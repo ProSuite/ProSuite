@@ -132,7 +132,7 @@ namespace ProSuite.AGP.WorkList.Selection
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new SelectionWorkList(repository, MapView.Active.Extent, uniqueName, displayName);
+			return new SelectionWorkList(repository, GetAreaOfInterest(), uniqueName, displayName);
 		}
 	}
 }

@@ -185,6 +185,27 @@ namespace ProSuite.AGP.WorkList
 			return definition.Name;
 		}
 
+		[CanBeNull]
+		public static string GetWorklistName([NotNull] string worklistDefinitionFile,
+		                                     [CanBeNull] out string typeName)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			typeName = null;
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
+				return null;
+			}
+
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
+			typeName = definition.TypeName;
+
+			return definition.Name;
+		}
+
 		public static void MoveTo([NotNull] List<IWorkItem> items,
 		                          [NotNull] IWorkItem movingItem,
 		                          int insertIndex)

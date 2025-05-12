@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
@@ -17,11 +18,12 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
+	// TODO: (daro) rename. Environment is long living.
 	/// <summary>
 	/// Encapsulates the logic (but no volatile state) for a work list type, including the creation
 	/// of the work list.
 	/// </summary>
-	public abstract class WorkEnvironmentBase
+	public abstract class WorkEnvironmentBase : IWorkEnvironment
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -34,6 +36,11 @@ namespace ProSuite.AGP.WorkList
 		/// TODO: Implement and use for all DbStatusWorkLists and Selection worklist
 		/// </summary>
 		protected string UniqueName { get; set; }
+
+		protected virtual Geometry GetAreaOfInterest()
+		{
+			return MapView.Active.Extent;
+		}
 
 		[ItemCanBeNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)

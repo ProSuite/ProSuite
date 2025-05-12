@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
+using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -55,12 +57,19 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 			_path = HttpUtility.UrlDecode(_path);
 			_path = HttpUtility.UrlDecode(_path);
 
+			// TODO: (DARO) path might have been moved. How to set data source invalid?
 			if (! File.Exists(_path))
 			{
 				_msg.Debug($"{_path} does not exists");
 			}
 
-			string name = WorkListUtils.GetWorklistName(_path);
+			string name = WorkListUtils.GetWorklistName(_path, out string typeName);
+
+			IWorkListRegistry registry = WorkListRegistry.Instance;
+			if (! registry.WorklistExists(name))
+			{
+				registry.TryAdd(new LayerBasedWorkListFactory(name, typeName, _path));
+			}
 
 			// the following situation: when work list layer is already in TOC
 			// and its data source (work list definition file) is renamed

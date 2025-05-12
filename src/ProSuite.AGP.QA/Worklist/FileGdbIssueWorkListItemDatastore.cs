@@ -10,11 +10,13 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using GeometryType = ArcGIS.Core.Geometry.GeometryType;
 
 namespace ProSuite.AGP.QA.WorkList;
 
@@ -33,7 +35,8 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	public FileGdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
 	{
-		string gdbPath = null;
+		string gdbPath;
+
 		if (workListFileOrIssueGdbPath != null &&
 		    workListFileOrIssueGdbPath.EndsWith(
 			    ".iwl", StringComparison.InvariantCultureIgnoreCase))
@@ -73,8 +76,6 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		if (_issueGdbPath != null &&
 		    _issueGdbPath.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
 		{
-			// It's the definition file
-			string iwlFilePath = _issueGdbPath;
 			if (! ContainsValidIssueGdbPath(_issueGdbPath, out string _, out message))
 			{
 				return false;
@@ -198,7 +199,39 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	public IObjectDataset GetObjetDataset(TableDefinition tableDefinition)
 	{
-		throw new NotImplementedException();
+		IObjectDataset dataset;
+
+		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+		{
+			GeometryType geometryType = featureClassDefinition.GetShapeType();
+
+			switch (geometryType)
+			{
+				case GeometryType.Point:
+				case GeometryType.Multipoint:
+					dataset = new ErrorMultipointDataset("IssuePoints");
+					break;
+				case GeometryType.Polyline:
+					dataset = new ErrorLineDataset("IssueLines");
+					break;
+				case GeometryType.Polygon:
+					dataset = new ErrorPolygonDataset("IssuePolygons");
+					break;
+				case GeometryType.Multipatch:
+					dataset = new ErrorMultiPatchDataset("IssueMultiPatches");
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+		else
+		{
+			dataset = new ErrorTableDataset("IssueRows");
+		}
+
+		Assert.NotNull(dataset,
+		               $"Error dataset is null for table definition {tableDefinition.GetName()}");
+		return dataset;
 	}
 
 	#endregion

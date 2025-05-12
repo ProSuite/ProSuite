@@ -4,12 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -34,8 +31,6 @@ namespace ProSuite.AGP.QA.WorkList
 		{
 			return WorkListItemDatastore.SuggestWorkListName();
 		}
-
-		public Geometry AreaOfInterest { get; set; }
 
 		protected override string SuggestWorkListLayerName()
 		{
@@ -93,11 +88,13 @@ namespace ProSuite.AGP.QA.WorkList
 			return qaGroupLayer as T;
 		}
 
+		// TODO: (daro) drop!
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new IssueWorkList(repository, AreaOfInterest, uniqueName, displayName);
+			throw new NotImplementedException("This should not happen!");
+			//return new IssueWorkList(repository, AreaOfInterest, uniqueName, displayName);
 		}
 
 		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(

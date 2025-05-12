@@ -40,6 +40,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool AddOrReplace(IWorkList worklist);
 
+		[ItemCanBeNull]
 		Task<IWorkList> GetAsync(string name);
 	}
 }

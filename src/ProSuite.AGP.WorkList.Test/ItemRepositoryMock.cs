@@ -32,7 +32,7 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-			QueryFilter filter, WorkItemStatus? statusFilter = null, bool recycle = true,
+			QueryFilter filter, WorkItemStatus? statusFilter,
 			bool excludeGeometry = false)
 		{
 			IEnumerable<IWorkItem> query =
@@ -69,16 +69,6 @@ namespace ProSuite.AGP.WorkList.Test
 			WorkItemStateRepository?.UpdateState(item);
 		}
 
-		public Task UpdateAsync(IWorkItem item)
-		{
-			return Task.FromResult(0);
-		}
-
-		public void Save(IWorkItem item)
-		{
-			throw new NotImplementedException();
-		}
-		
 		public void Commit()
 		{
 			WorkItemStateRepository?.Commit(new List<ISourceClass> { new SourceClassMock() });
@@ -97,13 +87,12 @@ namespace ProSuite.AGP.WorkList.Test
 		public void SetVisited(IWorkItem item)
 		{
 			item.Visited = true;
-			WorkItemStateRepository?.UpdateState(item);
+			UpdateState(item);
 		}
 
 		public Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
-			item.Status = status;
-			WorkItemStateRepository?.UpdateState(item);
+			UpdateState(item);
 
 			return Task.CompletedTask;
 		}
@@ -140,15 +129,15 @@ namespace ProSuite.AGP.WorkList.Test
 			return ++_lastUsedOid;
 		}
 
-		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table, QueryFilter filter = null,
-		                                                               WorkItemStatus? statusFilter = null, bool recycle = true,
-		                                                               bool excludeGeometry = false)
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			Table table, QueryFilter filter,
+			WorkItemStatus? statusFilter,
+			bool excludeGeometry = false)
 		{
 			throw new NotImplementedException();
 		}
 
-		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItemsCore(
-			QueryFilter filter, bool excludeGeometry = false)
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
 		{
 			throw new NotImplementedException();
 		}

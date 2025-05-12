@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -46,6 +47,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		[ItemCanBeNull]
 		public async Task<IWorkList> GetAsync(string name)
 		{
 			bool exists;
@@ -127,7 +129,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					// In this case the work list has been created.
 					// XmlBasedWorkListFactory would create it in a non-canonical way (no schema info etc.)
 					// which might be fine for layer display purposes, but not for the NavigatorView. 
-					return factory is WorkListFactory;
+					return factory is WorkListFactoryBase;
 				}
 
 				return false;
