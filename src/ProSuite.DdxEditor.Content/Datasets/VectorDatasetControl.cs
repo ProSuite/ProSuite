@@ -3,7 +3,6 @@ using System.Windows.Forms;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -45,7 +44,7 @@ namespace ProSuite.DdxEditor.Content.Datasets
 				entity.DefaultLayerFile = new LayerFile(null);
 			}
 
-			Model model = _observer.GetModel();
+			DdxModel model = _observer.GetModel();
 
 			_textBoxModelMinimumSegmentLength.Text =
 				model.DefaultMinimumSegmentLength.ToString(CultureInfo.CurrentCulture);

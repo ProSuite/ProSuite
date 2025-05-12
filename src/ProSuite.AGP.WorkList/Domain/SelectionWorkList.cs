@@ -64,6 +64,9 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override void RefreshItems()
 		{
+			_indexByTask.Clear();
+			_itemsByIndex.Clear();
+
 			try
 			{
 				var items = Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo).ToList();

@@ -16,6 +16,8 @@ namespace ProSuite.GIS.Geometry.API
 
 		IEnvelope Envelope { get; }
 
+		// TODO: IHitTest on IGeometry (for SelectConnectedLinesTool and others)
+
 		// TODO: T Project<T>() where T : IGeometry
 		IGeometry Project(ISpatialReference outputSpatialReference);
 

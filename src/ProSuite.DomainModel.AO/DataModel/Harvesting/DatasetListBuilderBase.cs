@@ -137,7 +137,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			}
 		}
 
-		public void AddDatasets(Model model)
+		public void AddDatasets(DdxModel model)
 		{
 			foreach (Dataset dataset in _datasets)
 			{
@@ -149,7 +149,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			AddDatasetsCore(model);
 		}
 
-		protected virtual void AddDatasetsCore(Model model) { }
+		protected virtual void AddDatasetsCore(DdxModel model) { }
 
 		#endregion
 

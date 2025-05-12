@@ -1,13 +1,13 @@
 using System;
-using Microsoft.Win32.SafeHandles;
-using ProSuite.Commons.Essentials.Assertions;
-using System.Drawing.Drawing2D;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Microsoft.Win32.SafeHandles;
 using ProSuite.Commons.Diagnostics;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -26,25 +26,22 @@ namespace ProSuite.Commons.AGP.Windows
 		}
 
 		public static Cursor CreateCursor(byte[] baseImage,
-										  byte[] overlayImage,
-										  int xHotspot = 0,
-										  int yHotspot = 0)
+		                                  byte[] overlayImage,
+		                                  int xHotspot = 0,
+		                                  int yHotspot = 0)
 		{
-			return CreateCursor(baseImage, overlayImage, overlay2: null, overlay3: null, xHotspot, yHotspot);
+			return CreateCursor(baseImage, overlayImage, overlay2: null, overlay3: null, xHotspot,
+			                    yHotspot);
 		}
 
 		public static Cursor CreateCursor(byte[] baseImage,
-										  byte[] overlay1 = null,
-										  byte[] overlay2 = null,
-										  byte[] overlay3 = null,
-										  int xHotspot = 0,
-										  int yHotspot = 0)
+		                                  byte[] overlay1 = null,
+		                                  byte[] overlay2 = null,
+		                                  byte[] overlay3 = null,
+		                                  int xHotspot = 0,
+		                                  int yHotspot = 0)
 		{
 			Assert.ArgumentNotNull(baseImage, nameof(baseImage));
-
-			// https://stackoverflow.com/questions/14866603/a-generic-error-occurred-in-gdi-when-attempting-to-use-image-save
-			// https://stackoverflow.com/questions/72010973/a-generic-error-occurred-in-gdi-while-saving-image-to-memorystream
-			// https://stackoverflow.com/questions/5813633/a-generic-error-occurs-at-gdi-at-bitmap-save-after-using-savefiledialog
 
 			try
 			{
@@ -55,50 +52,82 @@ namespace ProSuite.Commons.AGP.Windows
 				{
 					graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-					using (var stream = new MemoryStream(baseImage))
-					using (Image image = Image.FromStream(stream))
-					{
-						graphics.DrawImage(image, destinationRectangle);
-					}
+					var stream = new MemoryStream(baseImage);
+					MemoryStream stream1 = null;
+					MemoryStream stream2 = null;
+					MemoryStream stream3 = null;
 
-					if (overlay1 != null)
+					try
 					{
-						using (var stream = new MemoryStream(overlay1))
-						using (Image image = Image.FromStream(stream))
+						if (overlay1 != null)
 						{
-							graphics.DrawImage(image, destinationRectangle);
+							stream1 = new MemoryStream(overlay1);
+						}
+
+						if (overlay2 != null)
+						{
+							stream2 = new MemoryStream(overlay2);
+						}
+
+						if (overlay3 != null)
+						{
+							stream3 = new MemoryStream(overlay3);
+						}
+
+						using (Bitmap tmp = new Bitmap(stream))
+						{
+							// https://jira.swisstopo.ch/browse/GOTOP-450
+							var bitmap = new Bitmap(tmp);
+							graphics.DrawImage(bitmap, destinationRectangle);
+						}
+
+						if (stream1 != null)
+						{
+							using (Bitmap tmp = new Bitmap(stream1))
+							{
+								var bitmap = new Bitmap(tmp);
+								graphics.DrawImage(bitmap, destinationRectangle);
+							}
+						}
+
+						if (stream2 != null)
+						{
+							using (Bitmap tmp = new Bitmap(stream2))
+							{
+								var bitmap = new Bitmap(tmp);
+								graphics.DrawImage(bitmap, destinationRectangle);
+							}
+						}
+
+						if (stream3 != null)
+						{
+							using (Bitmap tmp = new Bitmap(stream3))
+							{
+								var bitmap = new Bitmap(tmp);
+								graphics.DrawImage(bitmap, destinationRectangle);
+							}
+						}
+
+						using (Bitmap clone =
+						       result.Clone(destinationRectangle, result.PixelFormat))
+						{
+							var icon = new IconInfo();
+							GetIconInfo(clone.GetHicon(), ref icon);
+							icon.xHotspot = xHotspot;
+							icon.yHotspot = yHotspot;
+							icon.fIcon = false;
+
+							nint ptr = CreateIconIndirect(ref icon);
+
+							return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
 						}
 					}
-
-					if (overlay2 != null)
+					finally
 					{
-						using (var stream = new MemoryStream(overlay2))
-						using (Image image = Image.FromStream(stream))
-						{
-							graphics.DrawImage(image, destinationRectangle);
-						}
-					}
-
-					if (overlay3 != null)
-					{
-						using (var stream = new MemoryStream(overlay3))
-						using (Image image = Image.FromStream(stream))
-						{
-							graphics.DrawImage(image, destinationRectangle);
-						}
-					}
-
-					using (Bitmap clone = result.Clone(destinationRectangle, result.PixelFormat))
-					{
-						var icon = new IconInfo();
-						GetIconInfo(clone.GetHicon(), ref icon);
-						icon.xHotspot = xHotspot;
-						icon.yHotspot = yHotspot;
-						icon.fIcon = false;
-
-						nint ptr = CreateIconIndirect(ref icon);
-
-						return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
+						stream.Dispose();
+						stream1?.Dispose();
+						stream2?.Dispose();
+						stream3?.Dispose();
 					}
 				}
 			}

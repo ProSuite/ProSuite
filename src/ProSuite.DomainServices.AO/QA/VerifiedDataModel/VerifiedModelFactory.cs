@@ -45,7 +45,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			set => _datasetHarvester.HarvestObjectTypes = value;
 		}
 
-		public Model CreateModel(IWorkspace workspace,
+		public DdxModel CreateModel(IWorkspace workspace,
 		                         string modelName,
 		                         int modelId,
 		                         string databaseName,
@@ -67,20 +67,19 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		public void AssignMostFrequentlyUsedSpatialReference(
-			Model model,
+			DdxModel model,
 			IEnumerable<Dataset> usedDatasets)
 		{
-			ISpatialReference spatialReference = GetMainSpatialReference(
-				model, usedDatasets);
+			ISpatialReference spatialReference = GetMainSpatialReference(model, usedDatasets);
 
 			if (spatialReference != null)
 			{
 				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
+					SpatialReferenceDescriptorExtensions.CreateFrom(spatialReference);
 			}
 		}
 
-		private Model CreateFullModel(
+		private DdxModel CreateFullModel(
 			IWorkspace workspace, string name, int modelId, string databaseName, string schemaOwner)
 
 		{
@@ -117,7 +116,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			return model;
 		}
 
-		private Model CreateNeededModel(IWorkspace workspace,
+		private DdxModel CreateNeededModel(IWorkspace workspace,
 		                                string name,
 		                                int modelId,
 		                                string databaseName,
@@ -193,7 +192,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		public static ISpatialReference GetMainSpatialReference(
-			Model model, IEnumerable<Dataset> referencedDatasets)
+			DdxModel model, IEnumerable<Dataset> referencedDatasets)
 		{
 			var spatialDatasetReferenceCount =
 				new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -229,7 +228,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 				// Using a simple dataset opener is good enough. There are no models with just terrains and geometric networks.
 				IWorkspaceContext datasetContext =
-					Assert.NotNull(model.MasterDatabaseWorkspaceContext);
+					Assert.NotNull(model.GetMasterDatabaseWorkspaceContext());
 				IOpenDataset datasetOpener = new SimpleDatasetOpener(datasetContext);
 
 				ISpatialReference spatialReference = GetSpatialReference(maxDataset, datasetOpener);
@@ -313,7 +312,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			}
 		}
 
-		private void HarvestFeatureClasses([NotNull] Model model,
+		private void HarvestFeatureClasses([NotNull] DdxModel model,
 		                                   [NotNull] IFeatureWorkspace workspace,
 		                                   [NotNull] ICollection<string> harvestedNames)
 		{
@@ -324,7 +323,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			}
 		}
 
-		private void HarvestTables([NotNull] Model model,
+		private void HarvestTables([NotNull] DdxModel model,
 		                           [NotNull] IFeatureWorkspace workspace,
 		                           [NotNull] ICollection<string> harvestedNames)
 		{
@@ -336,7 +335,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		private void HarvestTopologyDatasets(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] ICollection<string> harvestedNames)
 		{
@@ -348,7 +347,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		private void HarvestRasterDatasets(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] ICollection<string> harvestedNames)
 		{
@@ -360,7 +359,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		private void HarvestRasterMosaicDatasets(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] ICollection<string> harvestedNames)
 		{
@@ -372,7 +371,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		private void HarvestTerrainDatasets(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] ICollection<string> harvestedNames)
 		{
@@ -384,7 +383,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		private void HarvestGeometricNetworkDatasets(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] ICollection<string> harvestedNames)
 		{

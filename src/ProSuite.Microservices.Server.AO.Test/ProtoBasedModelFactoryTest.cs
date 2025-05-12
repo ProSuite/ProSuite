@@ -102,17 +102,17 @@ namespace ProSuite.Microservices.Server.AO.Test
 			Assert.Greater(relationshipTable.Fields.FindField("ROUTE_OID"), 0);
 		}
 
-		private static Model CreateModel(string gdbPath,
+		private static DdxModel CreateModel(string gdbPath,
 		                                 int modelId)
 		{
 			SchemaMsg schemaMsg = ProtoTestUtils.CreateSchemaMsg(gdbPath, modelId);
 
-			Model rehydratedModel = CreateModel(schemaMsg);
+			DdxModel rehydratedModel = CreateModel(schemaMsg);
 
 			return rehydratedModel;
 		}
 
-		private static Model CreateModel(SchemaMsg schemaMsg)
+		private static DdxModel CreateModel(SchemaMsg schemaMsg)
 		{
 			IVerifiedModelFactory modelFactory =
 				new ProtoBasedModelFactory(schemaMsg, new MasterDatabaseWorkspaceContextFactory());

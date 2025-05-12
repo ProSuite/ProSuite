@@ -3,7 +3,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.NavigationPanel;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.ItemLocators
 {
@@ -11,7 +11,7 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 	{
 		public override bool CanLocate(Entity entity)
 		{
-			return entity is Model;
+			return entity is DdxModel;
 		}
 
 		public override Item Locate(Entity entity, IEnumerable<IItemTreeNode> rootNodes)
@@ -25,7 +25,7 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 
 			IItemTreeNode entityTypeNode = FindNode(
 				rootNode.ChildNodes,
-				n => n.IsBasedOnEntityType<Model>(),
+				n => n.IsBasedOnEntityType<DdxModel>(),
 				true);
 
 			return entityTypeNode == null

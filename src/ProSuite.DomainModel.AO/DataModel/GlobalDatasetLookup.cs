@@ -145,7 +145,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNull(unitOfWork, nameof(unitOfWork));
 
 			var entities = new List<Entity>();
-			var models = new HashSet<Model>();
+			var models = new HashSet<DdxModel>();
 
 			foreach (Dataset dataset in _datasetIndex.Values)
 			{
@@ -154,7 +154,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 					continue;
 				}
 
-				models.Add((Model) dataset.Model);
+				models.Add(dataset.Model);
 				entities.Add(dataset);
 			}
 
@@ -165,15 +165,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 					continue;
 				}
 
-				if (! models.Contains((Model) association.Model))
+				if (! models.Contains(association.Model))
 				{
-					models.Add((Model) association.Model);
+					models.Add(association.Model);
 				}
 
 				entities.Add(association);
 			}
 
-			foreach (Model model in models)
+			foreach (DdxModel model in models)
 			{
 				unitOfWork.Reattach(model);
 			}
@@ -353,7 +353,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			foreach (T candidate in candidates)
 			{
-				Model model = candidate.Model as Model;
+				DdxModel model = candidate.Model;
 				if (model == null)
 				{
 					continue;

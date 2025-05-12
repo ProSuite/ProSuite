@@ -2,7 +2,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DdxEditor.Content.Connections
 {

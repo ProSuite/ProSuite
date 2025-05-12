@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.3" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.4" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
   </ItemGroup>

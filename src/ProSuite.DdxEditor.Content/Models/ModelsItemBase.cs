@@ -8,11 +8,11 @@ using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
-	public abstract class ModelsItemBase : EntityTypeItem<Model>
+	public abstract class ModelsItemBase : EntityTypeItem<DdxModel>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

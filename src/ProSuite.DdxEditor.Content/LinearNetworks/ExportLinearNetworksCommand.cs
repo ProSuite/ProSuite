@@ -6,7 +6,7 @@ using ProSuite.Commons.UI.Finder;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.LinearNetworks
 {
@@ -36,7 +36,7 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 
 		protected override void ExecuteCore()
 		{
-			Model model = null;
+			DdxModel model = null;
 			if (_filterByModel)
 			{
 				model = FindModel(ApplicationController.Window);
@@ -57,7 +57,7 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 			}
 		}
 
-		private Model FindModel(IWin32Window owner)
+		private DdxModel FindModel(IWin32Window owner)
 		{
 			IList<ModelTableRow> list = Item.GetModelTableRows();
 

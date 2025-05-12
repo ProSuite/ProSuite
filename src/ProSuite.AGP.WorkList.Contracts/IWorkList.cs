@@ -103,7 +103,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		Geometry GetItemGeometry(IWorkItem item);
 
-		void SetItemsGeometryDraftMode(bool enable);
+		void SetItemsGeometryMode(bool enable);
 
 		void Rename(string name);
 	}

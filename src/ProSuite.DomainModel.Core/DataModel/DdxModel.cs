@@ -7,21 +7,33 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
 	public abstract class DdxModel : VersionedEntityWithMetadata, IDetachedState, INamed,
-	                                 IAnnotated, IDatasetContainer
+	                                 IAnnotated, IDatasetContainer, IModelHarvest
 	{
+		public const string EnvironmentVariableNoModelSchemaCache =
+			"PROSUITE_NO_MODEL_SCHEMA_CACHE";
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private int _cloneId = -1;
+
+		#region Persistent state
 
 		[UsedImplicitly] private string _name;
 		[UsedImplicitly] private string _description;
 		[UsedImplicitly] private bool _elementNamesAreQualified;
 		[UsedImplicitly] private string _defaultDatabaseName;
 		[UsedImplicitly] private string _defaultDatabaseSchemaOwner;
+		[UsedImplicitly] private string _schemaOwner;
+		[UsedImplicitly] private string _datasetPrefix;
+
+		[UsedImplicitly]
+		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
+
 		[UsedImplicitly] private bool _useDefaultDatabaseOnlyForSchema;
 
 		[UsedImplicitly] private readonly IList<Dataset> _datasets = new List<Dataset>();
@@ -29,29 +41,45 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly]
 		private readonly IList<Association> _associations = new List<Association>();
 
-		[UsedImplicitly]
-		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
+		[UsedImplicitly] private SpatialReferenceDescriptor _spatialReferenceDescriptor;
+
+		[UsedImplicitly] private ConnectionProvider _userConnectionProvider;
+
+		[UsedImplicitly] private SdeDirectConnectionProvider
+			_repositoryOwnerConnectionProvider;
+
+		[UsedImplicitly] private ConnectionProvider _schemaOwnerConnectionProvider;
+
+		[UsedImplicitly] private double _defaultMinimumSegmentLength = 2;
+
+		[UsedImplicitly] private bool _harvestQualifiedElementNames;
+		[UsedImplicitly] private bool _updateAliasNamesOnHarvest = true;
+		[UsedImplicitly] private DateTime? _lastHarvestedDate;
+		[UsedImplicitly] private string _lastHarvestedByUser;
+		[UsedImplicitly] private string _lastHarvestedConnectionString;
+
+		[UsedImplicitly] private bool _ignoreUnversionedDatasets;
+		[UsedImplicitly] private bool _ignoreUnregisteredTables;
+
+		[UsedImplicitly] private string _datasetInclusionCriteria;
+		[UsedImplicitly] private string _datasetExclusionCriteria;
+
+		[UsedImplicitly] private ClassDescriptor _attributeConfiguratorFactoryClassDescriptor;
+		[UsedImplicitly] private ClassDescriptor _datasetListBuilderFactoryClassDescriptor;
+
+		#endregion
+
+		private bool _keepDatasetLocks;
 
 		private bool _specialDatasetsAssigned;
+
 		private Dictionary<SimpleTerrainDataset, SimpleTerrainDataset> _terrainDatasets;
-
-		/// <summary>
-		/// Name of the schema owner, e.g. "TOPGIS_TLM"
-		/// </summary>
-		[UsedImplicitly] private string _schemaOwner;
-
-		/// <summary>
-		/// Prefix for individual datasets, e.g. "TLM_"
-		/// </summary>
-		[UsedImplicitly] private string _datasetPrefix;
 
 		[NotNull] private readonly Dictionary<string, Dataset> _datasetIndex =
 			new Dictionary<string, Dataset>(100, StringComparer.OrdinalIgnoreCase);
 
 		[NotNull] private readonly Dictionary<string, Association> _associationIndex =
 			new Dictionary<string, Association>(100, StringComparer.OrdinalIgnoreCase);
-
-		[UsedImplicitly] private double _defaultMinimumSegmentLength = 2;
 
 		#region Constructors
 
@@ -71,6 +99,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		}
 
 		#endregion
+
+		#region NHibernated properties
 
 		[Required]
 		[UsedImplicitly]
@@ -195,12 +225,150 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public IList<Association> Associations =>
 			new ReadOnlyList<Association>(_associations);
 
+		[Required]
+		public SpatialReferenceDescriptor SpatialReferenceDescriptor
+		{
+			get { return _spatialReferenceDescriptor; }
+			set { _spatialReferenceDescriptor = value; }
+		}
+
+		[Required]
+		public ConnectionProvider UserConnectionProvider
+		{
+			get { return _userConnectionProvider; }
+			set { _userConnectionProvider = value; }
+		}
+
+		public SdeDirectConnectionProvider RepositoryOwnerConnectionProvider
+		{
+			get { return _repositoryOwnerConnectionProvider; }
+			set { _repositoryOwnerConnectionProvider = value; }
+		}
+
+		public ConnectionProvider SchemaOwnerConnectionProvider
+		{
+			get { return _schemaOwnerConnectionProvider; }
+			set { _schemaOwnerConnectionProvider = value; }
+		}
+
 		[UsedImplicitly]
 		public double DefaultMinimumSegmentLength
 		{
 			get { return _defaultMinimumSegmentLength; }
 			set { _defaultMinimumSegmentLength = value; }
 		}
+
+		[UsedImplicitly]
+		public bool HarvestQualifiedElementNames
+		{
+			get { return _harvestQualifiedElementNames; }
+			set { _harvestQualifiedElementNames = value; }
+		}
+
+		/// <summary>
+		/// Gets a value indicating whether alias names of applicable datasets are
+		/// updated when harvesting. Template methods for subclasses to override.
+		/// </summary>
+		/// <value>
+		/// 	<c>true</c> if alias names should be updated based on the current
+		///	    value in the geodatabase; otherwise, <c>false</c>.
+		/// </value>
+		[UsedImplicitly]
+		public bool UpdateAliasNamesOnHarvest
+		{
+			get { return _updateAliasNamesOnHarvest; }
+			set { _updateAliasNamesOnHarvest = value; }
+		}
+
+		[UsedImplicitly]
+		public DateTime? LastHarvestedDate
+		{
+			get { return _lastHarvestedDate; }
+			set { _lastHarvestedDate = value; }
+		}
+
+		[UsedImplicitly]
+		public string LastHarvestedByUser
+		{
+			get { return _lastHarvestedByUser; }
+			set { _lastHarvestedByUser = value; }
+		}
+
+		[UsedImplicitly]
+		public string LastHarvestedConnectionString
+		{
+			get { return _lastHarvestedConnectionString; }
+			set { _lastHarvestedConnectionString = value; }
+		}
+
+		[UsedImplicitly]
+		public bool IgnoreUnversionedDatasets
+		{
+			get { return _ignoreUnversionedDatasets; }
+			set
+			{
+				if (_ignoreUnversionedDatasets == value)
+				{
+					return;
+				}
+
+				_ignoreUnversionedDatasets = value;
+
+				if (value)
+				{
+					// if unversioned datasets are ignored, unregistered tables are always ignored as they are unversioned
+					_ignoreUnregisteredTables = true;
+				}
+			}
+		}
+
+		[UsedImplicitly]
+		public bool IgnoreUnregisteredTables
+		{
+			get { return _ignoreUnregisteredTables; }
+			set { _ignoreUnregisteredTables = value; }
+		}
+
+		public bool CanChangeIgnoreUnregisteredTables =>
+			!(_ignoreUnversionedDatasets && _ignoreUnregisteredTables);
+
+		[UsedImplicitly]
+		public string DatasetInclusionCriteria
+		{
+			get { return _datasetInclusionCriteria; }
+			set { _datasetInclusionCriteria = value; }
+		}
+
+		[UsedImplicitly]
+		public string DatasetExclusionCriteria
+		{
+			get { return _datasetExclusionCriteria; }
+			set { _datasetExclusionCriteria = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets the class descriptor for the attribute configurator. Attribute
+		/// configurators must implement IAttributeConfigurator interface.
+		/// </summary>
+		/// <value>The attribute configurator factory class descriptor.</value>
+		public ClassDescriptor AttributeConfiguratorFactoryClassDescriptor
+		{
+			get { return _attributeConfiguratorFactoryClassDescriptor; }
+			set { _attributeConfiguratorFactoryClassDescriptor = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets the class descriptor for the dataset list builder. Dataset
+		/// list builder factories must implement IDatasetListBuilderFactory interface.
+		/// </summary>
+		/// <value>The dataset list builder factory class descriptor.</value>
+		public ClassDescriptor DatasetListBuilderFactoryClassDescriptor
+		{
+			get { return _datasetListBuilderFactoryClassDescriptor; }
+			set { _datasetListBuilderFactoryClassDescriptor = value; }
+		}
+
+		#endregion
 
 		public new int Id
 		{
@@ -215,11 +383,72 @@ namespace ProSuite.DomainModel.Core.DataModel
 			}
 		}
 
+		/// <summary>
+		/// Whether the user is allowed to change the 'Harvest qualified element names' property.
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if the user should be allowed to change this property; otherwise, <c>false</c>.
+		/// </value>
+		public bool AllowUserChangingHarvestQualifiedElementNames =>
+			AllowUserChangingHarvestQualifiedElementNamesCore;
+
+		/// <summary>
+		/// Whether the user is allowed to change the 'Use master database only for schema' property.
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if the user should be allowed to change this property; otherwise, <c>false</c>.
+		/// </value>
+		public bool AllowUserChangingUseMasterDatabaseOnlyForSchema =>
+			AllowUserChangingUseMasterDatabaseOnlyForSchemaCore;
+
+		/// <remarks>For internal use only, use GetMasterDatabaseWorkspaceContext()</remarks>
+		public object CachedMasterDatabaseWorkspaceContext { get; set; }
+
+		/// <remarks>For internal use only, use IsMasterDatabaseAccessible()</remarks>
+		public bool? CachedIsMasterDatabaseAccessible { get; set; }
+
+		/// <remarks>For internal use only, use GetMasterDatabaseNoAccessReason()</remarks>
+		public string CachedMasterDatabaseNoAccessReason { get; set; }
+
+		public bool KeepDatasetLocks
+		{
+			get { return _keepDatasetLocks; }
+			set
+			{
+				if (value == _keepDatasetLocks)
+				{
+					return;
+				}
+
+				// Value changed. Discard current workspace proxy
+				_keepDatasetLocks = value;
+
+				//if (_masterDatabaseWorkspaceContext == null)
+				if (CachedMasterDatabaseWorkspaceContext == null)
+				{
+					return;
+				}
+
+				//_masterDatabaseWorkspaceContext = null;
+				CachedMasterDatabaseWorkspaceContext = null;
+
+				if (_keepDatasetLocks)
+				{
+					return;
+				}
+
+				// make sure any locks are released immediately
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+			}
+		}
+
+
 		#region Object overrides
 
 		public override string ToString()
 		{
-			return Name;
+			return Name ?? "<no name>";
 		}
 
 		public override int GetHashCode()
@@ -328,7 +557,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <param name="name">The dataset name as defined in the data model.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The dataset or null if not found or not of type T</returns>
 		[CanBeNull]
 		public T GetDatasetByModelName<T>([NotNull] string name, bool includeDeleted = false)
@@ -342,7 +571,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <param name="name">The dataset name as defined in the data model.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The dataset or null if not found</returns>
 		[CanBeNull]
 		public Dataset GetDatasetByModelName([NotNull] string name, bool includeDeleted = false)
@@ -374,7 +603,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// Gets all datasets.
 		/// </summary>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of datasets.</returns>
 		public IList<Dataset> GetDatasets(bool includeDeleted = false)
 		{
@@ -387,7 +616,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// <param name="match">The <see cref="Predicate{T}"/> delegate that
 		/// defines the conditions of the element to search for.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of matching datasets.</returns>
 		[NotNull]
 		public IList<Dataset> GetDatasets([CanBeNull] Predicate<Dataset> match,
@@ -401,7 +630,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <typeparam name="T">The type of dataset to return.</typeparam>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of datasets of the specified type.</returns>
 		public IList<T> GetDatasets<T>(bool includeDeleted = false) where T : Dataset
 		{
@@ -416,7 +645,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// <param name="match">The <see cref="Predicate{T}"/> delegate that
 		/// defines the conditions of the element to search for.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of matching datasets.</returns>
 		[NotNull]
 		public IList<T> GetDatasets<T>([CanBeNull] Predicate<T> match, bool includeDeleted = false)
@@ -462,7 +691,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <param name="associationName">Name of the relationship class.</param>
 		/// <param name="includeDeleted">if set to <c>true</c>, associations registered as deleted are 
-		/// included. Otherwise they are excluded.</param>
+		/// included. Otherwise, they are excluded.</param>
 		/// <returns></returns>
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 		[CanBeNull]
@@ -517,7 +746,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// Gets the associations.
 		/// </summary>
 		/// <param name="includeDeleted">if set to <c>true</c> associations that are 
-		/// registered as deleted are included in the result. Otherwise they are excluded.</param>
+		/// registered as deleted are included in the result. Otherwise, they are excluded.</param>
 		/// <returns>The list of associations.</returns>
 		[NotNull]
 		public IList<Association> GetAssociations(bool includeDeleted = false)
@@ -622,36 +851,41 @@ namespace ProSuite.DomainModel.Core.DataModel
 			ReattachStateCore(unitOfWork);
 		}
 
-		public abstract string QualifyModelElementName(string modelElementName);
-
 		protected virtual void ReattachStateCore([NotNull] IUnitOfWork unitOfWork) { }
 
-		protected void InvalidateDatasetIndex()
+		public abstract string QualifyModelElementName(string modelElementName);
+
+		[NotNull]
+		public abstract string TranslateToModelElementName(
+			[NotNull] string masterDatabaseDatasetName);
+
+		#region Indexing
+
+		public void InvalidateDatasetIndex()
 		{
 			_datasetIndex.Clear();
 		}
 
-		protected void InvalidateAssociationIndex()
+		public void InvalidateAssociationIndex()
 		{
 			_associationIndex.Clear();
 		}
 
-		protected void InvalidateSpecialDatasetAssignment()
-		{
-			_specialDatasetsAssigned = false;
-		}
-
 		[CanBeNull]
-		protected Dataset GetDataset([NotNull] string name, bool useIndex)
+		protected Dataset GetDataset([NotNull] string datasetName, bool useIndex)
 		{
 			if (useIndex)
 			{
-				return GetDatasetFromIndex(name);
+				return GetDatasetFromIndex(datasetName);
 			}
 
-			return _datasets.FirstOrDefault(
-				dataset => string.Equals(dataset.Name, name,
-				                         StringComparison.OrdinalIgnoreCase));
+			return _datasets.FirstOrDefault(dataset => string.Equals(dataset.Name, datasetName,
+				                                StringComparison.OrdinalIgnoreCase));
+		}
+
+		Dataset IModelHarvest.GetExistingDataset(string datasetName, bool useIndex)
+		{
+			return GetDataset(datasetName, useIndex);
 		}
 
 		[CanBeNull]
@@ -702,6 +936,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 			return null; // not found
 		}
 
+		Association IModelHarvest.GetExistingAssociation(string associationName, bool useIndex)
+		{
+			return GetAssociation(associationName, useIndex);
+		}
+
 		private Association GetAssociationFromIndex(string relClassName)
 		{
 			PrepareAssociationIndex();
@@ -725,9 +964,18 @@ namespace ProSuite.DomainModel.Core.DataModel
 			}
 		}
 
+		#endregion
+
+		#region Special Dataset Assignments
+
+		public void InvalidateSpecialDatasetAssignment()
+		{
+			_specialDatasetsAssigned = false;
+		}
+
 		protected abstract void CheckAssignSpecialDatasetCore(Dataset dataset);
 
-		protected void AssignSpecialDatasets()
+		public void AssignSpecialDatasets()
 		{
 			if (_specialDatasetsAssigned)
 			{
@@ -752,6 +1000,19 @@ namespace ProSuite.DomainModel.Core.DataModel
 			// allow subclasses to add their own
 			CheckAssignSpecialDatasetCore(dataset);
 		}
+
+		#endregion
+
+		// ReSharper disable once VirtualMemberNeverOverridden.Global
+		protected virtual bool AllowUserChangingHarvestQualifiedElementNamesCore => true;
+
+		// ReSharper disable once VirtualMemberNeverOverridden.Global
+		protected virtual bool AllowUserChangingUseMasterDatabaseOnlyForSchemaCore => true;
+
+		[PublicAPI]
+		public bool DisableAutomaticSchemaCaching { get; set; }
+
+		public virtual bool AutoEnableSchemaCache => false;
 
 		#region Implementation of IDbDatasetContainer
 

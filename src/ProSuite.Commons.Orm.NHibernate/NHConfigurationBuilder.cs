@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NHibernate.Cfg;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using Environment = System.Environment;
 
 namespace ProSuite.Commons.Orm.NHibernate
@@ -74,13 +75,21 @@ namespace ProSuite.Commons.Orm.NHibernate
 			// TODO: Also check if the sequence exists. 
 			! IsSQLite;
 
-		public bool IsSQLite => Dialect.Contains("SQLite");
+		public bool IsSQLite =>
+			StringUtils.Contains(Dialect, "SQLite",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsPostgreSQL => Dialect.Contains("PostgreSQL");
+		public bool IsPostgreSQL =>
+			StringUtils.Contains(Dialect, "PostgreSQL",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsSqlServer => Dialect.Contains("MsSql");
+		public bool IsSqlServer =>
+			StringUtils.Contains(Dialect, "MsSql",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsOracle => Dialect.Contains("Oracle");
+		public bool IsOracle =>
+			StringUtils.Contains(Dialect, "Oracle",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
 		public string DdxEnvironmentName { get; protected set; }
 

@@ -44,6 +44,13 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			ChannelCredentials credentials,
 			int maxMessageLength)
 		{
+			// In the new Grpc.Net.Client, the root certificates must not be provided:
+			// https://stackoverflow.com/questions/59229663/grpc-and-asp-net-core-using-sslcredentials-with-non-null-arguments-is-not-suppo
+			if (credentials != ChannelCredentials.Insecure)
+			{
+				credentials = ChannelCredentials.SecureSsl;
+			}
+
 			ChannelBase channel = GrpcUtils.CreateChannel(
 				host, port, credentials, maxMessageLength);
 
