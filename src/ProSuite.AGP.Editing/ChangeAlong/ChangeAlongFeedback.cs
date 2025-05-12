@@ -50,8 +50,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			var grey = ColorFactory.Instance.CreateRGBColor(200, 200, 200);
 			_filteredReshapeLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(grey, _lineWidth);
-			var darkgrey = ColorFactory.Instance.CreateRGBColor(150, 150, 150);
-			_filterBufferSymbol = SymbolFactory.Instance.ConstructLineSymbol(darkgrey, _lineWidth - 1);
+			var darkGrey = ColorFactory.Instance.CreateRGBColor(150, 150, 150);
+			_filterBufferSymbol = SymbolFactory.Instance.ConstructLineSymbol(darkGrey, _lineWidth - 1);
 
 			var purple = ColorFactory.Instance.CreateRGBColor(150, 0, 150);
 			_targetLineSymbol = SymbolFactory.Instance.ConstructLineSymbol(purple, _lineWidth - 2);
