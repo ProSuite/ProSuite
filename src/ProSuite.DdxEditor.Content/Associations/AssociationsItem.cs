@@ -6,12 +6,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Associations
 {
-	public class AssociationsItem<M> : EntityTypeItem<Association> where M : Model
+	public class AssociationsItem<M> : EntityTypeItem<Association> where M : DdxModel
 	{
 		private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		private readonly ModelItemBase<M> _parent;
@@ -29,7 +28,7 @@ namespace ProSuite.DdxEditor.Content.Associations
 		}
 
 		[NotNull]
-		public Model Model => Assert.NotNull(_parent.GetEntity());
+		public DdxModel Model => Assert.NotNull(_parent.GetEntity());
 
 		protected override IEnumerable<Item> GetChildren()
 		{

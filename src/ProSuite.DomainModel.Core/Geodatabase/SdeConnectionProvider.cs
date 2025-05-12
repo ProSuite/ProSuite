@@ -1,12 +1,10 @@
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	public abstract class SdeConnectionProvider : ConnectionProvider,
-	                                              IOpenSdeWorkspace,
 	                                              IAlternateCredentials
 	{
 		private const string _defaultRepositoryName = "SDE";
@@ -28,8 +26,11 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		/// </summary>
 		/// <param name="name">The name.</param>
 		/// <param name="repositoryName">Name of the repository.</param>
-		protected SdeConnectionProvider(string name, string repositoryName) : base(name)
+		protected SdeConnectionProvider([NotNull] string name, [NotNull] string repositoryName) :
+			base(name)
 		{
+			Assert.ArgumentNotNullOrEmpty(repositoryName, nameof(repositoryName));
+
 			_repositoryName = repositoryName;
 		}
 
@@ -54,8 +55,6 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		public string AlternateUserName { get; private set; }
 
 		public string AlternatePassword { get; private set; }
-
-		public abstract IFeatureWorkspace OpenWorkspace(string versionName, int hWnd = 0);
 
 		#region IAlternateCredentials Members
 

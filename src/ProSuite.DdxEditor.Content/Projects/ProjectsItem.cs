@@ -2,8 +2,8 @@ using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Workflow;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Projects
 {

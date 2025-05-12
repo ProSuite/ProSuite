@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {

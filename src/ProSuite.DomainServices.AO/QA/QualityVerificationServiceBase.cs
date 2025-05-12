@@ -148,7 +148,7 @@ namespace ProSuite.DomainServices.AO.QA
 		protected abstract IGdbTransaction CreateGdbTransaction();
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
-		                                [NotNull] Model model)
+		                                [NotNull] DdxModel model)
 		{
 			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
@@ -176,7 +176,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IDomainTransactionManager domainTransactions)
 		{
-			var involvedModels = new HashSet<Model>();
+			var involvedModels = new HashSet<DdxModel>();
 
 			foreach (var qcon in qualitySpecification.Elements
 			                                         .Select(e => e.QualityCondition)
@@ -198,7 +198,7 @@ namespace ProSuite.DomainServices.AO.QA
 						domainTransactions.Initialize(objectDataset.AssociationEnds);
 					}
 
-					involvedModels.Add((Model) dataset.Model);
+					involvedModels.Add((DdxModel) dataset.Model);
 				}
 			}
 

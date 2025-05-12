@@ -1,8 +1,6 @@
-using ProSuite.DomainModel.Core.DataModel;
-
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class ProductionModel : Model
+	public abstract class ProductionModel : DdxModel
 	{
 		private ErrorMultipointDataset _errorMultipointDataset;
 		private ErrorMultiPatchDataset _errorMultiPatchDataset;

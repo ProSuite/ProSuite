@@ -1,9 +1,7 @@
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	public class FileGdbConnectionProvider : FilePathConnectionProviderBase
 	{
@@ -15,12 +13,6 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		public FileGdbConnectionProvider([NotNull] string path) : base(path) { }
 
 		#endregion
-
-		public override IFeatureWorkspace OpenWorkspace(int hWnd = 0)
-		{
-			AssertDirectoryExists();
-			return WorkspaceUtils.OpenFileGdbFeatureWorkspace(Path);
-		}
 
 		public override DbConnectionType ConnectionType => DbConnectionType.FileGeodatabase;
 
