@@ -224,6 +224,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				ProRelationshipClass.CreateRelationship(arcOriginObj.ProRow,
 				                                        arcDestinationObj.ProRow);
 
+			// Probably not necessary?
+			arcOriginObj.InvalidateCache();
+
+			// Make sure the new foreign key is used
+			arcDestinationObj.InvalidateCache();
+
 			return new ArcRelationship(aoRelationship, ProRelationshipClass);
 		}
 
@@ -267,6 +273,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			Row sourceRowProRow = sourceRow.ProRow;
 
 			DeleteRelationshipsFor(sourceRowProRow);
+
+			var arcRow = (ArcRow) anObject;
+			arcRow?.InvalidateCache();
 		}
 
 		private void DeleteRelationshipsFor(Row sourceRow)

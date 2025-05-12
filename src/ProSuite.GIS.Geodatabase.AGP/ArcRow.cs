@@ -20,6 +20,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private readonly ITable _parentTable;
 
 		private SimpleValueList _cachedValues;
+		private Row _proRow;
 
 		public static ArcRow Create(Row proRow, ITable parentTable)
 		{
@@ -43,7 +44,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_parentTable = parentTable;
 		}
 
-		public Row ProRow { get; protected set; }
+		public Row ProRow
+		{
+			get => _proRow;
+			protected set
+			{
+				_proRow = value;
+				InvalidateCache();
+			}
+		}
 
 		/// <summary>
 		/// Caches all field values from the underlying row for improved performance.
