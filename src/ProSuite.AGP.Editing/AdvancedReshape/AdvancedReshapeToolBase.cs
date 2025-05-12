@@ -209,13 +209,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 		}
 
-		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		protected override async Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
 		{
 			_symbolizedSketch =
 				new SymbolizedSketchTypeBasedOnSelection(this);
-			_symbolizedSketch.SetSketchAppearanceBasedOnSelection();
+			await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
 
-			return base.OnToolActivatedCore(hasMapViewChanged);
+			return true;
 		}
 
 		protected override void OnSelectionPhaseStarted()
@@ -230,6 +230,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			try
 			{
+				Assert.NotNull(_symbolizedSketch);
+
 				// OnSketchPhaseStartedAsync is sometimes called in QueuedTask and sometimes not
 				// Therefor use QueuedTask.Run() here.
 				// For some strange reason calling ActiveMapView.ClearSketchAsync()
@@ -237,10 +239,16 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				// ActiveMapView.ClearSketchAsync() outside QueuedTask leads to a
 				// not symbolised sketch. It's not documented that ActiveMapView.ClearSketchAsync()
 				// has to be put inside QueuedTask!!! May Teutates be with us!
-				await QueuedTask.Run(() =>
+				await QueuedTask.Run(async () =>
 				{
-					_symbolizedSketch?.SetSketchAppearanceBasedOnSelection();
-					ActiveMapView.ClearSketchAsync();
+					await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
+
+					if (await HasSketchAsync())
+					{
+						return;
+					}
+
+					await ActiveMapView.ClearSketchAsync();
 				});
 			}
 			catch (Exception ex)
@@ -426,7 +434,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return base.CanUseSelection(selectionByLayer);
 		}
 
-		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+		public async Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 		{
 			bool result;
 			switch (geometryType)
@@ -447,7 +455,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 			}
 
-			return result && ! IsInSelectionPhaseAsync().Result;
+			return result && ! await IsInSelectionPhaseAsync();
 		}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(

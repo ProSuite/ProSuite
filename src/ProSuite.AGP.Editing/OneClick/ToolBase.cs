@@ -144,7 +144,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			if (MapUtils.HasSelection(ActiveMapView))
 			{
 				await ViewUtils.TryAsync(
-					QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
+					QueuedTask.Run(() => _symbolizedSketch?.SetSketchAppearanceBasedOnSelectionAsync()),
 					_msg);
 
 				bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
@@ -385,9 +385,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return CanUseSelection(selectionByLayer, null);
 	}
 
-	public virtual bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+	public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
-		return true;
+		return Task.FromResult(true);
 	}
 
 	public void SetSketchSymbol(CIMSymbolReference symbolReference)
