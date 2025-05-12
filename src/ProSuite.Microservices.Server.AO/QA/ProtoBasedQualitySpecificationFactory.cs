@@ -5,7 +5,6 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -29,7 +28,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		/// <param name="modelFactory">The model factory</param>
 		/// <param name="dataSources"></param>
-		/// <param name="instanceDescriptors">All supported instance configurations</param>
+		/// <param name="instanceDescriptors">All supported instance descriptors</param>
 		public ProtoBasedQualitySpecificationFactory(
 			[NotNull] IVerifiedModelFactory modelFactory,
 			ICollection<DataSource> dataSources,
@@ -44,7 +43,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// QualitySpecification factory that uses a fine-grained proto buf message as input.
 		/// </summary>
 		/// <param name="modelsByWorkspaceId">The known models by workspace Id</param>
-		/// <param name="instanceDescriptors">All supported instance configurations</param>
+		/// <param name="instanceDescriptors">All supported instance descriptors</param>
 		public ProtoBasedQualitySpecificationFactory(
 			[NotNull] IDictionary<string, DdxModel> modelsByWorkspaceId,
 			[NotNull] ISupportedInstanceDescriptors instanceDescriptors)
@@ -117,7 +116,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] string schemaOwner,
 			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
 		{
-			Model result = ModelFactory.CreateModel(workspace, modelName, workspaceId,
+			DdxModel result = ModelFactory.CreateModel(workspace, modelName, workspaceId,
 			                                        databaseName, schemaOwner);
 
 			if (result.SpatialReferenceDescriptor == null)

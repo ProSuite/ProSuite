@@ -148,9 +148,9 @@ namespace ProSuite.DomainServices.AO.QA
 		protected abstract IGdbTransaction CreateGdbTransaction();
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
-		                                [NotNull] Model model)
+		                                [NotNull] DdxModel model)
 		{
-			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.SpatialReference);
+			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
@@ -176,7 +176,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IDomainTransactionManager domainTransactions)
 		{
-			var involvedModels = new HashSet<Model>();
+			var involvedModels = new HashSet<DdxModel>();
 
 			foreach (var qcon in qualitySpecification.Elements
 			                                         .Select(e => e.QualityCondition)
@@ -198,7 +198,7 @@ namespace ProSuite.DomainServices.AO.QA
 						domainTransactions.Initialize(objectDataset.AssociationEnds);
 					}
 
-					involvedModels.Add((Model) dataset.Model);
+					involvedModels.Add((DdxModel) dataset.Model);
 				}
 			}
 
@@ -679,7 +679,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 					string aoiTableName = verificationReporter.WriteAreaOfInterest(
 						_externalIssueRepository, areaOfInterest,
-						_verificationContext.SpatialReferenceDescriptor.SpatialReference);
+						_verificationContext.SpatialReferenceDescriptor.GetSpatialReference());
 
 					#region Write MXD - TO BE DEPRECATED once AO 10.x support is dropped
 
@@ -757,7 +757,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// Take from the model (as in the standalone/XML service)
 			ISpatialReference spatialReference =
-				_verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				_verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return spatialReference;
 		}

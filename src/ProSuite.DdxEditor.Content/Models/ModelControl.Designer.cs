@@ -1,9 +1,10 @@
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
-    partial class ModelControl<T> where T : Model
+    partial class ModelControl<T> where T : DdxModel
     {
         /// <summary> 
         /// Required designer variable.

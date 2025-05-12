@@ -3,13 +3,13 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
-	public class ModelControlPresenter<E> : EntityItemPresenter<E, IModelObserver, Model>,
+	public class ModelControlPresenter<E> : EntityItemPresenter<E, IModelObserver, DdxModel>,
 	                                        IModelObserver
-		where E : Model
+		where E : DdxModel
 	{
 		private readonly IModelView<E> _view;
 		private readonly IItemNavigation _itemNavigation;
@@ -61,7 +61,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 		public void GoToSpatialReferenceClicked()
 		{
-			Model model = Assert.NotNull(Item.GetEntity());
+			DdxModel model = Assert.NotNull(Item.GetEntity());
 
 			if (model.SpatialReferenceDescriptor != null)
 			{
@@ -76,7 +76,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 		public void GoToUserConnectionClicked()
 		{
-			Model model = Assert.NotNull(Item.GetEntity());
+			DdxModel model = Assert.NotNull(Item.GetEntity());
 
 			if (model.UserConnectionProvider != null)
 			{
@@ -84,9 +84,9 @@ namespace ProSuite.DdxEditor.Content.Models
 			}
 		}
 
-		private void RenderView(EntityItem<E, Model> item)
+		private void RenderView(EntityItem<E, DdxModel> item)
 		{
-			Model entity = item.GetEntity();
+			DdxModel entity = item.GetEntity();
 
 			_view.GoToSpatialReferenceEnabled = entity?.SpatialReferenceDescriptor != null;
 			_view.GoToUserConnectionEnabled = entity?.UserConnectionProvider != null;

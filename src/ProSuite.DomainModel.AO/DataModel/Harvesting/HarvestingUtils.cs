@@ -170,7 +170,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			[NotNull] IRelationshipClass relClass,
 			[NotNull] IObjectDataset destinationDataset,
 			[NotNull] IObjectDataset originDataset,
-			[NotNull] Model model)
+			[NotNull] DdxModel model)
 		{
 			bool unqualifyDatasetName = ! model.HarvestQualifiedElementNames;
 

@@ -8,6 +8,7 @@ using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
@@ -190,7 +191,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				return true;
 			}
 
-			Model primaryModel = StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
+			DdxModel primaryModel = StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			Assert.NotNull(primaryModel, "no primary model found for quality specification");
 
 			string issueGdbPath = null;
@@ -227,7 +228,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					new MasterDatabaseWorkspaceContextLookup());
 
 			ISpatialReference spatialReference =
-				primaryModel.SpatialReferenceDescriptor?.SpatialReference;
+				primaryModel.SpatialReferenceDescriptor?.GetSpatialReference();
 
 			ISpatialReference issuesSpatialReference =
 				IssueRepositorySpatialReference ?? spatialReference;
