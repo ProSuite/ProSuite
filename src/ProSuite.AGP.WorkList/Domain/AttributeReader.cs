@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Media;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -173,9 +175,73 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			object value = row[fieldIndex];
 
+			if (attribute == Attributes.IssueSeverity)
+			{
+				value = GetSeverity(row);
+			}
+
 			return value == null ? default : (T) value;
 		}
 
+		[NotNull]
+		public Brush GetSeverityBackColor([CanBeNull] string severity)
+		{
+			if (Enum.TryParse(severity, out IssueType type))
+			{
+				switch (type)
+				{
+					case IssueType.Error:
+						return Brushes.Salmon;
+					case IssueType.Warning:
+						return Brushes.Yellow;
+					default:
+						throw new ArgumentOutOfRangeException(
+							$"Unexpected issue severity type: {type}");
+				}
+			}
+
+			_msg.DebugFormat("Unexpected issue severity: {0}",
+			                 string.IsNullOrEmpty(severity)
+				                 ? "undefined"
+				                 : severity);
+
+			return Brushes.White;
+		}
+
+		public string GetSeverity(Row fromRow)
+		{
+			var attribute = Attributes.IssueSeverity;
+
+			if (! _fieldIndexByAttribute.TryGetValue(attribute, out int fieldIndex))
+			{
+				return default;
+			}
+
+			object value = null;
+
+			try
+			{
+				value = fromRow[fieldIndex];
+
+				string issueName = Enum.GetName(typeof(IssueType), (int) value);
+
+				if (issueName != null)
+				{
+					return issueName;
+				}
+
+				_msg.Debug($"Invalid issue type: {value}");
+				return "unkown";
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+				return $"Invalid issue type: {value}";
+			}
+		}
+
+
+		// TODO: (daro) drop!
 		public AttributeReader AddValue(Dictionary<string, object> attributes,
 		                                object value,
 		                                Attributes attribute)
