@@ -1018,7 +1018,7 @@ namespace ProSuite.QA.Container.TestContainer
 				     tableIndex < involvedTableCount;
 				     tableIndex++)
 				{
-					if (tableList[tableIndex] != table)
+					if (! tableList[tableIndex].Equals(table))
 					{
 						continue;
 					}
