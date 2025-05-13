@@ -468,7 +468,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			await SetupSelectionSketchAsync();
 
-			OnSelectionPhaseStarted();
+			await OnSelectionPhaseStartedAsync();
 		}
 
 		protected async Task<bool> HasSketchAsync()
@@ -515,7 +515,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
 
-		protected virtual void OnSelectionPhaseStarted() { }
+		protected virtual Task OnSelectionPhaseStartedAsync()
+		{
+			return Task.CompletedTask;
+		}
 
 		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
 		{
