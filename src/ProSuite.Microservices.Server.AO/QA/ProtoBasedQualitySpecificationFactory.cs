@@ -102,6 +102,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		protected override TestParameterValue CreateEmptyTestParameterValue<T>(
 			TestParameter testParameter)
 		{
+			// TODO: Implement and test the case of an empty list parameter
+
 			TestParameterValue parameterValue =
 				TestParameterTypeUtils.GetEmptyParameterValue(testParameter);
 			return parameterValue;

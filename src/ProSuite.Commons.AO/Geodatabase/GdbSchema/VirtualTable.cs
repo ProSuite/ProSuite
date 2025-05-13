@@ -287,7 +287,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual long RowCount(ITableFilter filter) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public bool Equals(IReadOnlyTable otherTable)
+		public virtual bool Equals(IReadOnlyTable otherTable)
 		{
 			if (ReferenceEquals(null, otherTable)) return false;
 

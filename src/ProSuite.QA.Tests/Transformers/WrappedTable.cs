@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Transformers
@@ -10,7 +12,7 @@ namespace ProSuite.QA.Tests.Transformers
 	/// Gdb table implementation that wraps an existing table. This instance is considered equal
 	/// to the base table in terms of hash-code and equality implementation.
 	/// </summary>
-	public class WrappedTable : GdbTable
+	public class WrappedTable : GdbTable, ITableBased
 	{
 		private readonly IReadOnlyTable _baseTable;
 
@@ -29,6 +31,18 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
+		public WrappedTable(ITable template, bool useTemplateForQuerying = false)
+			: base(template, useTemplateForQuerying)
+		{
+			_baseTable = ReadOnlyTableFactory.Create(template);
+		}
+
+		/// <summary>
+		/// An optional base class to be used for the ITableBased implementation.
+		/// Involved rows will be assumed to come from this class.
+		/// </summary>
+		public IReadOnlyTable InvolvedBaseClass { get; set; }
+
 		#region Overrides of GdbTable
 
 		// We need to force the ObjectClassID to be the same as the base table for correct equality
@@ -38,6 +52,25 @@ namespace ProSuite.QA.Tests.Transformers
 		// - FeatureClass from an in-memory workspace
 		// - many-to-many association table of RelationshipClass
 		public override int ObjectClassID => TransformedTableUtils.GetClassId(_baseTable);
+
+		#endregion
+
+		#region ITableBased implementation
+
+		public IList<IReadOnlyTable> GetInvolvedTables()
+		{
+			IReadOnlyTable involvedClass = InvolvedBaseClass ?? _baseTable;
+
+			return new List<IReadOnlyTable> { involvedClass };
+		}
+
+		public IEnumerable<Involved> GetInvolvedRows(IReadOnlyRow forTransformedRow)
+		{
+			IReadOnlyTable involvedClass = InvolvedBaseClass ?? _baseTable;
+
+			return new List<Involved>
+			       { new InvolvedRow(involvedClass.Name, forTransformedRow.OID) };
+		}
 
 		#endregion
 

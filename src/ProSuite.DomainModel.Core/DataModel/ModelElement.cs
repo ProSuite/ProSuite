@@ -20,7 +20,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		private int _cloneId = -1;
 
 		/// <summary>
-		/// The clone Id can be set if this instance is a (remote) clone of a persistent DdxModel.
+		/// The clone Id can be set if this instance is a (remote) clone of a persistent ModelElement.
 		/// </summary>
 		/// <param name="id"></param>
 		public void SetCloneId(int id)
