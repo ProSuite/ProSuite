@@ -158,6 +158,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_advancedReshapeToolOptions = InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
+			_symbolizedSketch =
+				new SymbolizedSketchTypeBasedOnSelection(this);
+			await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
+
 			await base.OnToolActivatingCoreAsync();
 		}
 
@@ -209,21 +213,15 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 		}
 
-		protected override async Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this);
-			await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
-
-			return true;
-		}
-
-		protected override void OnSelectionPhaseStarted()
-		{
-			base.OnSelectionPhaseStarted();
-			_symbolizedSketch?.ClearSketchSymbol();
-			_feedback?.Clear();
-			ActiveMapView.ClearSketchAsync();
+			await QueuedTask.Run(() =>
+			{
+				base.OnSelectionPhaseStartedAsync();
+				_symbolizedSketch?.ClearSketchSymbol();
+				_feedback?.Clear();
+				ActiveMapView.ClearSketchAsync();
+			});
 		}
 
 		protected override async Task OnSketchPhaseStartedAsync()
