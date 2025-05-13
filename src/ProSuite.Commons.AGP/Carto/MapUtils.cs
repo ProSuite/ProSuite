@@ -575,7 +575,7 @@ namespace ProSuite.Commons.AGP.Carto
 					continue;
 				}
 
-				if (elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
+				if (!evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
 				{
 					continue;
 				}

@@ -37,12 +37,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			            request.ClassDefinitions,
 			            out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
 
-			IList<CutSubcurve> resultLines = CalculateReshapeLines(
-				sourceFeatures, targetFeatures, request, trackCancel,
-				out ReshapeAlongCurveUsability usability);
+			ReshapeAlongResult reshapeResult = CalculateReshapeLines(
+				sourceFeatures, targetFeatures, request, trackCancel);
 
 			CalculateReshapeLinesResponse result =
-				PackCalculateReshapeLinesResponse(usability, resultLines);
+				PackCalculateReshapeLinesResponse(reshapeResult);
 
 			return result;
 		}
@@ -95,12 +94,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 		}
 
 		[NotNull]
-		private static IList<CutSubcurve> CalculateReshapeLines(
+		private static ReshapeAlongResult CalculateReshapeLines(
 			[NotNull] IList<IFeature> sourceFeatures,
 			[NotNull] IList<IFeature> targetFeatures,
 			[NotNull] CalculateReshapeLinesRequest request,
-			[CanBeNull] ITrackCancel trackCancel,
-			out ReshapeAlongCurveUsability usability)
+			[CanBeNull] ITrackCancel trackCancel)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
@@ -111,16 +109,14 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			TargetBufferOptions targetBufferOptions =
 				GetTargetBufferOptions(request.TargetBufferOptions);
 
-			IList<CutSubcurve> resultLines = new List<CutSubcurve>();
-
-			usability = ChangeGeometryAlongUtils.CalculateReshapeCurves(
+			ReshapeAlongResult result = ChangeGeometryAlongUtils.CalculateReshapeCurves(
 				sourceFeatures, targetFeatures, visibleExtent,
-				request.Tolerance, targetBufferOptions, filterOptions,
-				resultLines, trackCancel);
+				request.Tolerance, targetBufferOptions, filterOptions, trackCancel);
 
-			_msg.DebugStopTiming(watch, "Calculated {0} reshape lines", resultLines.Count);
+			_msg.DebugStopTiming(watch, "Calculated {0} reshape lines",
+			                     result.Subcurves.Count);
 
-			return resultLines;
+			return result;
 		}
 
 		private static TargetBufferOptions GetTargetBufferOptions(
@@ -167,24 +163,26 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 		}
 
 		private static CalculateReshapeLinesResponse PackCalculateReshapeLinesResponse(
-			ReshapeAlongCurveUsability usability,
-			[NotNull] IList<CutSubcurve> resultLines)
+			ReshapeAlongResult reshapeResult)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
 			var result = new CalculateReshapeLinesResponse
 			             {
-				             ReshapeLinesUsability = (int) usability
+				             ReshapeLinesUsability = (int) reshapeResult.Usability
 			             };
 
-			foreach (CutSubcurve resultCurve in resultLines)
+			foreach (CutSubcurve resultCurve in reshapeResult.Subcurves)
 			{
 				result.ReshapeLines.Add(ToReshapeLineMsg(resultCurve));
 			}
 
+			result.FilterBuffer =
+				ProtobufGeometryUtils.ToShapeMsg(reshapeResult.FilterBuffer);
+
 			_msg.DebugStopTiming(
 				watch, "Packed {0} reshape along calculation results into response",
-				resultLines.Count);
+				reshapeResult.Subcurves.Count);
 
 			return result;
 		}
@@ -269,13 +267,13 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 			ReshapeAlongCurveUsability curveUsability;
 
-			IList<CutSubcurve> newSubcurves =
+			var newResult =
 				CalculateReshapeLines(newSourceFeatures, newTargetFeatures,
-				                      calculationRequest, trackCancel, out curveUsability);
+				                      calculationRequest, trackCancel);
 
-			response.ReshapeLinesUsability = (int) curveUsability;
+			response.ReshapeLinesUsability = (int) newResult.Usability;
 
-			foreach (CutSubcurve resultCurve in newSubcurves)
+			foreach (CutSubcurve resultCurve in newResult.Subcurves)
 			{
 				response.NewReshapeLines.Add(ToReshapeLineMsg(resultCurve));
 			}

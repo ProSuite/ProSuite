@@ -121,23 +121,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#region OneClickToolBase overrides
 
-		protected override void OnSelectionPhaseStarted()
+		protected override Task OnSelectionPhaseStartedAsync()
 		{
-			if (QueuedTask.OnWorker)
-			{
-				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-			}
-			else
-			{
-				QueuedTask.Run(() =>
-				{
-					SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-					SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-				});
-			}
+			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
 
 			IsInSketchPhase = false;
+
+			return Task.CompletedTask;
 		}
 
 		protected override async Task OnToolActivatingCoreAsync()
@@ -468,15 +459,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetCursor(SketchCursor);
 
-			// todo: daro to Utils?
-			if (QueuedTask.OnWorker)
-			{
-				ResetSketchVertexSymbolOptions();
-			}
-			else
-			{
-				await QueuedTask.Run(ResetSketchVertexSymbolOptions);
-			}
+			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 
 			EditingTemplate relevanteTemplate = GetSketchTemplate();
 

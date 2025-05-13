@@ -15,11 +15,11 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		long RelationshipClassID { get; }
 
+		[NotNull]
 		IObjectClass OriginClass { get; }
 
+		[NotNull]
 		IObjectClass DestinationClass { get; }
-
-		//IFeatureDataset FeatureDataset { get; }
 
 		string ForwardPathLabel { get; }
 
@@ -27,39 +27,31 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		esriRelCardinality Cardinality { get; }
 
-		//esriRelNotification Notification { get; }
-
 		bool IsAttributed { get; }
 
 		bool IsComposite { get; }
 
-		IRelationship CreateRelationship(IObject originObject, IObject destinationObject);
+		[NotNull]
+		IRelationship CreateRelationship([NotNull] IObject originObject,
+		                                 [NotNull] IObject destinationObject);
 
-		IRelationship GetRelationship(IObject originObject, IObject destinationObject);
+		[CanBeNull]
+		IRelationship GetRelationship([NotNull] IObject originObject,
+		                              [NotNull] IObject destinationObject);
 
-		void DeleteRelationship(IObject originObject, IObject destinationObject);
+		void DeleteRelationship([NotNull] IObject originObject,
+		                        [NotNull] IObject destinationObject);
 
-		IEnumerable<IObject> GetObjectsRelatedToObject(IObject anObject);
+		IEnumerable<IObject> GetObjectsRelatedToObject([NotNull] IObject anObject);
 
-		//IEnumRelationship GetRelationshipsForObject(IObject anObject);
+		void DeleteRelationshipsForObject([NotNull] IObject anObject);
 
-		void DeleteRelationshipsForObject(IObject anObject);
-
-		IEnumerable<IObject> GetObjectsRelatedToObjectSet(IList<IObject> objectList);
-		//IEnumerable<IObject> GetObjectsRelatedToObjectSet(ISet anObjectSet);
-
-		//IEnumRelationship GetRelationshipsForObjectSet(ISet anObjectSet);
+		IEnumerable<IObject> GetObjectsRelatedToObjectSet([NotNull] IList<IObject> objectList);
 
 		IEnumerable<KeyValuePair<T, IObject>> GetObjectsMatchingObjectSet<T>(
 			[NotNull] IEnumerable<T> sourceObjects) where T : IObject;
 
 		void DeleteRelationshipsForObjectSet(ISet anObjectSet);
-
-		//IEnumRule RelationshipRules { get; }
-
-		//void AddRelationshipRule(IRule Rule);
-
-		//void DeleteRelationshipRule(IRule Rule);
 	}
 
 	public enum esriRelRole

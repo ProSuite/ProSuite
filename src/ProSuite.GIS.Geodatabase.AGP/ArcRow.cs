@@ -3,6 +3,7 @@ using ArcGIS.Core;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
@@ -16,10 +17,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private Row _proRow;
 		private readonly ITable _parentTable;
 
 		private SimpleValueList _cachedValues;
+		private Row _proRow;
 
 		public static ArcRow Create(Row proRow, ITable parentTable)
 		{
@@ -35,15 +36,23 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public static Func<ArcGIS.Core.Geometry.Geometry, IGeometry> GeometryFactory { get; set; } =
 			ArcGeometry.Create;
 
-		protected ArcRow(Row proRow, ITable parentTable)
+		protected ArcRow([CanBeNull] Row proRow, [NotNull] ITable parentTable)
 		{
-			_proRow = proRow;
-			OID = proRow.GetObjectID();
+			ProRow = proRow;
+			OID = proRow?.GetObjectID() ?? -1;
 
 			_parentTable = parentTable;
 		}
 
-		public Row ProRow => _proRow;
+		public Row ProRow
+		{
+			get => _proRow;
+			protected set
+			{
+				_proRow = value;
+				InvalidateCache();
+			}
+		}
 
 		/// <summary>
 		/// Caches all field values from the underlying row for improved performance.
@@ -61,7 +70,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			try
 			{
-				var fields = _proRow.GetFields();
+				var fields = ProRow.GetFields();
 				int fieldCount = fields.Count;
 				_cachedValues = new SimpleValueList(fieldCount);
 
@@ -70,7 +79,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				{
 					try
 					{
-						object value = _proRow[i];
+						object value = ProRow[i];
 						_cachedValues[i] = value;
 					}
 					catch (Exception ex)
@@ -89,11 +98,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		/// <summary>
-		/// Invalidates the cached values, forcing them to be reloaded on next access.
+		/// Invalidates and re-reads the cached values.
 		/// </summary>
 		public void InvalidateCache()
 		{
 			_cachedValues = null;
+			CacheValues();
 		}
 
 		#region Implementation of IRowBuffer
@@ -126,7 +136,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return false;
 		}
 
-		public void set_Value(int index, object value)
+		public virtual void set_Value(int index, object value)
 		{
 			TryOrRefreshRow<Row>(r => r[index] = value);
 
@@ -147,20 +157,20 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		//public bool HasOID => _proRow.HasOID;
 		public bool HasOID => OID >= 0;
 
-		public long OID { get; }
+		public long OID { get; protected set; }
 
 		public ITable Table => _parentTable;
 
-		public void Store()
+		public virtual void Store()
 		{
 			OnStoring();
 
 			TryOrRefreshRow<Row>(r => r.Store());
 
-			// After storing, refresh the cache if it was being used
+			// After storing, refresh the cache if it was being used before
 			if (_cachedValues != null)
 			{
-				CacheValues();
+				InvalidateCache();
 			}
 		}
 
@@ -171,7 +181,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			TryOrRefreshRow<Row>(r => r.Delete());
 		}
 
-		public object NativeImplementation => _proRow;
+		public object NativeImplementation => ProRow;
 
 		#endregion
 
@@ -187,7 +197,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				try
 				{
-					_proRow.GetObjectID();
+					ProRow.GetObjectID();
 					return false;
 				}
 				catch (ObjectDisposedException)
@@ -211,12 +221,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				ArcRow refreshedArcRow = _parentTable.GetRow(OID) as ArcRow;
 
-				_proRow = refreshedArcRow?.ProRow;
+				ProRow = refreshedArcRow?.ProRow;
 			}
 
 			try
 			{
-				action((T) _proRow);
+				action((T) ProRow);
 			}
 			catch (Exception e)
 			{
@@ -232,22 +242,22 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			get
 			{
 				int? subtypeCode =
-					GdbObjectUtils.GetSubtypeCode(_proRow);
+					GdbObjectUtils.GetSubtypeCode(ProRow);
 
 				return subtypeCode ?? -1;
 			}
-			set => GdbObjectUtils.SetSubtypeCode(_proRow, value);
+			set => GdbObjectUtils.SetSubtypeCode(ProRow, value);
 		}
 
 		public void InitDefaultValues()
 		{
 			Subtype subtype =
-				GdbObjectUtils.GetSubtype(_proRow);
+				GdbObjectUtils.GetSubtype(ProRow);
 
 			ArcTable arcTable = (ArcTable) _parentTable;
 
 			GdbObjectUtils.SetNullValuesToGdbDefault(
-				_proRow, arcTable.ProTableDefinition, subtype);
+				ProRow, arcTable.ProTableDefinition, subtype);
 		}
 
 		#endregion
