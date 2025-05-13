@@ -98,11 +98,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		/// <summary>
-		/// Invalidates the cached values, forcing them to be reloaded on next access.
+		/// Invalidates and re-reads the cached values.
 		/// </summary>
 		public void InvalidateCache()
 		{
 			_cachedValues = null;
+			CacheValues();
 		}
 
 		#region Implementation of IRowBuffer
@@ -166,10 +167,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			TryOrRefreshRow<Row>(r => r.Store());
 
-			// After storing, refresh the cache if it was being used
+			// After storing, refresh the cache if it was being used before
 			if (_cachedValues != null)
 			{
-				CacheValues();
+				InvalidateCache();
 			}
 		}
 
