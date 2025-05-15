@@ -334,5 +334,10 @@ public class WorkListMock : IWorkList
 	{
 		throw new NotImplementedException();
 	}
+
+	public Row GetCurrentItemSourceRow()
+	{
+		throw new NotImplementedException();
+	}
 }
 

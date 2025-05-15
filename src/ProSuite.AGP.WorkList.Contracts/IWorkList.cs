@@ -5,104 +5,97 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Contracts;
+
+public interface IWorkList : IRowCache
 {
-	public interface IWorkList : IRowCache
-	{
-		[NotNull]
-		string Name { get; set; }
+	string Name { get; set; }
 
-		[NotNull]
-		string DisplayName { get; }
+	string DisplayName { get; }
 
-		[NotNull] public Envelope GetExtent();
+	WorkItemVisibility? Visibility { get; set; }
 
-		WorkItemVisibility? Visibility { get; set; }
-		
-		[NotNull]
-		Geometry AreaOfInterest { get; set; }
+	IWorkItem Current { get; }
 
-		bool QueryLanguageSupported { get; }
+	int CurrentIndex { get; set; }
 
-		IWorkItem Current { get; }
+	// TODO: daro hide?
+	IWorkItemRepository Repository { get; }
 
-		int CurrentIndex { get; set; }
+	long? TotalCount { get; set; }
 
-		// TODO: daro hide?
-		IWorkItemRepository Repository { get; }
-		long? TotalCount { get; set; }
+	public Envelope GetExtent();
 
-		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+	event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
-		IEnumerable<IWorkItem> Search(QueryFilter filter);
+	IEnumerable<IWorkItem> Search(QueryFilter filter);
 
-		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null);
+	IEnumerable<IWorkItem> GetItems(QueryFilter filter = null);
 
-		IEnumerable<IWorkItem> GetItems(QueryFilter filter,
-		                                WorkItemStatus? itemStatus,
-		                                bool excludeGeometry = false);
+	IEnumerable<IWorkItem> GetItems(QueryFilter filter,
+	                                WorkItemStatus? itemStatus,
+	                                bool excludeGeometry = false);
 
-		int CountLoadedItems();
+	int CountLoadedItems();
 
-		long CountLoadedItems(out int todo);
+	long CountLoadedItems(out int todo);
 
-		bool CanGoFirst();
+	bool CanGoFirst();
 
-		void GoFirst();
+	void GoFirst();
 
-		void GoTo(long oid);
+	void GoTo(long oid);
 
-		bool CanGoNearest();
+	bool CanGoNearest();
 
-		void GoNearest([NotNull] Geometry reference,
-		               [CanBeNull] Predicate<IWorkItem> match = null,
-		               params Polygon[] contextPerimeters);
+	void GoNearest([NotNull] Geometry reference,
+	               [CanBeNull] Predicate<IWorkItem> match = null,
+	               params Polygon[] contextPerimeters);
 
-		bool CanGoNext();
+	bool CanGoNext();
 
-		void GoNext();
+	void GoNext();
 
-		bool CanGoPrevious();
+	bool CanGoPrevious();
 
-		void GoPrevious();
+	void GoPrevious();
 
-		bool CanSetStatus();
+	bool CanSetStatus();
 
-		//void SetVisited([NotNull] IWorkItem item);
-		void SetVisited(IList<IWorkItem> items, bool visited);
+	//void SetVisited([NotNull] IWorkItem item);
+	void SetVisited(IList<IWorkItem> items, bool visited);
 
-		void Commit();
+	void Commit();
 
-		Task SetStatusAsync([NotNull] IWorkItem item, WorkItemStatus status);
+	Task SetStatusAsync([NotNull] IWorkItem item, WorkItemStatus status);
 
-		bool IsValid(out string message);
+	bool IsValid(out string message);
 
-		IAttributeReader GetAttributeReader(long forSourceClassId);
+	IAttributeReader GetAttributeReader(long forSourceClassId);
 
-		/// <summary>
-		/// Ensures that the work list's row cache is synchronized with the underlying data store.
-		/// Edits to the associated source tables will be reflected in the row cache.
-		/// This is required for both the work list layer and the navigator to show the correct data.
-		/// </summary>
-		void EnsureRowCacheSynchronized();
+	/// <summary>
+	/// Ensures that the work list's row cache is synchronized with the underlying data store.
+	/// Edits to the associated source tables will be reflected in the row cache.
+	/// This is required for both the work list layer and the navigator to show the correct data.
+	/// </summary>
+	void EnsureRowCacheSynchronized();
 
-		/// <summary>
-		/// Deactivate the synchronization of the work list's row cache with the underlying data store.
-		/// </summary>
-		void DeactivateRowCacheSynchronization();
+	/// <summary>
+	/// Deactivate the synchronization of the work list's row cache with the underlying data store.
+	/// </summary>
+	void DeactivateRowCacheSynchronization();
 
-		Geometry GetItemGeometry(IWorkItem item);
+	Geometry GetItemGeometry(IWorkItem item);
 
-		void SetItemsGeometryDraftMode(bool enable);
+	void SetItemsGeometryDraftMode(bool enable);
 
-		void Rename(string name);
+	void Rename(string name);
 
-		void Invalidate(Envelope geometry);
+	void Invalidate(Envelope geometry);
 
-		void Invalidate(List<long> oids);
+	void UpdateExistingItemGeometries(QueryFilter filter);
 
-		void UpdateExistingItemGeometries(QueryFilter filter);
+	void ComputeTotalCount();
 
-		void ComputeTotalCount();
-	}
+	Row GetCurrentItemSourceRow();
 }

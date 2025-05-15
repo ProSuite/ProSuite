@@ -36,7 +36,7 @@ public interface IWorkItemRepository
 
 	int GetCurrentIndex();
 
-	void SetVisited(IWorkItem item);
+	void UpdateState(IWorkItem item);
 
 	/// <summary>
 	/// Persists the work item state.

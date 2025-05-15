@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows.Media;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
@@ -244,36 +243,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				_msg.Debug(ex.Message, ex);
 				return $"Invalid issue type: {value}";
 			}
-		}
-
-
-		// TODO: (daro) drop!
-		public AttributeReader AddValue(Dictionary<string, object> attributes,
-		                                object value,
-		                                Attributes attribute)
-		{
-			Assert.ArgumentNotNull(attributes, nameof(attributes));
-			Assert.ArgumentNotNull(value, nameof(value));
-
-			var fieldName = attribute.ToString();
-
-			Assert.True(_fieldIndexByAttribute.ContainsKey(attribute),
-			            $"No field index for attribute {fieldName}");
-
-			Assert.True(_fieldNameByIssueAttribute.ContainsKey(attribute),
-			            $"No field name for attribute {fieldName}");
-
-			string upperCaseFieldName = fieldName.ToUpper();
-
-			Assert.True(_fieldIndexByName.ContainsKey(upperCaseFieldName),
-			            $"No field index for field name {upperCaseFieldName}");
-
-			Assert.False(attributes.ContainsKey(upperCaseFieldName),
-			             $"Field {upperCaseFieldName} already added to attributes dictionary");
-
-			attributes.Add(upperCaseFieldName, value);
-
-			return this;
 		}
 	}
 }

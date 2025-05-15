@@ -73,7 +73,7 @@ namespace ProSuite.AGP.WorkList
 
 				// todo: daro inline
 				Datastore datastore = table.GetDatastore();
-				var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids, null);
+				var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), schema, oids, null);
 				sourceClasses.Add(sourceClass);
 			}
 

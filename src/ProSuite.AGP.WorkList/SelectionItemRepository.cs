@@ -65,18 +65,6 @@ public class SelectionItemRepository : GdbItemRepository
 		return true;
 	}
 
-	protected override void AdaptSourceFilter(QueryFilter filter,
-	                                          ISourceClass sourceClass)
-	{
-		filter.ObjectIDs = ((SelectionSourceClass) sourceClass).Oids;
-
-		if (filter is SpatialQueryFilter spatialFilter)
-		{
-			// Probably depends on the count of OIDs vs. the spatial filter's selectivity:
-			spatialFilter.SearchOrder = SearchOrder.Attribute;
-		}
-	}
-
 	public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
 	{
 		// No specific schema info is necessary/available

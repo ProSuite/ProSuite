@@ -32,6 +32,11 @@ public class SourceClassMock : ISourceClass
 		throw new NotImplementedException();
 	}
 
+	public void AdaptFilter(QueryFilter filter, WorkItemStatus? statusFilter)
+	{
+		throw new NotImplementedException();
+	}
+
 	public string CreateWhereClause(WorkItemStatus? statusFilter)
 	{
 		throw new NotImplementedException();
@@ -42,7 +47,8 @@ public class SourceClassMock : ISourceClass
 		return TableIdentity.Id;
 	}
 
-	public QueryFilter EnsureValidFilter(QueryFilter filter, bool excludeGeometry)
+	public void EnsureValidFilter(QueryFilter filter, WorkItemStatus? statusFilter,
+	                              bool excludeGeometry)
 	{
 		throw new NotImplementedException();
 	}

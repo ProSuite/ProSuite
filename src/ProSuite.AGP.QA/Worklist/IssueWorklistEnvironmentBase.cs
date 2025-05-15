@@ -149,7 +149,7 @@ namespace ProSuite.AGP.QA.WorkList
 			            "Multiple geodatabases are referenced by the work list's source classes.");
 
 			var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
-			var result = new DbStatusWorkItemRepository(sourceClasses, stateRepository, geodatabase);
+			var result = new DbStatusWorkItemRepository(sourceClasses, stateRepository, geodatabase.GetPath());
 
 			_msg.DebugStopTiming(watch, "Created issue work item repository");
 

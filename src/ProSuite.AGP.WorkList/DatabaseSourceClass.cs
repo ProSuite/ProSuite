@@ -8,7 +8,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
-	// TODO: rename DbSourceClass
 	public class DatabaseSourceClass : SourceClass
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -92,7 +91,6 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		#region Overrides of SourceClass
 
 		public override long GetUniqueTableId()
 		{
@@ -102,7 +100,7 @@ namespace ProSuite.AGP.WorkList
 			return ArcGISTableId;
 		}
 
-		protected override string CreateWhereClauseCore(WorkItemStatus? statusFilter)
+		protected override void EnsureValidFilterCore(QueryFilter filter, WorkItemStatus? statusFilter)
 		{
 			string result = string.Empty;
 
@@ -117,17 +115,17 @@ namespace ProSuite.AGP.WorkList
 
 			if (DefinitionQuery == null)
 			{
-				return result;
+				return;
 			}
 
-			if (! string.IsNullOrEmpty(result))
+			if (!string.IsNullOrEmpty(result))
 			{
 				result += " AND ";
 			}
 
 			result += DefinitionQuery;
 
-			return result;
+			filter.WhereClause = result;
 		}
 
 		protected override string GetRelevantSubFieldsCore(string subFields)
@@ -137,6 +135,5 @@ namespace ProSuite.AGP.WorkList
 				       : $"{subFields},{StatusField}";
 		}
 
-		#endregion
 	}
 }

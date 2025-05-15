@@ -13,7 +13,12 @@ public abstract class DbStatusWorkList : WorkList
 	                           [NotNull] string displayName)
 		: base(repository, areaOfInterest, name, displayName) { }
 
-	protected override bool CanSetStatusCore()
+	public override bool CanSetStatus()
+	{
+		return base.CanSetStatus() && base.CanSetStatus();
+	}
+
+	protected virtual bool CanSetStatusCore()
 	{
 		return Project.Current?.IsEditingEnabled == true;
 	}

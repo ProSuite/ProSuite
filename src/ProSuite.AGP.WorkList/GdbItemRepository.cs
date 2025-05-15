@@ -21,18 +21,12 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	// TODO: Create basic record for each source class: Table, DefinitionQuery, Schema
 	//		 re-use DbStatusSourceClassDefinition?
-	protected GdbItemRepository(
-		IList<ISourceClass> sourceClasses,
-		IWorkItemStateRepository workItemStateRepository)
+	protected GdbItemRepository(IList<ISourceClass> sourceClasses,
+	                            IWorkItemStateRepository workItemStateRepository)
 	{
 		SourceClasses = sourceClasses;
-
 		WorkItemStateRepository = workItemStateRepository;
 	}
-
-	// TODO: (daro) still needed? check usage.
-	[CanBeNull]
-	public IWorkListItemDatastore TableSchema { get; protected set; }
 
 	[NotNull]
 	public IWorkItemStateRepository WorkItemStateRepository { get; }
@@ -81,13 +75,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
 
-		return GetRows(sourceClass, filter, false).FirstOrDefault();
-	}
-
-	// TODO: Rename to Update?
-	public void SetVisited(IWorkItem item)
-	{
-		UpdateState(item);
+		return GetRows(sourceClass, filter).FirstOrDefault();
 	}
 
 	public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
@@ -96,17 +84,10 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		GdbTableIdentity tableId = item.GdbRowProxy.Table;
 
-		ISourceClass source =
-			SourceClasses.FirstOrDefault(s => s.Uses(tableId));
+		ISourceClass source = SourceClasses.FirstOrDefault(s => s.Uses(tableId));
 		Assert.NotNull(source);
 
-		// todo: daro read / restore item again from db? restore pattern in case of failure?
 		await SetStatusCoreAsync(item, source);
-	}
-
-	private void UpdateState(IWorkItem item)
-	{
-		WorkItemStateRepository.UpdateState(item);
 	}
 
 	public void Refresh(IWorkItem item)
@@ -134,6 +115,26 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		return ++_lastUsedOid;
 	}
 
+	public void UpdateState(IWorkItem item)
+	{
+		WorkItemStateRepository.UpdateState(item);
+	}
+
+	protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
+	                                          [NotNull] ISourceClass source)
+	{
+		UpdateState(item);
+
+		return Task.CompletedTask;
+	}
+
+	[NotNull]
+	protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
+	                                                [NotNull] ISourceClass sourceClass);
+
+	[CanBeNull]
+	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
+
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		ISourceClass sourceClass,
 		QueryFilter filter,
@@ -144,21 +145,9 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
+		sourceClass.EnsureValidFilter(filter, statusFilter, excludeGeometry);
 
-		// Source classes can set the respective filters / definition queries
-		// TODO: (daro) drop todo below?
-		// TODO: Consider getting only the right status, but that means
-		// extra round trips:
-
-		// TODO: (daro) should look like:
-		// AdaptSourceFilter(filter, sourceClass);
-		filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
-
-		// Selection Item ObjectIDs to filter out, or change of SearchOrder:
-		AdaptSourceFilter(filter, sourceClass);
-
-		foreach (Row row in GetRows(sourceClass, filter, recycle: true))
+		foreach (Row row in GetRows(sourceClass, filter))
 		{
 			IWorkItem item = CreateWorkItemCore(row, sourceClass);
 
@@ -182,18 +171,9 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		filter = sourceClass.EnsureValidFilter(filter, excludeGeometry);
+		sourceClass.EnsureValidFilter(filter, statusFilter, excludeGeometry);
 
-		// Source classes can set the respective filters / definition queries
-		// TODO: (daro) drop todo below?
-		// TODO: Consider getting only the right status, but that means
-		// extra round trips:
-		filter.WhereClause = sourceClass.CreateWhereClause(statusFilter);
-
-		// Selection Item ObjectIDs to filter out, or change of SearchOrder:
-		AdaptSourceFilter(filter, sourceClass);
-
-		foreach (Row row in GetRows(table, filter, recycle: true))
+		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
 		{
 			IWorkItem item = CreateWorkItemCore(row, sourceClass);
 
@@ -207,16 +187,36 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			watch, $"GetItems() {sourceClass.Name}: {count} items");
 	}
 
+	private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
+	                                 [CanBeNull] QueryFilter filter)
+	{
+		Table table = OpenTable(sourceClass);
+
+		if (table == null)
+		{
+			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
+			yield break;
+		}
+
+		try
+		{
+			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
+			{
+				yield return row;
+			}
+		}
+		finally
+		{
+			table.Dispose();
+		}
+	}
+
 	private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
 	{
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		// include done and todo
-		filter.WhereClause = sourceClass.CreateWhereClause(null);
+		sourceClass.EnsureValidFilter(filter, null, true);
 
-		AdaptSourceFilter(filter, sourceClass);
-
-		// TODO: (daro) pass in name
 		using Table table = OpenTable(sourceClass);
 
 		if (table == null)
@@ -236,59 +236,8 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		return count;
 	}
 
-	// todo: (daro) move to ISourceClass?
-	protected abstract void AdaptSourceFilter([NotNull] QueryFilter filter,
-	                                          [NotNull] ISourceClass sourceClass);
-
-	protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
-	                                          [NotNull] ISourceClass source)
-	{
-		UpdateState(item);
-
-		return Task.CompletedTask;
-	}
-
-	private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
-	                                 [CanBeNull] QueryFilter filter,
-	                                 bool recycle)
-	{
-		// TODO: (daro) pass in name
-		Table table = OpenTable(sourceClass);
-
-		if (table == null)
-		{
-			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
-			yield break;
-		}
-
-		try
-		{
-			// Todo: daro check recycle
-			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
-			{
-				yield return row;
-			}
-		}
-		finally
-		{
-			table.Dispose();
-		}
-	}
-
-	private IEnumerable<Row> GetRows([NotNull] Table table,
-	                                 [CanBeNull] QueryFilter filter,
-	                                 bool recycle)
-	{
-		// Todo: daro check recycle
-		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
-		{
-			yield return row;
-		}
-	}
-
-	// TODO: (daro) still needed?
 	[CanBeNull]
-	protected virtual IAttributeReader CreateAttributeReaderCore(
+	protected static IAttributeReader CreateAttributeReader(
 		[NotNull] TableDefinition definition,
 		[CanBeNull] IWorkListItemDatastore tableSchema)
 	{
@@ -305,11 +254,4 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		return tableSchema?.CreateAttributeReader(definition, attributes);
 	}
-
-	[NotNull]
-	protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
-	                                                [NotNull] ISourceClass sourceClass);
-
-	[CanBeNull]
-	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 }

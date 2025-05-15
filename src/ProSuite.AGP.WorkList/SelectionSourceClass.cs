@@ -11,15 +11,13 @@ namespace ProSuite.AGP.WorkList
 		public List<long> Oids { get; }
 
 		public SelectionSourceClass(GdbTableIdentity tableIdentity,
-		                            Datastore datastore, SourceClassSchema schema,
+		                            SourceClassSchema schema,
 		                            List<long> oids,
 		                            [CanBeNull] IAttributeReader attributeReader = null)
 			: base(tableIdentity, schema, attributeReader)
 		{
 			Oids = oids;
 		}
-
-		#region Overrides of SourceClass
 
 		public override long GetUniqueTableId()
 		{
@@ -30,6 +28,15 @@ namespace ProSuite.AGP.WorkList
 			return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(TableIdentity);
 		}
 
-		#endregion
+		protected override void EnsureValidFilterCore(QueryFilter filter, WorkItemStatus? statusFilter)
+		{
+			filter.ObjectIDs = Oids;
+
+			if (filter is SpatialQueryFilter spatialFilter)
+			{
+				// Probably depends on the count of OIDs vs. the spatial filter's selectivity:
+				spatialFilter.SearchOrder = SearchOrder.Attribute;
+			}
+		}
 	}
 }

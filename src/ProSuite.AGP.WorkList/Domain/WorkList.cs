@@ -27,22 +27,16 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static readonly object _obj = new();
-		private const int _initialCapacity = 1000;
+		private static readonly int _initialCapacity = 1000;
 
-		[CanBeNull] private EditEventsRowCacheSynchronizer _rowCacheSynchronizer;
-
-		[NotNull]
-		public IWorkItemRepository Repository { get; }
-
-		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
-
-		[NotNull] private readonly List<IWorkItem> _items = new(_initialCapacity);
-
-		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
-			new(_initialCapacity);
+		private readonly List<IWorkItem> _items = new(_initialCapacity);
+		private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap = new(_initialCapacity);
 
 		private WorkItemVisibility? _visibility;
-		private string _displayName;
+		[NotNull] private string _displayName;
+		[CanBeNull] private EditEventsRowCacheSynchronizer _rowCacheSynchronizer;
+		private bool _itemsGeometryDraftMode = true;
+		private Envelope _extent;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
 		                   [NotNull] Geometry areaOfInterest,
@@ -57,29 +51,20 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			CurrentIndex = repository.GetCurrentIndex();
 		}
-		
+
+		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+
+		[NotNull]
+		public IWorkItemRepository Repository { get; }
+
+		[NotNull]
 		public string Name { get; set; }
 
+		[NotNull]
 		public string DisplayName
 		{
 			get => _displayName;
 			private set => SetProperty(ref _displayName, value);
-		}
-
-		public void Rename(string name)
-		{
-			DisplayName = name;
-			Repository.WorkItemStateRepository.Rename(name);
-		}
-
-		public Envelope GetExtent()
-		{
-			if (_extent == null || _extent.IsEmpty)
-			{
-				return AreaOfInterest.Extent;
-			}
-
-			return _extent;
 		}
 
 		[CanBeNull]
@@ -116,33 +101,12 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public Geometry AreaOfInterest { get; set; }
+		public long? TotalCount { get; set; }
+		protected Geometry AreaOfInterest { get; }
 
-		public virtual bool QueryLanguageSupported { get; } = false;
-
-		public bool CanSetStatus()
+		public virtual bool CanSetStatus()
 		{
-			return HasCurrentItem && CanSetStatusCore();
-		}
-
-		public Row GetCurrentItemSourceRow()
-		{
-			if (Current == null)
-			{
-				return null;
-			}
-
-			ITableReference tableReference = Current.GdbRowProxy.Table;
-
-			ISourceClass sourceClass =
-				Repository.SourceClasses.FirstOrDefault(s => s.Uses(tableReference));
-
-			if (sourceClass == null)
-			{
-				return null;
-			}
-
-			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
+			return HasCurrentItem();
 		}
 
 		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
@@ -156,8 +120,62 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged();
 		}
 
-		private bool _itemsGeometryDraftMode = true;
-		private Envelope _extent;
+		public bool IsValid(out string message)
+		{
+			if (Repository.SourceClasses.Count == 0)
+			{
+				message = "None of the referenced tables could be loaded";
+				return false;
+			}
+
+			message = null;
+			return true;
+		}
+
+		public void SetVisited(IList<IWorkItem> items, bool visited)
+		{
+			var oids = new List<long>(items.Count);
+
+			foreach (IWorkItem item in items)
+			{
+				item.Visited = visited;
+				oids.Add(item.OID);
+			}
+
+			OnWorkListChanged(null, oids);
+		}
+
+		public void Commit()
+		{
+			Repository.Commit();
+		}
+
+		[CanBeNull]
+		public IAttributeReader GetAttributeReader(long forSourceClassId)
+		{
+			return Repository.SourceClasses
+			                 .FirstOrDefault(sc => sc.GetUniqueTableId() == forSourceClassId)
+			                 ?.AttributeReader;
+		}
+
+		public void Rename(string name)
+		{
+			DisplayName = name;
+			Repository.WorkItemStateRepository.Rename(name);
+		}
+
+		[NotNull]
+		public Envelope GetExtent()
+		{
+			if (_extent == null || _extent.IsEmpty)
+			{
+				return AreaOfInterest.Extent;
+			}
+
+			return _extent;
+		}
+
+		#region item geometry
 
 		public void SetItemsGeometryDraftMode(bool enable)
 		{
@@ -241,49 +259,29 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public bool IsValid(out string message)
-		{
-			if (Repository.SourceClasses.Count == 0)
-			{
-				message = "None of the referenced tables could be loaded";
-				return false;
-			}
-
-			message = null;
-			return true;
-		}
-
-		/// <summary>
-		/// Set work items visibility and invokes WorkListChanged event.
-		/// </summary>
-		public void SetVisited(IList<IWorkItem> items, bool visited)
-		{
-			var oids = new List<long>(items.Count);
-
-			foreach (IWorkItem item in items)
-			{
-				item.Visited = visited;
-				oids.Add(item.OID);
-			}
-
-			OnWorkListChanged(null, oids);
-		}
-
-		public void Commit()
-		{
-			Repository.Commit();
-		}
-
-		[CanBeNull]
-		public IAttributeReader GetAttributeReader(long forSourceClassId)
-		{
-			return Repository.SourceClasses
-			                 .FirstOrDefault(sc => sc.GetUniqueTableId() == forSourceClassId)
-			                 ?.AttributeReader;
-		}
-
+		#endregion
 
 		#region GetItems
+
+		public Row GetCurrentItemSourceRow()
+		{
+			if (Current == null)
+			{
+				return null;
+			}
+
+			ITableReference tableReference = Current.GdbRowProxy.Table;
+
+			ISourceClass sourceClass =
+				Repository.SourceClasses.FirstOrDefault(s => s.Uses(tableReference));
+
+			if (sourceClass == null)
+			{
+				return null;
+			}
+
+			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
+		}
 
 		public void UpdateExistingItemGeometries(QueryFilter filter)
 		{
@@ -481,8 +479,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			return _items.Count;
 		}
 
-		public long? TotalCount { get; set; }
-
 		public long CountLoadedItems(out int todo)
 		{
 			todo = 0;
@@ -495,11 +491,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Assert.Null(TotalCount);
 			TotalCount = Repository.Count();
-		}
-
-		protected virtual bool CanSetStatusCore()
-		{
-			return true;
 		}
 
 		#region Navigation public
@@ -590,7 +581,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				                     VisitedSearchOption.IncludeVisited);
 			}
 
-			if (! found && HasCurrentItem && Current != null)
+			if (! found && HasCurrentItem() && Current != null)
 			{
 				ClearCurrentItem(Current);
 			}
@@ -616,8 +607,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			IWorkItem next = GetNextVisitedVisibleItem();
 
-			// todo daro: remove assertion when sure algorithm works
-			//			  CanGoNext should prevent the assertion
 			Assert.NotNull(next);
 			Assert.False(Equals(next, Current), "current item and next item are equal");
 
@@ -648,8 +637,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			SetCurrentItemCore(previous, Current);
 		}
 
-		#endregion
-
 		public virtual void GoTo(long oid)
 		{
 			if (Current?.OID == oid)
@@ -666,6 +653,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		#endregion
+		
 		#region Navigation non-public
 
 		private bool TryGoNearest([NotNull] Polygon[] contextPerimeters,
@@ -762,16 +751,13 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[NotNull]
-		private Polygon GetIntersection([NotNull] Polygon[] perimeters, int index)
+		private static Polygon GetIntersection([NotNull] Polygon[] perimeters, int index)
 		{
 			Assert.ArgumentNotNull(perimeters, nameof(perimeters));
 
 			_msg.VerboseDebug(() => $"Intersecting perimeters {index} to {perimeters.Length - 1}");
 
 			Polygon intersection = GeometryFactory.Clone(perimeters[index]);
-
-			// todo daro old implementation
-			//GeometryUtils.EnsureSpatialReference(intersection, SpatialReference, true);
 
 			// intersect with all following perimeters, if any
 			int nextIndex = index + 1;
@@ -782,9 +768,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				     combineIndex < perimeters.Length;
 				     combineIndex++)
 				{
-					//Polygon projectedPerimeter =
-					//	GetInWorkListSpatialReference(perimeters[combineIndex]);
-
 					Polygon projectedPerimeter = perimeters[combineIndex];
 
 					if (intersection.IsEmpty)
@@ -802,14 +785,6 @@ namespace ProSuite.AGP.WorkList.Domain
 					// both are not empty; calculate intersection
 					try
 					{
-						// todo daro: old implementation
-						//var topoOp = (ITopologicalOperator)intersection;
-
-						//intersection =
-						//	(IPolygon)topoOp.Intersect(
-						//		projectedPerimeter,
-						//		esriGeometryDimension.esriGeometry2Dimension);
-
 						intersection =
 							(Polygon) GeometryEngine.Instance.Intersection(
 								intersection, projectedPerimeter,
@@ -824,13 +799,9 @@ namespace ProSuite.AGP.WorkList.Domain
 								e.Message);
 
 							_msg.DebugFormat("Perimeter index={0}:", combineIndex);
-							// todo daro: old implementation
-							//_msg.Debug(GeometryUtils.ToString(projectedPerimeter));
 
 							_msg.DebugFormat(
 								"Input intersection at nextIndex={0}:", nextIndex);
-							// todo daro: old implementation
-							//_msg.Debug(GeometryUtils.ToString(intersection));
 
 							// leave intersection as is, and continue
 						}
@@ -839,14 +810,6 @@ namespace ProSuite.AGP.WorkList.Domain
 							_msg.Warn("Error writing details to log", e1);
 						}
 					}
-
-					// todo daro: old implementation
-					//if (_msg.IsVerboseDebugEnabled)
-					//{
-					//	_msg.DebugFormat("Intersection {0}: {1}",
-					//					 combineIndex,
-					//					 IntersectionToString(intersection));
-					//}
 				}
 			}
 
@@ -868,11 +831,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			// todo daro: old implementation
-			// acceleration?
-			//GeometryUtils.AllowIndexing(searchReference);
-
-			//IProximityOperator referenceProximity;
 			GeometryType referenceGeometryType = searchReference.GeometryType;
 
 			Geometry referenceGeometry;
@@ -884,20 +842,14 @@ namespace ProSuite.AGP.WorkList.Domain
 				// boundary; search from centroid instead. This also prevents
 				// the extreme response times (minutes) of ReturnDistance() from
 				// very large polygons
-				// todo daro: old implementation
 				//referenceProximity = (IProximityOperator)((IArea)searchReference).Centroid;
 
 				referenceGeometry = GeometryEngine.Instance.Centroid(searchReference);
 			}
 			else
 			{
-				// todo daro: old implementation
-				//referenceProximity = (IProximityOperator)searchReference;
 				referenceGeometry = searchReference;
 			}
-
-			// todo daro: old implementation
-			//var referenceRelation = (IRelationalOperator)searchReference;
 
 			double minDistance = double.MaxValue;
 			IWorkItem nearest = null;
@@ -1001,7 +953,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			CurrentIndex = _items.IndexOf(nextItem);
 
 			Repository.SetCurrentIndex(CurrentIndex);
-			Repository.SetVisited(nextItem);
+			Repository.UpdateState(nextItem);
 
 			var oids = currentItem != null
 				           ? new List<long> { nextItem.OID, currentItem.OID }
@@ -1193,6 +1145,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}
 
+		#region IRowCache
+
 		public void EnsureRowCacheSynchronized()
 		{
 			if (_rowCacheSynchronizer != null)
@@ -1242,9 +1196,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged(null, oids);
 		}
 
-		// TODO: (daro) still needed?
 		public void Invalidate(IEnumerable<Table> tables)
 		{
+			// TODO: (daro) still needed?
 			// TODO: More fine-granular invalidation, consider separate row cache containing
 			// _rowMap, _items.
 			Invalidate();
@@ -1384,7 +1338,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					if (Current != null && exists)
 					{
-						Assert.True(HasCurrentItem, $"{nameof(HasCurrentItem)} is false");
+						Assert.True(HasCurrentItem(), $"{nameof(HasCurrentItem)} is false");
 						ClearCurrentItem(Current);
 					}
 
@@ -1451,6 +1405,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			return invalidateOids;
 		}
+
+		#endregion
 
 		private int UpdateExistingItemGeometry([NotNull] IWorkItem item,
 		                                       [CanBeNull] Geometry geometry,
@@ -1542,9 +1498,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged(null, new List<long> { current.OID });
 		}
 
-		private bool HasCurrentItem => CurrentIndex >= 0 &&
-		                               CurrentIndex < _items.Count;
-
 		// TODO: (daro) to Utils?
 		private static Envelope CreateExtent(List<IWorkItem> items, SpatialReference sref = null)
 		{
@@ -1566,6 +1519,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			return EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
 			                                        new Coordinate3D(xmax, ymax, zmax), sref);
+		}
+
+		private bool HasCurrentItem()
+		{
+			return CurrentIndex >= 0 &&
+			       CurrentIndex < _items.Count;
 		}
 
 		#region IEquatable implementation

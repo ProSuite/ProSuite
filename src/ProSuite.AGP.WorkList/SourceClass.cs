@@ -60,7 +60,9 @@ namespace ProSuite.AGP.WorkList
 			return subFields;
 		}
 
-		public QueryFilter EnsureValidFilter([CanBeNull] QueryFilter filter, bool excludeGeometry)
+		public void EnsureValidFilter([CanBeNull] QueryFilter filter,
+		                              WorkItemStatus? statusFilter,
+		                              bool excludeGeometry)
 		{
 			QueryFilter result;
 
@@ -76,8 +78,7 @@ namespace ProSuite.AGP.WorkList
 			}
 			else
 			{
-				// todo: (daro) drop!
-				Assert.False(subfields.Contains("SHAPE"), "Should not containe shape field");
+				Assert.False(subfields.Contains("SHAPE"), "Should not contain shape field");
 				result = GdbQueryUtils.CloneFilter<QueryFilter>(filter);
 			}
 
@@ -91,7 +92,7 @@ namespace ProSuite.AGP.WorkList
 				result.SubFields = relevantSubFields;
 			}
 
-			return result;
+			EnsureValidFilterCore(filter, statusFilter);
 		}
 
 		public bool Uses(ITableReference tableReference)
@@ -122,17 +123,14 @@ namespace ProSuite.AGP.WorkList
 				$"Datastore {datastore} type is not supported ");
 		}
 
-		public string CreateWhereClause(WorkItemStatus? statusFilter)
-		{
-			return CreateWhereClauseCore(statusFilter);
-		}
-
 		public abstract long GetUniqueTableId();
 
-		protected virtual string CreateWhereClauseCore(WorkItemStatus? statusFilter)
+		public virtual string CreateWhereClause(WorkItemStatus? statusFilter)
 		{
 			return null;
 		}
+
+		protected virtual void EnsureValidFilterCore(QueryFilter filter, WorkItemStatus? statusFilter) { }
 
 		public override string ToString()
 		{

@@ -71,7 +71,7 @@ public class WorkListDbTest
 
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb);
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
@@ -138,7 +138,7 @@ public class WorkListDbTest
 
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb);
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
@@ -207,7 +207,7 @@ public class WorkListDbTest
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb);
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
@@ -268,7 +268,7 @@ public class WorkListDbTest
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb);
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
@@ -308,7 +308,7 @@ public class WorkListDbTest
 
 			Datastore datastore = table.GetDatastore();
 			var sourceClass =
-				new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
+				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -449,7 +449,7 @@ public class WorkListDbTest
 			Datastore datastore = table.GetDatastore();
 			List<long> oids = [0, 1, 2, 3];
 			var sourceClass =
-				new SelectionSourceClass(new GdbTableIdentity(table), datastore, schema, oids);
+				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
 
 			sourceClasses.Add(sourceClass);
 		}
