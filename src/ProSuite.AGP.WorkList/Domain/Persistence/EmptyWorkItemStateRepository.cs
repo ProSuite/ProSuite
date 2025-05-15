@@ -49,7 +49,7 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 		helper.SaveToFile(definition, WorkListDefinitionFilePath);
 	}
 
-	public int? CurrentIndex { get; set; } = 0;
+	public int? CurrentIndex { get; set; }
 
 	public void Rename(string name)
 	{
