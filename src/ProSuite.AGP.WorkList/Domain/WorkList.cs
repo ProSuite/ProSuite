@@ -17,6 +17,12 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
+
+	// Note: SelectionItemRepository ensures only items of selected rows are returned.
+	//		 For DbStatusWorkItemRepository make sure not entire database is searched.
+	//		 filter by AOI.
+	// Note: Check that work list is not empty. Otherwise, GetWorkItemsForInnermostContextCore
+	//		 will search forever.
 	public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -35,7 +41,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new(_initialCapacity);
 
-		private WorkItemVisibility _visibility;
+		private WorkItemVisibility? _visibility;
 		private string _displayName;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
@@ -46,9 +52,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			Repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			AreaOfInterest = areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
 			Name = name ?? throw new ArgumentNullException(nameof(name));
+
 			_displayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
 
-			_visibility = WorkItemVisibility.Todo;
 			CurrentIndex = repository.GetCurrentIndex();
 		}
 		
@@ -56,16 +62,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string DisplayName
 		{
-			get
-			{
-				// todo: (daro) revise can it be null?
-				if (string.IsNullOrEmpty(_displayName))
-				{
-					return GetDisplayNameCore();
-				}
-
-				return _displayName;
-			}
+			get => _displayName;
 			private set => SetProperty(ref _displayName, value);
 		}
 
@@ -74,8 +71,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			DisplayName = name;
 			Repository.WorkItemStateRepository.Rename(name);
 		}
-
-		protected abstract string GetDisplayNameCore();
 
 		public Envelope GetExtent()
 		{
@@ -106,7 +101,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public int CurrentIndex { get; set; }
 
-		public WorkItemVisibility Visibility
+		public WorkItemVisibility? Visibility
 		{
 			get => _visibility;
 			set
@@ -121,7 +116,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		// TODO: (daro) check correctness with unit tests!
 		public Geometry AreaOfInterest { get; set; }
 
 		public virtual bool QueryLanguageSupported { get; } = false;
@@ -301,8 +295,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			int count = 0;
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
 			{
-				// TODO: (daro) refactor
-				// Don't update for multipatches, points, etc.
 				if (! UseItemGeometry(geometry))
 				{
 					continue;
@@ -325,10 +317,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public IEnumerable<IWorkItem> Search([NotNull] QueryFilter filter)
 		{
-			// TODO: (DARO) query database?
-			//		 QueryFilter.ObjectIDs are the IWorkItem.OID and not the IWorkItem.ObjectD
-			//		 of its source row. We'd have to make a lookup: IWorkItem.OID > Table, ObjectID
-			//		 to query database.
+			// Don't query database here. IWorkItem.OID is the item id. IWorkItem.ObjectID is the
+			// ObjectID of its source row. QueryFilter.ObjectIDs are the IWorkItem.OID and not
+			// the IWorkItem.ObjectID We'd have to make a lookup: IWorkItem.OID > Table, ObjectID
+			// to query database.
+
+			Assert.True(_items.Count > 0, "no work items");
 
 			if (filter.ObjectIDs.Count == 0)
 			{
@@ -354,11 +348,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			int newItemsCount = 0;
 
-			// Note: SelectionItemRepository ensures only items of selected rows are returned.
-			//		 For DbStatusWorkItemRepository make sure not entire database is searched.
-			//		 filter by AOI.
-
-			// TODO: (daro) recycle is always true!
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter, itemStatus, excludeGeometry))
 			{
 				bool exists;
@@ -379,7 +368,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					Assert.True(TryAddItem(item), $"Could not add {item}");
 
-					// it's a unkown item > refresh it's state (status, visited) either
+					// it's an unknown item > refresh it's state (status, visited) either
 					// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
 					Repository.Refresh(item);
 
@@ -439,17 +428,16 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		// todo: (daro) to utils?
-		private static WorkItemStatus? GetStatus(WorkItemVisibility visibility)
+		private static WorkItemStatus? GetStatus(WorkItemVisibility? visibility)
 		{
 			switch (visibility)
 			{
-				// TODO: (daro) drop None, make nullable?
 				case WorkItemVisibility.Todo:
 					return WorkItemStatus.Todo;
 				case WorkItemVisibility.Done:
 					return WorkItemStatus.Done;
 				case WorkItemVisibility.All:
-				case WorkItemVisibility.None:
+				case null:
 					return null;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(visibility), visibility, null);
@@ -458,16 +446,14 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		// TODO: (daro) rename: CountLoaded(), GetLoadedCount, GetLoadedItemsCount()
-		public int Count()
+		public int CountLoadedItems()
 		{
 			return _items.Count;
 		}
 
 		public long? TotalCount { get; set; }
 
-		// TODO: (daro) rename: CountLoaded
-		public long Count(out int todo)
+		public long CountLoadedItems(out int todo)
 		{
 			todo = 0;
 			todo += _items.Count(item => item.Status == WorkItemStatus.Todo);
@@ -490,7 +476,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoFirst()
 		{
-			// TODO: Use Prosuite RelayCommand to prevent crash!
 			try
 			{
 				return GetFirstVisibleVisitedItemBeforeCurrent() != null;
@@ -714,21 +699,28 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
-			// nothing found so far. Search entire work list
+			// Nothing found so far. Union perimeters and pass filter on to specific work list implementation.
+			Geometry union = GeometryUtils.Union(perimeters);
+			Assert.NotNull(union);
+			Assert.False(union.IsEmpty, "union is empty");
 
-			// Note: SelectionItemRepository ensures only items of selected rows are returned.
-			//		 For DbStatusWorkItemRepository make sure not entire database is searched.
-			//		 filter by AOI.
+			// Ensure not entire database is searched, filter by AOI.
+			List<IWorkItem> candidates = GetItems(GdbQueryUtils.CreateSpatialFilter(union.Extent), currentSearch, visitedSearch, 50);
 
-			// TODO: daro use GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
-			// TODO: daro use status search: see comment in GdbItemRepository.GetItems
-			return GetWorkItemsForInnermostContextCore(new QueryFilter(), visitedSearch, currentSearch).ToList();
+			if (candidates.Count > 0)
+			{
+				return candidates;
+			}
+
+			// Still nothing found. Let core method try with work list specific logic.
+			// Ensure not entire database is searched, filter by AOI.
+			return GetWorkItemsForInnermostContextCore(new QueryFilter(), currentSearch, visitedSearch).ToList();
 		}
 
 		protected virtual IEnumerable<IWorkItem> GetWorkItemsForInnermostContextCore(
 			[NotNull] QueryFilter filter,
-			VisitedSearchOption visitedSearch,
-			CurrentSearchOption currentSearch)
+			CurrentSearchOption currentSearch,
+			VisitedSearchOption visitedSearch)
 		{
 			return GetItems(filter, currentSearch, visitedSearch);
 		}
@@ -886,8 +878,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					if (item.HasExtent)
 					{
-						// todo daro: old implementation
-						//workItem.QueryExtent(otherExtent);
 						Envelope otherExtent = Assert.NotNull(item.Extent);
 
 						// IWorkItem.Extent from SDE (and reported from ALGR from occasionally from issues.gdb) seems to
@@ -895,45 +885,21 @@ namespace ProSuite.AGP.WorkList.Domain
 						// when the work list ist opened for the first time.
 						// EMA: while editing the SR resolution might be set to a very small value. This probably does
 						// not happen from FGDB data.
-						// todo daro: find a better solution than reprojecting in foreach loop
+						// DARO: find a better solution than reprojecting in foreach loop
 						Geometry projected =
 							GeometryUtils.EnsureSpatialReference(
 								referenceGeometry, otherExtent.SpatialReference);
 
 						double distance;
-						try
+						if (GeometryUtils.Disjoint(projected, otherExtent))
 						{
-							if (GeometryUtils.Disjoint(projected, otherExtent))
-							{
-								distance = GeometryEngine.Instance.Distance(projected, otherExtent);
-							}
-							else
-							{
-								//MapPoint otherCentroid = GeometryEngine.Instance.Centroid(otherExtent);
-								distance =
-									GeometryEngine.Instance.Distance(projected, otherExtent.Center);
-							}
-
-							// todo daro: old implementation
-							//if (referenceRelation.Disjoint(otherExtent))
-							//{
-							//	distance = referenceProximity.ReturnDistance(otherExtent);
-							//}
-							//else
-							//{
-							//	((IArea)otherExtent).QueryCentroid(otherCentroid);
-
-							//	distance = referenceProximity.ReturnDistance(
-							//		otherCentroid);
-							//}
+							distance = GeometryEngine.Instance.Distance(projected, otherExtent);
 						}
-						catch (Exception)
+						else
 						{
-							// todo daro: old implementation
-							//_msg.DebugFormat("search reference: {0}", GeometryUtils.ToString(searchReference));
-							//_msg.DebugFormat("otherExtent: {0}", GeometryUtils.ToString(otherExtent));
-
-							throw;
+							//MapPoint otherCentroid = GeometryEngine.Instance.Centroid(otherExtent);
+							distance =
+								GeometryEngine.Instance.Distance(projected, otherExtent.Center);
 						}
 
 						if (distance < minDistance)
@@ -945,10 +911,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					else
 					{
 						// item without geometry
-						if (firstWithoutGeometry == null)
-						{
-							firstWithoutGeometry = item;
-						}
+						firstWithoutGeometry ??= item;
 					}
 				}
 			}
@@ -959,63 +922,26 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		private Geometry GetNearestSearchReference([NotNull] Geometry reference)
 		{
-			const int maxPointCount = 10000;
+			MapPoint centroid = null;
 
-			// todo daro: old implementation
-			//bool useCentroid = !GeometryUtils.IsGeometryValid(reference);
-
-			bool useCentroid = true;
-
-			if (! useCentroid && GeometryUtils.GetPointCount(reference) > maxPointCount)
+			try
 			{
-				_msg.Debug(
-					"Too many points on reference geometry for searching, using center of envelope");
-				useCentroid = true;
+				if (! reference.IsEmpty)
+				{
+					centroid = GeometryEngine.Instance.Centroid(reference);
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Error trying to get centroid of geometry", e);
 			}
 
-			if (useCentroid)
+			if (centroid == null)
 			{
-				MapPoint centroid = null;
-
-				try
-				{
-					// todo daro: old implementation
-					//var area = reference.Extent as IArea;
-					//if (area != null && ! area.Centroid.IsEmpty)
-					//{
-					//	centroid = area.Centroid;
-					//}
-
-					if (! reference.IsEmpty)
-					{
-						centroid = GeometryEngine.Instance.Centroid(reference);
-					}
-				}
-				catch (Exception e)
-				{
-					_msg.Debug("Error trying to get centroid of geometry", e);
-					// todo daro: old implementation
-					//_msg.Debug(GeometryUtils.ToString(reference));
-				}
-
-				if (centroid == null)
-				{
-					return null;
-				}
-
-				reference = centroid;
+				return null;
 			}
-			// todo daro: old implementation
-			//else
-			//{
-			//	if (reference is IMultiPatch)
-			//	{
-			//		reference = ((IMultiPatch)reference).XYFootprint;
-			//	}
-			//}
 
-			// todo daro: old implementation
-			//reference = GetInWorkListSpatialReference(reference);
+			reference = centroid;
 
 			return reference;
 		}
@@ -1028,13 +954,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// <param name="currentItem">The work item.</param>
 		private void SetCurrentItem([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
 		{
-			// TODO: daro still needed?
 			ReorderCurrentItem(nextItem);
 
 			SetCurrentItemCore(nextItem, currentItem);
 		}
 
-		// TODO: (daro) rename
 		private void SetCurrentItemCore([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
 		{
 			nextItem.Visited = true;
@@ -1206,13 +1130,13 @@ namespace ProSuite.AGP.WorkList.Domain
 			return IsVisible(item, Visibility);
 		}
 
-		private bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility visibility)
+		private bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility? visibility)
 		{
 			WorkItemStatus status = item.Status;
 
 			switch (visibility)
 			{
-				case WorkItemVisibility.None:
+				case null:
 					return false;
 				case WorkItemVisibility.Todo:
 					return (status & WorkItemStatus.Todo) != 0;
@@ -1233,7 +1157,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}
 
-		// TODO: (daro) Check necessity 
 		public void EnsureRowCacheSynchronized()
 		{
 			if (_rowCacheSynchronizer != null)
@@ -1244,7 +1167,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			_rowCacheSynchronizer = new EditEventsRowCacheSynchronizer(this);
 		}
 
-		// TODO: (daro) Check necessity 
 		public void DeactivateRowCacheSynchronization()
 		{
 			_rowCacheSynchronizer?.Dispose();
@@ -1633,6 +1555,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override int GetHashCode()
 		{
+			// ReSharper disable once NonReadonlyMemberInGetHashCode
 			return StringComparer.OrdinalIgnoreCase.GetHashCode(Name);
 		}
 

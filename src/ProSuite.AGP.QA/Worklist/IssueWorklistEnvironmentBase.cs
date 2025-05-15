@@ -18,10 +18,12 @@ namespace ProSuite.AGP.QA.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		// TODO: (daro) create different Environments for IssueWorkList and ErrorWorkList and...
 		protected IssueWorkListEnvironmentBase(
 			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
 			: base(workListItemDatastore) { }
 
+		// TODO: ...drop this ctor.
 		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 			: base(new FileGdbIssueWorkListItemDatastore(path)) { }
 

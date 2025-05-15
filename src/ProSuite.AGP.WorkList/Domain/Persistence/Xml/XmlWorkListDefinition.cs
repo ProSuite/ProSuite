@@ -11,6 +11,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		[XmlElement("Type")]
 		public string TypeName { get; set; }
 
+		// TODO: (daro) not needed anymore. drop!
 		[XmlElement("Assembly")]
 		public string AssemblyName { get; set; }
 

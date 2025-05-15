@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -6,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ProSuite.AGP.Editing;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -23,11 +25,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		                                    [NotNull] string name,
 		                                    [NotNull] string displayName) :
 			base(repository, areaOfInterest, name, displayName) { }
-
-		protected override string GetDisplayNameCore()
-		{
-			return "Issue Work List";
-		}
 
 		public bool CanToggleCurrentItemAllowed()
 		{

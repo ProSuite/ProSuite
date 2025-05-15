@@ -86,8 +86,8 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 		// TODO: (daro) introduce new ending for ProductionModelIssueWorkList
 		if (path.EndsWith(".ewl", StringComparison.OrdinalIgnoreCase))
 		{
+			throw new NotImplementedException(".ewl");
 			//return CreateWorkEnvironment(path, "ProSuite.AGP.WorkList.Domain.ErrorWorkList");
-			return CreateWorkEnvironment(path, "ProSuite.AGP.WorkList.Domain.ProductionModelIssueWorkList");
 		}
 
 		if (path.EndsWith(".swl", StringComparison.OrdinalIgnoreCase))

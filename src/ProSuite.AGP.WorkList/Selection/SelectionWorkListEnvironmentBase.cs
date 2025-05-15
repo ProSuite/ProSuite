@@ -48,6 +48,8 @@ namespace ProSuite.AGP.WorkList.Selection
 		protected override Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
+			// todo: (daro) inject map as parameter. If layer is in toc
+			// WorkItemTable is called before MapView.Active is initialized.
 			Map map = MapView.Active.Map;
 
 			string path = stateRepository.WorkListDefinitionFilePath;

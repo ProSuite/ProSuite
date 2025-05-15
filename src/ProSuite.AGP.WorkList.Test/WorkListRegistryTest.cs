@@ -181,7 +181,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public WorkItemVisibility Visibility { get; set; }
+	public WorkItemVisibility? Visibility { get; set; }
 	public Geometry AreaOfInterest { get; set; }
 	public bool QueryLanguageSupported { get; }
 	public IWorkItem Current { get; }
@@ -205,12 +205,12 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public int Count()
+	public int CountLoadedItems()
 	{
 		throw new NotImplementedException();
 	}
 
-	public long Count(out int todo)
+	public long CountLoadedItems(out int todo)
 	{
 		throw new NotImplementedException();
 	}

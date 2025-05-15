@@ -17,7 +17,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		[NotNull] public Envelope GetExtent();
 
-		WorkItemVisibility Visibility { get; set; }
+		WorkItemVisibility? Visibility { get; set; }
 		
 		[NotNull]
 		Geometry AreaOfInterest { get; set; }
@@ -42,9 +42,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		                                WorkItemStatus? itemStatus,
 		                                bool excludeGeometry = false);
 
-		int Count();
+		int CountLoadedItems();
 
-		long Count(out int todo);
+		long CountLoadedItems(out int todo);
 
 		bool CanGoFirst();
 
