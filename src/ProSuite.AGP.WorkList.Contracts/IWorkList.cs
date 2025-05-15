@@ -24,7 +24,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool QueryLanguageSupported { get; }
 
-		[CanBeNull]
 		IWorkItem Current { get; }
 
 		int CurrentIndex { get; set; }

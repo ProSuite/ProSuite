@@ -87,7 +87,22 @@ namespace ProSuite.AGP.WorkList.Domain
 			return _extent;
 		}
 
-		public IWorkItem Current => GetItem(CurrentIndex);
+		[CanBeNull]
+		public IWorkItem Current
+		{
+			get
+			{
+				IWorkItem current = GetItem(CurrentIndex);
+				if (current == null)
+				{
+					return null;
+				}
+
+				// Ensure current item is always visited
+				current.Visited = true;
+				return current;
+			}
+		}
 
 		public int CurrentIndex { get; set; }
 
