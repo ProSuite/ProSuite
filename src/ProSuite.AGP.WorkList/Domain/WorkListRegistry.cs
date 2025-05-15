@@ -66,6 +66,21 @@ namespace ProSuite.AGP.WorkList.Domain
 			return null;
 		}
 
+		public async IAsyncEnumerable<IWorkList> GetAsync()
+		{
+			ICollection<IWorkListFactory> factories;
+
+			lock (_registryLock)
+			{
+				factories = _map.Values;
+			}
+
+			foreach (IWorkListFactory factory in factories)
+			{
+				yield return await factory.GetAsync();
+			}
+		}
+
 		public void Add(IWorkList workList)
 		{
 			if (workList == null)

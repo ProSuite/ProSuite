@@ -427,6 +427,36 @@ namespace ProSuite.AGP.WorkList.Domain
 			return query;
 		}
 
+		private List<IWorkItem> GetItems(SpatialQueryFilter filter,
+		                                 CurrentSearchOption currentSearch,
+		                                 VisitedSearchOption visitedSearch, int maxTrials)
+		{
+			List<IWorkItem> result = GetItems(filter, currentSearch, visitedSearch).ToList();
+
+			Envelope filterExtent = filter.FilterGeometry.Extent;
+
+			while (result.Count == 0)
+			{
+				filter = GdbQueryUtils.CreateSpatialFilter(filterExtent);
+
+				result = GetItems(filter, currentSearch, visitedSearch).ToList();
+
+				if (maxTrials == 0)
+				{
+					_msg.Debug($"Stop searching items after {maxTrials} tries.");
+					break;
+				}
+
+				if (result.Count == 0)
+				{
+					maxTrials--;
+					filterExtent = filterExtent.Expand(2, 2, true);
+				}
+			}
+
+			return result;
+		}
+
 		// todo: (daro) to utils?
 		private static WorkItemStatus? GetStatus(WorkItemVisibility? visibility)
 		{
@@ -1390,8 +1420,14 @@ namespace ProSuite.AGP.WorkList.Domain
 				int count = 0;
 				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter, null))
 				{
-					count += UpdateExistingItemGeometry(item, geometry);
-					invalidateOids.Add(item.OID);
+					if (! TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem))
+					{
+						continue;
+					}
+
+					count += UpdateItemGeometry(cachedItem, geometry);
+
+					invalidateOids.Add(cachedItem.OID);
 				}
 
 				// Avoid flooding the log.

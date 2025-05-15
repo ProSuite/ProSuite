@@ -42,5 +42,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		[ItemCanBeNull]
 		Task<IWorkList> GetAsync(string name);
+
+		IAsyncEnumerable<IWorkList> GetAsync();
 	}
 }

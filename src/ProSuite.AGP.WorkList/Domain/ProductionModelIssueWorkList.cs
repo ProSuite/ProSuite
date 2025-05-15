@@ -118,5 +118,18 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			return result;
 		}
+
+		protected override IEnumerable<IWorkItem> GetWorkItemsForInnermostContextCore(
+			QueryFilter filter,
+			CurrentSearchOption currentSearch,
+			VisitedSearchOption visitedSearch)
+		{
+			// AreaOfInterest should be equal to work unit perimeter.
+			Assert.NotNull(AreaOfInterest);
+			Assert.False(AreaOfInterest.IsEmpty, "aoi is empty");
+
+			return base.GetWorkItemsForInnermostContextCore(
+				GdbQueryUtils.CreateSpatialFilter(AreaOfInterest), currentSearch, visitedSearch);
+		}
 	}
 }
