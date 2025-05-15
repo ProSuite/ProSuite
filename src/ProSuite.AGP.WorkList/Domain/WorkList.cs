@@ -525,6 +525,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					index++;
 				}
+
+				// fewer items loaded than TotalCount
+				if (_items.Count < TotalCount)
+				{
+					return true;
+				}
 			}
 			catch (Exception e)
 			{
