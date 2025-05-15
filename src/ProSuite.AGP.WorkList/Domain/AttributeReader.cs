@@ -208,13 +208,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Brushes.White;
 		}
 
+		[NotNull]
 		public string GetSeverity(Row fromRow)
 		{
 			var attribute = Attributes.IssueSeverity;
 
 			if (! _fieldIndexByAttribute.TryGetValue(attribute, out int fieldIndex))
 			{
-				return default;
+				_msg.Debug($"table does not contain {attribute} field");
+				return "unkown";
 			}
 
 			object value = null;
@@ -223,11 +225,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				value = fromRow[fieldIndex];
 
-				string issueName = Enum.GetName(typeof(IssueType), (int) value);
-
-				if (issueName != null)
+				if (value is not string severity)
 				{
-					return issueName;
+					_msg.Debug($"Invalid issue type: {value}");
+					return "unkown";
+				}
+
+				if (Enum.TryParse(severity, out IssueType type))
+				{
+					return type.ToString();
 				}
 
 				_msg.Debug($"Invalid issue type: {value}");
