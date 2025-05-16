@@ -1,8 +1,4 @@
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Text;
-
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	public class SdeDirectOsaConnectionProvider : SdeDirectConnectionProvider
 	{
@@ -33,18 +29,6 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 			       databaseType, databaseName, repositoryName) { }
 
 		#endregion
-
-		protected override IFeatureWorkspace OpenWorkspaceCore(string versionName = null,
-		                                                       int hWnd = 0)
-		{
-			return (IFeatureWorkspace) WorkspaceUtils.OpenSDEWorkspace(
-				RepositoryName,
-				GetDirectConnectDriver(),
-				DatabaseName,
-				StringUtils.IsNotEmpty(versionName)
-					? versionName
-					: VersionName);
-		}
 
 		private static string GetDefaultName(string databaseName, string repositoryName)
 		{

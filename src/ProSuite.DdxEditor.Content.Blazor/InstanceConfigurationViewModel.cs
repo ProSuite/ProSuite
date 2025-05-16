@@ -223,7 +223,8 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 				continue;
 			}
 
-			if (param.IsConstructorParameter)
+			// TOP-5941: Do not automatically add empty rows to list parameters - they will be stored.
+			if (param.IsConstructorParameter && param.ArrayDimension == 0)
 			{
 				rowsByParameter[param]
 					.Add(ViewModelFactory.CreateEmptyTestParameterViewModel(param, this));

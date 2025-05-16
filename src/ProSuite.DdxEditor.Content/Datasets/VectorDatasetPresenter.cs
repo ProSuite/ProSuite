@@ -1,5 +1,4 @@
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Datasets
@@ -22,7 +21,7 @@ namespace ProSuite.DdxEditor.Content.Datasets
 
 		#region IVectorDatasetObserver<E> Members
 
-		public Model GetModel()
+		public DdxModel GetModel()
 		{
 			return _item.DatasetModel;
 		}

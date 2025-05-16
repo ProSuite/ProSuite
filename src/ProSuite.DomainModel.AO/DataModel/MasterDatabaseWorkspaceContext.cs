@@ -16,7 +16,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 {
 	public class MasterDatabaseWorkspaceContext : WorkspaceContextBase
 	{
-		[NotNull] private readonly Model _model;
+		[NotNull] private readonly DdxModel _model;
 		[NotNull] private readonly IWorkspaceProxy _workspaceProxy;
 
 		/// <summary>
@@ -25,7 +25,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <param name="featureWorkspace">The feature workspace.</param>
 		/// <param name="model">The model.</param>
 		public MasterDatabaseWorkspaceContext([NotNull] IFeatureWorkspace featureWorkspace,
-		                                      [NotNull] Model model)
+		                                      [NotNull] DdxModel model)
 			: base(featureWorkspace)
 		{
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));

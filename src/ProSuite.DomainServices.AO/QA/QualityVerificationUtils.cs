@@ -178,6 +178,8 @@ namespace ProSuite.DomainServices.AO.QA
 				IList<ITest> tests = factory.CreateTests(datasetOpener);
 				if (tests.Count == 0)
 				{
+					// TODO: Warn, consider not adding this condition to elementsByConditionVerification
+					//       in order to avoid downstream failure.
 					continue;
 				}
 

@@ -23,16 +23,16 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
+using ProSuite.DomainModel.Core.Geodatabase;
 using Path = System.IO.Path;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
-	public abstract class ModelItemBase<E> : SubclassedEntityItem<E, Model>
-		where E : Model
+	public abstract class ModelItemBase<E> : SubclassedEntityItem<E, DdxModel>
+		where E : DdxModel
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -48,7 +48,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		/// <param name="repository">The repository.</param>
 		protected ModelItemBase([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 		                        [NotNull] E model,
-		                        [NotNull] IRepository<Model> repository)
+		                        [NotNull] IRepository<DdxModel> repository)
 			: base(model, repository)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
@@ -129,7 +129,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		{
 			return FindConnectionProviderCore<ConnectionProvider>(
 				owner,
-				c => c is IOpenSdeWorkspace,
+				c => c is SdeConnectionProvider || c is ConnectionFileConnectionProvider,
 				new ColumnDescriptor("Name"),
 				new ColumnDescriptor("TypeDescription"),
 				new ColumnDescriptor("Description"));
@@ -316,7 +316,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 			if (entity.Name != null)
 			{
-				Model other = _modelBuilder.Models.Get(entity.Name);
+				DdxModel other = _modelBuilder.Models.Get(entity.Name);
 
 				if (other != null && other.Id != entity.Id)
 				{
@@ -373,8 +373,9 @@ namespace ProSuite.DdxEditor.Content.Models
 					                        geometryTypeRepository.GetAll());
 
 					IEnumerable<ObjectAttributeType> attributeTypes =
-						model.Harvest(geometryTypeRepository.GetAll(),
-						              attributeTypeRepository.GetAll());
+						ModelHarvesting.Harvest(model,
+						                     geometryTypeRepository.GetAll(),
+						                     attributeTypeRepository.GetAll());
 
 					foreach (ObjectAttributeType attributeType in attributeTypes)
 					{
@@ -558,7 +559,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			GetSpatialReferenceComparisons(
 				[NotNull] out SpatialReferenceProperties modelSpatialReferenceProperties)
 		{
-			Model model = Assert.NotNull(GetEntity());
+			DdxModel model = Assert.NotNull(GetEntity());
 
 			SpatialReferenceDescriptor spatialReferenceDescriptor =
 				model.SpatialReferenceDescriptor;

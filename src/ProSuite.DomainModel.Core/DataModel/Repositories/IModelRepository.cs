@@ -1,12 +1,9 @@
-using System.Collections.Generic;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel.Repositories
 {
-	/// <summary>
-	/// Provides direct access to DdxModel for non-AO usages.
-	/// </summary>
-	public interface IDdxModelRepository
+	public interface IModelRepository : IRepository<DdxModel>
 	{
 		/// <summary>
 		/// Gets the model having the specified name.
@@ -14,9 +11,6 @@ namespace ProSuite.DomainModel.Core.DataModel.Repositories
 		/// <param name="name">The name of the model.</param>
 		/// <returns>the model for the given name, or null if no model found.</returns>
 		[CanBeNull]
-		DdxModel GetDdxModel([NotNull] string name);
-
-		[NotNull]
-		IList<DdxModel> GetAllDdxModels();
+		DdxModel Get([NotNull] string name);
 	}
 }
