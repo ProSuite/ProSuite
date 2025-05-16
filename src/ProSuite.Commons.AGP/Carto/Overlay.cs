@@ -25,8 +25,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public Overlay([NotNull] Geometry geometry,
-		               [NotNull] CIMSymbol symbol)
-			: this(geometry, symbol.MakeSymbolReference()) { }
+		               [CanBeNull] CIMSymbol symbol)
+			: this(geometry, symbol?.MakeSymbolReference()) { }
 
 		public async Task<IDisposable> AddToMapAsync(MapView mapView,
 		                                             bool useReferenceScale = false)
