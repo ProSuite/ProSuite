@@ -5,7 +5,6 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -103,6 +102,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		protected override TestParameterValue CreateEmptyTestParameterValue<T>(
 			TestParameter testParameter)
 		{
+			// TODO: Implement and test the case of an empty list parameter
+
 			TestParameterValue parameterValue =
 				TestParameterTypeUtils.GetEmptyParameterValue(testParameter);
 			return parameterValue;
@@ -117,7 +118,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] string schemaOwner,
 			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
 		{
-			Model result = ModelFactory.CreateModel(workspace, modelName, workspaceId,
+			DdxModel result = ModelFactory.CreateModel(workspace, modelName, workspaceId,
 			                                        databaseName, schemaOwner);
 
 			if (result.SpatialReferenceDescriptor == null)

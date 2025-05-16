@@ -8,13 +8,13 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.TableRows;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
 	public class ModelTableRow : SelectableTableRow, IEntityRow
 	{
-		private readonly Model _entity;
+		private readonly DdxModel _entity;
 		private readonly Image _image;
 		private readonly string _type;
 
@@ -22,7 +22,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		/// Initializes a new instance of the <see cref="ModelTableRow"/> class.
 		/// </summary>
 		/// <param name="entity">The model.</param>
-		public ModelTableRow([NotNull] Model entity)
+		public ModelTableRow([NotNull] DdxModel entity)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 
@@ -88,7 +88,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		[Browsable(false)]
 		[NotNull]
 		[UsedImplicitly]
-		public Model Model => _entity;
+		public DdxModel Model => _entity;
 
 		#region IEntityRow Members
 

@@ -161,6 +161,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
 			{
+				if (instanceDescriptors.Contains(descriptorMsg.Name))
+				{
+					continue;
+				}
+
 				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
 				instanceDescriptors.AddDescriptor(instanceDescriptor);
 			}
@@ -396,33 +401,31 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static InstanceDescriptor GetInstanceDescriptor(
 			InstanceDescriptorMsg descriptorMessage)
 		{
+			InstanceType instanceType = (InstanceType) descriptorMessage.Type;
+
+			InstanceDescriptor result;
+
+			switch (instanceType)
 			{
-				InstanceType instanceType = (InstanceType) descriptorMessage.Type;
-
-				InstanceDescriptor result;
-
-				switch (instanceType)
-				{
-					case InstanceType.Test:
-						result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+				case InstanceType.Test:
+					result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+						descriptorMessage);
+					break;
+				case InstanceType.Transformer:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<TransformerDescriptor>(
 							descriptorMessage);
-						break;
-					case InstanceType.Transformer:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<TransformerDescriptor>(
-								descriptorMessage);
-						break;
-					case InstanceType.IssueFilter:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
-								descriptorMessage);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				return result;
+					break;
+				case InstanceType.IssueFilter:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+							descriptorMessage);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
+
+			return result;
 		}
 
 		private static IEnumerable<IssueFilterDescriptor> GetIssueFilterDescriptors(

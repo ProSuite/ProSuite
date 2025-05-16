@@ -41,6 +41,12 @@ namespace ProSuite.AGP.WorkList
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
 			string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
+
+			if (! Directory.Exists(directory))
+			{
+				Directory.CreateDirectory(directory);
+			}
+
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
 
 			string filePath = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);

@@ -1,6 +1,6 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	/// <summary>
 	/// Allows setting alternate username/password credentials for a connection provider.

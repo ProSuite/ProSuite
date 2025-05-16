@@ -1,13 +1,10 @@
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 
-namespace ProSuite.DomainModel.AO.Geodatabase
+namespace ProSuite.DomainModel.Core.Geodatabase
 {
 	[UsedImplicitly]
-	public class ConnectionFileConnectionProvider : FilePathConnectionProviderBase,
-	                                                IOpenSdeWorkspace
+	public class ConnectionFileConnectionProvider : FilePathConnectionProviderBase
 	{
 		#region Constructors
 
@@ -18,17 +15,6 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 			: base(connectionFilePath) { }
 
 		#endregion
-
-		public override IFeatureWorkspace OpenWorkspace(int hWnd = 0)
-		{
-			return OpenWorkspace(null, hWnd);
-		}
-
-		public IFeatureWorkspace OpenWorkspace(string versionName, int hWnd = 0)
-		{
-			AssertFileExists();
-			return (IFeatureWorkspace) WorkspaceUtils.OpenSDEWorkspace(Path, versionName, hWnd);
-		}
 
 		#region Overrides of ConnectionProvider
 

@@ -1040,7 +1040,7 @@ namespace ProSuite.QA.Container
 		}
 
 		public static bool IsSameRow([NotNull] IReadOnlyRow row0, [NotNull] IReadOnlyRow row1) =>
-			row0 == row1 || row0.OID == row1.OID && row0.Table == row1.Table;
+			row0 == row1 || row0.OID == row1.OID && row0.Table.Equals(row1.Table);
 
 		/// <summary>
 		/// Ensures a minimum width/height for a given envelope

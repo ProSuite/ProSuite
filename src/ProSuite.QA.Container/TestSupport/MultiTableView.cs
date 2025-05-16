@@ -99,7 +99,7 @@ namespace ProSuite.QA.Container.TestSupport
 						workspaceNamesDiffer = true;
 					}
 
-					if (commonDataset == null || commonDataset == dataset)
+					if (commonDataset == null || commonDataset.Equals(dataset))
 					{
 						commonDataset = dataset;
 					}
