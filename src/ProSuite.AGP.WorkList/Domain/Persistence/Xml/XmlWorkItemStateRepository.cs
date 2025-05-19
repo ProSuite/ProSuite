@@ -8,7 +8,6 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
@@ -26,17 +25,14 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 		public static XmlWorkListDefinition Import(string xmlFilePath)
 		{
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-
-			XmlWorkListDefinition definition = helper.ReadFromFile(xmlFilePath);
+			XmlWorkListDefinition definition = WorkListUtils.Read(xmlFilePath);
 			definition.Path = xmlFilePath;
 			return definition;
 		}
 
 		protected override void Store(XmlWorkListDefinition definition)
 		{
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			helper.SaveToFile(definition, WorkListDefinitionFilePath);
+			WorkListUtils.Save(definition, WorkListDefinitionFilePath);
 		}
 
 		protected override XmlWorkListDefinition CreateDefinition(

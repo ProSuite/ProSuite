@@ -8,7 +8,6 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
@@ -298,7 +297,7 @@ public class WorkListDbTest
 		selection.Add(multipoints, [5, 7, 12, 9]);
 		selection.Add(polygons, []);
 
-		var sourceClasses = new List<SelectionSourceClass>(selection.Count);
+		var sourceClasses = new List<ISourceClass>(selection.Count);
 
 		foreach ((Table table, List<long> oids) in selection)
 		{
@@ -306,8 +305,7 @@ public class WorkListDbTest
 
 			SourceClassSchema schema = CreateSchema(tableDefinition);
 
-			Datastore datastore = table.GetDatastore();
-			var sourceClass =
+			ISourceClass sourceClass =
 				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
 
 			sourceClasses.Add(sourceClass);
@@ -429,7 +427,7 @@ public class WorkListDbTest
 	[Test]
 	public void Can_create_SelectionWorkList_from_Shapefile()
 	{
-		string path = @"C:\temp\Shapefile";
+		string path = TestDataPreparer.ExtractZip("Shapefile.zip").GetPath();
 		using var fileSystem =
 			new FileSystemDatastore(new FileSystemConnectionPath(new Uri(path, UriKind.Absolute),
 			                                                     FileSystemDatastoreType
@@ -438,7 +436,7 @@ public class WorkListDbTest
 		var shapefile = fileSystem.OpenDataset<FeatureClass>("TLM_STRASSE_clip");
 
 		var tables = new List<Table> { shapefile };
-		var sourceClasses = new List<SelectionSourceClass>(tables.Count);
+		var sourceClasses = new List<ISourceClass>(tables.Count);
 
 		foreach (Table table in tables)
 		{
@@ -446,7 +444,6 @@ public class WorkListDbTest
 
 			SourceClassSchema schema = CreateSchema(tableDefinition);
 
-			Datastore datastore = table.GetDatastore();
 			List<long> oids = [0, 1, 2, 3];
 			var sourceClass =
 				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);

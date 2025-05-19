@@ -60,7 +60,7 @@ namespace ProSuite.AGP.WorkList
 			return subFields;
 		}
 
-		public void EnsureValidFilter([CanBeNull] QueryFilter filter,
+		public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
 		                              WorkItemStatus? statusFilter,
 		                              bool excludeGeometry)
 		{
@@ -92,7 +92,8 @@ namespace ProSuite.AGP.WorkList
 				result.SubFields = relevantSubFields;
 			}
 
-			EnsureValidFilterCore(filter, statusFilter);
+			EnsureValidFilterCore(ref result, statusFilter);
+			filter = result;
 		}
 
 		public bool Uses(ITableReference tableReference)
@@ -130,7 +131,8 @@ namespace ProSuite.AGP.WorkList
 			return null;
 		}
 
-		protected virtual void EnsureValidFilterCore(QueryFilter filter, WorkItemStatus? statusFilter) { }
+		protected virtual void EnsureValidFilterCore(ref QueryFilter filter,
+		                                             WorkItemStatus? statusFilter) { }
 
 		public override string ToString()
 		{

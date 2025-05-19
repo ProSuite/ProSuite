@@ -1247,7 +1247,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 				double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
 
-				// TODO: (DARO) implement Shapefile!
 				QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 				Stopwatch watch = Stopwatch.StartNew();
 
@@ -1367,7 +1366,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			try
 			{
-				// TODO: (DARO) implement Shapefile!
 				QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 				Stopwatch watch = Stopwatch.StartNew();
 

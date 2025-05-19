@@ -102,56 +102,60 @@ namespace ProSuite.AGP.QA.WorkList
 		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
-			var tables = await PrepareReferencedTables();
+			var watch = Stopwatch.StartNew();
 
-			IList<ISourceClass> sourceClasses = new List<ISourceClass>(tables.Count);
+			DbStatusWorkItemRepository result;
 
-			Stopwatch watch = Stopwatch.StartNew();
-
-			// TODO: Make attribute reader more generic, use AttributeRoles
-			Attributes[] attributes = new[]
-			                          {
-				                          Attributes.QualityConditionName,
-				                          Attributes.IssueCodeDescription,
-				                          Attributes.InvolvedObjects,
-				                          Attributes.IssueSeverity,
-				                          Attributes.IssueCode,
-				                          Attributes.IssueDescription,
-				                          Attributes.IssueType
-			                          };
-
-			Dictionary<IntPtr, Datastore> datastoresByHandle = new Dictionary<IntPtr, Datastore>();
-
-			foreach (Table table in tables)
+			try
 			{
-				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+				IList<Table> tables = await PrepareReferencedTables();
 
-				TableDefinition tableDefinition = table.GetDefinition();
+				IList<ISourceClass> sourceClasses = new List<ISourceClass>(tables.Count);
 
-				DbSourceClassSchema schema =
-					WorkListItemDatastore.CreateStatusSchema(tableDefinition);
+				// TODO: Make attribute reader more generic, use AttributeRoles
+				var attributes = new[]
+				                 {
+					                 Attributes.QualityConditionName,
+					                 Attributes.IssueCodeDescription,
+					                 Attributes.InvolvedObjects,
+					                 Attributes.IssueSeverity,
+					                 Attributes.IssueCode,
+					                 Attributes.IssueDescription,
+					                 Attributes.IssueType
+				                 };
 
-				IAttributeReader attributeReader =
-					WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
+				var datastoresByHandle = new Dictionary<IntPtr, Datastore>();
 
-				// TODO: inline
-				// TODO: add assertions
-				Datastore datastore = table.GetDatastore();
+				foreach (Table table in tables)
+				{
+					string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
 
-				datastoresByHandle.TryAdd(datastore.Handle, datastore);
+					TableDefinition tableDefinition = table.GetDefinition();
 
-				var sourceClass = new DatabaseSourceClass(new GdbTableIdentity(table), schema, attributeReader, defaultDefinitionQuery);
+					DbSourceClassSchema schema =
+						WorkListItemDatastore.CreateStatusSchema(tableDefinition);
 
-				sourceClasses.Add(sourceClass);
+					IAttributeReader attributeReader =
+						WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
+
+					datastoresByHandle.TryAdd(table.GetDatastore().Handle, table.GetDatastore());
+
+					sourceClasses.Add(new DatabaseSourceClass(new GdbTableIdentity(table), schema,
+					                                          attributeReader,
+					                                          defaultDefinitionQuery));
+				}
+
+				Assert.True(datastoresByHandle.Count == 1,
+				            "Multiple geodatabases are referenced by the work list's source classes.");
+
+				var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
+				result = new DbStatusWorkItemRepository(sourceClasses, stateRepository,
+				                                        geodatabase.GetPath());
 			}
-
-			Assert.True(datastoresByHandle.Count == 1,
-			            "Multiple geodatabases are referenced by the work list's source classes.");
-
-			var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
-			var result = new DbStatusWorkItemRepository(sourceClasses, stateRepository, geodatabase.GetPath());
-
-			_msg.DebugStopTiming(watch, "Created issue work item repository");
+			finally
+			{
+				_msg.DebugStopTiming(watch, "Created issue work item repository");
+			}
 
 			return result;
 		}

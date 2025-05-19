@@ -45,8 +45,7 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 		definition.Items = new List<XmlWorkItemState>(0);
 		definition.Workspaces = new List<XmlWorkListWorkspace>(0);
 
-		var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-		helper.SaveToFile(definition, WorkListDefinitionFilePath);
+		WorkListUtils.Save(definition, WorkListDefinitionFilePath);
 	}
 
 	public int? CurrentIndex { get; set; }

@@ -28,7 +28,8 @@ namespace ProSuite.AGP.WorkList
 			return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(TableIdentity);
 		}
 
-		protected override void EnsureValidFilterCore(QueryFilter filter, WorkItemStatus? statusFilter)
+		protected override void EnsureValidFilterCore(ref QueryFilter filter,
+		                                              WorkItemStatus? statusFilter)
 		{
 			filter.ObjectIDs = Oids;
 

@@ -145,7 +145,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(filter, statusFilter, excludeGeometry);
+		sourceClass.EnsureValidFilter(ref filter, statusFilter, excludeGeometry);
 
 		foreach (Row row in GetRows(sourceClass, filter))
 		{
@@ -171,7 +171,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(filter, statusFilter, excludeGeometry);
+		sourceClass.EnsureValidFilter(ref filter, statusFilter, excludeGeometry);
 
 		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
 		{
@@ -215,7 +215,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(filter, null, true);
+		sourceClass.EnsureValidFilter(ref filter, null, true);
 
 		using Table table = OpenTable(sourceClass);
 
@@ -234,24 +234,5 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			watch, $"Count() {sourceClass.Name}: {count} items");
 
 		return count;
-	}
-
-	[CanBeNull]
-	protected static IAttributeReader CreateAttributeReader(
-		[NotNull] TableDefinition definition,
-		[CanBeNull] IWorkListItemDatastore tableSchema)
-	{
-		// TODO: Make independent of attribute list, use standard AttributeRoles
-		var attributes = new[]
-		                 {
-			                 Attributes.QualityConditionName,
-			                 Attributes.IssueCodeDescription,
-			                 Attributes.InvolvedObjects,
-			                 Attributes.IssueSeverity,
-			                 Attributes.IssueCode,
-			                 Attributes.IssueDescription
-		                 };
-
-		return tableSchema?.CreateAttributeReader(definition, attributes);
 	}
 }

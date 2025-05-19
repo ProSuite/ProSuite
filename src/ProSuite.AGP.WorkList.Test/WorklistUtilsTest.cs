@@ -37,44 +37,12 @@ namespace ProSuite.AGP.WorkList.Test
 
 			XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
 
-			string displayName = WorkListUtils.GetName(path);
+			string displayName = WorkListUtils.ParseName(path);
 
 			//IWorkList worklist = WorkListUtils.Create(definition, displayName);
 			//Assert.NotNull(worklist);
 
 			//Assert.AreEqual(0, worklist.Count());
-		}
-
-		[Test]
-		public void Can_skip_work_item_workspace_because_of_invalid_connectionString()
-		{
-			string path =
-				TestDataPreparer.FromDirectory()
-				                .GetPath("work_list_definition_buggy_connectionString.swl");
-
-			XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
-
-			List<Table> tables = WorkListUtils.GetDistinctTables(
-				definition.Workspaces, definition.Name,
-				definition.Path, out NotificationCollection notifications);
-
-			var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
-			Type type = descriptor.GetInstanceType();
-
-			string name = definition.Name;
-			string filePath = definition.Path;
-			int currentIndex = definition.CurrentIndex;
-
-			IWorkItemStateRepository stateRepository =
-				WorkListUtils.CreateItemStateRepository(filePath, name, type, currentIndex);
-
-			//IWorkItemRepository workItemRepository =
-			//	WorkListUtils.CreateWorkItemRepository(tables, type, stateRepository, definition);
-			//Assert.NotNull(workItemRepository);
-
-			// This tries to load ArcGIS.Desktop.Framework. Why does WorkList needs this?
-			// Try to push work list further up, away from AGP Desktop.
-			//Assert.AreEqual(2, repository.GetCount());
 		}
 
 		[Test, Ignore("Learning test")]

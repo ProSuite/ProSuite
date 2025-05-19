@@ -100,7 +100,8 @@ namespace ProSuite.AGP.WorkList
 			return ArcGISTableId;
 		}
 
-		protected override void EnsureValidFilterCore(QueryFilter filter, WorkItemStatus? statusFilter)
+		protected override void EnsureValidFilterCore(ref QueryFilter filter,
+		                                              WorkItemStatus? statusFilter)
 		{
 			string result = string.Empty;
 

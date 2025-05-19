@@ -51,8 +51,19 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 				{
 					using TableDefinition definition = table.GetDefinition();
 
+					// TODO: Make independent of attribute list, use standard AttributeRoles
+					var attributes = new[]
+					                 {
+						                 Attributes.QualityConditionName,
+						                 Attributes.IssueCodeDescription,
+						                 Attributes.InvolvedObjects,
+						                 Attributes.IssueSeverity,
+						                 Attributes.IssueCode,
+						                 Attributes.IssueDescription
+					                 };
+
 					sourceClass.AttributeReader =
-						CreateAttributeReader(definition, tableSchemaInfo);
+						tableSchemaInfo?.CreateAttributeReader(definition, attributes);
 				}
 				else
 				{

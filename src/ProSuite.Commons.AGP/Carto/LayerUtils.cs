@@ -193,6 +193,25 @@ namespace ProSuite.Commons.AGP.Carto
 			return new LayerDocument(filePath);
 		}
 
+		[NotNull]
+		public static FeatureLayerCreationParams CreateLayerParams(
+			[NotNull] FeatureClass featureClass, string alias = null)
+		{
+			if (featureClass is null) throw new ArgumentNullException(nameof(featureClass));
+
+			if (string.IsNullOrEmpty(alias))
+			{
+				alias = featureClass.GetName();
+			}
+
+			return new FeatureLayerCreationParams(featureClass)
+			       {
+				       IsVisible = true,
+				       Name = alias,
+				       MapMemberPosition = MapMemberPosition.AddToTop
+			       };
+		}
+
 		/// <summary>
 		/// Gets the ObjectIDs of selected features from the given <paramref name="layer"/>.
 		/// </summary>

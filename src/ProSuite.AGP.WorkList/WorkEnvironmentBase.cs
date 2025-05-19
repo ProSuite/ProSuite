@@ -214,7 +214,7 @@ namespace ProSuite.AGP.WorkList
 				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
 
 				FeatureLayer result = LayerFactory.Instance.CreateLayer<FeatureLayer>(
-					WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
+					LayerUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 					layerContainer);
 
 				if (result == null)
@@ -223,7 +223,7 @@ namespace ProSuite.AGP.WorkList
 						"Failed to create work list layer for {0}. Trying one more time...",
 						worklist.Name);
 					result = LayerFactory.Instance.CreateLayer<FeatureLayer>(
-						WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
+						LayerUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 						layerContainer);
 				}
 

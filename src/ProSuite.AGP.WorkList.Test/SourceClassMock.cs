@@ -47,7 +47,7 @@ public class SourceClassMock : ISourceClass
 		return TableIdentity.Id;
 	}
 
-	public void EnsureValidFilter(QueryFilter filter, WorkItemStatus? statusFilter,
+	public void EnsureValidFilter(ref QueryFilter filter, WorkItemStatus? statusFilter,
 	                              bool excludeGeometry)
 	{
 		throw new NotImplementedException();

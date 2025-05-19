@@ -666,7 +666,7 @@ namespace ProSuite.AGP.WorkList.Test
 				wl.Commit();
 
 				Assert.True(File.Exists(path));
-				Assert.AreEqual(fileNameWithoutSuffix, WorkListUtils.GetName(path));
+				Assert.AreEqual(fileNameWithoutSuffix, WorkListUtils.ParseName(path));
 
 				wl.Rename(newName);
 				Assert.AreEqual(uniqueName, wl.Name);

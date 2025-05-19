@@ -12,9 +12,9 @@ public class SelectionItemRepository : GdbItemRepository
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	public SelectionItemRepository(IList<SelectionSourceClass> sourceClasses,
+	public SelectionItemRepository(IList<ISourceClass> sourceClasses,
 	                               IWorkItemStateRepository stateRepository) : base(
-		sourceClasses.OfType<ISourceClass>().ToList(), stateRepository) { }
+		sourceClasses, stateRepository) { }
 
 	public override IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		QueryFilter filter,

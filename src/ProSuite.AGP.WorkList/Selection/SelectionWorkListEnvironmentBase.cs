@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
-using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
-using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Selection
@@ -52,80 +47,36 @@ namespace ProSuite.AGP.WorkList.Selection
 			// WorkItemTable is called before MapView.Active is initialized.
 			Map map = MapView.Active.Map;
 
-			string path = stateRepository.WorkListDefinitionFilePath;
+			var watch = Stopwatch.StartNew();
 
-			if (File.Exists(path))
+			Task<IWorkItemRepository> result;
+
+			try
 			{
-				XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
+				string path = stateRepository.WorkListDefinitionFilePath;
 
-				var tables = FindMatchingTables(map, definition).ToList();
+				IList<ISourceClass> sourceClasses;
 
-				if (tables.Count == 0)
+				if (File.Exists(path))
 				{
-					// TODO: (daro) show work list display name?
-					_msg.Debug($"There are no referenced table from '{path}' in the map");
+					XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
 
-					var message = $"There are no referenced table from '{Path.GetFileName(path)}' in the map";
-					var caption = "Cannot open work List";
-
-					Gateway.ShowMessage(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
-
-					return Task.FromResult<IWorkItemRepository>(null);
+					sourceClasses = WorkListUtils.CreateSourceClasses(map, definition).ToList();
+				}
+				else
+				{
+					sourceClasses = WorkListUtils.CreateSourceClasses(map).ToList();
 				}
 
-				return Task.FromResult(WorkListUtils.CreateSelectionItemRepository(tables, stateRepository, definition));
+				result = Task.FromResult<IWorkItemRepository>(
+					         new SelectionItemRepository(sourceClasses, stateRepository));
 			}
-
-			Dictionary<MapMember, List<long>> oidsByLayer = SelectionUtils.GetSelection(map);
-
-			Dictionary<Table, List<long>> selection =
-				MapUtils.GetDistinctSelectionByTable(oidsByLayer);
-			
-			IList<SelectionSourceClass> sourceClasses = new List<SelectionSourceClass>(selection.Count);
-
-			foreach ((Table table, List<long> oids) in selection)
+			finally
 			{
-				using TableDefinition tableDefinition = table.GetDefinition();
-
-				string objectIDField = tableDefinition.GetObjectIDField();
-
-				string shapeField = null;
-
-				if (tableDefinition is FeatureClassDefinition featureClassDefinition)
-				{
-					shapeField = featureClassDefinition.GetShapeField();
-				}
-
-				var schema = new SourceClassSchema(objectIDField, shapeField);
-
-				var sourceClass = new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
-				sourceClasses.Add(sourceClass);
+				_msg.DebugStopTiming(watch, "Created selection work item repository");
 			}
 
-			return Task.FromResult<IWorkItemRepository>(
-				new SelectionItemRepository(sourceClasses, stateRepository));
-		}
-
-		private static IEnumerable<Table> FindMatchingTables(
-			Map map, XmlWorkListDefinition definition)
-		{
-			var featureLayers = MapUtils.GetFeatureLayers<BasicFeatureLayer>(map).ToList();
-
-			foreach (XmlTableReference tableReference in definition.Workspaces.SelectMany(w => w.Tables))
-			{
-				foreach (BasicFeatureLayer layer in featureLayers)
-				{
-					Table table = layer.GetTable();
-
-					var tableId = new GdbTableIdentity(table);
-					long id = WorkListUtils.GetUniqueTableIdAcrossWorkspaces(tableId);
-
-					if (id == tableReference.Id)
-					{
-						yield return table;
-					}
-				}
-			}
+			return result;
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
