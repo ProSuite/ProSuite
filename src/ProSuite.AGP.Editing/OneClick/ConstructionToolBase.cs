@@ -290,6 +290,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => $"HandleKeyUpCoreAsync ({Caption})");
 
+			await base.HandleKeyUpCoreAsync(args);
+
 			if (args.Key == _keyFinishSketch)
 			{
 				// #114: F2 has no effect unless another tool has been used before:
