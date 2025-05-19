@@ -564,4 +564,4 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		#endregion
 	}
-}
+}
