@@ -132,14 +132,10 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.ShowPicker;
 		}
 
-		int lowestGeometryDimensionCount =
-			CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates));
-
-		if (NoMultiselection && lowestGeometryDimensionCount > 1)
+		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
 		{
-			// If area selection: show picker
-			// But: If single click: Also show picker
-			//if (! IsPointClick)
+			// if area selection: show picker
+			if (! IsPointClick)
 			{
 				modes |= PickerMode.ShowPicker;
 			}
@@ -147,7 +143,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		}
 		else
 		{
-			if (lowestGeometryDimensionCount > 1)
+			if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
 			{
 				modes |= PickerMode.ShowPicker;
 			}
