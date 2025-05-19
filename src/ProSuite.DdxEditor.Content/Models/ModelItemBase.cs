@@ -372,8 +372,10 @@ namespace ProSuite.DdxEditor.Content.Models
 					AddMissingGeometryTypes(geometryTypeRepository,
 					                        geometryTypeRepository.GetAll());
 
+					var workspaceContext = GetWorkspaceContext(model);
+
 					IEnumerable<ObjectAttributeType> attributeTypes =
-						ModelHarvesting.Harvest(model,
+						ModelHarvesting.Harvest(model,  workspaceContext,
 						                     geometryTypeRepository.GetAll(),
 						                     attributeTypeRepository.GetAll());
 
@@ -385,6 +387,38 @@ namespace ProSuite.DdxEditor.Content.Models
 						}
 					}
 				});
+		}
+
+		/// <summary>
+		/// Get the model's master workspace context, used for harvesting.
+		/// If the model cannot create this workspace context, a default
+		/// master database workspace context will be created. Override
+		/// in subclass to modify this behaviour.
+		/// </summary>
+		[NotNull]
+		protected virtual IWorkspaceContext GetWorkspaceContext(DdxModel model)
+		{
+			var workspaceContext = model.CachedMasterDatabaseWorkspaceContext as IWorkspaceContext;
+
+			if (workspaceContext is null)
+			{
+				if (model is IModelMasterDatabase masterDatabase)
+				{
+					_msg.DebugFormat(
+						"Creating master database workspace context for model “{0}”", model.Name);
+					workspaceContext = masterDatabase.CreateMasterDatabaseWorkspaceContext();
+				}
+				else
+				{
+					_msg.DebugFormat(
+						"Creating default database workspace context for model “{0}”", model.Name);
+					workspaceContext = ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(model);
+				}
+
+				model.CachedMasterDatabaseWorkspaceContext = workspaceContext;
+			}
+
+			return workspaceContext;
 		}
 
 		private static void AddMissingGeometryTypes(
