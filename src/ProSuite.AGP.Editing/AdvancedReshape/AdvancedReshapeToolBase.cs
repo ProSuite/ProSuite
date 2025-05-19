@@ -215,12 +215,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			await QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
-				base.OnSelectionPhaseStartedAsync();
+				await base.OnSelectionPhaseStartedAsync();
 				_symbolizedSketch?.ClearSketchSymbol();
 				_feedback?.Clear();
-				ActiveMapView.ClearSketchAsync();
+				await ActiveMapView.ClearSketchAsync();
 			});
 		}
 
