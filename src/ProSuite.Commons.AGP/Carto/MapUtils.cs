@@ -570,12 +570,12 @@ namespace ProSuite.Commons.AGP.Carto
 			foreach (ElevationSurfaceLayer elevationSurfaceLayer in map.GetElevationSurfaceLayers())
 			{
 				if (elevationSurfaceLayer.ElevationMode != ElevationMode.BaseGlobeSurface ||
-					elevationSurfaceLayer.Name != name)
+				    elevationSurfaceLayer.Name != name)
 				{
 					continue;
 				}
 
-				if (!evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
+				if (! evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
 				{
 					continue;
 				}
@@ -880,9 +880,14 @@ namespace ProSuite.Commons.AGP.Carto
 					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(color));
 				}
 
-				foreach (Geometry geometry in group)
+				if (group.Count() > 1)
 				{
-					overlays.Add(new Overlay(geometry, symbol));
+					Geometry union = GeometryEngine.Instance.Union(group);
+					overlays.Add(new Overlay(union, symbol));
+				}
+				else
+				{
+					overlays.AddRange(group.Select(geometry => new Overlay(geometry, symbol)));
 				}
 			}
 
@@ -914,7 +919,8 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (IDisposable disposable in disposables)
 				{
-					disposable.Dispose();
+					// mapView.AddOverlay can return null (e.g. for GeometryBags).
+					disposable?.Dispose();
 				}
 			}
 
