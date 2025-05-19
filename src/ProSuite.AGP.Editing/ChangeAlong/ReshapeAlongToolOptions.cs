@@ -411,7 +411,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				       excludeOutSideSourceTolerance: ExcludeLinesTolerance)
 			       {
 				       OnlyResultingInRemovals = ExcludeLinesShowOnlyRemove,
-				       ExcludeResultingInOverlaps = ExcludeLinesOverlaps
+				       ExcludeResultingInOverlaps = ExcludeLinesOverlaps,
+				       ShowExcludeReshapeLinesToleranceBuffer =
+					       ShowExcludeReshapeLinesToleranceBuffer
 			       };
 		}
 	}

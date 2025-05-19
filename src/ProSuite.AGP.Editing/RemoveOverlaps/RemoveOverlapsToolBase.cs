@@ -418,7 +418,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			try
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 			catch (Exception e)
 			{

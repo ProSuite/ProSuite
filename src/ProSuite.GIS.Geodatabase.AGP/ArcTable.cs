@@ -106,54 +106,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IRow CreateRow(int? subtypeCode = null)
 		{
-			if (subtypeCode == null)
-			{
-				subtypeCode = DatasetUtils.GetDefaultSubtypeCode(ProTableDefinition);
-			}
-
-			ArcGIS.Core.Data.Subtype subtype =
-				DatasetUtils.GetSubtype(ProTableDefinition, subtypeCode);
-
-			RowBuffer rowBuffer = ProTable.CreateRowBuffer(subtype);
-
-			GdbObjectUtils.SetNullValuesToGdbDefault(
-				rowBuffer, ProTableDefinition, subtype);
-
-			if (ProTable is FeatureClass fc)
-			{
-				// TODO: Move to GeometryFactory
-				ArcGIS.Core.Geometry.Geometry geometry;
-				switch (fc.GetShapeType())
-				{
-					case GeometryType.Point:
-						geometry = new MapPointBuilder().ToGeometry();
-						break;
-					case GeometryType.Polyline:
-						geometry = new PolylineBuilder().ToGeometry();
-						break;
-					case GeometryType.Polygon:
-						geometry = new PolygonBuilder().ToGeometry();
-						break;
-					case GeometryType.Multipoint:
-						geometry = new MultipointBuilder().ToGeometry();
-						break;
-					case GeometryType.Multipatch:
-						geometry = new MultipatchBuilderEx().ToGeometry();
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				FeatureClassDefinition classDefinition = fc.GetDefinition();
-
-				geometry =
-					GeometryUtils.EnsureGeometrySchema(geometry, classDefinition.HasZ(),
-					                                   classDefinition.HasM());
-
-				rowBuffer[fc.GetDefinition().GetShapeField()] = geometry;
-			}
-
-			Row proRow = ProTable.CreateRow(rowBuffer);
+			Row proRow = CreateProRow(subtypeCode);
 
 			return ArcGeodatabaseUtils.ToArcRow(proRow);
 		}
@@ -362,6 +315,56 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
 				//}
 			}
+		}
+
+		public Row CreateProRow(int? subtypeCode)
+		{
+			subtypeCode ??= DatasetUtils.GetDefaultSubtypeCode(ProTableDefinition);
+
+			ArcGIS.Core.Data.Subtype subtype =
+				DatasetUtils.GetSubtype(ProTableDefinition, subtypeCode);
+
+			RowBuffer rowBuffer = ProTable.CreateRowBuffer(subtype);
+
+			GdbObjectUtils.SetNullValuesToGdbDefault(
+				rowBuffer, ProTableDefinition, subtype);
+
+			if (ProTable is FeatureClass fc)
+			{
+				// TODO: Move to GeometryFactory
+				ArcGIS.Core.Geometry.Geometry geometry;
+				switch (fc.GetShapeType())
+				{
+					case GeometryType.Point:
+						geometry = new MapPointBuilder().ToGeometry();
+						break;
+					case GeometryType.Polyline:
+						geometry = new PolylineBuilder().ToGeometry();
+						break;
+					case GeometryType.Polygon:
+						geometry = new PolygonBuilder().ToGeometry();
+						break;
+					case GeometryType.Multipoint:
+						geometry = new MultipointBuilder().ToGeometry();
+						break;
+					case GeometryType.Multipatch:
+						geometry = new MultipatchBuilderEx().ToGeometry();
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				FeatureClassDefinition classDefinition = fc.GetDefinition();
+
+				geometry =
+					GeometryUtils.EnsureGeometrySchema(geometry, classDefinition.HasZ(),
+					                                   classDefinition.HasM());
+
+				rowBuffer[fc.GetDefinition().GetShapeField()] = geometry;
+			}
+
+			Row proRow = ProTable.CreateRow(rowBuffer);
+			return proRow;
 		}
 
 		private IRelationshipClass PrepareCached(IRelationshipClass relClass)

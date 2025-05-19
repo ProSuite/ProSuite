@@ -364,14 +364,14 @@ namespace ProSuite.AGP.Editing.Chopper
 			return result;
 		}
 
-		private void _chopperToolOptions_PropertyChanged(object sender,
-		                                                 PropertyChangedEventArgs eventArgs)
+		private async void _chopperToolOptions_PropertyChanged(object sender,
+		                                                       PropertyChangedEventArgs eventArgs)
 
 		{
 			try
 
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				await QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 
 			catch (Exception e)
@@ -500,4 +500,4 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		#endregion
 	}
-}
+}

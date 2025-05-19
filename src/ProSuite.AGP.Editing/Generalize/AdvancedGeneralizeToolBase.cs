@@ -316,7 +316,7 @@ namespace ProSuite.AGP.Editing.Generalize
 		{
 			try
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 			catch (Exception e)
 			{

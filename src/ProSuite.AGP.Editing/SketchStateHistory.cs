@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
@@ -29,6 +30,8 @@ public class SketchStateHistory
 	private readonly SketchLatch _latch = new();
 	[CanBeNull] private List<IDisposable> _overlays;
 	private bool _active;
+	[CanBeNull] private SubscriptionToken _onSketchModifiedToken;
+	[CanBeNull] private SubscriptionToken _onSketchCompletedToken;
 
 	public bool IsInIntermittentSelectionPhase { get; private set; }
 
@@ -194,8 +197,6 @@ public class SketchStateHistory
 	/// </summary>
 	public void Deactivate()
 	{
-		Assert.True(_active, "Not recording");
-
 		UnwireEvents();
 
 		_active = false;
@@ -287,14 +288,24 @@ public class SketchStateHistory
 
 	private void WireEvents()
 	{
-		SketchModifiedEvent.Subscribe(OnSketchModified);
-		SketchCompletedEvent.Subscribe(OnSketchCompleted);
+		_onSketchModifiedToken = SketchModifiedEvent.Subscribe(OnSketchModified);
+		_onSketchCompletedToken = SketchCompletedEvent.Subscribe(OnSketchCompleted);
 	}
 
 	private void UnwireEvents()
 	{
-		SketchModifiedEvent.Unsubscribe(OnSketchModified);
-		SketchCompletedEvent.Unsubscribe(OnSketchCompleted);
+		if (_onSketchModifiedToken != null)
+		{
+			SketchModifiedEvent.Unsubscribe(_onSketchModifiedToken);
+		}
+
+		if (_onSketchCompletedToken != null)
+		{
+			SketchCompletedEvent.Unsubscribe(_onSketchCompletedToken);
+		}
+
+		_onSketchModifiedToken = null;
+		_onSketchCompletedToken = null;
 	}
 
 	private static CIMLineSymbol CreateLineSymbol()
