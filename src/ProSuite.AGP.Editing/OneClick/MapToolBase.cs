@@ -223,8 +223,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				OnToolMouseDownCore(args);
 
+				// NOTE: If args.Handled = true the HandleMouseDownAsync/HandleMouseUpAsync
+				//       methods are called. However, no sketch is created and (OnSketchFinishedAsync)
+				//       is not called, even if IsSketchTool = true.
+
+				// In order to get the HandleMouseDownAsync method call, do this:
 				// Ensure the -Async overload is called
-				args.Handled = true;
+				//args.Handled = true;
 			}
 			catch (Exception e)
 			{
@@ -258,7 +263,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		// TODO: Async Double-Click, Mouse Down, Mouse up etc.
+		// TODO: Async Double-Click, etc.
 
 		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
 		{
@@ -279,8 +284,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				OnToolMouseUpCore(args);
 
-				// Ensure the -Async overload is called
-				args.Handled = true;
+				// NOTE: If args.Handled = true the HandleMouseDownAsync/HandleMouseUpAsync
+				//       methods are called. However, no sketch is created and (OnSketchFinishedAsync)
+				//       is not called, even if IsSketchTool = true.
+
+				// In order to get the HandleMouseUpAsync method call, do this:
+				//args.Handled = true;
 			}
 			catch (Exception e)
 			{
@@ -355,6 +364,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args) { }
 
+		/// <summary>
+		/// Handles the mouse down event. This method is called only if the Handled property of the
+		/// event args in <see cref="OnToolMouseDownCore"/> is set to true.
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
 		protected virtual Task OnToolMouseDownCoreAsync(MapViewMouseButtonEventArgs args)
 		{
 			return Task.CompletedTask;
@@ -364,6 +379,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolMouseUpCore(MapViewMouseButtonEventArgs args) { }
 
+		/// <summary>
+		/// Handles the mouse up event. This method is called only if the Handled property of the
+		/// event args in <see cref="OnToolMouseUpCore"/> is set to true.
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
 		protected virtual Task OnToolMouseUpCoreAsync(MapViewMouseButtonEventArgs args)
 		{
 			return Task.CompletedTask;
