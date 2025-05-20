@@ -23,15 +23,16 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		public override PartialOptionsBase Clone()
 		{
-			var result = new PartialChopperToolOptions	
-			{
+			var result = new PartialChopperToolOptions
+			             {
 				             TargetFeatureSelection = TryClone(TargetFeatureSelection),
 				             RespectMinimumSegmentLength = TryClone(RespectMinimumSegmentLength),
 				             MinimumSegmentLength = TryClone(MinimumSegmentLength),
 				             SnapToTargetVertices = TryClone(SnapToTargetVertices),
 				             SnapTolerance = TryClone(SnapTolerance),
 				             UseSourceZs = TryClone(UseSourceZs),
-				             ExcludeInteriorInteriorIntersections = TryClone(ExcludeInteriorInteriorIntersections)
+				             ExcludeInteriorInteriorIntersections =
+					             TryClone(ExcludeInteriorInteriorIntersections)
 			             };
 
 			return result;

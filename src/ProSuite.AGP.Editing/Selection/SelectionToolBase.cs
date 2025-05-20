@@ -54,11 +54,11 @@ namespace ProSuite.AGP.Editing.Selection
 		protected override async Task HandleEscapeAsync()
 		{
 			Task task = QueuedTask.Run(async () =>
-				{
-					ClearSelection();
+			{
+				ClearSelection();
 
-					await StartSelectionPhaseAsync();
-				});
+				await StartSelectionPhaseAsync();
+			});
 
 			await ViewUtils.TryAsync(task, _msg);
 		}
