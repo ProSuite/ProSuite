@@ -83,7 +83,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#region Overrides of MapToolBase
 
-		protected override async Task OnToolActivateAsyncCore(bool hasMapViewChanged)
+		protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 		{
 			MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
@@ -147,7 +147,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetSketchVertexSymbolOptions(vertexSymbolType, options);
 		}
 
-		protected override async Task OnToolDeactivateAsyncCore(bool hasMapViewChanged)
+		protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 		{
 			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);

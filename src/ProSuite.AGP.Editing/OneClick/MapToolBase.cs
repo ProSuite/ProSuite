@@ -92,7 +92,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				// ReSharper disable once MethodHasAsyncOverload
 				OnToolActivatingCore();
 
-				await OnToolActivateAsyncCore(hasMapViewChanged);
+				await OnToolActivateCoreAsync(hasMapViewChanged);
 
 				// TODO: Activated here...
 			}
@@ -113,7 +113,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				OnToolDeactivatingCore();
 
-				await OnToolDeactivateAsyncCore(hasMapViewChanged);
+				await OnToolDeactivateCoreAsync(hasMapViewChanged);
 			}
 			catch (Exception ex)
 			{
@@ -217,6 +217,21 @@ namespace ProSuite.AGP.Editing.OneClick
 				_msg.VerboseDebug(() => $"{nameof(OnToolMouseDown)} ({Caption})");
 
 				OnToolMouseDownCore(args);
+
+				// Ensure the -Async overload is called
+				args.Handled = true;
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
+		protected override async Task HandleMouseDownAsync(MapViewMouseButtonEventArgs args)
+		{
+			try
+			{
+				await OnToolMouseDownCoreAsync(args);
 			}
 			catch (Exception e)
 			{
@@ -251,6 +266,37 @@ namespace ProSuite.AGP.Editing.OneClick
 			              suppressErrorMessageBox: true);
 		}
 
+		protected override void OnToolMouseUp(MapViewMouseButtonEventArgs args)
+		{
+			try
+			{
+				_msg.VerboseDebug(() => $"{nameof(OnToolMouseUp)} ({Caption})");
+
+				OnToolMouseUpCore(args);
+
+				// Ensure the -Async overload is called
+				args.Handled = true;
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
+		protected override async Task HandleMouseUpAsync(MapViewMouseButtonEventArgs args)
+		{
+			try
+			{
+				_msg.VerboseDebug(() => $"{nameof(HandleMouseUpAsync)} ({Caption})");
+
+				await OnToolMouseUpCoreAsync(args);
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
 			try
@@ -281,12 +327,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <remarks>Called first when the tool is activated. Will be called on GUI thread</remarks>
 		protected virtual void OnToolActivatingCore() { }
 
-		protected abstract Task OnToolActivateAsyncCore(bool hasMapViewChanged);
+		protected abstract Task OnToolActivateCoreAsync(bool hasMapViewChanged);
 
 		/// <remarks>Called first on de-activation of the tool. Will be called on GUI thread</remarks>
 		protected virtual void OnToolDeactivatingCore() { }
 
-		protected abstract Task OnToolDeactivateAsyncCore(bool hasMapViewChanged);
+		protected abstract Task OnToolDeactivateCoreAsync(bool hasMapViewChanged);
 
 		protected virtual void OnKeyDownCore(MapViewKeyEventArgs args) { }
 
@@ -304,7 +350,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolMouseDownCore(MapViewMouseButtonEventArgs args) { }
 
+		protected virtual Task OnToolMouseDownCoreAsync(MapViewMouseButtonEventArgs args)
+		{
+			return Task.CompletedTask;
+		}
+
 		protected virtual void OnToolMouseMoveCore(MapViewMouseEventArgs args) { }
+
+		protected virtual void OnToolMouseUpCore(MapViewMouseButtonEventArgs args) { }
+
+		protected virtual Task OnToolMouseUpCoreAsync(MapViewMouseButtonEventArgs args)
+		{
+			return Task.CompletedTask;
+		}
 
 		protected virtual Task OnToolDoubleClickCoreAsync(MapViewMouseButtonEventArgs args)
 		{
