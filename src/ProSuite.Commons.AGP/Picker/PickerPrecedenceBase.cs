@@ -110,7 +110,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	[CanBeNull]
 	public virtual IPickableItem PickBest(IEnumerable<IPickableItem> items)
 	{
-		return items.FirstOrDefault();
+		return items.OrderBy(item => GeometryUtils.GetShapeDimension(item.Geometry.GeometryType))
+		            .FirstOrDefault();
 	}
 
 	public Point PickerLocation { get; set; }
