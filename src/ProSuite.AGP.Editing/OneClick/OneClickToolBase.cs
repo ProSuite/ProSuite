@@ -92,9 +92,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			using var source = GetProgressorSource();
 			var progressor = source?.Progressor;
 
+			_selectionCursors ??= GetSelectionCursors();
+
 			await QueuedTaskUtils.Run(async () =>
 			{
-				SetupCursors();
+				_selectionSketchCursor =
+					SketchAndCursorSetter.Create(this,
+					                             _selectionCursors,
+					                             GetSelectionSketchGeometryType(),
+					                             DefaultSketchTypeOnFinishSketch);
 
 				await OnToolActivatingCoreAsync();
 
@@ -435,7 +441,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			return Task.FromResult(true);
 		}
-
 
 		private async Task<bool> OnSelectionSketchCompleteAsync(
 			[NotNull] Geometry sketchGeometry,
