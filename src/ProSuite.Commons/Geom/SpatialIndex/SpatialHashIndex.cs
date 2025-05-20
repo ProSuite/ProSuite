@@ -64,8 +64,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public void Add(T identifier, double x, double y)
 		{
 			TileIndex tileIndex = _tilingDefinition.GetTileIndexAt(x, y);
-			IEnumerable<TileIndex> intersectedTile = new List<TileIndex> { tileIndex };
-			Add(identifier, intersectedTile);
+			Add(identifier, tileIndex);
 		}
 
 		public void Add(T identifier, Box box)
@@ -85,27 +84,32 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			Add(identifier, intersectedTiles);
 		}
 
+		public void Add(T identifier, TileIndex tileIndex)
+		{
+			List<T> tileGeometryRefs;
+
+			if (!_tiles.TryGetValue(tileIndex, out tileGeometryRefs))
+			{
+				tileGeometryRefs = new List<T>(_estimatedItemsPerTile);
+				_tiles.Add(tileIndex, tileGeometryRefs);
+			}
+
+			if (_msg.IsVerboseDebugEnabled &&
+			    tileGeometryRefs.Count >= _estimatedItemsPerTile)
+			{
+				_msg.DebugFormat(
+					"Numer of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
+					tileIndex, tileGeometryRefs.Count + 1);
+			}
+
+			tileGeometryRefs.Add(identifier);
+		}
+
 		public void Add(T identifier, IEnumerable<TileIndex> intersectedTiles)
 		{
 			foreach (TileIndex intersectedTileIdx in intersectedTiles)
 			{
-				List<T> tileGeometryRefs;
-				if (! _tiles.TryGetValue(intersectedTileIdx, out tileGeometryRefs))
-				{
-					tileGeometryRefs = new List<T>(_estimatedItemsPerTile);
-
-					_tiles.Add(intersectedTileIdx, tileGeometryRefs);
-				}
-
-				if (_msg.IsVerboseDebugEnabled &&
-				    tileGeometryRefs.Count >= _estimatedItemsPerTile)
-				{
-					_msg.DebugFormat(
-						"Numer of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
-						intersectedTileIdx, tileGeometryRefs.Count + 1);
-				}
-
-				tileGeometryRefs.Add(identifier);
+				Add(identifier, intersectedTileIdx);
 			}
 		}
 
