@@ -39,6 +39,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
 
 		private ChangeAlongFeedback _feedback;
+
+		private SelectionCursors _secondPhaseCursors;
 		private SketchAndCursorSetter _targetSketchCursor;
 
 		protected ChangeAlongToolBase()
@@ -133,21 +135,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				ShowTargetLines = DisplayTargetLines
 			};
 
+			_secondPhaseCursors = GetTargetSelectionCursors();
+
 			await QueuedTaskUtils.Run(() =>
 			{
 				_targetSketchCursor =
 					SketchAndCursorSetter.Create(this,
-												 GetTargetSelectionCursor(),
-												 GetTargetSelectionCursorLasso(),
-												 GetTargetSelectionCursorPolygon(),
+					                             _secondPhaseCursors,
 												 GetSelectionSketchGeometryType(),
 												 DefaultSketchTypeOnFinishSketch);
-
-				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchCursor.SetSelectionCursorLassoShift(
-					GetTargetSelectionCursorLassoShift());
-				_targetSketchCursor.SetSelectionCursorPolygonShift(
-					GetTargetSelectionCursorPolygonShift());
 			});
 		}
 
@@ -441,6 +437,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return true;
 		}
+
+		protected abstract SelectionCursors GetTargetSelectionCursors();
 
 		protected abstract void LogAfterPickTarget(
 			ReshapeAlongCurveUsability reshapeCurveUsability);

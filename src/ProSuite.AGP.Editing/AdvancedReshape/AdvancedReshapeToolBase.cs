@@ -183,7 +183,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			                                    out centralConfiguration);
 
 			var result = new ReshapeToolOptions(centralConfiguration,
-			                                                     localConfiguration);
+			                                    localConfiguration);
 
 			result.PropertyChanged -= _advancedReshapeToolOptions_PropertyChanged;
 			result.PropertyChanged += _advancedReshapeToolOptions_PropertyChanged;
@@ -192,7 +192,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			string optionsMessage = result.GetLocalOverridesMessage();
 
-			if (!string.IsNullOrEmpty(optionsMessage))
+			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
@@ -271,6 +271,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
 			return SketchGeometryType.Line;
+		}
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return new SelectionCursors(Resources.AdvancedReshapeOverlay);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()

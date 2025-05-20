@@ -38,6 +38,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_cutAlongToolOptions.TargetFeatureSelection;
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return new SelectionCursors(Resources.CutPolygonAlongOverlay);
+		}
+
+		protected override SelectionCursors GetTargetSelectionCursors()
+		{
+			return new SelectionCursors(Resources.CutPolygonAlongOverlay, Resources.Cross);
+		}
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			base.OnToolDeactivateCore(hasMapViewChanged);

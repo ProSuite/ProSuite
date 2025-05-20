@@ -8,6 +8,11 @@ namespace ProSuite.AGP.Editing.YReshape
 	{
 		protected override string OptionsFileName => "YReshapeToolOptions.xml";
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.YReshapeOverlay);
+		}
+
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,

@@ -32,6 +32,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_reshapeAlongToolOptions.TargetFeatureSelection;
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return new SelectionCursors(Resources.ReshapeAlongOverlay);
+		}
+
+		protected override SelectionCursors GetTargetSelectionCursors()
+		{
+			return new SelectionCursors(Resources.ReshapeAlongOverlay, Resources.Cross);
+		}
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			base.OnToolDeactivateCore(hasMapViewChanged);

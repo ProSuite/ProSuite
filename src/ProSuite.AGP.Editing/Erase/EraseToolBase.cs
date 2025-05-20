@@ -38,6 +38,11 @@ namespace ProSuite.AGP.Editing.Erase
 			return SketchGeometryType.Polygon;
 		}
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
+		}
+
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;

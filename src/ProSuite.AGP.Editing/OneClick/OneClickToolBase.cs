@@ -42,6 +42,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private DateTime _lastSketchFinishedTime;
 
 		[NotNull] private SketchAndCursorSetter _selectionSketchCursor;
+		private SelectionCursors _selectionCursors;
 
 		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
 		protected OneClickToolBase()
@@ -113,17 +114,18 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void SetupCursors()
 		{
+			_selectionCursors = GetSelectionCursors();
+
 			_selectionSketchCursor =
 				SketchAndCursorSetter.Create(this,
-				                             GetSelectionCursor(),
-				                             GetSelectionCursorLasso(),
-				                             GetSelectionCursorPolygon(),
+				                             _selectionCursors,
 				                             GetSelectionSketchGeometryType(),
 				                             DefaultSketchTypeOnFinishSketch);
+		}
 
-			_selectionSketchCursor.SetSelectionCursorShift(GetSelectionCursorShift());
-			_selectionSketchCursor.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
-			_selectionSketchCursor.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
+		protected virtual SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
 		}
 
 		protected virtual bool DefaultSketchTypeOnFinishSketch =>
@@ -259,7 +261,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+				SetToolCursor(_selectionSketchCursor.GetCursor(GetSketchType(), shiftDown: true));
 			}
 
 			await ShiftPressedCoreAsync();
@@ -269,7 +271,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
+				SetToolCursor(_selectionSketchCursor.GetCursor(GetSketchType(), shiftDown: false));
 			}
 
 			await ShiftReleasedCoreAsync();

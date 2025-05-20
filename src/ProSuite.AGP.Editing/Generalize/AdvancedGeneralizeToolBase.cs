@@ -69,6 +69,16 @@ namespace ProSuite.AGP.Editing.Generalize
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.AdvancedGeneralizeOverlay);
+		}
+
+		protected override SelectionCursors GetSecondPhaseCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.AdvancedGeneralizeOverlay);
+		}
+
 		protected override Task OnToolActivatingCoreAsync()
 		{
 			_generalizeToolOptions = InitializeOptions();

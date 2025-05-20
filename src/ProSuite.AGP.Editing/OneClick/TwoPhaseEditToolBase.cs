@@ -24,6 +24,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private SketchAndCursorSetter _secondPhaseSketchCursor;
+		private SelectionCursors _secondPhaseCursors;
 
 		protected TwoPhaseEditToolBase()
 		{
@@ -32,17 +33,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task OnToolActivatingCoreAsync()
 		{
+			_secondPhaseCursors = GetSecondPhaseCursors();
+
 			await QueuedTaskUtils.Run(() =>
 			{
 				_secondPhaseSketchCursor =
 					SketchAndCursorSetter.Create(this,
-					                             GetSecondPhaseCursor(),
-					                             GetSecondPhaseCursorLasso(),
-					                             GetSecondPhaseCursorPolygon(),
+					                             _secondPhaseCursors,
 					                             GetSelectionSketchGeometryType(),
 					                             DefaultSketchTypeOnFinishSketch);
 
-				// NOTE daro: no shift cursors for second phase.
+				// NOTE: Shift (add / remove) is not yet implemented for second phase.
 			});
 		}
 
@@ -128,7 +129,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected override Task AfterSelectionAsync(IList<Feature> selectedFeatures,
-		                                       CancelableProgressor progressor)
+		                                            CancelableProgressor progressor)
 		{
 			CalculateDerivedGeometries(selectedFeatures, progressor);
 
@@ -237,6 +238,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			return SketchGeometryType.Rectangle;
 		}
+
+		protected abstract SelectionCursors GetSecondPhaseCursors();
 
 		protected abstract void CalculateDerivedGeometries(
 			[NotNull] IList<Feature> selectedFeatures,

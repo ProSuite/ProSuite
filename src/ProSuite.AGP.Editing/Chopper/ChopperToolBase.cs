@@ -78,6 +78,16 @@ namespace ProSuite.AGP.Editing.Chopper
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.ChopperOverlay);
+		}
+
+		protected override SelectionCursors GetSecondPhaseCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.ChopperOverlay);
+		}
+
 		protected override Task OnToolActivatingCoreAsync()
 
 		{
