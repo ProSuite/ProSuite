@@ -313,7 +313,8 @@ namespace ProSuite.AGP.Editing
 
 				if (subtypeValue != null && subtypeValue != DBNull.Value)
 				{
-					int subtypeCode = (int) subtypeValue;
+					//NOTE: Subtypes can be based on short integers
+					int subtypeCode = Convert.ToInt32(subtypeValue);
 					subtype = classDefinition.GetSubtypes()
 					                         .FirstOrDefault(s => s.GetCode() == subtypeCode);
 				}
