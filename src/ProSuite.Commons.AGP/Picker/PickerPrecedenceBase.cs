@@ -138,7 +138,9 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			modes |= PickerMode.ShowPicker;
 		}
 
-		if (NoMultiselection)
+		int candidatesCount = candidates.Sum(fs => fs.GetCount());
+
+		if (NoMultiselection && candidatesCount > 1)
 		{
 			// If area selection: show picker
 			if (! IsPointClick)
