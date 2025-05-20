@@ -61,6 +61,13 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			_estimatedItemsPerTile = (int) Math.Ceiling(estimatedItemsPerTile);
 		}
 
+		public void Add(T identifier, double x, double y)
+		{
+			TileIndex tileIndex = _tilingDefinition.GetTileIndexAt(x, y);
+			IEnumerable<TileIndex> intersectedTile = new List<TileIndex> { tileIndex };
+			Add(identifier, intersectedTile);
+		}
+
 		public void Add(T identifier, Box box)
 		{
 			IEnumerable<TileIndex> intersectedTiles =
