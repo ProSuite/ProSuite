@@ -133,26 +133,22 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.ShowPicker;
 		}
 
-		int lowestGeometryDimensionCount =
-			CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates));
+		if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
+		{
+			modes |= PickerMode.ShowPicker;
+		}
 
-		if (NoMultiselection && lowestGeometryDimensionCount > 1)
+		if (NoMultiselection)
 		{
 			// If area selection: show picker
-			// But: If single click: Also show picker
-			//if (! IsPointClick)
+			if (! IsPointClick)
 			{
 				modes |= PickerMode.ShowPicker;
 			}
-			// ...if not: pick best
+			// if not: pick best
 		}
 		else
 		{
-			if (lowestGeometryDimensionCount > 1)
-			{
-				modes |= PickerMode.ShowPicker;
-			}
-
 			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 			{
 				modes |= PickerMode.PickAll;
