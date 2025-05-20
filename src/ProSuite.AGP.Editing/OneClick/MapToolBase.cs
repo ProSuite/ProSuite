@@ -52,6 +52,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyShowOptionsPane);
 		}
 
+		protected static int GetSelectionTolerancePixels()
+		{
+			return SelectionEnvironment.SelectionTolerance;
+		}
+
 		#region PlugIn overrides
 
 		protected override void OnUpdate()

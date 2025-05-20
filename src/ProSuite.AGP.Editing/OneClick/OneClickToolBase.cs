@@ -436,10 +436,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-		protected int GetSelectionTolerancePixels()
-		{
-			return SelectionEnvironment.SelectionTolerance;
-		}
 
 		private async Task<bool> OnSelectionSketchCompleteAsync(
 			[NotNull] Geometry sketchGeometry,
@@ -488,8 +484,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual IPickerPrecedence CreatePickerPrecedence(
 			[NotNull] Geometry sketchGeometry)
 		{
-			return new PickerPrecedence(sketchGeometry,
-			                            GetSelectionTolerancePixels(),
+			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
 			                            ActiveMapView.ClientToScreen(CurrentMousePosition));
 		}
 
