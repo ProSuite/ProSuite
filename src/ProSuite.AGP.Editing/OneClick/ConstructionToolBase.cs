@@ -238,7 +238,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				_sketchStateHistory?.ResetSketchStates();
 				_isIntermittentSelectionPhaseActive = false;
 
-				_msg.Debug(e.Message, e);
+				_msg.Warn(e.Message, e);
 			}
 		}
 
