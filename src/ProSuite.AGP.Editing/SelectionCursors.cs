@@ -3,6 +3,7 @@ using System.Windows.Input;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing
 {
@@ -13,6 +14,8 @@ namespace ProSuite.AGP.Editing
 	/// </summary>
 	public class SelectionCursors
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		// Selection phase cursors
 		[NotNull] private Cursor _rectangleCursor;
 		[NotNull] private Cursor _lassoCursor;
@@ -72,7 +75,7 @@ namespace ProSuite.AGP.Editing
 
 		public SketchGeometryType DefaultSelectionSketchType { get; set; } =
 			SketchGeometryType.Rectangle;
-		
+
 		public SketchGeometryType? GetStartSelectionSketchGeometryType(
 			SketchGeometryType? previousSketchTypeToUse)
 		{
@@ -160,6 +163,7 @@ namespace ProSuite.AGP.Editing
 						       ? LassoShiftCursor
 						       : LassoCursor;
 				default:
+					_msg.Debug($"Unknown geometry type {geometryType} - using rectangle cursor");
 					return shiftDown
 						       ? RectangleShiftCursor
 						       : RectangleCursor;
