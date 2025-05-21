@@ -779,47 +779,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return SketchType;
 		}
 
-		protected virtual Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross,
-			                              Resources.SelectOverlay, 10, 10);
-		}
-
-		protected virtual Cursor GetSelectionCursorShift()
-		{
-			return
-				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
-				                       Resources.Shift, null, 10, 10);
-		}
-
-		protected virtual Cursor GetSelectionCursorLasso()
-		{
-			return
-				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
-				                       Resources.Lasso, null, 10, 10);
-		}
-
-		protected virtual Cursor GetSelectionCursorLassoShift()
-		{
-			return
-				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
-				                       Resources.Lasso, Resources.Shift, 10, 10);
-		}
-
-		protected virtual Cursor GetSelectionCursorPolygon()
-		{
-			return
-				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
-				                       Resources.Polygon, null, 10, 10);
-		}
-
-		protected virtual Cursor GetSelectionCursorPolygonShift()
-		{
-			return
-				ToolUtils.CreateCursor(Resources.Cross, Resources.SelectOverlay,
-				                       Resources.Polygon, Resources.Shift, 10, 10);
-		}
-
 		/// <summary>
 		/// Returns a simplified sketch geometry of the correct geometry type.
 		/// NOTE: This method can return a different geometry type in the single click case.

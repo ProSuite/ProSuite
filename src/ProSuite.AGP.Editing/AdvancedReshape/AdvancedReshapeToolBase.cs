@@ -787,48 +787,5 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			SketchSymbol = symbolReference;
 		}
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
 	}
 }

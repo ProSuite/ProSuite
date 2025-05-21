@@ -147,18 +147,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			});
 		}
 
-		protected abstract Cursor GetTargetSelectionCursor();
-
-		protected abstract Cursor GetTargetSelectionCursorShift();
-
-		protected abstract Cursor GetTargetSelectionCursorLasso();
-
-		protected abstract Cursor GetTargetSelectionCursorLassoShift();
-
-		protected abstract Cursor GetTargetSelectionCursorPolygon();
-
-		protected abstract Cursor GetTargetSelectionCursorPolygonShift();
-
 		protected abstract void InitializeOptions();
 
 		public void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)

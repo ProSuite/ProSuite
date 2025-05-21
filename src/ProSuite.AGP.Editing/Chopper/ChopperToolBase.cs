@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -380,70 +379,6 @@ namespace ProSuite.AGP.Editing.Chopper
 			var viewModel = GetChopperViewModel();
 
 			viewModel?.Hide();
-		}
-
-		#endregion
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#region second phase cursors
-
-		protected override Cursor GetSecondPhaseCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay,
-			                              Resources.Polygon, null, 10, 10);
 		}
 
 		#endregion

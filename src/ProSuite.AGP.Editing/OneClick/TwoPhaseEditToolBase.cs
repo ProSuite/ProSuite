@@ -47,12 +47,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			});
 		}
 
-		protected abstract Cursor GetSecondPhaseCursor();
-
-		protected abstract Cursor GetSecondPhaseCursorLasso();
-
-		protected abstract Cursor GetSecondPhaseCursorPolygon();
-
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
