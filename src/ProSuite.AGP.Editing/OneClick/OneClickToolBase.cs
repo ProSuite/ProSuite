@@ -41,6 +41,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private Geometry _lastSketch;
 		private DateTime _lastSketchFinishedTime;
 
+		// TODO: The remaining logic in SketchAndCursorSetter could be absorbed into the tool class
+		//       for higher cohesion and less complexity.
 		[NotNull] private SketchAndCursorSetter _selectionSketchCursor;
 		private SelectionCursors _selectionCursors;
 
@@ -93,6 +95,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			var progressor = source?.Progressor;
 
 			_selectionCursors ??= GetSelectionCursors();
+			_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
 
 			await QueuedTaskUtils.Run(async () =>
 			{
@@ -118,17 +121,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
-		private void SetupCursors()
-		{
-			_selectionCursors = GetSelectionCursors();
-
-			_selectionSketchCursor =
-				SketchAndCursorSetter.Create(this,
-				                             _selectionCursors,
-				                             GetSelectionSketchGeometryType(),
-				                             DefaultSketchTypeOnFinishSketch);
-		}
-
+		/// <summary>
+		/// Create the cursor bitmaps to be used in the selection phase of the tool.
+		/// The default is the cross with the selection icon.
+		/// </summary>
+		/// <returns></returns>
 		protected virtual SelectionCursors GetSelectionCursors()
 		{
 			return SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
@@ -594,7 +591,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		public void UpdateCursors()
 		{
-			SetupCursors();
+			// TODO: Consider updating the existing cursors?
+			_selectionCursors = GetSelectionCursors();
+
+			_selectionSketchCursor =
+				SketchAndCursorSetter.Create(this,
+				                             _selectionCursors,
+				                             GetSelectionSketchGeometryType(),
+				                             DefaultSketchTypeOnFinishSketch);
+
 			_selectionSketchCursor.ResetOrDefault();
 		}
 

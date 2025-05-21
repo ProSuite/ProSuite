@@ -335,6 +335,34 @@ namespace ProSuite.AGP.Editing
 			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
 		}
 
+		public static SketchGeometryType? ToggleSketchGeometryType(
+			SketchGeometryType? toggleType,
+			SketchGeometryType? currentSketchType,
+			SketchGeometryType defaultSketchType)
+		{
+			SketchGeometryType? type;
+
+			switch (toggleType)
+			{
+				// TODO: If the default is Polygon and the currentSketch is already Polygon -> Rectangle
+				case SketchGeometryType.Polygon:
+					type = currentSketchType == SketchGeometryType.Polygon
+						       ? defaultSketchType
+						       : toggleType;
+					break;
+				case SketchGeometryType.Lasso:
+					type = currentSketchType == SketchGeometryType.Lasso
+						       ? defaultSketchType
+						       : toggleType;
+					break;
+				default:
+					type = toggleType;
+					break;
+			}
+
+			return type;
+		}
+
 		/// <summary>
 		/// Finds the features that intersect the specified selection.
 		/// </summary>

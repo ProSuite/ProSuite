@@ -70,6 +70,15 @@ namespace ProSuite.AGP.Editing
 				                       Resources.Shift);
 		}
 
+		public SketchGeometryType DefaultSelectionSketchType { get; set; } =
+			SketchGeometryType.Rectangle;
+		
+		public SketchGeometryType? GetStartSelectionSketchGeometryType(
+			SketchGeometryType? previousSketchTypeToUse)
+		{
+			return previousSketchTypeToUse ?? DefaultSelectionSketchType;
+		}
+
 		#region Cursor properties
 
 		/// <summary>
