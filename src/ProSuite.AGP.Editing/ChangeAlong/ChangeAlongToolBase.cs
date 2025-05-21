@@ -40,7 +40,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
-		private SelectionCursors _secondPhaseCursors;
+		private SelectionCursors _laterPhaseCursors;
 		private SketchAndCursorSetter _targetSketchCursor;
 
 		protected ChangeAlongToolBase()
@@ -135,15 +135,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				ShowTargetLines = DisplayTargetLines
 			};
 
-			_secondPhaseCursors = GetTargetSelectionCursors();
+			_laterPhaseCursors = GetTargetSelectionCursors();
 
 			await QueuedTaskUtils.Run(() =>
 			{
 				_targetSketchCursor =
 					SketchAndCursorSetter.Create(this,
-					                             _secondPhaseCursors,
-												 GetSelectionSketchGeometryType(),
-												 DefaultSketchTypeOnFinishSketch);
+					                             _laterPhaseCursors,
+					                             GetSelectionSketchGeometryType(),
+					                             DefaultSketchTypeOnFinishSketch);
 			});
 		}
 
@@ -318,7 +318,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (!IsInSubcurveSelectionPhase())
 			{
 				// 2. Phase: target selection:
-				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: true);
+				SetToolCursor(cursor);
 			}
 
 			// 3. Phase: Shift is not supported.
@@ -332,31 +333,26 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
+				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: false);
+				SetToolCursor(cursor);
 			}
 		}
 
-		protected override async Task SetupLassoSketchAsync()
+		protected override async Task ToggleSelectionSketchGeometryType(
+			SketchGeometryType toggleSketchType,
+			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.SetupLassoSketchAsync();
+				// Use base implementation
+				await base.ToggleSelectionSketchGeometryType(
+					toggleSketchType, selectionCursors);
 			}
 			else
 			{
-				_targetSketchCursor.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
-			}
-		}
-
-		protected override async Task SetupPolygonSketchAsync()
-		{
-			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
-			{
-				await base.SetupPolygonSketchAsync();
-			}
-			else
-			{
-				_targetSketchCursor.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
+				// Second and third phase: use the _secondPhaseCursors
+				await base.ToggleSelectionSketchGeometryType(
+					toggleSketchType, _laterPhaseCursors);
 			}
 		}
 

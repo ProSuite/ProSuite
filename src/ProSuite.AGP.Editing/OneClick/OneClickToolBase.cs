@@ -160,6 +160,20 @@ namespace ProSuite.AGP.Editing.OneClick
 			await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
 		}
 
+		protected virtual async Task ToggleSelectionSketchGeometryType(
+			SketchGeometryType toggleSketchType,
+			[CanBeNull] SelectionCursors selectionCursors = null)
+		{
+			selectionCursors ??= _selectionCursors;
+
+			SketchGeometryType? newSketchGeometryType =
+				ToolUtils.ToggleSketchGeometryType(toggleSketchType, SketchType,
+				                                   selectionCursors.DefaultSelectionSketchType);
+
+			await SetSelectionSketchTypeAsync(newSketchGeometryType, selectionCursors);
+		}
+
+		[Obsolete("Use ToggleSelectionSketchGeometryType")]
 		protected virtual Task SetupLassoSketchAsync()
 		{
 			_selectionSketchCursor.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
@@ -167,6 +181,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.CompletedTask;
 		}
 
+		[Obsolete("Use ToggleSelectionSketchGeometryType")]
 		protected virtual Task SetupPolygonSketchAsync()
 		{
 			_selectionSketchCursor.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
@@ -178,12 +193,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (args.Key == _keyPolygonDraw)
 			{
-				await SetupPolygonSketchAsync();
+				await ToggleSelectionSketchGeometryType(SketchGeometryType.Polygon);
 			}
 
 			if (args.Key == _keyLassoDraw)
 			{
-				await SetupLassoSketchAsync();
+				await ToggleSelectionSketchGeometryType(SketchGeometryType.Lasso);
 			}
 
 			if (KeyboardUtils.IsShiftKey(args.Key))
@@ -264,7 +279,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				SetToolCursor(_selectionSketchCursor.GetCursor(GetSketchType(), shiftDown: true));
+				SetToolCursor(_selectionCursors.GetCursor(GetSketchType(), shiftDown: true));
 			}
 
 			await ShiftPressedCoreAsync();
@@ -274,7 +289,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				SetToolCursor(_selectionSketchCursor.GetCursor(GetSketchType(), shiftDown: false));
+				SetToolCursor(_selectionCursors.GetCursor(GetSketchType(), shiftDown: false));
 			}
 
 			await ShiftReleasedCoreAsync();
@@ -324,6 +339,34 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetupSketch();
 
 			_selectionSketchCursor.ResetOrDefault();
+		}
+
+		protected async Task SetSelectionSketchTypeAsync(
+			SketchGeometryType? newGeometryType,
+			[CanBeNull] SelectionCursors selectionCursors = null)
+		{
+			if (SketchType != newGeometryType)
+			{
+				SketchType = newGeometryType;
+				_msg.Debug($"{Caption} changed sketch type to {newGeometryType}");
+			}
+
+			selectionCursors ??= _selectionCursors;
+
+			var newCursor =
+				selectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
+
+			SetToolCursor(newCursor);
+
+			if (newGeometryType == SketchGeometryType.Polygon)
+			{
+				// If using a polygon sketch as a selection sketch, the vertices should be invisible:
+				await QueuedTask.Run(() =>
+				{
+					SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+					SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+				});
+			}
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,

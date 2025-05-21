@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Events;
@@ -199,27 +198,17 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override async Task SetupLassoSketchAsync()
+		protected override async Task ToggleSelectionSketchGeometryType(
+			SketchGeometryType toggleSketchType,
+			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				await base.SetupLassoSketchAsync();
+				await base.ToggleSelectionSketchGeometryType(toggleSketchType, selectionCursors);
 			}
 			else
 			{
-				_secondPhaseSketchCursor.Toggle(SketchGeometryType.Lasso);
-			}
-		}
-
-		protected override async Task SetupPolygonSketchAsync()
-		{
-			if (await IsInSelectionPhaseAsync())
-			{
-				await base.SetupPolygonSketchAsync();
-			}
-			else
-			{
-				_secondPhaseSketchCursor.Toggle(SketchGeometryType.Polygon);
+				await base.ToggleSelectionSketchGeometryType(toggleSketchType, _secondPhaseCursors);
 			}
 		}
 

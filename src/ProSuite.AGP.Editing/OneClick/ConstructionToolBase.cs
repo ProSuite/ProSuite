@@ -242,22 +242,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override async Task SetupLassoSketchAsync()
+		protected override async Task ToggleSelectionSketchGeometryType(
+			SketchGeometryType toggleSketchType,
+			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.SetupLassoSketchAsync();
+				await base.ToggleSelectionSketchGeometryType(toggleSketchType, selectionCursors);
 			}
-			// Else do nothing: no lasso in construction sketch phase.
-		}
-
-		protected override async Task SetupPolygonSketchAsync()
-		{
-			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
-			{
-				await base.SetupPolygonSketchAsync();
-			}
-			// Else do nothing: no polygon sketch cursor in construction sketch phase.
+			// Else do nothing: No selection sketch toggling in edit sketch phase.
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
