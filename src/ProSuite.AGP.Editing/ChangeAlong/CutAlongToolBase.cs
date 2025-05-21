@@ -35,6 +35,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected string OptionsFileName => "CutAlongToolOptions.xml";
 
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_cutAlongToolOptions.TargetFeatureSelection;
 
