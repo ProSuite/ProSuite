@@ -91,7 +91,7 @@ namespace ProSuite.AGP.Editing.FillHole
 					"in the 'Create Feature' Pane. This will determine the type of new features created to fill holes.");
 			}
 			else if (EditingTemplate.Current.Layer is BasicFeatureLayer fl &&
-					 fl.ShapeType != esriGeometryType.esriGeometryPolygon)
+			         fl.ShapeType != esriGeometryType.esriGeometryPolygon)
 			{
 				_msg.WarnFormat(
 					"The current feature template ({0}) is not a polygon feature type. Please select a polygon " +
@@ -138,7 +138,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			PartialHoleToolOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
-												out centralConfiguration);
+			                                    out centralConfiguration);
 
 			var result =
 				new HoleToolOptions(centralConfiguration, localConfiguration);
@@ -150,7 +150,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			string optionsMessage = result.GetLocalOverridesMessage();
 
-			if (!string.IsNullOrEmpty(optionsMessage))
+			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
@@ -158,7 +158,8 @@ namespace ProSuite.AGP.Editing.FillHole
 			return result;
 		}
 
-		private void _fillHoleToolOptions_PropertyChanged(object sender, PropertyChangedEventArgs args)
+		private void _fillHoleToolOptions_PropertyChanged(object sender,
+		                                                  PropertyChangedEventArgs args)
 		{
 			try
 			{
@@ -181,12 +182,12 @@ namespace ProSuite.AGP.Editing.FillHole
 		}
 
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
-														   CancelableProgressor progressor)
+		                                                   CancelableProgressor progressor)
 		{
 			_calculationExtent = ActiveMapView.Extent;
 
 			_msg.DebugFormat("Calculating fillable holes for {0} selected features",
-							 selectedFeatures.Count);
+			                 selectedFeatures.Count);
 
 			CancellationToken cancellationToken;
 
@@ -213,7 +214,6 @@ namespace ProSuite.AGP.Editing.FillHole
 			_feedback.Update(_holes);
 
 			_feedback.UpdateExtent(_calculationExtent);
-			
 		}
 
 		protected override bool CanUseDerivedGeometries()
@@ -231,7 +231,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			IList<Polygon> holesToFill = SelectHoles(_holes, sketch);
 
 			_msg.DebugFormat("Selected {0} out of {1} holes to fill",
-							 holesToFill.Count, _holes.Count);
+			                 holesToFill.Count, _holes.Count);
 
 			if (holesToFill.Count == 0)
 			{
@@ -247,32 +247,32 @@ namespace ProSuite.AGP.Editing.FillHole
 			IList<Feature> newFeatures = new List<Feature>();
 
 			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
-							 editContext =>
-							 {
-								 _msg.DebugFormat("Inserting {0} new features...",
-												  holesToFill.Count);
+				             editContext =>
+				             {
+					             _msg.DebugFormat("Inserting {0} new features...",
+					                              holesToFill.Count);
 
-								 newFeatures = GdbPersistenceUtils.InsertTx(
-									 editContext, currentTargetClass, targetSubtype,
-									 holesToFill, GetFieldValue);
+					             newFeatures = GdbPersistenceUtils.InsertTx(
+						             editContext, currentTargetClass, targetSubtype,
+						             holesToFill, GetFieldValue);
 
-								 _msg.InfoFormat("Successfully created {0} new {1} feature(s).",
-												 newFeatures.Count, currentTargetClass.GetName());
+					             _msg.InfoFormat("Successfully created {0} new {1} feature(s).",
+					                             newFeatures.Count, currentTargetClass.GetName());
 
-								 return true;
-							 },
-							 "Fill hole(s)", datasets);
+					             return true;
+				             },
+				             "Fill hole(s)", datasets);
 
 			foreach (IDisplayTable displayTable in MapUtils
-						 .GetFeatureLayersForSelection<FeatureLayer>(
-							 MapView.Active.Map, currentTargetClass))
+				         .GetFeatureLayersForSelection<FeatureLayer>(
+					         MapView.Active.Map, currentTargetClass))
 			{
 				if (displayTable is FeatureLayer featureLayer)
 				{
 					var objectIds = newFeatures.Select(f => f.GetObjectID()).ToList();
 
 					SelectionUtils.SelectRows(featureLayer, SelectionCombinationMethod.Add,
-											  objectIds);
+					                          objectIds);
 				}
 			}
 
@@ -289,12 +289,12 @@ namespace ProSuite.AGP.Editing.FillHole
 		}
 
 		protected virtual object GetFieldValue([NotNull] Field field,
-											   [NotNull] FeatureClassDefinition featureClassDef,
-											   [CanBeNull] Subtype subtype)
+		                                       [NotNull] FeatureClassDefinition featureClassDef,
+		                                       [CanBeNull] Subtype subtype)
 		{
 			// If there is an active template, use it:
 			if (GdbPersistenceUtils.TryGetFieldValueFromTemplate(
-					field.Name, EditingTemplate.Current, out object result))
+				    field.Name, EditingTemplate.Current, out object result))
 			{
 				return result;
 			}
@@ -329,9 +329,9 @@ namespace ProSuite.AGP.Editing.FillHole
 						: $"Found {holeCount} holes{{0}}. ";
 
 				holeCountMsg = string.Format(holeCountMsg,
-											 _fillHoleToolOptions.LimitPreviewToExtent
-												 ? " in current extent (shown in green)"
-												 : string.Empty);
+				                             _fillHoleToolOptions.LimitPreviewToExtent
+					                             ? " in current extent (shown in green)"
+					                             : string.Empty);
 
 				EditingTemplate editTemplate = EditingTemplate.Current;
 
@@ -345,38 +345,38 @@ namespace ProSuite.AGP.Editing.FillHole
 				//"Holes selected by dragging a box or by drawing a polygon (while holding [P]) must be completely within the area.";
 
 				_msg.InfoFormat("{0}{1}" +
-								Environment.NewLine +
-								"Press [ESC] to select different features.",
-								holeCountMsg, clickHoleMsg);
+				                Environment.NewLine +
+				                "Press [ESC] to select different features.",
+				                holeCountMsg, clickHoleMsg);
 			}
 		}
 
 		protected abstract bool CalculateHoles(IList<Feature> selectedFeatures,
-											   CancelableProgressor progressor,
-											   CancellationToken cancellationToken);
+		                                       CancelableProgressor progressor,
+		                                       CancellationToken cancellationToken);
 
 		protected abstract IList<Polygon> SelectHoles([CanBeNull] IList<Holes> holes,
-													  [NotNull] Geometry sketch);
+		                                              [NotNull] Geometry sketch);
 
 		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
-											HashSet<long> editableClassHandles)
+		                                    HashSet<long> editableClassHandles)
 		{
-			if (!GdbPersistenceUtils.CanChange(originalFeature,
-												editableClassHandles, out string warning))
+			if (! GdbPersistenceUtils.CanChange(originalFeature,
+			                                    editableClassHandles, out string warning))
 			{
 				_msg.DebugFormat("{0}: {1}",
-								 GdbObjectUtils.ToString(originalFeature),
-								 warning);
+				                 GdbObjectUtils.ToString(originalFeature),
+				                 warning);
 				return false;
 			}
 
 			Geometry originalGeometry = originalFeature.GetShape();
 
 			if (originalGeometry != null &&
-				originalGeometry.IsEqual(updatedGeometry))
+			    originalGeometry.IsEqual(updatedGeometry))
 			{
 				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
-								 GdbObjectUtils.ToString(originalFeature));
+				                 GdbObjectUtils.ToString(originalFeature));
 
 				return false;
 			}
@@ -393,7 +393,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			foreach (Feature selectedFeature in selectedFeatures)
 			{
-				var selectedPoly = (Polygon)selectedFeature.GetShape();
+				var selectedPoly = (Polygon) selectedFeature.GetShape();
 
 				if (clipEnvelope == null)
 				{
@@ -426,7 +426,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			foreach (Polygon polygonToClip in shapesToClip)
 			{
 				selectedShapes.Add(GeometryUtils.GetClippedPolygon(polygonToClip,
-									   Assert.NotNull(clipEnvelope)));
+					                   Assert.NotNull(clipEnvelope)));
 				Marshal.ReleaseComObject(polygonToClip);
 			}
 
@@ -448,7 +448,7 @@ namespace ProSuite.AGP.Editing.FillHole
 					DockPaneFillHoleViewModelBase;
 
 			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
-								  OptionsDockPaneID);
+			                      OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
@@ -479,44 +479,44 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.FillHoleOverlay, null);
+			                              Resources.FillHoleOverlay, null);
 		}
 
 		protected override Cursor GetSelectionCursorShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.FillHoleOverlay,
-										  Resources.Shift);
+			                              Resources.FillHoleOverlay,
+			                              Resources.Shift);
 		}
 
 		protected override Cursor GetSelectionCursorLasso()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.FillHoleOverlay,
-										  Resources.Lasso);
+			                              Resources.FillHoleOverlay,
+			                              Resources.Lasso);
 		}
 
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.FillHoleOverlay,
-										  Resources.Lasso,
-										  Resources.Shift);
+			                              Resources.FillHoleOverlay,
+			                              Resources.Lasso,
+			                              Resources.Shift);
 		}
 
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.FillHoleOverlay,
-										  Resources.Polygon);
+			                              Resources.FillHoleOverlay,
+			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-										  Resources.FillHoleOverlay,
-										  Resources.Polygon,
-										  Resources.Shift);
+			                              Resources.FillHoleOverlay,
+			                              Resources.Polygon,
+			                              Resources.Shift);
 		}
 
 		#endregion
@@ -531,13 +531,13 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected override Cursor GetSecondPhaseCursorLasso()
 		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay,
-										  Resources.Lasso, null, 10, 10);
+			                              Resources.Lasso, null, 10, 10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Cross, Resources.FillHoleOverlay,
-										  Resources.Polygon, null, 10, 10);
+			                              Resources.Polygon, null, 10, 10);
 		}
 
 		#endregion
