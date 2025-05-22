@@ -90,6 +90,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 
+	[CanBeNull]
 	protected abstract SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch();
 
 	[NotNull] protected abstract Cursor GetSelectionCursor();
@@ -139,15 +140,17 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			await ViewUtils.TryAsync(QueuedTask.Run(SetupCursors), _msg);
 
-			await ViewUtils.TryAsync(OnToolActivateCoreAsync(hasMapViewChanged), _msg);
+			await OnToolActivateCoreAsync(hasMapViewChanged);
 
 			if (MapUtils.HasSelection(ActiveMapView))
 			{
-				await ViewUtils.TryAsync(
-					QueuedTask.Run(() => _symbolizedSketch?.SetSketchAppearanceBasedOnSelectionAsync()),
-					_msg);
+				if (_symbolizedSketch != null)
+				{
+					await QueuedTask.Run(
+						() => _symbolizedSketch?.SetSketchAppearanceBasedOnSelectionAsync());
+				}
 
-				bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
+				bool selectionProcessed = await ProcessSelectionAsync();
 
 				if (selectionProcessed)
 				{
