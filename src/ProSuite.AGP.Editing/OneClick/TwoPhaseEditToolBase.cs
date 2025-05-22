@@ -9,7 +9,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,7 +21,6 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private SketchAndCursorSetter _secondPhaseSketchCursor;
 		private SelectionCursors _secondPhaseCursors;
 
 		protected TwoPhaseEditToolBase()
@@ -30,20 +28,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsSketchTool = true;
 		}
 
-		protected override async Task OnToolActivatingCoreAsync()
+		protected override void OnToolActivatingCore()
 		{
+			base.OnToolActivatingCore();
 			_secondPhaseCursors = GetSecondPhaseCursors();
-
-			await QueuedTaskUtils.Run(() =>
-			{
-				_secondPhaseSketchCursor =
-					SketchAndCursorSetter.Create(this,
-					                             _secondPhaseCursors,
-					                             GetSelectionSketchGeometryType(),
-					                             DefaultSketchTypeOnFinishSketch);
-
-				// NOTE: Shift (add / remove) is not yet implemented for second phase.
-			});
 		}
 
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
@@ -56,7 +44,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (selection.Count == 0)
 			{
 				ResetDerivedGeometries();
-				StartSelectionPhaseAsync();
+				await StartSelectionPhaseAsync();
 			}
 
 			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
@@ -75,7 +63,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
+		protected override async Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
 			                           args.CompletedType == EditCompletedType.Reconcile ||
@@ -84,8 +72,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (requiresRecalculate)
 			{
-				return QueuedTask.Run(
-					() =>
+				await QueuedTask.Run(
+					async () =>
 					{
 						try
 						{
@@ -98,44 +86,40 @@ namespace ProSuite.AGP.Editing.OneClick
 							if (selectedFeatures.Count == 0)
 							{
 								ResetDerivedGeometries();
-								StartSelectionPhaseAsync();
-								return true;
+								await StartSelectionPhaseAsync();
+								return;
 							}
 
 							using var source = GetProgressorSource();
 							var progressor = source?.Progressor;
 
 							CalculateDerivedGeometries(selectedFeatures, progressor);
-
-							return true;
+							await DerivedGeometriesCalculated(null, true);
 						}
 						catch (Exception e)
 						{
 							// Do not re-throw or the application could crash (e.g. in undo)
 							_msg.Error($"Error calculating reshape curves: {e.Message}", e);
-							return false;
 						}
 					});
 			}
 
-			return base.OnEditCompletedAsyncCore(args);
+			await base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override Task AfterSelectionAsync(IList<Feature> selectedFeatures,
-		                                            CancelableProgressor progressor)
+		protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+		                                                  CancelableProgressor progressor)
 		{
 			CalculateDerivedGeometries(selectedFeatures, progressor);
 
-			DerivedGeometriesCalculated(progressor);
-
-			return Task.CompletedTask;
+			await DerivedGeometriesCalculated(progressor);
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			var result = await QueuedTask.Run(() =>
+			bool result = await QueuedTask.Run(() =>
 			{
 				var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
 
@@ -145,7 +129,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return SelectAndProcessDerivedGeometry(selection, simpleGeometry, progressor);
 			});
 
-			StartSecondPhase();
+			await StartSecondPhaseAsync();
 
 			return result;
 		}
@@ -194,7 +178,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				_secondPhaseSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
+				SetToolCursor(_secondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
 			}
 		}
 
@@ -238,7 +222,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract void LogDerivedGeometriesCalculated(CancelableProgressor progressor);
 
-		private void DerivedGeometriesCalculated([CanBeNull] CancelableProgressor progressor)
+		private async Task DerivedGeometriesCalculated([CanBeNull] CancelableProgressor progressor)
 		{
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -251,12 +235,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (CanUseDerivedGeometries())
 			{
-				StartSecondPhase();
+				await StartSecondPhaseAsync();
 			}
 			else
 			{
 				// In case it has not yet been started (e.g. on tool activation with selection)
-				StartSelectionPhaseAsync();
+				await StartSelectionPhaseAsync();
 			}
 
 			LogDerivedGeometriesCalculated(progressor);
@@ -278,11 +262,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		private void StartSecondPhase()
+		private async Task StartSecondPhaseAsync()
 		{
 			SetupSketch();
 
-			_secondPhaseSketchCursor?.ResetOrDefault();
+			await ResetSelectionSketchType(_secondPhaseCursors);
 		}
 	}
 }
