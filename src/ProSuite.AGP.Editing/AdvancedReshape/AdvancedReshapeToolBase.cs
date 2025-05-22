@@ -275,7 +275,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override SelectionCursors GetSelectionCursors()
 		{
-			return new SelectionCursors(Resources.AdvancedReshapeOverlay);
+			return SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()

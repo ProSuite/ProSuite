@@ -33,12 +33,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override SelectionCursors GetSelectionCursors()
 		{
-			return new SelectionCursors(Resources.ReshapeAlongOverlay);
+			return SelectionCursors.CreateArrowCursors(Resources.ReshapeAlongOverlay);
 		}
 
 		protected override SelectionCursors GetTargetSelectionCursors()
 		{
-			return new SelectionCursors(Resources.ReshapeAlongOverlay, Resources.Cross);
+			return SelectionCursors.CreateCrossCursors(Resources.ReshapeAlongOverlay);
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

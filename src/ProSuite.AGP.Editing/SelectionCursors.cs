@@ -31,7 +31,9 @@ namespace ProSuite.AGP.Editing
 
 		public static SelectionCursors CreateCrossCursors([NotNull] byte[] toolOverlay)
 		{
-			return new SelectionCursors(toolOverlay, Resources.Cross);
+			const int xHotspot = 10;
+			const int yHotspot = 10;
+			return new SelectionCursors(toolOverlay, Resources.Cross, xHotspot, yHotspot);
 		}
 
 		/// <summary>
@@ -42,36 +44,42 @@ namespace ProSuite.AGP.Editing
 		public SelectionCursors() { }
 
 		/// <summary>
-		/// Creates the cursor combinations for a tool with the specified tool overlay image.
+		/// Creates the cursor combinations for a tool using the specified tool overlay image
+		/// combined with the phase overlay or the default arrow image.
 		/// </summary>
 		/// <param name="toolOverlay">The tool-specific overlay to be combined with the base cursor and various other overlays</param>
 		/// <param name="phaseOverlay">The icon of the selection phase. By default, this is an Arrow.</param>
+		/// <param name="xHotspot">The x coordinate of the cursor's hotspot</param>
+		/// <param name="yHotspot">The y coordinate of the cursor's hotspot</param>
 		public SelectionCursors([NotNull] byte[] toolOverlay,
-		                        [CanBeNull] byte[] phaseOverlay = null)
+		                        [CanBeNull] byte[] phaseOverlay = null,
+		                        int xHotspot = 0,
+		                        int yHotspot = 0)
 		{
-			byte[] toolOverlay1 =
-				toolOverlay ?? throw new ArgumentNullException(nameof(toolOverlay));
-
 			if (phaseOverlay == null)
 			{
 				phaseOverlay = Resources.Arrow;
 			}
 
 			// Create selection phase cursor combinations
-			_rectangleCursor = ToolUtils.CreateCursor(phaseOverlay, toolOverlay1, null);
-			_lassoCursor = ToolUtils.CreateCursor(phaseOverlay, toolOverlay1, Resources.Lasso);
-			_polygonCursor =
-				ToolUtils.CreateCursor(phaseOverlay, toolOverlay1, Resources.Polygon);
+			_rectangleCursor =
+				ToolUtils.CreateCursor(phaseOverlay, toolOverlay, xHotspot, yHotspot);
+			_lassoCursor = ToolUtils.CreateCursor(phaseOverlay, toolOverlay, Resources.Lasso, null,
+			                                      xHotspot, yHotspot);
+			_polygonCursor = ToolUtils.CreateCursor(phaseOverlay, toolOverlay, Resources.Polygon,
+			                                        null, xHotspot, yHotspot);
 
 			// Selection shift variants
 			_rectangleShiftCursor =
-				ToolUtils.CreateCursor(phaseOverlay, toolOverlay1, Resources.Shift);
+				ToolUtils.CreateCursor(phaseOverlay, toolOverlay, Resources.Shift, null,
+				                       xHotspot, yHotspot);
 			_lassoShiftCursor =
-				ToolUtils.CreateCursor(phaseOverlay, toolOverlay1, Resources.Lasso,
-				                       Resources.Shift);
+				ToolUtils.CreateCursor(phaseOverlay, toolOverlay, Resources.Lasso, Resources.Shift,
+				                       xHotspot, yHotspot);
 			_polygonShiftCursor =
-				ToolUtils.CreateCursor(phaseOverlay, toolOverlay1, Resources.Polygon,
-				                       Resources.Shift);
+				ToolUtils.CreateCursor(phaseOverlay, toolOverlay, Resources.Polygon,
+				                       Resources.Shift,
+				                       xHotspot, yHotspot);
 		}
 
 		public SketchGeometryType DefaultSelectionSketchType { get; set; } =
