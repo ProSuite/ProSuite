@@ -41,7 +41,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private ChangeAlongFeedback _feedback;
 
 		private SelectionCursors _laterPhaseCursors;
-		private SketchAndCursorSetter _targetSketchCursor;
 
 		protected ChangeAlongToolBase()
 		{
@@ -126,25 +125,23 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override async Task OnToolActivatingCoreAsync()
+		protected override void OnToolActivatingCore()
 		{
+			base.OnToolActivatingCore();
+
 			InitializeOptions();
 
+			_laterPhaseCursors = GetTargetSelectionCursors();
+		}
+
+		protected override Task OnToolActivatingCoreAsync()
+		{
 			_feedback = new ChangeAlongFeedback()
 			            {
 				            ShowTargetLines = DisplayTargetLines
 			            };
 
-			_laterPhaseCursors = GetTargetSelectionCursors();
-
-			await QueuedTaskUtils.Run(() =>
-			{
-				_targetSketchCursor =
-					SketchAndCursorSetter.Create(this,
-					                             _laterPhaseCursors,
-					                             GetSelectionSketchGeometryType(),
-					                             DefaultSketchTypeOnFinishSketch);
-			});
+			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected abstract void InitializeOptions();
@@ -235,12 +232,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override Task AfterSelectionAsync(IList<Feature> selectedFeatures,
-		                                            CancelableProgressor progressor)
+		protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+		                                                  CancelableProgressor progressor)
 		{
-			StartTargetSelectionPhase();
-
-			return Task.CompletedTask;
+			await StartTargetSelectionPhaseAsync();
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
@@ -284,26 +279,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			finally
 			{
 				// reset after 2. phase
-				_targetSketchCursor.ResetOrDefault();
-			}
-		}
-
-		protected virtual async Task ResetSketchCoreAsync()
-		{
-			try
-			{
-				if (! await IsInSelectionPhaseAsync())
-				{
-					_targetSketchCursor.ResetOrDefault();
-				}
-				else
-				{
-					await SetupSelectionSketchAsync();
-				}
-			}
-			catch (Exception ex)
-			{
-				ViewUtils.ShowError(ex, _msg);
+				await ResetSelectionSketchType(_laterPhaseCursors);
 			}
 		}
 
@@ -438,11 +414,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves);
 
-		private void StartTargetSelectionPhase()
+		private async Task StartTargetSelectionPhaseAsync()
 		{
 			SetupSketch();
 
-			_targetSketchCursor.ResetOrDefault();
+			await ResetSelectionSketchType(_laterPhaseCursors);
 		}
 
 		protected ZSettingsModel GetZSettingsModel()
