@@ -435,10 +435,20 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			DataGridViewRow row = _dataGridView.Rows[firstFindCell.RowIndex];
 
-			if (! row.Visible)
+			if (!row.Visible)
 			{
 				row.Visible = true;
 			}
+
+			DataGridViewColumn column = _dataGridView.Columns[firstFindCell.ColumnIndex];
+			if (!column.Visible)
+			{
+				column.Visible = true;
+			}
+
+			// Scroll to ensure the cell is visible
+			_dataGridView.FirstDisplayedScrollingRowIndex = row.Index;
+			_dataGridView.FirstDisplayedScrollingColumnIndex = column.Index;
 
 			_dataGridView.CurrentCell = row.Cells[firstFindCell.ColumnIndex];
 
