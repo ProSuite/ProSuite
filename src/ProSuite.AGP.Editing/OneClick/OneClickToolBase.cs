@@ -41,9 +41,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		private Geometry _lastSketch;
 		private DateTime _lastSketchFinishedTime;
 
-		// TODO: The remaining logic in SketchAndCursorSetter could be absorbed into the tool class
-		//       for higher cohesion and less complexity.
-		[NotNull] private SketchAndCursorSetter _selectionSketchCursor;
+		// TODO: The remaining logic in SketchAndCursorSetter has been absorbed into the tool class
+		//       for higher cohesion and better encapsulation for tool-private state.
+		[NotNull] [Obsolete] private SketchAndCursorSetter _selectionSketchCursor;
 		private SelectionCursors _selectionCursors;
 
 		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
@@ -338,7 +338,29 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetupSketch();
 
-			_selectionSketchCursor.ResetOrDefault();
+			await ResetSelectionSketchType(_selectionCursors);
+		}
+
+		/// <summary>
+		/// Resets the sketch type (rectangle, polygon, lasso) to the respective default (i.e. the
+		/// last used type or the default) and updates the mouse cursor accordingly.
+		/// </summary>
+		protected async Task ResetSelectionSketchType(SelectionCursors selectionCursors)
+		{
+			SketchGeometryType? previousSketchTypeToUse = null;
+
+			SketchGeometryType? previousSketchType = selectionCursors.PreviousSelectionSketchType;
+
+			if (! DefaultSketchTypeOnFinishSketch &&
+			    previousSketchType is SketchGeometryType.Polygon or SketchGeometryType.Lasso)
+			{
+				previousSketchTypeToUse = previousSketchType;
+			}
+
+			SketchGeometryType? startSketchType =
+				selectionCursors.GetStartSelectionSketchGeometryType(previousSketchTypeToUse);
+
+			await SetSelectionSketchTypeAsync(startSketchType, selectionCursors);
 		}
 
 		protected async Task SetSelectionSketchTypeAsync(
@@ -367,6 +389,9 @@ namespace ProSuite.AGP.Editing.OneClick
 					SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
 				});
 			}
+
+			// Remember the sketch type (consider local field, using last sketch type across tool phases):
+			selectionCursors.PreviousSelectionSketchType = newGeometryType;
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
@@ -632,9 +657,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool UnJoinedSelection { get; set; } = true;
 
+		[Obsolete("In order to use another set of cursors in a second tool phase create a second " +
+		          "SelectionCursors instance and call ResetSelectionSketchType(secondPhaseCursors)")]
 		public void UpdateCursors()
 		{
-			// TODO: Consider updating the existing cursors?
 			_selectionCursors = GetSelectionCursors();
 
 			_selectionSketchCursor =
