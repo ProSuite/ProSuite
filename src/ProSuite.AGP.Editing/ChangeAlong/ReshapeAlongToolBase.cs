@@ -29,6 +29,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected string OptionsFileName => "ReshapeAlongToolOptions.xml";
 
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_reshapeAlongToolOptions.TargetFeatureSelection;
 

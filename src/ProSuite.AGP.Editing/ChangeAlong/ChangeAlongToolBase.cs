@@ -59,7 +59,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 				AppDataFolder.Roaming, "ToolDefaults");
 
-		protected abstract string OptionsDockPaneID { get; }
 		protected bool DisplayTargetLines { get; set; }
 
 		protected abstract string EditOperationDescription { get; }
