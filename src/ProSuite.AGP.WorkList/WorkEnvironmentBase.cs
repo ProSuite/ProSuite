@@ -266,7 +266,7 @@ namespace ProSuite.AGP.WorkList
 			Assert.True(FileSystemUtils.EnsureDirectoryExists(directory), $"Cannot create {directory}");
 
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
-			definitionFile = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
+			definitionFile = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder, $"{fileName}{FileSuffix}");
 
 			return definitionFile != null && File.Exists(definitionFile);
 		}
