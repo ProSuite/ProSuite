@@ -13,7 +13,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -119,19 +118,20 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			bool result = await QueuedTask.Run(() =>
+			return await QueuedTask.Run(async () =>
 			{
 				var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
 
 				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
 				Assert.NotNull(simpleGeometry, "Geometry is null");
 
-				return SelectAndProcessDerivedGeometry(selection, simpleGeometry, progressor);
+				bool success =
+					await SelectAndProcessDerivedGeometry(selection, simpleGeometry, progressor);
+
+				await DerivedGeometriesCalculated(null, true);
+
+				return success;
 			});
-
-			await StartSecondPhaseAsync();
-
-			return result;
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -157,17 +157,15 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			Task task = QueuedTask.Run(
-				() =>
+			await QueuedTask.Run(
+				async () =>
 				{
 					ClearSelection();
 
 					ResetDerivedGeometries();
 
-					StartSelectionPhaseAsync();
+					await StartSelectionPhaseAsync();
 				});
-
-			await ViewUtils.TryAsync(task, _msg);
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
@@ -214,6 +212,16 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract bool CanUseDerivedGeometries();
 
+		/// <summary>
+		/// Implementation for the processing of the selected derived geometry elements and typically
+		/// the application of the updates in an edit operation.
+		/// Convention: Call <see cref="CalculateDerivedGeometries"/> after any updates to ensure the
+		/// derived geometries are synchronized with the selected features.
+		/// </summary>
+		/// <param name="selection"></param>
+		/// <param name="sketch"></param>
+		/// <param name="progressor"></param>
+		/// <returns></returns>
 		protected abstract Task<bool> SelectAndProcessDerivedGeometry(
 			[NotNull] Dictionary<MapMember, List<long>> selection, [NotNull] Geometry sketch,
 			[CanBeNull] CancelableProgressor progressor);
@@ -222,7 +230,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract void LogDerivedGeometriesCalculated(CancelableProgressor progressor);
 
-		private async Task DerivedGeometriesCalculated([CanBeNull] CancelableProgressor progressor)
+		private async Task DerivedGeometriesCalculated([CanBeNull] CancelableProgressor progressor,
+		                                               bool suppressLogging = false)
 		{
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -243,7 +252,10 @@ namespace ProSuite.AGP.Editing.OneClick
 				await StartSelectionPhaseAsync();
 			}
 
-			LogDerivedGeometriesCalculated(progressor);
+			if (! suppressLogging)
+			{
+				LogDerivedGeometriesCalculated(progressor);
+			}
 		}
 
 		private bool IsInSelectionPhaseQueued()
