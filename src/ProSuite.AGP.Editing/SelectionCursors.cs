@@ -38,6 +38,7 @@ namespace ProSuite.AGP.Editing
 		/// Intermediate constructor to allow using setters instead of constructor.
 		/// This shall be removed once it is not used any more.
 		/// </summary>
+		[Obsolete]
 		public SelectionCursors() { }
 
 		/// <summary>
@@ -75,6 +76,14 @@ namespace ProSuite.AGP.Editing
 
 		public SketchGeometryType DefaultSelectionSketchType { get; set; } =
 			SketchGeometryType.Rectangle;
+
+		// NOTE: This should probably be part of the tool state (i.e. a tool property) and most
+		// likely the same 'last sketch type' should be used both for the selection phase and the
+		// second or third phase.
+		/// <summary>
+		/// A property to maintain and remember the previously active selection sketch type.
+		/// </summary>
+		public SketchGeometryType? PreviousSelectionSketchType { get; set; }
 
 		public SketchGeometryType? GetStartSelectionSketchGeometryType(
 			SketchGeometryType? previousSketchTypeToUse)

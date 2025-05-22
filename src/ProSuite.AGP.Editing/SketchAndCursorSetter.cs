@@ -15,8 +15,6 @@ public class SketchAndCursorSetter
 	[NotNull] private readonly ISketchTool _tool;
 	[NotNull] private readonly SelectionCursors _cursors;
 
-	private SketchGeometryType? _previousType;
-
 	/// <summary>
 	/// Must be called on the MCT.
 	/// </summary>
@@ -107,10 +105,12 @@ public class SketchAndCursorSetter
 	{
 		SketchGeometryType? previousSketchTypeToUse = null;
 
+		SketchGeometryType? previousSketchType = _cursors.PreviousSelectionSketchType;
+
 		if (! DefaultSketchTypeOnFinishSketch &&
-		    _previousType is SketchGeometryType.Polygon or SketchGeometryType.Lasso)
+		    previousSketchType is SketchGeometryType.Polygon or SketchGeometryType.Lasso)
 		{
-			previousSketchTypeToUse = _previousType;
+			previousSketchTypeToUse = previousSketchType;
 		}
 
 		SketchGeometryType? startSketchType =
@@ -154,7 +154,7 @@ public class SketchAndCursorSetter
 		_tool.SetSketchType(type);
 
 		_msg.Debug($"{_tool.Caption}: {type} sketch");
-		_previousType = type;
+		_cursors.PreviousSelectionSketchType = type;
 	}
 
 	public void SetCursor(SketchGeometryType? type, bool shiftDown = false)
