@@ -5,8 +5,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.AssociationEnds
 {
-	public interface IAssociationEndView :
-		IWrappedEntityControl<AssociationEnd>, IWin32Window
+	public interface IAssociationEndView : IWrappedEntityControl<AssociationEnd>, IWin32Window
 	{
 		[CanBeNull]
 		IAssociationEndObserver Observer { get; set; }
