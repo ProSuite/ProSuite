@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
@@ -275,8 +275,11 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		private void _toolStripTextBoxFind_TextChanged(object sender, EventArgs e)
 		{
 			ApplyHighlightFindText();
-
-			Observer?.Find(_toolStripTextBoxFind.Text);
+			try { Observer?.Find(_toolStripTextBoxFind.Text); }
+			catch (Exception exception)
+			{
+				// ignored
+			}
 		}
 
 		private void _toolStripTextBoxFind_KeyDown(object sender, KeyEventArgs e)

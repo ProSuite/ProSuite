@@ -432,18 +432,18 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			DataGridViewFindResultCell firstFindCell =
 				Assert.NotNull(_findResults).FindResultCells[CurrentFindResultIndex];
-
+		   
 			DataGridViewRow row = _dataGridView.Rows[firstFindCell.RowIndex];
 
 			if (!row.Visible)
 			{
-				row.Visible = true;
+				return;
 			}
 
 			DataGridViewColumn column = _dataGridView.Columns[firstFindCell.ColumnIndex];
 			if (!column.Visible)
 			{
-				column.Visible = true;
+				return;
 			}
 
 			// Scroll to ensure the cell is visible
