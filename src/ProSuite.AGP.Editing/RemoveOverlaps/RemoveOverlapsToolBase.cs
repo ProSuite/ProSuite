@@ -132,11 +132,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				return;
 			}
 
-			// TODO: Options
-			bool insertVerticesInTarget = true;
-			_overlappingFeatures = insertVerticesInTarget
-				                       ? overlappingFeatures
-				                       : null;
+			_overlappingFeatures = overlappingFeatures;
 
 			_feedback.Update(_overlaps);
 		}
@@ -289,8 +285,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		                                   IList<Feature> overlappingFeatures,
 		                                   CancelableProgressor progressor)
 		{
-			Overlaps overlaps;
-
 			CancellationToken cancellationToken;
 
 			if (progressor != null)
@@ -303,19 +297,17 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				cancellationToken = cancellationTokenSource.Token;
 			}
 
-			//_msg.DebugFormat("Calculating removable overlaps with the following options: {0}",
-			//                 removeToolOptions);
-
-			if (MicroserviceClient != null)
-			{
-				overlaps =
-					MicroserviceClient.CalculateOverlaps(selectedFeatures, overlappingFeatures,
-					                                     cancellationToken);
-			}
-			else
+			if (MicroserviceClient == null)
 			{
 				throw new InvalidConfigurationException("Microservice has not been started.");
 			}
+
+			Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
+				                    ? ActiveMapView.Extent
+				                    : null;
+
+			Overlaps overlaps = MicroserviceClient.CalculateOverlaps(
+				selectedFeatures, overlappingFeatures, inExtent, cancellationToken);
 
 			return overlaps;
 		}
