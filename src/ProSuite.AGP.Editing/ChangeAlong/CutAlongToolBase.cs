@@ -29,7 +29,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected CutAlongToolOptions _cutAlongToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialCutAlongToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
 
 		protected override string EditOperationDescription => "Cut along";
 
@@ -178,10 +178,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// For the time being, we always reload the options because they could have been updated in ArcMap
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialCutAlongToolOptions>(
+				new OverridableSettingsProvider<PartialCutAlongOptions>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-			PartialCutAlongToolOptions localConfiguration, centralConfiguration;
+			PartialCutAlongOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
