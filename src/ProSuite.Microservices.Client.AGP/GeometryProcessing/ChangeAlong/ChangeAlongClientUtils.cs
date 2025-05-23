@@ -69,13 +69,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			[NotNull] IList<Feature> targetFeatures,
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
+			double? customTolerance,
 			ZValueSource zValueSource,
 			CancellationToken cancellationToken)
 		{
 			var response =
 				CalculateCutCurvesRpc(rpcClient, sourceFeatures, targetFeatures,
-									  targetBufferOptions, clipExtent, zValueSource,
-									  cancellationToken);
+									  targetBufferOptions, clipExtent, customTolerance,
+									  zValueSource, cancellationToken);
 
 			if (response == null || cancellationToken.IsCancellationRequested)
 			{
@@ -116,12 +117,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			[NotNull] IList<Feature> targetFeatures,
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
+			double? customTolerance,
 			ZValueSource zValueSource,
 			CancellationToken cancellationToken)
 		{
 			var request = CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures,
-														 targetBufferOptions, clipExtent,
-														 zValueSource);
+			                                             targetBufferOptions, clipExtent,
+			                                             customTolerance, zValueSource);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
@@ -156,6 +158,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			IList<Feature> targetFeatures,
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
+			double? customTolerance,
 			ZValueSource zValueSource)
 		{
 			var request = new CalculateCutLinesRequest();
@@ -164,12 +167,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 											request.SourceFeatures, request.TargetFeatures,
 											request.ClassDefinitions);
 
+			request.Tolerance = customTolerance ?? -1;
+
 			request.TargetBufferOptions = ToTargetBufferOptionsMsg(targetBufferOptions);
 
 			request.FilterOptions =
 				ToLineFilterOptionsMsg(new ReshapeCurveFilterOptions(clipExtent));
 
-			// TODO: ZValueSource:
+			// TODO: ZValueSource (see RemoveOverlaps)
 
 			return request;
 		}
@@ -237,6 +242,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			[NotNull] IList<Feature> targetFeatures,
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
+			double? customTolerance,
 			ZValueSource zValueSource,
 			bool insertVerticesInTarget,
 			[NotNull] IList<CutSubcurve> selectedSubcurves,
@@ -248,8 +254,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 			ApplyCutLinesRequest request =
 				CreateApplyCutCurvesRequest(sourceFeatures, targetFeatures, targetBufferOptions,
-											clipExtent, zValueSource, insertVerticesInTarget,
-											selectedSubcurves);
+				                            clipExtent, customTolerance, zValueSource,
+				                            insertVerticesInTarget, selectedSubcurves);
 
 			ApplyCutLinesResponse response =
 				rpcClient.ApplyCutLines(request, null, null, cancellationToken);
@@ -325,6 +331,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			IList<Feature> targetFeatures,
 			TargetBufferOptions targetBufferOptions,
 			IBoundedXY clipExtent,
+			double? customTolerance,
 			ZValueSource zValueSource,
 			bool insertVerticesInTarget,
 			IList<CutSubcurve> selectedSubcurves)
@@ -335,7 +342,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 					CalculationRequest =
 						CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures,
 													   targetBufferOptions, clipExtent,
-													   zValueSource)
+													   customTolerance, zValueSource)
 				};
 
 			foreach (CutSubcurve subcurve in selectedSubcurves)

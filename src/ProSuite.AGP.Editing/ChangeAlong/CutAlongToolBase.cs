@@ -28,8 +28,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected CutAlongToolOptions _cutAlongToolOptions;
 
-		[CanBeNull]
-		private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
+		[CanBeNull] private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
 
 		protected override string EditOperationDescription => "Cut along";
 
@@ -80,12 +79,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
+			double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
+				                          ? _cutAlongToolOptions.MinimalTolerance
+				                          : null;
+
 			bool insertVerticesInTarget = _cutAlongToolOptions.InsertVerticesInTarget;
 
-			var updatedFeatures = MicroserviceClient.ApplyCutLines(
+			List<ResultFeature> updatedFeatures = MicroserviceClient.ApplyCutLines(
 				selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
-				zValueSource, insertVerticesInTarget,
-				cancellationToken, out newChangeAlongCurves);
+				customTolerance, zValueSource, insertVerticesInTarget, cancellationToken,
+				out newChangeAlongCurves);
 
 			return updatedFeatures;
 		}
@@ -161,9 +164,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
+			double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
+				                          ? _cutAlongToolOptions.MinimalTolerance
+				                          : null;
+
 			ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
-				selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, zValueSource,
-				cancellationToken);
+				selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, customTolerance,
+				zValueSource, cancellationToken);
 
 			return result;
 		}
