@@ -106,13 +106,15 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public Overlaps CalculateOverlaps(
 			IList<Feature> selectedFeatures,
 			IList<Feature> overlappingFeatures,
+			[CanBeNull] Envelope inExtent,
 			CancellationToken cancellationToken)
 		{
 			if (RemoveOverlapsClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
 			return RemoveOverlapsClientUtils.CalculateOverlaps(
-				RemoveOverlapsClient, selectedFeatures, overlappingFeatures, cancellationToken);
+				RemoveOverlapsClient, selectedFeatures, overlappingFeatures, inExtent,
+				cancellationToken);
 		}
 
 		public RemoveOverlapsResult RemoveOverlaps(IEnumerable<Feature> selectedFeatures,
