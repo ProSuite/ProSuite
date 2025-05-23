@@ -268,9 +268,9 @@ namespace ProSuite.DdxEditor.Content.Models
 		public void CheckSpatialReferences()
 		{
 			SpatialReferenceProperties modelSpatialReferenceProperties = null;
-			IEnumerable<ModelDatasetSpatialReferenceComparison> comparisons =
+			IList<ModelDatasetSpatialReferenceComparison> comparisons =
 				_modelBuilder
-					.ReadOnlyTransaction<IEnumerable<ModelDatasetSpatialReferenceComparison>>(
+					.ReadOnlyTransaction<IList<ModelDatasetSpatialReferenceComparison>>(
 						() => GetSpatialReferenceComparisons(out modelSpatialReferenceProperties));
 			Assert.NotNull(modelSpatialReferenceProperties, "modelSpatialReferenceProperties");
 
@@ -588,7 +588,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		}
 
 		[NotNull]
-		private IEnumerable<ModelDatasetSpatialReferenceComparison>
+		private IList<ModelDatasetSpatialReferenceComparison>
 			GetSpatialReferenceComparisons(
 				[NotNull] out SpatialReferenceProperties modelSpatialReferenceProperties)
 		{
