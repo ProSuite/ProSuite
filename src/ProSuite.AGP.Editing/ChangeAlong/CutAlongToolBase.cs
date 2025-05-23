@@ -30,6 +30,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		[CanBeNull] private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
 
+		protected override bool RefreshSubcurvesOnRedraw =>
+			_cutAlongToolOptions.ClipLinesOnVisibleExtent &&
+			_cutAlongToolOptions.DisplayRecalculateCutLines;
+
 		protected override string EditOperationDescription => "Cut along";
 
 		protected string OptionsFileName => "CutAlongToolOptions.xml";

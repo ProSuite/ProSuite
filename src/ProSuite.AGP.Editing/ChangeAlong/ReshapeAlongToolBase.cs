@@ -25,6 +25,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		[CanBeNull]
 		private OverridableSettingsProvider<PartialReshapeAlongOptions> _settingsProvider;
 
+		protected override bool RefreshSubcurvesOnRedraw =>
+			_reshapeAlongToolOptions.ClipLinesOnVisibleExtent &&
+			_reshapeAlongToolOptions.DisplayRecalculateCutLines;
+
 		protected override string EditOperationDescription => "Reshape along";
 
 		protected string OptionsFileName => "ReshapeAlongToolOptions.xml";
@@ -163,8 +167,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			ChangeAlongCurves result = MicroserviceClient.CalculateReshapeLines(
 				selectedFeatures, targetFeatures, targetBufferOptions, filterOptions,
-				customTolerance,
-				cancellationToken);
+				customTolerance, cancellationToken);
 
 			return result;
 		}
