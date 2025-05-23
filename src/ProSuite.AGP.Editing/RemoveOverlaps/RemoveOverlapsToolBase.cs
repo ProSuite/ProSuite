@@ -468,7 +468,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			Dictionary<MapMember, List<long>> selection =
 				SelectionUtils.GetSelection(ActiveMapView.Map);
 
-			Envelope inExtent = ActiveMapView.Extent;
+			Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
+				                    ? ActiveMapView.Extent
+				                    : null;
 
 			TargetFeatureSelection targetFeatureSelection =
 				_removeOverlapsToolOptions.TargetFeatureSelection;
