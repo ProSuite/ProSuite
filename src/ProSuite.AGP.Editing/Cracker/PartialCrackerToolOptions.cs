@@ -15,9 +15,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		public OverridableSetting<bool> SnapToTargetVertices { get; set; }
 		public OverridableSetting<double> SnapTolerance { get; set; }
-
-		public OverridableSetting<bool> RemoveUnnecessaryVertices { get; set; }
-
+		
 		public OverridableSetting<bool> UseSourceZs { get; set; }
 
 		#endregion
@@ -31,8 +29,7 @@ namespace ProSuite.AGP.Editing.Cracker
 				             MinimumSegmentLength = TryClone(MinimumSegmentLength),
 				             SnapToTargetVertices = TryClone(SnapToTargetVertices),
 				             SnapTolerance = TryClone(SnapTolerance),
-				             UseSourceZs = TryClone(UseSourceZs),
-				             RemoveUnnecessaryVertices = TryClone(RemoveUnnecessaryVertices)
+				             UseSourceZs = TryClone(UseSourceZs)
 			             };
 
 			return result;

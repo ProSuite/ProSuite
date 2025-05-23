@@ -47,11 +47,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
-			// Checkbox Clean up
-			CentralizableRemoveUnnecessaryVertices =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.RemoveUnnecessaryVertices),
-					false);
 		}
 
 		#region Centralizable Properties
