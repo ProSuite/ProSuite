@@ -107,7 +107,7 @@ namespace ProSuite.AGP.WorkList
 			string displayName = Path.GetFileNameWithoutExtension(definitionFilePath);
 			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
 
-			_msg.DebugFormat("Created work list {0}", uniqueName);
+			_msg.Debug($"Created {WorkListUtils.Format(result)}");
 
 			return result;
 		}

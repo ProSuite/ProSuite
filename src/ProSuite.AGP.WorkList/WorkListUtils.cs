@@ -340,5 +340,10 @@ namespace ProSuite.AGP.WorkList
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
 			return helper.ReadFromFile(workListDefinitionFilePath);
 		}
+
+		public static string Format(IWorkList worklist)
+		{
+			return $"{worklist.DisplayName}: {worklist.Name}";
+		}
 	}
 }

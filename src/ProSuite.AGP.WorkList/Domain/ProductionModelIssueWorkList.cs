@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -7,7 +6,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ProSuite.AGP.Editing;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -117,19 +115,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				              });
 
 			return result;
-		}
-
-		protected override IEnumerable<IWorkItem> GetWorkItemsForInnermostContextCore(
-			QueryFilter filter,
-			CurrentSearchOption currentSearch,
-			VisitedSearchOption visitedSearch)
-		{
-			// AreaOfInterest should be equal to work unit perimeter.
-			Assert.NotNull(AreaOfInterest);
-			Assert.False(AreaOfInterest.IsEmpty, "aoi is empty");
-
-			return base.GetWorkItemsForInnermostContextCore(
-				GdbQueryUtils.CreateSpatialFilter(AreaOfInterest), currentSearch, visitedSearch);
 		}
 	}
 }

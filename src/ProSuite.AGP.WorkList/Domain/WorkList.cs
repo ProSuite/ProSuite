@@ -13,6 +13,8 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain
@@ -29,8 +31,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		private static readonly object _obj = new();
 		private static readonly int _initialCapacity = 1000;
 
-		private readonly List<IWorkItem> _items = new(_initialCapacity);
-		private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap = new(_initialCapacity);
+		private List<IWorkItem> _items = new(_initialCapacity);
+		private Dictionary<GdbRowIdentity, IWorkItem> _rowMap = new(_initialCapacity);
 
 		private WorkItemVisibility? _visibility;
 		[NotNull] private string _displayName;
@@ -102,6 +104,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		public long? TotalCount { get; set; }
+
+		// TODO: (daro) AOI can be null! E.g. selection work list. Issue work list where there is no work unit. But the should have the
+		//		 possibility to define an AOI.
 		protected Geometry AreaOfInterest { get; }
 
 		public virtual bool CanSetStatus()
@@ -263,6 +268,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region GetItems
 
+		private SpatialHashSearcher<IWorkItem> _searcher;
+
 		public Row GetCurrentItemSourceRow()
 		{
 			if (Current == null)
@@ -313,6 +320,60 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		public void LoadItems([NotNull] QueryFilter filter)
+		{
+			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
+			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
+			Dictionary<GdbRowIdentity, IWorkItem> rowMap = new();
+
+			Stopwatch watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start loading items.");
+
+			// Load all items not matter what WorkItemStatus
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
+			{
+				item.OID = Repository.GetNextOid();
+				Assert.True(item.OID > 0, "item is not initialized");
+
+				Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Could not add {item}");
+
+				// it's an unknown item > refresh it's state (status, visited) either
+				// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
+				Repository.Refresh(item);
+
+				if (geometry != null)
+				{
+					item.SetExtent(geometry.Extent);
+
+					ComputeExtent(geometry.Extent,
+					              ref xmin, ref ymin, ref zmin,
+					              ref xmax, ref ymax, ref zmax);
+				}
+			}
+
+			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} loaded {rowMap.Count} items.");
+
+			Assert.True(xmin > double.MinValue, "Cannot get coordinate");
+			Assert.True(ymin > double.MinValue, "Cannot get coordinate");
+			Assert.True(xmax < double.MaxValue, "Cannot get coordinate");
+			Assert.True(ymax < double.MaxValue, "Cannot get coordinate");
+
+			_extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
+			                                           new Coordinate3D(xmax, ymax, zmax),
+			                                           AreaOfInterest.SpatialReference);
+
+			// TODO: QueryPoints?
+			// TODO: (daro) introduce a loaded flag. Situation: work list is loaded into map. Navigator opened >
+			//		 LoadItemsInBackground > close navigator > re-open it, items are already loaded.
+			lock (_obj)
+			{
+				_rowMap = rowMap;
+				_items = new List<IWorkItem>(rowMap.Values);
+				_searcher = CreateSpatialSearcher(_items);
+			}
+
+			Invalidate();
+		}
+
 		public IEnumerable<IWorkItem> Search([NotNull] QueryFilter filter)
 		{
 			// Don't query database here. IWorkItem.OID is the item id. IWorkItem.ObjectID is the
@@ -320,97 +381,57 @@ namespace ProSuite.AGP.WorkList.Domain
 			// the IWorkItem.ObjectID We'd have to make a lookup: IWorkItem.OID > Table, ObjectID
 			// to query database.
 
-			Assert.True(_items.Count > 0, "no work items");
+			List<IWorkItem> items;
+
+			lock (_obj)
+			{
+				items = _items;
+			}
+
+			Assert.True(items.Count > 0, "no work items");
 
 			if (filter.ObjectIDs.Count == 0)
 			{
-				return _items.AsEnumerable();
+				return items.AsEnumerable();
 			}
 
 			List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
-			return _items.Where(item => oids.BinarySearch(item.OID) >= 0);
+			return items.Where(item => oids.BinarySearch(item.OID) >= 0);
 		}
 
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null)
+		public IEnumerable<IWorkItem> GetItems([NotNull] QueryFilter filter)
 		{
-			filter ??= new QueryFilter();
-			return GetItems(filter, GetStatus(Visibility), excludeGeometry: false);
-		}
-
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter,
-		                                       WorkItemStatus? itemStatus,
-		                                       bool excludeGeometry = false)
-		{
-			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
-			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
-
-			int newItemsCount = 0;
-
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter, itemStatus, excludeGeometry))
+			if (_searcher == null)
 			{
-				bool exists;
-				IWorkItem cachedItem;
-
-				lock (_obj)
-				{
-					exists = _rowMap.TryGetValue(item.GdbRowProxy, out cachedItem);
-				}
-
-				if (exists)
-				{
-					Assert.True(cachedItem.OID > 0, "item is not initialized");
-
-					yield return cachedItem;
-				}
-				else
-				{
-					Assert.True(TryAddItem(item), $"Could not add {item}");
-
-					// it's an unknown item > refresh it's state (status, visited) either
-					// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
-					Repository.Refresh(item);
-
-					newItemsCount++;
-
-					if (geometry?.Extent is { IsEmpty: false })
-					{
-						// Set extent here whereas item feature geometry is set in UpdateItemFeatureGeometry()
-						item.SetExtent(geometry.Extent);
-
-						ComputeExtent(geometry.Extent,
-						              ref xmin, ref ymin, ref zmin,
-						              ref xmax, ref ymax, ref zmax);
-					}
-
-					yield return item;
-				}
+				return Enumerable.Empty<IWorkItem>();
 			}
 
-			if (newItemsCount == 0)
+			if (filter is not SpatialQueryFilter spatialFilter)
 			{
-				yield break;
+				throw new NotImplementedException();
 			}
 
-			_msg.Debug($"Added {newItemsCount} new items to work list.");
+			Envelope extent = spatialFilter.FilterGeometry.Extent;
 
-			Assert.True(xmin > double.MinValue, "Cannot get coordinate");
-			Assert.True(ymin > double.MinValue, "Cannot get coordinate");
-			Assert.True(xmax < double.MaxValue, "Cannot get coordinate");
-			Assert.True(ymax < double.MaxValue, "Cannot get coordinate");
+			WorkItemStatus? currentVisibility = GetStatus(Visibility);
 
-			Envelope newExtent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
-																  new Coordinate3D(xmax, ymax, zmax),
-																  AreaOfInterest.SpatialReference);
+			Predicate<IWorkItem> predicate = null;
+			if (currentVisibility.HasValue)
+			{
+				predicate = item => item.Status == currentVisibility;
+			}
 
-			// Spatial referenece of work list is defined by WorkItemTable.GetExtent().
-			_extent = _extent == null ? newExtent : _extent.Union(newExtent);
+			// TODO: (daro) tolerance?
+			return _searcher.Search(extent.XMin, extent.YMin,
+			                        extent.XMax, extent.YMax,
+			                        0.001, predicate);
 		}
 
 		private IEnumerable<IWorkItem> GetItems([NotNull] QueryFilter filter,
 		                                        CurrentSearchOption currentSearch,
 		                                        VisitedSearchOption visitedSearch)
 		{
-			IEnumerable<IWorkItem> query = GetItems(filter, GetStatus(Visibility));
+			IEnumerable<IWorkItem> query = GetItems(filter);
 
 			if (currentSearch == CurrentSearchOption.ExcludeCurrent)
 			{
@@ -423,36 +444,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			return query;
-		}
-
-		private List<IWorkItem> GetItems(SpatialQueryFilter filter,
-		                                 CurrentSearchOption currentSearch,
-		                                 VisitedSearchOption visitedSearch, int maxTrials)
-		{
-			List<IWorkItem> result = GetItems(filter, currentSearch, visitedSearch).ToList();
-
-			Envelope filterExtent = filter.FilterGeometry.Extent;
-
-			while (result.Count == 0)
-			{
-				filter = GdbQueryUtils.CreateSpatialFilter(filterExtent);
-
-				result = GetItems(filter, currentSearch, visitedSearch).ToList();
-
-				if (maxTrials == 0)
-				{
-					_msg.Debug($"Stop searching items after {maxTrials} tries.");
-					break;
-				}
-
-				if (result.Count == 0)
-				{
-					maxTrials--;
-					filterExtent = filterExtent.Expand(2, 2, true);
-				}
-			}
-
-			return result;
 		}
 
 		// todo: (daro) to utils?
@@ -472,12 +463,19 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		#endregion
-
-		public int CountLoadedItems()
+		private static SpatialHashSearcher<IWorkItem> CreateSpatialSearcher(List<IWorkItem> items)
 		{
-			return _items.Count;
+			return SpatialHashSearcher<IWorkItem>.CreateSpatialSearcher(items, CreateEnvelope, 10);
 		}
+
+		private static EnvelopeXY CreateEnvelope(IWorkItem item)
+		{
+			if (item.Extent is null) throw new ArgumentNullException(nameof(item.Extent));
+
+			return new EnvelopeXY(item.Extent.XMin, item.Extent.YMin, item.Extent.XMax, item.Extent.YMax);
+		}
+
+		#endregion
 
 		public long CountLoadedItems(out int todo)
 		{
@@ -487,10 +485,13 @@ namespace ProSuite.AGP.WorkList.Domain
 			return _items.Count;
 		}
 
-		public void ComputeTotalCount()
+		public void Count()
 		{
-			Assert.Null(TotalCount);
-			TotalCount = Repository.Count();
+			var watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start counting items.");
+
+			TotalCount ??= Repository.Count();
+
+			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} counted {TotalCount} items.");
 		}
 
 		#region Navigation public
@@ -545,12 +546,6 @@ namespace ProSuite.AGP.WorkList.Domain
 					}
 
 					index++;
-				}
-
-				// fewer items loaded than TotalCount
-				if (_items.Count < TotalCount)
-				{
-					return true;
 				}
 			}
 			catch (Exception e)
@@ -661,23 +656,76 @@ namespace ProSuite.AGP.WorkList.Domain
 		                          [NotNull] Geometry reference,
 		                          VisitedSearchOption visitedSearchOption)
 		{
-			IList<IWorkItem> candidates =
-				GetWorkItemsForInnermostContext(contextPerimeters,
-				                                visitedSearchOption);
-			if (candidates.Count > 0)
-			{
-				IWorkItem nearest = GetNearest(reference, candidates);
+			IList<IWorkItem> candidates;
+			IWorkItem nearest;
 
-				if (nearest != null)
+			if (TryGetItemsForInnermostContext(contextPerimeters,
+			                                   visitedSearchOption,
+			                                   out candidates))
+			{
+				nearest = GetNearest(reference, candidates);
+			}
+			else
+			{
+				// nothing found, try AOI
+				candidates =
+					GetItems(GdbQueryUtils.CreateSpatialFilter(AreaOfInterest),
+					         CurrentSearchOption.ExcludeCurrent, visitedSearchOption).ToList();
+
+				if (candidates.Count == 0)
 				{
-					SetCurrentItem(nearest, Current);
-					return true;
+					// TODO: (daro) GetExtent() might be equal to AOI
+					// still nothing found, try extent
+					candidates =
+						GetItems(GdbQueryUtils.CreateSpatialFilter(GetExtent()),
+						         CurrentSearchOption.ExcludeCurrent, visitedSearchOption).ToList();
 				}
+
+				nearest = GetNearest(reference, candidates);
 			}
 
-			return false;
+			if (nearest == null)
+			{
+				return false;
+			}
+
+			SetCurrentItem(nearest, Current);
+			return true;
 		}
 
+		private bool TryGetItemsForInnermostContext(Polygon[] contextPerimeters,
+		                                            VisitedSearchOption visitedSearchOption,
+		                                            out IList<IWorkItem> items)
+		{
+			items = new List<IWorkItem>(0);
+
+			// TODO: (daro) magic number
+			int trials = 10;
+			int count = 0;
+
+			while (count == 0)
+			{
+				if (trials == 0)
+				{
+					_msg.Debug($"Stop searching items after {trials} tries.");
+					return false;
+				}
+
+				items =
+					GetWorkItemsForInnermostContext(contextPerimeters,
+					                                visitedSearchOption);
+				count = items.Count;
+				trials -= 1;
+
+				contextPerimeters =
+					contextPerimeters.Select(p => PolygonBuilderEx.CreatePolygon(p.Extent.Expand(2, 2, true), p.SpatialReference))
+					                 .ToArray();
+			}
+
+			return true;
+		}
+
+		// TODO: (daro) rename to GetItemsForInnermostContext
 		[NotNull]
 		private IList<IWorkItem> GetWorkItemsForInnermostContext([NotNull] Polygon[] perimeters,
 		                                                         VisitedSearchOption visitedSearch)
@@ -686,6 +734,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			_msg.VerboseDebug(() => $"Getting work items for innermost context ({perimeters.Length} perimeters)");
 
+			// TODO: DARO revise it's always Exclude Current
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
 
 			for (var index = 0; index < perimeters.Length; index++)
@@ -724,30 +773,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
-			// Nothing found so far. Union perimeters and pass filter on to specific work list implementation.
-			Geometry union = GeometryUtils.Union(perimeters);
-			Assert.NotNull(union);
-			Assert.False(union.IsEmpty, "union is empty");
-
-			// Ensure not entire database is searched, filter by AOI.
-			List<IWorkItem> candidates = GetItems(GdbQueryUtils.CreateSpatialFilter(union.Extent), currentSearch, visitedSearch, 50);
-
-			if (candidates.Count > 0)
-			{
-				return candidates;
-			}
-
-			// Still nothing found. Let core method try with work list specific logic.
-			// Ensure not entire database is searched, filter by AOI.
-			return GetWorkItemsForInnermostContextCore(new QueryFilter(), currentSearch, visitedSearch).ToList();
-		}
-
-		protected virtual IEnumerable<IWorkItem> GetWorkItemsForInnermostContextCore(
-			[NotNull] QueryFilter filter,
-			CurrentSearchOption currentSearch,
-			VisitedSearchOption visitedSearch)
-		{
-			return GetItems(filter, currentSearch, visitedSearch);
+			return new List<IWorkItem>(0);
 		}
 
 		[NotNull]

@@ -30,14 +30,8 @@ public interface IWorkList : IRowCache
 
 	IEnumerable<IWorkItem> Search(QueryFilter filter);
 
-	IEnumerable<IWorkItem> GetItems(QueryFilter filter = null);
-
-	IEnumerable<IWorkItem> GetItems(QueryFilter filter,
-	                                WorkItemStatus? itemStatus,
-	                                bool excludeGeometry = false);
-
-	int CountLoadedItems();
-
+	IEnumerable<IWorkItem> GetItems(QueryFilter filter);
+	
 	long CountLoadedItems(out int todo);
 
 	bool CanGoFirst();
@@ -95,7 +89,9 @@ public interface IWorkList : IRowCache
 
 	void UpdateExistingItemGeometries(QueryFilter filter);
 
-	void ComputeTotalCount();
+	void Count();
 
 	Row GetCurrentItemSourceRow();
+
+	void LoadItems(QueryFilter filter);
 }

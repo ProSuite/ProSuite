@@ -195,7 +195,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null)
+	public IEnumerable<IWorkItem> GetItems(QueryFilter filter)
 	{
 		throw new NotImplementedException();
 	}
@@ -330,12 +330,22 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public void ComputeTotalCount()
+	public void Count()
 	{
 		throw new NotImplementedException();
 	}
 
 	public Row GetCurrentItemSourceRow()
+	{
+		throw new NotImplementedException();
+	}
+
+	public void RefreshItems(QueryFilter filter)
+	{
+		throw new NotImplementedException();
+	}
+
+	public void LoadItems(QueryFilter filter)
 	{
 		throw new NotImplementedException();
 	}

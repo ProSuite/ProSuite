@@ -63,6 +63,12 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return GeometryType.Polygon;
 		}
 
+		// TODO: (daro) use creation date of definition file?
+		public override DateTime GetLastModifiedTime()
+		{
+			return DateTime.Now;
+		}
+
 		[NotNull]
 		public override PluginCursorTemplate Search(QueryFilter filter)
 		{
