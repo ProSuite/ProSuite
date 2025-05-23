@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Input;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
@@ -149,13 +151,35 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			{
 				SetProperty(ref _options, value);
 
+				Unit srUnit = MapView.Active?.Map.SpatialReference.Unit;
+
+				int decimalsCorrection = 0;
+				string unitLabel = "meters";
+				if (srUnit != null)
+				{
+					if (srUnit.UnitType == UnitType.Angular)
+					{
+						// Decimal degrees
+						decimalsCorrection = 6;
+						unitLabel = "degrees";
+					}
+					// If we ever encounter someone using a different unit, calculate the correction here...
+				}
+
 				ExcludeLinesOutsideSource =
 					new CentralizableSettingViewModel<bool>(
 						Options.CentralizableExcludeLinesOutsideSource);
 
 				ExcludeLinesTolerance = new CentralizableSettingViewModel<double>(
-					Options.CentralizableExcludeLinesTolerance,
-					new[] { Options.CentralizableExcludeLinesOutsideSource });
+					                        Options.CentralizableExcludeLinesTolerance,
+					                        new[]
+					                        {
+						                        Options.CentralizableExcludeLinesOutsideSource
+					                        })
+				                        {
+					                        Decimals = 2 + decimalsCorrection,
+					                        UnitLabel = unitLabel
+				                        };
 
 				ExcludeLinesDisplay = new CentralizableSettingViewModel<bool>(
 					Options.CentralizableExcludeLinesDisplay,
@@ -180,20 +204,28 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				BufferTarget =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
 				BufferTolerance = new CentralizableSettingViewModel<double>(
-					Options.CentralizableBufferTolerance,
-					new[] { Options.CentralizableBufferTarget });
+					                  Options.CentralizableBufferTolerance,
+					                  new[] { Options.CentralizableBufferTarget })
+				                  {
+					                  Decimals = 2 + decimalsCorrection,
+					                  UnitLabel = unitLabel
+				                  };
 
 				EnforceMinimumBufferSegmentLength = new CentralizableSettingViewModel<bool>(
 					Options.CentralizableEnforceMinimumBufferSegmentLength,
 					new[] { Options.CentralizableBufferTarget });
 
-				MinBufferSegmentLength = new CentralizableSettingViewModel<double>(
-					Options.CentralizableMinBufferSegmentLength,
-					new[]
+				MinBufferSegmentLength =
+					new CentralizableSettingViewModel<double>(
+						Options.CentralizableMinBufferSegmentLength,
+						new[]
+						{
+							Options.CentralizableEnforceMinimumBufferSegmentLength,
+							Options.CentralizableBufferTarget
+						})
 					{
-						Options.CentralizableEnforceMinimumBufferSegmentLength,
-						Options.CentralizableBufferTarget
-					});
+						Decimals = 2 + decimalsCorrection, UnitLabel = unitLabel
+					};
 
 				InsertVertices =
 					new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
@@ -203,8 +235,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 						Options.CentralizableMinimalToleranceApply);
 
 				MinimalTolerance = new CentralizableSettingViewModel<double>(
-					Options.CentralizableMinimalTolerance,
-					new[] { Options.CentralizableMinimalToleranceApply });
+					                   Options.CentralizableMinimalTolerance,
+					                   new[] { Options.CentralizableMinimalToleranceApply })
+				                   {
+					                   Decimals = 8 + decimalsCorrection,
+					                   UnitLabel = unitLabel
+				                   };
 
 				TargetFeatureSelectionVM =
 					new TargetFeatureSelectionViewModel(
