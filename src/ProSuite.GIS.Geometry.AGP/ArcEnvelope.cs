@@ -7,7 +7,7 @@ namespace ProSuite.GIS.Geometry.AGP
 {
 	public class ArcEnvelope : IEnvelope
 	{
-		private readonly Envelope _proEnvelope;
+		private Envelope _proEnvelope;
 
 		public ArcEnvelope(Envelope envelope)
 		{
@@ -186,7 +186,7 @@ namespace ProSuite.GIS.Geometry.AGP
 		{
 			var aoEnvelope = ((ArcEnvelope) other).ProEnvelope;
 
-			_proEnvelope.Union(aoEnvelope);
+			_proEnvelope = _proEnvelope.Union(aoEnvelope);
 
 		}
 
@@ -219,11 +219,11 @@ namespace ProSuite.GIS.Geometry.AGP
 		{
 			if (asRatio)
 			{
-				_proEnvelope.Expand(dx * _proEnvelope.Width, dy * _proEnvelope.Height, false);
+				_proEnvelope = _proEnvelope.Expand(dx * _proEnvelope.Width, dy * _proEnvelope.Height, false);
 			}
 			else
 			{
-				_proEnvelope.Expand(dx, dy, false);
+				_proEnvelope = _proEnvelope.Expand(dx, dy, false);
 			}
 		}
 
