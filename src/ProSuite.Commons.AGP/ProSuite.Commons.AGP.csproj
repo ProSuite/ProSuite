@@ -40,6 +40,7 @@
   <ItemGroup Condition=" '$(ArcGISProVersion)' &lt; 3.3 ">
     <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.cs" />
     <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.Designer.cs" />
+    <Compile Remove="Framework\Controls\ToolStripUtils.cs" />
   </ItemGroup>
 
   <ItemGroup>
