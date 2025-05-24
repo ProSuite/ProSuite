@@ -83,8 +83,11 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_removeHoleToolOptions.LocalOptions);
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
