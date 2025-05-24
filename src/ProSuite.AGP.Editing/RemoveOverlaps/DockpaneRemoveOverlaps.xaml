@@ -25,9 +25,7 @@
         HorizontalAlignment="Left"
         VerticalAlignment="Top">
 
-
 	    <!-- Overlaps calculation -->
-	    <Label FontWeight="Medium" Content="Snapping and minimum segment length"/>
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 		          Content="Limit overlap calculation to current extent"
 		          DataContext="{Binding LimitOverlapCalculationToExtent}" />
