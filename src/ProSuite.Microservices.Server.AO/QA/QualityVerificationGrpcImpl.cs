@@ -883,31 +883,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] ICollection<int> excludedConditionIds = null)
 		{
 			var dataSources = new List<DataSource>();
+
+			// Initialize using valid data sources from XML:
+			dataSources.AddRange(QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+
+			if (dataSources.Count > 0)
+			{
+				_msg.InfoFormat("Initialized {0} data sources from XML.", dataSources.Count);
+			}
+
 			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
-					List<string> replacementStrings =
-						StringUtils.SplitAndTrim(replacement, '|');
-					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
-
-					var dataSource =
-						new DataSource(replacementStrings[0], replacementStrings[0])
-						{
-							WorkspaceAsText = replacementStrings[1]
-						};
-
-					dataSources.Add(dataSource);
+					AddOrReplace(replacement, dataSources);
 				}
-
-				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
-			}
-			else
-			{
-				dataSources.AddRange(
-					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
-				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =
@@ -928,6 +918,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return qualitySpecification;
+		}
+
+		private static void AddOrReplace([NotNull] string replacementString,
+		                                 [NotNull] List<DataSource> dataSources)
+		{
+			List<string> replacementStrings =
+				StringUtils.SplitAndTrim(replacementString, '|');
+			Assert.AreEqual(2, replacementStrings.Count,
+			                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+
+			var dataSource =
+				new DataSource(replacementStrings[0], replacementStrings[0])
+				{
+					WorkspaceAsText = replacementStrings[1]
+				};
+
+			// Replace existing data source from XML if it exists:
+			int index = dataSources.FindIndex(ds => ds.ID == dataSource.ID);
+			if (index >= 0)
+			{
+				dataSources[index] = dataSource;
+				_msg.InfoFormat("Replaced data source <id> {0} with {1}", dataSource.ID,
+				                dataSource);
+			}
+			else
+			{
+				dataSources.Add(dataSource);
+				_msg.InfoFormat("Adding data source: {0}", dataSource);
+			}
 		}
 
 		private QualitySpecification SetupQualitySpecification(
