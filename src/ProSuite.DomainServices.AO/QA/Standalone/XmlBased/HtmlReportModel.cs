@@ -250,6 +250,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[UsedImplicitly]
 		public List<HtmlReportDataQualityCategory> RootCategories { get; }
 
+		private bool DatasetsHaveKnownSpatialReference =>
+			VerifiedDatasets?.Any(d => d.CoordinateSystem != null) ?? false;
+
 		[NotNull]
 		private static IEnumerable<KeyValuePair<string, string>> GetProperties(
 			[CanBeNull] IEnumerable<XmlNameValuePair> properties)
