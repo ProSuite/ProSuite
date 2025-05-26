@@ -36,21 +36,20 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			Assert.ArgumentNotNull(verificationReport, nameof(verificationReport));
 			Assert.ArgumentNotNullOrEmpty(outputDirectoryPath, nameof(outputDirectoryPath));
 			Assert.ArgumentNotNullOrEmpty(verificationReportName,
-										  nameof(verificationReportName));
+			                              nameof(verificationReportName));
 			Assert.ArgumentNotNull(categoryOptionsProvider, nameof(categoryOptionsProvider));
 
 			_verificationReport = verificationReport;
 			HtmlReportFiles =
-				htmlReportFileNames.Select(
-									   fileName =>
-										   new OutputFile(
-											   Path.Combine(outputDirectoryPath, fileName)))
-								   .ToList();
+				htmlReportFileNames.Select(fileName =>
+					                           new OutputFile(
+						                           Path.Combine(outputDirectoryPath, fileName)))
+				                   .ToList();
 			IssueMapFiles = issueMapFilePaths?.Select(path => new OutputFile(path))
-											 .ToList() ?? new List<OutputFile>();
+			                                 .ToList() ?? new List<OutputFile>();
 			QualitySpecificationReportFiles =
 				qualitySpecificationReportFilePaths?.Select(path => new OutputFile(path))
-												   .ToList() ?? new List<OutputFile>();
+				                                   .ToList() ?? new List<OutputFile>();
 
 			Properties = new NameValuePairs(GetProperties(verificationReport.Properties));
 			QualitySpecification = qualitySpecification.Name;
@@ -104,15 +103,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				_verificationReport.VerifiedDatasets.Select(xmld => new HtmlVerifiedDataset(xmld)));
 
 			WorkspaceDescriptions = new List<HtmlWorkspaceDescription>(
-				_verificationReport.DataSourceDescriptions.Select(
-					xmlw => new HtmlWorkspaceDescription(xmlw)));
+				_verificationReport.DataSourceDescriptions.Select(xmlw =>
+					new HtmlWorkspaceDescription(xmlw)));
 
 			HasWarnings = statistics.WarningCount > 0;
 			HasErrors = statistics.ErrorCount > 0;
-			HasIssues = !HasWarnings && !HasErrors;
+			HasIssues = ! HasWarnings && ! HasErrors;
 
 			IssueCount = HtmlReportUtils.Format(statistics.WarningCount +
-												statistics.ErrorCount);
+			                                    statistics.ErrorCount);
 			WarningCount = HtmlReportUtils.Format(statistics.WarningCount);
 			ErrorCount = HtmlReportUtils.Format(statistics.ErrorCount);
 			ExceptionCount = HtmlReportUtils.Format(statistics.ExceptionCount);
@@ -250,7 +249,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[UsedImplicitly]
 		public List<HtmlReportDataQualityCategory> RootCategories { get; }
 
-		private bool DatasetsHaveKnownSpatialReference =>
+		[UsedImplicitly]
+		public bool DatasetsHaveKnownSpatialReference =>
 			VerifiedDatasets?.Any(d => d.CoordinateSystem != null) ?? false;
 
 		[NotNull]
