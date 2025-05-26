@@ -1,5 +1,7 @@
+using System.IO;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -41,9 +43,10 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override string Name { get; }
 
+		[CanBeNull]
 		public override IWorkList Get()
 		{
-			if (WorkList == null)
+			if (WorkList == null && File.Exists(_path))
 			{
 				XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(_path);
 
