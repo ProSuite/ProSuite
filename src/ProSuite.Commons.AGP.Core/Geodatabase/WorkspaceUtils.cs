@@ -36,16 +36,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <returns></returns>
 		public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(string catalogPath)
 		{
-			if (System.IO.Path.GetExtension(catalogPath)
-			          .Equals(".sde", StringComparison.InvariantCultureIgnoreCase))
+			string extension = Path.GetExtension(catalogPath);
+
+			if (extension
+			    .Equals(".sde", StringComparison.InvariantCultureIgnoreCase))
 			{
 				DatabaseConnectionFile connector = new DatabaseConnectionFile(new Uri(catalogPath));
 
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
 
-			if (System.IO.Path.GetExtension(catalogPath)
-			          .Equals(".gdb", StringComparison.InvariantCultureIgnoreCase))
+			if (extension
+			    .Equals(".gdb", StringComparison.InvariantCultureIgnoreCase))
 			{
 				var connector = new FileGeodatabaseConnectionPath(new Uri(catalogPath));
 
@@ -53,17 +55,20 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			// Mobile Geodatabase
-			if (System.IO.Path.GetExtension(catalogPath).Equals(".geodatabase",StringComparison.InvariantCultureIgnoreCase))
+			if (extension
+			    .Equals(".geodatabase", StringComparison.InvariantCultureIgnoreCase))
 			{
 				var connector = new MobileGeodatabaseConnectionPath(new Uri(catalogPath));
 
 				return new ArcGIS.Core.Data.Geodatabase(connector);
-
 			}
 
 			// TODO: SQLite other?
 
-			return null;
+			string message =
+				$"Finder: Unsupported geodatabase extension: {extension} for path: {catalogPath}";
+			_msg.Debug(message);
+			throw new NotSupportedException(message);
 		}
 
 		/// <summary>
