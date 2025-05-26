@@ -1089,11 +1089,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false;
 			}
 
+			if (workspace1.Type != esriWorkspaceType.esriRemoteDatabaseWorkspace &&
+			    workspace2.Type != esriWorkspaceType.esriRemoteDatabaseWorkspace)
+			{
+				// Both not remote gdb. Compare based on workspace path.
+				return UsesSameWorkspacePath(workspace1, workspace2);
+			}
+			
 			var versionedWorkspace1 = workspace1 as IVersionedWorkspace;
 			var versionedWorkspace2 = workspace2 as IVersionedWorkspace;
 
 			if (versionedWorkspace1 == null && versionedWorkspace2 == null)
 			{
+				// Both not versioned, despite being remote gdbs
+
 				if (string.IsNullOrEmpty(workspace1.PathName) &&
 				    string.IsNullOrEmpty(workspace2.PathName))
 				{
@@ -1106,18 +1115,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 					                                StringComparison.OrdinalIgnoreCase);
 				}
 
-				// both are not versioned. Compare file paths
-				if (string.IsNullOrEmpty(workspace1.PathName) ||
-				    string.IsNullOrEmpty(workspace2.PathName))
-				{
-					return false;
-				}
+				_msg.WarnFormat(
+					"Comparison of unknown remote database workspaces, comparing workspace paths.{0}" +
+					"- Remote database workspace 1: {1}{0}" +
+					"- Remote database workspace 2: {2}{0}",
+					Environment.NewLine, WorkspaceToString(workspace1),
+					WorkspaceToString(workspace2));
 
-				//Determines whether two Uri instances have the same value.
-				// e.g. these paths are equal
-				// C:\Users\daro\AppData\Local\Temp\GdbWorkspaceTest.gdb
-				// file:///C:/Users/daro/AppData/Local/Temp/GdbWorkspaceTest.gdb
-				return Equals(new Uri(workspace1.PathName), new Uri(workspace2.PathName));
+				return UsesSameWorkspacePath(workspace1, workspace2);
 			}
 
 			if (versionedWorkspace1 == null || versionedWorkspace2 == null)
@@ -1219,6 +1224,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return Equals(modifyDate1, modifyDate2);
+		}
+
+		private static bool UsesSameWorkspacePath([NotNull] IWorkspace workspace1,
+		                                          [NotNull] IWorkspace workspace2)
+		{
+			Assert.ArgumentNotNull(workspace1, nameof(workspace1));
+			Assert.ArgumentNotNull(workspace2, nameof(workspace2));
+
+			if (string.IsNullOrEmpty(workspace1.PathName) ||
+			    string.IsNullOrEmpty(workspace2.PathName))
+			{
+				return false;
+			}
+
+			//Determines whether two Uri instances have the same value.
+			// e.g. these paths are equal
+			// C:\Users\daro\AppData\Local\Temp\GdbWorkspaceTest.gdb
+			// file:///C:/Users/daro/AppData/Local/Temp/GdbWorkspaceTest.gdb
+			return Equals(new Uri(workspace1.PathName), new Uri(workspace2.PathName));
 		}
 
 		/// <summary>
