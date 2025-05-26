@@ -52,7 +52,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
 
-			// TODO: SQLite, Mobile, other?
+			// Mobile Geodatabase
+			if (System.IO.Path.GetExtension(catalogPath).Equals(".geodatabase",StringComparison.InvariantCultureIgnoreCase))
+			{
+				var connector = new MobileGeodatabaseConnectionPath(new Uri(catalogPath));
+
+				return new ArcGIS.Core.Data.Geodatabase(connector);
+
+			}
+
+			// TODO: SQLite other?
 
 			return null;
 		}
