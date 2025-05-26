@@ -74,7 +74,7 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 
 	public IssueWorkListEnvironmentMock(IWorkListItemDatastore itemDatastore) { }
 
-	public Task<IWorkList> CreateWorkListAsync(string name, string path)
+	public Task<IWorkList> CreateWorkListAsync(string uniqueName, string path)
 	{
 		var worklist = new WorkListMock();
 		return Task.FromResult<IWorkList>(worklist);
@@ -98,7 +98,7 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 
 public class SelectionWorkListEnvironmentMock : IWorkEnvironment
 {
-	public Task<IWorkList> CreateWorkListAsync(string name, string path)
+	public Task<IWorkList> CreateWorkListAsync(string uniqueName, string path)
 	{
 		return Task.FromResult(default(IWorkList));
 	}

@@ -245,8 +245,13 @@ namespace ProSuite.AGP.WorkList.Domain
 			return UseItemGeometry(geometryType);
 		}
 
-		private static bool UseItemGeometry(Geometry geometry)
+		private static bool UseItemGeometry([CanBeNull] Geometry geometry)
 		{
+			if (geometry == null)
+			{
+				return false;
+			}
+
 			GeometryType geometryType = geometry.GeometryType;
 			return UseItemGeometry(geometryType);
 		}
@@ -324,7 +329,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
-			Dictionary<GdbRowIdentity, IWorkItem> rowMap = new();
+
+			var rowMap = new Dictionary<GdbRowIdentity, IWorkItem>();
+			var itemsWithExtent = new List<IWorkItem>();
 
 			Stopwatch watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start loading items.");
 
@@ -342,6 +349,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				if (geometry != null)
 				{
+					itemsWithExtent.Add(item);
+
 					item.SetExtent(geometry.Extent);
 
 					ComputeExtent(geometry.Extent,
@@ -368,7 +377,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				_rowMap = rowMap;
 				_items = new List<IWorkItem>(rowMap.Values);
-				_searcher = CreateSpatialSearcher(_items);
+				_searcher = CreateSpatialSearcher(itemsWithExtent);
 			}
 
 			Invalidate();
@@ -465,9 +474,10 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private static SpatialHashSearcher<IWorkItem> CreateSpatialSearcher(List<IWorkItem> items)
 		{
-			return SpatialHashSearcher<IWorkItem>.CreateSpatialSearcher(items, CreateEnvelope, 10);
+			return SpatialHashSearcher<IWorkItem>.CreateSpatialSearcher(items, CreateEnvelope);
 		}
 
+		[NotNull]
 		private static EnvelopeXY CreateEnvelope(IWorkItem item)
 		{
 			if (item.Extent is null) throw new ArgumentNullException(nameof(item.Extent));

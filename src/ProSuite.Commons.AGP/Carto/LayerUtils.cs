@@ -568,5 +568,21 @@ namespace ProSuite.Commons.AGP.Carto
 			cimLayer.Name = name;
 			layer.SetDefinition(cimLayer);
 		}
+
+		public static void Flatten([NotNull] IEnumerable<Layer> layers,
+		                           [NotNull] ref ICollection<Layer> flattenedLayers)
+		{
+			foreach (Layer layer in layers)
+			{
+				if (layer is ILayerContainer container)
+				{
+					Flatten(container.Layers, ref flattenedLayers);
+				}
+				else
+				{
+					flattenedLayers.Add(layer);
+				}
+			}
+		}
 	}
 }

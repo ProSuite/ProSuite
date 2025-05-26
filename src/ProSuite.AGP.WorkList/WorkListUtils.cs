@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
@@ -344,6 +348,124 @@ namespace ProSuite.AGP.WorkList
 		public static string Format(IWorkList worklist)
 		{
 			return $"{worklist.DisplayName}: {worklist.Name}";
+		}
+
+		public static void LoadItemsInBackground([NotNull] IWorkList workList)
+		{
+			if (workList == null) throw new ArgumentNullException();
+
+			try
+			{
+				var thread = new Thread(() =>
+				{
+					try
+					{
+						_msg.VerboseDebug(() => $"{Format(workList)} load items.");
+
+						workList.LoadItems(new QueryFilter());
+
+						// The thread terminates once its work is done.
+					}
+					catch (OperationCanceledException oce)
+					{
+						_msg.Debug("Cancel service", oce);
+					}
+					catch (Exception ex)
+					{
+						_msg.Debug(ex.Message, ex);
+					}
+				});
+
+				// TODO: (daro) implement feedback for navigator?
+				thread.TrySetApartmentState(ApartmentState.STA);
+				thread.IsBackground = true;
+				thread.Start();
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+		}
+
+		public static void CountItemsInBackground([NotNull] IWorkList workList)
+		{
+			if (workList == null) throw new ArgumentNullException();
+
+			try
+			{
+				IProgress<int> progress = new Progress<int>();
+				var thread = new Thread(() =>
+				{
+					try
+					{
+						_msg.VerboseDebug(() => $"{Format(workList)} count items.");
+
+						workList.Count();
+
+						// The thread terminates once its work is done.
+					}
+					catch (OperationCanceledException oce)
+					{
+						_msg.Debug("Cancel service", oce);
+					}
+					catch (Exception ex)
+					{
+						_msg.Debug(ex.Message, ex);
+					}
+				});
+
+				thread.TrySetApartmentState(ApartmentState.STA);
+				thread.IsBackground = true;
+				thread.Start();
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+		}
+
+		/// <summary>
+		/// Finds all work list layers in the active map.
+		/// </summary>
+		/// <param name="worklistLayers">all work list layers</param>
+		public static IEnumerable<Layer> GetActiveWorklistLayers(
+			[NotNull] IEnumerable<FeatureLayer> worklistLayers)
+		{
+			return GetActiveWorklistLayers(new FeatureLayer[], MapUtils.GetActiveMap());
+		}
+
+		/// <summary>
+		/// Finds all work list layers in the layer container.
+		/// </summary>
+		/// <param name="worklistLayers">all work list layers</param>
+		/// <param name="container">map or group layer</param>
+		/// <returns></returns>
+		public static IEnumerable<Layer> GetActiveWorklistLayers(
+			[NotNull] IEnumerable<FeatureLayer> worklistLayers,
+			[NotNull] ILayerContainer container)
+		{
+			return worklistLayers.Select(layer => container.FindLayer(layer.URI))
+			                     .Where(layer => layer != null).OfType<Table>();
+		}
+
+		public static IEnumerable<Layer> GetWorklistLayers([NotNull] string worklistName)
+		{
+			Map map = MapUtils.GetActiveMap();
+			IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
+
+			return GetWorklistLayers(layers, worklistName);
+		}
+
+		public static IEnumerable<Layer> GetWorklistLayers([NotNull] IEnumerable<Layer> layers,
+		                                                   [NotNull] string worklistName)
+		{
+			return layers.Where(layer =>
+			{
+				var connection = layer.GetDataConnection() as CIMStandardDataConnection;
+
+				return string.Equals(worklistName, connection?.Dataset,
+				                     StringComparison.OrdinalIgnoreCase);
+			});
 		}
 	}
 }
