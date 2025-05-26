@@ -1083,6 +1083,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return gdbWorkspace2.IsSameDatabase(workspace1);
 			}
 
+			if (workspace1.Type != workspace2.Type)
+			{
+				// Different workspace types (file system vs. local gdb vs. remote gdb). Different.
+				return false;
+			}
+
 			var versionedWorkspace1 = workspace1 as IVersionedWorkspace;
 			var versionedWorkspace2 = workspace2 as IVersionedWorkspace;
 
