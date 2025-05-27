@@ -33,14 +33,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
-		protected abstract IMapBasedSessionContext SessionContext { get; }
+		protected abstract ISessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
-		protected virtual Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool>
+		protected virtual
+			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
-		protected override Task<bool> OnClickCore()
+		protected override Task<bool> OnClickAsyncCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
 			{
@@ -91,7 +92,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(progressTracker, resultsPath),
-					ApplicationController = appController
+					ApplicationController = appController,
+					KeepPreviousIssuesDisabled = true
 				};
 
 			string actionTitle = $"{qualitySpecification.Name}: Verify Full Extent";

@@ -20,7 +20,7 @@ namespace ProSuite.AGP.WorkList
 		#region Overrides of GdbItemRepository
 
 		public DbStatusWorkItemRepository(
-			[NotNull] IEnumerable<DbStatusSourceClassDefinition> sourceClassDefinitions,
+			[NotNull] IList<DbStatusSourceClassDefinition> sourceClassDefinitions,
 			[NotNull] IWorkItemStateRepository workItemStateRepository)
 			: base(sourceClassDefinitions, workItemStateRepository) { }
 
@@ -89,7 +89,6 @@ namespace ProSuite.AGP.WorkList
 					context.Invalidate(row);
 				}, table);
 
-				// todo daro CancelMessage, AbortMessage
 				string fieldName = databaseSourceClass.StatusSchema.FieldName;
 				object value = databaseSourceClass.GetValue(item.Status);
 

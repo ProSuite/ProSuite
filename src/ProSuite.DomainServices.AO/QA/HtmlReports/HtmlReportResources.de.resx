@@ -120,35 +120,17 @@
   <data name="HtmlTexts_QualitySpecificationTitle" xml:space="preserve">
     <value>Qualitätsspezifikation</value>
   </data>
-  <data name="HtmlTexts_Warnings" xml:space="preserve">
-    <value>Warnungen</value>
-  </data>
-  <data name="HtmlTexts_Errors" xml:space="preserve">
-    <value>Fehler</value>
-  </data>
-  <data name="HtmlTexts_ColumnHeadingIssueType" xml:space="preserve">
-    <value>Typ</value>
-  </data>
-  <data name="HtmlTexts_ColumnHeadingIssueCount" xml:space="preserve">
-    <value>Meldungen</value>
-  </data>
-  <data name="HtmlTexts_ColumnHeadingAffectedComponent" xml:space="preserve">
-    <value>Betroffene Elemente</value>
-  </data>
-  <data name="HtmlTexts_ColumnHeadingIssueDescription" xml:space="preserve">
-    <value>Problembeschreibung</value>
-  </data>
-  <data name="HtmlTexts_ColumnHeadingQualityCondition" xml:space="preserve">
-    <value>Qualitätsbedingung</value>
-  </data>
   <data name="HtmlTexts_DateOfVerification" xml:space="preserve">
     <value>Prüfdatum</value>
   </data>
   <data name="HtmlTexts_ProcessingTime" xml:space="preserve">
     <value>Prüfdauer</value>
   </data>
-  <data name="HtmlTexts_OutputDirectory" xml:space="preserve">
-    <value>Ausgabeverzeichnis</value>
+  <data name="HtmlTexts_Warnings" xml:space="preserve">
+    <value>Warnungen</value>
+  </data>
+  <data name="HtmlTexts_Errors" xml:space="preserve">
+    <value>Fehler</value>
   </data>
   <data name="HtmlTexts_VerifiedExtent" xml:space="preserve">
     <value>Prüfausschnitt</value>
@@ -165,6 +147,12 @@
   <data name="HtmlTexts_AreaOfInterestClipExtent" xml:space="preserve">
     <value>Verarbeitungsausschnitt</value>
   </data>
+  <data name="HtmlTexts_OutputDirectory" xml:space="preserve">
+    <value>Ausgabeverzeichnis</value>
+  </data>
+  <data name="HtmlTexts_OriginalPath" xml:space="preserve">
+    <value>Orig. Pfad</value>
+  </data>
   <data name="HtmlTexts_MapDocument" xml:space="preserve">
     <value>Fehlerkarte</value>
   </data>
@@ -174,47 +162,74 @@
   <data name="HtmlTexts_VerificationCancelledMessage" xml:space="preserve">
     <value>Die Prüfung wurde abgebrochen</value>
   </data>
-  <data name="HtmlTexts_OriginalPath" xml:space="preserve">
-    <value>Orig. Pfad</value>
+  <data name="HtmlTexts_ColumnHeadingQualityCondition" xml:space="preserve">
+    <value>Qualitätsbedingung</value>
   </data>
-  <data name="HtmlTexts_IssueDatabase" xml:space="preserve">
-    <value>Meldungsdatenbank</value>
+  <data name="HtmlTexts_ColumnHeadingQualityConditions" xml:space="preserve">
+    <value>Geprüfte Qualitätsbedingungen</value>
+  </data>
+  <data name="HtmlTexts_ColumnHeadingIssueDescription" xml:space="preserve">
+    <value>Problembeschreibung</value>
+  </data>
+  <data name="HtmlTexts_ColumnHeadingAffectedComponent" xml:space="preserve">
+    <value>Betroffene Elemente</value>
+  </data>
+  <data name="HtmlTexts_ColumnHeadingIssueType" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="HtmlTexts_ColumnHeadingIssueCount" xml:space="preserve">
+    <value>Meldungen</value>
   </data>
   <data name="HtmlTexts_DatasetReport" xml:space="preserve">
     <value>Datensatzbericht</value>
   </data>
-  <data name="HtmlTexts_Alias" xml:space="preserve">
-    <value>Alias</value>
-  </data>
-  <data name="HtmlTexts_XYResolution" xml:space="preserve">
-    <value>XY-Auflösung</value>
-  </data>
-  <data name="HtmlTexts_XYCoordinateSystem" xml:space="preserve">
-    <value>Koordinatensystem</value>
-  </data>
-  <data name="HtmlTexts_VersionName" xml:space="preserve">
-    <value>Versionsname</value>
-  </data>
-  <data name="HtmlTexts_RowCount" xml:space="preserve">
-    <value>Anzahl Objekte</value>
-  </data>
-  <data name="HtmlTexts_RegisteredAsVersioned" xml:space="preserve">
-    <value>Registriert als versioniert</value>
-  </data>
-  <data name="HtmlTexts_No" xml:space="preserve">
-    <value>Nein</value>
+  <data name="HtmlTexts_IssueDatabase" xml:space="preserve">
+    <value>Meldungsdatenbank</value>
   </data>
   <data name="HtmlTexts_Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="HtmlTexts_MultipartFeatures" xml:space="preserve">
-    <value>Multipart-Features</value>
+  <data name="HtmlTexts_Description" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="HtmlTexts_Alias" xml:space="preserve">
+    <value>Alias</value>
+  </data>
+  <data name="HtmlTexts_DataSource" xml:space="preserve">
+    <value>Datenquelle</value>
+  </data>
+  <data name="HtmlTexts_DataSources" xml:space="preserve">
+    <value>Datenquellen</value>
+  </data>
+  <data name="HtmlTexts_RegisteredAsVersioned" xml:space="preserve">
+    <value>Registriert als versioniert</value>
+  </data>
+  <data name="HtmlTexts_Yes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="HtmlTexts_No" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="HtmlTexts_VersionName" xml:space="preserve">
+    <value>Versionsname</value>
+  </data>
+  <data name="HtmlTexts_GeometryType" xml:space="preserve">
+    <value>Geometrietyp</value>
   </data>
   <data name="HtmlTexts_XYTolerance" xml:space="preserve">
     <value>XY-Toleranz</value>
   </data>
-  <data name="HtmlTexts_GeometryType" xml:space="preserve">
-    <value>Geometrietyp</value>
+  <data name="HtmlTexts_XYCoordinateSystem" xml:space="preserve">
+    <value>Koordinatensystem</value>
+  </data>
+  <data name="HtmlTexts_XYResolution" xml:space="preserve">
+    <value>XY-Auflösung</value>
+  </data>
+  <data name="HtmlTexts_FeatureCount" xml:space="preserve">
+    <value>Anzahl Features</value>
+  </data>
+  <data name="HtmlTexts_MultipartFeatures" xml:space="preserve">
+    <value>Multipart-Features</value>
   </data>
   <data name="HtmlTexts_FeaturesWithoutGeometry" xml:space="preserve">
     <value>Features ohne Geometrie</value>
@@ -222,14 +237,8 @@
   <data name="HtmlTexts_FeaturesWithNonLinearSegments" xml:space="preserve">
     <value>Feat. mit nicht-linearen Seg.</value>
   </data>
-  <data name="HtmlTexts_FeatureCount" xml:space="preserve">
-    <value>Anzahl Features</value>
-  </data>
-  <data name="HtmlTexts_Yes" xml:space="preserve">
-    <value>Ja</value>
-  </data>
-  <data name="HtmlTexts_DataSource" xml:space="preserve">
-    <value>Datenquelle</value>
+  <data name="HtmlTexts_RowCount" xml:space="preserve">
+    <value>Anzahl Objekte</value>
   </data>
   <data name="HtmlTexts_NoCategory" xml:space="preserve">
     <value>&lt;Keine Kategorie&gt;</value>
@@ -242,5 +251,8 @@
   </data>
   <data name="HtmlTexts_UndefinedExceptionCategory" xml:space="preserve">
     <value>-</value>
+  </data>
+  <data name="HtmlTexts_DatasetName" xml:space="preserve">
+    <value>Datensatzname</value>
   </data>
 </root>

@@ -236,10 +236,10 @@ namespace ProSuite.Commons.AO.Geometry
 		public static string ToString([CanBeNull] IEnvelope envelope,
 		                              bool withoutSpatialReference = false)
 		{
+			var sb = new StringBuilder();
+
 			try
 			{
-				var sb = new StringBuilder();
-
 				sb.AppendLine("[Envelope]");
 				if (envelope == null)
 				{
@@ -263,7 +263,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			catch (Exception e)
 			{
-				return HandleToStringException(e);
+				return HandleToStringException(e, sb);
 			}
 		}
 
@@ -347,9 +347,10 @@ namespace ProSuite.Commons.AO.Geometry
 		[NotNull]
 		public static string ToString([CanBeNull] IPolyline polyline)
 		{
+			var sb = new StringBuilder();
+
 			try
 			{
-				var sb = new StringBuilder();
 				sb.AppendLine("[Polyline]");
 				if (polyline == null)
 				{
@@ -381,7 +382,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			catch (Exception e)
 			{
-				return HandleToStringException(e);
+				return HandleToStringException(e, sb);
 			}
 		}
 
@@ -399,9 +400,10 @@ namespace ProSuite.Commons.AO.Geometry
 		public static string ToString([CanBeNull] IPolygon polygon,
 		                              bool withoutSpatialReference = false)
 		{
+			var sb = new StringBuilder();
+
 			try
 			{
-				var sb = new StringBuilder();
 				sb.AppendLine("[Polygon]");
 				if (polygon == null)
 				{
@@ -438,16 +440,17 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			catch (Exception e)
 			{
-				return HandleToStringException(e);
+				return HandleToStringException(e, sb);
 			}
 		}
 
 		[NotNull]
 		public static string ToString([CanBeNull] IMultiPatch multiPatch)
 		{
+			var sb = new StringBuilder();
+
 			try
 			{
-				var sb = new StringBuilder();
 				sb.AppendLine("[Multipatch]");
 
 				if (multiPatch == null)
@@ -514,16 +517,17 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			catch (Exception e)
 			{
-				return HandleToStringException(e);
+				return HandleToStringException(e, sb);
 			}
 		}
 
 		[NotNull]
 		public static string ToString([CanBeNull] IMultipoint multipoint)
 		{
+			var sb = new StringBuilder();
+
 			try
 			{
-				var sb = new StringBuilder();
 				sb.AppendLine("[Multipoint]");
 
 				if (multipoint == null)
@@ -550,16 +554,17 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			catch (Exception e)
 			{
-				return HandleToStringException(e);
+				return HandleToStringException(e, sb);
 			}
 		}
 
 		[NotNull]
 		public static string ToString([CanBeNull] IPoint point)
 		{
+			var sb = new StringBuilder();
+
 			try
 			{
-				var sb = new StringBuilder();
 				sb.AppendLine("[Point]");
 
 				if (point == null)
@@ -586,7 +591,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 			catch (Exception e)
 			{
-				return HandleToStringException(e);
+				return HandleToStringException(e, sb);
 			}
 		}
 
@@ -8771,6 +8776,7 @@ namespace ProSuite.Commons.AO.Geometry
 						continue;
 					}
 
+					double allowedDeviation = 0;
 					// NOTE: If a maxDeviation is supplied to Densify() and the internal
 					// algorithm determines that less segments are required for the given
 					// deviation, the segment count is decreased!
@@ -8795,15 +8801,12 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 					else
 					{
-						// TODO: More appropriate approximation for beziers
-						densifiedLength = maxDeviation;
+						// NOTE: This is heuristic/compromise to prevent excessive segment counts
+						densifiedLength = maxDeviation * 10;
+						allowedDeviation = maxDeviation;
 					}
 
-					int segmentCount = (int) (segment.Length / densifiedLength) + 1;
-
-					result = new ILine[segmentCount];
-
-					GeometryBridge.Densify(segment, 0, ref segmentCount, ref result);
+					result = LinearizeSegment(segment, allowedDeviation, densifiedLength);
 
 					foreach (ILine line in result)
 					{
@@ -8814,6 +8817,20 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 				}
 			}
+		}
+
+		private static ILine[] LinearizeSegment([NotNull] ISegment segment,
+		                                        double maxDeviation,
+		                                        double densifiedSegmentLength)
+		{
+			ILine[] result;
+			int segmentCount = (int) (segment.Length / densifiedSegmentLength) + 1;
+
+			result = new ILine[segmentCount];
+
+			GeometryBridge.Densify(segment, maxDeviation, ref segmentCount, ref result);
+
+			return result;
 		}
 
 		/// <summary>
@@ -9569,11 +9586,20 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		[NotNull]
-		private static string HandleToStringException(Exception e)
+		private static string HandleToStringException(
+			Exception e,
+			[CanBeNull] StringBuilder stringBuilder = null)
 		{
 			string msg = string.Format("Error converting to string: {0}",
 			                           e.Message);
 			_msg.Debug(msg, e);
+
+			if (stringBuilder != null)
+			{
+				_msg.DebugFormat("Partial conversion to string result: {0}",
+				                 stringBuilder.ToString());
+			}
+
 			return msg;
 		}
 

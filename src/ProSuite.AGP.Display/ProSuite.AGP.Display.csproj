@@ -14,6 +14,9 @@
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
+
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>

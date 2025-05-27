@@ -277,10 +277,14 @@ namespace ProSuite.Microservices.Server.AO
 				if (objectClassMsg.Fields == null || objectClassMsg.Fields.Count == 0)
 				{
 					// The shape field can be important to determine Z/M awareness, etc:
-					bool hasZ = result.SpatialReference.HasZPrecision();
-					bool hasM = result.SpatialReference.HasMPrecision();
+					ISpatialReference spatialReference = result.SpatialReference;
+
+					Assert.NotNull(spatialReference, "No spatial reference provided");
+
+					bool hasZ = spatialReference.HasZPrecision();
+					bool hasM = spatialReference.HasMPrecision();
 					IField shapeField = FieldUtils.CreateShapeField(
-						result.ShapeFieldName, geometryType, result.SpatialReference,
+						result.ShapeFieldName, geometryType, spatialReference,
 						0d, hasZ, hasM);
 
 					result.AddField(shapeField);

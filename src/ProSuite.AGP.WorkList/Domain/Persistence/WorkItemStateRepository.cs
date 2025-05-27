@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -36,6 +37,19 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			get { return _statesByRow ??= ReadStatesByRow(); }
 		}
 
+		public void Rename(string name)
+		{
+			string directoryName = Path.GetDirectoryName(WorkListDefinitionFilePath);
+			Assert.NotNull(directoryName);
+
+			string extension = Path.GetExtension(WorkListDefinitionFilePath);
+			Assert.NotNull(extension);
+
+			string path = Path.Combine(directoryName, $"{name}{extension}");
+
+			WorkListDefinitionFilePath = path;
+		}
+
 		public string WorkListDefinitionFilePath { get; set; }
 
 		public int? CurrentIndex { get; set; }
@@ -60,7 +74,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 			if (state == null)
 			{
-				// todo daro: revise
 				// create new state if it doesn't exist
 				state = CreateState(item);
 
@@ -107,7 +120,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 			if (_workspaces.Count == 0 && _statesByRow.Count > 0)
 			{
-				_msg.Warn($"{Name}: Invalid work list will not be stored.");
+				_msg.Debug($"{Name}: Invalid work list (one or more referenced tables could not be loaded) will not be stored.");
 				return;
 			}
 

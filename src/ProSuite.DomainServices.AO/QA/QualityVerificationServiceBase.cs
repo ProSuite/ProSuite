@@ -148,9 +148,9 @@ namespace ProSuite.DomainServices.AO.QA
 		protected abstract IGdbTransaction CreateGdbTransaction();
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
-		                                [NotNull] Model model)
+		                                [NotNull] DdxModel model)
 		{
-			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.SpatialReference);
+			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
@@ -176,7 +176,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IDomainTransactionManager domainTransactions)
 		{
-			var involvedModels = new HashSet<Model>();
+			var involvedModels = new HashSet<DdxModel>();
 
 			foreach (var qcon in qualitySpecification.Elements
 			                                         .Select(e => e.QualityCondition)
@@ -198,7 +198,7 @@ namespace ProSuite.DomainServices.AO.QA
 						domainTransactions.Initialize(objectDataset.AssociationEnds);
 					}
 
-					involvedModels.Add((Model) dataset.Model);
+					involvedModels.Add((DdxModel) dataset.Model);
 				}
 			}
 
@@ -679,7 +679,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 					string aoiTableName = verificationReporter.WriteAreaOfInterest(
 						_externalIssueRepository, areaOfInterest,
-						_verificationContext.SpatialReferenceDescriptor.SpatialReference);
+						_verificationContext.SpatialReferenceDescriptor.GetSpatialReference());
 
 					#region Write MXD - TO BE DEPRECATED once AO 10.x support is dropped
 
@@ -727,8 +727,16 @@ namespace ProSuite.DomainServices.AO.QA
 			// TODO indicate if polygon, perimeter name, perimeter type etc.
 			reportBuilder.BeginVerification(areaOfInterest);
 
-			verificationReporter.AddVerifiedDatasets(
-				qualityVerification.VerificationDatasets.Select(vds => vds.Dataset));
+			foreach (var verificationDataset in qualityVerification.VerificationDatasets)
+			{
+				Dataset dataset = verificationDataset.Dataset;
+				double loadTime = verificationDataset.LoadTime;
+
+				IWorkspaceContext workspaceContext =
+					VerificationContext.GetWorkspaceContext(dataset);
+
+				verificationReporter.AddVerifiedDataset(verificationDataset, workspaceContext);
+			}
 
 			verificationReporter.AddVerifiedConditions(
 				qualityVerification.ConditionVerifications.Select(
@@ -749,7 +757,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// Take from the model (as in the standalone/XML service)
 			ISpatialReference spatialReference =
-				_verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				_verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return spatialReference;
 		}
@@ -994,6 +1002,8 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(qaError, nameof(qaError));
 
+			SetErrorGeometryInModelSpatialRef(qaError);
+
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
 				_verificationElements.GetQualityConditionVerification(test);
@@ -1077,6 +1087,22 @@ namespace ProSuite.DomainServices.AO.QA
 			                                             isAllowable));
 
 			return true;
+		}
+
+		private void SetErrorGeometryInModelSpatialRef(QaError qaError)
+		{
+			IGeometry errorGeometry = qaError.Geometry;
+
+			ISpatialReference contextSpatialReference = GetSpatialReferenceForIssueDatasets();
+
+			if (errorGeometry != null && contextSpatialReference != null &&
+			    GeometryUtils.EnsureSpatialReference(errorGeometry, contextSpatialReference, false,
+			                                         out IGeometry projected))
+			{
+				_msg.DebugFormat(
+					"Error spatial reference different from model context. Projected!");
+				qaError.SetGeometryInModelSpatialReference(projected);
+			}
 		}
 
 		private bool HasAnyRowsToBeTested(
@@ -1187,7 +1213,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QaError qaError,
 			[NotNull] QualityCondition qualityCondition)
 		{
-			IGeometry errorGeometry = qaError.Geometry;
+			IGeometry errorGeometry = qaError.GetGeometryInModelSpatialRef();
 
 			if (errorGeometry == null || errorGeometry.IsEmpty)
 			{

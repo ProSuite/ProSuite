@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.NamedValuesExpressions;
 
 namespace ProSuite.AGP.Editing;
 
@@ -57,7 +63,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// <summary>
 	/// Must be called on the MCT.
 	/// </summary>
-	public void SetSketchAppearanceBasedOnSelection()
+	public async Task SetSketchAppearanceBasedOnSelectionAsync()
 	{
 		Gateway.LogEntry(_msg);
 
@@ -66,7 +72,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-			TrySetSketchAppearance(featureLayer, oids);
+			await TrySetSketchAppearanceAsync(featureLayer, oids);
 		}
 		catch (Exception ex)
 		{
@@ -77,7 +83,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// <summary>
 	/// Is always on MCT.
 	/// </summary>
-	private void OnSketchModified(SketchModifiedEventArgs args)
+	private async void OnSketchModified(SketchModifiedEventArgs args)
 	{
 		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
 		    _showFeatureSketchSymbology)
@@ -94,7 +100,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			// only set sketch symbol not sketch type!
-			TrySetSketchAppearance(featureLayer, oids);
+			await TrySetSketchAppearanceAsync(featureLayer, oids);
 		}
 		catch (Exception ex)
 		{
@@ -113,11 +119,11 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		{
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
 
-			await QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
 				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-				TrySetSketchAppearance(featureLayer, oids);
+				await TrySetSketchAppearanceAsync(featureLayer, oids);
 			});
 		}
 		catch (Exception ex)
@@ -126,7 +132,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	private void TrySetSketchAppearance([CanBeNull] FeatureLayer featureLayer, [CanBeNull] IList<long> oids)
+	private async Task TrySetSketchAppearanceAsync([CanBeNull] FeatureLayer featureLayer, [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
@@ -138,9 +144,10 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 
 		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
 		{
-			if (_tool.CanSetConstructionSketchSymbol(geometryType))
+			if (await _tool.CanSetConstructionSketchSymbol(geometryType))
 			{
-				SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
+				//SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
+				SetSketchSymbol(GetSymbolReference(featureLayer, oids));
 			}
 			else
 			{
@@ -223,6 +230,76 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		return symbol.MakeSymbolReference();
 	}
 
+	[CanBeNull]
+	private static CIMSymbolReference GetSymbolReference([NotNull] FeatureLayer layer, [CanBeNull] IList<long> oids)
+	{
+		if (oids == null || oids.Count < 1)
+		{
+			return null;
+		}
+
+		CIMSymbol symbol = null;
+		CIMSymbolReference symbolReference = null;
+
+		var activeMap = MapView.Active?.Map;
+		if (activeMap is null)
+		{
+			return null;
+		}
+
+		var scaleDenom = activeMap.ReferenceScale;
+		var renderer = layer.GetRenderer();
+
+		IList<CIMSymbolReference> cimSymbolReferences = new List<CIMSymbolReference>();
+		//IList<CIMSymbol> cimSymbols = new List<CIMSymbol>();
+
+		foreach (long oid in oids)
+		{
+			//CIMSymbol oidLookupSymbol = layer.LookupSymbol(oid, MapView.Active);
+			//cimSymbols.Add(oidLookupSymbol);
+
+			var feature = GetFeature(layer, oid);
+			//var shape = feature.GetShape();
+			var values = new NamedValues(feature);
+			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out var overrides);
+
+			if (! cimSymbolReferences.Any(s => s.ToJson() == symref.ToJson()))
+			{
+				cimSymbolReferences.Add(symref);
+			}
+		}
+
+		//all selected has same Symbol
+		if (cimSymbolReferences.Count == 1)
+		{
+			symbolReference = cimSymbolReferences[0];
+		}
+
+		if (symbolReference == null)
+		{
+			if (oids.Count == 1)
+			{
+				_msg.Debug(
+					$"Cannot set sketch symbol: no symbol found in layer {layer.Name} for oid {oids[0]}.");
+			}
+			else
+			{
+				_msg.Debug($"Cannot set sketch symbol: found different symbols in selection of in layer {layer.Name}.");
+			}
+			return null;
+		}
+
+		//return symbol.MakeSymbolReference();
+		return symbolReference;
+	}
+
+	private static ArcGIS.Core.Data.Feature GetFeature(FeatureLayer layer, long oid)
+	{
+		using var featureClass = layer.GetFeatureClass();
+		if (featureClass is null) return null;
+		return ProSuite.Commons.AGP.Core.Geodatabase.GdbQueryUtils.GetFeature(featureClass, oid);
+	}
+
 	private static SketchGeometryType GetApplicableSketchType(GeometryType geometryType)
 	{
 		switch (geometryType)
@@ -245,4 +322,28 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 				throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 		}
 	}
+
+	#region Nestsed type: NamedValues
+
+	private class NamedValues : INamedValues
+	{
+		private readonly Row _row;
+
+		public NamedValues(Row row)
+		{
+			_row = row ?? throw new ArgumentNullException(nameof(row));
+		}
+
+		public bool Exists(string name)
+		{
+			return name is not null && _row.FindField(name) >= 0;
+		}
+
+		public object GetValue(string name)
+		{
+			return _row[name];
+		}
+	}
+
+	#endregion
 }

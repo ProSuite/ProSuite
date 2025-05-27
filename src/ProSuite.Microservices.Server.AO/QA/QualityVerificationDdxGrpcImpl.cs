@@ -77,6 +77,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
 
 		/// <summary>
+		/// The supported test descriptors for a fine-granular specification based off a condition list.
+		/// </summary>
+		[CanBeNull]
+		public ISupportedInstanceDescriptors SupportedInstanceDescriptors { get; set; }
+
+		/// <summary>
 		/// The default value to use if the environment variable that indicates whether or not the
 		/// service should continue serving (or shut down) in case of an exception.
 		/// </summary>
@@ -211,8 +217,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 					watch, "Gotten quality specification for peer {0} (<id> {1})",
 					context.Peer, request.QualitySpecificationId);
 
-				_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
-				                response.Specification.Name, response.Specification.Elements.Count);
+				ConditionListSpecificationMsg specificationMsg = response.Specification;
+
+				if (specificationMsg == null)
+				{
+					_msg.Warn("No specification found.");
+				}
+				else
+				{
+					_msg.InfoFormat("Returning quality specification {0} with {1} conditions",
+					                specificationMsg.Name, specificationMsg.Elements.Count);
+				}
 			}
 			catch (Exception e)
 			{
@@ -354,14 +369,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
 
+			GetProjectWorkspacesResponse response = null;
 			_domainTransactions.UseTransaction(
 				() =>
 				{
 					projectWorkspaces =
 						verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
-				});
 
-			GetProjectWorkspacesResponse response = PackProjectWorkspaceResponse(projectWorkspaces);
+					response = PackProjectWorkspaceResponse(projectWorkspaces);
+				});
 
 			return response;
 		}
@@ -420,7 +436,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
-				productionModel.SpatialReferenceDescriptor.SpatialReference,
+				productionModel.SpatialReferenceDescriptor.GetSpatialReference(),
 				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
 
 			ModelMsg modelMsg =
@@ -489,7 +505,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					ConditionListSpecificationMsg specificationMsg =
 						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-							qualitySpecification, null,
+							qualitySpecification, SupportedInstanceDescriptors,
 							out IDictionary<int, DdxModel> modelsById);
 
 					response.Specification = specificationMsg;

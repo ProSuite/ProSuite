@@ -4,19 +4,19 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
+using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: SetStatusDone !!!!
 	// Note maybe all SDK code, like open workspace, etc. should be in here. Not in DatabaseSourceClass for instance.
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
@@ -68,9 +68,10 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		protected GdbItemRepository(
-			IEnumerable<DbStatusSourceClassDefinition> sourceClassDefinitions,
+			IList<DbStatusSourceClassDefinition> sourceClassDefinitions,
 			IWorkItemStateRepository workItemStateRepository)
 		{
+			HashSet<nint> datastoreHandles = new HashSet<IntPtr>();
 			foreach (DbStatusSourceClassDefinition sourceDefinition in sourceClassDefinitions)
 			{
 				ISourceClass sourceClass = new DatabaseSourceClass(
@@ -78,12 +79,33 @@ namespace ProSuite.AGP.WorkList
 					sourceDefinition.AttributeReader, sourceDefinition.DefinitionQuery);
 
 				SourceClasses.Add(sourceClass);
+
+				IntPtr datastoreHandle = sourceDefinition.Table.GetDatastore().Handle;
+				datastoreHandles.Add(datastoreHandle);
+			}
+
+			Assert.True(datastoreHandles.Count < 2,
+			            "Multiple geodatabases are referenced by the work list's source classes.");
+
+			CurrentWorkspace =
+				sourceClassDefinitions.FirstOrDefault()?.Table.GetDatastore() as Geodatabase;
+
+			if (CurrentWorkspace == null)
+			{
+				_msg.Warn("No workspace found for the work list.");
 			}
 
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
-		protected IWorkItemStateRepository WorkItemStateRepository { get; }
+		/// <summary>
+		/// The single, current workspace in which all source tables reside. Not null for DbStatus
+		/// work lists.
+		/// </summary>
+		[CanBeNull]
+		public Geodatabase CurrentWorkspace { get; set; }
+
+		public IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		[CanBeNull]
 		public IWorkListItemDatastore TableSchema { get; protected set; }
@@ -167,7 +189,7 @@ namespace ProSuite.AGP.WorkList
 				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
-			Row row = GetRow(source, item.ObjectID);
+			Row row = GetSourceRow(source, item.ObjectID);
 			Assert.NotNull(row);
 
 			if (row is Feature feature)
@@ -178,26 +200,43 @@ namespace ProSuite.AGP.WorkList
 			RefreshCore(item, source, row);
 		}
 
-		// todo daro reorder members
+		public void RefreshGeometry(IWorkItem item)
+		{
+			ITableReference tableId = item.GdbRowProxy.Table;
+
+			// todo daro: log message
+			ISourceClass source =
+				SourceClasses.FirstOrDefault(sc => sc.Uses(tableId));
+			Assert.NotNull(source);
+
+			Row row = GetSourceRow(source, item.ObjectID);
+			Assert.NotNull(row);
+
+			if (row is Feature feature)
+			{
+				item.Geometry = GeometryUtils.Buffer(feature.GetShape(), 10);
+			}
+		}
+
 		[CanBeNull]
-		private Row GetRow([NotNull] ISourceClass sourceClass, long oid)
+		public Row GetSourceRow(ISourceClass sourceClass, long oid)
 		{
 			var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
 
-			// todo daro: log message
-			return GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
+			return GetRowsCore(sourceClass, filter, recycle: false).FirstOrDefault();
 		}
 
 		protected virtual void RefreshCore([NotNull] IWorkItem item,
 		                                   [NotNull] ISourceClass sourceClass,
 		                                   [NotNull] Row row) { }
 
+		// TODO: Rename to Update?
 		public void SetVisited(IWorkItem item)
 		{
 			WorkItemStateRepository.Update(item);
 		}
 
-		public async Task SetStatus(IWorkItem item, WorkItemStatus status)
+		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
 			item.Status = status;
 
@@ -207,19 +246,8 @@ namespace ProSuite.AGP.WorkList
 				SourceClasses.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
-			// todo daro: read / restore item again from db? restore pattern in case of failure?
+			// todo: daro read / restore item again from db? restore pattern in case of failure?
 			await SetStatusCoreAsync(item, source);
-		}
-
-		public void UpdateStateRepository(string path)
-		{
-			UpdateStateRepositoryCore(path);
-		}
-
-		public Task UpdateAsync(IWorkItem item)
-		{
-			// todo daro: revise
-			return Task.FromResult(0);
 		}
 
 		// todo daro: rename?
@@ -268,9 +296,9 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
-		private static IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
-		                                            [CanBeNull] QueryFilter filter,
-		                                            bool recycle)
+		private IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
+		                                     [CanBeNull] QueryFilter filter,
+		                                     bool recycle)
 		{
 			Table table = OpenTable(sourceClass);
 
@@ -332,12 +360,23 @@ namespace ProSuite.AGP.WorkList
 			string definitionQuery = null);
 
 		[CanBeNull]
-		protected static Table OpenTable([NotNull] ISourceClass sourceClass)
+		protected Table OpenTable([NotNull] ISourceClass sourceClass)
 		{
 			Table table = null;
 			try
 			{
-				table = sourceClass.OpenDataset<Table>();
+				if (CurrentWorkspace == null)
+				{
+					// NOTE: This can lead to using a different instance of the same workspace
+					// because opening a new Geodatabase with the Connector of an existing
+					// Geodatabase can in some cases result in a different instance!
+					table = sourceClass.OpenDataset<Table>();
+				}
+				else
+				{
+					// Therefore try using the (single) workspace of the repository:
+					table = CurrentWorkspace.OpenDataset<Table>(sourceClass.Name);
+				}
 			}
 			catch (Exception e)
 			{

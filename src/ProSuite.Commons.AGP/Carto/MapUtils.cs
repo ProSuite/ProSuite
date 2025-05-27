@@ -93,7 +93,8 @@ namespace ProSuite.Commons.AGP.Carto
 		#endregion
 
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
-			Dictionary<MapMember, List<long>> oidsByLayer)
+			[NotNull] Dictionary<MapMember, List<long>> oidsByLayer,
+			[CanBeNull] Predicate<Table> predicate = null)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
@@ -102,17 +103,20 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				Table table = DatasetUtils.GetDatabaseTable(GetTable(pair.Key));
 
+				if (predicate != null && ! predicate(table))
+				{
+					continue;
+				}
+
 				var tableId = new GdbTableIdentity(table);
 
-				if (! distinctTableIds.ContainsKey(tableId))
+				if (! distinctTableIds.TryGetValue(tableId, out Table distinctTable))
 				{
 					distinctTableIds.Add(tableId, table);
 					result.Add(table, new SimpleSet<long>(pair.Value));
 				}
 				else
 				{
-					Table distinctTable = distinctTableIds[tableId];
-
 					SimpleSet<long> ids = result[distinctTable];
 					foreach (long id in pair.Value)
 					{
@@ -125,8 +129,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		private static Table GetTable([NotNull] MapMember mapMember,
-		                              bool unJoined = false)
+		public static Table GetTable([NotNull] MapMember mapMember,
+		                             bool unJoined = false)
 		{
 			Assert.ArgumentNotNull(mapMember, nameof(mapMember));
 
@@ -548,6 +552,40 @@ namespace ProSuite.Commons.AGP.Carto
 			return elevationUnitAbbreviation;
 		}
 
+		/// <summary>
+		/// Gets the first elevation surface layer in the map with the specified name.
+		/// This layer contains the layers that provide the actual elevation.
+		/// </summary>
+		/// <param name="map"></param>
+		/// <param name="name"></param>
+		/// <param name="evenIfEmpty">Whether also empty surface layers containing no actual
+		/// elevation sources should be returned.</param>
+		/// <returns></returns>
+		public static ElevationSurfaceLayer GetElevationSurfaceGroupLayer(
+			[NotNull] Map map,
+			bool evenIfEmpty = false,
+			[CanBeNull] string name = "Ground")
+		{
+			ElevationSurfaceLayer existingSurfaceLayer = null;
+			foreach (ElevationSurfaceLayer elevationSurfaceLayer in map.GetElevationSurfaceLayers())
+			{
+				if (elevationSurfaceLayer.ElevationMode != ElevationMode.BaseGlobeSurface ||
+					elevationSurfaceLayer.Name != name)
+				{
+					continue;
+				}
+
+				if (!evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
+				{
+					continue;
+				}
+
+				existingSurfaceLayer = elevationSurfaceLayer;
+			}
+
+			return existingSurfaceLayer;
+		}
+
 		#region Not MapUtils --> move elsewhere
 
 		/// <summary>
@@ -652,6 +690,18 @@ namespace ProSuite.Commons.AGP.Carto
 			var screenPoint = mapView.MapToScreen(atPoint);
 
 			//Add tolerance pixels to get a "radius".
+			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
+			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
+
+			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		}
+
+		public static double ConvertScreenPixelToMapLength([NotNull] MapView mapView,
+		                                                   int pixels, Point screenPoint)
+		{
+			MapPoint atPoint = mapView.ScreenToMap(screenPoint);
+
+			// Add pixels to get a "radius".
 			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
 			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
 
@@ -795,6 +845,52 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return true;
+		}
+
+		public static void FlashGeometries(
+			[NotNull] MapView mapView,
+			IEnumerable<Geometry> geometries,
+			int milliseconds = 400,
+			CIMColor color = null,
+			bool useReferenceScale = false)
+		{
+			if (color == null)
+			{
+				color = ColorUtils.CreateRGB(0, 200, 0);
+			}
+
+			List<Overlay> overlays = new List<Overlay>();
+
+			CIMSymbol symbol = null;
+			foreach (var group in geometries.GroupBy(g => g.Dimension))
+			{
+				if (group.Key == 0)
+				{
+					symbol = SymbolUtils.CreateMarker(color, 4, SymbolUtils.MarkerStyle.Circle)
+					                    .MakePointSymbol();
+				}
+
+				if (group.Key == 1)
+				{
+					symbol = SymbolUtils.CreateLineSymbol(color, 2);
+				}
+
+				if (group.Key == 2)
+				{
+					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(color));
+				}
+
+				foreach (Geometry geometry in group)
+				{
+					overlays.Add(new Overlay(geometry, symbol));
+				}
+			}
+
+			if (overlays.Count > 0)
+			{
+				FlashGeometries(mapView, overlays, milliseconds,
+				                useReferenceScale);
+			}
 		}
 
 		public static bool FlashGeometries(

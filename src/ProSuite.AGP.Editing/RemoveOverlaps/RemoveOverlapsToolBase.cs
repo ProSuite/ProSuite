@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -8,6 +9,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
@@ -18,6 +20,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -25,7 +28,6 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
-using static System.Environment;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -46,6 +48,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		}
 
 		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
 
 		[CanBeNull]
 		protected virtual string CentralConfigDir => null;
@@ -70,7 +75,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			InitializeOptions();
+			_removeOverlapsToolOptions = InitializeOptions();
 
 			_feedback = new RemoveOverlapsFeedback();
 
@@ -81,6 +86,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
@@ -245,7 +253,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			if (_overlaps != null && _overlaps.Notifications.Count > 0)
 			{
-				_msg.Info(_overlaps.Notifications.Concatenate(NewLine));
+				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
 
 				if (! _overlaps.HasOverlaps())
 				{
@@ -285,6 +293,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				var cancellationTokenSource = new CancellationTokenSource();
 				cancellationToken = cancellationTokenSource.Token;
 			}
+
+			//_msg.DebugFormat("Calculating removable overlaps with the following options: {0}",
+			//                 removeToolOptions);
 
 			if (MicroserviceClient != null)
 			{
@@ -376,30 +387,84 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			string currentCentralConfigDir = CentralConfigDir;
 			string currentLocalConfigDir = LocalConfigDir;
 
-			// For the time being, we always reload the options because they could have been updated in ArcMap
-			_settingsProvider =
-				new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
-					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+			_settingsProvider ??= new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
+				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
 			PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			_removeOverlapsToolOptions = new RemoveOverlapsOptions(centralConfiguration,
+			var result  = new RemoveOverlapsOptions(centralConfiguration,
 				localConfiguration);
+
+			result.PropertyChanged -= OptionsPropertyChanged;
+			result.PropertyChanged += OptionsPropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
 
-			string optionsMessage = _removeOverlapsToolOptions.GetLocalOverridesMessage();
+			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
 
-			return _removeOverlapsToolOptions;
+			return result;
 		}
+
+		private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating removable overlaps : {e.Message}", e);
+			}
+		}
+
+		#region Tool Options DockPane
+
+		[CanBeNull]
+		private DockPaneRemoveOverlapsViewModelBase GetRemoveOverlapsViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneRemoveOverlapsViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			var viewModel = GetRemoveOverlapsViewModel();
+
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			viewModel.Options = _removeOverlapsToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			var viewModel = GetRemoveOverlapsViewModel();
+			viewModel?.Hide();
+		}
+
+		#endregion
 
 		#region Search target features
 
@@ -416,7 +481,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			TargetFeatureSelection targetFeatureSelection =
 				_removeOverlapsToolOptions.TargetFeatureSelection;
 
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+			                    {
+				                    FeatureClassPredicate = GetTargetFeatureClassPredicate()
+			                    };
 
 			// They might be stored (insert target vertices):
 			featureFinder.ReturnUnJoinedFeatures = true;
@@ -445,6 +513,11 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
 
 			return foundFeatures;
+		}
+
+		protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+		{
+			return null;
 		}
 
 		private bool CanOverlapLayer(Layer layer)
@@ -505,27 +578,27 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursor()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay, null);
+			                              Resources.RemoveOverlapsOverlay, null);
 		}
 
 		protected override Cursor GetSelectionCursorShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Shift);
 		}
 
 		protected override Cursor GetSelectionCursorLasso()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso);
 		}
 
 		protected override Cursor GetSelectionCursorLassoShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso,
 			                              Resources.Shift);
 		}
@@ -533,14 +606,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override Cursor GetSelectionCursorPolygon()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon);
 		}
 
 		protected override Cursor GetSelectionCursorPolygonShift()
 		{
 			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapslOverlay,
+			                              Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon,
 			                              Resources.Shift);
 		}
@@ -549,18 +622,19 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override Cursor GetSecondPhaseCursor()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay, 10, 10);
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10,
+			                              10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorLasso()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Lasso, null, 10, 10);
 		}
 
 		protected override Cursor GetSecondPhaseCursorPolygon()
 		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapslOverlay,
+			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
 			                              Resources.Polygon, null, 10, 10);
 		}
 

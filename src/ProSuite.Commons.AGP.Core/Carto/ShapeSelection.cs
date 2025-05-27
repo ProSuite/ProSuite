@@ -35,7 +35,7 @@ public interface IShapeSelection
 	IEnumerable<MapPoint> GetSelectedVertices();
 	IEnumerable<MapPoint> GetUnselectedVertices();
 
-	bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
+	bool SelectedVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
 
 	/// <param name="hitPoint">where the user clicked</param>
 	/// <param name="distance">distance to vertex found or undefined</param>
@@ -47,9 +47,33 @@ public interface IShapeSelection
 	MapPoint NearestVertex(MapPoint hitPoint, out double distance,
 	                   out int partIndex, out int vertexIndex, out bool selected);
 
-	/// <remarks>If the new shape is not compatible (type, part count, vertex
-	/// count) with the current shape, the selection is first cleared.</remarks>
-	void UpdateShape(Geometry newShape, out bool selectionCleared, out string selectionClearedReason);
+	/// <summary>
+	/// Notify this shape selection that the <see cref="Shape"/> has
+	/// a new vertex. The new vertex will be unselected. The internal
+	/// representation will be adjusted accordingly.
+	/// </summary>
+	void VertexAdded(int partIndex, int vertexIndex);
+
+	/// <summary>
+	/// Notify this shape selection that a vertex was removed from the
+	/// <see cref="Shape"/>. The internal representation will be adjusted
+	/// accordingly.
+	/// </summary>
+	void VertexRemoved(int partIndex, int vertexIndex);
+
+	/// <summary>
+	/// Notify this shape selection that the path at the given
+	/// part index has been reversed. The internal representation
+	/// will be adjusted accordingly.
+	/// </summary>
+	void PathReversed(int partIndex);
+
+	/// <summary>
+	/// Replace <see cref="Shape"/> with the given <paramref name="newShape"/>,
+	/// even if it is not compatible (see <see cref="IsCompatible"/>) with the
+	/// current shape/selection.
+	/// </summary>
+	void UpdateShape(Geometry newShape);
 
 	/// <returns>true iff given shape is compatible with this selection</returns>
 	/// <remarks>shape and selection are compatible if part and vertex counts are in range</remarks>
@@ -84,7 +108,7 @@ public class ShapeSelection : IShapeSelection
 			partIndex = 0;
 		}
 
-		return _blocks.ContainsVertex(partIndex, vertexIndex);
+		return _blocks.IsSelected(partIndex, vertexIndex);
 	}
 
 	public ShapeSelectionState IsPartSelected(int partIndex)
@@ -99,13 +123,13 @@ public class ShapeSelection : IShapeSelection
 		{
 			// outside world: a multipoint's points are its parts
 			// inside representation: all points in part 0 (for efficiency)
-			return _blocks.ContainsVertex(0, partIndex)
+			return _blocks.IsSelected(0, partIndex)
 				       ? ShapeSelectionState.Entirely
 				       : ShapeSelectionState.Not;
 		}
 
 		int partVertexCount = GetVertexCount(Shape, partIndex);
-		int selectedVertexCount = _blocks.CountVertices(partIndex);
+		int selectedVertexCount = _blocks.CountSelected(partIndex);
 
 		var result = ShapeSelectionState.Partially;
 		if (selectedVertexCount >= partVertexCount)
@@ -119,7 +143,7 @@ public class ShapeSelection : IShapeSelection
 	public ShapeSelectionState IsShapeSelected()
 	{
 		int totalVertexCount = GetVertexCount(Shape);
-		int selectedVertexCount = _blocks.CountVertices();
+		int selectedVertexCount = _blocks.CountSelected();
 
 		var result = ShapeSelectionState.Partially;
 		if (selectedVertexCount >= totalVertexCount)
@@ -150,32 +174,32 @@ public class ShapeSelection : IShapeSelection
 
 		if (method == SetCombineMethod.Add)
 		{
-			var added = _blocks.Add(partIndex, vertexIndex);
+			var added = _blocks.Select(partIndex, vertexIndex);
 			return changed || added;
 		}
 
 		if (method == SetCombineMethod.Remove)
 		{
-			var removed = _blocks.Remove(partIndex, vertexIndex);
+			var removed = _blocks.Unselect(partIndex, vertexIndex);
 			return changed || removed;
 		}
 
 		if (method == SetCombineMethod.And)
 		{
 			// remove all but the given vertex:
-			var contained = _blocks.ContainsVertex(partIndex, vertexIndex);
-			if (contained && _blocks.CountVertices() == 1) return false;
+			var contained = _blocks.IsSelected(partIndex, vertexIndex);
+			if (contained && _blocks.CountSelected() == 1) return false;
 			Clear();
-			if (contained) _blocks.Add(partIndex, vertexIndex);
+			if (contained) _blocks.Select(partIndex, vertexIndex);
 			return true;
 		}
 
 		if (method == SetCombineMethod.Xor)
 		{
-			var contained = _blocks.ContainsVertex(partIndex, vertexIndex);
+			var contained = _blocks.IsSelected(partIndex, vertexIndex);
 			if (contained)
-				_blocks.Remove(partIndex, vertexIndex);
-			else _blocks.Add(partIndex, vertexIndex);
+				_blocks.Unselect(partIndex, vertexIndex);
+			else _blocks.Select(partIndex, vertexIndex);
 			return true;
 		}
 
@@ -219,7 +243,7 @@ public class ShapeSelection : IShapeSelection
 		return _blocks.Clear();
 	}
 
-	public bool HitTestVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
+	public bool SelectedVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex)
 	{
 		if (hitPoint is null || hitPoint.IsEmpty)
 		{
@@ -284,14 +308,14 @@ public class ShapeSelection : IShapeSelection
 		return minVertex;
 	}
 
-	// Yield tuples (point,part,vertex,selected)
+	/// <returns>Yield tuples (point,part,vertex,selected)</returns>
 	private IEnumerable<ValueTuple<MapPoint, int, int, bool>> GetVertices()
 	{
 		var shape = Shape;
 
 		if (shape is MapPoint mapPoint)
 		{
-			bool selected = _blocks.ContainsVertex(0, 0);
+			bool selected = _blocks.IsSelected(0, 0);
 			yield return (mapPoint, 0, 0, selected);
 		}
 		else if (shape is Multipoint multipoint)
@@ -443,12 +467,6 @@ public class ShapeSelection : IShapeSelection
 			return false;
 		}
 
-		if (shape.PointCount != Shape.PointCount)
-		{
-			message = $"Number of points differ: {shape.PointCount} (requested) vs. {Shape.PointCount} (in selection)";
-			return false;
-		}
-
 		if (shape is Multipart yourMultipart && Shape is Multipart myMultipart)
 		{
 			int m = yourMultipart.PartCount;
@@ -470,57 +488,59 @@ public class ShapeSelection : IShapeSelection
 			}
 		}
 
+		if (shape.PointCount != Shape.PointCount)
+		{
+			message = $"Number of points differ: {shape.PointCount} (requested) vs. {Shape.PointCount} (in selection)";
+			return false;
+		}
+
 		message = string.Empty;
 		return true;
-
-		//int numParts = GetPartCount(shape);
-
-		//var block = _blocks.MaxBy(b => b.Part);
-		//if (block.Part >= numParts)
-		//{
-		//	message =
-		//		$"Selection refers to part {block.Part} but shape's max part index is {numParts - 1}";
-		//	return false;
-		//}
-
-		//var groups = _blocks.GroupBy(b => b.Part);
-		//foreach (var group in groups)
-		//{
-		//	int numVertices = GetVertexCount(shape, group.Key);
-		//	int maxIndex = group.Max(b => b.First + b.Count - 1);
-		//	if (! (maxIndex < numVertices))
-		//	{
-		//		message =
-		//			$"Selection refers to vertex {maxIndex} but max vertex index is {numVertices - 1} (in part {group.Key})";
-		//		return false;
-		//	}
-		//}
-
-		//message = string.Empty;
-		//return true;
 	}
 
-	public void UpdateShape(Geometry newShape, out bool selectionCleared, out string selectionClearedReason)
+	public void UpdateShape(Geometry newShape)
 	{
-		if (newShape is null)
-			throw new ArgumentNullException(nameof(newShape));
+		Shape = newShape ?? throw new ArgumentNullException(nameof(newShape));
+	}
 
-		bool compatible = IsCompatible(newShape, out string message);
-
-		if (compatible)
+	/// <summary>
+	/// Call after a vertex has been added to the shape.
+	/// For Multipoints, let partIndex=vertexIndex=point's index.
+	/// </summary>
+	public void VertexAdded(int partIndex, int vertexIndex)
+	{
+		if (Shape is Multipoint)
 		{
-			selectionCleared = false;
-			selectionClearedReason = null;
+			// outside world: a multipoint's points are its parts
+			// inside representation: all points in part 0 (for efficiency)
+			vertexIndex = partIndex;
+			partIndex = 0;
 		}
-		else
+
+		_blocks.VertexAdded(partIndex, vertexIndex);
+	}
+
+	/// <summary>
+	/// Call after a vertex has been removed from the shape.
+	/// For Multipoints, let partIndex=vertexIndex=point's index.
+	/// </summary>
+	public void VertexRemoved(int partIndex, int vertexIndex)
+	{
+		if (Shape is Multipoint)
 		{
-			Clear();
-
-			selectionCleared = true;
-			selectionClearedReason = message;
+			// outside world: a multipoint's points are its parts
+			// inside representation: all points in part 0 (for efficiency)
+			vertexIndex = partIndex;
+			partIndex = 0;
 		}
 
-		Shape = newShape;
+		_blocks.VertexRemoved(partIndex, vertexIndex);
+	}
+
+	public void PathReversed(int partIndex)
+	{
+		int numVerticesInPart = GeometryUtils.GetPointCount(Shape, partIndex);
+		_blocks.PartReversed(partIndex, numVerticesInPart);
 	}
 
 	#region Private methods
@@ -685,30 +705,6 @@ public class ShapeSelection : IShapeSelection
 		}
 	}
 
-	private static MapPoint GetPoint(Geometry shape, int partIndex, int vertexIndex = -1)
-	{
-		if (shape is null)
-			throw new ArgumentNullException(nameof(shape));
-
-		if (shape is MapPoint point)
-		{
-			return point;
-		}
-
-		if (shape is Multipoint multipoint)
-		{
-			// by convention, the points of a multipoint ar its parts:
-			return multipoint.Points[partIndex];
-		}
-
-		if (shape is Multipart multipart)
-		{
-			return GetPoint(multipart, partIndex, vertexIndex);
-		}
-
-		throw new NotSupportedException($"Shape of type {shape.GetType().Name} is not supported");
-	}
-
 	private static MapPoint GetPoint(Multipart multipart, int partIndex, int vertexIndex)
 	{
 		var part = multipart.Parts[partIndex];
@@ -728,19 +724,19 @@ public class ShapeSelection : IShapeSelection
 
 		if (shape.IsEmpty) return false;
 
-		var selected = blocks.CountVertices();
+		var selected = blocks.CountSelected();
 		var total = GeometryUtils.GetPointCount(shape);
 		var changed = selected != total; // not already entirely selected
 
 		if (shape is MapPoint)
 		{
 			blocks.Clear();
-			blocks.Add(0, 0);
+			blocks.Select(0, 0);
 		}
 		else if (shape is Multipoint multipoint)
 		{
 			blocks.Clear();
-			blocks.Add(0, 0, multipoint.PointCount);
+			blocks.Select(0, 0, multipoint.PointCount);
 		}
 		else if (shape is Multipart multipart)
 		{
@@ -751,7 +747,7 @@ public class ShapeSelection : IShapeSelection
 				var part = multipart.Parts[k];
 				var segmentCount = part.Count;
 				var vertexCount = multipart is Polygon ? segmentCount : segmentCount + 1;
-				blocks.Add(k, 0, vertexCount);
+				blocks.Select(k, 0, vertexCount);
 			}
 		}
 		else
@@ -777,7 +773,7 @@ public class ShapeSelection : IShapeSelection
 
 		foreach (var block in inverted)
 		{
-			blocks.Add(block.Part, block.First, block.Count);
+			blocks.Select(block.Part, block.First, block.Count);
 		}
 
 		return true;
@@ -790,7 +786,9 @@ public class ShapeSelection : IShapeSelection
 /// Linked list of blocks of sequences of contiguous vertices,
 /// always ordered by (part, first vertex). A new part always
 /// starts a new block. Blocks never overlap (such blocks are merged).
+/// Represents selected vertices of a shape/geometry.
 /// </summary>
+/// <remarks>Not thread-safe!</remarks>
 public class BlockList : IEnumerable<BlockList.Block>
 {
 	// _head.Next points to first real node
@@ -800,8 +798,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	public bool IsEmpty => _head.Next is null;
 
-	public bool Add(int part, int vertex, int count = 1)
+	public bool Select(int part, int vertex, int count = 1)
 	{
+		// if vertex is in existing block: nothing to do
+		// if vertex abuts existing block: grow this block
 		// if vertex is in existing block: grow this block and merge down the list
 		// otherwise: append new block to before and merge down the list
 
@@ -826,13 +826,13 @@ public class BlockList : IEnumerable<BlockList.Block>
 			node.Next = before.Next;
 			before.Next = node;
 
-			MergeBlocks(before);
+			MergeBlocks(before.IsHead ? node : before);
 		}
 
 		return true;
 	}
 
-	public bool Remove(int part, int vertex)
+	public bool Unselect(int part, int vertex)
 	{
 		var node = Find(part, vertex, out Node before);
 
@@ -878,8 +878,6 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return true;
 	}
 
-	// TODO Toggle(partIndex, vertexIndex): efficient implementation of this frequent XOR operation (for now: if (Contains) Remove else Add)
-
 	public bool Clear()
 	{
 		var wasEmpty = IsEmpty;
@@ -901,13 +899,13 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return ! wasEmpty;
 	}
 
-	public bool ContainsVertex(int part, int vertex)
+	public bool IsSelected(int part, int vertex)
 	{
 		var node = Find(part, vertex, out Node _);
 		return node is not null;
 	}
 
-	public int CountVertices(int part = -1)
+	public int CountSelected(int part = -1)
 	{
 		int count = 0;
 
@@ -919,6 +917,162 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 
 		return count;
+	}
+
+	/// <summary>
+	/// Adjust the selection after a vertex has been added to the shape
+	/// </summary>
+	public void VertexAdded(int part, int vertex)
+	{
+		// Have ordered list of blocks b=(p,f,c)
+		// See where given (p,v) falls into this list:
+		// - if selected (ie, in a block b with b.p==p and b.f <= v < b.f+b.c):
+		//   - set b.c += 1 on block (new vertex will be selected)
+		//   - for remaining blocks in same part: set b.f += 1
+		// - otherwise (ie, unselected):
+		//   - for all blocks b (b.p==p, b.f > v): set b.f += 1
+		//   - new vertex will be unselected
+
+		var node = Find(part, vertex, out var before);
+
+		if (node is not null)
+		{
+			// (p,v) is in a block (adjacent to or within selected vertices):
+			// enlarge this block and shift up all following blocks in same part
+
+			node.Count += 1;
+
+			node = node.Next;
+			while (node is not null && node.Part == part)
+			{
+				node.First += 1;
+				node = node.Next;
+			}
+		}
+		else
+		{
+			// (p,v) is not in a block:
+			// shift up all blocks b with b.p==p and b.f > v
+
+			node = before?.Next;
+			while (node is not null && node.Part == part)
+			{
+				node.First += 1;
+				node = node.Next;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Adjust the selection after a vertex has been removed from the shape
+	/// </summary>
+	public void VertexRemoved(int part, int vertex)
+	{
+		// Have ordered list of blocks b=(p,f,c)
+		// See where given (p,v) falls into this list:
+		// - if selected, i.e., in a block b (b.p==p and b.f <= v < b.f+b.c):
+		//   - set b.c -= 1 on block (and remove if empty)
+		//   - set b.f -= 1 in all remaining blocks in same part
+		// - otherwise (i.e., unselected):
+		//   - for all blocks b (b.p==p, b.f > v): set b.f -= 1
+
+		var node = Find(part, vertex, out var before);
+
+		if (node is not null)
+		{
+			// (p,v) is selected, thus in a block:
+			// shorten this block and shift down all following blocks in same part
+
+			Assert.NotNull(before, "before must not be null");
+			Assert.True(node.Part == part, "unexpected part index");
+
+			// Shorten (and remember) the containing block:
+
+			node.Count -= 1;
+			Node container = node;
+
+			// Shift down all following blocks in same part:
+
+			node = node.Next;
+			while (node is not null && node.Part == part)
+			{
+				node.First -= 1;
+				node = node.Next;
+			}
+
+			// Remove containing block if it became empty:
+
+			if (container.Count <= 0)
+			{
+				before.Next = container.Next;
+				FreeNode(container);
+			}
+		}
+		else
+		{
+			// (p,v) is not in a block:
+			// shift down all blocks b in same part with b.f > v
+
+			node = before?.Next;
+			while (node is not null && node.Part == part)
+			{
+				Assert.True(node.First > vertex, "unexpected first vertex");
+				node.First -= 1;
+				node = node.Next;
+			}
+
+			// Shifting might have brought blocks adjacent:
+
+			MergeBlocks(before);
+		}
+	}
+
+	public void PartReversed(int part, int numVerticesInPart)
+	{
+		var node = Find(part, 0, out var before);
+
+		if (node is null)
+		{
+			node = before.Next;
+		}
+
+		var list = new List<Node>();
+
+		while (node is not null && node.Part == part)
+		{
+			list.Add(node);
+			node = node.Next;
+		}
+
+		Node tail = node;
+
+		if (list.Count < 1)
+		{
+			return; // no selected vertices in given part
+		}
+
+		int last = list.Count - 1;
+
+		int minVertexCount = list[last].First + list[last].Count;
+		if (numVerticesInPart < minVertexCount)
+		{
+			throw new ArgumentOutOfRangeException(
+				nameof(numVerticesInPart), numVerticesInPart,
+				$"must be at least {minVertexCount} for this selection");
+		}
+
+		list.Reverse();
+
+		for (int i = 0; i < last; i++)
+		{
+			list[i].First = numVerticesInPart - list[i].First - list[i].Count;
+			list[i].Next = list[i + 1];
+		}
+
+		list[last].First = numVerticesInPart - list[last].First - list[last].Count;
+		list[last].Next = tail;
+
+		before.Next = list[0];
 	}
 
 	[MustDisposeResource]
@@ -969,6 +1123,13 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 	}
 
+	/// <summary>
+	/// Get the node that contains the addressed vertex, or
+	/// null if no node contains this vertex. In both cases,
+	/// <paramref name="before"/> will be the node just before
+	/// the one that contains the vertex, or where a node for
+	/// the vertex would have to be inserted.
+	/// </summary>
 	private Node Find(int part, int vertex, out Node before)
 	{
 		if (part < 0)
@@ -1044,7 +1205,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 
 		//public bool IsWholePart => First < 0;
-		private bool IsHead => Part < 0;
+		internal bool IsHead => Part < 0;
 
 		public override string ToString()
 		{

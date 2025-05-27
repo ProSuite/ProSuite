@@ -22,6 +22,18 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			// Avoid the message box (only appears when calling the async variant)
 			_editOperation.ShowModalMessageAfterFailure = false;
+
+			// Default to false
+			_editOperation.ShowProgressor = false;
+		}
+
+		/// <summary>
+		/// Whether the progressor window should be shown. Default: False.
+		/// </summary>
+		public bool ShowProgressorWindow
+		{
+			get => _editOperation.ShowProgressor;
+			set => _editOperation.ShowProgressor = value;
 		}
 
 		public bool Execute([NotNull] Action<EditOperation.IEditContext> action,
@@ -31,7 +43,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			return Execute(action, description, new[] { dataset });
 		}
 
-		public bool Execute([NotNull] Action<EditOperation.IEditContext> action,
+		public bool Execute([NotNull, InstantHandle] Action<EditOperation.IEditContext> action,
 		                    [NotNull] string description,
 		                    [NotNull] IEnumerable<Dataset> datasets)
 		{

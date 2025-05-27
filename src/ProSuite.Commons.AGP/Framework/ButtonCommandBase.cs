@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Dialogs;
+using ProSuite.Commons.UI;
 
 namespace ProSuite.Commons.AGP.Framework
 {
@@ -44,20 +44,20 @@ namespace ProSuite.Commons.AGP.Framework
 
 		protected override async void OnClick()
 		{
-			Gateway.LogEntry(_msg);
+			_msg.Debug($"{Caption}.OnClick");
 
 			try
 			{
-				bool success = await OnClickCore();
+				bool success = await OnClickAsyncCore();
 
 				if (! success)
 				{
-					_msg.Debug($"OnClickCore false for {Caption}");
+					_msg.Debug($"OnClickAsyncCore false for {Caption}");
 				}
 			}
 			catch (Exception ex)
 			{
-				ErrorHandler.HandleError(ex, _msg);
+				ViewUtils.ShowError(ex, _msg);
 			}
 		}
 
@@ -65,9 +65,9 @@ namespace ProSuite.Commons.AGP.Framework
 
 		protected virtual void OnUpdateCore() { }
 
-		protected virtual async Task<bool> OnClickCore()
+		protected virtual Task<bool> OnClickAsyncCore()
 		{
-			return true;
+			return Task.FromResult(true);
 		}
 	}
 }

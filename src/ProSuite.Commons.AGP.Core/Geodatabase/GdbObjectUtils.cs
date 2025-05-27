@@ -45,6 +45,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return string.Format("oid={0} table={1}", oid, tableName);
 		}
 
+		[NotNull]
 		public static string GetDisplayValue(Row row)
 		{
 			using (Table table = row.GetTable())
@@ -55,6 +56,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		[NotNull]
 		public static string GetDisplayValue(Row row, string className)
 		{
 			string subtypeName = null;

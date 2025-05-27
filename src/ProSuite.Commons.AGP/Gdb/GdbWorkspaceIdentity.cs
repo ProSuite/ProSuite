@@ -1,13 +1,13 @@
 using System;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	// todo daro: check correct handle / instantiation of Uri
 	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>,
 	                                     IComparable<GdbWorkspaceIdentity>,
 	                                     IDatastoreReference
@@ -30,7 +30,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			switch (connector)
 			{
-				case DatabaseConnectionProperties connectionProperties:
+				case DatabaseConnectionProperties:
 					ConnectionString = connectionString;
 					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
@@ -46,7 +46,10 @@ namespace ProSuite.Commons.AGP.Gdb
 					ConnectionString = mobileGeodatabaseConnectionPath.Path.ToString();
 					WorkspaceFactory = WorkspaceFactory.SQLite;
 					break;
-
+				case PluginDatasourceConnectionPath pluginDatasourceConnectionPath:
+					ConnectionString = pluginDatasourceConnectionPath.DatasourcePath.ToString();
+					WorkspaceFactory = WorkspaceFactory.Custom;
+					break;
 				default:
 					throw new NotImplementedException(
 						$"connector {connector.GetType()} is not implemented");
@@ -64,10 +67,6 @@ namespace ProSuite.Commons.AGP.Gdb
 			return (Geodatabase) OpenDatastore();
 		}
 
-		/// <summary>
-		/// Opens the associated datastore
-		/// </summary>
-		/// <returns></returns>
 		public Datastore OpenDatastore()
 		{
 			return _datastoreName.Open();

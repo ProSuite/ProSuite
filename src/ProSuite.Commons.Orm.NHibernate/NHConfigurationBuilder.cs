@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using NHibernate.Cfg;
-using NHibernate.Dialect;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using Environment = System.Environment;
 
 namespace ProSuite.Commons.Orm.NHibernate
 {
 	/// <summary>
-	/// Default imlementation of <see cref="INHConfigurationBuilder"/>
+	/// Default implementation of <see cref="INHConfigurationBuilder"/>
 	/// </summary>
 	[UsedImplicitly]
 	public abstract class NHConfigurationBuilder : INHConfigurationBuilder
@@ -17,8 +17,6 @@ namespace ProSuite.Commons.Orm.NHibernate
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IMappingConfigurator _mappingConfigurator;
-
-		private global::NHibernate.Dialect.Dialect _dialect;
 
 		protected NHConfigurationBuilder(
 			string defaultSchema,
@@ -77,15 +75,25 @@ namespace ProSuite.Commons.Orm.NHibernate
 			// TODO: Also check if the sequence exists. 
 			! IsSQLite;
 
-		public bool IsSQLite => _dialect is SQLiteDialect;
+		public bool IsSQLite =>
+			StringUtils.Contains(Dialect, "SQLite",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsPostgreSQL => Dialect.Contains("PosgreSQL");
+		public bool IsPostgreSQL =>
+			StringUtils.Contains(Dialect, "PostgreSQL",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsSqlServer => Dialect.Contains("MsSql");
+		public bool IsSqlServer =>
+			StringUtils.Contains(Dialect, "MsSql",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
-		public bool IsOracle => Dialect.Contains("Oracle");
+		public bool IsOracle =>
+			StringUtils.Contains(Dialect, "Oracle",
+			                     StringComparison.InvariantCultureIgnoreCase);
 
 		public string DdxEnvironmentName { get; protected set; }
+
+		public string DdxSchemaName => DefaultSchema;
 
 		/// <summary>
 		/// Builds the Configuration object from the specified configuration
@@ -99,8 +107,6 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 			// Allow for schema-version specific mapping:
 			DetermineDdxVersion(props);
-
-			_dialect = global::NHibernate.Dialect.Dialect.GetDialect(props);
 
 			Configuration cfg = new Configuration().SetProperties(props);
 

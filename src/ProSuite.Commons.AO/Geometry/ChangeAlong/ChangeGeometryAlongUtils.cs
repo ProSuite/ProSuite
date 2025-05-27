@@ -40,9 +40,57 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			ISubcurveCalculator curveCalculator = new ReshapableSubcurveCalculator();
 
+			if (tolerance >= 0)
+			{
+				curveCalculator.CustomTolerance = tolerance;
+			}
+
 			return CalculateChangeAlongCurves(sourceFeatures, targetFeatures, visibleExtent,
 			                                  tolerance, bufferOptions, filterOptions,
 			                                  resultSubcurves, curveCalculator, trackCancel);
+		}
+
+		/// <summary>
+		/// Limited reshape curve calculation without support for multiple-sources-as-union, adjust and preview-calculation
+		/// </summary>
+		/// <param name="sourceFeatures"></param>
+		/// <param name="targetFeatures"></param>
+		/// <param name="visibleExtent"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="bufferOptions"></param>
+		/// <param name="filterOptions"></param>
+		/// <param name="trackCancel"></param>
+		/// <returns></returns>
+		public static ReshapeAlongResult CalculateReshapeCurves(
+			[NotNull] IList<IFeature> sourceFeatures,
+			[NotNull] IList<IFeature> targetFeatures,
+			[CanBeNull] IEnvelope visibleExtent,
+			double tolerance,
+			TargetBufferOptions bufferOptions,
+			ReshapeCurveFilterOptions filterOptions,
+			[CanBeNull] ITrackCancel trackCancel = null)
+		{
+			ISubcurveCalculator curveCalculator = new ReshapableSubcurveCalculator();
+
+			if (tolerance >= 0)
+			{
+				curveCalculator.CustomTolerance = tolerance;
+			}
+
+			var resultSubcurves = new List<CutSubcurve>();
+
+			ReshapeAlongCurveUsability usability = CalculateChangeAlongCurves(
+				sourceFeatures, targetFeatures, visibleExtent,
+				tolerance, bufferOptions, filterOptions,
+				resultSubcurves, curveCalculator, trackCancel);
+
+			IPolyline filterBuffer =
+				curveCalculator.SubcurveFilter.ExclusionOutsideSourceBufferLine;
+
+			return new ReshapeAlongResult(usability, resultSubcurves)
+			       {
+				       FilterBuffer = filterBuffer
+			       };
 		}
 
 		/// <summary>
@@ -68,6 +116,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			ISubcurveCalculator curveCalculator = new CutPolygonSubcurveCalculator();
+
+			if (tolerance >= 0)
+			{
+				curveCalculator.CustomTolerance = tolerance;
+			}
 
 			return CalculateChangeAlongCurves(sourceFeatures, targetFeatures, visibleExtent,
 			                                  tolerance, bufferOptions, filterOptions,
@@ -120,9 +173,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			visibleExtent = visibleExtent ?? UnionExtents(sourceFeatures, targetFeatures);
 
-			// TODO: Actual tolerance that can be specified (using double for forward compatibility)
-			bool useMinimalTolerance = MathUtils.AreEqual(0, tolerance);
-
 			IEnvelope clipExtent =
 				GetClipExtent(visibleExtent,
 				              bufferOptions.BufferTarget ? bufferOptions.BufferDistance : 0);
@@ -141,8 +191,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				return ReshapeAlongCurveUsability.NoTarget;
 			}
 
-			PrepareSubcurveCalculator(curveCalculator, sourceFeatures, targetFeatures,
-			                          useMinimalTolerance, filterOptions, clipExtent);
+			curveCalculator.Prepare(sourceFeatures, targetFeatures, clipExtent, filterOptions);
 
 			ReshapeAlongCurveUsability result;
 			if (sourceFeatures.Count == 1)
@@ -180,8 +229,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			Assert.ArgumentNotNull(subCurveCalculator, nameof(subCurveCalculator));
 
-			subCurveCalculator.Prepare(sourceFeatures, targetFeatures, clipExtent,
-			                           useMinimalTolerance, filterOptions);
+			subCurveCalculator.UseMinimumTolerance = useMinimalTolerance;
+
+			subCurveCalculator.Prepare(sourceFeatures, targetFeatures, clipExtent, filterOptions);
 		}
 
 		[CanBeNull]

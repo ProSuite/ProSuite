@@ -14,6 +14,13 @@
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.2 ">
+    <DefineConstants>ARCGISPRO_GREATER_3_2</DefineConstants>
   </PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -123,11 +130,15 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="PickerUI\Images\Annotation.png" />
-    <Resource Include="PickerUI\Images\LineGeometry.bmp" />
-    <Resource Include="PickerUI\Images\PointGeometry.bmp" />
-    <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
-    <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Chopper\DockPaneChopper.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Cracker\DockPaneCracker.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="RemoveOverlaps\DockpaneRemoveOverlaps.xaml" />
   </ItemGroup>
 </Project>

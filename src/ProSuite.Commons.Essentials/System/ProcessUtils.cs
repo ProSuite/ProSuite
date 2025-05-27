@@ -28,6 +28,8 @@ namespace ProSuite.Commons.Essentials.System
 		{
 			Assert.ArgumentNotNull(process, nameof(process));
 
+			// TODO: VirtualMemorySize64 in .net core is completely different (gigantic number)
+			//       Either it should not be used any more or we need to adapt VM size!
 			virtualBytes = GetMemoryWorkaround(process.VirtualMemorySize64);
 			privateBytes = GetMemoryWorkaround(process.PrivateMemorySize64);
 			workingSet = GetMemoryWorkaround(process.WorkingSet64);

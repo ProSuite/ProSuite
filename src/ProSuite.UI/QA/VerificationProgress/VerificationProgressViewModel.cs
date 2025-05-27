@@ -71,6 +71,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 			CancelButtonText = "Cancel";
 			DetailProgressVisible = Visibility.Hidden;
 			OverallProgressVisible = Visibility.Hidden;
+
+			UpdateOptions = new UpdateIssuesOptionsViewModel();
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -335,8 +337,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
-		public UpdateIssuesOptionsViewModel UpdateOptions { get; } =
-			new UpdateIssuesOptionsViewModel();
+		/// <summary>
+		/// Whether the save option to keep previous issues in the work list is disabled or not.
+		/// </summary>
+		public bool KeepPreviousIssuesDisabled
+		{
+			get => UpdateOptions.KeepPreviousIssuesEnabled;
+			set => UpdateOptions.KeepPreviousIssuesEnabled = ! value;
+		}
+
+		public UpdateIssuesOptionsViewModel UpdateOptions { get; }
 
 		#endregion
 
@@ -601,8 +611,15 @@ namespace ProSuite.UI.QA.VerificationProgress
 				ViewUtils.RunOnUIThread(
 					() =>
 					{
-						ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
-						                                   true);
+						try
+						{
+							ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
+							                                   true);
+						}
+						catch (Exception ex)
+						{
+							ErrorHandler.HandleError(ex, _msg);
+						}
 					});
 			}
 
@@ -748,17 +765,29 @@ namespace ProSuite.UI.QA.VerificationProgress
 			return result;
 		}
 
-		private void SaveIssues()
+		private async void SaveIssues()
 		{
-			Try(nameof(SaveIssues),
-			    () =>
-			    {
-				    ApplicationController?.SaveIssues(Assert.NotNull(VerificationResult),
-				                                      UpdateOptions.ErrorDeletionType,
-				                                      ! UpdateOptions.KeepPreviousIssues);
+			{
+				_msg.VerboseDebug(() => $"VerificationProgressViewModel.{nameof(SaveIssues)}");
+			}
 
-				    _saveErrorsCommand?.RaiseCanExecuteChanged();
-			    });
+			try
+			{
+				if (ApplicationController == null)
+				{
+					return;
+				}
+
+				await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
+				                                            UpdateOptions.ErrorDeletionType,
+				                                            ! UpdateOptions.KeepPreviousIssues);
+
+				_saveErrorsCommand?.RaiseCanExecuteChanged();
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
 		}
 
 		private void ShowReport()

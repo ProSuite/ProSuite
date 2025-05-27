@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
@@ -28,6 +29,10 @@ namespace ProSuite.GIS.Geodatabase.API
 		esriConnectionDBMS DbmsType { get; }
 
 		IWorkspaceName GetWorkspaceName();
+
+		bool IsSameDatabase(IWorkspace otherWorkspace);
+
+		string Description { get; }
 	}
 
 	public interface IFeatureWorkspace : IWorkspace
@@ -56,6 +61,10 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		//IFeatureDataset CreateFeatureDataset(string name, ISpatialReference spatialReference);
 
+		IEnumerable<IRow> EvaluateQuery([NotNull] string tables,
+		                                [CanBeNull] string whereClause = null,
+		                                string subFields = "*",
+		                                bool recycling = false);
 		//IQueryDef CreateQueryDef();
 
 		//IFeatureDataset OpenFeatureQuery(string queryName, IQueryDef queryDef);
@@ -90,8 +99,6 @@ namespace ProSuite.GIS.Geodatabase.API
 		IEnumerable<IDomain> Domains();
 
 		IDomain get_DomainByName(string domainName);
-
-		bool IsSameDatabase(IFeatureWorkspace otherWorkspace);
 	}
 
 	public interface IVersionedWorkspace

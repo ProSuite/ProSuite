@@ -16,6 +16,9 @@
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <!-- .net 6 Winforms and WPF references: -->
@@ -84,8 +87,6 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
 
-
-
   <ItemGroup>
     <Resource Include="Images\LayerMaskingOff16.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -97,6 +98,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\LayerMaskingOn32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\LayerMaskingUnknown32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\StatusCriticalError_12x_16x.png">
@@ -126,5 +130,10 @@
     <Resource Include="Images\SymbolLayerDrawingUnknown32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="PickerUI\Images\Annotation.png" />
+    <Resource Include="PickerUI\Images\LineGeometry.bmp" />
+    <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
+    <Resource Include="PickerUI\Images\PointGeometry.bmp" />
+    <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
   </ItemGroup>
 </Project>

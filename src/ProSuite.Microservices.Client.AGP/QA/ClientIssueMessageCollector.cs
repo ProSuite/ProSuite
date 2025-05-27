@@ -7,11 +7,9 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.QA;
@@ -27,6 +25,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private readonly List<IssueMsg> _issueMessages = new();
 		private readonly List<GdbObjRefMsg> _obsoleteExceptionGdbRefs = new();
 
+		private ShapeMsg _verifiedPerimeterMsg;
+
 		[CanBeNull] private readonly IIssueStore _issueStore;
 
 		private int _verifiedSpecificationId = -1;
@@ -37,6 +37,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_issueStore = issueStore;
 		}
 
+		[CanBeNull]
 		private Geometry VerifiedPerimeter { get; set; }
 
 		private IList<Row> VerifiedRows { get; set; }
@@ -89,10 +90,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			List<GdbObjectReference> objectsToVerify = null;
 			List<Dataset> referencedIssueTables = null;
 
-			bool success = false;
-
-			await QueuedTask.Run(async () =>
+			await QueuedTask.Run(() =>
 			{
+				if (_verifiedPerimeterMsg != null)
+				{
+					VerifiedPerimeter = ProtobufConversionUtils.FromShapeMsg(_verifiedPerimeterMsg);
+				}
+
 				objectsToVerify = VerifiedRows?.Select(row => new GdbObjectReference(
 					                                       row.GetTable().GetID(),
 					                                       row.GetObjectID()))
@@ -104,17 +108,29 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				Assert.NotNull(referencedIssueTables, "Error getting issue FeatureClasses");
 
-				EditorTransaction transaction = new EditorTransaction(new EditOperation());
-
-				success = await transaction.ExecuteAsync(
-					          editContext =>
-					          {
-						          savedIssueCount =
-							          UpdateIssuesTx(editContext, objectsToVerify,
-							                         verifiedConditionIds);
-					          },
-					          "Update issues", referencedIssueTables);
+				return Task.CompletedTask;
 			});
+
+			// NOTE: Do not call transaction inside QueuedTask.Run or the EditingCompleted event
+			// will fire twice!
+			EditorTransaction transaction = new EditorTransaction(new EditOperation());
+
+			bool success = await transaction.ExecuteAsync(
+				               editContext =>
+				               {
+					               savedIssueCount =
+						               UpdateIssuesTx(editContext, objectsToVerify,
+						                              verifiedConditionIds);
+
+					               // Deleting issues can be pretty undiscriminating, we don't even
+					               // know if there were deletes or not.
+					               // TODO: Only invalidate the updated tables
+					               foreach (Dataset issueTable in referencedIssueTables)
+					               {
+						               editContext.Invalidate(issueTable);
+					               }
+				               },
+				               "Update issues", referencedIssueTables);
 
 			return success ? savedIssueCount : 0;
 		}
@@ -126,7 +142,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		{
 			if (perimeterMsg != null)
 			{
-				VerifiedPerimeter = ProtobufConversionUtils.FromShapeMsg(perimeterMsg);
+				// We're potentially on an MTA thread, no COM!
+				_verifiedPerimeterMsg = perimeterMsg;
 			}
 		}
 
@@ -206,7 +223,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		}
 
 		private void DeleteErrors([CanBeNull] IList<GdbObjectReference> objectSelection,
-		                          IEnumerable<int> verifiedConditionIds)
+		                          IList<int> verifiedConditionIds)
 		{
 			_msg.Debug("Deleting existing issues in verification perimeter...");
 

@@ -255,7 +255,7 @@ namespace ProSuite.Microservices.Client
 				return default;
 			}
 
-			if (rpcException.StatusCode == StatusCode.DeadlineExceeded)
+			if (rpcException.StatusCode == StatusCode.DeadlineExceeded)	
 			{
 				Log("Operation timed out", noWarn);
 				return default;

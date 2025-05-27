@@ -52,16 +52,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract Cursor GetSecondPhaseCursorPolygon();
 
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
+			MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
+			_msg.VerboseDebug(() => "OnMapSelectionChangedCoreAsync");
 
 			var selection = args.Selection;
 
 			if (selection.Count == 0)
 			{
 				ResetDerivedGeometries();
-				StartSelectionPhase();
+				StartSelectionPhaseAsync();
 			}
 
 			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
@@ -74,7 +75,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				using var source = GetProgressorSource();
 				var progressor = source?.Progressor;
-				AfterSelection(applicableSelection, progressor);
+				await AfterSelectionAsync(applicableSelection, progressor);
 			}
 
 			return true;
@@ -103,7 +104,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							if (selectedFeatures.Count == 0)
 							{
 								ResetDerivedGeometries();
-								StartSelectionPhase();
+								StartSelectionPhaseAsync();
 								return true;
 							}
 
@@ -126,12 +127,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		protected override Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
 			CalculateDerivedGeometries(selectedFeatures, progressor);
 
 			DerivedGeometriesCalculated(progressor);
+
+			return Task.CompletedTask;
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
@@ -183,7 +186,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					ResetDerivedGeometries();
 
-					StartSelectionPhase();
+					StartSelectionPhaseAsync();
 				});
 
 			await ViewUtils.TryAsync(task, _msg);
@@ -267,7 +270,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			else
 			{
 				// In case it has not yet been started (e.g. on tool activation with selection)
-				StartSelectionPhase();
+				StartSelectionPhaseAsync();
 			}
 
 			LogDerivedGeometriesCalculated(progressor);

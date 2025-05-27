@@ -41,7 +41,7 @@ namespace ProSuite.QA.Tests.Transformers
 				AppendedTable.Create(InvolvedTables, helpers, _transformerName);
 			return transformedTable;
 		}
-
+		
 		private class AppendedTable : VirtualTable, IDataContainerAware, ITransformedTable
 		{
 			private IWorkspace _workspace;

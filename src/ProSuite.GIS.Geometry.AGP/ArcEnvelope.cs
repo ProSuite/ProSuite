@@ -47,12 +47,13 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public IEnvelope Envelope => new ArcEnvelope(_proEnvelope.Extent);
 
-		public void Project(ISpatialReference newReferenceSystem)
+		public IGeometry Project(ISpatialReference newReferenceSystem)
 		{
-			// TODO: Change semantics, return result
-			throw new NotImplementedException();
-			//var newProSpatialRef = ((ArcSpatialReference) newReferenceSystem).ProSpatialReference;
-			//Geometry result = GeometryEngine.Instance.Project(_proEnvelope, newProSpatialRef);
+			var newProSpatialRef = ((ArcSpatialReference) newReferenceSystem).ProSpatialReference;
+			var proResultEnvelope =
+				(Envelope) GeometryEngine.Instance.Project(_proEnvelope, newProSpatialRef);
+
+			return new ArcEnvelope(proResultEnvelope);
 		}
 
 		public void SnapToSpatialReference()
@@ -75,6 +76,8 @@ namespace ProSuite.GIS.Geometry.AGP
 			Envelope clone = (Envelope) _proEnvelope.Clone();
 			return new ArcEnvelope(clone);
 		}
+
+		public object NativeImplementation => ProEnvelope;
 
 		#endregion
 
@@ -183,10 +186,8 @@ namespace ProSuite.GIS.Geometry.AGP
 		{
 			var aoEnvelope = ((ArcEnvelope) other).ProEnvelope;
 
-			Envelope result = _proEnvelope.Union(aoEnvelope);
+			_proEnvelope.Union(aoEnvelope);
 
-			// TODO: Change semantics, return result
-			throw new NotImplementedException();
 		}
 
 		public void Intersect(IEnvelope inEnvelope)
@@ -216,7 +217,14 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public void Expand(double dx, double dy, bool asRatio)
 		{
-			throw new NotImplementedException();
+			if (asRatio)
+			{
+				_proEnvelope.Expand(dx * _proEnvelope.Width, dy * _proEnvelope.Height, false);
+			}
+			else
+			{
+				_proEnvelope.Expand(dx, dy, false);
+			}
 		}
 
 		public void ExpandZ(double dz, bool asRatio)

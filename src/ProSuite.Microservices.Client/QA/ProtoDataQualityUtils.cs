@@ -507,12 +507,14 @@ namespace ProSuite.Microservices.Client.QA
 			{
 				modelMsg.DatasetIds.Add(dataset.Id);
 
-				if (dataset is IErrorDataset)
+				bool isErrorDataset = dataset is IErrorDataset;
+
+				if (isErrorDataset)
 				{
 					modelMsg.ErrorDatasetIds.Add(dataset.Id);
 				}
 
-				DatasetMsg datasetMsg = ToDatasetMsg(dataset);
+				DatasetMsg datasetMsg = ToDatasetMsg(dataset, isErrorDataset);
 
 				referencedDatasetMsgs.Add(datasetMsg);
 			}
@@ -525,6 +527,9 @@ namespace ProSuite.Microservices.Client.QA
 				ProtobufGeomUtils.NullToEmpty(productionModel.DefaultDatabaseName);
 			modelMsg.DefaultDatabaseSchemaOwner =
 				ProtobufGeomUtils.NullToEmpty(productionModel.DefaultDatabaseSchemaOwner);
+
+			modelMsg.UseDefaultDatabaseOnlyForSchema =
+				productionModel.UseDefaultDatabaseOnlyForSchema;
 
 			return modelMsg;
 		}
@@ -552,7 +557,8 @@ namespace ProSuite.Microservices.Client.QA
 				                     End1CascadeDeleteOrphans =
 					                     association.End1.CascadeDeleteOrphans,
 				                     End2CascadeDeleteOrphans =
-					                     association.End2.CascadeDeleteOrphans
+					                     association.End2.CascadeDeleteOrphans,
+				                     ModelId = association.Model.Id
 			                     };
 
 			if (includeDetails)
@@ -595,7 +601,8 @@ namespace ProSuite.Microservices.Client.QA
 					AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
 					GeometryType = geometryType,
 					DatasetType = (int) dataset.DatasetType,
-					TypeCode = dataset.ImplementationType?.Id ?? 0
+					TypeCode = dataset.ImplementationType?.Id ?? 0,
+					ModelId = dataset.Model.Id
 				};
 
 			if (includeDetails)
@@ -802,6 +809,10 @@ namespace ProSuite.Microservices.Client.QA
 					objectSubtype.AddCriterion(criterionMsg.AttributeName, attributeValue);
 				}
 			}
+
+			_msg.DebugFormat("Added {0} attributes and {1} object types to dataset {2}",
+			                 detailedDatasetMsg.Attributes.Count,
+			                 detailedDatasetMsg.ObjectCategories.Count, objectDataset.Name);
 		}
 
 		private static IEnumerable<ObjectCategoryMsg> ToObjectCategoryMsg(ObjectType objectType)

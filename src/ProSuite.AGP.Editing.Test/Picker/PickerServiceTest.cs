@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using NUnit.Framework;
-using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.AGP.Picker;
 
 namespace ProSuite.AGP.Editing.Test.Picker
 {
@@ -51,7 +52,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 
 			IEnumerable<IPickableItem> items = Create(polylines);
 
-			var pickerPrecedence = new StandardPickerPrecedenceMock();
+			var pickerPrecedence = new StandardPickerPrecedenceMock(new List<Key> { Key.LeftCtrl });
 			pickerPrecedence.SelectionGeometry = referenceGeometry;
 
 			Task<IPickableItem> pickSingle =

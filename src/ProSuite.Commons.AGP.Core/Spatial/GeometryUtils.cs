@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -194,6 +193,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return first.StartPoint;
 		}
 
+		[CanBeNull]
 		public static MapPoint GetEndPoint([CanBeNull] Multipart multipart)
 		{
 			var points = multipart?.Points;
@@ -685,6 +685,97 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		/// <summary>
+		/// Reverse the orientation of the given part <paramref name="partIndex"/>
+		/// (or all parts if <paramref name="partIndex"/> is negative) of the given
+		/// <paramref name="polycurve"/> (Polyline or Polygon). Notice that reversing
+		/// a polygon ring changes its meaning from interior to exterior or vice versa!
+		/// </summary>
+		public static T ReverseOrientation<T>(T polycurve, int partIndex = -1) where T : Multipart
+		{
+			if (polycurve is null)
+				return null;
+
+			if (partIndex < 0)
+			{
+				return (T) GeometryEngine.Instance.ReverseOrientation(polycurve);
+			}
+
+			Multipart result;
+
+			switch (polycurve)
+			{
+				case Polyline polyline:
+					result = ReverseOrientation(polyline, partIndex);
+					break;
+
+				case Polygon polygon:
+					result = ReverseOrientation(polygon, partIndex);
+					break;
+
+				default:
+					throw new NotSupportedException(
+						$"Unknown {nameof(Multipart)} subtype: {polycurve.GetType().Name}");
+			}
+
+			return (T) result;
+		}
+
+		private static Polyline ReverseOrientation(Polyline polyline, int partIndex = -1)
+		{
+			if (polyline is null)
+				throw new ArgumentNullException(nameof(polyline));
+			if (partIndex < 0 || partIndex >= polyline.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new PolylineBuilderEx(polyline);
+			ReverseOrientation(builder.Parts[partIndex]);
+			return builder.ToGeometry();
+		}
+
+		private static Polygon ReverseOrientation(Polygon polygon, int partIndex = -1)
+		{
+			if (polygon is null)
+				throw new ArgumentNullException(nameof(polygon));
+			if (partIndex < 0 || partIndex > polygon.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new PolygonBuilderEx(polygon);
+			ReverseOrientation(builder.Parts[partIndex]);
+			return builder.ToGeometry();
+		}
+
+		private static void ReverseOrientation(List<Segment> path)
+		{
+			// Reverse the list, then each segment in the list:
+
+			path.Reverse();
+
+			int count = path.Count;
+			for (int i = 0; i < count; i++)
+			{
+				var segment = path[i];
+
+				switch (segment)
+				{
+					case LineSegment line:
+						path[i] = LineBuilderEx.CreateLineSegment(line.EndPoint, line.StartPoint);
+						break;
+
+					case CubicBezierSegment bezier:
+						path[i] = CubicBezierBuilderEx.CreateCubicBezierSegment(
+							bezier.EndPoint, bezier.ControlPoint2, bezier.ControlPoint1, bezier.StartPoint);
+						break;
+
+					case EllipticArcSegment arc:
+						var builder = new EllipticArcBuilderEx(arc);
+						builder.Orientation = arc.IsCounterClockwise
+							                      ? ArcOrientation.ArcClockwise
+							                      : ArcOrientation.ArcCounterClockwise;
+						path[i] = builder.ToSegment();
+						break;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Return a copy of the input geometry with index structures
 		/// added that may accelerate the relational operations.
 		/// </summary>
@@ -719,6 +810,29 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Disjoint(geometry1, geometry2);
 		}
 
+		public static Geometry GetClippedGeometry([NotNull] Geometry polygon,
+		                                          [NotNull] Envelope clipExtent,
+		                                          double clipExtentRotationDeg = 0)
+		{
+			if (clipExtentRotationDeg == 0)
+			{
+				Envelope clipExtentSref =
+					EnsureSpatialReference(clipExtent, polygon.SpatialReference);
+
+				return Engine.Clip(polygon, clipExtentSref);
+			}
+
+			// It's a polygon:
+			Polygon envelopeAsPoly =
+				GeometryFactory.CreatePolygon(clipExtent, polygon.SpatialReference);
+
+			double rotationInRadians = MathUtils.ToRadians(clipExtentRotationDeg);
+
+			Geometry rotated = Engine.Rotate(envelopeAsPoly, clipExtent.Center, rotationInRadians);
+
+			return Engine.Intersection(polygon, rotated);
+		}
+
 		/// <summary>
 		/// Clips the polygon using the provided envelope. The envelope can be rotated
 		/// by the specified degrees before the clip is applied. This is useful for rotated
@@ -729,7 +843,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// <param name="clipExtentRotationDeg">The rotation to be applied to the clip extent before
 		/// clipping. The unit is degrees.</param>
 		/// <returns></returns>
-		public static Polygon GetClippedPolygon([NotNull] Polygon polygon,
+		public static Polygon GetClippedPolygon([NotNull] Geometry polygon,
 		                                        [NotNull] Envelope clipExtent,
 		                                        double clipExtentRotationDeg = 0)
 		{
@@ -1068,32 +1182,46 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (shape is Multipart multipart)
 			{
-				int vertexIndex = globalVertexIndex;
-				int partCount = multipart.PartCount;
-				for (int k = 0; k < partCount; k++)
-				{
-					int segmentCount = multipart.Parts[k].Count;
-					int vertexCount = segmentCount + 1; // even for rings!
-
-					if (vertexIndex < vertexCount)
-					{
-						partIndex = k;
-						return vertexIndex;
-					}
-
-					vertexIndex -= vertexCount;
-				}
-
-				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+				return GetLocalVertexIndex(multipart, globalVertexIndex, out partIndex);
 			}
 
-			if (shape is Multipatch multipatch)
+			if (shape is Multipatch)
 			{
 				throw new NotImplementedException("Multipatches are not yet implemented");
 			}
 
 			partIndex = 0;
 			return globalVertexIndex;
+		}
+
+		/// <summary>
+		/// Given a global (shape-wide) vertex index, get the part-local
+		/// vertex index and the part index
+		/// </summary>
+		public static int GetLocalVertexIndex(Multipart multipart, int globalVertexIndex, out int partIndex)
+		{
+			if (multipart is null)
+				throw new ArgumentNullException(nameof(multipart));
+			if (globalVertexIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
+
+			int vertexIndex = globalVertexIndex;
+			int partCount = multipart.PartCount;
+			for (int k = 0; k < partCount; k++)
+			{
+				int segmentCount = multipart.Parts[k].Count;
+				int vertexCount = segmentCount + 1; // even for rings!
+
+				if (vertexIndex < vertexCount)
+				{
+					partIndex = k;
+					return vertexIndex;
+				}
+
+				vertexIndex -= vertexCount;
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(globalVertexIndex));
 		}
 
 		/// <summary>
@@ -1144,7 +1272,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return vertexTally + localVertexIndex;
 			}
 
-			if (shape is Multipatch multipatch)
+			if (shape is Multipatch)
 			{
 				throw new NotImplementedException("Multipatches are not yet implemented");
 			}
@@ -1152,8 +1280,180 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return localVertexIndex;
 		}
 
+		/// <summary>
+		/// This method ensures that either <paramref name="partIndex"/>
+		/// equals <paramref name="pointIndex"/>, or that either
+		/// <paramref name="partIndex"/> or <paramref name="pointIndex"/>
+		/// is zero or unspecified (negative).
+		/// </summary>
+		/// <remarks>By convention, a multipoint geometry reports its
+		/// constituent points as its points (addressed by point index)
+		/// and as its parts (addressed by part index).</remarks>
+		public static int GetMultipointIndex(int partIndex, int pointIndex)
+		{
+			// p == v | p > 0 and v <= 0 | v > 0 and p <= 0
+
+			if (partIndex == pointIndex)
+			{
+				return partIndex;
+			}
+
+			if (partIndex <= 0)
+			{
+				return pointIndex;
+			}
+
+			if (pointIndex <= 0)
+			{
+				return partIndex;
+			}
+
+			throw new ArgumentException("For a multipoint, part and vertex index must not be different");
+		}
+
+		public static Geometry AddVertex(Geometry shape, MapPoint point)
+		{
+			return AddVertex(shape, point, out _, out _);
+		}
+
+		/// <summary>
+		/// Add a vertex to the given <paramref name="shape"/>
+		/// (a Polyline, Polygon, or a Multipoint) at or near the
+		/// given <paramref name="point"/> (it will be projected
+		/// onto the Polyline or Polygon boundary). If the given
+		/// <paramref name="point"/> has a non-zero ID, the new
+		/// vertex will be a control point, otherwise a regular vertex.
+		/// </summary>
+		/// <returns>A new geometry with the vertex added</returns>
+		/// <remarks>For multipoints, just append the point, for polylines
+		/// and polygons, use <see cref="IGeometryEngine.SplitAtPoint"/></remarks>
+		public static Geometry AddVertex(Geometry shape, MapPoint point, out int partIndex, out int vertexIndex)
+		{
+			if (shape is null)
+				throw new ArgumentNullException(nameof(shape));
+			if (point is null)
+				throw new ArgumentNullException(nameof(point));
+
+			// Multipoint: add point at clickPoint
+			// Multipart: split line at clickPoint
+			// MultiPatch: not implemented
+			// otherwise: error
+
+			if (shape is Multipoint multipoint)
+			{
+				point = EnsureSpatialReference(point, multipoint.SpatialReference);
+				var builder = new MultipointBuilderEx(multipoint);
+				if (point.HasID) builder.HasID = true;
+				// else: don't modify HasID
+				builder.AddPoint(point);
+				partIndex = vertexIndex = builder.PointCount - 1;
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipart multipart)
+			{
+				if (multipart.IsEmpty)
+				{
+					// cannot add a (single) vertex to an empty polyline/polygon
+					partIndex = -1;
+					vertexIndex = -1;
+					return multipart;
+				}
+
+				const bool projectOnto = true;
+				point = EnsureSpatialReference(point, multipart.SpatialReference);
+				Geometry newShape = GeometryEngine.Instance.SplitAtPoint(
+					multipart, point, projectOnto, false,
+					out bool splitOccurred, out partIndex, out int segmentIndex);
+				if (!splitOccurred)
+					throw new Exception($"Could not add vertex to {multipart.GeometryType}: " +
+					                    $"{nameof(GeometryEngine.Instance.SplitAtPoint)} says no split occurred");
+				// Returned partIndex and segmentIndex are for the segment *after* the
+				// split point, thus segmentIndex is the vertexIndex of the inserted vertex:
+				vertexIndex = segmentIndex;
+				// SplitAtPoint interpolates Z and M attributes (good), but also seems to
+				// inherit the ID from neighbouring vertices: take ID from split point
+				newShape = ControlPointUtils.SetPointID(point.ID, newShape, partIndex, segmentIndex);
+				return newShape;
+			}
+
+			if (shape is Multipatch)
+			{
+				throw new NotImplementedException("Add Vertex is not implemented for MultiPatch geometries");
+			}
+
+			throw new NotSupportedException(
+				$"Cannot Add Vertex on a geometry of type {shape.GetType().Name}");
+		}
+
+		/// <summary>
+		/// Remove the addressed vertex from the given geometry.
+		/// For a point geometry, both indices must be zero.
+		/// For a multipoint geometry, both indices should be the same.
+		/// </summary>
+		/// <returns>A new geometry instance, which may be an empty geometry
+		/// (if last vertex or segment was removed)</returns>
+		public static Geometry RemoveVertex(Geometry shape, int partIndex, int vertexIndex)
+		{
+			if (shape is null)
+				throw new ArgumentNullException(nameof(shape));
+
+			if (shape.IsEmpty)
+				throw new InvalidOperationException("Cannot remove vertex on an empty geometry");
+
+			if (shape is MapPoint mapPoint)
+			{
+				if (partIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(partIndex));
+				if (vertexIndex != 0)
+					throw new ArgumentOutOfRangeException(nameof(vertexIndex));
+
+				var builder = new MapPointBuilderEx(mapPoint);
+				builder.SetEmpty();
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipoint multipoint)
+			{
+				int pointIndex = GetMultipointIndex(partIndex, vertexIndex);
+				if (pointIndex < 0 || pointIndex >= multipoint.PointCount)
+					throw new ArgumentOutOfRangeException(
+						"point index out of range for multipoint shape", (Exception) null);
+
+				var builder = new MultipointBuilderEx(multipoint);
+				builder.RemovePoint(pointIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Polyline polyline)
+			{
+				var builder = new PolylineBuilderEx(polyline);
+				RemoveVertices(builder, partIndex, vertexIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Polygon polygon)
+			{
+				var builder = polygon.ToBuilder();
+				RemoveVertices(builder, partIndex, vertexIndex);
+				return builder.ToGeometry();
+			}
+
+			if (shape is Multipatch)
+			{
+				throw new NotImplementedException();
+			}
+
+			if (shape is Envelope)
+			{
+				throw new NotSupportedException("Cannot remove vertex on an Envelope");
+			}
+
+			throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
+		}
+
 		public static void RemoveVertices(/*this*/ MultipartBuilderEx builder, int partIndex,
-		                                  int firstVertex, int lastVertex = -1)
+		                                           int firstVertex, int lastVertex = -1)
 		{
 			switch (builder)
 			{
@@ -1348,9 +1648,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
 		{
 			var segment = builder.GetSegment(partIndex, segmentIndex);
-			var segbldr = segment.ToBuilder();
-			segbldr.StartPoint = segbldr.StartPoint.Shifted(dx, dy);
-			var moved = segbldr.ToSegment();
+
+			var startPoint = segment.StartPoint.Shifted(dx, dy);
+			Segment moved = UpdateEndpoints(segment, startPoint, null);
+
 			builder.ReplaceSegment(partIndex, segmentIndex, moved);
 		}
 
@@ -1358,10 +1659,124 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MultipartBuilderEx builder, int partIndex, int segmentIndex, double dx, double dy)
 		{
 			var segment = builder.GetSegment(partIndex, segmentIndex);
-			var segbldr = segment.ToBuilder();
-			segbldr.EndPoint = segbldr.EndPoint.Shifted(dx, dy);
-			var moved = segbldr.ToSegment();
+
+			var endPoint = segment.EndPoint.Shifted(dx, dy);
+			Segment moved = UpdateEndpoints(segment, null, endPoint);
+
 			builder.ReplaceSegment(partIndex, segmentIndex, moved);
+		}
+
+		/// <summary>
+		/// Update either or both endpoints of the given segment.
+		/// For a line segment, this is trivial. For a cubic Bézier
+		/// segment, move the control point(s) accordingly. For a
+		/// circular or elliptic arc, move the center decently.
+		/// </summary>
+		public static T UpdateEndpoints<T>([NotNull] T segment, MapPoint startPoint, MapPoint endPoint)
+			where T : Segment
+		{
+			if (segment is null)
+				throw new ArgumentNullException(nameof(segment));
+
+			if (segment is CubicBezierSegment bezier)
+			{
+				return (T) (Segment) UpdateEndpoints(bezier, startPoint, endPoint);
+			}
+
+			if (segment is EllipticArcSegment arc)
+			{
+				return (T) (Segment) UpdateEndpoints(arc, startPoint, endPoint);
+			}
+
+			var builder = segment.ToBuilder();
+			builder.StartPoint = startPoint ?? segment.StartPoint;
+			builder.EndPoint = endPoint ?? builder.EndPoint;
+			return (T) builder.ToSegment();
+		}
+
+		private static CubicBezierSegment UpdateEndpoints(
+			CubicBezierSegment bezier, MapPoint startPoint, MapPoint endPoint)
+		{
+			if (startPoint is null && endPoint is null)
+			{
+				// no endpoint changed: nothing to do
+				return bezier;
+			}
+
+			// Move CP1 same as startPoint, and CP2 same as endPoint:
+
+			var controlPoint1 = bezier.ControlPoint1;
+			var controlPoint2 = bezier.ControlPoint2;
+
+			if (startPoint is not null)
+			{
+				controlPoint1.Move(startPoint.X - bezier.StartPoint.X,
+				         startPoint.Y - bezier.StartPoint.Y);
+			}
+
+			if (endPoint is not null)
+			{
+				controlPoint2.Move(endPoint.X - bezier.EndPoint.X,
+				         endPoint.Y - bezier.EndPoint.Y);
+			}
+
+			var sref = bezier.SpatialReference;
+
+			return CubicBezierBuilderEx.CreateCubicBezierSegment(
+				startPoint ?? bezier.StartPoint, controlPoint1,
+				controlPoint2, endPoint ?? bezier.EndPoint, sref);
+		}
+
+		private static EllipticArcSegment UpdateEndpoints(
+			EllipticArcSegment arc, MapPoint startPoint, MapPoint endPoint)
+		{
+			if (startPoint is null && endPoint is null)
+			{
+				// no endpoint changed: nothing to do
+				return arc;
+			}
+
+			// Cannot just update arc.StartPoint and arc.EndPoint:
+			// must recreate the circular/elliptic arc segment:
+
+			EllipticArcSegment updated;
+
+			var orientation = arc.IsCounterClockwise
+				                  ? ArcOrientation.ArcCounterClockwise
+				                  : ArcOrientation.ArcClockwise;
+
+			var sref = arc.SpatialReference;
+
+			if (arc.IsCircular)
+			{
+
+				var ds = startPoint is null
+					         ? new Coordinate2D(0, 0)
+					         : new Coordinate2D(startPoint) - new Coordinate2D(arc.StartPoint);
+
+				var de = endPoint is null
+					         ? new Coordinate2D(0, 0)
+					         : new Coordinate2D(endPoint) - new Coordinate2D(arc.EndPoint);
+
+				var dc = 0.5 * (ds + de);
+				var centerPt = arc.CenterPoint.Shifted(dc.X, dc.Y);
+
+				updated = EllipticArcBuilderEx.CreateCircularArc(
+					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint, centerPt, orientation, sref);
+			}
+			else
+			{
+				var minor = arc.IsMinor
+					            ? MinorOrMajor.Minor
+					            : MinorOrMajor.Major;
+
+				updated = EllipticArcBuilderEx.CreateEllipticArcSegment(
+					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint,
+					arc.SemiMajorAxis, arc.MinorMajorRatio,
+					arc.RotationAngle, minor, orientation, sref);
+			}
+
+			return updated;
 		}
 
 		#endregion
@@ -1461,11 +1876,6 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			MapPoint upperRight = GetUpperRight(extent);
 
 			return $"{Format(lowerLeft, digits)}, {Format(upperRight, digits)}";
-		}
-
-		public static IEnumerable<MapPoint> GetVertices([NotNull] Feature feature)
-		{
-			return GetVertices(feature.GetShape());
 		}
 
 		public static IEnumerable<MapPoint> GetVertices([CanBeNull] Geometry geometry)

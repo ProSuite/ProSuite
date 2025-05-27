@@ -61,7 +61,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class based on several other filters that use the same &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class based on several other input feature filters that use the same &apos;featureClassToFilter&apos; as this transformer. Other input feature filters are transformers with name &apos;TrOnly...&apos;..
         /// </summary>
         public static string TrCombinedFilter_0 {
             get {
@@ -271,7 +273,9 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Transforms features of &apos;intersected&apos; by intersecting them with features from &apos;intersecting&apos;.
-        ///If intersected is a line class and intersecting is a polygon class, then the resulting feature class has an attribute &apos;PartIntersected&apos; which contains the (resultingFeature.Shape.Length / intersectedFeature.Shape.Length).
+        ///If ResultDimension is not specified, the result feature class has the same geometry dimension as the intersected feature class.
+        ///When the result feature class matches the dimension of the intersected feature class, an IntersectionRatio attribute is added. This represents the ratio of the result geometry to the original intersected geometry:
+        ///Polygons Features:  resultingFeature.Shape.Area / intersectedFeature.Shape [rest of string was truncated]&quot;;.
         /// </summary>
         public static string TrIntersect_0 {
             get {
@@ -294,6 +298,19 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string TrIntersect_intersecting {
             get {
                 return ResourceManager.GetString("TrIntersect_intersecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the dimensionality of the resulting intersection geometry.
+        ///- -1 (default): Automatically determines the result dimension by using the dimension of the intersected feature class.
+        ///- 0: Forces the result to be points (e.g., intersection points of polylines).
+        ///- 1: Forces the result to be polylines (e.g., overlapping line segments or polygon boundaries).
+        ///- 2: Forces the result to be polygons (e.g., overlapping areas of polygons)..
+        /// </summary>
+        public static string TrIntersect_ResultDimension {
+            get {
+                return ResourceManager.GetString("TrIntersect_ResultDimension", resourceCulture);
             }
         }
         
@@ -433,7 +450,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that are contained within features from &apos;containing&apos;. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class containing only the features that are contained within features from &apos;containing&apos;. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyContainedFeatures_0 {
             get {
@@ -460,7 +479,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that are disjoint from features from &apos;disjoint&apos;. Features that intersect any feature from &apos;disjoint&apos; are filtered out. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class containing only the features that are disjoint from features from &apos;disjoint&apos;. Features that intersect any feature from &apos;disjoint&apos; are filtered out. The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyDisjointFeatures_0 {
             get {
@@ -487,7 +508,9 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creates a filtered feature class containing only the features that intersect features from &apos;intersecting&apos;.  The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
+        ///   Looks up a localized string similar to This transformer is an input feature filter. Input feature filters use a spatial restriction to filter the rows of the input feature class &apos;featureClassToFilter&apos;.
+        ///
+        ///Creates a filtered feature class containing only the features that intersect features from &apos;intersecting&apos;.  The resulting feature class has the same properties and attributes as &apos;featureClassToFilter&apos;..
         /// </summary>
         public static string TrOnlyIntersectingFeatures_0 {
             get {

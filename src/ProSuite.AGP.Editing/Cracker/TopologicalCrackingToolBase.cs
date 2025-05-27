@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Data;
@@ -5,7 +6,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Selection;
@@ -21,8 +21,8 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 	protected CrackerResult CalculateCrackPoints(IList<Feature> selectedFeatures,
 	                                             IList<Feature> intersectingFeatures,
 	                                             ICrackerToolOptions crackerToolOptions,
-												 IntersectionPointOptions intersectionPointOptions,
-												 bool addCrackPointsOnExistingVertices,
+	                                             IntersectionPointOptions intersectionPointOptions,
+	                                             bool addCrackPointsOnExistingVertices,
 	                                             CancelableProgressor progressor)
 	{
 		CrackerResult resultCrackPoints;
@@ -43,8 +43,10 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 		{
 			resultCrackPoints =
 				MicroserviceClient.CalculateCrackPoints(selectedFeatures, intersectingFeatures,
-				                                        crackerToolOptions, intersectionPointOptions,
-				                                        addCrackPointsOnExistingVertices, cancellationToken);
+				                                        crackerToolOptions,
+				                                        intersectionPointOptions,
+				                                        addCrackPointsOnExistingVertices,
+				                                        cancellationToken);
 		}
 		else
 		{
@@ -62,50 +64,28 @@ public abstract class TopologicalCrackingToolBase : TwoPhaseEditToolBase
 		[NotNull] ICrackerToolOptions crackerToolOptions,
 		[CanBeNull] CancelableProgressor cancellabelProgressor)
 	{
-		Dictionary<MapMember, List<long>> selection =
-			SelectionUtils.GetSelection(ActiveMapView.Map);
-
-		Envelope inExtent = ActiveMapView.Extent;
-
 		TargetFeatureSelection targetFeatureSelection =
 			crackerToolOptions.TargetFeatureSelection;
 
-		if (targetFeatureSelection == TargetFeatureSelection.SelectedFeatures)
-		{
-			// NOTE: cracking within selection is signalled to the server by an empty target list.
-			return new List<Feature>();
-		}
-
-		var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
-
-		// They might be stored (insert target vertices):
-		featureFinder.ReturnUnJoinedFeatures = true;
-
 		// Snap crack points within tolerance to target vertices: enlarge search envelope.
+		double extraSearchTolerance = 0.0;
 		if (crackerToolOptions.SnapToTargetVertices)
 		{
-			featureFinder.ExtraSearchTolerance = crackerToolOptions.SnapTolerance;
+			extraSearchTolerance = crackerToolOptions.SnapTolerance;
 		}
 
-		// Set the feature classes to ignore
-		IEnumerable<FeatureSelectionBase> featureClassSelections =
-			featureFinder.FindIntersectingFeaturesByFeatureClass(
-				selection, null, inExtent, cancellabelProgressor);
+		Dictionary<MapMember, List<long>> selection =
+			SelectionUtils.GetSelection(ActiveMapView.Map);
 
-		if (cancellabelProgressor != null &&
-		    cancellabelProgressor.CancellationToken.IsCancellationRequested)
-		{
-			return new List<Feature>();
-		}
+		return ToolUtils.GetIntersectingFeatures(selection, ActiveMapView, targetFeatureSelection,
+		                                         extraSearchTolerance,
+		                                         GetTargetFeatureClassPredicate(),
+		                                         cancellabelProgressor);
+	}
 
-		var foundFeatures = new List<Feature>();
-
-		foreach (FeatureSelectionBase selectionBase in featureClassSelections)
-		{
-			foundFeatures.AddRange(selectionBase.GetFeatures());
-		}
-
-		return foundFeatures;
+	protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+	{
+		return null;
 	}
 
 	#endregion

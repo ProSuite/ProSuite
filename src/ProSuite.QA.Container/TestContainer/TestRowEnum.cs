@@ -361,13 +361,16 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
-			if (spatialFilter != null && filterGeometry != null &&
-			    ! ((IRelationalOperator) loadedExtent).Contains(filterGeometry))
+			if (_msg.IsVerboseDebugEnabled)
 			{
-				// Throw?
-				_msg.WarnFormat(
-					"The filter geometry is not completely covered by the tile cache's extent: {0}",
-					GeometryUtils.ToString(filterGeometry.Envelope, true));
+				// TODO: Find out in which cases this is ok (expanded search area?). It happens a lot!
+				if (spatialFilter != null && filterGeometry != null &&
+				    ! ((IRelationalOperator) loadedExtent).Contains(filterGeometry))
+				{
+					_msg.WarnFormat(
+						"The filter geometry is not completely covered by the tile cache's extent: {0}",
+						GeometryUtils.ToString(filterGeometry.Envelope, true));
+				}
 			}
 
 			return _tileCache.Search(table, queryFilter, filterHelper);
@@ -1015,7 +1018,7 @@ namespace ProSuite.QA.Container.TestContainer
 				     tableIndex < involvedTableCount;
 				     tableIndex++)
 				{
-					if (tableList[tableIndex] != table)
+					if (! tableList[tableIndex].Equals(table))
 					{
 						continue;
 					}

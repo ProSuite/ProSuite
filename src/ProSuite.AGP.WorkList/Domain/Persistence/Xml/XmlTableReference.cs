@@ -1,9 +1,11 @@
 using System.Xml.Serialization;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
 	public class XmlTableReference
 	{
+		[UsedImplicitly]
 		public XmlTableReference() { }
 
 		public XmlTableReference(long id, string name)

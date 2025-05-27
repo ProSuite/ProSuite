@@ -131,6 +131,13 @@ namespace ProSuite.DomainModel.Core.QA
 			return added;
 		}
 
+		public bool Contains(string name)
+		{
+			return _testDescriptors.ContainsKey(name) ||
+			       _transformerDescriptors.ContainsKey(name) ||
+			       _issueFilterDescriptors.ContainsKey(name);
+		}
+
 		public int Count => _testDescriptors.Count +
 		                    _transformerDescriptors?.Count ?? 0 +
 		                    _issueFilterDescriptors?.Count ?? 0;
@@ -143,12 +150,15 @@ namespace ProSuite.DomainModel.Core.QA
 		private static bool TryAdd<T>(IDictionary<string, T> toDictionary, T item)
 			where T : InstanceDescriptor
 		{
-			if (toDictionary.ContainsKey(item.Name))
+			//string canonicalName = item.GetCanonicalName();
+			string descriptorName = item.Name;
+
+			if (toDictionary.ContainsKey(descriptorName))
 			{
 				return false;
 			}
 
-			toDictionary.Add(item.Name, item);
+			toDictionary.Add(descriptorName, item);
 
 			return true;
 		}

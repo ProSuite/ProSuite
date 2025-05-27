@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -17,5 +18,13 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <param name="hasGeometry"></param>
 		/// <returns></returns>
 		IList<InvolvedTable> ParseInvolved(string involvedString, bool hasGeometry);
+
+		/// <summary>
+		/// Gets the name of the attribute.
+		/// </summary>
+		/// <param name="attribute"></param>
+		/// <returns></returns>
+		[CanBeNull]
+		string GetName(Attributes attribute);
 	}
 }

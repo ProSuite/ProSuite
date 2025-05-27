@@ -1,13 +1,13 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
 	internal class AssignDatasetCategoriesBasedOnFeatureDatasetsCommand<M> :
 		ItemCommandBase<ModelItemBase<M>>
-		where M : Model
+		where M : DdxModel
 	{
 		public AssignDatasetCategoriesBasedOnFeatureDatasetsCommand(
 			[NotNull] ModelItemBase<M> item,

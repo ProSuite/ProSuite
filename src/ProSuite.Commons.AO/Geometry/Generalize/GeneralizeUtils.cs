@@ -175,14 +175,7 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 
 					if (removeCount > 0)
 					{
-						if (updatedGeometries.ContainsKey(featureVertexInfo.Feature))
-						{
-							updatedGeometries[featureVertexInfo.Feature] = polycurveToUpdate;
-						}
-						else
-						{
-							updatedGeometries.Add(featureVertexInfo.Feature, polycurveToUpdate);
-						}
+						updatedGeometries[featureVertexInfo.Feature] = polycurveToUpdate;
 
 						featureCount++;
 						totalRemovedCount += removeCount;
@@ -638,7 +631,8 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			// and un-selected protecting features (protect every intersecting vertex)
 			var crackPointCalculator =
 				new CrackPointCalculator(
-					snapTolerance, minimumSegmentLength, addCrackPointsAlsoOnExistingVertices, false, intersectionOption, null);
+					snapTolerance, minimumSegmentLength, addCrackPointsAlsoOnExistingVertices,
+					false, intersectionOption, null);
 
 			return crackPointCalculator;
 		}
@@ -700,7 +694,7 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			return filteredSegments;
 		}
 
-		private static int DeleteShortSegments(
+		public static int DeleteShortSegments(
 			[NotNull] IPolycurve fromPolycurve,
 			[NotNull] FeatureVertexInfo vertexInfo,
 			bool use2DLengthOnly,

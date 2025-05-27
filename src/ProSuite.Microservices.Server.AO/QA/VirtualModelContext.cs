@@ -20,12 +20,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private IList<GdbWorkspace> _virtualWorkspaces;
 
-		private readonly Model _primaryModel;
+		private readonly DdxModel _primaryModel;
 
 		private readonly Func<DataVerificationResponse, DataVerificationRequest> _dataRequestFunc;
 
 		public VirtualModelContext(IList<GdbWorkspace> workspaces,
-		                           Model model)
+		                           DdxModel model)
 		{
 			_virtualWorkspaces = workspaces;
 			_primaryModel = model;
@@ -37,7 +37,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public VirtualModelContext(
 			Func<DataVerificationResponse, DataVerificationRequest> dataRequestFunc,
-			Model model)
+			DdxModel model)
 		{
 			_dataRequestFunc = dataRequestFunc;
 			_primaryModel = model;

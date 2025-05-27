@@ -1,0 +1,123 @@
+<controls:ProWindow x:Class="ProSuite.Commons.AGP.Carto.SymbolDisplaySettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProSuite.Commons.AGP.Carto"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+        xmlns:ui="clr-namespace:ProSuite.Commons.UI.WPF;assembly=ProSuite.Commons.UI"
+        d:DataContext="{d:DesignInstance {x:Type local:SymbolDisplaySettingsViewModel}, IsDesignTimeCreatable=False}"
+        mc:Ignorable="d"
+        Title="Symbol Display Settings"
+        Height="272" MinHeight="272" MaxHeight="320"
+        Width="400" MinWidth="400" MaxWidth="800"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource Esri_DialogFrameBackgroundBrush}">
+    <DockPanel Margin="8" Background="{DynamicResource Esri_DialogClientAreaBackgroundBrush}">
+        <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="4,4,4,4">
+            <Button DockPanel.Dock="Right" VerticalAlignment="Center"
+                    Content="Cancel" IsCancel="True" TabIndex="99"
+                    Style="{DynamicResource Esri_Button}"/>
+            <Separator DockPanel.Dock="Right" Width="8" Visibility="Hidden" />
+            <Button DockPanel.Dock="Right" VerticalAlignment="Center"
+                    Content="OK" IsDefault="True" TabIndex="88"
+                    Click="OkButtonClicked"
+                    Style="{DynamicResource Esri_Button}"/>
+            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="4,0,0,0">
+                <Run FontStyle="Italic" Text="{Binding ScopeMessage}"/>
+            </TextBlock>
+        </DockPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Margin="2">
+                <CheckBox Margin="4" IsChecked="{Binding AvoidSLMWithoutSLD }">Avoid SLM without SLD</CheckBox>
+                <TextBlock TextWrapping="Wrap" Background="Cornsilk"
+                           Margin="24,4,4,4" Padding="4,2,4,2">
+                    SLD and SLM can be toggled individually, but the
+                    combination SLM on with SLD off will not be possible
+                </TextBlock>
+            </StackPanel>
+            <Separator Grid.Row="1" />
+            <StackPanel Grid.Row="2" Margin="2">
+                <CheckBox Margin="4" IsChecked="{Binding UseScaleRange}">
+                    Disable SLD/SLM when...
+                </CheckBox>
+                <StackPanel Orientation="Horizontal" Margin="28,2,2,4">
+                    <TextBlock VerticalAlignment="Center">zoomed in beyond</TextBlock>
+                    <Separator Width="8" Visibility="Hidden"/>
+                    <TextBox VerticalAlignment="Center" MinWidth="80">
+                        <TextBox.Style>
+                            <Style TargetType="{x:Type TextBox}">
+                                <Style.Triggers>
+                                    <Trigger Property="Validation.HasError" Value="True">
+                                        <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                        <TextBox.Text>
+                            <Binding Path="MinScaleDenominator"
+                                     UpdateSourceTrigger="Default">
+                                <Binding.ValidationRules>
+                                    <ui:ScaleValidation/>
+                                </Binding.ValidationRules>
+                                <Binding.Converter>
+                                    <ui:ScaleConverter/>
+                                </Binding.Converter>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
+                    <Separator Width="8" Visibility="Hidden"/>
+                    <TextBlock VerticalAlignment="Center">(max scale, e.g. 1:500)</TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="28,2,2,4">
+                    <TextBlock VerticalAlignment="Center">zoomed out beyond</TextBlock>
+                    <Separator Width="8" Visibility="Hidden"/>
+                    <TextBox VerticalAlignment="Center" MinWidth="80">
+                        <TextBox.Style>
+                            <Style TargetType="{x:Type TextBox}">
+                                <Style.Triggers>
+                                    <Trigger Property="Validation.HasError" Value="True">
+                                        <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                        <TextBox.Text>
+                            <Binding Path="MaxScaleDenominator"
+                                     UpdateSourceTrigger="Default">
+                                <Binding.ValidationRules>
+                                    <ui:ScaleValidation/>
+                                </Binding.ValidationRules>
+                                <Binding.Converter>
+                                    <ui:ScaleConverter/>
+                                </Binding.Converter>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
+                    <Separator Width="8" Visibility="Hidden"/>
+                    <TextBlock VerticalAlignment="Center">(min scale, e.g. 1:15000)</TextBlock>
+                </StackPanel>
+                <TextBlock Foreground="SlateGray" Margin="28,4,0,0">
+                    Want:
+                    SLD = <Run Text="{Binding WantSLD}"/>,
+                    SLM = <Run Text="{Binding WantLM}"/>
+                </TextBlock>
+            </StackPanel>
+            <Separator Grid.Row="3" />
+        </Grid>
+    </DockPanel>
+    <controls:ProWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </controls:ProWindow.Resources>
+</controls:ProWindow>

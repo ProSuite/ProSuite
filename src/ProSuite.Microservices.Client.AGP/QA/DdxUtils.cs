@@ -33,7 +33,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// Sometimes it takes almost two minutes!
-		private const int _timeoutMilliseconds = 180000;
+		// From the US west cost to postgreSQL server in AWS europe even longer.
+		private const int _timeoutMilliseconds = 300000;
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] ICollection<Table> tables,
@@ -160,6 +161,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
 			{
+				if (instanceDescriptors.Contains(descriptorMsg.Name))
+				{
+					continue;
+				}
+
 				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
 				instanceDescriptors.AddDescriptor(instanceDescriptor);
 			}
@@ -334,21 +340,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					}
 				}
 
-				ObjectDataset originalDataset = dataset as ObjectDataset;
-
-				if (originalDataset == null)
-				{
-					continue;
-				}
-
-				if (originalDataset.Attributes.Count > 0)
-				{
-					_msg.DebugFormat("Dataset details already loaded for {0}",
-					                 originalDataset.Name);
-					continue;
-				}
-
-				ProtoDataQualityUtils.AddDetailsToDataset(originalDataset, datasetMsg);
+				TryAddDetailsToDataset(dataset, datasetMsg);
 			}
 
 			foreach (AssociationMsg associationMsg in response.Associations)
@@ -409,33 +401,31 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static InstanceDescriptor GetInstanceDescriptor(
 			InstanceDescriptorMsg descriptorMessage)
 		{
+			InstanceType instanceType = (InstanceType) descriptorMessage.Type;
+
+			InstanceDescriptor result;
+
+			switch (instanceType)
 			{
-				InstanceType instanceType = (InstanceType) descriptorMessage.Type;
-
-				InstanceDescriptor result;
-
-				switch (instanceType)
-				{
-					case InstanceType.Test:
-						result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+				case InstanceType.Test:
+					result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+						descriptorMessage);
+					break;
+				case InstanceType.Transformer:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<TransformerDescriptor>(
 							descriptorMessage);
-						break;
-					case InstanceType.Transformer:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<TransformerDescriptor>(
-								descriptorMessage);
-						break;
-					case InstanceType.IssueFilter:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
-								descriptorMessage);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				return result;
+					break;
+				case InstanceType.IssueFilter:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+							descriptorMessage);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
+
+			return result;
 		}
 
 		private static IEnumerable<IssueFilterDescriptor> GetIssueFilterDescriptors(
@@ -641,6 +631,16 @@ namespace ProSuite.Microservices.Client.AGP.QA
 						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
 				                       };
 
+				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
+					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
+
+				projectWorkspace.MinimumScaleDenominator =
+					projectMsg.MinimumScaleDenominator;
+
+				projectWorkspace.ToolConfigDirectory = projectMsg.ToolConfigDirectory;
+				projectWorkspace.WorkListConfigDir = projectMsg.WorkListConfigDir;
+				projectWorkspace.AttributeEditorConfigDir = projectMsg.AttributeEditorConfigDir;
+
 				result.Add(projectWorkspace);
 			}
 
@@ -687,6 +687,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				Dataset dataset = modelFactory.CreateDataset(datasetMsg);
 
 				datasetsById.Add(dataset.Id, dataset);
+
+				if (datasetMsg.Attributes.Count > 0 || datasetMsg.ObjectCategories.Count > 0)
+				{
+					TryAddDetailsToDataset(dataset, datasetMsg);
+				}
 			}
 
 			return datasetsById;
@@ -703,6 +708,25 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				yield return association;
 			}
+		}
+
+		private static void TryAddDetailsToDataset(IDdxDataset dataset, DatasetMsg datasetMsg)
+		{
+			ObjectDataset originalDataset = dataset as ObjectDataset;
+
+			if (originalDataset == null)
+			{
+				return;
+			}
+
+			if (originalDataset.Attributes.Count > 0)
+			{
+				_msg.DebugFormat("Dataset details already loaded for {0}",
+				                 originalDataset.Name);
+				return;
+			}
+
+			ProtoDataQualityUtils.AddDetailsToDataset(originalDataset, datasetMsg);
 		}
 
 		private static SpatialReference GetSpatialReference(

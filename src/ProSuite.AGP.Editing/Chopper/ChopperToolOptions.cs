@@ -17,34 +17,38 @@ namespace ProSuite.AGP.Editing.Chopper
 			LocalOptions = localOptions ??
 			               new PartialChopperToolOptions();
 
-			CentralizableTargetFeatureSelection =
-				InitializeSetting<TargetFeatureSelection>(
-					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
-					TargetFeatureSelection.VisibleFeatures);
-
+			// Checkbox Snap
+			CentralizableSnapToTargetVertices =
+				InitializeSetting<bool>(
+					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
+			// Numeric Spinner Tolerance
+			CentralizableSnapTolerance =
+				InitializeSetting<double>(
+					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
+			// Checkbox Minimum Segment
 			CentralizableRespectMinimumSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RespectMinimumSegmentLength),
 					false);
+			// Numeric Spinner Length
 			CentralizableMinimumSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinimumSegmentLength), 0.0);
-
-			CentralizableSnapToTargetVertices =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
-			CentralizableSnapTolerance =
-				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
-
-			CentralizableExcludeInteriorInteriorIntersections =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeInteriorInteriorIntersections),
-					false);
-
+			// Radio Intersect with
+			CentralizableTargetFeatureSelection =
+				InitializeSetting<TargetFeatureSelection>(
+					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
+					TargetFeatureSelection.VisibleFeatures);
+			// Checkbox Z values
 			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
+			// Checkbox T intersection
+			CentralizableExcludeInteriorInteriorIntersections =
+				InitializeSetting<bool>(
+					ReflectionUtils.GetProperty(
+						() => LocalOptions.ExcludeInteriorInteriorIntersections),
+					false);
 		}
 
 		#region Centralizable Properties
@@ -168,7 +172,8 @@ namespace ProSuite.AGP.Editing.Chopper
 			}
 
 			if (HasLocalOverride(CentralizableExcludeInteriorInteriorIntersections,
-			                     "Only chop at endpoints intersecting selected line's interior (T shapes)", notifications))
+			                     "Only chop at endpoints intersecting selected line's interior (T shapes)",
+			                     notifications))
 			{
 				result = true;
 			}

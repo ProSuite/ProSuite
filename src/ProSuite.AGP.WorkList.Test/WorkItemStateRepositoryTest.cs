@@ -27,7 +27,7 @@ namespace ProSuite.AGP.WorkList.Test
 		private string _statesXml =
 			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\a_selection_work_list.xml";
 
-		private IssueItemRepository _repository;
+		private ItemRepositoryMock _repository;
 
 		[SetUp]
 		public void SetUp()
@@ -48,7 +48,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			IWorkItemStateRepository stateRepository =
 				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new IssueItemRepository(new List<Table> { _table0 }, stateRepository);
+			_repository = new ItemRepositoryMock(new List<Table> { _table0 }, stateRepository);
 		}
 
 		[OneTimeSetUp]

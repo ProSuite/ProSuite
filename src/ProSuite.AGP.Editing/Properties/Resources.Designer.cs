@@ -63,6 +63,16 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] AdvancedGeneralizeOverlay {
+            get {
+                object obj = ResourceManager.GetObject("AdvancedGeneralizeOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] AdvancedReshapeOverlay {
             get {
                 object obj = ResourceManager.GetObject("AdvancedReshapeOverlay", resourceCulture);
@@ -131,16 +141,6 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap CutPolygonAlongTool {
-            get {
-                object obj = ResourceManager.GetObject("CutPolygonAlongTool", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] DestroyAndRebuildOverlay {
@@ -203,16 +203,6 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] PolygonDrawerCursor {
-            get {
-                object obj = ResourceManager.GetObject("PolygonDrawerCursor", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         internal static byte[] RemoveHoleOverlay {
             get {
                 object obj = ResourceManager.GetObject("RemoveHoleOverlay", resourceCulture);
@@ -223,9 +213,9 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] RemoveOverlapslOverlay {
+        internal static byte[] RemoveOverlapsOverlay {
             get {
-                object obj = ResourceManager.GetObject("RemoveOverlapslOverlay", resourceCulture);
+                object obj = ResourceManager.GetObject("RemoveOverlapsOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }

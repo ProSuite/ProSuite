@@ -17,6 +17,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private readonly CIMLineSymbol _candidateReshapeLineSymbol;
 		private readonly CIMLineSymbol _preselectedLineSymbol;
 		private readonly CIMLineSymbol _filteredReshapeLineSymbol;
+		private readonly CIMLineSymbol _filterBufferSymbol;
 
 		private readonly CIMLineSymbol _noReshapeLineSymbol;
 
@@ -46,9 +47,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_preselectedLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(blue, _lineWidth);
 
-			var grey = ColorFactory.Instance.CreateRGBColor(100, 100, 100);
+			var grey = ColorFactory.Instance.CreateRGBColor(200, 200, 200);
 			_filteredReshapeLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(grey, _lineWidth);
+			var darkGrey = ColorFactory.Instance.CreateRGBColor(150, 150, 150);
+			_filterBufferSymbol = SymbolFactory.Instance.ConstructLineSymbol(darkGrey, _lineWidth - 1);
 
 			var purple = ColorFactory.Instance.CreateRGBColor(150, 0, 150);
 			_targetLineSymbol = SymbolFactory.Instance.ConstructLineSymbol(purple, _lineWidth - 2);
@@ -61,6 +64,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		public bool ShowTargetLines { get; set; }
+
 
 		public void Update([CanBeNull] ChangeAlongCurves newCurves)
 		{
@@ -88,32 +92,37 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 			}
 
+			Predicate<CutSubcurve> canReshape = c => c.CanReshape && !c.IsFiltered;
+
 			Predicate<CutSubcurve> noReshape = c =>
-				! c.CanReshape && ! c.IsReshapeMemberCandidate && ! c.IsFiltered;
+				!c.CanReshape && !c.IsReshapeMemberCandidate && !c.IsFiltered;
 
 			Predicate<CutSubcurve> isCandidate = c =>
-				c.IsReshapeMemberCandidate && ! newCurves.PreSelectedSubcurves.Contains(c);
+				c.IsReshapeMemberCandidate && !newCurves.PreSelectedSubcurves.Contains(c);
 
 			Predicate<CutSubcurve> isPreSelected = c => newCurves.PreSelectedSubcurves.Contains(c);
 
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, noReshape, _noReshapeLineSymbol);
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.IsFiltered,
-			                _filteredReshapeLineSymbol);
+							_filteredReshapeLineSymbol);
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, isCandidate,
-			                _candidateReshapeLineSymbol);
+							_candidateReshapeLineSymbol);
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, isPreSelected, _preselectedLineSymbol);
-			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
-			                _reshapeLineSymbol);
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, canReshape, _reshapeLineSymbol);
+
+			if (newCurves.FilterBuffer != null && !newCurves.FilterBuffer.IsEmpty)
+			{
+				AddOverlay(newCurves.FilterBuffer, _filterBufferSymbol);
+			}
 
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, noReshape, _noReshapeLineEnd);
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.IsFiltered,
-			                        _filteredLineEnd);
+									_filteredLineEnd);
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, isCandidate, _candidateLineEnd);
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, isPreSelected,
-			                        _preselectedLineEnd);
+									_preselectedLineEnd);
 
-			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
-			                        _reshapeLineEnd);
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, canReshape, _reshapeLineEnd);
 		}
 
 		public void DisposeOverlays()
@@ -124,7 +133,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		private void AddReshapeLines(IEnumerable<CutSubcurve> subcurves,
-		                             Predicate<CutSubcurve> predicate, CIMLineSymbol symbol)
+									 Predicate<CutSubcurve> predicate, CIMLineSymbol symbol)
 		{
 			foreach (var cutSubcurve in subcurves)
 			{
@@ -136,8 +145,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		private void AddReshapeLineEndpoints(IEnumerable<CutSubcurve> subcurves,
-		                                     Predicate<CutSubcurve> predicate,
-		                                     CIMPointSymbol symbol)
+											 Predicate<CutSubcurve> predicate,
+											 CIMPointSymbol symbol)
 		{
 			foreach (var cutSubcurve in subcurves)
 			{
@@ -152,7 +161,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private void AddOverlay(Geometry polyline, CIMSymbol symbol)
 		{
 			var addedOverlay = MapView.Active.AddOverlay(polyline,
-			                                             symbol.MakeSymbolReference());
+														 symbol.MakeSymbolReference());
 
 			_overlays.Add(addedOverlay);
 		}
@@ -161,8 +170,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			var circlePtSymbol =
 				SymbolFactory.Instance.ConstructPointSymbol(ColorFactory.Instance.BlueRGB,
-				                                            _markerSize,
-				                                            SimpleMarkerStyle.Circle);
+															_markerSize,
+															SimpleMarkerStyle.Circle);
 
 			var marker = Assert.NotNull(circlePtSymbol.SymbolLayers[0] as CIMVectorMarker);
 
@@ -170,7 +179,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			polySymbol.SymbolLayers[0] =
 				SymbolFactory.Instance.ConstructStroke(ColorFactory.Instance.WhiteRGB, 2,
-				                                       SimpleLineStyle.Solid);
+													   SimpleLineStyle.Solid);
 			polySymbol.SymbolLayers[1] = SymbolFactory.Instance.ConstructSolidFill(color);
 
 			return circlePtSymbol;
