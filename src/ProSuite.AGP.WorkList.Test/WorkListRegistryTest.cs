@@ -95,10 +95,12 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 		throw new NotImplementedException();
 	}
 
-	public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
+	public bool WorkListFileExistsInProjectFolder(out string worklistFilePath)
 	{
 		throw new NotImplementedException();
 	}
+
+	public string WorkListFile { get; set; }
 
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
 	{
@@ -128,7 +130,7 @@ public class SelectionWorkListEnvironmentMock : IWorkEnvironment
 		throw new NotImplementedException();
 	}
 
-	public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
+	public bool WorkListFileExistsInProjectFolder(out string worklistFilePath)
 	{
 		throw new NotImplementedException();
 	}

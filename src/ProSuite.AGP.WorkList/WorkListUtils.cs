@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
@@ -427,7 +427,7 @@ namespace ProSuite.AGP.WorkList
 
 		public static IEnumerable<Layer> GetWorklistLayersByPath(
 			[NotNull] ILayerContainer container,
-			[NotNull] string workListFilePath)
+			[NotNull] string workListFile)
 		{
 			IReadOnlyList<Layer> layers = container.GetLayersAsFlattenedList();
 
@@ -443,24 +443,11 @@ namespace ProSuite.AGP.WorkList
 
 				string database = builder["database"];
 
-				if (string.Equals(database, workListFilePath, StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(database, workListFile, StringComparison.OrdinalIgnoreCase))
 				{
 					yield return layer;
 				}
 			}
-		}
-
-		/// <summary>
-		/// Finds all work list layers in the layer container.
-		/// </summary>
-		/// <param name="container">map or group layer</param>
-		/// <param name="worklistLayers">all work list layers</param>
-		public static IEnumerable<Layer> GetWorklistLayers(
-			[NotNull] ILayerContainer container,
-			[NotNull] IEnumerable<Layer> worklistLayers)
-		{
-			return worklistLayers.Select(layer => container.FindLayer(layer.URI))
-								 .Where(layer => layer != null);
 		}
 
 		public static IEnumerable<Layer> GetWorklistLayers(
@@ -469,27 +456,76 @@ namespace ProSuite.AGP.WorkList
 		{
 			IReadOnlyList<Layer> layers = container.GetLayersAsFlattenedList();
 
-			return layers.Where(layer =>
+			foreach (Layer layer in layers)
 			{
 				var connection = layer.GetDataConnection() as CIMStandardDataConnection;
 
-				return string.Equals(worklistName, connection?.Dataset,
-				                     StringComparison.OrdinalIgnoreCase);
-			});
+				if (! string.Equals(worklistName, connection?.Dataset,
+				                    StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+
+				_msg.VerboseDebug(
+					() => $"'work list layer {layer.Name} is loaded: work list {worklistName}");
+
+				yield return layer;
+			}
+		}
+
+		public static IEnumerable<IWorkList> GetLoadedWorklistsByPath(
+			[NotNull] IWorkListRegistry registry,
+			[NotNull] ILayerContainer container,
+			[NotNull] string workListFile)
+		{
+			IEnumerable<Layer> layers = GetWorklistLayersByPath(container, workListFile);
+
+			return GetLoadedWorklists(registry, layers);
 		}
 
 		[NotNull]
-		public static IEnumerable<IWorkList> GetLoadedWorklists([NotNull] IEnumerable<Layer> layers)
+		public static IEnumerable<IWorkList> GetLoadedWorklists(
+			[NotNull] IWorkListRegistry registry,
+			[NotNull] ILayerContainer container)
 		{
-			return layers.Select(GetLoadedWorklist).Where(worklist => worklist != null);
+			return GetLoadedWorklists(registry, container.GetLayersAsFlattenedList());
+		}
+
+		[NotNull]
+		public static IEnumerable<IWorkList> GetLoadedWorklists(
+			[NotNull] IWorkListRegistry registry,
+			[NotNull] IEnumerable<Layer> layers)
+		{
+			return layers.Select(lyr => GetLoadedWorklist(registry, lyr))
+			             .Where(worklist => worklist != null);
 		}
 
 		[CanBeNull]
-		private static IWorkList GetLoadedWorklist(Layer layer)
+		public static IWorkList GetLoadedWorklist(
+			[NotNull] IWorkListRegistry registry,
+			[NotNull] Layer layer)
 		{
 			return layer.GetDataConnection() is not CIMStandardDataConnection connection
 				       ? null
-				       : WorkListRegistry.Instance.Get(connection.Dataset);
+				       : registry.Get(connection.Dataset);
+		}
+
+		private static bool WorkListLayerLoaded(IWorkEnvironment env, string file)
+		{
+			Map map = MapUtils.GetActiveMap();
+
+			List<Layer> layers = GetWorklistLayersByPath(map, file).ToList();
+
+			if (layers.Count <= 0)
+			{
+				return false;
+			}
+
+			string layerNames = StringUtils.Concatenate(layers, layer => layer.Name, ", ");
+			string displayName = env.GetDisplayName();
+
+			_msg.Info($"{displayName} is already in the map: layer {layerNames}");
+			return true;
 		}
 	}
 }

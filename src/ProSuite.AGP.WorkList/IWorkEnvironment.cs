@@ -27,5 +27,5 @@ public interface IWorkEnvironment
 
 	string GetDisplayName();
 
-	bool DefinitionFileExistsInProjectFolder(out string definitionFile);
+	bool WorkListFileExistsInProjectFolder(out string worklistFilePath);
 }

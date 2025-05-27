@@ -77,10 +77,10 @@ namespace ProSuite.AGP.WorkList
 
 		[ItemCanBeNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
-		                                                 [NotNull] string definitionFilePath)
+		                                                 [NotNull] string workListFile)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
-			Assert.ArgumentNotNullOrEmpty(definitionFilePath, nameof(definitionFilePath));
+			Assert.ArgumentNotNullOrEmpty(workListFile, nameof(workListFile));
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -91,10 +91,10 @@ namespace ProSuite.AGP.WorkList
 			var watch = Stopwatch.StartNew();
 
 			IWorkItemStateRepository stateRepository =
-				CreateStateRepositoryCore(definitionFilePath, uniqueName);
+				CreateStateRepositoryCore(workListFile, uniqueName);
 
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
-			                     definitionFilePath);
+			                     workListFile);
 
 			IWorkItemRepository itemRepository =
 				await CreateItemRepositoryCoreAsync(stateRepository);
@@ -104,7 +104,7 @@ namespace ProSuite.AGP.WorkList
 				return await Task.FromResult<IWorkList>(null);
 			}
 
-			string displayName = Path.GetFileNameWithoutExtension(definitionFilePath);
+			string displayName = Path.GetFileNameWithoutExtension(workListFile);
 			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
 			Assert.NotNull(result);
 
@@ -264,16 +264,20 @@ namespace ProSuite.AGP.WorkList
 
 		public abstract string GetDisplayName();
 
-		// TODO: (DARO) move to RevisionWorkListEnvironment
-		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
+		/// <summary>
+		/// Check whether definition file exists in PROJECT\WorkLists folder.
+		/// ATTENTION: result is dependent on implementation of GetDisplayName()!
+		/// </summary>
+		/// <param name="worklistFilePath">Full path to work list file</param>
+		public bool WorkListFileExistsInProjectFolder(out string worklistFilePath)
 		{
 			string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
 			Assert.True(FileSystemUtils.EnsureDirectoryExists(directory), $"Cannot create {directory}");
 
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
-			definitionFile = Path.Combine(directory, $"{fileName}{FileSuffix}");
+			worklistFilePath = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
 
-			return definitionFile != null && File.Exists(definitionFile);
+			return worklistFilePath != null && File.Exists(worklistFilePath);
 		}
 
 		protected virtual string EnsureValidDefinitionFilePath(string directory, string fileName, string suffix)
@@ -292,7 +296,7 @@ namespace ProSuite.AGP.WorkList
 		// TODO: (daro) check usage in GoTop!
 		public IEnumerable<BasicFeatureLayer> FindWorkListLayers(Map map)
 		{
-			if (! DefinitionFileExistsInProjectFolder(out string definitionFile))
+			if (! WorkListFileExistsInProjectFolder(out string definitionFile))
 			{
 				yield break;
 			}
