@@ -44,7 +44,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected HoleToolOptions _removeHoleToolOptions;
 
-		private OverridableSettingsProvider<PartialHoleToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialHoleOptions> _settingsProvider;
 
 		protected abstract ICalculateHolesService MicroserviceClient { get; }
 
@@ -111,10 +111,10 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			// For the time being, we always reload the options because they could have been updated in ArcMap
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialHoleToolOptions>(
+				new OverridableSettingsProvider<PartialHoleOptions>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-			PartialHoleToolOptions localConfiguration, centralConfiguration;
+			PartialHoleOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
