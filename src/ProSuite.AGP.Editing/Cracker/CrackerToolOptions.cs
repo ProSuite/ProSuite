@@ -8,19 +8,19 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
-	public class CrackerToolOptions : OptionsBase<PartialCrackerToolOptions>, ICrackerToolOptions
+	public class CrackerToolOptions : OptionsBase<PartialCrackerOptions>, ICrackerToolOptions
 	{
 		public ICommand RevertToDefaultsCommand { get; }
 
-		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
-		                          [CanBeNull] PartialCrackerToolOptions localOptions)
+		public CrackerToolOptions([CanBeNull] PartialCrackerOptions centralOptions,
+		                          [CanBeNull] PartialCrackerOptions localOptions)
 		{
 			//RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??
-			               new PartialCrackerToolOptions();
+			               new PartialCrackerOptions();
 			// Checkbox Snap
 			CentralizableSnapToTargetVertices =
 				InitializeSetting<bool>(
