@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -8,11 +7,13 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
-using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
@@ -424,41 +425,50 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		/// <summary>
-		/// Finds all work list layers in the active map.
-		/// </summary>
-		/// <param name="worklistLayers">all work list layers</param>
-		public static IEnumerable<Layer> GetActiveWorklistLayers(
-			[NotNull] IEnumerable<FeatureLayer> worklistLayers)
+		public static IEnumerable<Layer> GetWorklistLayersByPath(
+			[NotNull] ILayerContainer container,
+			[NotNull] string workListFilePath)
 		{
-			return GetActiveWorklistLayers(new FeatureLayer[], MapUtils.GetActiveMap());
+			IReadOnlyList<Layer> layers = container.GetLayersAsFlattenedList();
+
+			foreach (Layer layer in layers)
+			{
+				if (layer.GetDataConnection() is not CIMStandardDataConnection connection)
+				{
+					continue;
+				}
+
+				string connectionString = connection.WorkspaceConnectionString;
+				var builder = new ConnectionStringBuilder(connectionString);
+
+				string database = builder["database"];
+
+				if (string.Equals(database, workListFilePath, StringComparison.OrdinalIgnoreCase))
+				{
+					yield return layer;
+				}
+			}
 		}
 
 		/// <summary>
 		/// Finds all work list layers in the layer container.
 		/// </summary>
-		/// <param name="worklistLayers">all work list layers</param>
 		/// <param name="container">map or group layer</param>
-		/// <returns></returns>
-		public static IEnumerable<Layer> GetActiveWorklistLayers(
-			[NotNull] IEnumerable<FeatureLayer> worklistLayers,
-			[NotNull] ILayerContainer container)
+		/// <param name="worklistLayers">all work list layers</param>
+		public static IEnumerable<Layer> GetWorklistLayers(
+			[NotNull] ILayerContainer container,
+			[NotNull] IEnumerable<Layer> worklistLayers)
 		{
 			return worklistLayers.Select(layer => container.FindLayer(layer.URI))
-			                     .Where(layer => layer != null).OfType<Table>();
+								 .Where(layer => layer != null);
 		}
 
-		public static IEnumerable<Layer> GetWorklistLayers([NotNull] string worklistName)
+		public static IEnumerable<Layer> GetWorklistLayers(
+			[NotNull] ILayerContainer container,
+			[NotNull] string worklistName)
 		{
-			Map map = MapUtils.GetActiveMap();
-			IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
+			IReadOnlyList<Layer> layers = container.GetLayersAsFlattenedList();
 
-			return GetWorklistLayers(layers, worklistName);
-		}
-
-		public static IEnumerable<Layer> GetWorklistLayers([NotNull] IEnumerable<Layer> layers,
-		                                                   [NotNull] string worklistName)
-		{
 			return layers.Where(layer =>
 			{
 				var connection = layer.GetDataConnection() as CIMStandardDataConnection;
@@ -466,6 +476,20 @@ namespace ProSuite.AGP.WorkList
 				return string.Equals(worklistName, connection?.Dataset,
 				                     StringComparison.OrdinalIgnoreCase);
 			});
+		}
+
+		[NotNull]
+		public static IEnumerable<IWorkList> GetLoadedWorklists([NotNull] IEnumerable<Layer> layers)
+		{
+			return layers.Select(GetLoadedWorklist).Where(worklist => worklist != null);
+		}
+
+		[CanBeNull]
+		private static IWorkList GetLoadedWorklist(Layer layer)
+		{
+			return layer.GetDataConnection() is not CIMStandardDataConnection connection
+				       ? null
+				       : WorkListRegistry.Instance.Get(connection.Dataset);
 		}
 	}
 }
