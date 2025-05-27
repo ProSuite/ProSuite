@@ -24,4 +24,8 @@ public interface IWorkEnvironment
 	/// the issue feature classes.
 	/// </summary>
 	void LoadAssociatedLayers(IWorkList worklist);
+
+	string GetDisplayName();
+
+	bool DefinitionFileExistsInProjectFolder(out string definitionFile);
 }

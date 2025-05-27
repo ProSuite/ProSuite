@@ -19,7 +19,7 @@ namespace ProSuite.AGP.WorkList.Selection
 
 		protected override string FileSuffix => ".swl";
 
-		protected override string GetDisplayName()
+		public override string GetDisplayName()
 		{
 			string currentName = Path.GetFileNameWithoutExtension(Project.Current.Name);
 			var now = DateTime.Now.ToString("yyyy_MM_dd_HHmmss");

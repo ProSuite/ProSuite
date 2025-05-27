@@ -262,7 +262,7 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		protected abstract string GetDisplayName();
+		public abstract string GetDisplayName();
 
 		// TODO: (DARO) move to RevisionWorkListEnvironment
 		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
@@ -271,7 +271,7 @@ namespace ProSuite.AGP.WorkList
 			Assert.True(FileSystemUtils.EnsureDirectoryExists(directory), $"Cannot create {directory}");
 
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
-			definitionFile = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
+			definitionFile = Path.Combine(directory, $"{fileName}{FileSuffix}");
 
 			return definitionFile != null && File.Exists(definitionFile);
 		}

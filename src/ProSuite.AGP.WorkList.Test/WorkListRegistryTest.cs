@@ -90,6 +90,16 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 		throw new NotImplementedException();
 	}
 
+	public string GetDisplayName()
+	{
+		throw new NotImplementedException();
+	}
+
+	public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
+	{
+		throw new NotImplementedException();
+	}
+
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
 	{
 		throw new NotImplementedException();
@@ -109,6 +119,16 @@ public class SelectionWorkListEnvironmentMock : IWorkEnvironment
 	}
 
 	public void LoadAssociatedLayers(IWorkList worklist)
+	{
+		throw new NotImplementedException();
+	}
+
+	public string GetDisplayName()
+	{
+		throw new NotImplementedException();
+	}
+
+	public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
 	{
 		throw new NotImplementedException();
 	}

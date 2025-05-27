@@ -29,7 +29,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 		protected override string FileSuffix => ".iwl";
 
-		protected override string GetDisplayName()
+		public override string GetDisplayName()
 		{
 			return WorkListItemDatastore.SuggestWorkListName();
 		}
