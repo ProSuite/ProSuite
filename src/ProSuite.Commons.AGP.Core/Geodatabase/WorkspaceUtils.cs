@@ -62,9 +62,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
-
-			// TODO: SQLite other?
-
+			
 			string message =
 				$"Finder: Unsupported geodatabase extension: {extension} for path: {catalogPath}";
 			_msg.Debug(message);
