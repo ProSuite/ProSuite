@@ -27,12 +27,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected CutAlongToolOptions _cutAlongToolOptions;
 
-		[CanBeNull]
-		private OverridableSettingsProvider<PartialCutAlongToolOptions> _settingsProvider;
+		[CanBeNull] private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
+
+		protected override bool RefreshSubcurvesOnRedraw =>
+			_cutAlongToolOptions.ClipLinesOnVisibleExtent &&
+			_cutAlongToolOptions.DisplayRecalculateCutLines;
 
 		protected override string EditOperationDescription => "Cut along";
 
 		protected string OptionsFileName => "CutAlongToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
 
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_cutAlongToolOptions.TargetFeatureSelection;
@@ -86,12 +92,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
+			double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
+				                          ? _cutAlongToolOptions.MinimalTolerance
+				                          : null;
+
 			bool insertVerticesInTarget = _cutAlongToolOptions.InsertVerticesInTarget;
 
-			var updatedFeatures = MicroserviceClient.ApplyCutLines(
+			List<ResultFeature> updatedFeatures = MicroserviceClient.ApplyCutLines(
 				selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
-				zValueSource, insertVerticesInTarget,
-				cancellationToken, out newChangeAlongCurves);
+				customTolerance, zValueSource, insertVerticesInTarget, cancellationToken,
+				out newChangeAlongCurves);
 
 			return updatedFeatures;
 		}
@@ -167,9 +177,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
+			double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
+				                          ? _cutAlongToolOptions.MinimalTolerance
+				                          : null;
+
 			ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
-				selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, zValueSource,
-				cancellationToken);
+				selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, customTolerance,
+				zValueSource, cancellationToken);
 
 			return result;
 		}
@@ -184,10 +198,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// For the time being, we always reload the options because they could have been updated in ArcMap
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialCutAlongToolOptions>(
+				new OverridableSettingsProvider<PartialCutAlongOptions>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-			PartialCutAlongToolOptions localConfiguration, centralConfiguration;
+			PartialCutAlongOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);

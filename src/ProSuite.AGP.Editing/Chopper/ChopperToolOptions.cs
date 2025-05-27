@@ -7,13 +7,15 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.AGP.Editing.Chopper
 {
-	public class ChopperToolOptions : OptionsBase<PartialChopperToolOptions>, ICrackerToolOptions
+	public class ChopperToolOptions : OptionsBase<PartialChopperOptions>, ICrackerToolOptions
 	{
-		public ChopperToolOptions([CanBeNull] PartialChopperToolOptions centralOptions,
-		                          [CanBeNull] PartialChopperToolOptions localOptions)
+		public ChopperToolOptions([CanBeNull] PartialChopperOptions centralOptions,
+		                          [CanBeNull] PartialChopperOptions localOptions)
 		{
 			CentralOptions = centralOptions;
-			LocalOptions = localOptions ?? new PartialChopperToolOptions();
+
+			LocalOptions = localOptions ??
+			               new PartialChopperOptions();
 
 			// Checkbox Snap
 			CentralizableSnapToTargetVertices =

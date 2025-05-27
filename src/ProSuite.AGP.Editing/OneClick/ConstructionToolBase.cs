@@ -121,14 +121,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#region OneClickToolBase overrides
 
-		protected override Task OnSelectionPhaseStartedAsync()
+		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			await QueuedTask.Run(() =>
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			});
 
 			IsInSketchPhase = false;
-
-			return Task.CompletedTask;
 		}
 
 		protected override async Task OnToolActivatingCoreAsync()

@@ -3,7 +3,7 @@ using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.Chopper
 {
-	public class PartialChopperToolOptions : PartialOptionsBase
+	public class PartialChopperOptions : PartialOptionsBase
 	{
 		#region Overridable Settings
 
@@ -23,8 +23,8 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		public override PartialOptionsBase Clone()
 		{
-			var result = new PartialChopperToolOptions
-			             {
+			var result = new PartialChopperOptions	
+			{
 				             TargetFeatureSelection = TryClone(TargetFeatureSelection),
 				             RespectMinimumSegmentLength = TryClone(RespectMinimumSegmentLength),
 				             MinimumSegmentLength = TryClone(MinimumSegmentLength),

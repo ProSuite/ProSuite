@@ -22,11 +22,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialReshapeAlongToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialReshapeAlongOptions> _settingsProvider;
+
+		protected override bool RefreshSubcurvesOnRedraw =>
+			_reshapeAlongToolOptions.ClipLinesOnVisibleExtent &&
+			_reshapeAlongToolOptions.DisplayRecalculateCutLines;
 
 		protected override string EditOperationDescription => "Reshape along";
 
 		protected string OptionsFileName => "ReshapeAlongToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
 
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_reshapeAlongToolOptions.TargetFeatureSelection;
@@ -169,8 +176,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			ChangeAlongCurves result = MicroserviceClient.CalculateReshapeLines(
 				selectedFeatures, targetFeatures, targetBufferOptions, filterOptions,
-				customTolerance,
-				cancellationToken);
+				customTolerance, cancellationToken);
 
 			return result;
 		}
@@ -185,10 +191,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// For the time being, we always reload the options because they could have been updated in ArcMap
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialReshapeAlongToolOptions>(
+				new OverridableSettingsProvider<PartialReshapeAlongOptions>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-			PartialReshapeAlongToolOptions localConfiguration, centralConfiguration;
+			PartialReshapeAlongOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);

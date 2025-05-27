@@ -64,7 +64,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			if (geodatabase != null)
 			{
-				_workspaceHandle = geodatabase.Handle;
+				_workspaceHandle = geodatabase.Handle.ToInt64();
 				ArcWorkspace.Create(geodatabase, true);
 			}
 
@@ -460,7 +460,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					return null;
 				}
 
-				_workspaceHandle = geodatabase.Handle;
+				_workspaceHandle = geodatabase.Handle.ToInt64();
 
 				return ArcWorkspace.Create(geodatabase);
 			}

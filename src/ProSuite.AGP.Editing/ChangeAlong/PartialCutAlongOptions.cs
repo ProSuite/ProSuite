@@ -4,7 +4,7 @@ using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
-	public class PartialCutAlongToolOptions : PartialOptionsBase
+	public class PartialCutAlongOptions : PartialOptionsBase
 	{
 		#region Overridable Settings
 
@@ -12,21 +12,21 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		public OverridableSetting<TargetFeatureSelection> TargetFeatureSelection { get; set; }
 
 		// Basic settings
-		public OverridableSetting<bool> InsertVertices { get; set; }
+		public OverridableSetting<bool> InsertVerticesInTargets { get; set; }
 
 		// Display Performance Options
-		public OverridableSetting<bool> DisplayExcludeCutLines { get; set; }
-		public OverridableSetting<bool> DisplayRecalculateCutLines { get; set; }
-		public OverridableSetting<bool> DisplayHideCutLines { get; set; }
-		public OverridableSetting<double> DisplayHideCutLinesScale { get; set; }
+		public OverridableSetting<bool> DisplayLinesInVisibleExtentOnly { get; set; }
+		public OverridableSetting<bool> RecalculateLinesOnExtentChange { get; set; }
+		public OverridableSetting<bool> HideLinesBeyondMaxScale { get; set; }
+		public OverridableSetting<double> HideLinesMaxScaleDenominator { get; set; }
 
-		// Minimal Tolerance settings
-		public OverridableSetting<bool> MinimalToleranceApply { get; set; }
-		public OverridableSetting<double> MinimalTolerance { get; set; }
+		// Custom Tolerance settings
+		public OverridableSetting<bool> UseCustomTolerance { get; set; }
+		public OverridableSetting<double> CustomTolerance { get; set; }
 
 		// Buffer settings
 		public OverridableSetting<bool> BufferTarget { get; set; }
-		public OverridableSetting<double> BufferTolerance { get; set; }
+		public OverridableSetting<double> TargetBufferDistance { get; set; }
 		public OverridableSetting<bool> EnforceMinimumBufferSegmentLength { get; set; }
 		public OverridableSetting<double> MinBufferSegmentLength { get; set; }
 
@@ -37,24 +37,24 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		public override PartialOptionsBase Clone()
 		{
-			var result = new PartialCutAlongToolOptions
+			var result = new PartialCutAlongOptions
 			             {
 				             TargetFeatureSelection = TryClone(TargetFeatureSelection),
-				             InsertVertices = TryClone(InsertVertices),
+				             InsertVerticesInTargets = TryClone(InsertVerticesInTargets),
 
 				             // Display Performance Options
-				             DisplayExcludeCutLines = TryClone(DisplayExcludeCutLines),
-				             DisplayRecalculateCutLines = TryClone(DisplayRecalculateCutLines),
-				             DisplayHideCutLines = TryClone(DisplayHideCutLines),
-				             DisplayHideCutLinesScale = TryClone(DisplayHideCutLinesScale),
+				             DisplayLinesInVisibleExtentOnly = TryClone(DisplayLinesInVisibleExtentOnly),
+				             RecalculateLinesOnExtentChange = TryClone(RecalculateLinesOnExtentChange),
+				             HideLinesBeyondMaxScale = TryClone(HideLinesBeyondMaxScale),
+				             HideLinesMaxScaleDenominator = TryClone(HideLinesMaxScaleDenominator),
 
 				             // Minimal Tolerance settings
-				             MinimalToleranceApply = TryClone(MinimalToleranceApply),
-				             MinimalTolerance = TryClone(MinimalTolerance),
+				             UseCustomTolerance = TryClone(UseCustomTolerance),
+				             CustomTolerance = TryClone(CustomTolerance),
 
 				             // Buffer settings
 				             BufferTarget = TryClone(BufferTarget),
-				             BufferTolerance = TryClone(BufferTolerance),
+				             TargetBufferDistance = TryClone(TargetBufferDistance),
 				             EnforceMinimumBufferSegmentLength =
 					             TryClone(EnforceMinimumBufferSegmentLength),
 				             MinBufferSegmentLength = TryClone(MinBufferSegmentLength),

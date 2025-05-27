@@ -323,9 +323,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			                                          out bool singlePick);
 
 			// in case of single pick the line has priority...
-			Overlaps result = overlaps.SelectNewOverlaps(
-				o => o.GeometryType == GeometryType.Polyline &&
-				     ToolUtils.IsSelected(sketch, o, singlePick));
+			Overlaps result =
+				overlaps.SelectNewOverlaps(o => o.GeometryType == GeometryType.Polyline &&
+				                                ToolUtils.IsSelected(sketch, o, singlePick));
 
 			// ... over the polygon
 			if (! result.HasOverlaps() || ! singlePick)
@@ -477,7 +477,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			Dictionary<MapMember, List<long>> selection =
 				SelectionUtils.GetSelection(ActiveMapView.Map);
 
-			Envelope inExtent = ActiveMapView.Extent;
+			Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
+				                    ? ActiveMapView.Extent
+				                    : null;
 
 			TargetFeatureSelection targetFeatureSelection =
 				_removeOverlapsToolOptions.TargetFeatureSelection;
@@ -510,8 +512,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			// Remove the selected features from the set of overlapping features.
 			// This is also important to make sure the geometries don't get mixed up / reset 
 			// by inserting target vertices
-			foundFeatures.RemoveAll(
-				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
+			foundFeatures.RemoveAll(f =>
+				                        selectedFeatures.Any(s => GdbObjectUtils
+					                                             .IsSameFeature(f, s)));
 
 			return foundFeatures;
 		}

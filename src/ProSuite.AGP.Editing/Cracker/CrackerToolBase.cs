@@ -32,7 +32,7 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		private CrackerToolOptions _crackerToolOptions;
 
-		private OverridableSettingsProvider<PartialCrackerToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialCrackerOptions> _settingsProvider;
 
 		private CrackerResult _resultCrackPoints;
 
@@ -331,10 +331,10 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
 
-			_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerToolOptions>(
+			_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialCrackerToolOptions localConfiguration, centralConfiguration;
+			PartialCrackerOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
@@ -467,4 +467,4 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		#endregion
 	}
-}
+}

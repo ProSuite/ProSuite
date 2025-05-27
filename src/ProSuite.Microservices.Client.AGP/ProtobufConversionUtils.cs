@@ -12,7 +12,6 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Geom.Wkb;
@@ -399,7 +398,7 @@ namespace ProSuite.Microservices.Client.AGP
 				new WorkspaceMsg
 				{
 					WorkspaceHandle = datastore.Handle.ToInt64(),
-					WorkspaceDbType = (int) ToWorkspaceDbType(datastore)
+					WorkspaceDbType = (int) WorkspaceUtils.GetWorkspaceDbType(datastore)
 				};
 
 			Version defaultVersion = WorkspaceUtils.GetDefaultVersion(datastore);
@@ -430,57 +429,6 @@ namespace ProSuite.Microservices.Client.AGP
 			//	datastore.GetConnector() as DatabaseConnectionProperties;
 
 			return result;
-		}
-
-		private static WorkspaceDbType ToWorkspaceDbType(Datastore datastore)
-		{
-			if (datastore is Geodatabase geodatabase)
-			{
-				GeodatabaseType gdbType = geodatabase.GetGeodatabaseType();
-
-				// TODO: Test newer workspace types, such as sqlite, Netezza
-
-				var connector = geodatabase.GetConnector();
-
-				if (gdbType == GeodatabaseType.LocalDatabase)
-				{
-					return WorkspaceDbType.FileGeodatabase;
-				}
-
-				if (gdbType == GeodatabaseType.FileSystem)
-				{
-					return WorkspaceDbType.FileSystem;
-				}
-
-				if (gdbType != GeodatabaseType.RemoteDatabase)
-				{
-					return WorkspaceDbType.Unknown;
-				}
-
-				if (connector is DatabaseConnectionProperties connectionProperties)
-				{
-					switch (connectionProperties.DBMS)
-					{
-						case EnterpriseDatabaseType.Oracle:
-							return WorkspaceDbType.ArcSDEOracle;
-						case EnterpriseDatabaseType.Informix:
-							return WorkspaceDbType.ArcSDEInformix;
-						case EnterpriseDatabaseType.SQLServer:
-							return WorkspaceDbType.ArcSDESqlServer;
-						case EnterpriseDatabaseType.PostgreSQL:
-							return WorkspaceDbType.ArcSDEPostgreSQL;
-						case EnterpriseDatabaseType.DB2:
-							return WorkspaceDbType.ArcSDEDB2;
-						default:
-							return WorkspaceDbType.ArcSDE;
-					}
-				}
-
-				// No connection properties (probably SDE file -> TODO: How to find the connection details? Connection string?)
-				return WorkspaceDbType.ArcSDE;
-			}
-
-			return WorkspaceDbType.Unknown;
 		}
 
 		private static esriGeometryType TranslateAGPShapeType(Table objectClass)
