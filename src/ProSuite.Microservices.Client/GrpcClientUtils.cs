@@ -124,10 +124,13 @@ namespace ProSuite.Microservices.Client
 
 			try
 			{
+				_msg.VerboseDebug(() => $"Starting health check for {serviceName}...");
 				HealthCheckResponse healthResponse =
 					await healthClient
 					      .CheckAsync(new HealthCheckRequest() { Service = serviceName })
 					      .ConfigureAwait(false);
+
+				_msg.VerboseDebug(() => $"Health check for {serviceName} completed");
 
 				statusCode =
 					healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving
