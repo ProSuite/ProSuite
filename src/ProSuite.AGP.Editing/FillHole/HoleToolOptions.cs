@@ -6,13 +6,13 @@ using ProSuite.Commons.Reflection;
 namespace ProSuite.AGP.Editing.FillHole
 {
 	// TODO: Make configurable and centralizable option and move to appropriate location (ProSuite.AGP.Editing\Holes)
-	public class HoleToolOptions : OptionsBase<PartialHoleToolOptions>
+	public class HoleToolOptions : OptionsBase<PartialHoleOptions>
 	{
-		public HoleToolOptions([CanBeNull] PartialHoleToolOptions centralToolOptions,
-							 [CanBeNull] PartialHoleToolOptions localToolOptions)
+		public HoleToolOptions([CanBeNull] PartialHoleOptions centralOptions,
+							 [CanBeNull] PartialHoleOptions localOptions)
 		{
-			CentralOptions = centralToolOptions;
-			LocalOptions = localToolOptions ?? new PartialHoleToolOptions();
+			CentralOptions = centralOptions;
+			LocalOptions = localOptions ?? new PartialHoleOptions();
 
 			CentralizableShowPreview = InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.ShowPreview), true);

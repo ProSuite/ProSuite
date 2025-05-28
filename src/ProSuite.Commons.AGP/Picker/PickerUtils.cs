@@ -207,8 +207,9 @@ namespace ProSuite.Commons.AGP.Picker
 		public static void Select(List<IPickableItem> items,
 		                          SelectionCombinationMethod selectionMethod)
 		{
-			// No candidate (user clicked into empty space):
-			if (items.Count == 0)
+			// No candidate (user clicked into empty space).
+			// Don't clear selection if SelectionCombinationMethod.XOR (press shift).
+			if (items.Count == 0 && selectionMethod == SelectionCombinationMethod.And)
 			{
 				ClearSelection();
 				return;

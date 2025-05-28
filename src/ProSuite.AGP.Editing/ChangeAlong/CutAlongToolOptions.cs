@@ -7,42 +7,42 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
-	public class CutAlongToolOptions : OptionsBase<PartialCutAlongToolOptions>
+	public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 	{
-		public CutAlongToolOptions([CanBeNull] PartialCutAlongToolOptions centralOptions,
-		                           [CanBeNull] PartialCutAlongToolOptions localOptions)
+		public CutAlongToolOptions([CanBeNull] PartialCutAlongOptions centralOptions,
+		                           [CanBeNull] PartialCutAlongOptions localOptions)
 		{
 			CentralOptions = centralOptions;
-			LocalOptions = localOptions ?? new PartialCutAlongToolOptions();
+			LocalOptions = localOptions ?? new PartialCutAlongOptions();
 
 			// Basic settings
 			CentralizableInsertVertices =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.InsertVertices), true);
+					ReflectionUtils.GetProperty(() => LocalOptions.InsertVerticesInTargets), true);
 
 			// Display Performance Options
 			CentralizableDisplayExcludeCutLines =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayExcludeCutLines), true);
+					ReflectionUtils.GetProperty(() => LocalOptions.DisplayLinesInVisibleExtentOnly), true);
 			CentralizableDisplayRecalculateCutLines =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayRecalculateCutLines),
+					ReflectionUtils.GetProperty(() => LocalOptions.RecalculateLinesOnExtentChange),
 					false);
 			CentralizableDisplayHideCutLines =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayHideCutLines), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.HideLinesBeyondMaxScale), false);
 			CentralizableDisplayHideCutLinesScale =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayHideCutLinesScale),
+					ReflectionUtils.GetProperty(() => LocalOptions.HideLinesMaxScaleDenominator),
 					10000.0);
 
 			// Minimal Tolerance settings
 			CentralizableMinimalToleranceApply =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.MinimalToleranceApply), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.UseCustomTolerance), false);
 			CentralizableMinimalTolerance =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.MinimalTolerance), 0.1);
+					ReflectionUtils.GetProperty(() => LocalOptions.CustomTolerance), 0.0001);
 
 			// Buffer settings
 			CentralizableBufferTarget =
@@ -50,7 +50,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					ReflectionUtils.GetProperty(() => LocalOptions.BufferTarget), false);
 			CentralizableBufferTolerance =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.BufferTolerance), 1.0);
+					ReflectionUtils.GetProperty(() => LocalOptions.TargetBufferDistance), 1.0);
 			CentralizableEnforceMinimumBufferSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(

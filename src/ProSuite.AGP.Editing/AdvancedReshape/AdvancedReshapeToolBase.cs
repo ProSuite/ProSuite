@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialAdvancedReshapeOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -174,10 +174,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			string __ = LocalConfigDir;
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			_settingsProvider ??= new OverridableSettingsProvider<PartialAdvancedReshapeOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			PartialAdvancedReshapeOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
@@ -215,12 +215,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			await QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
-				base.OnSelectionPhaseStartedAsync();
+				await base.OnSelectionPhaseStartedAsync();
 				_symbolizedSketch?.ClearSketchSymbol();
 				_feedback?.Clear();
-				ActiveMapView.ClearSketchAsync();
+				await ActiveMapView.ClearSketchAsync();
 			});
 		}
 

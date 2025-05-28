@@ -2,7 +2,7 @@ using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public class PartialReshapeToolOptions : PartialOptionsBase
+	public class PartialAdvancedReshapeOptions : PartialOptionsBase
 	{
 		#region Overridable Settings
 
@@ -20,7 +20,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		public override PartialOptionsBase Clone()
 		{
-			var result = new PartialReshapeToolOptions
+			var result = new PartialAdvancedReshapeOptions
 			             {
 				             ShowPreview = TryClone(ShowPreview),
 				             RemainInSketchMode = TryClone(RemainInSketchMode),
