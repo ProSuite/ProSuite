@@ -2,7 +2,7 @@ using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.FillHole
 {
-	public class PartialHoleToolOptions : PartialOptionsBase
+	public class PartialHoleOptions : PartialOptionsBase
 	{
 		#region Overridable Settings
 
@@ -14,7 +14,7 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		public override PartialOptionsBase Clone()
 		{
-			var result = new PartialHoleToolOptions()
+			var result = new PartialHoleOptions()
 			{
 				ShowPreview = TryClone(ShowPreview),
 				LimitPreviewToExtent = TryClone(LimitPreviewToExtent)

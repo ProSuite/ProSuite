@@ -1,26 +1,26 @@
+using System.Windows.Input;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
-using System.Windows.Input;
-using ArcGIS.Desktop.Framework;
 
 namespace ProSuite.AGP.Editing.Cracker
 {
-	public class CrackerToolOptions : OptionsBase<PartialCrackerToolOptions>, ICrackerToolOptions
+	public class CrackerToolOptions : OptionsBase<PartialCrackerOptions>, ICrackerToolOptions
 	{
 		public ICommand RevertToDefaultsCommand { get; }
-		public CrackerToolOptions([CanBeNull] PartialCrackerToolOptions centralOptions,
-		                          [CanBeNull] PartialCrackerToolOptions localOptions)
+
+		public CrackerToolOptions([CanBeNull] PartialCrackerOptions centralOptions,
+		                          [CanBeNull] PartialCrackerOptions localOptions)
 		{
 			//RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
-			
+
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??
-			               new PartialCrackerToolOptions();
+			               new PartialCrackerOptions();
 			// Checkbox Snap
 			CentralizableSnapToTargetVertices =
 				InitializeSetting<bool>(
@@ -47,11 +47,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
-			// Checkbox Clean up
-			CentralizableRemoveUnnecessaryVertices =
-				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.RemoveUnnecessaryVertices),
-					false);
 		}
 
 		#region Centralizable Properties
@@ -71,11 +66,11 @@ namespace ProSuite.AGP.Editing.Cracker
 		public CentralizableSetting<TargetFeatureSelection>
 			CentralizableTargetFeatureSelection { get; private set; }
 
-		public CentralizableSetting<bool> CentralizableRemoveUnnecessaryVertices
-		{
-			get;
-			private set;
-		}
+		//public CentralizableSetting<bool> CentralizableRemoveUnnecessaryVertices
+		//{
+		//	get;
+		//	private set;
+		//}
 
 		public CentralizableSetting<bool> CentralizableUseSourceZs { get; private set; }
 
@@ -127,7 +122,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			CentralizableSnapToTargetVertices.RevertToDefault();
 			CentralizableSnapTolerance.RevertToDefault();
 
-			CentralizableRemoveUnnecessaryVertices.RevertToDefault();
+			//CentralizableRemoveUnnecessaryVertices.RevertToDefault();
 
 			CentralizableUseSourceZs.RevertToDefault();
 		}
@@ -167,13 +162,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			if (HasLocalOverride(CentralizableUseSourceZs, "Use source feature's Z",
 			                     notifications))
-			{
-				result = true;
-			}
-
-			//ToDo: Remove the "Remove unnecessary vertices" option once it's clear that no one needs it.
-			if (HasLocalOverride(CentralizableRemoveUnnecessaryVertices,
-			                     "Remove unnecessary vertices", notifications))
 			{
 				result = true;
 			}

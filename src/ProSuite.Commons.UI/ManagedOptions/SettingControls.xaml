@@ -23,6 +23,7 @@
                 IsEnabled="{Binding IsEnabled}" 
                 Margin="0, 2" 
                 Value="{Binding CurrentValue, Mode=TwoWay}" 
+                Decimals="{Binding Decimals}"
                 ToolTipService.ShowOnDisabled="True"
                 ToolTip="{Binding ToolTip}" 
                 TextFontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
@@ -34,7 +35,7 @@
             <Label 
                 DataContext="{TemplateBinding DataContext}"
                 IsEnabled="{Binding IsEnabled}" 
-                Content="meters"
+                Content="{Binding UnitLabel}"
                 HorizontalAlignment="Left"
                 ToolTipService.ShowOnDisabled="True"
                 ToolTip="{Binding ToolTip}" 

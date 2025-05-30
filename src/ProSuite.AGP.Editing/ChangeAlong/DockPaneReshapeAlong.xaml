@@ -198,7 +198,7 @@
 
 				<CheckBox Grid.Row="1" Grid.Column="1"
                           Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Use custom minimal tolerance of "
+                          Content="Use custom tolerance of "
                           DataContext="{Binding MinimalToleranceApply}"/>
 
 				<ContentControl Grid.Row="1" Grid.Column="2"
