@@ -89,7 +89,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (targetSpatialReference == null)
 				{
 					throw new InvalidOperationException(
-						$"unhandles spatial reference {geometry.SpatialReference?.FactoryCode}");
+						$"Unhandled spatial reference: {geometry.SpatialReference?.FactoryCode}.");
 				}
 
 				T result = SpatialReferenceUtils.ProjectEx(geometry, targetSpatialReference);
