@@ -110,7 +110,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	[CanBeNull]
 	public virtual IPickableItem PickBest(IEnumerable<IPickableItem> items)
 	{
-		return items.FirstOrDefault();
+		return items.OrderBy(item => GeometryUtils.GetShapeDimension(item.Geometry.GeometryType))
+		            .FirstOrDefault();
 	}
 
 	public Point PickerLocation { get; set; }
@@ -132,22 +133,24 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.ShowPicker;
 		}
 
-		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
+		if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
 		{
-			// if area selection: show picker
+			modes |= PickerMode.ShowPicker;
+		}
+
+		int candidatesCount = candidates.Sum(fs => fs.GetCount());
+
+		if (NoMultiselection && candidatesCount > 1)
+		{
+			// If area selection: show picker
 			if (! IsPointClick)
 			{
 				modes |= PickerMode.ShowPicker;
 			}
-			// ...if not: pick best
+			// if not: pick best
 		}
 		else
 		{
-			if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
-			{
-				modes |= PickerMode.ShowPicker;
-			}
-
 			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 			{
 				modes |= PickerMode.PickAll;
