@@ -24,29 +24,6 @@ namespace ProSuite.DomainModel.AO.QA
 	{
 		protected static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private static readonly Dictionary<string, IReadOnlyTable> _transformerCache =
-			new Dictionary<string, IReadOnlyTable>();
-
-		public static IReadOnlyTable GetOrCreateTransformedTable(
-			[NotNull] TransformerConfiguration config,
-			[NotNull] IOpenDataset datasetContext)
-		{
-			string key = config.Name; // Must stay as-is
-
-			if (_transformerCache.TryGetValue(key, out IReadOnlyTable cached))
-			{
-				return cached;
-			}
-
-			TransformerFactory factory = InstanceFactoryUtils.CreateTransformerFactory(config);
-			ITableTransformer transformer =
-				(ITableTransformer) factory.Create(datasetContext, config);
-			IReadOnlyTable result = (IReadOnlyTable) transformer.GetTransformed();
-
-			_transformerCache[key] = result;
-			return result;
-		}
-
 		public override Type InstanceType => GetType();
 
 		[NotNull]
@@ -138,7 +115,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 					IReadOnlyTable table = tableConstraint.Table;
 
-					if (! instance.InvolvedTables[tableIndex].Equals(table))
+					if (!instance.InvolvedTables[tableIndex].Equals(table))
 					{
 						throw new InvalidOperationException(
 							string.Format(
@@ -350,8 +327,8 @@ namespace ProSuite.DomainModel.AO.QA
 				if (! transformerConfiguration.HasCachedValue(datasetContext))
 				{
 					IReadOnlyTable transformedTable =
-						GetOrCreateTransformedTable(transformerConfiguration, datasetContext);
-
+						CreateTransformedTable(transformerConfiguration, datasetContext);
+					// TODO: validate caching
 					transformerConfiguration.CacheValue(transformedTable, datasetContext);
 				}
 
