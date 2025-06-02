@@ -1,6 +1,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -19,30 +19,17 @@ namespace ProSuite.Commons.UI.Drawing
 		/// <returns></returns>
 		public static Bitmap CreateBitmap([NotNull] BitmapImage bitmapImage)
 		{
-			// Copy pixeld from BitmapImage to byte array
-			int stride = bitmapImage.PixelWidth * 4;
-			byte[] buffer = new byte[stride * bitmapImage.PixelHeight];
-			bitmapImage.CopyPixels(buffer, stride, 0);
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				// Create a BitmapEncoder to encode the BitmapImage to a stream
+				BitmapEncoder encoder = new PngBitmapEncoder();
+				encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
+				encoder.Save(memoryStream);
+				memoryStream.Position = 0;
 
-			// Create Bitmap in the correct size and format
-			Bitmap bitmap =
-				new Bitmap(bitmapImage.PixelWidth, bitmapImage.PixelHeight,
-				           PixelFormat.Format32bppArgb);
-
-			// Lock the bitmap in memory
-			BitmapData bitmapData =
-				bitmap.LockBits(
-					new Rectangle(0, 0, bitmap.Width, bitmap.Height),
-					ImageLockMode.WriteOnly,
-					bitmap.PixelFormat);
-
-			// Copy the byte array to the bitmap
-			Marshal.Copy(buffer, 0, bitmapData.Scan0, buffer.Length);
-
-			// Unlock the bitmap
-			bitmap.UnlockBits(bitmapData);
-
-			return bitmap;
+				// Create a System.Drawing.Image from the stream
+				return (Bitmap) Image.FromStream(memoryStream);
+			}
 		}
 
 		public static Bitmap CreateBitmap(DrawingImage drawingImage)

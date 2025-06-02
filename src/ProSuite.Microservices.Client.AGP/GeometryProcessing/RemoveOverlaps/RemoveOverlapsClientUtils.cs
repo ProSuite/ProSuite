@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,10 +26,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> overlappingFeatures,
+			[CanBeNull] Envelope inExtent,
 			CancellationToken cancellationToken)
 		{
 			CalculateOverlapsResponse response =
-				CalculateOverlapsRpc(rpcClient, selectedFeatures, overlappingFeatures,
+				CalculateOverlapsRpc(rpcClient, selectedFeatures, overlappingFeatures, inExtent,
 				                     cancellationToken);
 
 			if (response == null || cancellationToken.IsCancellationRequested)
@@ -66,10 +68,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			[NotNull] RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> overlappingFeatures,
+			[CanBeNull] Envelope inExtent,
 			CancellationToken cancellationToken)
 		{
 			CalculateOverlapsRequest request =
-				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
+				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures, inExtent);
 
 			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
 
@@ -83,19 +86,41 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 		private static CalculateOverlapsRequest CreateCalculateOverlapsRequest(
 			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] IList<Feature> overlappingFeatures)
+			[NotNull] IList<Feature> overlappingFeatures,
+			[CanBeNull] Envelope inExtent)
 		{
 			var request = new CalculateOverlapsRequest();
 
+			Func<Feature, Geometry> getFeatureGeometry =
+				f => inExtent == null ? null : GetClippedGeometry(f, inExtent);
+
 			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
 			                                           request.SourceFeatures,
-			                                           request.ClassDefinitions);
+			                                           request.ClassDefinitions,
+			                                           false, getFeatureGeometry);
 
 			ProtobufConversionUtils.ToGdbObjectMsgList(overlappingFeatures,
 			                                           request.TargetFeatures,
-			                                           request.ClassDefinitions);
+			                                           request.ClassDefinitions,
+			                                           false, getFeatureGeometry);
 
 			return request;
+		}
+
+		private static Geometry GetClippedGeometry(Feature feature, Envelope extent)
+		{
+			Geometry geometry = feature.GetShape();
+
+			if (geometry.GeometryType != GeometryType.Polygon &&
+			    geometry.GeometryType != GeometryType.Polyline)
+			{
+				// Multipatches etc.:
+				return geometry;
+			}
+
+			geometry = GeometryEngine.Instance.Clip(geometry, extent);
+
+			return geometry.IsEmpty ? null : geometry;
 		}
 
 		#endregion

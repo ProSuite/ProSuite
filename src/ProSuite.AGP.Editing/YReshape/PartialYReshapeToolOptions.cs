@@ -19,7 +19,7 @@ namespace ProSuite.AGP.Editing.YReshape
 
 		public override PartialOptionsBase Clone()
 		{
-			var result = new PartialReshapeToolOptions
+			var result = new PartialAdvancedReshapeOptions
 			             {
 				MoveOpenJawEndJunction = new OverridableSetting<bool>(true, false), // YReshape: toggle with M
 				ShowPreview = TryClone(ShowPreview),

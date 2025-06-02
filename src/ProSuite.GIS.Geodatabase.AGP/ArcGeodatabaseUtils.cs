@@ -32,7 +32,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			if (gdb != null)
 			{
-				existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
+				existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle.ToInt64());
 
 				ArcTable found = existingWorkspace?.GetTableByName(databaseTable.GetName());
 

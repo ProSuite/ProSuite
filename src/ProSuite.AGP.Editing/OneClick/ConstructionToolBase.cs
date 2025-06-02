@@ -121,14 +121,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#region OneClickToolBase overrides
 
-		protected override Task OnSelectionPhaseStartedAsync()
+		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			await QueuedTask.Run(() =>
+			{
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			});
 
 			IsInSketchPhase = false;
-
-			return Task.CompletedTask;
 		}
 
 		protected override async Task OnToolActivatingCoreAsync()
@@ -238,26 +239,19 @@ namespace ProSuite.AGP.Editing.OneClick
 				_sketchStateHistory?.ResetSketchStates();
 				_isIntermittentSelectionPhaseActive = false;
 
-				_msg.Debug(e.Message, e);
+				_msg.Warn(e.Message, e);
 			}
 		}
 
-		protected override async Task SetupLassoSketchAsync()
+		protected override async Task ToggleSelectionSketchGeometryType(
+			SketchGeometryType toggleSketchType,
+			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.SetupLassoSketchAsync();
+				await base.ToggleSelectionSketchGeometryType(toggleSketchType, selectionCursors);
 			}
-			// Else do nothing: no lasso in construction sketch phase.
-		}
-
-		protected override async Task SetupPolygonSketchAsync()
-		{
-			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
-			{
-				await base.SetupPolygonSketchAsync();
-			}
-			// Else do nothing: no polygon sketch cursor in construction sketch phase.
+			// Else do nothing: No selection sketch toggling in edit sketch phase.
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
@@ -289,6 +283,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
 			_msg.VerboseDebug(() => $"HandleKeyUpCoreAsync ({Caption})");
+
+			await base.HandleKeyUpCoreAsync(args);
 
 			if (args.Key == _keyFinishSketch)
 			{

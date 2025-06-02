@@ -1,10 +1,13 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Properties;
 
 namespace ProSuite.Commons.UI.WinForms.Controls
@@ -12,6 +15,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 	public sealed class DataGridViewFindToolStrip : ToolStripEx,
 	                                                IDataGridViewFindToolsView
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly ToolStripTextBox _toolStripTextBoxFind;
 		private readonly ToolStripButton _toolStripButtonClearFilter;
 		private readonly ToolStripButton _toolStripButtonMoveNext;
@@ -46,7 +51,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				string.Format(
 					"{0}: ", LocalizableStrings.DataGridViewFindToolStrip_Find));
 
-			_toolStripTextBoxFind = new ToolStripTextBox {Width = 150, AutoSize = false};
+			_toolStripTextBoxFind = new ToolStripTextBox { Width = 150, AutoSize = false };
 
 			_toolStripTextBoxFind.TextChanged += _toolStripTextBoxFind_TextChanged;
 			_toolStripTextBoxFind.KeyDown += _toolStripTextBoxFind_KeyDown;
@@ -274,49 +279,79 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void _toolStripTextBoxFind_TextChanged(object sender, EventArgs e)
 		{
-			ApplyHighlightFindText();
-
-			Observer?.Find(_toolStripTextBoxFind.Text);
+			Try(() =>
+			{
+				ApplyHighlightFindText();
+				try
+				{
+					Observer?.Find(_toolStripTextBoxFind.Text);
+				}
+				catch (Exception exception)
+				{
+					// ignored
+				}
+			});
 		}
 
 		private void _toolStripTextBoxFind_KeyDown(object sender, KeyEventArgs e)
 		{
-			Observer?.HandleFindKeyEvent(e);
+			Try(() => { Observer?.HandleFindKeyEvent(e); });
 		}
 
 		private void _toolStripButtonClearFilter_Click(object sender, EventArgs e)
 		{
-			Observer?.ClearFilter();
+			Try(() => { Observer?.ClearFilter(); });
 		}
 
 		private void _toolStripButtonMovePrevious_Click(object sender, EventArgs e)
 		{
-			Observer?.MoveToPrevious();
+			Try(() => { Observer?.MoveToPrevious(); });
 		}
 
 		private void _toolStripButtonMoveNext_Click(object sender, EventArgs e)
 		{
-			Observer?.MoveToNext();
+			Try(() => { Observer?.MoveToNext(); });
 		}
 
 		private void _toolStripCheckBoxMatchCase_CheckChanged(object sender, EventArgs e)
 		{
-			if (Observer != null)
+			Try(() =>
 			{
-				Observer.MatchCase = _toolStripCheckBoxMatchCase.Checked;
-			}
+				if (Observer != null)
+				{
+					Observer.MatchCase = _toolStripCheckBoxMatchCase.Checked;
+				}
+			});
 		}
 
 		private void _toolStripButtonFilterRows_CheckChanged(object sender, EventArgs e)
 		{
-			if (Observer != null)
+			Try(() =>
 			{
-				Observer.FilterRows = _toolStripButtonFilterRows.Checked;
-			}
+				if (Observer != null)
+				{
+					Observer.FilterRows = _toolStripButtonFilterRows.Checked;
+				}
+			});
 		}
 
 		#endregion
 
 		#endregion
+
+		private static void Try([NotNull] Action procedure,
+		                        [CallerMemberName] string method = null)
+		{
+			try
+			{
+				_msg.VerboseDebug(() => $"QueryHistoryForm.{method}");
+
+				procedure();
+			}
+			catch (Exception ex)
+			{
+				ErrorHandler.HandleError(ex, _msg);
+			}
+		}
 	}
 }

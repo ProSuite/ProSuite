@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.Workflow
 {

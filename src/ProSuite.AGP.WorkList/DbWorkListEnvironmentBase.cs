@@ -91,7 +91,12 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 				featureLayer.SetExpanded(false);
 				featureLayer.SetVisibility(false);
-				featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
+				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+
+				if (! string.IsNullOrEmpty(defaultDefinitionQuery))
+				{
+					featureLayer.SetDefinitionQuery(defaultDefinitionQuery);
+				}
 
 #if ARCGISPRO_GREATER_3_2
 				featureLayer.SetShowLayerAtAllScales(true);

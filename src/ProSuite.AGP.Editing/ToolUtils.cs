@@ -313,7 +313,8 @@ namespace ProSuite.AGP.Editing
 
 				if (subtypeValue != null && subtypeValue != DBNull.Value)
 				{
-					int subtypeCode = (int) subtypeValue;
+					//NOTE: Subtypes can be based on short integers
+					int subtypeCode = Convert.ToInt32(subtypeValue);
 					subtype = classDefinition.GetSubtypes()
 					                         .FirstOrDefault(s => s.GetCode() == subtypeCode);
 				}
@@ -333,6 +334,34 @@ namespace ProSuite.AGP.Editing
 		public static SketchGeometryType GetSketchGeometryType()
 		{
 			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+		}
+
+		public static SketchGeometryType? ToggleSketchGeometryType(
+			SketchGeometryType? toggleType,
+			SketchGeometryType? currentSketchType,
+			SketchGeometryType defaultSketchType)
+		{
+			SketchGeometryType? type;
+
+			switch (toggleType)
+			{
+				// TODO: If the default is Polygon and the currentSketch is already Polygon -> Rectangle
+				case SketchGeometryType.Polygon:
+					type = currentSketchType == SketchGeometryType.Polygon
+						       ? defaultSketchType
+						       : toggleType;
+					break;
+				case SketchGeometryType.Lasso:
+					type = currentSketchType == SketchGeometryType.Lasso
+						       ? defaultSketchType
+						       : toggleType;
+					break;
+				default:
+					type = toggleType;
+					break;
+			}
+
+			return type;
 		}
 
 		/// <summary>

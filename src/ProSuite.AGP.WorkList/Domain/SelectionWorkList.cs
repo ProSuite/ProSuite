@@ -2,6 +2,9 @@ using System;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+			_indexByTask.Clear();
+			_itemsByIndex.Clear();
+
 
 namespace ProSuite.AGP.WorkList.Domain;
 

@@ -79,7 +79,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 		private void AssertExpectedTable([NotNull] IReadOnlyRow row)
 		{
-			if (Table == row.Table)
+			if (Table.Equals(row.Table))
 			{
 				return;
 			}

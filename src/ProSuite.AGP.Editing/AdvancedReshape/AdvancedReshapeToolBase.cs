@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialAdvancedReshapeOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -174,16 +174,16 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			string __ = LocalConfigDir;
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			_settingsProvider ??= new OverridableSettingsProvider<PartialAdvancedReshapeOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			PartialAdvancedReshapeOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
 			var result = new ReshapeToolOptions(centralConfiguration,
-			                                                     localConfiguration);
+			                                    localConfiguration);
 
 			result.PropertyChanged -= _advancedReshapeToolOptions_PropertyChanged;
 			result.PropertyChanged += _advancedReshapeToolOptions_PropertyChanged;
@@ -192,7 +192,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			string optionsMessage = result.GetLocalOverridesMessage();
 
-			if (!string.IsNullOrEmpty(optionsMessage))
+			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
@@ -215,12 +215,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			await QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
-				base.OnSelectionPhaseStartedAsync();
+				await base.OnSelectionPhaseStartedAsync();
 				_symbolizedSketch?.ClearSketchSymbol();
 				_feedback?.Clear();
-				ActiveMapView.ClearSketchAsync();
+				await ActiveMapView.ClearSketchAsync();
 			});
 		}
 
@@ -271,6 +271,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
 			return SketchGeometryType.Line;
+		}
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
@@ -781,49 +786,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public void SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
 			SketchSymbol = symbolReference;
-		}
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
 		}
 	}
 }

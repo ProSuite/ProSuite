@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,11 +19,13 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -130,6 +134,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public bool SetUnhealthyAfterEachVerification { get; set; } =
 			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 				"PROSUITE_QA_SERVER_SET_UNHEALTHY_AFTER_VERIFICATION");
+
+		/// <summary>
+		/// Whether the service should be set to unhealthy after a verification when the memory
+		/// allocation (private bytes) exceeds the specified amount in MB. This allows
+		/// for process recycling after verifications that fragment the process memory
+		/// which can lead to excessive memory pressure on the host.
+		/// </summary>
+		public double UnhealthyMemoryLimitMegaBytes { get; set; } = GetUnhealthyMemoryLimit();
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -341,11 +353,45 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                 CurrentLoad.CurrentProcessCount);
 			}
 
+			if (Health?.IsAnyServiceUnhealthy() == true)
+			{
+				return;
+			}
+
 			if (SetUnhealthyAfterEachVerification)
 			{
-				_msg.Info(
-					"Setting process to un-healthy after request to allow for process recycling.");
-				ServiceUtils.SetUnhealthy(Health, GetType());
+				ServiceUtils.SetUnhealthy(
+					Health, GetType(),
+					"Process is configured to be set to un-healthy after each request to allow for process recycling.");
+			}
+
+			if (UnhealthyMemoryLimitMegaBytes >= 0)
+			{
+				double privateBytesMb;
+				using (Process process = Process.GetCurrentProcess())
+				{
+					long privateBytes = process.PrivateMemorySize64;
+
+					const double mega = 1024 * 1024;
+
+					privateBytesMb = privateBytes / mega;
+				}
+
+				if (privateBytesMb > UnhealthyMemoryLimitMegaBytes)
+				{
+					string reason =
+						"High memory usage (allow for process recycling). " +
+						$"Private Memory: {privateBytesMb} MB. Configured limit: {UnhealthyMemoryLimitMegaBytes} MB";
+
+					ServiceUtils.SetUnhealthy(Health, GetType(), reason);
+				}
+				else
+				{
+					_msg.InfoFormat(
+						"Process is still healthy in terms of memory usage. " +
+						"Private Memory: {0} MB. Configured limit: {1} MB",
+						privateBytesMb, UnhealthyMemoryLimitMegaBytes);
+				}
 			}
 		}
 
@@ -487,7 +533,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					qaService = CreateVerificationService(
 						backgroundVerificationInputs, responseStreamer, trackCancel);
 
-					verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+					verification = WithCulture(
+						request.Parameters.ReportCultureCode,
+						() => qaService.Verify(backgroundVerificationInputs, trackCancel));
 
 					deletableAllowedErrorRefs.AddRange(
 						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
@@ -681,14 +729,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
 
-			qaService = CreateVerificationService(
+			BackgroundVerificationService service = CreateVerificationService(
 				backgroundVerificationInputs, responseStreamer, trackCancel);
 
-			qaService.DistributedTestRunner = distributedTestRunner;
+			service.DistributedTestRunner = distributedTestRunner;
 
 			QualityVerification verification =
-				qaService.Verify(backgroundVerificationInputs, trackCancel);
+				WithCulture(request.Parameters.ReportCultureCode,
+				            () => service.Verify(backgroundVerificationInputs, trackCancel));
 
+			qaService = service;
 			return verification;
 		}
 
@@ -744,7 +794,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				xmlService.ProgressStreamer = responseStreamer;
 			}
 
-			Model primaryModel =
+			DdxModel primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			responseStreamer.KnownIssueSpatialReference =
 				primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();
@@ -768,10 +818,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ProtobufGeometryUtils.FromSpatialReferenceMsg(
 					parameters.IssueRepositorySpatialReference);
 
-			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
-			                               trackCancel);
+			WithCulture(parameters.ReportCultureCode,
+			            () => xmlService.ExecuteVerification(qualitySpecification, aoi,
+			                                                 parameters.TileSize, trackCancel));
 
 			return xmlService.Verification;
+		}
+
+		private static T WithCulture<T>(string cultureCode, Func<T> func)
+		{
+			if (string.IsNullOrEmpty(cultureCode))
+			{
+				return func();
+			}
+
+			var culture = new CultureInfo(cultureCode, false);
+
+			return CultureInfoUtils.ExecuteUsing(culture, culture, func);
 		}
 
 		private bool IsStandAloneVerification([NotNull] VerificationRequest request,
@@ -820,31 +883,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] ICollection<int> excludedConditionIds = null)
 		{
 			var dataSources = new List<DataSource>();
+
+			// Initialize using valid data sources from XML:
+			dataSources.AddRange(QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+
+			if (dataSources.Count > 0)
+			{
+				_msg.InfoFormat("Initialized {0} data sources from XML.", dataSources.Count);
+			}
+
 			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
-					List<string> replacementStrings =
-						StringUtils.SplitAndTrim(replacement, '|');
-					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
-
-					var dataSource =
-						new DataSource(replacementStrings[0], replacementStrings[0])
-						{
-							WorkspaceAsText = replacementStrings[1]
-						};
-
-					dataSources.Add(dataSource);
+					AddOrReplace(replacement, dataSources);
 				}
-
-				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
-			}
-			else
-			{
-				dataSources.AddRange(
-					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
-				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =
@@ -865,6 +918,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return qualitySpecification;
+		}
+
+		private static void AddOrReplace([NotNull] string replacementString,
+		                                 [NotNull] List<DataSource> dataSources)
+		{
+			List<string> replacementStrings =
+				StringUtils.SplitAndTrim(replacementString, '|');
+			Assert.AreEqual(2, replacementStrings.Count,
+			                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+
+			var dataSource =
+				new DataSource(replacementStrings[0], replacementStrings[0])
+				{
+					WorkspaceAsText = replacementStrings[1]
+				};
+
+			// Replace existing data source from XML if it exists:
+			int index = dataSources.FindIndex(ds => ds.ID == dataSource.ID);
+			if (index >= 0)
+			{
+				dataSources[index] = dataSource;
+				_msg.InfoFormat("Replaced data source <id> {0} with {1}", dataSource.ID,
+				                dataSource);
+			}
+			else
+			{
+				dataSources.Add(dataSource);
+				_msg.InfoFormat("Adding data source: {0}", dataSource);
+			}
 		}
 
 		private QualitySpecification SetupQualitySpecification(
@@ -1026,6 +1108,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
 			           canceledException);
 			_msg.Warn("Task was cancelled, likely by the client");
+		}
+
+		private static double GetUnhealthyMemoryLimit()
+		{
+			const string envVarServerSetUnhealthyMemory =
+				"PROSUITE_QA_SERVER_UNHEALTHY_PROCESS_MEMORY";
+
+			string envVarValue = Environment.GetEnvironmentVariable(
+				envVarServerSetUnhealthyMemory);
+
+			if (! string.IsNullOrEmpty(envVarValue))
+			{
+				if (double.TryParse(envVarValue, out double memoryLimitMb))
+				{
+					return memoryLimitMb;
+				}
+
+				_msg.WarnFormat("Cannot parse environment variable {0} value ({1})",
+				                envVarServerSetUnhealthyMemory, envVarValue);
+			}
+
+			return -1;
 		}
 	}
 }
