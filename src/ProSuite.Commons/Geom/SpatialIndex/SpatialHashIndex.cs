@@ -61,6 +61,10 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			_estimatedItemsPerTile = (int) Math.Ceiling(estimatedItemsPerTile);
 		}
 
+		public double GridSize => _tilingDefinition.TileWidth;
+		public double OriginX => _tilingDefinition.OriginX;
+		public double OriginY => _tilingDefinition.OriginY;
+
 		public void Add(T identifier, double x, double y)
 		{
 			TileIndex tileIndex = _tilingDefinition.GetTileIndexAt(x, y);
@@ -88,7 +92,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		{
 			List<T> tileGeometryRefs;
 
-			if (!_tiles.TryGetValue(tileIndex, out tileGeometryRefs))
+			if (! _tiles.TryGetValue(tileIndex, out tileGeometryRefs))
 			{
 				tileGeometryRefs = new List<T>(_estimatedItemsPerTile);
 				_tiles.Add(tileIndex, tileGeometryRefs);
@@ -110,6 +114,70 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			foreach (TileIndex intersectedTileIdx in intersectedTiles)
 			{
 				Add(identifier, intersectedTileIdx);
+			}
+		}
+
+		/// <summary>
+		/// Returns Identifiers per tile, starting with the tile closest to the given point and continuing outward in a spiral pattern.
+		/// </summary>
+		/// <param name="x">X coordinate</param>
+		/// <param name="y">Y coordinate</param>
+		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
+		/// <returns></returns>
+		public IEnumerable<IEnumerable<T>> FindIdentifiers(double x, double y,
+		                                                   [CanBeNull] Predicate<T> predicate = null)
+		{
+			// TODO: Write a test
+			var visitedTiles = new HashSet<TileIndex>();
+			TileIndex centerTile = _tilingDefinition.GetTileIndexAt(x, y);
+
+			// Start with the center tile
+			visitedTiles.Add(centerTile);
+			yield return FindItemsWithinTile(centerTile, predicate);
+
+			// Expand outward one tile layer at a time
+			for (int tileRadius = 1;; tileRadius++)
+			{
+				var tilesAtRadius = new List<(TileIndex tile, double distanceSquared)>();
+
+				// Generate all tiles at this tile radius (perimeter only)
+				for (int dx = -tileRadius; dx <= tileRadius; dx++)
+				{
+					for (int dy = -tileRadius; dy <= tileRadius; dy++)
+					{
+						// Only process tiles on the perimeter of the current tile radius
+						if (Math.Abs(dx) != tileRadius && Math.Abs(dy) != tileRadius)
+							continue;
+
+						var tileIndex = new TileIndex(centerTile.East + dx, centerTile.North + dy);
+
+						if (! visitedTiles.Add(tileIndex))
+							continue; // Already visited
+
+						// Calculate squared distance from tile center to the original point
+						double tileCenterX = _tilingDefinition.OriginX +
+						                     (tileIndex.East + 0.5) * _tilingDefinition.TileWidth;
+						double tileCenterY = _tilingDefinition.OriginY +
+						                     (tileIndex.North + 0.5) * _tilingDefinition.TileHeight;
+						double distanceSquared =
+							(tileCenterX - x) * (tileCenterX - x) +
+							(tileCenterY - y) * (tileCenterY - y);
+
+						tilesAtRadius.Add((tileIndex, distanceSquared));
+					}
+				}
+
+				// Break if no new tiles were found
+				if (tilesAtRadius.Count == 0)
+					break;
+
+				// Sort by distance and yield closest tiles first
+				tilesAtRadius.Sort((a, b) => a.distanceSquared.CompareTo(b.distanceSquared));
+
+				foreach ((TileIndex tile, double distanceSquared) valueTuple in tilesAtRadius)
+				{
+					yield return FindItemsWithinTile(valueTuple.tile, predicate);
+				}
 			}
 		}
 
