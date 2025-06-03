@@ -23,6 +23,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		private HashSet<T> _foundIdentifiers;
 
+		public SpatialHashIndex(EnvelopeXY envelope, double gridsize, double estimatedItemsPerTile)
+			: this(new TilingDefinition(envelope.XMin, envelope.XMin, gridsize, gridsize),
+			       (int) Math.Ceiling(
+				       Math.Pow(
+					       Math.Max((envelope.XMax - envelope.XMin),
+					                (envelope.YMax - envelope.YMin)) / gridsize, 2)),
+			       estimatedItemsPerTile) {}
+
 		public SpatialHashIndex(double xMin, double yMin, double gridsize,
 		                        int estimatedMaxTileCount,
 		                        double estimatedItemsPerTile)
@@ -125,7 +133,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
 		/// <returns></returns>
 		public IEnumerable<IEnumerable<T>> FindIdentifiers(double x, double y,
-		                                                   [CanBeNull] Predicate<T> predicate = null)
+		                                                   [CanBeNull] Predicate<T> predicate =
+			                                                   null)
 		{
 			// TODO: Write a test
 			var visitedTiles = new HashSet<TileIndex>();
@@ -206,6 +215,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 
 			return _foundIdentifiers;
+		}
+
+		public IEnumerable<T> FindIdentifiers(
+			EnvelopeXY envelope,
+			[CanBeNull] Predicate<T> predicate = null)
+		{
+			return FindIdentifiers(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax,
+			                       predicate);
 		}
 
 		public IEnumerable<T> FindIdentifiers(
