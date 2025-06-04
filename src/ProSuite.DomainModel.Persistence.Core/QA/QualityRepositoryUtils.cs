@@ -49,7 +49,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			[NotNull] ISession session,
 			[NotNull] T descriptor) where T : InstanceDescriptor
 		{
-			return session.QueryOver<TransformerDescriptor>()
+			return session.QueryOver<T>()
 			              .Where(i => i.Class == descriptor.Class &&
 			                          i.ConstructorId == descriptor.ConstructorId)
 			              .SingleOrDefault();
