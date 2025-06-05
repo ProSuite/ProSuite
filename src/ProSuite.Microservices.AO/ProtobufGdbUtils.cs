@@ -348,6 +348,7 @@ namespace ProSuite.Microservices.AO
 			return relTableMsg;
 		}
 
+		[NotNull]
 		public static ConnectionMsg ToConnectionMsg([NotNull] ConnectionProvider connectionProvider)
 		{
 			string connectionString = null;
@@ -360,6 +361,9 @@ namespace ProSuite.Microservices.AO
 			{
 				connectionString = ToConnectionString(sdeDirectConnection);
 			}
+			else
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported connection provider: {connectionProvider}");
 
 			return new ConnectionMsg
 			       {
