@@ -1183,22 +1183,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region IRowCache
 
-		public void EnsureRowCacheSynchronized()
-		{
-			if (_rowCacheSynchronizer != null)
-			{
-				return;
-			}
-
-			_rowCacheSynchronizer = new EditEventsRowCacheSynchronizer(this);
-		}
-
-		public void DeactivateRowCacheSynchronization()
-		{
-			_rowCacheSynchronizer?.Dispose();
-			_rowCacheSynchronizer = null;
-		}
-
 		/// <summary>
 		/// Raises WorkListChanged event: forces
 		/// to redraw at least ActiveView.Active.Extent which leads

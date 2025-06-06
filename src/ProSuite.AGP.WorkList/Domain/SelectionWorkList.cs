@@ -1,11 +1,10 @@
-using System;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain;
 
-public class SelectionWorkList : WorkList, IDisposable
+public class SelectionWorkList : WorkList
 {
 	public SelectionWorkList([NotNull] IWorkItemRepository repository,
 	                         [NotNull] Geometry areaOfInterest,
@@ -13,9 +12,4 @@ public class SelectionWorkList : WorkList, IDisposable
 	                         [NotNull] string displayName) :
 		base(repository, areaOfInterest, uniqueName, displayName)
 	{ }
-
-	public void Dispose()
-	{
-		DeactivateRowCacheSynchronization();
-	}
 }

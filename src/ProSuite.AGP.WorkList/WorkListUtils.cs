@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
@@ -186,7 +184,7 @@ namespace ProSuite.AGP.WorkList
 				return null;
 			}
 
-			XmlWorkListDefinition definition = WorkListUtils.Read(worklistDefinitionFile);
+			XmlWorkListDefinition definition = Read(worklistDefinitionFile);
 			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
 
 			Assert.True(workspaces.Count > 0,
@@ -456,6 +454,18 @@ namespace ProSuite.AGP.WorkList
 		{
 			IReadOnlyList<Layer> layers = container.GetLayersAsFlattenedList();
 
+			return GetWorklistLayers(layers, worklistName);
+		}
+
+		public static IEnumerable<Layer> GetWorklistLayers([NotNull] IEnumerable<Layer> layers,
+		                                                   [NotNull] IWorkList workList)
+		{
+			return GetWorklistLayers(layers, workList.Name);
+		}
+
+		public static IEnumerable<Layer> GetWorklistLayers([NotNull] IEnumerable<Layer> layers,
+		                                                   [NotNull] string worklistName)
+		{
 			foreach (Layer layer in layers)
 			{
 				var connection = layer.GetDataConnection() as CIMStandardDataConnection;
@@ -508,24 +518,6 @@ namespace ProSuite.AGP.WorkList
 			return layer.GetDataConnection() is not CIMStandardDataConnection connection
 				       ? null
 				       : registry.Get(connection.Dataset);
-		}
-
-		private static bool WorkListLayerLoaded(IWorkEnvironment env, string file)
-		{
-			Map map = MapUtils.GetActiveMap();
-
-			List<Layer> layers = GetWorklistLayersByPath(map, file).ToList();
-
-			if (layers.Count <= 0)
-			{
-				return false;
-			}
-
-			string layerNames = StringUtils.Concatenate(layers, layer => layer.Name, ", ");
-			string displayName = env.GetDisplayName();
-
-			_msg.Info($"{displayName} is already in the map: layer {layerNames}");
-			return true;
 		}
 	}
 }
