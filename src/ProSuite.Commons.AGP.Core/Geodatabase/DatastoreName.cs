@@ -236,8 +236,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		#endregion
 
-		private bool Equals(Connector otherConnector)
+		public bool Equals(DatastoreName other, DatastoreComparison comparison)
 		{
+			if (other is null) return false;
+
+			Connector otherConnector = other._connector;
+
+			return Equals(otherConnector);
+		}
+
+		private bool Equals(Connector otherConnector,
+		                    DatastoreComparison comparison = DatastoreComparison.Exact)
+		{
+			_msg.VerboseDebug(() => $"Comparing datastore connectors {this} with {otherConnector}");
 			if (_connector.GetType() != otherConnector.GetType()) return false;
 
 			switch (_connector)
@@ -248,7 +259,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				case DatabaseConnectionProperties dbConnectionProps:
 					return AreEqual(dbConnectionProps,
-					                (DatabaseConnectionProperties) otherConnector);
+					                (DatabaseConnectionProperties) otherConnector, comparison);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
 					var otherFgdbConnection = (FileGeodatabaseConnectionPath) otherConnector;
@@ -331,19 +342,30 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		private static bool AreEqual([NotNull] DatabaseConnectionProperties a,
-		                             [CanBeNull] DatabaseConnectionProperties b)
+		                             [CanBeNull] DatabaseConnectionProperties b,
+		                             DatastoreComparison comparison)
 		{
 			if (b == null) return false;
 
-			return Equals(a.Instance, b.Instance) &&
-			       a.DBMS == b.DBMS &&
-			       Equals(a.Database, b.Database) &&
-			       a.AuthenticationMode == b.AuthenticationMode &&
-			       Equals(a.User, b.User) &&
-			       Equals(a.Password, b.Password) &&
-			       Equals(a.ProjectInstance, b.ProjectInstance) &&
-			       Equals(a.Version, b.Version) &&
-			       Equals(a.Branch, b.Branch);
+			bool basicEqual = Equals(a.Instance, b.Instance) &&
+			                  a.DBMS == b.DBMS &&
+			                  Equals(a.Database, b.Database) &&
+			                  a.AuthenticationMode == b.AuthenticationMode &&
+			                  Equals(a.ProjectInstance, b.ProjectInstance);
+
+			if (comparison == DatastoreComparison.AnyUserAnyVersion)
+			{
+				return basicEqual;
+			}
+
+			if (comparison == DatastoreComparison.AnyUserSameVersion)
+			{
+				return Equals(a.Version, b.Version) &&
+				       Equals(a.Branch, b.Branch);
+			}
+
+			return Equals(a.User, b.User) &&
+			       Equals(a.Password, b.Password);
 		}
 
 		private static bool AreEqual([NotNull] RealtimeServiceConnectionProperties a,
