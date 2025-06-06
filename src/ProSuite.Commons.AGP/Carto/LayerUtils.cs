@@ -343,14 +343,14 @@ namespace ProSuite.Commons.AGP.Carto
 			Assert.ArgumentNotNull(layer2, nameof(layer2));
 
 			// Handle group layers
-			if (layer1 is CompositeLayer groupLayer1 && layer2 is CompositeLayer groupLayer2)
+			if (layer1 is GroupLayer groupLayer1 && layer2 is GroupLayer groupLayer2)
 			{
 				return DataSourcesAreEqual(groupLayer1, groupLayer2,
 				                           requireSameVersion, requireSameDefinition);
 			}
 
 			// Handle case where a data layer is compared with a group layer
-			if (layer1 is FeatureLayer && layer2 is CompositeLayer groupLayer)
+			if (layer1 is FeatureLayer && layer2 is GroupLayer groupLayer)
 			{
 				// Replace the existing layer if any of the sub layers of the
 				// new group layer matches
@@ -371,6 +371,18 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				return DataSourcesAreEqual(displayTable1, displayTable2,
 				                           requireSameVersion, requireSameDefinition);
+			}
+
+			if (layer1.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn1 &&
+			    layer2.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn2)
+			{
+				return vectorTileConn1.URI.Equals(vectorTileConn2.URI);
+			}
+
+			if (layer1.GetDefinition() is CIMServiceLayer serviceLayer1 &&
+			    layer2.GetDefinition() is CIMServiceLayer serviceLayer2)
+			{
+				return DataSourcesAreEqual(serviceLayer1, serviceLayer2);
 			}
 
 			// TODO: Other layers, Service layers etc.
@@ -473,6 +485,113 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return true;
+		}
+
+		private static bool DataSourcesAreEqual(CIMServiceLayer serviceLayer1,
+		                                        CIMServiceLayer serviceLayer2)
+		{
+			// Check for same service layer type
+			if (serviceLayer1.GetType() != serviceLayer2.GetType())
+			{
+				return false;
+			}
+
+			// Handle case where service connections might be null
+			if (serviceLayer1.ServiceConnection == null || serviceLayer2.ServiceConnection == null)
+			{
+				// If both null, they're equal; if only one is null, they're not equal
+				return serviceLayer1.ServiceConnection == null &&
+				       serviceLayer2.ServiceConnection == null;
+			}
+
+			// Check for different service connection types
+			if (serviceLayer1.ServiceConnection.GetType() !=
+			    serviceLayer2.ServiceConnection.GetType())
+			{
+				return false;
+			}
+
+			// Compare CIMAGSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMAGSServiceConnection agsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMAGSServiceConnection agsServiceConn2)
+			{
+				return string.Equals(agsServiceConn1.URL,
+				                     agsServiceConn2.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWMSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWMSServiceConnection wmsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWMSServiceConnection wmsServiceConn2)
+			{
+				return string.Equals(wmsServiceConn1.ServerConnection?.URL,
+				                     wmsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWMTSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn2)
+			{
+				return string.Equals(wmtsServiceConn1.ServerConnection?.URL,
+				                     wmtsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWFSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWFSServiceConnection wfsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWFSServiceConnection wfsServiceConn2)
+			{
+				return string.Equals(wfsServiceConn1.ServerConnection?.URL,
+				                     wfsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMStandardServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMStandardServiceConnection
+				    standardServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMStandardServiceConnection
+				    standardServiceConn2)
+			{
+				return string.Equals(standardServiceConn1.URL,
+				                     standardServiceConn2.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWCSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWCSServiceConnection wcsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWCSServiceConnection wcsServiceConn2)
+			{
+				return string.Equals(wcsServiceConn1.ServerConnection?.URL,
+				                     wcsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMOGCAPIMapTilesServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
+				    ogcApiMapTilesConn1 &&
+			    serviceLayer2.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
+				    ogcApiMapTilesConn2)
+			{
+				return string.Equals(ogcApiMapTilesConn1.ServerConnection?.URL,
+				                     ogcApiMapTilesConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMOGCAPIServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn1 &&
+			    serviceLayer2.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn2)
+			{
+				return string.Equals(ogcApiConn1.ServerConnection?.URL,
+				                     ogcApiConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			_msg.WarnFormat(
+				"Cannot compare unknown or unsupported service layers. Layer 1: {0}. Layer 2: {1}",
+				serviceLayer1.Name, serviceLayer2.Name);
+
+			return false;
 		}
 
 		public static string GetDefinitionQuery(IDisplayTable displayTable)
