@@ -93,6 +93,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				       DatasetType = (ArcGIS.Core.CIM.esriDatasetType) Type
 			       };
 		}
+
+		#region Overrides of Object
+
+		public override string ToString()
+		{
+			return $"Name : {Name}, Type: {Type} - Datastore: {DataConnectionWorkspaceName}";
+		}
+
+		#endregion
 	}
 
 	/// <summary>
@@ -168,6 +177,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			             };
 
 			return result;
+		}
+
+		public override string ToString()
+		{
+			return $"Name : {Name}, Type: {Type} - Datastore: {DataConnectionWorkspaceName}";
 		}
 	}
 
@@ -258,12 +272,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					case WorkspaceFactory.Sql:
 					case WorkspaceFactory.OLEDB:
 						return esriWorkspaceType.esriRemoteDatabaseWorkspace;
-						break;
 					case WorkspaceFactory.FileGDB:
 					case WorkspaceFactory.SQLite:
 					case WorkspaceFactory.Access:
 						return esriWorkspaceType.esriLocalDatabaseWorkspace;
-						break;
 					case WorkspaceFactory.Raster:
 					case WorkspaceFactory.Shapefile:
 					case WorkspaceFactory.DelimitedTextFile:
