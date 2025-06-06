@@ -15,34 +15,52 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 {
 	internal static class QualityRepositoryUtils
 	{
-		public static TestDescriptor GetDescriptorWithSameImplementation(
+		public static TestDescriptor GetTestDescriptorWithSameImplementation(
 			[NotNull] ISession session,
 			[NotNull] TestDescriptor testDescriptor)
 		{
-			ICriteria criteria = session.CreateCriteria(typeof(TestDescriptor));
-
 			if (testDescriptor.TestClass != null)
 			{
-				criteria.Add(Restrictions.And(
-					             Restrictions.Eq("TestClass", testDescriptor.TestClass),
-					             Restrictions.Eq("ConstructorId",
-					                             testDescriptor.TestConstructorId)));
-			}
-			else if (testDescriptor.TestFactoryDescriptor != null)
-			{
-				criteria.Add(
-					Restrictions.Eq("TestFactoryDescriptor",
-					                testDescriptor.TestFactoryDescriptor));
-			}
-			else
-			{
-				// both null
-				throw new ArgumentException(
-					@"Both test class and test factory descriptor are null",
-					nameof(testDescriptor));
+				try
+				{
+					return session.CreateCriteria(typeof(TestDescriptor))
+					              .Add(Restrictions.And(
+						                   Restrictions.Eq("TestClass", testDescriptor.TestClass),
+						                   Restrictions.Eq("ConstructorId",
+						                                   testDescriptor.TestConstructorId)))
+					              .UniqueResult<TestDescriptor>();
+				}
+				catch (QueryException)
+				{
+					//Catch QueryException here to avoid:
+					//"NHibernate.QueryException: could not resolve property: TestClass of: ProSuite.DomainModel.Core.QA.TestDescriptor"
+					//
+					// This can occur depending on the specific context:
+					// - using mapping-by-code vs. xml mappings (hbm.xml)
+					// - same vs. different names of fields in ddx-tables for InstanceDescriptors/TestDescriptors
+					//
+					// This can be removed once InstanceDescriptor/TestDescriptor implementations are unified
+					return session.CreateCriteria(typeof(TestDescriptor))
+					              .Add(Restrictions.And(
+						                   Restrictions.Eq("Class", testDescriptor.TestClass),
+						                   Restrictions.Eq("ConstructorId",
+						                                   testDescriptor.TestConstructorId)))
+					              .UniqueResult<TestDescriptor>();
+				}
 			}
 
-			return criteria.UniqueResult<TestDescriptor>();
+			if (testDescriptor.TestFactoryDescriptor != null)
+			{
+				return session.CreateCriteria(typeof(TestDescriptor))
+				              .Add(Restrictions.Eq("TestFactoryDescriptor",
+				                                   testDescriptor.TestFactoryDescriptor))
+				              .UniqueResult<TestDescriptor>();
+			}
+
+			// both null
+			throw new ArgumentException(
+				@"Both test class and test factory descriptor are null",
+				nameof(testDescriptor));
 		}
 
 		public static InstanceDescriptor GetWithSameImplementation<T>(

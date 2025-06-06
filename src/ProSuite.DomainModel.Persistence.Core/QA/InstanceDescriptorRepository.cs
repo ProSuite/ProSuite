@@ -35,7 +35,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 			{
 				if (instanceDescriptor is TestDescriptor testDescriptor)
 				{
-					return QualityRepositoryUtils.GetDescriptorWithSameImplementation(
+					return QualityRepositoryUtils.GetTestDescriptorWithSameImplementation(
 						session, testDescriptor);
 				}
 
