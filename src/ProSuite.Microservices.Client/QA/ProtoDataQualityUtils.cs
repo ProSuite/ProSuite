@@ -623,6 +623,12 @@ namespace ProSuite.Microservices.Client.QA
 				}
 			}
 
+			if (dataset is ISpatialDataset spatialDataset)
+			{
+				datasetMsg.DefaultSymbology =
+					spatialDataset.DefaultLayerFile?.FileName ?? string.Empty;
+			}
+
 			return datasetMsg;
 		}
 

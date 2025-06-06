@@ -603,6 +603,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
+			await LogLastVertexZ(sketch);
+		}
+
+		private static async Task LogLastVertexZ(Geometry sketch)
+		{
 			if (! sketch.HasZ)
 			{
 				return;
@@ -627,9 +632,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				ReadOnlyPointCollection points = multipart.Points;
 
+				int pointNumFromEnd = 1;
+				if (sketch is Polygon)
+				{
+					// In a polygon sketch the last point is the same as the first, take the second-last:
+					pointNumFromEnd = 2;
+				}
+
 				if (points.Count > 0)
 				{
-					lastPoint = points[points.Count - 1];
+					lastPoint = points[points.Count - pointNumFromEnd];
 				}
 			}
 			else if (sketch is MapPoint point)

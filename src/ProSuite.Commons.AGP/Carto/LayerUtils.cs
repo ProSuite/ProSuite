@@ -346,6 +346,180 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
+		/// Determines if two layers reference the same data source.
+		/// </summary>
+		/// <param name="layer1">The first layer.</param>
+		/// <param name="layer2">The second layer.</param>
+		/// <param name="requireSameVersion">Whether the layers must reference the same version.</param>
+		/// <param name="requireSameDefinition">Whether the layers must have the same definition (e.g., same definition query).</param>
+		/// <returns>True if the layers reference the same data source; otherwise, false.</returns>
+		public static bool DataSourcesAreEqual([NotNull] Layer layer1,
+		                                       [NotNull] Layer layer2,
+		                                       bool requireSameVersion,
+		                                       bool requireSameDefinition = false)
+		{
+			Assert.ArgumentNotNull(layer1, nameof(layer1));
+			Assert.ArgumentNotNull(layer2, nameof(layer2));
+
+			// Handle group layers
+			if (layer1 is CompositeLayer groupLayer1 && layer2 is CompositeLayer groupLayer2)
+			{
+				return DataSourcesAreEqual(groupLayer1, groupLayer2,
+				                           requireSameVersion, requireSameDefinition);
+			}
+
+			// Handle case where a data layer is compared with a group layer
+			if (layer1 is FeatureLayer && layer2 is CompositeLayer groupLayer)
+			{
+				// Replace the existing layer if any of the sub layers of the
+				// new group layer matches
+				foreach (Layer subLayer in groupLayer.Layers)
+				{
+					if (DataSourcesAreEqual(layer1, subLayer, requireSameVersion,
+					                        requireSameDefinition))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			// Handle feature layers and stand-alone tables
+			if (layer1 is IDisplayTable displayTable1 && layer2 is IDisplayTable displayTable2)
+			{
+				return DataSourcesAreEqual(displayTable1, displayTable2,
+				                           requireSameVersion, requireSameDefinition);
+			}
+
+			// TODO: Other layers, Service layers etc.
+			//// Handle raster layers
+			//if (layer1 is RasterLayer rasterLayer1 && layer2 is RasterLayer rasterLayer2)
+			//{
+			//	return CompareRasterLayers(rasterLayer1, rasterLayer2, requireSameVersion);
+			//}
+
+			// Different layer types - not equal
+			return false;
+		}
+
+		private static bool DataSourcesAreEqual([NotNull] CompositeLayer groupLayer1,
+		                                        [NotNull] CompositeLayer groupLayer2,
+		                                        bool requireSameVersion,
+		                                        bool requireSameDefinition)
+		{
+			// Only equal if all contained layers match
+			if (groupLayer1.Layers.Count != groupLayer2.Layers.Count)
+			{
+				return false;
+			}
+
+			// Check if all child layers match (in order)
+			for (int i = 0; i < groupLayer1.Layers.Count; i++)
+			{
+				if (! DataSourcesAreEqual(groupLayer1.Layers[i], groupLayer2.Layers[i],
+				                          requireSameVersion, requireSameDefinition))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static bool DataSourcesAreEqual([NotNull] IDisplayTable layer1,
+		                                        [NotNull] IDisplayTable layer2,
+		                                        bool requireSameVersion,
+		                                        bool requireSameDefinition)
+		{
+			// Check if both layers are valid
+			var featureClass1 = layer1.GetTable();
+			var featureClass2 = layer2.GetTable();
+
+			if (featureClass1 == null || featureClass2 == null)
+			{
+				return false;
+			}
+
+			// Check if they reference the same dataset
+			if (! DatasetUtils.IsSameTable(featureClass1, featureClass2))
+			{
+				return false;
+			}
+
+			// Check versions if required
+			if (requireSameVersion)
+			{
+				// Get connection properties to compare version info
+				var gdb1 = featureClass1.GetDatastore() as Geodatabase;
+				var gdb2 = featureClass2.GetDatastore() as Geodatabase;
+
+				// Check if versions are specified
+				bool hasVersion1 = gdb1?.IsVersioningSupported() == true;
+				bool hasVersion2 = gdb2?.IsVersioningSupported() == true;
+
+				// If only one has a version, they're not equal
+				if (hasVersion1 != hasVersion2)
+				{
+					return false;
+				}
+
+				// If both have versions, compare them
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+				if (hasVersion1 && hasVersion2)
+				{
+					string version1 = gdb1.GetVersionManager().GetCurrentVersion().GetName();
+					string version2 = gdb2.GetVersionManager().GetCurrentVersion().GetName();
+
+					if (! string.Equals(version1, version2, StringComparison.OrdinalIgnoreCase))
+					{
+						return false;
+					}
+				}
+			}
+
+			// Check definitions if required
+			if (requireSameDefinition)
+			{
+				// Compare definition queries
+				string defQuery1 = GetDefinitionQuery(layer1);
+				string defQuery2 = GetDefinitionQuery(layer2);
+
+				if (! string.Equals(defQuery1, defQuery2, StringComparison.OrdinalIgnoreCase))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		public static string GetDefinitionQuery(IDisplayTable displayTable)
+		{
+			if (displayTable is StandaloneTable standaloneTable)
+			{
+				return GetDefinitionQuery(standaloneTable);
+			}
+
+			if (displayTable is BasicFeatureLayer featureLayer)
+			{
+				return GetDefinitionQuery(featureLayer);
+			}
+
+			throw new NotImplementedException("Unsupported type of display table");
+		}
+
+		public static string GetDefinitionQuery(BasicFeatureLayer featureLayer)
+		{
+			return featureLayer.DefinitionQuery;
+		}
+
+		public static string GetDefinitionQuery(StandaloneTable standaloneTable)
+		{
+			return standaloneTable.DefinitionQuery;
+		}
+
+		/// <summary>
 		/// Returns the feature class which is referenced by the specified layer. In case the
 		/// feature class is a joined table and the <see cref="unJoined"/> parameter is true,
 		/// the actual geodatabase feature class is returned.
