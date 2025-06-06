@@ -141,7 +141,7 @@ namespace ProSuite.Commons.AGP.Carto
 			AnnotationLayer annotationLayer = map.GetLayersAsFlattenedList()
 			                                     .OfType<AnnotationLayer>().FirstOrDefault();
 
-			CIMBaseLayer cimBaseLayer = annotationLayer.GetDefinition();
+			CIMBaseLayer cimBaseLayer = annotationLayer?.GetDefinition();
 			if (cimBaseLayer is CIMAnnotationLayer cimAnnotationLayer)
 			{
 				SymbolSubstitutionType symbolSubstitutionType = cimAnnotationLayer.SymbolSubstitutionType;
