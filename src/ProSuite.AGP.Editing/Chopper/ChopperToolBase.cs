@@ -383,4 +383,4 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		#endregion
 	}
-}
+}
