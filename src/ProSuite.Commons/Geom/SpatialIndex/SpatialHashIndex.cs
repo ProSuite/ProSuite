@@ -130,9 +130,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// </summary>
 		/// <param name="x">X coordinate</param>
 		/// <param name="y">Y coordinate</param>
+		/// <param name="maxTileDistance">The maximum Tile distance until which tiles are returned.</param>
 		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
 		/// <returns></returns>
 		public IEnumerable<IEnumerable<T>> FindIdentifiers(double x, double y,
+														   int maxTileDistance = int.MaxValue,
 		                                                   [CanBeNull] Predicate<T> predicate =
 			                                                   null)
 		{
@@ -145,7 +147,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			yield return FindItemsWithinTile(centerTile, predicate);
 
 			// Expand outward one tile layer at a time
-			for (int tileRadius = 1;; tileRadius++)
+			for (int tileRadius = 1; tileRadius <= maxTileDistance; tileRadius++)
 			{
 				var tilesAtRadius = new List<(TileIndex tile, double distanceSquared)>();
 
