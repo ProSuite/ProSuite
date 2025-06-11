@@ -43,6 +43,24 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			                    TileWidth, TileHeight);
 		}
 
+		public IEnumerable<TileIndex> GetTileIndexAround(double x,
+		                                                 double y,
+		                                                 DistanceMetric distanceMetric = DistanceMetric.EuclideanDistance,
+		                                                 int maxTileDistance = int.MaxValue)
+		{
+			switch (distanceMetric)
+			{
+				case DistanceMetric.EuclideanDistance:
+					return GetTileIndexAroundEuclidean(x, y, maxTileDistance);
+				case DistanceMetric.ChebyshevDistance:
+					return GetTileIndexAroundChebyshev(x, y, maxTileDistance);
+				case DistanceMetric.ManhattanDistance:
+					return GetTileIndexAroundManhattan(x, y, maxTileDistance);
+				default:
+					throw new ArgumentException($"Unsupported distance metric: {distanceMetric}", nameof(distanceMetric));
+			}
+		}
+
 		public IEnumerable<TileIndex> GetIntersectingTiles(
 			double xMin, double yMin, double xMax, double yMax)
 		{
@@ -102,6 +120,105 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			var indexNorth = (int) Math.Floor(tilePositionY);
 
 			return new TileIndex(indexEast, indexNorth);
+		}
+
+		// TODO: Test
+		private IEnumerable<TileIndex> GetTileIndexAroundEuclidean(double x, double y, int maxTileDistance = int.MaxValue)
+		{
+			// Get tiles from Manhattan implementation and sort each ring by Euclidean distance
+
+			using (var manhattanEnumerator =
+			       GetTileIndexAroundManhattan(x, y, maxTileDistance).GetEnumerator())
+			{
+				if (! manhattanEnumerator.MoveNext())
+					yield break;
+
+				// First tile is always the center tile
+				yield return manhattanEnumerator.Current;
+
+				// Process remaining tiles in batches of 4, 8, 12, 16, ... (4 * manhattanDistance)
+				for (int distance = 1; distance <= maxTileDistance; distance++)
+				{
+					var tilesInRing = new List<(TileIndex tile, double euclideanDist)>();
+					int expectedTilesInRing = distance * 4;
+
+					// Collect all tiles at this Manhattan distance
+					for (int i = 0; i < expectedTilesInRing && manhattanEnumerator.MoveNext(); i++)
+					{
+						var tile = manhattanEnumerator.Current;
+
+						// Calculate actual Euclidean distance from point to tile center
+						double tileCenterX = OriginX + tile.East * TileWidth + TileWidth / 2;
+						double tileCenterY = OriginY + tile.North * TileHeight + TileHeight / 2;
+						double euclideanDistanceSquared =
+							(x - tileCenterX) * (x - tileCenterX) +
+							(y - tileCenterY) * (y - tileCenterY);
+
+						tilesInRing.Add((tile, euclideanDistanceSquared));
+					}
+
+					// Sort by Euclidean distance and yield
+					tilesInRing.Sort((a, b) => a.euclideanDist.CompareTo(b.euclideanDist));
+					foreach ((TileIndex tile, var _) in tilesInRing)
+					{
+						yield return tile;
+					}
+
+					// If we didn't get the expected number of tiles, we've exhausted the enumerator
+					if (tilesInRing.Count < expectedTilesInRing)
+						break;
+				}
+			}
+		}
+
+		private IEnumerable<TileIndex> GetTileIndexAroundChebyshev(double x, double y, int maxTileDistance = int.MaxValue)
+		{
+			throw new NotImplementedException("Cannot use Chebyshev Distance. Not implemented.");
+		}
+
+		// TODO: Test
+		private IEnumerable<TileIndex> GetTileIndexAroundManhattan(double x, double y, int maxTileDistance = int.MaxValue)
+		{
+			TileIndex centerTile = GetTileIndexAt(x, y);
+
+			// Yield the center tile first (distance 0)
+			yield return centerTile;
+
+			// For each Manhattan distance from 1 to maxTileDistance
+			for (int distance = 1; distance <= maxTileDistance; distance++)
+			{
+				// Note: For each distance we generate all tiles at exactly this Manhattan distance
+				//		 => |dx| + |dy| = distance
+
+				// We'll traverse the diamond shape clockwise starting from the top
+				// This ensures a consistent order within each distance ring
+				for (int dx = 0; dx <= distance; dx++)
+				{
+					int dy = distance - dx;
+
+					// Generate the four points (or fewer if on axes)
+					if (dx == 0)
+					{
+						// On vertical axis
+						yield return new TileIndex(centerTile.East, centerTile.North + dy);
+						yield return new TileIndex(centerTile.East, centerTile.North - dy);
+					}
+					else if (dy == 0)
+					{
+						// On horizontal axis
+						yield return new TileIndex(centerTile.East + dx, centerTile.North);
+						yield return new TileIndex(centerTile.East - dx, centerTile.North);
+					}
+					else
+					{
+						// In quadrants
+						yield return new TileIndex(centerTile.East + dx, centerTile.North + dy);
+						yield return new TileIndex(centerTile.East - dx, centerTile.North + dy);
+						yield return new TileIndex(centerTile.East + dx, centerTile.North - dy);
+						yield return new TileIndex(centerTile.East - dx, centerTile.North - dy);
+					}
+				}
+			}
 		}
 
 		private static void GetTileBounds(TileIndex forTile,
