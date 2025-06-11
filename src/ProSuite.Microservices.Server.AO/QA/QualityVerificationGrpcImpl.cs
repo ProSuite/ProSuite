@@ -215,11 +215,32 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
 					{
-						return Task.Run(async () =>
-							                await RequestMoreDataAsync(
-									                requestStream, responseStream, context, r)
-								                .ConfigureAwait(false))
-						           .Result;
+                        Task<DataVerificationRequest> task = RequestMoreDataAsync(
+                                                    requestStream, responseStream, context, r);
+
+                        long timeOutMillis = 30 * 1000;
+                        long elapsedMillis = 0;
+                        int interval = 20;
+                        while (!task.IsCompleted && elapsedMillis < timeOutMillis)
+                        {
+                            Thread.Sleep(interval);
+                            elapsedMillis += interval;
+                        }
+
+                        if (task.IsFaulted)
+                        {
+                           throw task.Exception;
+                        }
+                        
+                        if (!task.IsCompleted)
+                        {
+                           throw new TimeoutException($"Client failed to provide data within {elapsedMillis}ms");
+                        }
+                        
+                        DataVerificationRequest moreData = task.Result;
+
+
+                        return moreData;
 					};
 
 				Func<ITrackCancel, ServiceCallStatus> func =
@@ -452,10 +473,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Task responseReaderTask = Task.Run(
 					async () =>
 					{
-						while (resultData == null)
+						// NOTE: The client should probably ensure that this call back
+						//       does not exceed a certain time span. Ideally this does
+						//       only block for a few seconds:
+
+                        // This results in an eternal loop and using a timespan here has no effect
+						//while (resultData == null && elapsedMillis < timeOutMillis)
 						{
 							while (await requestStream.MoveNext().ConfigureAwait(false))
 							{
+								// TODO: only break if result_data.HasMoreDate is false
 								resultData = requestStream.Current;
 								break;
 							}
