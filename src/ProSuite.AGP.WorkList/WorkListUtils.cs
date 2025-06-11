@@ -41,6 +41,12 @@ namespace ProSuite.AGP.WorkList
 					definition.Workspaces, definition.Name,
 					definition.Path, out NotificationCollection notifications);
 
+				if (tables == null)
+				{
+					throw new IOException(
+						$"Cannot create work list tables: {notifications.Concatenate(". ")}");
+				}
+
 				var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
 				Type type = descriptor.GetInstanceType();
 
@@ -59,7 +65,7 @@ namespace ProSuite.AGP.WorkList
 			}
 			catch (Exception e)
 			{
-				_msg.Error("Cannot create work list", e);
+				_msg.Debug("Cannot create work list", e);
 				throw;
 			}
 		}
@@ -413,13 +419,10 @@ namespace ProSuite.AGP.WorkList
 				                                   itemStateRepository);
 			}
 
-			// TODO (EMA):
-			_msg.Warn($"Unknown work list type: {type.Name}. Using Issue work list");
-
-			throw new ArgumentException($"Unknown work list type: {type.Name}");
+			throw new AssertionException($"Unsupported work list type: {type.Name}");
 		}
 
-		[NotNull]
+		[CanBeNull]
 		public static List<Table> GetDistinctTables(
 			ICollection<XmlWorkListWorkspace> workspaces,
 			string worklistName, string workListPath,
@@ -460,9 +463,7 @@ namespace ProSuite.AGP.WorkList
 			if (dataStoreNotifications.Count > 0)
 			{
 				_msg.Warn(
-					$"{worklistName}: Cannot open work item workspace(s) from connection strings specified in work list file:" +
-					Environment.NewLine + workListPath +
-					Environment.NewLine + "No items will be loaded." +
+					$"Work list {workListPath}: Opening datastore from connection strings specified in work list file failed:" +
 					Environment.NewLine +
 					$"{dataStoreNotifications.Concatenate(Environment.NewLine)}");
 			}
@@ -470,13 +471,12 @@ namespace ProSuite.AGP.WorkList
 			if (tableNotifications.Count > 0)
 			{
 				_msg.Warn(
-					$"{worklistName}: Cannot open work item table(s) specified in work list file:" +
-					Environment.NewLine + workListPath +
+					$"Work list {workListPath}: Cannot open work item table(s) specified in work list file:" +
 					Environment.NewLine + "No items will be loaded." +
 					Environment.NewLine + $"{tableNotifications.Concatenate(Environment.NewLine)}");
 			}
 
-			return new List<Table>(0);
+			return null;
 		}
 
 		[CanBeNull]
@@ -514,35 +514,10 @@ namespace ProSuite.AGP.WorkList
 					              out WorkspaceFactory factory),
 					$"Cannot parse {nameof(WorkspaceFactory)} from string {workspace.WorkspaceFactory}");
 
-				switch (factory)
-				{
-					case WorkspaceFactory.FileGDB:
-						return new Geodatabase(
-							new FileGeodatabaseConnectionPath(
-								new Uri(connectionString, UriKind.Absolute)));
+				Connector connector = CreateConnector(factory, connectionString);
 
-					case WorkspaceFactory.SDE:
-						DatabaseConnectionProperties connectionProperties =
-							WorkspaceUtils.GetConnectionProperties(connectionString);
+				return WorkspaceUtils.OpenDatastore(connector);
 
-						_msg.Debug(
-							$"Opening workspace from connection string {connectionString} " +
-							$"converted to {WorkspaceUtils.ConnectionPropertiesToString(connectionProperties)}");
-
-						return new Geodatabase(connectionProperties);
-
-					case WorkspaceFactory.Shapefile:
-						return new FileSystemDatastore(
-							new FileSystemConnectionPath(
-								new Uri(connectionString, UriKind.Absolute),
-								FileSystemDatastoreType.Shapefile));
-					case WorkspaceFactory.Custom:
-						return new PluginDatastore(
-							new PluginDatasourceConnectionPath(
-								PluginIdentifier, new Uri(connectionString, UriKind.Absolute)));
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
 			}
 			catch (Exception e)
 			{
@@ -551,8 +526,53 @@ namespace ProSuite.AGP.WorkList
 
 				_msg.Debug(message, e);
 
-				NotificationUtils.Add(notifications, $"{connectionString}");
+				NotificationUtils.Add(notifications, e.Message);
 				return null;
+			}
+		}
+
+		
+		/// <summary>
+		/// Creates a connector for the specified workspace factory and connection string.
+		/// </summary>
+		/// <param name="factory">The workspace factory type.</param>
+		/// <param name="connectionString">The connection string.</param>
+		/// <returns>A connector appropriate for the specified workspace factory.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when an unsupported workspace factory is specified.</exception>
+		[NotNull]
+		public static Connector CreateConnector(WorkspaceFactory factory, [NotNull] string connectionString)
+		{
+			Assert.ArgumentNotNull(connectionString, nameof(connectionString));
+
+			switch (factory)
+			{
+				case WorkspaceFactory.FileGDB:
+					return new FileGeodatabaseConnectionPath(
+						new Uri(connectionString, UriKind.Absolute));
+
+				case WorkspaceFactory.SDE:
+					DatabaseConnectionProperties connectionProperties =
+						WorkspaceUtils.GetConnectionProperties(connectionString);
+
+					_msg.Debug(
+						$"Creating connector from connection string {connectionString} " +
+						$"converted to {WorkspaceUtils.ConnectionPropertiesToString(connectionProperties)}");
+
+					return connectionProperties;
+
+				case WorkspaceFactory.Shapefile:
+					return new FileSystemConnectionPath(
+						new Uri(connectionString, UriKind.Absolute),
+						FileSystemDatastoreType.Shapefile);
+
+				case WorkspaceFactory.Custom:
+					// TODO: Does this really make sense? In which situation?
+					return new PluginDatasourceConnectionPath(
+						PluginIdentifier, new Uri(connectionString, UriKind.Absolute));
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(factory), factory,
+					                                      $"Unsupported workspace factory: {factory}");
 			}
 		}
 
@@ -631,6 +651,7 @@ namespace ProSuite.AGP.WorkList
 
 			return result;
 		}
+
 
 		#endregion
 	}

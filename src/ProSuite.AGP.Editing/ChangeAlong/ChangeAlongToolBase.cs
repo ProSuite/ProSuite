@@ -40,6 +40,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 		private SketchAndCursorSetter _targetSketchCursor;
+		private Geometry _lastDrawnExtent;
 
 		protected ChangeAlongToolBase()
 		{
@@ -59,8 +60,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 				AppDataFolder.Roaming, "ToolDefaults");
 
-		protected abstract string OptionsDockPaneID { get; }
 		protected bool DisplayTargetLines { get; set; }
+
+		protected abstract bool RefreshSubcurvesOnRedraw { get; }
 
 		protected abstract string EditOperationDescription { get; }
 
@@ -186,8 +188,20 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
+		#region Overrides of OneClickToolBase
+
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			DrawCompleteEvent.Subscribe(OnDrawCompleted);
+
+			return base.OnToolActivatedCore(hasMapViewChanged);
+		}
+
+		#endregion
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			DrawCompleteEvent.Unsubscribe(OnDrawCompleted);
 			ResetDerivedGeometries();
 			_feedback = null;
 		}
@@ -845,9 +859,38 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
+		private void OnDrawCompleted(MapViewEventArgs obj)
+		{
+			if (! RefreshSubcurvesOnRedraw || !  IsInSubcurveSelectionPhase())
+			{
+				return;
+			}
+
+			Envelope extent = Assert.NotNull(obj.MapView.Extent);
+
+			if (_lastDrawnExtent != null && GeometryEngine.Instance.Equals(_lastDrawnExtent, extent))
+			{
+				// This event is called repeatedly without anything changing
+				return;
+			}
+
+			_lastDrawnExtent = extent;
+
+			QueuedTask.Run(() =>
+			{
+				var selectedFeatures =
+					GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+				using var source = GetProgressorSource();
+				var progressor = source?.Progressor;
+
+				RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
+			});
+		}
+
 		private static bool IsStoreRequired([NotNull] ResultFeature resultFeature,
-											[NotNull] HashSet<long> editableClassHandles,
-											RowChangeType changeType)
+		                                    [NotNull] HashSet<long> editableClassHandles,
+		                                    RowChangeType changeType)
 		{
 			if (!GdbPersistenceUtils.CanChange(resultFeature, editableClassHandles, changeType))
 			{

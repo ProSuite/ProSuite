@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
@@ -558,7 +560,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					qaService = CreateVerificationService(
 						backgroundVerificationInputs, responseStreamer, trackCancel);
 
-					verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+					verification = WithCulture(
+						request.Parameters.ReportCultureCode,
+						() => qaService.Verify(backgroundVerificationInputs, trackCancel));
 
 					deletableAllowedErrorRefs.AddRange(
 						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
@@ -752,14 +756,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
 
-			qaService = CreateVerificationService(
+			BackgroundVerificationService service = CreateVerificationService(
 				backgroundVerificationInputs, responseStreamer, trackCancel);
 
-			qaService.DistributedTestRunner = distributedTestRunner;
+			service.DistributedTestRunner = distributedTestRunner;
 
 			QualityVerification verification =
-				qaService.Verify(backgroundVerificationInputs, trackCancel);
+				WithCulture(request.Parameters.ReportCultureCode,
+				            () => service.Verify(backgroundVerificationInputs, trackCancel));
 
+			qaService = service;
 			return verification;
 		}
 
@@ -839,10 +845,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ProtobufGeometryUtils.FromSpatialReferenceMsg(
 					parameters.IssueRepositorySpatialReference);
 
-			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
-			                               trackCancel);
+			WithCulture(parameters.ReportCultureCode,
+			            () => xmlService.ExecuteVerification(qualitySpecification, aoi,
+			                                                 parameters.TileSize, trackCancel));
 
 			return xmlService.Verification;
+		}
+
+		private static T WithCulture<T>(string cultureCode, Func<T> func)
+		{
+			if (string.IsNullOrEmpty(cultureCode))
+			{
+				return func();
+			}
+
+			var culture = new CultureInfo(cultureCode, false);
+
+			return CultureInfoUtils.ExecuteUsing(culture, culture, func);
 		}
 
 		private bool IsStandAloneVerification([NotNull] VerificationRequest request,
@@ -891,31 +910,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] ICollection<int> excludedConditionIds = null)
 		{
 			var dataSources = new List<DataSource>();
+
+			// Initialize using valid data sources from XML:
+			dataSources.AddRange(QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+
+			if (dataSources.Count > 0)
+			{
+				_msg.InfoFormat("Initialized {0} data sources from XML.", dataSources.Count);
+			}
+
 			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
-					List<string> replacementStrings =
-						StringUtils.SplitAndTrim(replacement, '|');
-					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
-
-					var dataSource =
-						new DataSource(replacementStrings[0], replacementStrings[0])
-						{
-							WorkspaceAsText = replacementStrings[1]
-						};
-
-					dataSources.Add(dataSource);
+					AddOrReplace(replacement, dataSources);
 				}
-
-				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
-			}
-			else
-			{
-				dataSources.AddRange(
-					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
-				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =
@@ -936,6 +945,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return qualitySpecification;
+		}
+
+		private static void AddOrReplace([NotNull] string replacementString,
+		                                 [NotNull] List<DataSource> dataSources)
+		{
+			List<string> replacementStrings =
+				StringUtils.SplitAndTrim(replacementString, '|');
+			Assert.AreEqual(2, replacementStrings.Count,
+			                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+
+			var dataSource =
+				new DataSource(replacementStrings[0], replacementStrings[0])
+				{
+					WorkspaceAsText = replacementStrings[1]
+				};
+
+			// Replace existing data source from XML if it exists:
+			int index = dataSources.FindIndex(ds => ds.ID == dataSource.ID);
+			if (index >= 0)
+			{
+				dataSources[index] = dataSource;
+				_msg.InfoFormat("Replaced data source <id> {0} with {1}", dataSource.ID,
+				                dataSource);
+			}
+			else
+			{
+				dataSources.Add(dataSource);
+				_msg.InfoFormat("Adding data source: {0}", dataSource);
+			}
 		}
 
 		private QualitySpecification SetupQualitySpecification(
