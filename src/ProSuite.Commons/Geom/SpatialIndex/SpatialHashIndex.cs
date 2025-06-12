@@ -5,6 +5,7 @@ using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Validation;
 
 namespace ProSuite.Commons.Geom.SpatialIndex
 {
@@ -17,6 +18,9 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		// TODO: ConcurrentDictionary, Parallel.Foreach
 		[NotNull] private readonly Dictionary<TileIndex, List<T>> _tiles;
 		[NotNull] private readonly TilingDefinition _tilingDefinition;
+
+		private EnvelopeXY _envelope;
+		private bool _envelopeUpToDate;
 
 		private readonly int _estimatedItemsPerTile;
 
@@ -72,6 +76,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public double OriginX => _tilingDefinition.OriginX;
 		public double OriginY => _tilingDefinition.OriginY;
 
+		public EnvelopeXY Envelope
+		{
+			get
+			{
+				if (!_envelopeUpToDate) UpdateEnvelope();
+				return _envelope;
+			}
+		}
 		public void Add(T identifier, double x, double y)
 		{
 			TileIndex tileIndex = _tilingDefinition.GetTileIndexAt(x, y);
@@ -103,13 +115,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			{
 				tileGeometryRefs = new List<T>(_estimatedItemsPerTile);
 				_tiles.Add(tileIndex, tileGeometryRefs);
+				_envelopeUpToDate = false;
 			}
 
 			if (_msg.IsVerboseDebugEnabled &&
 			    tileGeometryRefs.Count >= _estimatedItemsPerTile)
 			{
 				_msg.DebugFormat(
-					"Numer of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
+					"Number of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
 					tileIndex, tileGeometryRefs.Count + 1);
 			}
 
@@ -250,6 +263,25 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 					yield return geometryIdentifier;
 				}
 			}
+		}
+		private void UpdateEnvelope()
+		{
+			int xMax = int.MinValue;
+			int yMax = int.MinValue;
+			int xMin = int.MaxValue;
+			int yMin = int.MaxValue;
+
+
+			foreach (TileIndex tileIndex in _tiles.Keys)
+			{
+				if (tileIndex.East > xMax) xMax = tileIndex.East;
+				if (tileIndex.East < xMin) xMin = tileIndex.East;
+				if (tileIndex.North > yMax) yMax = tileIndex.North;
+				if (tileIndex.North < yMin) yMin = tileIndex.North;
+			}
+
+			_envelope = new EnvelopeXY(xMin, yMin, xMax, yMax);
+			_envelopeUpToDate = true;
 		}
 	}
 }
