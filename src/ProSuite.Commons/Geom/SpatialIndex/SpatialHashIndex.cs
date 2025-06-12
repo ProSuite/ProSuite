@@ -143,27 +143,24 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// <param name="x">X coordinate</param>
 		/// <param name="y">Y coordinate</param>
 		/// <param name="metric">The type of distance you want to use to order the tiles</param>
-		/// <param name="maxTileDistance">The maximum Tile distance until which tiles are returned.</param>
+		/// <param name="maxDistance">The maximum distance until which tiles are returned.</param>
 		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
 		/// <returns></returns>
 		public IEnumerable<IEnumerable<T>> FindTilesAround(double x, double y,
+		                                                   double maxDistance = double.MaxValue,
 		                                                   DistanceMetric metric = DistanceMetric.EuclideanDistance,
-		                                                   int maxTileDistance = int.MaxValue,
-		                                                   [CanBeNull] Predicate<T> predicate = null)
+														   [CanBeNull] Predicate<T> predicate = null)
 		{
 			if (_tiles.Count == 0)
 				yield break;
 
-			var centerTile = _tilingDefinition.GetTileIndexAt(x, y);
+			double maxExistingTileDistance = GetDistanceToFurthestPopulatedTile(x, y);
 
-			// Calculate the maximum tile distance to any existing tile
-			int maxExistingTileDistance = _tiles.Keys.Select(tileIndex => Math.Abs(tileIndex.East - centerTile.East) + Math.Abs(tileIndex.North - centerTile.North)).Prepend(0).Max();
+			double effectiveMaxTileDistance = Math.Min(maxExistingTileDistance, maxDistance);
+			int maxTileDistance = (int) Math.Ceiling(effectiveMaxTileDistance / GridSize);
 
-			int effectiveMaxDistance = Math.Min(maxExistingTileDistance, maxTileDistance);
-
-			// Use the tile generator with the effective maximum distance
 			foreach (var tileIndex in _tilingDefinition.GetTileIndexAround(
-				         x, y, metric, effectiveMaxDistance))
+				         x, y, metric, maxTileDistance))
 			{
 				// Only yield tiles that exist and have items
 				if (_tiles.ContainsKey(tileIndex))
@@ -264,6 +261,21 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				}
 			}
 		}
+
+		private double GetDistanceToFurthestPopulatedTile(double x, double y)
+		{
+			var centerTile = _tilingDefinition.GetTileIndexAt(x, y);
+
+			// Calculate the maximum distance to any existing tile
+			var dX = Math.Max(Math.Abs(Envelope.XMax - centerTile.East),
+			                  Math.Abs(Envelope.XMin - centerTile.East));
+			var dY = Math.Max(Math.Abs(Envelope.YMax - centerTile.North),
+			                  Math.Abs(Envelope.YMin - centerTile.North));
+
+			double maxExistingTileDistance = Math.Sqrt(Math.Pow(dX, 2) + Math.Pow(dY, 2));
+			return maxExistingTileDistance;
+		}
+
 		private void UpdateEnvelope()
 		{
 			int xMax = int.MinValue;
