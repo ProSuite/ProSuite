@@ -40,7 +40,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private readonly CIMPointSymbol _vertexMarkerSymbol;
 
 
-		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions, bool useProStyle = true)
+		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions, bool useProStyle = false)
 		{
 			const SymbolUtils.FillStyle noFill = SymbolUtils.FillStyle.Null;
 			var transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
@@ -48,6 +48,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			var red = ColorFactory.Instance.CreateRGBColor(255, 0, 0);
 			var cyan = ColorFactory.Instance.CreateRGBColor(0, 255, 255);
 			var green = ColorFactory.Instance.CreateRGBColor(0, 128, 0);
+			var magenta = ColorUtils.CreateRGB(240, 0, 248);
 
 			_advancedReshapeToolOptions = advancedReshapeToolOptions;
 			_advancedReshapeToolOptions.PropertyChanged += (sender, args) =>
@@ -93,20 +94,20 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 			else
 			{
-				_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(blue, 1.0);
+				_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(magenta, 0.8);
 
 				_startPointSymbol = QueuedTask
 				                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-					                         green, 5, SimpleMarkerStyle.Circle)).Result;
+					                         green, 6.5, SimpleMarkerStyle.Circle)).Result;
 				_endPointSymbol = QueuedTask
 				                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-					                       red, 5, SimpleMarkerStyle.Square)).Result;//Diamond
+					                       red, 6.5, SimpleMarkerStyle.Square)).Result;//Diamond
 
 				_vertexMarkerSymbol = QueuedTask
 				                      .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-					                           cyan, 5, SimpleMarkerStyle.Square)).Result;
+					                           cyan, 6.5, SimpleMarkerStyle.Square)).Result;
 
-				var stroke = SymbolUtils.CreateSolidStroke(blue, 1.0);
+				var stroke = SymbolUtils.CreateSolidStroke(magenta, 0.8);
 				_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
 			}
 		}
@@ -269,32 +270,40 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					case GeometryType.Polyline:
 						_selectedGeometries.Add(AddOverlay(geometry, _lineSymbol));
 
-						var startPoint = GeometryUtils.GetStartPoint(geometry as Polyline);
-						var endPoint = GeometryUtils.GetEndPoint(geometry as Polyline);
-						_selectedGeometries.Add(AddOverlay(startPoint, _startPointSymbol));
+						var startPointL = GeometryUtils.GetStartPoint(geometry as Polyline);
+						var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
+						_selectedGeometries.Add(AddOverlay(startPointL, _startPointSymbol));
 
 						//ReadOnlyPointCollection points = ((Multipart)geometry).Points;
 
-						IList<MapPoint> controlPoints = GetControlPoints(geometry as Multipart);
-						foreach (MapPoint controlPoint in controlPoints)
-						{
-							_selectedGeometries.Add(AddOverlay(controlPoint, _vertexMarkerSymbol));
-						}
-						_selectedGeometries.Add(AddOverlay(endPoint, _endPointSymbol));
+						//IList<MapPoint> controlPointsL = GetControlPoints(geometry as Multipart);
+						//foreach (MapPoint controlPoint in controlPointsL)
+						//{
+						//	_selectedGeometries.Add(AddOverlay(controlPoint, _vertexMarkerSymbol));
+						//}
+
+						Multipoint vertexMultipoint = CreateVertexMultipoint(geometry);
+						_selectedGeometries.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
+
+						_selectedGeometries.Add(AddOverlay(endPointL, _endPointSymbol));
 						break;
 					case GeometryType.Polygon:
 						_selectedGeometries.Add(AddOverlay(geometry, _polygonSymbol));
 
-						var startPoint2 = GeometryUtils.GetStartPoint(geometry as Polygon);
-						var endPoint2 = GeometryUtils.GetEndPoint(geometry as Polygon);
-						_selectedGeometries.Add(AddOverlay(startPoint2, _startPointSymbol));
+						var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
+						var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
+						_selectedGeometries.Add(AddOverlay(startPointP, _startPointSymbol));
 
-						IList<MapPoint> controlPoints2 = GetControlPoints(geometry as Multipart);
-						foreach (MapPoint controlPoint in controlPoints2)
-						{
-							_selectedGeometries.Add(AddOverlay(controlPoint, _vertexMarkerSymbol));
-						}
-						_selectedGeometries.Add(AddOverlay(endPoint2, _endPointSymbol));
+						//IList<MapPoint> controlPointsP = GetControlPoints(geometry as Multipart);
+						//foreach (MapPoint controlPoint in controlPointsP)
+						//{
+						//	_selectedGeometries.Add(AddOverlay(controlPoint, _vertexMarkerSymbol));
+						//}
+
+						Multipoint vertexMultipoint2 = CreateVertexMultipoint(geometry);
+						_selectedGeometries.Add(AddOverlay(vertexMultipoint2, _vertexMarkerSymbol));
+
+						_selectedGeometries.Add(AddOverlay(endPointP, _endPointSymbol));
 						break;
 
 					default:
@@ -307,6 +316,21 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return Task.FromResult(true);
 		}
 
+		private Multipoint CreateVertexMultipoint(Geometry geometry)
+		{
+			var builder = new MultipointBuilderEx(geometry.SpatialReference);
+
+			IList<MapPoint> points = GetControlPoints(geometry as Multipart);
+
+			builder.AddPoints(points);
+			var multipoint = builder.ToGeometry();
+
+			// simplify to remove duplicate vertices:
+			var result = GeometryEngine.Instance.SimplifyAsFeature(multipoint, true);
+
+			return (Multipoint)result;
+		}
+
 		public void ClearSelection()
 		{
 			DisposeSelectedGeometriesOverlays();
@@ -316,11 +340,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			foreach (IDisposable overlay in _selectedGeometries)
 			{
-				overlay.Dispose();
+				overlay?.Dispose();
 			}
 			_selectedGeometries.Clear();
 		}
-
 
 		public static IList<MapPoint> GetControlPoints(
 			Multipart geometry, int partIndex = -1)
