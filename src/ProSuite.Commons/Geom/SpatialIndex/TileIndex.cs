@@ -1,4 +1,5 @@
 using System;
+using ProSuite.Commons.Misc;
 
 namespace ProSuite.Commons.Geom.SpatialIndex
 {
@@ -31,6 +32,24 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			       North == rectangularTileIndex.North;
 		}
 
+		/// <summary>
+		/// Returns the euclidean distance of a tile to a point
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <returns></returns>
+		public double Distance(double x, double y)
+		{
+			return EuclideanDistance(x, y);
+		}
+
+		/// <summary>
+		/// Returns the selected distance of the tile to another tile
+		/// </summary>
+		/// <param name="other"></param>
+		/// <param name="distanceMetric"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException"></exception>
 		public double Distance(TileIndex other, DistanceMetric distanceMetric = DistanceMetric.EuclideanDistance)
 		{
 			switch (distanceMetric)
@@ -38,9 +57,10 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				case DistanceMetric.EuclideanDistance:
 					return EuclideanDistance(other);
 				case DistanceMetric.ChebyshevDistance:
-					return ManhattanDistance(other);
-				case DistanceMetric.ManhattanDistance:
 					return ChebyshevDistance(other);
+				case DistanceMetric.ManhattanDistance:
+					return ManhattanDistance(other);
+				
 				default:
 					throw new ArgumentException($"Unsupported distance metric: {distanceMetric}", nameof(distanceMetric));
 			}
@@ -48,8 +68,13 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		private double EuclideanDistance(TileIndex other)
 		{
-			double dx = Math.Abs(East - other.East);
-			double dy = Math.Abs(North - other.North);
+			return EuclideanDistance(other.East, other.North);
+		}
+
+		private double EuclideanDistance(double x, double y)
+		{
+			double dx = Math.Abs(East - x);
+			double dy = Math.Abs(North - y);
 
 			return Math.Sqrt(dx * dx + dy * dy);
 		}
