@@ -76,11 +76,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public double OriginX => _tilingDefinition.OriginX;
 		public double OriginY => _tilingDefinition.OriginY;
 
-		public EnvelopeXY Envelope
+		private EnvelopeXY TileIndexEnvelope
 		{
 			get
 			{
-				if (!_envelopeUpToDate) UpdateEnvelope();
+				if (!_envelopeUpToDate) UpdateTileIndexEnvelope();
 				return _envelope;
 			}
 		}
@@ -267,16 +267,16 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			var centerTile = _tilingDefinition.GetTileIndexAt(x, y);
 
 			// Calculate the maximum distance to any existing tile
-			var dX = Math.Max(Math.Abs(Envelope.XMax - centerTile.East),
-			                  Math.Abs(Envelope.XMin - centerTile.East));
-			var dY = Math.Max(Math.Abs(Envelope.YMax - centerTile.North),
-			                  Math.Abs(Envelope.YMin - centerTile.North));
+			var dX = Math.Max(Math.Abs(TileIndexEnvelope.XMax - centerTile.East),
+			                  Math.Abs(TileIndexEnvelope.XMin - centerTile.East));
+			var dY = Math.Max(Math.Abs(TileIndexEnvelope.YMax - centerTile.North),
+			                  Math.Abs(TileIndexEnvelope.YMin - centerTile.North));
 
 			double maxExistingTileDistance = Math.Sqrt(Math.Pow(dX, 2) + Math.Pow(dY, 2));
 			return maxExistingTileDistance;
 		}
 
-		private void UpdateEnvelope()
+		private void UpdateTileIndexEnvelope()
 		{
 			int xMax = int.MinValue;
 			int yMax = int.MinValue;
