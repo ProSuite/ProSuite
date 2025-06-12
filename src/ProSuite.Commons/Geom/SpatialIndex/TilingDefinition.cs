@@ -121,53 +121,68 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			return new TileIndex(indexEast, indexNorth);
 		}
-
-		// TODO: Test
 		private IEnumerable<TileIndex> GetTileIndexAroundEuclidean(double x, double y, int maxTileDistance = int.MaxValue)
 		{
-			// Get tiles from Manhattan implementation and sort each ring by Euclidean distance
-
-			using (var manhattanEnumerator =
-			       GetTileIndexAroundManhattan(x, y, maxTileDistance).GetEnumerator())
-			{
-				if (! manhattanEnumerator.MoveNext())
-					yield break;
-
-				// First tile is always the center tile
-				yield return manhattanEnumerator.Current;
-
-				// Process remaining tiles in batches of 4, 8, 12, 16, ... (4 * manhattanDistance)
-				for (int distance = 1; distance <= maxTileDistance; distance++)
+			var centerTile = GetTileIndexAt(x, y);
+			var visitedTiles = new HashSet<TileIndex>();
+			var tilesToCheck = new SortedSet<(TileIndex tile, double distance)>(
+				Comparer<(TileIndex tile, double distance)>.Create((a, b) =>
 				{
-					var tilesInRing = new List<(TileIndex tile, double euclideanDist)>();
-					int expectedTilesInRing = distance * 4;
+					int distanceComparison = a.distance.CompareTo(b.distance);
+					if (distanceComparison != 0)
+						return distanceComparison;
 
-					// Collect all tiles at this Manhattan distance
-					for (int i = 0; i < expectedTilesInRing && manhattanEnumerator.MoveNext(); i++)
-					{
-						var tile = manhattanEnumerator.Current;
+					// If distances are equal, compare by tile coordinates for consistent ordering
+					int eastComparison = a.tile.East.CompareTo(b.tile.East);
+					if (eastComparison != 0)
+						return eastComparison;
 
-						// Calculate actual Euclidean distance from point to tile center
-						double tileCenterX = OriginX + tile.East * TileWidth + TileWidth / 2;
-						double tileCenterY = OriginY + tile.North * TileHeight + TileHeight / 2;
-						double euclideanDistanceSquared =
-							(x - tileCenterX) * (x - tileCenterX) +
-							(y - tileCenterY) * (y - tileCenterY);
+					return a.tile.North.CompareTo(b.tile.North);
+				}));
 
-						tilesInRing.Add((tile, euclideanDistanceSquared));
-					}
+			// Add the center tile
+			var centerDistance = centerTile.Distance(x, y);
+			tilesToCheck.Add((centerTile, centerDistance));
 
-					// Sort by Euclidean distance and yield
-					tilesInRing.Sort((a, b) => a.euclideanDist.CompareTo(b.euclideanDist));
-					foreach ((TileIndex tile, var _) in tilesInRing)
-					{
-						yield return tile;
-					}
+			while (tilesToCheck.Count > 0)
+			{
+				var (currentTile, currentDistance) = tilesToCheck.Min;
+				tilesToCheck.Remove((currentTile, currentDistance));
 
-					// If we didn't get the expected number of tiles, we've exhausted the enumerator
-					if (tilesInRing.Count < expectedTilesInRing)
-						break;
-				}
+				// Skip if already visited or beyond max distance
+				if (visitedTiles.Contains(currentTile) || currentDistance > maxTileDistance)
+					continue;
+
+				visitedTiles.Add(currentTile);
+				yield return currentTile;
+
+				// Add neighboring tiles if not already visited
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East, currentTile.North - 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East, currentTile.North + 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+
+				// Add diagonal neighbors for better coverage
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North - 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North + 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North - 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North + 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+			}
+		}
+
+		private void AddNeighborIfNotVisited(int east, int north, double x, double y,
+			HashSet<TileIndex> visitedTiles, SortedSet<(TileIndex tile, double distance)> tilesToCheck, int maxTileDistance)
+		{
+			var neighborTile = new TileIndex(east, north);
+
+			if (visitedTiles.Contains(neighborTile))
+				return;
+
+			var distance = neighborTile.Distance(x, y);
+
+			if (distance <= maxTileDistance)
+			{
+				tilesToCheck.Add((neighborTile, distance));
 			}
 		}
 
