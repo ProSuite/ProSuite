@@ -1,6 +1,7 @@
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -39,9 +40,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private readonly CIMPointSymbol _vertexMarkerSymbol;
 
 
-		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions)
+		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions, bool useProStyle = true)
 		{
 			const SymbolUtils.FillStyle noFill = SymbolUtils.FillStyle.Null;
+			var transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
 			var blue = ColorFactory.Instance.CreateRGBColor(0, 0, 200);
 			var red = ColorFactory.Instance.CreateRGBColor(255, 0, 0);
 			var cyan = ColorFactory.Instance.CreateRGBColor(0, 255, 255);
@@ -65,21 +67,48 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 
 			//selection symbols
-			_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(blue, 2.0);
-			_startPointSymbol = QueuedTask
-			                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                         green, 5, SimpleMarkerStyle.Circle)).Result;
-			_endPointSymbol = QueuedTask
-			                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                       red, 5, SimpleMarkerStyle.Square)).Result;//Diamond
+			if (useProStyle)
+			{
+				var stroke = SymbolFactory.Instance.ConstructStroke(blue, 1, SimpleLineStyle.Dash);
+				stroke.CapStyle = LineCapStyle.Square;
+				stroke.JoinStyle = LineJoinStyle.Miter;
+				stroke.MiterLimit = 4;
 
-			_vertexMarkerSymbol = QueuedTask
-			                      .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                           cyan, 5, SimpleMarkerStyle.Square)).Result;
+				_lineSymbol = SymbolUtils.CreateLineSymbol(stroke);
 
-			var stroke = SymbolUtils.CreateSolidStroke(blue, 2.0);
-			_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
+				_startPointSymbol =
+					CreateHollowPointSymbol(green, 6, SimpleMarkerStyle.Circle, 1.5,
+					                        SimpleLineStyle.Solid);
 
+				_endPointSymbol =
+					CreateHollowPointSymbol(red, 5, SimpleMarkerStyle.Square, 1.5,
+					                        SimpleLineStyle.Solid);
+
+				_vertexMarkerSymbol = CreateHollowPointSymbol(green, 5, SimpleMarkerStyle.Square, 1.5, SimpleLineStyle.Solid);
+				//CIMPointSymbol cimVertexSymbol = CreateVertexSymbol(5, transparent, VertexMarkerType.Square, green, 1.5);
+				//System.Diagnostics.Debug.WriteLine(cimVertexSymbol.ToJson());
+				//System.Diagnostics.Debug.WriteLine(_vertexMarkerSymbol.ToJson());
+
+				_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
+			}
+			else
+			{
+				_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(blue, 1.0);
+
+				_startPointSymbol = QueuedTask
+				                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+					                         green, 5, SimpleMarkerStyle.Circle)).Result;
+				_endPointSymbol = QueuedTask
+				                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+					                       red, 5, SimpleMarkerStyle.Square)).Result;//Diamond
+
+				_vertexMarkerSymbol = QueuedTask
+				                      .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+					                           cyan, 5, SimpleMarkerStyle.Square)).Result;
+
+				var stroke = SymbolUtils.CreateSolidStroke(blue, 1.0);
+				_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
+			}
 		}
 
 		public void UpdateOpenJawReplacedEndPoint([CanBeNull] MapPoint point)
@@ -88,8 +117,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			// Make openJawEndSymbol azure or celest blue, depending  on state of MoveOpenJawEndJunction
 			_openJawEndSymbol = _advancedReshapeToolOptions.MoveOpenJawEndJunction
-				                    ? CreateHollowPointSymbol(0, 200, 255, SimpleMarkerStyle.Circle, 19)
-				                    : CreateHollowPointSymbol(0, 0, 200, SimpleMarkerStyle.Circle, 19);
+				                    ? CreateHollowPointSymbol(0, 200, 255, 19, SimpleMarkerStyle.Circle, 2, SimpleLineStyle.Solid)
+				                    : CreateHollowPointSymbol(0, 0, 200, 19, SimpleMarkerStyle.Circle, 2, SimpleLineStyle.Solid);
 
 			if (point != null)
 			{
@@ -170,25 +199,50 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return result;
 		}
 
-		private static CIMPointSymbol CreateHollowPointSymbol(int red, int green, int blue, SimpleMarkerStyle markerStyle, double size)
+		private static CIMPointSymbol CreateHollowPointSymbol(int red, int green, int blue, double size, SimpleMarkerStyle markerStyle, double outlineWidth, SimpleLineStyle outLineStyle)
+		{
+			CIMColor color = ColorFactory.Instance.CreateRGBColor(red, green, blue);
+			return CreateHollowPointSymbol(color, size, markerStyle, outlineWidth, outLineStyle);
+		}
+
+		private static CIMPointSymbol CreateHollowPointSymbol(CIMColor color, double size, SimpleMarkerStyle markerStyle, double outlineWidth, SimpleLineStyle outLineStyle)
 		{
 			CIMColor transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
-			CIMColor color = ColorFactory.Instance.CreateRGBColor(red, green, blue);
 
 			CIMPointSymbol hollowSymbol =
 				SymbolFactory.Instance.ConstructPointSymbol(transparent, size, markerStyle);
 
 			var marker = hollowSymbol.SymbolLayers[0] as CIMVectorMarker;
+			marker.DominantSizeAxis3D = DominantSizeAxis.Z;
+			marker.ScaleSymbolsProportionally = false;
 			var polySymbol = Assert.NotNull(marker).MarkerGraphics[0].Symbol as CIMPolygonSymbol;
 
-			//Outline:
-			Assert.NotNull(polySymbol).SymbolLayers[0] =
-				SymbolFactory.Instance.ConstructStroke(color, 2, SimpleLineStyle.Solid);
-
 			// Fill:
-			polySymbol.SymbolLayers[1] = SymbolFactory.Instance.ConstructSolidFill(transparent);
+			Assert.NotNull(polySymbol).SymbolLayers[0] = SymbolFactory.Instance.ConstructSolidFill(transparent);
+
+			//Outline:
+			CIMStroke cimStroke = SymbolFactory.Instance.ConstructStroke(color, outlineWidth, outLineStyle);
+			cimStroke.CapStyle = LineCapStyle.Square;
+			cimStroke.JoinStyle = LineJoinStyle.Miter;
+			cimStroke.MiterLimit = 4;
+			polySymbol.SymbolLayers[1] = cimStroke;
+
+			hollowSymbol.HaloSize = 0;
 
 			return hollowSymbol;
+		}
+
+		private static CIMPointSymbol CreateVertexSymbol(double symbolSize, CIMColor fillColor, VertexMarkerType markerType, CIMColor outlineColor, double outlineWidth )
+		{
+			var vertexOptions = new VertexSymbolOptions(VertexSymbolType.RegularUnselected);
+			vertexOptions.Color = fillColor; //transparent;
+			vertexOptions.MarkerType = markerType;
+			vertexOptions.OutlineColor = outlineColor;//green;
+			vertexOptions.OutlineWidth = outlineWidth;//1.5;
+			vertexOptions.Size = symbolSize;//5;
+			CIMPointSymbol cimPointSymbol = vertexOptions.GetPointSymbol();
+
+			return cimPointSymbol;
 		}
 
 		#region Selection
