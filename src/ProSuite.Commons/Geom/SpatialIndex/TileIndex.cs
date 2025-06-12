@@ -33,17 +33,6 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		}
 
 		/// <summary>
-		/// Returns the euclidean distance of a tile to a point
-		/// </summary>
-		/// <param name="x"></param>
-		/// <param name="y"></param>
-		/// <returns></returns>
-		public double Distance(double x, double y)
-		{
-			return EuclideanDistance(x, y);
-		}
-
-		/// <summary>
 		/// Returns the selected distance of the tile to another tile
 		/// </summary>
 		/// <param name="other"></param>

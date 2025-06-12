@@ -141,8 +141,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				}));
 
 			// Add the center tile
-			var centerDistance = centerTile.Distance(x, y);
-			tilesToCheck.Add((centerTile, centerDistance));
+			tilesToCheck.Add((centerTile, 0));
 
 			while (tilesToCheck.Count > 0)
 			{
@@ -157,20 +156,20 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				yield return currentTile;
 
 				// Add neighboring tiles if not already visited
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North, x, y, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North, x, y, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East, currentTile.North - 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East, currentTile.North + 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East, currentTile.North - 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East, currentTile.North + 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
 
 				// Add diagonal neighbors for better coverage
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North - 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North + 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North - 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North + 1, x, y, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North - 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North + 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North - 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North + 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
 			}
 		}
 
-		private void AddNeighborIfNotVisited(int east, int north, double x, double y,
+		private void AddNeighborIfNotVisited(int east, int north, TileIndex centerTile,
 			HashSet<TileIndex> visitedTiles, SortedSet<(TileIndex tile, double distance)> tilesToCheck, int maxTileDistance)
 		{
 			var neighborTile = new TileIndex(east, north);
@@ -178,7 +177,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			if (visitedTiles.Contains(neighborTile))
 				return;
 
-			var distance = neighborTile.Distance(x, y);
+			var distance = neighborTile.Distance(centerTile);
 
 			if (distance <= maxTileDistance)
 			{
@@ -191,7 +190,6 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			throw new NotImplementedException("Cannot use Chebyshev Distance. Not implemented.");
 		}
 
-		// TODO: Test
 		private IEnumerable<TileIndex> GetTileIndexAroundManhattan(double x, double y, int maxTileDistance = int.MaxValue)
 		{
 			TileIndex centerTile = GetTileIndexAt(x, y);
