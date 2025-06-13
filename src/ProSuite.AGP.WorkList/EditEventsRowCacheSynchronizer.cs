@@ -12,9 +12,12 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList
 {
+	// TODO: (daro) implement subclass MapBasedEditEventsRowCacheSynchronizer and
+	//		 push ArcGIS.Desktop.Mapping code down?
 	// todo: daro is this the right namespace for this type?
 	public class EditEventsRowCacheSynchronizer : IDisposable
 	{
@@ -81,9 +84,25 @@ namespace ProSuite.AGP.WorkList
 
 		private void ProcessChanges(EditCompletedEventArgs args)
 		{
-			IEnumerable<FeatureLayer> layers = args.Members.OfType<FeatureLayer>();
+			IEnumerable<BasicFeatureLayer> layers = args.Members.OfType<BasicFeatureLayer>();
 
-			if (! layers.All(layer => _rowCache.CanContain(layer.GetTable())))
+			var canContain = false;
+
+			foreach (BasicFeatureLayer layer in layers)
+			{
+				Table table = layer.GetTable();
+				if (_rowCache.CanContain(table))
+				{
+					canContain = true;
+					_msg.IncrementIndentation($"{table.GetName()} is contained in row cache");
+				}
+				else
+				{
+					_msg.Debug($"{table.GetName()} is not contained in row cache");
+				}
+			}
+
+			if (! canContain)
 			{
 				return;
 			}
@@ -105,8 +124,13 @@ namespace ProSuite.AGP.WorkList
 				}
 			}
 
+			fullTableInvalidations = args.InvalidateAllMembers.OfType<BasicFeatureLayer>()
+			                             .Select(lyr => lyr.GetTable())
+			                             .Where(table => _rowCache.CanContain(table)).ToList();
+
 			if (fullTableInvalidations.Count > 0)
 			{
+				_msg.Warn($"Invalidate all members: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
 				_rowCache.Invalidate(fullTableInvalidations);
 			}
 
@@ -138,6 +162,8 @@ namespace ProSuite.AGP.WorkList
 				Dispose(deletes.Keys);
 				Dispose(modifies.Keys);
 			}
+
+			_msg.DecrementIndentation();
 		}
 
 		private static void Dispose(Dictionary<Table, List<long>>.KeyCollection tables)

@@ -7,7 +7,6 @@ using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -80,14 +79,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 	{
-		item.Status = status;
-
-		GdbTableIdentity tableId = item.GdbRowProxy.Table;
-
-		ISourceClass source = SourceClasses.FirstOrDefault(s => s.Uses(tableId));
-		Assert.NotNull(source);
-
-		await SetStatusCoreAsync(item, source);
+		await SetStatusCoreAsync(item, status);
 	}
 
 	public void Refresh(IWorkItem item)
@@ -121,8 +113,10 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	}
 
 	protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
-	                                          [NotNull] ISourceClass source)
+	                                          WorkItemStatus status)
 	{
+		item.Status = status;
+
 		UpdateState(item);
 
 		return Task.CompletedTask;

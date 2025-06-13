@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -21,7 +22,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		private readonly int _estimatedItemsPerTile;
 
-		private HashSet<T> _foundIdentifiers;
+		private ThreadLocal<HashSet<T>> _foundIdentifiers =
+			new ThreadLocal<HashSet<T>>(() => new HashSet<T>());
 
 		public SpatialHashIndex(EnvelopeXY envelope, double gridsize, double estimatedItemsPerTile)
 			: this(new TilingDefinition(envelope.XMin, envelope.XMin, gridsize, gridsize),
@@ -86,6 +88,27 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 					box.Min.X, box.Min.Y, box.Max.X, box.Max.Y);
 
 			Add(identifier, intersectedTiles);
+		}
+
+		public void Remove(T identifier, double xMin, double yMin, double xMax, double yMax)
+		{
+			IEnumerable<TileIndex> intersectedTiles =
+				_tilingDefinition.GetIntersectingTiles(xMin, yMin, xMax, yMax);
+
+			foreach (TileIndex intersectedTileIdx in intersectedTiles)
+			{
+				List<T> tileGeometryRefs;
+
+				if (! _tiles.TryGetValue(intersectedTileIdx, out tileGeometryRefs))
+				{
+					continue;
+				}
+
+				if (tileGeometryRefs.Contains(identifier))
+				{
+					tileGeometryRefs.Remove(identifier);
+				}
+			}
 		}
 
 		public void Add(T identifier, double xMin, double yMin, double xMax, double yMax)
@@ -195,9 +218,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			[CanBeNull] Predicate<T> predicate = null)
 		{
 			// The resulting identifiers must be made distinct
-			// TODO: ConcurrentHashset 
-			_foundIdentifiers = _foundIdentifiers ?? new HashSet<T>();
-			_foundIdentifiers.Clear();
+			HashSet<T> resultList = _foundIdentifiers.Value;
+			resultList.Clear();
 
 			// check the intersecting neighbour tiles:
 			foreach (TileIndex neighborTileIdx in
@@ -207,14 +229,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				foreach (T geometryIdentifier in
 				         FindItemsWithinTile(neighborTileIdx, predicate))
 				{
-					if (! _foundIdentifiers.Contains(geometryIdentifier))
-					{
-						_foundIdentifiers.Add(geometryIdentifier);
-					}
+					resultList.Add(geometryIdentifier);
 				}
 			}
 
-			return _foundIdentifiers;
+			return resultList;
 		}
 
 		public IEnumerable<T> FindIdentifiers(
@@ -242,19 +261,18 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public IEnumerator<T> GetEnumerator()
 		{
 			// The resulting identifiers must be made distinct
-			// TODO: ConcurrentHashset 
-			_foundIdentifiers = _foundIdentifiers ?? new HashSet<T>();
-			_foundIdentifiers.Clear();
+			HashSet<T> resultList = _foundIdentifiers.Value;
+			resultList.Clear();
 
 			foreach (var identifiers in _tiles.Values)
 			{
 				foreach (T identifier in identifiers)
 				{
-					_foundIdentifiers.Add(identifier);
+					resultList.Add(identifier);
 				}
 			}
 
-			return _foundIdentifiers.GetEnumerator();
+			return resultList.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()

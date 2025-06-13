@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -88,14 +89,19 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 	}
 
 	protected override async Task SetStatusCoreAsync(IWorkItem item,
-	                                                 ISourceClass source)
+	                                                 WorkItemStatus status)
 	{
-		Table table = OpenTable(source);
-		Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
-
+		Table table = null;
 		try
 		{
-			var databaseSourceClass = (DatabaseSourceClass) source;
+			GdbTableIdentity tableId = item.GdbRowProxy.Table;
+
+			var source = SourceClasses.OfType<DatabaseSourceClass>()
+			                          .FirstOrDefault(s => s.Uses(tableId));
+			Assert.NotNull(source);
+
+			table = OpenTable(source);
+			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
 
 			string description = GetOperationDescription(item);
 
@@ -111,10 +117,16 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 			}, table);
 
 			operation.Modify(table, item.ObjectID,
-			                 databaseSourceClass.StatusField,
-			                 databaseSourceClass.GetValue(item.Status));
+			                 source.StatusField,
+			                 source.GetValue(status));
 
 			await operation.ExecuteAsync();
+
+			// NOTE: Important to call base.SetStatusCoreAsync() after operation.ExececuteAsync() because this triggers
+			//		 IRowCache.ProcessChanges > ProcessUpdates where the edit is evaluated whether it's only
+			//		 a status edit or the geometry has changed. The latter requires to update
+			//		 the work list's SpatialHashSearcher.
+			await base.SetStatusCoreAsync(item, status);
 		}
 		catch (Exception e)
 		{
@@ -123,7 +135,7 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 		finally
 		{
-			table.Dispose();
+			table?.Dispose();
 		}
 	}
 

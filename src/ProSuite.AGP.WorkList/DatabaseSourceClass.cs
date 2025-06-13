@@ -21,6 +21,7 @@ namespace ProSuite.AGP.WorkList
 			: base(tableIdentity, schema, attributeReader)
 		{
 			Assert.ArgumentNotNull(schema, nameof(schema));
+
 			_statusFieldIndex = schema.StatusFieldIndex;
 			StatusField = schema.StatusField;
 			TodoValue = schema.TodoValue;
