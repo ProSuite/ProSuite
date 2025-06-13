@@ -7,7 +7,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 {
 	/// <summary>
 	/// Tiling definition that uses the border point allocation policy of bottom-left, i.e.
-	/// points that are on the bottom or left border of a tile tile are assigned to that tile.
+	/// points that are on the bottom or left border of a tile are assigned to that tile.
 	/// </summary>
 	public class TilingDefinition
 	{
