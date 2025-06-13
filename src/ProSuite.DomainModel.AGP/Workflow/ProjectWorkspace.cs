@@ -65,6 +65,11 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			return WorkspaceUtils.GetCurrentVersion(Datastore)?.GetName();
 		}
 
+		public VersionAccessType? GetSdeVersionAccessType()
+		{
+			return WorkspaceUtils.GetCurrentVersion(Datastore)?.GetAccessType();
+		}
+
 		public IList<int> GetDatasetIds()
 		{
 			return Datasets.Select(d => d.Id).ToList();
