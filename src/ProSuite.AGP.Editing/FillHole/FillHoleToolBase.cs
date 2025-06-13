@@ -294,7 +294,19 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
 		{
-			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+			FeatureClass result;
+			try
+			{
+				result = ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+			}
+			catch (Exception e)
+			{
+				throw new InvalidOperationException(
+					$"{e.Message}. Please select a feature template from the Create Features " +
+					$"pane that determines the type of the new feature that fills the hole.");
+			}
+
+			return result;
 		}
 
 		protected virtual object GetFieldValue([NotNull] Field field,

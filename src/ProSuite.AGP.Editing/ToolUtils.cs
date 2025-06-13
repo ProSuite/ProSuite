@@ -292,7 +292,7 @@ namespace ProSuite.AGP.Editing
 
 			if (editingTemplate == null)
 			{
-				throw new InvalidOperationException("No current template");
+				throw new InvalidOperationException("No editing template is currently selected");
 			}
 
 			FeatureClass currentTargetClass =
