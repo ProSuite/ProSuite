@@ -2,7 +2,7 @@ using System;
 
 namespace ProSuite.Commons.Geom.SpatialIndex
 {
-	// TODO: Consider to make this internal and expose it to the test project.
+	// TODO: Consider to make this internal and expose it to the test project. 
 	public static class TileUtils
 	{
 		/// <summary>
@@ -47,7 +47,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		                                            double tileHeight)
 		{
 			double dx = Math.Abs(t1.East * tileWidth - t2.East * tileWidth);
-			double dy = Math.Abs(t1.North * tileHeight - t2.East * tileHeight);
+			double dy = Math.Abs(t1.North * tileHeight - t2.North * tileHeight);
 
 			return dx * dx + dy * dy;
 		}
