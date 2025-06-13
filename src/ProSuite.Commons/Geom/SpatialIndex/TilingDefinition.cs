@@ -192,11 +192,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			if (visitedTiles.Contains(neighborTile))
 				return;
 
-			var distance = TileUtils.EuclideanTileDistance2(neighborTile, centerTile, TileWidth, TileHeight);
+			var distance2 = TileUtils.EuclideanTileDistance2(neighborTile, centerTile, TileWidth, TileHeight);
 
-			if (distance <= maxDistance2)
+			if (distance2 <= maxDistance2)
 			{
-				tilesToCheck.Add((neighborTile, distance));
+				tilesToCheck.Add((neighborTile, distance2));
 			}
 		}
 
