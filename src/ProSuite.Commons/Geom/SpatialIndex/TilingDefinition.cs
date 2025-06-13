@@ -45,19 +45,21 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public IEnumerable<TileIndex> GetTileIndexAround(double x,
 		                                                 double y,
-		                                                 DistanceMetric distanceMetric = DistanceMetric.EuclideanDistance,
-		                                                 int maxTileDistance = int.MaxValue)
+		                                                 DistanceMetric distanceMetric =
+			                                                 DistanceMetric.EuclideanDistance,
+		                                                 double maxDistance = double.MaxValue)
 		{
 			switch (distanceMetric)
 			{
 				case DistanceMetric.EuclideanDistance:
-					return GetTileIndexAroundEuclidean(x, y, maxTileDistance);
+					return GetTileIndexAroundEuclidean(x, y, maxDistance);
 				case DistanceMetric.ChebyshevDistance:
-					return GetTileIndexAroundChebyshev(x, y, maxTileDistance);
+					return GetTileIndexAroundChebyshev(x, y, maxDistance);
 				case DistanceMetric.ManhattanDistance:
-					return GetTileIndexAroundManhattan(x, y, maxTileDistance);
+					return GetTileIndexAroundManhattan(x, y, maxDistance);
 				default:
-					throw new ArgumentException($"Unsupported distance metric: {distanceMetric}", nameof(distanceMetric));
+					throw new ArgumentException($"Unsupported distance metric: {distanceMetric}",
+					                            nameof(distanceMetric));
 			}
 		}
 
@@ -121,8 +123,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			return new TileIndex(indexEast, indexNorth);
 		}
-		private IEnumerable<TileIndex> GetTileIndexAroundEuclidean(double x, double y, int maxTileDistance = int.MaxValue)
+
+		private IEnumerable<TileIndex> GetTileIndexAroundEuclidean(
+			double x, double y, double maxDistance = double.MaxValue)
 		{
+			var maxDistance2 = maxDistance * maxDistance;
 			var centerTile = GetTileIndexAt(x, y);
 			var visitedTiles = new HashSet<TileIndex>();
 			var tilesToCheck = new SortedSet<(TileIndex tile, double distance)>(
@@ -149,56 +154,68 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				tilesToCheck.Remove((currentTile, currentDistance));
 
 				// Skip if already visited or beyond max distance
-				if (visitedTiles.Contains(currentTile) || currentDistance > maxTileDistance)
+				if (visitedTiles.Contains(currentTile) || currentDistance > maxDistance2)
 					continue;
 
 				visitedTiles.Add(currentTile);
 				yield return currentTile;
 
 				// Add neighboring tiles if not already visited
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East, currentTile.North - 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East, currentTile.North + 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
+				AddNeighborIfNotVisited(currentTile.East, currentTile.North - 1, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
+				AddNeighborIfNotVisited(currentTile.East, currentTile.North + 1, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
 
 				// Add diagonal neighbors for better coverage
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North - 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North + 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North - 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North + 1, centerTile, visitedTiles, tilesToCheck, maxTileDistance);
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North - 1, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
+				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North + 1, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North - 1, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
+				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North + 1, centerTile,
+				                        visitedTiles, tilesToCheck, maxDistance2);
 			}
 		}
 
 		private void AddNeighborIfNotVisited(int east, int north, TileIndex centerTile,
-			HashSet<TileIndex> visitedTiles, SortedSet<(TileIndex tile, double distance)> tilesToCheck, int maxTileDistance)
+		                                     HashSet<TileIndex> visitedTiles,
+		                                     SortedSet<(TileIndex tile, double distance)>
+			                                     tilesToCheck, double maxDistance2)
 		{
 			var neighborTile = new TileIndex(east, north);
 
 			if (visitedTiles.Contains(neighborTile))
 				return;
 
-			var distance = neighborTile.Distance(centerTile);
+			var distance = TileUtils.EuclideanTileDistance2(neighborTile, centerTile, TileWidth, TileHeight);
 
-			if (distance <= maxTileDistance)
+			if (distance <= maxDistance2)
 			{
 				tilesToCheck.Add((neighborTile, distance));
 			}
 		}
 
-		private IEnumerable<TileIndex> GetTileIndexAroundChebyshev(double x, double y, int maxTileDistance = int.MaxValue)
+		private IEnumerable<TileIndex> GetTileIndexAroundChebyshev(
+			double x, double y, double maxDistance = double.MaxValue)
 		{
 			throw new NotImplementedException("Cannot use Chebyshev Distance. Not implemented.");
 		}
 
-		private IEnumerable<TileIndex> GetTileIndexAroundManhattan(double x, double y, int maxTileDistance = int.MaxValue)
+		private IEnumerable<TileIndex> GetTileIndexAroundManhattan(
+			double x, double y, double maxDistance = double.MaxValue)
 		{
 			TileIndex centerTile = GetTileIndexAt(x, y);
 
 			// Yield the center tile first (distance 0)
 			yield return centerTile;
 
-			// For each Manhattan distance from 1 to maxTileDistance
-			for (int distance = 1; distance <= maxTileDistance; distance++)
+			// For each Manhattan distance from 1 to maxDistance
+			for (int distance = 1; distance <= maxDistance; distance++)
 			{
 				// Note: For each distance we generate all tiles at exactly this Manhattan distance
 				//		 => |dx| + |dy| = distance

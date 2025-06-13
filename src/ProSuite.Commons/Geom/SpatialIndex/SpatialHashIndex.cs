@@ -156,11 +156,10 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			double maxExistingTileDistance = GetDistanceToFurthestPopulatedTile(x, y);
 
-			double effectiveMaxTileDistance = Math.Min(maxExistingTileDistance, maxDistance);
-			int maxTileDistance = (int) Math.Ceiling(effectiveMaxTileDistance / GridSize);
+			double effectiveMaxDistance = Math.Min(maxExistingTileDistance, maxDistance);
 
 			foreach (var tileIndex in _tilingDefinition.GetTileIndexAround(
-				         x, y, metric, maxTileDistance))
+				         x, y, metric, effectiveMaxDistance))
 			{
 				// Only yield tiles that exist and have items
 				if (_tiles.ContainsKey(tileIndex))

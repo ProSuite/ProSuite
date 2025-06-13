@@ -10,7 +10,7 @@ namespace ProSuite.Commons.Test.Geom.SpatialIndex
 		public void TestGetTileIndexAroundEuclidean()
 		{
 			var tiling = new TilingDefinition(-0.5, -0.5, 1, 1);
-			var tileIndexesAround = tiling.GetTileIndexAround(0, 0, maxTileDistance: 5).ToList();
+			var tileIndexesAround = tiling.GetTileIndexAround(0, 0, maxDistance: 5).ToList();
 
 			var centerTile = tileIndexesAround[0];
 
@@ -18,19 +18,54 @@ namespace ProSuite.Commons.Test.Geom.SpatialIndex
 			Assert.AreEqual(centerTile.East, 0);
 			Assert.AreEqual(centerTile.North, 0);
 
-			// Bottom point
-			Assert.AreEqual(1.0, tileIndexesAround[1].Distance(centerTile));
-			Assert.AreEqual(1.41, tileIndexesAround[7].Distance(centerTile), 0.01);
-			Assert.AreEqual(2.23, tileIndexesAround[15].Distance(centerTile), 0.01);
-			Assert.AreEqual(2.23, tileIndexesAround[19].Distance(centerTile), 0.01);
-			Assert.AreEqual(2.82, tileIndexesAround[24].Distance(centerTile), 0.01);
-			Assert.AreEqual(3, tileIndexesAround[26].Distance(centerTile), 0.01);
-			Assert.AreEqual(3.16, tileIndexesAround[32].Distance(centerTile), 0.01);
-			Assert.AreEqual(3.16, tileIndexesAround[35].Distance(centerTile), 0.01);
-			Assert.AreEqual(3.60, tileIndexesAround[37].Distance(centerTile), 0.01);
-			Assert.AreEqual(3.60, tileIndexesAround[44].Distance(centerTile), 0.01);
-			Assert.AreEqual(4.00, tileIndexesAround[45].Distance(centerTile), 0.01);
-			Assert.AreEqual(5.0, tileIndexesAround[80].Distance(centerTile), 0.01);
+			Assert.AreEqual(
+				1.0,
+				TileUtils.TileDistance(tileIndexesAround[1], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				1.41,
+				TileUtils.TileDistance(tileIndexesAround[7], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				2.23,
+				TileUtils.TileDistance(tileIndexesAround[15], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				2.23,
+				TileUtils.TileDistance(tileIndexesAround[19], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				2.82,
+				TileUtils.TileDistance(tileIndexesAround[24], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				3,
+				TileUtils.TileDistance(tileIndexesAround[26], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				3.16,
+				TileUtils.TileDistance(tileIndexesAround[32], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				3.16,
+				TileUtils.TileDistance(tileIndexesAround[35], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				3.60,
+				TileUtils.TileDistance(tileIndexesAround[37], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				3.60,
+				TileUtils.TileDistance(tileIndexesAround[44], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				4.00,
+				TileUtils.TileDistance(tileIndexesAround[45], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
+			Assert.AreEqual(
+				5.0,
+				TileUtils.TileDistance(tileIndexesAround[80], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight), 0.01);
 		}
 
 		[Test]
@@ -38,7 +73,7 @@ namespace ProSuite.Commons.Test.Geom.SpatialIndex
 		{
 			var tiling = new TilingDefinition(-0.5, -0.5, 1, 1);
 			var tileIndexesAround = tiling
-			                        .GetTileIndexAround(0, 0, maxTileDistance: 5,
+			                        .GetTileIndexAround(0, 0, maxDistance: 5,
 			                                            distanceMetric: DistanceMetric
 				                                            .ManhattanDistance).ToList();
 
@@ -50,39 +85,63 @@ namespace ProSuite.Commons.Test.Geom.SpatialIndex
 
 			// Bottom point
 			Assert.AreEqual(
-				1.0, tileIndexesAround[1].Distance(centerTile, DistanceMetric.ManhattanDistance));
+				1.0,
+				TileUtils.TileDistance(centerTile, tileIndexesAround[1], tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance));
 			Assert.AreEqual(
-				2, tileIndexesAround[7].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				2,
+				TileUtils.TileDistance(tileIndexesAround[7], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				2, tileIndexesAround[12].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				2,
+				TileUtils.TileDistance(tileIndexesAround[12], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				3, tileIndexesAround[13].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				3,
+				TileUtils.TileDistance(tileIndexesAround[13], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				3, tileIndexesAround[24].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				3,
+				TileUtils.TileDistance(tileIndexesAround[24], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				4, tileIndexesAround[26].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				4,
+				TileUtils.TileDistance(tileIndexesAround[26], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				4, tileIndexesAround[32].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				4,
+				TileUtils.TileDistance(tileIndexesAround[32], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				4, tileIndexesAround[35].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				4,
+				TileUtils.TileDistance(tileIndexesAround[35], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				4, tileIndexesAround[37].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				4,
+				TileUtils.TileDistance(tileIndexesAround[37], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				5, tileIndexesAround[44].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				5,
+				TileUtils.TileDistance(tileIndexesAround[44], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				5, tileIndexesAround[45].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				5,
+				TileUtils.TileDistance(tileIndexesAround[45], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 			Assert.AreEqual(
-				5, tileIndexesAround[60].Distance(centerTile, DistanceMetric.ManhattanDistance),
+				5,
+				TileUtils.TileDistance(tileIndexesAround[60], centerTile, tiling.TileWidth,
+				                       tiling.TileHeight, DistanceMetric.ManhattanDistance),
 				0.01);
 		}
 	}
