@@ -4,7 +4,7 @@ using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.Commons.Test.Geom.SpatialIndex
 {
-	internal class TilingDefinitionTest
+	public class TilingDefinitionTest
 	{
 		[Test]
 		public void TestGetTileIndexAroundEuclidean()
