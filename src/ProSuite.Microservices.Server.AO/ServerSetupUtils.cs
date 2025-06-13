@@ -51,12 +51,15 @@ namespace ProSuite.Microservices.Server.AO
 
 			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
 
+			IRequestAdmin requestAdmin = new RequestAdmin();
+
 			int maxThreadCount = arguments.MaxParallel < 0
 				                     ? Environment.ProcessorCount - 1
 				                     : arguments.MaxParallel;
 
 			QualityVerificationGrpcImpl verificationServiceImpl =
 				CreateQualityVerificationGrpc(inputsFactory, loadReporting,
+				                              requestAdmin,
 				                              markUnhealthyOnExceptions ? health : null,
 				                              maxThreadCount);
 
@@ -76,19 +79,21 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] MicroserverArguments arguments,
 			[CanBeNull] Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactory,
 			[CanBeNull] LoadReportingGrpcImpl loadReporting,
+			[CanBeNull] IRequestAdmin requestAdmin,
 			[CanBeNull] IServiceHealth health)
 		{
 			int maxThreadCount = arguments.MaxParallel < 0
 				                     ? Environment.ProcessorCount - 1
 				                     : arguments.MaxParallel;
 
-			return CreateQualityVerificationGrpc(inputsFactory, loadReporting, health,
+			return CreateQualityVerificationGrpc(inputsFactory, loadReporting, requestAdmin, health,
 			                                     maxThreadCount);
 		}
 
 		public static QualityVerificationGrpcImpl CreateQualityVerificationGrpc(
 			[CanBeNull] Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactory,
 			[CanBeNull] LoadReportingGrpcImpl loadReporting,
+			[CanBeNull] IRequestAdmin requestAdmin,
 			[CanBeNull] IServiceHealth health,
 			int maxThreadCount)
 		{
@@ -104,7 +109,8 @@ namespace ProSuite.Microservices.Server.AO
 			var verificationServiceImpl =
 				new QualityVerificationGrpcImpl(inputsFactory, maxThreadCount)
 				{
-					CurrentLoad = serviceLoad
+					CurrentLoad = serviceLoad,
+					RequestAdmin = requestAdmin
 				};
 
 			if (health != null)

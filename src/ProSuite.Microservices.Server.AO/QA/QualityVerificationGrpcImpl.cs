@@ -89,6 +89,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public ServiceLoad CurrentLoad { get; set; }
 
 		/// <summary>
+		/// Admin interface to manage requests and their cancellation.
+		/// </summary>
+		public IRequestAdmin RequestAdmin { get; set; }
+
+		/// <summary>
 		/// The license checkout action to be performed before any service call is executed.
 		/// By default the lowest available license (basic, standard, advanced) is checked out
 		/// in a 32-bit process, the server license is checked out in a 64-bit process. In case
@@ -563,6 +568,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IServerStreamWriter<VerificationResponse> responseStream,
 			ITrackCancel trackCancel)
 		{
+			CancelableRequest registeredRequest =
+				RegisterRequest(request.UserName, request.Environment, trackCancel);
+
 			SetupUserNameProvider(request);
 
 			BackgroundVerificationService qaService = null;
@@ -649,12 +657,26 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
+			finally
+			{
+				if (registeredRequest != null)
+				{
+					RequestAdmin.UnregisterRequest(registeredRequest);
+				}
+			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
 				qaService?.GetVerifiedPerimeter(), trackCancel);
 
 			return result;
+		}
+
+		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
+		                                                       [CanBeNull] string environment,
+		                                                       [CanBeNull] ITrackCancel trackCancel)
+		{
+			return RequestAdmin?.RegisterRequest(requestUserName, environment, trackCancel);
 		}
 
 		private ServiceCallStatus VerifyStandaloneXmlCore(
