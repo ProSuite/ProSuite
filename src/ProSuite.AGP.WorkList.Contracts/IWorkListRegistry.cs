@@ -4,9 +4,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
+	// TODO: (daro) delete unused usages
 	public interface IWorkListRegistry
 	{
-		[CanBeNull]
 		IWorkList Get([NotNull] string name);
 
 		void Add([NotNull] IWorkList workList);
@@ -40,9 +40,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool AddOrReplace(IWorkList worklist);
 
-		[ItemCanBeNull]
 		Task<IWorkList> GetAsync(string name);
 
 		IAsyncEnumerable<IWorkList> GetAsync();
+
+		IEnumerable<IWorkList> Get();
 	}
 }

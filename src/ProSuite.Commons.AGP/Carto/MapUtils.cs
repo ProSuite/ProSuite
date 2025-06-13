@@ -16,6 +16,7 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using UnitType = ArcGIS.Core.Geometry.UnitType;
 
@@ -25,6 +26,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 	public static class MapUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Asserts an active MapView.
 		/// </summary>
@@ -550,6 +553,46 @@ namespace ProSuite.Commons.AGP.Carto
 			string elevationUnitAbbreviation = elevationUnitFormat?.Abbreviation;
 
 			return elevationUnitAbbreviation;
+		}
+
+		public static bool RemoveLayer(Map map, Layer layer)
+		{
+			try
+			{
+				if (! map.CanRemoveLayer(layer))
+				{
+					return false;
+				}
+
+				map.RemoveLayer(layer);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
+		}
+
+		public static bool RemoveLayers(Map map, ICollection<Layer> layers)
+		{
+			try
+			{
+				if (! map.CanRemoveLayers(layers))
+				{
+					return false;
+				}
+
+				map.RemoveLayers(layers);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
 		}
 
 		/// <summary>

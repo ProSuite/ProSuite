@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Carto;
@@ -518,6 +521,32 @@ namespace ProSuite.AGP.WorkList
 			return layer.GetDataConnection() is not CIMStandardDataConnection connection
 				       ? null
 				       : registry.Get(connection.Dataset);
+		}
+
+		public static async Task RemoveWorkListLayersAsync(IWorkList workList)
+		{
+			await QueuedTask.Run(() =>
+			{
+				Map map = MapUtils.GetActiveMap();
+				IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
+
+				var worklistLayers =
+					GetWorklistLayers(layers, workList).ToList();
+
+				Assert.True(MapUtils.RemoveLayers(map, worklistLayers),
+				            "map doesn't contain work list layer");
+
+				if (workList is not IssueWorkList)
+				{
+					return;
+				}
+
+				// NOTE: magic string!!!!
+				map.RemoveLayers(
+					MapUtils.GetLayers<GroupLayer>(
+						map,
+						l => string.Equals(l.Name, "QA", StringComparison.OrdinalIgnoreCase)));
+			});
 		}
 	}
 }
