@@ -94,8 +94,8 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 			var t2 = new TransformerDescriptor("trans2", trClassDesc1, 0, "desc");
 			var t3 = new TransformerDescriptor("transDiff", trClassDesc2, 0, "desc");
 
-			var f1 = new TransformerDescriptor("filt1", ifClassDesc1, 0);
-			var f2 = new TransformerDescriptor("filt2", ifClassDesc1, 0, "desc");
+			var f1 = new IssueFilterDescriptor("filt1", ifClassDesc1, 0);
+			var f2 = new IssueFilterDescriptor("filt2", ifClassDesc1, 0, "desc");
 			var f3 = new TransformerDescriptor("filtDiff", ifClassDesc2, 0, "desc");
 
 			var q1 = new TestDescriptor("test1", qClassDesc1, 1);
