@@ -154,12 +154,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IServerStreamWriter<VerificationResponse> responseStream,
 			ServerCallContext context)
 		{
+			CancelableRequest registeredRequest = null;
 			try
 			{
 				await StartRequest(request);
 
+				registeredRequest =
+					RegisterRequest(request.UserName, request.Environment,
+					                context.CancellationToken);
+
+				var trackCancellationToken =
+					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
+
+				// TODO: Adapt ITrackCancel, move to CancellationToken everywhere.
 				Func<ITrackCancel, ServiceCallStatus> func =
-					trackCancel => VerifyQualityCore(request, responseStream, trackCancel);
+					trackCancel =>
+						VerifyQualityCore(request, responseStream, trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -180,6 +190,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			finally
 			{
+				if (registeredRequest != null)
+				{
+					RequestAdmin.UnregisterRequest(registeredRequest);
+				}
+
 				EndRequest();
 			}
 		}
@@ -569,9 +584,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IServerStreamWriter<VerificationResponse> responseStream,
 			ITrackCancel trackCancel)
 		{
-			CancelableRequest registeredRequest =
-				RegisterRequest(request.UserName, request.Environment, trackCancel);
-
 			SetupUserNameProvider(request);
 
 			BackgroundVerificationService qaService = null;
@@ -658,13 +670,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
-			finally
-			{
-				if (registeredRequest != null)
-				{
-					RequestAdmin.UnregisterRequest(registeredRequest);
-				}
-			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
@@ -674,10 +679,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
-		                                                       [CanBeNull] string environment,
-		                                                       [CanBeNull] ITrackCancel trackCancel)
+		                                          [CanBeNull] string environment,
+		                                          CancellationToken token)
 		{
-			return RequestAdmin?.RegisterRequest(requestUserName, environment, trackCancel);
+			CancellationTokenSource combinedTokenSource =
+				CancellationTokenSource.CreateLinkedTokenSource(token);
+
+			return RequestAdmin?.RegisterRequest(requestUserName, environment, combinedTokenSource);
 		}
 
 		private ServiceCallStatus VerifyStandaloneXmlCore(
