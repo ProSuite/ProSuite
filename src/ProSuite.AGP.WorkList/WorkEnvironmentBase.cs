@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -10,7 +9,6 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -286,6 +284,11 @@ namespace ProSuite.AGP.WorkList
 			return worklistFilePath != null && File.Exists(worklistFilePath);
 		}
 
+		// TODO: (daro) rename to EnsureUniqueWorkListFile
+		/// <summary>
+		/// Ensures that work list file is always unique. Override this
+		/// method to always use the same work list file.
+		/// </summary>
 		protected virtual string EnsureValidDefinitionFilePath(string directory, string fileName, string suffix)
 		{
 			int increment = 1;
@@ -297,34 +300,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return Path.Combine(directory, $"{newFileName}{FileSuffix}");
-		}
-
-		// TODO: (daro) check usage in GoTop!
-		public IEnumerable<BasicFeatureLayer> FindWorkListLayers(Map map)
-		{
-			if (! WorkListFileExistsInProjectFolder(out string definitionFile))
-			{
-				yield break;
-			}
-
-			// TODO: Consider making the folder the data store and the file the work list name?
-			//       Currently, the data store is the work list file and the name is probably
-			//       irrelevant for opening the work list (except that it must be unique for the
-			//       work list registry, which could also use the full file path or some kind of
-			//       name moniker similar to IFeatureClassName). 
-			string workListName =
-				UniqueName ?? WorkListUtils.GetWorklistName(definitionFile)?.ToLower();
-			var datastore =
-				WorkListUtils.GetPluginDatastore(new Uri(definitionFile, UriKind.Absolute));
-
-			Table table = datastore.OpenTable(workListName);
-			Assert.NotNull(table);
-
-			foreach (FeatureLayer featureLayer in MapUtils.GetFeatureLayers<FeatureLayer>(
-				         map, l => DatasetUtils.IsSameTable(table, l.GetTable())))
-			{
-				yield return featureLayer;
-			}
 		}
 	}
 }

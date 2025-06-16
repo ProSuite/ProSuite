@@ -102,9 +102,9 @@ namespace ProSuite.AGP.QA.WorkList
 		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
-			var watch = Stopwatch.StartNew();
+			DbStatusWorkItemRepository result = null;
 
-			DbStatusWorkItemRepository result;
+			var watch = Stopwatch.StartNew();
 
 			try
 			{
@@ -151,6 +151,10 @@ namespace ProSuite.AGP.QA.WorkList
 				var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
 				result = new DbStatusWorkItemRepository(sourceClasses, stateRepository,
 				                                        geodatabase.GetPath());
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
 			}
 			finally
 			{

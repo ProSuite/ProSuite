@@ -29,9 +29,6 @@ namespace ProSuite.Commons.Testing
 			                           Assembly.GetCallingAssembly(), dirRelativeToProject);
 		}
 
-		/// <summary>
-		/// Create a ZIP of PGDB (*.mdb) and use FromZip()
-		/// </summary>
 		[NotNull]
 		public static ITestDataDirectory FromDirectory(
 			string dirRelativeToProject = _defaultTestDataDir)

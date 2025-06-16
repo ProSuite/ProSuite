@@ -29,7 +29,6 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 		return WorkList;
 	}
 
-	//
 	public override async Task<IWorkList> GetAsync()
 	{
 		try
