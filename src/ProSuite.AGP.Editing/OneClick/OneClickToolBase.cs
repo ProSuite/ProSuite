@@ -61,6 +61,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool RequiresSelection { get; init; } = true;
 
 		/// <summary>
+		/// Whether this tool requires editing to be enabled.
+		/// </summary>
+		protected bool RequiresEditSession { get; init; } = true;
+
+		/// <summary>
 		/// Whether the required selection can only contain editable features.
 		/// </summary>
 		protected bool SelectOnlyEditFeatures { get; init; } = true;
@@ -444,6 +449,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (IsCompletingSelectionSketch)
 				{
+					return;
+				}
+
+				if (RequiresEditSession && Project.Current?.IsEditingEnabled != true)
+				{
+					return;
+				}
+
+				if (! Enabled)
+				{
+					// It is possible to be the active tool but not enabled£
 					return;
 				}
 
