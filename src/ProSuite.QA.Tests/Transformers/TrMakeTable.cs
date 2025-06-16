@@ -99,7 +99,6 @@ namespace ProSuite.QA.Tests.Transformers
 			ITable resultTable = DatasetUtils.OpenTable(workspace, _viewOrTableName);
 
 			return GetWrappedTable(resultTable);
-			;
 		}
 
 		private IReadOnlyTable CreateQueryLayerClass()

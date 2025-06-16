@@ -105,7 +105,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 					entity, descriptorWithSameName, notification);
 			}
 
-			// check if another test descriptor with the implementation exists
+			// check if another instance descriptor with the implementation exists
 			InstanceDescriptor descriptorWithSameImplementation =
 				_modelBuilder.InstanceDescriptors.GetWithSameImplementation(entity);
 
