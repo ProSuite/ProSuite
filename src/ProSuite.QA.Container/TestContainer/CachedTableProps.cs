@@ -28,10 +28,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public bool Verify([CanBeNull] IHasGeotransformation otherGeotrans)
 		{
-			if (otherGeotrans != HasGeotransformation)
+			if (HasGeotransformation != null &&
+			    ! HasGeotransformation.Equals(otherGeotrans))
 			{
 				throw new InvalidOperationException(
-					$"{Table.Name} has differing geotransformations");
+					$"{Table.Name} has different coordinate transformation than {otherGeotrans}");
 			}
 
 			return true;
