@@ -19,6 +19,7 @@ using ProSuite.Commons.Xml;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Server.AO.QA;
 using Quaestor.LoadReporting;
+using Quaestor.ProcessAdministration;
 
 namespace ProSuite.Microservices.Server.AO
 {
@@ -51,7 +52,8 @@ namespace ProSuite.Microservices.Server.AO
 
 			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
 
-			IRequestAdmin requestAdmin = new RequestAdmin();
+			ProcessAdministrationGrpcImpl processAdministration =
+				new ProcessAdministrationGrpcImpl();
 
 			int maxThreadCount = arguments.MaxParallel < 0
 				                     ? Environment.ProcessorCount - 1
@@ -59,14 +61,15 @@ namespace ProSuite.Microservices.Server.AO
 
 			QualityVerificationGrpcImpl verificationServiceImpl =
 				CreateQualityVerificationGrpc(inputsFactory, loadReporting,
-				                              requestAdmin,
+				                              processAdministration.RequestAdmin,
 				                              markUnhealthyOnExceptions ? health : null,
 				                              maxThreadCount);
 
 			health.SetStatus(verificationServiceImpl.GetType(), true);
 
 			Grpc.Core.Server server =
-				StartGrpcServer(arguments, verificationServiceImpl, healthService, loadReporting);
+				StartGrpcServer(arguments, verificationServiceImpl, healthService, loadReporting,
+				                processAdministration);
 
 			_msg.InfoFormat("Service is listening on host {0}, port {1}.", arguments.HostName,
 			                arguments.Port);
@@ -125,14 +128,16 @@ namespace ProSuite.Microservices.Server.AO
 			MicroserverArguments arguments,
 			[NotNull] QualityVerificationGrpcImpl verificationServiceImpl,
 			[NotNull] HealthServiceImpl healthService,
-			[NotNull] LoadReportingGrpcImpl loadReporting)
+			[NotNull] LoadReportingGrpcImpl loadReporting,
+			[NotNull] ProcessAdministrationGrpcImpl processAdministration)
 		{
 			var services = new List<ServerServiceDefinition>(
 				new[]
 				{
 					QualityVerificationGrpc.BindService(verificationServiceImpl),
 					Health.BindService(healthService),
-					LoadReportingGrpc.BindService(loadReporting)
+					LoadReportingGrpc.BindService(loadReporting),
+					ProcessAdministrationGrpc.BindService(processAdministration)
 				});
 
 			Grpc.Core.Server result = StartGrpcServer(services, arguments);

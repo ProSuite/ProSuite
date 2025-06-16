@@ -54,6 +54,10 @@
       <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="Quaestor.ProcessAdministration, Culture=neutral, PublicKeyToken=225b4ed5a615a65b, processorArchitecture=MSIL">
+      <HintPath>..\..\lib\Quaestor\Quaestor.ProcessAdministration.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
 
   </ItemGroup>
 
