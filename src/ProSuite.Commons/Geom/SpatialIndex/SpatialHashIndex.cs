@@ -17,8 +17,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		// This is most likely due to more efficient memory management when creating one large array rather than many small ones (most likely not even on the LOH)
 		// TODO: ConcurrentDictionary, Parallel.Foreach
 		[NotNull] private readonly Dictionary<TileIndex, List<T>> _tiles;
-
 		[NotNull] private readonly TilingDefinition _tilingDefinition;
+
+		private int _maxTileEasting = int.MinValue;
+		private int _maxTileNorthing = int.MinValue;
+		private int _minTileEasting = int.MaxValue;
+		private int _minTileNorthing = int.MaxValue;
+
+		private bool _envelopeUpToDate;
 
 		private readonly int _estimatedItemsPerTile;
 
@@ -31,7 +37,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				       Math.Pow(
 					       Math.Max((envelope.XMax - envelope.XMin),
 					                (envelope.YMax - envelope.YMin)) / gridsize, 2)),
-			       estimatedItemsPerTile) {}
+			       estimatedItemsPerTile) { }
 
 		public SpatialHashIndex(double xMin, double yMin, double gridsize,
 		                        int estimatedMaxTileCount,
@@ -74,6 +80,45 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public double GridSize => _tilingDefinition.TileWidth;
 		public double OriginX => _tilingDefinition.OriginX;
 		public double OriginY => _tilingDefinition.OriginY;
+
+		// @PLU: Decided to implement this with raw coordinates instead of EnvelopeXY because these are
+		// TileIndexes and not real coordinates. That's also why they're private. If we wanted to expose
+		// an envelope, we'd have to calculate it from these.
+		private int MinTileEasting
+		{
+			get
+			{
+				if (! _envelopeUpToDate) UpdateTileIndexEnvelope();
+				return _minTileEasting;
+			}
+		}
+
+		private int MinTileNorthing
+		{
+			get
+			{
+				if (! _envelopeUpToDate) UpdateTileIndexEnvelope();
+				return _minTileNorthing;
+			}
+		}
+
+		private int MaxTileEasting
+		{
+			get
+			{
+				if (! _envelopeUpToDate) UpdateTileIndexEnvelope();
+				return _maxTileEasting;
+			}
+		}
+
+		private int MaxTileNorthing
+		{
+			get
+			{
+				if (! _envelopeUpToDate) UpdateTileIndexEnvelope();
+				return _maxTileNorthing;
+			}
+		}
 
 		public void Add(T identifier, double x, double y)
 		{
@@ -127,13 +172,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			{
 				tileGeometryRefs = new List<T>(_estimatedItemsPerTile);
 				_tiles.Add(tileIndex, tileGeometryRefs);
+				_envelopeUpToDate = false;
 			}
 
 			if (_msg.IsVerboseDebugEnabled &&
 			    tileGeometryRefs.Count >= _estimatedItemsPerTile)
 			{
 				_msg.DebugFormat(
-					"Numer of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
+					"Number of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
 					tileIndex, tileGeometryRefs.Count + 1);
 			}
 
@@ -149,66 +195,35 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		}
 
 		/// <summary>
-		/// Returns Identifiers per tile, starting with the tile closest to the given point and continuing outward in a spiral pattern.
+		/// Get Identifiers per tile, starting with the tile containing to the given point sorted according to the given DistanceMetric.
 		/// </summary>
 		/// <param name="x">X coordinate</param>
 		/// <param name="y">Y coordinate</param>
+		/// <param name="metric">The type of distance you want to use to order the tiles</param>
+		/// <param name="maxDistance">The maximum distance until which tiles are returned.</param>
 		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
 		/// <returns></returns>
-		public IEnumerable<IEnumerable<T>> FindIdentifiers(double x, double y,
+		public IEnumerable<IEnumerable<T>> FindTilesAround(double x, double y,
+		                                                   double maxDistance = double.MaxValue,
+		                                                   DistanceMetric metric =
+			                                                   DistanceMetric.EuclideanDistance,
 		                                                   [CanBeNull] Predicate<T> predicate =
 			                                                   null)
 		{
-			// TODO: Write a test
-			var visitedTiles = new HashSet<TileIndex>();
-			TileIndex centerTile = _tilingDefinition.GetTileIndexAt(x, y);
+			if (_tiles.Count == 0)
+				yield break;
 
-			// Start with the center tile
-			visitedTiles.Add(centerTile);
-			yield return FindItemsWithinTile(centerTile, predicate);
+			double maxExistingTileDistance = GetDistanceToFurthestPopulatedTile(x, y);
 
-			// Expand outward one tile layer at a time
-			for (int tileRadius = 1;; tileRadius++)
+			double effectiveMaxDistance = Math.Min(maxExistingTileDistance, maxDistance);
+
+			foreach (var tileIndex in _tilingDefinition.GetTileIndexAround(
+				         x, y, metric, effectiveMaxDistance))
 			{
-				var tilesAtRadius = new List<(TileIndex tile, double distanceSquared)>();
-
-				// Generate all tiles at this tile radius (perimeter only)
-				for (int dx = -tileRadius; dx <= tileRadius; dx++)
+				// Only yield tiles that exist and have items
+				if (_tiles.ContainsKey(tileIndex))
 				{
-					for (int dy = -tileRadius; dy <= tileRadius; dy++)
-					{
-						// Only process tiles on the perimeter of the current tile radius
-						if (Math.Abs(dx) != tileRadius && Math.Abs(dy) != tileRadius)
-							continue;
-
-						var tileIndex = new TileIndex(centerTile.East + dx, centerTile.North + dy);
-
-						if (! visitedTiles.Add(tileIndex))
-							continue; // Already visited
-
-						// Calculate squared distance from tile center to the original point
-						double tileCenterX = _tilingDefinition.OriginX +
-						                     (tileIndex.East + 0.5) * _tilingDefinition.TileWidth;
-						double tileCenterY = _tilingDefinition.OriginY +
-						                     (tileIndex.North + 0.5) * _tilingDefinition.TileHeight;
-						double distanceSquared =
-							(tileCenterX - x) * (tileCenterX - x) +
-							(tileCenterY - y) * (tileCenterY - y);
-
-						tilesAtRadius.Add((tileIndex, distanceSquared));
-					}
-				}
-
-				// Break if no new tiles were found
-				if (tilesAtRadius.Count == 0)
-					break;
-
-				// Sort by distance and yield closest tiles first
-				tilesAtRadius.Sort((a, b) => a.distanceSquared.CompareTo(b.distanceSquared));
-
-				foreach ((TileIndex tile, double distanceSquared) valueTuple in tilesAtRadius)
-				{
-					yield return FindItemsWithinTile(valueTuple.tile, predicate);
+					yield return FindItemsWithinTile(tileIndex, predicate);
 				}
 			}
 		}
@@ -298,6 +313,39 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 					yield return geometryIdentifier;
 				}
 			}
+		}
+
+		private double GetDistanceToFurthestPopulatedTile(double x, double y)
+		{
+			var centerTile = _tilingDefinition.GetTileIndexAt(x, y);
+
+			int furthestEasting = Math.Abs(MaxTileEasting - centerTile.East) >
+			                      Math.Abs(MinTileEasting - centerTile.East)
+				                      ? MaxTileEasting
+				                      : MinTileEasting;
+
+			int furthestNorthing = Math.Abs(MaxTileNorthing - centerTile.North) >
+			                       Math.Abs(MinTileNorthing - centerTile.North)
+				                       ? MaxTileNorthing
+				                       : MinTileNorthing;
+
+			var furthestTile = new TileIndex(furthestEasting, furthestNorthing);
+
+			return TileUtils.TileDistance(centerTile, furthestTile, _tilingDefinition.TileWidth,
+			                              _tilingDefinition.TileHeight);
+		}
+
+		private void UpdateTileIndexEnvelope()
+		{
+			foreach (TileIndex tileIndex in _tiles.Keys)
+			{
+				if (tileIndex.East > _maxTileEasting) _maxTileEasting = tileIndex.East;
+				if (tileIndex.East < _minTileEasting) _minTileEasting = tileIndex.East;
+				if (tileIndex.North > _maxTileNorthing) _maxTileNorthing = tileIndex.North;
+				if (tileIndex.North < _minTileNorthing) _minTileNorthing = tileIndex.North;
+			}
+
+			_envelopeUpToDate = true;
 		}
 	}
 }

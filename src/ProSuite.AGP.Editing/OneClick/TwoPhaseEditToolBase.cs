@@ -13,6 +13,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Dialogs;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -118,20 +119,32 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			return await QueuedTask.Run(async () =>
+			try
 			{
-				var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
+				return await QueuedTask.Run(async () =>
+				{
+					var selection = SelectionUtils.GetSelection(ActiveMapView.Map);
 
-				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
-				Assert.NotNull(simpleGeometry, "Geometry is null");
+					Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
+					Assert.NotNull(simpleGeometry, "Geometry is null");
 
-				bool success =
-					await SelectAndProcessDerivedGeometry(selection, simpleGeometry, progressor);
+					bool success =
+						await SelectAndProcessDerivedGeometry(
+							selection, simpleGeometry, progressor);
 
-				await DerivedGeometriesCalculated(null, true);
+					await DerivedGeometriesCalculated(null, true);
 
-				return success;
-			});
+					return success;
+				});
+			}
+			catch (Exception e)
+			{
+				// Consider Task.FromException? --> no, as it throws once awaited!
+				ErrorHandler.HandleError($"{Caption}: Error processing geometry." +
+				                         $"{Environment.NewLine}{e.Message}", e, _msg);
+
+				return await Task.FromResult(true);
+			}
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)

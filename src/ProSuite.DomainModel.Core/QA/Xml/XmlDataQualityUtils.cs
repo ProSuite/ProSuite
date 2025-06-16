@@ -442,7 +442,10 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				return;
 			}
 
-			var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			// NOTE: In the database the names are case sensitive. Hence it is possible to have
+			// qaNoGaps(0) and QaNoGaps(0) as different names.
+			StringComparer compareCaseSensitive = StringComparer.Ordinal;
+			var names = new HashSet<string>(compareCaseSensitive);
 
 			foreach (T xmlInstanceDescriptor in instanceDescriptors)
 			{
