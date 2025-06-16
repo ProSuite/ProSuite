@@ -6,7 +6,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Shared.ArcGIS;
 
 namespace ProSuite.Commons.AO.Test.Surface
 {
