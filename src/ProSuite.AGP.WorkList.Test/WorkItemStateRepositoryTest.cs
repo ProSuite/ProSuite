@@ -39,7 +39,7 @@ public class WorkItemStateRepositoryTest
 			new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
 		IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-		List<IWorkItem> items = wl.GetItems(new QueryFilter()).ToList();
+		List<IWorkItem> items = wl.GetItems(new SpatialQueryFilter()).ToList();
 
 		IWorkItem first = items.First();
 		Assert.True(first.Visited);

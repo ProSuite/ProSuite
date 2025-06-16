@@ -504,7 +504,7 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4, item5, item6 });
 			var wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter([2, 3, 4])).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(GdbQueryUtils.CreateFilter([2, 3, 4])).ToList();
 
 			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
@@ -529,7 +529,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.CanGoFirst());
 
 			// get remaining items
-			IEnumerable<IWorkItem> __ = wl.GetItems(GdbQueryUtils.CreateFilter([1, 5, 6])).ToList();
+			IEnumerable<IWorkItem> __ = wl.Search(GdbQueryUtils.CreateFilter([1, 5, 6])).ToList();
 
 			Assert.True(wl.CanGoNext());
 			Assert.True(wl.CanGoPrevious());

@@ -30,7 +30,7 @@ public interface IWorkList : IRowCache
 
 	IEnumerable<IWorkItem> Search(QueryFilter filter);
 
-	IEnumerable<IWorkItem> GetItems(QueryFilter filter);
+	IEnumerable<IWorkItem> GetItems(SpatialQueryFilter filter);
 	
 	long CountLoadedItems(out int todo);
 

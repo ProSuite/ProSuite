@@ -82,7 +82,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 			state.Visited = item.Visited;
 
-			UpdateCore(state, item);
+			UpdateStateCore(state, item);
 		}
 
 		public void Commit(IList<ISourceClass> sourceClasses)
@@ -120,7 +120,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		protected virtual void RefreshCore([NotNull] IWorkItem item, [NotNull] TState state) { }
 
-		protected virtual void UpdateCore(TState state, IWorkItem item) { }
+		protected virtual void UpdateStateCore(TState state, IWorkItem item) { }
 
 		[CanBeNull]
 		private TState Lookup([NotNull] IWorkItem item)

@@ -380,6 +380,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			Invalidate();
+
+			LoadItemsCore(filter);
 		}
 
 		public IEnumerable<IWorkItem> Search([NotNull] QueryFilter filter)
@@ -407,19 +409,12 @@ namespace ProSuite.AGP.WorkList.Domain
 			return items.Where(item => oids.BinarySearch(item.OID) >= 0);
 		}
 
-		public IEnumerable<IWorkItem> GetItems([NotNull] QueryFilter filter)
+		public IEnumerable<IWorkItem> GetItems([NotNull] SpatialQueryFilter filter)
 		{
 			if (_searcher == null)
 			{
 				return Enumerable.Empty<IWorkItem>();
 			}
-
-			if (filter is not SpatialQueryFilter spatialFilter)
-			{
-				throw new NotImplementedException();
-			}
-
-			Envelope extent = spatialFilter.FilterGeometry.Extent;
 
 			WorkItemStatus? currentVisibility = GetStatus(Visibility);
 
@@ -429,13 +424,23 @@ namespace ProSuite.AGP.WorkList.Domain
 				predicate = item => item.Status == currentVisibility;
 			}
 
+			Envelope extent = filter.FilterGeometry.Extent;
+
 			// TODO: (daro) tolerance?
 			return _searcher.Search(extent.XMin, extent.YMin,
 			                        extent.XMax, extent.YMax,
 			                        0.001, predicate);
 		}
 
-		private IEnumerable<IWorkItem> GetItems([NotNull] QueryFilter filter,
+		protected virtual void LoadItemsCore(QueryFilter filter)
+		{
+			foreach (IWorkItem item in Search(filter))
+			{
+				Repository.UpdateState(item);
+			}
+		}
+
+		private IEnumerable<IWorkItem> GetItems([NotNull] SpatialQueryFilter filter,
 		                                        CurrentSearchOption currentSearch,
 		                                        VisitedSearchOption visitedSearch)
 		{

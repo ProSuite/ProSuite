@@ -116,5 +116,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			return result;
 		}
+
+		protected override void LoadItemsCore(QueryFilter filter)
+		{
+			// Do nothing here. The item's status is not persisted in work list file
+			// for ProductionModelIssueWorkList, instead STATUS is persisted in DB.
+		}
 	}
 }

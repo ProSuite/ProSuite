@@ -217,7 +217,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<IWorkItem> GetItems(QueryFilter filter)
+	public IEnumerable<IWorkItem> GetItems(SpatialQueryFilter filter)
 	{
 		throw new NotImplementedException();
 	}

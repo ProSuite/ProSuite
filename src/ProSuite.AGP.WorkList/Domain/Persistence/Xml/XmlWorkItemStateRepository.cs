@@ -142,7 +142,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 		protected override void RefreshCore(IWorkItem item, XmlWorkItemState state) { }
 
-		protected override void UpdateCore(XmlWorkItemState state, IWorkItem item)
+		protected override void UpdateStateCore(XmlWorkItemState state, IWorkItem item)
 		{
 			state.Status = item.Status;
 		}
