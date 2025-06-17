@@ -64,7 +64,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			Key.Escape, Key.LeftShift, Key.RightShift,
 			Key.F2, _keyLassoDraw, _keyPolygonDraw
 		};
-	
+
 	protected Point CurrentMousePosition;
 
 	[NotNull]
@@ -72,13 +72,16 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected virtual bool AllowNoSelection => false;
 
+	protected virtual bool EnableLassoSketch => true;
+	protected virtual bool EnablePolygonSketch => true;
+
 	/// Whether the required selection can only contain selectable features.
 	protected bool SelectOnlySelectableFeatures { get; init; } = true;
 
 	protected bool CanSelectOnlyEditFeatures { get; init; } = true;
 
 	#region abstract
-	
+
 	protected abstract void LogPromptForSelection();
 
 	protected abstract SelectionSettings GetSelectionSettings();
@@ -89,11 +92,14 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected abstract SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch();
 
-	[NotNull] protected abstract Cursor GetSelectionCursor();
+	[NotNull]
+	protected abstract Cursor GetSelectionCursor();
 
-	[NotNull] protected abstract Cursor GetSelectionCursorLasso();
+	[NotNull]
+	protected abstract Cursor GetSelectionCursorLasso();
 
-	[NotNull] protected abstract Cursor GetSelectionCursorPolygon();
+	[NotNull]
+	protected abstract Cursor GetSelectionCursorPolygon();
 
 	[CanBeNull]
 	protected virtual Cursor GetSelectionCursorShift()
@@ -141,7 +147,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			if (MapUtils.HasSelection(ActiveMapView))
 			{
 				await ViewUtils.TryAsync(
-					QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); }),
+					QueuedTask.Run(
+						() => _symbolizedSketch?.SetSketchAppearanceBasedOnSelectionAsync()),
 					_msg);
 
 				bool selectionProcessed = await ViewUtils.TryAsync(ProcessSelectionAsync(), _msg);
@@ -176,9 +183,24 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 			                             GetDefaultSelectionSketchType(),
 			                             DefaultSketchTypeOnFinishSketch);
 
-		_selectionSketchCursor.SetSelectionCursorShift(GetSelectionCursorShift());
-		_selectionSketchCursor.SetSelectionCursorLassoShift(GetSelectionCursorLassoShift());
-		_selectionSketchCursor.SetSelectionCursorPolygonShift(GetSelectionCursorPolygonShift());
+		Cursor selectionCursorShift = GetSelectionCursorShift();
+		if (selectionCursorShift != null)
+		{
+			_selectionSketchCursor.SetSelectionCursorShift(selectionCursorShift);
+		}
+
+		Cursor selectionCursorLassoShift = GetSelectionCursorLassoShift();
+		if (selectionCursorLassoShift != null)
+		{
+			_selectionSketchCursor.SetSelectionCursorLassoShift(selectionCursorLassoShift);
+		}
+
+		Cursor selectionCursorPolygonShift = GetSelectionCursorPolygonShift();
+
+		if (selectionCursorPolygonShift != null)
+		{
+			_selectionSketchCursor.SetSelectionCursorPolygonShift(selectionCursorPolygonShift);
+		}
 	}
 
 	protected abstract bool DefaultSketchTypeOnFinishSketch { get; }
@@ -294,12 +316,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (! InConstructionPhase())
 			{
-				if (args.Key == _keyPolygonDraw)
+				if (EnablePolygonSketch && args.Key == _keyPolygonDraw)
 				{
 					SetupPolygonSketch();
 				}
 
-				if (args.Key == _keyLassoDraw)
+				if (EnableLassoSketch && args.Key == _keyLassoDraw)
 				{
 					SetupLassoSketch();
 				}
@@ -382,9 +404,9 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return CanUseSelection(selectionByLayer, null);
 	}
 
-	public virtual bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+	public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
-		return true;
+		return Task.FromResult(true);
 	}
 
 	public void SetSketchSymbol(CIMSymbolReference symbolReference)
@@ -508,18 +530,15 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	{
 		try
 		{
-			Geometry simpleGeometry = GeometryUtils.Simplify(geometry);
-			Assert.NotNull(simpleGeometry, "Geometry is null");
-
-			using IPickerPrecedence precedence = CreatePickerPrecedence(simpleGeometry);
+			using IPickerPrecedence precedence = CreatePickerPrecedence(geometry);
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				IEnumerable<FeatureSelectionBase> candidates =
+				var candidates =
 					FindFeatureSelection(precedence.GetSelectionGeometry(),
-					                     precedence.SpatialRelationship);
+					                     precedence.SpatialRelationship).ToList();
 
-				List<IPickableItem> items = await PickerUtils.GetItems(candidates, precedence);
+				List<IPickableItem> items = await PickerUtils.GetItemsAsync(candidates, precedence);
 
 				PickerUtils.Select(items, precedence.SelectionCombinationMethod);
 			});
@@ -585,7 +604,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	}
 
 	protected virtual void SetupLassoSketchCore() { }
-
 
 	#endregion
 
@@ -904,10 +922,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		}
 		else
 		{
-			Application.Current.Dispatcher.Invoke(() =>
-			{
-				SetCursor(cursor);
-			});
+			Application.Current.Dispatcher.Invoke(() => { SetCursor(cursor); });
 		}
 	}
 

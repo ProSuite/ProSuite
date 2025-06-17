@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -23,14 +22,31 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialReshapeAlongToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialReshapeAlongOptions> _settingsProvider;
+
+		protected override bool RefreshSubcurvesOnRedraw =>
+			_reshapeAlongToolOptions.ClipLinesOnVisibleExtent &&
+			_reshapeAlongToolOptions.DisplayRecalculateCutLines;
 
 		protected override string EditOperationDescription => "Reshape along";
 
 		protected string OptionsFileName => "ReshapeAlongToolOptions.xml";
 
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_reshapeAlongToolOptions.TargetFeatureSelection;
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.ReshapeAlongOverlay);
+		}
+
+		protected override SelectionCursors GetTargetSelectionCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.ReshapeAlongOverlay);
+		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
@@ -160,8 +176,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			ChangeAlongCurves result = MicroserviceClient.CalculateReshapeLines(
 				selectedFeatures, targetFeatures, targetBufferOptions, filterOptions,
-				customTolerance,
-				cancellationToken);
+				customTolerance, cancellationToken);
 
 			return result;
 		}
@@ -176,10 +191,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// For the time being, we always reload the options because they could have been updated in ArcMap
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialReshapeAlongToolOptions>(
+				new OverridableSettingsProvider<PartialReshapeAlongOptions>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-			PartialReshapeAlongToolOptions localConfiguration, centralConfiguration;
+			PartialReshapeAlongOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
@@ -223,92 +238,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			var viewModel = GetReshapeAlongViewModel();
 			viewModel?.Hide();
 		}
-
-		#region first phase selection cursor
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ReshapeAlongOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ReshapeAlongOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ReshapeAlongOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ReshapeAlongOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ReshapeAlongOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ReshapeAlongOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#endregion
-
-		#region second phase target selection cursor
-
-		protected override Cursor GetTargetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
-			                              Resources.Shift, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
-			                              Resources.Lasso, Resources.Shift, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
-			                              Resources.Polygon, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ReshapeAlongOverlay,
-			                              Resources.Polygon, Resources.Shift, 10, 10);
-		}
-
-		#endregion
 
 		#region Tool Options DockPane
 

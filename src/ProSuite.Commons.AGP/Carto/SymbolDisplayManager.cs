@@ -17,6 +17,8 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	private readonly Dictionary<string, bool> _lmStateCache = new();
 	private readonly Dictionary<string, SymbolDisplaySettings> _settingsByMap = new();
 
+	private SubscriptionToken _mapViewInitializedToken;
+	private SubscriptionToken _activeMapViewChangedToken;
 	private SubscriptionToken _mapViewCameraChangedToken;
 	private SubscriptionToken _projectClosedToken;
 
@@ -33,7 +35,12 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	private SymbolDisplayManager() // private to prevent outside instantiation
 	{
 		_defaultSettings = new SymbolDisplaySettings();
-		_lastScaleDenom = double.NaN;
+		_lastScaleDenom = 0.0;
+
+		WantSLD = new IndexedProperty<bool?>(
+			nameof(SymbolDisplaySettings.WantSLD), _settingsByMap, GetDefaults);
+		WantLM = new IndexedProperty<bool?>(
+			nameof(SymbolDisplaySettings.WantLM), _settingsByMap, GetDefaults);
 
 		NoMaskingWithoutSLD = new IndexedProperty<bool>(
 			nameof(SymbolDisplaySettings.NoMaskingWithoutSLD), _settingsByMap, GetDefaults);
@@ -69,9 +76,13 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 	#endregion
 
-	// Settings:
-	// write: set current and default
-	// read: get current (or default)
+	// The following settings are per map:
+	// - on write: set current and default
+	// - on read: get current (or default)
+
+	// The user's last conscious SLD/LM preferences (from toggle buttons):
+	public IIndexedProperty<Map, bool?> WantSLD { get; }
+	public IIndexedProperty<Map, bool?> WantLM { get; }
 
 	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
 
@@ -86,37 +97,76 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			_defaultSettings = settings;
 		}
 
+		_mapViewInitializedToken ??= MapViewInitializedEvent.Subscribe(OnMapViewInitialized);
+		_activeMapViewChangedToken ??= ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
 		_mapViewCameraChangedToken ??= MapViewCameraChangedEvent.Subscribe(OnMapViewCameraChanged);
 		_projectClosedToken ??= ProjectClosedEvent.Subscribe(OnProjectClosed);
 	}
 
 	public void Shutdown()
 	{
-		if (_mapViewCameraChangedToken is not null)
-		{
-			MapViewCameraChangedEvent.Unsubscribe(_mapViewCameraChangedToken);
-		}
-
 		if (_projectClosedToken is not null)
 		{
 			ProjectClosedEvent.Unsubscribe(_projectClosedToken);
 		}
 
+		if (_mapViewCameraChangedToken is not null)
+		{
+			MapViewCameraChangedEvent.Unsubscribe(_mapViewCameraChangedToken);
+		}
+
+		if (_activeMapViewChangedToken is not null)
+		{
+			ActiveMapViewChangedEvent.Unsubscribe(_activeMapViewChangedToken);
+		}
+
+		if (_mapViewInitializedToken is not null)
+		{
+			MapViewInitializedEvent.Unsubscribe(_mapViewInitializedToken);
+		}
+
 		ClearStateCache();
+		ClearSettings();
 	}
 
 	#region Event handling
 
-	private void OnProjectClosed(ProjectEventArgs obj)
+	private void OnMapViewInitialized(MapViewEventArgs args)
 	{
 		try
 		{
-			ClearStateCache();
-			ClearSettings();
+			// MapViewInitialized fires when the map view's Camera is still null,
+			// so can't set _lastScaleDenom here (do so in OnActiveMapViewChanged)
+
+			var map = args.MapView?.Map;
+			if (map is not null)
+			{
+				QueuedTask.Run(() => InitializeDesiredState(map));
+			}
 		}
 		catch (Exception ex)
 		{
-			Gateway.LogError(ex, _msg, nameof(OnProjectClosed));
+			Gateway.LogError(ex, _msg, nameof(OnMapViewInitialized));
+		}
+	}
+
+	private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs args)
+	{
+		try
+		{
+			var camera = args.IncomingView?.Camera;
+			_lastScaleDenom = camera?.Scale ?? 0.0;
+
+			var map = args.IncomingView?.Map;
+			if (map != null && (WantSLD[map] is null || WantLM[map] is null))
+			{
+				// Just a fallback in case we didn't get OnMapViewInitialized
+				QueuedTask.Run(() => InitializeDesiredState(map));
+			}
+		}
+		catch (Exception ex)
+		{
+			Gateway.LogError(ex, _msg, nameof(OnActiveMapViewChanged));
 		}
 	}
 
@@ -129,15 +179,30 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 			var currentScaleDenom = camera.Scale;
 
-			// Note: args.MapView is "ahead" of MapView.Active (the latter may still be null)
+			// Empirically, args.MapView is "ahead" of MapView.Active:
+			// the latter may still be null when we receive this event
+
 			var map = args.MapView?.Map;
 			if (map is null) return;
 
-			QueuedTask.Run(() => ScaleChanged(map, currentScaleDenom));
+			ScaleChanged(map, currentScaleDenom);
 		}
 		catch (Exception ex)
 		{
 			Gateway.LogError(ex, _msg, nameof(OnMapViewCameraChanged));
+		}
+	}
+
+	private void OnProjectClosed(ProjectEventArgs obj)
+	{
+		try
+		{
+			ClearStateCache();
+			ClearSettings();
+		}
+		catch (Exception ex)
+		{
+			Gateway.LogError(ex, _msg, nameof(OnProjectClosed));
 		}
 	}
 
@@ -178,14 +243,14 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		bool usesSLD = UsesSLD(map);
 		bool turnOn = enable ?? ! usesSLD;
 
+		WantSLD[map] = turnOn;
+
 		bool modified = false;
 
 		if (turnOn != usesSLD)
 		{
-			modified = DisplayUtils.ToggleSymbolLayerDrawing(map, turnOn);
+			modified = SetSLD(map, turnOn);
 		}
-
-		_sldStateCache[map.URI] = turnOn; // cache for performance
 
 		bool noMaskingWithoutSLD = NoMaskingWithoutSLD[map];
 
@@ -232,14 +297,14 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		bool usesLM = UsesLM(map);
 		bool turnOn = enable ?? ! usesLM;
 
+		WantLM[map] = turnOn;
+
 		bool modified = false;
 
 		if (turnOn != usesLM)
 		{
-			modified = DisplayUtils.ToggleLayerMasking(map, turnOn);
+			modified = SetLM(map, turnOn);
 		}
-
-		_lmStateCache[map.URI] = turnOn; // cache for performance
 
 		bool noMaskingWithoutSLD = NoMaskingWithoutSLD[map];
 
@@ -253,7 +318,6 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 	#region Private methods
 
-	/// <remarks>Must run on MCT</remarks>
 	private void ScaleChanged(Map map, double currentScaleDenom)
 	{
 		var autoSwitch = AutoSwitch[map];
@@ -264,40 +328,74 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		var delta = _lastScaleDenom - currentScaleDenom;
 		if (Math.Abs(delta) < double.Epsilon) return; // no change
 
-		_lastScaleDenom = currentScaleDenom;
-
 		var min = AutoMinScaleDenom[map];
 		if (!(min > 0)) min = 0;
 
 		var max = AutoMaxScaleDenom[map];
 		if (!(max > 0)) max = double.MaxValue;
 
-		bool wantOn = min <= currentScaleDenom && currentScaleDenom <= max;
+		bool lastInRange = min <= _lastScaleDenom && _lastScaleDenom <= max;
+		bool currentInRange = min <= currentScaleDenom && currentScaleDenom <= max;
 
-		if (wantOn)
+		_lastScaleDenom = currentScaleDenom;
+
+		if (currentInRange && !lastInRange)
 		{
-			if (!UsesSLD(map))
-			{
-				ToggleSLD(map, true);
-			}
-
-			if (!UsesLM(map))
-			{
-				ToggleLM(map, true);
-			}
+			QueuedTask.Run(() => EnterRange(map));
 		}
-		else
+
+		if (lastInRange && !currentInRange)
 		{
-			if (UsesLM(map))
-			{
-				ToggleLM(map, false);
-			}
-
-			if (UsesSLD(map))
-			{
-				ToggleSLD(map, false);
-			}
+			QueuedTask.Run(() => LeaveRange(map));
 		}
+	}
+
+	/// <remarks>Must run on MCT</remarks>
+	private void EnterRange(Map map)
+	{
+		const bool uncached = true;
+		bool wantSLD = WantSLD[map] ??= UsesSLD(map, uncached);
+		bool wantLM = WantLM[map] ??= UsesLM(map, uncached);
+
+		if (wantSLD && !UsesSLD(map))
+		{
+			SetSLD(map, true);
+		}
+
+		if (wantLM && !UsesLM(map))
+		{
+			SetLM(map, true);
+		}
+	}
+
+	/// <remarks>Must run on MCT</remarks>
+	private void LeaveRange(Map map)
+	{
+		if (UsesLM(map))
+		{
+			SetLM(map, false);
+		}
+
+		if (UsesSLD(map))
+		{
+			SetSLD(map, false);
+		}
+	}
+
+	/// <remarks>Must run on MCT</remarks>
+	private bool SetSLD(Map map, bool enable)
+	{
+		bool modified = DisplayUtils.ToggleSymbolLayerDrawing(map, enable);
+		_sldStateCache[map.URI] = enable; // cache for performance
+		return modified;
+	}
+
+	/// <remarks>Must run on MCT</remarks>
+	private bool SetLM(Map map, bool enable)
+	{
+		bool modified = DisplayUtils.ToggleLayerMasking(map, enable);
+		_lmStateCache[map.URI] = enable; // cache for performance
+		return modified;
 	}
 
 	private void ClearSettings()
@@ -309,6 +407,21 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		_sldStateCache.Clear();
 		_lmStateCache.Clear();
+	}
+
+	/// <remarks>Must run on MCT</remarks>
+	private void InitializeDesiredState(Map map)
+	{
+		_msg.Debug($"Initializing {GetType().Name} for map “{map?.Name ?? "(null)"}”");
+
+		using (_msg.IncrementIndentation())
+		{
+			const bool uncached = true;
+			WantSLD[map] = UsesSLD(map, uncached);
+			WantLM[map] = UsesLM(map, uncached);
+
+			_msg.Debug($"Want: SLD={WantSLD[map]}, LM={WantLM[map]}");
+		}
 	}
 
 	#endregion

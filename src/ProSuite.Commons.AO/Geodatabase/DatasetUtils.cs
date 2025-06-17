@@ -4312,6 +4312,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				table.DeleteSearchedRows(filter);
 			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error deleting rows in {GetName(table)} using filter:", e);
+				GdbQueryUtils.LogFilterProperties(filter);
+				throw;
+			}
 			finally
 			{
 				if (subFieldsBefore != filter.SubFields)

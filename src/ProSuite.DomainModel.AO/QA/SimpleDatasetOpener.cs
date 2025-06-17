@@ -204,7 +204,7 @@ namespace ProSuite.DomainModel.AO.QA
 		#region IOpenAssociation members
 
 		public string GetRelationshipClassName(string associationName,
-		                                       Model model)
+		                                       DdxModel model)
 		{
 			if (CanUseQueryTableContext(out IQueryTableContext queryTableContext))
 			{
@@ -222,13 +222,13 @@ namespace ProSuite.DomainModel.AO.QA
 		                                     JoinType joinType,
 		                                     string whereClause = null)
 		{
-			Model model = (Model) association.Model;
+			DdxModel model = association.Model;
 
 			return OpenQueryTable(association.Name, model, tables, joinType, whereClause);
 		}
 
 		public IReadOnlyTable OpenQueryTable(string associationName,
-		                                     Model model,
+		                                     DdxModel model,
 		                                     IList<IReadOnlyTable> tables,
 		                                     JoinType joinType,
 		                                     string whereClause = null)

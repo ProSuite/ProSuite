@@ -22,6 +22,9 @@
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
+    <!-- .net framework: -->
+    <LangVersion>7.3</LangVersion>
+
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -48,13 +51,6 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
   </ItemGroup>
 
   <!-- Legacy property editors with AO dependency, replaced by blazor in .net 6: 
@@ -322,6 +318,10 @@
       <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\lib\licenses\prosuite-microservice-definitions.license.txt">
+      <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
 
     <Content Include="Properties\AssociationEndImages\AssociationEndDeleted.png" />
     <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany1.png" />
@@ -388,7 +388,9 @@
     <Content Include="Properties\VerificationResultImages\OK.png" />
     <Content Include="Properties\VerificationResultImages\Warning.png" />
   </ItemGroup>
+
   <ItemGroup>
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.5" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
 

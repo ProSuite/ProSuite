@@ -3,6 +3,7 @@ using Grpc.Core;
 using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA;
@@ -20,12 +21,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		internal static void SetUnhealthy([CanBeNull] IServiceHealth serviceHealth,
-		                                  [NotNull] Type serviceType)
+		                                  [NotNull] Type serviceType,
+		                                  [CanBeNull] string reason = null)
 		{
 			if (serviceHealth != null)
 			{
-				_msg.Warn("Setting service health to \"not serving\" due to exception " +
-				          "because the process might be compromised.");
+				string message = "Setting service health to \"not serving\".";
+				if (reason != null)
+				{
+					message = $"{message} Reason: {reason}";
+				}
+
+				_msg.Warn(message);
 
 				serviceHealth.SetStatus(serviceType, false);
 			}
@@ -62,7 +69,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				response.Progress = new VerificationProgressMsg
 				                    {
-					                    Message = exception.Message
+					                    Message = ExceptionUtils.FormatMessage(exception)
 				                    };
 			}
 
@@ -86,7 +93,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			                            {
 				                            Message = new LogMsg()
 				                                      {
-					                                      Message = exception.Message,
+					                                      Message = ExceptionUtils.FormatMessage(
+						                                      exception),
 					                                      MessageLevel = Level.Error.Value
 				                                      },
 				                            ServiceCallStatus = (int) ServiceCallStatus.Failed

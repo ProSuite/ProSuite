@@ -273,7 +273,9 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Transforms features of &apos;intersected&apos; by intersecting them with features from &apos;intersecting&apos;.
-        ///If intersected is a line class and intersecting is a polygon class, then the resulting feature class has an attribute &apos;PartIntersected&apos; which contains the (resultingFeature.Shape.Length / intersectedFeature.Shape.Length).
+        ///If ResultDimension is not specified, the result feature class has the same geometry dimension as the intersected feature class.
+        ///When the result feature class matches the dimension of the intersected feature class, an IntersectionRatio attribute is added. This represents the ratio of the result geometry to the original intersected geometry:
+        ///Polygons Features:  resultingFeature.Shape.Area / intersectedFeature.Shape [rest of string was truncated]&quot;;.
         /// </summary>
         public static string TrIntersect_0 {
             get {
@@ -296,6 +298,19 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string TrIntersect_intersecting {
             get {
                 return ResourceManager.GetString("TrIntersect_intersecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the dimensionality of the resulting intersection geometry.
+        ///- -1 (default): Automatically determines the result dimension by using the dimension of the intersected feature class.
+        ///- 0: Forces the result to be points (e.g., intersection points of polylines).
+        ///- 1: Forces the result to be polylines (e.g., overlapping line segments or polygon boundaries).
+        ///- 2: Forces the result to be polygons (e.g., overlapping areas of polygons)..
+        /// </summary>
+        public static string TrIntersect_ResultDimension {
+            get {
+                return ResourceManager.GetString("TrIntersect_ResultDimension", resourceCulture);
             }
         }
         

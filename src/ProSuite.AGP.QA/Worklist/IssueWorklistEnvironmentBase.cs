@@ -4,13 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
-using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -20,18 +18,18 @@ namespace ProSuite.AGP.QA.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		// TODO: (daro) create different Environments for IssueWorkList and ErrorWorkList and...
 		protected IssueWorkListEnvironmentBase(
 			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
 			: base(workListItemDatastore) { }
 
+		// TODO: ...drop this ctor.
 		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 			: base(new FileGdbIssueWorkListItemDatastore(path)) { }
 
-		public override string FileSuffix => ".iwl";
+		protected override string FileSuffix => ".iwl";
 
-		public Geometry AreaOfInterest { get; set; }
-
-		protected override string SuggestWorkListName()
+		public override string GetDisplayName()
 		{
 			return WorkListItemDatastore.SuggestWorkListName();
 		}
@@ -69,7 +67,7 @@ namespace ProSuite.AGP.QA.WorkList
 			// - They should be deletable by the user (in which case a new layer should be re-added)
 			// - If the layer is moved outside the group a new layer should be added. Only layers within the
 			//   sub-group are considered to be part of the work list.
-			string groupName = DisplayName; // _workListItemDatastore.SuggestWorkListGroupName();
+			string groupName = GetDisplayName(); // _workListItemDatastore.SuggestWorkListGroupName();
 			if (groupName != null)
 			{
 				GroupLayer workListGroupLayer = qaGroupLayer.FindLayers(groupName)
@@ -92,66 +90,76 @@ namespace ProSuite.AGP.QA.WorkList
 			return qaGroupLayer as T;
 		}
 
+		// TODO: (daro) drop!
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new IssueWorkList(repository, uniqueName, AreaOfInterest, displayName);
+			throw new NotImplementedException("This should not happen!");
+			//return new IssueWorkList(repository, AreaOfInterest, uniqueName, displayName);
 		}
 
-		protected override IWorkItemStateRepository CreateStateRepositoryCore(
-			string path, string workListName)
-		{
-			Type type = GetWorkListTypeCore<IssueWorkList>();
-
-			return new XmlWorkItemStateRepository(path, workListName, type);
-		}
-
-		protected override async Task<IWorkItemRepository> CreateItemRepositoryCore(
+		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
-			var tables = await PrepareReferencedTables();
+			DbStatusWorkItemRepository result = null;
 
-			var sourceClassDefinitions = new List<DbStatusSourceClassDefinition>(tables.Count);
+			var watch = Stopwatch.StartNew();
 
-			Stopwatch watch = Stopwatch.StartNew();
-
-			// TODO: Make attribute reader more generic, use AttributeRoles
-			Attributes[] attributes = new[]
-			                          {
-				                          Attributes.QualityConditionName,
-				                          Attributes.IssueCodeDescription,
-				                          Attributes.InvolvedObjects,
-				                          Attributes.IssueSeverity,
-				                          Attributes.IssueCode,
-				                          Attributes.IssueDescription,
-				                          Attributes.IssueType
-			                          };
-
-			foreach (Table table in tables)
+			try
 			{
-				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+				IList<Table> tables = await PrepareReferencedTables();
 
-				TableDefinition tableDefinition = table.GetDefinition();
+				IList<ISourceClass> sourceClasses = new List<ISourceClass>(tables.Count);
 
-				WorkListStatusSchema statusSchema =
-					WorkListItemDatastore.CreateStatusSchema(tableDefinition);
+				// TODO: Make attribute reader more generic, use AttributeRoles
+				var attributes = new[]
+				                 {
+					                 Attributes.QualityConditionName,
+					                 Attributes.IssueCodeDescription,
+					                 Attributes.InvolvedObjects,
+					                 Attributes.IssueSeverity,
+					                 Attributes.IssueCode,
+					                 Attributes.IssueDescription,
+					                 Attributes.IssueType
+				                 };
 
-				IAttributeReader attributeReader =
-					WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
+				var datastoresByHandle = new Dictionary<IntPtr, Datastore>();
 
-				var sourceClassDef =
-					new DbStatusSourceClassDefinition(table, defaultDefinitionQuery, statusSchema)
-					{
-						AttributeReader = attributeReader
-					};
+				foreach (Table table in tables)
+				{
+					string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
 
-				sourceClassDefinitions.Add(sourceClassDef);
+					TableDefinition tableDefinition = table.GetDefinition();
+
+					DbSourceClassSchema schema =
+						WorkListItemDatastore.CreateStatusSchema(tableDefinition);
+
+					IAttributeReader attributeReader =
+						WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
+
+					datastoresByHandle.TryAdd(table.GetDatastore().Handle, table.GetDatastore());
+
+					sourceClasses.Add(new DatabaseSourceClass(new GdbTableIdentity(table), schema,
+					                                          attributeReader,
+					                                          defaultDefinitionQuery));
+				}
+
+				Assert.True(datastoresByHandle.Count == 1,
+				            "Multiple geodatabases are referenced by the work list's source classes.");
+
+				var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
+				result = new DbStatusWorkItemRepository(sourceClasses, stateRepository,
+				                                        geodatabase.GetPath());
 			}
-
-			var result = new DbStatusWorkItemRepository(sourceClassDefinitions, stateRepository);
-
-			_msg.DebugStopTiming(watch, "Created revision work item repository");
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+			finally
+			{
+				_msg.DebugStopTiming(watch, "Created issue work item repository");
+			}
 
 			return result;
 		}

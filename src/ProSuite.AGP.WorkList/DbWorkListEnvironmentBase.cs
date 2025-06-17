@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList;
@@ -64,14 +62,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		AddToMapCore(GetTablesCore(), worklist);
 	}
 
-	public override bool IsSameWorkListDefinition(string existingDefinitionFilePath)
-	{
-		string suggestedWorkListName = Assert.NotNull(SuggestWorkListName());
-
-		return IsSameWorkListDefinition(existingDefinitionFilePath, suggestedWorkListName);
-	}
-
-	protected void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
+	protected virtual void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
 	{
 		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
 
@@ -100,7 +91,12 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 				featureLayer.SetExpanded(false);
 				featureLayer.SetVisibility(false);
-				featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
+				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+
+				if (! string.IsNullOrEmpty(defaultDefinitionQuery))
+				{
+					featureLayer.SetDefinitionQuery(defaultDefinitionQuery);
+				}
 
 #if ARCGISPRO_GREATER_3_2
 				featureLayer.SetShowLayerAtAllScales(true);
@@ -213,18 +209,6 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		}
 
 		return WorkListItemDatastore.GetTables();
-	}
-
-	private static bool IsSameWorkListDefinition(
-		[NotNull] string existingDefinitionFilePath,
-		[NotNull] string suggestedNewWorkListName)
-	{
-		string suggestedFileName =
-			FileSystemUtils.ReplaceInvalidFileNameChars(suggestedNewWorkListName, '_');
-
-		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFilePath);
-
-		return existingFileName.Equals(suggestedFileName);
 	}
 
 	private static void SetDisplayField(FeatureLayer layer, string name)

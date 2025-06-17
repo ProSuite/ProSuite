@@ -4,8 +4,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	// todo daro: find correct folder and namespace for this class
-
 	public class IssueItem : WorkItem, IIssueItem
 	{
 		private string _issueCodeDescription;
@@ -13,7 +11,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		// todo daro: use Factory Method on abstract ISourceClass base to create item
 		//			  instead of passing in reader
 		public IssueItem(long objectId, long uniqueTableId, [NotNull] Row row)
-			: base(objectId, uniqueTableId, row) { }
+			: base(uniqueTableId, row) { }
 
 		public string ExceptionRetirementDate { get; set; }
 

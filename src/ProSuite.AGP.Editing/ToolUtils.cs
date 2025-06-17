@@ -15,10 +15,8 @@ using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.AGP.Windows;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Input;
@@ -26,7 +24,7 @@ using Point = System.Windows.Point;
 
 namespace ProSuite.AGP.Editing
 {
-	// todo daro use GeometryUtils, GeometryFactory
+	// todo: daro use GeometryUtils, GeometryFactory
 	public static class ToolUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -64,13 +62,14 @@ namespace ProSuite.AGP.Editing
 		}
 
 		/// <summary>
-		/// Determines whether the sketch geometry is a single click.
+		/// Determines whether the sketch geometry is a single click. Call this method after a
+		/// polygon sketch has been simplified.
 		/// </summary>
 		/// <param name="sketchGeometry">The sketch geometry</param>
 		/// <returns></returns>
 		public static bool IsSingleClickSketch([NotNull] Geometry sketchGeometry)
 		{
-			return PickerUtils.IsSingleClick(sketchGeometry);
+			return ! (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0);
 		}
 
 		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
@@ -85,11 +84,18 @@ namespace ProSuite.AGP.Editing
 		                                              int selectionTolerancePixels,
 		                                              out bool singleClick)
 		{
+			if (sketch is MapPoint sketchPoint)
+			{
+				// Pre-determined single click (new standard) -> expand to tolerance
+				singleClick = true;
+				return GetSinglePickSelectionArea(sketchPoint, selectionTolerancePixels);
+			}
+
+			// Consider removing, if this is really not called any more:
 			singleClick = IsSingleClickSketch(sketch);
 
 			if (singleClick)
 			{
-				Assert.True(sketch.IsEmpty, "no simple single click sketch");
 				Point mouseScreenPosition = MouseUtils.GetMouseScreenPosition();
 				MapPoint mouseMapPosition = MapView.Active.ScreenToMap(mouseScreenPosition);
 				sketch = GetSinglePickSelectionArea(mouseMapPosition, selectionTolerancePixels);
@@ -286,7 +292,7 @@ namespace ProSuite.AGP.Editing
 
 			if (editingTemplate == null)
 			{
-				throw new InvalidOperationException("No current template");
+				throw new InvalidOperationException("No editing template is currently selected");
 			}
 
 			FeatureClass currentTargetClass =
@@ -307,7 +313,8 @@ namespace ProSuite.AGP.Editing
 
 				if (subtypeValue != null && subtypeValue != DBNull.Value)
 				{
-					int subtypeCode = (int) subtypeValue;
+					//NOTE: Subtypes can be based on short integers
+					int subtypeCode = Convert.ToInt32(subtypeValue);
 					subtype = classDefinition.GetSubtypes()
 					                         .FirstOrDefault(s => s.GetCode() == subtypeCode);
 				}
@@ -327,6 +334,34 @@ namespace ProSuite.AGP.Editing
 		public static SketchGeometryType GetSketchGeometryType()
 		{
 			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;
+		}
+
+		public static SketchGeometryType? ToggleSketchGeometryType(
+			SketchGeometryType? toggleType,
+			SketchGeometryType? currentSketchType,
+			SketchGeometryType defaultSketchType)
+		{
+			SketchGeometryType? type;
+
+			switch (toggleType)
+			{
+				// TODO: If the default is Polygon and the currentSketch is already Polygon -> Rectangle
+				case SketchGeometryType.Polygon:
+					type = currentSketchType == SketchGeometryType.Polygon
+						       ? defaultSketchType
+						       : toggleType;
+					break;
+				case SketchGeometryType.Lasso:
+					type = currentSketchType == SketchGeometryType.Lasso
+						       ? defaultSketchType
+						       : toggleType;
+					break;
+				default:
+					type = toggleType;
+					break;
+			}
+
+			return type;
 		}
 
 		/// <summary>

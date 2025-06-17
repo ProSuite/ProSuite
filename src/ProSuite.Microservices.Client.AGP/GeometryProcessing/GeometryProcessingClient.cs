@@ -71,6 +71,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			ChannelCredentials credentials,
 			int maxMessageLength)
 		{
+			// In the new Grpc.Net.Client, the root certificates must not be provided:
+			// https://stackoverflow.com/questions/59229663/grpc-and-asp-net-core-using-sslcredentials-with-non-null-arguments-is-not-suppo
+			if (credentials != ChannelCredentials.Insecure)
+			{
+				credentials = ChannelCredentials.SecureSsl;
+			}
+
 			ChannelBase channel = GrpcUtils.CreateChannel(
 				HostName, Port, credentials, maxMessageLength);
 
@@ -99,13 +106,15 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public Overlaps CalculateOverlaps(
 			IList<Feature> selectedFeatures,
 			IList<Feature> overlappingFeatures,
+			[CanBeNull] Envelope inExtent,
 			CancellationToken cancellationToken)
 		{
 			if (RemoveOverlapsClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
 			return RemoveOverlapsClientUtils.CalculateOverlaps(
-				RemoveOverlapsClient, selectedFeatures, overlappingFeatures, cancellationToken);
+				RemoveOverlapsClient, selectedFeatures, overlappingFeatures, inExtent,
+				cancellationToken);
 		}
 
 		public RemoveOverlapsResult RemoveOverlaps(IEnumerable<Feature> selectedFeatures,
@@ -163,20 +172,20 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		}
 
 		[NotNull]
-		public ChangeAlongCurves CalculateCutLines(
-			IList<Feature> sourceFeatures,
-			IList<Feature> targetFeatures,
-			TargetBufferOptions targetBufferOptions,
-			IBoundedXY clipExtent,
-			ZValueSource zValueSource,
-			CancellationToken cancellationToken)
+		public ChangeAlongCurves CalculateCutLines(IList<Feature> sourceFeatures,
+		                                           IList<Feature> targetFeatures,
+		                                           TargetBufferOptions targetBufferOptions,
+		                                           IBoundedXY clipExtent,
+		                                           double? customTolerance,
+		                                           ZValueSource zValueSource,
+		                                           CancellationToken cancellationToken)
 		{
 			if (ChangeAlongClient == null)
 				throw new InvalidOperationException("No microservice available.");
 
 			return ChangeAlongClientUtils.CalculateCutLines(
 				ChangeAlongClient, sourceFeatures, targetFeatures, targetBufferOptions, clipExtent,
-				zValueSource, cancellationToken);
+				customTolerance, zValueSource, cancellationToken);
 		}
 
 		[NotNull]
@@ -206,16 +215,16 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		}
 
 		[NotNull]
-		public List<ResultFeature> ApplyCutLines(
-			IList<Feature> sourceFeatures,
-			IList<Feature> targetFeatures,
-			IList<CutSubcurve> selectedReshapeLines,
-			TargetBufferOptions targetBufferOptions,
-			IBoundedXY clipExtent,
-			ZValueSource zValueSource,
-			bool insertVerticesInTarget,
-			CancellationToken cancellationToken,
-			out ChangeAlongCurves newChangeAlongCurves)
+		public List<ResultFeature> ApplyCutLines(IList<Feature> sourceFeatures,
+		                                         IList<Feature> targetFeatures,
+		                                         IList<CutSubcurve> selectedReshapeLines,
+		                                         TargetBufferOptions targetBufferOptions,
+		                                         IBoundedXY clipExtent,
+		                                         double? customTolerance,
+		                                         ZValueSource zValueSource,
+		                                         bool insertVerticesInTarget,
+		                                         CancellationToken cancellationToken,
+		                                         out ChangeAlongCurves newChangeAlongCurves)
 		{
 			if (targetFeatures == null)
 			{
@@ -227,8 +236,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			return ChangeAlongClientUtils.ApplyCutCurves(
 				ChangeAlongClient, sourceFeatures, targetFeatures,
-				targetBufferOptions, clipExtent, zValueSource, insertVerticesInTarget,
-				selectedReshapeLines, cancellationToken, out newChangeAlongCurves);
+				targetBufferOptions, clipExtent, customTolerance, zValueSource,
+				insertVerticesInTarget, selectedReshapeLines, cancellationToken,
+				out newChangeAlongCurves);
 		}
 
 		#endregion

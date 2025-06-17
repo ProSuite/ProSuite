@@ -8,8 +8,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -348,6 +348,7 @@ namespace ProSuite.Microservices.AO
 			return relTableMsg;
 		}
 
+		[NotNull]
 		public static ConnectionMsg ToConnectionMsg([NotNull] ConnectionProvider connectionProvider)
 		{
 			string connectionString = null;
@@ -360,6 +361,9 @@ namespace ProSuite.Microservices.AO
 			{
 				connectionString = ToConnectionString(sdeDirectConnection);
 			}
+			else
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported connection provider: {connectionProvider}");
 
 			return new ConnectionMsg
 			       {

@@ -10,10 +10,13 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.GP;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using GeometryType = ArcGIS.Core.Geometry.GeometryType;
 
 namespace ProSuite.AGP.QA.WorkList;
 
@@ -32,7 +35,8 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 	public FileGdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
 	{
-		string gdbPath = null;
+		string gdbPath;
+
 		if (workListFileOrIssueGdbPath != null &&
 		    workListFileOrIssueGdbPath.EndsWith(
 			    ".iwl", StringComparison.InvariantCultureIgnoreCase))
@@ -72,8 +76,6 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		if (_issueGdbPath != null &&
 		    _issueGdbPath.EndsWith(".iwl", StringComparison.InvariantCultureIgnoreCase))
 		{
-			// It's the definition file
-			string iwlFilePath = _issueGdbPath;
 			if (! ContainsValidIssueGdbPath(_issueGdbPath, out string _, out message))
 			{
 				return false;
@@ -148,7 +150,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
-	public WorkListStatusSchema CreateStatusSchema(TableDefinition tableDefinition)
+	public DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
 		int fieldIndex;
 
@@ -167,10 +169,19 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 			throw;
 		}
 
+		string shapeField = null;
+		string objectIDField = tableDefinition.GetObjectIDField();
+
+		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+		{
+			shapeField = featureClassDefinition.GetShapeField();
+		}
+
 		// The status schema is the same for production model datasets and Issue Geodatabase tables.
-		return new WorkListStatusSchema(_statusFieldName, fieldIndex,
-		                                (int) IssueCorrectionStatus.NotCorrected,
-		                                (int) IssueCorrectionStatus.Corrected);
+		return new DbSourceClassSchema(objectIDField, shapeField,
+		                               _statusFieldName, fieldIndex,
+		                               (int) IssueCorrectionStatus.NotCorrected,
+		                               (int) IssueCorrectionStatus.Corrected);
 	}
 
 	public string SuggestWorkListName()
@@ -184,6 +195,43 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 
 		return IssueGdbSchema.IssueFeatureClassNames.Any(
 			n => n.Equals(sourceClass.Name, StringComparison.InvariantCultureIgnoreCase));
+	}
+
+	public IObjectDataset GetObjetDataset(TableDefinition tableDefinition)
+	{
+		IObjectDataset dataset;
+
+		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+		{
+			GeometryType geometryType = featureClassDefinition.GetShapeType();
+
+			switch (geometryType)
+			{
+				case GeometryType.Point:
+				case GeometryType.Multipoint:
+					dataset = new ErrorMultipointDataset("IssuePoints");
+					break;
+				case GeometryType.Polyline:
+					dataset = new ErrorLineDataset("IssueLines");
+					break;
+				case GeometryType.Polygon:
+					dataset = new ErrorPolygonDataset("IssuePolygons");
+					break;
+				case GeometryType.Multipatch:
+					dataset = new ErrorMultiPatchDataset("IssueMultiPatches");
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+		else
+		{
+			dataset = new ErrorTableDataset("IssueRows");
+		}
+
+		Assert.NotNull(dataset,
+		               $"Error dataset is null for table definition {tableDefinition.GetName()}");
+		return dataset;
 	}
 
 	#endregion

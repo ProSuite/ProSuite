@@ -1,76 +1,77 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence;
-using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Test
 {
 	public class ItemRepositoryMock : IWorkItemRepository
 	{
-		private readonly IEnumerable<IWorkItem> _items;
+		private readonly List<IWorkItem> _items;
 		private int _currentIndex;
+		private int _lastUsedOid;
 
-		public ItemRepositoryMock(IEnumerable<IWorkItem> items)
+		public ItemRepositoryMock(IEnumerable<IWorkItem> items, IWorkItemStateRepository stateRepository = null)
 		{
-			_items = items;
+			_items = items.ToList();
+			WorkItemStateRepository = stateRepository;
 		}
 
-		public ItemRepositoryMock(List<Table> items, IWorkItemStateRepository stateRepository)
+		public ItemRepositoryMock(List<Table> items, IWorkItemStateRepository stateRepository = null)
+		{
+			WorkItemStateRepository = stateRepository;
+		}
+
+		public long Count()
 		{
 			throw new NotImplementedException();
 		}
 
-		public int GetCount(QueryFilter filter = null)
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			QueryFilter filter, WorkItemStatus? statusFilter,
+			bool excludeGeometry = false)
 		{
-			throw new NotImplementedException();
-		}
+			IEnumerable<IWorkItem> query =
+				statusFilter == null
+					? _items
+					: _items.Where(item => item.Status == statusFilter);
 
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
-		{
-			return _items;
-		}
+			IEnumerable<IWorkItem> result;
+			if (filter.ObjectIDs.Count == 0)
+			{
+				result = query;
+			}
+			else
+			{
+				result = query.Where(item => filter.ObjectIDs.Contains(item.GdbRowProxy.ObjectId));
+			}
 
-		public IEnumerable<IWorkItem> GetItems(Geometry areaOfInterest,
-		                                       WorkItemStatus? statusFilter, bool recycle = true)
-		{
-			return _items;
-		}
+			IEnumerable<KeyValuePair<IWorkItem, Envelope>> dictionary = result.ToDictionary(item => item, item => item.Extent);
 
-		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
-		                                       bool recycle = true)
-		{
-			throw new NotImplementedException();
+			foreach ((IWorkItem item, Geometry geometry) in dictionary)
+			{
+				WorkItemStateRepository?.Refresh(item);
+				yield return KeyValuePair.Create(item, geometry);
+			}
 		}
 
 		public void Refresh(IWorkItem item)
 		{
-			throw new NotImplementedException();
+			WorkItemStateRepository?.Refresh(item);
 		}
 
-		public Task UpdateAsync(IWorkItem item)
+		public void UpdateState(IWorkItem item)
 		{
-			return Task.FromResult(0);
+			WorkItemStateRepository?.UpdateState(item);
 		}
-
-		public void Save(IWorkItem item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void UpdateVolatileState(IEnumerable<IWorkItem> items) { }
 
 		public void Commit()
 		{
-			throw new NotImplementedException();
-		}
-
-		public void Discard()
-		{
-			throw new NotImplementedException();
+			WorkItemStateRepository?.Commit(new List<ISourceClass> { new SourceClassMock() });
 		}
 
 		public void SetCurrentIndex(int currentIndex)
@@ -86,11 +87,14 @@ namespace ProSuite.AGP.WorkList.Test
 		public void SetVisited(IWorkItem item)
 		{
 			item.Visited = true;
+			UpdateState(item);
 		}
 
 		public Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
-			throw new NotImplementedException();
+			UpdateState(item);
+
+			return Task.CompletedTask;
 		}
 
 		public void UpdateStateRepository(string path)
@@ -98,9 +102,12 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public List<ISourceClass> SourceClasses { get; }
+		public IList<ISourceClass> SourceClasses { get; }
 
 		public string WorkListDefinitionFilePath { get; set; }
+
+		[CanBeNull]
+		public IWorkItemStateRepository WorkItemStateRepository { get; }
 
 		public void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
 		{
@@ -115,6 +122,34 @@ namespace ProSuite.AGP.WorkList.Test
 		public Row GetSourceRow(ISourceClass sourceClass, long oid)
 		{
 			throw new NotImplementedException();
+		}
+
+		public long GetNextOid()
+		{
+			return ++_lastUsedOid;
+		}
+
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+			Table table, QueryFilter filter,
+			WorkItemStatus? statusFilter,
+			bool excludeGeometry = false)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Add(IWorkItem item)
+		{
+			_items.Add(item);
+		}
+
+		public bool Remove(IWorkItem item)
+		{
+			return _items.Remove(item);
 		}
 
 		public void RefreshGeometry(IWorkItem item)

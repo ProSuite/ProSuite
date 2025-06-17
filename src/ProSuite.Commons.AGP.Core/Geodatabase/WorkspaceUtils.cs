@@ -1,5 +1,5 @@
 using System;
-using System.Data.Common;
+using System.IO;
 using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -7,6 +7,7 @@ using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Ado;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using Version = ArcGIS.Core.Data.Version;
 
@@ -35,31 +36,44 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <returns></returns>
 		public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(string catalogPath)
 		{
-			
-			if (System.IO.Path.GetExtension(catalogPath)
-			          .Equals(".sde", StringComparison.InvariantCultureIgnoreCase))
+			string extension = Path.GetExtension(catalogPath);
+
+			if (extension
+			    .Equals(".sde", StringComparison.InvariantCultureIgnoreCase))
 			{
 				DatabaseConnectionFile connector = new DatabaseConnectionFile(new Uri(catalogPath));
-				
+
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
 
-			if (System.IO.Path.GetExtension(catalogPath)
-			          .Equals(".gdb", StringComparison.InvariantCultureIgnoreCase)) {
+			if (extension
+			    .Equals(".gdb", StringComparison.InvariantCultureIgnoreCase))
+			{
 				var connector = new FileGeodatabaseConnectionPath(new Uri(catalogPath));
 
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
-		   
-			// TODO: SQLite, Mobile, other?
 
-			return null;
+			// Mobile Geodatabase
+			if (extension
+			    .Equals(".geodatabase", StringComparison.InvariantCultureIgnoreCase))
+			{
+				var connector = new MobileGeodatabaseConnectionPath(new Uri(catalogPath));
+
+				return new ArcGIS.Core.Data.Geodatabase(connector);
+			}
+
+			string message =
+				$"Finder: Unsupported geodatabase extension: {extension} for path: {catalogPath}";
+			_msg.Debug(message);
+			throw new NotSupportedException(message);
 		}
 
 		/// <summary>
 		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
 		/// </summary>
 		/// <returns></returns>
+		[NotNull]
 		public static Datastore OpenDatastore([NotNull] Connector connector)
 		{
 			try
@@ -107,18 +121,37 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Failed to open Datastore {GetDatastoreDisplayText(connector)}", e);
-				throw;
+				string message = $"Failed to open Datastore {GetDatastoreDisplayText(connector)}";
+				_msg.Debug(message, e);
+				throw new IOException($"{message}: {e.Message}", e);
 			}
 		}
 
-		public static bool IsSameDatastore(Datastore datastore1, Datastore datastore2)
+		public static bool IsSameDatastore([CanBeNull] Datastore datastore1,
+		                                   [CanBeNull] Datastore datastore2,
+		                                   DatastoreComparison comparison = DatastoreComparison.Exact)
 		{
-			// todo daro check ProProcessingUtils
-			if (ReferenceEquals(datastore1, datastore2)) return true;
-			if (Equals(datastore1.Handle, datastore2.Handle)) return true;
+			// Comparison in case of null:
+			if (datastore1 == null && datastore2 == null)
+			{
+				return true;
+			}
 
-			return false;
+			if (datastore1 == null || datastore2 == null)
+			{
+				return false;
+			}
+
+			if (comparison == DatastoreComparison.ReferenceEquals)
+			{
+				return ReferenceEquals(datastore1, datastore2) ||
+				       Equals(datastore1.Handle, datastore2.Handle);
+			}
+
+			DatastoreName datastoreName1 = new DatastoreName(datastore1.GetConnector());
+			DatastoreName datastoreName2 = new DatastoreName(datastore2.GetConnector());
+
+			return datastoreName1.Equals(datastoreName2, comparison);
 		}
 
 		[CanBeNull]
@@ -307,6 +340,59 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					throw new ArgumentOutOfRangeException(
 						$"Unsupported workspace type: {connector?.GetType()}");
 			}
+		}
+
+		public static WorkspaceDbType GetWorkspaceDbType(Datastore datastore)
+		{
+			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			{
+				GeodatabaseType gdbType = geodatabase.GetGeodatabaseType();
+
+				// TODO: Test newer workspace types, such as sqlite, Netezza
+
+				var connector = geodatabase.GetConnector();
+
+				if (gdbType == GeodatabaseType.LocalDatabase)
+				{
+					return WorkspaceDbType.FileGeodatabase;
+				}
+
+				if (gdbType == GeodatabaseType.FileSystem)
+				{
+					return WorkspaceDbType.FileSystem;
+				}
+
+				if (gdbType != GeodatabaseType.RemoteDatabase)
+				{
+					return WorkspaceDbType.Unknown;
+				}
+
+				if (connector is DatabaseConnectionProperties connectionProperties)
+				{
+					switch (connectionProperties.DBMS)
+					{
+						case EnterpriseDatabaseType.Oracle:
+							return WorkspaceDbType.ArcSDEOracle;
+						case EnterpriseDatabaseType.Informix:
+							return WorkspaceDbType.ArcSDEInformix;
+						case EnterpriseDatabaseType.SQLServer:
+							return WorkspaceDbType.ArcSDESqlServer;
+						case EnterpriseDatabaseType.PostgreSQL:
+							return WorkspaceDbType.ArcSDEPostgreSQL;
+						case EnterpriseDatabaseType.DB2:
+							return WorkspaceDbType.ArcSDEDB2;
+						case EnterpriseDatabaseType.SQLite:
+							return WorkspaceDbType.MobileGeodatabase;
+						default:
+							return WorkspaceDbType.ArcSDE;
+					}
+				}
+
+				// No connection properties (probably SDE file -> TODO: How to find the connection details? Connection string?)
+				return WorkspaceDbType.ArcSDE;
+			}
+
+			return WorkspaceDbType.Unknown;
 		}
 
 		private static string GetConnectionDisplayText(

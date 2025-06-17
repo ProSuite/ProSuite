@@ -6,7 +6,9 @@ using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Input;
 
@@ -14,17 +16,20 @@ namespace ProSuite.Commons.AGP.Picker;
 
 public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
+	[NotNull] private readonly Geometry _sketchGeometry;
+	[CanBeNull] private readonly MapPoint _clickPoint;
+
 	[UsedImplicitly]
 	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
-	                               int selectionTolerance,
+	                               int tolerance,
 	                               Point pickerLocation,
 	                               SelectionCombinationMethod? selectionMethod = null)
 	{
-		SketchGeometry = sketchGeometry;
-		SelectionTolerance = selectionTolerance;
+		_sketchGeometry = sketchGeometry;
+		Tolerance = tolerance;
 		PickerLocation = pickerLocation;
 
-		IsSingleClick = PickerUtils.IsSingleClick(sketchGeometry);
+		IsPointClick = PickerUtils.IsPointClick(sketchGeometry, tolerance, out _clickPoint);
 		SpatialRelationship = PickerUtils.GetSpatialRelationship();
 
 		SelectionCombinationMethod = selectionMethod ?? PickerUtils.GetSelectionCombinationMethod();
@@ -33,15 +38,10 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	}
 
 	protected List<Key> PressedKeys { get; } = new();
+	
+	public int Tolerance { get; }
 
-	/// <summary>
-	/// The original sketch geometry, without expansion or simplification.
-	/// </summary>
-	private Geometry SketchGeometry { get; set; }
-
-	public int SelectionTolerance { get; }
-
-	public bool IsSingleClick { get; }
+	public bool IsPointClick { get; }
 
 	public bool AggregateItems =>
 		PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
@@ -52,29 +52,27 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	/// <summary>
 	/// Side-effect-free method that returns the geometry which can be used for spatial queries.
-	/// For single-click picks, it returns the geometry expanded by the <see cref="SelectionTolerance" />.
+	/// For single-click picks, it returns the geometry expanded by the <see cref="Tolerance" />.
 	/// This method must be called on the CIM thread.
 	/// </summary>
 	/// <returns></returns>
 	public Geometry GetSelectionGeometry()
 	{
-		if (! IsSingleClick)
+		if (IsPointClick)
 		{
-			return SketchGeometry;
+			Assert.NotNull(_clickPoint);
+			return GetSelectionGeometryCore(_clickPoint);
 		}
 
-		return GetSelectionGeometryCore(PickerLocation);
-	}
-
-	protected virtual Geometry GetSelectionGeometryCore(Point screenPoint)
-	{
-		return PickerUtils.CreatePolygon(screenPoint, SelectionTolerance);
+		// Otherwise relational operators and spatial queries return the wrong result
+		Geometry simpleGeometry = GeometryUtils.Simplify(_sketchGeometry);
+		return Assert.NotNull(simpleGeometry, "Geometry is null");
 	}
 
 	[NotNull]
 	public virtual IPickableItemsFactory CreateItemsFactory()
 	{
-		if (IsSingleClick)
+		if (IsPointClick)
 		{
 			return CreateItemsFactory<IPickableFeatureItem>();
 		}
@@ -112,47 +110,72 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	[CanBeNull]
 	public virtual IPickableItem PickBest(IEnumerable<IPickableItem> items)
 	{
-		return items.FirstOrDefault();
+		return items.OrderBy(item => GeometryUtils.GetShapeDimension(item.Geometry.GeometryType))
+		            .FirstOrDefault();
 	}
 
 	public Point PickerLocation { get; set; }
 
 	public bool NoMultiselection { get; set; }
 
-	public virtual PickerMode GetPickerMode(ICollection<FeatureSelectionBase> orderedSelection)
+	public virtual PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates)
 	{
+		if (candidates.Count == 0)
+		{
+			return PickerMode.None;
+		}
+
+		var modes = PickerMode.PickBest;
+
 		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 		{
+			// always show picker if CTRL pressed
 			return PickerMode.ShowPicker;
 		}
 
-		bool areaSelect = ! IsSingleClick;
-		if (areaSelect)
+		if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
 		{
-			if (NoMultiselection)
+			modes |= PickerMode.ShowPicker;
+		}
+
+		int candidatesCount = candidates.Sum(fs => fs.GetCount());
+
+		if (NoMultiselection && candidatesCount > 1)
+		{
+			// If area selection: show picker
+			if (! IsPointClick)
 			{
-				return PickerMode.ShowPicker;
+				modes |= PickerMode.ShowPicker;
+			}
+			// if not: pick best
+		}
+		else
+		{
+			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+			{
+				modes |= PickerMode.PickAll;
 			}
 
-			return PickerMode.PickAll;
+			if (! IsPointClick)
+			{
+				modes |= PickerMode.PickAll;
+			}
 		}
 
-		if (NoMultiselection)
+		// the higher mode wins
+		var result = PickerMode.PickBest;
+
+		if ((modes & PickerMode.ShowPicker) != 0)
 		{
-			return PickerMode.ShowPicker;
+			result = PickerMode.ShowPicker;
 		}
 
-		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+		if ((modes & PickerMode.PickAll) != 0)
 		{
-			return PickerMode.PickAll;
+			result = PickerMode.PickAll;
 		}
 
-		if (CountLowestShapeDimension(orderedSelection) > 1)
-		{
-			return PickerMode.ShowPicker;
-		}
-
-		return PickerMode.PickBest;
+		return result;
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
@@ -162,8 +185,12 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public void Dispose()
 	{
-		SketchGeometry = null;
 		PressedKeys.Clear();
+	}
+
+	protected virtual Geometry GetSelectionGeometryCore(Geometry geometry)
+	{
+		return PickerUtils.ExpandGeometryByPixels(geometry, Tolerance);
 	}
 
 	private void AreModifierKeysPressed()
@@ -187,7 +214,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		}
 	}
 
-	protected static int CountLowestShapeDimension(
+	protected static int CountLowestGeometryDimension(
 		IEnumerable<FeatureSelectionBase> layerSelection)
 	{
 		var count = 0;

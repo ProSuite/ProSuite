@@ -185,8 +185,13 @@ namespace ProSuite.DomainModel.Core.QA
 		/// returned.
 		/// </summary>
 		/// <returns></returns>
-		public IEnumerable<Dataset> GetAllSourceDatasets()
+		public IEnumerable<Dataset> GetAllSourceDatasets(bool excludeReferenceDatasets = false)
 		{
+			if (excludeReferenceDatasets && UsedAsReferenceData)
+			{
+				yield break;
+			}
+
 			if (DatasetValue != null)
 			{
 				yield return DatasetValue;
@@ -194,7 +199,8 @@ namespace ProSuite.DomainModel.Core.QA
 			else if (ValueSource != null)
 			{
 				foreach (Dataset referencedDataset in ValueSource.GetDatasetParameterValues(
-					         includeSourceDatasets: true))
+					         includeSourceDatasets: true,
+					         excludeReferenceDatasets: excludeReferenceDatasets))
 				{
 					yield return referencedDataset;
 				}

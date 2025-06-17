@@ -10,42 +10,42 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
-	public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongToolOptions>
+	public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 	{
-		public ReshapeAlongToolOptions([CanBeNull] PartialReshapeAlongToolOptions centralOptions,
-		                               [CanBeNull] PartialReshapeAlongToolOptions localOptions)
+		public ReshapeAlongToolOptions([CanBeNull] PartialReshapeAlongOptions centralOptions,
+		                               [CanBeNull] PartialReshapeAlongOptions localOptions)
 		{
 			CentralOptions = centralOptions;
-			LocalOptions = localOptions ?? new PartialReshapeAlongToolOptions();
+			LocalOptions = localOptions ?? new PartialReshapeAlongOptions();
 
 			// Basic settings
 			CentralizableInsertVertices =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.InsertVertices), true);
+					ReflectionUtils.GetProperty(() => LocalOptions.InsertVerticesInTargets), true);
 
 			// Display Performance Options
 			CentralizableDisplayExcludeCutLines =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayExcludeCutLines), true);
+					ReflectionUtils.GetProperty(() => LocalOptions.DisplayLinesInVisibleExtentOnly), true);
 			CentralizableDisplayRecalculateCutLines =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayRecalculateCutLines),
+					ReflectionUtils.GetProperty(() => LocalOptions.RecalculateLinesOnExtentChange),
 					false);
 			CentralizableDisplayHideCutLines =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayHideCutLines), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.HideLinesBeyondMaxScale), false);
 			CentralizableDisplayHideCutLinesScale =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayHideCutLinesScale),
+					ReflectionUtils.GetProperty(() => LocalOptions.HideLinesMaxScaleDenominator),
 					10000.0);
 
 			// Minimal Tolerance settings
 			CentralizableMinimalToleranceApply =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.MinimalToleranceApply), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.UseCustomTolerance), false);
 			CentralizableMinimalTolerance =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.MinimalTolerance), 0.1);
+					ReflectionUtils.GetProperty(() => LocalOptions.CustomTolerance), 0.1);
 
 			// Buffer settings
 			CentralizableBufferTarget =
@@ -53,7 +53,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					ReflectionUtils.GetProperty(() => LocalOptions.BufferTarget), false);
 			CentralizableBufferTolerance =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.BufferTolerance), 1.0);
+					ReflectionUtils.GetProperty(() => LocalOptions.TargetBufferDistance), 1.0);
 			CentralizableEnforceMinimumBufferSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(
@@ -65,21 +65,21 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			// Reshape line filter settings
 			CentralizableExcludeLinesOutsideSource =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOutsideSource),
+					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOutsideToleranceOfSource),
 					false);
 			CentralizableExcludeLinesTolerance =
 				InitializeSetting<double>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesTolerance), 1.0);
+					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOutsideSourceTolerance), 1.0);
 			CentralizableExcludeLinesDisplay =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesDisplay), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.ShowExcludeLinesOutsideSourceToleranceBuffer), false);
 			CentralizableExcludeLinesShowOnlyRemove =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesShowOnlyRemove),
+					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOutsidePolygonSource),
 					false);
 			CentralizableExcludeLinesOverlaps =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesOverlaps), false);
+					ReflectionUtils.GetProperty(() => LocalOptions.ExcludeLinesResultingInTargetOverlaps), false);
 
 			// Z Value settings
 			CentralizableZValueSource =
@@ -411,7 +411,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				       excludeOutSideSourceTolerance: ExcludeLinesTolerance)
 			       {
 				       OnlyResultingInRemovals = ExcludeLinesShowOnlyRemove,
-				       ExcludeResultingInOverlaps = ExcludeLinesOverlaps
+				       ExcludeResultingInOverlaps = ExcludeLinesOverlaps,
+				       ShowExcludeReshapeLinesToleranceBuffer =
+					       ShowExcludeReshapeLinesToleranceBuffer
 			       };
 		}
 	}

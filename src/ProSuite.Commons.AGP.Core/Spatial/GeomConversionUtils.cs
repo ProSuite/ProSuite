@@ -14,6 +14,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
 		}
 
+		public static Pnt3D GetPoint3D(Coordinate3D coord)
+		{
+			return new Pnt3D(coord.X, coord.Y, coord.Z);
+		}
+
 		public static Polyhedron CreatePolyhedron(Multipatch multipatch)
 		{
 			var ringGroups = new List<RingGroup>();
@@ -65,18 +70,6 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return new Polyhedron(ringGroups);
 		}
 
-		private static IEnumerable<Pnt3D> GetPoints(
-			ReadOnlyPointCollection pointCollection,
-			int patchStartPointIndex, int patchPointCount)
-		{
-			int patchEndPointIndex = patchStartPointIndex + patchPointCount;
-			for (int i = patchStartPointIndex; i < patchEndPointIndex; i++)
-			{
-				MapPoint mapPoint = pointCollection[i];
-				yield return new Pnt3D(mapPoint.X, mapPoint.Y, mapPoint.Z);
-			}
-		}
-
 		public static Multipatch CreateMultipatch([NotNull] Polyhedron polyhedron,
 		                                          [CanBeNull] SpatialReference spatialReference)
 		{
@@ -110,6 +103,59 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			Multipatch multipatch = mpBuilder.ToGeometry();
 
 			return multipatch;
+		}
+
+		public static MultiPolycurve CreateMultiPolycurve([NotNull] Polygon polygon)
+		{
+			var result = new List<RingGroup>();
+			foreach (Polygon singlePolygon in GeometryUtils.ConnectedComponents(polygon))
+			{
+				RingGroup ringGroup = null;
+
+				foreach (ReadOnlySegmentCollection ring in singlePolygon.Parts)
+				{
+					var line = new Linestring(GetPoints(ring));
+					if (ringGroup == null)
+					{
+						ringGroup = new RingGroup(line);
+					}
+					else
+					{
+						ringGroup.AddInteriorRing(line);
+					}
+
+				}
+				result.Add(ringGroup);
+			}
+
+			return new MultiPolycurve(result);
+		}
+
+		private static IEnumerable<Pnt3D> GetPoints(
+			ReadOnlyPointCollection pointCollection,
+			int patchStartPointIndex, int patchPointCount)
+		{
+			int patchEndPointIndex = patchStartPointIndex + patchPointCount;
+			for (int i = patchStartPointIndex; i < patchEndPointIndex; i++)
+			{
+				MapPoint mapPoint = pointCollection[i];
+				yield return new Pnt3D(mapPoint.X, mapPoint.Y, mapPoint.Z);
+			}
+		}
+
+		private static IEnumerable<Pnt3D> GetPoints(ReadOnlySegmentCollection ring)
+		{
+			Segment lastSegment = null;
+			foreach (Segment segment in ring)
+			{
+				lastSegment = segment;
+				yield return GetPoint3D(segment.StartPoint.Coordinate3D);
+			}
+
+			if (lastSegment != null)
+			{
+				yield return GetPoint3D(lastSegment.EndPoint.Coordinate3D);
+			}
 		}
 
 		private static Patch ToPatch([NotNull] Linestring linestring,

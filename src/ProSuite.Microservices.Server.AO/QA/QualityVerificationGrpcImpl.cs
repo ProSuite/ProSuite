@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,11 +18,14 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -40,9 +45,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly StaTaskScheduler _staThreadScheduler;
-
-		private static readonly ThreadAffineUseNameProvider _userNameProvider =
-			new ThreadAffineUseNameProvider();
 
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
 			_verificationInputsFactoryMethod;
@@ -64,7 +66,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_staThreadScheduler = new StaTaskScheduler(maxThreadCount);
 
-			EnvironmentUtils.SetUserNameProvider(_userNameProvider);
+			var perThreadUserNameProvider =
+				EnvironmentUtils.GetUserNameProvider() as ThreadAffineUseNameProvider;
+
+			if (perThreadUserNameProvider == null)
+			{
+				var userNameProvider = new ThreadAffineUseNameProvider();
+				EnvironmentUtils.SetUserNameProvider(userNameProvider);
+			}
 		}
 
 		/// <summary>
@@ -121,6 +130,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// service should continue serving (or shut down) in case of an exception.
 		/// </summary>
 		public bool KeepServingOnErrorDefaultValue { get; set; }
+
+		/// <summary>
+		/// Whether the service should be set to unhealthy after each verification. This allows
+		/// for process recycling after each verification to avoid GDB-locks.
+		/// </summary>
+		public bool SetUnhealthyAfterEachVerification { get; set; } =
+			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				"PROSUITE_QA_SERVER_SET_UNHEALTHY_AFTER_VERIFICATION");
+
+		/// <summary>
+		/// Whether the service should be set to unhealthy after a verification when the memory
+		/// allocation (private bytes) exceeds the specified amount in MB. This allows
+		/// for process recycling after verifications that fragment the process memory
+		/// which can lead to excessive memory pressure on the host.
+		/// </summary>
+		public double UnhealthyMemoryLimitMegaBytes { get; set; } = GetUnhealthyMemoryLimit();
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -331,6 +356,47 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.DebugFormat("Remaining requests that are inprogress: {0}",
 				                 CurrentLoad.CurrentProcessCount);
 			}
+
+			if (Health?.IsAnyServiceUnhealthy() == true)
+			{
+				return;
+			}
+
+			if (SetUnhealthyAfterEachVerification)
+			{
+				ServiceUtils.SetUnhealthy(
+					Health, GetType(),
+					"Process is configured to be set to un-healthy after each request to allow for process recycling.");
+			}
+
+			if (UnhealthyMemoryLimitMegaBytes >= 0)
+			{
+				double privateBytesMb;
+				using (Process process = Process.GetCurrentProcess())
+				{
+					long privateBytes = process.PrivateMemorySize64;
+
+					const double mega = 1024 * 1024;
+
+					privateBytesMb = privateBytes / mega;
+				}
+
+				if (privateBytesMb > UnhealthyMemoryLimitMegaBytes)
+				{
+					string reason =
+						"High memory usage (allow for process recycling). " +
+						$"Private Memory: {privateBytesMb} MB. Configured limit: {UnhealthyMemoryLimitMegaBytes} MB";
+
+					ServiceUtils.SetUnhealthy(Health, GetType(), reason);
+				}
+				else
+				{
+					_msg.InfoFormat(
+						"Process is still healthy in terms of memory usage. " +
+						"Private Memory: {0} MB. Configured limit: {1} MB",
+						privateBytesMb, UnhealthyMemoryLimitMegaBytes);
+				}
+			}
 		}
 
 		private async Task<bool> EnsureLicenseAsync()
@@ -451,10 +517,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 				else
 				{
-					// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
-					// short-term objects (request) -> add to background verification inputs
 					IBackgroundVerificationInputs backgroundVerificationInputs =
-						_verificationInputsFactoryMethod(request);
+						CreateBackgroundVerificationInputs(request);
 
 					if (initialRequest.Schema != null)
 					{
@@ -473,7 +537,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					qaService = CreateVerificationService(
 						backgroundVerificationInputs, responseStreamer, trackCancel);
 
-					verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+					verification = WithCulture(
+						request.Parameters.ReportCultureCode,
+						() => qaService.Verify(backgroundVerificationInputs, trackCancel));
 
 					deletableAllowedErrorRefs.AddRange(
 						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
@@ -482,7 +548,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
@@ -578,7 +644,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
@@ -601,6 +667,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ITrackCancel trackCancel)
 		{
 			SetupUserNameProvider(request.UserName);
+
 			try
 			{
 				VerificationParametersMsg parameters = request.Parameters;
@@ -642,7 +709,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.DebugFormat("Error during processing of request {0}", request);
-				_msg.Error($"Error verifying quality: {e.Message}", e);
+				_msg.Error($"Error verifying quality: {ExceptionUtils.FormatMessage(e)}", e);
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
@@ -662,22 +729,39 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ITrackCancel trackCancel,
 			out BackgroundVerificationService qaService)
 		{
+			IBackgroundVerificationInputs backgroundVerificationInputs =
+				CreateBackgroundVerificationInputs(request);
+
+			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+
+			BackgroundVerificationService service = CreateVerificationService(
+				backgroundVerificationInputs, responseStreamer, trackCancel);
+
+			service.DistributedTestRunner = distributedTestRunner;
+
+			QualityVerification verification =
+				WithCulture(request.Parameters.ReportCultureCode,
+				            () => service.Verify(backgroundVerificationInputs, trackCancel));
+
+			qaService = service;
+			return verification;
+		}
+
+		private IBackgroundVerificationInputs CreateBackgroundVerificationInputs(
+			VerificationRequest request)
+		{
 			// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
 			// short-term objects (request) -> add to background verification inputs
 			IBackgroundVerificationInputs backgroundVerificationInputs =
 				_verificationInputsFactoryMethod(request);
 
-			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+			if (SupportedInstanceDescriptors != null)
+			{
+				backgroundVerificationInputs.SupportedInstanceDescriptors =
+					SupportedInstanceDescriptors;
+			}
 
-			qaService = CreateVerificationService(
-				backgroundVerificationInputs, responseStreamer, trackCancel);
-
-			qaService.DistributedTestRunner = distributedTestRunner;
-
-			QualityVerification verification =
-				qaService.Verify(backgroundVerificationInputs, trackCancel);
-
-			return verification;
+			return backgroundVerificationInputs;
 		}
 
 		private QualityVerification VerifyStandaloneXmlCore<T>(
@@ -715,10 +799,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				xmlService.ProgressStreamer = responseStreamer;
 			}
 
-			Model primaryModel =
+			DdxModel primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			responseStreamer.KnownIssueSpatialReference =
-				primaryModel?.SpatialReferenceDescriptor?.SpatialReference;
+				primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 
@@ -739,10 +823,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ProtobufGeometryUtils.FromSpatialReferenceMsg(
 					parameters.IssueRepositorySpatialReference);
 
-			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
-			                               trackCancel);
+			WithCulture(parameters.ReportCultureCode,
+			            () => xmlService.ExecuteVerification(qualitySpecification, aoi,
+			                                                 parameters.TileSize, trackCancel));
 
 			return xmlService.Verification;
+		}
+
+		private static T WithCulture<T>(string cultureCode, Func<T> func)
+		{
+			if (string.IsNullOrEmpty(cultureCode))
+			{
+				return func();
+			}
+
+			var culture = new CultureInfo(cultureCode, false);
+
+			return CultureInfoUtils.ExecuteUsing(culture, culture, func);
 		}
 
 		private bool IsStandAloneVerification([NotNull] VerificationRequest request,
@@ -791,31 +888,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] ICollection<int> excludedConditionIds = null)
 		{
 			var dataSources = new List<DataSource>();
+
+			// Initialize using valid data sources from XML:
+			dataSources.AddRange(QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+
+			if (dataSources.Count > 0)
+			{
+				_msg.InfoFormat("Initialized {0} data sources from XML.", dataSources.Count);
+			}
+
 			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
-					List<string> replacementStrings =
-						StringUtils.SplitAndTrim(replacement, '|');
-					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
-
-					var dataSource =
-						new DataSource(replacementStrings[0], replacementStrings[0])
-						{
-							WorkspaceAsText = replacementStrings[1]
-						};
-
-					dataSources.Add(dataSource);
+					AddOrReplace(replacement, dataSources);
 				}
-
-				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
-			}
-			else
-			{
-				dataSources.AddRange(
-					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
-				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =
@@ -836,6 +923,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return qualitySpecification;
+		}
+
+		private static void AddOrReplace([NotNull] string replacementString,
+		                                 [NotNull] List<DataSource> dataSources)
+		{
+			List<string> replacementStrings =
+				StringUtils.SplitAndTrim(replacementString, '|');
+			Assert.AreEqual(2, replacementStrings.Count,
+			                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+
+			var dataSource =
+				new DataSource(replacementStrings[0], replacementStrings[0])
+				{
+					WorkspaceAsText = replacementStrings[1]
+				};
+
+			// Replace existing data source from XML if it exists:
+			int index = dataSources.FindIndex(ds => ds.ID == dataSource.ID);
+			if (index >= 0)
+			{
+				dataSources[index] = dataSource;
+				_msg.InfoFormat("Replaced data source <id> {0} with {1}", dataSource.ID,
+				                dataSource);
+			}
+			else
+			{
+				dataSources.Add(dataSource);
+				_msg.InfoFormat("Adding data source: {0}", dataSource);
+			}
 		}
 
 		private QualitySpecification SetupQualitySpecification(
@@ -948,14 +1064,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			SetupUserNameProvider(userName);
 		}
 
-		private static void SetupUserNameProvider(string userName)
+		private static void SetupUserNameProvider([NotNull] string userName)
 		{
 			_msg.DebugFormat("New verification request from {0}", userName);
 
-			if (! string.IsNullOrEmpty(userName))
+			if (string.IsNullOrEmpty(userName))
 			{
-				_userNameProvider.SetDisplayName(userName);
+				return;
 			}
+
+			var perThreadProvider =
+				EnvironmentUtils.GetUserNameProvider() as ThreadAffineUseNameProvider;
+
+			Assert.NotNull(perThreadProvider, "No or unexpected type of user name provider");
+
+			perThreadProvider.SetDisplayName(userName);
 		}
 
 		private static void SendProgress<T>(
@@ -997,6 +1120,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
 			           canceledException);
 			_msg.Warn("Task was cancelled, likely by the client");
+		}
+
+		private static double GetUnhealthyMemoryLimit()
+		{
+			const string envVarServerSetUnhealthyMemory =
+				"PROSUITE_QA_SERVER_UNHEALTHY_PROCESS_MEMORY";
+
+			string envVarValue = Environment.GetEnvironmentVariable(
+				envVarServerSetUnhealthyMemory);
+
+			if (! string.IsNullOrEmpty(envVarValue))
+			{
+				if (double.TryParse(envVarValue, out double memoryLimitMb))
+				{
+					return memoryLimitMb;
+				}
+
+				_msg.WarnFormat("Cannot parse environment variable {0} value ({1})",
+				                envVarServerSetUnhealthyMemory, envVarValue);
+			}
+
+			return -1;
 		}
 	}
 }

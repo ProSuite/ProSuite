@@ -12,19 +12,23 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public DatabaseSourceClass(GdbTableIdentity tableIdentity,
-		                           [NotNull] WorkListStatusSchema statusSchema,
-		                           [CanBeNull] IAttributeReader attributeReader,
-		                           [CanBeNull] string definitionQuery = null)
-			: base(tableIdentity, attributeReader)
-		{
-			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
+		private readonly int _statusFieldIndex;
 
-			StatusSchema = statusSchema;
+		public DatabaseSourceClass(GdbTableIdentity tableIdentity,
+		                           [NotNull] DbSourceClassSchema schema,
+		                           [CanBeNull] IAttributeReader attributeReader,
+		                           [CanBeNull] string definitionQuery)
+			: base(tableIdentity, schema, attributeReader)
+		{
+			Assert.ArgumentNotNull(schema, nameof(schema));
+
+			_statusFieldIndex = schema.StatusFieldIndex;
+			StatusField = schema.StatusField;
+			TodoValue = schema.TodoValue;
+			DoneValue = schema.DoneValue;
+
 			DefinitionQuery = definitionQuery;
 		}
-
-		public WorkListStatusSchema StatusSchema { get; }
 
 		public WorkItemStatus GetStatus([NotNull] Row row)
 		{
@@ -32,13 +36,13 @@ namespace ProSuite.AGP.WorkList
 
 			try
 			{
-				object value = row[StatusSchema.FieldIndex];
+				object value = row[_statusFieldIndex];
 
 				return GetStatus(value);
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error get value from row {row} with index {StatusSchema.FieldIndex}",
+				_msg.Error($"Error get value from row {row} with index {_statusFieldIndex}",
 				           e);
 
 				return WorkItemStatus.Todo;
@@ -47,12 +51,12 @@ namespace ProSuite.AGP.WorkList
 
 		public WorkItemStatus GetStatus([CanBeNull] object value)
 		{
-			if (StatusSchema.TodoValue.Equals(value))
+			if (TodoValue.Equals(value))
 			{
 				return WorkItemStatus.Todo;
 			}
 
-			if (StatusSchema.DoneValue.Equals(value))
+			if (DoneValue.Equals(value))
 			{
 				return WorkItemStatus.Done;
 			}
@@ -63,15 +67,21 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStatus.Todo;
 		}
 
+		public object DoneValue { get; }
+
+		public object TodoValue { get; }
+
+		public string StatusField { get; }
+
 		public object GetValue(WorkItemStatus status)
 		{
 			switch (status)
 			{
 				case WorkItemStatus.Done:
-					return StatusSchema.DoneValue;
+					return DoneValue;
 
 				case WorkItemStatus.Todo:
-					return StatusSchema.TodoValue;
+					return TodoValue;
 
 				case WorkItemStatus.Unknown:
 					return DBNull.Value;
@@ -82,7 +92,6 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		#region Overrides of SourceClass
 
 		public override long GetUniqueTableId()
 		{
@@ -92,28 +101,41 @@ namespace ProSuite.AGP.WorkList
 			return ArcGISTableId;
 		}
 
-		protected override string CreateWhereClauseCore(WorkItemStatus? statusFilter)
+		protected override void EnsureValidFilterCore(ref QueryFilter filter,
+		                                              WorkItemStatus? statusFilter)
 		{
 			string result = string.Empty;
 
 			if (statusFilter != null)
 			{
-				result = $"{StatusSchema.FieldName} = {GetValue(statusFilter.Value)}";
+				object value = GetValue(statusFilter.Value);
+
+				result = value.Equals(TodoValue)
+					         ? $"({StatusField} = {value} OR {StatusField} IS NULL)"
+					         : $"{StatusField} = {value}";
 			}
 
-			if (DefinitionQuery != null)
+			if (DefinitionQuery == null)
 			{
-				if (! string.IsNullOrEmpty(result))
-				{
-					result += " AND ";
-				}
-
-				result += DefinitionQuery;
+				return;
 			}
 
-			return result;
+			if (!string.IsNullOrEmpty(result))
+			{
+				result += " AND ";
+			}
+
+			result += DefinitionQuery;
+
+			filter.WhereClause = result;
 		}
 
-		#endregion
+		protected override string GetRelevantSubFieldsCore(string subFields)
+		{
+			return string.IsNullOrEmpty(StatusField)
+				       ? subFields
+				       : $"{subFields},{StatusField}";
+		}
+
 	}
 }

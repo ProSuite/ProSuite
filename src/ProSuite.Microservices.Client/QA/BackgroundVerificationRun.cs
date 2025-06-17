@@ -6,6 +6,7 @@ using Grpc.Core;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
@@ -247,7 +248,7 @@ namespace ProSuite.Microservices.Client.QA
 					// Communicate the error to the server but do not throw here (it might just be
 					// a test whether a where clause is valid). The server shall decide whether it
 					// wants to continue or not.
-					result.ErrorMessage = e.Message;
+					result.ErrorMessage = ExceptionUtils.FormatMessage(e);
 					callRequestStream.WriteAsync(result);
 
 					return false;
@@ -287,36 +288,44 @@ namespace ProSuite.Microservices.Client.QA
 
 		private void HandleProgressMsg(VerificationResponse responseMsg)
 		{
-			Progress.RemoteCallStatus =
-				(ServiceCallStatus) responseMsg.ServiceCallStatus;
-
-			foreach (IssueMsg issueMessage in responseMsg.Issues)
+			try
 			{
-				ResultIssueCollector?.AddIssueMessage(issueMessage);
-			}
+				Progress.RemoteCallStatus =
+					(ServiceCallStatus) responseMsg.ServiceCallStatus;
 
-			foreach (GdbObjRefMsg objRefMsg in responseMsg.ObsoleteExceptions)
-			{
-				ResultIssueCollector?.AddObsoleteException(objRefMsg);
-			}
-
-			UpdateServiceProgress(Progress, responseMsg);
-
-			if (responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running)
-			{
-				// Final message: Finished, Failed or Cancelled
-
-				if (QualityVerificationResult != null)
+				foreach (IssueMsg issueMessage in responseMsg.Issues)
 				{
-					QualityVerificationResult.VerificationMsg =
-						responseMsg.QualityVerification;
-
-					ResultIssueCollector?.SetVerifiedPerimeter(
-						responseMsg.VerifiedPerimeter);
+					ResultIssueCollector?.AddIssueMessage(issueMessage);
 				}
-			}
 
-			LogProgress(responseMsg.Progress, responseMsg.Issues.Count);
+				foreach (GdbObjRefMsg objRefMsg in responseMsg.ObsoleteExceptions)
+				{
+					ResultIssueCollector?.AddObsoleteException(objRefMsg);
+				}
+
+				UpdateServiceProgress(Progress, responseMsg);
+
+				if (responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running)
+				{
+					// Final message: Finished, Failed or Cancelled
+
+					if (QualityVerificationResult != null)
+					{
+						QualityVerificationResult.VerificationMsg =
+							responseMsg.QualityVerification;
+
+						ResultIssueCollector?.SetVerifiedPerimeter(
+							responseMsg.VerifiedPerimeter);
+					}
+				}
+
+				LogProgress(responseMsg.Progress, responseMsg.Issues.Count);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error handling progress: {e.Message}", e);
+				throw;
+			}
 		}
 
 		private static void LogProgress(VerificationProgressMsg progressMsg,

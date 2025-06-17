@@ -6,13 +6,12 @@ using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.AGP.WorkList
 {
+	// TODO: drop! move to IssueWorkListUtils
 	public static class IssueUtils
 	{
 		// should this be un IssueUtils or IssueAttributeReader ?
 		private static readonly string[] _idValueSeparator = { "||" };
 
-		//public IList<InvolvedTable> ParseInvolvedTables( string involvedTablesString,
-		//	  IAlternateKeyConverter alternateKeyConverter = null)
 		public static IList<InvolvedTable> ParseInvolvedTables(
 			string involvedTablesString, bool hasGeometry)
 		{
@@ -101,13 +100,6 @@ namespace ProSuite.AGP.WorkList
 
 							rowReferences.Add(new OIDRowReference(oid, hasGeometry));
 						}
-						// TODO algr: is actual?
-						//else
-						//{
-						//	object key = alternateKeyConverter?.Convert(tableName, fieldName, id) ?? id;
-
-						//	rowReferences.Add(new AlternateKeyRowReference(key));
-						//}
 					}
 				}
 				else

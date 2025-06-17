@@ -69,6 +69,16 @@ namespace ProSuite.AGP.Editing.Generalize
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.AdvancedGeneralizeOverlay);
+		}
+
+		protected override SelectionCursors GetSecondPhaseCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.AdvancedGeneralizeOverlay);
+		}
+
 		protected override Task OnToolActivatingCoreAsync()
 		{
 			_generalizeToolOptions = InitializeOptions();
@@ -316,7 +326,7 @@ namespace ProSuite.AGP.Editing.Generalize
 		{
 			try
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 			catch (Exception e)
 			{
@@ -518,69 +528,5 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		#endregion
 
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedGeneralizeOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedGeneralizeOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedGeneralizeOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedGeneralizeOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedGeneralizeOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedGeneralizeOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#region second phase cursors
-
-		protected override Cursor GetSecondPhaseCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.AdvancedGeneralizeOverlay, 10,
-			                              10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.AdvancedGeneralizeOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.AdvancedGeneralizeOverlay,
-			                              Resources.Polygon, null, 10, 10);
-		}
-
-		#endregion
 	}
 }

@@ -611,8 +611,15 @@ namespace ProSuite.UI.QA.VerificationProgress
 				ViewUtils.RunOnUIThread(
 					() =>
 					{
-						ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
-						                                   true);
+						try
+						{
+							ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
+							                                   true);
+						}
+						catch (Exception ex)
+						{
+							ErrorHandler.HandleError(ex, _msg);
+						}
 					});
 			}
 

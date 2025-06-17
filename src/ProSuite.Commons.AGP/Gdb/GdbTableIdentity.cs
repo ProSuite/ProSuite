@@ -6,9 +6,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
+	// TODO: daro Create method?
 	// todo: daro rename to TableProxy?
-	public readonly struct GdbTableIdentity : IEquatable<GdbTableIdentity>, IComparable<GdbTableIdentity>,
-	                                          ITableReference
+	public struct GdbTableIdentity : IEquatable<GdbTableIdentity>, IComparable<GdbTableIdentity>,
+	                                 ITableReference
 	{
 		// TODO make static factory method FromTable(table) -- the ctor(table) suggests we hold on the table, which we don't
 		public GdbTableIdentity(Table table)

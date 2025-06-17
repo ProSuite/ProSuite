@@ -1,5 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -10,6 +11,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		void UseDataset([NotNull] IDatasetName name);
 
-		void AddDatasets([NotNull] Model model);
+		void AddDatasets([NotNull] DdxModel model);
 	}
 }

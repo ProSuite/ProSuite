@@ -30,6 +30,8 @@ namespace ProSuite.Microservices.Server.AO
 			ServiceName = serviceName;
 		}
 
+		public bool HasBeenStarted { get; private set; }
+
 		private void StartHealthChecking(IServiceHealth health)
 		{
 			_health = health;
@@ -56,6 +58,8 @@ namespace ProSuite.Microservices.Server.AO
 			Try(nameof(OnStart),
 			    () =>
 			    {
+				    HasBeenStarted = true;
+
 				    StartedGrpcServer<T> started = _serverStart(args);
 
 				    _server = started.Server;

@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -25,16 +24,14 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.Chopper
-
 {
 	public abstract class ChopperToolBase : TopologicalCrackingToolBase
-
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private ChopperToolOptions _chopperToolOptions;
 
-		private OverridableSettingsProvider<PartialChopperToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialChopperOptions> _settingsProvider;
 
 		private CrackerResult _resultChopPoints;
 
@@ -43,7 +40,6 @@ namespace ProSuite.AGP.Editing.Chopper
 		private Envelope _calculationExtent;
 
 		protected ChopperToolBase()
-
 		{
 			GeomIsSimpleAsFeature = false;
 		}
@@ -51,81 +47,74 @@ namespace ProSuite.AGP.Editing.Chopper
 		protected string OptionsFileName => "ChopperToolOptions.xml";
 
 		[CanBeNull]
-
 		protected virtual string OptionsDockPaneID => null;
 
 		[CanBeNull]
-
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
 		/// By default, the local configuration directory shall be in
 		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
 		/// </summary>
-
 		protected virtual string LocalConfigDir
-
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected override void OnUpdateCore()
-
 		{
 			Enabled = MicroserviceClient != null;
-
 			if (MicroserviceClient == null)
-
+			{
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+			}
+		}
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.ChopperOverlay);
+		}
+
+		protected override SelectionCursors GetSecondPhaseCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.ChopperOverlay);
 		}
 
 		protected override Task OnToolActivatingCoreAsync()
-
 		{
 			_chopperToolOptions = InitializeOptions();
-
 			_feedback = new CrackerFeedback();
-
 			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
-
 		{
 			_settingsProvider?.StoreLocalConfiguration(_chopperToolOptions.LocalOptions);
-
 			_feedback?.DisposeOverlays();
-
 			_feedback = null;
 		}
 
 		protected override void LogPromptForSelection()
-
 		{
 			_msg.Info(LocalizableStrings.ChopperTool_LogPromptForSelection);
 		}
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
-
 		{
 			return geometryType == GeometryType.Polyline;
 		}
 
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
-
 		{
 			// Store current map extent
-
 			_calculationExtent = ActiveMapView.Extent;
 
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
-
 			{
 				_msg.Warn("Calculation of chop points was cancelled.");
-
 				return;
 			}
 
@@ -135,20 +124,16 @@ namespace ProSuite.AGP.Editing.Chopper
 				                     true, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
-
 			{
 				_msg.Warn("Calculation of chop points was cancelled.");
-
 				return;
 			}
 
 			_feedback.Update(_resultChopPoints, selectedFeatures);
-
 			_feedback.UpdateExtent(_calculationExtent);
 		}
 
 		protected override bool CanUseDerivedGeometries()
-
 		{
 			return _resultChopPoints != null && _resultChopPoints.ResultsByFeature.Count > 0;
 		}
@@ -157,14 +142,12 @@ namespace ProSuite.AGP.Editing.Chopper
 			Dictionary<MapMember, List<long>> selection,
 			Geometry sketch,
 			CancelableProgressor progressor)
-
 		{
 			Assert.NotNull(_resultChopPoints);
 
 			CrackerResult chopPointsToApply = SelectCrackPointsToApply(_resultChopPoints, sketch);
 
 			if (! chopPointsToApply.HasCrackPoints)
-
 			{
 				return false;
 			}
@@ -196,31 +179,25 @@ namespace ProSuite.AGP.Editing.Chopper
 			HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
 
 			foreach (ResultFeature resultFeature in result)
-
 			{
 				Feature originalFeature = resultFeature.OriginalFeature;
 
 				Geometry newGeometry = resultFeature.NewGeometry;
 
 				if (! IsStoreRequired(originalFeature, newGeometry, editableClassHandles))
-
 				{
 					continue;
 				}
 
 				if (resultFeature.ChangeType == RowChangeType.Update)
-
 				{
 					updates.Add(originalFeature, newGeometry);
 				}
-
 				else
-
 				{
 					IList<Geometry> newGeometries;
 
 					if (! inserts.TryGetValue(originalFeature, out newGeometries))
-
 					{
 						newGeometries = new List<Geometry>();
 
@@ -238,7 +215,6 @@ namespace ProSuite.AGP.Editing.Chopper
 
 			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
 				             editContext =>
-
 				             {
 					             _msg.DebugFormat("Saving {0} updates and {1} inserts...",
 					                              updates.Count,
@@ -263,27 +239,21 @@ namespace ProSuite.AGP.Editing.Chopper
 		}
 
 		protected override void ResetDerivedGeometries()
-
 		{
 			_resultChopPoints = null;
-
 			_calculationExtent = null;
-
 			_feedback.DisposeOverlays();
 		}
 
 		protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
-
 		{
 			if (_resultChopPoints == null || ! _resultChopPoints.HasCrackPoints)
-
 			{
 				_msg.Info(
 					"No intersections with other geometries found. Please select several features to calculate chop points.");
 			}
 
 			if (_resultChopPoints != null && _resultChopPoints.HasCrackPoints)
-
 			{
 				string msg = _resultChopPoints.ResultsByFeature.Count == 1
 					             ? "Select the chop points to apply."
@@ -295,11 +265,9 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
 		                                    HashSet<long> editableClassHandles)
-
 		{
 			if (! GdbPersistenceUtils.CanChange(originalFeature,
 			                                    editableClassHandles, out string warning))
-
 			{
 				_msg.DebugFormat("{0}: {1}",
 				                 GdbObjectUtils.ToString(originalFeature),
@@ -312,7 +280,6 @@ namespace ProSuite.AGP.Editing.Chopper
 
 			if (originalGeometry != null &&
 			    originalGeometry.IsEqual(updatedGeometry))
-
 			{
 				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
 				                 GdbObjectUtils.ToString(originalFeature));
@@ -324,7 +291,6 @@ namespace ProSuite.AGP.Editing.Chopper
 		}
 
 		private ChopperToolOptions InitializeOptions()
-
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -336,10 +302,10 @@ namespace ProSuite.AGP.Editing.Chopper
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
 
-			_settingsProvider ??= new OverridableSettingsProvider<PartialChopperToolOptions>(
+			_settingsProvider ??= new OverridableSettingsProvider<PartialChopperOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialChopperToolOptions localConfiguration, centralConfiguration;
+			PartialChopperOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
@@ -356,7 +322,6 @@ namespace ProSuite.AGP.Editing.Chopper
 			string optionsMessage = result.GetLocalOverridesMessage();
 
 			if (! string.IsNullOrEmpty(optionsMessage))
-
 			{
 				_msg.Info(optionsMessage);
 			}
@@ -364,18 +329,14 @@ namespace ProSuite.AGP.Editing.Chopper
 			return result;
 		}
 
-		private void _chopperToolOptions_PropertyChanged(object sender,
-		                                                 PropertyChangedEventArgs eventArgs)
-
+		private async void _chopperToolOptions_PropertyChanged(object sender,
+		                                                       PropertyChangedEventArgs eventArgs)
 		{
 			try
-
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				await QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
-
 			catch (Exception e)
-
 			{
 				_msg.Error($"Error re-calculating chop points: {e.Message}", e);
 			}
@@ -385,10 +346,8 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		[CanBeNull]
 		private DockPaneChopperViewModelBase GetChopperViewModel()
-
 		{
 			if (OptionsDockPaneID == null)
-
 			{
 				return null;
 			}
@@ -402,12 +361,10 @@ namespace ProSuite.AGP.Editing.Chopper
 		}
 
 		protected override void ShowOptionsPane()
-
 		{
 			var viewModel = GetChopperViewModel();
 
 			if (viewModel == null)
-
 			{
 				return;
 			}
@@ -418,7 +375,6 @@ namespace ProSuite.AGP.Editing.Chopper
 		}
 
 		protected override void HideOptionsPane()
-
 		{
 			var viewModel = GetChopperViewModel();
 
@@ -426,78 +382,5 @@ namespace ProSuite.AGP.Editing.Chopper
 		}
 
 		#endregion
-
-		protected override Cursor GetSelectionCursor()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.ChopperOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#region second phase cursors
-
-		protected override Cursor GetSecondPhaseCursor()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorLasso()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorPolygon()
-
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.ChopperOverlay,
-			                              Resources.Polygon, null, 10, 10);
-		}
-
-		#endregion
 	}
-}
+}

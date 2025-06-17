@@ -8,7 +8,7 @@ using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.Geodatabase;
 
 namespace ProSuite.DdxEditor.Content.Connections
 {

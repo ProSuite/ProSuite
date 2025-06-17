@@ -45,6 +45,7 @@ namespace ProSuite.AGP.Editing
 						                              OutputZ = double.NaN
 					                              };
 
+#if ARCGISPRO_GREATER_3_2
 					SurfaceZsResult result =
 						_mapWithSurfaceLayer.GetZsFromSurface(
 							geometry, _surfaceLayer, surfaceZsMissingHandler);
@@ -55,6 +56,10 @@ namespace ProSuite.AGP.Editing
 					}
 
 					_msg.WarnFormat("Failed to apply Z values: {0}", result.Status);
+#else
+					_msg.Warn("GetZsFromSurface is not available in this version of the API.");
+					return geometry;
+#endif
 				}
 			}
 			else if (CurrentMode == ZMode.Interpolate)

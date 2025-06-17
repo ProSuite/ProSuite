@@ -557,7 +557,8 @@ namespace ProSuite.Microservices.Client.QA
 				                     End1CascadeDeleteOrphans =
 					                     association.End1.CascadeDeleteOrphans,
 				                     End2CascadeDeleteOrphans =
-					                     association.End2.CascadeDeleteOrphans
+					                     association.End2.CascadeDeleteOrphans,
+				                     ModelId = association.Model.Id
 			                     };
 
 			if (includeDetails)
@@ -600,7 +601,8 @@ namespace ProSuite.Microservices.Client.QA
 					AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
 					GeometryType = geometryType,
 					DatasetType = (int) dataset.DatasetType,
-					TypeCode = dataset.ImplementationType?.Id ?? 0
+					TypeCode = dataset.ImplementationType?.Id ?? 0,
+					ModelId = dataset.Model.Id
 				};
 
 			if (includeDetails)
@@ -619,6 +621,12 @@ namespace ProSuite.Microservices.Client.QA
 						datasetMsg.ObjectCategories.AddRange(ToObjectCategoryMsg(objectType));
 					}
 				}
+			}
+
+			if (dataset is ISpatialDataset spatialDataset)
+			{
+				datasetMsg.DefaultSymbology =
+					spatialDataset.DefaultLayerFile?.FileName ?? string.Empty;
 			}
 
 			return datasetMsg;

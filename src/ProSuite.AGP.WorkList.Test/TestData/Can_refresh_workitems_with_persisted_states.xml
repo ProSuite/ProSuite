@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkListDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>stateRepo</Name>
+  <Type>ProSuite.AGP.WorkList.Domain.IssueWorkList</Type>
+  <Assembly>ProSuite.AGP.WorkList</Assembly>
+  <Workspaces>
+    <Workspace workspaceFactory="FileGDB" connectionString="file:///C:/temp/foo.gdb">
+      <Tables>
+        <Table tableId="42" name="myTable" statusValueTodo="0" statusValueDone="0" />
+      </Tables>
+    </Workspace>
+  </Workspaces>
+  <CurrentItemIndex>-1</CurrentItemIndex>
+  <Items>
+    <Item id="1" visited="true" status="Done" connectionString="file:///C:/temp/foo.gdb">
+      <Row oid="1" tableId="42" tableName="myTable" />
+      <XMin>0</XMin>
+      <XMax>0</XMax>
+      <YMin>0</YMin>
+      <YMax>0</YMax>
+    </Item>
+    <Item id="2" visited="false" status="Todo" connectionString="file:///C:/temp/foo.gdb">
+      <Row oid="2" tableId="42" tableName="myTable" />
+      <XMin>0</XMin>
+      <XMax>0</XMax>
+      <YMin>0</YMin>
+      <YMax>0</YMax>
+    </Item>
+    <Item id="3" visited="false" status="Todo" connectionString="file:///C:/temp/foo.gdb">
+      <Row oid="3" tableId="42" tableName="myTable" />
+      <XMin>0</XMin>
+      <XMax>0</XMax>
+      <YMin>0</YMin>
+      <YMax>0</YMax>
+    </Item>
+    <Item id="4" visited="false" status="Todo" connectionString="file:///C:/temp/foo.gdb">
+      <Row oid="4" tableId="42" tableName="myTable" />
+      <XMin>0</XMin>
+      <XMax>0</XMax>
+      <YMin>0</YMin>
+      <YMax>0</YMax>
+    </Item>
+  </Items>
+</WorkListDefinition>

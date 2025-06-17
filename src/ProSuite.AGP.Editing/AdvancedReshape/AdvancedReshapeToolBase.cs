@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialAdvancedReshapeOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -73,7 +73,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		/// <summary>
 		/// By default, the local configuration directory shall be in
-		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// %APPDATA%\Roaming\ORGANIZATION\PRODUCT>\ToolDefaults.
 		/// </summary>
 		protected virtual string LocalConfigDir
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
@@ -158,6 +158,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_advancedReshapeToolOptions = InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
+			_symbolizedSketch =
+				new SymbolizedSketchTypeBasedOnSelection(this);
+			await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
+
 			await base.OnToolActivatingCoreAsync();
 		}
 
@@ -166,20 +170,20 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			Stopwatch watch = _msg.DebugStartTiming();
 
 			// NOTE: by only reading the file locations we can save a couple of 100ms
-			string currentCentralConfigDir = CentralConfigDir;
-			string currentLocalConfigDir = LocalConfigDir;
+			string _ = CentralConfigDir;
+			string __ = LocalConfigDir;
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			_settingsProvider ??= new OverridableSettingsProvider<PartialAdvancedReshapeOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			PartialAdvancedReshapeOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
 			var result = new ReshapeToolOptions(centralConfiguration,
-			                                                     localConfiguration);
+			                                    localConfiguration);
 
 			result.PropertyChanged -= _advancedReshapeToolOptions_PropertyChanged;
 			result.PropertyChanged += _advancedReshapeToolOptions_PropertyChanged;
@@ -188,7 +192,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			string optionsMessage = result.GetLocalOverridesMessage();
 
-			if (!string.IsNullOrEmpty(optionsMessage))
+			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
@@ -201,7 +205,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			try
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 			catch (Exception e)
 			{
@@ -209,29 +213,41 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 		}
 
-		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this);
-			_symbolizedSketch.SetSketchAppearanceBasedOnSelection();
-
-			return base.OnToolActivatedCore(hasMapViewChanged);
+			await QueuedTask.Run(async () =>
+			{
+				await base.OnSelectionPhaseStartedAsync();
+				_symbolizedSketch?.ClearSketchSymbol();
+				_feedback?.Clear();
+				await ActiveMapView.ClearSketchAsync();
+			});
 		}
 
-		protected override void OnSelectionPhaseStarted()
-		{
-			base.OnSelectionPhaseStarted();
-			_symbolizedSketch?.ClearSketchSymbol();
-			_feedback?.Clear();
-			ActiveMapView.ClearSketchAsync();
-		}
-
-		protected override void OnSketchPhaseStarted()
+		protected override async Task OnSketchPhaseStartedAsync()
 		{
 			try
 			{
-				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); });
-				QueuedTask.Run(() => { ActiveMapView.ClearSketchAsync(); });
+				Assert.NotNull(_symbolizedSketch);
+
+				// OnSketchPhaseStartedAsync is sometimes called in QueuedTask and sometimes not
+				// Therefor use QueuedTask.Run() here.
+				// For some strange reason calling ActiveMapView.ClearSketchAsync()
+				// inside a QueuedTask makes the sketch symbol appear correctly. Calling
+				// ActiveMapView.ClearSketchAsync() outside QueuedTask leads to a
+				// not symbolised sketch. It's not documented that ActiveMapView.ClearSketchAsync()
+				// has to be put inside QueuedTask!!! May Teutates be with us!
+				await QueuedTask.Run(async () =>
+				{
+					await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
+
+					if (await HasSketchAsync())
+					{
+						return;
+					}
+
+					await ActiveMapView.ClearSketchAsync();
+				});
 			}
 			catch (Exception ex)
 			{
@@ -255,6 +271,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
 			return SketchGeometryType.Line;
+		}
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
@@ -416,7 +437,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return base.CanUseSelection(selectionByLayer);
 		}
 
-		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+		public async Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 		{
 			bool result;
 			switch (geometryType)
@@ -437,7 +458,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 			}
 
-			return result && ! IsInSelectionPhaseAsync().Result;
+			return result && ! await IsInSelectionPhaseAsync();
 		}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
@@ -463,12 +484,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				if (success && ! _advancedReshapeToolOptions.RemainInSketchMode)
 				{
-					StartSelectionPhase();
+					await StartSelectionPhaseAsync();
 				}
 				else
 				{
-					await ClearSketchAsync();
-					StartSketchPhase();
+					await ActiveMapView.ClearSketchAsync();
+					await StartSketchPhaseAsync();
 				}
 			}
 
@@ -499,8 +520,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			int timeout = selection.Count * 10000;
 			_cancellationTokenSource = new CancellationTokenSource(timeout);
 
+			bool allowOpenJawReshape = _advancedReshapeToolOptions.AllowOpenJawReshape;
+
 			ReshapeResult result = MicroserviceClient.Reshape(
-				selection, sketchLine, potentiallyAffectedFeatures, true, true,
+				selection, sketchLine, potentiallyAffectedFeatures, allowOpenJawReshape, true,
 				_nonDefaultSideMode, _cancellationTokenSource.Token,
 				_advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
@@ -514,9 +537,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				if (! string.IsNullOrEmpty(result.FailureMessage))
 				{
 					_msg.Warn(result.FailureMessage);
-					{
-						return false;
-					}
+					return false;
 				}
 			}
 
@@ -765,49 +786,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		public void SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
 			SketchSymbol = symbolReference;
-		}
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
 		}
 	}
 }

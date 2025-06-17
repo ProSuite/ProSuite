@@ -16,6 +16,7 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using UnitType = ArcGIS.Core.Geometry.UnitType;
 
@@ -25,6 +26,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 	public static class MapUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Asserts an active MapView.
 		/// </summary>
@@ -93,7 +96,8 @@ namespace ProSuite.Commons.AGP.Carto
 		#endregion
 
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
-			Dictionary<MapMember, List<long>> oidsByLayer)
+			[NotNull] Dictionary<MapMember, List<long>> oidsByLayer,
+			[CanBeNull] Predicate<Table> predicate = null)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
@@ -102,17 +106,20 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				Table table = DatasetUtils.GetDatabaseTable(GetTable(pair.Key));
 
+				if (predicate != null && ! predicate(table))
+				{
+					continue;
+				}
+
 				var tableId = new GdbTableIdentity(table);
 
-				if (! distinctTableIds.ContainsKey(tableId))
+				if (! distinctTableIds.TryGetValue(tableId, out Table distinctTable))
 				{
 					distinctTableIds.Add(tableId, table);
 					result.Add(table, new SimpleSet<long>(pair.Value));
 				}
 				else
 				{
-					Table distinctTable = distinctTableIds[tableId];
-
 					SimpleSet<long> ids = result[distinctTable];
 					foreach (long id in pair.Value)
 					{
@@ -548,6 +555,80 @@ namespace ProSuite.Commons.AGP.Carto
 			return elevationUnitAbbreviation;
 		}
 
+		public static bool RemoveLayer(Map map, Layer layer)
+		{
+			try
+			{
+				if (! map.CanRemoveLayer(layer))
+				{
+					return false;
+				}
+
+				map.RemoveLayer(layer);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
+		}
+
+		public static bool RemoveLayers(Map map, ICollection<Layer> layers)
+		{
+			try
+			{
+				if (! map.CanRemoveLayers(layers))
+				{
+					return false;
+				}
+
+				map.RemoveLayers(layers);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Gets the first elevation surface layer in the map with the specified name.
+		/// This layer contains the layers that provide the actual elevation.
+		/// </summary>
+		/// <param name="map"></param>
+		/// <param name="name"></param>
+		/// <param name="evenIfEmpty">Whether also empty surface layers containing no actual
+		/// elevation sources should be returned.</param>
+		/// <returns></returns>
+		public static ElevationSurfaceLayer GetElevationSurfaceGroupLayer(
+			[NotNull] Map map,
+			bool evenIfEmpty = false,
+			[CanBeNull] string name = "Ground")
+		{
+			ElevationSurfaceLayer existingSurfaceLayer = null;
+			foreach (ElevationSurfaceLayer elevationSurfaceLayer in map.GetElevationSurfaceLayers())
+			{
+				if (elevationSurfaceLayer.ElevationMode != ElevationMode.BaseGlobeSurface ||
+				    elevationSurfaceLayer.Name != name)
+				{
+					continue;
+				}
+
+				if (! evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
+				{
+					continue;
+				}
+
+				existingSurfaceLayer = elevationSurfaceLayer;
+			}
+
+			return existingSurfaceLayer;
+		}
+
 		#region Not MapUtils --> move elsewhere
 
 		/// <summary>
@@ -809,6 +890,57 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		public static void FlashGeometries(
+			[NotNull] MapView mapView,
+			IEnumerable<Geometry> geometries,
+			int milliseconds = 400,
+			CIMColor color = null,
+			bool useReferenceScale = false)
+		{
+			if (color == null)
+			{
+				color = ColorUtils.CreateRGB(0, 200, 0);
+			}
+
+			List<Overlay> overlays = new List<Overlay>();
+
+			CIMSymbol symbol = null;
+			foreach (var group in geometries.GroupBy(g => g.Dimension))
+			{
+				if (group.Key == 0)
+				{
+					symbol = SymbolUtils.CreateMarker(color, 4, SymbolUtils.MarkerStyle.Circle)
+					                    .MakePointSymbol();
+				}
+
+				if (group.Key == 1)
+				{
+					symbol = SymbolUtils.CreateLineSymbol(color, 2);
+				}
+
+				if (group.Key == 2)
+				{
+					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(color));
+				}
+
+				if (group.Count() > 1)
+				{
+					Geometry union = GeometryEngine.Instance.Union(group);
+					overlays.Add(new Overlay(union, symbol));
+				}
+				else
+				{
+					overlays.AddRange(group.Select(geometry => new Overlay(geometry, symbol)));
+				}
+			}
+
+			if (overlays.Count > 0)
+			{
+				FlashGeometries(mapView, overlays, milliseconds,
+				                useReferenceScale);
+			}
+		}
+
 		public static bool FlashGeometries(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
@@ -830,7 +962,8 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (IDisposable disposable in disposables)
 				{
-					disposable.Dispose();
+					// mapView.AddOverlay can return null (e.g. for GeometryBags).
+					disposable?.Dispose();
 				}
 			}
 

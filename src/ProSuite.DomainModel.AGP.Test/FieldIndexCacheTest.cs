@@ -52,7 +52,7 @@ namespace ProSuite.DomainModel.AGP.Test
 					Password = "dkm50k2_manager",
 					Database = "dkm50k2"
 				};
-			using var gdb = (Geodatabase) WorkspaceUtils.OpenDatastore(connectionProperties);
+			using var gdb = (ArcGIS.Core.Data.Geodatabase) WorkspaceUtils.OpenDatastore(connectionProperties);
 
 			ExecutePerformanceTest(gdb, "Local Oracle SDE", "DKM50K2_MANAGER.DKM50_STRASSE",
 			                       numberOfRuns, numberOfRepetitionsPerRun);
@@ -60,7 +60,7 @@ namespace ProSuite.DomainModel.AGP.Test
 			                       numberOfRuns, numberOfRepetitionsPerRun);
 		}
 
-		private void ExecutePerformanceTest(Geodatabase gdb, string gdbName, string datasetName,
+		private void ExecutePerformanceTest(ArcGIS.Core.Data.Geodatabase gdb, string gdbName, string datasetName,
 		                                    int numberOfRuns, int numberOfRepetitionsPerRun)
 		{
 			Console.Out.WriteLine($"Testing {gdbName} with dataset \"{datasetName}\"");

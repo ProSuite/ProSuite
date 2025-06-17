@@ -122,7 +122,9 @@ namespace ProSuite.Microservices.Client.QA
 		                                 ErrorDeletionInPerimeter errorDeletion,
 		                                 bool updateLatestTestDate)
 		{
-			throw new NotImplementedException();
+			SaveIssues(verificationResult, errorDeletion, updateLatestTestDate);
+
+			return Task.FromResult(verificationResult.IssuesSaved);
 		}
 
 		public bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason)

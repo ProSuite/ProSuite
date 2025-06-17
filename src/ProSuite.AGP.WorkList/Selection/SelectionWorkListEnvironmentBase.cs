@@ -1,20 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
-using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
-using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Selection
@@ -23,11 +17,14 @@ namespace ProSuite.AGP.WorkList.Selection
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public override string FileSuffix => ".swl";
+		protected override string FileSuffix => ".swl";
 
-		protected override string SuggestWorkListName()
+		public override string GetDisplayName()
 		{
-			return "Selection Work List";
+			string currentName = Path.GetFileNameWithoutExtension(Project.Current.Name);
+			var now = DateTime.Now.ToString("yyyy_MM_dd_HHmmss");
+
+			return $"{currentName}_{now}";
 		}
 
 		protected override T GetLayerContainerCore<T>()
@@ -43,80 +40,50 @@ namespace ProSuite.AGP.WorkList.Selection
 			return new XmlSelectionItemStateRepository(path, workListName, type);
 		}
 
-		protected override Task<IWorkItemRepository> CreateItemRepositoryCore(
+		protected override Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
+			// todo: (daro) inject map as parameter. If layer is in toc
+			// WorkItemTable is called before MapView.Active is initialized.
 			Map map = MapView.Active.Map;
 
-			string path = stateRepository.WorkListDefinitionFilePath;
+			var watch = Stopwatch.StartNew();
 
-			if (File.Exists(path))
+			Task<IWorkItemRepository> result;
+
+			try
 			{
-				XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
+				string path = stateRepository.WorkListDefinitionFilePath;
 
-				var tables = FindMatchingTables(map, definition).ToList();
+				IList<ISourceClass> sourceClasses;
 
-				if (tables.Count == 0)
+				if (File.Exists(path))
 				{
-					// TODO: (daro) show work list display name?
-					_msg.Debug($"There are no referenced table from '{path}' in the map");
+					XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
 
-					var message = $"There are no referenced table from '{Path.GetFileName(path)}' in the map";
-					var caption = "Cannot open work List";
-
-					Gateway.ShowMessage(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
-
-					return Task.FromResult<IWorkItemRepository>(null);
+					sourceClasses = WorkListUtils.CreateSourceClasses(map, definition).ToList();
+				}
+				else
+				{
+					sourceClasses = WorkListUtils.CreateSourceClasses(map).ToList();
 				}
 
-				return Task.FromResult(WorkListUtils.CreateSelectionItemRepository(tables, stateRepository, definition));
+				result = Task.FromResult<IWorkItemRepository>(
+					         new SelectionItemRepository(sourceClasses, stateRepository));
 			}
-			else
+			finally
 			{
-				Dictionary<MapMember, List<long>> oidsByLayer = SelectionUtils.GetSelection(map);
-
-				Dictionary<Table, List<long>> selection =
-					MapUtils.GetDistinctSelectionByTable(oidsByLayer);
-
-				return Task.FromResult<IWorkItemRepository>(
-					new SelectionItemRepository(selection, stateRepository));
+				_msg.DebugStopTiming(watch, "Created selection work item repository");
 			}
-		}
 
-		private static IEnumerable<Table> FindMatchingTables(
-			Map map, XmlWorkListDefinition definition)
-		{
-			var featureLayers = MapUtils.GetFeatureLayers<BasicFeatureLayer>(map).ToList();
-
-			foreach (XmlTableReference tableReference in definition.Workspaces.SelectMany(w => w.Tables))
-			{
-				foreach (BasicFeatureLayer layer in featureLayers)
-				{
-					Table table = layer.GetTable();
-
-					var tableId = new GdbTableIdentity(table);
-					long id = WorkListUtils.GetUniqueTableIdAcrossWorkspaces(tableId);
-
-					if (id == tableReference.Id)
-					{
-						yield return table;
-					}
-				}
-			}
-		}
-
-		public override bool IsSameWorkListDefinition(string existingDefinitionFile)
-		{
-			// We currently cannot compare the current selection with the one in the file
-			// so for the time being, always make a new one.
-			return false;
+			return result;
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new SelectionWorkList(repository, uniqueName, displayName);
+			return new SelectionWorkList(repository, GetAreaOfInterest(), uniqueName, displayName);
 		}
 	}
 }

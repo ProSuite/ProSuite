@@ -138,12 +138,6 @@ namespace ProSuite.UI.QA.VerificationResult
 			_latch.RunLatchedOperation(OnSelectionChanged);
 		}
 
-		private enum IssueType
-		{
-			Warning,
-			Error
-		}
-
 		private class VerifiedConditionItem
 		{
 			private static readonly Image _statusImageNoIssues = VerificationResultImages.OK;
