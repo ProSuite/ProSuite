@@ -32,7 +32,7 @@ namespace ProSuite.AGP.Editing.Generalize
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private AdvancedGeneralizeOptions _generalizeToolOptions;
+		private AdvancedGeneralizeToolOptions _generalizeToolOptions;
 		private OverridableSettingsProvider<PartialAdvancedGeneralizeOptions> _settingsProvider;
 
 		protected abstract IAdvancedGeneralizeService MicroserviceClient { get; }
@@ -156,7 +156,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			var selectedFeatures = MapUtils.GetFeatures(
 				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
-			AdvancedGeneralizeOptions generalizeOptions = _generalizeToolOptions;
+			AdvancedGeneralizeToolOptions generalizeOptions = _generalizeToolOptions;
 
 			double? weedTolerance =
 				generalizeOptions.Weed ? generalizeOptions.WeedTolerance : null;
@@ -276,7 +276,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			return true;
 		}
 
-		private AdvancedGeneralizeOptions InitializeOptions()
+		private AdvancedGeneralizeToolOptions InitializeOptions()
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -295,7 +295,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			                                    out centralConfiguration);
 
 			var result =
-				new AdvancedGeneralizeOptions(centralConfiguration, localConfiguration);
+				new AdvancedGeneralizeToolOptions(centralConfiguration, localConfiguration);
 
 			result.PropertyChanged -= OptionsPropertyChanged;
 			result.PropertyChanged += OptionsPropertyChanged;
@@ -352,7 +352,7 @@ namespace ProSuite.AGP.Editing.Generalize
 		private GeneralizeResult CalculateRemovableSegments(
 			[NotNull] IList<Feature> selectedFeatures,
 			[CanBeNull] IList<Feature> intersectingFeatures,
-			AdvancedGeneralizeOptions generalizeOptions,
+			AdvancedGeneralizeToolOptions generalizeOptions,
 			CancelableProgressor progressor)
 		{
 			GeneralizeResult result;
@@ -403,7 +403,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			return result;
 		}
 
-		private static Geometry GetPerimeter(AdvancedGeneralizeOptions generalizeOptions)
+		private static Geometry GetPerimeter(AdvancedGeneralizeToolOptions generalizeOptions)
 		{
 			// TODO: Intersect with work perimeter
 			Geometry perimeter = generalizeOptions.LimitToVisibleExtent
