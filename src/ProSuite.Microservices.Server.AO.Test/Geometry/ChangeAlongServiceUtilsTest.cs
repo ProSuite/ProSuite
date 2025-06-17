@@ -722,7 +722,9 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-			applyRequest.ChangedVerticesZSource = (int) ChangeAlongZSource.Target;
+			const int zSourceValue = (int) ChangeAlongZSource.Target;
+			applyRequest.CalculationRequest.ZSources.Add(new DatasetZSource
+			                                             { ZSource = zSourceValue });
 
 			ApplyCutLinesResponse applyResponse =
 				ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
@@ -754,7 +756,10 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-			applyRequest.ChangedVerticesZSource = (int) ChangeAlongZSource.InterpolatedSource;
+
+			const int interpolateValue = (int) ChangeAlongZSource.InterpolatedSource;
+			applyRequest.CalculationRequest.ZSources.Add(new DatasetZSource
+			                                             { ZSource = interpolateValue });
 
 			applyResponse = ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
 
@@ -795,7 +800,10 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-			applyRequest.ChangedVerticesZSource = (int) ChangeAlongZSource.SourcePlane;
+
+			const int sourcePlaneVal = (int) ChangeAlongZSource.SourcePlane;
+			applyRequest.CalculationRequest.ZSources.Add(new DatasetZSource
+			                                             { ZSource = sourcePlaneVal });
 
 			applyResponse = ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
 
