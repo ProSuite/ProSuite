@@ -834,8 +834,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 					GeometryFactory.CreatePoint(2602000, 1202000));
 			cutFeature.Store();
 
-			var source1FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(source1Feature);
-			var source2FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(source2Feature);
+			var source1FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) source1Feature);
+			var source2FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) source2Feature);
 
 			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(cutFeature);
 
@@ -1002,8 +1002,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		private static CalculateReshapeLinesRequest CreateCalculateReshapeLinesRequest(
 			GdbFeature sourceFeature, GdbFeature targetFeature)
 		{
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 
