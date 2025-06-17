@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
+	// TODO: (daro) delete unused usages
 	public interface IWorkListRegistry
 	{
-		[CanBeNull]
 		IWorkList Get([NotNull] string name);
 
 		void Add([NotNull] IWorkList workList);
@@ -38,5 +39,11 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool WorklistExists([NotNull] string name);
 
 		bool AddOrReplace(IWorkList worklist);
+
+		Task<IWorkList> GetAsync(string name);
+
+		IAsyncEnumerable<IWorkList> GetAsync();
+
+		IEnumerable<IWorkList> Get();
 	}
 }

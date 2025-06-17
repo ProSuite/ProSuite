@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Media;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -173,35 +174,75 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			object value = row[fieldIndex];
 
+			if (attribute == Attributes.IssueSeverity)
+			{
+				value = GetSeverity(row);
+			}
+
 			return value == null ? default : (T) value;
 		}
 
-		public AttributeReader AddValue(Dictionary<string, object> attributes,
-		                                object value,
-		                                Attributes attribute)
+		[NotNull]
+		public Brush GetSeverityBackColor([CanBeNull] string severity)
 		{
-			Assert.ArgumentNotNull(attributes, nameof(attributes));
-			Assert.ArgumentNotNull(value, nameof(value));
+			if (Enum.TryParse(severity, out IssueType type))
+			{
+				switch (type)
+				{
+					case IssueType.Error:
+						return Brushes.Salmon;
+					case IssueType.Warning:
+						return Brushes.Yellow;
+					default:
+						throw new ArgumentOutOfRangeException(
+							$"Unexpected issue severity type: {type}");
+				}
+			}
 
-			var fieldName = attribute.ToString();
+			_msg.DebugFormat("Unexpected issue severity: {0}",
+			                 string.IsNullOrEmpty(severity)
+				                 ? "undefined"
+				                 : severity);
 
-			Assert.True(_fieldIndexByAttribute.ContainsKey(attribute),
-			            $"No field index for attribute {fieldName}");
+			return Brushes.White;
+		}
 
-			Assert.True(_fieldNameByIssueAttribute.ContainsKey(attribute),
-			            $"No field name for attribute {fieldName}");
+		[NotNull]
+		public string GetSeverity(Row fromRow)
+		{
+			var attribute = Attributes.IssueSeverity;
 
-			string upperCaseFieldName = fieldName.ToUpper();
+			if (! _fieldIndexByAttribute.TryGetValue(attribute, out int fieldIndex))
+			{
+				_msg.Debug($"table does not contain {attribute} field");
+				return "unkown";
+			}
 
-			Assert.True(_fieldIndexByName.ContainsKey(upperCaseFieldName),
-			            $"No field index for field name {upperCaseFieldName}");
+			object value = null;
 
-			Assert.False(attributes.ContainsKey(upperCaseFieldName),
-			             $"Field {upperCaseFieldName} already added to attributes dictionary");
+			try
+			{
+				value = fromRow[fieldIndex];
 
-			attributes.Add(upperCaseFieldName, value);
+				if (value is not string severity)
+				{
+					_msg.Debug($"Invalid issue type: {value}");
+					return "unkown";
+				}
 
-			return this;
+				if (Enum.TryParse(severity, out IssueType type))
+				{
+					return type.ToString();
+				}
+
+				_msg.Debug($"Invalid issue type: {value}");
+				return "unkown";
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+				return $"Invalid issue type: {value}";
+			}
 		}
 	}
 }

@@ -73,6 +73,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
 		/// </summary>
 		/// <returns></returns>
+		[NotNull]
 		public static Datastore OpenDatastore([NotNull] Connector connector)
 		{
 			try

@@ -106,7 +106,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				filter = new QueryFilter { SubFields = oidField };
 			}
-			else if (GdbQueryUtils.EnsureSubField(filter.SubFields, oidField,
+			else if (GdbQueryUtils.EnsureSubField(oidField, filter.SubFields,
 			                                      out string newSubFields))
 			{
 				filter.SubFields = newSubFields;
@@ -191,6 +191,25 @@ namespace ProSuite.Commons.AGP.Carto
 			// todo daro no valid .lyrx file
 
 			return new LayerDocument(filePath);
+		}
+
+		[NotNull]
+		public static FeatureLayerCreationParams CreateLayerParams(
+			[NotNull] FeatureClass featureClass, string alias = null)
+		{
+			if (featureClass is null) throw new ArgumentNullException(nameof(featureClass));
+
+			if (string.IsNullOrEmpty(alias))
+			{
+				alias = featureClass.GetName();
+			}
+
+			return new FeatureLayerCreationParams(featureClass)
+			       {
+				       IsVisible = true,
+				       Name = alias,
+				       MapMemberPosition = MapMemberPosition.AddToTop
+			       };
 		}
 
 		/// <summary>
@@ -841,6 +860,22 @@ namespace ProSuite.Commons.AGP.Carto
 			CIMBaseLayer cimLayer = layer.GetDefinition();
 			cimLayer.Name = name;
 			layer.SetDefinition(cimLayer);
+		}
+
+		public static void Flatten([NotNull] IEnumerable<Layer> layers,
+		                           [NotNull] ref ICollection<Layer> flattenedLayers)
+		{
+			foreach (Layer layer in layers)
+			{
+				if (layer is ILayerContainer container)
+				{
+					Flatten(container.Layers, ref flattenedLayers);
+				}
+				else
+				{
+					flattenedLayers.Add(layer);
+				}
+			}
 		}
 	}
 }
