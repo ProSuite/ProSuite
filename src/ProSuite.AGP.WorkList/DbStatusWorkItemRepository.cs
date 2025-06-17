@@ -179,13 +179,15 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 
 	private static string GetOperationDescription(IWorkItem item)
 	{
-		switch (item.Status)
+		WorkItemStatus oldState = item.Status;
+
+		switch (oldState)
 		{
 			case WorkItemStatus.Todo:
-				 return $"Set status of work item OID={item.OID} to 'Not Corrected'";
+				return $"Set status of work item OID={item.OID} to 'Corrected'";
 
 			case WorkItemStatus.Done:
-				return $"Set status of work item OID={item.OID} to 'Corrected'";
+				return $"Set status of work item OID={item.OID} to 'Not Corrected'";
 
 			default:
 				throw new ArgumentException($"Invalid status for operation: {item}");
