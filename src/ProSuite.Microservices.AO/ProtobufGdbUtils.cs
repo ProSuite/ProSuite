@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
@@ -76,9 +77,6 @@ namespace ProSuite.Microservices.AO
 
 			var result = ToGdbObjectMsg(roRow, includeSpatialRef,
 			                            includeFieldValues, subFields);
-
-			result.ClassHandle = featureOrObject.Class.ObjectClassID;
-
 			return result;
 		}
 
@@ -91,13 +89,14 @@ namespace ProSuite.Microservices.AO
 
 			result.ObjectId = featureOrRow.OID;
 
-			if (featureOrRow is IFeature feature)
+			if (featureOrRow is IReadOnlyFeature feature)
 			{
 				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
 				//       However, the Shape property E_FAILs.
 				bool canGetShape =
 					string.IsNullOrEmpty(subFields) || subFields == "*" ||
-					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
+					StringUtils.Contains(subFields,
+					                     ((IFeatureClass) feature.FeatureClass).ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
 				if (canGetShape)
@@ -117,6 +116,16 @@ namespace ProSuite.Microservices.AO
 						ProtobufGeometryUtils.ToShapeMsg(featureShape, shapeFormat,
 						                                 spatialRefFormat);
 				}
+			}
+
+			IReadOnlyRow roRow = featureOrRow as IReadOnlyRow;
+			Assert.NotNull(roRow, "Unsupported row type");
+
+			IObjectClass objectClass = GetObjectClass(roRow);
+
+			if (objectClass != null)
+			{
+				result.ClassHandle = objectClass.ObjectClassID;
 			}
 
 			if (includeFieldValues)
@@ -378,6 +387,25 @@ namespace ProSuite.Microservices.AO
 				       ConnectionType = (int) connectionProvider.ConnectionType,
 				       Name = connectionProvider.Name
 			       };
+		}
+
+		private static IObjectClass GetObjectClass(IReadOnlyRow roRow)
+		{
+			// Consider moving this method to DatasetUtils or GdbObjectUtils
+
+			IObjectClass objectClass = null;
+
+			if (roRow is IObject obj)
+			{
+				objectClass = obj.Class;
+			}
+
+			if (roRow is ReadOnlyRow arcRow)
+			{
+				objectClass = arcRow.BaseRow.Table as IObjectClass;
+			}
+
+			return objectClass;
 		}
 
 		private static string ToConnectionString(

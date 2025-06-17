@@ -722,9 +722,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-			const int zSourceValue = (int) ChangeAlongZSource.Target;
-			applyRequest.CalculationRequest.ZSources.Add(new DatasetZSource
-			                                             { ZSource = zSourceValue });
+			SetZSource(applyRequest, ChangeAlongZSource.Target);
 
 			ApplyCutLinesResponse applyResponse =
 				ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
@@ -757,9 +755,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
 
-			const int interpolateValue = (int) ChangeAlongZSource.InterpolatedSource;
-			applyRequest.CalculationRequest.ZSources.Add(new DatasetZSource
-			                                             { ZSource = interpolateValue });
+			SetZSource(applyRequest, ChangeAlongZSource.InterpolatedSource);
 
 			applyResponse = ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
 
@@ -800,10 +796,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-
-			const int sourcePlaneVal = (int) ChangeAlongZSource.SourcePlane;
-			applyRequest.CalculationRequest.ZSources.Add(new DatasetZSource
-			                                             { ZSource = sourcePlaneVal });
+			SetZSource(applyRequest, ChangeAlongZSource.SourcePlane);
 
 			applyResponse = ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
 
@@ -1082,6 +1075,18 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				default:
 					return -1;
 			}
+		}
+
+		private static void SetZSource(ApplyCutLinesRequest applyRequest,
+		                               ChangeAlongZSource zSource)
+		{
+			applyRequest.CalculationRequest.ZSources.Clear();
+
+			int intValue = (int) zSource;
+
+			var zSourceMsg = new DatasetZSource { ZSource = intValue };
+
+			applyRequest.CalculationRequest.ZSources.Add(zSourceMsg);
 		}
 	}
 }
