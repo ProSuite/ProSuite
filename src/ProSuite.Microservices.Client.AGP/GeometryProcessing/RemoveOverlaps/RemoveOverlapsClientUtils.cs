@@ -136,7 +136,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] Overlaps overlapsToRemove,
 			[CanBeNull] IList<Feature> overlappingFeatures,
-			[NotNull] RemoveOverlapsOptions options,
+			[NotNull] RemoveOverlapsToolOptions options,
 			CancellationToken cancellationToken)
 		{
 			List<Feature> updateFeatures;
@@ -254,7 +254,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] Overlaps overlapsToRemove,
 			[CanBeNull] IList<Feature> targetFeaturesForVertexInsertion,
-			[NotNull] RemoveOverlapsOptions options,
+			[NotNull] RemoveOverlapsToolOptions options,
 			out List<Feature> updateFeatures)
 		{
 			var request = new RemoveOverlapsRequest
