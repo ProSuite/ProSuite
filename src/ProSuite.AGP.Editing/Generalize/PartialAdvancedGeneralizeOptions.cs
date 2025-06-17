@@ -61,8 +61,8 @@ namespace ProSuite.AGP.Editing.Generalize
 			result.ProtectTopologicalVertices = TryClone(ProtectTopologicalVertices);
 			result.VertexProtectingFeatureSelection = VertexProtectingFeatureSelection;
 
-			result.Only2D = Only2D;
-			result.ShowDialog = ShowDialog;
+			result.Only2D = TryClone(Only2D);
+			result.ShowDialog = TryClone(ShowDialog);
 
 			return result;
 		}
