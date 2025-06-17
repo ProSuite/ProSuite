@@ -518,9 +518,15 @@ namespace ProSuite.AGP.WorkList
 			[NotNull] IWorkListRegistry registry,
 			[NotNull] Layer layer)
 		{
-			return layer.GetDataConnection() is not CIMStandardDataConnection connection
-				       ? null
-				       : registry.Get(connection.Dataset);
+			IWorkList loadedWorklist = null;
+
+			if (layer.GetDataConnection() is CIMStandardDataConnection connection &&
+			    layer.ConnectionStatus == ConnectionStatus.Connected)
+			{
+				loadedWorklist = registry.Get(connection.Dataset);
+			}
+
+			return loadedWorklist;
 		}
 
 		public static async Task RemoveWorkListLayersAsync(IWorkList workList)
