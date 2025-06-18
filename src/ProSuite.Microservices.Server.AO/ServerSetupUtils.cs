@@ -66,6 +66,8 @@ namespace ProSuite.Microservices.Server.AO
 				                              maxThreadCount);
 
 			health.SetStatus(verificationServiceImpl.GetType(), true);
+			health.SetStatus(processAdministration.GetType(), true);
+
 
 			Grpc.Core.Server server =
 				StartGrpcServer(arguments, verificationServiceImpl, healthService, loadReporting,

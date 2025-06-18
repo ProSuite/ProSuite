@@ -222,6 +222,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ServerCallContext context)
 		{
 			VerificationRequest request = null;
+			CancelableRequest registeredRequest = null;
 
 			try
 			{
@@ -234,21 +235,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				await StartRequest(request);
 
+				registeredRequest =
+					RegisterRequest(request.UserName, request.Environment,
+									context.CancellationToken);
+
+				var trackCancellationToken =
+					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
+
 				// TODO: Separate data request handler class with async method
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
-					delegate(DataVerificationResponse r)
+					delegate (DataVerificationResponse r)
 					{
 						return Task.Run(async () =>
-							                await RequestMoreDataAsync(
-									                requestStream, responseStream, context, r)
-								                .ConfigureAwait(false))
-						           .Result;
+											await RequestMoreDataAsync(
+													requestStream, responseStream, context, r)
+												.ConfigureAwait(false))
+								   .Result;
 					};
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
 						VerifyDataQualityCore(initialRequest, moreDataRequest, responseStream,
-						                      trackCancel);
+											  trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -269,6 +277,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			finally
 			{
+				if (registeredRequest != null)
+				{
+					RequestAdmin.UnregisterRequest(registeredRequest);
+				}
+
 				EndRequest();
 			}
 		}
