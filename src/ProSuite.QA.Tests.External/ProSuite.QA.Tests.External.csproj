@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}</ProjectGuid>
 
@@ -76,7 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.5" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.6" />
     <PackageReference Include="Google.Protobuf" Version="3.24.0" />
     <PackageReference Include="Grpc" Version="2.46.6" />
   </ItemGroup>
