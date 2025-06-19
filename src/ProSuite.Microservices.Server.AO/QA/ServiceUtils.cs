@@ -91,14 +91,31 @@ namespace ProSuite.Microservices.Server.AO.QA
 			MessagingUtils.SendResponse(responseStream,
 			                            new StandaloneVerificationResponse()
 			                            {
-				                            Message = new LogMsg()
-				                                      {
-					                                      Message = ExceptionUtils.FormatMessage(
-						                                      exception),
-					                                      MessageLevel = Level.Error.Value
-				                                      },
+				                            Message = CreateExceptionMessage(exception),
 				                            ServiceCallStatus = (int) ServiceCallStatus.Failed
 			                            });
+		}
+
+		internal static void SendFatalException(Exception exception,
+		                                        IServerStreamWriter<QueryDataResponse>
+			                                        responseStream)
+		{
+			MessagingUtils.SendResponse(responseStream,
+			                            new QueryDataResponse()
+			                            {
+				                            Message = CreateExceptionMessage(exception),
+				                            ServiceCallStatus = (int) ServiceCallStatus.Failed
+			                            });
+		}
+
+		private static LogMsg CreateExceptionMessage(Exception exception)
+		{
+			return new LogMsg()
+			       {
+				       Message = ExceptionUtils.FormatMessage(
+					       exception),
+				       MessageLevel = Level.Error.Value
+			       };
 		}
 	}
 }

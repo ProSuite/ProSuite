@@ -264,7 +264,7 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		private static InstanceConfigurationMsg CreateInstanceConfigMsg<T>(
+		public static InstanceConfigurationMsg CreateInstanceConfigMsg<T>(
 			[NotNull] InstanceConfiguration instanceConfiguration,
 			[CanBeNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
 			[NotNull] IDictionary<int, DdxModel> usedModelsById)
