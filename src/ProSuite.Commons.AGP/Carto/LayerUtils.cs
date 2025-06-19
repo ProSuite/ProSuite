@@ -106,7 +106,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				filter = new QueryFilter { SubFields = oidField };
 			}
-			else if (GdbQueryUtils.EnsureSubField(filter.SubFields, oidField,
+			else if (GdbQueryUtils.EnsureSubField(oidField, filter.SubFields,
 			                                      out string newSubFields))
 			{
 				filter.SubFields = newSubFields;
@@ -191,6 +191,25 @@ namespace ProSuite.Commons.AGP.Carto
 			// todo daro no valid .lyrx file
 
 			return new LayerDocument(filePath);
+		}
+
+		[NotNull]
+		public static FeatureLayerCreationParams CreateLayerParams(
+			[NotNull] FeatureClass featureClass, string alias = null)
+		{
+			if (featureClass is null) throw new ArgumentNullException(nameof(featureClass));
+
+			if (string.IsNullOrEmpty(alias))
+			{
+				alias = featureClass.GetName();
+			}
+
+			return new FeatureLayerCreationParams(featureClass)
+			       {
+				       IsVisible = true,
+				       Name = alias,
+				       MapMemberPosition = MapMemberPosition.AddToTop
+			       };
 		}
 
 		/// <summary>
@@ -324,6 +343,299 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return DatasetUtils.IsSameTable(featureClass1, featureClass2);
+		}
+
+		/// <summary>
+		/// Determines if two layers reference the same data source.
+		/// </summary>
+		/// <param name="layer1">The first layer.</param>
+		/// <param name="layer2">The second layer.</param>
+		/// <param name="requireSameVersion">Whether the layers must reference the same version.</param>
+		/// <param name="requireSameDefinition">Whether the layers must have the same definition (e.g., same definition query).</param>
+		/// <returns>True if the layers reference the same data source; otherwise, false.</returns>
+		public static bool DataSourcesAreEqual([NotNull] Layer layer1,
+		                                       [NotNull] Layer layer2,
+		                                       bool requireSameVersion,
+		                                       bool requireSameDefinition = false)
+		{
+			Assert.ArgumentNotNull(layer1, nameof(layer1));
+			Assert.ArgumentNotNull(layer2, nameof(layer2));
+
+			// Handle group layers
+			if (layer1 is GroupLayer groupLayer1 && layer2 is GroupLayer groupLayer2)
+			{
+				return DataSourcesAreEqual(groupLayer1, groupLayer2,
+				                           requireSameVersion, requireSameDefinition);
+			}
+
+			// Handle case where a data layer is compared with a group layer
+			if (layer1 is FeatureLayer && layer2 is GroupLayer groupLayer)
+			{
+				// Replace the existing layer if any of the sub layers of the
+				// new group layer matches
+				foreach (Layer subLayer in groupLayer.Layers)
+				{
+					if (DataSourcesAreEqual(layer1, subLayer, requireSameVersion,
+					                        requireSameDefinition))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			// Handle feature layers and stand-alone tables
+			if (layer1 is IDisplayTable displayTable1 && layer2 is IDisplayTable displayTable2)
+			{
+				return DataSourcesAreEqual(displayTable1, displayTable2,
+				                           requireSameVersion, requireSameDefinition);
+			}
+
+			if (layer1.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn1 &&
+			    layer2.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn2)
+			{
+				return vectorTileConn1.URI.Equals(vectorTileConn2.URI);
+			}
+
+			if (layer1.GetDefinition() is CIMServiceLayer serviceLayer1 &&
+			    layer2.GetDefinition() is CIMServiceLayer serviceLayer2)
+			{
+				return DataSourcesAreEqual(serviceLayer1, serviceLayer2);
+			}
+
+			// TODO: Other layers, Service layers etc.
+			//// Handle raster layers
+			//if (layer1 is RasterLayer rasterLayer1 && layer2 is RasterLayer rasterLayer2)
+			//{
+			//	return CompareRasterLayers(rasterLayer1, rasterLayer2, requireSameVersion);
+			//}
+
+			// Different layer types - not equal
+			return false;
+		}
+
+		private static bool DataSourcesAreEqual([NotNull] CompositeLayer groupLayer1,
+		                                        [NotNull] CompositeLayer groupLayer2,
+		                                        bool requireSameVersion,
+		                                        bool requireSameDefinition)
+		{
+			// Only equal if all contained layers match
+			if (groupLayer1.Layers.Count != groupLayer2.Layers.Count)
+			{
+				return false;
+			}
+
+			// Check if all child layers match (in order)
+			for (int i = 0; i < groupLayer1.Layers.Count; i++)
+			{
+				if (! DataSourcesAreEqual(groupLayer1.Layers[i], groupLayer2.Layers[i],
+				                          requireSameVersion, requireSameDefinition))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static bool DataSourcesAreEqual([NotNull] IDisplayTable layer1,
+		                                        [NotNull] IDisplayTable layer2,
+		                                        bool requireSameVersion,
+		                                        bool requireSameDefinition)
+		{
+			// Check if both layers are valid
+			var featureClass1 = layer1.GetTable();
+			var featureClass2 = layer2.GetTable();
+
+			if (featureClass1 == null || featureClass2 == null)
+			{
+				return false;
+			}
+
+			// Check if they reference the same dataset
+			if (! DatasetUtils.IsSameTable(featureClass1, featureClass2))
+			{
+				return false;
+			}
+
+			// Check versions if required
+			if (requireSameVersion)
+			{
+				// Get connection properties to compare version info
+				var gdb1 = featureClass1.GetDatastore() as Geodatabase;
+				var gdb2 = featureClass2.GetDatastore() as Geodatabase;
+
+				// Check if versions are specified
+				bool hasVersion1 = gdb1?.IsVersioningSupported() == true;
+				bool hasVersion2 = gdb2?.IsVersioningSupported() == true;
+
+				// If only one has a version, they're not equal
+				if (hasVersion1 != hasVersion2)
+				{
+					return false;
+				}
+
+				// If both have versions, compare them
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+				if (hasVersion1 && hasVersion2)
+				{
+					string version1 = gdb1.GetVersionManager().GetCurrentVersion().GetName();
+					string version2 = gdb2.GetVersionManager().GetCurrentVersion().GetName();
+
+					if (! string.Equals(version1, version2, StringComparison.OrdinalIgnoreCase))
+					{
+						return false;
+					}
+				}
+			}
+
+			// Check definitions if required
+			if (requireSameDefinition)
+			{
+				// Compare definition queries
+				string defQuery1 = GetDefinitionQuery(layer1);
+				string defQuery2 = GetDefinitionQuery(layer2);
+
+				if (! string.Equals(defQuery1, defQuery2, StringComparison.OrdinalIgnoreCase))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static bool DataSourcesAreEqual(CIMServiceLayer serviceLayer1,
+		                                        CIMServiceLayer serviceLayer2)
+		{
+			// Check for same service layer type
+			if (serviceLayer1.GetType() != serviceLayer2.GetType())
+			{
+				return false;
+			}
+
+			// Handle case where service connections might be null
+			if (serviceLayer1.ServiceConnection == null || serviceLayer2.ServiceConnection == null)
+			{
+				// If both null, they're equal; if only one is null, they're not equal
+				return serviceLayer1.ServiceConnection == null &&
+				       serviceLayer2.ServiceConnection == null;
+			}
+
+			// Check for different service connection types
+			if (serviceLayer1.ServiceConnection.GetType() !=
+			    serviceLayer2.ServiceConnection.GetType())
+			{
+				return false;
+			}
+
+			// Compare CIMAGSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMAGSServiceConnection agsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMAGSServiceConnection agsServiceConn2)
+			{
+				return string.Equals(agsServiceConn1.URL,
+				                     agsServiceConn2.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWMSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWMSServiceConnection wmsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWMSServiceConnection wmsServiceConn2)
+			{
+				return string.Equals(wmsServiceConn1.ServerConnection?.URL,
+				                     wmsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWMTSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn2)
+			{
+				return string.Equals(wmtsServiceConn1.ServerConnection?.URL,
+				                     wmtsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWFSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWFSServiceConnection wfsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWFSServiceConnection wfsServiceConn2)
+			{
+				return string.Equals(wfsServiceConn1.ServerConnection?.URL,
+				                     wfsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMStandardServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMStandardServiceConnection
+				    standardServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMStandardServiceConnection
+				    standardServiceConn2)
+			{
+				return string.Equals(standardServiceConn1.URL,
+				                     standardServiceConn2.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMWCSServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMWCSServiceConnection wcsServiceConn1 &&
+			    serviceLayer2.ServiceConnection is CIMWCSServiceConnection wcsServiceConn2)
+			{
+				return string.Equals(wcsServiceConn1.ServerConnection?.URL,
+				                     wcsServiceConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMOGCAPIMapTilesServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
+				    ogcApiMapTilesConn1 &&
+			    serviceLayer2.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
+				    ogcApiMapTilesConn2)
+			{
+				return string.Equals(ogcApiMapTilesConn1.ServerConnection?.URL,
+				                     ogcApiMapTilesConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Compare CIMOGCAPIServiceConnection
+			if (serviceLayer1.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn1 &&
+			    serviceLayer2.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn2)
+			{
+				return string.Equals(ogcApiConn1.ServerConnection?.URL,
+				                     ogcApiConn2.ServerConnection?.URL,
+				                     StringComparison.OrdinalIgnoreCase);
+			}
+
+			_msg.WarnFormat(
+				"Cannot compare unknown or unsupported service layers. Layer 1: {0}. Layer 2: {1}",
+				serviceLayer1.Name, serviceLayer2.Name);
+
+			return false;
+		}
+
+		public static string GetDefinitionQuery(IDisplayTable displayTable)
+		{
+			if (displayTable is StandaloneTable standaloneTable)
+			{
+				return GetDefinitionQuery(standaloneTable);
+			}
+
+			if (displayTable is BasicFeatureLayer featureLayer)
+			{
+				return GetDefinitionQuery(featureLayer);
+			}
+
+			throw new NotImplementedException("Unsupported type of display table");
+		}
+
+		public static string GetDefinitionQuery(BasicFeatureLayer featureLayer)
+		{
+			return featureLayer.DefinitionQuery;
+		}
+
+		public static string GetDefinitionQuery(StandaloneTable standaloneTable)
+		{
+			return standaloneTable.DefinitionQuery;
 		}
 
 		/// <summary>
@@ -548,6 +860,22 @@ namespace ProSuite.Commons.AGP.Carto
 			CIMBaseLayer cimLayer = layer.GetDefinition();
 			cimLayer.Name = name;
 			layer.SetDefinition(cimLayer);
+		}
+
+		public static void Flatten([NotNull] IEnumerable<Layer> layers,
+		                           [NotNull] ref ICollection<Layer> flattenedLayers)
+		{
+			foreach (Layer layer in layers)
+			{
+				if (layer is ILayerContainer container)
+				{
+					Flatten(container.Layers, ref flattenedLayers);
+				}
+				else
+				{
+					flattenedLayers.Add(layer);
+				}
+			}
 		}
 	}
 }

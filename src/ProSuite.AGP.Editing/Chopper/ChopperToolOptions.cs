@@ -21,28 +21,34 @@ namespace ProSuite.AGP.Editing.Chopper
 			CentralizableSnapToTargetVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
+
 			// Numeric Spinner Tolerance
 			CentralizableSnapTolerance =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
+
 			// Checkbox Minimum Segment
 			CentralizableRespectMinimumSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RespectMinimumSegmentLength),
 					false);
+
 			// Numeric Spinner Length
 			CentralizableMinimumSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinimumSegmentLength), 0.0);
+
 			// Radio Intersect with
 			CentralizableTargetFeatureSelection =
 				InitializeSetting<TargetFeatureSelection>(
 					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
 					TargetFeatureSelection.VisibleFeatures);
+
 			// Checkbox Z values
 			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
+
 			// Checkbox T intersection
 			CentralizableExcludeInteriorInteriorIntersections =
 				InitializeSetting<bool>(

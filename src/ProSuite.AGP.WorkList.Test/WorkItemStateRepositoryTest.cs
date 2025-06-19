@@ -1,139 +1,95 @@
-using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.Testing;
 
-namespace ProSuite.AGP.WorkList.Test
+namespace ProSuite.AGP.WorkList.Test;
+
+[TestFixture]
+[Apartment(ApartmentState.STA)]
+public class WorkItemStateRepositoryTest
 {
-	[TestFixture]
-	[Apartment(ApartmentState.STA)]
-	public class WorkItemStateRepositoryTest
+	[OneTimeSetUp]
+	public void SetupFixture()
 	{
-		private Geodatabase _geodatabase;
-		private Table _table0;
+		// Host must be initialized on an STA thread:
+		CoreHostProxy.Initialize();
+	}
 
-		private readonly string _issuesGdb =
-			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues.gdb";
+	[Test]
+	public void Can_refresh_workitems_with_persisted_states()
+	{
+		string path = TestDataPreparer.FromDirectory().GetPath($"{nameof(Can_refresh_workitems_with_persisted_states)}.xml");
+		var stateRepo = new XmlSelectionItemStateRepository(path, "stateRepo", typeof(IssueWorkList));
 
-		private readonly string _featureClass = "IssuePolygons";
+		IWorkItem item1 = new WorkItemMock(1);
+		IWorkItem item2 = new WorkItemMock(2);
+		IWorkItem item3 = new WorkItemMock(3);
+		IWorkItem item4 = new WorkItemMock(4);
 
-		//private string _statesXml = @"C:\temp\states.xml";
-		private string _statesXml =
-			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\a_selection_work_list.xml";
+		var repo =
+			new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
+		IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-		private ItemRepositoryMock _repository;
+		List<IWorkItem> items = wl.GetItems(new SpatialQueryFilter()).ToList();
 
-		[SetUp]
-		public void SetUp()
+		IWorkItem first = items.First();
+		Assert.True(first.Visited);
+
+		Assert.AreEqual(WorkItemStatus.Done, first.Status);
+	}
+
+	[Test]
+	public void Can_persist_workitem_states()
+	{
+		string path = TestDataPreparer.FromDirectory().GetPath($"{nameof(Can_persist_workitem_states)}.xml");
+
+		try
 		{
-			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
-			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+			var stateRepo = new XmlSelectionItemStateRepository(path, "stateRepo", typeof(IssueWorkList));
 
-			_geodatabase =
-				new Geodatabase(
-					new FileGeodatabaseConnectionPath(new Uri(_issuesGdb, UriKind.Absolute)));
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
 
-			_table0 = _geodatabase.OpenDataset<Table>(_featureClass);
+			var repo =
+				new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
+			IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
-			                          {
-				                          {_geodatabase, new List<Table> {_table0}}
-			                          };
+			List<IWorkItem> items = wl.GetItems(null).ToList();
 
-			IWorkItemStateRepository stateRepository =
-				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			_repository = new ItemRepositoryMock(new List<Table> { _table0 }, stateRepository);
+			items.ForEach(item => Assert.False(item.Visited));
+
+			IWorkItem first = items.First();
+
+			repo.SetVisited(first);
+			repo.SetStatusAsync(first, WorkItemStatus.Done);
+
+			wl.Commit();
+
+			wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
+			items = wl.GetItems(null).ToList();
+			first = items.First();
+
+			Assert.True(first.Visited);
+			Assert.AreEqual(WorkItemStatus.Done, first.Status);
+
+			Assert.True(File.Exists(path));
 		}
-
-		[OneTimeSetUp]
-		public void SetupFixture()
+		finally
 		{
-			// Host must be initialized on an STA thread:
-			CoreHostProxy.Initialize();
-		}
-
-		[Test]
-		public void Can_refresh_with_persisted_visited_state()
-		{
-			try
+			if (File.Exists(path))
 			{
-				List<IWorkItem> items = _repository.GetItems().ToList();
-
-				items.ForEach(item => Assert.False(item.Visited));
-
-				IWorkItem first = items.First();
-				Assert.False(first.Visited);
-
-				first.Visited = true;
-				first.Status = WorkItemStatus.Done;
-
-				_repository.UpdateVolatileState(items);
-				_repository.Commit();
-
-				items = _repository.GetItems().ToList();
-				first = items.First();
-
-				Assert.True(first.Visited);
-				Assert.AreEqual(WorkItemStatus.Done, first.Status);
-			}
-			finally
-			{
-				// reset visited state
-				List<IWorkItem> items = _repository.GetItems().ToList();
-
-				items.First().Visited = false;
-				items.First().Status = WorkItemStatus.Todo;
-
-				_repository.UpdateVolatileState(items);
-				_repository.Commit();
-			}
-		}
-
-		[Test]
-		public void Can_discard_volatile_visited_state()
-		{
-			try
-			{
-				List<IWorkItem> items = _repository.GetItems().ToList();
-
-				items.ForEach(item => Assert.False(item.Visited));
-
-				IWorkItem first = items.First();
-				Assert.False(first.Visited);
-
-				first.Visited = true;
-				first.Status = WorkItemStatus.Done;
-
-				_repository.UpdateVolatileState(items);
-
-				items = _repository.GetItems().ToList();
-				first = items.First();
-				Assert.True(first.Visited);
-				Assert.AreEqual(WorkItemStatus.Done, first.Status);
-
-				_repository.Discard();
-
-				items = _repository.GetItems().ToList();
-				first = items.First();
-				Assert.False(first.Visited);
-				Assert.AreEqual(WorkItemStatus.Todo, first.Status);
-			}
-			finally
-			{
-				// reset visited state
-				//List<IWorkItem> items = _repository.GetItems().ToList();
-
-				//items.First().Visited = false;
-				//items.First().Status = WorkItemStatus.Todo;
-
-				//_repository.UpdateVolatileState(items);
-				//_repository.Commit();
+				File.Delete(path);
 			}
 		}
 	}

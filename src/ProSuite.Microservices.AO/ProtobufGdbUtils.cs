@@ -6,7 +6,9 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.Geodatabase;
@@ -71,15 +73,14 @@ namespace ProSuite.Microservices.AO
 		                                          bool includeFieldValues = false,
 		                                          string subFields = null)
 		{
-			var result = ToGdbObjectMsg((IRow) featureOrObject, includeSpatialRef,
+			IReadOnlyRow roRow = ReadOnlyRow.Create(featureOrObject);
+
+			var result = ToGdbObjectMsg(roRow, includeSpatialRef,
 			                            includeFieldValues, subFields);
-
-			result.ClassHandle = featureOrObject.Class.ObjectClassID;
-
 			return result;
 		}
 
-		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IRow featureOrRow,
+		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IDbRow featureOrRow,
 		                                          bool includeSpatialRef = false,
 		                                          bool includeFieldValues = false,
 		                                          string subFields = null)
@@ -88,13 +89,14 @@ namespace ProSuite.Microservices.AO
 
 			result.ObjectId = featureOrRow.OID;
 
-			if (featureOrRow is IFeature feature)
+			if (featureOrRow is IReadOnlyFeature feature)
 			{
 				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
 				//       However, the Shape property E_FAILs.
 				bool canGetShape =
 					string.IsNullOrEmpty(subFields) || subFields == "*" ||
-					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
+					StringUtils.Contains(subFields,
+					                     ((IFeatureClass) feature.FeatureClass).ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
 				if (canGetShape)
@@ -116,15 +118,25 @@ namespace ProSuite.Microservices.AO
 				}
 			}
 
+			IReadOnlyRow roRow = featureOrRow as IReadOnlyRow;
+			Assert.NotNull(roRow, "Unsupported row type");
+
+			IObjectClass objectClass = GetObjectClass(roRow);
+
+			if (objectClass != null)
+			{
+				result.ClassHandle = objectClass.ObjectClassID;
+			}
+
 			if (includeFieldValues)
 			{
-				IFields fields = featureOrRow.Fields;
+				IReadOnlyList<ITableField> fields = featureOrRow.DbTable.TableFields;
 
-				for (int i = 0; i < fields.FieldCount; i++)
+				for (int i = 0; i < fields.Count; i++)
 				{
-					IField field = fields.Field[i];
+					ITableField field = fields[i];
 
-					object valueObject = featureOrRow.Value[i];
+					object valueObject = featureOrRow.GetValue(i);
 
 					var attributeValue = new AttributeValue();
 
@@ -136,7 +148,9 @@ namespace ProSuite.Microservices.AO
 					}
 					else
 					{
-						switch (field.Type)
+						esriFieldType fieldType = (esriFieldType) field.FieldType;
+
+						switch (fieldType)
 						{
 							case esriFieldType.esriFieldTypeSmallInteger:
 								attributeValue.ShortIntValue = (int) valueObject;
@@ -183,6 +197,7 @@ namespace ProSuite.Microservices.AO
 							case esriFieldType.esriFieldTypeXML:
 								// Not supported, ignore
 								break;
+							// TODO: BigInteger!
 							default:
 								throw new ArgumentOutOfRangeException();
 						}
@@ -348,6 +363,7 @@ namespace ProSuite.Microservices.AO
 			return relTableMsg;
 		}
 
+		[NotNull]
 		public static ConnectionMsg ToConnectionMsg([NotNull] ConnectionProvider connectionProvider)
 		{
 			string connectionString = null;
@@ -360,6 +376,9 @@ namespace ProSuite.Microservices.AO
 			{
 				connectionString = ToConnectionString(sdeDirectConnection);
 			}
+			else
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported connection provider: {connectionProvider}");
 
 			return new ConnectionMsg
 			       {
@@ -368,6 +387,25 @@ namespace ProSuite.Microservices.AO
 				       ConnectionType = (int) connectionProvider.ConnectionType,
 				       Name = connectionProvider.Name
 			       };
+		}
+
+		private static IObjectClass GetObjectClass(IReadOnlyRow roRow)
+		{
+			// Consider moving this method to DatasetUtils or GdbObjectUtils
+
+			IObjectClass objectClass = null;
+
+			if (roRow is IObject obj)
+			{
+				objectClass = obj.Class;
+			}
+
+			if (roRow is ReadOnlyRow arcRow)
+			{
+				objectClass = arcRow.BaseRow.Table as IObjectClass;
+			}
+
+			return objectClass;
 		}
 
 		private static string ToConnectionString(

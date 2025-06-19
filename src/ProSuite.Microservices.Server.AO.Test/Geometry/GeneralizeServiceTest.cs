@@ -67,8 +67,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbFeature targetFeature = GdbFeature.Create(43, fClass1);
 			targetFeature.Shape = polygon2;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class, true);
 
@@ -235,8 +235,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbFeature targetFeature = GdbFeature.Create(43, fClass2);
 			targetFeature.Shape = polygon2;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg1 = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class, true);
 			var objectClassMsg2 = ProtobufGdbUtils.ToObjectClassMsg(targetFeature.Class, true);

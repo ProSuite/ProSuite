@@ -39,8 +39,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
 
 		private ChangeAlongFeedback _feedback;
-		private SketchAndCursorSetter _targetSketchCursor;
 		private Geometry _lastDrawnExtent;
+
+		private SelectionCursors _laterPhaseCursors;
 
 		protected ChangeAlongToolBase()
 		{
@@ -82,7 +83,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return await base.FinishSketchOnDoubleClick();
 			}
 
-			if (!IsInSubcurveSelectionPhase())
+			if (! IsInSubcurveSelectionPhase())
 			{
 				// 2. Phase: target selection:
 				return SketchType == SketchGeometryType.Polygon;
@@ -111,59 +112,39 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			Task task = QueuedTask.Run(async () =>
+			{
+				if (IsInSubcurveSelectionPhase())
 				{
-					if (IsInSubcurveSelectionPhase())
-					{
-						ResetDerivedGeometries();
-					}
-					else
-					{
-						ClearSelection();
-						await StartSelectionPhaseAsync();
-					}
-				});
+					ResetDerivedGeometries();
+				}
+				else
+				{
+					ClearSelection();
+					await StartSelectionPhaseAsync();
+				}
+			});
 
 			await ViewUtils.TryAsync(task, _msg);
 		}
 
-		protected override async Task OnToolActivatingCoreAsync()
+		protected override void OnToolActivatingCore()
 		{
+			base.OnToolActivatingCore();
+
 			InitializeOptions();
 
-			_feedback = new ChangeAlongFeedback()
-			{
-				ShowTargetLines = DisplayTargetLines
-			};
-
-			await QueuedTaskUtils.Run(() =>
-			{
-				_targetSketchCursor =
-					SketchAndCursorSetter.Create(this,
-												 GetTargetSelectionCursor(),
-												 GetTargetSelectionCursorLasso(),
-												 GetTargetSelectionCursorPolygon(),
-												 GetSelectionSketchGeometryType(),
-												 DefaultSketchTypeOnFinishSketch);
-
-				_targetSketchCursor.SetSelectionCursorShift(GetTargetSelectionCursorShift());
-				_targetSketchCursor.SetSelectionCursorLassoShift(
-					GetTargetSelectionCursorLassoShift());
-				_targetSketchCursor.SetSelectionCursorPolygonShift(
-					GetTargetSelectionCursorPolygonShift());
-			});
+			_laterPhaseCursors = GetTargetSelectionCursors();
 		}
 
-		protected abstract Cursor GetTargetSelectionCursor();
+		protected override Task OnToolActivatingCoreAsync()
+		{
+			_feedback = new ChangeAlongFeedback()
+			            {
+				            ShowTargetLines = DisplayTargetLines
+			            };
 
-		protected abstract Cursor GetTargetSelectionCursorShift();
-
-		protected abstract Cursor GetTargetSelectionCursorLasso();
-
-		protected abstract Cursor GetTargetSelectionCursorLassoShift();
-
-		protected abstract Cursor GetTargetSelectionCursorPolygon();
-
-		protected abstract Cursor GetTargetSelectionCursorPolygonShift();
+			return base.OnToolActivatingCoreAsync();
+		}
 
 		protected abstract void InitializeOptions();
 
@@ -232,9 +213,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
 		{
 			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
-									   args.CompletedType == EditCompletedType.Reconcile ||
-									   args.CompletedType == EditCompletedType.Redo ||
-									   args.CompletedType == EditCompletedType.Undo;
+			                           args.CompletedType == EditCompletedType.Reconcile ||
+			                           args.CompletedType == EditCompletedType.Redo ||
+			                           args.CompletedType == EditCompletedType.Undo;
 
 			if (requiresRecalculate)
 			{
@@ -265,12 +246,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return base.OnEditCompletedAsyncCore(args);
 		}
 
-		protected override Task AfterSelectionAsync(IList<Feature> selectedFeatures,
-		                                            CancelableProgressor progressor)
+		protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+		                                                  CancelableProgressor progressor)
 		{
-			StartTargetSelectionPhase();
-
-			return Task.CompletedTask;
+			await StartTargetSelectionPhaseAsync();
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
@@ -286,7 +265,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
 				Assert.NotNull(simpleGeometry, "Geometry is null");
 
-				if (!IsInSubcurveSelectionPhase())
+				if (! IsInSubcurveSelectionPhase())
 				{
 					// 2. Phase: target selection:
 					return await SelectTargetsAsync(selection, simpleGeometry, progressor);
@@ -309,31 +288,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 
 				return await QueuedTask.Run(
-						   () => UpdateFeatures(selection, cutSubcurves, progressor));
+					       () => UpdateFeatures(selection, cutSubcurves, progressor));
 			}
 			finally
 			{
 				// reset after 2. phase
-				_targetSketchCursor.ResetOrDefault();
-			}
-		}
-
-		protected virtual async Task ResetSketchCoreAsync()
-		{
-			try
-			{
-				if (!await IsInSelectionPhaseAsync())
-				{
-					_targetSketchCursor.ResetOrDefault();
-				}
-				else
-				{
-					await SetupSelectionSketchAsync();
-				}
-			}
-			catch (Exception ex)
-			{
-				ViewUtils.ShowError(ex, _msg);
+				await ResetSelectionSketchType(_laterPhaseCursors);
 			}
 		}
 
@@ -345,10 +305,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
-			if (!IsInSubcurveSelectionPhase())
+			if (! IsInSubcurveSelectionPhase())
 			{
 				// 2. Phase: target selection:
-				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
+				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: true);
+				SetToolCursor(cursor);
 			}
 
 			// 3. Phase: Shift is not supported.
@@ -362,31 +323,26 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				_targetSketchCursor.SetCursor(GetSketchType(), shiftDown: false);
+				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: false);
+				SetToolCursor(cursor);
 			}
 		}
 
-		protected override async Task SetupLassoSketchAsync()
+		protected override async Task ToggleSelectionSketchGeometryType(
+			SketchGeometryType toggleSketchType,
+			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.SetupLassoSketchAsync();
+				// Use base implementation
+				await base.ToggleSelectionSketchGeometryType(
+					toggleSketchType, selectionCursors);
 			}
 			else
 			{
-				_targetSketchCursor.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
-			}
-		}
-
-		protected override async Task SetupPolygonSketchAsync()
-		{
-			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
-			{
-				await base.SetupPolygonSketchAsync();
-			}
-			else
-			{
-				_targetSketchCursor.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
+				// Second and third phase: use the _secondPhaseCursors
+				await base.ToggleSelectionSketchGeometryType(
+					toggleSketchType, _laterPhaseCursors);
 			}
 		}
 
@@ -401,10 +357,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (shiftDown)
 			{
 				// With reshape curves and shift it would mean we're in the target selection phase
-				return !HasReshapeCurves();
+				return ! HasReshapeCurves();
 			}
 
-			Task<bool> task = QueuedTask.Run(() => !CanUseSelection(ActiveMapView));
+			Task<bool> task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
 			bool result = await ViewUtils.TryAsync(task, _msg);
 			return result;
 		}
@@ -419,9 +375,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected bool IsInSubcurveSelectionPhase()
 		{
 			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-							 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 
-			return HasReshapeCurves() && !shiftDown;
+			return HasReshapeCurves() && ! shiftDown;
 		}
 
 		protected virtual bool CanUseAsTargetLayer(Layer layer)
@@ -429,7 +385,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (layer is FeatureLayer featureLayer)
 			{
 				return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
-					   featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
+				       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
 			}
 
 			return false;
@@ -441,12 +397,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		protected virtual bool CanUseAsTargetFeature([NotNull] IList<Feature> selection,
-													 [NotNull] Feature testFeature)
+		                                             [NotNull] Feature testFeature)
 		{
 			foreach (Feature selectedFeature in selection)
 			{
 				if (selectedFeature.GetObjectID() == testFeature.GetObjectID() &&
-					selectedFeature.GetTable().Handle == testFeature.GetTable().Handle)
+				    selectedFeature.GetTable().Handle == testFeature.GetTable().Handle)
 				{
 					// already selected
 					return false;
@@ -455,6 +411,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return true;
 		}
+
+		protected abstract SelectionCursors GetTargetSelectionCursors();
 
 		protected abstract void LogAfterPickTarget(
 			ReshapeAlongCurveUsability reshapeCurveUsability);
@@ -470,11 +428,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves);
 
-		private void StartTargetSelectionPhase()
+		private async Task StartTargetSelectionPhaseAsync()
 		{
 			SetupSketch();
 
-			_targetSketchCursor.ResetOrDefault();
+			await ResetSelectionSketchType(_laterPhaseCursors);
 		}
 
 		protected ZSettingsModel GetZSettingsModel()
@@ -570,18 +528,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					: SpatialRelationship.Intersects;
 
 			FeatureFinder featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
-			{
-				SelectedFeatures = selectedFeatures,
-				SpatialRelationship = spatialRel,
-				ReturnUnJoinedFeatures = true,
-				FeatureClassPredicate =
-												  GetTargetFeatureClassPredicate()
-			};
+			                              {
+				                              SelectedFeatures = selectedFeatures,
+				                              SpatialRelationship = spatialRel,
+				                              ReturnUnJoinedFeatures = true,
+				                              FeatureClassPredicate =
+					                              GetTargetFeatureClassPredicate()
+			                              };
 
 			var selectionByClass =
 				featureFinder.FindFeaturesByFeatureClass(sketch, CanUseAsTargetLayer,
-														 canUseAsTargetFeature, progressor)
-							 .ToList();
+				                                         canUseAsTargetFeature, progressor)
+				             .ToList();
 
 			return selectionByClass;
 		}
@@ -599,7 +557,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (actualTargetFeatures.Count == 0)
 			{
 				ChangeAlongCurves = new ChangeAlongCurves(new List<CutSubcurve>(),
-														  ReshapeAlongCurveUsability.NoTarget);
+				                                          ReshapeAlongCurveUsability.NoTarget);
 			}
 			else
 			{
@@ -663,9 +621,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			foreach (Feature target in features)
 			{
 				var objRef = new GdbObjectReference(target.GetTable().Handle.ToInt64(),
-													target.GetObjectID());
+				                                    target.GetObjectID());
 
-				if (!resultDictionary.ContainsKey(objRef))
+				if (! resultDictionary.ContainsKey(objRef))
 				{
 					resultDictionary.Add(objRef, target);
 				}
@@ -675,7 +633,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private List<CutSubcurve> GetSelectedCutSubcurves([NotNull] Geometry sketch)
 		{
 			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
-													  out bool singlePick);
+			                                          out bool singlePick);
 
 			Predicate<CutSubcurve> canReshapePredicate =
 				cutSubcurve => ToolUtils.IsSelected(sketch, cutSubcurve.Path, singlePick);
@@ -717,7 +675,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (MicroserviceClient != null)
 			{
 				result = CalculateChangeAlongCurves(selectedFeatures, targetFeatures,
-													cancellationToken);
+				                                    cancellationToken);
 
 				result.TargetFeatures = targetFeatures;
 			}
@@ -734,8 +692,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			[CanBeNull] CancelableProgressor progressor = null)
 		{
 			if (ChangeAlongCurves == null ||
-				ChangeAlongCurves.TargetFeatures == null ||
-				ChangeAlongCurves.TargetFeatures.Count == 0)
+			    ChangeAlongCurves.TargetFeatures == null ||
+			    ChangeAlongCurves.TargetFeatures.Count == 0)
 			{
 				return;
 			}
@@ -748,7 +706,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			ChangeAlongCurves newState =
 				RefreshChangeAlongCurves(selectedFeatures, ChangeAlongCurves.TargetFeatures,
-										 progressor);
+				                         progressor);
 
 			ChangeAlongCurves.Update(newState);
 
@@ -756,8 +714,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		private async Task<bool> UpdateFeatures(List<Feature> selectedFeatures,
-												List<CutSubcurve> cutSubcurves,
-												CancelableProgressor progressor)
+		                                        List<CutSubcurve> cutSubcurves,
+		                                        CancelableProgressor progressor)
 		{
 			CancellationToken cancellationToken =
 				progressor?.CancellationToken ?? new CancellationTokenSource().Token;
@@ -790,14 +748,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Dictionary<Feature, Geometry> resultFeatures =
 				updatedFeatures
 					.Where(f => IsStoreRequired(
-							   f, editableClassHandles, RowChangeType.Update))
+						       f, editableClassHandles, RowChangeType.Update))
 					.ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
 
 			// Inserts (in case of cut), grouped by original feature:
 			var inserts = updatedFeatures
-						  .Where(
-							  f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
-						  .ToList();
+			              .Where(
+				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
+			              .ToList();
 
 			if (resultFeatures.Count == 0 && inserts.Count == 0)
 			{
@@ -808,17 +766,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			List<Feature> newFeatures = new List<Feature>();
 
 			bool success = await GdbPersistenceUtils.ExecuteInTransactionAsync(
-							   delegate (EditOperation.IEditContext editContext)
-							   {
-								   GdbPersistenceUtils.UpdateTx(editContext, resultFeatures);
+				               delegate(EditOperation.IEditContext editContext)
+				               {
+					               GdbPersistenceUtils.UpdateTx(editContext, resultFeatures);
 
-								   newFeatures.AddRange(
-									   GdbPersistenceUtils.InsertTx(editContext, inserts));
+					               newFeatures.AddRange(
+						               GdbPersistenceUtils.InsertTx(editContext, inserts));
 
-								   return true;
-							   },
-							   EditOperationDescription,
-							   GdbPersistenceUtils.GetDatasetsNonEmpty(resultFeatures.Keys));
+					               return true;
+				               },
+				               EditOperationDescription,
+				               GdbPersistenceUtils.GetDatasetsNonEmpty(resultFeatures.Keys));
 
 			LogReshapeResults(updatedFeatures, resultFeatures);
 
@@ -836,8 +794,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		private static IEnumerable<Feature> ReRead([NotNull] IList<Feature> features,
-												   [CanBeNull]
-												   SpatialReference outputSpatialReference)
+		                                           [CanBeNull]
+		                                           SpatialReference outputSpatialReference)
 		{
 			var groupedByClass = features.GroupBy(f => f.GetTable().GetID());
 
@@ -851,8 +809,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 
 				foreach (Feature feature in GdbQueryUtils.GetFeatures(
-							 featureClass, grouping.Select(f => f.GetObjectID()),
-							 outputSpatialReference, false))
+					         featureClass, grouping.Select(f => f.GetObjectID()),
+					         outputSpatialReference, false))
 				{
 					yield return feature;
 				}
@@ -892,7 +850,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		                                    [NotNull] HashSet<long> editableClassHandles,
 		                                    RowChangeType changeType)
 		{
-			if (!GdbPersistenceUtils.CanChange(resultFeature, editableClassHandles, changeType))
+			if (! GdbPersistenceUtils.CanChange(resultFeature, editableClassHandles, changeType))
 			{
 				return false;
 			}
@@ -902,11 +860,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Geometry originalGeometry = feature.GetShape();
 
 			if (changeType == RowChangeType.Update &&
-				originalGeometry != null &&
-				originalGeometry.IsEqual(resultFeature.NewGeometry))
+			    originalGeometry != null &&
+			    originalGeometry.IsEqual(resultFeature.NewGeometry))
 			{
 				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
-								 GdbObjectUtils.ToString(feature));
+				                 GdbObjectUtils.ToString(feature));
 
 				return false;
 			}
@@ -915,12 +873,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		private void LogReshapeResults(List<ResultFeature> updatedFeatures,
-									   Dictionary<Feature, Geometry> savedUpdates)
+		                               Dictionary<Feature, Geometry> savedUpdates)
 		{
 			foreach (ResultFeature resultFeature in updatedFeatures)
 			{
 				if (savedUpdates.ContainsKey(resultFeature.OriginalFeature) &&
-					resultFeature.Messages.Count == 1)
+				    resultFeature.Messages.Count == 1)
 				{
 					_msg.Info(resultFeature.Messages[0]);
 				}

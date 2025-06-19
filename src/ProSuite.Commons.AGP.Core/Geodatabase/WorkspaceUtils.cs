@@ -62,7 +62,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
-			
+
 			string message =
 				$"Finder: Unsupported geodatabase extension: {extension} for path: {catalogPath}";
 			_msg.Debug(message);
@@ -73,6 +73,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
 		/// </summary>
 		/// <returns></returns>
+		[NotNull]
 		public static Datastore OpenDatastore([NotNull] Connector connector)
 		{
 			try
@@ -126,13 +127,31 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
-		public static bool IsSameDatastore(Datastore datastore1, Datastore datastore2)
+		public static bool IsSameDatastore([CanBeNull] Datastore datastore1,
+		                                   [CanBeNull] Datastore datastore2,
+		                                   DatastoreComparison comparison = DatastoreComparison.Exact)
 		{
-			// todo daro check ProProcessingUtils
-			if (ReferenceEquals(datastore1, datastore2)) return true;
-			if (Equals(datastore1.Handle, datastore2.Handle)) return true;
+			// Comparison in case of null:
+			if (datastore1 == null && datastore2 == null)
+			{
+				return true;
+			}
 
-			return false;
+			if (datastore1 == null || datastore2 == null)
+			{
+				return false;
+			}
+
+			if (comparison == DatastoreComparison.ReferenceEquals)
+			{
+				return ReferenceEquals(datastore1, datastore2) ||
+				       Equals(datastore1.Handle, datastore2.Handle);
+			}
+
+			DatastoreName datastoreName1 = new DatastoreName(datastore1.GetConnector());
+			DatastoreName datastoreName2 = new DatastoreName(datastore2.GetConnector());
+
+			return datastoreName1.Equals(datastoreName2, comparison);
 		}
 
 		[CanBeNull]

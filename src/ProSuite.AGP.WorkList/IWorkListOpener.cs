@@ -10,7 +10,8 @@ namespace ProSuite.AGP.WorkList
 
 		Task OpenProductionModelIssueWorkEnvironmentAsync([CanBeNull] Geometry areaOfInterest);
 
-		Task OpenFileGdbIssueWorkListAsync([CanBeNull] string issuesGdbPath = null,
+		Task OpenFileGdbIssueWorkListAsync(Envelope areaOfInterest,
+		                                   [CanBeNull] string issuesGdbPath = null,
 		                                   bool removeExisting = false);
 	}
 }

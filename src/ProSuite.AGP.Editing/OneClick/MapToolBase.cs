@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -52,8 +53,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyShowOptionsPane);
 		}
 
-		protected static int GetSelectionTolerancePixels()
+		protected virtual int GetSelectionTolerancePixels()
 		{
+			// TODO: Make more dynamic selection environment that supports changing the standard Pro tolerance within the session
+			//       and at the same time support custom implementations (map tolerance, dips, whatever, custom dialog)
 			return SelectionEnvironment.SelectionTolerance;
 		}
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -20,7 +19,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected string Name { get; }
 		protected Type Type { get; }
 
-		private IDictionary<GdbObjectReference, TState> _statesByRow;
+		public string WorkListDefinitionFilePath { get; set; }
 
 		private readonly IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>
 			_workspaces = new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
@@ -30,45 +29,31 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			Name = name;
 			Type = type;
 			CurrentIndex = currentItemIndex;
+
+			ReadStatesByRow();
 		}
 
-		private IDictionary<GdbObjectReference, TState> StatesByRow
-		{
-			get { return _statesByRow ??= ReadStatesByRow(); }
-		}
+		protected IDictionary<GdbObjectReference, TState> StatesByRow { get; set; }
 
-		public void Rename(string name)
-		{
-			string directoryName = Path.GetDirectoryName(WorkListDefinitionFilePath);
-			Assert.NotNull(directoryName);
-
-			string extension = Path.GetExtension(WorkListDefinitionFilePath);
-			Assert.NotNull(extension);
-
-			string path = Path.Combine(directoryName, $"{name}{extension}");
-
-			WorkListDefinitionFilePath = path;
-		}
-
-		public string WorkListDefinitionFilePath { get; set; }
+		public virtual void Rename(string name) { }
 
 		public int? CurrentIndex { get; set; }
 
-		public IWorkItem Refresh(IWorkItem item)
+		public void Refresh(IWorkItem item)
 		{
 			TState state = Lookup(item);
 
 			if (state == null)
 			{
-				return item;
+				return;
 			}
 
 			item.Visited = state.Visited;
 
-			return RefreshCore(item, state);
+			RefreshCore(item, state);
 		}
 
-		public void Update([NotNull] IWorkItem item)
+		public void UpdateState([NotNull] IWorkItem item)
 		{
 			TState state = Lookup(item);
 
@@ -97,39 +82,21 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 			state.Visited = item.Visited;
 
-			UpdateCore(state, item);
-		}
-
-		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
-		{
-			// Ensure StatesByRow is initialized!
-			// TODO: Create the item repository based on the XML/JSON definition to ensure it is
-			// only read once. We don't gain anything by delaying the reading of the file.
-			IDictionary<GdbObjectReference, TState> statesByRow = StatesByRow;
-
-			foreach (IWorkItem item in items)
-			{
-				Update(item);
-			}
+			UpdateStateCore(state, item);
 		}
 
 		public void Commit(IList<ISourceClass> sourceClasses)
 		{
-			Assert.NotNull(_statesByRow,
+			Assert.NotNull(StatesByRow,
 			               "Work item states have never been read, failed to read or have already been discarded");
 
-			if (_workspaces.Count == 0 && _statesByRow.Count > 0)
+			if (_workspaces.Count == 0 && StatesByRow.Count > 0)
 			{
 				_msg.Debug($"{Name}: Invalid work list (one or more referenced tables could not be loaded) will not be stored.");
 				return;
 			}
 
-			Store(CreateDefinition(_workspaces, sourceClasses, _statesByRow.Values));
-		}
-
-		public void Discard()
-		{
-			Invalidate();
+			Store(CreateDefinition(_workspaces, sourceClasses, StatesByRow.Values));
 		}
 
 		protected abstract void Store(TDefinition definition);
@@ -141,14 +108,19 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		protected abstract TState CreateState(IWorkItem item);
 
-		protected abstract IDictionary<GdbObjectReference, TState> ReadStatesByRow();
-
-		protected virtual IWorkItem RefreshCore([NotNull] IWorkItem item, [NotNull] TState state)
+		protected void ReadStatesByRow()
 		{
-			return item;
+			ReadStatesByRowCore();
 		}
 
-		protected virtual void UpdateCore(TState state, IWorkItem item) { }
+		protected virtual void ReadStatesByRowCore()
+		{
+			StatesByRow = new Dictionary<GdbObjectReference, TState>();
+		}
+
+		protected virtual void RefreshCore([NotNull] IWorkItem item, [NotNull] TState state) { }
+
+		protected virtual void UpdateStateCore(TState state, IWorkItem item) { }
 
 		[CanBeNull]
 		private TState Lookup([NotNull] IWorkItem item)
@@ -165,11 +137,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			}
 
 			return volatileState;
-		}
-
-		private void Invalidate()
-		{
-			_statesByRow = null;
 		}
 	}
 }

@@ -1,15 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -17,11 +16,12 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
+	// TODO: (daro) rename. Environment is long living.
 	/// <summary>
 	/// Encapsulates the logic (but no volatile state) for a work list type, including the creation
 	/// of the work list.
 	/// </summary>
-	public abstract class WorkEnvironmentBase
+	public abstract class WorkEnvironmentBase : IWorkEnvironment
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -34,6 +34,11 @@ namespace ProSuite.AGP.WorkList
 		/// TODO: Implement and use for all DbStatusWorkLists and Selection worklist
 		/// </summary>
 		protected string UniqueName { get; set; }
+
+		protected virtual Geometry GetAreaOfInterest()
+		{
+			return MapView.Active.Extent;
+		}
 
 		[ItemCanBeNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName)
@@ -76,10 +81,10 @@ namespace ProSuite.AGP.WorkList
 
 		[ItemCanBeNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
-		                                                 [NotNull] string definitionFilePath)
+		                                                 [NotNull] string workListFile)
 		{
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
-			Assert.ArgumentNotNullOrEmpty(definitionFilePath, nameof(definitionFilePath));
+			Assert.ArgumentNotNullOrEmpty(workListFile, nameof(workListFile));
 
 			if (! await TryPrepareSchemaCoreAsync())
 			{
@@ -90,10 +95,10 @@ namespace ProSuite.AGP.WorkList
 			var watch = Stopwatch.StartNew();
 
 			IWorkItemStateRepository stateRepository =
-				CreateStateRepositoryCore(definitionFilePath, uniqueName);
+				CreateStateRepositoryCore(workListFile, uniqueName);
 
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
-			                     definitionFilePath);
+			                     workListFile);
 
 			IWorkItemRepository itemRepository =
 				await CreateItemRepositoryCoreAsync(stateRepository);
@@ -103,10 +108,14 @@ namespace ProSuite.AGP.WorkList
 				return await Task.FromResult<IWorkList>(null);
 			}
 
-			string displayName = Path.GetFileNameWithoutExtension(definitionFilePath);
+			string displayName = Path.GetFileNameWithoutExtension(workListFile);
 			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
+			Assert.NotNull(result);
 
-			_msg.DebugFormat("Created work list {0}", uniqueName);
+			_msg.Debug($"Created {WorkListUtils.Format(result)}");
+
+			WorkListUtils.LoadItemsInBackground(result);
+			WorkListUtils.CountItemsInBackground(result);
 
 			return result;
 		}
@@ -179,7 +188,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected abstract IWorkList CreateWorkListCore([NotNull] IWorkItemRepository repository,
 		                                                [NotNull] string uniqueName,
-		                                                [CanBeNull] string displayName);
+		                                                [NotNull] string displayName);
 
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
 			string path, string workListName);
@@ -213,7 +222,7 @@ namespace ProSuite.AGP.WorkList
 				string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
 
 				FeatureLayer result = LayerFactory.Instance.CreateLayer<FeatureLayer>(
-					WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
+					LayerUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 					layerContainer);
 
 				if (result == null)
@@ -222,7 +231,7 @@ namespace ProSuite.AGP.WorkList
 						"Failed to create work list layer for {0}. Trying one more time...",
 						worklist.Name);
 					result = LayerFactory.Instance.CreateLayer<FeatureLayer>(
-						WorkListUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
+						LayerUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
 						layerContainer);
 				}
 
@@ -257,20 +266,29 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		protected abstract string GetDisplayName();
+		public abstract string GetDisplayName();
 
-		// TODO: (DARO) move to RevisionWorkListEnvironment
-		public bool DefinitionFileExistsInProjectFolder(out string definitionFile)
+		/// <summary>
+		/// Check whether definition file exists in PROJECT\WorkLists folder.
+		/// ATTENTION: result is dependent on implementation of GetDisplayName()!
+		/// </summary>
+		/// <param name="worklistFilePath">Full path to work list file</param>
+		public bool WorkListFileExistsInProjectFolder(out string worklistFilePath)
 		{
 			string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
 			Assert.True(FileSystemUtils.EnsureDirectoryExists(directory), $"Cannot create {directory}");
 
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
-			definitionFile = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder, $"{fileName}{FileSuffix}");
+			worklistFilePath = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
 
-			return definitionFile != null && File.Exists(definitionFile);
+			return worklistFilePath != null && File.Exists(worklistFilePath);
 		}
 
+		// TODO: (daro) rename to EnsureUniqueWorkListFile
+		/// <summary>
+		/// Ensures that work list file is always unique. Override this
+		/// method to always use the same work list file.
+		/// </summary>
 		protected virtual string EnsureValidDefinitionFilePath(string directory, string fileName, string suffix)
 		{
 			int increment = 1;
@@ -282,34 +300,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return Path.Combine(directory, $"{newFileName}{FileSuffix}");
-		}
-
-		// TODO: (daro) check usage in GoTop!
-		public IEnumerable<BasicFeatureLayer> FindWorkListLayers(Map map)
-		{
-			if (! DefinitionFileExistsInProjectFolder(out string definitionFile))
-			{
-				yield break;
-			}
-
-			// TODO: Consider making the folder the data store and the file the work list name?
-			//       Currently, the data store is the work list file and the name is probably
-			//       irrelevant for opening the work list (except that it must be unique for the
-			//       work list registry, which could also use the full file path or some kind of
-			//       name moniker similar to IFeatureClassName). 
-			string workListName =
-				UniqueName ?? WorkListUtils.GetWorklistName(definitionFile)?.ToLower();
-			var datastore =
-				WorkListUtils.GetPluginDatastore(new Uri(definitionFile, UriKind.Absolute));
-
-			Table table = datastore.OpenTable(workListName);
-			Assert.NotNull(table);
-
-			foreach (FeatureLayer featureLayer in MapUtils.GetFeatureLayers<FeatureLayer>(
-				         map, l => DatasetUtils.IsSameTable(table, l.GetTable())))
-			{
-				yield return featureLayer;
-			}
 		}
 	}
 }
