@@ -530,7 +530,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-			return GetSelectionSettings().SelectionTolerancePixels;
 		private async Task<bool> OnSelectionSketchCompleteAsync(
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] CancelableProgressor progressor)
