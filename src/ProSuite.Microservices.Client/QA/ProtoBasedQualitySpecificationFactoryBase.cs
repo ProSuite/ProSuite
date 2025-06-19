@@ -57,6 +57,36 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
+		[NotNull]
+		public TransformerConfiguration CreateTransformerConfiguration(
+			[NotNull] InstanceConfigurationMsg transformerConfigurationMsg)
+		{
+			// Prepare models (if stand-alone, the models must be harvested):
+			if (ModelsByWorkspaceId == null)
+			{
+				ModelsByWorkspaceId = GetModelsByWorkspaceId(new ConditionListSpecificationMsg());
+			}
+
+			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
+
+			DatasetSettings datasetSettings = new DatasetSettings(getDatasetsByName, false);
+
+			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+				TransformerConfiguration result =
+					CreateTransformerConfiguration(transformerConfigurationMsg, datasetSettings);
+
+				return Assert.NotNull(result);
+			}
+			finally
+			{
+				Thread.CurrentThread.CurrentCulture = origCulture;
+			}
+		}
+
 		protected abstract IDictionary<string, DdxModel> GetModelsByWorkspaceId(
 			[NotNull] ConditionListSpecificationMsg conditionListSpecificationMsg);
 

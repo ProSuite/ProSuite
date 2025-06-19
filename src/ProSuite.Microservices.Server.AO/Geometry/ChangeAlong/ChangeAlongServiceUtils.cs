@@ -405,7 +405,19 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			            request.CalculationRequest.ClassDefinitions,
 			            out IList<IFeature> sourceFeatures, out targetFeatures);
 
-			ChangeAlongZSource zSource = (ChangeAlongZSource) request.ChangedVerticesZSource;
+			var zSources = request.CalculationRequest.ZSources;
+
+			// Default: target
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target;
+
+			if (zSources.Count == 1 && string.IsNullOrEmpty(zSources[0].DatasetName))
+			{
+				zSource = (ChangeAlongZSource) zSources[0].ZSource;
+			}
+			else if (zSources.Count > 1)
+			{
+				throw new NotImplementedException("Per-class Z source is not yet implemented");
+			}
 
 			DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider =
 				new DatasetSpecificSettingProvider<ChangeAlongZSource>(

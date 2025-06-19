@@ -673,6 +673,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
+		public static IGeometry GetFeatureShape(IReadOnlyFeature roFeature)
+		{
+			if (roFeature is IFeature feature)
+			{
+				return GetFeatureShape(feature);
+			}
+
+			return roFeature.Shape;
+		}
+
 		public static IGeometry GetFeatureShape(IFeature feature)
 		{
 			IGeometry featureShape;
