@@ -36,7 +36,10 @@ namespace ProSuite.Commons.AGP.MapOverlay
 			where T : UserControl
 		{
 			grid.Children.Add(control);
+			Grid.SetRow(control, 1);
+
 			_adapter.SetViewModel(vm);
+
 			Title = title;
 		}
 
