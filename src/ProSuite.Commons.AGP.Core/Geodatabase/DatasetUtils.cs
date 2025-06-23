@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -301,6 +302,90 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			return false;
+		}
+
+		public static FeatureClass OpenOrCreateFeatureClass(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[NotNull] string datasetName,
+			[NotNull] List<FieldDescription> fieldDescription,
+			[NotNull] GeometryType geometryType,
+			[NotNull] ArcGIS.Core.Geometry.SpatialReference spatialReference)
+		{
+			TryOpenDataset<FeatureClass>(geodatabase, datasetName, out var fc);
+			if (fc != null)
+			{
+				if (!ValidateSchema(fc, geometryType, fieldDescription, spatialReference))
+				{
+					throw new ArgumentException(
+						$"Feature class {datasetName} already exists but has an incompatible schema.");
+				}
+				return fc;
+			}
+
+			return CreateFeatureClass(geodatabase, datasetName, fieldDescription, geometryType,
+			                          spatialReference);
+		}
+
+		private static bool ValidateSchema(FeatureClass featureClass,
+		                                  GeometryType expectedGeometryType,
+		                                  List<FieldDescription> expectedFields,
+		                                  ArcGIS.Core.Geometry.SpatialReference spatialReference)
+		{
+			using (FeatureClassDefinition definition = featureClass.GetDefinition())
+			{
+				if (definition.GetShapeType() != expectedGeometryType)
+				{
+					return false;
+				}
+				if (!definition.GetSpatialReference().IsEqual(spatialReference))
+				{
+					return false;
+				}
+
+				var existingFields = definition.GetFields();
+
+				foreach (var expectedField in expectedFields)
+				{
+					var existingField = existingFields.FirstOrDefault(f =>
+						f.Name.Equals(expectedField.Name, StringComparison.OrdinalIgnoreCase));
+
+					if (existingField == null || existingField.FieldType != expectedField.FieldType)
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+
+		public static FeatureClass CreateFeatureClass(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[NotNull] string datasetName,
+			[NotNull] List<FieldDescription> fieldDescription,
+			[NotNull] GeometryType geometryType,
+			[NotNull] ArcGIS.Core.Geometry.SpatialReference spatialReference,
+			[NotNull] bool hasZ = true)
+		{
+			var shapeFieldDescription = new ShapeDescription(geometryType, spatialReference)
+			                            {
+				                            HasZ = hasZ
+			                            };
+			var featureClassDescription = new FeatureClassDescription(datasetName,
+			                                                          fieldDescription,
+			                                                          shapeFieldDescription);
+
+
+			SchemaBuilder schemaBuilder = new SchemaBuilder(geodatabase);
+			schemaBuilder.Create(featureClassDescription);
+			bool success = schemaBuilder.Build();
+
+			if (!success)
+			{
+				throw new Exception($"Failed to create feature class {datasetName}");
+			}
+
+			// Open and return the newly created feature class
+			return geodatabase.OpenDataset<FeatureClass>(datasetName);
 		}
 
 		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,
