@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -37,11 +37,15 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private MergeToolOptions _mergeToolOptions;
 		private OverridableSettingsProvider<PartialMergeOptions> _settingsProvider;
 
+		private const Key _immediateMergeKey = Key.Enter;
+
 		protected MergeFeaturesToolBase()
 		{
 			IsSketchTool = true;
 
 			GeomIsSimpleAsFeature = false;
+
+			HandledKeys.Add(_immediateMergeKey);
 		}
 
 		protected virtual string OptionsFileName => "MergeToolOptions.xml";
@@ -70,8 +74,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		// First selected feature
 		private Feature _firstFeature;
-
-		private const Keys _immediateMergeKey = Keys.Enter;
 
 		//#region Constructors
 
@@ -142,18 +144,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		//	_editEvents2 = (IEditEvents2_Event)Editor;
 		//}
 
-		protected void AddControlledKeysCore(IList<Keys> controlledKeys)
-		{
-			//controlledKeys.Add(_optionsFormKey);
-			controlledKeys.Add(_immediateMergeKey);
-		}
-
-		//TODO: Add when MergeOverlay is defined/implemented in the resources
-		//protected override SelectionCursors GetSelectionCursors()
-		//{
-		//	return SelectionCursors.CreateArrowCursors(Resources.MergeOverlay);
-		//}
-
 		protected override async Task HandleEscapeAsync()
 		{
 			//_envelopeDrawer = null;
@@ -189,8 +179,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		}
 
 		protected override async Task AfterSelectionAsync([NotNull] IList<Feature> selectedFeatures,
-		                                                  [CanBeNull]
-		                                                  CancelableProgressor progressor)
+														  [CanBeNull]
+														  CancelableProgressor progressor)
 		{
 			_firstFeature = selectedFeatures[0];
 			//TODO: brauchts das?
@@ -223,9 +213,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			if (selectedCount > 1)
 			{
 				message = Environment.NewLine +
-				          "Press Enter to merge all selected features. The largest feature will survive after the merge." +
-				          Environment.NewLine +
-				          $"Alternatively, select a new first feature to merge{survivorText}";
+						  "Press Enter to merge all selected features. The largest feature will survive after the merge." +
+						  Environment.NewLine +
+						  $"Alternatively, select a new first feature to merge{survivorText}";
 			}
 			else
 			{
@@ -275,7 +265,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				return false;
 			}
 
-			if (! CanUseSelection(ActiveMapView))
+			if (!CanUseSelection(ActiveMapView))
 			{
 				_firstFeature = null;
 				// TODO: Test if this is necessary
@@ -307,9 +297,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
 			return geometryType == GeometryType.Polygon ||
-			       geometryType == GeometryType.Polyline ||
-			       geometryType == GeometryType.Multipatch ||
-			       geometryType == GeometryType.Multipoint;
+				   geometryType == GeometryType.Polyline ||
+				   geometryType == GeometryType.Multipatch ||
+				   geometryType == GeometryType.Multipoint;
 		}
 
 		protected bool CanSelectFeatureType(esriFeatureType featureType)
@@ -334,54 +324,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 					return false;
 			}
 		}
-
-		//protected override void KeyReleasedCore(Keys key)
-		//{
-		//	//if (key == _optionsFormKey)
-		//	//{
-		//	//	_msg.Info(_settingsProvider.GetXmlLocationLogMessage());
-
-		//	//	var formOptions = (MergeToolOptions)MergeOptions.Clone();
-
-		//	//	using (var form = new MergeToolOptionsForm(formOptions, Caption))
-		//	//	{
-		//	//		if (DialogResult.OK == UIEnvironment.ShowDialog(form))
-		//	//		{
-		//	//			MergeOptions = formOptions;
-
-		//	//			_settingsProvider.StoreLocalConfiguration(MergeOptions.LocalOptions);
-		//	//		}
-		//	//	}
-		//	//}
-		//	//ToDo muss noch migriert
-
-		//	if (key == _immediateMergeKey)
-		//	{
-		//		IList<Feature> selectedFeatures = GetSelectedEditFeatures();
-
-		//		MergerBase merger = GetMerger();
-
-		//		if (!merger.CanMerge(selectedFeatures))
-		//		{
-		//			return;
-		//		}
-
-		//		Geometry largestGeometry =
-		//			GeometryUtils.GetLargestGeometry(selectedFeatures.Select(f => f.Shape));
-
-		//		Feature largestFeature =
-		//			selectedFeatures.FirstOrDefault(f => f.Shape == largestGeometry);
-
-		//		Assert.NotNull(largestFeature, "No largest feature identified.");
-
-		//		Feature survivingFeature = merger.MergeFeatures(selectedFeatures, largestFeature);
-
-		//		if (survivingFeature != null)
-		//		{
-		//			SelectResultAndLogNextStep(survivingFeature);
-		//		}
-		//	}
-		//}
 
 		//protected override void OnKeyDownCore(int code, int shift)
 		//{
@@ -564,7 +506,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			PartialMergeOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
-			                                    out centralConfiguration);
+												out centralConfiguration);
 
 			var result =
 				new MergeToolOptions(centralConfiguration, localConfiguration);
@@ -576,7 +518,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			string optionsMessage = result.GetLocalOverridesMessage();
 
-			if (! string.IsNullOrEmpty(optionsMessage))
+			if (!string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
@@ -596,6 +538,56 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
+		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
+		{
+			try
+			{
+				await base.HandleKeyDownAsync(args);
+
+				if (args.Key == _immediateMergeKey)
+				{
+					await QueuedTask.Run(async () =>
+					{
+						try
+						{
+
+							IList<Feature> selectedFeatures =
+								GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+							MergerBase merger = GetMerger();
+
+							if (!merger.CanMerge(selectedFeatures))
+							{
+								return;
+							}
+
+							Feature largestFeature =
+								GeometryUtils.GetLargestFeature(selectedFeatures);
+
+							Assert.NotNull(largestFeature, "No largest feature identified.");
+
+							Feature survivingFeature =
+								merger.MergeFeatures(selectedFeatures, largestFeature);
+
+							if (survivingFeature != null)
+							{
+								SelectResultAndLogNextStep(survivingFeature);
+							}
+						}
+
+						catch (Exception e)
+						{
+							_msg.Warn("Error merging immediatly", e);
+						}
+					});
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error handling key press", e);
+			}
+		}
+
 		#region Tool Options DockPane
 
 		[CanBeNull]
@@ -611,7 +603,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 					DockPaneMergeFeaturesViewModelBase;
 
 			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
-			                      OptionsDockPaneID);
+								  OptionsDockPaneID);
 		}
 
 		protected override void ShowOptionsPane()
@@ -637,7 +629,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		#endregion
 
 		private async Task<bool> CanStillUseSelection(Geometry sketchGeometry,
-		                                              CancelableProgressor progressor)
+													  CancelableProgressor progressor)
 		{
 			return await QueuedTask.Run(() =>
 			{
@@ -712,7 +704,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		//}
 
 		private async Task<bool> PickSecondFeatureAndMerge(Geometry sketchGeometry,
-		                                                   CancelableProgressor progressor)
+														   CancelableProgressor progressor)
 		{
 			Feature secondFeature =
 				await QueuedTask.Run(() => PickSecondFeature(sketchGeometry, progressor));
@@ -726,7 +718,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			IList<Feature> features = new List<Feature> { _firstFeature, secondFeature };
 			bool canMerge = await QueuedTask.Run(() => merger.CanMerge(features));
-			if (! canMerge)
+			if (!canMerge)
 			{
 				return false;
 			}
@@ -735,15 +727,15 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			bool flipFeatures =
 				await QueuedTask.Run(() => DetermineSecondFeatureIsUpdate(
-					                     _firstFeature, secondFeature));
+										 _firstFeature, secondFeature));
 
 			Feature updateFeature = flipFeatures
-				                        ? secondFeature
-				                        : _firstFeature;
+										? secondFeature
+										: _firstFeature;
 			Feature survivingFeature =
 				await QueuedTask.Run(() => merger.MergeFeatures(
-					                     new List<Feature> { _firstFeature, secondFeature },
-					                     updateFeature));
+										 new List<Feature> { _firstFeature, secondFeature },
+										 updateFeature));
 
 			if (survivingFeature != null)
 			{
@@ -782,7 +774,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			Geometry testFeatureShape = feature.GetShape();
 
 			bool unEqualShapeTypes = firstFeatureShape.GeometryType !=
-			                         testFeatureShape.GeometryType;
+									 testFeatureShape.GeometryType;
 
 			if (unEqualShapeTypes)
 			{
@@ -790,26 +782,26 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 
 			return _firstFeature.GetObjectID() != feature.GetObjectID() ||
-			       _firstFeature.GetTable().GetID() != feature.GetTable().GetID();
+				   _firstFeature.GetTable().GetID() != feature.GetTable().GetID();
 		}
 
 		[CanBeNull]
 		private Feature PickSecondFeature(Geometry sketchGeometry,
-		                                  CancelableProgressor cancellabelProgressor)
+										  CancelableProgressor cancellabelProgressor)
 		{
 			var featureFinder = new FeatureFinder(ActiveMapView,
-			                                      TargetFeatureSelection
-				                                      .VisibleSelectableEditableFeatures)
-			                    {
-				                    //FeatureClassPredicate = GetTargetFeatureClassPredicate()
-			                    };
+												  TargetFeatureSelection
+													  .VisibleSelectableEditableFeatures)
+			{
+				//FeatureClassPredicate = GetTargetFeatureClassPredicate()
+			};
 
 			// They might be stored (insert target vertices):
 			featureFinder.ReturnUnJoinedFeatures = true;
 
 			Predicate<Layer> layerPredicate = null; // CanOverlapLayer;
-			//IEnumerable<FeatureSelectionBase> featureClassSelections =
-			//	featureFinder.FindFeaturesByLayer(sketchGeometry, layerPredicate);
+													//IEnumerable<FeatureSelectionBase> featureClassSelections =
+													//	featureFinder.FindFeaturesByLayer(sketchGeometry, layerPredicate);
 
 			var selectionByClass =
 				featureFinder.FindFeaturesByFeatureClass(sketchGeometry, layerPredicate);
@@ -896,7 +888,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		/// <param name="secondFeature"></param>
 		/// <returns></returns>
 		private bool DetermineSecondFeatureIsUpdate(Feature firstFeature,
-		                                            Feature secondFeature)
+													Feature secondFeature)
 		{
 			bool result;
 
@@ -908,21 +900,21 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			else
 			{
 				Assert.True(_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.LargerObject,
-				            "Unsupported MergeOperationSurvivor.");
+							"Unsupported MergeOperationSurvivor.");
 
 				Geometry firstShape = firstFeature.GetShape();
 				Geometry secondShape = secondFeature.GetShape();
 
 				Geometry larger =
 					GeometryUtils.GetLargestGeometry(new List<Geometry>
-					                                 {
-						                                 firstShape,
-						                                 secondShape
-					                                 });
+													 {
+														 firstShape,
+														 secondShape
+													 });
 
 				bool firstFeatureIsLarger = firstShape == larger;
 
-				result = ! firstFeatureIsLarger;
+				result = !firstFeatureIsLarger;
 			}
 
 			return result;
