@@ -193,6 +193,16 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] MergeFeaturesOverlay {
+            get {
+                object obj = ResourceManager.GetObject("MergeFeaturesOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] Polygon {
             get {
                 object obj = ResourceManager.GetObject("Polygon", resourceCulture);

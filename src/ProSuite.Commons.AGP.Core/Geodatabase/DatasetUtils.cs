@@ -363,12 +363,17 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			[NotNull] string datasetName,
 			[NotNull] List<FieldDescription> fieldDescription,
 			[NotNull] GeometryType geometryType,
-			[NotNull] ArcGIS.Core.Geometry.SpatialReference spatialReference)
+			[NotNull] ArcGIS.Core.Geometry.SpatialReference spatialReference,
+			[NotNull] bool hasZ = true)
 		{
-			var shapeFieldDescription = new ShapeDescription(geometryType, spatialReference);
+			var shapeFieldDescription = new ShapeDescription(geometryType, spatialReference)
+			                            {
+				                            HasZ = hasZ
+			                            };
 			var featureClassDescription = new FeatureClassDescription(datasetName,
-				fieldDescription,
-				shapeFieldDescription);
+			                                                          fieldDescription,
+			                                                          shapeFieldDescription);
+
 
 			SchemaBuilder schemaBuilder = new SchemaBuilder(geodatabase);
 			schemaBuilder.Create(featureClassDescription);
