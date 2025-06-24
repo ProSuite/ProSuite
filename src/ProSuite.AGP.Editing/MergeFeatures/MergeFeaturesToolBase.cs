@@ -39,6 +39,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private const Key _immediateMergeKey = Key.Enter;
 		private Feature _firstFeature;
 
+		private SelectionCursors _secondPhaseCursors;
+
 		protected MergeFeaturesToolBase()
 		{
 			IsSketchTool = true;
@@ -63,9 +65,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected virtual string LocalConfigDir
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 				AppDataFolder.Roaming, "ToolDefaults");
-
-		//private readonly Cursor _step1Cursor;
-		//private readonly Cursor _step2Cursor;
 
 		protected MergeToolOptions MergeOptions => _mergeToolOptions;
 
@@ -93,25 +92,59 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		protected override SelectionCursors GetSelectionCursors()
 		{
-			return SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay);
+			return SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay1);
 		}
 
-		protected override Task HandleEscapeAsync()
+		private SelectionCursors GetSecondPhaseCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay2);
+		}
+
+		protected override async Task HandleEscapeAsync()
 		{
 			_firstFeature = null;
 
 			try
 			{
-				ClearSelection();
+				await QueuedTask.Run(async () =>
+				{
+					ClearSelection();
 
-				LogPromptForSelection();
+					LogPromptForSelection();
+
+					await SetupSelectionSketchAsync();
+				});
 			}
 			catch (Exception e)
 			{
 				ErrorHandler.HandleError(e, _msg);
 			}
+		}
 
-			return Task.CompletedTask;
+		protected override async Task ShiftReleasedCoreAsync()
+		{
+			if (await IsInSelectionPhaseAsync())
+			{
+				await base.ShiftReleasedCoreAsync();
+			}
+			else
+			{
+				SetToolCursor(_secondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
+			}
+		}
+
+		protected override async Task ToggleSelectionSketchGeometryType(
+			SketchGeometryType toggleSketchType,
+			SelectionCursors selectionCursors = null)
+		{
+			if (await IsInSelectionPhaseAsync())
+			{
+				await base.ToggleSelectionSketchGeometryType(toggleSketchType, selectionCursors);
+			}
+			else
+			{
+				await base.ToggleSelectionSketchGeometryType(toggleSketchType, _secondPhaseCursors);
+			}
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
@@ -146,7 +179,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 							if (survivingFeature != null)
 							{
-								SelectResultAndLogNextStep(survivingFeature);
+								await SelectResultAndLogNextStep(survivingFeature);
 							}
 						}
 
@@ -167,6 +200,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			_mergeToolOptions = InitializeOptions();
 
+			_secondPhaseCursors = GetSecondPhaseCursors();
+
 			return base.OnToolActivatingCoreAsync();
 		}
 
@@ -179,12 +214,13 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			HideOptionsPane();
 		}
 
-		protected override Task AfterSelectionAsync([NotNull] IList<Feature> selectedFeatures,
-		                                            [CanBeNull] CancelableProgressor progressor)
+		protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+		                                                  [CanBeNull]
+		                                                  CancelableProgressor progressor)
 		{
 			_firstFeature = selectedFeatures[0];
 
-			return Task.CompletedTask;
+			await StartSecondPhaseAsync();
 		}
 
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -192,6 +228,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			bool isInSelectionPhase = _firstFeature == null || shiftDown;
 
 			return Task.FromResult(isInSelectionPhase);
+		}
+
+		private async Task StartSecondPhaseAsync()
+		{
+			await QueuedTask.Run(() => { SetupSketch(); });
+			await QueuedTask.Run(() => { ResetSelectionSketchType(_secondPhaseCursors).Wait(); });
 		}
 
 		protected override void LogUsingCurrentSelection()
@@ -236,9 +278,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			//if (isInFirstPhase)
 			//{
-			//	 return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
+			//	return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
 			//}
-			//else if (!await CanStillUseSelection(sketchGeometry, progressor))
+
+			//if (!await CanStillUseSelection(sketchGeometry, progressor))
 			//{
 			//	_msg.InfoFormat(
 			//		"The current selection cannot be used. Re-selecting the first feature...");
@@ -584,7 +627,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			return true;
 		}
 
-		private void SelectResultAndLogNextStep(Feature survivingFeature)
+		private async Task SelectResultAndLogNextStep(Feature survivingFeature)
 		{
 			SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
 
@@ -592,11 +635,15 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			{
 				_firstFeature = survivingFeature;
 				LogUsingCurrentSelection();
+				await StartSecondPhaseAsync();
 			}
 			else
 			{
 				_firstFeature = null;
+
 				LogPromptForSelection();
+
+				await QueuedTask.Run(async () => { await SetupSelectionSketchAsync(); });
 			}
 		}
 

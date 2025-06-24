@@ -178,7 +178,10 @@
   <data name="AdvancedGeneralizeOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\AdvancedGeneralizeOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="MergeFeaturesOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	  <value>Images\MergeFeaturesOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="MergeFeaturesOverlay1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+	  <value>Images\MergeFeaturesOverlay1.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="MergeFeaturesOverlay2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+	  <value>Images\MergeFeaturesOverlay2.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
