@@ -289,6 +289,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					// Take the second last item
 					instance = strings[^2];
 				}
+				else if (lastItem.Contains('$'))
+				{
+					// Very legacy. E.g. oracle$TOPGIST
+					string server = builder["server"];
+					if (! string.IsNullOrEmpty(server))
+					{
+						instance = server;
+					}
+					else
+					{
+						instance = lastItem.Split('$')[^1];
+					}
+				}
 				else
 				{
 					instance = lastItem;
