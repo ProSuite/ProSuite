@@ -76,6 +76,20 @@ namespace ProSuite.Commons.UI.WPF
 			};
 		}
 
+		/// <remarks>Call from margin text boxes to make sure the binding
+		/// source is up to date before up/down key triggers an increment
+		/// (in case the user typed another unit or value)</remarks>
+		private void PreviewKeyDownHandler(object sender, KeyEventArgs args)
+		{
+			if (sender is TextBox && (args.Key == Key.Enter || args.Key == Key.Up || args.Key == Key.Down))
+			{
+				var be = textBox.GetBindingExpression(TextBox.TextProperty);
+				be?.UpdateSource();
+			}
+
+			args.Handled = false; // pass the event on!
+		}
+
 		private void DimensionSpinBox_DataContextChanged(object sender,
 		                                                 DependencyPropertyChangedEventArgs e)
 		{

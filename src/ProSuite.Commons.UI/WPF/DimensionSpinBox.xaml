@@ -53,7 +53,7 @@
                     </Grid>
                 </Button.Content>
             </Button>
-            <TextBox x:Name="textBox" Grid.Column="1" MinWidth="50">
+            <TextBox x:Name="textBox" Grid.Column="1" MinWidth="50" PreviewKeyDown="PreviewKeyDownHandler">
                 <TextBox.Style>
                     <Style TargetType="{x:Type TextBox}">
                         <Style.Triggers>
