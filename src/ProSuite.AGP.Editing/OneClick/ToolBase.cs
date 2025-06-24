@@ -269,12 +269,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 			_selectionSketchCursor.SetCursor(GetSketchType(), shiftDown: true);
 		}
 
-		await ShiftPressedCoreAsync();
-	}
-
-	protected virtual Task ShiftPressedCoreAsync()
-	{
-		return Task.CompletedTask;
+		await Task.CompletedTask;
 	}
 
 	protected sealed override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
@@ -329,7 +324,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 		base.OnToolMouseMove(args);
 	}
 
-	protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs args)
+	protected override async Task OnToolDoubleClickCoreAsync(MapViewMouseButtonEventArgs args)
 	{
 		// if in selection phase
 		if (GetSketchType() == SketchGeometryType.Polygon && ! InConstructionPhase())
@@ -865,14 +860,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 		Cursor cursor = ConstructionCursorCore;
 		Assert.NotNull(cursor);
 
-		if (Application.Current.Dispatcher.CheckAccess())
-		{
-			SetCursor(cursor);
-		}
-		else
-		{
-			Application.Current.Dispatcher.Invoke(() => { SetCursor(cursor); });
-		}
+		SetToolCursor(cursor);
 	}
 
 	private bool InConstructionPhase()
