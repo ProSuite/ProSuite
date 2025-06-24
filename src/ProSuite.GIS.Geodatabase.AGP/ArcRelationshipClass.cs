@@ -61,7 +61,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		                            bool cachePropertiesEagerly = false)
 		{
 			ProRelationshipClass = proRelationshipClass;
-			_proRelationshipClassDefinition = proRelationshipClass.GetDefinition();
+
+			// NOTE: The proRelationshipClass.GetDefinition() does NOT return an AttributedRelationshipClassDefinition!
+			// We have to call the AttributedRelationshipClass:
+			_proRelationshipClassDefinition =
+				proRelationshipClass is AttributedRelationshipClass attributedRelClass
+					? attributedRelClass.GetDefinition()
+					: proRelationshipClass.GetDefinition();
 
 			if (cachePropertiesEagerly)
 			{
