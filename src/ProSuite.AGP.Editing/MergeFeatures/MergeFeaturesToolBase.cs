@@ -629,7 +629,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		private async Task SelectResultAndLogNextStep(Feature survivingFeature)
 		{
-			SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
+			await QueuedTask.Run(() =>
+			{
+				ActiveMapView.Map.ClearSelection();
+
+				SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
+			});
 
 			if (_mergeToolOptions.UseMergeResultForNextMerge)
 			{
@@ -640,9 +645,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			else
 			{
 				_firstFeature = null;
-
 				LogPromptForSelection();
-
 				await QueuedTask.Run(async () => { await SetupSelectionSketchAsync(); });
 			}
 		}

@@ -415,9 +415,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 						             GdbPersistenceUtils.StoreShape(
 							             updateFeature, mergedGeometry, editContext);
 
-						             foreach (Feature featureToDelete in deleteFeatures)
+						             foreach (Feature deleteFeature in deleteFeatures)
 						             {
-							             featureToDelete.Delete();
+							             editContext.Invalidate(deleteFeature);
+							             deleteFeature.Delete();
 						             }
 					             }
 					             catch (Exception ex)
