@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -1046,15 +1047,48 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Geometry GetLargestGeometry(
 			[NotNull] IEnumerable<Geometry> geometries)
 		{
-			Assert.ArgumentNotNull(geometries, nameof(geometries));
+			return GetLargest(geometries, geometry => geometry);
+		}
+
+		/// <summary>
+		/// Returns a reference to the largest (area for IArea objects, length for ICurve objects, 
+		/// point count for multipoint objects) geometry of the given geometries. If several 
+		/// geometries have the largest size, the first in the list will be returned.
+		/// </summary>
+		/// <param name="features">The geometries which must all be of the same geometry type.</param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static Feature GetLargestFeature(
+			[NotNull] IEnumerable<Feature> features)
+		{
+			return GetLargest(features, feature => feature.GetShape());
+			;
+		}
+
+		/// <summary>
+		/// Returns a reference to the largest (area for IArea objects, length for ICurve objects, 
+		/// point count for multipoint objects) geometry of the given geometries. If several 
+		/// geometries have the largest size, the first in the list will be returned.
+		/// </summary>
+		/// <param name="features">The objects that reference a geometry.</param>
+		/// <param name="getShape">The method that provides a geometry from a T object.</param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static T GetLargest<T>([NotNull] IEnumerable<T> features,
+		                              [NotNull] Func<T, Geometry> getShape)
+		{
+			Assert.ArgumentNotNull(features, nameof(features));
 
 			double largestSize = double.MinValue;
-			Geometry result = null;
 
-			foreach (Geometry geometry in geometries)
+			T result = default(T);
+
+			foreach (T feature in features)
 			{
+				Geometry geometry = getShape(feature);
+
 				Assert.True(geometry is Multipart or Multipatch or Multipoint,
-				            "GetLargestGeometry: Unsupported geometry type: {0}",
+				            "GetLargest: Unsupported geometry type: {0}",
 				            geometry.GeometryType);
 
 				double size = GetGeometrySize(geometry);
@@ -1062,7 +1096,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				if (size > largestSize)
 				{
 					largestSize = size;
-					result = geometry;
+					result = feature;
 				}
 			}
 
