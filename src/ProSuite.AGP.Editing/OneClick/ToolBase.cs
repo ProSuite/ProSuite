@@ -30,7 +30,7 @@ using ProSuite.Commons.UI.Input;
 namespace ProSuite.AGP.Editing.OneClick;
 
 // TODO: get rid off NotificationCollection
-public abstract class ToolBase : MapTool, ISymbolizedSketchTool
+public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -58,22 +58,10 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		ConstructionCursorCore = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
 	}
 
-	protected List<Key> HandledKeys { get; } =
-		new(6)
-		{
-			Key.Escape, Key.LeftShift, Key.RightShift,
-			Key.F2, _keyLassoDraw, _keyPolygonDraw
-		};
-
-	protected Point CurrentMousePosition;
-
 	[NotNull]
 	protected virtual Cursor ConstructionCursorCore { get; }
 
 	protected virtual bool AllowNoSelection => false;
-
-	protected virtual bool EnableLassoSketch => true;
-	protected virtual bool EnablePolygonSketch => true;
 
 	/// Whether the required selection can only contain selectable features.
 	protected bool SelectOnlySelectableFeatures { get; init; } = true;
@@ -85,8 +73,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 	protected abstract void LogPromptForSelection();
 
 	protected abstract SelectionSettings GetSelectionSettings();
-
-	protected abstract Task HandleEscapeAsync();
 
 	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 
@@ -234,14 +220,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return await ViewUtils.TryAsync(OnSketchCompleteCoreAsync(geometry), _msg);
 	}
 
-	protected override void OnToolKeyDown(MapViewKeyEventArgs args)
-	{
-		if (HandledKeys.Contains(args.Key))
-		{
-			args.Handled = true;
-		}
-	}
-
 	protected sealed override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 	{
 		try
@@ -284,7 +262,7 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		}
 	}
 
-	private async Task ShiftPressedAsync()
+	protected override async Task ShiftPressedAsync()
 	{
 		if (! InConstructionPhase())
 		{
@@ -299,14 +277,6 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		return Task.CompletedTask;
 	}
 
-	protected override void OnToolKeyUp(MapViewKeyEventArgs args)
-	{
-		if (HandledKeys.Contains(args.Key))
-		{
-			args.Handled = true;
-		}
-	}
-
 	protected sealed override async Task HandleKeyUpAsync(MapViewKeyEventArgs args)
 	{
 		try
@@ -318,12 +288,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 			if (! InConstructionPhase())
 			{
-				if (EnablePolygonSketch && args.Key == _keyPolygonDraw)
+				if (args.Key == _keyPolygonDraw)
 				{
 					SetupPolygonSketch();
 				}
 
-				if (EnableLassoSketch && args.Key == _keyLassoDraw)
+				if (args.Key == _keyLassoDraw)
 				{
 					SetupLassoSketch();
 				}
@@ -372,22 +342,12 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	#region tool
 
-	protected virtual Task OnToolActivateCoreAsync(bool hasMapViewChanged)
+	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
 		return Task.CompletedTask;
 	}
 
-	protected virtual Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
-	{
-		return Task.CompletedTask;
-	}
-
-	protected virtual Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
-	{
-		return Task.CompletedTask;
-	}
-
-	protected virtual Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
+	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
 		return Task.CompletedTask;
 	}
@@ -589,24 +549,15 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 		_selectionSketchCursor.ResetOrDefault();
 	}
 
-	private void SetupPolygonSketch()
+	protected virtual void SetupPolygonSketch()
 	{
 		_selectionSketchCursor.Toggle(SketchGeometryType.Polygon);
-
-		SetupPolygonSketchCore();
 	}
 
-	protected virtual void SetupPolygonSketchCore() { }
-
-	private void SetupLassoSketch()
+	protected virtual void SetupLassoSketch()
 	{
 		_selectionSketchCursor.Toggle(SketchGeometryType.Lasso);
-
-		SetupLassoSketchCore();
 	}
-
-	protected virtual void SetupLassoSketchCore() { }
-
 	#endregion
 
 	#region selection
@@ -901,12 +852,8 @@ public abstract class ToolBase : MapTool, ISymbolizedSketchTool
 
 	protected virtual void StartConstructionPhaseCore() { }
 
-	/// <summary>
-	/// Override and return null if no <see cref="CancelableProgressorSource"/>
-	/// to show no progressor.
-	/// </summary>
-	[CanBeNull]
-	protected virtual CancelableProgressorSource GetProgressorSource()
+	
+	protected override CancelableProgressorSource GetProgressorSource()
 	{
 		var message = Caption ?? string.Empty;
 		const bool delayedShow = true; // todo daro delayedShow = true
