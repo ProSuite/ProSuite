@@ -276,18 +276,19 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			Assert.False(isInFirstPhase, "Unexpected tool phase");
 
-			//if (isInFirstPhase)
-			//{
-			//	return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
-			//}
-
-			//if (!await CanStillUseSelection(sketchGeometry, progressor))
-			//{
-			//	_msg.InfoFormat(
-			//		"The current selection cannot be used. Re-selecting the first feature...");
-			//	return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
-			//}
-			//else
+			//Hopefully we can delete this..... 
+			// if (isInFirstPhase)
+			// {
+			// 	return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
+			// }
+			//
+			// if (!await CanStillUseSelection(sketchGeometry, progressor))
+			// {
+			// 	_msg.InfoFormat(
+			// 		"The current selection cannot be used. Re-selecting the first feature...");
+			// 	return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
+			// }
+			// else
 			{
 				await PickSecondFeatureAndMerge(sketchGeometry, progressor);
 			}
@@ -295,21 +296,20 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
 		}
 
-		protected override Task<bool> OnMapSelectionChangedCoreAsync(
+		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
 			_msg.VerboseDebug(() => "OnMapSelectionChangedCoreAsync");
 
 			if (ActiveMapView == null)
 			{
-				return Task.FromResult(false);
+				return false;
 			}
 
 			if (! CanUseSelection(ActiveMapView))
 			{
 				_firstFeature = null;
-				// TODO: Test if this is necessary
-				//await StartSelectionPhaseAsync();
+				await SetupSelectionSketchAsync();
 			}
 			else
 			{
@@ -321,10 +321,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 						.ToList();
 
 				_firstFeature = selection[0];
-				//await StartSketchPhaseAsync();
 			}
 
-			return Task.FromResult(true);
+			return true;
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
@@ -510,12 +509,13 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
-		private async Task<bool> CanStillUseSelection(Geometry sketchGeometry,
-		                                              CancelableProgressor progressor)
-		{
-			return await QueuedTask.Run(() =>
-			{
-				return true;
+		//Hopefully we can delete this.....
+		//private async Task<bool> CanStillUseSelection(Geometry sketchGeometry,
+		//                                              CancelableProgressor progressor)
+		//{
+		//	return await QueuedTask.Run(() =>
+		//	{
+				//return true;
 				//List<Feature> selectedFeatures =
 				//	GetApplicableSelectedFeatures(ActiveMapView).ToList();
 				////TODO: Kratzt mich diese Unterwellelung?
@@ -527,14 +527,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				//Feature selectedFeature = selectedFeatures[0];
 				//return selectedFeature.GetObjectID() == sketchGeometry.GetObjectID() &&
 				//	   selectedFeature.GetTable().GetID() == sketchGeometry.GetTable().GetID();
-			});
-
-			//IList<Feature> selectedFeatures = EditorUtils.GetSelectedEditFeatures(Editor);
-
-			//// Consider using method CanUseSelection(out applicableSelection, notifications)
-			//return CanUseCurrentSelectionCore() &&
-			//	   selectedFeatures.Count == 1 && selectedFeatures[0] == feature;
-		}
+		//	});
+		//}
 
 		///// <summary>
 		///// Check if the given feature belongs to the originclass of the given
