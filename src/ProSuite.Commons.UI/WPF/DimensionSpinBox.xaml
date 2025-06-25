@@ -45,7 +45,7 @@
                 <ColumnDefinition />
                 <ColumnDefinition Width="18" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Grid.Row="0" Width="Auto" Height="Auto" Click="DecrementValue" Padding="10, 5">
+            <Button Grid.Column="0" Grid.Row="0" Width="Auto" Height="Auto" Click="DecrementValue" IsTabStop="False" Padding="10, 5">
                 <Button.Content >
                     <Grid Background="Transparent" Width="18" Height="10">
                         <Path HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,1 L8,1" Stroke="Black" 
@@ -79,7 +79,7 @@
                     <KeyBinding Key="Down" Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DecrementValueCommand}" />
                 </TextBox.InputBindings>
             </TextBox>
-            <Button Grid.Column="2" Width="Auto" Height="Auto" Click="IncrementValue">
+            <Button Grid.Column="2" Width="Auto" Height="Auto" Click="IncrementValue" IsTabStop="False">
                 <Button.Content>
                     <Grid Background="Transparent" Width="18" Height="10">
                         <Path  HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,4 L8,4 M4,8 L4,0" Stroke="Black" 
