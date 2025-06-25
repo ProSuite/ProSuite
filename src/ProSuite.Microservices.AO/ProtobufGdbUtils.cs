@@ -133,11 +133,25 @@ namespace ProSuite.Microservices.AO
 			{
 				IReadOnlyList<ITableField> fields = featureOrRow.DbTable.TableFields;
 
-				for (int i = 0; i < fields.Count; i++)
+				HashSet<string> requestedFields = null;
+				if (! string.IsNullOrEmpty(subFields) && subFields != "*")
 				{
-					ITableField field = fields[i];
+					requestedFields = new HashSet<string>(StringUtils.SplitAndTrim(subFields, ','));
+				}
 
-					object valueObject = featureOrRow.GetValue(i);
+				// NOTE: We want to maintain the order of the fields as they are defined by the subfields string.
+				List<int> fieldsToReturn = GetFieldsIndexes(fields, requestedFields);
+
+				foreach (int fieldIdx in fieldsToReturn)
+				{
+					ITableField field = fields[fieldIdx];
+
+					if (requestedFields != null && ! requestedFields.Contains(field.Name))
+					{
+						continue;
+					}
+
+					object valueObject = featureOrRow.GetValue(fieldIdx);
 
 					AttributeValue attributeValue = ToAttributeValueMsg(valueObject, field);
 
@@ -327,6 +341,25 @@ namespace ProSuite.Microservices.AO
 				       ConnectionType = (int) connectionProvider.ConnectionType,
 				       Name = connectionProvider.Name
 			       };
+		}
+
+		private static List<int> GetFieldsIndexes([NotNull] IReadOnlyList<ITableField> fields,
+		                                          [CanBeNull] HashSet<string> fieldNames)
+		{
+			if (fieldNames == null)
+			{
+				return Enumerable.Range(0, fields.Count).ToList();
+			}
+
+			var fieldIndexesByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < fields.Count; i++)
+			{
+				fieldIndexesByName[fields[i].Name] = i;
+			}
+
+			return fieldNames
+			       .Select(fieldName => fieldIndexesByName[fieldName])
+			       .ToList();
 		}
 
 		private static IObjectClass GetObjectClass(IReadOnlyRow roRow)
