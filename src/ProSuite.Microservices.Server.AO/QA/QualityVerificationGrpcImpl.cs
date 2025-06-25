@@ -38,6 +38,7 @@ using ProSuite.Microservices.AO.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.QA.Distributed;
+using ProSuite.QA.Container;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -888,9 +889,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				var datasetContext = new MasterDatabaseDatasetContext();
 
-				IReadOnlyTable table = InstanceFactory.CreateTransformedTable(
+				ITableTransformer tableTransformer = InstanceFactory.CreateTransformer(
 					transformerConfiguration,
 					new SimpleDatasetOpener(datasetContext));
+
+				// When querying the field name predictability is more important than not having dots in the names:
+				if (tableTransformer is ITableTransformerFieldSettings transformerFieldSettings)
+				{
+					transformerFieldSettings.FullyQualifyFieldNames = true;
+				}
+
+				IReadOnlyTable table = (IReadOnlyTable) tableTransformer.GetTransformed();
 
 				ITableFilter filter = VerificationRequestUtils.CreateFilter(
 					table, dataRequest.SubFields, dataRequest.WhereClause,
