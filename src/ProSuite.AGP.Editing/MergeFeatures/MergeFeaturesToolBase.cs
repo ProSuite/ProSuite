@@ -175,7 +175,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 							Assert.NotNull(largestFeature, "No largest feature identified.");
 
 							Feature survivingFeature =
-								merger.MergeFeatures(selectedFeatures, largestFeature);
+								await merger.MergeFeatures(selectedFeatures, largestFeature);
 
 							if (survivingFeature != null)
 							{
@@ -515,18 +515,18 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		//{
 		//	return await QueuedTask.Run(() =>
 		//	{
-				//return true;
-				//List<Feature> selectedFeatures =
-				//	GetApplicableSelectedFeatures(ActiveMapView).ToList();
-				////TODO: Kratzt mich diese Unterwellelung?
-				//if (selectedFeatures == null || selectedFeatures.Count != 1)
-				//{
-				//	return false;
-				//}
+		//return true;
+		//List<Feature> selectedFeatures =
+		//	GetApplicableSelectedFeatures(ActiveMapView).ToList();
+		////TODO: Kratzt mich diese Unterwellelung?
+		//if (selectedFeatures == null || selectedFeatures.Count != 1)
+		//{
+		//	return false;
+		//}
 
-				//Feature selectedFeature = selectedFeatures[0];
-				//return selectedFeature.GetObjectID() == sketchGeometry.GetObjectID() &&
-				//	   selectedFeature.GetTable().GetID() == sketchGeometry.GetTable().GetID();
+		//Feature selectedFeature = selectedFeatures[0];
+		//return selectedFeature.GetObjectID() == sketchGeometry.GetObjectID() &&
+		//	   selectedFeature.GetTable().GetID() == sketchGeometry.GetTable().GetID();
 		//	});
 		//}
 

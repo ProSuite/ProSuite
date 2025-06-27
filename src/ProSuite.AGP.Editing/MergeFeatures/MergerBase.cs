@@ -5,12 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Dialogs;
 
 namespace ProSuite.AGP.Editing.MergeFeatures
@@ -31,12 +34,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				                 ? knownSurvivor
 				                 : mergeOptions.MergeSurvivor;
 		}
-
-		//protected IMxApplication MxApplication
-		//	=> _mxApplication ?? (_mxApplication = ArcMapUtils.GetMxApplication());
-
-		//protected IEditor Editor
-		//	=> _editor ?? (_editor = ArcMapUtils.GetEditor(MxApplication));
 
 		protected MergeToolOptions MergeOptions { get; }
 
@@ -127,11 +124,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			{
 				if (mergeResult.GeometryType == GeometryType.Polygon &&
 				    ((Polygon) mergeResult).ExteriorRingCount > 1 ||
-				    mergeResult.GeometryType == GeometryType.Polyline //&&
-				    //((IGeometryCollection)mergeResult).GeometryCount > 1)
-				    //polyline.Parts.Count > 1
-				    //((Polyline)mergeResult.PartCount>1)
-				   )
+				    mergeResult.GeometryType == GeometryType.Polyline &&
+				    ((Multipart) mergeResult).PartCount > 1)
+
 				{
 					NotificationUtils.Add(notifications,
 					                      "The merge result is a multi-part geometry (not allowed/option disabled)");
@@ -143,8 +138,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			return IsValidMergeResultCore(mergeResult, notifications);
 		}
 
-		public Feature MergeFeatures([NotNull] IList<Feature> features,
-		                             [NotNull] Feature survivor)
+		public async Task<Feature> MergeFeatures([NotNull] IList<Feature> features,
+		                                         [NotNull] Feature survivor)
 		{
 			var notifications = new NotificationCollection();
 
@@ -186,7 +181,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			Assert.NotNull(mergeResult, "mergeResult");
 
 			Feature resultFeature =
-				UpdateMergedFeatures(updateFeature, deletedFeatures, mergeResult, warnings);
+				await UpdateMergedFeatures(updateFeature, deletedFeatures, mergeResult, warnings);
 
 			return resultFeature;
 		}
@@ -206,7 +201,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			// TODO: Reconsider MergeConditionEvaluator
 			if (MergeConditionEvaluator != null)
 			{
-				//if (!DatasetUtils.AreSameObjectClass(features.Select(f => f.Class)))
+				//if (! DatasetUtils.AreSameObjectClass(features.Select(f => f.Class)))
 				//{
 				//	List<string> distinctClassNames =
 				//		features.Select(f => f.Class).Distinct().Select(c => c.AliasName).ToList();
@@ -215,9 +210,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				//		"The merged features belong to different feature classes: {0}",
 				//		StringUtils.Concatenate(distinctClassNames, ", "));
 				//}
-				//else if (((FeatureClass)features[0].Class).ShapeType ==
-				//		 esriGeometryType.esriGeometryPolyline &&
-				//		 features.Count == 2)
+				//else if (((FeatureClass) features[0].Class).ShapeType ==
+				//         esriGeometryType.esriGeometryPolyline &&
+				//         features.Count == 2)
 				{
 					// TODO: Enhance, allow XML configuration, use for all geometry types
 
@@ -248,10 +243,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		/// a good idea.</param>
 		/// <returns>The surviving feature if updating of the merged feature was successful, 
 		/// null otherwise</returns>
-		private Feature UpdateMergedFeatures([NotNull] Feature updateFeature,
-		                                     [NotNull] IList<Feature> deletedFeatures,
-		                                     [NotNull] Geometry mergedGeometry,
-		                                     ICollection<string> warnings)
+		private async Task<Feature> UpdateMergedFeatures([NotNull] Feature updateFeature,
+		                                                 [NotNull] IList<Feature> deletedFeatures,
+		                                                 [NotNull] Geometry mergedGeometry,
+		                                                 ICollection<string> warnings)
 		{
 			Assert.ArgumentNotNull(updateFeature, nameof(updateFeature));
 			Assert.ArgumentNotNull(deletedFeatures, nameof(deletedFeatures));
@@ -266,25 +261,21 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			//								FieldDisplayUtils.GetDefaultRowFormat(f.Class, true), f)
 			//							, ", ");
 
-			Task<bool> success = Commit(updateFeature, deletedFeatures, mergedGeometry);
+			string updatedFeatureFormat = GdbObjectUtils.ToString(updateFeature);
+			string deletedFeatureFormat =
+				StringUtils.Concatenate(deletedFeatures, f => GdbObjectUtils.ToString(f), ", ");
 
-			//if (success)
-			//{
-			//	LogResult(deletedFeatureFormat, updatedFeatureFormat, warnings);
+			bool success = await Commit(updateFeature, deletedFeatures, mergedGeometry);
 
-			//	EditToolUtils.EnsureMapSpatialReference(updateFeature, Editor.Map);
-
-			//	DisplayUtils.InvalidateFeature(ArcMapUtils.GetAppDisplay(MxApplication),
-			//								   updateFeature);
-			//	DisplayUtils.InvalidateFeatures(ArcMapUtils.GetAppDisplay(MxApplication),
-			//									deletedFeatures);
-			//}
-			//else
-			//{
-			//	_msg.WarnFormat("Unable to merge {0} with {1}", deletedFeatureFormat,
-			//					updatedFeatureFormat);
-			//	ArcMapUtils.RefreshAll(MxApplication);
-			//}
+			if (success)
+			{
+				LogResult(deletedFeatureFormat, updatedFeatureFormat, warnings);
+			}
+			else
+			{
+				_msg.WarnFormat("Unable to merge {0} with {1}", deletedFeatureFormat,
+				                updatedFeatureFormat);
+			}
 
 			return updateFeature;
 		}
@@ -349,63 +340,23 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			                         "At least one feature must be deleted.");
 			Assert.ArgumentNotNull(mergedGeometry, nameof(mergedGeometry));
 
-			//var featuresToDelete = new List<Feature>(deleteFeatures);
-
-			// IMPORTANT: Ensure the update feature is not in the delete list
-			// (Should never happen, but prevents errors if it does)
-			//featuresToDelete.RemoveAll(f =>
-			//	                           f.GetObjectID() == updateFeature.GetObjectID() &&
-			//	                           f.GetTable().GetID() == updateFeature.GetTable().GetID());
-
 			var datasets = GdbPersistenceUtils
 			               .GetDatasetsNonEmpty(deleteFeatures.Append(updateFeature)).ToList();
 
 			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
 				             editContext =>
 				             {
-					             //// Re-query the updateFeature to ensure it's not recycled
-					             //long updateFeatureOid = updateFeature.GetObjectID();
-					             //Table featureTable = updateFeature.GetTable();
-					             //Feature freshUpdateFeature = null;
-
-					             //using (RowCursor cursor = featureTable.Search(
-					             //        new QueryFilter { WhereClause = $"OBJECTID = {updateFeatureOid}" }, false))
-					             //{
-					             // if (cursor.MoveNext())
-					             // {
-					             //	 freshUpdateFeature = (Feature)cursor.Current;
-					             // }
-					             //}
-
-					             //if (freshUpdateFeature == null)
-					             //{
-					             // _msg.Error($"Could not re-query survivor feature with OID {updateFeatureOid}");
-					             // editContext.Abort($"Could not re-query survivor feature with OID {updateFeatureOid}");
-					             // return false;
-					             //}
-
 					             if (MergeOptions.TransferRelationships)
 					             {
 						             foreach (Feature deleteFeature in
 						                      deleteFeatures.OrderBy(f => GeometryUtils
 							                      .GetGeometrySize(f.GetShape())))
 						             {
-							             // TransferRelationships(deleteFeature, freshUpdateFeature);
+							             TransferRelationships(deleteFeature, updateFeature);
 						             }
 					             }
 
 					             OnCommitting(updateFeature, deleteFeatures, mergedGeometry);
-
-					             //// also delete the default junction type if it is not the orphan class?
-					             //// -> make configurable?
-					             //Predicate<ISimpleJunctionFeature> deleteIntermediateJunction =
-					             //	simpleJunctionFeature =>
-					             //		NetworkUtils.IsOrphanJunctionFeature(
-					             //			(IFeature)simpleJunctionFeature) ||
-					             //		NetworkUtils.IsDefaultJunctionForAllEdges(simpleJunctionFeature);
-
-					             //NetworkUtils.StoreFeatureMerge(updateFeature, deleteFeatures, mergedGeometry,
-					             //							   deleteIntermediateJunction, out _);
 
 					             _msg.DebugFormat("Saving one updates and {0} deletes...",
 					                              deleteFeatures.Count);
@@ -434,198 +385,176 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			return saved;
 		}
 
-		///// <summary>
-		///// Copies as many relationships as possible from the sourceFeature to the target feature.
-		///// </summary>
-		///// <param name="sourceFeature">Source feature holding relationships that could be
-		///// transfered to the targetObject</param>
-		///// <param name="targetObject">Target feature that will get the relationships of
-		///// the sourceFeature</param>
-		//private static void TransferRelationships([NotNull] Feature sourceFeature,
-		//										  [NotNull] Object targetObject)
-		//{
-		//	IObjectClass sourceClass = sourceFeature.Class;
+		/// <summary>
+		/// Copies as many relationships as possible from the sourceFeature to the target feature.
+		/// </summary>
+		/// <param name="sourceFeature">Source feature holding relationships that could be
+		/// transfered to the targetObject</param>
+		/// <param name="targetFeature">Target feature that will get the relationships of
+		/// the sourceFeature</param>
+		private static void TransferRelationships([NotNull] Feature sourceFeature,
+		                                          [NotNull] Feature targetFeature)
+		{
+			QueuedTask.Run(() =>
+			{
+				FeatureClass sourceClass = sourceFeature.GetTable();
+				Geodatabase gdb = (Geodatabase) sourceClass.GetDatastore();
 
-		//	IEnumerable<Relationship> transferableRelationshipClasses =
-		//		DatasetUtils.GetRelationshipClasses(sourceClass).Where(
-		//			relClass =>
-		//				relClass.Cardinality !=
-		//				esriRelCardinality.esriRelCardinalityOneToOne);
+				var relClasses = RelationshipClassUtils.GetRelationshipClassDefinitions(
+					gdb, rc => rc.GetOriginClass() == sourceClass.GetName() ||
+					           rc.GetDestinationClass() == sourceClass.GetName()).ToList();
 
-		//	foreach (RelationshipClass relationshipClass in transferableRelationshipClasses)
-		//	{
-		//		TransferRelationships(sourceFeature, targetObject, relationshipClass);
-		//	}
-		//}
+				foreach (RelationshipClassDefinition relClassDefinition in
+				         relClasses.Where(rc => rc.GetCardinality() !=
+				                                RelationshipCardinality.OneToOne))
+				{
+					TransferRelationships(sourceFeature, targetFeature, relClassDefinition);
+				}
+			});
+		}
 
-		///// <summary>
-		///// Transfers the relations from the given relationshipClass found on
-		///// the sourceFeature to the targetObject
-		///// </summary>
-		///// <param name="sourceFeature">Source feature holding the relations to transfere</param>
-		///// <param name="targetObject">Target feature the will get the relations</param>
-		///// <param name="relationshipClass">Relationshipclass used to get all relations of
-		///// both feature to prevent coping a relationship that allready exists</param>
-		//private static void TransferRelationships(
-		//	[NotNull] Feature sourceFeature,
-		//	[NotNull] Object targetObject,
-		//	[NotNull] RelationshipClass  relationshipClass)
-		//{
-		//	IList<Relationship> sourceRelations =
-		//		GetRelationships(sourceFeature, relationshipClass);
+		/// <summary>
+		/// Transfers the relations from the given relationshipClass found on
+		/// the sourceFeature to the targetObject
+		/// </summary>
+		/// <param name="sourceFeature">Source feature holding the relations to transfer</param>
+		/// <param name="targetFeature">Target feature the will get the relations</param>
+		/// <param name="relationshipClassDefinition">Relationshipclass used to get all relations of
+		/// both feature to prevent coping a relationship that allready exists</param>
+		private static void TransferRelationships(
+			[NotNull] Feature sourceFeature,
+			[NotNull] Feature targetFeature,
+			[NotNull] RelationshipClassDefinition relationshipClassDefinition)
+		{
+			// Origin: contains primary key
+			// Destination: contains foreign key
+			bool sourceFeatureIsOrigin =
+				IsFeatureFromOriginClass(sourceFeature, relationshipClassDefinition);
 
-		//	if (!DatasetUtils.IsSameObjectClass(sourceFeature.Class, targetObject.Class))
-		//	{
-		//		// NOTE: Theoretically some related objects could be related to the source feature through a different rel-class,
-		//		//       such as TLM-names. However this is not necessarily correct because these relationships can have different meanings
-		//		//       or even be ambiguous if there are several relationship classes between the same two object classes.
-		//		if (sourceRelations.Count > 0)
-		//		{
-		//			_msg.InfoFormat(
-		//				"The relationships of {0} cannot be transferred to {1} because they are not from the same feature class.",
-		//				RowFormat.Format(sourceFeature, true),
-		//				RowFormat.Format(targetObject, true));
-		//		}
+			Geodatabase geodatabase = (Geodatabase) sourceFeature.GetTable().GetDatastore();
 
-		//		return;
-		//	}
+			var relationshipClass =
+				geodatabase.OpenDataset<RelationshipClass>(relationshipClassDefinition.GetName());
 
-		//	// Get target relationships only once we know the target is from the same class (TOP-4570)
-		//	IList<Relationship> targetRelations =
-		//		GetRelationships(targetObject, relationshipClass);
+			IReadOnlyList<Row> relatedToSourceFeature =
+				RelationshipClassUtils.GetRelatedRows(sourceFeature, relationshipClass,
+				                                      sourceFeatureIsOrigin);
 
-		//	// Origin: contains primary key
-		//	// Destination: contains foreign key
-		//	bool isOrigin = IsFeatureFromOriginClass(sourceFeature, relationshipClass);
+			if (! DatasetUtils.IsSameObjectClass(sourceFeature.GetTable(),
+			                                     targetFeature.GetTable()))
+			{
+				// NOTE: Theoretically some related objects could be related to the source feature through a different rel-class,
+				//       such as TLM-names. However this is not necessarily correct because these relationships can have different meanings
+				//       or even be ambiguous if there are several relationship classes between the same two object classes.
+				if (relatedToSourceFeature.Count > 0)
+				{
+					_msg.InfoFormat(
+						"The relationships of {0} cannot be transferred to {1} because they are not from the same feature class.",
+						GdbObjectUtils.ToString(sourceFeature),
+						GdbObjectUtils.ToString(targetFeature));
+				}
 
-		//	foreach (Relationship relation in sourceRelations)
-		//	{
-		//		Object relatedObject = isOrigin
-		//									? relation.DestinationObject
-		//									: relation.OriginObject;
+				return;
+			}
 
-		//		if (relatedObject == null ||
-		//			IsObjectInRelationList(relatedObject, targetRelations, !isOrigin))
-		//		{
-		//			continue;
-		//		}
+			// Get target relationships only once we know the target is from the same class (TOP-4570)
+			IReadOnlyList<Row> relatedToTargetFeature =
+				RelationshipClassUtils.GetRelatedRows(targetFeature, relationshipClass,
+				                                      sourceFeatureIsOrigin);
 
-		//		// avoid TOP-4786, but allow overwriting foreign key if the (single) related feature
-		//		// is going to be deleted by the merge:
-		//		bool overwriteExistingForeignKeys = isOrigin &&
-		//											relationshipClass.Cardinality ==
-		//											esriRelCardinality.esriRelCardinalityOneToMany;
+			foreach (Row relatedToSourceRow in relatedToSourceFeature)
+			{
+				if (relatedToSourceRow == null ||
+				    IsFeatureInList(relatedToSourceRow, relatedToTargetFeature))
+				{
+					continue;
+				}
 
-		//		var notifications = new NotificationCollection();
+				// avoid TOP-4786, but allow overwriting foreign key if the (single) related feature
+				// is going to be deleted by the merge:
+				bool overwriteExistingForeignKeys = sourceFeatureIsOrigin &&
+				                                    relationshipClassDefinition.GetCardinality() ==
+				                                    RelationshipCardinality.OneToMany;
 
-		//		IRelationship newRelationship = RelationshipClassUtils.TryCreateRelationship(
-		//			targetObject, relatedObject, relationshipClass, false,
-		//			overwriteExistingForeignKeys, notifications);
+				var notifications = new NotificationCollection();
 
-		//		string relationshipLabel = isOrigin
-		//									   ? relationshipClass.ForwardPathLabel
-		//									   : relationshipClass.BackwardPathLabel;
+				Row originObject, destinationObject;
+				if (sourceFeatureIsOrigin)
+				{
+					originObject = relatedToSourceRow;
+					destinationObject = targetFeature;
+				}
+				else
+				{
+					originObject = targetFeature;
+					destinationObject = relatedToSourceRow;
+				}
 
-		//		string relatedObjFormat = RowFormat.Format(relatedObject, true);
+				Relationship newRelationship = RelationshipClassUtils.TryCreateRelationship(
+					originObject, destinationObject, relationshipClass, false,
+					overwriteExistingForeignKeys, notifications);
 
-		//		if (newRelationship == null)
-		//		{
-		//			_msg.InfoFormat(
-		//				"Relationship ({0}) to {1} was not transferred to remaining feature. {2}",
-		//				relationshipLabel, relatedObjFormat,
-		//				NotificationUtils.Concatenate(notifications, ". "));
-		//		}
-		//		else
-		//		{
-		//			_msg.InfoFormat("Transferring relationship ({0}) to {1} to remaining feature.",
-		//							relationshipLabel, relatedObjFormat);
-		//		}
-		//	}
-		//}
+				string relationshipLabel = sourceFeatureIsOrigin
+					                           ? relationshipClassDefinition.GetForwardPathLabel()
+					                           : relationshipClassDefinition.GetBackwardPathLabel();
 
-		///// <summary>
-		///// Check if the given object is found in the list of relations.
-		///// </summary>
-		///// <param name="relObject">Related object searched in the given list</param>
-		///// <param name="relations">List of relationships where the given related object
-		///// may belong to</param>
-		///// <param name="objectIsOrigin">Flag if the given related object is from 
-		///// the originClass of the relationshipclass</param>
-		///// <returns>TRUE if the related object is found, FALSE otherwise</returns>
-		//private static bool IsObjectInRelationList(
-		//	Object relObject,
-		//	[NotNull] ICollection<Relationship> relations, bool objectIsOrigin)
-		//{
-		//	if (relObject == null || relations.Count < 1)
-		//	{
-		//		return false;
-		//	}
+				string relatedRowFormat = GdbObjectUtils.ToString(relatedToSourceRow);
 
-		//	Assert.True(relObject.HasOID,
-		//				"Selected feature does not have an object ID.");
+				if (newRelationship == null)
+				{
+					_msg.InfoFormat(
+						"Relationship ({0}) to {1} was not transferred to remaining feature. {2}",
+						relationshipLabel, relatedRowFormat,
+						NotificationUtils.Concatenate(notifications, ". "));
+				}
+				else
+				{
+					_msg.InfoFormat("Transferring relationship ({0}) to {1} to remaining feature.",
+					                relationshipLabel, relatedRowFormat);
+				}
+			}
+		}
 
-		//	foreach (Relationship relation in relations)
-		//	{
-		//		Object tempObject = objectIsOrigin
-		//								 ? relation.OriginObject
-		//								 : relation.DestinationObject;
+		/// <summary>
+		/// Check if the given object is found in the list of relations.
+		/// </summary>
+		/// <param name="relRow">Related object searched in the given list</param>
+		/// <param name="rowList">List of rows that already have a relationship of a specific type.
+		/// may belong to</param>
+		/// <returns>TRUE if the related object is found, FALSE otherwise</returns>
+		private static bool IsFeatureInList(
+			[NotNull] Row relRow,
+			[NotNull] IReadOnlyList<Row> rowList)
+		{
+			foreach (Row row in rowList)
+			{
+				if (relRow.GetObjectID() == row.GetObjectID())
+				{
+					return true;
+				}
+			}
 
-		//		if (tempObject != null && tempObject.GetObjectID() == relObject.GetObjectID())
-		//		{
-		//			return true;
-		//		}
-		//	}
+			return false;
+		}
 
-		//	return false;
-		//}
+		/// <summary>
+		/// Check if the given feature belongs to the originclass of the given
+		/// relationship class.
+		/// If the class of the feature and the originfeatureclass do not share
+		/// the same name, then false is returned, there is no check, if the class
+		/// of the given features does belong the relationshipClass
+		/// </summary>
+		/// <param name="feature">Feature to check</param>
+		/// <param name="relationshipClassDefinition">RelationshipClass used to get the originClass</param>
+		/// <returns>TRUE if the feature is from the originClass, FALSE otherwise</returns>
+		private static bool IsFeatureFromOriginClass(
+			[NotNull] Feature feature,
+			[NotNull] RelationshipClassDefinition relationshipClassDefinition)
+		{
+			string featureClassName = feature.GetTable().GetName();
+			string originClassName = relationshipClassDefinition.GetOriginClass();
 
-		///// <summary>
-		///// Check if the given feature belongs to the originclass of the given
-		///// relationship class.
-		///// If the class of the feature and the originfeatureclass do not share
-		///// the same name, then false is returned, there is no check, if the class
-		///// of the given features does belong the the relationshipClass
-		///// </summary>
-		///// <param name="feature">Feature to check</param>
-		///// <param name="relationshipClass">RelationshipClass used to get the originClass</param>
-		///// <returns>TRUE if the feature is from the originClass, FALSE otherwise</returns>
-		//private static bool IsFeatureFromOriginClass(
-		//	[NotNull] Feature feature,
-		//	[NotNull] RelationshipClass  relationshipClass)
-		//{
-		//	string featureClassName = ((IDataset)feature.Class).Name;
-		//	string originClassName = ((IDataset)relationshipClass.OriginClass).Name;
-
-		//	return featureClassName.Equals(originClassName);
-		//}
-
-		///// <summary>
-		///// Gets the list of relationships where the given object is one part of.
-		///// </summary>
-		///// <param name="gdbObject">Feature that must belong to the returned relationship</param>
-		///// <param name="relationshipClass">RelationshipClass that holds the information
-		///// about the relationships with the given object</param>
-		///// <returns>List with Relationship instances, could be empty</returns>
-		//[NotNull]
-		//private static IList<Relationship> GetRelationships(
-		//	[NotNull] Object gdbObject,
-		//	[NotNull] RelationshipClass  relationshipClass)
-		//{
-		//	var result = new List<Relationship>();
-
-		//	IEnumRelationship relations = relationshipClass.GetRelationshipsForObject(gdbObject);
-
-		//	if (relations != null)
-		//	{
-		//		relations.Reset();
-		//		IRelationship relationship;
-		//		while ((relationship = relations.Next()) != null)
-		//		{
-		//			result.Add(relationship);
-		//		}
-		//	}
-
-		//	return result;
-		//}
+			return featureClassName.Equals(originClassName);
+		}
 	}
 }
