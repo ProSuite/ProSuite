@@ -26,6 +26,18 @@ namespace ProSuite.Commons.Geom
 
 		#region IPnt Members
 
+		public double X
+		{
+			get => _x;
+			set => _x = value;
+		}
+
+		public double Y
+		{
+			get => _y;
+			set => _y = value;
+		}
+
 		/// <summary>
 		/// returns coordinate of dimension index
 		/// </summary>
@@ -64,18 +76,6 @@ namespace ProSuite.Commons.Geom
 							nameof(index), "Index must be 0, 1, or 2 for X, Y, or Z respectively.");
 				}
 			}
-		}
-
-		public double X
-		{
-			get => _x;
-			set => _x = value;
-		}
-
-		public double Y
-		{
-			get => _y;
-			set => _y = value;
 		}
 
 		public IPnt Clone()

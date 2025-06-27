@@ -10,7 +10,6 @@ namespace ProSuite.Commons.Geom
 	{
 		private double _x;
 		private double _y;
-		
 
 		public Coordinates2D(double x, double y)
 		{
@@ -78,7 +77,7 @@ namespace ProSuite.Commons.Geom
 
 		public bool Intersects(IBox box)
 		{
-			return box.Contains((IPnt)this);
+			return box.Contains((IPnt) this);
 		}
 
 		public int Dimension => 2;
