@@ -453,7 +453,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetSketchType(GetSketchGeometryType());
 
-			SetCursor(SketchCursor);
+			SetToolCursor(SketchCursor);
 
 			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 

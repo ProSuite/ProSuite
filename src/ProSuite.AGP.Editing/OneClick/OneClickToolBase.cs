@@ -29,7 +29,7 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	public abstract class OneClickToolBase : MapToolBase, ISketchTool
+	public abstract class OneClickToolBase : MapToolBase
 	{
 		private const Key _keyPolygonDraw = Key.P;
 		private const Key _keyLassoDraw = Key.L;
@@ -41,9 +41,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		private Geometry _lastSketch;
 		private DateTime _lastSketchFinishedTime;
 
-		// TODO: The remaining logic in SketchAndCursorSetter has been absorbed into the tool class
-		//       for higher cohesion and better encapsulation for tool-private state.
-		[NotNull] [Obsolete] private SketchAndCursorSetter _selectionSketchCursor;
 		private SelectionCursors _selectionCursors;
 
 		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
@@ -104,12 +101,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			await QueuedTaskUtils.Run(async () =>
 			{
-				_selectionSketchCursor =
-					SketchAndCursorSetter.Create(this,
-					                             _selectionCursors,
-					                             GetSelectionSketchGeometryType(),
-					                             DefaultSketchTypeOnFinishSketch);
-
 				await OnToolActivatingCoreAsync();
 
 				if (RequiresSelection)
@@ -146,12 +137,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual bool DefaultSketchTypeOnFinishSketch =>
 			GetSelectionSettings().PreferRectangleSelectionSketch;
 
-		// TODO: Pull the correct cursor from a cursor collection but do not allow external access
-		public void SetCursor(Cursor cursor)
-		{
-			SetToolCursor(cursor);
-		}
-
 		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
 		{
 			var options = new VertexSymbolOptions(vertexSymbolType)
@@ -183,22 +168,6 @@ namespace ProSuite.AGP.Editing.OneClick
 				                                   selectionCursors.DefaultSelectionSketchType);
 
 			await SetSelectionSketchTypeAsync(newSketchGeometryType, selectionCursors);
-		}
-
-		[Obsolete("Use ToggleSelectionSketchGeometryType")]
-		protected virtual Task SetupLassoSketchAsync()
-		{
-			_selectionSketchCursor.Toggle(SketchGeometryType.Lasso, KeyboardUtils.IsShiftDown());
-
-			return Task.CompletedTask;
-		}
-
-		[Obsolete("Use ToggleSelectionSketchGeometryType")]
-		protected virtual Task SetupPolygonSketchAsync()
-		{
-			_selectionSketchCursor.Toggle(SketchGeometryType.Polygon, KeyboardUtils.IsShiftDown());
-
-			return Task.CompletedTask;
 		}
 
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
@@ -679,21 +648,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// exception when setting the shape (GOTOP-190)!
 		/// </summary>
 		protected bool UnJoinedSelection { get; set; } = true;
-
-		[Obsolete("In order to use another set of cursors in a second tool phase create a second " +
-		          "SelectionCursors instance and call ResetSelectionSketchType(secondPhaseCursors)")]
-		public void UpdateCursors()
-		{
-			_selectionCursors = GetSelectionCursors();
-
-			_selectionSketchCursor =
-				SketchAndCursorSetter.Create(this,
-				                             _selectionCursors,
-				                             GetSelectionSketchGeometryType(),
-				                             DefaultSketchTypeOnFinishSketch);
-
-			_selectionSketchCursor.ResetOrDefault();
-		}
 
 		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
 		                                  NotificationCollection notifications = null)

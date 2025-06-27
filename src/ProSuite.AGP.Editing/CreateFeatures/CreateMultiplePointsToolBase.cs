@@ -100,7 +100,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			{
 				try
 				{
-					SetCursor(Cursors.Wait);
+					SetToolCursor(Cursors.Wait);
 
 					List<long> newFeatureIds;
 
@@ -136,7 +136,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				}
 				finally
 				{
-					SetCursor(SketchCursor);
+					SetToolCursor(SketchCursor);
 				}
 			});
 

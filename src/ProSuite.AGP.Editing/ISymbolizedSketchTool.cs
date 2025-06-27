@@ -7,8 +7,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing;
 
-public interface ISymbolizedSketchTool : ISketchTool
+public interface ISymbolizedSketchTool
 {
+	void SetSketchType(SketchGeometryType? sketchType);
+
 	Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType);
 
 	void SetSketchSymbol([CanBeNull] CIMSymbolReference symbolReference);
