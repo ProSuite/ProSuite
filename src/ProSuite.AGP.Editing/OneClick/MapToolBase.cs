@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -418,10 +417,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void HideOptionsPane() { }
 
+		/// <summary>
+		/// Override and return null to don't show progressor.
+		/// </summary>
 		[CanBeNull]
 		protected virtual CancelableProgressorSource GetProgressorSource()
 		{
-			// NOTE: Tools that support thea picker are currently not compatible with a progressor
+			// NOTE: Tools that support the picker are currently not compatible with a progressor
 			//       ArcGIS Pro crashes, whenever the picker and the progress window are both open.
 
 			// Subclasses shall individually configure the progressor source

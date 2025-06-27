@@ -157,7 +157,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
 		}
 
-		protected virtual async Task ToggleSelectionSketchGeometryType(
+		protected virtual async Task ToggleSelectionSketchGeometryTypeAsync(
 			SketchGeometryType toggleSketchType,
 			[CanBeNull] SelectionCursors selectionCursors = null)
 		{
@@ -174,12 +174,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (args.Key == _keyPolygonDraw)
 			{
-				await ToggleSelectionSketchGeometryType(SketchGeometryType.Polygon);
+				await ToggleSelectionSketchGeometryTypeAsync(SketchGeometryType.Polygon);
 			}
 
 			if (args.Key == _keyLassoDraw)
 			{
-				await ToggleSelectionSketchGeometryType(SketchGeometryType.Lasso);
+				await ToggleSelectionSketchGeometryTypeAsync(SketchGeometryType.Lasso);
 			}
 
 			if (KeyboardUtils.IsShiftKey(args.Key))
@@ -319,14 +319,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetupSketch();
 
-			await ResetSelectionSketchType(_selectionCursors);
+			await ResetSelectionSketchTypeAsync(_selectionCursors);
 		}
 
 		/// <summary>
 		/// Resets the sketch type (rectangle, polygon, lasso) to the respective default (i.e. the
 		/// last used type or the default) and updates the mouse cursor accordingly.
 		/// </summary>
-		protected async Task ResetSelectionSketchType(SelectionCursors selectionCursors)
+		protected async Task ResetSelectionSketchTypeAsync(SelectionCursors selectionCursors)
 		{
 			SketchGeometryType? previousSketchTypeToUse = null;
 

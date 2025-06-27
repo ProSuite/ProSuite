@@ -293,7 +293,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			finally
 			{
 				// reset after 2. phase
-				await ResetSelectionSketchType(_laterPhaseCursors);
+				await ResetSelectionSketchTypeAsync(_laterPhaseCursors);
 			}
 		}
 
@@ -328,20 +328,20 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override async Task ToggleSelectionSketchGeometryType(
+		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
 			SketchGeometryType toggleSketchType,
 			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
 				// Use base implementation
-				await base.ToggleSelectionSketchGeometryType(
+				await base.ToggleSelectionSketchGeometryTypeAsync(
 					toggleSketchType, selectionCursors);
 			}
 			else
 			{
 				// Second and third phase: use the _secondPhaseCursors
-				await base.ToggleSelectionSketchGeometryType(
+				await base.ToggleSelectionSketchGeometryTypeAsync(
 					toggleSketchType, _laterPhaseCursors);
 			}
 		}
@@ -432,7 +432,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			SetupSketch();
 
-			await ResetSelectionSketchType(_laterPhaseCursors);
+			await ResetSelectionSketchTypeAsync(_laterPhaseCursors);
 		}
 
 		protected ZSettingsModel GetZSettingsModel()
