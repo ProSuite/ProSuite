@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.AGP.WorkList
 {
+	// TODO: drop! move to IssueWorkListUtils
 	public static class IssueUtils
 	{
 		// should this be un IssueUtils or IssueAttributeReader ?

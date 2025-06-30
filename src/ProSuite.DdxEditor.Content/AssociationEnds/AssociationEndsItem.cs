@@ -15,11 +15,12 @@ namespace ProSuite.DdxEditor.Content.AssociationEnds
 		private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		private readonly ObjectDatasetItem<T> _parent;
 
-		public AssociationEndsItem(CoreDomainModelItemModelBuilder modelBuilder,
-		                           ObjectDatasetItem<T> parent)
+		public AssociationEndsItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                           [NotNull] ObjectDatasetItem<T> parent)
 			: base("Association Ends", "Properties for ends of associations")
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
+			Assert.ArgumentNotNull(parent, nameof(parent));
 
 			_modelBuilder = modelBuilder;
 			_parent = parent;

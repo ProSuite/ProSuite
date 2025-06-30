@@ -193,9 +193,37 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		                                               [NotNull] IPoint atPoint)
 		{
 			return feature =>
-				GeometryUtils.Touches(feature.Shape, atPoint) &&
+				IsEndPointCoincident(atPoint, feature) &&
 				! GdbObjectUtils.IsSameObject(feature, toEdgeFeature,
 				                              ObjectClassEquality.SameTableSameVersion);
+		}
+
+		private static bool IsEndPointCoincident(IPoint atPoint, IFeature feature)
+		{
+			IGeometry featureShape = feature.Shape;
+
+			if (featureShape is IPolyline polyline)
+			{
+				// NOTE: Touches results in the wrong result for vertical lines
+				double xyTolerance = GeometryUtils.GetXyTolerance(feature);
+				double zTolerance = GeometryUtils.GetZTolerance(feature);
+
+				if (GeometryUtils.IsSamePoint(atPoint, polyline.FromPoint,
+				                              xyTolerance, zTolerance))
+				{
+					return true;
+				}
+
+				if (GeometryUtils.IsSamePoint(atPoint, polyline.ToPoint, xyTolerance, zTolerance))
+				{
+					return true;
+				}
+
+				return false;
+			}
+
+			// TODO: Assert CantReach? 
+			return GeometryUtils.Touches(featureShape, atPoint);
 		}
 
 		private IList<IFeature> FindPolylinesAt(

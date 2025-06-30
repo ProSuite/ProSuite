@@ -271,6 +271,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			return averageSegmentLength * 3;
 		}
 
+		public void Remove(T value, double xMin, double yMin, double xMax, double yMax)
+		{
+			_spatialHashIndex.Remove(value, xMin, yMin, xMax, yMax);
+		}
+
 		public void Add(T value, double xMin, double yMin, double xMax, double yMax)
 		{
 			_spatialHashIndex.Add(value, xMin, yMin, xMax, yMax);

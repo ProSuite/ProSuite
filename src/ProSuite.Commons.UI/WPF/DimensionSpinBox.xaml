@@ -1,0 +1,95 @@
+<UserControl x:Class="ProSuite.Commons.UI.WPF.DimensionSpinBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:wpf="clr-namespace:ProSuite.Commons.UI.WPF"
+             mc:Ignorable="d" x:Name="root_dimension_spin_box"
+             d:DesignHeight="20" d:DesignWidth="50">
+    <UserControl.Resources>
+        <ControlTemplate x:Key="updown_button_style" TargetType="Button">
+            <Border x:Name="br" BorderThickness="0" BorderBrush="{DynamicResource ThemeBrushDark}" 
+                            Background="{DynamicResource ThemeBrush}" CornerRadius="0">
+                <ContentPresenter x:Name="cp" TextElement.Foreground="{TemplateBinding Foreground}" 
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter TargetName="br" Property="Background" Value="{DynamicResource ThemeBrushActive}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="false">
+                    <Setter TargetName="br" Property="Background" Value="Silver" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <Style TargetType="Button">
+            <Setter Property="Template" Value="{StaticResource updown_button_style}" />
+        </Style>
+    </UserControl.Resources>
+    <Border>
+        <Border.OpacityMask>
+            <VisualBrush>
+                <VisualBrush.Visual>
+                    <Border Background="Black" SnapsToDevicePixels="True"
+                            CornerRadius="4"
+                            Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType=Border}}"
+                            Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType=Border}}" />
+                </VisualBrush.Visual>
+            </VisualBrush>
+        </Border.OpacityMask>
+        <Grid x:Name="grid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="18" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="18" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Grid.Row="0" Width="Auto" Height="Auto" Click="DecrementValue" IsTabStop="False" Padding="10, 5">
+                <Button.Content >
+                    <Grid Background="Transparent" Width="18" Height="10">
+                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,1 L8,1" Stroke="Black" 
+                               StrokeThickness="2"/>
+                    </Grid>
+                </Button.Content>
+            </Button>
+            <TextBox x:Name="textBox" Grid.Column="1" MinWidth="50" PreviewKeyDown="PreviewKeyDownHandler">
+                <TextBox.Style>
+                    <Style TargetType="{x:Type TextBox}">
+                        <Style.Triggers>
+                            <Trigger Property="Validation.HasError" Value="True">
+                                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+                
+                <TextBox.Text>
+                    <Binding RelativeSource="{RelativeSource AncestorType=UserControl}" Path="Value" UpdateSourceTrigger="Default">
+                        <Binding.Converter>
+                            <wpf:DimensionConverter FormatSpecifier="F3" />
+                        </Binding.Converter>
+                        <Binding.ValidationRules>
+                            <wpf:DimensionValidation ValidUnitsText="" UnitRequired="False" />
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Up" Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=IncrementValueCommand}" />
+                    <KeyBinding Key="Down" Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DecrementValueCommand}" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <Button Grid.Column="2" Width="Auto" Height="Auto" Click="IncrementValue" IsTabStop="False">
+                <Button.Content>
+                    <Grid Background="Transparent" Width="18" Height="10">
+                        <Path  HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,4 L8,4 M4,8 L4,0" Stroke="Black" 
+                               StrokeThickness="2"/>
+                    </Grid>
+                </Button.Content>
+            </Button>
+            
+            <Border BorderBrush="Gray" IsHitTestVisible="False" BorderThickness="1" CornerRadius="4" 
+                    Grid.Column="0" Grid.ColumnSpan="3" Padding="0" Margin="0" />
+        </Grid>
+    </Border>
+</UserControl>

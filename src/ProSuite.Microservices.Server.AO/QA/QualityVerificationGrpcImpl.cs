@@ -46,9 +46,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private readonly StaTaskScheduler _staThreadScheduler;
 
-		private static readonly ThreadAffineUseNameProvider _userNameProvider =
-			new ThreadAffineUseNameProvider();
-
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
 			_verificationInputsFactoryMethod;
 
@@ -69,7 +66,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_staThreadScheduler = new StaTaskScheduler(maxThreadCount);
 
-			EnvironmentUtils.SetUserNameProvider(_userNameProvider);
+			var perThreadUserNameProvider =
+				EnvironmentUtils.GetUserNameProvider() as ThreadAffineUseNameProvider;
+
+			if (perThreadUserNameProvider == null)
+			{
+				var userNameProvider = new ThreadAffineUseNameProvider();
+				EnvironmentUtils.SetUserNameProvider(userNameProvider);
+			}
 		}
 
 		/// <summary>
@@ -663,6 +667,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ITrackCancel trackCancel)
 		{
 			SetupUserNameProvider(request.UserName);
+
 			try
 			{
 				VerificationParametersMsg parameters = request.Parameters;
@@ -1059,14 +1064,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			SetupUserNameProvider(userName);
 		}
 
-		private static void SetupUserNameProvider(string userName)
+		private static void SetupUserNameProvider([NotNull] string userName)
 		{
 			_msg.DebugFormat("New verification request from {0}", userName);
 
-			if (! string.IsNullOrEmpty(userName))
+			if (string.IsNullOrEmpty(userName))
 			{
-				_userNameProvider.SetDisplayName(userName);
+				return;
 			}
+
+			var perThreadProvider =
+				EnvironmentUtils.GetUserNameProvider() as ThreadAffineUseNameProvider;
+
+			Assert.NotNull(perThreadProvider, "No or unexpected type of user name provider");
+
+			perThreadProvider.SetDisplayName(userName);
 		}
 
 		private static void SendProgress<T>(

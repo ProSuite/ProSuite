@@ -41,6 +41,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		public static IEnumerable<ObjectAttributeType> Harvest(
+			[NotNull] DdxModel model, [NotNull] IWorkspaceContext workspaceContext,
+			[NotNull] IList<GeometryType> geometryTypes,
+			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes = null)
+		{
+			Assert.ArgumentNotNull(geometryTypes, nameof(geometryTypes));
+
+			IDatasetListBuilderFactory datasetListBuilderFactory =
+				GetDatasetListBuilderFactory(model, geometryTypes);
+
+			Assert.NotNull(datasetListBuilderFactory,
+			               "DatasetListBuilderFactory not assigned to model");
+
+			return Harvest(model, workspaceContext, datasetListBuilderFactory,
+			               GetAttributeConfigurator(model, existingAttributeTypes));
+		}
+
+		[NotNull]
+		public static IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] DdxModel model,
 			[NotNull] IDatasetListBuilderFactory datasetListBuilderFactory,
 			[CanBeNull] IAttributeConfigurator attributeConfigurator)
@@ -65,6 +83,32 @@ namespace ProSuite.DomainModel.AO.DataModel
 				new GeometryTypeConfigurator(datasetListBuilderFactory.GeometryTypes);
 
 			return Harvest(model, datasetListBuilder, attributeConfigurator, geometryTypeConfigurator);
+		}
+
+		[NotNull]
+		public static IEnumerable<ObjectAttributeType> Harvest(
+			[NotNull] DdxModel model, [NotNull] IWorkspaceContext workspaceContext,
+			[NotNull] IDatasetListBuilderFactory datasetListBuilderFactory,
+			[CanBeNull] IAttributeConfigurator attributeConfigurator)
+		{
+			Assert.ArgumentNotNull(datasetListBuilderFactory,
+			                       nameof(datasetListBuilderFactory));
+
+			DatasetFilter datasetFilter = HarvestingUtils.CreateDatasetFilter(
+				model.DatasetInclusionCriteria, model.DatasetExclusionCriteria);
+
+			IDatasetListBuilder datasetListBuilder =
+				datasetListBuilderFactory.Create(model.SchemaOwner,
+				                                 model.DatasetPrefix,
+				                                 model.IgnoreUnversionedDatasets,
+				                                 model.IgnoreUnregisteredTables,
+				                                 !model.HarvestQualifiedElementNames,
+				                                 datasetFilter);
+
+			IGeometryTypeConfigurator geometryTypeConfigurator =
+				new GeometryTypeConfigurator(datasetListBuilderFactory.GeometryTypes);
+
+			return Harvest(model, workspaceContext, datasetListBuilder, attributeConfigurator, geometryTypeConfigurator);
 		}
 
 		[NotNull]
@@ -193,7 +237,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				Association association = pair.Value;
 
 				AddOrUpdateAssociation(model, relationshipClass, association,
-									   workspace,
+									   workspaceContext,
 									   uniqueDatabaseName,
 									   uniqueSchemaOwner,
 									   datasetNamesAreQualified);
@@ -701,13 +745,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] DdxModel model,
 			[NotNull] IRelationshipClass relClass,
 			[CanBeNull] Association association,
-			[NotNull] IWorkspace workspace,
+			[NotNull] IWorkspaceContext workspaceContext,
 			[CanBeNull] string expectedDatabaseName,
 			[CanBeNull] string expectedSchemaOwner,
 			bool datasetNamesAreQualified)
 		{
 			Assert.ArgumentNotNull(relClass, nameof(relClass));
-			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNull(workspaceContext, nameof(workspaceContext));
+
+			IWorkspace workspace = workspaceContext.Workspace;
 
 			// TODO incorrect warnings 
 			// 1. harvest empty (non-matching schema owner), unqualified names
@@ -957,7 +1003,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				if (attributedAssociation != null)
 				{
-					AttributeHarvestingUtils.HarvestAttributes(attributedAssociation);
+					AttributeHarvestingUtils.HarvestAttributes(attributedAssociation, workspaceContext);
 				}
 			}
 		}
