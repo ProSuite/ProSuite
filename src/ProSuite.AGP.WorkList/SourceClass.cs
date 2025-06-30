@@ -60,11 +60,27 @@ namespace ProSuite.AGP.WorkList
 			return subFields;
 		}
 
+		/// <summary>
+		/// Ensures the filter is valid with the correct subfields. If subfields are "*" the bool
+		/// excludeGeometry is always false.
+		/// </summary>
+		/// <param name="filter"></param>
+		/// <param name="statusFilter"></param>
+		/// <param name="excludeGeometry">Always false if subfields are "*".</param>
 		public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
 		                              WorkItemStatus? statusFilter,
 		                              bool excludeGeometry)
 		{
 			QueryFilter result;
+
+			if (filter != null && string.Equals(filter.SubFields, "*"))
+			{
+				filter = HasGeometry
+					         ? GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter)
+					         : GdbQueryUtils.CloneFilter<QueryFilter>(filter);
+
+				return;
+			}
 
 			string relevantSubFields = GetRelevantSubFields(excludeGeometry);
 
