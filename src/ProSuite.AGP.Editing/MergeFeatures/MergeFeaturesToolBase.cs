@@ -696,7 +696,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			List<PickableFeatureItem> items =
 				await PickerUtils.GetItemsAsync<PickableFeatureItem>(
-					selectionByClass, precedence, PickerMode.PickBest);
+					selectionByClass, precedence, PickerMode.ShowPicker);
 
 			Feature selectedFeature = items.FirstOrDefault()?.Feature;
 
