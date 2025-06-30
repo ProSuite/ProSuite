@@ -15,10 +15,10 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -669,37 +669,36 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		}
 
 		[CanBeNull]
-		private Feature PickSecondFeature(Geometry sketchGeometry,
-		                                  CancelableProgressor cancellabelProgressor)
+		private async Task<Feature> PickSecondFeature(Geometry sketchGeometry,
+		                                              CancelableProgressor cancellabelProgressor)
 		{
+			Geometry searchGeometry =
+				ToolUtils.GetSinglePickSelectionArea(sketchGeometry, GetSelectionTolerancePixels());
+
 			var featureFinder = new FeatureFinder(ActiveMapView,
 			                                      TargetFeatureSelection
 				                                      .VisibleSelectableEditableFeatures)
 			                    {
-				                    //FeatureClassPredicate = GetTargetFeatureClassPredicate()
+				                    ReturnUnJoinedFeatures = true
 			                    };
-
-			featureFinder.ReturnUnJoinedFeatures = true;
 
 			Predicate<Layer> layerPredicate = null;
 			var selectionByClass =
-				featureFinder.FindFeaturesByFeatureClass(sketchGeometry, layerPredicate);
+				featureFinder.FindFeaturesByFeatureClass(searchGeometry, layerPredicate,
+				                                         IsPickableTargetFeature);
 
 			if (cancellabelProgressor?.CancellationToken.IsCancellationRequested == true)
 			{
 				return null;
 			}
 
-			var foundFeatures = new List<Feature>();
+			using var precedence = CreatePickerPrecedence(sketchGeometry);
 
-			foreach (var classSelection in selectionByClass)
-			{
-				foundFeatures.AddRange(classSelection.GetFeatures().Where(IsPickableTargetFeature));
-			}
+			List<PickableFeatureItem> items =
+				await PickerUtils.GetItemsAsync<PickableFeatureItem>(
+					selectionByClass, precedence, PickerMode.PickBest);
 
-			foundFeatures.RemoveAll(f => GdbObjectUtils.IsSameFeature(f, _firstFeature));
-
-			Feature selectedFeature = foundFeatures.FirstOrDefault();
+			Feature selectedFeature = items.FirstOrDefault()?.Feature;
 
 			if (selectedFeature == null)
 			{
