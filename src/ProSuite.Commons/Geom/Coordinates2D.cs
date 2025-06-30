@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.Geom
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Coordinates2D : IPnt, IBox
+	public struct Coordinates2D : IPntZ, IPnt, IBox
 
 	{
 		private double _x;
@@ -15,6 +15,11 @@ namespace ProSuite.Commons.Geom
 		{
 			_x = x;
 			_y = y;
+		}
+
+		public static implicit operator Coordinates3D(Coordinates2D coord2D)
+		{
+			return new Coordinates3D(coord2D.X, coord2D.Y, 0);
 		}
 
 		#region IPnt Members
@@ -29,6 +34,12 @@ namespace ProSuite.Commons.Geom
 		{
 			get => _y;
 			set => _y = value;
+		}
+
+		public double Z
+		{
+			get => double.NaN;
+			set => throw new NotSupportedException("Cannot set Z on 2D coordinates");
 		}
 
 		/// <summary>

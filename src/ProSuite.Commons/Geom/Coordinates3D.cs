@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.Geom
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Coordinates3D : IPnt, IBox
+	public struct Coordinates3D : IPntZ, IPnt, IBox
 	{
 		private double _x;
 		private double _y;
@@ -89,7 +89,7 @@ namespace ProSuite.Commons.Geom
 
 		public bool Intersects(IBox box)
 		{
-			return box.Contains((IPnt) this);
+			return box.Contains((IPnt)this);
 		}
 
 		public int Dimension => 3;
