@@ -350,7 +350,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 					             {
 						             foreach (Feature deleteFeature in
 						                      deleteFeatures.OrderBy(f => GeometryUtils
-							                      .GetGeometrySize(f.GetShape())))
+								                      .GetGeometrySize(f.GetShape())))
 						             {
 							             TransferRelationships(deleteFeature, updateFeature);
 						             }
@@ -481,13 +481,14 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				Row originObject, destinationObject;
 				if (sourceFeatureIsOrigin)
 				{
-					originObject = relatedToSourceRow;
-					destinationObject = targetFeature;
+					// Source and target are in the same feature class:
+					originObject = targetFeature;
+					destinationObject = relatedToSourceRow;
 				}
 				else
 				{
-					originObject = targetFeature;
-					destinationObject = relatedToSourceRow;
+					destinationObject = targetFeature;
+					originObject = relatedToSourceRow;
 				}
 
 				Relationship newRelationship = RelationshipClassUtils.TryCreateRelationship(
