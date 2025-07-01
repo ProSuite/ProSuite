@@ -68,7 +68,6 @@ namespace ProSuite.Microservices.Server.AO
 			health.SetStatus(verificationServiceImpl.GetType(), true);
 			health.SetStatus(processAdministration.GetType(), true);
 
-
 			Grpc.Core.Server server =
 				StartGrpcServer(arguments, verificationServiceImpl, healthService, loadReporting,
 				                processAdministration);
@@ -278,9 +277,9 @@ namespace ProSuite.Microservices.Server.AO
 
 				parsedArgs.WithParsed(arguments => { result = arguments; });
 
-				bool helpArg = args.Any(
-					a => a != null &&
-					     a.Equals("--help", StringComparison.InvariantCultureIgnoreCase));
+				bool helpArg = args.Any(a => a != null &&
+				                             a.Equals("--help",
+				                                      StringComparison.InvariantCultureIgnoreCase));
 
 				if (helpArg)
 				{
@@ -297,10 +296,14 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] string logConfigFileName,
 			[CanBeNull] ConfigurationDirectorySearcher configDirSearcher = null)
 		{
-			bool verboseArg = commandLineArgs.Any(
-				a => a != null &&
-				     (a.Equals("-v", StringComparison.InvariantCultureIgnoreCase) ||
-				      a.Equals("--verbose", StringComparison.InvariantCultureIgnoreCase)));
+			bool verboseArg = commandLineArgs.Any(a => a != null &&
+			                                           (a.Equals(
+				                                            "-v",
+				                                            StringComparison
+					                                            .InvariantCultureIgnoreCase) ||
+			                                            a.Equals("--verbose",
+			                                                     StringComparison
+				                                                     .InvariantCultureIgnoreCase)));
 
 			var parsedArgs = Parser.Default.ParseArguments<MicroserverArguments>(commandLineArgs);
 

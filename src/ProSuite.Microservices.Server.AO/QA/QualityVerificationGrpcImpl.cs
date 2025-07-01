@@ -241,26 +241,26 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				registeredRequest =
 					RegisterRequest(request.UserName, request.Environment,
-									context.CancellationToken);
+					                context.CancellationToken);
 
 				var trackCancellationToken =
 					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
 
 				// TODO: Separate data request handler class with async method
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
-					delegate (DataVerificationResponse r)
+					delegate(DataVerificationResponse r)
 					{
 						return Task.Run(async () =>
-											await RequestMoreDataAsync(
-													requestStream, responseStream, context, r)
-												.ConfigureAwait(false))
-								   .Result;
+							                await RequestMoreDataAsync(
+									                requestStream, responseStream, context, r)
+								                .ConfigureAwait(false))
+						           .Result;
 					};
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
 						VerifyDataQualityCore(initialRequest, moreDataRequest, responseStream,
-											  trackCancellationToken);
+						                      trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -489,18 +489,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				Task responseReaderTask = Task.Run(
-					async () =>
+				Task responseReaderTask = Task.Run(async () =>
+				{
+					while (resultData == null)
 					{
-						while (resultData == null)
+						while (await requestStream.MoveNext().ConfigureAwait(false))
 						{
-							while (await requestStream.MoveNext().ConfigureAwait(false))
-							{
-								resultData = requestStream.Current;
-								break;
-							}
+							resultData = requestStream.Current;
+							break;
 						}
-					});
+					}
+				});
 
 				await responseStream.WriteAsync(r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
