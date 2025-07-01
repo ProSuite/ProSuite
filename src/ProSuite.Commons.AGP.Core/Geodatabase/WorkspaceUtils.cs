@@ -144,8 +144,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			switch (factory)
 			{
 				case WorkspaceFactory.FileGDB:
-					return new FileGeodatabaseConnectionPath(
-						new Uri(connectionString, UriKind.Absolute));
+					string filePath = connectionString;
+					// Extract actual path if it has a DATABASE= prefix
+					if (connectionString.StartsWith("DATABASE=",
+					                                StringComparison.OrdinalIgnoreCase))
+					{
+						filePath = connectionString.Substring("DATABASE=".Length);
+					}
+
+					return new FileGeodatabaseConnectionPath(new Uri(filePath, UriKind.Absolute));
 
 				case WorkspaceFactory.SDE:
 					DatabaseConnectionProperties connectionProperties =
