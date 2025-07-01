@@ -374,7 +374,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (hasDubiousOid)
 			{
-				if (StringUtils.IsNotEmpty(oidFieldName))
+				if (StringUtils.IsNotEmpty(oidFieldName) &&
+					queryDescription.Fields.FindField(oidFieldName) >= 0)
 				{
 					_msg.DebugFormat("Opening {0} as view, using configured OID field {1}",
 					                 gdbDatasetName, oidFieldName);
