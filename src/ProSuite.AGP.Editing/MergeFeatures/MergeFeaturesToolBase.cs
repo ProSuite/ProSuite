@@ -133,17 +133,17 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
-		protected override async Task ToggleSelectionSketchGeometryType(
+		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
 			SketchGeometryType toggleSketchType,
 			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				await base.ToggleSelectionSketchGeometryType(toggleSketchType, selectionCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
 			}
 			else
 			{
-				await base.ToggleSelectionSketchGeometryType(toggleSketchType, _secondPhaseCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, _secondPhaseCursors);
 			}
 		}
 
@@ -233,7 +233,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private async Task StartSecondPhaseAsync()
 		{
 			await QueuedTask.Run(() => { SetupSketch(); });
-			await QueuedTask.Run(() => { ResetSelectionSketchType(_secondPhaseCursors).Wait(); });
+			await QueuedTask.Run(async () =>
+			{
+				await ResetSelectionSketchTypeAsync(_secondPhaseCursors);
+			});
 		}
 
 		protected override void LogUsingCurrentSelection()
