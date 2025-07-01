@@ -410,12 +410,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (geometry is Envelope extent)
 			{
 				// Note: GeometryEngine's Buffer() does not support Envelope
-				return extent.Expand(distance, distance, false);
+				return Buffer(extent, distance);
 			}
 
 			var buffer = Engine.Buffer(geometry, distance);
 			// Note: buffer may NOT be a Polygon if distance is almost zero!
 			return buffer;
+		}
+
+		public static Envelope Buffer(Envelope envelope, double distance)
+		{
+			if (envelope is null) return null;
+			if (envelope.IsEmpty) return envelope;
+			return envelope.Expand(distance, distance, false);
 		}
 
 		public static Geometry ConvexHull(Geometry geometry)
@@ -873,6 +880,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Polyline GetClippedPolyline(Polyline polyline, Envelope clipExtent)
 		{
 			return (Polyline) Engine.Clip(polyline, clipExtent);
+		}
+
+		public static Envelope Project(Envelope envelope, SpatialReference sref)
+		{
+			var projected = Engine.Project(envelope, sref);
+			return projected as Envelope ??
+			       throw UnexpectedResultFrom("Project", typeof(Envelope), projected);
 		}
 
 		/// <summary>

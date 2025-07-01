@@ -1,5 +1,6 @@
 using System.Drawing;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -19,10 +20,9 @@ namespace ProSuite.DdxEditor.Content.AssociationEnds
 		/// <param name="modelBuilder">The model builder.</param>
 		/// <param name="associationEnd">The associationEnd.</param>
 		/// <param name="repository">The repository.</param>
-		public AssociationEndItem(CoreDomainModelItemModelBuilder modelBuilder,
-		                          AssociationEnd associationEnd,
-		                          IRepository<AssociationEnd>
-			                          repository)
+		public AssociationEndItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                          [NotNull] AssociationEnd associationEnd,
+		                          [NotNull] IRepository<AssociationEnd> repository)
 			: base(associationEnd, repository)
 		{
 			_image = AssociationEndImageLookup.GetImage(associationEnd, out _imageKey);

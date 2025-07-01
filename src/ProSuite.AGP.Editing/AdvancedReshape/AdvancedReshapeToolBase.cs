@@ -469,7 +469,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var polyline = (Polyline) sketchGeometry;
 
-			SetCursor(Cursors.Wait);
+			SetToolCursor(Cursors.Wait);
 
 			bool success = false;
 			try

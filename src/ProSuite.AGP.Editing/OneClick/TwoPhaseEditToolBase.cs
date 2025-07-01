@@ -193,17 +193,17 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override async Task ToggleSelectionSketchGeometryType(
+		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
 			SketchGeometryType toggleSketchType,
 			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				await base.ToggleSelectionSketchGeometryType(toggleSketchType, selectionCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
 			}
 			else
 			{
-				await base.ToggleSelectionSketchGeometryType(toggleSketchType, _secondPhaseCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, _secondPhaseCursors);
 			}
 		}
 
@@ -291,7 +291,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			await ResetSelectionSketchType(_secondPhaseCursors);
+			await ResetSelectionSketchTypeAsync(_secondPhaseCursors);
 		}
 	}
 }
