@@ -7,7 +7,7 @@ namespace ProSuite.Commons.Geom
 	/// <summary>
 	/// Summary description for Point.
 	/// </summary>
-	public abstract class Pnt : IPnt, IBox
+	public abstract class Pnt : IPntZ, IPnt, IBox
 	{
 		[NotNull] private double[] _coordinates;
 
@@ -107,6 +107,25 @@ namespace ProSuite.Commons.Geom
 			get { return _coordinates[1]; }
 			set { _coordinates[1] = value; }
 		}
+
+		public double Z 
+		{
+			get
+			{
+				if (_coordinates.Length < 3)
+				{
+					return double.NaN;
+				}
+				return _coordinates[2];
+			}
+			set {
+				if (_coordinates.Length < 3)
+				{
+					throw new InvalidOperationException("This point does not have a Z coordinate.");
+				}
+				_coordinates[2] = value;
+			}
+	}
 
 		public IPnt Clone()
 		{

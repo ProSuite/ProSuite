@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
-	public sealed class Pnt3D : Pnt, IPntZ
+	public sealed class Pnt3D : Pnt
 	{
 		public Pnt3D() : base(3) { }
 
