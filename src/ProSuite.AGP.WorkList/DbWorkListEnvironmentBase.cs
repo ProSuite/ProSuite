@@ -62,7 +62,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		AddToMapCore(GetTablesCore(), worklist);
 	}
 
-	protected void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
+	protected virtual void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
 	{
 		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
 

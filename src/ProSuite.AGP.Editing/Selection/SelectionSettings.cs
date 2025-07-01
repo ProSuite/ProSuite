@@ -15,7 +15,8 @@ namespace ProSuite.AGP.Editing.Selection
 		public SpatialRelationship SpatialRelationship { get; set; }
 
 		/// <summary>
-		/// Will be applied to points only
+		/// Will be applied to points only (TODO: is that remark still true?)
+		/// To re-use the ArcGIS Pro setting can use: SelectionEnvironment.SelectionTolerance
 		/// </summary>
 		public int SelectionTolerancePixels { get; set; }
 

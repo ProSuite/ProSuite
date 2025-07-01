@@ -91,12 +91,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		{
 			var request = new CalculateOverlapsRequest();
 
-			Func<Feature, Geometry> getFeatureGeometry = null;
-
-			if (inExtent != null)
-			{
-				getFeatureGeometry = f => GetClippedGeometry(f, inExtent);
-			}
+			Func<Feature, Geometry> getFeatureGeometry =
+				f => inExtent == null ? null : GetClippedGeometry(f, inExtent);
 
 			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
 			                                           request.SourceFeatures,
@@ -136,7 +132,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] Overlaps overlapsToRemove,
 			[CanBeNull] IList<Feature> overlappingFeatures,
-			[NotNull] RemoveOverlapsOptions options,
+			[NotNull] RemoveOverlapsToolOptions options,
 			CancellationToken cancellationToken)
 		{
 			List<Feature> updateFeatures;
@@ -254,7 +250,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			[NotNull] IEnumerable<Feature> selectedFeatures,
 			[NotNull] Overlaps overlapsToRemove,
 			[CanBeNull] IList<Feature> targetFeaturesForVertexInsertion,
-			[NotNull] RemoveOverlapsOptions options,
+			[NotNull] RemoveOverlapsToolOptions options,
 			out List<Feature> updateFeatures)
 		{
 			var request = new RemoveOverlapsRequest
@@ -270,15 +266,19 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 			if (datasetSpecificValues?.DatasetSpecificValues != null)
 			{
-				request.DatasetSpecificZSources.AddRange(
-					datasetSpecificValues.DatasetSpecificValues.Select(
-						dss => new DatasetSpecificZSource()
-						       { DatasetName = dss.Dataset, ZSource = (int) dss.Value }));
+				var datasetZSources = datasetSpecificValues.DatasetSpecificValues.Select(
+					dss => new DatasetZSource
+					       {
+						       DatasetName = dss.Dataset,
+						       ZSource = (int) dss.Value
+					       });
+
+				request.ZSources.AddRange(datasetZSources);
 			}
 
 			// Add the fallback value with an empty string as dataset name
-			request.DatasetSpecificZSources.Add(
-				new DatasetSpecificZSource()
+			request.ZSources.Add(
+				new DatasetZSource
 				{
 					DatasetName = string.Empty,
 					ZSource = (int) options.ZSource

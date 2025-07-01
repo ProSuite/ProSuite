@@ -12,7 +12,7 @@ namespace ProSuite.AGP.Editing.Generalize
 	//      load to the ProSuite.Commons project.
 	//      This project could also include the service abstractions, such as IAdvancedGeneralizeService.
 
-	public class AdvancedGeneralizeOptions :
+	public class AdvancedGeneralizeToolOptions :
 		OptionsBase<PartialAdvancedGeneralizeOptions>
 	{
 		public CentralizableSetting<bool> CentralizableLimitToVisibleExtent { get; private set; }
@@ -46,7 +46,7 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		public CentralizableSetting<bool> CentralizableShowDialog { get; private set; }
 
-		public AdvancedGeneralizeOptions(
+		public AdvancedGeneralizeToolOptions(
 			[CanBeNull] PartialAdvancedGeneralizeOptions centralOptions,
 			[CanBeNull] PartialAdvancedGeneralizeOptions localOptions)
 		{

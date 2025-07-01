@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -407,6 +408,15 @@ namespace ProSuite.Commons.UI.Dialogs
 		[CanBeNull]
 		private static IWin32Window ChooseOwner([CanBeNull] IWin32Window owner)
 		{
+			// If not on the UI thread, do not impose the main window from the provider but
+			// what the caller suggested. Otherwise, the following exception occurs:
+			// The calling thread cannot access this object because a different thread owns it
+			// NOTE: Windows can be shown from other STA threads than the Main thread (with limitations)
+			if (Environment.CurrentManagedThreadId != 1 || Thread.CurrentThread.IsBackground)
+			{
+				return owner;
+			}
+
 			return owner ?? UIEnvironment.MainWindow;
 		}
 
@@ -424,11 +434,11 @@ namespace ProSuite.Commons.UI.Dialogs
 		}
 
 		public DialogResult Show(IWin32Window owner,
-		                          string message,
-		                          string title,
-		                          MessageBoxButtons buttons,
-		                          MessageBoxIcon icon,
-		                          MessageBoxDefaultButton defaultButton)
+		                         string message,
+		                         string title,
+		                         MessageBoxButtons buttons,
+		                         MessageBoxIcon icon,
+		                         MessageBoxDefaultButton defaultButton)
 		{
 			var result = DialogResult.None;
 			UIEnvironment.WithReleasedCursor(

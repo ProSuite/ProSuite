@@ -31,7 +31,8 @@ namespace ProSuite.AGP.Editing.Chopper
 				             SnapToTargetVertices = TryClone(SnapToTargetVertices),
 				             SnapTolerance = TryClone(SnapTolerance),
 				             UseSourceZs = TryClone(UseSourceZs),
-				             ExcludeInteriorInteriorIntersections = TryClone(ExcludeInteriorInteriorIntersections)
+				             ExcludeInteriorInteriorIntersections =
+					             TryClone(ExcludeInteriorInteriorIntersections)
 			             };
 
 			return result;

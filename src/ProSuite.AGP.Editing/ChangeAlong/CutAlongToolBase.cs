@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -43,6 +42,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_cutAlongToolOptions.TargetFeatureSelection;
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.CutPolygonAlongOverlay);
+		}
+
+		protected override SelectionCursors GetTargetSelectionCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.CutPolygonAlongOverlay);
+		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
@@ -236,93 +245,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			var viewModel = GetCutAlongViewModel();
 			viewModel?.Hide();
 		}
-
-		#region first phase selection cursor
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#endregion
-
-		#region second phase target selection cursor
-
-		protected override Cursor GetTargetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay, 10,
-			                              10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Shift, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso, Resources.Shift, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon, Resources.Shift, 10, 10);
-		}
-
-		#endregion
 
 		#region Tool Options DockPane
 

@@ -239,26 +239,19 @@ namespace ProSuite.AGP.Editing.OneClick
 				_sketchStateHistory?.ResetSketchStates();
 				_isIntermittentSelectionPhaseActive = false;
 
-				_msg.Debug(e.Message, e);
+				_msg.Warn(e.Message, e);
 			}
 		}
 
-		protected override async Task SetupLassoSketchAsync()
+		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
+			SketchGeometryType toggleSketchType,
+			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.SetupLassoSketchAsync();
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
 			}
-			// Else do nothing: no lasso in construction sketch phase.
-		}
-
-		protected override async Task SetupPolygonSketchAsync()
-		{
-			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
-			{
-				await base.SetupPolygonSketchAsync();
-			}
-			// Else do nothing: no polygon sketch cursor in construction sketch phase.
+			// Else do nothing: No selection sketch toggling in edit sketch phase.
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
@@ -290,6 +283,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
 			_msg.VerboseDebug(() => $"HandleKeyUpCoreAsync ({Caption})");
+
+			await base.HandleKeyUpCoreAsync(args);
 
 			if (args.Key == _keyFinishSketch)
 			{
@@ -458,7 +453,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetSketchType(GetSketchGeometryType());
 
-			SetCursor(SketchCursor);
+			SetToolCursor(SketchCursor);
 
 			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 
@@ -608,6 +603,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
+			await LogLastVertexZ(sketch);
+		}
+
+		private static async Task LogLastVertexZ(Geometry sketch)
+		{
 			if (! sketch.HasZ)
 			{
 				return;
@@ -632,9 +632,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				ReadOnlyPointCollection points = multipart.Points;
 
+				int pointNumFromEnd = 1;
+				if (sketch is Polygon)
+				{
+					// In a polygon sketch the last point is the same as the first, take the second-last:
+					pointNumFromEnd = 2;
+				}
+
 				if (points.Count > 0)
 				{
-					lastPoint = points[points.Count - 1];
+					lastPoint = points[points.Count - pointNumFromEnd];
 				}
 			}
 			else if (sketch is MapPoint point)

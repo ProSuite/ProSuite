@@ -5,111 +5,88 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	/// <summary>
-	/// A WorkList is a named list of work items.
-	/// It maintains a current item and provides
-	/// navigation to change the current item.
-	/// </summary>
-	// todo: daro separate geometry processing code
-	// todo: daro separate QueuedTask code
-	// todo: daro avoid ArcGIS.Desktop.Mapping dependency
+
+	// Note: SelectionItemRepository ensures only items of selected rows are returned.
+	//		 For DbStatusWorkItemRepository make sure not entire database is searched.
+	//		 filter by AOI.
+	// Note: Check that work list is not empty. Otherwise, GetWorkItemsForInnermostContextCore
+	//		 will search forever.
 	public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private static readonly object _obj = new();
+		private static readonly int _initialCapacity = 1000;
 
-		// todo daro: revise
-		private const int _initialCapacity = 1000;
+		private List<IWorkItem> _items = new(_initialCapacity);
+		private Dictionary<GdbRowIdentity, IWorkItem> _rowMap = new(_initialCapacity);
 
-		private readonly object _syncLock = new object();
+		private WorkItemVisibility? _visibility;
+		[NotNull] private string _displayName;
+		private bool _itemsGeometryDraftMode = true;
+		private Envelope _extent;
 
-		[CanBeNull] private EditEventsRowCacheSynchronizer _rowCacheSynchronizer;
+		protected WorkList([NotNull] IWorkItemRepository repository,
+		                   [NotNull] Geometry areaOfInterest,
+		                   [NotNull] string name,
+		                   [NotNull] string displayName)
+		{
+			Repository = repository ?? throw new ArgumentNullException(nameof(repository));
+			AreaOfInterest = areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
+			Name = name ?? throw new ArgumentNullException(nameof(name));
+
+			_displayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
+
+			CurrentIndex = repository.GetCurrentIndex();
+		}
+
+		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
 		[NotNull]
 		public IWorkItemRepository Repository { get; }
 
-		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
-
-		[NotNull] private List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
-
 		[NotNull]
-		protected List<IWorkItem> Items
-		{
-			get => _items;
-			set => _items = value;
-		}
-
-		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
-			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
-
-		[NotNull]
-		protected Dictionary<GdbRowIdentity, IWorkItem> RowMap => _rowMap;
-
-		private WorkItemVisibility _visibility;
-		private string _displayName;
-
-		protected WorkList([NotNull] IWorkItemRepository repository,
-		                   [NotNull] string name,
-		                   [CanBeNull] Geometry areaOfInterest = null,
-		                   [CanBeNull] string displayName = null)
-		{
-			_displayName = displayName;
-			Name = name;
-
-			Repository = repository;
-
-			Visibility = WorkItemVisibility.Todo;
-			AreaOfInterest = areaOfInterest;
-			CurrentIndex = repository.GetCurrentIndex();
-
-			RefreshItems();
-		}
-		
 		public string Name { get; set; }
 
+		[NotNull]
 		public string DisplayName
 		{
-			get
-			{
-				if (string.IsNullOrEmpty(_displayName))
-				{
-					return GetDisplayNameCore();
-				}
-
-				return _displayName;
-			}
+			get => _displayName;
 			private set => SetProperty(ref _displayName, value);
 		}
 
-		public void Rename(string name)
+		[CanBeNull]
+		public IWorkItem Current
 		{
-			DisplayName = name;
-			Repository.WorkItemStateRepository.Rename(name);
+			get
+			{
+				IWorkItem current = GetItem(CurrentIndex);
+				if (current == null)
+				{
+					return null;
+				}
+
+				// Ensure current item is always visited
+				current.Visited = true;
+				return current;
+			}
 		}
-
-		protected abstract string GetDisplayNameCore();
-
-		// NOTE: An empty work list should return null and not an empty envelope.
-		//		 Pluggable Datasource cannot handle an empty envelope.
-		public Envelope Extent { get; protected set; }
-
-		public IWorkItem Current => GetItem(CurrentIndex);
 
 		public int CurrentIndex { get; set; }
 
-		public WorkItemVisibility Visibility
+		public WorkItemVisibility? Visibility
 		{
 			get => _visibility;
 			set
@@ -124,139 +101,31 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public Geometry AreaOfInterest { get; set; }
+		public long? TotalCount { get; set; }
 
-		public virtual bool QueryLanguageSupported { get; } = false;
+		// TODO: (daro) AOI can be null! E.g. selection work list. Issue work list where there is no work unit. But the should have the
+		//		 possibility to define an AOI.
+		protected Geometry AreaOfInterest { get; }
 
-		public bool CanSetStatus()
+		public virtual bool CanSetStatus()
 		{
-			return HasCurrentItem && CanSetStatusCore();
-		}
-
-		public Row GetCurrentItemSourceRow()
-		{
-			if (Current == null)
-			{
-				return null;
-			}
-
-			ITableReference tableReference = Current.GdbRowProxy.Table;
-
-			ISourceClass sourceClass =
-				Repository.SourceClasses.FirstOrDefault(s => s.Uses(tableReference));
-
-			if (sourceClass == null)
-			{
-				return null;
-			}
-
-			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
+			return HasCurrentItem();
 		}
 
 		public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 		{
 			await Repository.SetStatusAsync(item, status);
 
-			// If an item visibility changes to 'Done' the item is not part
-			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
-			// does not return the Done-item anymore. Therefor use the item's Extent
-			// to invalidate the work list layer.
+			// If an item visibility changes to 'Done' the item might not be part
+			// of the work list anymore depending on the work list's Visibility,
+			// respectively GetItems() does not return the Done-item anymore.
+			// Therefor use the item's Extent to invalidate the work list layer.
 			OnWorkListChanged();
-		}
-
-		private bool _itemsGeometryMode = true;
-
-		public void SetItemsGeometryMode(bool enable)
-		{
-			_itemsGeometryMode = enable;
-
-			// invalidate map
-			OnWorkListChanged(MapView.Active.Extent);
-		}
-
-		public Geometry GetItemGeometry(IWorkItem item)
-		{
-			try
-			{
-				if (item?.Extent == null)
-				{
-					return null;
-				}
-
-				if (! UseItemGeometry(item))
-				{
-					item.QueryPoints(out double xmin, out double ymin,
-					                 out double xmax, out double ymax,
-					                 out double zmax);
-
-					return PolygonBuilderEx.CreatePolygon(EnvelopeBuilderEx.CreateEnvelope(
-						                                      new Coordinate3D(xmin, ymin, zmax),
-						                                      new Coordinate3D(xmax, ymax, zmax),
-						                                      item.Extent.SpatialReference));
-				}
-
-				if (item.HasFeatureGeometry && _itemsGeometryMode)
-				{
-					return (Polygon) item.Geometry;
-				}
-
-				return PolygonBuilderEx.CreatePolygon(item.Extent, item.Extent.SpatialReference);
-			}
-			catch (Exception ex)
-			{
-				Gateway.LogError(ex, _msg);
-			}
-
-			return null;
-		}
-
-		private static bool UseItemGeometry([NotNull] IWorkItem item)
-		{
-			switch (item.GeometryType)
-			{
-				case GeometryType.Polyline:
-				case GeometryType.Polygon:
-					return true;
-
-				default:
-					return false;
-			}
-		}
-
-		public virtual void RefreshItems()
-		{
-			List<IWorkItem> newItems = new List<IWorkItem>(_items.Count);
-
-			foreach (IWorkItem item in Repository.GetItems(AreaOfInterest, WorkItemStatus.Todo))
-			{
-				newItems.Add(item);
-
-				if (!_rowMap.ContainsKey(item.GdbRowProxy))
-				{
-					_rowMap.Add(item.GdbRowProxy, item);
-				}
-				else
-				{
-					// todo daro: warn
-				}
-			}
-
-			_msg.DebugFormat("Added {0} items to work list", newItems.Count);
-
-			// initializes the state repository if no states for
-			// the work items are read yet
-			Repository.UpdateVolatileState(newItems);
-
-			_msg.DebugFormat("Getting extents for {0} items...", newItems.Count);
-			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
-			//			  look old work item implementation
-			Extent = GetExtentFromItems(newItems);
-
-			_items = newItems;
 		}
 
 		public bool IsValid(out string message)
 		{
+			// TODO: (DARO) still needed?
 			if (Repository.SourceClasses.Count == 0)
 			{
 				message = "None of the referenced tables could be loaded";
@@ -267,9 +136,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
-		/// <summary>
-		/// Set work items visibility and invokes WorkListChanged event.
-		/// </summary>
 		public void SetVisited(IList<IWorkItem> items, bool visited)
 		{
 			var oids = new List<long>(items.Count);
@@ -296,117 +162,356 @@ namespace ProSuite.AGP.WorkList.Domain
 			                 ?.AttributeReader;
 		}
 
-		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
-		                                               bool ignoreListSettings = false,
-		                                               int startIndex = -1)
+		public void Rename(string name)
 		{
-			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
+			DisplayName = name;
+			Repository.WorkItemStateRepository.Rename(name);
+		}
 
-			var query = (IEnumerable<IWorkItem>) _items;
-
-			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
+		[NotNull]
+		public Envelope GetExtent()
+		{
+			if (_extent == null || _extent.IsEmpty)
 			{
-				query = query.Where(item => IsVisible(item, Visibility));
+				return AreaOfInterest.Extent;
 			}
 
-			if (filter?.ObjectIDs != null && filter.ObjectIDs.Count > 0)
+			return _extent;
+		}
+
+		#region item geometry
+
+		public void SetItemsGeometryDraftMode(bool enable)
+		{
+			_itemsGeometryDraftMode = enable;
+		}
+
+		public Geometry GetItemGeometry(IWorkItem item)
+		{
+			try
 			{
-				List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
-				query = query.Where(item => oids.BinarySearch(item.OID) >= 0);
+				if (_itemsGeometryDraftMode)
+				{
+					// it's not a table row and not a point
+					if (item.HasExtent && UseItemGeometry(item))
+					{
+						Assert.NotNull(item.Extent);
+						return PolygonBuilderEx.CreatePolygon(item.Extent, item.Extent.SpatialReference);
+					}
+				}
+				else
+				{
+					// it's not a table row and not a point
+					if (item.HasFeatureGeometry && UseItemGeometry(item))
+					{
+						Assert.NotNull(item.Geometry);
+
+						switch (item.GeometryType)
+						{
+							case GeometryType.Polyline:
+								var polyline = (Polyline) item.Geometry;
+								return PolygonBuilderEx.CreatePolygon(polyline, item.Geometry.SpatialReference);
+							case GeometryType.Polygon:
+								return (Polygon) item.Geometry;
+
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+					}
+				}
+
+				// it's a point
+				if (item.HasExtent)
+				{
+					Assert.NotNull(item.Extent);
+					return PolygonBuilderEx.CreatePolygon(item.Extent,
+					                                      item.Extent.SpatialReference);
+				}
+
+				return null;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
 			}
 
-			// filter should never have a WhereClause since we say QueryLanguageSupported = false
+			return null;
+		}
 
-			if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
+		private static bool UseItemGeometry([NotNull] IWorkItem item)
+		{
+			GeometryType? geometryType = item.GeometryType;
+			return UseItemGeometry(geometryType);
+		}
+
+		private static bool UseItemGeometry([CanBeNull] Geometry geometry)
+		{
+			if (geometry == null)
 			{
-				// TODO: Use spatial index! This is slow for a large item count.
-				// todo daro: do not use method to build Extent every time
-				query = query.Where(
-					item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
+				return false;
 			}
 
-			if (! ignoreListSettings && AreaOfInterest != null)
+			GeometryType geometryType = geometry.GeometryType;
+			return UseItemGeometry(geometryType);
+		}
+
+		private static bool UseItemGeometry(GeometryType? geometryType)
+		{
+			switch (geometryType)
 			{
-				query = query.Where(item => WithinAreaOfInterest(item.Extent, AreaOfInterest));
+				case GeometryType.Polyline:
+				case GeometryType.Polygon:
+					return true;
+
+				default:
+					return false;
+			}
+		}
+
+		#endregion
+
+		#region GetItems
+
+		private SpatialHashSearcher<IWorkItem> _searcher;
+
+		public Row GetCurrentItemSourceRow()
+		{
+			if (Current == null)
+			{
+				return null;
 			}
 
-			// TODO: (daro) drop!
-			if (startIndex > -1 && startIndex < _items.Count)
+			ITableReference tableReference = Current.GdbRowProxy.Table;
+
+			ISourceClass sourceClass =
+				Repository.SourceClasses.FirstOrDefault(s => s.Uses(tableReference));
+
+			if (sourceClass == null)
 			{
-				// This can be ultra-slow for a large item count! Consider looping over all items exactly once!
-				query = query.Where(item => _items.IndexOf(item, startIndex) > -1);
+				return null;
+			}
+
+			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
+		}
+
+		public void UpdateExistingItemGeometries(QueryFilter filter)
+		{
+			// Don't update items already having feature geometry
+			Predicate<IWorkItem> exclusion = item => item.HasFeatureGeometry;
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int count = 0;
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
+			{
+				if (! UseItemGeometry(geometry))
+				{
+					continue;
+				}
+
+				count += UpdateExistingItemGeometry(item, geometry, exclusion);
+			}
+
+			// Avoid flooding the log.
+			if (count > 0)
+			{
+				_msg.DebugStopTiming(watch, $"{count} item geometries updated.");
+			}
+			else
+			{
+				// Just to keep everything tidy and clean.
+				watch.Stop();
+			}
+		}
+
+		public void LoadItems([NotNull] QueryFilter filter)
+		{
+			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
+			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
+
+			var rowMap = new Dictionary<GdbRowIdentity, IWorkItem>();
+			var itemsWithExtent = new List<IWorkItem>();
+
+			Stopwatch watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start loading items.");
+
+			// Load all items not matter what WorkItemStatus
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
+			{
+				item.OID = Repository.GetNextOid();
+				Assert.True(item.OID > 0, "item is not initialized");
+
+				Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Could not add {item}");
+
+				// it's an unknown item > refresh it's state (status, visited) either
+				// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
+				Repository.Refresh(item);
+
+				if (geometry != null)
+				{
+					itemsWithExtent.Add(item);
+
+					item.SetExtent(geometry.Extent);
+
+					ComputeExtent(geometry.Extent,
+					              ref xmin, ref ymin, ref zmin,
+					              ref xmax, ref ymax, ref zmax);
+				}
+			}
+
+			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} loaded {rowMap.Count} items.");
+
+			Assert.True(xmin > double.MinValue, "Cannot get coordinate");
+			Assert.True(ymin > double.MinValue, "Cannot get coordinate");
+			Assert.True(xmax < double.MaxValue, "Cannot get coordinate");
+			Assert.True(ymax < double.MaxValue, "Cannot get coordinate");
+
+			_extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
+			                                           new Coordinate3D(xmax, ymax, zmax),
+			                                           AreaOfInterest.SpatialReference);
+
+			// TODO: QueryPoints?
+			// TODO: (daro) introduce a loaded flag. Situation: work list is loaded into map. Navigator opened >
+			//		 LoadItemsInBackground > close navigator > re-open it, items are already loaded.
+			lock (_obj)
+			{
+				_rowMap = rowMap;
+				_items = new List<IWorkItem>(rowMap.Values);
+				_searcher = CreateSpatialSearcher(itemsWithExtent);
+			}
+
+			Invalidate();
+
+			LoadItemsCore(filter);
+		}
+
+		public IEnumerable<IWorkItem> Search([NotNull] QueryFilter filter)
+		{
+			// Don't query database here. IWorkItem.OID is the item id. IWorkItem.ObjectID is the
+			// ObjectID of its source row. QueryFilter.ObjectIDs are the IWorkItem.OID and not
+			// the IWorkItem.ObjectID We'd have to make a lookup: IWorkItem.OID > Table, ObjectID
+			// to query database.
+
+			List<IWorkItem> items;
+
+			lock (_obj)
+			{
+				items = _items;
+			}
+
+			Assert.True(items.Count > 0, "no work items");
+
+			if (filter.ObjectIDs.Count == 0)
+			{
+				return items.AsEnumerable();
+			}
+
+			List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
+			return items.Where(item => oids.BinarySearch(item.OID) >= 0);
+		}
+
+		public IEnumerable<IWorkItem> GetItems([NotNull] SpatialQueryFilter filter)
+		{
+			if (_searcher == null)
+			{
+				return Enumerable.Empty<IWorkItem>();
+			}
+
+			WorkItemStatus? currentVisibility = GetStatus(Visibility);
+
+			Predicate<IWorkItem> predicate = null;
+			if (currentVisibility.HasValue)
+			{
+				predicate = item => item.Status == currentVisibility;
+			}
+
+			Envelope extent = filter.FilterGeometry.Extent;
+
+			// TODO: (daro) tolerance?
+			return _searcher.Search(extent.XMin, extent.YMin,
+			                        extent.XMax, extent.YMax,
+			                        0.001, predicate);
+		}
+
+		protected virtual void LoadItemsCore(QueryFilter filter)
+		{
+			foreach (IWorkItem item in Search(filter))
+			{
+				Repository.UpdateState(item);
+			}
+		}
+
+		private IEnumerable<IWorkItem> GetItems([NotNull] SpatialQueryFilter filter,
+		                                        CurrentSearchOption currentSearch,
+		                                        VisitedSearchOption visitedSearch)
+		{
+			IEnumerable<IWorkItem> query = GetItems(filter);
+
+			if (currentSearch == CurrentSearchOption.ExcludeCurrent)
+			{
+				query = query.Where(item => ! Equals(item, Current));
+			}
+
+			if (visitedSearch == VisitedSearchOption.ExcludeVisited)
+			{
+				query = query.Where(item => ! item.Visited);
 			}
 
 			return query;
 		}
 
-		//public IEnumerable<IWorkItem> GetItems(WorkItemStatus? filterByStatus = null,
-		//                                       int startIndex = 0)
-		//{
-		//	var query = (IEnumerable<IWorkItem>)_items;
-
-		//	if (!ignoreListSettings && Visibility != WorkItemVisibility.None)
-		//	{
-		//		query = query.Where(item => IsVisible(item, Visibility));
-		//	}
-
-		//	if (filter?.ObjectIDs != null && filter.ObjectIDs.Count > 0)
-		//	{
-		//		List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
-		//		query = query.Where(item => oids.BinarySearch(item.OID) >= 0);
-		//	}
-
-		//	// filter should never have a WhereClause since we say QueryLanguageSupported = false
-
-		//	if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
-		//	{
-		//		// todo daro: do not use method to build Extent every time
-		//		query = query.Where(
-		//			item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
-		//	}
-
-		//	if (!ignoreListSettings && AreaOfInterest != null)
-		//	{
-		//		query = query.Where(item => WithinAreaOfInterest(item.Extent, AreaOfInterest));
-		//	}
-
-		//	if (startIndex > -1 && startIndex < _items.Count)
-		//	{
-		//		query = query.Where(item => _items.IndexOf(item, startIndex) > -1);
-		//	}
-
-		//	return query;
-		//}
-
-
-		// TODO: daro drop?
-		public virtual int Count(QueryFilter filter = null, bool ignoreListSettings = false)
+		// todo: (daro) to utils?
+		private static WorkItemStatus? GetStatus(WorkItemVisibility? visibility)
 		{
-			lock (_syncLock)
+			switch (visibility)
 			{
-				return GetItems(filter, ignoreListSettings).Count();
+				case WorkItemVisibility.Todo:
+					return WorkItemStatus.Todo;
+				case WorkItemVisibility.Done:
+					return WorkItemStatus.Done;
+				case WorkItemVisibility.All:
+				case null:
+					return null;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(visibility), visibility, null);
 			}
 		}
 
-		// TODO: daro move to base?
-		public int Count()
+		private static SpatialHashSearcher<IWorkItem> CreateSpatialSearcher(List<IWorkItem> items)
 		{
-			lock (_syncLock)
-			{
-				return _items.Count;
-			}
+			return SpatialHashSearcher<IWorkItem>.CreateSpatialSearcher(items, CreateEnvelope);
 		}
 
-		protected virtual bool CanSetStatusCore()
+		[NotNull]
+		private static EnvelopeXY CreateEnvelope(IWorkItem item)
 		{
-			return true;
+			if (item.Extent is null) throw new ArgumentNullException(nameof(item.Extent));
+
+			return new EnvelopeXY(item.Extent.XMin, item.Extent.YMin, item.Extent.XMax, item.Extent.YMax);
+		}
+
+		#endregion
+
+		public long CountLoadedItems(out int todo)
+		{
+			todo = 0;
+			todo += _items.Count(item => item.Status == WorkItemStatus.Todo);
+
+			return _items.Count;
+		}
+
+		public void Count()
+		{
+			var watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start counting items.");
+
+			TotalCount ??= Repository.Count();
+
+			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} counted {TotalCount} items.");
 		}
 
 		#region Navigation public
 
 		public virtual bool CanGoFirst()
 		{
-			// TODO: Use Prosuite RelayCommand to prevent crash!
 			try
 			{
 				return GetFirstVisibleVisitedItemBeforeCurrent() != null;
@@ -473,29 +578,24 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			// start after the current item
-			int startIndex = CurrentIndex + 1;
-
 			// first, try to go to an unvisited item
 			bool found = TryGoNearest(contextPerimeters, reference,
-			                          VisitedSearchOption.ExcludeVisited,
-			                          startIndex);
+			                          VisitedSearchOption.ExcludeVisited);
 
 			if (! found)
 			{
 				// if none found, search also the visited ones, but
 				// only those *after* the current item
 				found = TryGoNearest(contextPerimeters, reference,
-				                     VisitedSearchOption.IncludeVisited,
-				                     startIndex);
+				                     VisitedSearchOption.IncludeVisited);
 			}
 
-			if (! found && HasCurrentItem && Current != null)
+			if (! found && HasCurrentItem() && Current != null)
 			{
 				ClearCurrentItem(Current);
 			}
 
-			_msg.DebugStopTiming(watch, nameof(GetNearest));
+			_msg.DebugStopTiming(watch, nameof(GoNearest));
 		}
 
 		public virtual bool CanGoNext()
@@ -516,8 +616,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			IWorkItem next = GetNextVisitedVisibleItem();
 
-			// todo daro: remove assertion when sure algorithm works
-			//			  CanGoNext should prevent the assertion
 			Assert.NotNull(next);
 			Assert.False(Equals(next, Current), "current item and next item are equal");
 
@@ -548,8 +646,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			SetCurrentItemCore(previous, Current);
 		}
 
-		#endregion
-
 		public virtual void GoTo(long oid)
 		{
 			if (Current?.OID == oid)
@@ -558,7 +654,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			var filter = new QueryFilter { ObjectIDs = new[] { oid } };
-			IWorkItem target = GetItems(filter, false).FirstOrDefault();
+			IWorkItem target = Search(filter).FirstOrDefault();
 
 			if (target != null)
 			{
@@ -566,43 +662,93 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		#endregion
+		
 		#region Navigation non-public
 
 		private bool TryGoNearest([NotNull] Polygon[] contextPerimeters,
 		                          [NotNull] Geometry reference,
-		                          VisitedSearchOption visitedSearchOption,
-		                          int startIndex)
+		                          VisitedSearchOption visitedSearchOption)
 		{
-			IList<IWorkItem> candidates =
-				GetWorkItemsForInnermostContext(contextPerimeters,
-				                                visitedSearchOption, startIndex);
-			if (candidates.Count > 0)
-			{
-				IWorkItem nearest = GetNearest(reference, candidates);
+			IList<IWorkItem> candidates;
+			IWorkItem nearest;
 
-				if (nearest != null)
+			if (TryGetItemsForInnermostContext(contextPerimeters,
+			                                   visitedSearchOption,
+			                                   out candidates))
+			{
+				nearest = GetNearest(reference, candidates);
+			}
+			else
+			{
+				// nothing found, try AOI
+				candidates =
+					GetItems(GdbQueryUtils.CreateSpatialFilter(AreaOfInterest),
+					         CurrentSearchOption.ExcludeCurrent, visitedSearchOption).ToList();
+
+				if (candidates.Count == 0)
 				{
-					SetCurrentItem(nearest, Current);
-					return true;
+					// TODO: (daro) GetExtent() might be equal to AOI
+					// still nothing found, try extent
+					candidates =
+						GetItems(GdbQueryUtils.CreateSpatialFilter(GetExtent()),
+						         CurrentSearchOption.ExcludeCurrent, visitedSearchOption).ToList();
 				}
+
+				nearest = GetNearest(reference, candidates);
 			}
 
-			return false;
+			if (nearest == null)
+			{
+				return false;
+			}
+
+			SetCurrentItem(nearest, Current);
+			return true;
 		}
 
+		private bool TryGetItemsForInnermostContext(Polygon[] contextPerimeters,
+		                                            VisitedSearchOption visitedSearchOption,
+		                                            out IList<IWorkItem> items)
+		{
+			items = new List<IWorkItem>(0);
+
+			// TODO: (daro) magic number
+			int trials = 10;
+			int count = 0;
+
+			while (count == 0)
+			{
+				if (trials == 0)
+				{
+					_msg.Debug($"Stop searching items after {trials} tries.");
+					return false;
+				}
+
+				items =
+					GetWorkItemsForInnermostContext(contextPerimeters,
+					                                visitedSearchOption);
+				count = items.Count;
+				trials -= 1;
+
+				contextPerimeters =
+					contextPerimeters.Select(p => PolygonBuilderEx.CreatePolygon(p.Extent.Expand(2, 2, true), p.SpatialReference))
+					                 .ToArray();
+			}
+
+			return true;
+		}
+
+		// TODO: (daro) rename to GetItemsForInnermostContext
 		[NotNull]
 		private IList<IWorkItem> GetWorkItemsForInnermostContext([NotNull] Polygon[] perimeters,
-		                                                         VisitedSearchOption visitedSearch,
-		                                                         int startIndex)
+		                                                         VisitedSearchOption visitedSearch)
 		{
 			Assert.ArgumentNotNull(perimeters, nameof(perimeters));
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.DebugFormat("Getting work items for innermost context ({0} perimeters)",
-				                 perimeters.Length);
-			}
+			_msg.VerboseDebug(() => $"Getting work items for innermost context ({perimeters.Length} perimeters)");
 
+			// TODO: DARO revise it's always Exclude Current
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
 
 			for (var index = 0; index < perimeters.Length; index++)
@@ -619,45 +765,18 @@ namespace ProSuite.AGP.WorkList.Domain
 					// and qualify each candidate with "intersects" / "within" 
 					// --> filter result
 
-					// todo daro: old implementation
-					// search the items fully within the search extent
-					//IList<WorkItem> workItems = GetItems(statusSearch, currentSearch,
-					//                                     visitedSearch, startIndex,
-					//                                     intersection,
-					//                                     SpatialSearchOption.Within,
-					//                                     match);
-
-					SpatialQueryFilter filter =
-						GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Within);
-
-					List<IWorkItem> workItems =
-						GetItems(filter, startIndex, currentSearch, visitedSearch).ToList();
+					var workItems =
+						GetItems(GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Contains), currentSearch, visitedSearch).ToList();
 
 					if (workItems.Count == 0)
 					{
-						if (_msg.IsVerboseDebugEnabled)
-						{
-							_msg.Debug(
-								"No work items fully within the intersection, searching partially contained items");
-						}
-
-						// todo daro: old implementation
-						// search also intersecting items
-						//workItems = GetItems(statusSearch, currentSearch,
-						//					 visitedSearch, startIndex,
-						//					 intersection, SpatialSearchOption.Intersect,
-						//					 match);
-
-						filter = GdbQueryUtils.CreateSpatialFilter(intersection);
-
-						workItems = GetItems(filter, startIndex, currentSearch, visitedSearch)
-							.ToList();
+						_msg.VerboseDebug(() => "The intersection contains no items, searching partially contained items");
+						
+						workItems =
+							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection), currentSearch, visitedSearch).ToList();
 					}
 
-					if (_msg.IsVerboseDebugEnabled)
-					{
-						_msg.DebugFormat("{0} work item(s) found", workItems.Count);
-					}
+					_msg.VerboseDebug(() => $"{workItems.Count} work item(s) found");
 
 					if (workItems.Count > 0)
 					{
@@ -668,47 +787,17 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
-			// nothing found so far. Search entire work list
-			// todo daro: old implementation
-			//return GetItems(statusSearch, currentSearch, visitedSearch, startIndex, match);
-			return GetItems(null, startIndex, currentSearch, visitedSearch).ToList();
-		}
-
-		private IEnumerable<IWorkItem> GetItems(
-			QueryFilter filter = null, int startIndex = -1,
-			CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
-			VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
-		{
-			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
-
-			if (currentSearch == CurrentSearchOption.ExcludeCurrent)
-			{
-				query = query.Where(item => ! Equals(item, Current));
-			}
-
-			if (visitedSearch == VisitedSearchOption.ExcludeVisited)
-			{
-				query = query.Where(item => ! item.Visited);
-			}
-
-			return query;
+			return new List<IWorkItem>(0);
 		}
 
 		[NotNull]
-		private Polygon GetIntersection([NotNull] Polygon[] perimeters, int index)
+		private static Polygon GetIntersection([NotNull] Polygon[] perimeters, int index)
 		{
 			Assert.ArgumentNotNull(perimeters, nameof(perimeters));
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.DebugFormat("Intersecting perimeters {0} to {1}",
-				                 index, perimeters.Length - 1);
-			}
+			_msg.VerboseDebug(() => $"Intersecting perimeters {index} to {perimeters.Length - 1}");
 
 			Polygon intersection = GeometryFactory.Clone(perimeters[index]);
-
-			// todo daro old implementation
-			//GeometryUtils.EnsureSpatialReference(intersection, SpatialReference, true);
 
 			// intersect with all following perimeters, if any
 			int nextIndex = index + 1;
@@ -719,9 +808,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				     combineIndex < perimeters.Length;
 				     combineIndex++)
 				{
-					//Polygon projectedPerimeter =
-					//	GetInWorkListSpatialReference(perimeters[combineIndex]);
-
 					Polygon projectedPerimeter = perimeters[combineIndex];
 
 					if (intersection.IsEmpty)
@@ -739,14 +825,6 @@ namespace ProSuite.AGP.WorkList.Domain
 					// both are not empty; calculate intersection
 					try
 					{
-						// todo daro: old implementation
-						//var topoOp = (ITopologicalOperator)intersection;
-
-						//intersection =
-						//	(IPolygon)topoOp.Intersect(
-						//		projectedPerimeter,
-						//		esriGeometryDimension.esriGeometry2Dimension);
-
 						intersection =
 							(Polygon) GeometryEngine.Instance.Intersection(
 								intersection, projectedPerimeter,
@@ -761,13 +839,9 @@ namespace ProSuite.AGP.WorkList.Domain
 								e.Message);
 
 							_msg.DebugFormat("Perimeter index={0}:", combineIndex);
-							// todo daro: old implementation
-							//_msg.Debug(GeometryUtils.ToString(projectedPerimeter));
 
 							_msg.DebugFormat(
 								"Input intersection at nextIndex={0}:", nextIndex);
-							// todo daro: old implementation
-							//_msg.Debug(GeometryUtils.ToString(intersection));
 
 							// leave intersection as is, and continue
 						}
@@ -776,14 +850,6 @@ namespace ProSuite.AGP.WorkList.Domain
 							_msg.Warn("Error writing details to log", e1);
 						}
 					}
-
-					// todo daro: old implementation
-					//if (_msg.IsVerboseDebugEnabled)
-					//{
-					//	_msg.DebugFormat("Intersection {0}: {1}",
-					//					 combineIndex,
-					//					 IntersectionToString(intersection));
-					//}
 				}
 			}
 
@@ -805,11 +871,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			// todo daro: old implementation
-			// acceleration?
-			//GeometryUtils.AllowIndexing(searchReference);
-
-			//IProximityOperator referenceProximity;
 			GeometryType referenceGeometryType = searchReference.GeometryType;
 
 			Geometry referenceGeometry;
@@ -821,20 +882,14 @@ namespace ProSuite.AGP.WorkList.Domain
 				// boundary; search from centroid instead. This also prevents
 				// the extreme response times (minutes) of ReturnDistance() from
 				// very large polygons
-				// todo daro: old implementation
 				//referenceProximity = (IProximityOperator)((IArea)searchReference).Centroid;
 
 				referenceGeometry = GeometryEngine.Instance.Centroid(searchReference);
 			}
 			else
 			{
-				// todo daro: old implementation
-				//referenceProximity = (IProximityOperator)searchReference;
 				referenceGeometry = searchReference;
 			}
-
-			// todo daro: old implementation
-			//var referenceRelation = (IRelationalOperator)searchReference;
 
 			double minDistance = double.MaxValue;
 			IWorkItem nearest = null;
@@ -849,56 +904,30 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 				else
 				{
-					if (item.HasGeometry)
+					if (item.HasExtent)
 					{
-						// todo daro: old implementation
-						//workItem.QueryExtent(otherExtent);
-						Envelope otherExtent = item.Extent;
+						Envelope otherExtent = Assert.NotNull(item.Extent);
 
 						// IWorkItem.Extent from SDE (and reported from ALGR from occasionally from issues.gdb) seems to
 						// to have an unequal SR compared to the referenceGeometry which is the MapView.Current.Extent
 						// when the work list ist opened for the first time.
 						// EMA: while editing the SR resolution might be set to a very small value. This probably does
 						// not happen from FGDB data.
-						// todo daro: find a better solution than reprojecting in foreach loop
+						// DARO: find a better solution than reprojecting in foreach loop
 						Geometry projected =
 							GeometryUtils.EnsureSpatialReference(
 								referenceGeometry, otherExtent.SpatialReference);
 
 						double distance;
-						try
+						if (GeometryUtils.Disjoint(projected, otherExtent))
 						{
-							if (GeometryUtils.Disjoint(projected, otherExtent))
-							{
-								distance = GeometryEngine.Instance.Distance(projected, otherExtent);
-							}
-							else
-							{
-								//MapPoint otherCentroid = GeometryEngine.Instance.Centroid(otherExtent);
-								distance =
-									GeometryEngine.Instance.Distance(projected, otherExtent.Center);
-							}
-
-							// todo daro: old implementation
-							//if (referenceRelation.Disjoint(otherExtent))
-							//{
-							//	distance = referenceProximity.ReturnDistance(otherExtent);
-							//}
-							//else
-							//{
-							//	((IArea)otherExtent).QueryCentroid(otherCentroid);
-
-							//	distance = referenceProximity.ReturnDistance(
-							//		otherCentroid);
-							//}
+							distance = GeometryEngine.Instance.Distance(projected, otherExtent);
 						}
-						catch (Exception)
+						else
 						{
-							// todo daro: old implementation
-							//_msg.DebugFormat("search reference: {0}", GeometryUtils.ToString(searchReference));
-							//_msg.DebugFormat("otherExtent: {0}", GeometryUtils.ToString(otherExtent));
-
-							throw;
+							//MapPoint otherCentroid = GeometryEngine.Instance.Centroid(otherExtent);
+							distance =
+								GeometryEngine.Instance.Distance(projected, otherExtent.Center);
 						}
 
 						if (distance < minDistance)
@@ -910,10 +939,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					else
 					{
 						// item without geometry
-						if (firstWithoutGeometry == null)
-						{
-							firstWithoutGeometry = item;
-						}
+						firstWithoutGeometry ??= item;
 					}
 				}
 			}
@@ -924,63 +950,26 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		private Geometry GetNearestSearchReference([NotNull] Geometry reference)
 		{
-			const int maxPointCount = 10000;
+			MapPoint centroid = null;
 
-			// todo daro: old implementation
-			//bool useCentroid = !GeometryUtils.IsGeometryValid(reference);
-
-			bool useCentroid = true;
-
-			if (! useCentroid && GeometryUtils.GetPointCount(reference) > maxPointCount)
+			try
 			{
-				_msg.Debug(
-					"Too many points on reference geometry for searching, using center of envelope");
-				useCentroid = true;
+				if (! reference.IsEmpty)
+				{
+					centroid = GeometryEngine.Instance.Centroid(reference);
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Error trying to get centroid of geometry", e);
 			}
 
-			if (useCentroid)
+			if (centroid == null)
 			{
-				MapPoint centroid = null;
-
-				try
-				{
-					// todo daro: old implementation
-					//var area = reference.Extent as IArea;
-					//if (area != null && ! area.Centroid.IsEmpty)
-					//{
-					//	centroid = area.Centroid;
-					//}
-
-					if (! reference.IsEmpty)
-					{
-						centroid = GeometryEngine.Instance.Centroid(reference);
-					}
-				}
-				catch (Exception e)
-				{
-					_msg.Debug("Error trying to get centroid of geometry", e);
-					// todo daro: old implementation
-					//_msg.Debug(GeometryUtils.ToString(reference));
-				}
-
-				if (centroid == null)
-				{
-					return null;
-				}
-
-				reference = centroid;
+				return null;
 			}
-			// todo daro: old implementation
-			//else
-			//{
-			//	if (reference is IMultiPatch)
-			//	{
-			//		reference = ((IMultiPatch)reference).XYFootprint;
-			//	}
-			//}
 
-			// todo daro: old implementation
-			//reference = GetInWorkListSpatialReference(reference);
+			reference = centroid;
 
 			return reference;
 		}
@@ -1004,7 +993,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			CurrentIndex = _items.IndexOf(nextItem);
 
 			Repository.SetCurrentIndex(CurrentIndex);
-			Repository.SetVisited(nextItem);
+			Repository.UpdateState(nextItem);
 
 			var oids = currentItem != null
 				           ? new List<long> { nextItem.OID, currentItem.OID }
@@ -1058,6 +1047,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				if (workItem == currentItem)
 				{
 					// found the current one, stop search
+					//continue;
 					return null;
 				}
 
@@ -1146,70 +1136,21 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : null;
 		}
 
-		// todo daro: to Utils? Compare with EnvelopeBuilderEx
-		// todo: daro drop or refactor
-		[CanBeNull]
-		public static Envelope GetExtentFromItems([CanBeNull] IEnumerable<IWorkItem> items)
+		private static void ComputeExtent(Envelope extent,
+		                                  ref double xmin, ref double ymin,
+		                                  ref double zmin, ref double xmax,
+		                                  ref double ymax, ref double zmax)
 		{
-			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
-			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
-			SpatialReference sref = null;
-			long count = 0;
+			if (extent == null) return;
+			if (extent.IsEmpty) return;
 
-			if (items != null)
-			{
-				foreach (var item in items)
-				{
-					if (item == null) continue;
-					var extent = item.Extent;
-					if (extent == null) continue;
-					if (extent.IsEmpty) continue;
+			if (extent.XMin < xmin) xmin = extent.XMin;
+			if (extent.YMin < ymin) ymin = extent.YMin;
+			if (extent.ZMin < zmin) zmin = extent.ZMin;
 
-					if (extent.XMin < xmin) xmin = extent.XMin;
-					if (extent.YMin < ymin) ymin = extent.YMin;
-					if (extent.ZMin < zmin) zmin = extent.ZMin;
-
-					if (extent.XMax > xmax) xmax = extent.XMax;
-					if (extent.YMax > ymax) ymax = extent.YMax;
-					if (extent.ZMax > zmax) zmax = extent.ZMax;
-
-					sref = extent.SpatialReference;
-
-					count += 1;
-				}
-			}
-
-			// Should return null and not an empty envelope. Pluggable Datasource cannot handle
-			// an empty envelope.
-			return count > 0
-				       ? EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
-				                                          new Coordinate3D(xmax, ymax, zmax), sref)
-				       : null;
-		}
-
-		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
-		{
-			if (a == null || b == null) return false;
-
-			switch (rel)
-			{
-				case SpatialRelationship.EnvelopeIntersects:
-				case SpatialRelationship.IndexIntersects:
-				case SpatialRelationship.Intersects:
-					return GeometryEngine.Instance.Intersects(a, b);
-				case SpatialRelationship.Touches:
-					return GeometryEngine.Instance.Touches(a, b);
-				case SpatialRelationship.Overlaps:
-					return GeometryEngine.Instance.Overlaps(a, b);
-				case SpatialRelationship.Crosses:
-					return GeometryEngine.Instance.Crosses(a, b);
-				case SpatialRelationship.Within:
-					return GeometryEngine.Instance.Within(a, b);
-				case SpatialRelationship.Contains:
-					return GeometryEngine.Instance.Contains(a, b);
-			}
-
-			return false;
+			if (extent.XMax > xmax) xmax = extent.XMax;
+			if (extent.YMax > ymax) ymax = extent.YMax;
+			if (extent.ZMax > zmax) zmax = extent.ZMax;
 		}
 
 		private bool IsVisible([NotNull] IWorkItem item)
@@ -1217,13 +1158,13 @@ namespace ProSuite.AGP.WorkList.Domain
 			return IsVisible(item, Visibility);
 		}
 
-		private bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility visibility)
+		private bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility? visibility)
 		{
 			WorkItemStatus status = item.Status;
 
 			switch (visibility)
 			{
-				case WorkItemVisibility.None:
+				case null:
 					return false;
 				case WorkItemVisibility.Todo:
 					return (status & WorkItemStatus.Todo) != 0;
@@ -1236,58 +1177,66 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		private static bool WithinAreaOfInterest(Envelope extent, Geometry areaOfInterest)
-		{
-			if (extent == null) return false;
-			if (areaOfInterest == null) return true;
-			return GeometryEngine.Instance.Intersects(extent, areaOfInterest);
-		}
-
 		#endregion
 
-		// https://blog.stephencleary.com/2012/02/async-and-await.html
-		// The primary use case for async void methods is event handlers.
 		private void OnWorkListChanged([CanBeNull] Envelope extent = null,
 		                               [CanBeNull] List<long> oids = null)
 		{
 			WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}
 
-		public void EnsureRowCacheSynchronized()
-		{
-			if (_rowCacheSynchronizer != null)
-			{
-				return;
-			}
+		#region IRowCache
 
-			_rowCacheSynchronizer = new EditEventsRowCacheSynchronizer(this);
-		}
-
-		public void DeactivateRowCacheSynchronization()
-		{
-			_rowCacheSynchronizer?.Dispose();
-			_rowCacheSynchronizer = null;
-		}
-
+		/// <summary>
+		/// Raises WorkListChanged event: forces
+		/// to redraw at least ActiveView.Active.Extent which leads
+		/// to a GetItems() call.
+		/// </summary>
 		public void Invalidate()
 		{
 			_msg.Debug("Invalidate");
 
-			RefreshItems();
-
-			if (! HasCurrentItem)
-			{
-				GoNearest(MapView.Active.Extent);
-			}
-
 			OnWorkListChanged();
+		}
+
+		/// <summary>
+		/// Raises WorkListChanged event: forces
+		/// to redraw the map which leads to a GetItems() call.
+		/// </summary>
+		/// <param name="geometry">The area to invalidate the work list layer.</param>
+		public void Invalidate(Envelope geometry)
+		{
+			_msg.Debug("Invalidate by geometry");
+
+			OnWorkListChanged(geometry.Extent);
+		}
+
+		/// <summary>
+		/// Triggers WorkItemTable.Search(QueryFilter)
+		/// </summary>
+		/// <param name="oids">List of work item OIDs (not ObjectID</param>
+		public void Invalidate(List<long> oids)
+		{
+			OnWorkListChanged(null, oids);
 		}
 
 		public void Invalidate(IEnumerable<Table> tables)
 		{
+			// TODO: (daro) still needed?
 			// TODO: More fine-granular invalidation, consider separate row cache containing
 			// _rowMap, _items.
 			Invalidate();
+		}
+
+		public bool CanContain(Table table)
+		{
+			// Is it the work list itself?
+			if (string.Equals(table.GetName(), Name, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+
+			return Repository.SourceClasses.Any(s => s.TableIdentity.ReferencesTable(table));
 		}
 
 		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
@@ -1295,99 +1244,249 @@ namespace ProSuite.AGP.WorkList.Domain
 		                           Dictionary<Table, List<long>> updates)
 		{
 			_msg.Debug(
-				$"{nameof(ProcessChanges)} - inserts: {inserts.Count} deletes: {deletes.Count} updates: {updates.Count}");
+				$"ProcessChanges - {inserts.Count} inserts, {deletes.Count} deletes, {updates.Count} updates.");
 
-			foreach (var insert in inserts)
+			foreach ((Table table, List<long> oids) in inserts)
 			{
-				ProcessInserts(insert.Key, insert.Value);
+				Invalidate(ProcessInserts(table, oids));
 			}
 
-			foreach (var delete in deletes)
+			foreach ((Table table, List<long> oids) in updates)
 			{
-				ProcessDeletes(delete.Key, delete.Value);
+				Invalidate(ProcessUpdates(table, oids));
 			}
 
-			foreach (var update in updates)
+			foreach ((Table table, List<long> oids) in deletes)
 			{
-				ProcessUpdates(update.Key, update.Value);
-			}
+				ProcessDeletes(table, oids);
 
-			if (! HasCurrentItem)
-			{
-				GoNearest(MapView.Active.Extent);
+				// Do not invalidate with item OID because the item has already
+				// been removed from _items.
+				Invalidate();
 			}
-
-			// If a item visibility changes to Done the item is not part
-			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
-			// does not return the Done-item anymore. Therefor use the item's Extent
-			// to invalidate the work list layer.
-			OnWorkListChanged();
 		}
 
-		public bool CanContain(Table table)
+		private List<long> ProcessInserts(Table table, List<long> oids)
 		{
-			return Repository.SourceClasses.Any(s => s.TableIdentity.ReferencesTable(table));
-		}
+			_msg.Debug($"ProcessInserts {table.GetName()}.");
 
-		private void ProcessInserts(Table table, IReadOnlyList<long> oids)
-		{
-			_msg.Debug($"{nameof(ProcessInserts)}");
+			var invalidateOids = new List<long>(oids.Count);
 
-			foreach (long oid in oids)
+			try
 			{
-				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
 
-				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
+				QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
+				Stopwatch watch = Stopwatch.StartNew();
+
+				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter, null))
 				{
-					Refresh(item);
+					Assert.True(TryAddItem(item), $"Could not add {item}");
 
-					_items.Add(item);
+					// it's a unkown item > refresh it's state (status, visited) either
+					// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
+					// TODO: (daro) really necessary? It's a virgin new item...
+					Repository.Refresh(item);
 
-					if (! HasCurrentItem)
+					UpdateItemGeometry(item, geometry);
+
+					if (item.HasExtent)
 					{
-						SetCurrentItem(item);
+						_searcher.Add(item, CreateEnvelope(item));
+					}
+
+					invalidateOids.Add(item.OID);
+				}
+
+				Assert.NotNull(_extent);
+				_extent = CreateExtent(_items, _extent.SpatialReference);
+
+				_msg.DebugStopTiming(watch, $"{invalidateOids.Count} items inserted.");
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return invalidateOids;
+		}
+
+		private void ProcessDeletes(Table table, List<long> oids)
+		{
+			_msg.Debug($"ProcessDeletes {table.GetName()}.");
+
+			try
+			{
+				GdbTableIdentity tableId = new GdbTableIdentity(table);
+
+				foreach (long oid in oids)
+				{
+					var rowId = new GdbRowIdentity(oid, tableId);
+
+					if (! TryGetItem(rowId, out IWorkItem cachedItem))
+					{
+						continue;
+					}
+
+					if (Current != null && Current.Equals(cachedItem))
+					{
+						Assert.True(HasCurrentItem(), $"{nameof(HasCurrentItem)} is false");
+						ClearCurrentItem(cachedItem);
+					}
+
+					lock (_obj)
+					{
+						// to invalidate item remove it from work list cache
+						bool invalidated = _rowMap.Remove(cachedItem.GdbRowProxy, out IWorkItem item) && _items.Remove(item);
+						Assert.True(invalidated, $"Invalidate work item failed: {rowId} not part of work list");
+
+						Envelope extent = cachedItem.Extent;
+						if (extent != null)
+						{
+							_searcher.Remove(cachedItem,
+							                 extent.XMin, extent.YMin,
+							                 extent.XMax, extent.YMax);
+						}
 					}
 				}
+
+				Assert.NotNull(_extent);
+				_extent = CreateExtent(_items, _extent.SpatialReference);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
 			}
 		}
 
-		private void ProcessDeletes(Table table, IEnumerable<long> oids)
+		private List<long> ProcessUpdates(Table table, List<long> oids)
 		{
-			_msg.Debug($"{nameof(ProcessDeletes)}");
+			_msg.Debug($"ProcessUpdate {table.GetName()}.");
 
-			foreach (long oid in oids)
+			var invalidateOids = new List<long>(oids.Count);
+
+			try
 			{
-				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
+				QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
+				Stopwatch watch = Stopwatch.StartNew();
 
-				if (Current != null && Current.GdbRowProxy.Equals(rowId))
+				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter, null))
 				{
-					Assert.True(HasCurrentItem, $"{nameof(HasCurrentItem)} is false");
+					Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
+					            $"Could not get {cachedItem}");
 
-					ClearCurrentItem(Current);
+					invalidateOids.Add(cachedItem.OID);
+
+					if (Equals(cachedItem.Status, item.Status))
+					{
+						// Status hasn't changed but maybe the geometry => update SpatialHashSearcher.
+						if (cachedItem.HasExtent)
+						{
+							Envelope extent = Assert.NotNull(cachedItem.Extent);
+
+							_searcher.Remove(cachedItem,
+							                 extent.XMin, extent.YMin,
+							                 extent.XMax, extent.YMax);
+
+							UpdateItemGeometry(cachedItem, geometry);
+
+							_searcher.Add(cachedItem, CreateEnvelope(cachedItem));
+						}
+					}
+
+					// Update cached item's state from database item. IWorkItem.Status
+					// also is updated in GdbItemRepository.SetStatusCoreAsync().
+					cachedItem.Status = item.Status;
 				}
 
-				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
-				{
-					_items.Remove(item);
-				}
+				Assert.NotNull(_extent);
+				_extent = CreateExtent(_items, _extent.SpatialReference);
+
+				_msg.DebugStopTiming(watch, $"{invalidateOids.Count} items updated.");
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
 			}
 
-			Extent = GetExtentFromItems(_items);
+			return invalidateOids;
 		}
 
-		private void ProcessUpdates(Table table, IEnumerable<long> oids)
+		#endregion
+
+		private int UpdateExistingItemGeometry([NotNull] IWorkItem item,
+		                                       [CanBeNull] Geometry geometry,
+		                                       Predicate<IWorkItem> exclusion = null)
 		{
-			_msg.Debug($"{nameof(ProcessUpdates)}");
-
-			foreach (long oid in oids)
+			if (geometry == null)
 			{
-				var rowId = new GdbRowIdentity(oid, new GdbTableIdentity(table));
-
-				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
-				{
-					Refresh(item);
-				}
+				return 0;
 			}
+
+			bool exists = TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem);
+
+			if (! exists)
+			{
+				return 0;
+			}
+
+			Assert.True(cachedItem.OID > 0, "item is not initialized");
+
+			return UpdateItemGeometry(cachedItem, geometry, exclusion);
+		}
+
+		private static int UpdateItemGeometry([NotNull] IWorkItem item,
+		                                      [CanBeNull] Geometry geometry,
+		                                      Predicate<IWorkItem> exclusion = null)
+		{
+			if (geometry == null)
+			{
+				return 0;
+			}
+
+			if (exclusion != null && exclusion(item))
+			{
+				return 0;
+			}
+
+			if (UseItemGeometry(geometry))
+			{
+				item.SetGeometry(GeometryUtils.Buffer(geometry, 10));
+			}
+			else
+			{
+				item.SetExtent(geometry.Extent);
+			}
+
+			return 1;
+		}
+
+		private bool TryAddItem(IWorkItem item)
+		{
+			Assert.True(item.OID <= 0, "item is already initialized");
+			item.OID = Repository.GetNextOid();
+
+			lock (_obj)
+			{
+				if (! _rowMap.TryAdd(item.GdbRowProxy, item))
+				{
+					return false;
+				}
+
+				_items.Add(item);
+				return true;
+			}
+		}
+
+		private bool TryGetItem(GdbRowIdentity rowProxy, out IWorkItem cachedItem)
+		{
+			bool exists;
+
+			lock (_obj)
+			{
+				exists = _rowMap.TryGetValue(rowProxy, out cachedItem);
+			}
+
+			return exists;
 		}
 
 		private void ClearCurrentItem([NotNull] IWorkItem current)
@@ -1404,21 +1503,34 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged(null, new List<long> { current.OID });
 		}
 
-		private void UpdateExtent(Envelope itemExtent)
+		// TODO: (daro) to Utils?
+		private static Envelope CreateExtent(List<IWorkItem> items, SpatialReference sref = null)
 		{
-			Extent = Extent?.Union(itemExtent);
+			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
+			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
+
+			foreach (IWorkItem item in items)
+			{
+				ComputeExtent(item.Extent,
+				              ref xmin, ref ymin,
+				              ref zmin, ref xmax,
+				              ref ymax, ref zmax);
+			}
+
+			Assert.True(xmin > double.MinValue, "Cannot get coordinate");
+			Assert.True(ymin > double.MinValue, "Cannot get coordinate");
+			Assert.True(xmax < double.MaxValue, "Cannot get coordinate");
+			Assert.True(ymax < double.MaxValue, "Cannot get coordinate");
+
+			return EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
+			                                        new Coordinate3D(xmax, ymax, zmax), sref);
 		}
 
-		// todo daro: refresh or update?
-		private void Refresh(IWorkItem item)
+		private bool HasCurrentItem()
 		{
-			Repository.Refresh(item);
-
-			UpdateExtent(item.Extent);
+			return CurrentIndex >= 0 &&
+			       CurrentIndex < _items.Count;
 		}
-
-		private bool HasCurrentItem => CurrentIndex >= 0 &&
-		                               CurrentIndex < _items.Count;
 
 		#region IEquatable implementation
 
@@ -1449,6 +1561,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override int GetHashCode()
 		{
+			// ReSharper disable once NonReadonlyMemberInGetHashCode
 			return StringComparer.OrdinalIgnoreCase.GetHashCode(Name);
 		}
 

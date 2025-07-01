@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
+using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Datasource;
@@ -13,94 +16,120 @@ public class WorkListGeometryService
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly CancellationTokenSource _cancellationTokenSource = new();
+	private readonly BlockingCollection<KeyValuePair<string, QueryFilter>> _queue = new();
 
-	public void Start(IWorkList workList)
+	[CanBeNull] private CancellationTokenSource _cancellationTokenSource;
+	[CanBeNull] private Thread _thread;
+
+	public bool Start()
 	{
-		CancellationToken token = _cancellationTokenSource.Token;
-
-		int count = 3;
-
 		try
 		{
-			var selectionWorkList = (SelectionWorkList) workList;
+			_msg.Debug("Start service.");
 
-			var threads = new Thread[count];
+			_cancellationTokenSource = new CancellationTokenSource();
 
-			for (int index = 0; index < count; index++)
-			{
-				var name = $"swl geometry service {index}";
-				threads[index] = CreateThread(selectionWorkList, name, token);
-			}
+			CancellationToken token = _cancellationTokenSource.Token;
 
-			foreach (Thread thread in threads)
-			{
-				thread.Start();
-			}
+			_thread = new Thread(() => BackgroundAction(token));
+
+			_thread.TrySetApartmentState(ApartmentState.STA);
+			_thread.Name = $"{_thread.ManagedThreadId} {nameof(WorkListGeometryService)}";
+			_thread.IsBackground = true;
+			_thread.Start();
+
+			return _thread != null;
 		}
 		catch (Exception ex)
 		{
-			Gateway.LogError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
+		}
+
+		return false;
+	}
+
+	public void Stop()
+	{
+		try
+		{
+			if (_thread == null)
+			{
+				_msg.Debug("Service has not been started.");
+				return;
+			}
+
+			_msg.Debug("Stop service.");
+
+			_cancellationTokenSource?.Cancel();
+
+			_queue.CompleteAdding();
+
+			_thread?.Join();
+			_thread = null;
+		}
+		catch (AggregateException ae)
+		{
+			// Handle the expected cancellation exception.
+			ae.Handle(e => e is OperationCanceledException);
+		}
+		catch (Exception ex)
+		{
+			Gateway.ReportError(ex, _msg);
 		}
 	}
 
-	private static Thread CreateThread(SelectionWorkList workList, string name,
-	                                   CancellationToken token)
+	public void UpdateItemGeometries(string workListName, QueryFilter filter)
 	{
-		var thread = new Thread(() => BackgroundAction(workList, token));
-
-		thread.TrySetApartmentState(ApartmentState.STA);
-		thread.Name = name;
-		thread.IsBackground = true;
-		return thread;
-	}
-
-	private static void BackgroundAction(SelectionWorkList workList, CancellationToken token)
-	{
-		int id = Environment.CurrentManagedThreadId;
-
 		try
 		{
-			Stopwatch watch = _msg.DebugStartTiming("Start thread {0}", id);
-
-			int total = 0;
-			if (workList.TryGetItems(id, out List<IWorkItem> items))
+			if (_thread == null)
 			{
-				total = items.Count;
-				for (int index = 0; index < total; index++)
+				_msg.Debug("Service has not been started.");
+				return;
+			}
+
+			Assert.True(_thread.IsAlive, "Thread is dead. Maybe an exception occurred.");
+
+			if (_queue.IsAddingCompleted)
+			{
+				return;
+			}
+
+			_queue.Add(KeyValuePair.Create(workListName, filter));
+		}
+		catch (Exception ex)
+		{
+			Gateway.ReportError(ex, _msg);
+		}
+	}
+
+	private void BackgroundAction(CancellationToken token)
+	{
+		try
+		{
+			foreach (var request in _queue.GetConsumingEnumerable(token))
+			{
+				string workListName = request.Key;
+				QueryFilter filter = request.Value;
+
+				IWorkList workList = WorkListRegistry.Instance.Get(workListName);
+
+				if (workList == null)
 				{
-					IWorkItem item = items[index];
-
-					if (token.IsCancellationRequested)
-					{
-						_msg.Debug(
-							$"Thread {id} cancellation after {index} of {total} items");
-
-						// without catch block: this kills the process!
-						token.ThrowIfCancellationRequested();
-					}
-
-					//// without catch block: this kills the process!
-					//if (index == total - 3)
-					//{
-					//	throw new OperationCanceledException("bar");
-					//}
-
-					workList.Repository.RefreshGeometry(item);
+					_msg.Debug("Cannot get work list.");
+					return;
 				}
+
+				workList.UpdateExistingItemGeometries(filter);
 			}
-
-			_msg.DebugStopTiming(watch, $"Thread {id}: {total} item geometries refreshed");
-
-			// The thread terminates once its work is done.
 		}
-		catch (OperationCanceledException oce)
+		catch (OperationCanceledException ex)
 		{
-			_msg.Debug("Cancel service", oce);
+			_msg.Debug("Cancel service", ex);
 		}
 		catch (Exception ex)
 		{
-			Gateway.LogError(ex, _msg);
+			Gateway.ReportError(ex, _msg);
 		}
 	}
 }

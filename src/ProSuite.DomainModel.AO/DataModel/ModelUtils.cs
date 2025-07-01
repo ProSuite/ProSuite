@@ -53,6 +53,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				       : ModelElementNameUtils.GetUnqualifiedName(gdbDatasetName);
 		}
 
+		[NotNull]
 		public static IWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext(DdxModel model)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));

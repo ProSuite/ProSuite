@@ -8,17 +8,16 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.UI;
 using GeometryUtils = ProSuite.Commons.AGP.Core.Spatial.GeometryUtils;
 using Application = System.Windows.Application;
 using DisplayUtils = ProSuite.Commons.UI.WPF.DisplayUtils;
 
 namespace ProSuite.Commons.AGP.Framework;
 
-public class WindowPositioner : IWindowPositioner
+public class WindowPositioner
 {
-	private readonly List<Rect> _preferredAreas = new() { };
-	private readonly List<Rect> _areasToAvoid = new() { };
+	private readonly List<Rect> _preferredAreas = new();
+	private readonly List<Rect> _areasToAvoid = new();
 	private readonly EvaluationMethod _method;
 	private Window _window;
 	private Point _initialPosition;
@@ -124,9 +123,9 @@ public class WindowPositioner : IWindowPositioner
 	public Point FindSuitablePosition(Point desiredPosition, double windowWidth,
 	                                  double windowHeight)
 	{
-		List<Rect> preferredAreasDeviceIndependent = new() { };
-		List<Rect> areasToAvoidDeviceIndependent = new() { };
-		List<Rect> monitorsDeviceIndependent = new() { };
+		List<Rect> preferredAreasDeviceIndependent = new();
+		List<Rect> areasToAvoidDeviceIndependent = new();
+		List<Rect> monitorsDeviceIndependent = new();
 
 		Window ownerWindow = Application.Current?.MainWindow;
 
@@ -278,7 +277,7 @@ public class WindowPositioner : IWindowPositioner
 		bool positionFound = false;
 		for (int iteration = firstIteration;; ++iteration)
 		{
-			Queue<Point> pointsToLookAt = new() { };
+			Queue<Point> pointsToLookAt = new();
 			AddNextPoints(desiredPosition, objectWidth, objectHeight, iteration,
 			              ref pointsToLookAt);
 
@@ -478,7 +477,7 @@ public class WindowPositioner : IWindowPositioner
 	// The resulting list is sorted by proximity to focusPoint
 	private static List<Rect> GetMonitorExtends(Point focusPoint)
 	{
-		List<Rect> screens = new() { };
+		List<Rect> screens = new();
 		foreach (var screen2 in Screen.AllScreens)
 		{
 			var rect = screen2.WorkingArea;
@@ -554,7 +553,7 @@ public class WindowPositioner : IWindowPositioner
 	                                                 int lineOffset,
 	                                                 int maxRectLengthForLines = 25)
 	{
-		List<Rect> boundingRects = new() { };
+		List<Rect> boundingRects = new();
 
 		switch (geometry.GeometryType)
 		{
@@ -603,7 +602,7 @@ public class WindowPositioner : IWindowPositioner
 	                                                   int lineOffset,
 	                                                   int maxRectLengthForLines)
 	{
-		List<Rect> boundingRects = new() { };
+		List<Rect> boundingRects = new();
 		foreach (var part in line.Parts)
 		{
 			foreach (var segment in part)

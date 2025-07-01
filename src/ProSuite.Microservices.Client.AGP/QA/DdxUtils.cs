@@ -205,6 +205,36 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			return result;
 		}
 
+		public static DdxModel CreateFullModel([NotNull] IModelFactory modelFactory,
+		                                       [NotNull] ModelMsg modelMsg,
+		                                       [NotNull] ICollection<DatasetMsg> datasets,
+		                                       [NotNull] ICollection<AssociationMsg> associations)
+		{
+			DdxModel result = modelFactory.CreateModel(modelMsg);
+
+			foreach (var datasetById in FromDatasetMsgs(datasets, modelFactory))
+			{
+				Dataset dataset = (Dataset) datasetById.Value;
+
+				if (! result.Contains((IDdxDataset) dataset))
+				{
+					result.AddDataset<Dataset>(dataset);
+				}
+			}
+
+			foreach (AssociationMsg associationMsg in associations)
+			{
+				Association association = modelFactory.CreateAssociation(associationMsg);
+
+				if (! result.Contains(association))
+				{
+					result.AddAssociation(association);
+				}
+			}
+
+			return result;
+		}
+
 		public static DdxModel CreateDdxModel(ModelMsg modelMsg,
 		                                      Func<ModelMsg, DdxModel> modelFactory)
 		{

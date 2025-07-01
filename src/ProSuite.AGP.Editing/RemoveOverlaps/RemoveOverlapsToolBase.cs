@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -35,7 +34,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private RemoveOverlapsOptions _removeOverlapsToolOptions;
+		private RemoveOverlapsToolOptions _removeOverlapsToolOptions;
 		private OverridableSettingsProvider<PartialRemoveOverlapsOptions> _settingsProvider;
 
 		private Overlaps _overlaps;
@@ -71,6 +70,16 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (MicroserviceClient == null)
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+		}
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.RemoveOverlapsOverlay);
+		}
+
+		protected override SelectionCursors GetSecondPhaseCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.RemoveOverlapsOverlay);
 		}
 
 		protected override Task OnToolActivatingCoreAsync()
@@ -372,7 +381,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return true;
 		}
 
-		private RemoveOverlapsOptions InitializeOptions()
+		private RemoveOverlapsToolOptions InitializeOptions()
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -388,7 +397,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			var result = new RemoveOverlapsOptions(centralConfiguration,
+			var result = new RemoveOverlapsToolOptions(centralConfiguration,
 			                                       localConfiguration);
 
 			result.PropertyChanged -= OptionsPropertyChanged;
@@ -520,7 +529,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			var featureLayer = layer as FeatureLayer;
 
 			List<string>
-				ignoredClasses = new List<string>(); // RemoveOverlapsOptions.IgnoreFeatureClasses;
+				ignoredClasses = new List<string>(); // RemoveOverlapsToolOptions.IgnoreFeatureClasses;
 
 			return CanOverlapGeometryType(featureLayer) &&
 			       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
@@ -570,69 +579,5 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		#endregion
 
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveOverlapsOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#region second phase cursors
-
-		protected override Cursor GetSecondPhaseCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay, 10,
-			                              10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveOverlapsOverlay,
-			                              Resources.Polygon, null, 10, 10);
-		}
-
-		#endregion
 	}
 }
