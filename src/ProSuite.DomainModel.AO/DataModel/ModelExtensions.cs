@@ -71,10 +71,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			if (!model.IsMasterDatabaseAccessible())
-			{
-				return null;
-			}
+			// TODO(ConflictEngine): CartoModel is not IModelMasterDatabase (because this requires AO...) -> Discuss solution
+			//if (!model.IsMasterDatabaseAccessible())
+			//{
+			//	return null;
+			//}
 
 			return (IWorkspace) model.UserConnectionProvider.OpenWorkspace();
 			//return (IWorkspace) UserConnectionProvider.OpenWorkspace();
