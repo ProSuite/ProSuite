@@ -265,6 +265,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
+				Stopwatch watch = Stopwatch.StartNew();
+
 				await StartRequest(context.Peer, request, true);
 
 				Func<ITrackCancel, ServiceCallStatus> func =
@@ -275,7 +277,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					await GrpcServerUtils.ExecuteServiceCall(
 						func, context, _staThreadScheduler, true);
 
-				_msg.InfoFormat("Verification {0}", result);
+				watch.Stop();
+				_msg.InfoFormat("Data request {0} ({1} ms)", result, watch.ElapsedMilliseconds);
 			}
 			catch (TaskCanceledException canceledException)
 			{
