@@ -106,6 +106,8 @@ namespace ProSuite.DomainModel.AGP.QA
 			ErrorDeletionInPerimeter errorDeletion,
 			bool updateLatestTestDate);
 
+		ITransformerQueryService GetTransformerQueryService();
+
 		/// <summary>
 		/// Disable the current environment. All specifications are cleared.
 		/// </summary>

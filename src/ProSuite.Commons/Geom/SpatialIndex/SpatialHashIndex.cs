@@ -252,7 +252,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		}
 
 		public IEnumerable<T> FindIdentifiers(
-			EnvelopeXY envelope,
+			IBoundedXY envelope,
 			[CanBeNull] Predicate<T> predicate = null)
 		{
 			return FindIdentifiers(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax,

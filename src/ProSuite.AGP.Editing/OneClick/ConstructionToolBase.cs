@@ -243,13 +243,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override async Task ToggleSelectionSketchGeometryType(
+		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
 			SketchGeometryType toggleSketchType,
 			SelectionCursors selectionCursors = null)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.ToggleSelectionSketchGeometryType(toggleSketchType, selectionCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
 			}
 			// Else do nothing: No selection sketch toggling in edit sketch phase.
 		}
@@ -423,7 +423,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
 		{
-			return ! _isIntermittentSelectionPhaseActive;
+			return true;
 		}
 
 		protected abstract void LogEnteringSketchMode();
@@ -453,7 +453,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetSketchType(GetSketchGeometryType());
 
-			SetCursor(SketchCursor);
+			SetToolCursor(SketchCursor);
 
 			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 

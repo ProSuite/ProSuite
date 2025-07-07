@@ -10,14 +10,13 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Attributes
 {
-	public class ObjectAttributesItem<T> : EntityTypeItem<ObjectAttribute>
-		where T : ObjectDataset
+	public class ObjectAttributesItem<T> : EntityTypeItem<ObjectAttribute> where T : ObjectDataset
 	{
 		private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 		private readonly ObjectDatasetItem<T> _parent;
 
-		public ObjectAttributesItem(CoreDomainModelItemModelBuilder modelBuilder,
-		                            ObjectDatasetItem<T> parent)
+		public ObjectAttributesItem([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
+		                            [NotNull] ObjectDatasetItem<T> parent)
 			: base("Attributes", "Attributes of the object dataset")
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
