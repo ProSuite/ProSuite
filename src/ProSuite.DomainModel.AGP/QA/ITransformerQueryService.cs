@@ -8,7 +8,7 @@ namespace ProSuite.DomainModel.AGP.QA;
 
 public interface ITransformerQueryService
 {
-	IAsyncEnumerable<List<object[]>> QueryRows(
+	IEnumerable<object[]> QueryRows(
 		[NotNull] TransformerConfiguration transformerConfiguration,
 		[NotNull] IDictionary<string, Datastore> dataStoreByWorkspaceId,
 		[CanBeNull] Geometry searchGeometry,
