@@ -216,5 +216,11 @@ namespace ProSuite.GIS.Geometry.AGP
 					throw new ArgumentOutOfRangeException();
 			}
 		}
+
+		public bool IsEqual(IClone other)
+		{
+			var geometry = (ArcGeometry) other;
+			return ProGeometry.IsEqual(geometry.ProGeometry);
+		}
 	}
 }
