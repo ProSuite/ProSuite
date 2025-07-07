@@ -72,6 +72,12 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 			return this;
 		}
 
+		if (typeof(ConflictWorkList).IsAssignableFrom(typeof(T)))
+		{
+			_currentWorkListType = typeof(ConflictWorkList);
+			return this;
+		}
+
 		throw new ArgumentOutOfRangeException();
 	}
 
@@ -120,6 +126,11 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 		                           StringComparison.OrdinalIgnoreCase))
 		{
 			type = typeof(ProductionModelIssueWorkList);
+		}
+		else if (typeString.Equals("ConflictWorkList",
+		                           StringComparison.OrdinalIgnoreCase))
+		{
+			type = typeof(ConflictWorkList);
 		}
 		else
 		{

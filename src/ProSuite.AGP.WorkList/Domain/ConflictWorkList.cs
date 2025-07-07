@@ -1,9 +1,8 @@
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList;
+namespace ProSuite.AGP.WorkList.Domain;
 
 public class ConflictWorkList : DbStatusWorkList
 {
