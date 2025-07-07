@@ -2,6 +2,13 @@ using System.Runtime.InteropServices;
 
 namespace ProSuite.Commons.Geom
 {
+	/// <summary>
+	/// Most simple implementation of <see cref="ICoordinates"/> for 3D coordinates.
+	/// It is implemented as a struct to allow for efficient memory usage and performance.
+	/// </summary>
+	/// <remarks>
+	///	Currently, it uses a Sequential layout, however we may need to validate the performance implications of this in the future.
+	/// </remarks>
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Coordinates3D : ICoordinates
 	{
