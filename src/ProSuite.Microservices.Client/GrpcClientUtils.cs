@@ -224,8 +224,8 @@ namespace ProSuite.Microservices.Client
 			return result;
 		}
 
-		private static CallOptions GetCallOptions(CancellationToken cancellationToken,
-		                                          int deadlineMilliseconds)
+		public static CallOptions GetCallOptions(CancellationToken cancellationToken,
+		                                         int deadlineMilliseconds)
 		{
 			CallOptions callOptions =
 				new CallOptions(null, DateTime.UtcNow.AddMilliseconds(deadlineMilliseconds),
@@ -258,7 +258,7 @@ namespace ProSuite.Microservices.Client
 				return default;
 			}
 
-			if (rpcException.StatusCode == StatusCode.DeadlineExceeded)	
+			if (rpcException.StatusCode == StatusCode.DeadlineExceeded)
 			{
 				Log("Operation timed out", noWarn);
 				return default;
