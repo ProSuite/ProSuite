@@ -121,7 +121,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			if (TryGetCachedValue(index, out object value))
 			{
-				return value;
+				return value ?? DBNull.Value;
 			}
 
 			object result = null;
