@@ -71,7 +71,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			// TODO(ConflictEngine): CartoModel is not IModelMasterDatabase (because this requires AO...) -> Discuss solution
+			// TODO(ConflictEngine): CartoModel is not derived from IModelMasterDatabase anymore (because this would require ArcGIS)
 			//if (!model.IsMasterDatabaseAccessible())
 			//{
 			//	return null;
