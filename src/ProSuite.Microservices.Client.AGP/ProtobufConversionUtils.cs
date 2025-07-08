@@ -411,7 +411,7 @@ namespace ProSuite.Microservices.Client.AGP
 			var result = new FieldMsg
 			             {
 				             Name = field.Name,
-				             AliasName = field.AliasName,
+				             AliasName = field.AliasName ?? string.Empty,
 				             Type = (int) field.FieldType,
 				             Length = field.Length,
 				             Precision = field.Precision,
