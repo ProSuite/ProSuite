@@ -938,12 +938,25 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error querying data for request {request}", e);
 				_ = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
-				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
-				{
-					ServiceUtils.SetUnhealthy(Health, GetType());
-				}
+				// Always keep serving if query failed
+				//if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				//{
+				//	ServiceUtils.SetUnhealthy(Health, GetType());
+				//}
 
-				throw;
+				SendResponse(new QueryDataResponse
+				             {
+					             Message = new LogMsg()
+					                       {
+						                       Message =
+							                       $"Server error: {ExceptionUtils.FormatMessage(e)}",
+						                       MessageLevel = Level.Error.Value
+					                       },
+					             ServiceCallStatus = (int) ServiceCallStatus.Failed
+				             }, responseStream, trackCancel);
+
+				return ServiceCallStatus.Failed;
+				//throw;
 			}
 		}
 
