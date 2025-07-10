@@ -94,8 +94,9 @@ namespace ProSuite.GIS.Geometry.AGP
 		public IGeometry get_Geometry(int index)
 		{
 			ReadOnlySegmentCollection segmentCollection = _proPolycurve.Parts[index];
+			bool asRing = ProGeometry is Polygon;
 
-			throw new NotImplementedException();
+			return new ArcPath(segmentCollection, asRing, SpatialReference);
 		}
 
 		public IEnumerable<KeyValuePair<int, ISegment>> FindSegments(
