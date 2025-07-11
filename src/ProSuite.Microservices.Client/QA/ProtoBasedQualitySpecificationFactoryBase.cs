@@ -61,10 +61,13 @@ namespace ProSuite.Microservices.Client.QA
 		public TransformerConfiguration CreateTransformerConfiguration(
 			[NotNull] InstanceConfigurationMsg transformerConfigurationMsg)
 		{
-			// Prepare models (if stand-alone, the models must be harvested):
 			if (ModelsByWorkspaceId == null)
 			{
-				ModelsByWorkspaceId = GetModelsByWorkspaceId(new ConditionListSpecificationMsg());
+				// TODO: Use other constructor that sets ModelsByWorkspaceId from some provided
+				//       remote workspace. Then we can remove this (and assert ModelsByWorkspaceId
+				//       is not null).
+				var dummySpecification = new ConditionListSpecificationMsg();
+				ModelsByWorkspaceId = GetModelsByWorkspaceId(dummySpecification);
 			}
 
 			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();

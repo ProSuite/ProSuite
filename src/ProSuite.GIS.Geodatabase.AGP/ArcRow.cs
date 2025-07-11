@@ -22,13 +22,18 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private SimpleValueList _cachedValues;
 		private Row _proRow;
 
-		public static ArcRow Create(Row proRow, ITable parentTable)
+		public static ArcRow Create(Row proRow, ITable parentTable, bool cacheValues = false)
 		{
 			Assert.NotNull(proRow, "No row provided");
 
 			var result = proRow is Feature feature
 				             ? new ArcFeature(feature, (IFeatureClass) parentTable)
 				             : new ArcRow(proRow, parentTable);
+
+			if (cacheValues)
+			{
+				result.CacheValues();
+			}
 
 			return result;
 		}
@@ -38,10 +43,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		protected ArcRow([CanBeNull] Row proRow, [NotNull] ITable parentTable)
 		{
+			_parentTable = parentTable;
+
 			ProRow = proRow;
 			OID = proRow?.GetObjectID() ?? -1;
-
-			_parentTable = parentTable;
 		}
 
 		public Row ProRow
@@ -70,8 +75,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			try
 			{
-				var fields = ProRow.GetFields();
-				int fieldCount = fields.Count;
+				int fieldCount = _parentTable.Fields.FieldCount;
 				_cachedValues = new SimpleValueList(fieldCount);
 
 				// Populate the cache for all fields
@@ -102,8 +106,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		/// </summary>
 		public void InvalidateCache()
 		{
+			bool hasCache = _cachedValues != null;
 			_cachedValues = null;
-			CacheValues();
+
+			if (hasCache)
+			{
+				CacheValues();
+			}
 		}
 
 		#region Implementation of IRowBuffer
@@ -112,7 +121,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			if (TryGetCachedValue(index, out object value))
 			{
-				return value;
+				return value ?? DBNull.Value;
 			}
 
 			object result = null;

@@ -265,6 +265,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
+				Stopwatch watch = Stopwatch.StartNew();
+
 				await StartRequest(context.Peer, request, true);
 
 				Func<ITrackCancel, ServiceCallStatus> func =
@@ -275,7 +277,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					await GrpcServerUtils.ExecuteServiceCall(
 						func, context, _staThreadScheduler, true);
 
-				_msg.InfoFormat("Verification {0}", result);
+				watch.Stop();
+				_msg.InfoFormat("Data request {0} ({1} ms)", result, watch.ElapsedMilliseconds);
 			}
 			catch (TaskCanceledException canceledException)
 			{
@@ -935,12 +938,25 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error querying data for request {request}", e);
 				_ = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
-				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
-				{
-					ServiceUtils.SetUnhealthy(Health, GetType());
-				}
+				// Always keep serving if query failed
+				//if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				//{
+				//	ServiceUtils.SetUnhealthy(Health, GetType());
+				//}
 
-				throw;
+				SendResponse(new QueryDataResponse
+				             {
+					             Message = new LogMsg()
+					                       {
+						                       Message =
+							                       $"Server error: {ExceptionUtils.FormatMessage(e)}",
+						                       MessageLevel = Level.Error.Value
+					                       },
+					             ServiceCallStatus = (int) ServiceCallStatus.Failed
+				             }, responseStream, trackCancel);
+
+				return ServiceCallStatus.Failed;
+				//throw;
 			}
 		}
 
