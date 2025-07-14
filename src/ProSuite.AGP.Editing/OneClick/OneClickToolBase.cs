@@ -354,10 +354,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				_msg.Debug($"{Caption} changed sketch type to {newGeometryType}");
 			}
 
-			selectionCursors ??= _selectionCursors;
+			if (selectionCursors != null)
+			{
+				_selectionCursors = selectionCursors;
+			}
 
 			var newCursor =
-				selectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
+				_selectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
 
 			SetToolCursor(newCursor);
 
@@ -372,7 +375,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			// Remember the sketch type (consider local field, using last sketch type across tool phases):
-			selectionCursors.PreviousSelectionSketchType = newGeometryType;
+			_selectionCursors.PreviousSelectionSketchType = newGeometryType;
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
