@@ -851,6 +851,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		public void SetSketchType(SketchGeometryType? sketchType)
 		{
+			SetSketchTypeCore(sketchType);
+		}
+
+		protected virtual void SetSketchTypeCore(SketchGeometryType? sketchType)
+		{
 			SketchType = sketchType;
 		}
 
