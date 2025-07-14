@@ -354,10 +354,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				_msg.Debug($"{Caption} changed sketch type to {newGeometryType}");
 			}
 
-			selectionCursors ??= _selectionCursors;
+			if (selectionCursors != null)
+			{
+				_selectionCursors = selectionCursors;
+			}
 
 			var newCursor =
-				selectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
+				_selectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
 
 			SetToolCursor(newCursor);
 
@@ -372,7 +375,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			// Remember the sketch type (consider local field, using last sketch type across tool phases):
-			selectionCursors.PreviousSelectionSketchType = newGeometryType;
+			_selectionCursors.PreviousSelectionSketchType = newGeometryType;
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
@@ -588,6 +591,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
 
+		protected virtual bool AllowMultiSelection(out string reason)
+		{
+			reason = null;
+			return true;
+		}
+
 		protected abstract SelectionSettings GetSelectionSettings();
 
 		protected abstract void LogUsingCurrentSelection();
@@ -721,6 +730,34 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
+			void LogInfo(NotificationCollection collection)
+			{
+				if (collection == null)
+				{
+					return;
+				}
+
+				if (collection.Any()) _msg.Debug("Cannot use selection:");
+
+				foreach (INotification notification in collection)
+				{
+					_msg.Info(notification.Message);
+				}
+			}
+
+			int count = SelectionUtils.GetFeatureCount(selectionByLayer);
+
+			if (count > 1 && ! AllowMultiSelection(out string reason))
+			{
+				notifications?.Add(reason);
+
+				_msg.Debug(
+					$"Cannot use selection: multi selection not allowed, selection count is {count}");
+
+				LogInfo(notifications);
+				return false;
+			}
+
 			return AllowNotApplicableFeaturesInSelection
 				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key, notifications))
 				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key, notifications));
@@ -816,6 +853,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		public void SetSketchType(SketchGeometryType? sketchType)
+		{
+			SetSketchTypeCore(sketchType);
+		}
+
+		protected virtual void SetSketchTypeCore(SketchGeometryType? sketchType)
 		{
 			SketchType = sketchType;
 		}

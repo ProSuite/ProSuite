@@ -32,7 +32,7 @@ using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class AdvancedReshapeToolBase : ConstructionToolBase, ISymbolizedSketchTool
+	public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -49,7 +49,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Update feedback on toggle layer visibility
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
-		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
 
@@ -158,10 +157,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_advancedReshapeToolOptions = InitializeOptions();
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
-			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this);
-			await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
-
 			await base.OnToolActivatingCoreAsync();
 		}
 
@@ -218,48 +213,15 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			await QueuedTask.Run(async () =>
 			{
 				await base.OnSelectionPhaseStartedAsync();
-				_symbolizedSketch?.ClearSketchSymbol();
 				_feedback?.Clear();
 				await ActiveMapView.ClearSketchAsync();
 			});
-		}
-
-		protected override async Task OnSketchPhaseStartedAsync()
-		{
-			try
-			{
-				Assert.NotNull(_symbolizedSketch);
-
-				// OnSketchPhaseStartedAsync is sometimes called in QueuedTask and sometimes not
-				// Therefor use QueuedTask.Run() here.
-				// For some strange reason calling ActiveMapView.ClearSketchAsync()
-				// inside a QueuedTask makes the sketch symbol appear correctly. Calling
-				// ActiveMapView.ClearSketchAsync() outside QueuedTask leads to a
-				// not symbolised sketch. It's not documented that ActiveMapView.ClearSketchAsync()
-				// has to be put inside QueuedTask!!! May Teutates be with us!
-				await QueuedTask.Run(async () =>
-				{
-					await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
-
-					if (await HasSketchAsync())
-					{
-						return;
-					}
-
-					await ActiveMapView.ClearSketchAsync();
-				});
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message, ex);
-			}
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_settingsProvider?.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
 
-			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
@@ -427,17 +389,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
-		public bool CanSelectFromLayer(Layer layer)
-		{
-			return base.CanSelectFromLayer(layer);
-		}
-
-		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
-		{
-			return base.CanUseSelection(selectionByLayer);
-		}
-
-		public async Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
+		public override async Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 		{
 			bool result;
 			switch (geometryType)
@@ -781,11 +733,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			return await QueuedTaskUtils.Run(
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
-		}
-
-		public void SetSketchSymbol(CIMSymbolReference symbolReference)
-		{
-			SketchSymbol = symbolReference;
 		}
 	}
 }
