@@ -26,14 +26,14 @@ namespace ProSuite.Commons.CommandLine
 		/// flags are returned as (optionName, "true") pairs</returns>
 		public static Dictionary<string, string> ParseGlobalOptions(string[] args)
 		{
-			if (args is null || args.Length < 1)
-			{
-				return null;
-			}
-
 			const string trueString = "true"; // "argument" for flags
 
 			var data = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+			if (args is null)
+			{
+				return data;
+			}
 
 			for (int i = 0; i < args.Length; i++)
 			{

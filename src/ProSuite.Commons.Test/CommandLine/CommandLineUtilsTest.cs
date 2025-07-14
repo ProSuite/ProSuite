@@ -12,10 +12,12 @@ namespace ProSuite.Commons.Test.CommandLine
 		public void CanParseGlobalOptions()
 		{
 			var dict1 = CommandLineUtils.ParseGlobalOptions(null);
-			Assert.IsNull(dict1);
+			Assert.NotNull(dict1);
+			Assert.IsEmpty(dict1);
 
 			var dict2 = CommandLineUtils.ParseGlobalOptions(Array.Empty<string>());
-			Assert.IsNull(dict2);
+			Assert.NotNull(dict2);
+			Assert.IsEmpty(dict2);
 
 			var dict3 = CommandLineUtils.ParseGlobalOptions(MakeArgs("arg", "--opt"));
 			Assert.NotNull(dict3);
