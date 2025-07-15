@@ -69,7 +69,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
-		_feedback?.Clear();
+		_feedback?.ClearSelection();
 		_feedback = null;
 
 		return base.OnToolDeactivateCoreAsync(hasMapViewChanged);
@@ -79,11 +79,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	{
 		await base.OnSelectionPhaseStartedAsync();
 
-		await QueuedTask.Run(async () =>
-		{
-			_feedback?.Clear();
-			await ActiveMapView.ClearSketchAsync();
-		});
+		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
 	}
 
 	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
@@ -91,7 +87,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	{
 		if (args.Selection.Count == 0)
 		{
-			_feedback.Clear();
+			_feedback?.ClearSelection();
 		}
 
 		return await base.OnMapSelectionChangedCoreAsync(args);
@@ -104,7 +100,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			{
 				SelectionUtils.ClearSelection(ActiveMapView?.Map);
 
-				_feedback.Clear();
+				_feedback.ClearSelection();
 			});
 		await ViewUtils.TryAsync(task, _msg);
 	}
@@ -120,11 +116,11 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		if (feature == null)
 		{
 			_msg.Debug("no selection");
-			_feedback.Clear();
+			_feedback.ClearSelection();
 			return;
 		}
 
-		_feedback.UpdatePreview(feature.GetShape());
+		_feedback?.UpdateSelection(selectedFeatures);
 
 		_msg.Info(
 			$"Destroy and rebuild feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");
@@ -152,7 +148,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			if (selectionByLayer.Count == 0)
 			{
 				_msg.Debug("no selection");
-				_feedback.Clear();
+				_feedback?.ClearSelection();
 
 				return true;
 			}
@@ -168,7 +164,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 				if (selectedFeatures == null || selectedFeatures.Count == 0)
 				{
 					_msg.Debug("no applicable selection");
-					_feedback.Clear();
+					_feedback?.ClearSelection();
 
 					return true;
 				}
@@ -178,7 +174,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 				await StoreUpdatedFeature(featureLayer, originalFeature, sketchGeometry);
 
-				_feedback.Clear();
+				_feedback?.ClearSelection();
 
 				LogPromptForSelection();
 
