@@ -127,12 +127,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
 		}
 
-		protected override int GetSelectionTolerancePixels()
-		{
-			// TODO: Make more dynamic selection environment that supports changing the standard Pro tolerance within the session
-			//       and at the same time support custom implementations (map tolerance, dips, whatever, custom dialog)
-			return GetSelectionSettings().SelectionTolerancePixels;
-		}
 
 		protected virtual bool DefaultSketchTypeOnFinishSketch =>
 			GetSelectionSettings().PreferRectangleSelectionSketch;
