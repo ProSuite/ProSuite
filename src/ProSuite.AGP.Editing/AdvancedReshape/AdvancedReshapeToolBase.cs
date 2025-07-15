@@ -85,11 +85,18 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			RequiresSelection = true;
 
+			UseGeometryForSketchGeometryType = false;
+
 			HandledKeys.Add(_keyToggleNonDefaultSide);
 			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
 
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
+
+		protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
+		{
+			return new SymbolizedSketchTypeBasedOnSelection(this);
+		}
 
 		protected override void OnUpdateCore()
 		{

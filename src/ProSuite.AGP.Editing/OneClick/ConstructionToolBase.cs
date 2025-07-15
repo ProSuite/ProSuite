@@ -37,6 +37,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
+		protected bool UseGeometryForSketchGeometryType { get; set; } = true;
+
 		protected ConstructionToolBase()
 		{
 			ContextMenuID = "esri_editing_SketchContextMenu";
@@ -423,7 +425,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			return null;
 		}
 
-		// Note: This sketch geometry type is only used if GetSketchGeometryType() is null
+		// Note: This sketch geometry type is only used if UseGeometryForSketchGeometryType is
+		// false or GetSketchGeometryType() is null 
 		protected abstract SketchGeometryType GetSketchGeometryType();
 
 		/// <summary>
@@ -477,7 +480,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
 
-			if (_symbolizedSketch != null)
+			if (UseGeometryForSketchGeometryType && _symbolizedSketch != null)
 			{
 				Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
 					SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
