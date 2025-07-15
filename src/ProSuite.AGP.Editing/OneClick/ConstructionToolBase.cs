@@ -482,12 +482,16 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (UseGeometryForSketchGeometryType && _symbolizedSketch != null)
 			{
-				Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-					SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+				Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection = null;
+				await QueuedTask.Run(() =>
+				{
+					Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+						SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
 
-				Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection =
-					SelectionUtils.GetApplicableSelectedFeatures(
-						selectionByLayer, CanSelectFromLayer);
+					applicableSelection =
+						SelectionUtils.GetApplicableSelectedFeatures(
+							selectionByLayer, CanSelectFromLayer);
+				});
 
 				if (applicableSelection.Count > 0)
 				{
