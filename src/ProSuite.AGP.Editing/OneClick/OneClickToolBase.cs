@@ -127,9 +127,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
 		}
 
-
-		protected virtual bool DefaultSketchTypeOnFinishSketch =>
-			GetSelectionSettings().PreferRectangleSelectionSketch;
+		protected virtual bool DefaultSketchTypeOnFinishSketch => true;
 
 		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
 		{
@@ -582,7 +580,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
 
-		protected abstract SelectionSettings GetSelectionSettings();
+		[Obsolete(
+			"Override GetSelectionTolerancePixels and PreferRectangleSelectionSketch for non-default values")]
+		protected virtual SelectionSettings GetSelectionSettings()
+		{
+			return null;
+		}
 
 		protected abstract void LogUsingCurrentSelection();
 
