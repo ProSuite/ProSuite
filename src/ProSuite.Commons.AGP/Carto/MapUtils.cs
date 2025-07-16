@@ -559,10 +559,12 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			try
 			{
+#if ARCGISPRO_GREATER_3_2
 				if (! map.CanRemoveLayer(layer))
 				{
 					return false;
 				}
+#endif
 
 				map.RemoveLayer(layer);
 				return true;
@@ -579,10 +581,12 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			try
 			{
+#if ARCGISPRO_GREATER_3_2
 				if (! map.CanRemoveLayers(layers))
 				{
 					return false;
 				}
+#endif
 
 				map.RemoveLayers(layers);
 				return true;

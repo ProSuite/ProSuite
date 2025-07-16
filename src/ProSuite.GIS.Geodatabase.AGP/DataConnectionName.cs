@@ -169,7 +169,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				             JoinType = _joinType,
 				             JoinForward = ForwardDirection,
 				             // TODO: Deal with one-to-first once properly implemented
-				             OneToFirst = false,
+				             //OneToFirst = false,
 				             SourceTable = _sourceConnectionName.ToCIMDataConnection(),
 				             DestinationTable = _destinationConnectionName.ToCIMDataConnection(),
 				             PrimaryKey = PrimaryKey,

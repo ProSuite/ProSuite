@@ -291,11 +291,11 @@ public class WorkListDbTest
 		using var polygons = geodatabase.OpenDataset<FeatureClass>("IssuePolygons");
 
 		Dictionary<Table, List<long>> selection = new Dictionary<Table, List<long>>();
-		selection.Add(rows, []);
-		selection.Add(lines, [1, 2, 3, 4, 5]);
-		selection.Add(multipatchs, []);
-		selection.Add(multipoints, [5, 7, 12, 9]);
-		selection.Add(polygons, []);
+		selection.Add(rows, new List<long> { });
+		selection.Add(lines, new List<long> { 1, 2, 3, 4, 5 });
+		selection.Add(multipatchs, new List<long> { });
+		selection.Add(multipoints, new List<long> { 5, 7, 12, 9 });
+		selection.Add(polygons, new List<long> { });
 
 		var sourceClasses = new List<ISourceClass>(selection.Count);
 
@@ -444,7 +444,7 @@ public class WorkListDbTest
 
 			SourceClassSchema schema = CreateSchema(tableDefinition);
 
-			List<long> oids = [0, 1, 2, 3];
+			List<long> oids = new() { 0, 1, 2, 3 };
 			var sourceClass =
 				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
 
