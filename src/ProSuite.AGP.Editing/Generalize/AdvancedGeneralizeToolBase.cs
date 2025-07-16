@@ -69,15 +69,11 @@ namespace ProSuite.AGP.Editing.Generalize
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.AdvancedGeneralizeOverlay);
-		}
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.AdvancedGeneralizeOverlay);
 
-		protected override SelectionCursors GetSecondPhaseCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.AdvancedGeneralizeOverlay);
-		}
+		protected override SelectionCursors SecondPhaseCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.AdvancedGeneralizeOverlay);
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
@@ -527,6 +523,5 @@ namespace ProSuite.AGP.Editing.Generalize
 		}
 
 		#endregion
-
 	}
 }

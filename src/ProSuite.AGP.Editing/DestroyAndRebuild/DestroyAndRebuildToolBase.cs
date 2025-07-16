@@ -29,10 +29,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
-	protected override SelectionCursors GetSelectionCursors()
-	{
-		return SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
-	}
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{

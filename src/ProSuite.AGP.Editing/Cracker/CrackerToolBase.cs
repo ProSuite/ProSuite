@@ -73,15 +73,11 @@ namespace ProSuite.AGP.Editing.Cracker
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.CrackerOverlay);
-		}
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.CrackerOverlay);
 
-		protected override SelectionCursors GetSecondPhaseCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.CrackerOverlay);
-		}
+		protected override SelectionCursors SecondPhaseCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.CrackerOverlay);
 
 		protected override Task OnToolActivatingCoreAsync()
 		{

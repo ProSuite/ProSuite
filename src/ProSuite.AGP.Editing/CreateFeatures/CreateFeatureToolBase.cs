@@ -53,6 +53,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// "Select a point or multipoint feature template in the Create Features pane";
 		}
 
+		protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+
 		#region Overrides of PlugIn
 
 		protected override void OnUpdateCore()

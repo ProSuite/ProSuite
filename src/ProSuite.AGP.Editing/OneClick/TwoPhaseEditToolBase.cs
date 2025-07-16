@@ -21,17 +21,13 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private SelectionCursors _secondPhaseCursors;
+		protected abstract SelectionCursors FirstPhaseCursors { get; }
+
+		protected abstract SelectionCursors SecondPhaseCursors { get; }
 
 		protected TwoPhaseEditToolBase()
 		{
 			IsSketchTool = true;
-		}
-
-		protected override void OnToolActivatingCore()
-		{
-			base.OnToolActivatingCore();
-			_secondPhaseCursors = GetSecondPhaseCursors();
 		}
 
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
@@ -181,6 +177,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				});
 		}
 
+		protected override Task OnSelectionPhaseStartedAsync()
+		{
+			SelectionCursors = FirstPhaseCursors;
+			return base.OnSelectionPhaseStartedAsync();
+		}
+
 		protected override async Task ShiftReleasedCoreAsync()
 		{
 			if (await IsInSelectionPhaseAsync())
@@ -189,21 +191,22 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				SetToolCursor(_secondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
+				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: false));
 			}
 		}
 
 		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
+				SelectionCursors = FirstPhaseCursors;
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 			else
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, _secondPhaseCursors);
+				SelectionCursors = SecondPhaseCursors;
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 		}
 
@@ -216,8 +219,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			return SketchGeometryType.Rectangle;
 		}
-
-		protected abstract SelectionCursors GetSecondPhaseCursors();
 
 		protected abstract void CalculateDerivedGeometries(
 			[NotNull] IList<Feature> selectedFeatures,
@@ -291,7 +292,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			await ResetSelectionSketchTypeAsync(_secondPhaseCursors);
+			SelectionCursors = SecondPhaseCursors;
+			await ResetSelectionSketchTypeAsync();
 		}
 	}
 }

@@ -48,6 +48,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				"Select a point or multipoint feature template in the Create Features pane";
 		}
 
+		protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+
 		protected override void OnCurrentTemplateUpdated()
 		{
 			UpdateEnabled();
@@ -136,7 +138,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				}
 				finally
 				{
-					SetToolCursor(SketchCursor);
+					SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
 				}
 			});
 

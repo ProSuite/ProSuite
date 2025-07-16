@@ -91,6 +91,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
 
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay);
+
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
 
 		protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
@@ -240,11 +243,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override SketchGeometryType GetSketchGeometryType()
 		{
 			return SketchGeometryType.Line;
-		}
-
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()

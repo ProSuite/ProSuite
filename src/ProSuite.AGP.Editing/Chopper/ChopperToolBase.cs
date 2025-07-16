@@ -69,15 +69,11 @@ namespace ProSuite.AGP.Editing.Chopper
 			}
 		}
 
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.ChopperOverlay);
-		}
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.ChopperOverlay);
 
-		protected override SelectionCursors GetSecondPhaseCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.ChopperOverlay);
-		}
+		protected override SelectionCursors SecondPhaseCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.ChopperOverlay);
 
 		protected override Task OnToolActivatingCoreAsync()
 		{

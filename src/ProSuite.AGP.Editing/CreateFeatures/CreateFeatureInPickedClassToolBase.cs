@@ -26,15 +26,13 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
+
 	[CanBeNull]
 	protected virtual ICollection<string> GetExclusionFieldNames()
 	{
 		return null;
-	}
-
-	protected override SelectionCursors GetSelectionCursors()
-	{
-		return SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 	}
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
@@ -82,10 +80,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 	{
 		await base.OnSelectionPhaseStartedAsync();
 
-		await QueuedTask.Run(async () =>
-		{
-			await ActiveMapView.ClearSketchAsync();
-		});
+		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
 	}
 
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,

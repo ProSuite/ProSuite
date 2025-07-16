@@ -85,6 +85,31 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool IsCompletingSelectionSketch { get; set; }
 
+		/// <summary>
+		/// The cursor bitmaps to be used in the selection phase of the tool.
+		/// The default is the cross with the selection icon.
+		/// </summary>
+		/// <returns></returns>
+		protected SelectionCursors SelectionCursors
+		{
+			get
+			{
+				if (_selectionCursors == null)
+				{
+					_selectionCursors ??=
+						SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
+					_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
+				}
+
+				return _selectionCursors;
+			}
+			set
+			{
+				_selectionCursors = value;
+				_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
+			}
+		}
+
 		#region Overrides of MapToolBase
 
 		protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
@@ -95,9 +120,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			using var source = GetProgressorSource();
 			var progressor = source?.Progressor;
-
-			_selectionCursors ??= GetSelectionCursors();
-			_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
 
 			await QueuedTaskUtils.Run(async () =>
 			{
@@ -116,16 +138,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		#endregion
-
-		/// <summary>
-		/// Create the cursor bitmaps to be used in the selection phase of the tool.
-		/// The default is the cross with the selection icon.
-		/// </summary>
-		/// <returns></returns>
-		protected virtual SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
-		}
 
 		protected override int GetSelectionTolerancePixels()
 		{
@@ -158,16 +170,13 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected virtual async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			[CanBeNull] SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
-			selectionCursors ??= _selectionCursors;
-
 			SketchGeometryType? newSketchGeometryType =
 				ToolUtils.ToggleSketchGeometryType(toggleSketchType, SketchType,
-				                                   selectionCursors.DefaultSelectionSketchType);
+				                                   SelectionCursors.DefaultSelectionSketchType);
 
-			await SetSelectionSketchTypeAsync(newSketchGeometryType, selectionCursors);
+			await SetSelectionSketchTypeAsync(newSketchGeometryType);
 		}
 
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
@@ -260,7 +269,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				SetToolCursor(_selectionCursors.GetCursor(GetSketchType(), shiftDown: true));
+				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: true));
 			}
 
 			await ShiftPressedCoreAsync();
@@ -270,7 +279,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				SetToolCursor(_selectionCursors.GetCursor(GetSketchType(), shiftDown: false));
+				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: false));
 			}
 
 			await ShiftReleasedCoreAsync();
@@ -319,18 +328,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			SetupSketch();
 
-			await ResetSelectionSketchTypeAsync(_selectionCursors);
+			await ResetSelectionSketchTypeAsync();
 		}
 
 		/// <summary>
 		/// Resets the sketch type (rectangle, polygon, lasso) to the respective default (i.e. the
-		/// last used type or the default) and updates the mouse cursor accordingly.
+		/// last used type or the default) and updates the mouse cursor based on the current
+		/// value of SelectionCursors.
 		/// </summary>
-		protected async Task ResetSelectionSketchTypeAsync(SelectionCursors selectionCursors)
+		protected async Task ResetSelectionSketchTypeAsync()
 		{
 			SketchGeometryType? previousSketchTypeToUse = null;
 
-			SketchGeometryType? previousSketchType = selectionCursors.PreviousSelectionSketchType;
+			SketchGeometryType? previousSketchType = SelectionCursors.PreviousSelectionSketchType;
 
 			if (! DefaultSketchTypeOnFinishSketch &&
 			    previousSketchType is SketchGeometryType.Polygon or SketchGeometryType.Lasso)
@@ -339,14 +349,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			SketchGeometryType? startSketchType =
-				selectionCursors.GetStartSelectionSketchGeometryType(previousSketchTypeToUse);
+				SelectionCursors.GetStartSelectionSketchGeometryType(previousSketchTypeToUse);
 
-			await SetSelectionSketchTypeAsync(startSketchType, selectionCursors);
+			await SetSelectionSketchTypeAsync(startSketchType);
 		}
 
-		protected async Task SetSelectionSketchTypeAsync(
-			SketchGeometryType? newGeometryType,
-			[CanBeNull] SelectionCursors selectionCursors = null)
+		protected async Task SetSelectionSketchTypeAsync(SketchGeometryType? newGeometryType)
 		{
 			if (SketchType != newGeometryType)
 			{
@@ -354,13 +362,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				_msg.Debug($"{Caption} changed sketch type to {newGeometryType}");
 			}
 
-			if (selectionCursors != null)
-			{
-				_selectionCursors = selectionCursors;
-			}
-
 			var newCursor =
-				_selectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
+				SelectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
 
 			SetToolCursor(newCursor);
 
@@ -375,7 +378,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			// Remember the sketch type (consider local field, using last sketch type across tool phases):
-			_selectionCursors.PreviousSelectionSketchType = newGeometryType;
+			SelectionCursors.PreviousSelectionSketchType = newGeometryType;
 		}
 
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,

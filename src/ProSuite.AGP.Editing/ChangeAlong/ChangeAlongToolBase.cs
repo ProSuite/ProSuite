@@ -41,7 +41,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private ChangeAlongFeedback _feedback;
 		private Geometry _lastDrawnExtent;
 
-		private SelectionCursors _laterPhaseCursors;
+		protected abstract SelectionCursors InitialSelectionCursors { get; }
+
+		protected abstract SelectionCursors TargetSelectionCursors { get; }
 
 		protected ChangeAlongToolBase()
 		{
@@ -132,8 +134,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			base.OnToolActivatingCore();
 
 			InitializeOptions();
-
-			_laterPhaseCursors = GetTargetSelectionCursors();
 		}
 
 		protected override Task OnToolActivatingCoreAsync()
@@ -185,6 +185,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			DrawCompleteEvent.Unsubscribe(OnDrawCompleted);
 			ResetDerivedGeometries();
 			_feedback = null;
+		}
+
+		protected override Task OnSelectionPhaseStartedAsync()
+		{
+			SelectionCursors = InitialSelectionCursors;
+			return base.OnSelectionPhaseStartedAsync();
 		}
 
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
@@ -293,7 +299,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			finally
 			{
 				// reset after 2. phase
-				await ResetSelectionSketchTypeAsync(_laterPhaseCursors);
+				SelectionCursors = TargetSelectionCursors;
+				await ResetSelectionSketchTypeAsync();
 			}
 		}
 
@@ -308,7 +315,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (! IsInSubcurveSelectionPhase())
 			{
 				// 2. Phase: target selection:
-				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: true);
+				Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), shiftDown: true);
 				SetToolCursor(cursor);
 			}
 
@@ -323,26 +330,27 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: false);
+				Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), shiftDown: false);
 				SetToolCursor(cursor);
 			}
 		}
 
 		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				// Use base implementation
+				// First phase
+				SelectionCursors = InitialSelectionCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(
-					toggleSketchType, selectionCursors);
+					toggleSketchType);
 			}
 			else
 			{
-				// Second and third phase: use the _secondPhaseCursors
+				// Second and third phase
+				SelectionCursors = TargetSelectionCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(
-					toggleSketchType, _laterPhaseCursors);
+					toggleSketchType);
 			}
 		}
 
@@ -412,8 +420,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return true;
 		}
 
-		protected abstract SelectionCursors GetTargetSelectionCursors();
-
 		protected abstract void LogAfterPickTarget(
 			ReshapeAlongCurveUsability reshapeCurveUsability);
 
@@ -432,7 +438,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			SetupSketch();
 
-			await ResetSelectionSketchTypeAsync(_laterPhaseCursors);
+			SelectionCursors = TargetSelectionCursors;
+			await ResetSelectionSketchTypeAsync();
 		}
 
 		protected ZSettingsModel GetZSettingsModel()
@@ -819,14 +826,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private void OnDrawCompleted(MapViewEventArgs obj)
 		{
-			if (! RefreshSubcurvesOnRedraw || !  IsInSubcurveSelectionPhase())
+			if (! RefreshSubcurvesOnRedraw || ! IsInSubcurveSelectionPhase())
 			{
 				return;
 			}
 
 			Envelope extent = Assert.NotNull(obj.MapView.Extent);
 
-			if (_lastDrawnExtent != null && GeometryEngine.Instance.Equals(_lastDrawnExtent, extent))
+			if (_lastDrawnExtent != null &&
+			    GeometryEngine.Instance.Equals(_lastDrawnExtent, extent))
 			{
 				// This event is called repeatedly without anything changing
 				return;

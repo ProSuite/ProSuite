@@ -37,7 +37,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
-		protected bool UseGeometryForSketchGeometryType { get; set; } = true;
+		protected bool UseGeometryForSketchGeometryType { get; init; } = true;
 
 		protected ConstructionToolBase()
 		{
@@ -58,13 +58,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			GeomIsSimpleAsFeature = false;
 
-			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
-
 			HandledKeys.Add(_keyFinishSketch);
 			HandledKeys.Add(_keyRestorePrevious);
 		}
 
-		protected Cursor SketchCursor { get; set; }
+		protected abstract SelectionCursors FirstPhaseCursors { get; }
+
+		protected SelectionCursors SketchCursors { get; set; } =
+			SelectionCursors.CreateCrossCursors(Resources.Cross);
 
 		/// <summary>
 		/// Whether the geometry sketch (as opposed to the selection sketch) is currently active
@@ -135,6 +136,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
 			});
 
+			SelectionCursors = FirstPhaseCursors;
+
 			IsInSketchPhase = false;
 
 			await QueuedTask.Run(async () =>
@@ -146,6 +149,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task OnToolActivatingCoreAsync()
 		{
+			SelectionCursors = FirstPhaseCursors;
+
 			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
 
 			_symbolizedSketch = GetSymbolizedSketch();
@@ -252,6 +257,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				await _sketchStateHistory.StartIntermittentSelection();
 
 				// During start selection phase the edit sketch is cleared:
+				SelectionCursors = FirstPhaseCursors;
 				await StartSelectionPhaseAsync();
 			}
 			catch (Exception e)
@@ -264,13 +270,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(
-					toggleSketchType, selectionCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 			// Else do nothing: No selection sketch toggling in edit sketch phase.
 		}
@@ -503,7 +507,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				SetSketchType(GetSketchGeometryType());
 			}
 
-			SetToolCursor(SketchCursor);
+			SelectionCursors = SketchCursors;
+			SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
 
 			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 
