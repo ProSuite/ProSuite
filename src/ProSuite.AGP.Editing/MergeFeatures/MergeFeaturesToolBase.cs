@@ -15,6 +15,7 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -139,11 +140,13 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(
+					toggleSketchType, selectionCursors);
 			}
 			else
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, _secondPhaseCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(
+					toggleSketchType, _secondPhaseCursors);
 			}
 		}
 
@@ -159,6 +162,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 					{
 						try
 						{
+							//Dictionary<MapMember, List<long>> selectionByLayer =
+							//	SelectionUtils.GetSelection(ActiveMapView.Map);
+
 							IList<Feature> selectedFeatures =
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
@@ -628,9 +634,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			await QueuedTask.Run(() =>
 			{
-				ActiveMapView.Map.ClearSelection();
-
-				SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
+				ToolUtils.SelectNewFeatures(new[] { survivingFeature }, MapView.Active);
 			});
 
 			if (_mergeToolOptions.UseMergeResultForNextMerge)
@@ -656,17 +660,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				return true;
 			}
 
-			Geometry firstFeatureShape = _firstFeature.GetShape();
-			Geometry testFeatureShape = feature.GetShape();
-
-			bool unEqualShapeTypes = firstFeatureShape.GeometryType !=
-			                         testFeatureShape.GeometryType;
-
-			if (unEqualShapeTypes)
-			{
-				return false;
-			}
-
 			return _firstFeature.GetObjectID() != feature.GetObjectID() ||
 			       _firstFeature.GetTable().GetID() != feature.GetTable().GetID();
 		}
@@ -682,13 +675,14 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			                                      TargetFeatureSelection
 				                                      .VisibleSelectableEditableFeatures)
 			                    {
-				                    ReturnUnJoinedFeatures = true
+				                    ReturnUnJoinedFeatures = true,
+				                    DelayFeatureFetching = true
 			                    };
 
-			Predicate<Layer> layerPredicate = null;
-			var selectionByClass =
-				featureFinder.FindFeaturesByFeatureClass(searchGeometry, layerPredicate,
-				                                         IsPickableTargetFeature);
+			const Predicate<Feature> featurePredicate = null;
+			var selectionByLayer =
+				featureFinder.FindFeaturesByLayer(searchGeometry, CanLayerContainSecondFeature,
+				                                  IsPickableTargetFeature).ToList();
 
 			if (cancellabelProgressor?.CancellationToken.IsCancellationRequested == true)
 			{
@@ -697,11 +691,17 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			using var precedence = CreatePickerPrecedence(sketchGeometry);
 
-			List<PickableFeatureItem> items =
-				await PickerUtils.GetItemsAsync<PickableFeatureItem>(
-					selectionByClass, precedence, PickerMode.ShowPicker);
+			List<IPickableItem> items =
+				await PickerUtils.GetItemsAsync(selectionByLayer, precedence);
 
-			Feature selectedFeature = items.FirstOrDefault()?.Feature;
+			IPickableFeatureItem selectedItem = items.FirstOrDefault() as IPickableFeatureItem;
+
+			if (selectedItem == null)
+			{
+				return null;
+			}
+
+			Feature selectedFeature = selectedItem.Feature;
 
 			if (selectedFeature == null)
 			{
@@ -709,6 +709,17 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 
 			return selectedFeature;
+		}
+
+		private bool CanLayerContainSecondFeature(BasicFeatureLayer layer)
+		{
+			Assert.NotNull(_firstFeature, "No first feature selected");
+
+			GeometryType geometryType = _firstFeature.GetShape().GeometryType;
+
+			FeatureClass featureClass = layer.GetFeatureClass();
+
+			return featureClass != null && featureClass.GetShapeType() == geometryType;
 		}
 
 		/// <summary>
