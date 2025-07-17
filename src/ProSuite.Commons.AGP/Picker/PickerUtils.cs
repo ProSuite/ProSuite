@@ -129,6 +129,30 @@ namespace ProSuite.Commons.AGP.Picker
 		#region Show Picker
 
 		/// <summary>
+		/// Returns a feature item from the provided feature selections filtered to the lowest
+		/// geometry dimension.
+		/// </summary>
+		/// <param name="selectionByLayer"></param>
+		/// <param name="precedence"></param>
+		/// <returns>The single feature item or null if no selected feature exists in any of the
+		/// feature selections or none has been picked.</returns>
+		/// <remarks>The provided feature selections are filtered to the lowest geometry
+		/// dimension that contains at least one feature. If the lowest geometry dimension contains
+		/// more than one feature, the picker UI is shown.</remarks>
+		[ItemCanBeNull]
+		public static async Task<IPickableFeatureItem> PickSingleAsync(
+			[NotNull] IEnumerable<FeatureSelectionBase> selectionByLayer,
+			[NotNull] IPickerPrecedence precedence)
+		{
+			IList<IPickableItem> lowestGeometryDimensionFeatures =
+				GetLowestGeometryDimensionFeatureItems(selectionByLayer);
+
+			return
+				(IPickableFeatureItem) await PickSingleAsync(
+					                       lowestGeometryDimensionFeatures, precedence);
+		}
+
+		/// <summary>
 		/// Returns the single item selected from the picker control if more than one item is
 		/// provided. Otherwise, returns the only item or null if no items are provided or none
 		/// has been selected by the user.

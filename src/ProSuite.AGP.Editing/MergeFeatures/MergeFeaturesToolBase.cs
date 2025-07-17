@@ -634,7 +634,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			await QueuedTask.Run(() =>
 			{
-				ToolUtils.SelectNewFeatures(new[] { survivingFeature }, MapView.Active);
+				ToolUtils.SelectNewFeatures(
+					new[] { survivingFeature }, MapView.Active);
 			});
 
 			if (_mergeToolOptions.UseMergeResultForNextMerge)
@@ -675,29 +676,23 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			                                      TargetFeatureSelection
 				                                      .VisibleSelectableEditableFeatures)
 			                    {
-				                    ReturnUnJoinedFeatures = true,
-				                    DelayFeatureFetching = true
+				                    ReturnUnJoinedFeatures = true
 			                    };
 
-			const Predicate<Feature> featurePredicate = null;
-			var selectionByLayer =
-				featureFinder.FindFeaturesByLayer(searchGeometry, CanLayerContainSecondFeature,
-				                                  IsPickableTargetFeature).ToList();
+			List<FeatureSelectionBase> selectionByLayer =
+				featureFinder.FindFeaturesByFeatureClass(searchGeometry,
+				                                         CanLayerContainSecondFeature,
+				                                         IsPickableTargetFeature).ToList();
 
 			if (cancellabelProgressor?.CancellationToken.IsCancellationRequested == true)
 			{
 				return null;
 			}
 
-			using var precedence = CreatePickerPrecedence(sketchGeometry);
-			IList<IPickableItem> lowestGeometryDimensionFeatures =
-				PickerUtils.GetLowestGeometryDimensionFeatureItems(selectionByLayer);
-
 			IPickerPrecedence precedence = CreatePickerPrecedence(sketchGeometry);
 
 			IPickableFeatureItem selectedItem =
-				(IPickableFeatureItem) await PickerUtils.PickSingleAsync(
-					                       lowestGeometryDimensionFeatures, precedence);
+				await PickerUtils.PickSingleAsync(selectionByLayer, precedence);
 
 			if (selectedItem == null)
 			{
