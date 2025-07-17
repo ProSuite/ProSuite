@@ -28,7 +28,7 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 		return new PickerViewModel(selectionGeometry);
 	}
 
-	private static IEnumerable<IPickableItem> CreatePickableFeatureItems(
+	public static IEnumerable<IPickableItem> CreatePickableFeatureItems(
 		[NotNull] FeatureSelectionBase classSelection)
 	{
 		BasicFeatureLayer layer = classSelection.BasicFeatureLayer;

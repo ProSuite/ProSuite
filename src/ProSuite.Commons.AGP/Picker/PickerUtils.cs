@@ -204,6 +204,42 @@ namespace ProSuite.Commons.AGP.Picker
 
 		#endregion
 
+		/// <summary>
+		/// Gets the count of features with the lowest non-empty geometry dimension.
+		/// </summary>
+		/// <param name="layerSelection">The layer selections</param>
+		/// <returns>The number of features with the lowest non-empty dimension.</returns>
+		public static int GetLowestGeometryDimensionFeatureCount(
+			[NotNull] IEnumerable<FeatureSelectionBase> layerSelection)
+		{
+			var count = 0;
+
+			// Initialize with sentinel value to detect the first dimension
+			int shapeDimension = -1;
+
+			foreach (FeatureSelectionBase selection in
+			         layerSelection.OrderBy(fcs => fcs.ShapeDimension))
+			{
+				if (shapeDimension < selection.ShapeDimension)
+				{
+					// If we've already counted features at a lower dimension, return that count
+					if (count > 0)
+					{
+						return count;
+					}
+
+					// If there are no rows at the current dimension, count objects in the next one
+					shapeDimension = selection.ShapeDimension;
+				}
+
+				// Add all features of the current dimension to the count
+				count += selection.GetCount();
+			}
+
+			// Return the total count (may be 0 if no features were found)
+			return count;
+		}
+
 		public static void Select(List<IPickableItem> items,
 		                          SelectionCombinationMethod selectionMethod)
 		{
