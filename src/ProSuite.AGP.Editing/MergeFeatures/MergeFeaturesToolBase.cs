@@ -221,7 +221,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		}
 
 		protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
-		                                                  [CanBeNull]
 		                                                  CancelableProgressor progressor)
 		{
 			_firstFeature = selectedFeatures[0];
@@ -669,8 +668,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private async Task<Feature> PickSecondFeature(Geometry sketchGeometry,
 		                                              CancelableProgressor cancellabelProgressor)
 		{
-			Geometry searchGeometry =
-				ToolUtils.GetSinglePickSelectionArea(sketchGeometry, GetSelectionTolerancePixels());
+			IPickerPrecedence precedence = CreatePickerPrecedence(sketchGeometry);
 
 			var featureFinder = new FeatureFinder(ActiveMapView,
 			                                      TargetFeatureSelection
@@ -680,33 +678,31 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			                    };
 
 			List<FeatureSelectionBase> selectionByLayer =
-				featureFinder.FindFeaturesByFeatureClass(searchGeometry,
+				featureFinder.FindFeaturesByFeatureClass(precedence.GetSelectionGeometry(),
 				                                         CanLayerContainSecondFeature,
 				                                         IsPickableTargetFeature).ToList();
+
+			if (selectionByLayer.Count == 0)
+			{
+				_msg.Info("No valid second feature found in any layer.");
+				return null;
+			}
 
 			if (cancellabelProgressor?.CancellationToken.IsCancellationRequested == true)
 			{
 				return null;
 			}
 
-			IPickerPrecedence precedence = CreatePickerPrecedence(sketchGeometry);
-
 			IPickableFeatureItem selectedItem =
 				await PickerUtils.PickSingleAsync(selectionByLayer, precedence);
 
 			if (selectedItem == null)
 			{
+				_msg.Info("No valid second has been selected.");
 				return null;
 			}
 
-			Feature selectedFeature = selectedItem.Feature;
-
-			if (selectedFeature == null)
-			{
-				_msg.Info("No valid second feature found.");
-			}
-
-			return selectedFeature;
+			return selectedItem.Feature;
 		}
 
 		private bool CanLayerContainSecondFeature(BasicFeatureLayer layer)
