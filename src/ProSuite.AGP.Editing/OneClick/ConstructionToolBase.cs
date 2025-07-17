@@ -137,6 +137,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			});
 
 			SelectionCursors = FirstPhaseCursors;
+			SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
 
 			IsInSketchPhase = false;
 
