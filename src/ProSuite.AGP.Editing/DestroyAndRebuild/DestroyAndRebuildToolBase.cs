@@ -48,11 +48,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return SketchGeometryType.Rectangle;
 	}
 
-	protected override SketchGeometryType GetSketchGeometryType()
-	{
-		return SketchGeometryType.Line;
-	}
-
 	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
 		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.

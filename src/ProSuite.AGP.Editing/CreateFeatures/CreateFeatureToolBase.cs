@@ -66,7 +66,12 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override void LogPromptForSelection() { }
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
+		{
+			return new SymbolizedSketchTypeWithoutSymbol(this, GetSketchGeometryType);
+		}
+
+		private SketchGeometryType GetSketchGeometryType()
 		{
 			esriGeometryType? targetShapeType = GetTargetLayerShapeType();
 

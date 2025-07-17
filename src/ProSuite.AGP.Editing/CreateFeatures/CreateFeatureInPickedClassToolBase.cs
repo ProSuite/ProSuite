@@ -46,11 +46,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return false;
 	}
 
-	protected override SketchGeometryType GetSketchGeometryType()
-	{
-		return SketchGeometryType.Line;
-	}
-
 	protected override SketchGeometryType GetSelectionSketchGeometryType()
 	{
 		return SketchGeometryType.Rectangle;

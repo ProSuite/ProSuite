@@ -85,8 +85,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			RequiresSelection = true;
 
-			UseGeometryForSketchGeometryType = false;
-
 			HandledKeys.Add(_keyToggleNonDefaultSide);
 			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
@@ -98,7 +96,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 		{
-			return new SymbolizedSketchTypeBasedOnSelection(this);
+			return new SymbolizedSketchTypeBasedOnSelection(this, () => SketchGeometryType.Line);
 		}
 
 		protected override void OnUpdateCore()
@@ -238,11 +236,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			base.OnToolDeactivateCore(hasMapViewChanged);
 
 			HideOptionsPane();
-		}
-
-		protected override SketchGeometryType GetSketchGeometryType()
-		{
-			return SketchGeometryType.Line;
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()

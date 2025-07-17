@@ -114,7 +114,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 				if (_symbolizedSketch != null)
 				{
 					await QueuedTask.Run(
-						() => _symbolizedSketch?.SetSketchAppearanceBasedOnSelectionAsync());
+						() => _symbolizedSketch?.SetSketchAppearanceAsync());
 				}
 
 				bool selectionProcessed = await ProcessSelectionAsync();
@@ -863,7 +863,6 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 
 	protected virtual void StartConstructionPhaseCore() { }
 
-	
 	protected override CancelableProgressorSource GetProgressorSource()
 	{
 		var message = Caption ?? string.Empty;

@@ -64,9 +64,9 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		#endregion
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return SketchGeometryType.Multipoint;
+			return new SymbolizedSketchTypeWithoutSymbol(this, SketchGeometryType.Multipoint);
 		}
 
 		protected override EditingTemplate GetSketchTemplate()

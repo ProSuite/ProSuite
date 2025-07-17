@@ -35,9 +35,9 @@ namespace ProSuite.AGP.Editing.Erase
 		protected override SelectionCursors FirstPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return SketchGeometryType.Polygon;
+			return new SymbolizedSketchTypeWithoutSymbol(this, SketchGeometryType.Polygon);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()

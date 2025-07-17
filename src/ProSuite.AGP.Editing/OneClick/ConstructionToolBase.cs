@@ -35,9 +35,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private bool _isIntermittentSelectionPhaseActive;
 		[CanBeNull] private SketchStateHistory _sketchStateHistory;
 
-		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
-
-		protected bool UseGeometryForSketchGeometryType { get; init; } = true;
+		[CanBeNull] private ISymbolizedSketchType _symbolizedSketch;
 
 		protected ConstructionToolBase()
 		{
@@ -155,10 +153,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
 
 			_symbolizedSketch = GetSymbolizedSketch();
-			if (_symbolizedSketch != null)
-			{
-				await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
-			}
+			Assert.NotNull(_symbolizedSketch);
+			await _symbolizedSketch.SetSketchAppearanceAsync();
 
 			if (! RequiresSelection)
 			{
@@ -424,15 +420,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
-		// Note: See also GetSketchGeometryType() if a fixed sketch geometry type is needed
-		protected virtual SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
-		{
-			return null;
-		}
-
-		// Note: This sketch geometry type is only used if UseGeometryForSketchGeometryType is
-		// false or GetSketchGeometryType() is null 
-		protected abstract SketchGeometryType GetSketchGeometryType();
+		protected abstract ISymbolizedSketchType GetSymbolizedSketch();
 
 		/// <summary>
 		/// The template that can optionally be used to set up the sketch properties, such as
@@ -485,28 +473,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
 
-			if (UseGeometryForSketchGeometryType && _symbolizedSketch != null)
+			Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection = null;
+			await QueuedTask.Run(() =>
 			{
-				Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection = null;
-				await QueuedTask.Run(() =>
-				{
-					Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-						SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+				Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+					SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
 
-					applicableSelection =
-						SelectionUtils.GetApplicableSelectedFeatures(
-							selectionByLayer, CanSelectFromLayer);
-				});
+				applicableSelection =
+					SelectionUtils.GetApplicableSelectedFeatures(
+						selectionByLayer, CanSelectFromLayer);
+			});
 
-				if (applicableSelection.Count > 0)
-				{
-					_symbolizedSketch?.SetSketchType(applicableSelection.Keys.First());
-				}
-			}
-			else
-			{
-				SetSketchType(GetSketchGeometryType());
-			}
+			_symbolizedSketch?.SetSketchType(applicableSelection.Keys.FirstOrDefault());
 
 			SelectionCursors = SketchCursors;
 			SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
@@ -540,7 +518,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					// has to be put inside QueuedTask!!! May Teutates be with us!
 					await QueuedTask.Run(async () =>
 					{
-						await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
+						await _symbolizedSketch.SetSketchAppearanceAsync();
 
 						if (await HasSketchAsync())
 						{
