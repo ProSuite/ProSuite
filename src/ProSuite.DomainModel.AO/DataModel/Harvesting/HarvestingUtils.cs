@@ -38,8 +38,8 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			[CanBeNull] string exclusionCriteria)
 		{
 			var parser = new NamedValuesParser('=',
-			                                   new[] {";", Environment.NewLine},
-			                                   new[] {","},
+			                                   new[] { ";", Environment.NewLine },
+			                                   new[] { "," },
 			                                   " AND ");
 
 			NotificationCollection notifications;
@@ -192,7 +192,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 				return new ForeignKeyAssociation(associationName,
 				                                 cardinality,
 				                                 originFK,
-				                                 originPK) {Model = model};
+				                                 originPK) { Model = model };
 			}
 
 			ObjectAttribute destinationPK = GetDestinationPK(
@@ -211,7 +211,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 				       relClass.DestinationForeignKey, (FieldType) destinationFKType,
 				       destinationPK,
 				       relClass.OriginForeignKey, (FieldType) originFKType,
-				       originPK) {Model = model};
+				       originPK) { Model = model };
 		}
 
 		public static void EnsureUnqualifiedNames([NotNull] IModelElement modelElement,
