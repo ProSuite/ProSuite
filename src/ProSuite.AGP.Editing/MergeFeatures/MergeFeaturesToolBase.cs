@@ -690,11 +690,14 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 
 			using var precedence = CreatePickerPrecedence(sketchGeometry);
+			IList<IPickableItem> lowestGeometryDimensionFeatures =
+				PickerUtils.GetLowestGeometryDimensionFeatureItems(selectionByLayer);
 
-			List<IPickableItem> items =
-				await PickerUtils.GetItemsAsync(selectionByLayer, precedence);
+			IPickerPrecedence precedence = CreatePickerPrecedence(sketchGeometry);
 
-			IPickableFeatureItem selectedItem = items.FirstOrDefault() as IPickableFeatureItem;
+			IPickableFeatureItem selectedItem =
+				(IPickableFeatureItem) await PickerUtils.PickSingleAsync(
+					                       lowestGeometryDimensionFeatures, precedence);
 
 			if (selectedItem == null)
 			{
