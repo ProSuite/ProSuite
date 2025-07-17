@@ -261,9 +261,33 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 			//cimSymbols.Add(oidLookupSymbol);
 
 			var feature = GetFeature(layer, oid);
-			//var shape = feature.GetShape();
+
 			var values = new NamedValues(feature);
 			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out _);
+
+			string SubtypeFieldName = "OBJEKTART";
+			string SymbolFieldName = "SYMBOL";
+			string SizeFieldName = "LB50";
+
+			int symbolFieldIdx = feature.FindField(SymbolFieldName);
+			int sizeFieldIdx = feature.FindField(SizeFieldName);
+
+			object symbolValue = (symbolFieldIdx > -1) ? feature[symbolFieldIdx] : DBNull.Value;
+			object sizeValue = (sizeFieldIdx > -1) ? feature[sizeFieldIdx] : DBNull.Value;
+
+			IDictionary<string, object> CurrentValues = new Dictionary<string, object>();
+			int subtypeCode = 100;
+			CurrentValues[SubtypeFieldName] = subtypeCode;
+			CurrentValues[SymbolFieldName] = symbolValue; //Schema.GetSymbolValue(subtypeCode);
+			CurrentValues[SizeFieldName] = sizeValue;
+
+			var values2 = CurrentValues.ToDictionary(p => p.Key, p => p.Value);
+			var namedValues = new DictNamedValues(values2);
+
+			CIMSymbolReference symref2 = SymbolUtils.GetSymbol(renderer, namedValues, scaleDenom, out var overrides2);
+			symref = symref2;
+
+
 
 			if (cimSymbolReferences.All(s => s.ToJson() != symref.ToJson()))
 			{
@@ -346,6 +370,28 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		public object GetValue(string name)
 		{
 			return _row[name];
+		}
+	}
+
+	private class DictNamedValues : INamedValues
+	{
+		private readonly IDictionary<string, object> _dict;
+
+		public DictNamedValues([CanBeNull] IDictionary<string, object> dict)
+		{
+			_dict = dict;
+		}
+
+		public bool Exists(string name)
+		{
+			if (name is null || _dict is null) return false;
+			return _dict.ContainsKey(name);
+		}
+
+		public object GetValue(string name)
+		{
+			if (name is null || _dict is null) return null;
+			return _dict.TryGetValue(name, out var value) ? value : null;
 		}
 	}
 
