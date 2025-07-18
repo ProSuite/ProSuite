@@ -91,8 +91,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		{
 			var request = new CalculateOverlapsRequest();
 
-			Func<Feature, Geometry> getFeatureGeometry =
-				f => inExtent == null ? null : GetClippedGeometry(f, inExtent);
+			Func<Feature, Geometry> getFeatureGeometry = null;
+
+			if (inExtent != null)
+			{
+				getFeatureGeometry = f => GetClippedGeometry(f, inExtent);
+			}
 
 			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
 			                                           request.SourceFeatures,
