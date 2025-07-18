@@ -44,7 +44,7 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 		}
 
-		protected virtual void OnShowCore(bool isVisible) {}
+		protected virtual void OnShowCore(bool isVisible) { }
 
 		protected override void OnHidden()
 		{
@@ -58,6 +58,16 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 		}
 
-		protected virtual void OnHiddenCore() {}
+		protected virtual void OnHiddenCore() { }
+
+		/// <summary>
+		/// This method can be used to get notified when the application context has been
+		/// initialized. Dock panes can be shown directly when ArcGIS Pro starts before
+		/// the application has had a chance to initialize. Once the application context
+		/// is ready, also the dock pane can initialize its application-specific state.
+		/// It is the application's responsibility to call this method of all known
+		/// dock-panes when it is initialized.
+		/// </summary>
+		public virtual void OnContextInitialized() { }
 	}
 }
