@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Internal.Layouts.Utilities;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -17,6 +15,10 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.Editing;
 
@@ -250,7 +252,15 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 
 		var scaleDenom = activeMap.ReferenceScale;
-		var renderer = layer.GetRenderer();
+		CIMRenderer renderer = layer.GetRenderer();
+		string[] symbolFields = GetSymbolFields(renderer);
+
+		var definition = layer.GetFeatureClass().GetDefinition();
+		var subtypeFieldName = definition.GetSubtypeField();
+
+		string SubtypeFieldName = subtypeFieldName; //"OBJEKTART";
+		//string SymbolFieldName = "SYMBOL";
+		//string SizeFieldName = "LB50";
 
 		IList<CIMSymbolReference> cimSymbolReferences = new List<CIMSymbolReference>();
 		//IList<CIMSymbol> cimSymbols = new List<CIMSymbol>();
@@ -262,36 +272,78 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 
 			var feature = GetFeature(layer, oid);
 
-			var values = new NamedValues(feature);
-			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out _);
+			//var values = new NamedValues(feature);
+			//CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out _);
 
-			string SubtypeFieldName = "OBJEKTART";
-			string SymbolFieldName = "SYMBOL";
-			string SizeFieldName = "LB50";
-
-			int symbolFieldIdx = feature.FindField(SymbolFieldName);
-			int sizeFieldIdx = feature.FindField(SizeFieldName);
-
-			object symbolValue = (symbolFieldIdx > -1) ? feature[symbolFieldIdx] : DBNull.Value;
-			object sizeValue = (sizeFieldIdx > -1) ? feature[sizeFieldIdx] : DBNull.Value;
+			//int sizeFieldIdx = feature.FindField(SizeFieldName);
+			//object sizeValue = (sizeFieldIdx > -1) ? feature[sizeFieldIdx] : DBNull.Value;
 
 			IDictionary<string, object> CurrentValues = new Dictionary<string, object>();
-			int subtypeCode = 100;
-			CurrentValues[SubtypeFieldName] = subtypeCode;
-			CurrentValues[SymbolFieldName] = symbolValue; //Schema.GetSymbolValue(subtypeCode);
-			CurrentValues[SizeFieldName] = sizeValue;
+
+			if (!string.IsNullOrEmpty(SubtypeFieldName))
+			{
+				int subtypeFieldIdx = feature.FindField(SubtypeFieldName);
+				if (subtypeFieldIdx > -1)
+				{
+					object subtypeValue = feature[subtypeFieldIdx];
+					CurrentValues[SubtypeFieldName] = subtypeValue; //subtypeCode;
+				}
+			}
+			if (symbolFields is { Length: > 0 })
+			{
+				for (int i = 0; i < symbolFields.Length; i++)
+				{
+					string SymbolFieldName = symbolFields[i];
+					int symbolFieldIdx = feature.FindField(SymbolFieldName);
+					if (symbolFieldIdx > -1)
+					{
+						object symbolValue = feature[symbolFieldIdx];
+						CurrentValues[SymbolFieldName] = symbolValue; 
+					}
+				}
+			}
+		
+			//CurrentValues[SizeFieldName] = sizeValue;
 
 			var values2 = CurrentValues.ToDictionary(p => p.Key, p => p.Value);
-			var namedValues = new DictNamedValues(values2);
+			INamedValues namedValues;
+			if (values2.Count > 0)
+			{
+				namedValues = new DictNamedValues(values2);
+			}
+			else
+			{
+				namedValues = new NamedValues(feature);
+			}
 
-			CIMSymbolReference symref2 = SymbolUtils.GetSymbol(renderer, namedValues, scaleDenom, out var overrides2);
-			symref = symref2;
-
-
+			//Renderer.VisualVariables.CIMVisualVariable.ValueExpressionInfo.Expression - SizeField
+			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, namedValues, scaleDenom, out var overrides);
+			if (overrides != null)
+			{
+				foreach (CIMPrimitiveOverride po in overrides)
+				{
+					if (po.PropertyName == "Width")
+					{
+						var fieldName = SymbolUtils.GetOverrideField(po);
+						int idx = feature.FindField(fieldName);
+						if (idx > -1)
+						{
+							object value = feature[idx];
+							SymbolUtils.ApplyOverride(symref.Symbol, po.PrimitiveName,
+							                          po.PropertyName, value);
+						}
+					}
+				}
+			}
 
 			if (cimSymbolReferences.All(s => s.ToJson() != symref.ToJson()))
 			{
 				cimSymbolReferences.Add(symref);
+				if (cimSymbolReferences.Count > 1)
+				{
+					//wenn schon 2 Symbole ungleich sind braucht der Reste nicht mehr ausgewertet werden
+					break;
+				}
 			}
 		}
 
@@ -317,8 +369,17 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 			return null;
 		}
 
-		//return symbol.MakeSymbolReference();
 		return symbolReference;
+	}
+
+	private static string[] GetSymbolFields(CIMRenderer renderer)
+	{
+		if (renderer is CIMUniqueValueRenderer uvRenderer)
+		{
+			return uvRenderer.Fields;
+		}
+
+		return new string[] { };
 	}
 
 	private static Feature GetFeature(FeatureLayer layer, long oid)
