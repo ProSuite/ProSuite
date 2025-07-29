@@ -508,6 +508,24 @@ namespace ProSuite.Commons.Geom
 		#region AreaContains, IsContained
 
 		/// <summary>
+		/// Determines whether the specified bounds contain (including the boundary) the
+		/// specified test geometry. This method ignores the orientation.
+		/// </summary>
+		/// <param name="bounds"></param>
+		/// <param name="testPoint"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static bool BoundsContainXY([NotNull] IBoundedXY bounds,
+		                                   [NotNull] ICoordinates testPoint,
+		                                   double tolerance)
+		{
+			return testPoint.X >= bounds.XMin - tolerance &&
+			       testPoint.X <= bounds.XMax + tolerance &&
+			       testPoint.Y >= bounds.YMin - tolerance &&
+			       testPoint.Y <= bounds.YMax + tolerance;
+		}
+
+		/// <summary>
 		/// Determines whether the specified closed polycurve contains (including the boundary) the
 		/// specified test geometry. This method ignores the orientation.
 		/// </summary>
