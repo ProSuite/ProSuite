@@ -34,7 +34,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 {
 	public enum MergeAction
 	{
-		MergeWithFirstFeature,
 		MergeWithLargestFeature,
 		MergeWithClickedFeature
 	}
@@ -239,30 +238,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 					{
 						try
 						{
-							IList<Feature> selectedFeatures =
-								GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-							MergerBase merger = GetMerger();
-
-							if (! merger.CanMerge(selectedFeatures))
-							{
-								return;
-							}
-
-							Feature largestFeature =
-								GeometryUtils.GetLargestFeature(selectedFeatures);
-
-							Assert.NotNull(largestFeature, "No largest feature identified.");
-
-							Feature survivingFeature =
-								await merger.MergeFeatures(selectedFeatures, largestFeature);
-
-							if (survivingFeature != null)
-							{
-								await SelectResultAndLogNextStep(survivingFeature);
-							}
+							await MergeFeaturesUsingLargestFeatureCoreAsync();
 						}
-
 						catch (Exception e)
 						{
 							_msg.Warn("Error merging immediatly", e);
@@ -336,10 +313,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			if (selectedCount > 1)
 			{
-				message = Environment.NewLine +
-				          "Press Enter to merge all selected features. The largest feature will survive after the merge." +
-				          Environment.NewLine +
-				          $"Alternatively, select a new first feature to merge{survivorText}";
+				message =
+					"Press Enter to merge all selected features. The largest feature will survive after the merge." +
+					Environment.NewLine +
+					$"Alternatively, select a new first feature to merge{survivorText}";
 			}
 			else
 			{
@@ -657,6 +634,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			await QueuedTask.Run(() =>
 			{
+				//ToDiskuss: Old version worked to refresh the count in List By Selection properly but lead to GOTOP-530
+				//ClearSelection();
+				//SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
+
+				//ToDiskuss: New version works to prevent GOTOP-530
+				//but does not refresh the count in List By Selection properly
 				ToolUtils.SelectNewFeatures(
 					new[] { survivingFeature }, MapView.Active);
 			});
@@ -788,8 +771,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			{
 				return QueuedTask.Run(() =>
 				{
-					IList<Feature> selectedFeatures = GetApplicableSelectedFeatures(ActiveMapView).ToList();
-					bool hasMultipleFeatures = selectedFeatures.Count >= 2;
+					IList<Feature> selectedFeatures =
+						GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
 					MergerBase merger = GetMerger();
 
@@ -797,14 +780,11 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 					switch (action)
 					{
-						case MergeAction.MergeWithFirstFeature:
-							return canMerge && hasMultipleFeatures && _firstFeature != null;
-
 						case MergeAction.MergeWithLargestFeature:
-							return canMerge && hasMultipleFeatures;
+							return canMerge;
 
 						case MergeAction.MergeWithClickedFeature:
-							return canMerge && hasMultipleFeatures && ContextClickedFeature != null;
+							return canMerge && ContextClickedFeature != null;
 
 						default:
 							throw new NotSupportedException($"Unsupported merge action: {action}");
@@ -823,10 +803,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			switch (action)
 			{
-				case MergeAction.MergeWithFirstFeature:
-					await MergeFeaturesUsingFirstFeatureAsync();
-					break;
-
 				case MergeAction.MergeWithLargestFeature:
 					await MergeFeaturesUsingLargestFeatureAsync();
 					break;
@@ -840,89 +816,43 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
-		private async Task MergeFeaturesUsingFirstFeatureAsync()
-		{
-			try
-			{
-				await QueuedTask.Run(async () =>
-				{
-					if (_firstFeature == null)
-					{
-						_msg.Info(
-							"No first feature available. Please select features in sequence.");
-						return;
-					}
-
-					IList<Feature> selectedFeatures =
-						GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-					if (selectedFeatures.Count < 2)
-					{
-						_msg.Info("Please select at least 2 features to merge.");
-						return;
-					}
-
-					MergerBase merger = GetMerger();
-
-					if (! merger.CanMerge(selectedFeatures))
-					{
-						_msg.Info("The selected features cannot be merged.");
-						return;
-					}
-
-					Feature survivingFeature =
-						await merger.MergeFeatures(selectedFeatures, _firstFeature);
-
-					if (survivingFeature != null)
-					{
-						await SelectResultAndLogNextStep(survivingFeature);
-					}
-				});
-			}
-			catch (Exception e)
-			{
-				_msg.Warn("Error merging features using first feature", e);
-			}
-		}
-
 		private async Task MergeFeaturesUsingLargestFeatureAsync()
 		{
 			try
 			{
 				await QueuedTask.Run(async () =>
 				{
-					IList<Feature> selectedFeatures =
-						GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-					if (selectedFeatures.Count < 2)
-					{
-						_msg.Info("Please select at least 2 features to merge.");
-						return;
-					}
-
-					MergerBase merger = GetMerger();
-
-					if (! merger.CanMerge(selectedFeatures))
-					{
-						_msg.Info("The selected features cannot be merged.");
-						return;
-					}
-
-					Feature largestFeature = GeometryUtils.GetLargestFeature(selectedFeatures);
-					Assert.NotNull(largestFeature, "No largest feature identified.");
-
-					Feature survivingFeature =
-						await merger.MergeFeatures(selectedFeatures, largestFeature);
-
-					if (survivingFeature != null)
-					{
-						await SelectResultAndLogNextStep(survivingFeature);
-					}
+					await MergeFeaturesUsingLargestFeatureCoreAsync();
 				});
 			}
 			catch (Exception e)
 			{
 				_msg.Warn("Error merging features using largest feature", e);
+			}
+		}
+
+		private async Task MergeFeaturesUsingLargestFeatureCoreAsync()
+		{
+			IList<Feature> selectedFeatures =
+				GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+			MergerBase merger = GetMerger();
+
+			if (! merger.CanMerge(selectedFeatures))
+			{
+				_msg.Info("The selected features cannot be merged.");
+				return;
+			}
+
+			Feature largestFeature = GeometryUtils.GetLargestFeature(selectedFeatures);
+			Assert.NotNull(largestFeature, "No largest feature identified.");
+
+			Feature survivingFeature =
+				await merger.MergeFeatures(selectedFeatures, largestFeature);
+
+			if (survivingFeature != null)
+			{
+				await SelectResultAndLogNextStep(survivingFeature);
 			}
 		}
 
@@ -941,12 +871,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 					IList<Feature> selectedFeatures =
 						GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-					if (selectedFeatures.Count < 2)
-					{
-						_msg.Info("Please select at least 2 features to merge.");
-						return;
-					}
 
 					MergerBase merger = GetMerger();
 
