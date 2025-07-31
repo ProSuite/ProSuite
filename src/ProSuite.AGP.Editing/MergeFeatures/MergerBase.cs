@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			if (features.Count < 2)
 			{
-				_msg.Info("Can not merge less than two features.");
+				_msg.Info("Cannot merge less than two features.");
 
 				return false;
 			}
@@ -167,7 +167,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			var deletedFeatures = new List<Feature>();
 			foreach (Feature feature in features)
 			{
-				if (feature == survivor)
+				//OLD: if (feature == survivor)
+				if (feature.GetObjectID() == survivor.GetObjectID() &&
+				    feature.GetTable().GetID() == survivor.GetTable().GetID())
 				{
 					updateFeature = feature;
 				}

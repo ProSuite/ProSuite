@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -30,6 +32,13 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.MergeFeatures
 {
+	public enum MergeAction
+	{
+		MergeWithFirstFeature,
+		MergeWithLargestFeature,
+		MergeWithClickedFeature
+	}
+
 	public abstract class MergeFeaturesToolBase : OneClickToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -41,6 +50,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private Feature _firstFeature;
 
 		private SelectionCursors _secondPhaseCursors;
+
+		public Feature ContextClickedFeature { get; set; }
+
+		protected abstract ContextMenu GetContextMenu(Point screenLocation);
 
 		protected MergeFeaturesToolBase()
 		{
@@ -150,6 +163,70 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
+		protected override async void OnToolMouseDown(MapViewMouseButtonEventArgs args)
+		{
+			if (args.ChangedButton == MouseButton.Right)
+			{
+				args.Handled = true;
+
+				await DetectFeaturesAtRightClick(args.ClientPoint);
+
+				Point screenPosition = ActiveMapView.ClientToScreen(args.ClientPoint);
+				ShowContextMenu(screenPosition);
+			}
+		}
+
+		private async Task DetectFeaturesAtRightClick(Point clientPoint)
+		{
+			_msg.Debug("Detecting features at right-click point...");
+
+			ContextClickedFeature = null;
+
+			await QueuedTask.Run(() =>
+			{
+				try
+				{
+					IList<Feature> selectedFeatures =
+						GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+					if (selectedFeatures.Count < 2)
+					{
+						_msg.Debug($"Not enough features selected: {selectedFeatures.Count}");
+						return;
+					}
+
+					MapPoint mapPoint = ActiveMapView.ClientToMap(clientPoint);
+
+					Geometry searchGeometry =
+						GeometryEngine.Instance.Buffer(mapPoint, GetSelectionTolerancePixels());
+
+					IList<Feature> featuresAtClick = selectedFeatures
+					                                 .Where(f => GeometryEngine.Instance.Intersects(
+						                                        f.GetShape(), searchGeometry))
+					                                 .ToList();
+
+					if (featuresAtClick.Count == 1)
+					{
+						ContextClickedFeature = featuresAtClick[0];
+						_msg.Debug(
+							$"Found feature at click point: {ContextClickedFeature.GetObjectID()}");
+					}
+					else if (featuresAtClick.Count > 1)
+					{
+						_msg.Debug("Multiple features found at click point");
+					}
+					else
+					{
+						_msg.Debug("No features found at click point");
+					}
+				}
+				catch (Exception ex)
+				{
+					_msg.Warn("Error detecting features at click point", ex);
+				}
+			});
+		}
+
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 		{
 			try
@@ -162,9 +239,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 					{
 						try
 						{
-							//Dictionary<MapMember, List<long>> selectionByLayer =
-							//	SelectionUtils.GetSelection(ActiveMapView.Map);
-
 							IList<Feature> selectedFeatures =
 								GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
@@ -347,29 +421,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			       geometryType == GeometryType.Multipoint;
 		}
 
-		//protected override void OnMouseMoveCore(int button, int shift, int x, int y)
-		//{
-		//	if (_firstFeature == null || shift == 1)
-		//	{
-		//		base.OnMouseMoveCore(button, shift, x, y);
-		//	}
-		//	else
-		//	{
-		//		_envelopeDrawer?.OnMouseMove(button, shift, x, y);
-		//	}
-		//}
-
-		//protected override bool OnContextMenuCore(int x, int y)
-		//{
-		//	ICommandBar bar = CreateContextMenu(Assert.NotNull(Application));
-
-		//	Point mousePosition = Control.MousePosition;
-
-		//	bar.Popup(mousePosition.X, mousePosition.Y);
-
-		//	return true;
-		//}
-
 		#endregion
 
 		#region Tool Options DockPane
@@ -412,6 +463,20 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		#endregion
 
+		#region Context menu
+
+		private void ShowContextMenu(Point screenLocation)
+		{
+			ContextMenu contextMenu = GetContextMenu(screenLocation);
+
+			if (contextMenu is not null)
+			{
+				contextMenu.IsOpen = true;
+			}
+		}
+
+		#endregion
+
 		#region Non-public members
 
 		[NotNull]
@@ -428,47 +493,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			return null;
 		}
-
-		//[NotNull]
-		//private ICommandBar CreateContextMenu([NotNull] IApplication application)
-		//{
-		//	Assert.ArgumentNotNull(application, nameof(application));
-
-		//	ICommandBars bars = application.Document.CommandBars;
-		//	ICommandBar bar = bars.Create("MergeFeaturesContextMenu",
-		//								  esriCmdBarType.esriCmdBarTypeShortcutMenu);
-
-		//	object optional = Type.Missing;
-
-		//	Type largestPartCmdType = MergeWithLargestAsPrimaryCmd();
-
-		//	if (largestPartCmdType != null)
-		//	{
-		//		bar.Add(UIDUtils.CreateUID(largestPartCmdType), ref optional);
-		//	}
-
-		//	Type selectPartCmdType = MergeWithSelectedAsPrimaryCmd();
-
-		//	if (selectPartCmdType != null)
-		//	{
-		//		bar.Add(UIDUtils.CreateUID(selectPartCmdType), ref optional);
-		//	}
-
-		//	ICommandItem item = bar.Add(
-		//		UIDUtils.CreateUID(KnownMxCommands.ZoomToSelected),
-		//		ref optional);
-		//	item.Group = true;
-
-		//	bar.Add(UIDUtils.CreateUID(KnownMxCommands.ZoomToPreviousExtent),
-		//			ref optional);
-		//	bar.Add(UIDUtils.CreateUID(KnownMxCommands.ZoomToNextExtent), ref optional);
-
-		//	bar.Add(UIDUtils.CreateUID(KnownMxCommands.ZoomInFixed), ref optional);
-		//	bar.Add(UIDUtils.CreateUID(KnownMxCommands.ZoomOutFixed), ref optional);
-		//	bar.Add(UIDUtils.CreateUID(KnownMxCommands.ClearSelection), ref optional);
-
-		//	return bar;
-		//}
 
 		private MergeToolOptions InitializeOptions()
 		{
@@ -756,5 +780,197 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		}
 
 		#endregion
+
+		// Add this method to check if a specific merge action can be executed
+		public bool CanExecuteMergeAction(MergeAction action)
+		{
+			try
+			{
+				return QueuedTask.Run(() =>
+				{
+					IList<Feature> selectedFeatures = GetApplicableSelectedFeatures(ActiveMapView).ToList();
+					bool hasMultipleFeatures = selectedFeatures.Count >= 2;
+
+					MergerBase merger = GetMerger();
+
+					bool canMerge = merger.CanMerge(selectedFeatures);
+
+					switch (action)
+					{
+						case MergeAction.MergeWithFirstFeature:
+							return canMerge && hasMultipleFeatures && _firstFeature != null;
+
+						case MergeAction.MergeWithLargestFeature:
+							return canMerge && hasMultipleFeatures;
+
+						case MergeAction.MergeWithClickedFeature:
+							return canMerge && hasMultipleFeatures && ContextClickedFeature != null;
+
+						default:
+							throw new NotSupportedException($"Unsupported merge action: {action}");
+					}
+				}).Result;
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn("Error checking if merge action can execute", ex);
+				return false;
+			}
+		}
+
+		// Add this method to execute a specific merge action
+		public async Task ExecuteMergeActionAsync(MergeAction action)
+		{
+			switch (action)
+			{
+				case MergeAction.MergeWithFirstFeature:
+					await MergeFeaturesUsingFirstFeatureAsync();
+					break;
+
+				case MergeAction.MergeWithLargestFeature:
+					await MergeFeaturesUsingLargestFeatureAsync();
+					break;
+
+				case MergeAction.MergeWithClickedFeature:
+					await MergeFeaturesUsingClickedFeatureAsync();
+					break;
+
+				default:
+					throw new NotSupportedException($"Unsupported merge action: {action}");
+			}
+		}
+
+		private async Task MergeFeaturesUsingFirstFeatureAsync()
+		{
+			try
+			{
+				await QueuedTask.Run(async () =>
+				{
+					if (_firstFeature == null)
+					{
+						_msg.Info(
+							"No first feature available. Please select features in sequence.");
+						return;
+					}
+
+					IList<Feature> selectedFeatures =
+						GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+					if (selectedFeatures.Count < 2)
+					{
+						_msg.Info("Please select at least 2 features to merge.");
+						return;
+					}
+
+					MergerBase merger = GetMerger();
+
+					if (! merger.CanMerge(selectedFeatures))
+					{
+						_msg.Info("The selected features cannot be merged.");
+						return;
+					}
+
+					Feature survivingFeature =
+						await merger.MergeFeatures(selectedFeatures, _firstFeature);
+
+					if (survivingFeature != null)
+					{
+						await SelectResultAndLogNextStep(survivingFeature);
+					}
+				});
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error merging features using first feature", e);
+			}
+		}
+
+		private async Task MergeFeaturesUsingLargestFeatureAsync()
+		{
+			try
+			{
+				await QueuedTask.Run(async () =>
+				{
+					IList<Feature> selectedFeatures =
+						GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+					if (selectedFeatures.Count < 2)
+					{
+						_msg.Info("Please select at least 2 features to merge.");
+						return;
+					}
+
+					MergerBase merger = GetMerger();
+
+					if (! merger.CanMerge(selectedFeatures))
+					{
+						_msg.Info("The selected features cannot be merged.");
+						return;
+					}
+
+					Feature largestFeature = GeometryUtils.GetLargestFeature(selectedFeatures);
+					Assert.NotNull(largestFeature, "No largest feature identified.");
+
+					Feature survivingFeature =
+						await merger.MergeFeatures(selectedFeatures, largestFeature);
+
+					if (survivingFeature != null)
+					{
+						await SelectResultAndLogNextStep(survivingFeature);
+					}
+				});
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error merging features using largest feature", e);
+			}
+		}
+
+		private async Task MergeFeaturesUsingClickedFeatureAsync()
+		{
+			try
+			{
+				await QueuedTask.Run(async () =>
+				{
+					if (ContextClickedFeature == null)
+					{
+						_msg.Info(
+							"No feature was clicked. Please click on a feature to use as primary.");
+						return;
+					}
+
+					IList<Feature> selectedFeatures =
+						GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+					if (selectedFeatures.Count < 2)
+					{
+						_msg.Info("Please select at least 2 features to merge.");
+						return;
+					}
+
+					MergerBase merger = GetMerger();
+
+					if (! merger.CanMerge(selectedFeatures))
+					{
+						_msg.Info("The selected features cannot be merged.");
+						return;
+					}
+
+					Feature survivingFeature =
+						await merger.MergeFeatures(selectedFeatures, ContextClickedFeature);
+
+					ContextClickedFeature = null;
+
+					if (survivingFeature != null)
+					{
+						await SelectResultAndLogNextStep(survivingFeature);
+					}
+				});
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error merging features using clicked feature", e);
+			}
+		}
 	}
 }
