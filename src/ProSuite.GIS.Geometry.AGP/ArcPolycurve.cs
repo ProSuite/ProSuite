@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geometry.AGP
@@ -21,7 +22,11 @@ namespace ProSuite.GIS.Geometry.AGP
 		public IPoint FromPoint
 		{
 			// No need for cloning because the geometries are immutable
-			get => new ArcPoint(_proPolycurve.Points[0]);
+			get
+			{
+				MapPoint proStartPoint = _proPolycurve.Points[0];
+				return new ArcPoint(proStartPoint);
+			}
 			set => throw new NotImplementedException(
 				       "Immutable geometry. Use other implementation.");
 		}
@@ -34,7 +39,11 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public IPoint ToPoint
 		{
-			get => new ArcPoint(_proPolycurve.Points[_proPolycurve.PointCount - 1]);
+			get
+			{
+				MapPoint endPoint = _proPolycurve.Points[_proPolycurve.PointCount - 1];
+				return new ArcPoint(endPoint);
+			}
 			set => throw new NotImplementedException(
 				       "Immutable geometry. Use other implementation.");
 		}
@@ -85,15 +94,35 @@ namespace ProSuite.GIS.Geometry.AGP
 		public IGeometry get_Geometry(int index)
 		{
 			ReadOnlySegmentCollection segmentCollection = _proPolycurve.Parts[index];
+			bool asRing = ProGeometry is Polygon;
 
-			throw new NotImplementedException();
+			return new ArcPath(segmentCollection, asRing, SpatialReference);
 		}
 
 		public IEnumerable<KeyValuePair<int, ISegment>> FindSegments(
 			double xMin, double yMin, double xMax, double yMax, double tolerance,
 			bool allowIndexing = true, Predicate<int> predicate = null)
 		{
-			throw new NotImplementedException();
+			int index = 0;
+
+			foreach (ReadOnlySegmentCollection segmentCollection in _proPolycurve.Parts)
+			{
+				foreach (ISegment segment in GetSegments(segmentCollection,
+				                                         SpatialReference as ArcSpatialReference))
+				{
+					index++;
+
+					if (! segment.ExtentIntersectsXY(xMin, yMin, xMax, yMax, tolerance))
+					{
+						continue;
+					}
+
+					if (predicate == null || predicate(index))
+					{
+						yield return new KeyValuePair<int, ISegment>(index, segment);
+					}
+				}
+			}
 		}
 
 		public bool HasNonLinearSegments()
@@ -102,5 +131,25 @@ namespace ProSuite.GIS.Geometry.AGP
 		}
 
 		#endregion
+
+		protected static IEnumerable<ISegment> GetSegments([NotNull] ReadOnlySegmentCollection part,
+		                                                   [CanBeNull] ArcSpatialReference sr)
+		{
+			foreach (Segment segment in part)
+			{
+				if (segment is LineSegment lineSegment)
+				{
+					yield return new ArcLineSegment(lineSegment, sr);
+				}
+				else if (segment is EllipticArcSegment arcSegment)
+				{
+					yield return new ArcEllipticSegment(arcSegment, sr);
+				}
+				else if (segment is CubicBezierSegment bezierSegment)
+				{
+					yield return new ArcBezierSegment(bezierSegment, sr);
+				}
+			}
+		}
 	}
 }

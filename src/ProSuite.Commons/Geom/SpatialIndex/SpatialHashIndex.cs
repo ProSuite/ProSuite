@@ -202,20 +202,25 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// <param name="metric">The type of distance you want to use to order the tiles</param>
 		/// <param name="maxDistance">The maximum distance until which tiles are returned.</param>
 		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
+		/// <param name="returnEmptyTiles">Whether to return tiles that do not contain points</param>
 		/// <returns></returns>
 		public IEnumerable<IEnumerable<T>> FindTilesAround(double x, double y,
 		                                                   double maxDistance = double.MaxValue,
 		                                                   DistanceMetric metric =
 			                                                   DistanceMetric.EuclideanDistance,
 		                                                   [CanBeNull] Predicate<T> predicate =
-			                                                   null)
+			                                                   null,
+		                                                   bool returnEmptyTiles = false)
 		{
 			if (_tiles.Count == 0)
 				yield break;
+			
+			double maxExistingTileDistance = Math.Ceiling(GetDistanceToFurthestPopulatedTile(x, y));
 
-			double maxExistingTileDistance = GetDistanceToFurthestPopulatedTile(x, y);
-
-			double effectiveMaxDistance = Math.Min(maxExistingTileDistance, maxDistance);
+			// Note: We take the ceiling of the actual distance to ensure that all points that are within the defined radius
+			//		 are actually returned. In some cases this might lead to points being returned that are further away
+			//		 than the max distance.
+			double effectiveMaxDistance = Math.Ceiling((Math.Min(maxExistingTileDistance, maxDistance)));
 
 			foreach (var tileIndex in _tilingDefinition.GetTileIndexAround(
 				         x, y, metric, effectiveMaxDistance))
@@ -224,6 +229,10 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				if (_tiles.ContainsKey(tileIndex))
 				{
 					yield return FindItemsWithinTile(tileIndex, predicate);
+				}
+				else if (returnEmptyTiles)
+				{
+					yield return new List<T>();
 				}
 			}
 		}

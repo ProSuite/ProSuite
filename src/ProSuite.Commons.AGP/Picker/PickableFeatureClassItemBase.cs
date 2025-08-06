@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Media;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
@@ -17,8 +18,10 @@ namespace ProSuite.Commons.AGP.Picker
 
 		protected PickableFeatureClassItemBase([NotNull] string datasetName,
 		                                       [NotNull] IEnumerable<long> oids,
-		                                       Geometry geometry)
+		                                       [NotNull] Geometry geometry)
 		{
+			Assert.NotNullOrEmpty(datasetName);
+
 			_datasetName = datasetName;
 			_oids = oids.ToHashSet();
 			Geometry = geometry;

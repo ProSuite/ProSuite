@@ -128,6 +128,62 @@ namespace ProSuite.Commons.AGP.Picker
 
 		#region Show Picker
 
+		/// <summary>
+		/// Returns a feature item from the provided feature selections filtered to the lowest
+		/// geometry dimension.
+		/// </summary>
+		/// <param name="selectionByLayer"></param>
+		/// <param name="precedence"></param>
+		/// <returns>The single feature item or null if no selected feature exists in any of the
+		/// feature selections or none has been picked.</returns>
+		/// <remarks>The provided feature selections are filtered to the lowest geometry
+		/// dimension that contains at least one feature. If the lowest geometry dimension contains
+		/// more than one feature, the picker UI is shown.</remarks>
+		[ItemCanBeNull]
+		public static async Task<IPickableFeatureItem> PickSingleAsync(
+			[NotNull] IEnumerable<FeatureSelectionBase> selectionByLayer,
+			[NotNull] IPickerPrecedence precedence)
+		{
+			IList<IPickableItem> lowestGeometryDimensionFeatures =
+				GetLowestGeometryDimensionFeatureItems(selectionByLayer);
+
+			return
+				(IPickableFeatureItem) await PickSingleAsync(
+					                       lowestGeometryDimensionFeatures, precedence);
+		}
+
+		/// <summary>
+		/// Returns the single item selected from the picker control if more than one item is
+		/// provided. Otherwise, returns the only item or null if no items are provided or none
+		/// has been selected by the user.
+		/// </summary>
+		/// <param name="items"></param>
+		/// <param name="precedence"></param>
+		/// <returns></returns>
+		[ItemCanBeNull]
+		public static async Task<IPickableItem> PickSingleAsync(
+			[NotNull] ICollection<IPickableItem> items,
+			[NotNull] IPickerPrecedence precedence)
+		{
+			Assert.ArgumentNotNull(precedence, nameof(precedence));
+
+			if (items.Count == 0)
+			{
+				return null;
+			}
+
+			if (items.Count == 1)
+			{
+				return items.First();
+			}
+
+			var vm = new PickerViewModel(precedence.GetSelectionGeometry());
+
+			PickerService service = new PickerService(precedence);
+
+			return await service.Pick(items, vm);
+		}
+
 		public static async Task<IPickableItem> ShowPickerAsync(
 			IPickerPrecedence precedence,
 			IEnumerable<FeatureSelectionBase> candidates,
@@ -203,6 +259,80 @@ namespace ProSuite.Commons.AGP.Picker
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Gets the count of features with the lowest non-empty geometry dimension.
+		/// </summary>
+		/// <param name="layerSelection">The layer selections</param>
+		/// <returns>The number of features with the lowest non-empty dimension.</returns>
+		public static int GetLowestGeometryDimensionFeatureCount(
+			[NotNull] IEnumerable<FeatureSelectionBase> layerSelection)
+		{
+			var count = 0;
+
+			// Initialize with sentinel value to detect the first dimension
+			int shapeDimension = -1;
+
+			foreach (FeatureSelectionBase selection in
+			         layerSelection.OrderBy(fcs => fcs.ShapeDimension))
+			{
+				if (shapeDimension < selection.ShapeDimension)
+				{
+					// If we've already counted features at a lower dimension, return that count
+					if (count > 0)
+					{
+						return count;
+					}
+
+					// If there are no rows at the current dimension, count objects in the next one
+					shapeDimension = selection.ShapeDimension;
+				}
+
+				// Add all features of the current dimension to the count
+				count += selection.GetCount();
+			}
+
+			// Return the total count (may be 0 if no features were found)
+			return count;
+		}
+
+		/// <summary>
+		/// Gets all features from the specified layer selections with the lowest dimension that
+		/// has at least one feature.
+		/// </summary>
+		/// <param name="layerSelection">The layer selections</param>
+		/// <returns>The list of features with the lowest non-empty dimension.</returns>
+		/// <remarks>This method iterates the features in the <see cref="layerSelection"/> only once
+		/// or not at all if a lower-selection</remarks>
+		public static IList<IPickableItem> GetLowestGeometryDimensionFeatureItems(
+			[NotNull] IEnumerable<FeatureSelectionBase> layerSelection)
+		{
+			var result = new List<IPickableItem>();
+
+			int shapeDimension = -1;
+
+			// Loop through feature selections (points, then lines, polygons/multipatches)
+			foreach (FeatureSelectionBase selection in
+			         layerSelection.OrderBy(fcs => fcs.ShapeDimension))
+			{
+				if (shapeDimension < selection.ShapeDimension)
+				{
+					// If we've already found features at a lower dimension, return them
+					if (result.Count > 0)
+					{
+						return result;
+					}
+
+					// If there are no rows at the current dimension, count objects in the next one
+					shapeDimension = selection.ShapeDimension;
+				}
+
+				// Add all features of the current dimension to the count
+				result.AddRange(PickableFeatureItemsFactory.CreatePickableFeatureItems(selection));
+			}
+
+			return result;
+		}
 
 		public static void Select(List<IPickableItem> items,
 		                          SelectionCombinationMethod selectionMethod)

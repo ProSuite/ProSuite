@@ -8,6 +8,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.Workflow;
 
 namespace ProSuite.DomainModel.AGP.Workflow
 {
@@ -16,6 +17,9 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	/// because they are in the map. The project workspace is a concept the users need to be
 	/// aware of in order to get the expected specifications and for the system to know which
 	/// datasets from which version shall be verified. For more details, see the admin help.
+	/// The project workspace, managed by a <see cref="ISessionContext"/> can largely replace
+	/// the work unit concept in a simplified way, i.e. provide the datasets that are relevant
+	/// and their representation in an actual workspace, together with project-specific settings.
 	/// </summary>
 	public class ProjectWorkspace
 	{
@@ -40,6 +44,9 @@ namespace ProSuite.DomainModel.AGP.Workflow
 
 		public int ProjectId { get; }
 		public string ProjectName { get; }
+
+		public IProjectSettings ProjectSettings { get; set; }
+
 		public IList<IDdxDataset> Datasets { get; }
 		public Datastore Datastore { get; }
 		public Connector DatastoreConnector { get; set; }
@@ -50,15 +57,11 @@ namespace ProSuite.DomainModel.AGP.Workflow
 
 		public bool IsMasterDatabaseWorkspace { get; set; }
 
+		/// <summary>
+		/// Some projects could exclude read-only datasets from the project workspace determination
+		/// logic.
+		/// </summary>
 		public bool ExcludeReadOnlyDatasetsFromProjectWorkspace { get; set; }
-
-		public double MinimumScaleDenominator { get; set; }
-
-		public string ToolConfigDirectory { get; set; }
-
-		public string WorkListConfigDir { get; set; }
-
-		public string AttributeEditorConfigDir { get; set; }
 
 		public string GetVersionName()
 		{
