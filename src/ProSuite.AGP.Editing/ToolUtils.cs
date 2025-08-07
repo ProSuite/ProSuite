@@ -174,10 +174,17 @@ namespace ProSuite.AGP.Editing
 		/// </summary>
 		/// <param name="newFeatures"></param>
 		/// <param name="mapView"></param>
-		public static void SelectNewFeatures(IEnumerable<Feature> newFeatures, MapView mapView)
+		/// <param name="clearExistingSelection"></param>
+		public static void SelectNewFeatures([NotNull] IEnumerable<Feature> newFeatures,
+		                                     [NotNull] MapView mapView,
+		                                     bool clearExistingSelection)
 		{
 			var layersWithSelection =
 				SelectionUtils.GetSelection(mapView.Map).Keys.OfType<BasicFeatureLayer>().ToList();
+			if (clearExistingSelection)
+			{
+				SelectionUtils.ClearSelection(mapView.Map);
+			}
 
 			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
 		}

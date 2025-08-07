@@ -641,7 +641,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				//ToDiskuss: New version works to prevent GOTOP-530
 				//but does not refresh the count in List By Selection properly
 				ToolUtils.SelectNewFeatures(
-					new[] { survivingFeature }, MapView.Active);
+					new[] { survivingFeature }, MapView.Active, true);
 			});
 
 			if (_mergeToolOptions.UseMergeResultForNextMerge)
