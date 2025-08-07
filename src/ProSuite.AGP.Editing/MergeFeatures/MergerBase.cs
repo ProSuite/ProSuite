@@ -43,19 +43,17 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		/// </summary>
 		public IMergeConditionEvaluator MergeConditionEvaluator { get; set; }
 
-		public bool CanMerge(IList<Feature> features)
+		public bool CanMerge(IList<Feature> features, out string reason)
 		{
 			if (features.Any(feature => feature == null))
 			{
-				_msg.Info("One of the merge features is null. Cannot merge.");
-
+				reason = "One of the merge features is null. Cannot merge.";
 				return false;
 			}
 
 			if (features.Count < 2)
 			{
-				_msg.Info("Cannot merge less than two features.");
-
+				reason = "Cannot merge less than two features.";
 				return false;
 			}
 
@@ -67,13 +65,11 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			if (differentGeometryTypes)
 			{
-				_msg.Info(
-					"The selected features do not have the same geometry type. Cannot merge.");
-
+				reason = "The selected features do not have the same geometry type. Cannot merge.";
 				return false;
 			}
 
-			if (! CanMergeCore(features))
+			if (! CanMergeCore(features, out reason))
 			{
 				return false;
 			}
@@ -82,19 +78,23 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			if (! AssumeStoredGeometryIsSimple &&
 			    ! ToolUtils.ReasonablySimple(features))
 			{
-				Dialog.Warning("Cannot merge features",
-				               $"Unable to merge the selected features.{Environment.NewLine}" +
-				               $"Please correct the input features first, for example with the clean geometry tool.");
-				return false;
+				throw new InvalidOperationException(
+					"Cannot merge features because they are not simple.");
 			}
 
+			reason = null;
 			return true;
 		}
 
-		public bool AssumeStoredGeometryIsSimple { get; set; }
+		// TODO: Test with really broken polygons (e.g. shape file with incorrect orientation poly)
+		//       In the past these cases have resulted in very inconsistent merge results. It would
+		//       be better to prevent merging these cases in the first place. Setting to true for
+		//       the moment to avoid waiting for the ContextMenu to open when many features are selected.
+		public bool AssumeStoredGeometryIsSimple { get; set; } = true;
 
-		protected virtual bool CanMergeCore(IList<Feature> features)
+		protected virtual bool CanMergeCore(IList<Feature> features, out string reason)
 		{
+			reason = null;
 			return true;
 		}
 

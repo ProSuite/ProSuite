@@ -610,10 +610,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			IList<Feature> features = new List<Feature> { _firstFeature, secondFeature };
 
-			bool canMerge = await QueuedTask.Run(() => merger.CanMerge(features));
+			string reason = null;
+			bool canMerge = await QueuedTask.Run(() => merger.CanMerge(features, out reason));
 
 			if (! canMerge)
 			{
+				_msg.Info(reason);
 				return false;
 			}
 
@@ -789,7 +791,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 					MergerBase merger = GetMerger();
 
-					bool canMerge = merger.CanMerge(selectedFeatures);
+					bool canMerge = merger.CanMerge(selectedFeatures, out _);
 
 					switch (action)
 					{
@@ -806,7 +808,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 			catch (Exception ex)
 			{
-				_msg.Warn("Error checking if merge action can execute", ex);
+				_msg.Warn($"Error checking if merge action can execute: {ex.Message}", ex);
 				return false;
 			}
 		}
@@ -859,9 +861,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			MergerBase merger = GetMerger();
 
-			if (! merger.CanMerge(selectedFeatures))
+			if (! merger.CanMerge(selectedFeatures, out string reason))
 			{
-				_msg.Info("The selected features cannot be merged.");
+				_msg.Info(reason);
 				return null;
 			}
 
@@ -891,9 +893,9 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 					MergerBase merger = GetMerger();
 
-					if (! merger.CanMerge(selectedFeatures))
+					if (! merger.CanMerge(selectedFeatures, out string reason))
 					{
-						_msg.Info("The selected features cannot be merged.");
+						_msg.Info(reason);
 						return;
 					}
 
