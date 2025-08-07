@@ -181,6 +181,7 @@ namespace ProSuite.AGP.Editing
 		{
 			var layersWithSelection =
 				SelectionUtils.GetSelection(mapView.Map).Keys.OfType<BasicFeatureLayer>().ToList();
+
 			if (clearExistingSelection)
 			{
 				SelectionUtils.ClearSelection(mapView.Map);

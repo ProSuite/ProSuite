@@ -167,7 +167,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			var deletedFeatures = new List<Feature>();
 			foreach (Feature feature in features)
 			{
-				//OLD: if (feature == survivor)
 				if (feature.GetObjectID() == survivor.GetObjectID() &&
 				    feature.GetTable().GetID() == survivor.GetTable().GetID())
 				{

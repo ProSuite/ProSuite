@@ -234,17 +234,24 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 				if (args.Key == _immediateMergeKey)
 				{
+					Feature survivingFeature = null;
+
 					await QueuedTask.Run(async () =>
 					{
 						try
 						{
-							await MergeFeaturesUsingLargestFeatureCoreAsync();
+							survivingFeature = await MergeFeaturesUsingLargestFeatureCoreAsync();
 						}
 						catch (Exception e)
 						{
 							_msg.Warn("Error merging immediatly", e);
 						}
 					});
+
+					if (survivingFeature != null)
+					{
+						await SelectResultAndSetupNextStep(survivingFeature);
+					}
 				}
 			}
 			catch (Exception e)
@@ -602,21 +609,20 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			MergerBase merger = await QueuedTask.Run(() => GetMerger());
 
 			IList<Feature> features = new List<Feature> { _firstFeature, secondFeature };
+
 			bool canMerge = await QueuedTask.Run(() => merger.CanMerge(features));
+
 			if (! canMerge)
 			{
 				return false;
 			}
 
-			// TODO: Remember the layer of the current selection to prioritize this layer when selecting the result feature!
-
 			bool flipFeatures =
 				await QueuedTask.Run(() => DetermineSecondFeatureIsUpdate(
 					                     _firstFeature, secondFeature));
 
-			Feature updateFeature = flipFeatures
-				                        ? secondFeature
-				                        : _firstFeature;
+			Feature updateFeature = flipFeatures ? secondFeature : _firstFeature;
+
 			Feature survivingFeature =
 				await QueuedTask.Run(() => merger.MergeFeatures(
 					                     new List<Feature> { _firstFeature, secondFeature },
@@ -624,26 +630,33 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			if (survivingFeature != null)
 			{
-				await QueuedTask.Run(() => SelectResultAndLogNextStep(survivingFeature));
+				await SelectResultAndSetupNextStep(survivingFeature);
 			}
 
 			return true;
 		}
 
-		private async Task SelectResultAndLogNextStep(Feature survivingFeature)
+		/// <summary>
+		/// IMPORTANT: This method must not be called from within a QueuedTask!
+		/// </summary>
+		/// <param name="survivingFeature"></param>
+		/// <returns></returns>
+		private async Task SelectResultAndSetupNextStep(Feature survivingFeature)
 		{
-			await QueuedTask.Run(() =>
-			{
-				//ToDiskuss: Old version worked to refresh the count in List By Selection properly but lead to GOTOP-530
-				//ClearSelection();
-				//SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
+			await QueuedTask.Run(() => ToolUtils.SelectNewFeatures(
+				                     new[] { survivingFeature }, MapView.Active, true));
 
-				//ToDiskuss: New version works to prevent GOTOP-530
-				//but does not refresh the count in List By Selection properly
-				ToolUtils.SelectNewFeatures(
-					new[] { survivingFeature }, MapView.Active, true);
-			});
+			// NOTE: Even though SetupNextStepAfterMerge can theoretically run without a QueuedTask,
+			//       we need to ensure it is called sequentially (i.e. queued) after the above method,
+			//       because the SelectionChanged events are only fired at the end of the queued task.
+			//       Within the SelectionChanged events, the _firstFeature can be changed which would
+			//       defy setting the first feature in the following method to null in case
+			//       UseMergeResultForNextMerge is false.
+			await QueuedTask.Run(() => SetupNextStepAfterMerge(survivingFeature));
+		}
 
+		private async Task SetupNextStepAfterMerge(Feature survivingFeature)
+		{
 			if (_mergeToolOptions.UseMergeResultForNextMerge)
 			{
 				_firstFeature = survivingFeature;
@@ -820,10 +833,18 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			try
 			{
+				Feature survivingFeature = null;
+
 				await QueuedTask.Run(async () =>
 				{
-					await MergeFeaturesUsingLargestFeatureCoreAsync();
+					survivingFeature =
+						await MergeFeaturesUsingLargestFeatureCoreAsync();
 				});
+
+				if (survivingFeature != null)
+				{
+					await SelectResultAndSetupNextStep(survivingFeature);
+				}
 			}
 			catch (Exception e)
 			{
@@ -831,7 +852,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
-		private async Task MergeFeaturesUsingLargestFeatureCoreAsync()
+		private async Task<Feature> MergeFeaturesUsingLargestFeatureCoreAsync()
 		{
 			IList<Feature> selectedFeatures =
 				GetApplicableSelectedFeatures(ActiveMapView).ToList();
@@ -841,25 +862,21 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			if (! merger.CanMerge(selectedFeatures))
 			{
 				_msg.Info("The selected features cannot be merged.");
-				return;
+				return null;
 			}
 
 			Feature largestFeature = GeometryUtils.GetLargestFeature(selectedFeatures);
 			Assert.NotNull(largestFeature, "No largest feature identified.");
 
-			Feature survivingFeature =
-				await merger.MergeFeatures(selectedFeatures, largestFeature);
-
-			if (survivingFeature != null)
-			{
-				await SelectResultAndLogNextStep(survivingFeature);
-			}
+			return await merger.MergeFeatures(selectedFeatures, largestFeature);
 		}
 
 		private async Task MergeFeaturesUsingClickedFeatureAsync()
 		{
 			try
 			{
+				Feature survivingFeature = null;
+
 				await QueuedTask.Run(async () =>
 				{
 					if (ContextClickedFeature == null)
@@ -880,16 +897,16 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 						return;
 					}
 
-					Feature survivingFeature =
+					survivingFeature =
 						await merger.MergeFeatures(selectedFeatures, ContextClickedFeature);
 
 					ContextClickedFeature = null;
-
-					if (survivingFeature != null)
-					{
-						await SelectResultAndLogNextStep(survivingFeature);
-					}
 				});
+
+				if (survivingFeature != null)
+				{
+					await SelectResultAndSetupNextStep(survivingFeature);
+				}
 			}
 			catch (Exception e)
 			{
