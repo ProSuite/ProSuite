@@ -196,8 +196,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 					MapPoint mapPoint = ActiveMapView.ClientToMap(clientPoint);
 
-					Geometry searchGeometry =
-						GeometryEngine.Instance.Buffer(mapPoint, GetSelectionTolerancePixels());
+					Geometry searchGeometry = ToolUtils.SketchToSearchGeometry(
+						mapPoint, GetSelectionTolerancePixels(), out bool _);
 
 					IList<Feature> featuresAtClick = selectedFeatures
 					                                 .Where(f => GeometryEngine.Instance.Intersects(
