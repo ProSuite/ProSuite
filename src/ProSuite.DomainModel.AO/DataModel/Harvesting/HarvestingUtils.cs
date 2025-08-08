@@ -297,7 +297,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 
 			IDatasetName featureDatasetName = DatasetUtils.GetFeatureDatasetName(datasetName);
 			Assert.NotNull(featureDatasetName,
-			               "Unable to determine feature dataset name for {0}. The dataset type is probably not supported on this plattform.",
+			               "Unable to determine feature dataset name for {0}. The dataset type is probably not supported on this platform.",
 			               datasetName.Name);
 
 			featureDatasetElement.FeatureDatasetName =

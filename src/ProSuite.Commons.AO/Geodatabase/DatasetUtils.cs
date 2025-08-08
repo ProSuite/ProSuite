@@ -19,7 +19,7 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using Path = System.IO.Path;
-#if !Server
+#if !Server || ARCGIS_11_5_OR_GREATER
 using ESRI.ArcGIS.GeoDatabaseExtensions;
 #endif
 
@@ -2408,7 +2408,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return relationshipClassName.FeatureDatasetName;
 			}
 
-#if !Server
 			var topologyName = datasetName as ITopologyName;
 			if (topologyName != null)
 			{
@@ -2421,16 +2420,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return geometricNetworkName.FeatureDatasetName;
 			}
 
+			var networkDatasetName = datasetName as INetworkDatasetName;
+			if (networkDatasetName != null)
+			{
+				return networkDatasetName.FeatureDatasetName;
+			}
+
+#if ARCGIS_11_5_OR_GREATER
 			var terrainName = datasetName as ITerrainName;
 			if (terrainName != null)
 			{
 				return terrainName.FeatureDatasetName;
 			}
+#endif
 
-			var networkDatasetName = datasetName as INetworkDatasetName;
-			if (networkDatasetName != null)
+#if !Server
+			var terrainName = datasetName as ITerrainName;
+			if (terrainName != null)
 			{
-				return networkDatasetName.FeatureDatasetName;
+				return terrainName.FeatureDatasetName;
 			}
 
 			var fabricName = datasetName as ICadastralFabricName;
@@ -2438,8 +2446,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return fabricName.FeatureDatasetName;
 			}
-
 #endif
+
 			// other dataset name, assume not in a feature dataset
 			return null;
 		}
@@ -3053,17 +3061,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return featureClass.FeatureDataset;
 			}
 
-#if !Server
+#if ARCGIS_11_5_OR_GREATER
 			if (dataset is ITerrain terrain)
 			{
 				return terrain.FeatureDataset;
 			}
+#endif
 
 			if (dataset is ITopology topology)
 			{
 				return topology.FeatureDataset;
 			}
-#endif
 
 			if (dataset is IRelationshipClass relationshipClass)
 			{
