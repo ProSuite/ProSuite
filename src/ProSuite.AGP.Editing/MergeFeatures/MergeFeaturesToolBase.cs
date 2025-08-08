@@ -682,7 +682,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				if (selectedCount == 0)
 				{
 					// Larger feature wins but the smaller was selected -> Just try any matching layer
-					SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
+					SelectionUtils.SelectFeature(ActiveMapView, survivingFeature);
 				}
 			});
 

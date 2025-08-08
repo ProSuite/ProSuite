@@ -25,7 +25,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected override async Task<bool> OnClickAsyncCore()
 		{
-			Map map = Assert.NotNull(MapView.Active?.Map, "No active map");
+			MapView mapView = MapView.Active;
+			Map map = Assert.NotNull(mapView?.Map, "No active map");
 
 			if (! MapUtils.HasSelection(map))
 			{
@@ -33,15 +34,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
-			long selectedCount = await QueuedTaskUtils.Run(() => SelectInvolvedRows(map));
+			long selectedCount = await QueuedTaskUtils.Run(() => SelectInvolvedRows(mapView));
 
 			return selectedCount > 0;
 		}
 
-		private long SelectInvolvedRows([NotNull] Map map)
+		private long SelectInvolvedRows([NotNull] MapView mapView)
 		{
 			IEnumerable<IDisplayTable> displayTables = MapUtils.GetDisplayTables<IDisplayTable>(
-				map.GetLayersAsFlattenedList(), null);
+				mapView.Map.GetLayersAsFlattenedList(), null);
 
 			long selectedCount = 0;
 			foreach (IDisplayTable displayTable in displayTables)
@@ -84,14 +85,14 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                 involvedRows.Count);
 
 				//select features or rows based on involved rows
-				selectedCount += SelectRows(involvedRows, map);
+				selectedCount += SelectRows(involvedRows, mapView);
 			}
 
 			return selectedCount;
 		}
 
 		private static long SelectRows([NotNull] Dictionary<string, List<long>> involvedRows,
-		                               [NotNull] Map map)
+		                               [NotNull] MapView mapView)
 		{
 			long selectedCount = 0;
 
@@ -104,7 +105,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				Predicate<IDisplayTable> layerPredicate = l => IsBasedOnTable(l, tableName);
 
 				long selectedRowsForTable =
-					SelectionUtils.SelectRows(map, layerPredicate, objectIds);
+					SelectionUtils.SelectRows(mapView, layerPredicate, objectIds);
 
 				if (selectedRowsForTable == 0)
 				{
