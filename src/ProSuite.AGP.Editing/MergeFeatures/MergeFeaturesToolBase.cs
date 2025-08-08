@@ -92,6 +92,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		/// </summary>
 		public IMergeConditionEvaluator MergeConditionEvaluator { get; protected set; }
 
+		public bool NoMultiselection { get; set; }
+
 		#region MapToolBase and OneClickToolBase overrides
 
 		protected bool AllowMultiSelection =>
@@ -111,6 +113,21 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private SelectionCursors GetSecondPhaseCursors()
 		{
 			return SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay2);
+		}
+
+		// TODO: Move to Base, consolidate NoMultiselection / AllowMultiSelection after pull subtree
+		protected override IPickerPrecedence CreatePickerPrecedence(
+			[NotNull] Geometry sketchGeometry)
+		{
+			var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
+			                                  ActiveMapView.ClientToScreen(CurrentMousePosition))
+			             {
+				             NoMultiselection =
+					             _mergeToolOptions.MergeSurvivor ==
+					             MergeOperationSurvivor.FirstObject
+			             };
+
+			return result;
 		}
 
 		protected override async Task HandleEscapeAsync()
