@@ -110,13 +110,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			throw new NotImplementedException();
 		}
 
-		protected override void IncludeBaseDatasets(ICollection<Dataset> verifiedDatasets,
-		                                            IVerificationContext verificationContext)
-		{
-			// NOTE that the base datasets of a terrain must be included in the verified
-			// datasets of the background verification context. They are not added here.
-		}
-
 		protected override IGdbTransaction CreateGdbTransaction()
 		{
 			return _backgroundVerificationInputs.CreateGdbTransaction();
