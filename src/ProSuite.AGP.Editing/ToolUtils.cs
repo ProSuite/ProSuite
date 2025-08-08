@@ -175,7 +175,8 @@ namespace ProSuite.AGP.Editing
 		/// <param name="newFeatures"></param>
 		/// <param name="mapView"></param>
 		/// <param name="clearExistingSelection"></param>
-		public static void SelectNewFeatures([NotNull] IEnumerable<Feature> newFeatures,
+		/// <returns>The number of selected features</returns>
+		public static long SelectNewFeatures([NotNull] IEnumerable<Feature> newFeatures,
 		                                     [NotNull] MapView mapView,
 		                                     bool clearExistingSelection)
 		{
@@ -187,7 +188,9 @@ namespace ProSuite.AGP.Editing
 				SelectionUtils.ClearSelection(mapView.Map);
 			}
 
-			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
+			long selectedCount = SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
+
+			return selectedCount;
 		}
 
 		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,

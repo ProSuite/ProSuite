@@ -662,8 +662,17 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		/// <returns></returns>
 		private async Task SelectResultAndSetupNextStep(Feature survivingFeature)
 		{
-			await QueuedTask.Run(() => ToolUtils.SelectNewFeatures(
-				                     new[] { survivingFeature }, MapView.Active, true));
+			await QueuedTask.Run(() =>
+			{
+				long selectedCount = ToolUtils.SelectNewFeatures(
+					new[] { survivingFeature }, MapView.Active, true);
+
+				if (selectedCount == 0)
+				{
+					// Larger feature wins but the smaller was selected -> Just try any matching layer
+					SelectionUtils.SelectFeature(ActiveMapView.Map, survivingFeature);
+				}
+			});
 
 			// NOTE: Even though SetupNextStepAfterMerge can theoretically run without a QueuedTask,
 			//       we need to ensure it is called sequentially (i.e. queued) after the above method,
