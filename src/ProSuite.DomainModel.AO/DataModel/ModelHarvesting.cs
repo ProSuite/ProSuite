@@ -383,6 +383,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 			{
 				_msg.VerboseDebug(() => $"Checking existing dataset {dataset.Name}");
 
+				if (dataset is ISimpleTerrainDataset)
+				{
+					// TOP-5958: This is not an actual geodatabase dataset, but a pure DDX model
+					// element, do not register it as deleted!
+					continue;
+				}
+
 				string gdbDatasetName = ModelElementUtils.GetGdbElementName(dataset, workspace,
 					model.DefaultDatabaseName, model.DefaultDatabaseSchemaOwner);
 
