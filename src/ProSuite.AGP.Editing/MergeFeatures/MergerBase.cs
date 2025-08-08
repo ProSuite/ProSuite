@@ -306,7 +306,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 					string survivorText =
 						_mergeSurvivor == MergeOperationSurvivor.LargerObject
 							? "larger feature"
-							: "first selected feature";
+							: "first / clicked feature";
 					_msg.InfoFormat("{0} has been updated ({1})", updatedFeatureFormat,
 					                survivorText);
 					_msg.InfoFormat("{0} has been deleted", deletedFeatureFormat);
