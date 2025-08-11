@@ -32,8 +32,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 			schemaExport.SetDelimiter(Environment.NewLine);
 
-			const bool export = true;
-			schemaExport.Create(writeToConsole, export);
+			const bool execute = true;
+			schemaExport.Create(writeToConsole, execute);
 		}
 
 		/// <summary>
@@ -49,8 +49,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 			schemaExport.SetOutputFile(outputFile);
 			schemaExport.SetDelimiter(Environment.NewLine);
 
-			const bool export = false;
-			schemaExport.Create(writeToConsole, export);
+			schemaExport.Create(writeToConsole, false);
 		}
 	}
 }
