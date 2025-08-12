@@ -507,9 +507,11 @@ namespace ProSuite.Microservices.AO
 					case esriFieldType.esriFieldTypeXML:
 						// Not supported, ignore
 						break;
+#if Server
 					case esriFieldType.esriFieldTypeBigInteger:
 					// TODO:
 					//attributeValue.BigIntValue =  (long) valueObject;
+#endif
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
