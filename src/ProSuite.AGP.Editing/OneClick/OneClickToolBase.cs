@@ -127,15 +127,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
 		}
 
-		protected override int GetSelectionTolerancePixels()
-		{
-			// TODO: Make more dynamic selection environment that supports changing the standard Pro tolerance within the session
-			//       and at the same time support custom implementations (map tolerance, dips, whatever, custom dialog)
-			return GetSelectionSettings().SelectionTolerancePixels;
-		}
-
-		protected virtual bool DefaultSketchTypeOnFinishSketch =>
-			GetSelectionSettings().PreferRectangleSelectionSketch;
+		protected virtual bool DefaultSketchTypeOnFinishSketch => true;
 
 		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
 		{
@@ -588,7 +580,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
 
-		protected abstract SelectionSettings GetSelectionSettings();
+		[Obsolete(
+			"Override GetSelectionTolerancePixels and PreferRectangleSelectionSketch for non-default values")]
+		protected virtual SelectionSettings GetSelectionSettings()
+		{
+			return null;
+		}
 
 		protected abstract void LogUsingCurrentSelection();
 
@@ -660,19 +657,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			string layerName = layer.Name;
 
-			if (! LayerUtils.IsVisible(layer))
+			if (! LayerUtils.IsVisible(layer, ActiveMapView))
 			{
-				NotificationUtils.Add(notifications, $"Layer is not visible: {layerName}");
+				NotificationUtils.Add(notifications, $"Layer is not visible in active map: {layerName}");
 				return false;
 			}
-
-			if (! layer.IsVisibleInView(ActiveMapView))
-			{
-				// Takes scale range into account (and probably the parent layer too)
-				NotificationUtils.Add(notifications, $"Layer is not visible on map: {layerName}");
-				return false;
-			}
-
+			
 			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");

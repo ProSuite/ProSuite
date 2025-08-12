@@ -239,7 +239,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				             },
 				             "Remove overlaps", datasets);
 
-			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
+			ToolUtils.SelectNewFeatures(newFeatures, activeMapView, false);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
@@ -578,6 +578,5 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		}
 
 		#endregion
-
 	}
 }

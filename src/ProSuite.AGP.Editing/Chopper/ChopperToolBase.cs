@@ -229,7 +229,7 @@ namespace ProSuite.AGP.Editing.Chopper
 				             },
 				             "Chop Lines", datasets);
 
-			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
+			ToolUtils.SelectNewFeatures(newFeatures, activeMapView, false);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 

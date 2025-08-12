@@ -15,6 +15,7 @@ using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
+using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.AO
 {
@@ -132,76 +133,29 @@ namespace ProSuite.Microservices.AO
 			{
 				IReadOnlyList<ITableField> fields = featureOrRow.DbTable.TableFields;
 
-				for (int i = 0; i < fields.Count; i++)
+				HashSet<string> requestedFields = null;
+				if (! string.IsNullOrEmpty(subFields) && subFields != "*")
 				{
-					ITableField field = fields[i];
+					requestedFields = new HashSet<string>(StringUtils.SplitAndTrim(subFields, ','));
+				}
 
-					object valueObject = featureOrRow.GetValue(i);
+				// NOTE: We want to maintain the order of the fields as they are defined by the subfields string.
+				List<int> fieldsToReturn = GetFieldsIndexes(fields, requestedFields);
 
-					var attributeValue = new AttributeValue();
+				foreach (int fieldIdx in fieldsToReturn)
+				{
+					ITableField field = fields[fieldIdx];
+
+					if (requestedFields != null && ! requestedFields.Contains(field.Name))
+					{
+						continue;
+					}
+
+					object valueObject = featureOrRow.GetValue(fieldIdx);
+
+					AttributeValue attributeValue = ToAttributeValueMsg(valueObject, field);
 
 					result.Values.Add(attributeValue);
-
-					if (valueObject == DBNull.Value || valueObject == null)
-					{
-						attributeValue.DbNull = true;
-					}
-					else
-					{
-						esriFieldType fieldType = (esriFieldType) field.FieldType;
-
-						switch (fieldType)
-						{
-							case esriFieldType.esriFieldTypeSmallInteger:
-								attributeValue.ShortIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeInteger:
-								attributeValue.LongIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeSingle:
-								attributeValue.ShortIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeDouble:
-								attributeValue.DoubleValue = (double) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeString:
-								attributeValue.StringValue = (string) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeDate:
-								attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
-								break;
-							case esriFieldType.esriFieldTypeOID:
-								attributeValue.ShortIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeGeometry:
-								// Leave empty, it is sent through Shape property
-								break;
-							case esriFieldType.esriFieldTypeBlob:
-								// TODO: Test and make this work
-								attributeValue.BlobValue =
-									ByteString.CopyFrom((byte[]) valueObject);
-								break;
-							case esriFieldType.esriFieldTypeRaster:
-								// Not supported, ignore
-								break;
-							case esriFieldType.esriFieldTypeGUID:
-								byte[] asBytes = new Guid((string) valueObject).ToByteArray();
-								attributeValue.UuidValue =
-									new UUID { Value = ByteString.CopyFrom(asBytes) };
-								break;
-							case esriFieldType.esriFieldTypeGlobalID:
-								asBytes = new Guid((string) valueObject).ToByteArray();
-								attributeValue.UuidValue =
-									new UUID { Value = ByteString.CopyFrom(asBytes) };
-								break;
-							case esriFieldType.esriFieldTypeXML:
-								// Not supported, ignore
-								break;
-							// TODO: BigInteger!
-							default:
-								throw new ArgumentOutOfRangeException();
-						}
-					}
 				}
 			}
 
@@ -389,6 +343,25 @@ namespace ProSuite.Microservices.AO
 			       };
 		}
 
+		private static List<int> GetFieldsIndexes([NotNull] IReadOnlyList<ITableField> fields,
+		                                          [CanBeNull] HashSet<string> fieldNames)
+		{
+			if (fieldNames == null)
+			{
+				return Enumerable.Range(0, fields.Count).ToList();
+			}
+
+			var fieldIndexesByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < fields.Count; i++)
+			{
+				fieldIndexesByName[fields[i].Name] = i;
+			}
+
+			return fieldNames
+			       .Select(fieldName => fieldIndexesByName[fieldName])
+			       .ToList();
+		}
+
 		private static IObjectClass GetObjectClass(IReadOnlyRow roRow)
 		{
 			// Consider moving this method to DatasetUtils or GdbObjectUtils
@@ -466,6 +439,83 @@ namespace ProSuite.Microservices.AO
 			             };
 
 			return result;
+		}
+
+		private static AttributeValue ToAttributeValueMsg([CanBeNull] object valueObject,
+		                                                  [NotNull] ITableField field)
+		{
+			var attributeValue = new AttributeValue();
+
+			if (valueObject == DBNull.Value || valueObject == null)
+			{
+				attributeValue.DbNull = true;
+			}
+			else
+			{
+				esriFieldType fieldType = (esriFieldType) field.FieldType;
+
+				switch (fieldType)
+				{
+					case esriFieldType.esriFieldTypeSmallInteger:
+						attributeValue.ShortIntValue = (short) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeInteger:
+						attributeValue.LongIntValue = (int) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeSingle:
+						attributeValue.FloatValue = (float) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeDouble:
+						attributeValue.DoubleValue = (double) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeString:
+						attributeValue.StringValue = (string) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeDate:
+						attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
+						break;
+					case esriFieldType.esriFieldTypeOID:
+						attributeValue.ShortIntValue = (int) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeGeometry:
+						// Leave empty, it is sent through Shape property
+						break;
+					case esriFieldType.esriFieldTypeBlob:
+
+						// The base row field is not officially part of the schema
+						if (field.Name != InvolvedRowUtils.BaseRowField)
+						{
+							// TODO: Test and make this work or skip blobs altogether?
+							attributeValue.BlobValue =
+								ByteString.CopyFrom((byte[]) valueObject);
+						}
+
+						break;
+					case esriFieldType.esriFieldTypeRaster:
+						// Not supported, ignore
+						break;
+					case esriFieldType.esriFieldTypeGUID:
+						byte[] asBytes = new Guid((string) valueObject).ToByteArray();
+						attributeValue.UuidValue =
+							new UUID { Value = ByteString.CopyFrom(asBytes) };
+						break;
+					case esriFieldType.esriFieldTypeGlobalID:
+						asBytes = new Guid((string) valueObject).ToByteArray();
+						attributeValue.UuidValue =
+							new UUID { Value = ByteString.CopyFrom(asBytes) };
+						break;
+					case esriFieldType.esriFieldTypeXML:
+						// Not supported, ignore
+						break;
+					case esriFieldType.esriFieldTypeBigInteger:
+					// TODO:
+					//attributeValue.BigIntValue =  (long) valueObject;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+
+			return attributeValue;
 		}
 	}
 }

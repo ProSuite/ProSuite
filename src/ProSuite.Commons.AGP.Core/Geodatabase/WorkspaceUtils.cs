@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
@@ -127,9 +128,55 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
+		/// <summary>
+		/// Creates a connector for the specified workspace factory and connection string.
+		/// </summary>
+		/// <param name="factory">The workspace factory type.</param>
+		/// <param name="connectionString">The connection string.</param>
+		/// <returns>A connector appropriate for the specified workspace factory.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when an unsupported workspace factory is specified.</exception>
+		[NotNull]
+		public static Connector CreateConnector(WorkspaceFactory factory,
+		                                        [NotNull] string connectionString)
+		{
+			Assert.ArgumentNotNull(connectionString, nameof(connectionString));
+
+			switch (factory)
+			{
+				case WorkspaceFactory.FileGDB:
+					string filePath = connectionString;
+					// Extract actual path if it has a DATABASE= prefix
+					if (connectionString.StartsWith("DATABASE=",
+					                                StringComparison.OrdinalIgnoreCase))
+					{
+						filePath = connectionString.Substring("DATABASE=".Length);
+					}
+
+					return new FileGeodatabaseConnectionPath(new Uri(filePath, UriKind.Absolute));
+
+				case WorkspaceFactory.SDE:
+					DatabaseConnectionProperties connectionProperties =
+						GetConnectionProperties(connectionString);
+
+					return connectionProperties;
+
+				case WorkspaceFactory.Shapefile:
+					return new FileSystemConnectionPath(
+						new Uri(connectionString, UriKind.Absolute),
+						FileSystemDatastoreType.Shapefile);
+
+				// TODO: SQLite, others?
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(factory), factory,
+					                                      $"Unsupported workspace factory: {factory}");
+			}
+		}
+
 		public static bool IsSameDatastore([CanBeNull] Datastore datastore1,
 		                                   [CanBeNull] Datastore datastore2,
-		                                   DatastoreComparison comparison = DatastoreComparison.Exact)
+		                                   DatastoreComparison comparison =
+			                                   DatastoreComparison.Exact)
 		{
 			// Comparison in case of null:
 			if (datastore1 == null && datastore2 == null)
@@ -248,6 +295,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					// Take the second last item
 					instance = strings[^2];
+				}
+				else if (lastItem.Contains('$'))
+				{
+					// Very legacy. E.g. oracle$TOPGIST
+					string server = builder["server"];
+					if (! string.IsNullOrEmpty(server))
+					{
+						instance = server;
+					}
+					else
+					{
+						instance = lastItem.Split('$')[^1];
+					}
 				}
 				else
 				{

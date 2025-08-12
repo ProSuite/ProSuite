@@ -423,7 +423,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
 		{
-			return ! _isIntermittentSelectionPhaseActive;
+			return true;
 		}
 
 		protected abstract void LogEnteringSketchMode();

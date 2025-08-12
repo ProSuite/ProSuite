@@ -54,8 +54,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual int GetSelectionTolerancePixels()
 		{
-			// TODO: Make more dynamic selection environment that supports changing the standard Pro tolerance within the session
-			//       and at the same time support custom implementations (map tolerance, dips, whatever, custom dialog)
+			// Subclasses can choose to use fixed settings or some other custom implementation.
 			return SelectionEnvironment.SelectionTolerance;
 		}
 

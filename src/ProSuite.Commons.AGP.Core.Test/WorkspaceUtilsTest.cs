@@ -98,6 +98,26 @@ namespace ProSuite.Commons.AGP.Core.Test
 		}
 
 		[Test]
+		public void CanConvertConnectionStrintToPropertiesOracleOsaLegacy()
+		{
+			// From a lyr-file pulled into Pro:
+			string connectionString =
+				"SERVER=TOPGIST;INSTANCE=sde:oracle$TOPGIST;DBCLIENT=oracle;" +
+				"DB_CONNECTION_PROPERTIES=TOPGIST;VERSION=SDE.DEFAULT;AUTHENTICATION_MODE=OSA";
+
+			var properties = WorkspaceUtils.GetConnectionProperties(connectionString);
+
+			Console.WriteLine(WorkspaceUtils.ConnectionPropertiesToString(properties));
+
+			Assert.AreEqual(EnterpriseDatabaseType.Oracle, properties.DBMS);
+			Assert.AreEqual(AuthenticationMode.OSA, properties.AuthenticationMode);
+			Assert.AreEqual("TOPGIST", properties.Instance);
+			Assert.AreEqual(string.Empty, properties.Database);
+			Assert.AreEqual(string.Empty, properties.User);
+			Assert.AreEqual("SDE.DEFAULT", properties.Version);
+		}
+
+		[Test]
 		public void CanConvertConnectionStringToPropertiesPostgresUserPw()
 		{
 			string connectionString =
@@ -128,7 +148,7 @@ namespace ProSuite.Commons.AGP.Core.Test
 				"ENCRYPTED_PASSWORD=00022e687856674c45514f2b6f4d6268443148435a522f4f6a7a636e44674c6358656848654d482f423234624d75733d2a00;" +
 				"SERVER=localhost;INSTANCE=sde:postgresql:localhost;DBCLIENT=postgresql;DB_CONNECTION_PROPERTIES=localhost;" +
 				"DATABASE=data_osm;USER=osm;VERSION=sde.DEFAULT;AUTHENTICATION_MODE=DBMS";
-			
+
 			var properties = WorkspaceUtils.GetConnectionProperties(connectionString);
 
 			Console.WriteLine(WorkspaceUtils.ConnectionPropertiesToString(properties));
