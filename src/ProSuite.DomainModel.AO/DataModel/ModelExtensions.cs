@@ -114,16 +114,25 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
 
-			result = model.GetMasterDatabaseWorkspaceContext();
-
-			if (result == null)
+			try
 			{
-				noAccessReason = model.GetMasterDatabaseNoAccessReason();
+				result = model.GetMasterDatabaseWorkspaceContext();
+
+				if (result == null)
+				{
+					noAccessReason = model.GetMasterDatabaseNoAccessReason();
+					return false;
+				}
+
+				noAccessReason = null;
+				return true;
+			}
+			catch (Exception ex)
+			{
+				result = null;
+				noAccessReason = ex.Message;
 				return false;
 			}
-
-			noAccessReason = null;
-			return true;
 		}
 
 		[NotNull]
@@ -198,7 +207,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			try
 			{
-				// try to open the workspace
 				model.UserConnectionProvider.OpenWorkspace();
 
 				return true;

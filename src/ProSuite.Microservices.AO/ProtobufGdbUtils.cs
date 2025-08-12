@@ -6,13 +6,16 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
+using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.AO
 {
@@ -71,15 +74,14 @@ namespace ProSuite.Microservices.AO
 		                                          bool includeFieldValues = false,
 		                                          string subFields = null)
 		{
-			var result = ToGdbObjectMsg((IRow) featureOrObject, includeSpatialRef,
+			IReadOnlyRow roRow = ReadOnlyRow.Create(featureOrObject);
+
+			var result = ToGdbObjectMsg(roRow, includeSpatialRef,
 			                            includeFieldValues, subFields);
-
-			result.ClassHandle = featureOrObject.Class.ObjectClassID;
-
 			return result;
 		}
 
-		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IRow featureOrRow,
+		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IDbRow featureOrRow,
 		                                          bool includeSpatialRef = false,
 		                                          bool includeFieldValues = false,
 		                                          string subFields = null)
@@ -88,13 +90,14 @@ namespace ProSuite.Microservices.AO
 
 			result.ObjectId = featureOrRow.OID;
 
-			if (featureOrRow is IFeature feature)
+			if (featureOrRow is IReadOnlyFeature feature)
 			{
 				// NOTE: Normal fields just return null if they have not been fetched due to sub-field restrictions.
 				//       However, the Shape property E_FAILs.
 				bool canGetShape =
 					string.IsNullOrEmpty(subFields) || subFields == "*" ||
-					StringUtils.Contains(subFields, ((IFeatureClass) feature.Class).ShapeFieldName,
+					StringUtils.Contains(subFields,
+					                     ((IFeatureClass) feature.FeatureClass).ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
 				if (canGetShape)
@@ -116,77 +119,43 @@ namespace ProSuite.Microservices.AO
 				}
 			}
 
+			IReadOnlyRow roRow = featureOrRow as IReadOnlyRow;
+			Assert.NotNull(roRow, "Unsupported row type");
+
+			IObjectClass objectClass = GetObjectClass(roRow);
+
+			if (objectClass != null)
+			{
+				result.ClassHandle = objectClass.ObjectClassID;
+			}
+
 			if (includeFieldValues)
 			{
-				IFields fields = featureOrRow.Fields;
+				IReadOnlyList<ITableField> fields = featureOrRow.DbTable.TableFields;
 
-				for (int i = 0; i < fields.FieldCount; i++)
+				HashSet<string> requestedFields = null;
+				if (! string.IsNullOrEmpty(subFields) && subFields != "*")
 				{
-					IField field = fields.Field[i];
+					requestedFields = new HashSet<string>(StringUtils.SplitAndTrim(subFields, ','));
+				}
 
-					object valueObject = featureOrRow.Value[i];
+				// NOTE: We want to maintain the order of the fields as they are defined by the subfields string.
+				List<int> fieldsToReturn = GetFieldsIndexes(fields, requestedFields);
 
-					var attributeValue = new AttributeValue();
+				foreach (int fieldIdx in fieldsToReturn)
+				{
+					ITableField field = fields[fieldIdx];
+
+					if (requestedFields != null && ! requestedFields.Contains(field.Name))
+					{
+						continue;
+					}
+
+					object valueObject = featureOrRow.GetValue(fieldIdx);
+
+					AttributeValue attributeValue = ToAttributeValueMsg(valueObject, field);
 
 					result.Values.Add(attributeValue);
-
-					if (valueObject == DBNull.Value || valueObject == null)
-					{
-						attributeValue.DbNull = true;
-					}
-					else
-					{
-						switch (field.Type)
-						{
-							case esriFieldType.esriFieldTypeSmallInteger:
-								attributeValue.ShortIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeInteger:
-								attributeValue.LongIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeSingle:
-								attributeValue.ShortIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeDouble:
-								attributeValue.DoubleValue = (double) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeString:
-								attributeValue.StringValue = (string) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeDate:
-								attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
-								break;
-							case esriFieldType.esriFieldTypeOID:
-								attributeValue.ShortIntValue = (int) valueObject;
-								break;
-							case esriFieldType.esriFieldTypeGeometry:
-								// Leave empty, it is sent through Shape property
-								break;
-							case esriFieldType.esriFieldTypeBlob:
-								// TODO: Test and make this work
-								attributeValue.BlobValue =
-									ByteString.CopyFrom((byte[]) valueObject);
-								break;
-							case esriFieldType.esriFieldTypeRaster:
-								// Not supported, ignore
-								break;
-							case esriFieldType.esriFieldTypeGUID:
-								byte[] asBytes = new Guid((string) valueObject).ToByteArray();
-								attributeValue.UuidValue =
-									new UUID { Value = ByteString.CopyFrom(asBytes) };
-								break;
-							case esriFieldType.esriFieldTypeGlobalID:
-								asBytes = new Guid((string) valueObject).ToByteArray();
-								attributeValue.UuidValue =
-									new UUID { Value = ByteString.CopyFrom(asBytes) };
-								break;
-							case esriFieldType.esriFieldTypeXML:
-								// Not supported, ignore
-								break;
-							default:
-								throw new ArgumentOutOfRangeException();
-						}
-					}
 				}
 			}
 
@@ -348,6 +317,7 @@ namespace ProSuite.Microservices.AO
 			return relTableMsg;
 		}
 
+		[NotNull]
 		public static ConnectionMsg ToConnectionMsg([NotNull] ConnectionProvider connectionProvider)
 		{
 			string connectionString = null;
@@ -360,6 +330,9 @@ namespace ProSuite.Microservices.AO
 			{
 				connectionString = ToConnectionString(sdeDirectConnection);
 			}
+			else
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported connection provider: {connectionProvider}");
 
 			return new ConnectionMsg
 			       {
@@ -368,6 +341,44 @@ namespace ProSuite.Microservices.AO
 				       ConnectionType = (int) connectionProvider.ConnectionType,
 				       Name = connectionProvider.Name
 			       };
+		}
+
+		private static List<int> GetFieldsIndexes([NotNull] IReadOnlyList<ITableField> fields,
+		                                          [CanBeNull] HashSet<string> fieldNames)
+		{
+			if (fieldNames == null)
+			{
+				return Enumerable.Range(0, fields.Count).ToList();
+			}
+
+			var fieldIndexesByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < fields.Count; i++)
+			{
+				fieldIndexesByName[fields[i].Name] = i;
+			}
+
+			return fieldNames
+			       .Select(fieldName => fieldIndexesByName[fieldName])
+			       .ToList();
+		}
+
+		private static IObjectClass GetObjectClass(IReadOnlyRow roRow)
+		{
+			// Consider moving this method to DatasetUtils or GdbObjectUtils
+
+			IObjectClass objectClass = null;
+
+			if (roRow is IObject obj)
+			{
+				objectClass = obj.Class;
+			}
+
+			if (roRow is ReadOnlyRow arcRow)
+			{
+				objectClass = arcRow.BaseRow.Table as IObjectClass;
+			}
+
+			return objectClass;
 		}
 
 		private static string ToConnectionString(
@@ -428,6 +439,83 @@ namespace ProSuite.Microservices.AO
 			             };
 
 			return result;
+		}
+
+		private static AttributeValue ToAttributeValueMsg([CanBeNull] object valueObject,
+		                                                  [NotNull] ITableField field)
+		{
+			var attributeValue = new AttributeValue();
+
+			if (valueObject == DBNull.Value || valueObject == null)
+			{
+				attributeValue.DbNull = true;
+			}
+			else
+			{
+				esriFieldType fieldType = (esriFieldType) field.FieldType;
+
+				switch (fieldType)
+				{
+					case esriFieldType.esriFieldTypeSmallInteger:
+						attributeValue.ShortIntValue = (short) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeInteger:
+						attributeValue.LongIntValue = (int) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeSingle:
+						attributeValue.FloatValue = (float) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeDouble:
+						attributeValue.DoubleValue = (double) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeString:
+						attributeValue.StringValue = (string) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeDate:
+						attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
+						break;
+					case esriFieldType.esriFieldTypeOID:
+						attributeValue.ShortIntValue = (int) valueObject;
+						break;
+					case esriFieldType.esriFieldTypeGeometry:
+						// Leave empty, it is sent through Shape property
+						break;
+					case esriFieldType.esriFieldTypeBlob:
+
+						// The base row field is not officially part of the schema
+						if (field.Name != InvolvedRowUtils.BaseRowField)
+						{
+							// TODO: Test and make this work or skip blobs altogether?
+							attributeValue.BlobValue =
+								ByteString.CopyFrom((byte[]) valueObject);
+						}
+
+						break;
+					case esriFieldType.esriFieldTypeRaster:
+						// Not supported, ignore
+						break;
+					case esriFieldType.esriFieldTypeGUID:
+						byte[] asBytes = new Guid((string) valueObject).ToByteArray();
+						attributeValue.UuidValue =
+							new UUID { Value = ByteString.CopyFrom(asBytes) };
+						break;
+					case esriFieldType.esriFieldTypeGlobalID:
+						asBytes = new Guid((string) valueObject).ToByteArray();
+						attributeValue.UuidValue =
+							new UUID { Value = ByteString.CopyFrom(asBytes) };
+						break;
+					case esriFieldType.esriFieldTypeXML:
+						// Not supported, ignore
+						break;
+					case esriFieldType.esriFieldTypeBigInteger:
+					// TODO:
+					//attributeValue.BigIntValue =  (long) valueObject;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+
+			return attributeValue;
 		}
 	}
 }

@@ -88,6 +88,7 @@ namespace ProSuite.Commons.UI.Env
 			// If not on the UI thread, do not impose the main window from the provider but
 			// what the caller suggested. Otherwise, the following exception occurs:
 			// The calling thread cannot access this object because a different thread owns it
+			// NOTE: Windows can be shown from other STA threads than the Main thread (with limitations)
 			if (Environment.CurrentManagedThreadId != 1 || Thread.CurrentThread.IsBackground)
 			{
 				return owner;

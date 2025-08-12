@@ -67,6 +67,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			return (Geodatabase) OpenDatastore();
 		}
 
+		[NotNull]
 		public Datastore OpenDatastore()
 		{
 			return _datastoreName.Open();

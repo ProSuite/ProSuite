@@ -57,6 +57,39 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
+		[NotNull]
+		public TransformerConfiguration CreateTransformerConfiguration(
+			[NotNull] InstanceConfigurationMsg transformerConfigurationMsg)
+		{
+			if (ModelsByWorkspaceId == null)
+			{
+				// TODO: Use other constructor that sets ModelsByWorkspaceId from some provided
+				//       remote workspace. Then we can remove this (and assert ModelsByWorkspaceId
+				//       is not null).
+				var dummySpecification = new ConditionListSpecificationMsg();
+				ModelsByWorkspaceId = GetModelsByWorkspaceId(dummySpecification);
+			}
+
+			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
+
+			DatasetSettings datasetSettings = new DatasetSettings(getDatasetsByName, false);
+
+			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+				TransformerConfiguration result =
+					CreateTransformerConfiguration(transformerConfigurationMsg, datasetSettings);
+
+				return Assert.NotNull(result);
+			}
+			finally
+			{
+				Thread.CurrentThread.CurrentCulture = origCulture;
+			}
+		}
+
 		protected abstract IDictionary<string, DdxModel> GetModelsByWorkspaceId(
 			[NotNull] ConditionListSpecificationMsg conditionListSpecificationMsg);
 

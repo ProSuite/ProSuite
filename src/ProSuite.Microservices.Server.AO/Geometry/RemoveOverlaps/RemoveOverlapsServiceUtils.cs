@@ -88,13 +88,13 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			bool storeOverlapsAsNewFeatures = request.StoreOverlapsAsNewFeatures;
 
 			int defaultZSourceValue =
-				request.DatasetSpecificZSources
+				request.ZSources
 				       .FirstOrDefault(dsz => dsz.DatasetName == string.Empty)
 				       ?.ZSource ?? (int) ChangeAlongZSource.Target;
 
 			ChangeAlongZSource fallBack = (ChangeAlongZSource) defaultZSourceValue;
 			List<DatasetSpecificValue<ChangeAlongZSource>> zSourcesByDatasetName =
-				request.DatasetSpecificZSources
+				request.ZSources
 				       .Select(dsz => new DatasetSpecificValue<ChangeAlongZSource>(
 					               dsz.DatasetName, (ChangeAlongZSource) dsz.ZSource)).ToList();
 

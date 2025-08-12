@@ -147,6 +147,18 @@
   <data name="RemoveOverlapsTool_Message" xml:space="preserve">
     <value>Remove a part of a feature that overlaps with other polygon features.</value>
   </data>
+  <data name="MergeFeaturesTool_LogPromptForSelection" xml:space="preserve">
+    <value>Select the first feature to merge{0}. Press [O] for options.</value>
+  </data>
+  <data name="MergeFeaturesTool_LogUsingCurrentSelection" xml:space="preserve">
+    <value>Select the second feature to be merged with the first.&lt;br&gt;Press [ESC] to reselect the first feature.</value>
+  </data>
+  <data name="MergeFeaturesTool_SurvivorFirstObject" xml:space="preserve">
+    <value> (this feature will remain after the merge)</value>
+  </data>
+  <data name="MergeFeaturesTool_SurvivorLargerObject" xml:space="preserve">
+    <value> (the larger feature will remain after the merge)</value>
+  </data>
   <data name="ReshapeAlongTool_LogPromptForSelection" xml:space="preserve">
     <value>Select one or more line or polygon features to align with other feature(s). &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
   </data>
@@ -168,6 +180,9 @@
   <data name="RemoveHoleTool_LogPromptForSelection" xml:space="preserve">
     <value>Select one or more polygon features which contain the hole(s) to be removed.</value>
   </data>
+  <data name="RemoveHoleTool_LogPromptForSelection1" xml:space="preserve">
+    <value>Select one or more polygon features which contain the hole(s) to be removed.</value>
+  </data>
   <data name="FillHoleTool_LogPromptForSelection" xml:space="preserve">
     <value>Select a polygon that contains a hole or several polygons with a gap in between.</value>
   </data>
@@ -176,5 +191,17 @@
   </data>
   <data name="CrackerTool_LogPromptForSelection" xml:space="preserve">
     <value>Select one or more line or polygon features to crack. The cracking process inserts vertices at intersections with other features for topological correctness.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
+  </data>
+  <data name="MergeFeaturesTool_Caption" xml:space="preserve">
+    <value>Merge Features</value>
+  </data>
+  <data name="MergeFeaturesTool_DisjointGeometries" xml:space="preserve">
+    <value>The selected features cannot be merged. Reason(s): {0}.&amp;lt;br&amp;gt;Reselect the second feature or press [ESC] to start with a new merge operation.</value>
+  </data>
+  <data name="MergeFeaturesTool_Message" xml:space="preserve">
+    <value>Merges two features with the same geometry type.</value>
+  </data>
+  <data name="MergeFeaturesTool_DisjointGeometriesList" xml:space="preserve">
+    <value>The selected features cannot be merged. Reason(s): {0}</value>
   </data>
 </root>

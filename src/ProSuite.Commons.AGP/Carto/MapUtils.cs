@@ -16,6 +16,7 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using UnitType = ArcGIS.Core.Geometry.UnitType;
 
@@ -25,6 +26,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 	public static class MapUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Asserts an active MapView.
 		/// </summary>
@@ -350,14 +353,14 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
-			[NotNull] Map map,
+			[NotNull] MapView mapView,
 			[CanBeNull] FeatureClass featureClass) where T : BasicFeatureLayer
 		{
 			// TODO: WorkspaceEquality.SameVersion
 			Predicate<T> sameTablePredicate =
 				l => DatasetUtils.IsSameTable(l.GetFeatureClass(), featureClass);
 
-			return GetFeatureLayersForSelection(map, sameTablePredicate);
+			return GetFeatureLayersForSelection(mapView, sameTablePredicate);
 		}
 
 		/// <summary>
@@ -365,14 +368,14 @@ namespace ProSuite.Commons.AGP.Carto
 		/// If all visible, selectable layers have a definition query, all layers are yielded.
 		/// </summary>
 		public static IEnumerable<T> GetFeatureLayersForSelection<T>(
-			[NotNull] Map map,
+			[NotNull] MapView mapView,
 			[NotNull] Predicate<T> layerPredicate) where T : BasicFeatureLayer
 		{
 			var filteredVisibleSelectableLayers = new List<T>();
 
 			foreach (T featureLayer in GetFeatureLayers<T>(
-				         map,
-				         l => LayerUtils.IsVisible(l) && l.IsSelectable))
+				         mapView.Map,
+				         l => l.IsSelectable && l.IsVisibleInView(mapView)))
 			{
 				if (! layerPredicate(featureLayer))
 				{
@@ -552,6 +555,50 @@ namespace ProSuite.Commons.AGP.Carto
 			return elevationUnitAbbreviation;
 		}
 
+		public static bool RemoveLayer(Map map, Layer layer)
+		{
+			try
+			{
+#if ARCGISPRO_GREATER_3_2
+				if (! map.CanRemoveLayer(layer))
+				{
+					return false;
+				}
+#endif
+
+				map.RemoveLayer(layer);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
+		}
+
+		public static bool RemoveLayers(Map map, ICollection<Layer> layers)
+		{
+			try
+			{
+#if ARCGISPRO_GREATER_3_2
+				if (! map.CanRemoveLayers(layers))
+				{
+					return false;
+				}
+#endif
+
+				map.RemoveLayers(layers);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
+		}
+
 		/// <summary>
 		/// Gets the first elevation surface layer in the map with the specified name.
 		/// This layer contains the layers that provide the actual elevation.
@@ -570,12 +617,12 @@ namespace ProSuite.Commons.AGP.Carto
 			foreach (ElevationSurfaceLayer elevationSurfaceLayer in map.GetElevationSurfaceLayers())
 			{
 				if (elevationSurfaceLayer.ElevationMode != ElevationMode.BaseGlobeSurface ||
-					elevationSurfaceLayer.Name != name)
+				    elevationSurfaceLayer.Name != name)
 				{
 					continue;
 				}
 
-				if (!evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
+				if (! evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
 				{
 					continue;
 				}
@@ -880,9 +927,14 @@ namespace ProSuite.Commons.AGP.Carto
 					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(color));
 				}
 
-				foreach (Geometry geometry in group)
+				if (group.Count() > 1)
 				{
-					overlays.Add(new Overlay(geometry, symbol));
+					Geometry union = GeometryEngine.Instance.Union(group);
+					overlays.Add(new Overlay(union, symbol));
+				}
+				else
+				{
+					overlays.AddRange(group.Select(geometry => new Overlay(geometry, symbol)));
 				}
 			}
 
@@ -914,7 +966,8 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (IDisposable disposable in disposables)
 				{
-					disposable.Dispose();
+					// mapView.AddOverlay can return null (e.g. for GeometryBags).
+					disposable?.Dispose();
 				}
 			}
 

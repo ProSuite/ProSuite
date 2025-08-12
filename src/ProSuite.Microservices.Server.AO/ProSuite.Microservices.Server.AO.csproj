@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{F997B55F-C442-4224-A573-AE39F72BEB4A}</ProjectGuid>
     <SignAssembly>true</SignAssembly>
@@ -54,6 +54,10 @@
       <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="Quaestor.ProcessAdministration, Culture=neutral, PublicKeyToken=225b4ed5a615a65b, processorArchitecture=MSIL">
+      <HintPath>..\..\lib\Quaestor\Quaestor.ProcessAdministration.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
 
   </ItemGroup>
 
@@ -65,9 +69,9 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="ConcurrentHashSet" Version="1.3.0" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.6.5" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.5" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.5" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.6.6" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.6" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.6" />
     <PackageReference Include="Google.Protobuf" Version="3.24.0" />
     <PackageReference Include="Grpc" Version="2.46.6" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />

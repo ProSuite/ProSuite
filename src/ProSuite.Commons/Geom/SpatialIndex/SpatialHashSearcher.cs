@@ -181,6 +181,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			double maxTileCount = fullExtent.Width * fullExtent.Height /
 			                      (averageEnvLateralLength * averageEnvLateralLength);
 
+			if (maxTileCount < 1) maxTileCount = 1;
+
 			if (double.IsNaN(gridSize))
 			{
 				gridSize = averageEnvLateralLength * 2;
@@ -269,6 +271,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			// TODO: This might be different for multipatches. An estimated number of
 			// segments intersecting the interior of a segments envelope would be useful.
 			return averageSegmentLength * 3;
+		}
+
+		public void Remove(T value, double xMin, double yMin, double xMax, double yMax)
+		{
+			_spatialHashIndex.Remove(value, xMin, yMin, xMax, yMax);
 		}
 
 		public void Add(T value, double xMin, double yMin, double xMax, double yMax)

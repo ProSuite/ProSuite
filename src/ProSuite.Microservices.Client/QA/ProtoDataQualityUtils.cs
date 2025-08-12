@@ -264,7 +264,7 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		private static InstanceConfigurationMsg CreateInstanceConfigMsg<T>(
+		public static InstanceConfigurationMsg CreateInstanceConfigMsg<T>(
 			[NotNull] InstanceConfiguration instanceConfiguration,
 			[CanBeNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
 			[NotNull] IDictionary<int, DdxModel> usedModelsById)
@@ -621,6 +621,12 @@ namespace ProSuite.Microservices.Client.QA
 						datasetMsg.ObjectCategories.AddRange(ToObjectCategoryMsg(objectType));
 					}
 				}
+			}
+
+			if (dataset is ISpatialDataset spatialDataset)
+			{
+				datasetMsg.DefaultSymbology =
+					spatialDataset.DefaultLayerFile?.FileName ?? string.Empty;
 			}
 
 			return datasetMsg;

@@ -173,7 +173,19 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
 		{
-			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+			FeatureClass result;
+			try
+			{
+				result = ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+			}
+			catch (Exception e)
+			{
+				throw new InvalidOperationException(
+					$"{e.Message}. Please select a template that " +
+					"determines the type of the new feature.");
+			}
+
+			return result;
 		}
 
 		protected virtual string GetTargetObjectTypeName()
@@ -282,7 +294,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				foreach (IDisplayTable displayTable in MapUtils
 					         .GetFeatureLayersForSelection<FeatureLayer>(
-						         MapView.Active.Map, featureClass))
+						         MapView.Active, featureClass))
 				{
 					if (displayTable is FeatureLayer featureLayer)
 					{

@@ -308,7 +308,8 @@ namespace ProSuite.Microservices.Client.AGP
 					// only keeps the WkId. Do not use the actual feature class' SR to avoid
 					// to-and-from transformations!
 					SpatialReference spatialRef = shape.SpatialReference;
-					resultGdbClasses.Add(ToObjectClassMsg(featureClass, uniqueClassId, spatialRef));
+					resultGdbClasses.Add(
+						ToObjectClassMsg(featureClass, uniqueClassId, false, spatialRef));
 
 					classesByClassId.Add(uniqueClassId, featureClass);
 
@@ -363,6 +364,7 @@ namespace ProSuite.Microservices.Client.AGP
 		public static ObjectClassMsg ToObjectClassMsg(
 			[NotNull] Table objectClass,
 			long classHandle,
+			bool includeFields = false,
 			[CanBeNull] SpatialReference spatialRef = null)
 		{
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);
@@ -386,6 +388,42 @@ namespace ProSuite.Microservices.Client.AGP
 					GeometryType = (int) geometryType,
 					WorkspaceHandle = objectClass.GetDatastore().Handle.ToInt64()
 				};
+
+			if (includeFields)
+			{
+				List<FieldMsg> fieldMessages = new List<FieldMsg>();
+
+				TableDefinition tableDefinition = objectClass.GetDefinition();
+
+				foreach (Field field in tableDefinition.GetFields())
+				{
+					fieldMessages.Add(ToFieldMsg(field));
+				}
+
+				result.Fields.AddRange(fieldMessages);
+			}
+
+			return result;
+		}
+
+		private static FieldMsg ToFieldMsg(Field field)
+		{
+			var result = new FieldMsg
+			             {
+				             Name = field.Name,
+				             AliasName = field.AliasName ?? string.Empty,
+				             Type = (int) field.FieldType,
+				             Length = field.Length,
+				             Precision = field.Precision,
+				             Scale = field.Scale,
+				             IsNullable = field.IsNullable,
+				             IsEditable = field.IsEditable
+			             };
+
+			if (field.GetDomain()?.GetName() != null)
+			{
+				result.DomainName = field.GetDomain().GetName();
+			}
 
 			return result;
 		}

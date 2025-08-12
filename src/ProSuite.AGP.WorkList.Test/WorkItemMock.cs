@@ -1,5 +1,3 @@
-using System;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -9,17 +7,20 @@ namespace ProSuite.AGP.WorkList.Test
 {
 	public class WorkItemMock : WorkItem
 	{
-		const int _tableId = 42;
-		public WorkItemMock(int id, Geometry geometry = null) : base(
-			id,
-			_tableId,
-			new GdbRowIdentity(id, _tableId, "Homer Simpson",
-			                   new GdbWorkspaceIdentity(
-				                   new FileGeodatabaseConnectionPath(
-					                   new Uri(@"C:\temp\foo.gdb", UriKind.Absolute)),
-				                   @"C:\temp\foo.gdb")))
+		public WorkItemMock(int rowOid, Geometry geometry = null) : this(
+			WorkListTestUtils.CreateRowProxy(rowOid), WorkListTestUtils.CreateTableProxy(),
+			geometry) { }
+
+		public WorkItemMock(GdbRowIdentity rowId, GdbTableIdentity tableId,
+		                    Geometry geometry = null) : base(
+			tableId.Id, rowId)
 		{
 			Status = WorkItemStatus.Todo;
+
+			if (geometry != null)
+			{
+				Extent = geometry.Extent;
+			}
 		}
 
 		public override string ToString()

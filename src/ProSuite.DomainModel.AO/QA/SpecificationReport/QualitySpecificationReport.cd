@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
   <Comment CommentText="HtmlQualitySpecification can be accessed in template as &quot;specification&quot;&#xD;&#xA;&#xD;&#xA;Example:&#xD;&#xA;&lt;title&gt;{{specification.Name}}&lt;/title&gt;">
     <Position X="0.5" Y="1.394" Height="1.241" Width="2.502" />
   </Comment>
@@ -39,8 +39,8 @@
         <Point X="6.552" Y="2.479" />
         <Point X="7" Y="2.479" />
       </Path>
-      <MemberNameLabel ManuallyPlaced="true">
-        <Position X="0.174" Y="1.016" />
+      <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
+        <Position X="0.369" Y="0.521" Height="0.182" Width="1.426" />
       </MemberNameLabel>
     </AssociationLine>
     <AssociationLine Name="QualitySpecificationElements" Type="ProSuite.DomainModel.AO.QA.SpecificationReport.HtmlQualitySpecificationElement" FixedToPoint="true">
@@ -199,14 +199,14 @@
       <Method Name="GetParameter" Hidden="true" />
       <Method Name="HtmlTestDescriptor" Hidden="true" />
     </Members>
-    <AssociationLine Name="IssueCodes" Type="ProSuite.QA.Container.IssueCode" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+    <AssociationLine Name="IssueCodes" Type="ProSuite.QA.Core.IssueCodes.IssueCode" ManuallyRouted="true">
       <Path>
-        <Point X="7.25" Y="10.969" />
-        <Point X="7.25" Y="11.375" />
-        <Point X="3" Y="11.375" />
+        <Point X="8.406" Y="10.969" />
+        <Point X="8.406" Y="11.469" />
+        <Point X="3" Y="11.469" />
       </Path>
       <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
-        <Position X="0.87" Y="0.123" Height="0.182" Width="1.968" />
+        <Position X="0.123" Y="0.87" Height="0.182" Width="1.968" />
       </MemberNameLabel>
     </AssociationLine>
     <AssociationLine Name="Parameters" Type="ProSuite.DomainModel.AO.QA.SpecificationReport.HtmlTestParameter" FixedFromPoint="true" FixedToPoint="true">
@@ -216,7 +216,7 @@
         <Point X="10.484" Y="12.25" />
       </Path>
       <MemberNameLabel ManuallyPlaced="true">
-        <Position X="-0.71" Y="0.738" />
+        <Position X="-1.345" Y="0.726" />
       </MemberNameLabel>
     </AssociationLine>
     <AssociationLine Name="ReferencingElements" Type="ProSuite.DomainModel.AO.QA.SpecificationReport.HtmlQualitySpecificationElement" FixedFromPoint="true">
@@ -270,17 +270,6 @@
       <Property Name="TestParameter" />
     </ShowAsAssociation>
   </Class>
-  <Class Name="ProSuite.QA.Container.IssueCode">
-    <Position X="1.25" Y="10.75" Width="1.75" />
-    <Members>
-      <Method Name="Equals" Hidden="true" />
-      <Method Name="GetHashCode" Hidden="true" />
-      <Method Name="IssueCode" Hidden="true" />
-      <Method Name="ToString" Hidden="true" />
-    </Members>
-    <TypeIdentifier />
-    <Lollipop Position="0.2" Collapsed="true" />
-  </Class>
   <Class Name="ProSuite.DomainModel.AO.QA.SpecificationReport.HtmlTexts">
     <Position X="4.75" Y="12.5" Width="3.5" />
     <TypeIdentifier>
@@ -326,7 +315,7 @@
         <Point X="5.312" Y="7.118" />
       </Path>
       <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
-        <Position X="-0.441" Y="1.093" Height="0.182" Width="3.202" />
+        <Position X="1.093" Y="-0.441" Height="0.182" Width="3.202" />
       </MemberNameLabel>
     </AssociationLine>
     <TypeIdentifier>
@@ -357,6 +346,13 @@
       <Property Name="Element" />
       <Property Name="ParameterValue" />
     </ShowAsAssociation>
+  </Class>
+  <Class Name="ProSuite.QA.Core.IssueCodes.IssueCode">
+    <Position X="1" Y="10.75" Width="2" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier />
   </Class>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>

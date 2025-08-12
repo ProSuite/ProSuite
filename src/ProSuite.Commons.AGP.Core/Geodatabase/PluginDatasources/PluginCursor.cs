@@ -1,8 +1,10 @@
-using System;
-using System.Collections.Generic;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using System;
+using System.Collections.Generic;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources
 {
@@ -39,6 +41,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources
 			try
 			{
 				result = _enumerator.MoveNext();
+			}
+			catch (GeodatabaseCursorException gdbException)
+			{
+				_msg.Error($"Error getting next feature: {gdbException.Message}", gdbException);
+				throw;
 			}
 			catch (Exception ex)
 			{
