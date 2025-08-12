@@ -100,7 +100,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			private set => SetProperty(ref _targetFeatureSelectionVm, value);
 		}
 
-		public AdvancedGeneralizeOptions Options
+		public AdvancedGeneralizeToolOptions Options
 		{
 			get => _options;
 			set

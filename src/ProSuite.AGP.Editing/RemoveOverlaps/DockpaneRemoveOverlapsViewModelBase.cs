@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			private set => SetProperty(ref _targetFeatureSelectionVm, value);
 		}
 
-		public RemoveOverlapsOptions Options
+		public RemoveOverlapsToolOptions Options
 		{
 			get => _options;
 			set
