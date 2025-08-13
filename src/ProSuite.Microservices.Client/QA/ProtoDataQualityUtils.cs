@@ -1068,6 +1068,9 @@ namespace ProSuite.Microservices.Client.QA
 				case AttributeValue.ValueOneofCase.ShortIntValue:
 					result = attributeValue.ShortIntValue;
 					break;
+				case AttributeValue.ValueOneofCase.IntValue:
+					result = attributeValue.IntValue;
+					break;
 				case AttributeValue.ValueOneofCase.BigIntValue:
 					result = attributeValue.BigIntValue;
 					break;
