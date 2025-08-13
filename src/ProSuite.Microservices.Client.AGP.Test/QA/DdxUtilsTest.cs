@@ -319,7 +319,7 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 					                    new ObjectAttributeType(AttributeRole.ErrorErrorType)));
 
 				errorDataset.AddAttribute(
-					new ObjectAttribute("CONDITION_ID", FieldType.LongInteger,
+					new ObjectAttribute("CONDITION_ID", FieldType.Integer,
 					                    new ObjectAttributeType(AttributeRole.ErrorConditionId)));
 
 				// Just for testing:
