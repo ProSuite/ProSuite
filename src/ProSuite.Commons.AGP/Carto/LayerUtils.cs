@@ -241,38 +241,19 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
-		/// Gets the layer's visibility state.
-		/// Works as well for layers nested in group layers.
+		/// Whether the layer is displayed in the specified mapView.
 		/// </summary>
-		public static bool IsVisible(Layer layer)
+		public static bool IsVisible([CanBeNull] Layer layer,
+		                             [CanBeNull] MapView inMapView)
 		{
-			if (layer is null) return false;
+			if (layer is null || inMapView is null) return false;
 
 			if (! layer.IsVisible)
 			{
 				return false;
 			}
 
-			if (layer.Parent is Layer parentLayer)
-			{
-				// ReSharper disable once TailRecursiveCall
-				return IsVisible(parentLayer);
-			}
-
-			// Version without tail recursion:
-			//var parent = layer.Parent;
-
-			//while (parent is Layer parentLayer)
-			//{
-			//	if (! parentLayer.IsVisible)
-			//	{
-			//		return false;
-			//	}
-
-			//	parent = parentLayer.Parent;
-			//}
-
-			return true;
+			return layer.IsVisibleInView(inMapView);
 		}
 
 		/// <remarks>A layer is considered valid if it has a non-null data table</remarks>

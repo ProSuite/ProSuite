@@ -990,11 +990,17 @@ namespace ProSuite.Microservices.Client.QA
 					case FieldType.ShortInteger:
 						attributeValue.ShortIntValue = (int) valueObject;
 						break;
-					case FieldType.LongInteger:
-						attributeValue.LongIntValue = (int) valueObject;
+					case FieldType.Integer:
+						attributeValue.IntValue = (int) valueObject;
+						break;
+					case FieldType.BigInteger:
+						attributeValue.BigIntValue = (long) valueObject;
 						break;
 					case FieldType.Double:
 						attributeValue.DoubleValue = (double) valueObject;
+						break;
+					case FieldType.Float:
+						attributeValue.FloatValue = (float) valueObject;
 						break;
 					case FieldType.Text:
 						attributeValue.StringValue = (string) valueObject;
@@ -1062,8 +1068,11 @@ namespace ProSuite.Microservices.Client.QA
 				case AttributeValue.ValueOneofCase.ShortIntValue:
 					result = attributeValue.ShortIntValue;
 					break;
-				case AttributeValue.ValueOneofCase.LongIntValue:
-					result = attributeValue.LongIntValue;
+				case AttributeValue.ValueOneofCase.IntValue:
+					result = attributeValue.IntValue;
+					break;
+				case AttributeValue.ValueOneofCase.BigIntValue:
+					result = attributeValue.BigIntValue;
 					break;
 				case AttributeValue.ValueOneofCase.FloatValue:
 					result = attributeValue.FloatValue;

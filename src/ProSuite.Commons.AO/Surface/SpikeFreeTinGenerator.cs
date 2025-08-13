@@ -64,7 +64,7 @@ namespace ProSuite.Commons.AO.Surface
 			{
 				_msg.Info("SpikeFree algorithm is only applied to specified areas");
 				var areasWithSpikes =
-					GdbQueryUtils.GetFeatures(_areasWithSpikes, filter, true)
+					GdbQueryUtils.GetFeatures(_areasWithSpikes, filter, false)
 					             .Select(f => f.Shape)
 					             .ToList();
 

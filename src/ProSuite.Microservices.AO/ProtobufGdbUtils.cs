@@ -460,7 +460,7 @@ namespace ProSuite.Microservices.AO
 						attributeValue.ShortIntValue = (short) valueObject;
 						break;
 					case esriFieldType.esriFieldTypeInteger:
-						attributeValue.LongIntValue = (int) valueObject;
+						attributeValue.IntValue = (int) valueObject;
 						break;
 					case esriFieldType.esriFieldTypeSingle:
 						attributeValue.FloatValue = (float) valueObject;
@@ -507,9 +507,11 @@ namespace ProSuite.Microservices.AO
 					case esriFieldType.esriFieldTypeXML:
 						// Not supported, ignore
 						break;
+#if Server
 					case esriFieldType.esriFieldTypeBigInteger:
-					// TODO:
-					//attributeValue.BigIntValue =  (long) valueObject;
+						attributeValue.BigIntValue = (long) valueObject;
+						break;
+#endif
 					default:
 						throw new ArgumentOutOfRangeException();
 				}

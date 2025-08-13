@@ -358,8 +358,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			result.WhereClause = filter.WhereClause;
 			result.PrefixClause = filter.PrefixClause;
 			result.PostfixClause = filter.PostfixClause;
+
+#if ARCGISPRO_GREATER_3_2
 			result.RowCount = filter.RowCount;
 			result.Offset = filter.Offset;
+#endif
 
 			return (T) result;
 		}

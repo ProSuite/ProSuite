@@ -40,6 +40,7 @@ using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.QA.Distributed;
 using ProSuite.QA.Container;
 using Quaestor.LoadReporting;
+using Quaestor.ProcessAdministration;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -94,6 +95,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		[CanBeNull]
 		public ServiceLoad CurrentLoad { get; set; }
+
+		/// <summary>
+		/// Admin interface to manage requests and their cancellation.
+		/// </summary>
+		public IRequestAdmin RequestAdmin { get; set; }
 
 		/// <summary>
 		/// The license checkout action to be performed before any service call is executed.
@@ -155,12 +161,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IServerStreamWriter<VerificationResponse> responseStream,
 			ServerCallContext context)
 		{
+			CancelableRequest registeredRequest = null;
 			try
 			{
 				await StartRequest(request);
 
+				registeredRequest =
+					RegisterRequest(request.UserName, request.Environment,
+					                context.CancellationToken);
+
+				var trackCancellationToken =
+					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
+
+				// TODO: Adapt ITrackCancel, move to CancellationToken everywhere.
 				Func<ITrackCancel, ServiceCallStatus> func =
-					trackCancel => VerifyQualityCore(request, responseStream, trackCancel);
+					trackCancel =>
+						VerifyQualityCore(request, responseStream, trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -181,6 +197,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			finally
 			{
+				if (registeredRequest != null)
+				{
+					RequestAdmin.UnregisterRequest(registeredRequest);
+				}
+
 				EndRequest();
 			}
 		}
@@ -208,6 +229,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ServerCallContext context)
 		{
 			VerificationRequest request = null;
+			CancelableRequest registeredRequest = null;
 
 			try
 			{
@@ -220,21 +242,49 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				await StartRequest(request);
 
+				registeredRequest =
+					RegisterRequest(request.UserName, request.Environment,
+					                context.CancellationToken);
+
+				var trackCancellationToken =
+					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
+
 				// TODO: Separate data request handler class with async method
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
 					{
-						return Task.Run(async () =>
-							                await RequestMoreDataAsync(
-									                requestStream, responseStream, context, r)
-								                .ConfigureAwait(false))
-						           .Result;
+						Task<DataVerificationRequest> task = RequestMoreDataAsync(
+							requestStream, responseStream, context, r);
+
+						long timeOutMillis = 30 * 1000;
+						long elapsedMillis = 0;
+						int interval = 20;
+						while (! task.IsCompleted && elapsedMillis < timeOutMillis)
+						{
+							Thread.Sleep(interval);
+							elapsedMillis += interval;
+						}
+
+						if (task.IsFaulted)
+						{
+							throw task.Exception;
+						}
+
+						if (! task.IsCompleted)
+						{
+							throw new TimeoutException(
+								$"Client failed to provide data within {elapsedMillis}ms");
+						}
+
+						DataVerificationRequest moreData = task.Result;
+
+						return moreData;
 					};
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
 						VerifyDataQualityCore(initialRequest, moreDataRequest, responseStream,
-						                      trackCancel);
+						                      trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -255,6 +305,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			finally
 			{
+				if (registeredRequest != null)
+				{
+					RequestAdmin.UnregisterRequest(registeredRequest);
+				}
+
 				EndRequest();
 			}
 		}
@@ -499,10 +554,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Task responseReaderTask = Task.Run(
 					async () =>
 					{
-						while (resultData == null)
+						// NOTE: The client should probably ensure that this call back
+						//       does not exceed a certain time span. Ideally this does
+						//       only block for a few seconds:
+
+						// This results in an eternal loop and using a timespan here has no effect
+						//while (resultData == null && elapsedMillis < timeOutMillis)
 						{
 							while (await requestStream.MoveNext().ConfigureAwait(false))
 							{
+								// TODO: only break if result_data.HasMoreDate is false
 								resultData = requestStream.Current;
 								break;
 							}
@@ -700,6 +761,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 				qaService?.GetVerifiedPerimeter(), trackCancel);
 
 			return result;
+		}
+
+		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
+		                                          [CanBeNull] string environment,
+		                                          CancellationToken token)
+		{
+			CancellationTokenSource combinedTokenSource =
+				CancellationTokenSource.CreateLinkedTokenSource(token);
+
+			return RequestAdmin?.RegisterRequest(requestUserName, environment, combinedTokenSource);
 		}
 
 		private ServiceCallStatus VerifyStandaloneXmlCore(

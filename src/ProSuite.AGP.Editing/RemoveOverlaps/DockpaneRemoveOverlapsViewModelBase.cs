@@ -29,7 +29,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		/// Text shown near the top of the DockPane.
 		private string _heading = "Remove Overlaps Options";
 
-		private RemoveOverlapsOptions _options;
+		private RemoveOverlapsToolOptions _options;
 		private CentralizableSettingViewModel<bool> _limitOverlapCalculationToExtent;
 		private CentralizableSettingViewModel<bool> _explodeMultipartResults;
 		private CentralizableSettingViewModel<bool> _InsertVerticesInTarget;
@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			private set => SetProperty(ref _targetFeatureSelectionVm, value);
 		}
 
-		public RemoveOverlapsOptions Options
+		public RemoveOverlapsToolOptions Options
 		{
 			get => _options;
 			set

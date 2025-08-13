@@ -353,14 +353,14 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
-			[NotNull] Map map,
+			[NotNull] MapView mapView,
 			[CanBeNull] FeatureClass featureClass) where T : BasicFeatureLayer
 		{
 			// TODO: WorkspaceEquality.SameVersion
 			Predicate<T> sameTablePredicate =
 				l => DatasetUtils.IsSameTable(l.GetFeatureClass(), featureClass);
 
-			return GetFeatureLayersForSelection(map, sameTablePredicate);
+			return GetFeatureLayersForSelection(mapView, sameTablePredicate);
 		}
 
 		/// <summary>
@@ -368,14 +368,14 @@ namespace ProSuite.Commons.AGP.Carto
 		/// If all visible, selectable layers have a definition query, all layers are yielded.
 		/// </summary>
 		public static IEnumerable<T> GetFeatureLayersForSelection<T>(
-			[NotNull] Map map,
+			[NotNull] MapView mapView,
 			[NotNull] Predicate<T> layerPredicate) where T : BasicFeatureLayer
 		{
 			var filteredVisibleSelectableLayers = new List<T>();
 
 			foreach (T featureLayer in GetFeatureLayers<T>(
-				         map,
-				         l => LayerUtils.IsVisible(l) && l.IsSelectable))
+				         mapView.Map,
+				         l => l.IsSelectable && l.IsVisibleInView(mapView)))
 			{
 				if (! layerPredicate(featureLayer))
 				{
@@ -559,10 +559,12 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			try
 			{
+#if ARCGISPRO_GREATER_3_2
 				if (! map.CanRemoveLayer(layer))
 				{
 					return false;
 				}
+#endif
 
 				map.RemoveLayer(layer);
 				return true;
@@ -579,10 +581,12 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			try
 			{
+#if ARCGISPRO_GREATER_3_2
 				if (! map.CanRemoveLayers(layers))
 				{
 					return false;
 				}
+#endif
 
 				map.RemoveLayers(layers);
 				return true;

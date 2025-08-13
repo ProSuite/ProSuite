@@ -28,7 +28,7 @@ namespace ProSuite.AGP.Editing.Generalize
 
 		private string _heading = "Generalization Options";
 
-		private AdvancedGeneralizeOptions _options;
+		private AdvancedGeneralizeToolOptions _options;
 		private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
 		private CentralizableSettingViewModel<bool> _weed;
@@ -100,7 +100,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			private set => SetProperty(ref _targetFeatureSelectionVm, value);
 		}
 
-		public AdvancedGeneralizeOptions Options
+		public AdvancedGeneralizeToolOptions Options
 		{
 			get => _options;
 			set

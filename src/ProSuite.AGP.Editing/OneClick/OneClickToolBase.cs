@@ -657,19 +657,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			string layerName = layer.Name;
 
-			if (! LayerUtils.IsVisible(layer))
+			if (! LayerUtils.IsVisible(layer, ActiveMapView))
 			{
-				NotificationUtils.Add(notifications, $"Layer is not visible: {layerName}");
+				NotificationUtils.Add(notifications, $"Layer is not visible in active map: {layerName}");
 				return false;
 			}
-
-			if (! layer.IsVisibleInView(ActiveMapView))
-			{
-				// Takes scale range into account (and probably the parent layer too)
-				NotificationUtils.Add(notifications, $"Layer is not visible on map: {layerName}");
-				return false;
-			}
-
+			
 			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");

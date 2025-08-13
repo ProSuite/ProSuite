@@ -272,9 +272,9 @@ namespace ProSuite.AGP.Editing.FillHole
 				             },
 				             "Fill hole(s)", datasets);
 
-			foreach (IDisplayTable displayTable in MapUtils
-				         .GetFeatureLayersForSelection<FeatureLayer>(
-					         MapView.Active.Map, currentTargetClass))
+			foreach (IDisplayTable displayTable in
+			         MapUtils.GetFeatureLayersForSelection<FeatureLayer>(
+				         MapView.Active, currentTargetClass))
 			{
 				if (displayTable is FeatureLayer featureLayer)
 				{

@@ -7,7 +7,7 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "Quaestor.LoadReporting/1.0.0": {
+      "Quaestor.ProcessAdministration/1.0.0": {
         "dependencies": {
           "Google.Protobuf": "3.24.0",
           "Grpc": "2.44.0",
@@ -15,7 +15,7 @@
           "NETStandard.Library": "2.0.3"
         },
         "runtime": {
-          "Quaestor.LoadReporting.dll": {}
+          "Quaestor.ProcessAdministration.dll": {}
         }
       },
       "Google.Protobuf/3.24.0": {
@@ -105,7 +105,7 @@
     }
   },
   "libraries": {
-    "Quaestor.LoadReporting/1.0.0": {
+    "Quaestor.ProcessAdministration/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

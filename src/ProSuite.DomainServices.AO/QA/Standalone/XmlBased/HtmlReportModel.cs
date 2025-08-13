@@ -20,7 +20,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[NotNull] private readonly List<HtmlReportIssueGroup> _issueGroups;
 
 		public HtmlReportModel(
-			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] string specificationName,
 			[NotNull] IIssueStatistics statistics,
 			[NotNull] XmlVerificationReport verificationReport,
 			[NotNull] string outputDirectoryPath,
@@ -31,7 +31,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[CanBeNull] IEnumerable<string> qualitySpecificationReportFilePaths,
 			[NotNull] IHtmlDataQualityCategoryOptionsProvider categoryOptionsProvider)
 		{
-			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
+			Assert.ArgumentNotNullOrEmpty(specificationName, nameof(specificationName));
 			Assert.ArgumentNotNull(statistics, nameof(statistics));
 			Assert.ArgumentNotNull(verificationReport, nameof(verificationReport));
 			Assert.ArgumentNotNullOrEmpty(outputDirectoryPath, nameof(outputDirectoryPath));
@@ -52,7 +52,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                                   .ToList() ?? new List<OutputFile>();
 
 			Properties = new NameValuePairs(GetProperties(verificationReport.Properties));
-			QualitySpecification = qualitySpecification.Name;
+			QualitySpecification = specificationName;
 			VerificationWasCancelled = verificationReport.Cancelled;
 			HasVerificationExtent = verificationReport.TestExtent != null;
 

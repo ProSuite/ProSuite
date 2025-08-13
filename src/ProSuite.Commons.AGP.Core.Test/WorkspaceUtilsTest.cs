@@ -1,13 +1,82 @@
-using System;
 using ArcGIS.Core.Data;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ProSuite.Commons.AGP.Core.Test
 {
 	[TestFixture]
 	public class WorkspaceUtilsTest
 	{
+		[OneTimeSetUp]
+		public void OneTimeSetUp()
+		{
+			CoreHostProxy.Initialize();
+		}
+
+		[Test]
+		public void TimeDatasetFinderTablesOsa()
+		{
+			const string connectionString =
+				"instance=sde:oracle11g:TOPGIST;dbclient=oracle;db_connection_properties=TOPGIST;" +
+				"project_instance=SDE;version=SDE.DEFAULT;authentication_mode=OSA";
+
+			DatabaseConnectionProperties properties = WorkspaceUtils.GetConnectionProperties(connectionString);
+
+			Console.WriteLine(WorkspaceUtils.ConnectionPropertiesToString(properties));
+
+			ArcGIS.Core.Data.Geodatabase geodatabase = (ArcGIS.Core.Data.Geodatabase)WorkspaceUtils.OpenDatastore(properties);
+
+			
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			IReadOnlyList<TableDefinition> defintionList = geodatabase.GetDefinitions<TableDefinition>();
+
+			stopwatch.Stop();
+			Console.WriteLine($"Time to get definitions: {stopwatch.ElapsedMilliseconds} ms");
+			Console.WriteLine($"Amount of defintions: {defintionList.Count}");
+
+			foreach (TableDefinition tableDefinition in defintionList)
+			{
+				Console.WriteLine($"Name: {tableDefinition.GetName()}");
+			}
+
+
+
+		}
+
+		[Test]
+		public void TimeDatasetFinderFeatureclasesOsa()
+		{
+			const string connectionString =
+				"instance=sde:oracle11g:TOPGIST;dbclient=oracle;db_connection_properties=TOPGIST;" +
+				"project_instance=SDE;version=SDE.DEFAULT;authentication_mode=OSA";
+
+			DatabaseConnectionProperties properties = WorkspaceUtils.GetConnectionProperties(connectionString);
+
+			Console.WriteLine(WorkspaceUtils.ConnectionPropertiesToString(properties));
+
+			ArcGIS.Core.Data.Geodatabase geodatabase = (ArcGIS.Core.Data.Geodatabase)WorkspaceUtils.OpenDatastore(properties);
+
+
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			IReadOnlyList<FeatureClassDefinition> defintionList = geodatabase.GetDefinitions<FeatureClassDefinition>();
+
+			stopwatch.Stop();
+			Console.WriteLine($"Time to get definitions: {stopwatch.ElapsedMilliseconds} ms");
+			Console.WriteLine($"Amount of defintions: {defintionList.Count}");
+
+			foreach (FeatureClassDefinition featureClassDefinition in defintionList)
+			{
+				Console.WriteLine($"Name: {featureClassDefinition.GetName()}");
+			}
+
+
+
+		}
+
 		[Test]
 		public void CanConvertConnectionStringToPropertiesOracleOsa()
 		{

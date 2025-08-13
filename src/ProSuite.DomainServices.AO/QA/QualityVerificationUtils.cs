@@ -20,24 +20,6 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static void IncludeBaseDatasets([NotNull] ICollection<Dataset> datasets,
-		                                       [NotNull] IModelContext datasetContext)
-		{
-			Assert.ArgumentNotNull(datasets, nameof(datasets));
-			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
-
-			var existingDatasets = new HashSet<Dataset>(datasets);
-
-			foreach (Dataset baseDataset in GetBaseDatasets(datasets, datasetContext))
-			{
-				if (! existingDatasets.Contains(baseDataset))
-				{
-					existingDatasets.Add(baseDataset);
-					datasets.Add(baseDataset);
-				}
-			}
-		}
-
 		/// <summary>
 		/// Gets all verified datasets for the verification context, including base datasets.
 		/// </summary>
@@ -48,8 +30,6 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] IVerificationContext verificationContext)
 		{
 			ICollection<Dataset> result = verificationContext.GetVerifiedDatasets();
-
-			IncludeBaseDatasets(result, verificationContext);
 
 			return result;
 		}
@@ -432,31 +412,6 @@ namespace ProSuite.DomainServices.AO.QA
 				                 ? "warning(s)"
 				                 : "error(s)",
 			                 conditionVerification.TotalExecuteTime * 1000);
-		}
-
-		[NotNull]
-		private static IEnumerable<Dataset> GetBaseDatasets(
-			[NotNull] IEnumerable<Dataset> datasets,
-			[NotNull] IWorkspaceContextLookup workspaceContextLookup)
-		{
-			var result = new List<Dataset>();
-
-			foreach (Dataset dataset in datasets)
-			{
-				// Currently this is only relevant for terrains. Theoretically linear networks
-				// could also be datasets implementing IDatasetCollection.
-
-				if (! (dataset is IDatasetCollection terrainDataset))
-				{
-					continue;
-				}
-
-				IEnumerable<IDdxDataset> baseDatasets = terrainDataset.ContainedDatasets;
-
-				result.AddRange(baseDatasets.Cast<Dataset>());
-			}
-
-			return result;
 		}
 	}
 }

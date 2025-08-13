@@ -42,8 +42,19 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 		ICollection<Dataset> IVerificationContext.GetVerifiedDatasets()
 		{
-			return GetEditableDatasets<Dataset>();
+			IList<Dataset> result = GetEditableDatasets<Dataset>();
+
+			AddDependentDatasets(result);
+
+			return result;
 		}
+
+		/// <summary>
+		/// Allows derived classes to add dependent datasets to the list of verified datasets that
+		/// are not directly editable in the work unit but should be included in the verification.
+		/// </summary>
+		/// <param name="toVerifiedDatasets"></param>
+		protected virtual void AddDependentDatasets([NotNull] IList<Dataset> toVerifiedDatasets) { }
 
 		public abstract SpatialReferenceDescriptor SpatialReferenceDescriptor { get; }
 

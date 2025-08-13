@@ -219,28 +219,27 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			if (requiresRecalculate)
 			{
-				return QueuedTask.Run(
-					() =>
+				return QueuedTask.Run(() =>
+				{
+					try
 					{
-						try
-						{
-							var selectedFeatures =
-								GetApplicableSelectedFeatures(ActiveMapView).ToList();
+						var selectedFeatures =
+							GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-							using var source = GetProgressorSource();
-							var progressor = source?.Progressor;
+						using var source = GetProgressorSource();
+						var progressor = source?.Progressor;
 
-							RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
+						RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 
-							return true;
-						}
-						catch (Exception e)
-						{
-							// Do not re-throw or the application could crash (e.g. in undo)
-							_msg.Error($"Error calculating reshape curves: {e.Message}", e);
-							return false;
-						}
-					});
+						return true;
+					}
+					catch (Exception e)
+					{
+						// Do not re-throw or the application could crash (e.g. in undo)
+						_msg.Error($"Error calculating reshape curves: {e.Message}", e);
+						return false;
+					}
+				});
 			}
 
 			return base.OnEditCompletedAsyncCore(args);
@@ -259,8 +258,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			try
 			{
 				List<Feature> selection =
-					await QueuedTask.Run(
-						() => GetApplicableSelectedFeatures(ActiveMapView).ToList());
+					await QueuedTask.Run(() => GetApplicableSelectedFeatures(ActiveMapView)
+						                     .ToList());
 
 				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
 				Assert.NotNull(simpleGeometry, "Geometry is null");
@@ -287,8 +286,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					return false;
 				}
 
-				return await QueuedTask.Run(
-					       () => UpdateFeatures(selection, cutSubcurves, progressor));
+				return await QueuedTask.Run(() => UpdateFeatures(
+					                            selection, cutSubcurves, progressor));
 			}
 			finally
 			{
@@ -506,8 +505,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 
 			ChangeAlongCurves =
-				await QueuedTaskUtils.Run(
-					() => RefreshChangeAlongCurves(selectedFeatures, targetFeatures, progressor));
+				await QueuedTaskUtils.Run(() => RefreshChangeAlongCurves(
+					                          selectedFeatures, targetFeatures, progressor));
 
 			return true;
 		}
@@ -753,8 +752,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// Inserts (in case of cut), grouped by original feature:
 			var inserts = updatedFeatures
-			              .Where(
-				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
+			              .Where(f => IsStoreRequired(f, editableClassHandles,
+			                                          RowChangeType.Insert))
 			              .ToList();
 
 			if (resultFeatures.Count == 0 && inserts.Count == 0)
@@ -780,7 +779,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			LogReshapeResults(updatedFeatures, resultFeatures);
 
-			ToolUtils.SelectNewFeatures(newFeatures, activeMap);
+			ToolUtils.SelectNewFeatures(newFeatures, activeMap, false);
 
 			SpatialReference outputSpatialReference = activeMap.Map.SpatialReference;
 
@@ -819,14 +818,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private void OnDrawCompleted(MapViewEventArgs obj)
 		{
-			if (! RefreshSubcurvesOnRedraw || !  IsInSubcurveSelectionPhase())
+			if (! RefreshSubcurvesOnRedraw || ! IsInSubcurveSelectionPhase())
 			{
 				return;
 			}
 
 			Envelope extent = Assert.NotNull(obj.MapView.Extent);
 
-			if (_lastDrawnExtent != null && GeometryEngine.Instance.Equals(_lastDrawnExtent, extent))
+			if (_lastDrawnExtent != null &&
+			    GeometryEngine.Instance.Equals(_lastDrawnExtent, extent))
 			{
 				// This event is called repeatedly without anything changing
 				return;

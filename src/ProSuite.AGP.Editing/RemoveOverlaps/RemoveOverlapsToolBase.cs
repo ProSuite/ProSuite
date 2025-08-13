@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private RemoveOverlapsOptions _removeOverlapsToolOptions;
+		private RemoveOverlapsToolOptions _removeOverlapsToolOptions;
 		private OverridableSettingsProvider<PartialRemoveOverlapsOptions> _settingsProvider;
 
 		private Overlaps _overlaps;
@@ -239,7 +239,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				             },
 				             "Remove overlaps", datasets);
 
-			ToolUtils.SelectNewFeatures(newFeatures, activeMapView);
+			ToolUtils.SelectNewFeatures(newFeatures, activeMapView, false);
 
 			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
 
@@ -381,7 +381,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return true;
 		}
 
-		private RemoveOverlapsOptions InitializeOptions()
+		private RemoveOverlapsToolOptions InitializeOptions()
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -397,7 +397,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
-			var result = new RemoveOverlapsOptions(centralConfiguration,
+			var result = new RemoveOverlapsToolOptions(centralConfiguration,
 			                                       localConfiguration);
 
 			result.PropertyChanged -= OptionsPropertyChanged;
@@ -529,7 +529,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			var featureLayer = layer as FeatureLayer;
 
 			List<string>
-				ignoredClasses = new List<string>(); // RemoveOverlapsOptions.IgnoreFeatureClasses;
+				ignoredClasses = new List<string>(); // RemoveOverlapsToolOptions.IgnoreFeatureClasses;
 
 			return CanOverlapGeometryType(featureLayer) &&
 			       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
@@ -578,6 +578,5 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		}
 
 		#endregion
-
 	}
 }
