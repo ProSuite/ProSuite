@@ -18,7 +18,8 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 			return qualitySpecification.Category;
 		}
 
-		protected override IItemTreeNode GetContainerNode(DataQualityCategory category,
+		protected override IItemTreeNode GetContainerNode(Entity entity,
+		                                                  DataQualityCategory category,
 		                                                  IItemTreeNode categoryNode)
 		{
 			if (category != null && category.CanContainOnlyQualitySpecifications)
@@ -27,9 +28,7 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 			}
 
 			// search beneath QualitySpecificationsItem child node
-			return FindNode(categoryNode,
-			                node =>
-				                node.IsBasedOnEntityType<QualitySpecification>());
+			return FindNode(categoryNode, node => node.IsBasedOnEntityType<QualitySpecification>());
 		}
 	}
 }
