@@ -78,7 +78,7 @@ namespace ProSuite.DomainModel.Core.Test.QA
 			EnsureDisplayValue(typeof(DateTime),
 			                   new DateTime(1975, 4, 27, 19, 30, 0).ToString(
 				                   CultureInfo.CurrentCulture));
-			EnsureDisplayValue(typeof(FieldType), FieldType.LongInteger.ToString());
+			EnsureDisplayValue(typeof(FieldType), FieldType.Integer.ToString());
 		}
 
 		private static void EnsureDisplayValue(Type dataType,

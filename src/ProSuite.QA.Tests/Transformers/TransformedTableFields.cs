@@ -70,6 +70,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IList<string> ExcludedSourceFields { get; } = new List<string>();
 
+		public bool QualifyFieldsWithSourceTable { get; set; }
+
 		public int ShapeFieldIndex { get; private set; } = -1;
 
 		[CanBeNull]
@@ -106,6 +108,11 @@ namespace ProSuite.QA.Tests.Transformers
 				string targetName = NonUserDefinedFieldPrefix != null
 					                    ? NonUserDefinedFieldPrefix + sourceField.Name
 					                    : sourceField.Name;
+
+				if (QualifyFieldsWithSourceTable)
+				{
+					targetName = $"{SourceTable.Name}.{targetName}";
+				}
 
 				int conflictingFieldIndex = toOutputClass.FindField(targetName);
 				bool alreadyExists = conflictingFieldIndex >= 0;
@@ -183,6 +190,11 @@ namespace ProSuite.QA.Tests.Transformers
 				if (resultField.Equals(inputField, StringComparison.InvariantCultureIgnoreCase))
 				{
 					resultField = unqualifiedInputField;
+				}
+
+				if (QualifyFieldsWithSourceTable)
+				{
+					resultField = $"{SourceTable.Name}.{resultField}";
 				}
 
 				//if (resultField.Contains('.'))
@@ -584,8 +596,9 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			// Repeating the name of the current table is not necessary for single tables but might be done for clarity
 
-			if (!string.IsNullOrWhiteSpace(sourceTable.Name)
-			    && fieldName.StartsWith(sourceTable.Name, StringComparison.InvariantCultureIgnoreCase))
+			if (! string.IsNullOrWhiteSpace(sourceTable.Name)
+			    && fieldName.StartsWith(sourceTable.Name,
+			                            StringComparison.InvariantCultureIgnoreCase))
 			{
 				string remainder = fieldName.Substring(sourceTable.Name.Length);
 

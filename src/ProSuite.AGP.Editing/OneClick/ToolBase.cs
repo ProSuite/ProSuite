@@ -737,16 +737,9 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 
 		string layerName = layer.Name;
 
-		if (! LayerUtils.IsVisible(layer))
+		if (! LayerUtils.IsVisible(layer, ActiveMapView))
 		{
-			NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
-			return false;
-		}
-
-		if (! layer.IsVisibleInView(ActiveMapView))
-		{
-			// Takes scale range into account (and probably the parent layer too)
-			NotificationUtils.Add(notifications, $"Layer {layerName} is not visible on map");
+			NotificationUtils.Add(notifications, $"Layer is not visible in active map: {layerName}");
 			return false;
 		}
 

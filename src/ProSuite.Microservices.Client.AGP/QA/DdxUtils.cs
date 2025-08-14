@@ -18,6 +18,7 @@ using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.Workflow;
 using ProSuite.Microservices.Client.DataModel;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
@@ -664,12 +665,28 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
 					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
 
-				projectWorkspace.MinimumScaleDenominator =
-					projectMsg.MinimumScaleDenominator;
+				var projectSettings =
+					new ProjectSettings(projectMsg.ProjectId,
+					                    projectMsg.ShortName,
+					                    projectMsg.Name)
+					{
+						MinimumScaleDenominator = projectMsg.MinimumScaleDenominator,
 
-				projectWorkspace.ToolConfigDirectory = projectMsg.ToolConfigDirectory;
-				projectWorkspace.WorkListConfigDir = projectMsg.WorkListConfigDir;
-				projectWorkspace.AttributeEditorConfigDir = projectMsg.AttributeEditorConfigDir;
+						AttributeEditorConfigDirectory =
+							ProtobufGeomUtils.EmptyToNull(projectMsg.AttributeEditorConfigDir),
+						ToolConfigDirectory =
+							ProtobufGeomUtils.EmptyToNull(projectMsg.ToolConfigDirectory),
+						WorkListConfigDirectory =
+							ProtobufGeomUtils.EmptyToNull(projectMsg.WorkListConfigDir),
+					};
+
+				projectSettings.SetFullExtent(
+					projectMsg.FullExtentXMin,
+					projectMsg.FullExtentYMin,
+					projectMsg.FullExtentXMax,
+					projectMsg.FullExtentYMax);
+
+				projectWorkspace.ProjectSettings = projectSettings;
 
 				result.Add(projectWorkspace);
 			}

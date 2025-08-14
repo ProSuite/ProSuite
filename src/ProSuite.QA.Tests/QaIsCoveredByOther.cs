@@ -6,10 +6,10 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
@@ -142,7 +142,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass covering,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_1))] [NotNull]
 			IReadOnlyFeatureClass covered)
-			: this(new[] {covering}, new[] {covered}, null) { }
+			: this(new[] { covering }, new[] { covered }, null) { }
 
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_2))]
 		public QaIsCoveredByOther(
@@ -154,8 +154,8 @@ namespace ProSuite.QA.Tests
 				covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))]
 			string isCoveringCondition)
-			: this(covering, new[] {GeometryComponent.EntireGeometry},
-			       covered, new[] {GeometryComponent.EntireGeometry},
+			: this(covering, new[] { GeometryComponent.EntireGeometry },
+			       covered, new[] { GeometryComponent.EntireGeometry },
 			       isCoveringCondition) { }
 
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_3))]
@@ -166,7 +166,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass covered,
 			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))]
 			string isCoveringCondition)
-			: this(new[] {covering}, new[] {covered}, isCoveringCondition) { }
+			: this(new[] { covering }, new[] { covered }, isCoveringCondition) { }
 
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_4))]
 		public QaIsCoveredByOther(
@@ -210,7 +210,7 @@ namespace ProSuite.QA.Tests
 			       covered, coveredGeometryComponents,
 			       string.IsNullOrEmpty(isCoveringCondition)
 				       ? null
-				       : new[] {isCoveringCondition},
+				       : new[] { isCoveringCondition },
 			       allowedUncoveredPercentage) { }
 
 		[Doc(nameof(DocStrings.QaIsCoveredByOther_6))]
@@ -404,6 +404,9 @@ namespace ProSuite.QA.Tests
 			{
 				var coveringClass = (IReadOnlyFeatureClass) InvolvedTables[coveringClassIndex];
 
+				// Optimization for large input polygons (e.g. map sheets must be covered): Union first
+				var geometriesToSubtract = new List<IGeometry>();
+
 				foreach (IReadOnlyFeature intersectingFeature in searcher.Search(uncoveredGeometry,
 					         coveringClass,
 					         coveringClassIndex))
@@ -433,8 +436,32 @@ namespace ProSuite.QA.Tests
 					}
 
 					uncoveredGeometry = GetRemainingUnCoveredGeometry(
-						uncoveredGeometry,
-						coveringGeometry);
+						uncoveredGeometry, coveringGeometry, geometriesToSubtract);
+
+					if (uncoveredGeometry == null || uncoveredGeometry.IsEmpty)
+					{
+						// no difference outside of covering features left --> covered
+						FlagFeatureAsCovered(tableIndex, feature);
+						return NoError;
+					}
+				}
+
+				if (geometriesToSubtract.Count > 0)
+				{
+					// Use the union of all covering geometries to subtract.
+					// TODO: Clip before union? Only union if they are many?
+					// TODO: Protect against worst case (large geometries covering many features)
+					//       Or better, keep the union to improve the probability that the test
+					//       features are contained? Clipping features before union is probably the best trade-off.
+
+					IGeometry geometryToSubtract =
+						geometriesToSubtract.Count == 1
+							? geometriesToSubtract[0]
+							: UnionPolygons(geometriesToSubtract, uncoveredGeometry.Envelope);
+
+					uncoveredGeometry = GetRemainingUnCoveredGeometry(
+						uncoveredGeometry, geometryToSubtract, null);
+					geometriesToSubtract.Clear();
 
 					if (uncoveredGeometry == null || uncoveredGeometry.IsEmpty)
 					{
@@ -450,6 +477,16 @@ namespace ProSuite.QA.Tests
 			                       intersectingCount);
 
 			return NoError;
+		}
+
+		private static IGeometry UnionPolygons(List<IGeometry> geometriesToSubtract,
+		                                       IEnvelope inEnvelope)
+		{
+			List<IPolygon> clippedPolygons =
+				geometriesToSubtract.Select(
+					g => GeometryUtils.GetClippedPolygon((IPolygon) g, inEnvelope)).ToList();
+
+			return GeometryUtils.Union(clippedPolygons);
 		}
 
 		private bool IsCoveredClassIndex(int tableIndex)
@@ -839,7 +876,8 @@ namespace ProSuite.QA.Tests
 		[CanBeNull]
 		private IGeometry GetRemainingUnCoveredGeometry(
 			[NotNull] IGeometry geometry,
-			[NotNull] IGeometry coveringGeometry)
+			[NotNull] IGeometry coveringGeometry,
+			[CanBeNull] List<IGeometry> geometriesToSubtract)
 		{
 			GeometryUtils.AllowIndexing(coveringGeometry);
 
@@ -891,6 +929,14 @@ namespace ProSuite.QA.Tests
 				coveringShapeType == esriGeometryType.esriGeometryMultiPatch
 					? GeometryFactory.CreatePolygon((IMultiPatch) coveringGeometry)
 					: coveringGeometry;
+
+			if (geometriesToSubtract != null &&
+			    coveringShapeType == esriGeometryType.esriGeometryPolygon)
+			{
+				// Optimization for potentially large input polygons (e.g. map sheets must be covered)
+				geometriesToSubtract.Add(geometryToSubtract);
+				return geometry;
+			}
 
 			GeometryUtils.AllowIndexing(geometry);
 			// uses xy tolerance of COVERED
@@ -1116,9 +1162,9 @@ namespace ProSuite.QA.Tests
 		private bool IsFeatureKnownCovered(int tableIndex, [NotNull] IReadOnlyFeature feature)
 		{
 			SimpleSet<long> featuresKnownCovered;
-			return
-				_featuresKnownCovered.TryGetValue(tableIndex, out featuresKnownCovered) &&
-				featuresKnownCovered.Contains(feature.OID);
+
+			return _featuresKnownCovered.TryGetValue(tableIndex, out featuresKnownCovered) &&
+			       featuresKnownCovered.Contains(feature.OID);
 		}
 
 		private void StoreUncoveredGeometry(int tableIndex,
@@ -1140,8 +1186,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			UnCoveredFeature unCoveredFeature;
-			if (
-				! unCoveredFeaturesByOID.TryGetValue(feature.OID, out unCoveredFeature))
+			if (! unCoveredFeaturesByOID.TryGetValue(feature.OID, out unCoveredFeature))
 			{
 				unCoveredFeature = new UnCoveredFeature(feature, tableIndex);
 				unCoveredFeaturesByOID.Add(feature.OID, unCoveredFeature);
@@ -1608,9 +1653,8 @@ namespace ProSuite.QA.Tests
 			public CoveringFeatureSearcher(
 				[NotNull] IFeatureClassFilter[] queryFilters,
 				[NotNull] QueryFilterHelper[] queryFilterHelpers,
-				[NotNull]
-				Func<IReadOnlyTable, ITableFilter, QueryFilterHelper,
-						IEnumerable<IReadOnlyRow>> searchFunction,
+				[NotNull] Func<IReadOnlyTable, ITableFilter, QueryFilterHelper,
+					IEnumerable<IReadOnlyRow>> searchFunction,
 				[NotNull] Func<int, double> getTolerance,
 				double tileEnvelopeXMin,
 				double tileEnvelopeYMin,

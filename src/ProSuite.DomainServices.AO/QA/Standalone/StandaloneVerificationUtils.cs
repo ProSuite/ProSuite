@@ -303,7 +303,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			string reportFilePath = Path.Combine(directory, reportDefinition.FileName);
 
 			_msg.DebugFormat("Preparing html report model");
-			var reportModel = new HtmlReportModel(qualitySpecification,
+			var reportModel = new HtmlReportModel(qualitySpecification.Name,
 			                                      issueStatistics,
 			                                      verificationReport,
 			                                      directory,

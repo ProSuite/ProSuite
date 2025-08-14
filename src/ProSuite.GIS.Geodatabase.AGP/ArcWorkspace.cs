@@ -39,7 +39,8 @@ public class ArcWorkspace : IFeatureWorkspace
 	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
 	                                  bool cacheProperties = false)
 	{
-		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(), out ArcWorkspace existing))
+		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(),
+		                                    out ArcWorkspace existing))
 		{
 			if (cacheProperties)
 			{
@@ -381,6 +382,8 @@ public class ArcWorkspace : IFeatureWorkspace
 	{
 		return _workspaceName ??= new ArcWorkspaceName(this);
 	}
+
+	public object NativeImplementation => Geodatabase;
 
 	#endregion
 

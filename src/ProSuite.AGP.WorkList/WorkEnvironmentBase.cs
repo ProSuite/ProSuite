@@ -276,7 +276,8 @@ namespace ProSuite.AGP.WorkList
 		public bool WorkListFileExistsInProjectFolder(out string worklistFilePath)
 		{
 			string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
-			Assert.True(FileSystemUtils.EnsureDirectoryExists(directory), $"Cannot create {directory}");
+			Assert.True(FileSystemUtils.EnsureDirectoryExists(directory),
+			            $"Cannot create {directory}");
 
 			string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
 			worklistFilePath = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
@@ -289,7 +290,8 @@ namespace ProSuite.AGP.WorkList
 		/// Ensures that work list file is always unique. Override this
 		/// method to always use the same work list file.
 		/// </summary>
-		protected virtual string EnsureValidDefinitionFilePath(string directory, string fileName, string suffix)
+		protected virtual string EnsureValidDefinitionFilePath(
+			string directory, string fileName, string suffix)
 		{
 			int increment = 1;
 			string newFileName = fileName;
@@ -299,7 +301,7 @@ namespace ProSuite.AGP.WorkList
 				newFileName = $"{fileName} {increment++}";
 			}
 
-			return Path.Combine(directory, $"{newFileName}{FileSuffix}");
+			return Path.Combine(directory, $"{newFileName}{suffix}");
 		}
 	}
 }

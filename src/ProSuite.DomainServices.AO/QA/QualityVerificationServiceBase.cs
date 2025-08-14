@@ -150,7 +150,8 @@ namespace ProSuite.DomainServices.AO.QA
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
 		                                [NotNull] DdxModel model)
 		{
-			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.GetSpatialReference());
+			SetTestPerimeter(areaOfInterest,
+			                 model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
@@ -1292,21 +1293,8 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			ICollection<Dataset> verifiedDatasets = VerificationContext.GetVerifiedDatasets();
 
-			IncludeBaseDatasets(verifiedDatasets, VerificationContext);
-
 			return GetDatasetsInvolvedInSelection(verifiedDatasets);
 		}
-
-		/// <summary>
-		/// Allows subclasses to include additional datasets that might not exist in the list
-		/// of verified datasets of the verification context. This is currently used for base
-		/// datasets of terrains.
-		/// </summary>
-		/// <param name="verifiedDatasets"></param>
-		/// <param name="verificationContext"></param>
-		protected abstract void IncludeBaseDatasets(
-			[NotNull] ICollection<Dataset> verifiedDatasets,
-			[NotNull] IVerificationContext verificationContext);
 
 		private class ErrorPerimeterRelation
 		{

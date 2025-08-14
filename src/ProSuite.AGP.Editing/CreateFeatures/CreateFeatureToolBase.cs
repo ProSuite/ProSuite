@@ -301,7 +301,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				foreach (IDisplayTable displayTable in MapUtils
 					         .GetFeatureLayersForSelection<FeatureLayer>(
-						         MapView.Active.Map, featureClass))
+						         MapView.Active, featureClass))
 				{
 					if (displayTable is FeatureLayer featureLayer)
 					{

@@ -16,12 +16,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
-		{
-			get => _targetFeatureSelectionVm;
-			private set => SetProperty(ref _targetFeatureSelectionVm, value);
-		}
-
 		public ICommand RevertToDefaultsCommand { get; }
 
 		public bool IsRevertToDefaultsEnabled => true;
@@ -142,6 +136,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			get => _minimalTolerance;
 			set => SetProperty(ref _minimalTolerance, value);
+		}
+
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
 		}
 
 		public ReshapeAlongToolOptions Options

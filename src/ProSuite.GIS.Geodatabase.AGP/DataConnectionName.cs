@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -169,7 +172,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				             JoinType = _joinType,
 				             JoinForward = ForwardDirection,
 				             // TODO: Deal with one-to-first once properly implemented
-				             OneToFirst = false,
+				             //OneToFirst = false,
 				             SourceTable = _sourceConnectionName.ToCIMDataConnection(),
 				             DestinationTable = _destinationConnectionName.ToCIMDataConnection(),
 				             PrimaryKey = PrimaryKey,
@@ -225,6 +228,40 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
+		[CanBeNull]
+		public static DataConnectionWorkspaceName FromGeodatabase(
+			[NotNull] Datastore datastore)
+		{
+			Connector connector = datastore.GetConnector();
+
+			WorkspaceFactory workspaceFactory;
+
+			switch (connector)
+			{
+				case DatabaseConnectionProperties:
+					workspaceFactory = WorkspaceFactory.SDE;
+					break;
+				case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
+					workspaceFactory = WorkspaceFactory.FileGDB;
+					break;
+				case FileSystemConnectionPath fileSystemConnection:
+					workspaceFactory = WorkspaceFactory.Shapefile;
+					break;
+				case MobileGeodatabaseConnectionPath mobileGeodatabaseConnectionPath:
+					workspaceFactory = WorkspaceFactory.SQLite;
+					break;
+				case PluginDatasourceConnectionPath pluginDatasourceConnectionPath:
+					workspaceFactory = WorkspaceFactory.Custom;
+					break;
+				default:
+					throw new NotImplementedException(
+						$"connector {connector.GetType()} is not implemented");
+			}
+
+			return new DataConnectionWorkspaceName(datastore.GetConnectionString(),
+			                                       workspaceFactory);
+		}
+
 		public DataConnectionWorkspaceName(CIMStandardDataConnection standardConnection)
 			: this(standardConnection.WorkspaceConnectionString,
 			       standardConnection.WorkspaceFactory) { }
@@ -247,7 +284,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public object Open()
 		{
-			throw new NotImplementedException();
+			Connector connector = WorkspaceUtils.CreateConnector(FactoryType, ConnectionString);
+
+			return WorkspaceUtils.OpenDatastore(connector);
 		}
 
 		#endregion

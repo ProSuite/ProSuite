@@ -39,39 +39,30 @@ namespace ProSuite.Commons.AGP.Selection
 			return IsSelected(selection, feature);
 		}
 
-		/// <summary>Select the given <paramref name="feature"/>
-		/// on the first layer of the given <paramref name="map"/>
-		/// that is visible, selectable, and actually shows the
-		/// feature (e.g. not excluded by definition query)</summary>
-		/// <returns>true iff the feature was selected</returns>
+		/// <summary>Select the given <paramref name="feature"/> the first layer of the given
+		/// <paramref name="mapView"/> that is visible, selectable, and actually show the feature
+		/// (i.e. the layer has preferably no definition query)</summary>
+		/// <returns>true if the feature is selected or was already selected.</returns>
 		/// <remarks>Must run on MCT</remarks>
-		public static bool SelectFeature(Map map, Feature feature)
+		public static bool SelectFeature(
+			[NotNull] MapView mapView,
+			[NotNull] Feature feature,
+			SelectionCombinationMethod method = SelectionCombinationMethod.Add)
 		{
-			if (map is null) return false;
-			if (feature is null) return false;
+			Assert.ArgumentNotNull(mapView, nameof(mapView));
+			Assert.ArgumentNotNull(feature, nameof(feature));
 
-			using var featureClass = feature.GetTable();
+			long oid = feature.GetObjectID();
+			var filter = new QueryFilter { ObjectIDs = new[] { oid } };
 
-			var layerList = map.GetLayersAsFlattenedList();
+			FeatureClass featureClass = feature.GetTable();
 
-			foreach (var layer in layerList.OfType<FeatureLayer>())
-			{
-				if (!layer.IsVisible) continue;
-				if (!layer.IsSelectable) continue;
+			Predicate<IDisplayTable> usesSameClass =
+				layer => SameFeatureClass(layer.GetTable() as FeatureClass, featureClass);
 
-				using var layerClass = layer.GetFeatureClass();
+			long selectionCount = SelectFeatures(mapView, filter, method, usesSameClass);
 
-				if (SameFeatureClass(layerClass, featureClass))
-				{
-					if (SelectFeature(layer, feature))
-					{
-						return true;
-					}
-					// else: could not select feature, probably because of a def query
-				}
-			}
-
-			return false;
+			return selectionCount > 0;
 		}
 
 		private static bool SameFeatureClass(FeatureClass a, FeatureClass b)
@@ -100,7 +91,7 @@ namespace ProSuite.Commons.AGP.Selection
 		/// layer or table without definition query.
 		/// </summary>
 		/// <returns>The number of actually selected rows.</returns>
-		public static long SelectRows([NotNull] Map map,
+		public static long SelectRows([NotNull] MapView mapView,
 		                              [NotNull] Predicate<IDisplayTable> mapMemberPredicate,
 		                              [NotNull] IReadOnlyList<long> objectIds)
 		{
@@ -113,7 +104,7 @@ namespace ProSuite.Commons.AGP.Selection
 
 			SelectionCombinationMethod combinationMethod = SelectionCombinationMethod.Add;
 
-			return SelectRows(map, queryFilter, combinationMethod, mapMemberPredicate);
+			return SelectRows(mapView, queryFilter, combinationMethod, mapMemberPredicate);
 		}
 
 		/// <summary>
@@ -123,7 +114,23 @@ namespace ProSuite.Commons.AGP.Selection
 		/// </summary>
 		/// <returns>The number of actually selected rows.</returns>
 		public static long SelectRows(
-			[NotNull] Map map,
+			[NotNull] MapView mapView,
+			[NotNull] QueryFilter queryFilter,
+			SelectionCombinationMethod combinationMethod = SelectionCombinationMethod.Add,
+			[CanBeNull] Predicate<IDisplayTable> mapMemberPredicate = null)
+		{
+			long totalSelected =
+				SelectFeatures(mapView, queryFilter, combinationMethod, mapMemberPredicate);
+
+			totalSelected +=
+				SelectStandaloneTableRows(mapView, queryFilter, combinationMethod,
+				                          mapMemberPredicate);
+
+			return totalSelected;
+		}
+
+		private static long SelectFeatures(
+			[NotNull] MapView mapView,
 			[NotNull] QueryFilter queryFilter,
 			SelectionCombinationMethod combinationMethod = SelectionCombinationMethod.Add,
 			[CanBeNull] Predicate<IDisplayTable> mapMemberPredicate = null)
@@ -135,18 +142,29 @@ namespace ProSuite.Commons.AGP.Selection
 				     (mapMemberPredicate == null || mapMemberPredicate(displayTable));
 
 			foreach (BasicFeatureLayer featureLayer in
-			         MapUtils.GetFeatureLayersForSelection(map, layerPredicate))
+			         MapUtils.GetFeatureLayersForSelection(mapView, layerPredicate))
 			{
 				totalSelected +=
 					SelectRows(featureLayer, combinationMethod, queryFilter);
 			}
+
+			return totalSelected;
+		}
+
+		private static long SelectStandaloneTableRows(
+			[NotNull] MapView mapView,
+			[NotNull] QueryFilter queryFilter,
+			SelectionCombinationMethod combinationMethod = SelectionCombinationMethod.Add,
+			[CanBeNull] Predicate<IDisplayTable> mapMemberPredicate = null)
+		{
+			long totalSelected = 0;
 
 			Predicate<StandaloneTable> tablePredicate =
 				t => t is IDisplayTable displayTable &&
 				     (mapMemberPredicate == null || mapMemberPredicate(displayTable));
 
 			foreach (StandaloneTable standaloneTable in
-			         MapUtils.GetStandaloneTablesForSelection(map, tablePredicate))
+			         MapUtils.GetStandaloneTablesForSelection(mapView.Map, tablePredicate))
 			{
 				totalSelected +=
 					SelectRows(standaloneTable, combinationMethod, queryFilter);

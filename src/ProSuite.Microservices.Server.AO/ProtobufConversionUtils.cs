@@ -56,34 +56,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
-		private static IDictionary<long, GdbFeatureClass> CreateGdbClassByHandleDictionary(
-			[NotNull] ICollection<ObjectClassMsg> objectClassMsgs)
-		{
-			var result = new Dictionary<long, GdbFeatureClass>();
-
-			// Create minimal workspace (for equality comparisons)
-			var workspaces = new Dictionary<long, GdbWorkspace>();
-
-			foreach (ObjectClassMsg classMsg in objectClassMsgs)
-			{
-				if (! workspaces.TryGetValue(classMsg.WorkspaceHandle, out GdbWorkspace workspace))
-				{
-					workspace = GdbWorkspace.CreateEmptyWorkspace(classMsg.WorkspaceHandle);
-					workspaces.Add(classMsg.WorkspaceHandle, workspace);
-				}
-
-				if (! result.ContainsKey(classMsg.ClassHandle))
-				{
-					GdbFeatureClass gdbTable =
-						(GdbFeatureClass) FromObjectClassMsg(classMsg, workspace);
-
-					result.Add(classMsg.ClassHandle, gdbTable);
-				}
-			}
-
-			return result;
-		}
-
+		[NotNull]
 		public static IList<IFeature> FromGdbObjectMsgList(
 			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
 			[NotNull] GdbTableContainer container)
@@ -104,6 +77,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static GdbTableContainer CreateGdbTableContainer(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] Func<DataVerificationResponse, DataVerificationRequest> getRemoteDataFunc,
@@ -153,9 +127,10 @@ namespace ProSuite.Microservices.Server.AO
 				container.TryAdd(gdbTable);
 			}
 
-			return container;
+			return Assert.NotNull(container, "No objectClassMessages provided");
 		}
 
+		[NotNull]
 		public static GdbWorkspace CreateGdbWorkspace(
 			[NotNull] WorkspaceMsg workspaceMessage,
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages)
@@ -191,6 +166,7 @@ namespace ProSuite.Microservices.Server.AO
 			return gdbWorkspace;
 		}
 
+		[NotNull]
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] ICollection<ObjectClassMsg> relClassMessages = null,
@@ -224,6 +200,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[NotNull] ICollection<WorkspaceMsg> workspaceMessages)
@@ -246,6 +223,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static GdbTable FromObjectClassMsg(
 			[NotNull] ObjectClassMsg objectClassMsg,
 			[CanBeNull] IWorkspace workspace,
@@ -296,6 +274,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static GdbTable FromQueryTableMsg(
 			[NotNull] ObjectClassMsg objectClassMsg,
 			[NotNull] IWorkspace workspace,
@@ -330,6 +309,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static GdbFeature FromGdbFeatureMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
 			[NotNull] Func<GdbFeatureClass> getClass)
@@ -414,6 +394,36 @@ namespace ProSuite.Microservices.Server.AO
 			return specificationElement;
 		}
 
+		[NotNull]
+		private static IDictionary<long, GdbFeatureClass> CreateGdbClassByHandleDictionary(
+			[NotNull] ICollection<ObjectClassMsg> objectClassMsgs)
+		{
+			var result = new Dictionary<long, GdbFeatureClass>();
+
+			// Create minimal workspace (for equality comparisons)
+			var workspaces = new Dictionary<long, GdbWorkspace>();
+
+			foreach (ObjectClassMsg classMsg in objectClassMsgs)
+			{
+				if (! workspaces.TryGetValue(classMsg.WorkspaceHandle, out GdbWorkspace workspace))
+				{
+					workspace = GdbWorkspace.CreateEmptyWorkspace(classMsg.WorkspaceHandle);
+					workspaces.Add(classMsg.WorkspaceHandle, workspace);
+				}
+
+				if (! result.ContainsKey(classMsg.ClassHandle))
+				{
+					GdbFeatureClass gdbTable =
+						(GdbFeatureClass) FromObjectClassMsg(classMsg, workspace);
+
+					result.Add(classMsg.ClassHandle, gdbTable);
+				}
+			}
+
+			return result;
+		}
+
+		[NotNull]
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
 		                                           GdbFeatureClass featureClass)
 		{
@@ -478,8 +488,9 @@ namespace ProSuite.Microservices.Server.AO
 			}
 		}
 
-		private static void ReadMsgValues(GdbObjectMsg gdbObjectMsg, GdbRow intoResult,
-		                                  ITable table)
+		private static void ReadMsgValues([NotNull] GdbObjectMsg gdbObjectMsg,
+		                                  [NotNull] GdbRow intoResult,
+		                                  [NotNull] ITable table)
 		{
 			if (gdbObjectMsg.Values.Count == 0)
 			{
