@@ -25,6 +25,16 @@ namespace ProSuite.QA.Tests
 			: base(featureClass)
 		{
 			Limit = limit;
+
+			// NOTE:
+			// It would probably be useful to set the ProcessBase.LinearUnits from the spatial.
+			// However, this would be breaking backwards compatibility with the allowed errors.
+			// Also, the double blank in the length description has been there for a long time:
+			// Length 45.28  < 50.00
+			// Possible solutions:
+			// - Add NumericValue fields and affected component to central issue tables (and use for comparisons)
+			// - Add a description comparison to each Test class (or TestDefinition) that can apply
+			//   legacy / fallback comparison logic
 		}
 
 		public override bool IsQueriedTable(int tableIndex)
