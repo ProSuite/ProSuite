@@ -73,6 +73,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool SelectOnlySelectableFeatures { get; init; } = true;
 
+		protected virtual bool AllowMultiSelection(out string reason)
+		{
+			reason = null;
+			return true;
+		}
+
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise, the selection phase will continue until all selected features are
@@ -110,6 +116,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
+
+		protected virtual bool DefaultSketchTypeOnFinishSketch => true;
+
 		#region Overrides of MapToolBase
 
 		protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
@@ -137,20 +147,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			}, progressor);
 		}
 
-		#endregion
-
-		protected virtual bool DefaultSketchTypeOnFinishSketch => true;
-
-		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
-		{
-			var options = new VertexSymbolOptions(vertexSymbolType)
-			              {
-				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
-				              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
-			              };
-			SetSketchVertexSymbolOptions(vertexSymbolType, options);
-		}
-
 		protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 		{
 			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
@@ -160,6 +156,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			// TODO: Async but not in QueuedTask (or separate OnToolDeactivateAsyncCoreQueued
 			await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
 		}
+
+		#endregion
 
 		protected virtual async Task ToggleSelectionSketchGeometryTypeAsync(
 			SketchGeometryType toggleSketchType)
@@ -373,6 +371,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			SelectionCursors.PreviousSelectionSketchType = newGeometryType;
 		}
 
+		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
+		{
+			var options = new VertexSymbolOptions(vertexSymbolType)
+			              {
+				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
+				              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
+			              };
+			SetSketchVertexSymbolOptions(vertexSymbolType, options);
+		}
+
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
 		                           bool useSnapping = false,
 		                           bool completeSketchOnMouseUp = true,
@@ -395,8 +403,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
 		}
-
-		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
 
 		protected virtual Task OnSelectionPhaseStartedAsync()
 		{
@@ -586,14 +592,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
 
-		protected virtual bool AllowMultiSelection(out string reason)
-		{
-			reason = null;
-			return true;
-		}
-
 		[Obsolete(
-			"Override GetSelectionTolerancePixels and PreferRectangleSelectionSketch for non-default values")]
+			"Override GetSelectionTolerancePixels and DefaultSketchTypeOnFinishSketch for non-default values")]
 		protected virtual SelectionSettings GetSelectionSettings()
 		{
 			return null;
