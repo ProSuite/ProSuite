@@ -77,6 +77,14 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		/// <summary>
+		/// Creates a GdbTableContainer from the provided object class messages which represent DDX datasets.
+		/// The workspace handle is typically the DDX model ID, with a fall-back to the workspace handle.
+		/// </summary>
+		/// <param name="objectClassMessages"></param>
+		/// <param name="getRemoteDataFunc"></param>
+		/// <param name="workspace"></param>
+		/// <returns></returns>
 		[NotNull]
 		public static GdbTableContainer CreateGdbTableContainer(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
@@ -89,9 +97,13 @@ namespace ProSuite.Microservices.Server.AO
 
 			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)
 			{
+				// TODO: Consider switching to actual workspace handle (and map via DataSourceMsg).
+				//       DdxModelId == 0 means not set
+				long workspaceHandleFromClient = GetContainerHandle(objectClassMsg);
+
 				if (workspaceHandle == null)
 				{
-					workspaceHandle = objectClassMsg.WorkspaceHandle;
+					workspaceHandle = workspaceHandleFromClient;
 
 					container = new GdbTableContainer();
 
@@ -99,11 +111,11 @@ namespace ProSuite.Microservices.Server.AO
 				}
 				else
 				{
-					Assert.AreEqual(workspaceHandle, objectClassMsg.WorkspaceHandle,
+					Assert.AreEqual(workspaceHandle, workspaceHandleFromClient,
 					                "Not all features are from the same workspace");
 				}
 
-				if (objectClassMsg.WorkspaceHandle == -1)
+				if (workspaceHandleFromClient == -1)
 				{
 					workspace = null;
 				}
@@ -117,7 +129,7 @@ namespace ProSuite.Microservices.Server.AO
 						                  new ClassDef
 						                  {
 							                  ClassHandle = objectClassMsg.ClassHandle,
-							                  WorkspaceHandle = objectClassMsg.WorkspaceHandle
+							                  WorkspaceHandle = workspaceHandleFromClient
 						                  });
 				}
 
@@ -130,6 +142,25 @@ namespace ProSuite.Microservices.Server.AO
 			return Assert.NotNull(container, "No objectClassMessages provided");
 		}
 
+		/// <summary>
+		/// Returns the DDX model ID if set, otherwise the workspace handle.
+		/// </summary>
+		/// <param name="objectClassMsg"></param>
+		/// <returns></returns>
+		private static long GetContainerHandle(ObjectClassMsg objectClassMsg)
+		{
+			return objectClassMsg.DdxModelId != 0
+				       ? objectClassMsg.DdxModelId
+				       : objectClassMsg.WorkspaceHandle;
+		}
+
+		/// <summary>
+		/// Creates a GdbWorkspace from the provided workspace message and object class messages
+		/// which represent actual Gdb datasets. The DdxModelId is not used here.
+		/// </summary>
+		/// <param name="workspaceMessage"></param>
+		/// <param name="objectClassMessages"></param>
+		/// <returns></returns>
 		[NotNull]
 		public static GdbWorkspace CreateGdbWorkspace(
 			[NotNull] WorkspaceMsg workspaceMessage,
@@ -173,8 +204,8 @@ namespace ProSuite.Microservices.Server.AO
 			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest = null)
 		{
 			var result = new List<GdbWorkspace>();
-			foreach (IGrouping<long, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
-				         c => c.WorkspaceHandle))
+			foreach (IGrouping<long, ObjectClassMsg> classGroup in
+			         objectClassMessages.GroupBy(GetContainerHandle))
 			{
 				GdbTableContainer gdbTableContainer =
 					CreateGdbTableContainer(classGroup, moreDataRequest,
@@ -189,7 +220,7 @@ namespace ProSuite.Microservices.Server.AO
 
 				foreach (ObjectClassMsg relTableMsg
 				         in relClassMessages.Where(
-					         r => r.WorkspaceHandle == gdbWorkspace.WorkspaceHandle))
+					         r => GetContainerHandle(r) == gdbWorkspace.WorkspaceHandle))
 				{
 					GdbTable relClassTable = FromObjectClassMsg(relTableMsg, gdbWorkspace);
 
@@ -200,6 +231,13 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		/// <summary>
+		/// Creates a GdbWorkspaces from the provided workspace message and object class messages
+		/// which represent actual Gdb datasets. The DdxModelId is never used here.
+		/// </summary>
+		/// <param name="objectClassMessages"></param>
+		/// <param name="workspaceMessages"></param>
+		/// <returns></returns>
 		[NotNull]
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,

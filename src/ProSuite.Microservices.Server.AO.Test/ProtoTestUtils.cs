@@ -69,7 +69,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 					                                  DatasetUtils.GetAliasName(objectClass));
 
 				if (modelId >= 0)
-					objectClassMsg.WorkspaceHandle = modelId;
+					objectClassMsg.DdxModelId = modelId;
 
 				dataSchema.ClassDefinitions.Add(objectClassMsg);
 			}
@@ -82,7 +82,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 				relTableMsg.Name = DatasetUtils.GetName(relationshipClass);
 
 				if (modelId >= 0)
-					relTableMsg.WorkspaceHandle = modelId;
+					relTableMsg.DdxModelId = modelId;
 
 				dataSchema.RelclassDefinitions.Add(relTableMsg);
 			}
