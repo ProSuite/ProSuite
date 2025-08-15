@@ -501,7 +501,7 @@ public static class MarkerPlacements
 					break;
 				case PolygonMarkerClipping.CenterInsideBoundary:
 					var point = MapPointBuilderEx.CreateMapPoint(tx, ty, polygon.SpatialReference);
-					if (GeometryUtils.Contains(point, polygon))
+					if (GeometryUtils.Contains(polygon, point))
 						yield return positioned;
 					break;
 				case PolygonMarkerClipping.FullyInsideBoundary:
