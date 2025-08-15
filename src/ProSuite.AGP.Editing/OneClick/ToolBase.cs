@@ -469,8 +469,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 	[NotNull]
 	protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
 	{
-		return new PickerPrecedence(sketchGeometry,
-		                            GetSelectionSettings().SelectionTolerancePixels,
+		return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
 		                            ActiveMapView.ClientToScreen(CurrentMousePosition));
 	}
 
