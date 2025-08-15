@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
@@ -16,9 +17,9 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		void DeleteSearchedRows(IQueryFilter queryFilter);
 
-		long RowCount(IQueryFilter queryFilter);
+		long RowCount(ITableFilter filter);
 
-		IEnumerable<IRow> Search(IQueryFilter queryFilter, bool recycling);
+		IEnumerable<IRow> Search(ITableFilter filter, bool recycling);
 
 		IEnumerable<IRow> Update(IQueryFilter queryFilter, bool recycling);
 

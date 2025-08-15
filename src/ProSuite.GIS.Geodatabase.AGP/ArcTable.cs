@@ -8,6 +8,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
@@ -170,16 +171,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			throw new NotImplementedException();
 		}
 
-		public long RowCount(IQueryFilter queryFilter)
+		public long RowCount(ITableFilter filter)
 		{
-			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
+			QueryFilter proQueryFilter = GetProQueryFilter(filter);
 
 			return ProTable.GetCount(proQueryFilter);
 		}
 
-		public IEnumerable<IRow> Search(IQueryFilter queryFilter, bool recycling)
+		public IEnumerable<IRow> Search(ITableFilter filter, bool recycling)
 		{
-			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
+			QueryFilter proQueryFilter = GetProQueryFilter(filter);
 
 			RowCursor cursor = ProTable.Search(proQueryFilter, recycling);
 
@@ -669,7 +670,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#endregion
 
-		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
+		private static QueryFilter GetProQueryFilter(ITableFilter queryFilter)
 		{
 			QueryFilter proQueryFilter;
 
