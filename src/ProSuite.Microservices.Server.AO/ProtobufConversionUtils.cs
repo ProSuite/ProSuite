@@ -362,7 +362,8 @@ namespace ProSuite.Microservices.Server.AO
 
 		public static GdbRow FromGdbObjectMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
-			[NotNull] GdbTable table)
+			[NotNull] GdbTable table,
+			[CanBeNull] List<int> fieldIndexesToReturn = null)
 		{
 			GdbRow result;
 			if (table is GdbFeatureClass featureClass)
@@ -374,7 +375,7 @@ namespace ProSuite.Microservices.Server.AO
 				result = new GdbRow((int) gdbObjectMsg.ObjectId, table);
 			}
 
-			ReadMsgValues(gdbObjectMsg, result, table);
+			ReadMsgValues(gdbObjectMsg, result, table, fieldIndexesToReturn);
 
 			return result;
 		}
@@ -465,7 +466,7 @@ namespace ProSuite.Microservices.Server.AO
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
 		                                           GdbFeatureClass featureClass)
 		{
-			GdbFeature result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
+			GdbFeature result = GdbFeature.Create(gdbObjectMsg.ObjectId, featureClass);
 
 			ShapeMsg shapeBuffer = gdbObjectMsg.Shape;
 
@@ -528,19 +529,29 @@ namespace ProSuite.Microservices.Server.AO
 
 		private static void ReadMsgValues([NotNull] GdbObjectMsg gdbObjectMsg,
 		                                  [NotNull] GdbRow intoResult,
-		                                  [NotNull] ITable table)
+		                                  [NotNull] ITable table,
+		                                  [CanBeNull] List<int> valueFields = null)
 		{
 			if (gdbObjectMsg.Values.Count == 0)
 			{
 				return;
 			}
 
-			Assert.AreEqual(table.Fields.FieldCount, gdbObjectMsg.Values.Count,
-			                "GdbObject message values do not correspond to table schema");
-
-			for (var index = 0; index < gdbObjectMsg.Values.Count; index++)
+			if (valueFields == null)
 			{
-				AttributeValue attributeValue = gdbObjectMsg.Values[index];
+				Assert.AreEqual(table.Fields.FieldCount, gdbObjectMsg.Values.Count,
+				                "GdbObject message values do not correspond to table schema");
+			}
+
+			for (var valueIndex = 0; valueIndex < gdbObjectMsg.Values.Count; valueIndex++)
+			{
+				int fieldIndex = valueIndex;
+				if (valueFields != null)
+				{
+					fieldIndex = valueFields[valueIndex];
+				}
+
+				AttributeValue attributeValue = gdbObjectMsg.Values[valueIndex];
 
 				object valueObj = ProtoDataQualityUtils.FromAttributeValue(attributeValue);
 
@@ -552,7 +563,7 @@ namespace ProSuite.Microservices.Server.AO
 
 				if (valueObj != null)
 				{
-					intoResult.set_Value(index, valueObj);
+					intoResult.set_Value(fieldIndex, valueObj);
 				}
 			}
 		}

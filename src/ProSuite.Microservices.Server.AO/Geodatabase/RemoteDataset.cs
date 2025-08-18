@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf.Collections;
@@ -13,11 +10,20 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Microservices.Server.AO.Geodatabase
 {
 	public class RemoteDataset : BackingDataset
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly GdbTable _schema;
 		[CanBeNull] private readonly ClassDef _classDefinition;
 		[CanBeNull] private readonly RelationshipClassQuery _queryDefinition;
@@ -120,9 +126,14 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 					DataRequest = dataRequest
 				};
 
+			Stopwatch watch = Stopwatch.StartNew();
+
 			DataVerificationRequest moreData = GetData(response);
 
 			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
+
+			_msg.DebugStopTiming(watch, "Received {0} objects", gdbData.GdbObjects.Count);
+			watch.Restart();
 
 			RepeatedField<GdbObjectMsg> foundGdbObjects = gdbData.GdbObjects;
 
@@ -131,10 +142,41 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 				yield break;
 			}
 
+			string subFields = filter?.SubFields;
+			List<int> fieldIndexes = null;
+			if (! string.IsNullOrEmpty(subFields) && subFields != "*")
+			{
+				fieldIndexes = GetFieldsIndexes(((ITableSchemaDef) _schema).TableFields,
+				                                  StringUtils.SplitAndTrim(subFields, ','));
+			}
+
 			foreach (GdbObjectMsg gdbObjMsg in foundGdbObjects)
 			{
-				yield return ProtobufConversionUtils.FromGdbObjectMsg(gdbObjMsg, _schema);
+				yield return ProtobufConversionUtils.FromGdbObjectMsg(gdbObjMsg, _schema, fieldIndexes);
 			}
+
+			_msg.DebugStopTiming(watch, "Unpacked and yielded {0} objects",
+			                     gdbData.GdbObjects.Count);
+		}
+
+		
+		private static List<int> GetFieldsIndexes([NotNull] IReadOnlyList<ITableField> fields,
+		                                          [CanBeNull] IEnumerable<string> fieldNames)
+		{
+			if (fieldNames == null)
+			{
+				return Enumerable.Range(0, fields.Count).ToList();
+			}
+
+			var fieldIndexesByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < fields.Count; i++)
+			{
+				fieldIndexesByName[fields[i].Name] = i;
+			}
+
+			return fieldNames
+			       .Select(fieldName => fieldIndexesByName[fieldName])
+			       .ToList();
 		}
 
 		private DataRequest CreateDataRequest([CanBeNull] ITableFilter filter)
