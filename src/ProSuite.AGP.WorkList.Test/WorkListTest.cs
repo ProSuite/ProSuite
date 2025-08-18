@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
@@ -13,6 +9,12 @@ using ProSuite.Commons.AGP.Core.Test;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
+using ArcGIS.Core.Data;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -339,6 +341,25 @@ namespace ProSuite.AGP.WorkList.Test
 			wl.GoNext();
 			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
+		}
+
+		[Test]
+		public void Can_handle_workitems_without_geometry()
+		{
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
+
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+
+			wl.LoadItems(GdbQueryUtils.CreateFilter(new []{item1.ObjectID, item2.ObjectID, item3.ObjectID, item4.ObjectID}));
+
+			Assert.False(wl.CanGoNearest());
+			Assert.Null(wl.GetExtent());
+
+			Assert.AreEqual(4, wl.GetItems(null).ToList().Count);
 		}
 
 		[Test]
