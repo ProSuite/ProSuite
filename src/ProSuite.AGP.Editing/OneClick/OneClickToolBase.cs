@@ -73,6 +73,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected bool SelectOnlySelectableFeatures { get; init; } = true;
 
+		protected virtual bool AllowMultiSelection(out string reason)
+		{
+			reason = null;
+			return true;
+		}
+
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise, the selection phase will continue until all selected features are
@@ -110,6 +116,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
+
+		protected virtual bool DefaultSketchTypeOnFinishSketch => true;
+
 		#region Overrides of MapToolBase
 
 		protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
@@ -137,28 +147,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			}, progressor);
 		}
 
-		#endregion
-
-		protected override int GetSelectionTolerancePixels()
-		{
-			// TODO: Make more dynamic selection environment that supports changing the standard Pro tolerance within the session
-			//       and at the same time support custom implementations (map tolerance, dips, whatever, custom dialog)
-			return GetSelectionSettings().SelectionTolerancePixels;
-		}
-
-		protected virtual bool DefaultSketchTypeOnFinishSketch =>
-			GetSelectionSettings().PreferRectangleSelectionSketch;
-
-		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
-		{
-			var options = new VertexSymbolOptions(vertexSymbolType)
-			              {
-				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
-				              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
-			              };
-			SetSketchVertexSymbolOptions(vertexSymbolType, options);
-		}
-
 		protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 		{
 			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
@@ -168,6 +156,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			// TODO: Async but not in QueuedTask (or separate OnToolDeactivateAsyncCoreQueued
 			await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
 		}
+
+		#endregion
 
 		protected virtual async Task ToggleSelectionSketchGeometryTypeAsync(
 			SketchGeometryType toggleSketchType)
@@ -381,6 +371,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			SelectionCursors.PreviousSelectionSketchType = newGeometryType;
 		}
 
+		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
+		{
+			var options = new VertexSymbolOptions(vertexSymbolType)
+			              {
+				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
+				              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
+			              };
+			SetSketchVertexSymbolOptions(vertexSymbolType, options);
+		}
+
 		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
 		                           bool useSnapping = false,
 		                           bool completeSketchOnMouseUp = true,
@@ -403,8 +403,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
 		}
-
-		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
 
 		protected virtual Task OnSelectionPhaseStartedAsync()
 		{
@@ -594,13 +592,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
 
-		protected virtual bool AllowMultiSelection(out string reason)
+		[Obsolete(
+			"Override GetSelectionTolerancePixels and DefaultSketchTypeOnFinishSketch for non-default values")]
+		protected virtual SelectionSettings GetSelectionSettings()
 		{
-			reason = null;
-			return true;
+			return null;
 		}
-
-		protected abstract SelectionSettings GetSelectionSettings();
 
 		protected abstract void LogUsingCurrentSelection();
 
@@ -672,19 +669,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			string layerName = layer.Name;
 
-			if (! LayerUtils.IsVisible(layer))
+			if (! LayerUtils.IsVisible(layer, ActiveMapView))
 			{
-				NotificationUtils.Add(notifications, $"Layer is not visible: {layerName}");
+				NotificationUtils.Add(notifications, $"Layer is not visible in active map: {layerName}");
 				return false;
 			}
-
-			if (! layer.IsVisibleInView(ActiveMapView))
-			{
-				// Takes scale range into account (and probably the parent layer too)
-				NotificationUtils.Add(notifications, $"Layer is not visible on map: {layerName}");
-				return false;
-			}
-
+			
 			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");

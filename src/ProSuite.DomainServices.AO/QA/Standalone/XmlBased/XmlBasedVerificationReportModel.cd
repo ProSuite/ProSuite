@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
   <Comment CommentText="HtmlReportModel can be accessed in template as &quot;report&quot;&#xD;&#xA;&#xD;&#xA;Example: &lt;title&gt;{{report.Source}}&lt;/title&gt;">
     <Position X="1.021" Y="1.385" Height="0.771" Width="2.721" />
@@ -18,19 +18,14 @@
     <Compartments>
       <Compartment Name="Fields" Collapsed="true" />
     </Compartments>
-    <AssociationLine Name="IssueGroups" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportIssueGroup" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="3.312" Y="7.392" />
-        <Point X="3.312" Y="8.188" />
-        <Point X="12.75" Y="8.188" />
-      </Path>
+    <AssociationLine Name="IssueGroups" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportIssueGroup">
       <MemberNameLabel ManuallyPlaced="true">
         <Position X="0.216" Y="0.1" />
       </MemberNameLabel>
     </AssociationLine>
     <TypeIdentifier>
-      <HashCode>IEAACYMAjBgEgBAAAAgABBAASAAHAABIFCAgQAQCAAA=</HashCode>
-      <FileName>QA\GP\XmlBased\HtmlReportModel.cs</FileName>
+      <HashCode>IEAACYMAjBgEgBAAAAgABBAgSACHAABoFCAgQAQCAAA=</HashCode>
+      <FileName>QA\Standalone\XmlBased\HtmlReportModel.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
       <Property Name="Properties" />
@@ -61,8 +56,8 @@
     <AssociationLine Name="ExceptionCategories" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlExceptionCategoryCount" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="15.5" Y="7.938" />
-        <Point X="18.25" Y="7.938" />
-        <Point X="18.25" Y="6.488" />
+        <Point X="18.5" Y="7.938" />
+        <Point X="18.5" Y="6.488" />
       </Path>
       <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
         <Position X="0.049" Y="1.034" Height="0.182" Width="3.636" />
@@ -76,7 +71,7 @@
       <Property Name="ExceptionCategories" />
     </ShowAsCollectionAssociation>
   </Class>
-  <Class Name="EsriDE.ProSuite.Services.QA.HtmlReports.HtmlReportQualityCondition">
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportQualityCondition">
     <Position X="16" Y="1.25" Width="2.75" />
     <Members>
       <Field Name="_exceptionCategories" Hidden="true" />
@@ -109,16 +104,9 @@
     <Members>
       <Method Name="NameValuePairs" Hidden="true" />
     </Members>
-    <TypeIdentifier />
-    <ShowAsCollectionAssociation>
-      <Property Name="Entries" />
-    </ShowAsCollectionAssociation>
-  </Class>
-  <Class Name="Commons.DotLiquid.NameValuePair">
-    <Position X="9.25" Y="0.5" Width="1.5" />
-    <Members>
-      <Method Name="NameValuePair" Hidden="true" />
-    </Members>
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
     <TypeIdentifier />
   </Class>
   <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportDataQualityCategory">
@@ -207,7 +195,7 @@
   <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlTexts">
     <Position X="7.25" Y="9.5" Width="3.25" />
     <TypeIdentifier>
-      <HashCode>AwRAQEIogAMQgwiwAAAAAAQAICoAQBTEAIABAEIAIgA=</HashCode>
+      <HashCode>IwRAQEIogAM0gwiwAAAAAAQAICoAQBTEAIABAEIAIgA=</HashCode>
       <FileName>QA\HtmlReports\HtmlTexts.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -223,7 +211,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlExceptionCategoryCount">
-    <Position X="16.25" Y="5" Width="2.25" />
+    <Position X="16.5" Y="5" Width="2.25" />
     <Members>
       <Method Name="Equals" Hidden="true" />
       <Method Name="GetHashCode" Hidden="true" />

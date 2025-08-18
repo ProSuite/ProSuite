@@ -17,6 +17,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.AGP.Windows;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Input;
@@ -173,12 +174,23 @@ namespace ProSuite.AGP.Editing
 		/// </summary>
 		/// <param name="newFeatures"></param>
 		/// <param name="mapView"></param>
-		public static void SelectNewFeatures(IEnumerable<Feature> newFeatures, MapView mapView)
+		/// <param name="clearExistingSelection"></param>
+		/// <returns>The number of selected features</returns>
+		public static long SelectNewFeatures([NotNull] IEnumerable<Feature> newFeatures,
+		                                     [NotNull] MapView mapView,
+		                                     bool clearExistingSelection)
 		{
 			var layersWithSelection =
 				SelectionUtils.GetSelection(mapView.Map).Keys.OfType<BasicFeatureLayer>().ToList();
 
-			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
+			if (clearExistingSelection)
+			{
+				SelectionUtils.ClearSelection(mapView.Map);
+			}
+
+			long selectedCount = SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
+
+			return selectedCount;
 		}
 
 		private static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
@@ -362,6 +374,54 @@ namespace ProSuite.AGP.Editing
 			}
 
 			return type;
+		}
+
+		/// <summary>
+		/// Determines whether the input features are simple enough to be processed with topolgical operator or union.
+		/// All non-simple reasons except short segments and empty parts are considered non-reasonably-simple:
+		/// Incorrect orientation: parts disappear
+		/// Self-intersections: parts of a part can disappear
+		/// Un-closed polygons: part disappearance has been observed
+		/// </summary>
+		/// <param name="features"></param>
+		/// <returns></returns>
+		public static bool ReasonablySimple([NotNull] IEnumerable<Feature> features)
+		{
+			Assert.ArgumentNotNull(features, nameof(features));
+
+			var result = true;
+
+			foreach (Feature feature in features)
+			{
+				if (! ReasonablySimple(feature))
+				{
+					result = false;
+				}
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Determines whether the input feature is simple enough to be processed with topolgical operator or union.
+		/// All non-simple reasons except short segments and empty parts are considered non-reasonably-simple:
+		/// Incorrect orientation: parts disappear
+		/// Self-intersections: parts of a part can disappear
+		/// Un-closed polygons: part disappearance has been observed
+		/// </summary>
+		/// <param name="feature"></param>
+		/// <returns></returns>
+		private static bool ReasonablySimple([NotNull] Feature feature)
+		{
+			Assert.ArgumentNotNull(feature, nameof(feature));
+
+			// TODO: Test if this simple check is sufficient for the edit use cases.
+
+			Geometry firstShape = feature.GetShape();
+
+			bool simple = GeometryEngine.Instance.IsSimpleAsFeature(firstShape, true);
+
+			return simple;
 		}
 
 		/// <summary>

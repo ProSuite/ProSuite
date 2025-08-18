@@ -352,7 +352,8 @@ namespace ProSuite.AGP.WorkList.Test
 			var item10 = new WorkItemMock(10, pt10);
 			var item15 = new WorkItemMock(15, pt15);
 
-			var repo = new ItemRepositoryMock([item7, item10, item15]);
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item7, item10, item15 }
+				                                  .AsReadOnly());
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
@@ -504,7 +505,8 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4, item5, item6 });
 			var wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.Search(GdbQueryUtils.CreateFilter([2, 3, 4])).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(GdbQueryUtils.CreateFilter(
+				                                     new List<long> { 2, 3, 4 }.AsReadOnly())).ToList();
 
 			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
@@ -529,7 +531,8 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.CanGoFirst());
 
 			// get remaining items
-			IEnumerable<IWorkItem> __ = wl.Search(GdbQueryUtils.CreateFilter([1, 5, 6])).ToList();
+			IEnumerable<IWorkItem> __ = wl.Search(GdbQueryUtils.CreateFilter(
+				                                      new List<long> { 1, 5, 6 }.AsReadOnly())).ToList();
 
 			Assert.True(wl.CanGoNext());
 			Assert.True(wl.CanGoPrevious());
@@ -560,7 +563,9 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
 			repo.Add(item2);
 
-			var inserts = new Dictionary<GdbTableIdentity, List<long>> { { tableId, [item2.OID] } };
+			var inserts = new Dictionary<GdbTableIdentity, List<long>> { { tableId,
+				              new List<long> { item2.OID }
+			              } };
 			var deletes = new Dictionary<GdbTableIdentity, List<long>>();
 			var updates = new Dictionary<GdbTableIdentity, List<long>>();
 
@@ -598,7 +603,9 @@ namespace ProSuite.AGP.WorkList.Test
 
 			var inserts = new Dictionary<GdbTableIdentity, List<long>>();
 			var deletes = new Dictionary<GdbTableIdentity, List<long>>();
-			var updates = new Dictionary<GdbTableIdentity, List<long>>{ { tableId, [item1.OID] } };
+			var updates = new Dictionary<GdbTableIdentity, List<long>>{ { tableId,
+				              new List<long> { item1.OID }
+			              } };
 
 			//wl.ProcessChanges(inserts, deletes, updates);
 
@@ -631,7 +638,9 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(GeometryUtils.Contains(wl.GetExtent(), envelope));
 
 			var inserts = new Dictionary<GdbTableIdentity, List<long>>();
-			var deletes = new Dictionary<GdbTableIdentity, List<long>> { { tableId, [item2.OID] } };
+			var deletes = new Dictionary<GdbTableIdentity, List<long>> { { tableId,
+				              new List<long> { item2.OID }
+			              } };
 			var updates = new Dictionary<GdbTableIdentity, List<long>>();
 
 			//wl.ProcessChanges(inserts, deletes, updates);

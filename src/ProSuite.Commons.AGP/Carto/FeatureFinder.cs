@@ -351,7 +351,12 @@ namespace ProSuite.Commons.AGP.Carto
 			TargetFeatureSelection? targetSelectionType,
 			[CanBeNull] ICollection<Feature> selectedFeatures)
 		{
-			if (! LayerUtils.IsVisible(basicFeatureLayer))
+			if (basicFeatureLayer == null)
+			{
+				return false;
+			}
+
+			if (! basicFeatureLayer.IsVisibleInView(_mapView))
 			{
 				return false;
 			}
@@ -365,12 +370,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				return true;
 			}
-
-			if (basicFeatureLayer == null)
-			{
-				return false;
-			}
-
+			
 			if ((targetSelectionType == TargetFeatureSelection.VisibleEditableFeatures ||
 			     targetSelectionType == TargetFeatureSelection.VisibleSelectableEditableFeatures) &&
 			    ! basicFeatureLayer.IsEditable)

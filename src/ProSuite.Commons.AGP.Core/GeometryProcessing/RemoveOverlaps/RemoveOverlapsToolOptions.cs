@@ -7,7 +7,7 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
 {
-	public class RemoveOverlapsOptions : OptionsBase<PartialRemoveOverlapsOptions>
+	public class RemoveOverlapsToolOptions : OptionsBase<PartialRemoveOverlapsOptions>
 	{
 		public CentralizableSetting<bool> CentralizableLimitOverlapCalculationToExtent { get; }
 
@@ -22,7 +22,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
 
 		public CentralizableSetting<ChangeAlongZSource> CentralizableZSource { get; }
 
-		public RemoveOverlapsOptions(
+		public RemoveOverlapsToolOptions(
 			[CanBeNull] PartialRemoveOverlapsOptions centralOptions,
 			[CanBeNull] PartialRemoveOverlapsOptions localOptions)
 		{

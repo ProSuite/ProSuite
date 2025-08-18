@@ -103,6 +103,16 @@ namespace ProSuite.QA.Container
 		new T GetTransformed();
 	}
 
+	public interface ITableTransformerFieldSettings : ITableTransformer
+	{
+		/// <summary>
+		/// Whether all field names in the output table should be fully qualified using the
+		/// SourceTableName.FieldName convention. This only applies to transformers with several
+		/// input tables and might not be supported by all transformers.
+		/// </summary>
+		bool FullyQualifyFieldNames { get; set; }
+	}
+
 	public interface IHasSearchDistance
 	{
 		double SearchDistance { get; }

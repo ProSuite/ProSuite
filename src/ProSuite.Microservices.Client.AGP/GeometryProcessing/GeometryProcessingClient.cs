@@ -120,7 +120,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public RemoveOverlapsResult RemoveOverlaps(IEnumerable<Feature> selectedFeatures,
 		                                           Overlaps overlapsToRemove,
 		                                           IList<Feature> overlappingFeatures,
-		                                           RemoveOverlapsOptions options,
+		                                           RemoveOverlapsToolOptions options,
 		                                           CancellationToken cancellationToken)
 		{
 			if (RemoveOverlapsClient == null)

@@ -38,7 +38,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	}
 
 	protected List<Key> PressedKeys { get; } = new();
-	
+
 	public int Tolerance { get; }
 
 	public bool IsPointClick { get; }
@@ -133,7 +133,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.ShowPicker;
 		}
 
-		if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
+		if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
 		{
 			modes |= PickerMode.ShowPicker;
 		}
@@ -212,34 +212,5 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			PressedKeys.Add(Key.LeftShift);
 			PressedKeys.Add(Key.RightShift);
 		}
-	}
-
-	protected static int CountLowestGeometryDimension(
-		IEnumerable<FeatureSelectionBase> layerSelection)
-	{
-		var count = 0;
-
-		int? lastShapeDimension = null;
-
-		foreach (FeatureSelectionBase selection in layerSelection)
-		{
-			if (lastShapeDimension == null)
-			{
-				lastShapeDimension = selection.ShapeDimension;
-
-				count += selection.GetCount();
-
-				continue;
-			}
-
-			if (lastShapeDimension < selection.ShapeDimension)
-			{
-				continue;
-			}
-
-			count += selection.GetCount();
-		}
-
-		return count;
 	}
 }

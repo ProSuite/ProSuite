@@ -15,12 +15,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
-		{
-			get => _targetFeatureSelectionVm;
-			private set => SetProperty(ref _targetFeatureSelectionVm, value);
-		}
-
 		public ICommand RevertToDefaultsCommand { get; }
 
 		public bool IsRevertToDefaultsEnabled => true;
@@ -35,7 +29,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		/// Text shown near the top of the DockPane.
 		private string _heading = "Remove Overlaps Options";
 
-		private RemoveOverlapsOptions _options;
+		private RemoveOverlapsToolOptions _options;
 		private CentralizableSettingViewModel<bool> _limitOverlapCalculationToExtent;
 		private CentralizableSettingViewModel<bool> _explodeMultipartResults;
 		private CentralizableSettingViewModel<bool> _InsertVerticesInTarget;
@@ -66,7 +60,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			set => SetProperty(ref _InsertVerticesInTarget, value);
 		}
 
-		public RemoveOverlapsOptions Options
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
+		}
+
+		public RemoveOverlapsToolOptions Options
 		{
 			get => _options;
 			set

@@ -364,6 +364,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 					}
 				}
 
+				// NOTE: Another relatively rare errors can occur here, but there is no remedy:
+				// COMException (0x800415BA): 'Invalid state ID' (when another process has called RefreshVersion in between)
+
 				throw;
 			}
 		}

@@ -166,6 +166,7 @@ namespace ProSuite.Microservices.AO.QA
 			return objectClass.OIDFieldName;
 		}
 
+		// TODO: Make obsolete, use other overload instead
 		public static GdbData ReadGdbData([NotNull] IReadOnlyTable roTable,
 		                                  [CanBeNull] ITableFilter filter,
 		                                  string subFields,
@@ -200,6 +201,67 @@ namespace ProSuite.Microservices.AO.QA
 
 			// Later, we could break up into several messages, if the total size gets too large
 			return featureData;
+		}
+
+		public static IEnumerable<GdbData> ReadGdbData([NotNull] IReadOnlyTable roTable,
+		                                               [CanBeNull] ITableFilter filter,
+		                                               string subFields,
+		                                               long resultClassHandle,
+		                                               int maxRowCount,
+		                                               bool countOnly)
+		{
+			GdbData featureData = new GdbData();
+
+			if (roTable is IReadOnlyFeatureClass fc)
+			{
+				_msg.VerboseDebug(() => $"{fc.Name} shape field is {fc.ShapeFieldName}");
+				_msg.VerboseDebug(() => $"{fc.Name} object id field is {fc.OIDFieldName}");
+			}
+
+			if (countOnly)
+			{
+				featureData.GdbObjectCount = roTable.RowCount(filter);
+
+				yield return featureData;
+				yield break;
+			}
+
+			int rowCount = 0;
+
+			foreach (IReadOnlyRow row in roTable.EnumRows(filter, true))
+			{
+				try
+				{
+					GdbObjectMsg objectMsg =
+						ProtobufGdbUtils.ToGdbObjectMsg(row, false, true, subFields);
+
+					objectMsg.ClassHandle = resultClassHandle;
+
+					featureData.GdbObjects.Add(objectMsg);
+
+					rowCount++;
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error converting {GdbObjectUtils.ToString(row)} to object message",
+					           e);
+					throw;
+				}
+
+				if (rowCount % maxRowCount == 0)
+				{
+					_msg.VerboseDebug(
+						() => $"Read {rowCount} rows from {roTable.Name} (max {maxRowCount})");
+					featureData.HasMoreData = true;
+
+					yield return featureData;
+
+					featureData = new GdbData(); // reset for next batch
+				}
+			}
+
+			// Later, we could break up into several messages, if the total size gets too large
+			yield return featureData;
 		}
 
 		private static string EnsureOIDFieldName(string subFields, IReadOnlyTable objectClass)
