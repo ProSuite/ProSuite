@@ -209,6 +209,10 @@ public static class ProtobufConversionUtils
 		}
 		else
 		{
+			// TODO: For reduced copying and array instantiation, consider using
+			// GeometryEngine.Instance.ExportToEsriShape(... ref byte[] buffer)
+			//       and then use ByteString.CopyFrom(buffer, 0, buffer.Length);
+			//       ... but measure first!
 			result.EsriShape = ByteString.CopyFrom(geometry.ToEsriShape());
 		}
 
@@ -413,6 +417,79 @@ public static class ProtobufConversionUtils
 		}
 
 		return result;
+	}
+
+	private static ObjectClassMsg ToObjectClassMsg(
+		[NotNull] string name,
+		long classHandle,
+		long datastoreHandle,
+		esriGeometryType geometryType,
+		string aliasName = null,
+		IEnumerable<Field> fields = null,
+		[CanBeNull] SpatialReference spatialRef = null)
+	{
+		ObjectClassMsg result =
+			new ObjectClassMsg()
+			{
+				Name = name,
+				Alias = aliasName ?? string.Empty,
+				ClassHandle = classHandle,
+				SpatialReference = ToSpatialReferenceMsg(
+					spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
+				GeometryType = (int) geometryType,
+				WorkspaceHandle = datastoreHandle
+			};
+
+		if (fields != null)
+		{
+			List<FieldMsg> fieldMessages = new List<FieldMsg>();
+
+			foreach (Field field in fields)
+			{
+				fieldMessages.Add(ToFieldMsg(field));
+			}
+
+			result.Fields.AddRange(fieldMessages);
+		}
+
+		return result;
+	}
+
+	public static ObjectClassMsg ToRelationshipClassMsg(
+		[NotNull] RelationshipClass relationshipClass)
+	{
+		long classId = relationshipClass.GetID();
+		long gdbHandle = relationshipClass.GetDatastore().Handle.ToInt64();
+
+		ObjectClassMsg relTableMsg;
+		if (relationshipClass is AttributedRelationshipClass attributedRelClass)
+		{
+			// it's also a real table:
+			AttributedRelationshipClassDefinition classDefinition =
+				attributedRelClass.GetDefinition();
+
+			string name = relationshipClass.GetName();
+			string aliasName = classDefinition.GetAliasName() ?? string.Empty;
+
+			IReadOnlyList<Field> fields = classDefinition.GetFields();
+
+			relTableMsg = ToObjectClassMsg(name, classId, gdbHandle,
+			                               esriGeometryType.esriGeometryNull, aliasName, fields);
+		}
+		else
+		{
+			// so far just the name is used
+			relTableMsg =
+				new ObjectClassMsg()
+				{
+					Name = relationshipClass.GetName(),
+					ClassHandle = classId,
+					WorkspaceHandle = gdbHandle,
+					GeometryType = (int) esriGeometryType.esriGeometryNull
+				};
+		}
+
+		return relTableMsg;
 	}
 
 	[NotNull]
