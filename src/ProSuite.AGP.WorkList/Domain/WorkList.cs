@@ -409,11 +409,16 @@ namespace ProSuite.AGP.WorkList.Domain
 			return items.Where(item => oids.BinarySearch(item.OID) >= 0);
 		}
 
-		public IEnumerable<IWorkItem> GetItems([NotNull] SpatialQueryFilter filter)
+		public IEnumerable<IWorkItem> GetItems([CanBeNull] SpatialQueryFilter filter)
 		{
 			if (_searcher == null)
 			{
 				return Enumerable.Empty<IWorkItem>();
+			}
+
+			if (filter == null)
+			{
+				return _searcher;
 			}
 
 			WorkItemStatus? currentVisibility = GetStatus(Visibility);

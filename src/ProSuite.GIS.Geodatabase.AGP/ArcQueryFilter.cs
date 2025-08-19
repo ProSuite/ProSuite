@@ -1,5 +1,6 @@
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.GeoDb;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
@@ -11,9 +12,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	{
 		private readonly QueryFilter _proQueryFilter;
 
-		public ArcQueryFilter(QueryFilter proQueryFilter)
+		public ArcQueryFilter(QueryFilter proQueryFilter = null)
 		{
-			_proQueryFilter = proQueryFilter;
+			_proQueryFilter = proQueryFilter ?? new QueryFilter();
 		}
 
 		public QueryFilter ProQueryFilter => _proQueryFilter;
@@ -26,7 +27,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			set => _proQueryFilter.SubFields = value;
 		}
 
-		public void AddField(string subField)
+		public bool AddField(string subField)
 		{
 			string trimmed = subField.Trim();
 
@@ -39,6 +40,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				_proQueryFilter.SubFields += ", " + trimmed;
 			}
+
+			return true;
 		}
 
 		public string WhereClause
@@ -51,6 +54,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get => _proQueryFilter.PostfixClause;
 			set => _proQueryFilter.PostfixClause = value;
+		}
+
+		ITableFilter ITableFilter.Clone()
+		{
+			return Clone();
+		}
+
+		protected virtual ITableFilter Clone()
+		{
+			return (ITableFilter) MemberwiseClone();
 		}
 
 		public ISpatialReference get_OutputSpatialReference(string fieldName)
@@ -82,9 +95,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	{
 		private readonly SpatialQueryFilter _proSpatialFilter;
 
-		public ArcSpatialFilter(SpatialQueryFilter proSpatialFilter) : base(proSpatialFilter)
+		public ArcSpatialFilter(SpatialQueryFilter proSpatialFilter = null) : base(proSpatialFilter)
 		{
-			_proSpatialFilter = proSpatialFilter;
+			_proSpatialFilter = proSpatialFilter ?? new SpatialQueryFilter();
 		}
 
 		public SpatialQueryFilter ProSpatialFilter => _proSpatialFilter;
@@ -107,6 +120,17 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get => _proSpatialFilter.SpatialRelationshipDescription;
 			set => _proSpatialFilter.SpatialRelationshipDescription = value;
+		}
+
+		protected override ITableFilter Clone()
+		{
+			ArcSpatialFilter clone = (ArcSpatialFilter) base.Clone();
+			if (Geometry != null)
+			{
+				clone.Geometry = Geometry.Clone();
+			}
+
+			return clone;
 		}
 
 		#endregion

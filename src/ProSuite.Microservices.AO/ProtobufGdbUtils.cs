@@ -263,7 +263,8 @@ namespace ProSuite.Microservices.AO
 						spatialReference,
 						SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
 					GeometryType = geometryType,
-					WorkspaceHandle = modelId
+					WorkspaceHandle = -1,
+					DdxModelId = modelId
 				};
 
 			if (aliasName == null)

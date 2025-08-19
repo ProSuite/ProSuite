@@ -1,6 +1,6 @@
 namespace ProSuite.GIS.Geometry.API
 {
-	public interface IGeometry
+	public interface IGeometry : IClone
 	{
 		esriGeometryType GeometryType { get; }
 
@@ -33,6 +33,11 @@ namespace ProSuite.GIS.Geometry.API
 		// TODO: ZAware, MAware, PointIDAware
 
 		object NativeImplementation { get; }
+	}
+
+	public interface IClone
+	{
+		bool IsEqual(IClone other);
 	}
 
 	public interface IMutableGeometry //<T> where T : class

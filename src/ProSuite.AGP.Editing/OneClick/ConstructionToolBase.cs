@@ -135,7 +135,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			});
 
 			SelectionCursors = FirstPhaseCursors;
-			SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 
 			IsInSketchPhase = false;
 
@@ -487,7 +487,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			_symbolizedSketch?.SetSketchType(applicableSelection.Keys.FirstOrDefault());
 
 			SelectionCursors = SketchCursors;
-			SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 
 			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -49,7 +49,7 @@ public class WorkListItemDatastoreMock : IWorkListItemDatastore
 		throw new NotImplementedException();
 	}
 
-	public IObjectDataset GetObjetDataset(TableDefinition tableDefinition)
+	public IObjectDataset GetObjectDataset(TableDefinition tableDefinition)
 	{
 		throw new NotImplementedException();
 	}
