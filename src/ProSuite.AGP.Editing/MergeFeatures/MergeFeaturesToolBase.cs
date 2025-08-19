@@ -48,7 +48,11 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private const Key _immediateMergeKey = Key.Enter;
 		private Feature _firstFeature;
 
-		private SelectionCursors _secondPhaseCursors;
+		private readonly SelectionCursors _firstPhaseCursors =
+			SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay1);
+
+		private readonly SelectionCursors _secondPhaseCursors =
+			SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay2);
 
 		public Feature ContextClickedFeature { get; set; }
 
@@ -96,24 +100,23 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		#region MapToolBase and OneClickToolBase overrides
 
-		protected bool AllowMultiSelection =>
-			_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.LargerObject;
+		protected override bool AllowMultiSelection(out string reason)
+		{
+			if (_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.LargerObject)
+			{
+				reason = null;
+				return true;
+			}
+
+			reason = "Multiple selections only possible using LargerObject for MergeSurvivor.";
+			return false;
+		}
 
 		protected bool AllowSelectByPolygon =>
 			_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.LargerObject;
 
 		//ToDo?
 		//protected bool IgnoreSelectionOutsideVisibleExtents => true;
-
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay1);
-		}
-
-		private SelectionCursors GetSecondPhaseCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay2);
-		}
 
 		// TODO: Move to Base, consolidate NoMultiselection / AllowMultiSelection after pull subtree
 		protected override IPickerPrecedence CreatePickerPrecedence(
@@ -164,18 +167,17 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		}
 
 		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(
-					toggleSketchType, selectionCursors);
+				SelectionCursors = _firstPhaseCursors;
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 			else
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(
-					toggleSketchType, _secondPhaseCursors);
+				SelectionCursors = _secondPhaseCursors;
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 		}
 
@@ -281,8 +283,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			_mergeToolOptions = InitializeOptions();
 
-			_secondPhaseCursors = GetSecondPhaseCursors();
-
 			return base.OnToolActivatingCoreAsync();
 		}
 
@@ -316,10 +316,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		private async Task StartSecondPhaseAsync()
 		{
+			SelectionCursors = _secondPhaseCursors;
+
 			await QueuedTask.Run(() => { SetupSketch(); });
 			await QueuedTask.Run(async () =>
 			{
-				await ResetSelectionSketchTypeAsync(_secondPhaseCursors);
+				await ResetSelectionSketchTypeAsync();
 			});
 		}
 
@@ -677,7 +679,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			await QueuedTask.Run(() =>
 			{
 				long selectedCount = ToolUtils.SelectNewFeatures(
-					new[] { survivingFeature }, MapView.Active, true);
+					new[] { survivingFeature }, ActiveMapView, true);
 
 				if (selectedCount == 0)
 				{

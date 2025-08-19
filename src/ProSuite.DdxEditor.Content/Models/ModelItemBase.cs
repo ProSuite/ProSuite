@@ -356,7 +356,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			return finder.ShowDialog(owner, all, columns);
 		}
 
-		private void RefreshCore(
+		protected virtual void RefreshCore(
 			[NotNull] E model,
 			[NotNull] IRepository<AttributeType> attributeTypeRepository,
 			[NotNull] IRepository<GeometryType> geometryTypeRepository)
@@ -374,9 +374,9 @@ namespace ProSuite.DdxEditor.Content.Models
 					var workspaceContext = GetMasterWorkspaceContext(model);
 
 					IEnumerable<ObjectAttributeType> attributeTypes =
-						ModelHarvesting.Harvest(model,  workspaceContext,
-						                     geometryTypeRepository.GetAll(),
-						                     attributeTypeRepository.GetAll());
+						ModelHarvesting.Harvest(model, workspaceContext,
+						                        geometryTypeRepository.GetAll(),
+						                        attributeTypeRepository.GetAll());
 
 					foreach (ObjectAttributeType attributeType in attributeTypes)
 					{
@@ -420,7 +420,7 @@ namespace ProSuite.DdxEditor.Content.Models
 			return workspaceContext;
 		}
 
-		private static void AddMissingGeometryTypes(
+		protected static void AddMissingGeometryTypes(
 			[NotNull] IRepository<GeometryType> geometryTypeRepo,
 			[NotNull] IList<GeometryType> existingGeometryTypes)
 		{

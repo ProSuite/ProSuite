@@ -949,7 +949,7 @@ public static class DrawingOutline
 
 		return new MarkerPlacements.AlongLineOptions
 		       {
-			       PlacePerPart = cim.PlacePerPart,
+			       PlacePerPart = cim.PlacePerPart, // empirical: always true
 
 			       AngleToLine = cim.AngleToLine,
 			       PerpendicularOffset = cim.Offset * scaleFactor,

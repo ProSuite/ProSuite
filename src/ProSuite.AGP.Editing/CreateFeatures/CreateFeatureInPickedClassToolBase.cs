@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
@@ -17,23 +17,22 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
 
-public abstract class CreateFeatureInPickedClassToolBase : ToolBase
+public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 
 	[CanBeNull]
 	protected virtual ICollection<string> GetExclusionFieldNames()
 	{
 		return null;
-	}
-
-	protected override SelectionCursors GetSelectionCursors()
-	{
-		return SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 	}
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
@@ -45,6 +44,11 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 	{
 		reason = "Cannot create feature. Please select only one template feature.";
 		return false;
+	}
+
+	protected override SketchGeometryType GetSelectionSketchGeometryType()
+	{
+		return SketchGeometryType.Rectangle;
 	}
 
 	protected override CancelableProgressorSource GetProgressorSource()
@@ -67,47 +71,60 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		await QueuedTask.Run(() => SelectionUtils.ClearSelection(ActiveMapView?.Map));
 	}
 
-	protected override async Task<bool> ProcessSelectionCoreAsync(
-		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
-		CancelableProgressor progressor = null)
+	protected override async Task OnSelectionPhaseStartedAsync()
 	{
-		Assert.ArgumentCondition(featuresByLayer.Count == 1, "selection count has to be 1");
+		await base.OnSelectionPhaseStartedAsync();
 
-		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
+		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
+	}
 
-		Feature feature = features?.FirstOrDefault();
+	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+	                                                  CancelableProgressor progressor)
+	{
+		Assert.ArgumentCondition(selectedFeatures.Count == 1, "selection count has to be 1");
+
+		Feature feature = selectedFeatures.FirstOrDefault();
 
 		// todo daro: assert instead?
 		if (feature == null)
 		{
 			_msg.Debug("no selection");
-			return false; // startContructionPhase = false
+			return;
 		}
 
 		_msg.Info(
-			$"Currently selected template feature {GdbObjectUtils.GetDisplayValue(feature, layer.Name)}");
-
-		_msg.Info("Construct the new feature. Hit [ESC] to reselect the template feature.");
+			$"Currently selected template feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");
 
 		await StartSketchAsync();
 
-		return true; // startContructionPhase = true
+		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}
 
-	protected override async Task<bool> OnConstructionSketchCompleteAsync(
-		Geometry geometry, IDictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-		CancelableProgressor progressor)
+	protected override void LogEnteringSketchMode()
 	{
-		// todo daro: assert instead?
-		if (selectionByLayer.Count == 0)
-		{
-			_msg.Debug("no selection");
+		_msg.Info("Construct the new feature. Hit [ESC] to reselect the template feature.");
+	}
 
-			return true; // startSelectionPhase = true;
-		}
-
+	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
+		Geometry sketchGeometry,
+		EditingTemplate editTemplate,
+		MapView activeView,
+		CancelableProgressor cancelableProgressor = null)
+	{
 		await QueuedTaskUtils.Run(async () =>
 		{
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+
+			// todo daro: assert instead?
+			if (selectionByLayer.Count == 0)
+			{
+				_msg.Debug("no selection");
+
+				await StartSelectionPhaseAsync();
+				return true;
+			}
+
 			try
 			{
 				var applicableSelection =
@@ -125,19 +142,19 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
-				await StoreNewFeature(featureLayer, originalFeature, geometry,
-				                      GetExclusionFieldNames(), progressor);
+				await StoreNewFeature(featureLayer, originalFeature, sketchGeometry,
+				                      GetExclusionFieldNames(), cancelableProgressor);
 
-				return false; // startSelectionPhase = false;
+				return false;
 			}
 			catch (Exception ex)
 			{
 				_msg.Error(ex.Message, ex);
-				return false; // startSelectionPhase = false;
+				return false;
 			}
 		});
 
-		return false; // startSelectionPhase = false;
+		return false;
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -165,12 +182,14 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		_msg.Info("Select a template feature");
 	}
 
-	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+	protected override bool CanSelectFromLayerCore(
+		BasicFeatureLayer basicFeatureLayer,
+		NotificationCollection notifications)
 	{
-		return layer is FeatureLayer;
+		return basicFeatureLayer is FeatureLayer;
 	}
 
-	protected override void StartConstructionPhaseCore()
+	protected override async Task OnSketchPhaseStartedAsync()
 	{
 		if (QueuedTask.OnWorker)
 		{
@@ -178,25 +197,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		}
 		else
 		{
-			QueuedTask.Run(ResetSketchVertexSymbolOptions);
+			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 		}
-	}
 
-	protected override void StartSelectionPhaseCore()
-	{
-		if (QueuedTask.OnWorker)
-		{
-			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-		}
-		else
-		{
-			QueuedTask.Run(() =>
-			{
-				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-			});
-		}
+		await base.OnSketchPhaseStartedAsync();
 	}
 
 	protected override void SetSketchTypeCore(SketchGeometryType? sketchType)

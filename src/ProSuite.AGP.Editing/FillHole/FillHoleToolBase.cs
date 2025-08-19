@@ -77,15 +77,11 @@ namespace ProSuite.AGP.Editing.FillHole
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.FillHoleOverlay);
-		}
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.FillHoleOverlay);
 
-		protected override SelectionCursors GetSecondPhaseCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.FillHoleOverlay);
-		}
+		protected override SelectionCursors SecondPhaseCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.FillHoleOverlay);
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
