@@ -11,7 +11,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -75,8 +74,6 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 	#region abstract
 
 	protected abstract void LogPromptForSelection();
-
-	protected abstract SelectionSettings GetSelectionSettings();
 
 	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 

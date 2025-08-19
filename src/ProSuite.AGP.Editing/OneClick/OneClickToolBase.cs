@@ -11,7 +11,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -591,13 +590,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
-
-		[Obsolete(
-			"Override GetSelectionTolerancePixels and DefaultSketchTypeOnFinishSketch for non-default values")]
-		protected virtual SelectionSettings GetSelectionSettings()
-		{
-			return null;
-		}
 
 		protected abstract void LogUsingCurrentSelection();
 
