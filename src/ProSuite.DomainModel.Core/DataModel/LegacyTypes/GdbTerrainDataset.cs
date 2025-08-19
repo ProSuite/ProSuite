@@ -4,6 +4,12 @@ using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 {
+	/// <summary>
+	/// Base class for the Geodatabase terrain. It must remain as entity because in the data
+	/// dictionary datasets are not deleted but only flagged as deleted.
+	/// Additionally, starting with ArcGIS 3.5/11.5, terrain datasets are supported again and
+	/// existing terrain datasets are honored again (with limited functionality).
+	/// </summary>
 	public class GdbTerrainDataset : Dataset, IGdbTerrainDataset
 	{
 		private string _featureDatasetName;
@@ -13,13 +19,13 @@ namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 		/// <remarks>Required for NHibernate</remarks>
 		protected GdbTerrainDataset() { }
 
-		protected GdbTerrainDataset([NotNull] string name,
-		                            [NotNull] string featureDatasetName)
+		public GdbTerrainDataset([NotNull] string name,
+		                         [NotNull] string featureDatasetName)
 			: this(name, featureDatasetName, name) { }
 
-		protected GdbTerrainDataset([NotNull] string name,
-		                            [NotNull] string featureDatasetName,
-		                            [CanBeNull] string abbreviation)
+		public GdbTerrainDataset([NotNull] string name,
+		                         [NotNull] string featureDatasetName,
+		                         [CanBeNull] string abbreviation)
 			: base(name, abbreviation)
 		{
 			Assert.ArgumentNotNullOrEmpty(featureDatasetName, nameof(featureDatasetName));
@@ -27,10 +33,10 @@ namespace ProSuite.DomainModel.Core.DataModel.LegacyTypes
 			FeatureDatasetName = featureDatasetName;
 		}
 
-		protected GdbTerrainDataset([NotNull] string name,
-		                            [NotNull] string featureDatasetName,
-		                            [CanBeNull] string abbreviation,
-		                            [CanBeNull] string aliasName)
+		public GdbTerrainDataset([NotNull] string name,
+		                         [NotNull] string featureDatasetName,
+		                         [CanBeNull] string abbreviation,
+		                         [CanBeNull] string aliasName)
 			: base(name, abbreviation, aliasName)
 		{
 			Assert.ArgumentNotNullOrEmpty(featureDatasetName, nameof(featureDatasetName));

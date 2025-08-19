@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
@@ -20,12 +21,13 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.Editing;
 
 // todo 3D, test multipatch sketch symbol!
-public class SymbolizedSketchTypeBasedOnSelection : IDisposable
+public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
 	private bool _showFeatureSketchSymbology;
+	private readonly Func<SketchGeometryType> _sketchGeometryTypeFunc;
 
 	/// <summary>
 	/// Sets sketch geometry type based on current selection.
@@ -35,9 +37,12 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// first FeatureLayer if many features are selected from many FeatureLayers.
 	/// </summary>
 	/// <param name="tool"></param>
-	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool)
+	/// <param name="sketchType">Optional sketch type method that replaces the default sketch type</param>
+	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool,
+	                                            Func<SketchGeometryType> sketchType = null)
 	{
 		_tool = tool;
+		_sketchGeometryTypeFunc = sketchType;
 
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
@@ -61,7 +66,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// <summary>
 	/// Must be called on the MCT.
 	/// </summary>
-	public async Task SetSketchAppearanceBasedOnSelectionAsync()
+	public async Task SetSketchAppearanceAsync()
 	{
 		Gateway.LogEntry(_msg);
 
@@ -130,7 +135,8 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	private async Task TrySetSketchAppearanceAsync([CanBeNull] FeatureLayer featureLayer, [CanBeNull] IList<long> oids)
+	private async Task TrySetSketchAppearanceAsync([CanBeNull] FeatureLayer featureLayer,
+	                                               [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
@@ -166,10 +172,23 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		_tool.SetSketchSymbol(symbolReference);
 	}
 
-	public void SetSketchType([NotNull] BasicFeatureLayer featureLayer)
+	public void SetSketchType(BasicFeatureLayer featureLayer)
 	{
-		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-		_tool.SetSketchType(GetApplicableSketchType(geometryType));
+		if (featureLayer == null)
+		{
+			return;
+		}
+
+		if (_sketchGeometryTypeFunc != null)
+		{
+			_tool.SetSketchType(_sketchGeometryTypeFunc());
+		}
+		else
+		{
+			GeometryType geometryType =
+				GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
+			_tool.SetSketchType(GetSketchGeometryType(geometryType));
+		}
 	}
 
 	private List<long> GetApplicableSelection(
@@ -214,29 +233,14 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	}
 
 	[CanBeNull]
-	private static CIMSymbolReference GetSymbolReference([NotNull] FeatureLayer layer, long oid)
-	{
-		CIMSymbol symbol = layer.LookupSymbol(oid, MapView.Active);
-
-		if (symbol == null)
-		{
-			_msg.Debug(
-				$"Cannot set sketch symbol: no symbol found in layer {layer.Name} for oid {oid}.");
-			return null;
-		}
-
-		return symbol.MakeSymbolReference();
-	}
-
-	[CanBeNull]
-	private static CIMSymbolReference GetSymbolReference([NotNull] FeatureLayer layer, [CanBeNull] IList<long> oids)
+	private static CIMSymbolReference GetSymbolReference([NotNull] FeatureLayer layer,
+	                                                     [CanBeNull] IList<long> oids)
 	{
 		if (oids == null || oids.Count < 1)
 		{
 			return null;
 		}
 
-		CIMSymbol symbol = null;
 		CIMSymbolReference symbolReference = null;
 
 		var activeMap = MapView.Active?.Map;
@@ -259,9 +263,9 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			var feature = GetFeature(layer, oid);
 			//var shape = feature.GetShape();
 			var values = new NamedValues(feature);
-			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out var overrides);
+			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out _);
 
-			if (! cimSymbolReferences.Any(s => s.ToJson() == symref.ToJson()))
+			if (cimSymbolReferences.All(s => s.ToJson() != symref.ToJson()))
 			{
 				cimSymbolReferences.Add(symref);
 			}
@@ -282,8 +286,10 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			}
 			else
 			{
-				_msg.Debug($"Cannot set sketch symbol: found different symbols in selection of in layer {layer.Name}.");
+				_msg.Debug(
+					$"Cannot set sketch symbol: found different symbols in selection of in layer {layer.Name}.");
 			}
+
 			return null;
 		}
 
@@ -291,14 +297,14 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		return symbolReference;
 	}
 
-	private static ArcGIS.Core.Data.Feature GetFeature(FeatureLayer layer, long oid)
+	private static Feature GetFeature(FeatureLayer layer, long oid)
 	{
 		using var featureClass = layer.GetFeatureClass();
 		if (featureClass is null) return null;
-		return ProSuite.Commons.AGP.Core.Geodatabase.GdbQueryUtils.GetFeature(featureClass, oid);
+		return GdbQueryUtils.GetFeature(featureClass, oid);
 	}
 
-	private static SketchGeometryType GetApplicableSketchType(GeometryType geometryType)
+	private static SketchGeometryType GetSketchGeometryType(GeometryType geometryType)
 	{
 		switch (geometryType)
 		{

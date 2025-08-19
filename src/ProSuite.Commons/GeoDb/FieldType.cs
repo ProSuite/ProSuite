@@ -6,7 +6,7 @@ namespace ProSuite.Commons.GeoDb
 	public enum FieldType
 	{
 		ShortInteger = 0, // SmallInteger
-		LongInteger = 1, // Integer
+		Integer = 1, // Integer (in AO 10.x: 'LongInteger')
 		Float = 2, // Single
 		Double = 3, // Double
 		Text = 4, // String
@@ -17,6 +17,7 @@ namespace ProSuite.Commons.GeoDb
 		Raster = 9, // Raster
 		Guid = 10, // GUID
 		GlobalID = 11, // GlobalID
-		Xml = 12 // XML
+		Xml = 12, // XML
+		BigInteger = 13, // BigInteger
 	}
 }

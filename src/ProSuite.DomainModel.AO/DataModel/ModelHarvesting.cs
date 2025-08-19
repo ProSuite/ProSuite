@@ -1,17 +1,17 @@
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons;
-using ProSuite.DomainModel.AO.DataModel.Harvesting;
-using ProSuite.DomainModel.Core.DataModel;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.DomainModels;
-using ProSuite.Commons.Exceptions;
-using System.Linq;
+using ProSuite.DomainModel.AO.DataModel.Harvesting;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -33,10 +33,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 				GetDatasetListBuilderFactory(model, geometryTypes);
 
 			Assert.NotNull(datasetListBuilderFactory,
-						   "DatasetListBuilderFactory not assigned to model");
+			               "DatasetListBuilderFactory not assigned to model");
 
 			return Harvest(model, datasetListBuilderFactory,
-						   GetAttributeConfigurator(model, existingAttributeTypes));
+			               GetAttributeConfigurator(model, existingAttributeTypes));
 		}
 
 		[NotNull]
@@ -54,6 +54,18 @@ namespace ProSuite.DomainModel.AO.DataModel
 			               "DatasetListBuilderFactory not assigned to model");
 
 			return Harvest(model, workspaceContext, datasetListBuilderFactory,
+			               existingAttributeTypes);
+		}
+
+		[NotNull]
+		public static IEnumerable<ObjectAttributeType> Harvest(
+			[NotNull] DdxModel model, [NotNull] IWorkspaceContext workspaceContext,
+			[NotNull] IDatasetListBuilderFactory datasetListBuilderFactory,
+			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes = null)
+		{
+			Assert.ArgumentNotNull(datasetListBuilderFactory, nameof(datasetListBuilderFactory));
+
+			return Harvest(model, workspaceContext, datasetListBuilderFactory,
 			               GetAttributeConfigurator(model, existingAttributeTypes));
 		}
 
@@ -64,7 +76,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[CanBeNull] IAttributeConfigurator attributeConfigurator)
 		{
 			Assert.ArgumentNotNull(datasetListBuilderFactory,
-								   nameof(datasetListBuilderFactory));
+			                       nameof(datasetListBuilderFactory));
 
 			model.AssertMasterDatabaseWorkspaceContextAccessible();
 
@@ -82,7 +94,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IGeometryTypeConfigurator geometryTypeConfigurator =
 				new GeometryTypeConfigurator(datasetListBuilderFactory.GeometryTypes);
 
-			return Harvest(model, datasetListBuilder, attributeConfigurator, geometryTypeConfigurator);
+			return Harvest(model, datasetListBuilder, attributeConfigurator,
+			               geometryTypeConfigurator);
 		}
 
 		[NotNull]
@@ -124,7 +137,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IAttributeConfigurator attributeConfigurator = GetAttributeConfigurator(
 				model, existingAttributeTypes);
 
-			return Harvest(model, datasetListBuilder, attributeConfigurator, geometryTypeConfigurator);
+			return Harvest(model, datasetListBuilder, attributeConfigurator,
+			               geometryTypeConfigurator);
 		}
 
 		[NotNull]
@@ -136,7 +150,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(datasetListBuilder, nameof(datasetListBuilder));
 
-			IWorkspaceContext workspaceContext = model.AssertMasterDatabaseWorkspaceContextAccessible();
+			IWorkspaceContext workspaceContext =
+				model.AssertMasterDatabaseWorkspaceContextAccessible();
 
 			return Harvest(model, workspaceContext, datasetListBuilder, attributeConfigurator,
 			               geometryTypeConfigurator);
@@ -161,8 +176,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 				using (_msg.IncrementIndentation("Refreshing datasets"))
 				{
 					HarvestDatasets(model, workspaceContext,
-									datasetListBuilder,
-									attributeConfigurator, geometryTypeConfigurator);
+					                datasetListBuilder,
+					                attributeConfigurator, geometryTypeConfigurator);
 				}
 
 				bool datasetNamesAreQualified = model.HarvestQualifiedElementNames &&
@@ -174,7 +189,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 					HarvestAssociations(model, workspaceContext,
 					                    model.DefaultDatabaseName,
 					                    model.DefaultDatabaseSchemaOwner,
-										datasetNamesAreQualified);
+					                    datasetNamesAreQualified);
 				}
 			}
 
@@ -195,7 +210,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public static void HarvestAssociations([NotNull] DdxModel model)
 		{
-			IWorkspaceContext workspaceContext = model.AssertMasterDatabaseWorkspaceContextAccessible();
+			IWorkspaceContext workspaceContext =
+				model.AssertMasterDatabaseWorkspaceContextAccessible();
 
 			HarvestAssociations(model, workspaceContext, model.DefaultDatabaseName,
 			                    model.DefaultDatabaseSchemaOwner,
@@ -225,7 +241,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				const bool useAssociationIndex = true;
 				Association association = GetExistingAssociation(model, relClassName, workspace,
 				                                                 model.ElementNamesAreQualified,
-																 useAssociationIndex);
+				                                                 useAssociationIndex);
 				existingAssociationByRelClass.Add(relationshipClass, association);
 			}
 
@@ -302,14 +318,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 			if (attributeConfigurator == null)
 			{
 				_msg.Warn("No attribute configurator specified, " +
-						  "attributes will not be specifically configured");
+				          "attributes will not be specifically configured");
 			}
 
 			model.InvalidateDatasetIndex();
 			model.InvalidateSpecialDatasetAssignment();
 
 			IFeatureWorkspace featureWorkspace = workspaceContext.FeatureWorkspace;
-			var workspace = (IWorkspace)featureWorkspace;
+			var workspace = (IWorkspace) featureWorkspace;
 
 			bool workspaceUsesQualifiedDatasetNames =
 				WorkspaceUtils.UsesQualifiedDatasetNames(workspace);
@@ -326,7 +342,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			var anyRelevantDatasetsFound = false;
 
 			foreach (IDatasetName datasetName in
-					 HarvestingUtils.GetHarvestableDatasetNames(featureWorkspace))
+			         HarvestingUtils.GetHarvestableDatasetNames(featureWorkspace))
 			{
 				// ALL dataset names in the workspace are returned!
 
@@ -376,15 +392,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 					string databaseName;
 					string ownerName;
 					DatasetUtils.ParseTableName(workspace, gdbDatasetName,
-												out databaseName,
-												out ownerName,
-												out string _);
-					if (!string.IsNullOrEmpty(ownerName))
+					                            out databaseName,
+					                            out ownerName,
+					                            out string _);
+					if (! string.IsNullOrEmpty(ownerName))
 					{
 						ownerNames.Add(ownerName);
 					}
 
-					if (!string.IsNullOrEmpty(databaseName))
+					if (! string.IsNullOrEmpty(databaseName))
 					{
 						databaseNames.Add(databaseName);
 					}
@@ -400,7 +416,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 				else
 				{
 					// TODO REVISE scenarios that lead to non-unique dataset names?
-					HarvestingUtils.UpdateName(dataset, datasetName, model.HarvestQualifiedElementNames);
+					HarvestingUtils.UpdateName(dataset, datasetName,
+					                           model.HarvestQualifiedElementNames);
 				}
 			}
 
@@ -422,6 +439,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 			{
 				_msg.VerboseDebug(() => $"Checking existing dataset {dataset.Name}");
 
+				if (dataset is ISimpleTerrainDataset)
+				{
+					// TOP-5958: This is not an actual geodatabase dataset, but a pure DDX model
+					// element, do not register it as deleted!
+					continue;
+				}
+
 				string gdbDatasetName = ModelElementUtils.GetGdbElementName(dataset, workspace,
 					model.DefaultDatabaseName, model.DefaultDatabaseSchemaOwner);
 
@@ -430,7 +454,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				if (datasetExists)
 				{
 					// The dataset exists in the geodatabase
-					if (dataset.Deleted && !ignoredExistingDatasetIds.Contains(dataset.Id))
+					if (dataset.Deleted && ! ignoredExistingDatasetIds.Contains(dataset.Id))
 					{
 						_msg.WarnFormat(
 							"Dataset {0} was registered as deleted, but exists now. " +
@@ -442,11 +466,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 				else
 				{
 					// the dataset no longer exists in the geodatabase
-					if (!dataset.Deleted)
+					if (! dataset.Deleted)
 					{
 						// The dataset does not exist in the geodatabase
 						_msg.WarnFormat("Registering dataset {0} as deleted",
-										dataset.Name);
+						                dataset.Name);
 
 						dataset.RegisterDeleted();
 					}
@@ -462,7 +486,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				// The dataset exists in the geodatabase, but it is ignored (and not yet marked as deleted)
 				_msg.WarnFormat("Registering ignored dataset {0} as deleted",
-								dataset.Name);
+				                dataset.Name);
 
 				dataset.RegisterDeleted();
 			}
@@ -488,7 +512,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 					// TODO determine if dataset was newly created
 					// -> only warn about alias update if the dataset already existed
 					HarvestObjectDataset(model, objectDataset, objectClass, attributeConfigurator,
-										 geometryTypeConfigurator);
+					                     geometryTypeConfigurator);
 				}
 				else
 				{
@@ -506,7 +530,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 						if (newGeometryType != null)
 						{
 							_msg.WarnFormat("Assigning new geometry type {0} for dataset {1}",
-											newGeometryType.Name, dataset.Name);
+							                newGeometryType.Name, dataset.Name);
 							dataset.GeometryType = newGeometryType;
 						}
 					}
@@ -527,8 +551,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			if (databaseNames.Count <= 1)
 			{
 				return databaseNames.Count == 0
-						   ? null
-						   : databaseNames.ToList()[0];
+					       ? null
+					       : databaseNames.ToList()[0];
 			}
 
 			if (model.HarvestQualifiedElementNames)
@@ -539,7 +563,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// this should not be possible, workspaces should be database-specific
 			throw new InvalidConfigurationException(
 				string.Format("Harvested datasets are from more than one database: {0}",
-							  StringUtils.ConcatenateSorted(databaseNames, ",")));
+				              StringUtils.ConcatenateSorted(databaseNames, ",")));
 		}
 
 		[CanBeNull]
@@ -550,8 +574,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			if (ownerNames.Count <= 1)
 			{
 				return ownerNames.Count == 0
-						   ? null
-						   : ownerNames.ToList()[0];
+					       ? null
+					       : ownerNames.ToList()[0];
 			}
 
 			if (model.HarvestQualifiedElementNames)
@@ -580,7 +604,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IModelHarvest modelAdmin = model;
 
 			if (associationNamesAreQualified ||
-				!ModelElementNameUtils.IsQualifiedName(relationshipClassName))
+			    ! ModelElementNameUtils.IsQualifiedName(relationshipClassName))
 			{
 				return modelAdmin.GetExistingAssociation(relationshipClassName, useIndex);
 			}
@@ -588,8 +612,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// the relationship class name is qualified, but the stored association names are (allegedly) not 
 			// (if the stored flag is correct - it could also be an incorrect initial value).
 
-			if (!ModelElementUtils.IsInSchema(workspace, relationshipClassName,
-			                                  model.DefaultDatabaseSchemaOwner))
+			if (! ModelElementUtils.IsInSchema(workspace, relationshipClassName,
+			                                   model.DefaultDatabaseSchemaOwner))
 			{
 				// the relationship class belongs to a different schema than the one last harvested
 				return null;
@@ -621,7 +645,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IModelHarvest modelAdmin = model;
 
 			if (datasetNamesAreQualified ||
-				!ModelElementNameUtils.IsQualifiedName(gdbDatasetName))
+			    ! ModelElementNameUtils.IsQualifiedName(gdbDatasetName))
 			{
 				return modelAdmin.GetExistingDataset(gdbDatasetName, useIndex);
 			}
@@ -630,8 +654,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// (if the stored flag is correct - it could also be an incorrect initial value).
 
 			// TODO also check database name (sql server/postgresql)?
-			if (!ModelElementUtils.IsInSchema(workspace, gdbDatasetName,
-			                                  model.DefaultDatabaseSchemaOwner))
+			if (! ModelElementUtils.IsInSchema(workspace, gdbDatasetName,
+			                                   model.DefaultDatabaseSchemaOwner))
 			{
 				// the gdb dataset belongs to a different schema than the one last harvested
 				return null;
@@ -639,8 +663,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			// the gdb dataset belongs to the schema that was last harvested
 			// -> search using the unqualified name.
-			Dataset result = modelAdmin.GetExistingDataset(ModelElementNameUtils.GetUnqualifiedName(gdbDatasetName),
-			                                  useIndex);
+			Dataset result = modelAdmin.GetExistingDataset(
+				ModelElementNameUtils.GetUnqualifiedName(gdbDatasetName),
+				useIndex);
 
 			// if not found, try with the qualified name (if dataset names are really qualified)
 			return result ?? modelAdmin.GetExistingDataset(gdbDatasetName, useIndex);
@@ -656,7 +681,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			// alias name
 			if (model.UpdateAliasNamesOnHarvest)
 			{
-				if (!Equals(objectClass.AliasName, objectDataset.AliasName))
+				if (! Equals(objectClass.AliasName, objectDataset.AliasName))
 				{
 					string origAliasName = objectDataset.AliasName;
 					objectDataset.AliasName = objectClass.AliasName;
@@ -665,12 +690,12 @@ namespace ProSuite.DomainModel.AO.DataModel
 					if (objectDataset.IsPersistent)
 					{
 						_msg.WarnFormat("Updated alias name for dataset {0}: {1} (was: {2})",
-										objectDataset.Name, objectDataset.AliasName, origAliasName);
+						                objectDataset.Name, objectDataset.AliasName, origAliasName);
 					}
 					else
 					{
 						_msg.DebugFormat("Assigned alias name {0} to newly registered dataset {1}",
-										 objectDataset.AliasName, objectDataset.Name);
+						                 objectDataset.AliasName, objectDataset.Name);
 					}
 				}
 			}
@@ -695,24 +720,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			// object types
 			using (_msg.IncrementIndentation("Refreshing object types for dataset '{0}'",
-											 objectDataset.Name))
+			                                 objectDataset.Name))
 			{
 				ObjectTypeHarvestingUtils.HarvestObjectTypes(objectDataset, objectClass);
 			}
 
 			// attributes
 			using (_msg.IncrementIndentation("Refreshing attributes for dataset '{0}'",
-											 objectDataset.Name))
+			                                 objectDataset.Name))
 			{
 				AttributeHarvestingUtils.HarvestAttributes(objectDataset, attributeConfigurator,
-														   objectClass);
+				                                           objectClass);
 			}
 
 			// shape type
 			if (objectDataset.HasGeometry)
 			{
 				using (_msg.IncrementIndentation("Refreshing geometry type for dataset '{0}'",
-												 objectDataset.Name))
+				                                 objectDataset.Name))
 				{
 					AttributeHarvestingUtils.HarvestGeometryType(
 						objectDataset, geometryTypeConfigurator, objectClass);
@@ -729,13 +754,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 			foreach (Association association in model.Associations)
 			{
 				if (HarvestingUtils.ExistsAssociation(relClasses, association.Name) ||
-					association.Deleted)
+				    association.Deleted)
 				{
 					continue;
 				}
 
 				_msg.WarnFormat("Registering association {0} as deleted",
-								association.Name);
+				                association.Name);
 
 				association.RegisterDeleted();
 			}

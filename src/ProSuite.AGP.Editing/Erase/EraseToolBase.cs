@@ -32,14 +32,12 @@ namespace ProSuite.AGP.Editing.Erase
 			RequiresSelection = true;
 		}
 
-		protected override SketchGeometryType GetSketchGeometryType()
-		{
-			return SketchGeometryType.Polygon;
-		}
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
 
-		protected override SelectionCursors GetSelectionCursors()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
+			return new SymbolizedSketchTypeWithoutSymbol(this, SketchGeometryType.Polygon);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()

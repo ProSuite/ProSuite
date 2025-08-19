@@ -53,6 +53,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// "Select a point or multipoint feature template in the Create Features pane";
 		}
 
+		protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+
 		#region Overrides of PlugIn
 
 		protected override void OnUpdateCore()
@@ -64,7 +66,12 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override void LogPromptForSelection() { }
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
+		{
+			return new SymbolizedSketchTypeWithoutSymbol(this, GetSketchGeometryType);
+		}
+
+		private SketchGeometryType GetSketchGeometryType()
 		{
 			esriGeometryType? targetShapeType = GetTargetLayerShapeType();
 

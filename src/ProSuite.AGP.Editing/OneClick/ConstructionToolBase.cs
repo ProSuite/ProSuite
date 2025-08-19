@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
@@ -12,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -20,7 +22,7 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
-	public abstract class ConstructionToolBase : OneClickToolBase
+	public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketchTool
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -32,6 +34,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		// TODO: Absorb this flag into the SketchStateHistory for better encapsulation
 		private bool _isIntermittentSelectionPhaseActive;
 		[CanBeNull] private SketchStateHistory _sketchStateHistory;
+
+		[CanBeNull] private ISymbolizedSketchType _symbolizedSketch;
 
 		protected ConstructionToolBase()
 		{
@@ -52,13 +56,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			GeomIsSimpleAsFeature = false;
 
-			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
-
 			HandledKeys.Add(_keyFinishSketch);
 			HandledKeys.Add(_keyRestorePrevious);
 		}
 
-		protected Cursor SketchCursor { get; set; }
+		protected abstract SelectionCursors FirstPhaseCursors { get; }
+
+		protected SelectionCursors SketchCursors { get; set; } =
+			SelectionCursors.CreateCrossCursors(Resources.Cross);
 
 		/// <summary>
 		/// Whether the geometry sketch (as opposed to the selection sketch) is currently active
@@ -129,12 +134,27 @@ namespace ProSuite.AGP.Editing.OneClick
 				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
 			});
 
+			SelectionCursors = FirstPhaseCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
+
 			IsInSketchPhase = false;
+
+			await QueuedTask.Run(async () =>
+			{
+				await base.OnSelectionPhaseStartedAsync();
+				_symbolizedSketch?.ClearSketchSymbol();
+			});
 		}
 
 		protected override async Task OnToolActivatingCoreAsync()
 		{
+			SelectionCursors = FirstPhaseCursors;
+
 			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
+
+			_symbolizedSketch = GetSymbolizedSketch();
+			Assert.NotNull(_symbolizedSketch);
+			await _symbolizedSketch.SetSketchAppearanceAsync();
 
 			if (! RequiresSelection)
 			{
@@ -154,6 +174,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			_sketchStateHistory?.Deactivate();
 			RememberSketch();
 			IsInSketchPhase = false;
+
+			_symbolizedSketch?.Dispose();
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -232,6 +254,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				await _sketchStateHistory.StartIntermittentSelection();
 
 				// During start selection phase the edit sketch is cleared:
+				SelectionCursors = FirstPhaseCursors;
 				await StartSelectionPhaseAsync();
 			}
 			catch (Exception e)
@@ -244,12 +267,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 			// Else do nothing: No selection sketch toggling in edit sketch phase.
 		}
@@ -398,7 +420,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
-		protected abstract SketchGeometryType GetSketchGeometryType();
+		protected abstract ISymbolizedSketchType GetSymbolizedSketch();
 
 		/// <summary>
 		/// The template that can optionally be used to set up the sketch properties, such as
@@ -451,9 +473,21 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
 
-			SetSketchType(GetSketchGeometryType());
+			Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection = null;
+			await QueuedTask.Run(() =>
+			{
+				Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+					SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
 
-			SetToolCursor(SketchCursor);
+				applicableSelection =
+					SelectionUtils.GetApplicableSelectedFeatures(
+						selectionByLayer, CanSelectFromLayer);
+			});
+
+			_symbolizedSketch?.SetSketchType(applicableSelection.Keys.FirstOrDefault());
+
+			SelectionCursors = SketchCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 
 			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 
@@ -472,6 +506,33 @@ namespace ProSuite.AGP.Editing.OneClick
 			LogEnteringSketchMode();
 
 			IsInSketchPhase = true;
+
+			if (_symbolizedSketch != null)
+			{
+				try
+				{
+					// For some strange reason calling ActiveMapView.ClearSketchAsync()
+					// inside a QueuedTask makes the sketch symbol appear correctly. Calling
+					// ActiveMapView.ClearSketchAsync() outside QueuedTask leads to a
+					// not symbolised sketch. It's not documented that ActiveMapView.ClearSketchAsync()
+					// has to be put inside QueuedTask!!! May Teutates be with us!
+					await QueuedTask.Run(async () =>
+					{
+						await _symbolizedSketch.SetSketchAppearanceAsync();
+
+						if (await HasSketchAsync())
+						{
+							return;
+						}
+
+						await ActiveMapView.ClearSketchAsync();
+					});
+				}
+				catch (Exception ex)
+				{
+					_msg.Error(ex.Message, ex);
+				}
+			}
 
 			await OnSketchPhaseStartedAsync();
 		}
@@ -659,6 +720,26 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return lastPoint;
+		}
+
+		public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
+		{
+			return Task.FromResult(true);
+		}
+
+		public void SetSketchSymbol(CIMSymbolReference symbolReference)
+		{
+			SketchSymbol = symbolReference;
+		}
+
+		public bool CanSelectFromLayer(Layer layer)
+		{
+			return CanSelectFromLayer(layer, null);
+		}
+
+		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+		{
+			return CanUseSelection(selectionByLayer, null);
 		}
 	}
 }

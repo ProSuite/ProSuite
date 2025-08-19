@@ -71,7 +71,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			if (!model.IsMasterDatabaseAccessible())
+			if (! model.IsMasterDatabaseAccessible())
 			{
 				return null;
 			}
@@ -82,18 +82,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public static bool IsMasterDatabaseAccessible(this DdxModel model)
 		{
-			if (model is IModelMasterDatabase)
+			if (! model.CachedIsMasterDatabaseAccessible.HasValue)
 			{
-				if (! model.CachedIsMasterDatabaseAccessible.HasValue)
-				{
-					model.CachedIsMasterDatabaseAccessible =
-						DetermineMasterDatabaseWorkspaceAccessibility(model);
-				}
-
-				return model.CachedIsMasterDatabaseAccessible.Value;
+				model.CachedIsMasterDatabaseAccessible =
+					DetermineMasterDatabaseWorkspaceAccessibility(model);
 			}
 
-			return false;
+			return model.CachedIsMasterDatabaseAccessible.Value;
 		}
 
 		public static string GetMasterDatabaseNoAccessReason(this DdxModel model)
@@ -106,7 +101,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return "No user connection provider defined for model";
 			}
 
-			return model.CachedMasterDatabaseNoAccessReason; // _lastMasterDatabaseAccessError (Model)
+			return model.CachedMasterDatabaseNoAccessReason;
 		}
 
 		public static bool TryGetMasterDatabaseWorkspaceContext(

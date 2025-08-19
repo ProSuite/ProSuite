@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</ProjectGuid>
 
@@ -23,13 +23,20 @@
     <TargetFramework>netstandard2.0</TargetFramework>
 
   </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt; 11.4 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_11_5_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
-    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DefineConstants>TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.AO.xml</DocumentationFile>
   </PropertyGroup>
 

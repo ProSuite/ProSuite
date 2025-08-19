@@ -397,7 +397,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (hasUnknownSref && queryDescription.IsSpatialQuery)
 			{
-				queryDescription.SpatialReference = spatialReferenceDescriptor?.GetSpatialReference();
+				queryDescription.SpatialReference =
+					spatialReferenceDescriptor?.GetSpatialReference();
 			}
 
 			string queryLayerName = null;

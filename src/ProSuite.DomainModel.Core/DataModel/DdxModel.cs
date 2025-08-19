@@ -222,8 +222,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <value>The list associations (read-only).</value>
 		[NotNull]
-		public IList<Association> Associations =>
-			new ReadOnlyList<Association>(_associations);
+		public IList<Association> Associations => new ReadOnlyList<Association>(_associations);
 
 		[Required]
 		public SpatialReferenceDescriptor SpatialReferenceDescriptor
@@ -330,7 +329,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		}
 
 		public bool CanChangeIgnoreUnregisteredTables =>
-			!(_ignoreUnversionedDatasets && _ignoreUnregisteredTables);
+			! (_ignoreUnversionedDatasets && _ignoreUnregisteredTables);
 
 		[UsedImplicitly]
 		public string DatasetInclusionCriteria
@@ -442,7 +441,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 				GC.WaitForPendingFinalizers();
 			}
 		}
-
 
 		#region Object overrides
 
@@ -605,6 +603,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
 		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of datasets.</returns>
+		[NotNull]
 		public IList<Dataset> GetDatasets(bool includeDeleted = false)
 		{
 			return GetDatasets<Dataset>(null, includeDeleted);
@@ -632,6 +631,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// <param name="includeDeleted">if set to <c>true</c>, datasets registered as deleted are 
 		/// included. Otherwise, they are excluded.</param>
 		/// <returns>The list of datasets of the specified type.</returns>
+		[NotNull]
 		public IList<T> GetDatasets<T>(bool includeDeleted = false) where T : Dataset
 		{
 			return GetDatasets<T>(null, includeDeleted);
