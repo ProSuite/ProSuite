@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Analyst3D;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Data.Raster;
+using ArcGIS.Core.Data.Topology;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,7 +23,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	/// </summary>
 	public class DataConnectionName : IDatasetName
 	{
-		[CanBeNull]
+		[NotNull]
 		public static DataConnectionName FromDataConnection(
 			[NotNull] CIMDataConnection cimDataConnection)
 		{
@@ -73,9 +76,48 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public esriDatasetType Type { get; }
 		public IWorkspaceName WorkspaceName => DataConnectionWorkspaceName;
 
+		public Dataset OpenDataset()
+		{
+			Datastore datastore = DataConnectionWorkspaceName.OpenDatastore();
+
+			switch (Type)
+			{
+				case esriDatasetType.esriDTFeatureClass:
+					return DatasetUtils.OpenDataset<FeatureClass>(datastore, NameString);
+				case esriDatasetType.esriDTTable:
+					return DatasetUtils.OpenDataset<Table>(datastore, NameString);
+				case esriDatasetType.esriDTTopology:
+					return DatasetUtils.OpenDataset<Topology>(datastore, NameString);
+					;
+				case esriDatasetType.esriDTRelationshipClass:
+					return DatasetUtils.OpenDataset<RelationshipClass>(datastore, NameString);
+				case esriDatasetType.esriDTRasterDataset:
+					return DatasetUtils.OpenDataset<RasterDataset>(datastore, NameString);
+				case esriDatasetType.esriDTTerrain:
+					return DatasetUtils.OpenDataset<Terrain>(datastore, NameString);
+				case esriDatasetType.esriDTMosaicDataset:
+					return DatasetUtils.OpenDataset<MosaicDataset>(datastore, NameString);
+				case esriDatasetType.esriDTLasDataset:
+					return DatasetUtils.OpenDataset<LasDataset>(datastore, NameString);
+				case esriDatasetType.esriDTTin:
+					return DatasetUtils.OpenDataset<TinDataset>(datastore, NameString);
+				default:
+					throw new ArgumentOutOfRangeException($"Unsupported dataset type: {Type}");
+			}
+		}
+
 		public object Open()
 		{
-			throw new NotImplementedException();
+			switch (Type)
+			{
+				case esriDatasetType.esriDTFeatureClass:
+				case esriDatasetType.esriDTTable:
+					return ArcGeodatabaseUtils.ToArcTable((Table) OpenDataset());
+				case esriDatasetType.esriDTTopology:
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported dataset type for IName.Open(): {Type}");
+			}
 		}
 
 		public string Name => NameString;
@@ -282,11 +324,26 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public string NameString { get; set; }
 
-		public object Open()
+		public Datastore OpenDatastore()
 		{
 			Connector connector = WorkspaceUtils.CreateConnector(FactoryType, ConnectionString);
 
 			return WorkspaceUtils.OpenDatastore(connector);
+		}
+
+		public object Open()
+		{
+			Datastore datastore = OpenDatastore();
+
+			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			{
+				return ArcWorkspace.Create(geodatabase);
+			}
+
+			// TODO: Shapefile, Database, etc.
+
+			throw new NotImplementedException(
+				$"Unsupported workspace type: {datastore.GetType().Name}");
 		}
 
 		#endregion
