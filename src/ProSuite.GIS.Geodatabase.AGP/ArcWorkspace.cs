@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,9 +17,9 @@ public class ArcWorkspace : IFeatureWorkspace
 {
 	private static readonly Dictionary<long, ArcWorkspace> _workspacesByHandle = new();
 
-	private readonly Dictionary<string, ArcRelationshipClass> _relationshipClassesByName = new();
+	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName = new();
 
-	private readonly Dictionary<string, ArcTable> _tablesByName = new();
+	private readonly ConcurrentDictionary<string, ArcTable> _tablesByName = new();
 
 	private List<RelationshipClassDefinition> _allRelationshipClassDefinitions;
 

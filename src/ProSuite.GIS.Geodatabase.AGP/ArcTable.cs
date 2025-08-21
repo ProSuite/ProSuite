@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
@@ -30,7 +31,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		[CanBeNull] private string _subtypeFieldName;
 		[CanBeNull] private int? _defaultSubtypeCode;
 
-		private Dictionary<int, Subtype> _subtypes;
+		private ConcurrentDictionary<int, Subtype> _subtypes;
 
 		private IFields _fields;
 
@@ -579,7 +580,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		private void InitializeSubtypes()
 		{
-			_subtypes = new Dictionary<int, Subtype>();
+			_subtypes = new ConcurrentDictionary<int, Subtype>();
 
 			if (string.IsNullOrEmpty(SubtypeFieldName))
 			{
