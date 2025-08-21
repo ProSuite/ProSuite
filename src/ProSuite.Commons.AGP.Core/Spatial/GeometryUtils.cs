@@ -6,7 +6,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
@@ -1041,10 +1040,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (geometry is Multipatch multipatch)
 			{
-				Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
-
-				// TODO: Proper GetXyFootprint method that first unions the rings!
-				return polyhedron.RingGroups.Sum(r => r.GetArea2D());
+				return GeometryEngine.Instance.Area(multipatch);
 			}
 
 			return 0;
