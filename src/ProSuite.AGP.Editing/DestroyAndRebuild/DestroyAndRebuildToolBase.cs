@@ -86,18 +86,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return await base.OnMapSelectionChangedCoreAsync(args);
 	}
 
-	protected override async Task HandleEscapeAsync()
-	{
-		var task = QueuedTask.Run(
-			() =>
-			{
-				SelectionUtils.ClearSelection(ActiveMapView?.Map);
-
-				_feedback.ClearSelection();
-			});
-		await ViewUtils.TryAsync(task, _msg);
-	}
-
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{

@@ -66,11 +66,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return base.OnToolActivateCoreAsync(hasMapViewChanged);
 	}
 
-	protected override async Task HandleEscapeAsync()
-	{
-		await QueuedTask.Run(() => SelectionUtils.ClearSelection(ActiveMapView?.Map));
-	}
-
 	protected override async Task OnSelectionPhaseStartedAsync()
 	{
 		await base.OnSelectionPhaseStartedAsync();
