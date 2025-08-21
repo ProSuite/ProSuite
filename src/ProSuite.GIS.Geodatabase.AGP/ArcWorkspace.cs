@@ -20,7 +20,7 @@ public class ArcWorkspace : IFeatureWorkspace
 
 	private readonly Dictionary<string, ArcTable> _tablesByName = new();
 
-	private List<IRelationshipClass> _allRelationshipClasses;
+	private List<RelationshipClassDefinition> _allRelationshipClassDefinitions;
 
 	// Property caching for non CIM-thread access:
 	private string _pathName;
@@ -188,38 +188,41 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 	}
 
-	private IEnumerable<IRelationshipClass> GetAllRelationshipClasses()
+	public IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions()
 	{
-		if (_allRelationshipClasses == null)
+		if (_allRelationshipClassDefinitions == null)
 		{
-			_allRelationshipClasses = new List<IRelationshipClass>();
+			_allRelationshipClassDefinitions = new List<RelationshipClassDefinition>();
 
 			foreach (RelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<RelationshipClassDefinition>())
 			{
-				IDataset result = Open(definition);
-
-				if (result is IRelationshipClass relationshipClass)
-				{
-					_allRelationshipClasses.Add(relationshipClass);
-				}
+				_allRelationshipClassDefinitions.Add(definition);
 			}
 
 			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<AttributedRelationshipClassDefinition>())
 			{
-				IDataset result = Open(definition);
-
-				if (result is IRelationshipClass relationshipClass)
-				{
-					_allRelationshipClasses.Add(relationshipClass);
-				}
+				_allRelationshipClassDefinitions.Add(definition);
 			}
 		}
 
-		foreach (IRelationshipClass relationshipClass in _allRelationshipClasses)
+		foreach (RelationshipClassDefinition definition in _allRelationshipClassDefinitions)
 		{
-			yield return relationshipClass;
+			yield return definition;
+		}
+	}
+
+	private IEnumerable<IRelationshipClass> GetAllRelationshipClasses()
+	{
+		foreach (var relClassDefinition in GetRelationshipClassDefinitions())
+		{
+			IDataset result = Open(relClassDefinition);
+
+			if (result is IRelationshipClass relationshipClass)
+			{
+				yield return relationshipClass;
+			}
 		}
 	}
 
