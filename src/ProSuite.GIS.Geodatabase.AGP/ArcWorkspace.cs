@@ -228,20 +228,20 @@ public class ArcWorkspace : IFeatureWorkspace
 		if (definition is FeatureClassDefinition)
 		{
 			FeatureClass proTable =
-				Geodatabase.OpenDataset<FeatureClass>(definition.GetName());
+				DatasetUtils.OpenDataset<FeatureClass>(Geodatabase, definition.GetName());
 			return ArcGeodatabaseUtils.ToArcTable(proTable);
 		}
 
 		if (definition is TableDefinition)
 		{
-			Table proTable = Geodatabase.OpenDataset<Table>(definition.GetName());
+			Table proTable = DatasetUtils.OpenDataset<Table>(Geodatabase, definition.GetName());
 			return ArcGeodatabaseUtils.ToArcTable(proTable);
 		}
 
 		if (definition is RelationshipClassDefinition)
 		{
 			RelationshipClass proRelClass =
-				Geodatabase.OpenDataset<RelationshipClass>(definition.GetName());
+				DatasetUtils.OpenDataset<RelationshipClass>(Geodatabase, definition.GetName());
 			return ArcRelationshipClass.Create(proRelClass);
 		}
 
@@ -396,7 +396,8 @@ public class ArcWorkspace : IFeatureWorkspace
 			return result;
 		}
 
-		return ArcGeodatabaseUtils.ToArcTable(Geodatabase.OpenDataset<Table>(name));
+		Table proTable = DatasetUtils.OpenDataset<Table>(Geodatabase, name);
+		return ArcGeodatabaseUtils.ToArcTable(proTable);
 	}
 
 	public IFeatureClass OpenFeatureClass(string name)
@@ -441,8 +442,7 @@ public class ArcWorkspace : IFeatureWorkspace
 			return result;
 		}
 
-		var proRelClass = Geodatabase.OpenDataset<RelationshipClass>(name);
-
+		var proRelClass = DatasetUtils.OpenDataset<RelationshipClass>(Geodatabase, name);
 		return new ArcRelationshipClass(proRelClass);
 	}
 
