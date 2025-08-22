@@ -27,6 +27,11 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected DestroyAndRebuildToolBase()
+	{
+		FireSketchEvents = true;
+	}
+
 	private DestroyAndRebuildFeedback _feedback;
 
 	protected override SelectionCursors FirstPhaseCursors { get; } =

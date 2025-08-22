@@ -26,6 +26,11 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected CreateFeatureInPickedClassToolBase()
+	{
+		FireSketchEvents = true;
+	}
+
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 

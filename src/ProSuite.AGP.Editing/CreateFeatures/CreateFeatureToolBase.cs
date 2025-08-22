@@ -30,6 +30,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		{
 			UseSnapping = true;
 
+			FireSketchEvents = true;
+			
 			RequiresSelection = false;
 
 			// This does not work unless loadOnClick="false" in the daml.xml:
