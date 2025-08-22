@@ -28,8 +28,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected CreateFeatureToolBase()
 		{
-			UseSnapping = true;
-
 			FireSketchEvents = true;
 			
 			RequiresSelection = false;

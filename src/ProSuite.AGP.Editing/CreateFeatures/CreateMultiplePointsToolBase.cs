@@ -24,8 +24,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected CreateMultiplePointsToolBase()
 		{
-			UseSnapping = true;
-
 			RequiresSelection = false;
 
 			// This does not work unless loadOnClick="false" in the daml.xml:
