@@ -47,7 +47,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			{
 				// Do return not an empty envelope.
 				// Pluggable Datasource cannot handle an empty envelope.
-				_workList ??= WorkListRegistry.Instance.GetAsync(_tableName).Result;
+				_workList ??= WorkListRegistry.Instance.Get(_tableName);
 
 				return _workList?.GetExtent();
 			}
@@ -75,7 +75,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			// This is called on open table. Check QueryFilter.ObjectIDs.
 			try
 			{
-				_workList ??= WorkListRegistry.Instance.GetAsync(_tableName).Result;
+				_workList ??= WorkListRegistry.Instance.Get(_tableName);
 
 				if (_workList == null)
 				{
@@ -100,7 +100,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			try
 			{
-				_workList ??= WorkListRegistry.Instance.GetAsync(_tableName).Result;
+				_workList ??= WorkListRegistry.Instance.Get(_tableName);
 
 				if (_workList == null)
 				{

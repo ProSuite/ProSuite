@@ -37,10 +37,27 @@ namespace ProSuite.AGP.Editing
 		}
 
 		/// <summary>
-		/// Intermediate constructor to allow using setters instead of constructor.
-		/// This shall be removed once it is not used any more.
+		/// Create SelectionCursors from a .cur file.
+		/// <param name="cursor">Data of the cursor file to be used for all cursor overlays (independent of sketch type and pressed keys)</param>
 		/// </summary>
-		[Obsolete]
+		public static SelectionCursors CreateFromCursor([NotNull] byte[] cursor)
+		{
+			var s = new SelectionCursors
+			        {
+				        _rectangleCursor = ToolUtils.GetCursor(cursor),
+				        _lassoCursor = ToolUtils.GetCursor(cursor),
+				        _polygonCursor = ToolUtils.GetCursor(cursor),
+				        _rectangleShiftCursor = ToolUtils.GetCursor(cursor),
+				        _lassoShiftCursor = ToolUtils.GetCursor(cursor),
+				        _polygonShiftCursor = ToolUtils.GetCursor(cursor)
+			        };
+			return s;
+		}
+
+		/// <summary>
+		/// Intermediate constructor to allow using setters instead of constructor.
+		/// This shall be set to private once it is not used anymore.
+		/// </summary>
 		public SelectionCursors() { }
 
 		/// <summary>

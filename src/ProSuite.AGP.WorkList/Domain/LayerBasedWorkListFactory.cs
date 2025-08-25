@@ -26,6 +26,43 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 
 	public override IWorkList Get()
 	{
+		try
+		{
+			if (WorkList != null)
+			{
+				return WorkList;
+			}
+
+			if (MapView.Active == null)
+			{
+				return null;
+			}
+
+			IWorkEnvironment workEnvironment =
+				WorkListEnvironmentFactory.Instance.CreateWorkEnvironment(_path, _typeName);
+
+			if (workEnvironment == null)
+			{
+				return null;
+			}
+
+			// TODO: register AOI in WorkListEnvironmentFactory? Like item store?
+			// TODO: AreaOfInterest pull to base and as ctor paramter?
+			// TODO: (daro) consider storing extent in definition file.
+			//workEnvironment.AreaOfInterest
+
+			Assert.NotNull(workEnvironment);
+
+			QueuedTask.Run(async () =>
+			{
+				WorkList = await workEnvironment.CreateWorkListAsync(Name, _path);
+			});
+		}
+		catch (Exception ex)
+		{
+			_msg.Debug(ex.Message, ex);
+		}
+
 		return WorkList;
 	}
 

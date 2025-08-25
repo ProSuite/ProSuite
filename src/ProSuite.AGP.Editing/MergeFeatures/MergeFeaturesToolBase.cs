@@ -136,6 +136,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected override async Task HandleEscapeAsync()
 		{
 			_firstFeature = null;
+			SelectionCursors = _firstPhaseCursors;
 
 			try
 			{
@@ -282,6 +283,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected override Task OnToolActivatingCoreAsync()
 		{
 			_mergeToolOptions = InitializeOptions();
+
+			SelectionCursors = _firstPhaseCursors;
 
 			return base.OnToolActivatingCoreAsync();
 		}
@@ -708,6 +711,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			else
 			{
 				_firstFeature = null;
+				SelectionCursors = _firstPhaseCursors;
 				LogPromptForSelection();
 				await QueuedTask.Run(async () => { await SetupSelectionSketchAsync(); });
 			}
