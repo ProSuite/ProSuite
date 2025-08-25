@@ -130,11 +130,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			queryFilter = queryFilter ?? new AoTableFilter();
 
-			// TODO: get workspace and properties
-			int maxWhereClauseLength = 4000;
-			int maxValueCount = 1000;
-			IWorkspace workspace = table.Workspace;
-			// GdbQueryUtils.GetWhereClauseLimits(workspace, out maxWhereClauseLength, out maxValueCount);
+			GdbQueryUtils.GetWhereClauseLimits(
+				table.Workspace, out int maxWhereClauseLength, out int maxValueCount);
 
 			string origWhereClause = queryFilter.WhereClause;
 			try
