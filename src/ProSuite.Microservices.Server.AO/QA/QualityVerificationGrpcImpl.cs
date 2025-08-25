@@ -1113,6 +1113,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				//	ServiceUtils.SetUnhealthy(Health, GetType());
 				//}
 
+				if (trackCancel?.Continue() == false || e.Message == "Already finished.")
+				{
+					// Typically: System.InvalidOperationException: Already finished.
+					_msg.Debug(
+						"The request has been cancelled and the client is already gone.", e);
+
+					return ServiceCallStatus.Cancelled;
+				}
+
 				SendResponse(new QueryDataResponse
 				             {
 					             Message = new LogMsg()
@@ -1377,6 +1386,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				            };
 
 				QueryDataRequest output = moreDataRequest(input);
+
+				if (output?.InputData == null)
+				{
+					return null;
+				}
 
 				return new DataVerificationRequest
 				       {
