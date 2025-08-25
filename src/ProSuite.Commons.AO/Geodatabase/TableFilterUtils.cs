@@ -1,12 +1,11 @@
-
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -16,8 +15,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static void SetSubFields([NotNull] ITableFilter queryFilter,
 		                                params string[] fieldNames)
 		{
-			SetSubFields(queryFilter, (IEnumerable<string>)fieldNames);
+			SetSubFields(queryFilter, (IEnumerable<string>) fieldNames);
 		}
+
 		public static void SetSubFields([NotNull] ITableFilter queryFilter,
 		                                [NotNull] IEnumerable<string> fieldNames)
 		{
@@ -36,7 +36,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				uniqueFieldNames.Add(fieldName);
 			}
 
-			queryFilter.SubFields = string.Concat(uniqueFieldNames.Select(x => $"{x},")).TrimEnd(',');
+			queryFilter.SubFields =
+				string.Concat(uniqueFieldNames.Select(x => $"{x},")).TrimEnd(',');
 		}
 
 		[NotNull]
@@ -65,7 +66,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				if (! string.IsNullOrWhiteSpace(filter.PostfixClause))
 				{
-					var filterDefinition = (IQueryFilterDefinition)result;
+					var filterDefinition = (IQueryFilterDefinition) result;
 					filterDefinition.PostfixClause = filter.PostfixClause;
 				}
 			}
@@ -73,7 +74,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
-		public static IEnumerable<IReadOnlyRow> GetRows(IReadOnlyTable table, IEnumerable<long> oids, bool recycle)
+		public static IEnumerable<IReadOnlyRow> GetRows(IReadOnlyTable table,
+		                                                IEnumerable<long> oids, bool recycle)
 		{
 			return GetRowsInList(table, table.OIDFieldName, oids, recycle);
 		}
@@ -91,8 +93,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(valueList, nameof(valueList));
 
 			foreach (var row in GetRowsInList(table,
-			                                   DatasetUtils.GetField(table, fieldName), valueList,
-			                                   (q) => GetRows(table, q, recycle), queryFilter))
+			                                  DatasetUtils.GetField(table, fieldName), valueList,
+			                                  (q) => GetRows(table, q, recycle), queryFilter))
 			{
 				yield return row;
 			}
@@ -141,8 +143,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				foreach (object value in valueList)
 				{
 					if (sb == null ||
-						sb.Length >= maxWhereClauseLength ||
-						valueCount >= maxValueCount)
+					    sb.Length >= maxWhereClauseLength ||
+					    valueCount >= maxValueCount)
 					{
 						if (sb != null)
 						{
@@ -157,7 +159,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 						}
 
 						sb = new StringBuilder();
-						if (!string.IsNullOrEmpty(origWhereClause))
+						if (! string.IsNullOrEmpty(origWhereClause))
 						{
 							sb.AppendFormat("({0}) AND ", origWhereClause);
 						}
@@ -171,7 +173,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 						sb.Append(",");
 					}
 
-					sb.Append(GdbSqlUtils.GetLiteral(value, fieldType, workspace));
+					sb.Append(GdbSqlUtils.GetLiteral(value, fieldType, table.Workspace));
 					valueCount++;
 				}
 
@@ -191,6 +193,5 @@ namespace ProSuite.Commons.AO.Geodatabase
 				queryFilter.WhereClause = origWhereClause;
 			}
 		}
-
 	}
 }
