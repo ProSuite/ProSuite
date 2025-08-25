@@ -292,30 +292,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				{
 					yield return PrepareCached(relClass);
 				}
-
-				//RelationshipClass proRelClass = (RelationshipClass) relClass.NativeImplementation;
-				//var relClassDef = proRelClass.GetDefinition();
-
-				//string relClassName = relClass.Name;
-
-				//if (role == esriRelRole.esriRelRoleAny &&
-				//    (relClassDef.GetOriginClass() == thisTableName ||
-				//     relClassDef.GetDestinationClass() == thisTableName))
-				//{
-				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
-				//}
-
-				//if (role == esriRelRole.esriRelRoleOrigin &&
-				//    relClassDef.GetOriginClass() == thisTableName)
-				//{
-				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
-				//}
-
-				//if (role == esriRelRole.esriRelRoleDestination &&
-				//    relClassDef.GetDestinationClass() == thisTableName)
-				//{
-				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
-				//}
 			}
 		}
 
@@ -572,8 +548,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				if (_subtypes != null)
 				{
-					return _subtypes.Select(
-						kvp => new KeyValuePair<int, string>(kvp.Key, kvp.Value.Name));
+					return _subtypes.Select(kvp => new KeyValuePair<int, string>(
+						                        kvp.Key, kvp.Value.Name));
 				}
 
 				return ProTableDefinition.GetSubtypes()
@@ -713,10 +689,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field =
 				ProTableDefinition.GetFields()
-				                  .FirstOrDefault(
-					                  f => f.Name.Equals(
-						                  fieldName,
-						                  StringComparison.CurrentCultureIgnoreCase));
+				                  .FirstOrDefault(f => f.Name.Equals(
+					                                  fieldName,
+					                                  StringComparison.CurrentCultureIgnoreCase));
 
 			if (field == null)
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");

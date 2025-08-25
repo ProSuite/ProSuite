@@ -17,7 +17,8 @@ public class ArcWorkspace : IFeatureWorkspace
 {
 	private static readonly Dictionary<long, ArcWorkspace> _workspacesByHandle = new();
 
-	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName = new();
+	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName =
+		new();
 
 	private readonly ConcurrentDictionary<string, ArcTable> _tablesByName = new();
 
@@ -198,29 +199,43 @@ public class ArcWorkspace : IFeatureWorkspace
 			foreach (RelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<RelationshipClassDefinition>())
 			{
-				IDataset result = Open(definition);
-
-				if (result is IRelationshipClass relationshipClass)
-				{
-					_allRelationshipClasses.Add(relationshipClass);
-				}
+				TryAddRelClass(definition, _allRelationshipClasses);
 			}
 
 			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<AttributedRelationshipClassDefinition>())
 			{
-				IDataset result = Open(definition);
-
-				if (result is IRelationshipClass relationshipClass)
-				{
-					_allRelationshipClasses.Add(relationshipClass);
-				}
+				TryAddRelClass(definition, _allRelationshipClasses);
 			}
 		}
 
 		foreach (IRelationshipClass relationshipClass in _allRelationshipClasses)
 		{
 			yield return relationshipClass;
+		}
+	}
+
+	private void TryAddRelClass(RelationshipClassDefinition definition,
+	                            List<IRelationshipClass> toList)
+	{
+		IDataset result = null;
+
+		try
+		{
+			result = Open(definition);
+		}
+		catch (Exception e)
+		{
+			_msg.Warn($"Cannot open relationship class {definition.GetName()}. " +
+			          $"It will be ignored ({e.Message})", e);
+
+			// TODO: Could this also happen due to missing privileges? In which case assuming
+			// it does not exist is correct. Or: Add a placeholder relationship class that throws on use?
+		}
+
+		if (result is IRelationshipClass relationshipClass)
+		{
+			toList.Add(relationshipClass);
 		}
 	}
 
