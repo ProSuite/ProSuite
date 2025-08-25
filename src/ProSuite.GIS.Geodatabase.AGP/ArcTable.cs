@@ -7,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
@@ -265,42 +266,57 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				yield break;
 			}
 
-			ArcWorkspace arcWorkspace = (ArcWorkspace) Workspace;
-
-			foreach (RelationshipClassDefinition relationshipClassDefinition in
-			         arcWorkspace.GetRelationshipClassDefinitions())
+			foreach (IDataset dataset in Workspace.get_Datasets(
+				         esriDatasetType.esriDTRelationshipClass))
 			{
-				if (HasRole(role, relationshipClassDefinition))
+				if (! (dataset is IRelationshipClass relClass))
 				{
-					yield return arcWorkspace.OpenRelationshipClass(
-						relationshipClassDefinition.GetName());
+					throw new AssertionException("Unexpected dataset type.");
 				}
-			}
-		}
 
-		private bool HasRole(esriRelRole role,
-		                     [NotNull] RelationshipClassDefinition inRelationshipClass)
-		{
-			if (role == esriRelRole.esriRelRoleAny &&
-			    (inRelationshipClass.GetOriginClass().Equals(Name) ||
-			     inRelationshipClass.GetDestinationClass().Equals(Name)))
-			{
-				return true;
-			}
+				if (role == esriRelRole.esriRelRoleAny &&
+				    (relClass.OriginClass.Equals(this) ||
+				     relClass.DestinationClass.Equals(this)))
+				{
+					yield return PrepareCached(relClass);
+				}
 
-			if (role == esriRelRole.esriRelRoleOrigin &&
-			    inRelationshipClass.GetOriginClass().Equals(Name))
-			{
-				return true;
-			}
+				if (role == esriRelRole.esriRelRoleOrigin &&
+				    relClass.OriginClass.Equals(this))
+				{
+					yield return PrepareCached(relClass);
+				}
 
-			if (role == esriRelRole.esriRelRoleDestination &&
-			    inRelationshipClass.GetDestinationClass().Equals(Name))
-			{
-				return true;
-			}
+				if (role == esriRelRole.esriRelRoleDestination &&
+				    relClass.DestinationClass.Equals(this))
+				{
+					yield return PrepareCached(relClass);
+				}
 
-			return false;
+				//RelationshipClass proRelClass = (RelationshipClass) relClass.NativeImplementation;
+				//var relClassDef = proRelClass.GetDefinition();
+
+				//string relClassName = relClass.Name;
+
+				//if (role == esriRelRole.esriRelRoleAny &&
+				//    (relClassDef.GetOriginClass() == thisTableName ||
+				//     relClassDef.GetDestinationClass() == thisTableName))
+				//{
+				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
+				//}
+
+				//if (role == esriRelRole.esriRelRoleOrigin &&
+				//    relClassDef.GetOriginClass() == thisTableName)
+				//{
+				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
+				//}
+
+				//if (role == esriRelRole.esriRelRoleDestination &&
+				//    relClassDef.GetDestinationClass() == thisTableName)
+				//{
+				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
+				//}
+			}
 		}
 
 		public Row CreateProRow(int? subtypeCode)
@@ -366,10 +382,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private IRelationshipClass CreateArcRelationshipClass(
 			ArcGIS.Core.Data.Geodatabase geodatabase, string relClassName)
 		{
-			RelationshipClass proRelClass =
-				DatasetUtils.OpenDataset<RelationshipClass>(geodatabase, relClassName);
+			RelationshipClass relClass =
+				geodatabase.OpenDataset<RelationshipClass>(relClassName);
 
-			return ArcRelationshipClass.Create(proRelClass, _cachePropertiesEagerly);
+			return ArcRelationshipClass.Create(relClass, _cachePropertiesEagerly);
 		}
 
 		#endregion
@@ -556,8 +572,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				if (_subtypes != null)
 				{
-					return _subtypes.Select(kvp => new KeyValuePair<int, string>(
-						                        kvp.Key, kvp.Value.Name));
+					return _subtypes.Select(
+						kvp => new KeyValuePair<int, string>(kvp.Key, kvp.Value.Name));
 				}
 
 				return ProTableDefinition.GetSubtypes()
@@ -697,9 +713,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field =
 				ProTableDefinition.GetFields()
-				                  .FirstOrDefault(f => f.Name.Equals(
-					                                  fieldName,
-					                                  StringComparison.CurrentCultureIgnoreCase));
+				                  .FirstOrDefault(
+					                  f => f.Name.Equals(
+						                  fieldName,
+						                  StringComparison.CurrentCultureIgnoreCase));
 
 			if (field == null)
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");

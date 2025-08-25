@@ -21,7 +21,7 @@ public class ArcWorkspace : IFeatureWorkspace
 
 	private readonly ConcurrentDictionary<string, ArcTable> _tablesByName = new();
 
-	private List<RelationshipClassDefinition> _allRelationshipClassDefinitions;
+	private List<IRelationshipClass> _allRelationshipClasses;
 
 	// Property caching for non CIM-thread access:
 	private string _pathName;
@@ -189,41 +189,38 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 	}
 
-	public IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions()
+	private IEnumerable<IRelationshipClass> GetAllRelationshipClasses()
 	{
-		if (_allRelationshipClassDefinitions == null)
+		if (_allRelationshipClasses == null)
 		{
-			_allRelationshipClassDefinitions = new List<RelationshipClassDefinition>();
+			_allRelationshipClasses = new List<IRelationshipClass>();
 
 			foreach (RelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<RelationshipClassDefinition>())
 			{
-				_allRelationshipClassDefinitions.Add(definition);
+				IDataset result = Open(definition);
+
+				if (result is IRelationshipClass relationshipClass)
+				{
+					_allRelationshipClasses.Add(relationshipClass);
+				}
 			}
 
 			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<AttributedRelationshipClassDefinition>())
 			{
-				_allRelationshipClassDefinitions.Add(definition);
+				IDataset result = Open(definition);
+
+				if (result is IRelationshipClass relationshipClass)
+				{
+					_allRelationshipClasses.Add(relationshipClass);
+				}
 			}
 		}
 
-		foreach (RelationshipClassDefinition definition in _allRelationshipClassDefinitions)
+		foreach (IRelationshipClass relationshipClass in _allRelationshipClasses)
 		{
-			yield return definition;
-		}
-	}
-
-	private IEnumerable<IRelationshipClass> GetAllRelationshipClasses()
-	{
-		foreach (var relClassDefinition in GetRelationshipClassDefinitions())
-		{
-			IDataset result = Open(relClassDefinition);
-
-			if (result is IRelationshipClass relationshipClass)
-			{
-				yield return relationshipClass;
-			}
+			yield return relationshipClass;
 		}
 	}
 
