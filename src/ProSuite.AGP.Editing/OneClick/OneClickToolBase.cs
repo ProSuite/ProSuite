@@ -40,6 +40,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private Geometry _lastSketch;
 		private DateTime _lastSketchFinishedTime;
 
+		// Implicitly not null because it is set in OnToolActivateCoreAsync
 		private SelectionCursors _selectionCursors;
 
 		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
@@ -95,21 +96,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// The default is the cross with the selection icon.
 		/// </summary>
 		/// <returns></returns>
+		[NotNull]
 		protected SelectionCursors SelectionCursors
 		{
-			get
-			{
-				if (_selectionCursors == null)
-				{
-					_selectionCursors ??=
-						SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
-					_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
-				}
-
-				return _selectionCursors;
-			}
+			get => Assert.NotNull(_selectionCursors);
 			set
 			{
+				Assert.ArgumentNotNull(value);
+
 				_selectionCursors = value;
 				_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
 			}
@@ -129,6 +123,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			using var source = GetProgressorSource();
 			var progressor = source?.Progressor;
+
+			// Note: We set _selectionCursors here, exactly once on the UI thread. And not in the getter of SelectionCursors.
+			_selectionCursors ??= SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
+			_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
 
 			await QueuedTaskUtils.Run(async () =>
 			{
@@ -385,11 +383,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		                           bool completeSketchOnMouseUp = true,
 		                           bool enforceSimpleSketch = false)
 		{
-			_msg.VerboseDebug(
-				() =>
-					$"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
-					$"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
-					$"enforceSimplifySketch: {enforceSimpleSketch}");
+			_msg.VerboseDebug(() =>
+				                  $"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
+				                  $"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
+				                  $"enforceSimplifySketch: {enforceSimpleSketch}");
 
 			// screen coords are currently not supported and only relevant
 			// when selecting with the View being in 3D viewing mode
@@ -663,10 +660,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! LayerUtils.IsVisible(layer, ActiveMapView))
 			{
-				NotificationUtils.Add(notifications, $"Layer is not visible in active map: {layerName}");
+				NotificationUtils.Add(notifications,
+				                      $"Layer is not visible in active map: {layerName}");
 				return false;
 			}
-			
+
 			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");
