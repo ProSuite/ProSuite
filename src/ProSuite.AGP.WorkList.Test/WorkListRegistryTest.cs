@@ -32,7 +32,7 @@ public class WorkListRegistryTest
 
 		Assert.Null(factory.CreateWorkEnvironment(path, typeName));
 
-		factory.AddStore(new WorkListItemDatastoreMock());
+		factory.AddStore<IssueWorkList>(new WorkListItemDatastoreMock());
 
 		Assert.NotNull(factory.CreateWorkEnvironment(path, typeName));
 	}
