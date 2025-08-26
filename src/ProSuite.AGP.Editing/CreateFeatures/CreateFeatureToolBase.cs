@@ -29,7 +29,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		protected CreateFeatureToolBase()
 		{
 			FireSketchEvents = true;
-			
+
 			RequiresSelection = false;
 
 			// This does not work unless loadOnClick="false" in the daml.xml:
@@ -68,10 +68,10 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return new SymbolizedSketchTypeWithoutSymbol(this, GetSketchGeometryType);
+			return new SymbolizedSketchTypeWithoutSymbol(this, GetEditSketchGeometryType);
 		}
 
-		private SketchGeometryType GetSketchGeometryType()
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			esriGeometryType? targetShapeType = GetTargetLayerShapeType();
 

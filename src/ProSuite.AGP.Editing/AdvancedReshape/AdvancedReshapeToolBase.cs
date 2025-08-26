@@ -96,7 +96,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 		{
-			return new SymbolizedSketchTypeBasedOnSelection(this, () => SketchGeometryType.Line);
+			return new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
 		}
 
 		protected override void OnUpdateCore()
@@ -236,6 +236,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			base.OnToolDeactivateCore(hasMapViewChanged);
 
 			HideOptionsPane();
+		}
+
+		protected override SketchGeometryType GetEditSketchGeometryType()
+		{
+			return SketchGeometryType.Line;
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()

@@ -26,6 +26,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private GeometryType _currentFeatureGeometryType;
+
 	protected CreateFeatureInPickedClassToolBase()
 	{
 		FireSketchEvents = true;
@@ -42,13 +44,18 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this);
+		return new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
 	{
 		reason = "Cannot create feature. Please select only one template feature.";
 		return false;
+	}
+
+	protected override SketchGeometryType GetEditSketchGeometryType()
+	{
+		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
 	}
 
 	protected override SketchGeometryType GetSelectionSketchGeometryType()
@@ -91,6 +98,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 			_msg.Debug("no selection");
 			return;
 		}
+
+		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
 
 		_msg.Info(
 			$"Currently selected template feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");

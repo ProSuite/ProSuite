@@ -128,22 +128,20 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task OnSelectionPhaseStartedAsync()
 		{
+			await base.OnSelectionPhaseStartedAsync();
+
 			await QueuedTask.Run(() =>
 			{
 				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
 				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+
+				_symbolizedSketch?.ClearSketchSymbol();
 			});
 
 			SelectionCursors = FirstPhaseCursors;
 			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 
 			IsInSketchPhase = false;
-
-			await QueuedTask.Run(async () =>
-			{
-				await base.OnSelectionPhaseStartedAsync();
-				_symbolizedSketch?.ClearSketchSymbol();
-			});
 		}
 
 		protected override async Task OnToolActivatingCoreAsync()
@@ -152,9 +150,18 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
 
-			_symbolizedSketch = GetSymbolizedSketch();
-			Assert.NotNull(_symbolizedSketch);
-			await _symbolizedSketch.SetSketchAppearanceAsync();
+			_symbolizedSketch = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology
+				                    ? GetSymbolizedSketch()
+				                    : null;
+
+			if (_symbolizedSketch != null)
+			{
+				await _symbolizedSketch.SetSketchAppearanceAsync();
+			}
+			else
+			{
+				SketchSymbol = null;
+			}
 
 			if (! RequiresSelection)
 			{
@@ -176,6 +183,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			IsInSketchPhase = false;
 
 			_symbolizedSketch?.Dispose();
+			_symbolizedSketch = null;
 		}
 
 		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -420,7 +428,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
-		protected abstract ISymbolizedSketchType GetSymbolizedSketch();
+		protected virtual ISymbolizedSketchType GetSymbolizedSketch()
+		{
+			return null;
+		}
+
+		protected abstract SketchGeometryType GetEditSketchGeometryType();
 
 		/// <summary>
 		/// The template that can optionally be used to set up the sketch properties, such as
@@ -473,18 +486,31 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
 
-			Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection = null;
-			await QueuedTask.Run(() =>
+			// NOTE: Only execute this logic inside QueuedTask.Run if it is really needed,
+			// especially if inside the QueuedTask.Run some UI thread is used which can lead to
+			// application hangs.
+			if (_symbolizedSketch != null)
 			{
-				Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-					SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+				// TODO: Is this really needed here? Or does it just set the sketch type, in which case
+				//       we should just call SetSketchType(GetEditSketchGeometryType()); in order
+				//       to de-couple sketch type and symbolization concerns
+				Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection = null;
+				await QueuedTask.Run(() =>
+				{
+					Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+						SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
 
-				applicableSelection =
-					SelectionUtils.GetApplicableSelectedFeatures(
-						selectionByLayer, CanSelectFromLayer);
-			});
+					applicableSelection =
+						SelectionUtils.GetApplicableSelectedFeatures(
+							selectionByLayer, CanSelectFromLayer);
+				});
 
-			_symbolizedSketch?.SetSketchType(applicableSelection.Keys.FirstOrDefault());
+				_symbolizedSketch.SetSketchType(applicableSelection.Keys.FirstOrDefault());
+			}
+			else
+			{
+				SetSketchType(GetEditSketchGeometryType());
+			}
 
 			SelectionCursors = SketchCursors;
 			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));

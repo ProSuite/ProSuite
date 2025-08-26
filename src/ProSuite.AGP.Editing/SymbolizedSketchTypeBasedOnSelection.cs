@@ -187,7 +187,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		{
 			GeometryType geometryType =
 				GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-			_tool.SetSketchType(GetSketchGeometryType(geometryType));
+			_tool.SetSketchType(ToolUtils.GetSketchGeometryType(geometryType));
 		}
 	}
 
@@ -304,28 +304,6 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		return GdbQueryUtils.GetFeature(featureClass, oid);
 	}
 
-	private static SketchGeometryType GetSketchGeometryType(GeometryType geometryType)
-	{
-		switch (geometryType)
-		{
-			case GeometryType.Point:
-			case GeometryType.Multipoint:
-				return SketchGeometryType.Point;
-			case GeometryType.Polyline:
-				return SketchGeometryType.Line;
-			case GeometryType.Polygon:
-				return SketchGeometryType.Polygon;
-			case GeometryType.Multipatch:
-				return SketchGeometryType.Multipatch;
-			case GeometryType.Unknown:
-			case GeometryType.Envelope:
-			case GeometryType.GeometryBag:
-				throw new ArgumentOutOfRangeException(nameof(geometryType),
-				                                      $@"Cannot apply sketch geometry type for {nameof(geometryType)}");
-			default:
-				throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
-		}
-	}
 
 	#region Nestsed type: NamedValues
 

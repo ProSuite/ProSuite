@@ -19,7 +19,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
@@ -34,12 +33,14 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
+	private GeometryType _currentFeatureGeometryType;
+
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this);
+		return new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
@@ -51,6 +52,11 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	protected override SketchGeometryType GetSelectionSketchGeometryType()
 	{
 		return SketchGeometryType.Rectangle;
+	}
+
+	protected override SketchGeometryType GetEditSketchGeometryType()
+	{
+		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
 	}
 
 	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
@@ -105,6 +111,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			_feedback.ClearSelection();
 			return;
 		}
+
+		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
 
 		_feedback?.UpdateSelection(selectedFeatures);
 

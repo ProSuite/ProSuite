@@ -37,7 +37,12 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return new SymbolizedSketchTypeWithoutSymbol(this, SketchGeometryType.Polygon);
+			return new SymbolizedSketchTypeWithoutSymbol(this, GetEditSketchGeometryType);
+		}
+
+		protected override SketchGeometryType GetEditSketchGeometryType()
+		{
+			return SketchGeometryType.Polygon;
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
