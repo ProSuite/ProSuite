@@ -7,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
@@ -265,42 +266,33 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				yield break;
 			}
 
-			ArcWorkspace arcWorkspace = (ArcWorkspace) Workspace;
-
-			foreach (RelationshipClassDefinition relationshipClassDefinition in
-			         arcWorkspace.GetRelationshipClassDefinitions())
+			foreach (IDataset dataset in Workspace.get_Datasets(
+				         esriDatasetType.esriDTRelationshipClass))
 			{
-				if (HasRole(role, relationshipClassDefinition))
+				if (! (dataset is IRelationshipClass relClass))
 				{
-					yield return arcWorkspace.OpenRelationshipClass(
-						relationshipClassDefinition.GetName());
+					throw new AssertionException("Unexpected dataset type.");
+				}
+
+				if (role == esriRelRole.esriRelRoleAny &&
+				    (relClass.OriginClass.Equals(this) ||
+				     relClass.DestinationClass.Equals(this)))
+				{
+					yield return PrepareCached(relClass);
+				}
+
+				if (role == esriRelRole.esriRelRoleOrigin &&
+				    relClass.OriginClass.Equals(this))
+				{
+					yield return PrepareCached(relClass);
+				}
+
+				if (role == esriRelRole.esriRelRoleDestination &&
+				    relClass.DestinationClass.Equals(this))
+				{
+					yield return PrepareCached(relClass);
 				}
 			}
-		}
-
-		private bool HasRole(esriRelRole role,
-		                     [NotNull] RelationshipClassDefinition inRelationshipClass)
-		{
-			if (role == esriRelRole.esriRelRoleAny &&
-			    (inRelationshipClass.GetOriginClass().Equals(Name) ||
-			     inRelationshipClass.GetDestinationClass().Equals(Name)))
-			{
-				return true;
-			}
-
-			if (role == esriRelRole.esriRelRoleOrigin &&
-			    inRelationshipClass.GetOriginClass().Equals(Name))
-			{
-				return true;
-			}
-
-			if (role == esriRelRole.esriRelRoleDestination &&
-			    inRelationshipClass.GetDestinationClass().Equals(Name))
-			{
-				return true;
-			}
-
-			return false;
 		}
 
 		public Row CreateProRow(int? subtypeCode)
@@ -366,10 +358,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private IRelationshipClass CreateArcRelationshipClass(
 			ArcGIS.Core.Data.Geodatabase geodatabase, string relClassName)
 		{
-			RelationshipClass proRelClass =
-				DatasetUtils.OpenDataset<RelationshipClass>(geodatabase, relClassName);
+			RelationshipClass relClass =
+				geodatabase.OpenDataset<RelationshipClass>(relClassName);
 
-			return ArcRelationshipClass.Create(proRelClass, _cachePropertiesEagerly);
+			return ArcRelationshipClass.Create(relClass, _cachePropertiesEagerly);
 		}
 
 		#endregion

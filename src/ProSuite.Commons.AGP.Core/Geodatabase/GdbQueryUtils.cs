@@ -26,6 +26,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return new QueryFilter { ObjectIDs = oids };
 		}
 
+		public static QueryFilter CreateFilter([CanBeNull] string whereClause = "",
+		                                       [CanBeNull] string subFields = null)
+		{
+			return new QueryFilter
+			       {
+				       WhereClause = whereClause,
+				       SubFields = subFields
+			       };
+		}
+
 		[NotNull]
 		public static SpatialQueryFilter CreateSpatialFilter(
 			[NotNull] Geometry filterGeometry,

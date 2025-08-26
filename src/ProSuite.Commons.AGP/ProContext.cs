@@ -6,11 +6,14 @@ using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP
 {
 	public static class ProContext
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Whether the current process is running in headless mode, i.e. outside the ArcGIS Pro application.
 		/// </summary>
@@ -31,6 +34,9 @@ namespace ProSuite.Commons.AGP
 				return ! canLoad;
 			}
 		}
+
+		public static bool IsWorkerBusy =>
+			IsRunningHeadless ? BackgroundTask.Busy : QueuedTaskUtils.IsBusy;
 
 		/// <summary>
 		/// Execute the given action either as a QueuedTask (if running in ArcGIS Pro)
@@ -75,6 +81,9 @@ namespace ProSuite.Commons.AGP
 
 				return BackgroundTask.Run(function, BackgroundProgressor.None);
 			}
+
+			_msg.VerboseDebug(
+				() => $"Calling QueuedTask.Run from {Thread.CurrentThread.GetApartmentState()}...");
 
 			return QueuedTaskUtils.Run(function, null, options);
 		}

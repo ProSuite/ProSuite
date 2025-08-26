@@ -476,7 +476,11 @@ namespace ProSuite.Microservices.AO
 						attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
 						break;
 					case esriFieldType.esriFieldTypeOID:
-						attributeValue.ShortIntValue = (int) valueObject;
+#if Server
+						attributeValue.BigIntValue = Convert.ToInt64(valueObject);
+#else
+						attributeValue.IntValue = Convert.ToInt32(valueObject);
+#endif
 						break;
 					case esriFieldType.esriFieldTypeGeometry:
 						// Leave empty, it is sent through Shape property

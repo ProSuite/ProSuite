@@ -1233,9 +1233,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private static void GetWhereClauseLimits([NotNull] IWorkspace workspace,
-		                                         out int maximumWhereClauseLength,
-		                                         out int maximumInValueCount)
+		public static void GetWhereClauseLimits([NotNull] IWorkspace workspace,
+		                                        out int maximumWhereClauseLength,
+		                                        out int maximumInValueCount)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
@@ -1272,7 +1272,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 					return;
 
 				case esriWorkspaceType.esriRemoteDatabaseWorkspace:
-					var connectionInfo = (IDatabaseConnectionInfo2) workspace;
+					var connectionInfo = workspace as IDatabaseConnectionInfo2;
+
+					if (connectionInfo == null)
+					{
+						// Use somewhat safe defaults
+						maximumWhereClauseLength = 60000; // actual limit is higher
+						maximumInValueCount = 1000; // limit may be higher
+						return;
+					}
+
 					switch (connectionInfo.ConnectionDBMS)
 					{
 						case esriConnectionDBMS.esriDBMS_Oracle:
@@ -1289,6 +1298,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 							// apparently unlimited
 							maximumWhereClauseLength = 200000;
 							maximumInValueCount = 10000;
+							return;
+						case esriConnectionDBMS.esriDBMS_SQLite:
+							maximumWhereClauseLength = 100000000; // one billion bytes
+							maximumInValueCount = 10000; // no explicit limit
 							return;
 
 						case esriConnectionDBMS.esriDBMS_Unknown:

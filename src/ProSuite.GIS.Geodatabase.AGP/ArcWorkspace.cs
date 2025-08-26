@@ -17,11 +17,12 @@ public class ArcWorkspace : IFeatureWorkspace
 {
 	private static readonly Dictionary<long, ArcWorkspace> _workspacesByHandle = new();
 
-	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName = new();
+	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName =
+		new();
 
 	private readonly ConcurrentDictionary<string, ArcTable> _tablesByName = new();
 
-	private List<RelationshipClassDefinition> _allRelationshipClassDefinitions;
+	private List<IRelationshipClass> _allRelationshipClasses;
 
 	// Property caching for non CIM-thread access:
 	private string _pathName;
@@ -189,41 +190,52 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 	}
 
-	public IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions()
+	private IEnumerable<IRelationshipClass> GetAllRelationshipClasses()
 	{
-		if (_allRelationshipClassDefinitions == null)
+		if (_allRelationshipClasses == null)
 		{
-			_allRelationshipClassDefinitions = new List<RelationshipClassDefinition>();
+			_allRelationshipClasses = new List<IRelationshipClass>();
 
 			foreach (RelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<RelationshipClassDefinition>())
 			{
-				_allRelationshipClassDefinitions.Add(definition);
+				TryAddRelClass(definition, _allRelationshipClasses);
 			}
 
 			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<AttributedRelationshipClassDefinition>())
 			{
-				_allRelationshipClassDefinitions.Add(definition);
+				TryAddRelClass(definition, _allRelationshipClasses);
 			}
 		}
 
-		foreach (RelationshipClassDefinition definition in _allRelationshipClassDefinitions)
+		foreach (IRelationshipClass relationshipClass in _allRelationshipClasses)
 		{
-			yield return definition;
+			yield return relationshipClass;
 		}
 	}
 
-	private IEnumerable<IRelationshipClass> GetAllRelationshipClasses()
+	private void TryAddRelClass(RelationshipClassDefinition definition,
+	                            List<IRelationshipClass> toList)
 	{
-		foreach (var relClassDefinition in GetRelationshipClassDefinitions())
-		{
-			IDataset result = Open(relClassDefinition);
+		IDataset result = null;
 
-			if (result is IRelationshipClass relationshipClass)
-			{
-				yield return relationshipClass;
-			}
+		try
+		{
+			result = Open(definition);
+		}
+		catch (Exception e)
+		{
+			_msg.Warn($"Cannot open relationship class {definition.GetName()}. " +
+			          $"It will be ignored ({e.Message})", e);
+
+			// TODO: Could this also happen due to missing privileges? In which case assuming
+			// it does not exist is correct. Or: Add a placeholder relationship class that throws on use?
+		}
+
+		if (result is IRelationshipClass relationshipClass)
+		{
+			toList.Add(relationshipClass);
 		}
 	}
 
