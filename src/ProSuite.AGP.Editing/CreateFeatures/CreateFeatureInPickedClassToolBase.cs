@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -44,7 +45,9 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+		return MapUtils.IsStereoMapView(ActiveMapView)
+			       ? null
+			       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)

@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return new SymbolizedSketchTypeWithoutSymbol(this, GetEditSketchGeometryType);
+			return null;
 		}
 
 		protected override SketchGeometryType GetEditSketchGeometryType()

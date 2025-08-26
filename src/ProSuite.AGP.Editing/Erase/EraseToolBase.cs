@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
@@ -37,7 +38,9 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return new SymbolizedSketchTypeWithoutSymbol(this, GetEditSketchGeometryType);
+			return MapUtils.IsStereoMapView(ActiveMapView)
+				       ? null
+				       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
 		}
 
 		protected override SketchGeometryType GetEditSketchGeometryType()
