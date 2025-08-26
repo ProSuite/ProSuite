@@ -56,7 +56,7 @@ public interface IWorkItemRepository
 
 	bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema);
 
-	Row GetSourceRow([NotNull] ISourceClass sourceClass, long oid);
+	Row GetSourceRow([NotNull] ISourceClass sourceClass, long oid, bool recycle = true);
 
 	long GetNextOid();
 

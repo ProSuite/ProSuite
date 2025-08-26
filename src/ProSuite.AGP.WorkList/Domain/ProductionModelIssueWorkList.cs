@@ -57,7 +57,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			bool result = await QueuedTaskUtils.Run(
 				              async () =>
 				              {
-					              Row workItemRow = GetCurrentItemSourceRow();
+					              Row workItemRow = GetCurrentItemSourceRow(readOnly: false);
 
 					              if (workItemRow == null)
 					              {

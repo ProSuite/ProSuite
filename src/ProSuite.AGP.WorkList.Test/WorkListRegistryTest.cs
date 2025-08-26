@@ -32,7 +32,7 @@ public class WorkListRegistryTest
 
 		Assert.Null(factory.CreateWorkEnvironment(path, typeName));
 
-		factory.AddStore(new WorkListItemDatastoreMock());
+		factory.AddStore<IssueWorkList>(new WorkListItemDatastoreMock());
 
 		Assert.NotNull(factory.CreateWorkEnvironment(path, typeName));
 	}
@@ -357,7 +357,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public Row GetCurrentItemSourceRow()
+	public Row GetCurrentItemSourceRow(bool readOnly = true)
 	{
 		throw new NotImplementedException();
 	}

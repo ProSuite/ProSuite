@@ -60,7 +60,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyRestorePrevious);
 		}
 
-		protected abstract SelectionCursors FirstPhaseCursors { get; }
+		[NotNull] protected virtual SelectionCursors FirstPhaseCursors => SelectionCursors;
 
 		protected SelectionCursors SketchCursors { get; set; } =
 			SelectionCursors.CreateFromCursor(Resources.EditSketchCrosshair);
