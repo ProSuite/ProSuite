@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
@@ -1064,6 +1065,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ITableTransformer tableTransformer = InstanceFactory.CreateTransformer(
 					transformerConfiguration,
 					new SimpleDatasetOpener(datasetContext));
+
+				foreach (IWorkspace workspace in tableTransformer.InvolvedTables.Select(
+					         t => t.Workspace))
+				{
+					WorkspaceUtils.TryRefreshVersion(workspace);
+				}
 
 				// When querying the field name predictability is more important than not having dots in the names:
 				if (tableTransformer is ITableTransformerFieldSettings transformerFieldSettings)
