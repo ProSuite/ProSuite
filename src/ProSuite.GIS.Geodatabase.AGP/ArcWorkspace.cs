@@ -218,24 +218,28 @@ public class ArcWorkspace : IFeatureWorkspace
 	private void TryAddRelClass(RelationshipClassDefinition definition,
 	                            List<IRelationshipClass> toList)
 	{
-		IDataset result = null;
-
 		try
 		{
-			result = Open(definition);
+			IDataset result = Open(definition);
+
+			if (result is IRelationshipClass relationshipClass)
+			{
+				// Ensure that Origin/Destination can be opened as well, otherwise, skip
+
+				Assert.NotNull(relationshipClass.OriginClass);
+				Assert.NotNull(relationshipClass.DestinationClass);
+
+				toList.Add(relationshipClass);
+			}
 		}
 		catch (Exception e)
 		{
-			_msg.Warn($"Cannot open relationship class {definition.GetName()}. " +
-			          $"It will be ignored ({e.Message})", e);
+			_msg.Warn(
+				$"Cannot open relationship class {definition.GetName()} or one of its related tables. " +
+				$"It will be ignored ({e.Message})", e);
 
 			// TODO: Could this also happen due to missing privileges? In which case assuming
 			// it does not exist is correct. Or: Add a placeholder relationship class that throws on use?
-		}
-
-		if (result is IRelationshipClass relationshipClass)
-		{
-			toList.Add(relationshipClass);
 		}
 	}
 
