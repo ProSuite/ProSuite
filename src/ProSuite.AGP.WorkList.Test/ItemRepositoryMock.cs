@@ -116,7 +116,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 		throw new NotImplementedException();
 	}
 
-	public Row GetSourceRow(ISourceClass sourceClass, long oid)
+	public Row GetSourceRow(ISourceClass sourceClass, long oid, bool recycle = true)
 	{
 		throw new NotImplementedException();
 	}

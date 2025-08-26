@@ -79,7 +79,7 @@ public interface IWorkList : IRowCache
 
 	void Count();
 
-	Row GetCurrentItemSourceRow();
+	Row GetCurrentItemSourceRow(bool readOnly = true);
 
 	void LoadItems(QueryFilter filter);
 }

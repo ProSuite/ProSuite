@@ -274,7 +274,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private SpatialHashSearcher<IWorkItem> _searcher;
 
-		public Row GetCurrentItemSourceRow()
+		public Row GetCurrentItemSourceRow(bool readOnly = true)
 		{
 			if (Current == null)
 			{
@@ -291,7 +291,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			return Repository.GetSourceRow(sourceClass, Current.ObjectID);
+			return Repository.GetSourceRow(sourceClass, Current.ObjectID, readOnly);
 		}
 
 		public void UpdateExistingItemGeometries(QueryFilter filter)

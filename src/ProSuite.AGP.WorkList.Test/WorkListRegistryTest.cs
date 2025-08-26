@@ -357,7 +357,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public Row GetCurrentItemSourceRow()
+	public Row GetCurrentItemSourceRow(bool readOnly = true)
 	{
 		throw new NotImplementedException();
 	}
