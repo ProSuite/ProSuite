@@ -83,7 +83,8 @@ namespace ProSuite.Commons.AGP
 			}
 
 			_msg.VerboseDebug(
-				() => $"Calling QueuedTask.Run from {Thread.CurrentThread.GetApartmentState()}...");
+				() => $"Calling QueuedTask.Run from {Thread.CurrentThread.GetApartmentState()} " +
+				      $"thread {Thread.CurrentThread.ManagedThreadId}. Busy: {QueuedTaskUtils.IsBusy}..");
 
 			return QueuedTaskUtils.Run(function, null, options);
 		}
