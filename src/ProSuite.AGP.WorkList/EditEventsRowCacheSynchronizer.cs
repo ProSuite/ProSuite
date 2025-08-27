@@ -94,7 +94,7 @@ namespace ProSuite.AGP.WorkList
 				if (_rowCache.CanContain(table))
 				{
 					canContain = true;
-					_msg.IncrementIndentation($"{table.GetName()} is contained in row cache");
+					_msg.Debug($"{table.GetName()} is contained in row cache");
 				}
 				else
 				{
