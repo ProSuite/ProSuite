@@ -353,7 +353,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (DatasetMsg datasetMsg in response.Datasets)
 			{
-				_msg.DebugFormat("Adding dataset details to {0}", datasetMsg.Name);
+				_msg.DebugFormat("Adding dataset details to {0} / ID: {1}", datasetMsg.Name,
+				                 datasetMsg.DatasetId);
 
 				// TODO: Move this to the model factory
 				if (! datasetsById.TryGetValue(datasetMsg.DatasetId, out IDdxDataset dataset))
@@ -406,8 +407,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				VectorDataset vectorDataset = vectorDatasets.FirstOrDefault(
 					vd => vd.Id == networkDatasetMsg.DatasetId);
 
-				Assert.NotNull(
-					$"Vector dataset <id> {networkDatasetMsg.DatasetId} not found in provided datasets");
+				Assert.NotNull(vectorDataset,
+				               $"Linear Network {linearNetworkMsg.Name}: Vector dataset <id> " +
+				               $"{networkDatasetMsg.DatasetId} not in editable datasets");
 
 				var networkDataset = new LinearNetworkDataset(vectorDataset);
 				networkDataset.WhereClause = networkDatasetMsg.WhereClause;
