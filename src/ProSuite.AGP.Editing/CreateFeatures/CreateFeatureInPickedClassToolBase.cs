@@ -66,28 +66,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return SketchGeometryType.Rectangle;
 	}
 
-	protected override CancelableProgressorSource GetProgressorSource()
-	{
-		return null;
-	}
-
-	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
-	{
-		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.
-		// Set it on tool activate. In ctor is not enough.
-		CompleteSketchOnMouseUp = true;
-		GeomIsSimpleAsFeature = false;
-
-		return base.OnToolActivateCoreAsync(hasMapViewChanged);
-	}
-
-	protected override async Task OnSelectionPhaseStartedAsync()
-	{
-		await base.OnSelectionPhaseStartedAsync();
-
-		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
-	}
-
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{

@@ -220,12 +220,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			await QueuedTask.Run(async () =>
-			{
-				await base.OnSelectionPhaseStartedAsync();
-				_feedback?.Clear();
-				await ActiveMapView.ClearSketchAsync();
-			});
+			await base.OnSelectionPhaseStartedAsync();
+			_feedback?.Clear();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)

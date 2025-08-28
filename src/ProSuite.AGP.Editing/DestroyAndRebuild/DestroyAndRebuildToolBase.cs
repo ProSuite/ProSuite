@@ -64,11 +64,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
-		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.
-		// Set it on tool activate. In ctor is not enough.
-		CompleteSketchOnMouseUp = true;
-		GeomIsSimpleAsFeature = false;
-
 		_feedback = new DestroyAndRebuildFeedback();
 
 		return base.OnToolActivateCoreAsync(hasMapViewChanged);
@@ -80,13 +75,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		_feedback = null;
 
 		return base.OnToolDeactivateCoreAsync(hasMapViewChanged);
-	}
-
-	protected override async Task OnSelectionPhaseStartedAsync()
-	{
-		await base.OnSelectionPhaseStartedAsync();
-
-		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
 	}
 
 	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
