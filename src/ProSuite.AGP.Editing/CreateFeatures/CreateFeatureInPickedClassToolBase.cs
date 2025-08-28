@@ -69,23 +69,16 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
-		Assert.ArgumentCondition(selectedFeatures.Count == 1, "selection count has to be 1");
-
-		Feature feature = selectedFeatures.FirstOrDefault();
-
-		// todo daro: assert instead?
-		if (feature == null)
+		if (selectedFeatures.Count is 0 or > 1)
 		{
-			_msg.Debug("no selection");
+			_msg.DebugFormat("Invalid feature count for Create Same: {0}", selectedFeatures.Count);
+			_currentFeatureGeometryType = GeometryType.Unknown;
 			return;
 		}
 
+		Feature feature = selectedFeatures.Single();
+
 		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
-
-		_msg.Info(
-			$"Currently selected template feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");
-
-		await StartSketchAsync();
 
 		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}

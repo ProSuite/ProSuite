@@ -91,24 +91,20 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
-		Assert.ArgumentCondition(selectedFeatures.Count == 1, "selection count has to be 1");
-
-		Feature feature = selectedFeatures.FirstOrDefault();
-
-		// todo daro: assert instead?
-		if (feature == null)
+		if (selectedFeatures.Count is 0 or > 1)
 		{
-			_msg.Debug("no selection");
+			_msg.DebugFormat("Invalid feature count for D&R: {0}", selectedFeatures.Count);
 			_feedback.ClearSelection();
 			return;
 		}
+
+		Feature feature = selectedFeatures.Single();
 
 		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
 
 		_feedback?.UpdateSelection(selectedFeatures);
 
-		_msg.Info(
-			$"Destroy and rebuild feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");
+		_msg.Info($"Rebuild the geometry for {GdbObjectUtils.GetDisplayValue(feature)}");
 
 		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}
