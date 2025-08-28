@@ -428,7 +428,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (! Enabled)
 				{
-					// It is possible to be the active tool but not enabled£
+					// It is possible to be the active tool but not enabled
 					return;
 				}
 
@@ -713,21 +713,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
-			void LogInfo(NotificationCollection collection)
-			{
-				if (collection == null)
-				{
-					return;
-				}
-
-				if (collection.Any()) _msg.Debug("Cannot use selection:");
-
-				foreach (INotification notification in collection)
-				{
-					_msg.Info(notification.Message);
-				}
-			}
-
 			int count = SelectionUtils.GetFeatureCount(selectionByLayer);
 
 			if (count > 1 && ! AllowMultiSelection(out string reason))
@@ -737,7 +722,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				_msg.Debug(
 					$"Cannot use selection: multi selection not allowed, selection count is {count}");
 
-				LogInfo(notifications);
+				LogSelectionInfo(notifications);
 				return false;
 			}
 
@@ -833,6 +818,21 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var map = ActiveMapView?.Map;
 			map?.ClearSelection();
+		}
+
+		private static void LogSelectionInfo(NotificationCollection collection)
+		{
+			if (collection == null)
+			{
+				return;
+			}
+
+			if (collection.Any()) _msg.Debug("Cannot use selection:");
+
+			foreach (INotification notification in collection)
+			{
+				_msg.Info(notification.Message);
+			}
 		}
 
 		public void SetSketchType(SketchGeometryType? sketchType)
