@@ -381,6 +381,7 @@ namespace ProSuite.AGP.Editing.OneClick
 								else
 								{
 									ClearSelection();
+									await StartSelectionPhaseAsync();
 								}
 							}
 						}
