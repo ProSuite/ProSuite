@@ -40,7 +40,7 @@ namespace ProSuite.AGP.Editing.Erase
 		{
 			return MapUtils.IsStereoMapView(ActiveMapView)
 				       ? null
-				       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
 		}
 
 		public override Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)

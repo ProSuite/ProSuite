@@ -162,7 +162,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
 
 			// NOTE: If it is really necessary to support immediate switching without changing the
-			//       tool, we could request an OptionsChanged event;
+			//       tool, we should request an OptionsChanged event;
 			_symbolizedSketch = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology
 				                    ? GetSymbolizedSketch()
 				                    : null;
@@ -562,31 +562,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = true;
 			CompleteSketchOnMouseUp = false;
 
-			// NOTE: Only execute this logic inside QueuedTask.Run if it is really needed,
-			// because inside the QueuedTask.Run some UI thread is used which can lead to
-			// application hangs.
-			if (_symbolizedSketch != null)
-			{
-				// TODO: Is this really needed here? Or does it just set the sketch type, in which case
-				//       we should just call SetSketchType(GetEditSketchGeometryType()); in order
-				//       to de-couple sketch type and symbolization concerns
-				Dictionary<BasicFeatureLayer, List<Feature>> applicableSelection = null;
-				await QueuedTask.Run(() =>
-				{
-					Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-						SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
-
-					applicableSelection =
-						SelectionUtils.GetApplicableSelectedFeatures(
-							selectionByLayer, CanSelectFromLayer);
-				});
-
-				_symbolizedSketch.SetSketchType(applicableSelection.Keys.FirstOrDefault());
-			}
-			else
-			{
-				SetSketchType(GetEditSketchGeometryType());
-			}
+			SetSketchType(GetEditSketchGeometryType());
 
 			SelectionCursors = SketchCursors;
 			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));

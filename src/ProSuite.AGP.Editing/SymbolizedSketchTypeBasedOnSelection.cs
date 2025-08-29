@@ -14,6 +14,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -161,23 +162,11 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		await ApplySketchSymbolWorkAround();
 	}
 
-	public void SetSketchType(BasicFeatureLayer featureLayer)
+	public void SetSketchType()
 	{
-		if (featureLayer == null)
-		{
-			return;
-		}
+		Assert.NotNull(_sketchGeometryTypeFunc, "No _sketchGeometryTypeFunc");
 
-		if (_sketchGeometryTypeFunc != null)
-		{
-			_tool.SetSketchType(_sketchGeometryTypeFunc());
-		}
-		else
-		{
-			GeometryType geometryType =
-				GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-			_tool.SetSketchType(ToolUtils.GetSketchGeometryType(geometryType));
-		}
+		_tool.SetSketchType(_sketchGeometryTypeFunc());
 	}
 
 	private List<long> GetApplicableSelection(

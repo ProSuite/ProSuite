@@ -54,7 +54,7 @@ public class SymbolizedSketchTypeWithoutSymbol : ISymbolizedSketchType
 		return Task.CompletedTask;
 	}
 
-	public void SetSketchType(BasicFeatureLayer featureLayer)
+	public void SetSketchType()
 	{
 		var type = _sketchGeometryTypeFunc?.Invoke() ?? _sketchGeometryType;
 		_tool.SetSketchType(type);

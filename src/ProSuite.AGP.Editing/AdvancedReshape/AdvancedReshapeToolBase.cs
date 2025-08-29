@@ -98,7 +98,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			return MapUtils.IsStereoMapView(ActiveMapView)
 				       ? null
-				       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
 		}
 
 		protected override void OnUpdateCore()

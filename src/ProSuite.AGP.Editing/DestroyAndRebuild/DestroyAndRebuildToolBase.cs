@@ -43,7 +43,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	{
 		return MapUtils.IsStereoMapView(ActiveMapView)
 			       ? null
-			       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+			       : new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)

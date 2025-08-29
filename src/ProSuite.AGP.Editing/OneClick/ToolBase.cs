@@ -604,7 +604,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 			return false; // startContructionPhase = false
 		}
 
-		_symbolizedSketch?.SetSketchType(applicableSelection.Keys.First());
+		_symbolizedSketch?.SetSketchType();
 
 		return await ProcessSelectionCoreAsync(applicableSelection, progressor);
 	}
