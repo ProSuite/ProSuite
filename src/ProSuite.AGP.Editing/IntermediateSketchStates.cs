@@ -22,7 +22,7 @@ namespace ProSuite.AGP.Editing;
 /// After the sketch is restored, this history allows correct undo/redo stack for all the previous
 /// states of this edit sketch.
 /// </summary>
-public class SketchStateHistory
+public class IntermediateSketchStates
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -33,12 +33,12 @@ public class SketchStateHistory
 	[CanBeNull] private SubscriptionToken _onSketchModifiedToken;
 	[CanBeNull] private SubscriptionToken _onSketchCompletedToken;
 
-	public bool IsInIntermittentSelectionPhase { get; private set; }
-
 	private CIMLineSymbol _lineSymbol;
 	private CIMPolygonSymbol _polygonSymbol;
 	private CIMPointSymbol _regularUnselectedSymbol;
 	private CIMPointSymbol _currentUnselectedSymbol;
+
+	public bool IsInIntermittentSelectionPhase { get; private set; }
 
 	public CIMLineSymbol LineSymbol
 	{

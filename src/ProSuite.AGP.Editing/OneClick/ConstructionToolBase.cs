@@ -31,9 +31,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private Geometry _previousSketch;
 
-		// TODO: Absorb this flag into the SketchStateHistory for better encapsulation
-		private bool _isIntermittentSelectionPhaseActive;
-		[CanBeNull] private SketchStateHistory _sketchStateHistory;
+		[CanBeNull] private IntermediateSketchStates _intermediateSketchStates;
 
 		[CanBeNull] private ISymbolizedSketchType _symbolizedSketch;
 
@@ -72,13 +70,13 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// intermediate selection (using shift key). <see cref="IsInSketchPhase"/> however
 		/// will remain true in an intermediate selection.
 		/// </summary>
-		protected bool IsInSketchMode => IsInSketchPhase && ! InInIntermittentSelectionMode;
+		protected bool IsInSketchMode => IsInSketchPhase && ! ShiftPressedToSelect;
 
 		/// <summary>
 		/// Whether the user is indicating an intermittent selection by pressing the shift key
 		/// (exclusively) during the sketch phase.
 		/// </summary>
-		private bool InInIntermittentSelectionMode
+		protected bool ShiftPressedToSelect
 		{
 			get
 			{
@@ -182,16 +180,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				_isIntermittentSelectionPhaseActive = false;
-
-				_sketchStateHistory = new SketchStateHistory();
-				await _sketchStateHistory.ActivateAsync();
+				_intermediateSketchStates = new IntermediateSketchStates();
+				await _intermediateSketchStates.ActivateAsync();
 			}
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
-			_sketchStateHistory?.Deactivate();
+			_intermediateSketchStates?.Deactivate();
 			RememberSketch();
 			IsInSketchPhase = false;
 
@@ -226,13 +222,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			// Release latch. The tool might not get the shift released when the shift key was
 			// released while picker window was visible.
-			if (_isIntermittentSelectionPhaseActive && ! KeyboardUtils.IsShiftDown())
+			if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true &&
+			    ! KeyboardUtils.IsShiftDown())
 			{
 				if (await CanStartSketchPhaseAsync(selectedFeatures))
 				{
 					await StartSketchPhaseAsync();
-					await Assert.NotNull(_sketchStateHistory).StopIntermittentSelectionAsync();
-					_isIntermittentSelectionPhaseActive = false;
+					await Assert.NotNull(_intermediateSketchStates)
+					            .StopIntermittentSelectionAsync();
 				}
 
 				return;
@@ -253,7 +250,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			// This is called repeatedly while keeping the shift key pressed.
 			// Return if intermittent selection phase is running.
-			if (_isIntermittentSelectionPhaseActive)
+			if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true)
 			{
 				return;
 			}
@@ -261,7 +258,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (! KeyboardUtils.IsShiftDown())
 			{
 				// The key is not held down, but was pressed and released quickly.
-				// In this situation the ShiftReleasedCoreAsync will typically not be called.
+				// In this situation the ShiftReleasedCoreAsync will typically not be called, so
+				// it is better not to start the intermittent selection phase in the first place.
 				return;
 			}
 
@@ -273,11 +271,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
-				_isIntermittentSelectionPhaseActive = true;
-
 				// must not be null because of entrance guard RequiresSelection
-				Assert.NotNull(_sketchStateHistory);
-				await _sketchStateHistory.StartIntermittentSelection();
+				Assert.NotNull(_intermediateSketchStates);
+				await _intermediateSketchStates.StartIntermittentSelection();
 
 				// During start selection phase the edit sketch is cleared:
 				SelectionCursors = FirstPhaseCursors;
@@ -285,8 +281,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				_sketchStateHistory?.ResetSketchStates();
-				_isIntermittentSelectionPhaseActive = false;
+				_intermediateSketchStates?.ResetSketchStates();
 
 				_msg.Warn(e.Message, e);
 			}
@@ -316,18 +311,16 @@ namespace ProSuite.AGP.Editing.OneClick
 				// The sketch phase must be restarted 
 				await StartSketchPhaseAsync();
 
-				if (_sketchStateHistory != null)
+				if (_intermediateSketchStates != null)
 				{
-					await _sketchStateHistory.StopIntermittentSelectionAsync();
+					await _intermediateSketchStates.StopIntermittentSelectionAsync();
 				}
 			}
 			else
 			{
 				// No sketch phase restart (e.g. because selection gone), reset the sketch states
-				_sketchStateHistory?.ResetSketchStates();
+				_intermediateSketchStates?.ResetSketchStates();
 			}
-
-			_isIntermittentSelectionPhaseActive = false;
 		}
 
 		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
@@ -361,7 +354,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			try
 			{
 				// In case we did not register the shift-up and the overlay is still lying around:
-				_sketchStateHistory?.ResetSketchStates();
+				_intermediateSketchStates?.ResetSketchStates();
 
 				await QueuedTask.Run(
 					async () =>
@@ -621,8 +614,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private async Task<bool> CanStartSketchPhaseAsync(IList<Feature> selectedFeatures)
 		{
-			if (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-			    KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true))
+			if (ShiftPressedToSelect)
 			{
 				return false;
 			}
