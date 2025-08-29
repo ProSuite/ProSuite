@@ -104,6 +104,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool LogSketchVertexZs { get; set; }
 
+		/// <summary>
+		/// Flag to indicate that currently the selection is changed by the <see
+		/// cref="OnSketchCompleteCoreAsync"/> method and selection events should be ignored.
+		/// </summary>
+		protected bool IsCompletingEditSketch { get; set; }
+
 		#region MapTool overrides
 
 		protected override async Task<bool> OnSketchModifiedAsync()
@@ -419,6 +425,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			if (IsCompletingEditSketch)
+			{
+				// The sketch phases should be managed by OnEditSketchCompleteCoreAsync()
+				return false;
+			}
+
 			// Short-cut to reduce unnecessary (and very frequent) selection evaluations
 			// despite the selection not having changed (and not even being present).
 			if (args.Selection.IsEmpty && IsInSketchPhase)
@@ -465,10 +477,19 @@ namespace ProSuite.AGP.Editing.OneClick
 				EditingTemplate currentTemplate = EditingTemplate.Current;
 				MapView activeView = ActiveMapView;
 
-				RememberSketch(sketchGeometry);
+				try
+				{
+					IsCompletingEditSketch = true;
 
-				return await OnEditSketchCompleteCoreAsync(
-					       sketchGeometry, currentTemplate, activeView, progressor);
+					RememberSketch(sketchGeometry);
+
+					return await OnEditSketchCompleteCoreAsync(
+						       sketchGeometry, currentTemplate, activeView, progressor);
+				}
+				finally
+				{
+					IsCompletingEditSketch = false;
+				}
 			}
 
 			return false;

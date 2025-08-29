@@ -87,7 +87,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		/// <summary>
-		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
+		/// Flag to indicate that currently the selection is changed by the <see
+		/// cref="OnSelectionSketchCompleteAsync"/> method and selection events should be ignored.
 		/// </summary>
 		protected bool IsCompletingSelectionSketch { get; set; }
 
