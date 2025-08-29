@@ -441,7 +441,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				}
 				else
 				{
-					await ActiveMapView.ClearSketchAsync();
 					await StartSketchPhaseAsync();
 				}
 			}

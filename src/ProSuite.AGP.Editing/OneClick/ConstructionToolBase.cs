@@ -347,7 +347,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (CanFinishSketch(currentSketch))
 				{
 					await OnSketchCompleteAsync(currentSketch);
-					await ActiveMapView.ClearSketchAsync();
+					await ClearSketchAsync();
 				}
 			}
 
@@ -392,7 +392,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						}
 						else
 						{
-							await ActiveMapView.ClearSketchAsync();
+							await ClearSketchAsync();
 							ClearSelection();
 						}
 					});
@@ -646,7 +646,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			RememberSketch();
 
-			await ActiveMapView.ClearSketchAsync();
+			await ClearSketchAsync();
 
 			await OnSketchModifiedAsyncCore();
 

@@ -311,10 +311,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug(() => nameof(SetupSelectionSketchAsync));
 
-			if (await HasSketchAsync())
-			{
-				await ActiveMapView.ClearSketchAsync();
-			}
+			await ClearSketchAsync();
 
 			SetupSketch();
 
