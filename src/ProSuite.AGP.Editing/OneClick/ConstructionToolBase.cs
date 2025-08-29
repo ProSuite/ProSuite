@@ -263,6 +263,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
+			if (! IsInSketchPhase)
+			{
+				// In the selection phase already, no intermittent selection needed.
+				return;
+			}
+
 			try
 			{
 				_isIntermittentSelectionPhaseActive = true;
