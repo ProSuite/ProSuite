@@ -81,6 +81,11 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ESRI.ArcGIS.ItemIndex">
+      <HintPath>$(ProAssemblyPath)\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
@@ -107,5 +112,10 @@
       <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Properties\Images\NavigateErrorsCmd16.png" />
+    <Resource Include="Properties\Images\NavigateErrorsCmd32.png" />
   </ItemGroup>
 </Project>
