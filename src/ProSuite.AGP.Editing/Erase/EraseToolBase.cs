@@ -109,6 +109,8 @@ namespace ProSuite.AGP.Editing.Erase
 
 			await Task.WhenAll(taskFlash, taskSave);
 
+			await StartSelectionPhaseAsync();
+
 			return taskSave.Result;
 		}
 

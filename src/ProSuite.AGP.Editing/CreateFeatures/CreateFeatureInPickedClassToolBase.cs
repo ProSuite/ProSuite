@@ -137,6 +137,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 			}
 		});
 
+		await StartSelectionPhaseAsync();
+
 		return false;
 	}
 
