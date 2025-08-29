@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.AGP.WorkList.Domain
+namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
 	public interface IWorkListDefinition<T> where T : IWorkItemState
 	{

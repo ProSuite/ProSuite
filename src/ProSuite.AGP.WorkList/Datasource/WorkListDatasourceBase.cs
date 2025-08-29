@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -39,53 +37,40 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 
 	public override void Open([NotNull] Uri connectionPath) // "open workspace"
 	{
-		try
+		if (connectionPath is null)
+			throw new ArgumentNullException(nameof(connectionPath));
+
+		_msg.Debug($"Try to open {connectionPath}");
+
+		_path = connectionPath.IsAbsoluteUri
+			        ? connectionPath.LocalPath
+			        : connectionPath.ToString();
+
+		if (! File.Exists(_path))
 		{
-			Assert.ArgumentNotNull(connectionPath, nameof(connectionPath));
-
-			_msg.Debug($"Try to open {connectionPath}");
-
-			// Empirical: when opening a project (.aprx) with a saved layer
-			// using our Plugin Datasource, the connectionPath will be
-			// prepended with the project file's directory path and
-			// two times URL encoded (e.g., ' ' => %20 => %2520)!
-
-			_path = connectionPath.IsAbsoluteUri
-				        ? connectionPath.LocalPath
-				        : connectionPath.ToString();
-
-			_path = HttpUtility.UrlDecode(_path);
-			_path = HttpUtility.UrlDecode(_path);
-
-			// TODO: (DARO) path might have been moved. How to set data source invalid?
-			if (! File.Exists(_path))
-			{
-				_msg.Debug($"{_path} does not exists");
-			}
-
-			string name = WorkListUtils.GetWorklistName(_path, out string typeName);
-
-			IWorkListRegistry registry = WorkListRegistry.Instance;
-			if (! registry.WorklistExists(name))
-			{
-				registry.TryAdd(new LayerBasedWorkListFactory(name, typeName, _path));
-			}
-
-			// the following situation: when work list layer is already in TOC
-			// and its data source (work list definition file) is renamed
-			// Pro still opens the old data source (old file name) which
-			// doesn't exist anymore
-			if (string.IsNullOrEmpty(name))
-			{
-				return;
-			}
-
-			_tableNames = new ReadOnlyCollection<string>(new List<string> { name });
+			throw new FileNotFoundException(
+				$"Work list definition file not found: {_path}");
 		}
-		catch (Exception ex)
+
+		string name = WorkListUtils.GetWorklistName(_path, out string typeName);
+
+		IWorkListRegistry registry = WorkListRegistry.Instance;
+
+		if (! registry.WorklistExists(name))
 		{
-			_msg.Debug("Error opening work list data source", ex);
+			registry.TryAdd(new LayerBasedWorkListFactory(name, typeName, _path));
 		}
+
+		// the following situation: when work list layer is already in TOC
+		// and its data source (work list definition file) is renamed
+		// Pro still opens the old data source (old file name) which
+		// doesn't exist anymore
+		if (string.IsNullOrEmpty(name))
+		{
+			return;
+		}
+
+		_tableNames = new ReadOnlyCollection<string>(new List<string> { name });
 	}
 
 	/// <summary>
@@ -101,7 +86,8 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 
 	public override PluginTableTemplate OpenTable([NotNull] string name)
 	{
-		Assert.ArgumentNotNull(name, nameof(name));
+		if (name is null)
+			throw new ArgumentNullException(nameof(name));
 
 		WorkItemTable result = null;
 		try

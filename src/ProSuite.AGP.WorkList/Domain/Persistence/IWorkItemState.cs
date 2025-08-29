@@ -1,6 +1,6 @@
 using ProSuite.AGP.WorkList.Contracts;
 
-namespace ProSuite.AGP.WorkList.Domain
+namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
 	public interface IWorkItemState
 	{
