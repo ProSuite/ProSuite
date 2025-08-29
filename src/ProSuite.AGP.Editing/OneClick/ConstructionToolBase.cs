@@ -396,17 +396,41 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			if (RequiresSelection && ! CanUseSelection(ActiveMapView))
+			if (! RequiresSelection)
 			{
-				//LogPromptForSelection();
+				// No selection required, ignore selection changes
+				return false;
+			}
+
+			// Short-cut to reduce unnecessary (and very frequent) selection evaluations
+			// despite the selection not having changed (and not even being present).
+			if (args.Selection.IsEmpty && IsInSketchPhase)
+			{
+				// Selection is required but removed: return to selection phase
 				await StartSelectionPhaseAsync();
+				return true;
+			}
+
+			Dictionary<BasicFeatureLayer, List<long>> dictionary =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+
+			// TODO: Try to make CanUseSelection run outside QueuedTask.Run (as far as possible)
+			bool canUseSelection = await QueuedTask.Run(() => CanUseSelection(dictionary));
+
+			if (! canUseSelection)
+			{
+				if (IsInSketchPhase)
+				{
+					await StartSelectionPhaseAsync();
+				}
 			}
 			else
 			{
-				await StartSketchPhaseAsync();
+				if (! IsInSketchPhase)
+				{
+					await StartSketchPhaseAsync();
+				}
 			}
-
-			// TODO: virtual RefreshFeedbackCoreAsync(), override in AdvancedReshape
 
 			return true;
 		}

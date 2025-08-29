@@ -435,7 +435,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					return;
 				}
 
-				await QueuedTask.Run(() => OnMapSelectionChangedCoreAsync(args));
+				await OnMapSelectionChangedCoreAsync(args);
 			}
 			catch (Exception e)
 			{
@@ -495,7 +495,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
 
-		/// <remarks>Will be called on MCT</remarks>
+		/// <summary>
+		/// Method called on the UI thread to react to changes to map selection that typically do
+		/// not originate from the tool itself. Examples: Clear Selection Button, attribute table
+		/// or clearing the selection of a single layer in the 'List by Selection' tab of the TOC.
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
+		/// <remarks>Will be called on the UI thread</remarks>
 		protected virtual Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
