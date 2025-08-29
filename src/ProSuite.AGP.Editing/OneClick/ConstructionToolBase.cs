@@ -239,7 +239,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected override async Task ShiftPressedCoreAsync()
+		protected override async Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 		{
 			if (! RequiresSelection)
 			{
@@ -250,6 +250,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			// Return if intermittent selection phase is running.
 			if (_isIntermittentSelectionPhaseActive)
 			{
+				return;
+			}
+
+			if (! KeyboardUtils.IsShiftDown())
+			{
+				// The key is not held down, but was pressed and released quickly.
+				// In this situation the ShiftReleasedCoreAsync will typically not be called.
 				return;
 			}
 

@@ -398,22 +398,26 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				return false;
 			}
 
-			if (! CanUseSelection(ActiveMapView))
-			{
-				_firstFeature = null;
-				await SetupSelectionSketchAsync();
-			}
-			else
-			{
-				Dictionary<MapMember, List<long>> selectionByLayer =
-					SelectionUtils.GetSelection(ActiveMapView.Map);
+			await QueuedTask.Run(
+				async () =>
+				{
+					if (! CanUseSelection(ActiveMapView))
+					{
+						_firstFeature = null;
+						await SetupSelectionSketchAsync();
+					}
+					else
+					{
+						Dictionary<MapMember, List<long>> selectionByLayer =
+							SelectionUtils.GetSelection(ActiveMapView.Map);
 
-				List<Feature> selection =
-					GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
-						.ToList();
+						List<Feature> selection =
+							GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+								.ToList();
 
-				_firstFeature = selection[0];
-			}
+						_firstFeature = selection[0];
+					}
+				});
 
 			return true;
 		}

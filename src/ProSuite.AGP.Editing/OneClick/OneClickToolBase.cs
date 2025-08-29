@@ -252,14 +252,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-		protected override async Task ShiftPressedAsync()
+		protected override async Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
 				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: true));
 			}
 
-			await ShiftPressedCoreAsync();
+			await ShiftPressedCoreAsync(keyArgs);
 		}
 
 		private async Task ShiftReleasedAsync()
@@ -276,8 +276,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// Allows implementors to start tasks when the shift key is pressed.
 		/// NOTE: ShiftPressedCoreAsync and ShiftReleasedAsync are not necessarily symmetrical!
 		/// </summary>
+		/// <param name="keyArgs"></param>
 		/// <returns></returns>
-		protected virtual Task ShiftPressedCoreAsync()
+		protected virtual Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 		{
 			return Task.CompletedTask;
 		}
@@ -308,6 +309,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected async Task SetupSelectionSketchAsync()
 		{
+			_msg.VerboseDebug(() => nameof(SetupSelectionSketchAsync));
+
 			if (await HasSketchAsync())
 			{
 				await ActiveMapView.ClearSketchAsync();
