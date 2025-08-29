@@ -132,12 +132,15 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			await base.OnSelectionPhaseStartedAsync();
 
-			await QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
 				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
 				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
 
-				_symbolizedSketch?.ClearSketchSymbol();
+				if (_symbolizedSketch != null)
+				{
+					await _symbolizedSketch.ClearSketchSymbol();
+				}
 			});
 
 			SelectionCursors = FirstPhaseCursors;
@@ -152,6 +155,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			_msg.VerboseDebug(() => "OnToolActivatingCoreAsync");
 
+			// NOTE: If it is really necessary to support immediate switching without changing the
+			//       tool, we could request an OptionsChanged event;
 			_symbolizedSketch = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology
 				                    ? GetSymbolizedSketch()
 				                    : null;
@@ -530,7 +535,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			CompleteSketchOnMouseUp = false;
 
 			// NOTE: Only execute this logic inside QueuedTask.Run if it is really needed,
-			// especially if inside the QueuedTask.Run some UI thread is used which can lead to
+			// because inside the QueuedTask.Run some UI thread is used which can lead to
 			// application hangs.
 			if (_symbolizedSketch != null)
 			{
@@ -796,7 +801,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-		public void SetSketchSymbol(CIMSymbolReference symbolReference)
+		void ISymbolizedSketchTool.SetSketchSymbol(CIMSymbolReference symbolReference)
 		{
 			SketchSymbol = symbolReference;
 		}

@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing;
 
+[Obsolete("Use a null symbolized sketch type")]
 public class SymbolizedSketchTypeWithoutSymbol : ISymbolizedSketchType
 {
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
@@ -38,9 +39,10 @@ public class SymbolizedSketchTypeWithoutSymbol : ISymbolizedSketchType
 		ClearSketchSymbol();
 	}
 
-	public void ClearSketchSymbol()
+	public Task ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
+		return Task.CompletedTask;
 	}
 
 	/// <summary>

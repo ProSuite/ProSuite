@@ -55,12 +55,16 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		SketchModifiedEvent.Unsubscribe(OnSketchModified);
 		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 
-		ClearSketchSymbol();
+		_ = ClearSketchSymbol();
 	}
 
-	public void ClearSketchSymbol()
+	public async Task ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
+
+		// This is needed to make the sketch symbol take effect.
+		// It likely triggers the relevant events internally...
+		await MapView.Active.ClearSketchAsync();
 	}
 
 	/// <summary>
@@ -68,7 +72,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	/// </summary>
 	public async Task SetSketchAppearanceAsync()
 	{
-		Gateway.LogEntry(_msg);
+		_msg.VerboseDebug(() => nameof(SetSketchAppearanceAsync));
 
 		try
 		{
@@ -88,17 +92,17 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	/// </summary>
 	private async void OnSketchModified(SketchModifiedEventArgs args)
 	{
-		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
-		    _showFeatureSketchSymbology)
-		{
-			return;
-		}
-
-		_showFeatureSketchSymbology =
-			ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
-
 		try
 		{
+			if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
+			    _showFeatureSketchSymbology)
+			{
+				return;
+			}
+
+			_showFeatureSketchSymbology =
+				ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
+
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
@@ -140,7 +144,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	{
 		if (featureLayer == null || oids == null)
 		{
-			ClearSketchSymbol();
+			await ClearSketchSymbol();
 			return;
 		}
 
@@ -150,26 +154,29 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		{
 			if (await _tool.CanSetConstructionSketchSymbol(geometryType))
 			{
-				//SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
-				SetSketchSymbol(GetSymbolReference(featureLayer, oids));
+				await SetSketchSymbol(GetSymbolReference(featureLayer, oids));
 			}
 			else
 			{
 				_msg.Debug($"Cannot set sketch symbol for geometry type {geometryType}");
-				ClearSketchSymbol();
+				await ClearSketchSymbol();
 			}
 		}
 		else
 		{
 			_msg.Debug(
 				"Cannot set sketch symbol. Show feature symbology in sketch is turned off.");
-			ClearSketchSymbol();
+			await ClearSketchSymbol();
 		}
 	}
 
-	private void SetSketchSymbol(CIMSymbolReference symbolReference)
+	private async Task SetSketchSymbol(CIMSymbolReference symbolReference)
 	{
 		_tool.SetSketchSymbol(symbolReference);
+
+		// This is needed to make the sketch symbol take effect.
+		// It likely triggers the relevant events internally...
+		await MapView.Active.ClearSketchAsync();
 	}
 
 	public void SetSketchType(BasicFeatureLayer featureLayer)
@@ -303,7 +310,6 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		if (featureClass is null) return null;
 		return GdbQueryUtils.GetFeature(featureClass, oid);
 	}
-
 
 	#region Nestsed type: NamedValues
 

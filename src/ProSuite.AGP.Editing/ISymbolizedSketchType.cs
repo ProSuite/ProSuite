@@ -6,7 +6,7 @@ namespace ProSuite.AGP.Editing;
 
 public interface ISymbolizedSketchType : IDisposable
 {
-	public void ClearSketchSymbol();
+	public Task ClearSketchSymbol();
 
 	/// <summary>
 	/// Must be called on the MCT.
