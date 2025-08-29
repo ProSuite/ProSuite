@@ -199,30 +199,21 @@ namespace ProSuite.AGP.Editing.OneClick
 			_symbolizedSketch = null;
 		}
 
-		protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 		{
 			if (! RequiresSelection)
 			{
-				return false;
+				return Task.FromResult(false);
 			}
 
 			if (shiftDown)
 			{
-				return true;
+				return Task.FromResult(true);
 			}
 
-			if (IsInSketchPhase)
-			{
-				return false;
-			}
+			bool result = ! IsInSketchPhase;
 
-			bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
-			return result;
-		}
-
-		private bool IsInSelectionPhaseQueued()
-		{
-			return ! IsInSketchPhase;
+			return Task.FromResult(result);
 		}
 
 		protected override void LogUsingCurrentSelection()
