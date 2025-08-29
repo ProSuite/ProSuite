@@ -12,7 +12,6 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -47,13 +46,11 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
 		SketchModifiedEvent.Subscribe(OnSketchModified);
-		MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
 	}
 
 	public void Dispose()
 	{
 		SketchModifiedEvent.Unsubscribe(OnSketchModified);
-		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 
 		_ = ClearSketchSymbol();
 	}
@@ -85,6 +82,18 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 	}
 
+	public async Task SelectionChangedAsync(MapSelectionChangedEventArgs args)
+	{
+		var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+
+		await QueuedTask.Run(async () =>
+		{
+			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
+
+			await TrySetSketchAppearanceAsync(featureLayer, oids);
+		});
+	}
+
 	/// <summary>
 	/// Is always on MCT.
 	/// </summary>
@@ -92,6 +101,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	{
 		try
 		{
+			// TODO: If this is a relevant use case, we should request an OptionChangedEvent
 			if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
 			    _showFeatureSketchSymbology)
 			{
@@ -106,30 +116,6 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 
 			// only set sketch symbol not sketch type!
 			await TrySetSketchAppearanceAsync(featureLayer, oids);
-		}
-		catch (Exception ex)
-		{
-			_msg.Error(ex.Message, ex);
-		}
-	}
-
-	/// <summary>
-	/// Is always on worker thread.
-	/// </summary>
-	private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
-	{
-		Gateway.LogEntry(_msg);
-
-		try
-		{
-			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
-
-			await QueuedTask.Run(async () =>
-			{
-				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
-
-				await TrySetSketchAppearanceAsync(featureLayer, oids);
-			});
 		}
 		catch (Exception ex)
 		{

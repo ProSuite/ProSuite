@@ -457,7 +457,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (! IsInSketchPhase)
 				{
+					// In selection phase and can use the selection -> start sketch phase
 					await StartSketchPhaseAsync();
+				}
+				else
+				{
+					// In sketch phase and can use the selection -> remain in sketch phase, adapt
+					// sketch symbol if needed:
+					_symbolizedSketch?.SelectionChangedAsync(args);
 				}
 			}
 

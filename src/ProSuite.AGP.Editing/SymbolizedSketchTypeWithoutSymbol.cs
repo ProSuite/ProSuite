@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing;
@@ -57,5 +58,10 @@ public class SymbolizedSketchTypeWithoutSymbol : ISymbolizedSketchType
 	{
 		var type = _sketchGeometryTypeFunc?.Invoke() ?? _sketchGeometryType;
 		_tool.SetSketchType(type);
+	}
+
+	public Task SelectionChangedAsync(MapSelectionChangedEventArgs args)
+	{
+		return Task.CompletedTask;
 	}
 }
