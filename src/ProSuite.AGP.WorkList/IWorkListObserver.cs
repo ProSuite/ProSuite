@@ -11,5 +11,7 @@ namespace ProSuite.AGP.WorkList
 
 		[CanBeNull]
 		ProWindow View { get; }
+
+		string WorkListName { get; }
 	}
 }
