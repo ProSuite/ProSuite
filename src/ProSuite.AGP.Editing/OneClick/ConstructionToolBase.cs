@@ -585,21 +585,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				try
 				{
-					// For some strange reason calling ActiveMapView.ClearSketchAsync()
-					// inside a QueuedTask makes the sketch symbol appear correctly. Calling
-					// ActiveMapView.ClearSketchAsync() outside QueuedTask leads to a
-					// not symbolised sketch. It's not documented that ActiveMapView.ClearSketchAsync()
-					// has to be put inside QueuedTask!!! May Teutates be with us!
 					await QueuedTask.Run(async () =>
 					{
 						await _symbolizedSketch.SetSketchAppearanceAsync();
-
-						if (await HasSketchAsync())
-						{
-							return;
-						}
-
-						await ActiveMapView.ClearSketchAsync();
 					});
 				}
 				catch (Exception ex)

@@ -62,9 +62,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	{
 		_tool.SetSketchSymbol(null);
 
-		// This is needed to make the sketch symbol take effect.
-		// It likely triggers the relevant events internally...
-		await MapView.Active.ClearSketchAsync();
+		await ApplySketchSymbolWorkAround();
 	}
 
 	/// <summary>
@@ -174,9 +172,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	{
 		_tool.SetSketchSymbol(symbolReference);
 
-		// This is needed to make the sketch symbol take effect.
-		// It likely triggers the relevant events internally...
-		await MapView.Active.ClearSketchAsync();
+		await ApplySketchSymbolWorkAround();
 	}
 
 	public void SetSketchType(BasicFeatureLayer featureLayer)
@@ -309,6 +305,23 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		using var featureClass = layer.GetFeatureClass();
 		if (featureClass is null) return null;
 		return GdbQueryUtils.GetFeature(featureClass, oid);
+	}
+
+	private static async Task ApplySketchSymbolWorkAround()
+	{
+		Geometry sketch = await MapView.Active.GetCurrentSketchAsync();
+
+		if (sketch?.IsEmpty == false)
+		{
+			// We could be in the middle of a sketch phase and de-select some irrelevant selection
+			// on an unrelated layer. Rather continue with the wrong sketch symbol than losing the
+			// entire sketch!
+			return;
+		}
+
+		// This is needed (apparently inside a QueuedTask) to make the sketch symbol take effect.
+		// It likely triggers the relevant events internally...
+		await MapView.Active.ClearSketchAsync();
 	}
 
 	#region Nestsed type: NamedValues
