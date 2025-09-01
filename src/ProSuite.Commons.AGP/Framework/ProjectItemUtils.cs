@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -10,6 +12,24 @@ namespace ProSuite.Commons.AGP.Framework
 {
 	public static class ProjectItemUtils
 	{
+		[CanBeNull]
+		public static string GetSelectedProjectItemPath()
+		{
+			var window = FrameworkApplication.ActiveWindow as IProjectWindow;
+
+			string path = window?.SelectedItems.FirstOrDefault()?.Path;
+
+			if (File.Exists(path))
+			{
+				return path;
+			}
+
+			string message = $"{path} does not exist.";
+			Gateway.ShowMessage(message, "File not found", MessageBoxButton.OK, MessageBoxImage.Error);
+
+			return null;
+		}
+
 		public static IEnumerable<T> Get<T>() where T : Item
 		{
 			return Project.Current.GetItems<T>();
