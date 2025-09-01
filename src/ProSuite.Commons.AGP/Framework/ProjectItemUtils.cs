@@ -64,7 +64,7 @@ namespace ProSuite.Commons.AGP.Framework
 				return false;
 			}
 
-			string itemName = Path.GetFileName(path);
+			string itemName = Path.GetFileNameWithoutExtension(path);
 
 			var result = Get<T>(itemName);
 
