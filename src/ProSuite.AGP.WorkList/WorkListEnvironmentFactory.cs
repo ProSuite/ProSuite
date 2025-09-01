@@ -54,8 +54,10 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 
 	public void AddStore<T>(IWorkListItemDatastore store) where T : IWorkList
 	{
-		Assert.False(_datastoresByWorkListType.ContainsKey(typeof(T)),
-		             $"Work list of type {typeof(T).Name} already has a work item datastore registered.");
+		if (_datastoresByWorkListType.ContainsKey(typeof(T)))
+		{
+			_datastoresByWorkListType.Remove(typeof(T));
+		}
 
 		_datastoresByWorkListType.Add(typeof(T), store);
 	}
