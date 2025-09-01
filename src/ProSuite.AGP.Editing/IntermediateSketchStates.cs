@@ -158,8 +158,11 @@ public class IntermediateSketchStates
 	{
 		try
 		{
-			Assert.True(IsInIntermittentSelectionPhase, "Not suspended");
-			Assert.True(_active, "Not recording");
+			if (! IsInIntermittentSelectionPhase)
+			{
+				// This happens for example when the map is changed while pressing shift
+				return;
+			}
 
 			IsInIntermittentSelectionPhase = false;
 
