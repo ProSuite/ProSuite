@@ -79,7 +79,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
 			{
-				_msg.Debug($"work list {Format(worklist)} is already a project item");
+				_msg.Debug($"work list {worklist} is already a project item");
 			}
 
 			return worklist;
@@ -142,7 +142,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
 			{
-				_msg.Debug($"work list {Format(worklist)} is already a project item");
+				_msg.Debug($"work list {worklist} is already a project item");
 			}
 
 			return worklist;
@@ -465,11 +465,6 @@ namespace ProSuite.AGP.WorkList
 			return helper.ReadFromFile(workListDefinitionFilePath);
 		}
 
-		public static string Format(IWorkList worklist)
-		{
-			return $"{worklist.DisplayName}: {worklist.Name}";
-		}
-
 		public static void LoadItemsInBackground([NotNull] IWorkList workList)
 		{
 			if (workList == null) throw new ArgumentNullException();
@@ -480,7 +475,7 @@ namespace ProSuite.AGP.WorkList
 				{
 					try
 					{
-						_msg.VerboseDebug(() => $"{Format(workList)} load items.");
+						_msg.VerboseDebug(() => $"{workList} load items.");
 
 						workList.LoadItems(new QueryFilter());
 
@@ -518,7 +513,7 @@ namespace ProSuite.AGP.WorkList
 				{
 					try
 					{
-						_msg.VerboseDebug(() => $"{Format(workList)} count items.");
+						_msg.VerboseDebug(() => $"{workList} count items.");
 
 						workList.Count();
 

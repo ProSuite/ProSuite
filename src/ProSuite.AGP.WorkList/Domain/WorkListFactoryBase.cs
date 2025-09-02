@@ -236,7 +236,7 @@ public abstract class WorkListFactoryBase : IWorkListFactory
 
 							// no need to persist work list state, work list gets deleted
 							Assert.True(WorkListRegistry.Instance.Remove(workList),
-							            $"Cannot remove work list {WorkListUtils.Format(workList)} from registry");
+							            $"Cannot remove work list {workList} from registry");
 						}
 					}
 				}

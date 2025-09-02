@@ -332,7 +332,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			var rowMap = new Dictionary<GdbRowIdentity, IWorkItem>();
 			var itemsWithExtent = new List<IWorkItem>();
 
-			Stopwatch watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start loading items.");
+			Stopwatch watch = _msg.DebugStartTiming($"{this} start loading items.");
 
 			// Load all items not matter what WorkItemStatus
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
@@ -358,7 +358,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
-			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} loaded {rowMap.Count} items.");
+			_msg.DebugStopTiming(watch, $"{this} loaded {rowMap.Count} items.");
 
 			Assert.True(xmin > double.MinValue, "Cannot get coordinate");
 			Assert.True(ymin > double.MinValue, "Cannot get coordinate");
@@ -506,11 +506,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Count()
 		{
-			var watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start counting items.");
+			var watch = _msg.DebugStartTiming($"{this} start counting items.");
 
 			TotalCount ??= Repository.Count();
 
-			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} counted {TotalCount} items.");
+			_msg.DebugStopTiming(watch, $"{this} counted {TotalCount} items.");
 		}
 
 		#region Navigation public
@@ -1571,5 +1571,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		#endregion
+
+		public virtual string ToString()
+		{
+			return $"{DisplayName}: {Name}";
+		}
 	}
 }
