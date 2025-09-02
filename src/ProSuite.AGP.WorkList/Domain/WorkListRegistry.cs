@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -100,9 +99,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void Add(IWorkList workList)
 		{
 			if (workList == null)
-			{
 				throw new ArgumentNullException(nameof(workList));
-			}
 
 			lock (_registryLock)
 			{
@@ -120,9 +117,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void Add(IWorkListFactory factory)
 		{
 			if (factory == null)
-			{
 				throw new ArgumentNullException(nameof(factory));
-			}
 
 			lock (_registryLock)
 			{
@@ -137,8 +132,28 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		public bool TryAdd(IWorkList workList)
+		{
+			if (workList == null)
+				throw new ArgumentNullException(nameof(workList));
+
+			lock (_registryLock)
+			{
+				if (_map.ContainsKey(workList.Name))
+				{
+					return false;
+				}
+			}
+
+			Add(new WorkListFactory(workList));
+			return true;
+		}
+
 		public bool TryAdd(IWorkListFactory factory)
 		{
+			if (factory == null)
+				throw new ArgumentNullException(nameof(factory));
+
 			lock (_registryLock)
 			{
 				if (_map.ContainsKey(factory.Name))
@@ -171,8 +186,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			lock (_registryLock)
 			{
-				if (_map.ContainsKey(worklist.Name))
+				if (_map.TryGetValue(worklist.Name, out IWorkListFactory factory))
 				{
+					factory.UnWire();
+
 					_map[worklist.Name] = new WorkListFactory(worklist);
 				}
 				else
@@ -187,39 +204,42 @@ namespace ProSuite.AGP.WorkList.Domain
 		public bool Remove(IWorkList workList)
 		{
 			if (workList == null)
-			{
 				throw new ArgumentNullException(nameof(workList));
-			}
 
 			return Remove(workList.Name);
 		}
 
 		public bool Remove(string name)
 		{
-			if (name == null)
-			{
+			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
-			}
 
 			lock (_registryLock)
 			{
+				UnWire(name);
+
 				return _map.Remove(name);
 			}
 		}
 
-		public IEnumerable<string> GetNames()
+		public void UnWire(IWorkList workList)
 		{
-			lock (_registryLock)
-			{
-				return _map.Keys.ToList();
-			}
+			if (workList == null)
+				throw new ArgumentNullException(nameof(workList));
+
+			UnWire(workList.Name);
 		}
 
-		public bool Contains(string name)
+		public void UnWire(string name)
 		{
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
+
 			lock (_registryLock)
 			{
-				return ! string.IsNullOrEmpty(name) && _map.ContainsKey(name);
+				_map.TryGetValue(name, out IWorkListFactory factory);
+
+				factory?.UnWire();
 			}
 		}
 

@@ -171,6 +171,12 @@ public class WorkListFactoryMock : IWorkListFactory
 
 		return Task.FromResult(worklist);
 	}
+
+	public void UnWire()
+	{
+		throw new NotImplementedException();
+	}
+
 }
 
 public class WorkListMock : IWorkList

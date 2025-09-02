@@ -8,11 +8,13 @@ using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.AGP.WorkList.ProjectItem;
 using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
@@ -39,6 +41,122 @@ namespace ProSuite.AGP.WorkList
 
 			return new PluginDatastore(
 				new PluginDatasourceConnectionPath(PluginIdentifier, dataSource));
+		}
+
+		public static async Task<IWorkList> LoadWorkListToMapAsync(
+			[NotNull] IWorkEnvironment environment)
+		{
+			Assert.ArgumentNotNull(environment, nameof(environment));
+
+			if (environment.WorkListFileExistsInProjectFolder(out string workListFile))
+			{
+				return await LoadWorkListToMapAsync(environment, workListFile);
+			}
+
+			string name = EnsureUniqueName();
+
+			IWorkList worklist = await environment.CreateWorkListAsync(name);
+			Assert.NotNull(worklist);
+
+			// Commit writes work list definition to disk. Necessary for adding project item.
+			worklist.Commit();
+
+			WorkListRegistry.Instance.AddOrReplace(worklist);
+
+			// TODO: (daro) revise
+			IWorkItemStateRepository stateRepo = worklist.Repository.WorkItemStateRepository;
+
+			workListFile = stateRepo.WorkListDefinitionFilePath;
+
+			List<Layer> workListLayers = WorkListUtils
+			                             .GetWorklistLayers(MapUtils.GetActiveMap(), worklist.Name)
+			                             .ToList();
+
+			if (workListLayers.Count == 0)
+			{
+				await LoadWorkListLayerToMapAsync(environment, worklist, workListFile);
+			}
+
+			if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
+			{
+				_msg.Debug($"work list {Format(worklist)} is already a project item");
+			}
+
+			return worklist;
+		}
+
+		/// <summary>
+		/// Creates a new work list instance from an existing definition file
+		/// resp. IWorkItemStateRepository
+		/// </summary>
+		/// <param name="environment"></param>
+		/// <param name="workListFile"></param>
+		/// <returns></returns>
+		[ItemCanBeNull]
+		public static async Task<IWorkList> LoadWorkListToMapAsync(
+			[NotNull] IWorkEnvironment environment,
+			[NotNull] string workListFile)
+		{
+			Assert.ArgumentNotNull(environment, nameof(environment));
+			Assert.ArgumentNotNullOrEmpty(workListFile, nameof(workListFile));
+
+			Map map = MapUtils.GetActiveMap();
+			IWorkListRegistry registry = WorkListRegistry.Instance;
+
+			// Is work list layer loaded? This is cheaper than read the work list file
+			IWorkList worklist = GetLoadedWorklistsByPath(registry, map, workListFile)
+				.FirstOrDefault();
+
+			if (worklist == null)
+			{
+				// it's not loaded > read the work list file
+				string name = GetWorklistName(workListFile)?.ToLower();
+				Assert.NotNullOrEmpty(name);
+
+				// try to get work list from registry
+				worklist = await registry.GetAsync(name);
+
+				if (worklist == null)
+				{
+					worklist = await environment.CreateWorkListAsync(name, workListFile);
+					Assert.NotNull(worklist);
+				}
+			}
+
+			// Commit writes work list definition to disk.
+			// Necessary for adding project item.
+			worklist.Commit();
+
+			// TODO: (DARO) still necessary?
+			// wiring work list events, etc. is done in OnDrawComplete
+			// register work list before creating the layer
+			registry.AddOrReplace(worklist);
+
+			List<Layer> workListLayers = GetWorklistLayers(map, worklist.Name)
+				.ToList();
+
+			if (workListLayers.Count == 0)
+			{
+				await LoadWorkListLayerToMapAsync(environment, worklist, workListFile);
+			}
+
+			if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
+			{
+				_msg.Debug($"work list {Format(worklist)} is already a project item");
+			}
+
+			return worklist;
+		}
+
+		private static async Task LoadWorkListLayerToMapAsync(IWorkEnvironment environment,
+		                                                      IWorkList workList,
+		                                                      string workListFile)
+		{
+			OperationManager manager = MapView.Active.Map.OperationManager;
+
+			var ops = new LoadWorkListLayersOperation(environment, workList.Name);
+
+			await manager.DoAsync(ops);
 		}
 
 		public static IEnumerable<ISourceClass> CreateSourceClasses([NotNull] Map map)
@@ -145,6 +263,12 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[NotNull]
+		public static string EnsureUniqueName()
+		{
+			return $"{Guid.NewGuid()}".Replace('-', '_').ToLower();
+		}
+
+		[NotNull]
 		public static string ParseName([CanBeNull] string uri)
 		{
 			if (string.IsNullOrEmpty(uri))
@@ -231,24 +355,18 @@ namespace ProSuite.AGP.WorkList
 			return definition.Name;
 		}
 
-		[CanBeNull]
+		[NotNull]
 		public static string GetWorklistName([NotNull] string worklistDefinitionFile,
 		                                     [CanBeNull] out string typeName)
 		{
 			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
-
-			typeName = null;
-
-			if (! File.Exists(worklistDefinitionFile))
-			{
-				_msg.Debug($"{worklistDefinitionFile} does not exist");
-				return null;
-			}
+			Assert.ArgumentCondition(File.Exists(worklistDefinitionFile),
+			                         $"{worklistDefinitionFile} does not exist");
 
 			XmlWorkListDefinition definition = Read(worklistDefinitionFile);
 			typeName = definition.TypeName;
 
-			return definition.Name;
+			return Assert.NotNullOrEmpty(definition.Name);
 		}
 
 		public static void MoveTo([NotNull] List<IWorkItem> items,
@@ -553,6 +671,35 @@ namespace ProSuite.AGP.WorkList
 						map,
 						l => string.Equals(l.Name, "QA", StringComparison.OrdinalIgnoreCase)));
 			});
+		}
+
+		public static async Task UnloadWorklists()
+		{
+			_msg.Debug("Unload all work lists");
+
+			try
+			{
+				Map map = MapUtils.GetActiveMap();
+				IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
+
+				foreach (IWorkList workList in
+				         WorkListUtils.GetLoadedWorklists(WorkListRegistry.Instance, layers))
+				{
+					WorkListRegistry.Instance.Remove(workList);
+
+					// TODO:
+					// For the moment, do it the quick and dirty way. In the future, the work list
+					// should also maintain all associated layers or at least their URIs:
+					// Now also remove the associated layers:
+					//environment.RemoveAssociatedLayers();
+
+					await WorkListUtils.RemoveWorkListLayersAsync(workList);
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
 		}
 	}
 }

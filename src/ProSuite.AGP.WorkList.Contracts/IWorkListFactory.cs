@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace ProSuite.AGP.WorkList.Contracts
@@ -9,5 +10,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IWorkList Get();
 
 		Task<IWorkList> GetAsync();
+
+		void UnWire();
 	}
 }

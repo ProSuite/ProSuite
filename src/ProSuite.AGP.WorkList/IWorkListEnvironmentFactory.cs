@@ -11,6 +11,7 @@ public interface IWorkListEnvironmentFactory
 
 	IWorkListEnvironmentFactory RegisterEnvironment<T>() where T : IWorkList;
 
+	// todo: (daro): make generic instead of strings?
 	IWorkEnvironment CreateWorkEnvironment(string path, string typeName);
 
 	void AddStore<T>(IWorkListItemDatastore store) where T : IWorkList;
