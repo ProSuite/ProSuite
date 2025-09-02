@@ -98,7 +98,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			return MapUtils.IsStereoMapView(ActiveMapView)
 				       ? null
-				       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
 		}
 
 		protected override void OnUpdateCore()
@@ -220,12 +220,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			await QueuedTask.Run(async () =>
-			{
-				await base.OnSelectionPhaseStartedAsync();
-				_feedback?.Clear();
-				await ActiveMapView.ClearSketchAsync();
-			});
+			await base.OnSelectionPhaseStartedAsync();
+			_feedback?.Clear();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -445,7 +441,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				}
 				else
 				{
-					await ActiveMapView.ClearSketchAsync();
 					await StartSketchPhaseAsync();
 				}
 			}

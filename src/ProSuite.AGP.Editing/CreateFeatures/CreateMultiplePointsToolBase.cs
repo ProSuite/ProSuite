@@ -67,7 +67,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		{
 			return MapUtils.IsStereoMapView(ActiveMapView)
 				       ? null
-				       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
 		}
 
 		protected override SketchGeometryType GetEditSketchGeometryType()

@@ -87,7 +87,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		/// <summary>
-		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
+		/// Flag to indicate that currently the selection is changed by the <see
+		/// cref="OnSelectionSketchCompleteAsync"/> method and selection events should be ignored.
 		/// </summary>
 		protected bool IsCompletingSelectionSketch { get; set; }
 
@@ -252,14 +253,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-		protected override async Task ShiftPressedAsync()
+		protected override async Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
 				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: true));
 			}
 
-			await ShiftPressedCoreAsync();
+			await ShiftPressedCoreAsync(keyArgs);
 		}
 
 		private async Task ShiftReleasedAsync()
@@ -276,8 +277,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// Allows implementors to start tasks when the shift key is pressed.
 		/// NOTE: ShiftPressedCoreAsync and ShiftReleasedAsync are not necessarily symmetrical!
 		/// </summary>
+		/// <param name="keyArgs"></param>
 		/// <returns></returns>
-		protected virtual Task ShiftPressedCoreAsync()
+		protected virtual Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 		{
 			return Task.CompletedTask;
 		}
@@ -308,10 +310,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected async Task SetupSelectionSketchAsync()
 		{
-			if (await HasSketchAsync())
-			{
-				await ActiveMapView.ClearSketchAsync();
-			}
+			_msg.VerboseDebug(() => nameof(SetupSelectionSketchAsync));
+
+			await ClearSketchAsync();
 
 			SetupSketch();
 
@@ -428,11 +429,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (! Enabled)
 				{
-					// It is possible to be the active tool but not enabled£
+					// It is possible to be the active tool but not enabled
 					return;
 				}
 
-				await QueuedTask.Run(() => OnMapSelectionChangedCoreAsync(args));
+				await OnMapSelectionChangedCoreAsync(args);
 			}
 			catch (Exception e)
 			{
@@ -492,7 +493,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
 
-		/// <remarks>Will be called on MCT</remarks>
+		/// <summary>
+		/// Method called on the UI thread to react to changes to map selection that typically do
+		/// not originate from the tool itself. Examples: Clear Selection Button, attribute table
+		/// or clearing the selection of a single layer in the 'List by Selection' tab of the TOC.
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
+		/// <remarks>Will be called on the UI thread</remarks>
 		protected virtual Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
@@ -547,7 +555,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry)
 		{
 			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                            ActiveMapView.ClientToScreen(CurrentMousePosition));
+			                            ActiveMapView.ClientToScreen(CurrentMousePosition))
+			       {
+					   NoMultiselection = ! AllowMultiSelection(out _)
+			       };
 		}
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
@@ -713,21 +724,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
-			void LogInfo(NotificationCollection collection)
-			{
-				if (collection == null)
-				{
-					return;
-				}
-
-				if (collection.Any()) _msg.Debug("Cannot use selection:");
-
-				foreach (INotification notification in collection)
-				{
-					_msg.Info(notification.Message);
-				}
-			}
-
 			int count = SelectionUtils.GetFeatureCount(selectionByLayer);
 
 			if (count > 1 && ! AllowMultiSelection(out string reason))
@@ -737,7 +733,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				_msg.Debug(
 					$"Cannot use selection: multi selection not allowed, selection count is {count}");
 
-				LogInfo(notifications);
+				LogSelectionInfo(notifications);
 				return false;
 			}
 
@@ -833,6 +829,21 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			var map = ActiveMapView?.Map;
 			map?.ClearSelection();
+		}
+
+		private static void LogSelectionInfo(NotificationCollection collection)
+		{
+			if (collection == null)
+			{
+				return;
+			}
+
+			if (collection.Any()) _msg.Debug("Cannot use selection:");
+
+			foreach (INotification notification in collection)
+			{
+				_msg.Info(notification.Message);
+			}
 		}
 
 		public void SetSketchType(SketchGeometryType? sketchType)

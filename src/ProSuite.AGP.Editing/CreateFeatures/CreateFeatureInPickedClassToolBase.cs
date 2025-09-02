@@ -47,7 +47,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 	{
 		return MapUtils.IsStereoMapView(ActiveMapView)
 			       ? null
-			       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+			       : new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
@@ -66,48 +66,19 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return SketchGeometryType.Rectangle;
 	}
 
-	protected override CancelableProgressorSource GetProgressorSource()
-	{
-		return null;
-	}
-
-	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
-	{
-		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.
-		// Set it on tool activate. In ctor is not enough.
-		CompleteSketchOnMouseUp = true;
-		GeomIsSimpleAsFeature = false;
-
-		return base.OnToolActivateCoreAsync(hasMapViewChanged);
-	}
-
-	protected override async Task OnSelectionPhaseStartedAsync()
-	{
-		await base.OnSelectionPhaseStartedAsync();
-
-		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
-	}
-
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
-		Assert.ArgumentCondition(selectedFeatures.Count == 1, "selection count has to be 1");
-
-		Feature feature = selectedFeatures.FirstOrDefault();
-
-		// todo daro: assert instead?
-		if (feature == null)
+		if (selectedFeatures.Count is 0 or > 1)
 		{
-			_msg.Debug("no selection");
+			_msg.DebugFormat("Invalid feature count for Create Same: {0}", selectedFeatures.Count);
+			_currentFeatureGeometryType = GeometryType.Unknown;
 			return;
 		}
 
+		Feature feature = selectedFeatures.Single();
+
 		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
-
-		_msg.Info(
-			$"Currently selected template feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");
-
-		await StartSketchAsync();
 
 		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}
@@ -165,6 +136,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 				return false;
 			}
 		});
+
+		await StartSelectionPhaseAsync();
 
 		return false;
 	}

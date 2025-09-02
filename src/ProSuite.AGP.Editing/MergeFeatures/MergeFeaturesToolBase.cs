@@ -115,24 +115,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected bool AllowSelectByPolygon =>
 			_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.LargerObject;
 
-		//ToDo?
-		//protected bool IgnoreSelectionOutsideVisibleExtents => true;
-
-		// TODO: Move to Base, consolidate NoMultiselection / AllowMultiSelection after pull subtree
-		protected override IPickerPrecedence CreatePickerPrecedence(
-			[NotNull] Geometry sketchGeometry)
-		{
-			var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                                  ActiveMapView.ClientToScreen(CurrentMousePosition))
-			             {
-				             NoMultiselection =
-					             _mergeToolOptions.MergeSurvivor ==
-					             MergeOperationSurvivor.FirstObject
-			             };
-
-			return result;
-		}
-
 		protected override async Task HandleEscapeAsync()
 		{
 			_firstFeature = null;
@@ -398,22 +380,26 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 				return false;
 			}
 
-			if (! CanUseSelection(ActiveMapView))
-			{
-				_firstFeature = null;
-				await SetupSelectionSketchAsync();
-			}
-			else
-			{
-				Dictionary<MapMember, List<long>> selectionByLayer =
-					SelectionUtils.GetSelection(ActiveMapView.Map);
+			await QueuedTask.Run(
+				async () =>
+				{
+					if (! CanUseSelection(ActiveMapView))
+					{
+						_firstFeature = null;
+						await SetupSelectionSketchAsync();
+					}
+					else
+					{
+						Dictionary<MapMember, List<long>> selectionByLayer =
+							SelectionUtils.GetSelection(ActiveMapView.Map);
 
-				List<Feature> selection =
-					GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
-						.ToList();
+						List<Feature> selection =
+							GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+								.ToList();
 
-				_firstFeature = selection[0];
-			}
+						_firstFeature = selection[0];
+					}
+				});
 
 			return true;
 		}

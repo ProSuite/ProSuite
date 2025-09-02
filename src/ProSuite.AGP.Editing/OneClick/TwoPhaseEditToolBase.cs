@@ -43,18 +43,23 @@ namespace ProSuite.AGP.Editing.OneClick
 				await StartSelectionPhaseAsync();
 			}
 
-			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-			Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
+			await QueuedTask.Run(
+				async () =>
+				{
+					// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+					Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
 
-			var applicableSelection =
-				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection).ToList();
+					var applicableSelection =
+						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+							.ToList();
 
-			if (applicableSelection.Count > 0)
-			{
-				using var source = GetProgressorSource();
-				var progressor = source?.Progressor;
-				await AfterSelectionAsync(applicableSelection, progressor);
-			}
+					if (applicableSelection.Count > 0)
+					{
+						using var source = GetProgressorSource();
+						var progressor = source?.Progressor;
+						await AfterSelectionAsync(applicableSelection, progressor);
+					}
+				});
 
 			return true;
 		}

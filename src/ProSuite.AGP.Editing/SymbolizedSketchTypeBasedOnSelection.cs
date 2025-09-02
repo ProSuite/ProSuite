@@ -12,9 +12,9 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -47,20 +47,20 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
 		SketchModifiedEvent.Subscribe(OnSketchModified);
-		MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
 	}
 
 	public void Dispose()
 	{
 		SketchModifiedEvent.Unsubscribe(OnSketchModified);
-		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 
-		ClearSketchSymbol();
+		_ = ClearSketchSymbol();
 	}
 
-	public void ClearSketchSymbol()
+	public async Task ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
+
+		await ApplySketchSymbolWorkAround();
 	}
 
 	/// <summary>
@@ -68,7 +68,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	/// </summary>
 	public async Task SetSketchAppearanceAsync()
 	{
-		Gateway.LogEntry(_msg);
+		_msg.VerboseDebug(() => nameof(SetSketchAppearanceAsync));
 
 		try
 		{
@@ -83,22 +83,35 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 	}
 
+	public async Task SelectionChangedAsync(MapSelectionChangedEventArgs args)
+	{
+		var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+
+		await QueuedTask.Run(async () =>
+		{
+			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
+
+			await TrySetSketchAppearanceAsync(featureLayer, oids);
+		});
+	}
+
 	/// <summary>
 	/// Is always on MCT.
 	/// </summary>
 	private async void OnSketchModified(SketchModifiedEventArgs args)
 	{
-		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
-		    _showFeatureSketchSymbology)
-		{
-			return;
-		}
-
-		_showFeatureSketchSymbology =
-			ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
-
 		try
 		{
+			// TODO: If this is a relevant use case, we should request an OptionChangedEvent
+			if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
+			    _showFeatureSketchSymbology)
+			{
+				return;
+			}
+
+			_showFeatureSketchSymbology =
+				ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
+
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
@@ -111,36 +124,12 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 	}
 
-	/// <summary>
-	/// Is always on worker thread.
-	/// </summary>
-	private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
-	{
-		Gateway.LogEntry(_msg);
-
-		try
-		{
-			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
-
-			await QueuedTask.Run(async () =>
-			{
-				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
-
-				await TrySetSketchAppearanceAsync(featureLayer, oids);
-			});
-		}
-		catch (Exception ex)
-		{
-			_msg.Error(ex.Message, ex);
-		}
-	}
-
 	private async Task TrySetSketchAppearanceAsync([CanBeNull] FeatureLayer featureLayer,
 	                                               [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
-			ClearSketchSymbol();
+			await ClearSketchSymbol();
 			return;
 		}
 
@@ -150,45 +139,34 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		{
 			if (await _tool.CanSetConstructionSketchSymbol(geometryType))
 			{
-				//SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
-				SetSketchSymbol(GetSymbolReference(featureLayer, oids));
+				await SetSketchSymbol(GetSymbolReference(featureLayer, oids));
 			}
 			else
 			{
 				_msg.Debug($"Cannot set sketch symbol for geometry type {geometryType}");
-				ClearSketchSymbol();
+				await ClearSketchSymbol();
 			}
 		}
 		else
 		{
 			_msg.Debug(
 				"Cannot set sketch symbol. Show feature symbology in sketch is turned off.");
-			ClearSketchSymbol();
+			await ClearSketchSymbol();
 		}
 	}
 
-	private void SetSketchSymbol(CIMSymbolReference symbolReference)
+	private async Task SetSketchSymbol(CIMSymbolReference symbolReference)
 	{
 		_tool.SetSketchSymbol(symbolReference);
+
+		await ApplySketchSymbolWorkAround();
 	}
 
-	public void SetSketchType(BasicFeatureLayer featureLayer)
+	public void SetSketchType()
 	{
-		if (featureLayer == null)
-		{
-			return;
-		}
+		Assert.NotNull(_sketchGeometryTypeFunc, "No _sketchGeometryTypeFunc");
 
-		if (_sketchGeometryTypeFunc != null)
-		{
-			_tool.SetSketchType(_sketchGeometryTypeFunc());
-		}
-		else
-		{
-			GeometryType geometryType =
-				GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-			_tool.SetSketchType(ToolUtils.GetSketchGeometryType(geometryType));
-		}
+		_tool.SetSketchType(_sketchGeometryTypeFunc());
 	}
 
 	private List<long> GetApplicableSelection(
@@ -304,6 +282,22 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		return GdbQueryUtils.GetFeature(featureClass, oid);
 	}
 
+	private static async Task ApplySketchSymbolWorkAround()
+	{
+		Geometry sketch = await MapView.Active.GetCurrentSketchAsync();
+
+		if (sketch?.IsEmpty == false)
+		{
+			// We could be in the middle of a sketch phase and de-select some irrelevant selection
+			// on an unrelated layer. Rather continue with the wrong sketch symbol than losing the
+			// entire sketch!
+			return;
+		}
+
+		// This is needed (apparently inside a QueuedTask) to make the sketch symbol take effect.
+		// It likely triggers the relevant events internally...
+		await MapView.Active.ClearSketchAsync();
+	}
 
 	#region Nestsed type: NamedValues
 

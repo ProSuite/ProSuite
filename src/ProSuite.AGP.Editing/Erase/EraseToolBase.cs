@@ -40,7 +40,13 @@ namespace ProSuite.AGP.Editing.Erase
 		{
 			return MapUtils.IsStereoMapView(ActiveMapView)
 				       ? null
-				       : new SymbolizedSketchTypeBasedOnSelection(this, GetEditSketchGeometryType);
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
+		}
+
+		public override Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
+		{
+			// It makes no sense to apply the symbol from the selected line to the polygon sketch:
+			return Task.FromResult(geometryType == GeometryType.Polygon);
 		}
 
 		protected override SketchGeometryType GetEditSketchGeometryType()
@@ -102,6 +108,8 @@ namespace ProSuite.AGP.Editing.Erase
 					() => ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures));
 
 			await Task.WhenAll(taskFlash, taskSave);
+
+			await StartSelectionPhaseAsync();
 
 			return taskSave.Result;
 		}
@@ -173,7 +181,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 				FeatureClass featureClass = feature.GetTable();
 				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
-				GeometryType geometryType = classDefinition.GetShapeType();
+
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
 
@@ -190,26 +198,6 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat("Successfully stored {0} updated features.", result.Count);
 
 			return true;
-		}
-
-		private static IEnumerable<Dataset> GetDatasets(IEnumerable<MapMember> mapMembers)
-		{
-			foreach (MapMember mapMember in mapMembers)
-			{
-				var featureLayer = mapMember as FeatureLayer;
-
-				if (featureLayer != null)
-				{
-					yield return featureLayer.GetFeatureClass();
-				}
-
-				var standaloneTable = mapMember as StandaloneTable;
-
-				if (standaloneTable != null)
-				{
-					yield return standaloneTable.GetTable();
-				}
-			}
 		}
 
 		private static IEnumerable<Dataset> GetDatasets(IEnumerable<Feature> features)
