@@ -32,7 +32,9 @@ namespace ProSuite.Commons.AGP.Framework
 
 		public static IEnumerable<T> Get<T>() where T : Item
 		{
-			return Project.Current.GetItems<T>();
+			Project project = Project.Current;
+
+			return project == null ? Enumerable.Empty<T>() : project.GetItems<T>();
 		}
 
 		[CanBeNull]
@@ -40,7 +42,14 @@ namespace ProSuite.Commons.AGP.Framework
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
-			foreach (T item in Project.Current.GetItems<T>())
+			Project project = Project.Current;
+
+			if (project == null)
+			{
+				return null;
+			}
+
+			foreach (T item in project.GetItems<T>())
 			{
 				// after adding the project item it's name has an file extension, e.g. "worklist.swl"
 				if (string.Equals(item.Name, name, StringComparison.OrdinalIgnoreCase))
@@ -66,7 +75,14 @@ namespace ProSuite.Commons.AGP.Framework
 		{
 			Assert.ArgumentNotNullOrEmpty(substring, nameof(substring));
 
-			return Project.Current.GetItems<T>()
+			Project project = Project.Current;
+
+			if (project == null)
+			{
+				return Enumerable.Empty<T>();
+			}
+
+			return project.GetItems<T>()
 			              .Where(item => item.Name.StartsWith(
 				                     substring, StringComparison.OrdinalIgnoreCase));
 		}
@@ -79,7 +95,14 @@ namespace ProSuite.Commons.AGP.Framework
 
 			var projectItem = ItemFactory.Instance.Create(path) as IProjectItem;
 
-			if (projectItem == null || ! Project.Current.AddItem(projectItem))
+			Project project = Project.Current;
+
+			if (project == null)
+			{
+				return false;
+			}
+
+			if (projectItem == null || ! project.AddItem(projectItem))
 			{
 				return false;
 			}
@@ -107,7 +130,14 @@ namespace ProSuite.Commons.AGP.Framework
 
 			var projectItem = ItemFactory.Instance.Create(path, type) as IProjectItem;
 
-			if (projectItem == null || ! Project.Current.AddItem(projectItem))
+			Project project = Project.Current;
+
+			if (project == null)
+			{
+				return false;
+			}
+
+			if (projectItem == null || ! project.AddItem(projectItem))
 			{
 				return false;
 			}
@@ -132,14 +162,16 @@ namespace ProSuite.Commons.AGP.Framework
 			var item = ItemFactory.Instance.Create(path) as IProjectItem;
 			Assert.NotNull(item);
 
-			return Project.Current.RemoveItem(item);
+			return Remove(item);
 		}
 
 		public static bool Remove([NotNull] IProjectItem item)
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
-			return Project.Current.RemoveItem(item);
+			Project project = Project.Current;
+
+			return project != null && project.RemoveItem(item);
 		}
 	}
 }
