@@ -555,7 +555,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry)
 		{
 			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                            ActiveMapView.ClientToScreen(CurrentMousePosition));
+			                            ActiveMapView.ClientToScreen(CurrentMousePosition))
+			       {
+					   NoMultiselection = ! AllowMultiSelection(out _)
+			       };
 		}
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
