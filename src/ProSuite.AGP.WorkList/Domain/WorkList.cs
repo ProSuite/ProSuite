@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -18,7 +19,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-
 	// Note: SelectionItemRepository ensures only items of selected rows are returned.
 	//		 For DbStatusWorkItemRepository make sure not entire database is searched.
 	//		 filter by AOI.
@@ -44,7 +44,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		                   [NotNull] string displayName)
 		{
 			Repository = repository ?? throw new ArgumentNullException(nameof(repository));
-			AreaOfInterest = areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
+			AreaOfInterest =
+				areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 
 			_displayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
@@ -196,7 +197,8 @@ namespace ProSuite.AGP.WorkList.Domain
 					if (item.HasExtent && UseItemGeometry(item))
 					{
 						Assert.NotNull(item.Extent);
-						return PolygonBuilderEx.CreatePolygon(item.Extent, item.Extent.SpatialReference);
+						return PolygonBuilderEx.CreatePolygon(
+							item.Extent, item.Extent.SpatialReference);
 					}
 				}
 				else
@@ -210,7 +212,8 @@ namespace ProSuite.AGP.WorkList.Domain
 						{
 							case GeometryType.Polyline:
 								var polyline = (Polyline) item.Geometry;
-								return PolygonBuilderEx.CreatePolygon(polyline, item.Geometry.SpatialReference);
+								return PolygonBuilderEx.CreatePolygon(
+									polyline, item.Geometry.SpatialReference);
 							case GeometryType.Polygon:
 								return (Polygon) item.Geometry;
 
@@ -324,7 +327,18 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public void LoadItems([NotNull] QueryFilter filter)
+		public void LoadItems()
+		{
+			QueryFilter filter = AreaOfInterest != null
+				                     ? GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
+				                     : new QueryFilter();
+
+			WorkItemStatus? status = GetStatus(Visibility);
+
+			LoadItems(filter, status);
+		}
+
+		public void LoadItems([NotNull] QueryFilter filter, WorkItemStatus? statusFilter = null)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
@@ -332,10 +346,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			var rowMap = new Dictionary<GdbRowIdentity, IWorkItem>();
 			var itemsWithExtent = new List<IWorkItem>();
 
-			Stopwatch watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start loading items.");
+			Stopwatch watch =
+				_msg.DebugStartTiming($"{WorkListUtils.Format(this)} start loading items.");
 
-			// Load all items not matter what WorkItemStatus
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
+				         filter, statusFilter))
 			{
 				item.OID = Repository.GetNextOid();
 				Assert.True(item.OID > 0, "item is not initialized");
@@ -358,7 +373,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
-			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} loaded {rowMap.Count} items.");
+			_msg.DebugStopTiming(
+				watch, $"{WorkListUtils.Format(this)} loaded {rowMap.Count} items.");
 
 			Assert.True(xmin > double.MinValue, "Cannot get coordinate");
 			Assert.True(ymin > double.MinValue, "Cannot get coordinate");
@@ -379,7 +395,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				_searcher = CreateSpatialSearcher(itemsWithExtent);
 			}
 
-			Invalidate();
+			OnWorkListChanged();
 
 			LoadItemsCore(filter);
 		}
@@ -491,7 +507,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			if (item.Extent is null) throw new ArgumentNullException(nameof(item.Extent));
 
-			return new EnvelopeXY(item.Extent.XMin, item.Extent.YMin, item.Extent.XMax, item.Extent.YMax);
+			return new EnvelopeXY(item.Extent.XMin, item.Extent.YMin, item.Extent.XMax,
+			                      item.Extent.YMax);
 		}
 
 		#endregion
@@ -506,11 +523,13 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Count()
 		{
-			var watch = _msg.DebugStartTiming($"{WorkListUtils.Format(this)} start counting items.");
+			var watch =
+				_msg.DebugStartTiming($"{WorkListUtils.Format(this)} start counting items.");
 
 			TotalCount ??= Repository.Count();
 
-			_msg.DebugStopTiming(watch, $"{WorkListUtils.Format(this)} counted {TotalCount} items.");
+			_msg.DebugStopTiming(
+				watch, $"{WorkListUtils.Format(this)} counted {TotalCount} items.");
 		}
 
 		#region Navigation public
@@ -668,7 +687,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		#endregion
-		
+
 		#region Navigation non-public
 
 		private bool TryGoNearest([NotNull] Polygon[] contextPerimeters,
@@ -737,8 +756,10 @@ namespace ProSuite.AGP.WorkList.Domain
 				trials -= 1;
 
 				contextPerimeters =
-					contextPerimeters.Select(p => PolygonBuilderEx.CreatePolygon(p.Extent.Expand(2, 2, true), p.SpatialReference))
-					                 .ToArray();
+					contextPerimeters
+						.Select(p => PolygonBuilderEx.CreatePolygon(
+							        p.Extent.Expand(2, 2, true), p.SpatialReference))
+						.ToArray();
 			}
 
 			return true;
@@ -751,7 +772,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Assert.ArgumentNotNull(perimeters, nameof(perimeters));
 
-			_msg.VerboseDebug(() => $"Getting work items for innermost context ({perimeters.Length} perimeters)");
+			_msg.VerboseDebug(
+				() => $"Getting work items for innermost context ({perimeters.Length} perimeters)");
 
 			// TODO: DARO revise it's always Exclude Current
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
@@ -771,14 +793,20 @@ namespace ProSuite.AGP.WorkList.Domain
 					// --> filter result
 
 					var workItems =
-						GetItems(GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Contains), currentSearch, visitedSearch).ToList();
+						GetItems(
+							GdbQueryUtils.CreateSpatialFilter(
+								intersection, SpatialRelationship.Contains), currentSearch,
+							visitedSearch).ToList();
 
 					if (workItems.Count == 0)
 					{
-						_msg.VerboseDebug(() => "The intersection contains no items, searching partially contained items");
-						
+						_msg.VerboseDebug(
+							() =>
+								"The intersection contains no items, searching partially contained items");
+
 						workItems =
-							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection), currentSearch, visitedSearch).ToList();
+							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection), currentSearch,
+							         visitedSearch).ToList();
 					}
 
 					_msg.VerboseDebug(() => $"{workItems.Count} work item(s) found");
@@ -1193,13 +1221,20 @@ namespace ProSuite.AGP.WorkList.Domain
 		#region IRowCache
 
 		/// <summary>
-		/// Raises WorkListChanged event: forces
-		/// to redraw at least ActiveView.Active.Extent which leads
-		/// to a GetItems() call.
+		/// Invalidates and re-loads all items of the work list. This method is needed when the
+		/// invalidation of source objects cannot be specified by OID or geometry but only by
+		/// modified table. Typical scenarios are 'discard edits' or 'reconcile'.
 		/// </summary>
 		public void Invalidate()
 		{
-			_msg.Debug("Invalidate");
+			_msg.Debug($"{nameof(Invalidate)}: All items");
+
+			LoadItems();
+
+			if (! HasCurrentItem())
+			{
+				GoNearest(MapView.Active.Extent);
+			}
 
 			OnWorkListChanged();
 		}
@@ -1211,7 +1246,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// <param name="geometry">The area to invalidate the work list layer.</param>
 		public void Invalidate(Envelope geometry)
 		{
-			_msg.Debug("Invalidate by geometry");
+			_msg.Debug($"{nameof(Invalidate)}: by geometry");
 
 			OnWorkListChanged(geometry.Extent);
 		}
@@ -1222,12 +1257,21 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// <param name="oids">List of work item OIDs (not ObjectID</param>
 		public void Invalidate(List<long> oids)
 		{
+			_msg.Debug($"{nameof(Invalidate)}: {oids.Count} object IDs");
+
 			OnWorkListChanged(null, oids);
 		}
 
+		/// <summary>
+		/// Invalidates and re-loads all items of the specified source tables. This method can
+		/// be employed when the changes cannot be identified on a per-object level but only
+		/// per source table (e.g. deletes).
+		/// </summary>
+		/// <param name="tables"></param>
 		public void Invalidate(IEnumerable<Table> tables)
 		{
-			// TODO: (daro) still needed?
+			_msg.Debug($"{nameof(Invalidate)}: Specific source tables");
+
 			// TODO: More fine-granular invalidation, consider separate row cache containing
 			// _rowMap, _items.
 			Invalidate();
@@ -1279,11 +1323,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			try
 			{
-
 				QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 				Stopwatch watch = Stopwatch.StartNew();
 
-				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter, null))
+				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
+					         table, filter, null))
 				{
 					Assert.True(TryAddItem(item), $"Could not add {item}");
 
@@ -1341,8 +1385,11 @@ namespace ProSuite.AGP.WorkList.Domain
 					lock (_obj)
 					{
 						// to invalidate item remove it from work list cache
-						bool invalidated = _rowMap.Remove(cachedItem.GdbRowProxy, out IWorkItem item) && _items.Remove(item);
-						Assert.True(invalidated, $"Invalidate work item failed: {rowId} not part of work list");
+						bool invalidated =
+							_rowMap.Remove(cachedItem.GdbRowProxy, out IWorkItem item) &&
+							_items.Remove(item);
+						Assert.True(invalidated,
+						            $"Invalidate work item failed: {rowId} not part of work list");
 
 						Envelope extent = cachedItem.Extent;
 						if (extent != null)
@@ -1374,7 +1421,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 				Stopwatch watch = Stopwatch.StartNew();
 
-				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter, null))
+				foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
+					         table, filter, null))
 				{
 					Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
 					            $"Could not get {cachedItem}");

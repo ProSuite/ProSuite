@@ -31,7 +31,7 @@ public interface IWorkList : IRowCache
 	IEnumerable<IWorkItem> Search(QueryFilter filter);
 
 	IEnumerable<IWorkItem> GetItems(SpatialQueryFilter filter);
-	
+
 	long CountLoadedItems(out int todo);
 
 	bool CanGoFirst();
@@ -81,5 +81,11 @@ public interface IWorkList : IRowCache
 
 	Row GetCurrentItemSourceRow(bool readOnly = true);
 
-	void LoadItems(QueryFilter filter);
+	/// <summary>
+	/// Loads all items using the current AOI and status settings.
+	/// </summary>
+	void LoadItems();
+
+	void LoadItems(QueryFilter filter,
+	               WorkItemStatus? statusFilter = null);
 }
