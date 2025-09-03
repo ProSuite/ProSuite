@@ -90,6 +90,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		}
 
 		public void QueryTileBounds(TileIndex forTile,
+									out double xMin, out double yMin,
+									out double xMax, out double yMax)
+		{
+			GetTileBounds(forTile, OriginX, OriginY, TileWidth, TileHeight,
+						  out xMin, out yMin, out xMax, out yMax);
+		}
+
+		public void QueryTileBounds(TileIndex forTile,
 		                            [NotNull] IBox box)
 		{
 			double xMin;
