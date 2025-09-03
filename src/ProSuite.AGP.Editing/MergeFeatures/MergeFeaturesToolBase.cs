@@ -48,10 +48,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private const Key _immediateMergeKey = Key.Enter;
 		private Feature _firstFeature;
 
-		private readonly SelectionCursors _firstPhaseCursors =
+		private SelectionCursors FirstPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay1);
 
-		private readonly SelectionCursors _secondPhaseCursors =
+		private SelectionCursors SecondPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay2);
 
 		public Feature ContextClickedFeature { get; set; }
@@ -118,7 +118,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected override async Task HandleEscapeAsync()
 		{
 			_firstFeature = null;
-			SelectionCursors = _firstPhaseCursors;
+			SelectionCursors = FirstPhaseCursors;
 
 			try
 			{
@@ -137,6 +137,13 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
+		protected override Task OnSelectionPhaseStartedAsync()
+		{
+			SelectionCursors = FirstPhaseCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
+			return base.OnSelectionPhaseStartedAsync();
+		}
+
 		protected override async Task ShiftReleasedCoreAsync()
 		{
 			if (await IsInSelectionPhaseAsync())
@@ -145,7 +152,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 			else
 			{
-				SetToolCursor(_secondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
+				SetToolCursor(SecondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
 			}
 		}
 
@@ -154,12 +161,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				SelectionCursors = _firstPhaseCursors;
+				SelectionCursors = FirstPhaseCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 			else
 			{
-				SelectionCursors = _secondPhaseCursors;
+				SelectionCursors = SecondPhaseCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 		}
@@ -266,7 +273,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			_mergeToolOptions = InitializeOptions();
 
-			SelectionCursors = _firstPhaseCursors;
+			//SelectionCursors = _firstPhaseCursors;
 
 			return base.OnToolActivatingCoreAsync();
 		}
@@ -301,13 +308,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		private async Task StartSecondPhaseAsync()
 		{
-			SelectionCursors = _secondPhaseCursors;
+			SelectionCursors = SecondPhaseCursors;
 
 			await QueuedTask.Run(() => { SetupSketch(); });
-			await QueuedTask.Run(async () =>
-			{
-				await ResetSelectionSketchTypeAsync();
-			});
+			await QueuedTask.Run(async () => { await ResetSelectionSketchTypeAsync(); });
 		}
 
 		protected override void LogUsingCurrentSelection()
@@ -373,33 +377,37 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnMapSelectionChangedCoreAsync");
+			_msg.VerboseDebug(() => nameof(OnMapSelectionChangedCoreAsync));
 
 			if (ActiveMapView == null)
 			{
 				return false;
 			}
 
-			await QueuedTask.Run(
-				async () =>
+			if (args.Selection.IsEmpty)
+			{
+				SelectionCursors = FirstPhaseCursors;
+			}
+
+			await QueuedTask.Run(async () =>
+			{
+				if (! CanUseSelection(ActiveMapView))
 				{
-					if (! CanUseSelection(ActiveMapView))
-					{
-						_firstFeature = null;
-						await SetupSelectionSketchAsync();
-					}
-					else
-					{
-						Dictionary<MapMember, List<long>> selectionByLayer =
-							SelectionUtils.GetSelection(ActiveMapView.Map);
+					_firstFeature = null;
+					await SetupSelectionSketchAsync();
+				}
+				else
+				{
+					Dictionary<MapMember, List<long>> selectionByLayer =
+						SelectionUtils.GetSelection(ActiveMapView.Map);
 
-						List<Feature> selection =
-							GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
-								.ToList();
+					List<Feature> selection =
+						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+							.ToList();
 
-						_firstFeature = selection[0];
-					}
-				});
+					_firstFeature = selection[0];
+				}
+			});
 
 			return true;
 		}
@@ -697,7 +705,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			else
 			{
 				_firstFeature = null;
-				SelectionCursors = _firstPhaseCursors;
+				SelectionCursors = FirstPhaseCursors;
 				LogPromptForSelection();
 				await QueuedTask.Run(async () => { await SetupSelectionSketchAsync(); });
 			}
