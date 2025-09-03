@@ -35,6 +35,8 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		protected string UniqueName { get; set; }
 
+		protected bool AllowBackgroundLoading { get; set; }
+
 		protected virtual Geometry GetAreaOfInterest()
 		{
 			return MapView.Active.Extent;
@@ -114,8 +116,15 @@ namespace ProSuite.AGP.WorkList
 
 			_msg.Debug($"Created {WorkListUtils.Format(result)}");
 
-			WorkListUtils.LoadItemsInBackground(result);
-			WorkListUtils.CountItemsInBackground(result);
+			if (AllowBackgroundLoading)
+			{
+				WorkListUtils.LoadItemsInBackground(result);
+				WorkListUtils.CountItemsInBackground(result);
+			}
+			else
+			{
+				result.LoadItems();
+			}
 
 			return result;
 		}
