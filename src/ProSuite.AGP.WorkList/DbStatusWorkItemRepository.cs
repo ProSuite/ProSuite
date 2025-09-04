@@ -85,7 +85,12 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 
 		WorkItemStatus status = dbSourceClass.GetStatus(row);
 
-		return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), row, status);
+		// Create table identity only once for better performance:
+		GdbTableIdentity tableIdentity = dbSourceClass.TableIdentity;
+
+		var rowIdentity = new GdbRowIdentity(row.GetObjectID(), tableIdentity);
+
+		return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), rowIdentity, status);
 	}
 
 	protected override async Task SetStatusCoreAsync(IWorkItem item,
