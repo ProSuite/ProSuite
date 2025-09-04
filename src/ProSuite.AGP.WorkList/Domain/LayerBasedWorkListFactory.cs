@@ -15,6 +15,8 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 	private readonly string _typeName;
 	private readonly string _path;
 
+	private bool _isCreatingWorkList;
+
 	public LayerBasedWorkListFactory(string tableName, string typeName, string path)
 	{
 		_typeName = typeName;
@@ -53,10 +55,10 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 
 			Assert.NotNull(workEnvironment);
 
-			QueuedTask.Run(async () =>
+			if (! _isCreatingWorkList)
 			{
-				WorkList = await workEnvironment.CreateWorkListAsync(Name, _path);
-			});
+				StartCreatingWorklist(workEnvironment);
+			}
 		}
 		catch (Exception ex)
 		{
@@ -64,6 +66,26 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 		}
 
 		return WorkList;
+	}
+
+	private void StartCreatingWorklist(IWorkEnvironment workEnvironment)
+	{
+		Task.Run(async () =>
+		{
+			try
+			{
+				_isCreatingWorkList = true;
+				WorkList = await workEnvironment.CreateWorkListAsync(Name, _path);
+			}
+			catch (Exception e)
+			{
+				_msg.Error("Error preparing work list.", e);
+			}
+			finally
+			{
+				_isCreatingWorkList = false;
+			}
+		});
 	}
 
 	public override async Task<IWorkList> GetAsync()
