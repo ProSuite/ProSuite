@@ -35,7 +35,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private WorkItemVisibility? _visibility;
 		[NotNull] private string _displayName;
-		private bool _itemsGeometryDraftMode = true;
+
 		private Envelope _extent;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
@@ -107,6 +107,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		// TODO: (daro) AOI can be null! E.g. selection work list. Issue work list where there is no work unit. But the should have the
 		//		 possibility to define an AOI.
 		protected Geometry AreaOfInterest { get; }
+
+		public bool AlwaysUseDraftMode { get; set; } = true;
+
+		public bool CacheBufferedItemGeometries { get; set; }
 
 		public virtual bool CanSetStatus()
 		{
@@ -184,14 +188,19 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void SetItemsGeometryDraftMode(bool enable)
 		{
-			_itemsGeometryDraftMode = enable;
+			AlwaysUseDraftMode = enable;
 		}
 
 		public Geometry GetItemGeometry(IWorkItem item)
 		{
 			try
 			{
-				if (_itemsGeometryDraftMode)
+				if (item == null)
+				{
+					return null;
+				}
+
+				if (AlwaysUseDraftMode)
 				{
 					// it's not a table row and not a point
 					if (item.HasExtent && UseItemGeometry(item))
@@ -204,21 +213,28 @@ namespace ProSuite.AGP.WorkList.Domain
 				else
 				{
 					// it's not a table row and not a point
-					if (item.HasFeatureGeometry && UseItemGeometry(item))
+					if (CacheBufferedItemGeometries && item.HasFeatureGeometry &&
+					    UseItemGeometry(item))
 					{
-						Assert.NotNull(item.Geometry);
+						return GetPolygonGeometry(item);
+					}
 
-						switch (item.GeometryType)
+					// No pre-caching enabled, but the current item can be buffered if not draft mode:
+					if (! AlwaysUseDraftMode && item.GdbRowProxy.Equals(Current?.GdbRowProxy))
+					{
+						if (item.HasFeatureGeometry)
 						{
-							case GeometryType.Polyline:
-								var polyline = (Polyline) item.Geometry;
-								return PolygonBuilderEx.CreatePolygon(
-									polyline, item.Geometry.SpatialReference);
-							case GeometryType.Polygon:
-								return (Polygon) item.Geometry;
+							return GetPolygonGeometry(item);
+						}
 
-							default:
-								throw new ArgumentOutOfRangeException();
+						if (GetCurrentItemSourceRow(false) is Feature feature)
+						{
+							UpdateItemGeometry(item, feature.GetShape());
+
+							if (item.HasFeatureGeometry)
+							{
+								return GetPolygonGeometry(item);
+							}
 						}
 					}
 				}
@@ -235,10 +251,28 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			catch (Exception ex)
 			{
-				_msg.Debug(ex.Message, ex);
+				_msg.Warn($"Error calculating work item geometry: {ex.Message}", ex);
 			}
 
 			return null;
+		}
+
+		private static Geometry GetPolygonGeometry(IWorkItem item)
+		{
+			Assert.NotNull(item.Geometry);
+
+			switch (item.Geometry.GeometryType)
+			{
+				case GeometryType.Polyline:
+					var polyline = (Polyline) item.Geometry;
+					return PolygonBuilderEx.CreatePolygon(
+						polyline, item.Geometry.SpatialReference);
+				case GeometryType.Polygon:
+					return (Polygon) item.Geometry;
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 
 		private static bool UseItemGeometry([NotNull] IWorkItem item)
@@ -1336,7 +1370,10 @@ namespace ProSuite.AGP.WorkList.Domain
 					// TODO: (daro) really necessary? It's a virgin new item...
 					Repository.Refresh(item);
 
-					UpdateItemGeometry(item, geometry);
+					if (CacheBufferedItemGeometries)
+					{
+						UpdateItemGeometry(item, geometry);
+					}
 
 					if (item.HasExtent)
 					{
@@ -1440,7 +1477,10 @@ namespace ProSuite.AGP.WorkList.Domain
 							                 extent.XMin, extent.YMin,
 							                 extent.XMax, extent.YMax);
 
-							UpdateItemGeometry(cachedItem, geometry);
+							if (CacheBufferedItemGeometries)
+							{
+								UpdateItemGeometry(cachedItem, geometry);
+							}
 
 							_searcher.Add(cachedItem, CreateEnvelope(cachedItem));
 						}
