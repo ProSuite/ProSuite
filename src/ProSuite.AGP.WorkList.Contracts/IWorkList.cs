@@ -32,6 +32,14 @@ public interface IWorkList : IRowCache
 	/// </summary>
 	bool CacheBufferedItemGeometries { get; set; }
 
+	/// <summary>
+	/// Whether the work items should always use the draft mode (envelope geometry). If false,
+	/// polyline and polygon geometries are buffered and provided in the
+	/// <see cref="IWorkItem.Geometry"/> property. If <see cref="CacheBufferedItemGeometries"/>
+	/// is true, all items are buffered, otherwise only the current item.
+	/// </summary>
+	bool AlwaysUseDraftMode { get; set; }
+
 	public Envelope GetExtent();
 
 	event EventHandler<WorkListChangedEventArgs> WorkListChanged;
