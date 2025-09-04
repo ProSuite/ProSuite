@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
@@ -103,7 +104,8 @@ namespace ProSuite.AGP.WorkList
 			                     workListFile);
 
 			IWorkItemRepository itemRepository =
-				await CreateItemRepositoryCoreAsync(stateRepository);
+				await QueuedTask.Run(async () =>
+					                     await CreateItemRepositoryCoreAsync(stateRepository));
 
 			if (itemRepository == null)
 			{
@@ -123,7 +125,7 @@ namespace ProSuite.AGP.WorkList
 			}
 			else
 			{
-				result.LoadItems();
+				await QueuedTask.Run(() => { result.LoadItems(); });
 			}
 
 			return result;
