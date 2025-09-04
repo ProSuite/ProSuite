@@ -24,6 +24,14 @@ public interface IWorkList : IRowCache
 
 	long? TotalCount { get; set; }
 
+	/// <summary>
+	/// Allow the Worklist geometry service to calculate and set the work items' geometry
+	/// property to its buffered representation, if required.
+	/// NOTE: This service uses a background thread to access the items of the work list.
+	/// NOTE: This service therefore does not see up-to-date geometries.
+	/// </summary>
+	bool CacheBufferedItemGeometries { get; set; }
+
 	public Envelope GetExtent();
 
 	event EventHandler<WorkListChangedEventArgs> WorkListChanged;

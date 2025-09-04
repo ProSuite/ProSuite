@@ -200,6 +200,8 @@ public class WorkListMock : IWorkList
 	public string Name { get; set; }
 	public string DisplayName { get; }
 
+	public bool CacheBufferedItemGeometries { get; set; }
+
 	public Envelope GetExtent()
 	{
 		throw new NotImplementedException();
