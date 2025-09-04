@@ -387,27 +387,37 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			if (args.Selection.IsEmpty)
 			{
 				SelectionCursors = FirstPhaseCursors;
+
+				_firstFeature = null;
+				await SetupSelectionSketchAsync();
+				return true;
 			}
 
-			await QueuedTask.Run(async () =>
-			{
-				if (! CanUseSelection(ActiveMapView))
-				{
-					_firstFeature = null;
-					await SetupSelectionSketchAsync();
-				}
-				else
-				{
-					Dictionary<MapMember, List<long>> selectionByLayer =
-						SelectionUtils.GetSelection(ActiveMapView.Map);
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
 
+			// TODO: Try to make CanUseSelection run outside QueuedTask.Run (as far as possible)
+			bool canUseSelection = await QueuedTask.Run(() => CanUseSelection(selectionByLayer));
+
+			if (! canUseSelection)
+			{
+				_firstFeature = null;
+				await SetupSelectionSketchAsync();
+			}
+			else
+			{
+				Dictionary<MapMember, List<long>> mapMemberSelection =
+					selectionByLayer.ToDictionary(MapMember (kvp) => kvp.Key, kvp => kvp.Value);
+
+				await QueuedTask.Run(() =>
+				{
 					List<Feature> selection =
-						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+						GetDistinctApplicableSelectedFeatures(mapMemberSelection, UnJoinedSelection)
 							.ToList();
 
 					_firstFeature = selection[0];
-				}
-			});
+				});
+			}
 
 			return true;
 		}
