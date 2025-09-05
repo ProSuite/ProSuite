@@ -308,7 +308,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return currentSketch?.IsEmpty == false;
 		}
 
-		protected async Task SetupSelectionSketchAsync()
+		private async Task SetupSelectionSketchAsync()
 		{
 			_msg.VerboseDebug(() => nameof(SetupSelectionSketchAsync));
 
@@ -401,6 +401,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
 		}
 
+		/// <summary>
+		/// Subclasses override this method to execute tool-specific logic after the start of the
+		/// selection phase, such as specific cursors.
+		/// </summary>
+		/// <returns></returns>
 		protected virtual Task OnSelectionPhaseStartedAsync()
 		{
 			return Task.CompletedTask;
@@ -557,7 +562,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
 			                            ActiveMapView.ClientToScreen(CurrentMousePosition))
 			       {
-					   NoMultiselection = ! AllowMultiSelection(out _)
+				       NoMultiselection = ! AllowMultiSelection(out _)
 			       };
 		}
 
