@@ -636,6 +636,11 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return Math.Max(minDistance, coplanarityTolerance);
 		}
 
+		public static Pnt2D GetCentroid2D(IBoundedXY bounds)
+		{
+			return new Pnt2D(bounds.XMax - bounds.XMin, bounds.YMax - bounds.YMin);
+		}
+
 		public static double GetArea2D([NotNull] IList<Pnt3D> ringVertices)
 		{
 			double area = 0;
