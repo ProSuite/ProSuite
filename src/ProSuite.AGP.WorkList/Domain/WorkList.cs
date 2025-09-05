@@ -1542,9 +1542,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			return UpdateItemGeometry(cachedItem, geometry, exclusion);
 		}
 
-		private static int UpdateItemGeometry([NotNull] IWorkItem item,
-		                                      [CanBeNull] Geometry geometry,
-		                                      Predicate<IWorkItem> exclusion = null)
+		private int UpdateItemGeometry([NotNull] IWorkItem item,
+		                               [CanBeNull] Geometry geometry,
+		                               Predicate<IWorkItem> exclusion = null)
 		{
 			if (geometry == null)
 			{
@@ -1558,7 +1558,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (UseItemGeometry(geometry))
 			{
-				item.SetGeometry(GeometryUtils.Buffer(geometry, 10));
+				// TODO: Add units to configuration, convert to data spatial reference if necessary
+				//       So far, the buffer distance is assumed to be in the data spatial reference units.
+				double bufferDistance = ItemDisplayBufferDistance;
+
+				item.SetGeometry(GeometryUtils.Buffer(geometry, bufferDistance));
 			}
 			else
 			{
