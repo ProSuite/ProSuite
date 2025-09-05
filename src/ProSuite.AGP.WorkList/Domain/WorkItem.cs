@@ -75,11 +75,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public GdbRowIdentity GdbRowProxy { get; }
 
-		public GeometryType? GeometryType
-		{
-			get => _geometry?.GeometryType;
-			set => throw new NotImplementedException();
-		}
+		public GeometryType? SourceGeometryType { get; set; }
 
 		#endregion
 

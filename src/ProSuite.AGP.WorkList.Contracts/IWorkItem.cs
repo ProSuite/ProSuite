@@ -47,7 +47,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// The geometry type of the work item's source feature, if any.
 		/// </summary>
 		[CanBeNull]
-		GeometryType? GeometryType { get; set; }
+		GeometryType? SourceGeometryType { get; set; }
 
 		bool HasExtent { get; }
 

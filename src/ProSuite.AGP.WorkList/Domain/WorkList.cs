@@ -298,7 +298,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private static bool CanUseBufferedGeometryFor([NotNull] IWorkItem item)
 		{
-			GeometryType? geometryType = item.GeometryType;
+			GeometryType? geometryType = item.SourceGeometryType;
 			return CanUseBufferedGeometryFor(geometryType);
 		}
 
@@ -446,7 +446,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					itemsWithExtent.Add(item);
 
-					item.GeometryType = geometry.GeometryType;
+					item.SourceGeometryType = geometry.GeometryType;
 					item.SetExtent(geometry.Extent);
 
 					ComputeExtent(geometry.Extent,
