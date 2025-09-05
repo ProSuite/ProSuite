@@ -11,7 +11,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
@@ -35,19 +34,6 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected override SelectionCursors FirstPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
-
-		protected override ISymbolizedSketchType GetSymbolizedSketch()
-		{
-			return MapUtils.IsStereoMapView(ActiveMapView)
-				       ? null
-				       : new SymbolizedSketchTypeBasedOnSelection(this);
-		}
-
-		public override Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
-		{
-			// It makes no sense to apply the symbol from the selected line to the polygon sketch:
-			return Task.FromResult(geometryType == GeometryType.Polygon);
-		}
 
 		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
@@ -104,8 +90,8 @@ namespace ProSuite.AGP.Editing.Erase
 
 			var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
 			var taskFlash =
-				QueuedTaskUtils.Run(
-					() => ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures));
+				QueuedTaskUtils.Run(() => ToolUtils.FlashResultPolygonsAsync(
+					                    activeView, resultFeatures));
 
 			await Task.WhenAll(taskFlash, taskSave);
 

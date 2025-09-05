@@ -546,7 +546,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			try
 			{
 				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
-
 			}
 			catch (Exception e)
 			{
@@ -648,17 +647,31 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
-		protected virtual bool IsPickableTargetFeature([NotNull] Feature feature)
+		protected bool IsPickableTargetFeature([NotNull] Feature feature)
 		{
 			// assumes that editability is already checked at layer level
 
-			if (_firstFeature == null)
+			if (_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.FirstObject)
 			{
-				return true;
+				if (_firstFeature == null)
+				{
+					return true;
+				}
+
+				return _firstFeature.GetObjectID() != feature.GetObjectID() ||
+				       _firstFeature.GetTable().GetID() != feature.GetTable().GetID();
 			}
 
-			return _firstFeature.GetObjectID() != feature.GetObjectID() ||
-			       _firstFeature.GetTable().GetID() != feature.GetTable().GetID();
+			// MergeSurvivor == LargerObject
+			IList<Feature> selectedFeatures = GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+			bool alreadySelected = selectedFeatures.Any(selectedFeature =>
+				                                            selectedFeature.GetObjectID() ==
+				                                            feature.GetObjectID() &&
+				                                            selectedFeature.GetTable().GetID() ==
+				                                            feature.GetTable().GetID());
+
+			return ! alreadySelected;
 		}
 
 		[CanBeNull]
