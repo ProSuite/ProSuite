@@ -14,7 +14,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly double _extentExpansionFactor = 1.1;
 		private readonly double _minimumSizeDegrees = 0.001;
 		private readonly double _minimumSizeProjected = 30;
-			
+
 		private WorkItemStatus _status;
 		private Geometry _geometry;
 		private Envelope _extent;
@@ -46,57 +46,21 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public long OID
 		{
-			get
-			{
-				lock (_obj)
-				{
-					return _oid;
-				}
-			}
-			set
-			{
-				lock (_obj)
-				{
-					_oid = value;
-				}
-			}
+			get => _oid;
+			set => _oid = value;
 		}
 
 		public WorkItemStatus Status
 		{
-			get
-			{
-				lock (_obj)
-				{
-					return _status;
-				}
-			}
-			set
-			{
-				lock (_obj)
-				{
-					_status = value;
-				}
-			}
+			get => _status;
+			set => _status = value;
 		}
 
 		public Envelope Extent
 		{
-			get
-			{
-				lock (_obj)
-				{
-					return _extent;
-				}
-			}
+			get => _extent;
 			// Use SetExtent! Protected setter is only for unit testing.
-			protected set
-			{
-				lock (_obj)
-				{
-					_extent = value;
-				}
-			}
+			protected set => _extent = value;
 		}
 
 		public Geometry BufferedGeometry => _geometry;
