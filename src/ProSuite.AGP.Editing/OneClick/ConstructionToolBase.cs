@@ -248,6 +248,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
+			if (! AllowMultiSelection(out _))
+			{
+				return;
+			}
+
 			// This is called repeatedly while keeping the shift key pressed.
 			// Return if intermittent selection phase is running.
 			if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true)
