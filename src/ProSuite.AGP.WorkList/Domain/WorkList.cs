@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -27,11 +28,12 @@ namespace ProSuite.AGP.WorkList.Domain
 	public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private static readonly object _obj = new();
 		private static readonly int _initialCapacity = 1000;
 
 		private List<IWorkItem> _items = new(_initialCapacity);
-		private Dictionary<GdbRowIdentity, IWorkItem> _rowMap = new(_initialCapacity);
+		private ConcurrentDictionary<GdbRowIdentity, IWorkItem> _rowMap = new();
 
 		private WorkItemVisibility? _visibility;
 		[NotNull] private string _displayName;
@@ -349,7 +351,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region GetItems
 
-		private SpatialHashSearcher<IWorkItem> _searcher;
+		[CanBeNull] private SpatialHashSearcher<IWorkItem> _searcher;
 
 		public Row GetCurrentItemSourceRow(bool readOnly = true)
 		{
@@ -424,7 +426,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
 
-			var rowMap = new Dictionary<GdbRowIdentity, IWorkItem>();
+			var rowMap = new ConcurrentDictionary<GdbRowIdentity, IWorkItem>();
 			var itemsWithExtent = new List<IWorkItem>();
 
 			Stopwatch watch =
@@ -489,22 +491,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			// the IWorkItem.ObjectID We'd have to make a lookup: IWorkItem.OID > Table, ObjectID
 			// to query database.
 
-			List<IWorkItem> items;
-
-			lock (_obj)
-			{
-				items = _items;
-			}
-
-			Assert.True(items.Count > 0, "no work items");
+			Assert.True(_items.Count > 0, "no work items");
 
 			if (filter.ObjectIDs.Count == 0)
 			{
-				return items.AsEnumerable();
+				return _items.AsEnumerable();
 			}
 
 			List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
-			return items.Where(item => oids.BinarySearch(item.OID) >= 0);
+			return _items.Where(item => oids.BinarySearch(item.OID) >= 0);
 		}
 
 		public IEnumerable<IWorkItem> GetItems([CanBeNull] SpatialQueryFilter filter)
@@ -581,6 +576,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private static SpatialHashSearcher<IWorkItem> CreateSpatialSearcher(List<IWorkItem> items)
 		{
+			if (items.Count == 0)
+			{
+				return null;
+			}
+
 			return SpatialHashSearcher<IWorkItem>.CreateSpatialSearcher(items, CreateEnvelope);
 		}
 
@@ -1423,11 +1423,6 @@ namespace ProSuite.AGP.WorkList.Domain
 						UpdateItemDisplayGeometry(item, geometry);
 					}
 
-					if (item.HasExtent)
-					{
-						_searcher.Add(item, CreateEnvelope(item));
-					}
-
 					invalidateOids.Add(item.OID);
 				}
 
@@ -1467,22 +1462,19 @@ namespace ProSuite.AGP.WorkList.Domain
 						ClearCurrentItem(cachedItem);
 					}
 
-					lock (_obj)
-					{
-						// to invalidate item remove it from work list cache
-						bool invalidated =
-							_rowMap.Remove(cachedItem.GdbRowProxy, out IWorkItem item) &&
-							_items.Remove(item);
-						Assert.True(invalidated,
-						            $"Invalidate work item failed: {rowId} not part of work list");
+					// to invalidate item remove it from work list cache
+					bool invalidated =
+						_rowMap.Remove(cachedItem.GdbRowProxy, out IWorkItem item) &&
+						_items.Remove(item);
+					Assert.True(invalidated,
+					            $"Invalidate work item failed: {rowId} not part of work list");
 
-						Envelope extent = cachedItem.Extent;
-						if (extent != null)
-						{
-							_searcher.Remove(cachedItem,
-							                 extent.XMin, extent.YMin,
-							                 extent.XMax, extent.YMax);
-						}
+					Envelope extent = cachedItem.Extent;
+					if (extent != null)
+					{
+						_searcher?.Remove(cachedItem,
+						                  extent.XMin, extent.YMin,
+						                  extent.XMax, extent.YMax);
 					}
 				}
 
@@ -1521,9 +1513,9 @@ namespace ProSuite.AGP.WorkList.Domain
 						{
 							Envelope extent = Assert.NotNull(cachedItem.Extent);
 
-							_searcher.Remove(cachedItem,
-							                 extent.XMin, extent.YMin,
-							                 extent.XMax, extent.YMax);
+							Assert.NotNull(_searcher).Remove(cachedItem,
+							                                 extent.XMin, extent.YMin,
+							                                 extent.XMax, extent.YMax);
 
 							if (CacheBufferedItemGeometries)
 							{
@@ -1610,26 +1602,31 @@ namespace ProSuite.AGP.WorkList.Domain
 			Assert.True(item.OID <= 0, "item is already initialized");
 			item.OID = Repository.GetNextOid();
 
-			lock (_obj)
+			if (! _rowMap.TryAdd(item.GdbRowProxy, item))
 			{
-				if (! _rowMap.TryAdd(item.GdbRowProxy, item))
-				{
-					return false;
-				}
-
-				_items.Add(item);
-				return true;
+				return false;
 			}
+
+			_items.Add(item);
+
+			if (item.HasExtent)
+			{
+				if (_searcher == null)
+				{
+					_searcher = CreateSpatialSearcher(_items);
+				}
+				else
+				{
+					_searcher.Add(item, CreateEnvelope(item));
+				}
+			}
+
+			return true;
 		}
 
 		private bool TryGetItem(GdbRowIdentity rowProxy, out IWorkItem cachedItem)
 		{
-			bool exists;
-
-			lock (_obj)
-			{
-				exists = _rowMap.TryGetValue(rowProxy, out cachedItem);
-			}
+			bool exists = _rowMap.TryGetValue(rowProxy, out cachedItem);
 
 			return exists;
 		}
