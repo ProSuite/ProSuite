@@ -38,7 +38,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool HasExtent => _extent != null;
 
-		public bool HasFeatureGeometry => _geometry != null;
+		public bool HasBufferedGeometry => _geometry != null;
 
 		#region IWorkItem
 
@@ -99,23 +99,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public Geometry Geometry
-		{
-			get
-			{
-				lock (_obj)
-				{
-					return _geometry;
-				}
-			}
-			set
-			{
-				lock (_obj)
-				{
-					_geometry = value;
-				}
-			}
-		}
+		public Geometry BufferedGeometry => _geometry;
 
 		#endregion
 
@@ -127,13 +111,18 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public GdbRowIdentity GdbRowProxy { get; }
 
-		public GeometryType? GeometryType => _geometry?.GeometryType;
+		public GeometryType? GeometryType
+		{
+			get => _geometry?.GeometryType;
+			set => throw new NotImplementedException();
+		}
 
 		#endregion
 
 		public override string ToString()
 		{
-			return $"item id={OID}, row oid={ObjectID}, {GdbRowProxy.Table.Name}, {Status}, {Visited}";
+			return
+				$"item id={OID}, row oid={ObjectID}, {GdbRowProxy.Table.Name}, {Status}, {Visited}";
 		}
 
 		[NotNull]
@@ -148,9 +137,12 @@ namespace ProSuite.AGP.WorkList.Domain
 			return $"{tableName} OID={row.ObjectId} (item ID={OID})";
 		}
 
-		public void SetGeometry([NotNull] Geometry geometry)
+		public void SetBufferedGeometry([NotNull] Geometry geometry)
 		{
-			Geometry = geometry;
+			lock (_obj)
+			{
+				_geometry = geometry;
+			}
 
 			SetExtent(geometry.Extent);
 		}

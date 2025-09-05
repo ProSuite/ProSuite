@@ -137,7 +137,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 				values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
 				values[2] = item.Visited ? 1 : 0;
 				values[3] = item == current ? 1 : 0;
-				values[4] = workList.GetItemGeometry(item);
+				values[4] = workList.GetItemDisplayGeometry(item);
 			}
 			catch (Exception ex)
 			{

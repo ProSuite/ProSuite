@@ -199,7 +199,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			AlwaysUseDraftMode = enable;
 		}
 
-		public Geometry GetItemGeometry(IWorkItem item)
+		public Geometry GetItemDisplayGeometry(IWorkItem item)
 		{
 			try
 			{
@@ -208,54 +208,20 @@ namespace ProSuite.AGP.WorkList.Domain
 					return null;
 				}
 
+				// In draft mode, use extent-based geometry for bufferable items
 				if (AlwaysUseDraftMode)
 				{
-					// it's not a table row and not a point
-					if (item.HasExtent && UseItemGeometry(item))
-					{
-						Assert.NotNull(item.Extent);
-						return PolygonBuilderEx.CreatePolygon(
-							item.Extent, item.Extent.SpatialReference);
-					}
+					return CreateExtentGeometry(item);
 				}
-				else
+
+				// In non-draft mode, try to get detailed geometry
+				if (TryGetDetailedGeometry(item, out Geometry detailedGeometry))
 				{
-					// it's not a table row and not a point
-					if (CacheBufferedItemGeometries && item.HasFeatureGeometry &&
-					    UseItemGeometry(item))
-					{
-						return GetPolygonGeometry(item);
-					}
-
-					// No pre-caching enabled, but the current item can be buffered if not draft mode:
-					if (! AlwaysUseDraftMode && item.GdbRowProxy.Equals(Current?.GdbRowProxy))
-					{
-						if (item.HasFeatureGeometry)
-						{
-							return GetPolygonGeometry(item);
-						}
-
-						if (GetCurrentItemSourceRow(false) is Feature feature)
-						{
-							UpdateItemGeometry(item, feature.GetShape());
-
-							if (item.HasFeatureGeometry)
-							{
-								return GetPolygonGeometry(item);
-							}
-						}
-					}
+					return detailedGeometry;
 				}
 
-				// it's a point
-				if (item.HasExtent)
-				{
-					Assert.NotNull(item.Extent);
-					return PolygonBuilderEx.CreatePolygon(item.Extent,
-					                                      item.Extent.SpatialReference);
-				}
-
-				return null;
+				// Fallback to extent-based geometry
+				return CreateExtentGeometry(item);
 			}
 			catch (Exception ex)
 			{
@@ -265,31 +231,78 @@ namespace ProSuite.AGP.WorkList.Domain
 			return null;
 		}
 
+		private static Geometry CreateExtentGeometry(IWorkItem item)
+		{
+			if (! item.HasExtent)
+				return null;
+
+			Assert.NotNull(item.Extent);
+			return PolygonBuilderEx.CreatePolygon(item.Extent, item.Extent.SpatialReference);
+		}
+
+		private bool TryGetDetailedGeometry([NotNull] IWorkItem item, out Geometry geometry)
+		{
+			geometry = null;
+
+			// Use cached buffered geometry if available
+			if (CacheBufferedItemGeometries &&
+			    item.HasBufferedGeometry &&
+			    CanUseBufferedGeometryFor(item))
+			{
+				geometry = GetPolygonGeometry(item);
+				return true;
+			}
+
+			// For current item, try to load geometry from source (single buffer is fast)
+			if (item.GdbRowProxy.Equals(Current?.GdbRowProxy))
+			{
+				if (item.HasBufferedGeometry)
+				{
+					geometry = GetPolygonGeometry(item);
+					return true;
+				}
+
+				// Try to load geometry from database
+				if (GetCurrentItemSourceRow(false) is Feature feature)
+				{
+					UpdateItemDisplayGeometry(item, feature.GetShape());
+				}
+
+				if (item.HasBufferedGeometry)
+				{
+					geometry = GetPolygonGeometry(item);
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		private static Geometry GetPolygonGeometry(IWorkItem item)
 		{
-			Assert.NotNull(item.Geometry);
+			Assert.NotNull(item.BufferedGeometry);
 
-			switch (item.Geometry.GeometryType)
+			switch (item.BufferedGeometry.GeometryType)
 			{
 				case GeometryType.Polyline:
-					var polyline = (Polyline) item.Geometry;
+					var polyline = (Polyline) item.BufferedGeometry;
 					return PolygonBuilderEx.CreatePolygon(
-						polyline, item.Geometry.SpatialReference);
+						polyline, item.BufferedGeometry.SpatialReference);
 				case GeometryType.Polygon:
-					return (Polygon) item.Geometry;
+					return (Polygon) item.BufferedGeometry;
 
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		private static bool UseItemGeometry([NotNull] IWorkItem item)
+		private static bool CanUseBufferedGeometryFor([NotNull] IWorkItem item)
 		{
 			GeometryType? geometryType = item.GeometryType;
-			return UseItemGeometry(geometryType);
+			return CanUseBufferedGeometryFor(geometryType);
 		}
 
-		private static bool UseItemGeometry([CanBeNull] Geometry geometry)
+		private bool CanUseBufferedGeometryFor([CanBeNull] Geometry geometry)
 		{
 			if (geometry == null)
 			{
@@ -297,10 +310,29 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			GeometryType geometryType = geometry.GeometryType;
-			return UseItemGeometry(geometryType);
+
+			if (! CanUseBufferedGeometryFor(geometryType))
+			{
+				return false;
+			}
+
+			int pointCount = GeometryUtils.GetPointCount(geometry);
+
+			if (pointCount > MaxBufferedShapePointCount)
+			{
+				return false;
+			}
+
+			if (geometry is Multipart polycurve && polycurve.HasCurves)
+			{
+				// creating the buffer for non-linear segments is extremely expensive
+				return false;
+			}
+
+			return true;
 		}
 
-		private static bool UseItemGeometry(GeometryType? geometryType)
+		private static bool CanUseBufferedGeometryFor(GeometryType? geometryType)
 		{
 			switch (geometryType)
 			{
@@ -342,14 +374,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void UpdateExistingItemGeometries(QueryFilter filter)
 		{
 			// Don't update items already having feature geometry
-			Predicate<IWorkItem> exclusion = item => item.HasFeatureGeometry;
+			Predicate<IWorkItem> exclusion = item => item.HasBufferedGeometry;
 
 			Stopwatch watch = Stopwatch.StartNew();
 
 			int count = 0;
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
 			{
-				if (! UseItemGeometry(geometry))
+				if (! CanUseBufferedGeometryFor(geometry))
 				{
 					continue;
 				}
@@ -414,6 +446,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					itemsWithExtent.Add(item);
 
+					item.GeometryType = geometry.GeometryType;
 					item.SetExtent(geometry.Extent);
 
 					ComputeExtent(geometry.Extent,
@@ -1387,7 +1420,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					if (CacheBufferedItemGeometries)
 					{
-						UpdateItemGeometry(item, geometry);
+						UpdateItemDisplayGeometry(item, geometry);
 					}
 
 					if (item.HasExtent)
@@ -1494,7 +1527,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 							if (CacheBufferedItemGeometries)
 							{
-								UpdateItemGeometry(cachedItem, geometry);
+								UpdateItemDisplayGeometry(cachedItem, geometry);
 							}
 
 							_searcher.Add(cachedItem, CreateEnvelope(cachedItem));
@@ -1539,14 +1572,14 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Assert.True(cachedItem.OID > 0, "item is not initialized");
 
-			return UpdateItemGeometry(cachedItem, geometry, exclusion);
+			return UpdateItemDisplayGeometry(cachedItem, geometry, exclusion);
 		}
 
-		private int UpdateItemGeometry([NotNull] IWorkItem item,
-		                               [CanBeNull] Geometry geometry,
-		                               Predicate<IWorkItem> exclusion = null)
+		private int UpdateItemDisplayGeometry([NotNull] IWorkItem item,
+		                                      [CanBeNull] Geometry shapeGeometry,
+		                                      Predicate<IWorkItem> exclusion = null)
 		{
-			if (geometry == null)
+			if (shapeGeometry == null)
 			{
 				return 0;
 			}
@@ -1556,17 +1589,17 @@ namespace ProSuite.AGP.WorkList.Domain
 				return 0;
 			}
 
-			if (UseItemGeometry(geometry))
+			if (CanUseBufferedGeometryFor(shapeGeometry))
 			{
 				// TODO: Add units to configuration, convert to data spatial reference if necessary
 				//       So far, the buffer distance is assumed to be in the data spatial reference units.
 				double bufferDistance = ItemDisplayBufferDistance;
 
-				item.SetGeometry(GeometryUtils.Buffer(geometry, bufferDistance));
+				item.SetBufferedGeometry(GeometryUtils.Buffer(shapeGeometry, bufferDistance));
 			}
 			else
 			{
-				item.SetExtent(geometry.Extent);
+				item.SetExtent(shapeGeometry.Extent);
 			}
 
 			return 1;

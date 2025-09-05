@@ -333,7 +333,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public Geometry GetItemGeometry(IWorkItem item)
+	public Geometry GetItemDisplayGeometry(IWorkItem item)
 	{
 		throw new NotImplementedException();
 	}

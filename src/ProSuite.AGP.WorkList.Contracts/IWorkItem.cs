@@ -10,7 +10,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// The work item id.
 		/// </summary>
 		long OID { get; set; }
-		
+
 		/// <summary>
 		/// Object ID of the work item's source row
 		/// </summary>
@@ -37,17 +37,23 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[CanBeNull]
 		Envelope Extent { get; }
 
-		// TODO: (daro) GetGeometry?
+		/// <summary>
+		/// The buffered wireframe geometry of the work item, if applicable.
+		/// </summary>
 		[CanBeNull]
-		Geometry Geometry { get; }
+		Geometry BufferedGeometry { get; }
 
-		GeometryType? GeometryType { get; }
+		/// <summary>
+		/// The geometry type of the work item's source feature, if any.
+		/// </summary>
+		[CanBeNull]
+		GeometryType? GeometryType { get; set; }
 
 		bool HasExtent { get; }
 
-		bool HasFeatureGeometry { get; }
+		bool HasBufferedGeometry { get; }
 
-		void SetGeometry(Geometry geometry);
+		void SetBufferedGeometry(Geometry geometry);
 
 		void SetExtent(Envelope extent);
 
