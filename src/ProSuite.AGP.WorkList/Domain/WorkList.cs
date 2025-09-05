@@ -108,9 +108,17 @@ namespace ProSuite.AGP.WorkList.Domain
 		//		 possibility to define an AOI.
 		protected Geometry AreaOfInterest { get; }
 
+		public double MinimumScaleDenominator { get; set; }
+
 		public bool AlwaysUseDraftMode { get; set; } = true;
 
 		public bool CacheBufferedItemGeometries { get; set; }
+
+		public double ItemDisplayBufferDistance { get; set; }
+
+		public int? MaxBufferedItemCount { get; set; }
+
+		public int? MaxBufferedShapePointCount { get; set; }
 
 		public virtual bool CanSetStatus()
 		{

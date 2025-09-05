@@ -113,10 +113,15 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			string displayName = Path.GetFileNameWithoutExtension(workListFile);
-			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
-			Assert.NotNull(result);
+
+			IWorkList result =
+				Assert.NotNull(CreateWorkListCore(itemRepository, uniqueName, displayName));
 
 			_msg.Debug($"Created {WorkListUtils.Format(result)}");
+
+			ConfigureWorkList(result);
+
+			_msg.Debug($"Configured {WorkListUtils.Format(result)}. Start loading items...");
 
 			if (AllowBackgroundLoading)
 			{
@@ -136,6 +141,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			return null;
 		}
+
+		protected virtual void ConfigureWorkList(IWorkList workList) { }
 
 		/// <summary>
 		/// Loads the work list layer, containing the navigable items based on the plugin

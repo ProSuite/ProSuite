@@ -25,6 +25,12 @@ public interface IWorkList : IRowCache
 	long? TotalCount { get; set; }
 
 	/// <summary>
+	/// The minimum scale denominator, i.e. the maximum scale which should be applied when zooming
+	/// to a work item. The scale will also be determined by the item's display buffer distance.
+	/// </summary>
+	double MinimumScaleDenominator { get; set; }
+
+	/// <summary>
 	/// Allow the Worklist geometry service to calculate and set the work items' geometry
 	/// property to its buffered representation, if required.
 	/// NOTE: This service uses a background thread to access the items of the work list.
@@ -39,6 +45,22 @@ public interface IWorkList : IRowCache
 	/// is true, all items are buffered, otherwise only the current item.
 	/// </summary>
 	bool AlwaysUseDraftMode { get; set; }
+
+	/// <summary>
+	/// The buffer distance to be used to draw the display frame of the work items in the map.
+	/// </summary>
+	double ItemDisplayBufferDistance { get; set; }
+
+	/// <summary>
+	/// The maximum number of items whose frame should be in the form of the buffered geometry.
+	/// </summary>
+	public int? MaxBufferedItemCount { get; set; }
+
+	/// <summary>
+	/// The maximum number of points per geometry to be used when buffering. Geometries that exceed
+	/// this number of points will not be buffered, but their envelope will be displayed instead.
+	/// </summary>
+	public int? MaxBufferedShapePointCount { get; set; }
 
 	public Envelope GetExtent();
 
