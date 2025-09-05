@@ -369,7 +369,14 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			WorkItemStatus? status = GetStatus(Visibility);
 
+			string aoiText = AreaOfInterest != null ? " within area of interest" : string.Empty;
+
+			_msg.InfoFormat("Loading work list items for {0}{1}...", DisplayName, aoiText);
+
 			LoadItems(filter, status);
+
+			_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
+			                DisplayName);
 		}
 
 		public void LoadItems([NotNull] QueryFilter filter, WorkItemStatus? statusFilter = null)
