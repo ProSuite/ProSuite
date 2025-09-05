@@ -422,6 +422,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					sb.Append(
 						$"Output spatial reference: {spatialFilter.OutputSpatialReference.Name}");
 				}
+				else
+				{
+					sb.Append("Output spatial reference is null");
+				}
 			}
 
 			return sb.ToString();

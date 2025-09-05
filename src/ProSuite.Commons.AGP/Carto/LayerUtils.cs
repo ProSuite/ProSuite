@@ -64,22 +64,40 @@ namespace ProSuite.Commons.AGP.Carto
 			_msg.VerboseDebug(() => $"Querying layer {((MapMember) layer).Name} using filter: " +
 			                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
 
-			using RowCursor cursor = layer.Search(filter);
-			if (cursor is null) yield break; // no valid data source
-
-			while (cursor.MoveNext())
+			RowCursor cursor = null;
+			try
 			{
-				if (cancellationToken.IsCancellationRequested)
+				try
 				{
-					yield break;
+					cursor = layer.Search(filter);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error querying layer {((MapMember) layer).Name} using filter: " +
+					           $"{GdbQueryUtils.FilterPropertiesToString(filter)} ", e);
+					throw;
 				}
 
-				T currentRow = (T) cursor.Current;
+				if (cursor is null) yield break; // no valid data source
 
-				if (predicate(currentRow))
+				while (cursor.MoveNext())
 				{
-					yield return currentRow;
+					if (cancellationToken.IsCancellationRequested)
+					{
+						yield break;
+					}
+
+					T currentRow = (T) cursor.Current;
+
+					if (predicate(currentRow))
+					{
+						yield return currentRow;
+					}
 				}
+			}
+			finally
+			{
+				cursor?.Dispose();
 			}
 		}
 
