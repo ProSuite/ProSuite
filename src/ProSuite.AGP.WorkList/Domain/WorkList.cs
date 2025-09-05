@@ -490,9 +490,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			// ObjectID of its source row. QueryFilter.ObjectIDs are the IWorkItem.OID and not
 			// the IWorkItem.ObjectID We'd have to make a lookup: IWorkItem.OID > Table, ObjectID
 			// to query database.
-
-			Assert.True(_items.Count > 0, "no work items");
-
+			
 			if (filter.ObjectIDs.Count == 0)
 			{
 				return _items.AsEnumerable();
