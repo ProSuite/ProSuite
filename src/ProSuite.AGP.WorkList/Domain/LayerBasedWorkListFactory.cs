@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.Assertions;
@@ -15,7 +14,7 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 	private readonly string _typeName;
 	private readonly string _path;
 
-	private bool _isCreatingWorkList;
+	private TaskCompletionSource<IWorkList> _workListCreationTaskCompletionSource;
 
 	public LayerBasedWorkListFactory(string tableName, string typeName, string path)
 	{
@@ -55,7 +54,7 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 
 			Assert.NotNull(workEnvironment);
 
-			if (! _isCreatingWorkList)
+			if (_workListCreationTaskCompletionSource == null)
 			{
 				StartCreatingWorklist(workEnvironment);
 			}
@@ -66,26 +65,6 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 		}
 
 		return WorkList;
-	}
-
-	private void StartCreatingWorklist(IWorkEnvironment workEnvironment)
-	{
-		Task.Run(async () =>
-		{
-			try
-			{
-				_isCreatingWorkList = true;
-				WorkList = await workEnvironment.CreateWorkListAsync(Name, _path);
-			}
-			catch (Exception e)
-			{
-				_msg.Error("Error preparing work list.", e);
-			}
-			finally
-			{
-				_isCreatingWorkList = false;
-			}
-		});
 	}
 
 	public override async Task<IWorkList> GetAsync()
@@ -102,6 +81,12 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 				return null;
 			}
 
+			if (_workListCreationTaskCompletionSource != null)
+			{
+				// The work list is already being created. Wait for it:
+				return await _workListCreationTaskCompletionSource.Task;
+			}
+
 			IWorkEnvironment workEnvironment =
 				WorkListEnvironmentFactory.Instance.CreateWorkEnvironment(_path, _typeName);
 
@@ -115,9 +100,7 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 			// TODO: (daro) consider storing extent in definition file.
 			//workEnvironment.AreaOfInterest
 
-			Assert.NotNull(workEnvironment);
-
-			WorkList = await QueuedTask.Run(() => workEnvironment.CreateWorkListAsync(Name, _path));
+			return await StartCreatingWorklist(workEnvironment).Task;
 		}
 		catch (Exception ex)
 		{
@@ -125,5 +108,30 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 		}
 
 		return WorkList;
+	}
+
+	private TaskCompletionSource<IWorkList> StartCreatingWorklist(IWorkEnvironment workEnvironment)
+	{
+		_workListCreationTaskCompletionSource = new TaskCompletionSource<IWorkList>();
+
+		Task.Run(async () =>
+		{
+			try
+			{
+				WorkList = await workEnvironment.CreateWorkListAsync(Name, _path);
+				_workListCreationTaskCompletionSource.SetResult(WorkList);
+			}
+			catch (Exception e)
+			{
+				_msg.Error("Error preparing work list.", e);
+				_workListCreationTaskCompletionSource.SetException(e);
+			}
+			finally
+			{
+				_workListCreationTaskCompletionSource = null;
+			}
+		});
+
+		return _workListCreationTaskCompletionSource;
 	}
 }
