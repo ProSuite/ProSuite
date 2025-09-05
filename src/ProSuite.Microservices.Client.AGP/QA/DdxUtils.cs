@@ -656,37 +656,21 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					                   .Select(datasetId => datasetsById[datasetId])
 					                   .ToList();
 
-				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
-				                                            projectMsg.Name,
-				                                            datasets, datastore, sr)
-				                       {
-					                       IsMasterDatabaseWorkspace =
-						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
-				                       };
-
-				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
-					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
-
-				var projectSettings =
-					new ProjectSettings(projectMsg.ProjectId,
-					                    projectMsg.ShortName,
-					                    projectMsg.Name)
+				var projectWorkspace =
+					new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
+					                     projectMsg.Name,
+					                     datasets, datastore, sr)
 					{
-						MinimumScaleDenominator = projectMsg.MinimumScaleDenominator,
-
-						AttributeEditorConfigDirectory =
-							ProtobufGeomUtils.EmptyToNull(projectMsg.AttributeEditorConfigDir),
-						ToolConfigDirectory =
-							ProtobufGeomUtils.EmptyToNull(projectMsg.ToolConfigDirectory),
-						WorkListConfigDirectory =
-							ProtobufGeomUtils.EmptyToNull(projectMsg.WorkListConfigDir),
+						IsMasterDatabaseWorkspace = projectWorkspaceMsg.IsMasterDatabaseWorkspace,
+						ExcludeReadOnlyDatasetsFromProjectWorkspace =
+							projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace
 					};
 
-				projectSettings.SetFullExtent(
-					projectMsg.FullExtentXMin,
-					projectMsg.FullExtentYMin,
-					projectMsg.FullExtentXMax,
-					projectMsg.FullExtentYMax);
+				var projectSettings =
+					new ProjectSettings(projectMsg.ProjectId, projectMsg.ShortName,
+					                    projectMsg.Name);
+
+				ReadProjectSettings(projectMsg, projectSettings);
 
 				projectWorkspace.ProjectSettings = projectSettings;
 
@@ -694,6 +678,23 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			return result;
+		}
+
+		public static void ReadProjectSettings([NotNull] ProjectMsg fromProjectMsg,
+		                                       [NotNull] IProjectSettings intoProjectSettings)
+		{
+			intoProjectSettings.MinimumScaleDenominator = fromProjectMsg.MinimumScaleDenominator;
+			intoProjectSettings.AttributeEditorConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.AttributeEditorConfigDir);
+			intoProjectSettings.ToolConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.ToolConfigDirectory);
+			intoProjectSettings.WorkListConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.WorkListConfigDir);
+
+			intoProjectSettings.FullExtentXMin = fromProjectMsg.FullExtentXMin;
+			intoProjectSettings.FullExtentYMin = fromProjectMsg.FullExtentYMin;
+			intoProjectSettings.FullExtentXMax = fromProjectMsg.FullExtentXMax;
+			intoProjectSettings.FullExtentYMax = fromProjectMsg.FullExtentYMax;
 		}
 
 		private static Dictionary<int, IDdxDataset> FromDatasetMsgs(
