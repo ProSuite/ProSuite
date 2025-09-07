@@ -5,6 +5,8 @@ using System.IO;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -16,6 +18,8 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 
 	private IReadOnlyList<string> _tableNames;
 	private string _path;
+
+	private XmlWorkListDefinition _xmlWorkListDefinition;
 
 	[CanBeNull] private static WorkListGeometryService _service;
 
@@ -53,25 +57,63 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 				$"Work list definition file not found: {_path}");
 		}
 
-		string name = WorkListUtils.GetWorklistName(_path, out string typeName);
+		_msg.DebugFormat("Reading work list definition {0}", _path);
 
-		IWorkListRegistry registry = WorkListRegistry.Instance;
+		// Read the work list definition only once - this is the expensive part (but still about
+		// more one or two orders of magnitude faster than opening a real work list):
+		_xmlWorkListDefinition = XmlWorkItemStateRepository.Import(_path);
 
-		if (! registry.WorklistExists(name))
-		{
-			registry.TryAdd(new LayerBasedWorkListFactory(name, typeName, _path));
-		}
+		string tableName = _xmlWorkListDefinition.Name;
 
 		// the following situation: when work list layer is already in TOC
 		// and its data source (work list definition file) is renamed
 		// Pro still opens the old data source (old file name) which
 		// doesn't exist anymore
-		if (string.IsNullOrEmpty(name))
+		// TODO: Is this still relevant?
+		if (string.IsNullOrEmpty(tableName))
 		{
 			return;
 		}
 
-		_tableNames = new ReadOnlyCollection<string>(new List<string> { name });
+		_msg.DebugFormat("Read work list definition {0} with {1} items.",
+		                 tableName, _xmlWorkListDefinition.Items.Count);
+
+		IWorkListRegistry registry = WorkListRegistry.Instance;
+
+		if (! registry.WorklistExists(tableName))
+		{
+			IWorkEnvironment workEnvironment = null;
+			try
+			{
+				workEnvironment = WorkListEnvironmentFactory.Instance.CreateWorkEnvironment(
+					_path, _xmlWorkListDefinition.TypeName);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error creating work environment for {tableName}", e);
+			}
+
+			// Mechanism to start creating the work list and loading all items in the background
+			// so that it is ready when the user opens the navigator. This is currently opt-in by
+			// the <see	cref="IWorkEnvironment.AllowBackgroundLoading"/> flat. However, the items
+			// loaded in the background come from the saved workspace state and can be outdated.
+			// Only use for read-only work list items.
+			bool allowBackgroundLoading = workEnvironment?.AllowBackgroundLoading == true;
+
+			if (allowBackgroundLoading)
+			{
+				var layerBasedWorkListFactory =
+					new LayerBasedWorkListFactory(tableName, _xmlWorkListDefinition.TypeName,
+					                              _path);
+				registry.TryAdd(layerBasedWorkListFactory);
+			}
+
+			// In all other cases, the proper work list is created and registered when the user
+			// opens it in the navigator.
+		}
+
+		_tableNames =
+			new ReadOnlyCollection<string>(new List<string> { tableName });
 	}
 
 	/// <summary>
@@ -87,8 +129,7 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 
 	public override PluginTableTemplate OpenTable([NotNull] string name)
 	{
-		if (name is null)
-			throw new ArgumentNullException(nameof(name));
+		Assert.NotNullOrEmpty(name, nameof(name));
 
 		WorkItemTable result = null;
 		try
@@ -96,7 +137,9 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 			// The given name is one of those returned by GetTableNames()
 			_msg.Debug($"Open table '{name}'");
 
-			result = new WorkItemTable(name, Service);
+			var cachedWorkItemData = new CachedWorkItemData(_xmlWorkListDefinition);
+
+			result = new WorkItemTable(name, cachedWorkItemData, Service);
 		}
 		catch (Exception ex)
 		{

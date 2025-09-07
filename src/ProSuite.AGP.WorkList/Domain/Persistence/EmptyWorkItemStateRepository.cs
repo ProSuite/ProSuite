@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence;
 
@@ -26,7 +26,7 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 
 	public void UpdateState(IWorkItem item) { }
 
-	public void Commit(IList<ISourceClass> sourceClasses)
+	public void Commit(IList<ISourceClass> sourceClasses, Envelope extent)
 	{
 		int index = -1;
 		if (CurrentIndex.HasValue)
@@ -41,6 +41,8 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 			                 AssemblyName = Type.Assembly.GetName().Name,
 			                 CurrentIndex = index
 		                 };
+
+		definition.Extent = extent.ToXml();
 
 		definition.Items = new List<XmlWorkItemState>(0);
 		definition.Workspaces = new List<XmlWorkListWorkspace>(0);

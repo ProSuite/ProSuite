@@ -100,6 +100,8 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 		throw new NotImplementedException();
 	}
 
+	public bool AllowBackgroundLoading { get; set; }
+
 	public string WorkListFile { get; set; }
 
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
@@ -134,6 +136,8 @@ public class SelectionWorkListEnvironmentMock : IWorkEnvironment
 	{
 		throw new NotImplementedException();
 	}
+
+	public bool AllowBackgroundLoading { get; set; }
 
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
 	{

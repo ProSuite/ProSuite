@@ -30,5 +30,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		[XmlArray("Items")]
 		[XmlArrayItem(typeof(XmlWorkItemState), ElementName = "Item")]
 		public List<XmlWorkItemState> Items { get; set; }
+
+		[XmlElement("Extent")]
+		public string Extent { get; set; }
 	}
 }

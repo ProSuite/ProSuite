@@ -7,26 +7,62 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Datasource
 {
+	/// <summary>
+	/// Represents a work list as a read-only table which is the source behind the work list layer.
+	/// </summary>
 	public class WorkItemTable : PluginTableTemplate
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IReadOnlyList<PluginField> _fields;
+		[NotNull] private readonly string _tableName;
+
+		[NotNull] private readonly IReadOnlyList<PluginField> _fields;
+
+		[NotNull] private readonly IWorkItemData _workItemData;
+
 		[CanBeNull] private readonly WorkListGeometryService _service;
-		private readonly string _tableName;
 
-		[CanBeNull] private IWorkList _workList;
-
-		public WorkItemTable(string tableName, WorkListGeometryService service)
+		public WorkItemTable([NotNull] string tableName,
+		                     [NotNull] IWorkItemData workItemData,
+		                     WorkListGeometryService service)
 		{
-			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
-			_service = service;
+			Assert.ArgumentNotNullOrEmpty(nameof(tableName));
+			Assert.ArgumentNotNull(workItemData, nameof(workItemData));
+
+			_tableName = tableName;
+			_workItemData = workItemData;
+
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
+
+			_service = service;
+		}
+
+		/// <summary>
+		/// Provides access to non-null work item data at all times even when the map is being
+		/// initialized and no data source or metadata other than the work list definition file
+		/// is available yet.
+		/// </summary>
+		private IWorkItemData WorkItems
+		{
+			get
+			{
+				IWorkList workList = WorkListRegistry.Instance.Get(_tableName);
+
+				if (workList != null)
+				{
+					// If the work list has been registered, use it, otherwise fall back to the
+					return workList;
+				}
+
+				// cached work item data
+				return _workItemData;
+			}
 		}
 
 		public override string GetName()
@@ -45,11 +81,12 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			try
 			{
-				// Do return not an empty envelope.
-				// Pluggable Datasource cannot handle an empty envelope.
-				_workList ??= WorkListRegistry.Instance.Get(_tableName);
-
-				return _workList?.Extent;
+				// NOTE: Do return not an empty envelope. Pluggable Datasource cannot handle an
+				// empty envelope.
+				// NOTE: But also, do not return null, as the feature classes spatial reference is 
+				// determined by the envelope's spatial reference! Without spatial reference,
+				// downstream layer queries will fail (GOTOP-621).
+				return WorkItems?.Extent;
 			}
 			catch (Exception ex)
 			{
@@ -75,18 +112,41 @@ namespace ProSuite.AGP.WorkList.Datasource
 			// This is called on open table. Check QueryFilter.ObjectIDs.
 			try
 			{
-				_workList ??= WorkListRegistry.Instance.Get(_tableName);
-
-				if (_workList == null)
+				// NOTE: If the Extent is null, the spatial reference will be null as well and all
+				//       filters with null OutputSpatialReference will fail in MoveNext with a
+				//       null-pointer from deep inside the Pro SDK
+				_msg.VerboseDebug(() =>
 				{
+					bool willFail = filter.OutputSpatialReference == null &&
+					                WorkItems.Extent == null;
+
+					return "Querying WorkItemTable '" + _tableName +
+					       (willFail
+						        ? "' with null OutputSpatialReference and null Extent (will likely fail in MoveNext)"
+						        : "...");
+				});
+
+				IWorkItemData workItems = WorkItems;
+
+				if (workItems == null)
+				{
+					// Even if unexpectedly no work items are available, return an empty cursor instead of throwing.
+					_msg.DebugFormat("No work items available! Returning no item for {0}",
+					                 _tableName);
 					return new WorkItemCursor(Enumerable.Empty<object[]>());
 				}
 
-				IEnumerable<object[]> items =
-					_workList.Search(filter)
-					         .Select(item => GetValues(item, _workList, _workList.CurrentItem));
+				// NOTE: The spatial filtering is implemented significantly different. It matters which overload
+				//       of Search is called!
+				IEnumerable<IWorkItem> resultItems =
+					filter is SpatialQueryFilter spatialFilter
+						? workItems.Search(spatialFilter)
+						: workItems.Search(filter);
 
-				return new WorkItemCursor(items);
+				IEnumerable<object[]> resultRows =
+					resultItems.Select(item => GetValues(item, workItems, workItems.CurrentItem));
+
+				return new WorkItemCursor(resultRows);
 			}
 			catch (Exception ex)
 			{
@@ -98,32 +158,12 @@ namespace ProSuite.AGP.WorkList.Datasource
 		[NotNull]
 		public override PluginCursorTemplate Search(SpatialQueryFilter filter)
 		{
-			try
+			if (WorkItems is IWorkList workList && workList.CacheBufferedItemGeometries)
 			{
-				_workList ??= WorkListRegistry.Instance.Get(_tableName);
-
-				if (_workList == null)
-				{
-					return new WorkItemCursor(Enumerable.Empty<object[]>());
-				}
-
-				if (_workList.CacheBufferedItemGeometries)
-				{
-					_service?.UpdateItemGeometries(_tableName, filter);
-				}
-
-
-				IEnumerable<object[]> items =
-					_workList.Search(filter)
-					         .Select(item => GetValues(item, _workList, _workList.CurrentItem));
-
-				return new WorkItemCursor(items);
+				_service?.UpdateItemGeometries(_tableName, filter);
 			}
-			catch (Exception ex)
-			{
-				_msg.Warn(ex.Message, ex);
-				return new WorkItemCursor(Enumerable.Empty<object[]>());
-			}
+
+			return Search((QueryFilter) filter);
 		}
 
 		[NotNull]

@@ -81,7 +81,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 
 	public void Commit()
 	{
-		WorkItemStateRepository?.Commit(new List<ISourceClass> { new SourceClassMock() });
+		WorkItemStateRepository?.Commit(new List<ISourceClass> { new SourceClassMock() }, null);
 	}
 
 	public void SetCurrentIndex(int currentIndex)

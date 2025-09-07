@@ -89,7 +89,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	public void Commit()
 	{
-		WorkItemStateRepository.Commit(SourceClasses);
+		WorkItemStateRepository.Commit(SourceClasses, null);
 	}
 
 	public void SetCurrentIndex(int currentIndex)

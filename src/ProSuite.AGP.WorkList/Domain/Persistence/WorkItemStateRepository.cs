@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -85,18 +86,23 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			UpdateStateCore(state, item);
 		}
 
-		public void Commit(IList<ISourceClass> sourceClasses)
+		public void Commit(IList<ISourceClass> sourceClasses, Envelope extent)
 		{
 			Assert.NotNull(StatesByRow,
 			               "Work item states have never been read, failed to read or have already been discarded");
 
 			if (_workspaces.Count == 0 && StatesByRow.Count > 0)
 			{
-				_msg.Debug($"{Name}: Invalid work list (one or more referenced tables could not be loaded) will not be stored.");
+				_msg.Debug(
+					$"{Name}: Invalid work list (one or more referenced tables could not be loaded) will not be stored.");
 				return;
 			}
 
-			Store(CreateDefinition(_workspaces, sourceClasses, StatesByRow.Values));
+			TDefinition workListDefinition =
+				CreateDefinition(_workspaces, sourceClasses, StatesByRow.Values,
+				                 extent);
+
+			Store(workListDefinition);
 		}
 
 		protected abstract void Store(TDefinition definition);
@@ -104,7 +110,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected abstract TDefinition CreateDefinition(
 			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			IList<ISourceClass> sourceClasses,
-			IEnumerable<TState> states);
+			IEnumerable<TState> states,
+			Envelope extent);
 
 		protected abstract TState CreateState(IWorkItem item);
 

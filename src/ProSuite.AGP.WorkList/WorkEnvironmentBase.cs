@@ -36,7 +36,7 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		protected string UniqueName { get; set; }
 
-		protected bool AllowBackgroundLoading { get; set; }
+		public bool AllowBackgroundLoading { get; set; }
 
 		protected virtual Geometry GetAreaOfInterest()
 		{

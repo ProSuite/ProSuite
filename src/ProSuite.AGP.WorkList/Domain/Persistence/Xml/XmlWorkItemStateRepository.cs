@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -38,7 +39,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override XmlWorkListDefinition CreateDefinition(
 			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			IList<ISourceClass> sourceClasses,
-			IEnumerable<XmlWorkItemState> states)
+			IEnumerable<XmlWorkItemState> states,
+			Envelope extent)
 		{
 			int index = -1;
 			if (CurrentIndex.HasValue)
@@ -53,6 +55,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				                 AssemblyName = Type.Assembly.GetName().Name,
 				                 CurrentIndex = index
 			                 };
+
+			definition.Extent = extent?.ToXml();
 
 			definition.Items = new List<XmlWorkItemState>();
 
