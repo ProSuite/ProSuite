@@ -24,12 +24,12 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		[NotNull] private readonly IReadOnlyList<PluginField> _fields;
 
-		[NotNull] private readonly IWorkItemData _workItemData;
+		[CanBeNull] private readonly IWorkItemData _workItemData;
 
 		[CanBeNull] private readonly WorkListGeometryService _service;
 
 		public WorkItemTable([NotNull] string tableName,
-		                     [NotNull] IWorkItemData workItemData,
+		                     [CanBeNull] IWorkItemData workItemData,
 		                     WorkListGeometryService service)
 		{
 			Assert.ArgumentNotNullOrEmpty(nameof(tableName));

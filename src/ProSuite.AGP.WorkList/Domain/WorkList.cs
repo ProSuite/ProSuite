@@ -425,6 +425,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
 			                DisplayName);
+
+			TotalCount = _items.Count;
 		}
 
 		public void LoadItems([NotNull] QueryFilter filter, WorkItemStatus? statusFilter = null)

@@ -137,13 +137,19 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 			// The given name is one of those returned by GetTableNames()
 			_msg.Debug($"Open table '{name}'");
 
-			var cachedWorkItemData = new CachedWorkItemData(_xmlWorkListDefinition);
+			// The work list could already be registered before the layer is made visible in the TOC:
+			CachedWorkItemData cachedWorkItemData =
+				WorkListRegistry.Instance.WorklistExists(name)
+					? null
+					: new CachedWorkItemData(_xmlWorkListDefinition);
 
 			result = new WorkItemTable(name, cachedWorkItemData, Service);
 		}
 		catch (Exception ex)
 		{
-			_msg.Debug(ex.Message, ex);
+			_msg.Debug(
+				$"Error opening work item table: {ex.Message}. Definition: {_xmlWorkListDefinition}",
+				ex);
 		}
 
 		return result;

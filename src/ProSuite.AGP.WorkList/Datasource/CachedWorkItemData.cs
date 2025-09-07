@@ -10,6 +10,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
@@ -36,15 +37,42 @@ public class CachedWorkItemData : IWorkItemData
 
 	public CachedWorkItemData(XmlWorkListDefinition workListDefinition)
 	{
+		Assert.ArgumentNotNull(workListDefinition, nameof(workListDefinition));
+		Assert.ArgumentCondition(! string.IsNullOrEmpty(workListDefinition.Name),
+		                         "Work list has no name");
+
 		Name = workListDefinition.Name;
-		Extent = EnvelopeBuilderEx.FromXml(workListDefinition.Extent);
+
+		// Extent is null in work lists saved in previous versions
+		if (workListDefinition.Extent != null)
+		{
+			Extent = EnvelopeBuilderEx.FromXml(workListDefinition.Extent);
+		}
 
 		Stopwatch watch = Stopwatch.StartNew();
-		if (workListDefinition.Items.Count > 0)
+
+		if (workListDefinition.Items?.Count > 0)
 		{
+			double gridCellSize = double.NaN;
+			if (Extent?.Width > 0 && Extent?.Height > 0)
+			{
+				// ReSharper disable once PossibleInvalidOperationException
+				double avgItemWidth = Extent.Width / workListDefinition.Items.Count;
+				double avgItemHeight = Extent.Height / workListDefinition.Items.Count;
+
+				gridCellSize = (avgItemWidth + avgItemHeight) / 2;
+			}
+
+			if (double.IsNaN(gridCellSize))
+			{
+				// Any value is better than 0:
+				gridCellSize = 1000;
+			}
+
 			_spatialSearcher = SpatialHashSearcher<XmlWorkItemState>.CreateSpatialSearcher(
 				workListDefinition.Items,
-				xmlItem => new EnvelopeXY(xmlItem.XMin, xmlItem.YMin, xmlItem.XMax, xmlItem.YMax));
+				xmlItem => new EnvelopeXY(xmlItem.XMin, xmlItem.YMin, xmlItem.XMax, xmlItem.YMax),
+				gridCellSize);
 		}
 
 		_tablesById = new Dictionary<long, GdbTableIdentity>();
@@ -52,7 +80,7 @@ public class CachedWorkItemData : IWorkItemData
 		PopulateTableIdentities(workListDefinition);
 
 		_msg.DebugStopTiming(watch, "Created CachedWorkItemData for '{0}' with {1} items.", Name,
-		                     workListDefinition.Items.Count);
+		                     workListDefinition.Items?.Count);
 	}
 
 	private void PopulateTableIdentities(XmlWorkListDefinition workListDefinition)
@@ -66,9 +94,8 @@ public class CachedWorkItemData : IWorkItemData
 					$"Cannot parse {xmlWorkListWorkspace.WorkspaceFactory}");
 			}
 
-			Connector connector = WorkspaceUtils.CreateConnector(result,
-			                                                     xmlWorkListWorkspace
-				                                                     .ConnectionString);
+			Connector connector = WorkspaceUtils.CreateConnector(
+				result, xmlWorkListWorkspace.ConnectionString);
 
 			GdbWorkspaceIdentity workspace =
 				new GdbWorkspaceIdentity(connector, xmlWorkListWorkspace.ConnectionString);
@@ -132,7 +159,7 @@ public class CachedWorkItemData : IWorkItemData
 
 		Envelope extent = filterGeometry.Extent;
 
-		double tolerance = filterGeometry.SpatialReference.XYTolerance;
+		double tolerance = filterGeometry.SpatialReference?.XYTolerance ?? 0;
 		return _spatialSearcher.Search(extent.XMin, extent.YMin,
 		                               extent.XMax, extent.YMax,
 		                               tolerance, predicate)
