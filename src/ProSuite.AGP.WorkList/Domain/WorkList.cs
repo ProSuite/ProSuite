@@ -38,19 +38,21 @@ namespace ProSuite.AGP.WorkList.Domain
 		private WorkItemVisibility? _visibility;
 		[NotNull] private string _displayName;
 
-		private Envelope _extent;
-
 		protected WorkList([NotNull] IWorkItemRepository repository,
-		                   [NotNull] Geometry areaOfInterest,
+		                   [CanBeNull] Geometry areaOfInterest,
 		                   [NotNull] string name,
 		                   [NotNull] string displayName)
 		{
-			Repository = repository ?? throw new ArgumentNullException(nameof(repository));
-			AreaOfInterest =
-				areaOfInterest ?? throw new ArgumentNullException(nameof(areaOfInterest));
-			Name = name ?? throw new ArgumentNullException(nameof(name));
+			Assert.NotNull(nameof(repository));
+			Assert.NotNullOrEmpty(name, nameof(name));
+			Assert.NotNullOrEmpty(displayName, nameof(displayName));
 
-			_displayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
+			Repository = repository;
+			Repository.AreaOfInterest = areaOfInterest;
+
+			Name = name;
+
+			_displayName = displayName;
 
 			CurrentIndex = repository.GetCurrentIndex();
 		}
@@ -106,9 +108,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public long? TotalCount { get; set; }
 
-		// TODO: (daro) AOI can be null! E.g. selection work list. Issue work list where there is no work unit. But the should have the
-		//		 possibility to define an AOI.
-		protected Geometry AreaOfInterest { get; }
+		[CanBeNull]
+		protected Geometry AreaOfInterest => Repository.AreaOfInterest;
 
 		public double MinimumScaleDenominator { get; set; }
 
@@ -183,17 +184,17 @@ namespace ProSuite.AGP.WorkList.Domain
 			Repository.WorkItemStateRepository.Rename(name);
 		}
 
-		[NotNull]
 		public Envelope Extent
 		{
 			get
 			{
-				if (_extent == null || _extent.IsEmpty)
+				Envelope extent = Repository.Extent;
+				if (extent == null || extent.IsEmpty)
 				{
-					return AreaOfInterest.Extent;
+					return AreaOfInterest?.Extent;
 				}
 
-				return _extent;
+				return extent;
 			}
 		}
 
@@ -468,9 +469,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			Assert.True(xmax < double.MaxValue, "Cannot get coordinate");
 			Assert.True(ymax < double.MaxValue, "Cannot get coordinate");
 
-			_extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
-			                                           new Coordinate3D(xmax, ymax, zmax),
-			                                           AreaOfInterest.SpatialReference);
+			Repository.Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
+			                                                     new Coordinate3D(xmax, ymax, zmax),
+			                                                     Repository.SpatialReference);
 
 			// TODO: QueryPoints?
 			// TODO: (daro) introduce a loaded flag. Situation: work list is loaded into map. Navigator opened >
@@ -788,19 +789,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			else
 			{
-				// nothing found, try AOI
+				// nothing found, try Extent
 				candidates =
-					GetItems(GdbQueryUtils.CreateSpatialFilter(AreaOfInterest),
+					GetItems(GdbQueryUtils.CreateSpatialFilter(Extent),
 					         CurrentSearchOption.ExcludeCurrent, visitedSearchOption).ToList();
-
-				if (candidates.Count == 0)
-				{
-					// TODO: (daro) GetExtent() might be equal to AOI
-					// still nothing found, try extent
-					candidates =
-						GetItems(GdbQueryUtils.CreateSpatialFilter(Extent),
-						         CurrentSearchOption.ExcludeCurrent, visitedSearchOption).ToList();
-				}
 
 				nearest = GetNearest(reference, candidates);
 			}
@@ -1427,8 +1419,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					invalidateOids.Add(item.OID);
 				}
 
-				Assert.NotNull(_extent);
-				_extent = CreateExtent(_items, _extent.SpatialReference);
+				Repository.Extent = CreateExtent(_items, Repository.SpatialReference);
 
 				_msg.DebugStopTiming(watch, $"{invalidateOids.Count} items inserted.");
 			}
@@ -1479,8 +1470,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					}
 				}
 
-				Assert.NotNull(_extent);
-				_extent = CreateExtent(_items, _extent.SpatialReference);
+				Repository.Extent = CreateExtent(_items, Repository.SpatialReference);
 			}
 			catch (Exception ex)
 			{
@@ -1532,8 +1522,8 @@ namespace ProSuite.AGP.WorkList.Domain
 					cachedItem.Status = item.Status;
 				}
 
-				Assert.NotNull(_extent);
-				_extent = CreateExtent(_items, _extent.SpatialReference);
+				// TODO: Move to repository!
+				Repository.Extent = CreateExtent(_items, Repository.SpatialReference);
 
 				_msg.DebugStopTiming(watch, $"{invalidateOids.Count} items updated.");
 			}

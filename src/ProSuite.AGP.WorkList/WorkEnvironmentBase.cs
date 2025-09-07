@@ -40,7 +40,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected virtual Geometry GetAreaOfInterest()
 		{
-			return MapView.Active.Extent;
+			return null;
 		}
 
 		[ItemCanBeNull]
