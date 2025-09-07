@@ -329,11 +329,13 @@ namespace ProSuite.AGP.WorkList.Domain
 				return false;
 			}
 
-			if (geometry is Multipart polycurve && polycurve.HasCurves)
-			{
-				// creating the buffer for non-linear segments is extremely expensive
-				return false;
-			}
+			// NOTE: polycurve.HasCurves has been observed to return incorrect values. Also
+			//       buffering a single item is less performance-critical.
+			//if (geometry is Multipart polycurve && polycurve.HasCurves)
+			//{
+			//	// creating the buffer for non-linear segments is extremely expensive
+			//	return false;
+			//}
 
 			return true;
 		}
