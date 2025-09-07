@@ -71,7 +71,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
-		public IWorkItem Current
+		public IWorkItem CurrentItem
 		{
 			get
 			{
@@ -184,14 +184,17 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[NotNull]
-		public Envelope GetExtent()
+		public Envelope Extent
 		{
-			if (_extent == null || _extent.IsEmpty)
+			get
 			{
-				return AreaOfInterest.Extent;
-			}
+				if (_extent == null || _extent.IsEmpty)
+				{
+					return AreaOfInterest.Extent;
+				}
 
-			return _extent;
+				return _extent;
+			}
 		}
 
 		#region item geometry
@@ -256,7 +259,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			// For current item, try to load geometry from source (single buffer is fast)
-			if (item.GdbRowProxy.Equals(Current?.GdbRowProxy))
+			if (item.GdbRowProxy.Equals(CurrentItem?.GdbRowProxy))
 			{
 				if (item.HasBufferedGeometry)
 				{
@@ -355,12 +358,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public Row GetCurrentItemSourceRow(bool readOnly = true)
 		{
-			if (Current == null)
+			if (CurrentItem == null)
 			{
 				return null;
 			}
 
-			ITableReference tableReference = Current.GdbRowProxy.Table;
+			ITableReference tableReference = CurrentItem.GdbRowProxy.Table;
 
 			ISourceClass sourceClass =
 				Repository.SourceClasses.FirstOrDefault(s => s.Uses(tableReference));
@@ -370,7 +373,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			return Repository.GetSourceRow(sourceClass, Current.ObjectID, readOnly);
+			return Repository.GetSourceRow(sourceClass, CurrentItem.ObjectID, readOnly);
 		}
 
 		public void UpdateExistingItemGeometries(QueryFilter filter)
@@ -490,7 +493,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			// ObjectID of its source row. QueryFilter.ObjectIDs are the IWorkItem.OID and not
 			// the IWorkItem.ObjectID We'd have to make a lookup: IWorkItem.OID > Table, ObjectID
 			// to query database.
-			
+
 			if (filter.ObjectIDs.Count == 0)
 			{
 				return _items.AsEnumerable();
@@ -500,7 +503,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return _items.Where(item => oids.BinarySearch(item.OID) >= 0);
 		}
 
-		public IEnumerable<IWorkItem> GetItems([CanBeNull] SpatialQueryFilter filter)
+		public IEnumerable<IWorkItem> Search([CanBeNull] SpatialQueryFilter filter)
 		{
 			if (_searcher == null)
 			{
@@ -540,11 +543,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		                                        CurrentSearchOption currentSearch,
 		                                        VisitedSearchOption visitedSearch)
 		{
-			IEnumerable<IWorkItem> query = GetItems(filter);
+			IEnumerable<IWorkItem> query = Search(filter);
 
 			if (currentSearch == CurrentSearchOption.ExcludeCurrent)
 			{
-				query = query.Where(item => ! Equals(item, Current));
+				query = query.Where(item => ! Equals(item, CurrentItem));
 			}
 
 			if (visitedSearch == VisitedSearchOption.ExcludeVisited)
@@ -635,7 +638,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			IWorkItem first = GetFirstVisibleVisitedItemBeforeCurrent();
 
 			Assert.NotNull(first);
-			Assert.False(Equals(first, Current), "current item and first item are equal");
+			Assert.False(Equals(first, CurrentItem), "current item and first item are equal");
 
 			SetCurrentItemCore(first, current);
 		}
@@ -694,9 +697,9 @@ namespace ProSuite.AGP.WorkList.Domain
 				                     VisitedSearchOption.IncludeVisited);
 			}
 
-			if (! found && HasCurrentItem() && Current != null)
+			if (! found && HasCurrentItem() && CurrentItem != null)
 			{
-				ClearCurrentItem(Current);
+				ClearCurrentItem(CurrentItem);
 			}
 
 			_msg.DebugStopTiming(watch, nameof(GoNearest));
@@ -721,9 +724,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			IWorkItem next = GetNextVisitedVisibleItem();
 
 			Assert.NotNull(next);
-			Assert.False(Equals(next, Current), "current item and next item are equal");
+			Assert.False(Equals(next, CurrentItem), "current item and next item are equal");
 
-			SetCurrentItemCore(next, Current);
+			SetCurrentItemCore(next, CurrentItem);
 		}
 
 		public virtual bool CanGoPrevious()
@@ -745,14 +748,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			IWorkItem previous = GetPreviousVisitedVisibleItem();
 
 			Assert.NotNull(previous);
-			Assert.False(Equals(previous, Current), "current item and previous item are equal");
+			Assert.False(Equals(previous, CurrentItem), "current item and previous item are equal");
 
-			SetCurrentItemCore(previous, Current);
+			SetCurrentItemCore(previous, CurrentItem);
 		}
 
 		public virtual void GoTo(long oid)
 		{
-			if (Current?.OID == oid)
+			if (CurrentItem?.OID == oid)
 			{
 				return;
 			}
@@ -762,7 +765,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (target != null)
 			{
-				SetCurrentItem(target, Current);
+				SetCurrentItem(target, CurrentItem);
 			}
 		}
 
@@ -795,7 +798,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					// TODO: (daro) GetExtent() might be equal to AOI
 					// still nothing found, try extent
 					candidates =
-						GetItems(GdbQueryUtils.CreateSpatialFilter(GetExtent()),
+						GetItems(GdbQueryUtils.CreateSpatialFilter(Extent),
 						         CurrentSearchOption.ExcludeCurrent, visitedSearchOption).ToList();
 				}
 
@@ -807,7 +810,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return false;
 			}
 
-			SetCurrentItem(nearest, Current);
+			SetCurrentItem(nearest, CurrentItem);
 			return true;
 		}
 
@@ -1007,7 +1010,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			double minDistance = double.MaxValue;
 			IWorkItem nearest = null;
 			IWorkItem firstWithoutGeometry = null;
-			IWorkItem current = Current;
+			IWorkItem current = CurrentItem;
 
 			foreach (IWorkItem item in candidates)
 			{
@@ -1151,7 +1154,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		private IWorkItem GetFirstVisibleVisitedItemBeforeCurrent()
 		{
-			IWorkItem currentItem = Current;
+			IWorkItem currentItem = CurrentItem;
 
 			foreach (IWorkItem workItem in _items)
 			{
@@ -1454,7 +1457,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						continue;
 					}
 
-					if (Current != null && Current.Equals(cachedItem))
+					if (CurrentItem != null && CurrentItem.Equals(cachedItem))
 					{
 						Assert.True(HasCurrentItem(), $"{nameof(HasCurrentItem)} is false");
 						ClearCurrentItem(cachedItem);

@@ -214,22 +214,22 @@ namespace ProSuite.AGP.WorkList.Test
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item4, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item4, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			Assert.False(wl.CanGoNext());
-			Assert.AreEqual(item4, wl.Current);
+			Assert.AreEqual(item4, wl.CurrentItem);
 		}
 
 		[Test]
@@ -247,21 +247,21 @@ namespace ProSuite.AGP.WorkList.Test
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			Assert.True(wl.CanGoNext());
 			Assert.False(wl.CanGoPrevious());
 			Assert.False(wl.CanGoFirst());
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			Assert.True(wl.CanGoNext());
 			Assert.True(wl.CanGoPrevious());
 			Assert.True(wl.CanGoFirst());
 			wl.GoNext();
-			Assert.AreEqual(item4, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item4, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// end of visited items reached
 			Assert.False(wl.CanGoNext());
@@ -281,29 +281,29 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go first again
 			wl.GoFirst();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go first again
 			wl.GoFirst();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 		}
 
 		[Test]
@@ -318,29 +318,29 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 			
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go previous
 			wl.GoPrevious();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go previous again
 			wl.GoPrevious();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 		}
 
 		[Test]
@@ -357,9 +357,9 @@ namespace ProSuite.AGP.WorkList.Test
 			wl.LoadItems(GdbQueryUtils.CreateFilter(new []{item1.ObjectID, item2.ObjectID, item3.ObjectID, item4.ObjectID}));
 
 			Assert.False(wl.CanGoNearest());
-			Assert.Null(wl.GetExtent());
+			Assert.Null(wl.Extent);
 
-			Assert.AreEqual(4, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
 		}
 
 		[Test]
@@ -379,30 +379,30 @@ namespace ProSuite.AGP.WorkList.Test
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			Geometry reference = PolygonConstruction.CreateMapPoint(11, 0, 0);
 
 			// go to item10
 			Assert.True(wl.CanGoNearest());
 			wl.GoNearest(reference);
-			Assert.AreEqual(item10, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item10, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go to item7
 			Assert.True(wl.CanGoNearest());
-			Assert.NotNull(wl.Current);
-			Assert.NotNull(wl.Current.Extent);
-			wl.GoNearest(wl.Current.Extent);
-			Assert.AreEqual(item7, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.NotNull(wl.CurrentItem);
+			Assert.NotNull(wl.CurrentItem.Extent);
+			wl.GoNearest(wl.CurrentItem.Extent);
+			Assert.AreEqual(item7, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go to item15
 			Assert.True(wl.CanGoNearest());
-			Assert.NotNull(wl.Current);
-			wl.GoNearest(wl.Current.Extent);
-			Assert.AreEqual(item15, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.NotNull(wl.CurrentItem);
+			wl.GoNearest(wl.CurrentItem.Extent);
+			Assert.AreEqual(item15, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// Now all are visited, what is the next item? None because there is no
 			// more item *after* the last item15.
@@ -411,14 +411,14 @@ namespace ProSuite.AGP.WorkList.Test
 
 			Assert.True(wl.CanGoPrevious());
 			wl.GoPrevious();
-			Assert.AreEqual(item7, wl.Current);
+			Assert.AreEqual(item7, wl.CurrentItem);
 
 			// Now we can go nearest again which is item10 (nearest to item7)
 			Assert.True(wl.CanGoNearest());
-			Assert.NotNull(wl.Current);
-			wl.GoNearest(wl.Current.Extent);
-			Assert.AreEqual(item10, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.NotNull(wl.CurrentItem);
+			wl.GoNearest(wl.CurrentItem.Extent);
+			Assert.AreEqual(item10, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 		}
 
 		[Test]
@@ -433,24 +433,24 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoFirst();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// set status done and update work list
-			Assert.NotNull(wl.Current);
-			wl.Current.Status = WorkItemStatus.Done;
-			wl.SetStatusAsync(wl.Current, WorkItemStatus.Done);
+			Assert.NotNull(wl.CurrentItem);
+			wl.CurrentItem.Status = WorkItemStatus.Done;
+			wl.SetStatusAsync(wl.CurrentItem, WorkItemStatus.Done);
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// second item is now the first in work list
 			// because first item is set to done and therefor 'not visible'
@@ -467,16 +467,16 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			Assert.AreEqual(WorkItemVisibility.Todo, wl.Visibility);
 
-			Assert.AreEqual(4, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
 			wl.SetStatusAsync(item2, WorkItemStatus.Done);
-			Assert.AreEqual(3, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(3, wl.Search(null).ToList().Count);
 
 			wl.Visibility = WorkItemVisibility.All;
-			Assert.AreEqual(4, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
 		}
 
 		[Test]
@@ -491,27 +491,27 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			Assert.AreEqual(WorkItemVisibility.Todo, wl.Visibility);
-			Assert.AreEqual(item1, wl.Current);
+			Assert.AreEqual(item1, wl.CurrentItem);
 
-			Assert.AreEqual(4, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
 			wl.SetStatusAsync(item1, WorkItemStatus.Done);
-			Assert.AreEqual(3, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(3, wl.Search(null).ToList().Count);
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
+			Assert.AreEqual(item2, wl.CurrentItem);
 			Assert.False(wl.CanGoFirst());
 			Assert.False(wl.CanGoPrevious());
 
 			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
+			Assert.AreEqual(item3, wl.CurrentItem);
 			Assert.True(wl.CanGoFirst());
 			Assert.True(wl.CanGoPrevious());
 
 			wl.Visibility = WorkItemVisibility.All;
-			Assert.AreEqual(4, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
 		}
 
 		[Test]
@@ -529,22 +529,22 @@ namespace ProSuite.AGP.WorkList.Test
 			IEnumerable<IWorkItem> _ = wl.Search(GdbQueryUtils.CreateFilter(
 				                                     new List<long> { 2, 3, 4 }.AsReadOnly())).ToList();
 
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			Assert.True(wl.CanGoNext());
 			Assert.False(wl.CanGoPrevious());
 			Assert.False(wl.CanGoFirst());
 			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			Assert.True(wl.CanGoNext());
 			Assert.True(wl.CanGoPrevious());
 			Assert.True(wl.CanGoFirst());
 			wl.GoNext();
-			Assert.AreEqual(item4, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item4, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// end of visited items reached
 			Assert.False(wl.CanGoNext());
@@ -559,8 +559,8 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.CanGoPrevious());
 			Assert.True(wl.CanGoFirst());
 			wl.GoNext();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 		}
 
 		#endregion
@@ -575,10 +575,10 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
-			Assert.AreEqual(1, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
 			Assert.NotNull(item1.Extent);
-			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
 
 			GdbRowIdentity rowId2 = WorkListTestUtils.CreateRowProxy(2);
 			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
@@ -592,16 +592,16 @@ namespace ProSuite.AGP.WorkList.Test
 
 			//wl.ProcessChanges(inserts, deletes, updates);
 
-			Assert.AreEqual(2, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(2, wl.Search(null).ToList().Count);
 
 			// assert oid is still the same
 			Assert.AreEqual(1, item1.OID);
 			Assert.AreEqual(2, item2.OID);
 
 			Envelope envelope = item1.Extent.Union(item2.Extent);
-			Assert.True(GeometryUtils.Intersects(wl.GetExtent(), envelope));
-			Assert.True(GeometryUtils.Contains(wl.GetExtent(), envelope));
-			Assert.True(envelope.IsEqual(wl.GetExtent()));
+			Assert.True(GeometryUtils.Intersects(wl.Extent, envelope));
+			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
+			Assert.True(envelope.IsEqual(wl.Extent));
 		}
 
 		[Test]
@@ -614,10 +614,10 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
-			Assert.AreEqual(1, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
 			Assert.NotNull(item1.Extent);
-			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
 
 			// Update Extext
 			item1.SetExtent(_poly1.Extent);
@@ -631,12 +631,12 @@ namespace ProSuite.AGP.WorkList.Test
 			//wl.ProcessChanges(inserts, deletes, updates);
 
 			// get items again because item1 was invalidated
-			Assert.AreEqual(1, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
 			// assert oid is still the same
 			Assert.AreEqual(1, item1.OID);
 			Assert.NotNull(item1.Extent);
-			Assert.True(item1.Extent.IsEqual(wl.GetExtent()));
+			Assert.True(item1.Extent.IsEqual(wl.Extent));
 		}
 
 		[Test]
@@ -652,11 +652,11 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
-			Assert.AreEqual(2, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(2, wl.Search(null).ToList().Count);
 
 			Envelope envelope = _poly0.Extent.Union(_poly1.Extent);
-			Assert.True(GeometryUtils.Intersects(wl.GetExtent(), envelope));
-			Assert.True(GeometryUtils.Contains(wl.GetExtent(), envelope));
+			Assert.True(GeometryUtils.Intersects(wl.Extent, envelope));
+			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
 
 			var inserts = new Dictionary<GdbTableIdentity, List<long>>();
 			var deletes = new Dictionary<GdbTableIdentity, List<long>> { { tableId,
@@ -668,10 +668,10 @@ namespace ProSuite.AGP.WorkList.Test
 
 			// remove it from repo mock too
 			Assert.True(repo.Remove(item2));
-			Assert.AreEqual(1, wl.GetItems(null).ToList().Count);
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
 			Assert.NotNull(item1.Extent);
-			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
 		}
 
 		[Test]
@@ -728,12 +728,12 @@ namespace ProSuite.AGP.WorkList.Test
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
 			IWorkList wl = new SelectionWorkList(repo, _poly0, "uniqueName", "displayName");
 
-			IEnumerable<IWorkItem> _ = wl.GetItems(null).ToList();
-			Assert.AreEqual(1, wl.GetItems(null).ToList().Count);
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
 			// Note: work item has a minimum length/width of 30!!
 			Assert.NotNull(item1.Extent);
-			Assert.True(AreEqual(item1.Extent, wl.GetExtent()));
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
 			//AssertEqual(item1.Extent, wl.GetExtent());
 		}
 

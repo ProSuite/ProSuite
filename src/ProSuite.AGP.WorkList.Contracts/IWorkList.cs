@@ -7,15 +7,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts;
 
-public interface IWorkList : IRowCache
+public interface IWorkList : IRowCache, IWorkItemData
 {
-	string Name { get; }
-
 	string DisplayName { get; }
 
 	WorkItemVisibility? Visibility { get; set; }
-
-	IWorkItem Current { get; }
 
 	int CurrentIndex { get; }
 
@@ -62,13 +58,7 @@ public interface IWorkList : IRowCache
 	/// </summary>
 	public int? MaxBufferedShapePointCount { get; set; }
 
-	public Envelope GetExtent();
-
 	event EventHandler<WorkListChangedEventArgs> WorkListChanged;
-
-	IEnumerable<IWorkItem> Search(QueryFilter filter);
-
-	IEnumerable<IWorkItem> GetItems(SpatialQueryFilter filter);
 
 	long CountLoadedItems(out int todo);
 
@@ -104,8 +94,6 @@ public interface IWorkList : IRowCache
 	bool IsValid(out string message);
 
 	IAttributeReader GetAttributeReader(long forSourceClassId);
-
-	Geometry GetItemDisplayGeometry(IWorkItem item);
 
 	void SetItemsGeometryDraftMode(bool enable);
 

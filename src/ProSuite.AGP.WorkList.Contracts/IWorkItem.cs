@@ -23,14 +23,14 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// </summary>
 		long UniqueTableId { get; }
 
-		bool Visited { get; set; }
-
 		/// <summary>
 		/// The reference to the GdbObject that represents the work item's source row.
 		/// This should become obsolete or at least Nullable or member of a derived IGdbWorkItem
 		/// interface in the future, once work lists do not necessarily represent GDB Rows.
 		/// </summary>
 		GdbRowIdentity GdbRowProxy { get; }
+
+		bool Visited { get; set; }
 
 		WorkItemStatus Status { get; set; }
 

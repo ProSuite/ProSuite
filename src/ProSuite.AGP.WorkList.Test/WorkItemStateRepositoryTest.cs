@@ -39,7 +39,7 @@ public class WorkItemStateRepositoryTest
 			new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
 		IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-		List<IWorkItem> items = wl.GetItems(new SpatialQueryFilter()).ToList();
+		List<IWorkItem> items = wl.Search(new SpatialQueryFilter()).ToList();
 
 		IWorkItem first = items.First();
 		Assert.True(first.Visited);
@@ -65,7 +65,7 @@ public class WorkItemStateRepositoryTest
 				new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
 			IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			List<IWorkItem> items = wl.GetItems(null).ToList();
+			List<IWorkItem> items = wl.Search(null).ToList();
 
 			items.ForEach(item => Assert.False(item.Visited));
 
@@ -77,7 +77,7 @@ public class WorkItemStateRepositoryTest
 			wl.Commit();
 
 			wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
-			items = wl.GetItems(null).ToList();
+			items = wl.Search(null).ToList();
 			first = items.First();
 
 			Assert.True(first.Visited);

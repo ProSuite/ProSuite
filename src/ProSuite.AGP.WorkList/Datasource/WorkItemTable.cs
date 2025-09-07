@@ -49,7 +49,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 				// Pluggable Datasource cannot handle an empty envelope.
 				_workList ??= WorkListRegistry.Instance.Get(_tableName);
 
-				return _workList?.GetExtent();
+				return _workList?.Extent;
 			}
 			catch (Exception ex)
 			{
@@ -84,7 +84,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 				IEnumerable<object[]> items =
 					_workList.Search(filter)
-					         .Select(item => GetValues(item, _workList, _workList.Current));
+					         .Select(item => GetValues(item, _workList, _workList.CurrentItem));
 
 				return new WorkItemCursor(items);
 			}
@@ -112,9 +112,10 @@ namespace ProSuite.AGP.WorkList.Datasource
 					_service?.UpdateItemGeometries(_tableName, filter);
 				}
 
+
 				IEnumerable<object[]> items =
-					_workList.GetItems(filter)
-					         .Select(item => GetValues(item, _workList, _workList.Current));
+					_workList.Search(filter)
+					         .Select(item => GetValues(item, _workList, _workList.CurrentItem));
 
 				return new WorkItemCursor(items);
 			}
@@ -127,7 +128,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		[NotNull]
 		private static object[] GetValues([NotNull] IWorkItem item,
-		                                  IWorkList workList,
+		                                  IWorkItemData workListItems,
 		                                  IWorkItem current = null)
 		{
 			var values = new object[5];
@@ -137,7 +138,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 				values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
 				values[2] = item.Visited ? 1 : 0;
 				values[3] = item == current ? 1 : 0;
-				values[4] = workList.GetItemDisplayGeometry(item);
+				values[4] = workListItems.GetItemDisplayGeometry(item);
 			}
 			catch (Exception ex)
 			{
