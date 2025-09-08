@@ -8,6 +8,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 	{
 		public string Name { get; set; }
 
+		[XmlElement("DisplayName")]
 		public string DisplayName { get; set; }
 
 		[XmlElement("Type")]

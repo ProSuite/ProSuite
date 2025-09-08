@@ -51,6 +51,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			var definition = new XmlWorkListDefinition
 			                 {
 				                 Name = Name,
+				                 DisplayName = DisplayName,
 				                 TypeName = Type.FullName,
 				                 AssemblyName = Type.Assembly.GetName().Name,
 				                 CurrentIndex = index
