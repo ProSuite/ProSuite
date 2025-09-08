@@ -31,9 +31,13 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		// TODO: Separate hierarchies for db-worklists vs memory-worklists
 		WorkListItemDatastore = workListItemDatastore;
 
-		if (! WorkListItemDatastore.Validate(out string message))
+		// TODO: Flag? Explicit environment validation method? 
+		if (QueuedTask.OnWorker)
 		{
-			throw new ArgumentException($"Invalid issue datastore: {message}");
+			if (! WorkListItemDatastore.Validate(out string message))
+			{
+				throw new ArgumentException($"Invalid issue datastore: {message}");
+			}
 		}
 	}
 

@@ -22,6 +22,10 @@ public class ItemRepositoryMock : IWorkItemRepository
 		WorkItemStateRepository = stateRepository;
 	}
 
+	public SpatialReference SpatialReference { get; set; }
+	public Geometry AreaOfInterest { get; set; }
+	public Envelope Extent { get; set; }
+
 	public long Count()
 	{
 		throw new NotImplementedException();
@@ -81,7 +85,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 
 	public void Commit()
 	{
-		WorkItemStateRepository?.Commit(new List<ISourceClass> { new SourceClassMock() });
+		WorkItemStateRepository?.Commit(new List<ISourceClass> { new SourceClassMock() }, Extent);
 	}
 
 	public void SetCurrentIndex(int currentIndex)

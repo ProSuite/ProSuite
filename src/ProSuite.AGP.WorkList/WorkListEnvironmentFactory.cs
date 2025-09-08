@@ -26,7 +26,7 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 
 	private WorkListEnvironmentFactory() { }
 
-	public static IWorkListEnvironmentFactory Instance { get; } = new WorkListEnvironmentFactory();
+	public static IWorkListEnvironmentFactory Instance { get; set; } = new WorkListEnvironmentFactory();
 
 	public void WithPath(Func<string, IWorkEnvironment> createEnvironment)
 	{

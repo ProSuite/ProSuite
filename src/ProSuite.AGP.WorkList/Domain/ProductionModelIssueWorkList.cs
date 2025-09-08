@@ -26,7 +26,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool CanToggleCurrentItemAllowed()
 		{
-			var currentItem = (DbStatusWorkItem) Current;
+			var currentItem = (DbStatusWorkItem) CurrentItem;
 
 			if (currentItem == null)
 			{
@@ -45,7 +45,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// <returns></returns>
 		public async Task<bool> ToggleCurrentItemAllowed()
 		{
-			var currentItem = (DbStatusWorkItem) Current;
+			var currentItem = (DbStatusWorkItem) CurrentItem;
 
 			if (currentItem == null)
 			{
