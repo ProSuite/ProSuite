@@ -19,6 +19,10 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 	private IReadOnlyList<string> _tableNames;
 	private string _path;
 
+	// Thread-safe static tracking of logged work list names
+	private static readonly HashSet<string> _loggedWorkListNames = new HashSet<string>();
+	private static readonly object _staticLogLock = new object();
+
 	private XmlWorkListDefinition _xmlWorkListDefinition;
 
 	[CanBeNull] private static WorkListGeometryService _service;
@@ -124,6 +128,15 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 		_service?.Stop();
 		_service = null;
 
+		// Clear the logged state for this work list when closing
+		if (_xmlWorkListDefinition?.Name != null)
+		{
+			lock (_staticLogLock)
+			{
+				_loggedWorkListNames.Remove(_xmlWorkListDefinition.Name);
+			}
+		}
+
 		_msg.Debug("WorkListDataSource.Close()");
 	}
 
@@ -140,17 +153,12 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 			// The work list could already be registered before the layer is made visible in the TOC:
 			bool canUseActualWorkList = WorkListRegistry.Instance.Get(name) != null;
 
-			if (! canUseActualWorkList)
-			{
-				_msg.InfoFormat(
-					"Work list layer for '{0}': Showing cached work items. Opening " +
-					"the Work List Navigator will re-read the items from the data store.", name);
-			}
-
 			CachedWorkItemData cachedWorkItemData =
 				canUseActualWorkList
 					? null
 					: new CachedWorkItemData(_xmlWorkListDefinition);
+
+			LogCachedWorkItemUsage(canUseActualWorkList);
 
 			result = new WorkItemTable(name, cachedWorkItemData, Service);
 		}
@@ -162,6 +170,28 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 		}
 
 		return result;
+	}
+
+	private void LogCachedWorkItemUsage(bool canUseActualWorkList)
+	{
+		if (canUseActualWorkList || _xmlWorkListDefinition?.Name == null)
+		{
+			return;
+		}
+
+		string workListName = _xmlWorkListDefinition.Name;
+
+		// Thread-safe one-time logging per work list name across all instances
+		lock (_staticLogLock)
+		{
+			if (_loggedWorkListNames.Add(workListName))
+			{
+				_msg.InfoFormat(
+					"Work list layer for '{0}': Showing cached work items. Opening " +
+					"the Work List Navigator will re-read the items from the data store.",
+					_xmlWorkListDefinition.DisplayName ?? workListName);
+			}
+		}
 	}
 
 	public override IReadOnlyList<string> GetTableNames()
