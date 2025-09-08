@@ -415,7 +415,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				                     ? GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
 				                     : new QueryFilter();
 
-			WorkItemStatus? status = GetStatus(Visibility);
+			// Must load all items, even those not visible due to status filter (otherwise the count is wrong in the navigator)
+			WorkItemStatus? status = null;
 
 			string aoiText = AreaOfInterest != null ? " within area of interest" : string.Empty;
 
