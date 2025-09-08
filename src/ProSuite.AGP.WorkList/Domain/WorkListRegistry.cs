@@ -114,12 +114,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (workList == null)
 				throw new ArgumentNullException(nameof(workList));
 
-			lock (_registryLock)
+			if (_map.ContainsKey(workList.Name))
 			{
-				if (_map.ContainsKey(workList.Name))
-				{
-					return false;
-				}
+				return false;
 			}
 
 			Add(new WorkListFactory(workList));
@@ -160,9 +157,9 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool AddOrReplace(IWorkList worklist)
 		{
-				if (_map.TryGetValue(worklist.Name, out IWorkListFactory factory))
+			if (_map.TryGetValue(worklist.Name, out IWorkListFactory factory))
 			{
-					factory.UnWire();
+				factory.UnWire();
 
 				_map[worklist.Name] = new WorkListFactory(worklist);
 			}
@@ -187,7 +184,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
 
-				UnWire(name);
+			UnWire(name);
 
 			return _map.Remove(name);
 		}
@@ -205,9 +202,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
 
-				_map.TryGetValue(name, out IWorkListFactory factory);
+			_map.TryGetValue(name, out IWorkListFactory factory);
 
-				factory?.UnWire();
+			factory?.UnWire();
 		}
 
 		public override string ToString()

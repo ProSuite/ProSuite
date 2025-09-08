@@ -117,11 +117,11 @@ namespace ProSuite.AGP.WorkList
 			IWorkList result =
 				Assert.NotNull(CreateWorkListCore(itemRepository, uniqueName, displayName));
 
-			_msg.Debug($"Created {WorkListUtils.Format(result)}");
+			_msg.Debug($"Created {result}");
 
 			ConfigureWorkList(result);
 
-			_msg.Debug($"Configured {WorkListUtils.Format(result)}. Start loading items...");
+			_msg.Debug($"Configured {result}. Start loading items...");
 
 			if (AllowBackgroundLoading)
 			{
