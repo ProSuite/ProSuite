@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -73,9 +73,9 @@ namespace ProSuite.Commons.Orm.NHibernate
 						}
 						catch (Exception e)
 						{
-							_msg.Debug("Error committing transaction", e);
+							_msg.Warn("Error committing transaction", e);
 							_inner.Clear();
-							throw;
+							// Note: We don't throw the exception to avoid masking the original exception.
 						}
 					}
 					else
