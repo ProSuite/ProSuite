@@ -921,7 +921,9 @@ namespace ProSuite.AGP.WorkList.Domain
 				     combineIndex < perimeters.Length;
 				     combineIndex++)
 				{
-					Polygon projectedPerimeter = perimeters[combineIndex];
+					Polygon projectedPerimeter =
+						GeometryUtils.Project(perimeters[combineIndex],
+						                      intersection.SpatialReference);
 
 					if (intersection.IsEmpty)
 					{

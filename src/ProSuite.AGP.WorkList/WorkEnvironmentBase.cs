@@ -92,6 +92,7 @@ namespace ProSuite.AGP.WorkList
 			if (! await TryPrepareSchemaCoreAsync())
 			{
 				// null work list
+				_msg.WarnFormat("Work list schema preparation failed for {0}", uniqueName);
 				return await Task.FromResult(default(IWorkList));
 			}
 
