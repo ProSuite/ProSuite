@@ -478,6 +478,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			                                                     new Coordinate3D(xmax, ymax, zmax),
 			                                                     Repository.SpatialReference);
 
+			SpatialHashSearcher<IWorkItem> searcher = CreateSpatialSearcher(itemsWithExtent);
+
 			// TODO: QueryPoints?
 			// TODO: (daro) introduce a loaded flag. Situation: work list is loaded into map. Navigator opened >
 			//		 LoadItemsInBackground > close navigator > re-open it, items are already loaded.
@@ -485,7 +487,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				_rowMap = rowMap;
 				_items = new List<IWorkItem>(rowMap.Values);
-				_searcher = CreateSpatialSearcher(itemsWithExtent);
+				_searcher = searcher;
 			}
 
 			OnWorkListChanged();
