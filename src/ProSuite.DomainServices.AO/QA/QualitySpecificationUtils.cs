@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -454,7 +455,12 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 			catch (Exception e)
 			{
-				_msg.VerboseDebug(() => $"Error opening dataset {dataset.Name}", e);
+				if (EnvironmentUtils.GetBooleanEnvironmentVariableValue("PROSUITE_EXPECT_ALL_DATASETS_EXIST"))
+				{
+					throw;
+				}
+
+				_msg.Debug($"Error opening (probably missing) dataset {dataset.Name}", e);
 				return false;
 			}
 		}
