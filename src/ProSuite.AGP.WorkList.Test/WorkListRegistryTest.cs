@@ -100,6 +100,8 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 		throw new NotImplementedException();
 	}
 
+	public bool AllowBackgroundLoading { get; set; }
+
 	public string WorkListFile { get; set; }
 
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
@@ -134,6 +136,8 @@ public class SelectionWorkListEnvironmentMock : IWorkEnvironment
 	{
 		throw new NotImplementedException();
 	}
+
+	public bool AllowBackgroundLoading { get; set; }
 
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
 	{
@@ -207,15 +211,12 @@ public class WorkListMock : IWorkList
 	public int? MaxBufferedItemCount { get; set; }
 	public int? MaxBufferedShapePointCount { get; set; }
 
-	public Envelope GetExtent()
-	{
-		throw new NotImplementedException();
-	}
+	public Envelope Extent => throw new NotImplementedException();
 
 	public WorkItemVisibility? Visibility { get; set; }
 	public Geometry AreaOfInterest { get; set; }
 	public bool QueryLanguageSupported { get; }
-	public IWorkItem Current { get; }
+	public IWorkItem CurrentItem { get; }
 	public int CurrentIndex { get; set; }
 	public IWorkItemRepository Repository { get; }
 	public long? TotalCount { get; set; }
@@ -226,7 +227,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<IWorkItem> GetItems(SpatialQueryFilter filter)
+	public IEnumerable<IWorkItem> Search(SpatialQueryFilter filter)
 	{
 		throw new NotImplementedException();
 	}

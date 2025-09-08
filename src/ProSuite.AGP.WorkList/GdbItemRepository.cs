@@ -30,6 +30,34 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	[NotNull]
 	public IWorkItemStateRepository WorkItemStateRepository { get; }
 
+	[CanBeNull]
+	public SpatialReference SpatialReference
+	{
+		get
+		{
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				var featureClass = OpenTable(sourceClass) as FeatureClass;
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				using (featureClass)
+				{
+					return featureClass.GetDefinition().GetSpatialReference();
+				}
+			}
+
+			return null;
+		}
+	}
+
+	public Geometry AreaOfInterest { get; set; }
+
+	public Envelope Extent { get; set; }
+
 	[NotNull]
 	public IList<ISourceClass> SourceClasses { get; }
 
@@ -89,7 +117,8 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	public void Commit()
 	{
-		WorkItemStateRepository.Commit(SourceClasses);
+		Envelope extent = Extent ?? AreaOfInterest?.Extent;
+		WorkItemStateRepository.Commit(SourceClasses, extent);
 	}
 
 	public void SetCurrentIndex(int currentIndex)

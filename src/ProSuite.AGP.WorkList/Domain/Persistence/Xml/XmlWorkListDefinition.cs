@@ -8,6 +8,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 	{
 		public string Name { get; set; }
 
+		// TODO:
+		//public string DisplayName { get; set; }
+
 		[XmlElement("Type")]
 		public string TypeName { get; set; }
 
@@ -17,8 +20,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 		[XmlElement("XmlFile")]
 		public string Path { get; set; }
-
-		// TODO: AreaOfInterest: Polygon (and move to JSON)
 
 		[XmlArray("Workspaces")]
 		[XmlArrayItem(typeof(XmlWorkListWorkspace), ElementName = "Workspace")]
@@ -30,5 +31,10 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		[XmlArray("Items")]
 		[XmlArrayItem(typeof(XmlWorkItemState), ElementName = "Item")]
 		public List<XmlWorkItemState> Items { get; set; }
+
+		[XmlElement("Extent")]
+		public string Extent { get; set; }
+
+		// TODO: AreaOfInterest?: Polygon (and move to JSON)
 	}
 }

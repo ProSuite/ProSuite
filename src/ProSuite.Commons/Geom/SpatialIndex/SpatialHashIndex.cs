@@ -25,7 +25,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		private bool _envelopeUpToDate;
 
-		private ThreadLocal<HashSet<T>> _foundIdentifiers =
+		private readonly ThreadLocal<HashSet<T>> _foundIdentifiers =
 			new ThreadLocal<HashSet<T>>(() => new HashSet<T>());
 
 		public SpatialHashIndex(EnvelopeXY envelope, double gridsize, double estimatedItemsPerTile)
@@ -100,6 +100,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		[NotNull]
 		public TilingDefinition TilingDefinition { get; }
+
 		public double GridSize => TilingDefinition.TileWidth;
 		public double OriginX => TilingDefinition.OriginX;
 		public double OriginY => TilingDefinition.OriginY;
@@ -213,9 +214,18 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public void Add(T identifier, IEnumerable<TileIndex> intersectedTiles)
 		{
+			int count = 0;
 			foreach (TileIndex intersectedTileIdx in intersectedTiles)
 			{
 				Add(identifier, intersectedTileIdx);
+				count++;
+			}
+
+			if (count > 100 && _msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat(
+					"Identifier {0} intersects {1} tiles. This might be an indication of too small tile size (or very varied object size).",
+					identifier, count);
 			}
 		}
 
@@ -239,13 +249,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		{
 			if (_tiles.Count == 0)
 				yield break;
-			
+
 			double maxExistingTileDistance = Math.Ceiling(GetDistanceToFurthestPopulatedTile(x, y));
 
 			// Note: We take the ceiling of the actual distance to ensure that all points that are within the defined radius
 			//		 are actually returned. In some cases this might lead to points being returned that are further away
 			//		 than the max distance.
-			double effectiveMaxDistance = Math.Ceiling((Math.Min(maxExistingTileDistance, maxDistance)));
+			double effectiveMaxDistance =
+				Math.Ceiling((Math.Min(maxExistingTileDistance, maxDistance)));
 
 			foreach (var tileIndex in TilingDefinition.GetTileIndexAround(
 				         x, y, metric, effectiveMaxDistance))
