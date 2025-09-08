@@ -98,8 +98,10 @@ namespace ProSuite.AGP.WorkList
 
 			var watch = Stopwatch.StartNew();
 
+			string displayName = Path.GetFileNameWithoutExtension(workListFile);
+
 			IWorkItemStateRepository stateRepository =
-				CreateStateRepositoryCore(workListFile, uniqueName);
+				CreateStateRepositoryCore(workListFile, uniqueName, displayName);
 
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
 			                     workListFile);
@@ -112,8 +114,6 @@ namespace ProSuite.AGP.WorkList
 			{
 				return await Task.FromResult<IWorkList>(null);
 			}
-
-			string displayName = Path.GetFileNameWithoutExtension(workListFile);
 
 			IWorkList result =
 				Assert.NotNull(CreateWorkListCore(itemRepository, uniqueName, displayName));
@@ -210,7 +210,7 @@ namespace ProSuite.AGP.WorkList
 		                                                [NotNull] string displayName);
 
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
-			string path, string workListName);
+			string path, string workListName, string displayName);
 
 		[ItemCanBeNull]
 		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(

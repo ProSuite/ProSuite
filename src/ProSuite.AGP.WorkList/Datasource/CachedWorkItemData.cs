@@ -43,6 +43,8 @@ public class CachedWorkItemData : IWorkItemData
 
 		Name = workListDefinition.Name;
 
+		DisplayName = workListDefinition.DisplayName;
+
 		// Extent is null in work lists saved in previous versions
 		if (workListDefinition.Extent != null)
 		{
@@ -63,8 +65,10 @@ public class CachedWorkItemData : IWorkItemData
 			catch (Exception e)
 			{
 				// TODO: Investigate case when all items have 0 extent at coordinate 0/0.
-				_msg.Warn($"Work list {workListDefinition.Name}: Cannot create cached work " +
-				          $"items. Open Work List Navigator to see work items", e);
+				_msg.Warn(
+					$"Work list {workListDefinition.DisplayName} ({workListDefinition.Name}):" +
+					$" Cannot create cached work items. Open Work List Navigator to see work items",
+					e);
 			}
 		}
 
@@ -105,6 +109,8 @@ public class CachedWorkItemData : IWorkItemData
 	#region Implementation of IWorkItemData
 
 	public string Name { get; }
+
+	public string DisplayName { get; set; }
 
 	public Envelope Extent { get; private set; }
 

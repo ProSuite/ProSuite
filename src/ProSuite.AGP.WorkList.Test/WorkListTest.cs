@@ -681,13 +681,15 @@ namespace ProSuite.AGP.WorkList.Test
 			string fileName = $"{nameof(Can_rename_worklist)}.xml";
 			string path = TestDataPreparer.FromDirectory().GetPath(fileName);
 			var uniqueName = "stateRepo";
-
+			var displayName = "state Repository display name";
 			var newName = "Run to the Hills";
 			string newPath = TestDataPreparer.FromDirectory().GetPath("Run to the Hills.xml");
 
 			try
 			{
-				var stateRepo = new XmlSelectionItemStateRepository(path, uniqueName, typeof(IssueWorkList));
+				var stateRepo =
+					new XmlSelectionItemStateRepository(path, uniqueName, displayName,
+					                                    typeof(IssueWorkList));
 
 				var repo = new ItemRepositoryMock(new List<IWorkItem>(), stateRepo);
 				IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), uniqueName, "displayName");

@@ -12,6 +12,11 @@ public interface IWorkItemData
 	string Name { get; }
 
 	/// <summary>
+	/// The display name to be used in the user interface.
+	/// </summary>
+	string DisplayName { get; }
+
+	/// <summary>
 	/// The extent of all work items in the work list.
 	/// </summary>
 	Envelope Extent { get; }

@@ -33,11 +33,11 @@ namespace ProSuite.AGP.WorkList.Selection
 		}
 
 		protected override IWorkItemStateRepository CreateStateRepositoryCore(
-			string path, string workListName)
+			string path, string workListName, string displayName)
 		{
 			Type type = GetWorkListTypeCore<SelectionWorkList>();
 
-			return new XmlSelectionItemStateRepository(path, workListName, type);
+			return new XmlSelectionItemStateRepository(path, workListName, displayName, type);
 		}
 
 		protected override Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
@@ -69,7 +69,7 @@ namespace ProSuite.AGP.WorkList.Selection
 				}
 
 				result = Task.FromResult<IWorkItemRepository>(
-					         new SelectionItemRepository(sourceClasses, stateRepository));
+					new SelectionItemRepository(sourceClasses, stateRepository));
 			}
 			finally
 			{
