@@ -33,7 +33,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		                     WorkListGeometryService service)
 		{
 			Assert.ArgumentNotNullOrEmpty(nameof(tableName));
-			Assert.ArgumentNotNull(workItemData, nameof(workItemData));
 
 			_tableName = tableName;
 			_workItemData = workItemData;

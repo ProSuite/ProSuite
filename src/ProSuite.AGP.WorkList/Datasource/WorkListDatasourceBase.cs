@@ -138,8 +138,17 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 			_msg.Debug($"Open table '{name}'");
 
 			// The work list could already be registered before the layer is made visible in the TOC:
+			bool canUseActualWorkList = WorkListRegistry.Instance.Get(name) != null;
+
+			if (! canUseActualWorkList)
+			{
+				_msg.InfoFormat(
+					"Work list layer for '{0}': Showing cached work items. Opening " +
+					"the Work List Navigator will re-read the items from the data store.", name);
+			}
+
 			CachedWorkItemData cachedWorkItemData =
-				WorkListRegistry.Instance.WorklistExists(name)
+				canUseActualWorkList
 					? null
 					: new CachedWorkItemData(_xmlWorkListDefinition);
 
