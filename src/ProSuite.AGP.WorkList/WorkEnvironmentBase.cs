@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
@@ -34,6 +35,8 @@ namespace ProSuite.AGP.WorkList
 		/// TODO: Implement and use for all DbStatusWorkLists and Selection worklist
 		/// </summary>
 		protected string UniqueName { get; set; }
+
+		protected bool AllowBackgroundLoading { get; set; }
 
 		protected virtual Geometry GetAreaOfInterest()
 		{
@@ -101,7 +104,8 @@ namespace ProSuite.AGP.WorkList
 			                     workListFile);
 
 			IWorkItemRepository itemRepository =
-				await CreateItemRepositoryCoreAsync(stateRepository);
+				await QueuedTask.Run(async () =>
+					                     await CreateItemRepositoryCoreAsync(stateRepository));
 
 			if (itemRepository == null)
 			{
@@ -109,13 +113,25 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			string displayName = Path.GetFileNameWithoutExtension(workListFile);
-			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
-			Assert.NotNull(result);
+
+			IWorkList result =
+				Assert.NotNull(CreateWorkListCore(itemRepository, uniqueName, displayName));
 
 			_msg.Debug($"Created {WorkListUtils.Format(result)}");
 
-			WorkListUtils.LoadItemsInBackground(result);
-			WorkListUtils.CountItemsInBackground(result);
+			ConfigureWorkList(result);
+
+			_msg.Debug($"Configured {WorkListUtils.Format(result)}. Start loading items...");
+
+			if (AllowBackgroundLoading)
+			{
+				WorkListUtils.LoadItemsInBackground(result);
+				WorkListUtils.CountItemsInBackground(result);
+			}
+			else
+			{
+				await QueuedTask.Run(() => { result.LoadItems(); });
+			}
 
 			return result;
 		}
@@ -125,6 +141,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			return null;
 		}
+
+		protected virtual void ConfigureWorkList(IWorkList workList) { }
 
 		/// <summary>
 		/// Loads the work list layer, containing the navigable items based on the plugin

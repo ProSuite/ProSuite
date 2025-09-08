@@ -17,7 +17,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IReadOnlyList<PluginField> _fields;
-		private readonly WorkListGeometryService _service;
+		[CanBeNull] private readonly WorkListGeometryService _service;
 		private readonly string _tableName;
 
 		[CanBeNull] private IWorkList _workList;
@@ -25,7 +25,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 		public WorkItemTable(string tableName, WorkListGeometryService service)
 		{
 			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
-			_service = service ?? throw new ArgumentNullException(nameof(service));
+			_service = service;
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
 		}
 
@@ -107,7 +107,10 @@ namespace ProSuite.AGP.WorkList.Datasource
 					return new WorkItemCursor(Enumerable.Empty<object[]>());
 				}
 
-				_service.UpdateItemGeometries(_tableName, filter);
+				if (_workList.CacheBufferedItemGeometries)
+				{
+					_service?.UpdateItemGeometries(_tableName, filter);
+				}
 
 				IEnumerable<object[]> items =
 					_workList.GetItems(filter)
@@ -134,7 +137,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 				values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
 				values[2] = item.Visited ? 1 : 0;
 				values[3] = item == current ? 1 : 0;
-				values[4] = workList.GetItemGeometry(item);
+				values[4] = workList.GetItemDisplayGeometry(item);
 			}
 			catch (Exception ex)
 			{

@@ -185,6 +185,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override Task OnSelectionPhaseStartedAsync()
 		{
 			SelectionCursors = FirstPhaseCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 			return base.OnSelectionPhaseStartedAsync();
 		}
 

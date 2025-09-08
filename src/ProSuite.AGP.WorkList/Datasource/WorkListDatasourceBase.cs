@@ -17,18 +17,19 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 	private IReadOnlyList<string> _tableNames;
 	private string _path;
 
-	[CanBeNull]
-	private static WorkListGeometryService _service;
+	[CanBeNull] private static WorkListGeometryService _service;
 
-	[NotNull]
-	private static WorkListGeometryService Service
+	/// <summary>
+	/// Subclasses can globally enable/disable the background service.
+	/// </summary>
+	[CanBeNull]
+	protected virtual WorkListGeometryService Service
 	{
 		get
 		{
 			if (_service == null)
 			{
 				_service = new WorkListGeometryService();
-				_service.Start();
 			}
 
 			return _service;

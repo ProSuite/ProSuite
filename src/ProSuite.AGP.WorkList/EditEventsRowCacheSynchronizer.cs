@@ -130,7 +130,8 @@ namespace ProSuite.AGP.WorkList
 
 			if (fullTableInvalidations.Count > 0)
 			{
-				_msg.Warn($"Invalidate all members: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
+				_msg.Info(
+					$"Re-reading tables: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
 				_rowCache.Invalidate(fullTableInvalidations);
 			}
 

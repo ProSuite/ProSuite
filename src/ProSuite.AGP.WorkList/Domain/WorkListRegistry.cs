@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
@@ -10,10 +11,9 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		private static volatile WorkListRegistry _instance;
 		private static readonly object _singletonLock = new object();
-		private static readonly object _registryLock = new object();
 
 		private readonly IDictionary<string, IWorkListFactory> _map =
-			new Dictionary<string, IWorkListFactory>();
+			new ConcurrentDictionary<string, IWorkListFactory>();
 
 		public static IWorkListRegistry Instance
 		{
@@ -41,22 +41,15 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		public IWorkList Get(string name)
 		{
-			lock (_registryLock)
-			{
-				return _map.TryGetValue(name, out IWorkListFactory factory) ? factory.Get() : null;
-			}
+			return _map.TryGetValue(name, out IWorkListFactory factory) ? factory.Get() : null;
 		}
 
 		[ItemCanBeNull]
 		public async Task<IWorkList> GetAsync(string name)
 		{
-			bool exists;
 			IWorkListFactory factory;
 
-			lock (_registryLock)
-			{
-				exists = _map.TryGetValue(name, out factory);
-			}
+			bool exists = _map.TryGetValue(name, out factory);
 
 			if (exists)
 			{
@@ -68,12 +61,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public IEnumerable<IWorkList> Get()
 		{
-			ICollection<IWorkListFactory> factories;
-
-			lock (_registryLock)
-			{
-				factories = _map.Values;
-			}
+			ICollection<IWorkListFactory> factories = _map.Values;
 
 			foreach (IWorkListFactory factory in factories)
 			{
@@ -83,12 +71,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public async IAsyncEnumerable<IWorkList> GetAsync()
 		{
-			ICollection<IWorkListFactory> factories;
-
-			lock (_registryLock)
-			{
-				factories = _map.Values;
-			}
+			ICollection<IWorkListFactory> factories = _map.Values;
 
 			foreach (IWorkListFactory factory in factories)
 			{
@@ -101,17 +84,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (workList == null)
 				throw new ArgumentNullException(nameof(workList));
 
-			lock (_registryLock)
+			string name = workList.Name;
+			if (_map.ContainsKey(name))
 			{
-				string name = workList.Name;
-				if (_map.ContainsKey(name))
-				{
-					throw new InvalidOperationException(
-						$"WorkList by that name already registered: '{name}'");
-				}
-
-				_map.Add(name, new WorkListFactory(workList));
+				throw new InvalidOperationException(
+					$"WorkList by that name already registered: '{name}'");
 			}
+
+			_map.Add(name, new WorkListFactory(workList));
 		}
 
 		public void Add(IWorkListFactory factory)
@@ -119,17 +99,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (factory == null)
 				throw new ArgumentNullException(nameof(factory));
 
-			lock (_registryLock)
+			string name = factory.Name;
+			if (_map.ContainsKey(name))
 			{
-				string name = factory.Name;
-				if (_map.ContainsKey(name))
-				{
-					throw new InvalidOperationException(
-						$"WorkList by that name already registered: '{name}'");
-				}
-
-				_map.Add(name, factory);
+				throw new InvalidOperationException(
+					$"WorkList by that name already registered: '{name}'");
 			}
+
+			_map.Add(name, factory);
 		}
 
 		public bool TryAdd(IWorkList workList)
@@ -154,12 +131,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (factory == null)
 				throw new ArgumentNullException(nameof(factory));
 
-			lock (_registryLock)
+			if (_map.ContainsKey(factory.Name))
 			{
-				if (_map.ContainsKey(factory.Name))
-				{
-					return false;
-				}
+				return false;
 			}
 
 			Add(factory);
@@ -168,7 +142,9 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool WorklistExists(string name)
 		{
-			lock (_registryLock)
+			// NOTE: This has been observed to deadlock between CIM-threads (without background loading)!
+			//       Never lock on somthing you cannot cantrol who has access to
+			//lock (_registryLock)
 			{
 				if (_map.TryGetValue(name, out IWorkListFactory factory))
 				{
@@ -184,18 +160,15 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool AddOrReplace(IWorkList worklist)
 		{
-			lock (_registryLock)
-			{
 				if (_map.TryGetValue(worklist.Name, out IWorkListFactory factory))
-				{
+			{
 					factory.UnWire();
 
-					_map[worklist.Name] = new WorkListFactory(worklist);
-				}
-				else
-				{
-					_map.Add(worklist.Name, new WorkListFactory(worklist));
-				}
+				_map[worklist.Name] = new WorkListFactory(worklist);
+			}
+			else
+			{
+				_map.Add(worklist.Name, new WorkListFactory(worklist));
 			}
 
 			return true;
@@ -214,12 +187,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
 
-			lock (_registryLock)
-			{
 				UnWire(name);
 
-				return _map.Remove(name);
-			}
+			return _map.Remove(name);
 		}
 
 		public void UnWire(IWorkList workList)
@@ -235,20 +205,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
 
-			lock (_registryLock)
-			{
 				_map.TryGetValue(name, out IWorkListFactory factory);
 
 				factory?.UnWire();
-			}
 		}
 
 		public override string ToString()
 		{
-			lock (_registryLock)
-			{
-				return $"{_map.Count}";
-			}
+			return $"{_map.Count}";
 		}
 	}
 }

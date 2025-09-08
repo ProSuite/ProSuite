@@ -191,7 +191,9 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public void ProcessChanges(Dictionary<Table, List<long>> inserts, Dictionary<Table, List<long>> deletes, Dictionary<Table, List<long>> updates)
+	public void ProcessChanges(Dictionary<Table, List<long>> inserts,
+	                           Dictionary<Table, List<long>> deletes,
+	                           Dictionary<Table, List<long>> updates)
 	{
 		throw new NotImplementedException();
 	}
@@ -203,6 +205,13 @@ public class WorkListMock : IWorkList
 
 	public string Name { get; set; }
 	public string DisplayName { get; }
+
+	public double MinimumScaleDenominator { get; set; }
+	public bool CacheBufferedItemGeometries { get; set; }
+	public bool AlwaysUseDraftMode { get; set; }
+	public double ItemDisplayBufferDistance { get; set; }
+	public int? MaxBufferedItemCount { get; set; }
+	public int? MaxBufferedShapePointCount { get; set; }
 
 	public Envelope GetExtent()
 	{
@@ -228,7 +237,8 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus, bool excludeGeometry = false)
+	public IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus,
+	                                       bool excludeGeometry = false)
 	{
 		throw new NotImplementedException();
 	}
@@ -263,7 +273,8 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public void GoNearest(Geometry reference, Predicate<IWorkItem> match = null, params Polygon[] contextPerimeters)
+	public void GoNearest(Geometry reference, Predicate<IWorkItem> match = null,
+	                      params Polygon[] contextPerimeters)
 	{
 		throw new NotImplementedException();
 	}
@@ -328,7 +339,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public Geometry GetItemGeometry(IWorkItem item)
+	public Geometry GetItemDisplayGeometry(IWorkItem item)
 	{
 		throw new NotImplementedException();
 	}
@@ -368,14 +379,18 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
+	public void LoadItems()
+	{
+		throw new NotImplementedException();
+	}
+
 	public void RefreshItems(QueryFilter filter)
 	{
 		throw new NotImplementedException();
 	}
 
-	public void LoadItems(QueryFilter filter)
+	public void LoadItems(QueryFilter filter, WorkItemStatus? statusFilter = null)
 	{
 		throw new NotImplementedException();
 	}
 }
-

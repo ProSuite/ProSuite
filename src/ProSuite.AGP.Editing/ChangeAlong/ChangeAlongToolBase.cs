@@ -190,6 +190,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override Task OnSelectionPhaseStartedAsync()
 		{
 			SelectionCursors = InitialSelectionCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 			return base.OnSelectionPhaseStartedAsync();
 		}
 

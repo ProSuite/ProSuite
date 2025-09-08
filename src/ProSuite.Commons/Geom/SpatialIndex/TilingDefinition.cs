@@ -29,7 +29,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public double TileHeight { get; }
 
-		public TileIndex GetTileIndexAt([NotNull] Pnt3D point)
+		public TileIndex GetTileIndexAt([NotNull] ICoordinates point)
 		{
 			Assert.ArgumentNotNull(point, nameof(point));
 
@@ -63,6 +63,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 		}
 
+		public IEnumerable<TileIndex> GetIntersectingTiles(IBoundedXY bounds)
+		{
+			return GetIntersectingTiles(bounds.XMin, bounds.YMin, bounds.XMax, bounds.YMax);
+		}
+
 		public IEnumerable<TileIndex> GetIntersectingTiles(
 			double xMin, double yMin, double xMax, double yMax)
 		{
@@ -87,6 +92,25 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			int maxNorth = Math.Min(maxExtentIndex.North, maximumIndex.North);
 
 			return GetAllTilesBetween(minEast, minNorth, maxEast, maxNorth);
+		}
+
+		public BoundedBox QueryTileBounds(TileIndex forTile)
+		{
+			double xMin;
+			double yMin;
+			double xMax;
+			double yMax;
+			GetTileBounds(forTile, OriginX, OriginY, TileWidth, TileHeight,
+						  out xMin, out yMin, out xMax, out yMax);
+			return new BoundedBox(xMin, yMin, xMax, yMax);
+		}
+
+		public void QueryTileBounds(TileIndex forTile,
+									out double xMin, out double yMin,
+									out double xMax, out double yMax)
+		{
+			GetTileBounds(forTile, OriginX, OriginY, TileWidth, TileHeight,
+						  out xMin, out yMin, out xMax, out yMax);
 		}
 
 		public void QueryTileBounds(TileIndex forTile,
