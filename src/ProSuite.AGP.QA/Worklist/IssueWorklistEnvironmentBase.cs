@@ -151,6 +151,7 @@ namespace ProSuite.AGP.QA.WorkList
 			catch (Exception ex)
 			{
 				_msg.Debug(ex.Message, ex);
+				throw;
 			}
 			finally
 			{
