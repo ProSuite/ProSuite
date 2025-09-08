@@ -53,26 +53,19 @@ public class CachedWorkItemData : IWorkItemData
 
 		if (workListDefinition.Items?.Count > 0)
 		{
-			double gridCellSize = double.NaN;
-			if (Extent?.Width > 0 && Extent?.Height > 0)
+			try
 			{
-				// ReSharper disable once PossibleInvalidOperationException
-				double avgItemWidth = Extent.Width / workListDefinition.Items.Count;
-				double avgItemHeight = Extent.Height / workListDefinition.Items.Count;
-
-				gridCellSize = (avgItemWidth + avgItemHeight) / 2;
+				_spatialSearcher = SpatialHashSearcher<XmlWorkItemState>.CreateSpatialSearcher(
+					workListDefinition.Items,
+					xmlItem =>
+						new EnvelopeXY(xmlItem.XMin, xmlItem.YMin, xmlItem.XMax, xmlItem.YMax));
 			}
-
-			if (double.IsNaN(gridCellSize))
+			catch (Exception e)
 			{
-				// Any value is better than 0:
-				gridCellSize = 1000;
+				// TODO: Investigate case when all items have 0 extent at coordinate 0/0.
+				_msg.Warn($"Work list {workListDefinition.Name}: Cannot create cached work " +
+				          $"items. Open Work List Navigator to see work items", e);
 			}
-
-			_spatialSearcher = SpatialHashSearcher<XmlWorkItemState>.CreateSpatialSearcher(
-				workListDefinition.Items,
-				xmlItem => new EnvelopeXY(xmlItem.XMin, xmlItem.YMin, xmlItem.XMax, xmlItem.YMax),
-				gridCellSize);
 		}
 
 		_tablesById = new Dictionary<long, GdbTableIdentity>();
