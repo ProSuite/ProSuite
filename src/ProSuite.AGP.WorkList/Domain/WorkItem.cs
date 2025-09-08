@@ -16,7 +16,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly double _minimumSizeProjected = 30;
 
 		private WorkItemStatus _status;
-		private Geometry _geometry;
+		private Geometry _bufferedGeometry;
 		private Envelope _extent;
 		private long _oid;
 
@@ -38,7 +38,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool HasExtent => _extent != null;
 
-		public bool HasBufferedGeometry => _geometry != null;
+		public bool HasBufferedGeometry => _bufferedGeometry != null;
 
 		#region IWorkItem
 
@@ -63,7 +63,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			protected set => _extent = value;
 		}
 
-		public Geometry BufferedGeometry => _geometry;
+		public Geometry BufferedGeometry => _bufferedGeometry;
 
 		#endregion
 
@@ -101,10 +101,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			lock (_obj)
 			{
-				_geometry = geometry;
+				_bufferedGeometry = geometry;
 			}
 
-			SetExtent(geometry.Extent);
+			// Keep the originally calculated extent (expansion factor 1.1)
+			if (Extent == null)
+			{
+				SetExtent(geometry.Extent);
+			}
 		}
 
 		public void SetExtent([NotNull] Envelope extent)
