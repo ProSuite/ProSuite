@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -279,8 +280,26 @@ namespace ProSuite.Microservices.Client.QA
 
 				foreach (TestParameterValue parameterValue in result.ParameterValues)
 				{
-					TestParameterValue existingParameter = existing.ParameterValues.Single(
-						p => p.TestParameterName == parameterValue.TestParameterName);
+					// TOP-5968: 
+					List<TestParameterValue> matchingParameters = existing.ParameterValues
+						.Where(p => p.TestParameterName == parameterValue.TestParameterName)
+						.ToList();
+
+					if (matchingParameters.Count != 1 &&
+					    ! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+						    "TOPGIS_NO_THROW_ON_MULTI_PARAMETER"))
+					{
+						throw new InvalidConfigurationException(
+							$"Transformer configuration '{result.Name}' has invalid parameter with " +
+							$"name '{parameterValue.TestParameterName}'. Each parameter value must " +
+							$"exist exactly once. Found matches: {matchingParameters.Count}");
+					}
+
+					_msg.Debug($"Transformer configuration '{result.Name}' has parameter <name> " +
+					           $"'{parameterValue.TestParameterName}' with a value count <> 1. " +
+					           $"Found matches: {matchingParameters.Count}");
+
+					TestParameterValue existingParameter = matchingParameters[0];
 
 					if (parameterValue.StringValue != existingParameter.StringValue)
 					{
