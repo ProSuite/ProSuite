@@ -881,11 +881,25 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (Polyline) Engine.Clip(polyline, clipExtent);
 		}
 
-		public static Envelope Project(Envelope envelope, SpatialReference sref)
+		public static Envelope Project([NotNull] Envelope envelope,
+		                               [NotNull] SpatialReference spatialReference)
 		{
-			var projected = Engine.Project(envelope, sref);
+			var projected = Engine.Project(envelope, spatialReference);
 			return projected as Envelope ??
 			       throw UnexpectedResultFrom("Project", typeof(Envelope), projected);
+		}
+
+		public static T Project<T>([NotNull] T geometry,
+		                           [NotNull] SpatialReference spatialReference) where T : Geometry
+		{
+			Geometry projected = Engine.Project(geometry, spatialReference);
+
+			if (projected is T result)
+			{
+				return result;
+			}
+
+			throw UnexpectedResultFrom("Project", typeof(T), projected);
 		}
 
 		/// <summary>

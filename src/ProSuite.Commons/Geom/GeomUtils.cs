@@ -638,7 +638,7 @@ return : Point2D : lines cut each other at Point (non parallel)
 
 		public static Pnt2D GetCentroid2D(IBoundedXY bounds)
 		{
-			return new Pnt2D(bounds.XMax - bounds.XMin, bounds.YMax - bounds.YMin);
+			return new Pnt2D((bounds.XMax + bounds.XMin) / 2, (bounds.YMax + bounds.YMin) / 2);
 		}
 
 		public static double GetArea2D([NotNull] IList<Pnt3D> ringVertices)

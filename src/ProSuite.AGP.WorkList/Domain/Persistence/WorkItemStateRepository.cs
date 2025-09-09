@@ -18,6 +18,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		private readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected string Name { get; }
+		protected string DisplayName { get; }
 		protected Type Type { get; }
 
 		public string WorkListDefinitionFilePath { get; set; }
@@ -25,9 +26,11 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		private readonly IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>
 			_workspaces = new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
 
-		protected WorkItemStateRepository(string name, Type type, int? currentItemIndex)
+		protected WorkItemStateRepository(string name, string displayName, Type type,
+		                                  int? currentItemIndex)
 		{
 			Name = name;
+			DisplayName = displayName;
 			Type = type;
 			CurrentIndex = currentItemIndex;
 

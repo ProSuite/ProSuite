@@ -415,7 +415,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				                     ? GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
 				                     : new QueryFilter();
 
-			WorkItemStatus? status = GetStatus(Visibility);
+			// Must load all items, even those not visible due to status filter (otherwise the count is wrong in the navigator)
+			WorkItemStatus? status = null;
 
 			string aoiText = AreaOfInterest != null ? " within area of interest" : string.Empty;
 
@@ -475,6 +476,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			                                                     new Coordinate3D(xmax, ymax, zmax),
 			                                                     Repository.SpatialReference);
 
+			SpatialHashSearcher<IWorkItem> searcher = CreateSpatialSearcher(itemsWithExtent);
+
 			// TODO: QueryPoints?
 			// TODO: (daro) introduce a loaded flag. Situation: work list is loaded into map. Navigator opened >
 			//		 LoadItemsInBackground > close navigator > re-open it, items are already loaded.
@@ -482,7 +485,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				_rowMap = rowMap;
 				_items = new List<IWorkItem>(rowMap.Values);
-				_searcher = CreateSpatialSearcher(itemsWithExtent);
+				_searcher = searcher;
 			}
 
 			OnWorkListChanged();
@@ -916,7 +919,9 @@ namespace ProSuite.AGP.WorkList.Domain
 				     combineIndex < perimeters.Length;
 				     combineIndex++)
 				{
-					Polygon projectedPerimeter = perimeters[combineIndex];
+					Polygon projectedPerimeter =
+						GeometryUtils.Project(perimeters[combineIndex],
+						                      intersection.SpatialReference);
 
 					if (intersection.IsEmpty)
 					{

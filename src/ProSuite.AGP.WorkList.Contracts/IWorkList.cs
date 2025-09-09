@@ -9,8 +9,6 @@ namespace ProSuite.AGP.WorkList.Contracts;
 
 public interface IWorkList : IRowCache, IWorkItemData
 {
-	string DisplayName { get; }
-
 	WorkItemVisibility? Visibility { get; set; }
 
 	int CurrentIndex { get; }
