@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ArcGIS.Core.Geometry;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -13,7 +14,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void UpdateState(IWorkItem item);
 
-		void Commit(IList<ISourceClass> sourceClasses);
+		void Commit(IList<ISourceClass> sourceClasses,
+		            Envelope extent);
 
 		int? CurrentIndex { get; set; }
 

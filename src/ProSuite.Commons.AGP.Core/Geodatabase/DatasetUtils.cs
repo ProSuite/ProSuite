@@ -279,6 +279,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					ex);
 				throw;
 			}
+			catch (Exception ex)
+			{
+				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+				_msg.Debug($"Error opening dataset {datasetName} from {displayText}: {ex.Message}");
+				throw;
+			}
 
 			throw new ArgumentOutOfRangeException(
 				$"Unsupported datastore type: {datastore.GetConnectionString()}");

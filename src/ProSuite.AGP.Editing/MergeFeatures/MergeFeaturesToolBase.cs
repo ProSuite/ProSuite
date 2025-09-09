@@ -48,10 +48,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private const Key _immediateMergeKey = Key.Enter;
 		private Feature _firstFeature;
 
-		private readonly SelectionCursors _firstPhaseCursors =
+		private SelectionCursors FirstPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay1);
 
-		private readonly SelectionCursors _secondPhaseCursors =
+		private SelectionCursors SecondPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay2);
 
 		public Feature ContextClickedFeature { get; set; }
@@ -96,7 +96,11 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		/// </summary>
 		public IMergeConditionEvaluator MergeConditionEvaluator { get; protected set; }
 
-		public bool NoMultiselection { get; set; }
+		/// <summary>
+		/// Flag to indicate that currently the selection is changed by the <see
+		/// cref="OnSketchCompleteCoreAsync"/> method and selection events should be ignored.
+		/// </summary>
+		protected bool IsMerging { get; set; }
 
 		#region MapToolBase and OneClickToolBase overrides
 
@@ -115,28 +119,8 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected bool AllowSelectByPolygon =>
 			_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.LargerObject;
 
-		//ToDo?
-		//protected bool IgnoreSelectionOutsideVisibleExtents => true;
-
-		// TODO: Move to Base, consolidate NoMultiselection / AllowMultiSelection after pull subtree
-		protected override IPickerPrecedence CreatePickerPrecedence(
-			[NotNull] Geometry sketchGeometry)
-		{
-			var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                                  ActiveMapView.ClientToScreen(CurrentMousePosition))
-			             {
-				             NoMultiselection =
-					             _mergeToolOptions.MergeSurvivor ==
-					             MergeOperationSurvivor.FirstObject
-			             };
-
-			return result;
-		}
-
 		protected override async Task HandleEscapeAsync()
 		{
-			_firstFeature = null;
-
 			try
 			{
 				await QueuedTask.Run(async () =>
@@ -145,13 +129,21 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 					LogPromptForSelection();
 
-					await SetupSelectionSketchAsync();
+					await StartSelectionPhaseAsync();
 				});
 			}
 			catch (Exception e)
 			{
 				ErrorHandler.HandleError(e, _msg);
 			}
+		}
+
+		protected override Task OnSelectionPhaseStartedAsync()
+		{
+			_firstFeature = null;
+			SelectionCursors = FirstPhaseCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
+			return base.OnSelectionPhaseStartedAsync();
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
@@ -162,7 +154,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 			else
 			{
-				SetToolCursor(_secondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
+				SetToolCursor(SecondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
 			}
 		}
 
@@ -171,12 +163,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				SelectionCursors = _firstPhaseCursors;
+				SelectionCursors = FirstPhaseCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 			else
 			{
-				SelectionCursors = _secondPhaseCursors;
+				SelectionCursors = SecondPhaseCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 		}
@@ -316,13 +308,10 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 		private async Task StartSecondPhaseAsync()
 		{
-			SelectionCursors = _secondPhaseCursors;
+			SelectionCursors = SecondPhaseCursors;
 
 			await QueuedTask.Run(() => { SetupSketch(); });
-			await QueuedTask.Run(async () =>
-			{
-				await ResetSelectionSketchTypeAsync();
-			});
+			await QueuedTask.Run(async () => { await ResetSelectionSketchTypeAsync(); });
 		}
 
 		protected override void LogUsingCurrentSelection()
@@ -365,21 +354,15 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 
 			Assert.False(isInFirstPhase, "Unexpected tool phase");
 
-			//Hopefully we can delete this..... 
-			// if (isInFirstPhase)
-			// {
-			// 	return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
-			// }
-			//
-			// if (!await CanStillUseSelection(sketchGeometry, progressor))
-			// {
-			// 	_msg.InfoFormat(
-			// 		"The current selection cannot be used. Re-selecting the first feature...");
-			// 	return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
-			// }
-			// else
+			try
 			{
+				IsMerging = true;
+
 				await PickLastFeatureAndMerge(sketchGeometry, progressor);
+			}
+			finally
+			{
+				IsMerging = false;
 			}
 
 			return await base.OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -388,28 +371,50 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug(() => "OnMapSelectionChangedCoreAsync");
+			_msg.VerboseDebug(() => nameof(OnMapSelectionChangedCoreAsync));
 
 			if (ActiveMapView == null)
 			{
 				return false;
 			}
 
-			if (! CanUseSelection(ActiveMapView))
+			if (IsMerging)
 			{
-				_firstFeature = null;
-				await SetupSelectionSketchAsync();
+				// While storing the selection is changed and managed by the respective method.
+				return false;
+			}
+
+			if (args.Selection.IsEmpty)
+			{
+				await StartSelectionPhaseAsync();
+
+				return true;
+			}
+
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+
+			// TODO: Try to make CanUseSelection run outside QueuedTask.Run (as far as possible)
+			bool canUseSelection = await QueuedTask.Run(() => CanUseSelection(selectionByLayer));
+
+			if (! canUseSelection)
+			{
+				//_firstFeature = null;
+				await StartSelectionPhaseAsync();
 			}
 			else
 			{
-				Dictionary<MapMember, List<long>> selectionByLayer =
-					SelectionUtils.GetSelection(ActiveMapView.Map);
+				Dictionary<MapMember, List<long>> mapMemberSelection =
+					selectionByLayer.ToDictionary(MapMember (kvp) => kvp.Key, kvp => kvp.Value);
 
-				List<Feature> selection =
-					GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
-						.ToList();
+				await QueuedTask.Run(() =>
+				{
+					List<Feature> selection =
+						GetDistinctApplicableSelectedFeatures(mapMemberSelection, UnJoinedSelection)
+							.ToList();
 
-				_firstFeature = selection[0];
+					_firstFeature = selection[0];
+				});
 			}
 
 			return true;
@@ -548,76 +553,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 		}
 
-		//Hopefully we can delete this.....
-		//private async Task<bool> CanStillUseSelection(Geometry sketchGeometry,
-		//                                              CancelableProgressor progressor)
-		//{
-		//	return await QueuedTask.Run(() =>
-		//	{
-		//return true;
-		//List<Feature> selectedFeatures =
-		//	GetApplicableSelectedFeatures(ActiveMapView).ToList();
-		////TODO: Kratzt mich diese Unterwellelung?
-		//if (selectedFeatures == null || selectedFeatures.Count != 1)
-		//{
-		//	return false;
-		//}
-
-		//Feature selectedFeature = selectedFeatures[0];
-		//return selectedFeature.GetObjectID() == sketchGeometry.GetObjectID() &&
-		//	   selectedFeature.GetTable().GetID() == sketchGeometry.GetTable().GetID();
-		//	});
-		//}
-
-		///// <summary>
-		///// Check if the given feature belongs to the originclass of the given
-		///// relationship class.
-		///// If the class of the feature and the originfeatureclass do not share
-		///// the same name, then false is returned, there is no check, if the class
-		///// of the given features does belong the relationshipClass
-		///// </summary>
-		///// <param name="feature">Feature to check</param>
-		///// <param name="relationshipClass">RelationshipClass used to get the originClass</param>
-		///// <returns>TRUE if the feature is from the originClass, FALSE otherwise</returns>
-		//private static bool IsFeatureFromOriginClass(
-		//	[NotNull] Feature feature,
-		//	[NotNull] RelationshipClass relationshipClass)
-		//{
-		//	string featureClassName = ((IDataset)feature.Class).Name;
-		//	string originClassName = ((IDataset)relationshipClass.OriginClass).Name;
-
-		//	return featureClassName.Equals(originClassName);
-		//}
-
-		///// <summary>
-		///// Gets the list of relationships where the given object is one part of.
-		///// </summary>
-		///// <param name="gdbObject">Feature that must belong to the returned relationship</param>
-		///// <param name="relationshipClass">RelationshipClass that holds the information
-		///// about the relationships with the given object</param>
-		///// <returns>List with IRelationship instances, could be empty</returns>
-		//[NotNull]
-		//private static IList<Relationship> GetRelationships(
-		//	[NotNull] Object gdbObject,
-		//	[NotNull] RelationshipClass relationshipClass)
-		//{
-		//	var result = new List<Relationship>();
-
-		//	//IEnumRelationship relations = relationshipClass.GetRelationshipsForObject(gdbObject);
-
-		//	if (relations != null)
-		//	{
-		//		relations.Reset();
-		//		Relationship relationship;
-		//		while ((relationship = relations.Next()) != null)
-		//		{
-		//			result.Add(relationship);
-		//		}
-		//	}
-
-		//	return result;
-		//}
-
 		private async Task<bool> PickLastFeatureAndMerge(Geometry sketchGeometry,
 		                                                 CancelableProgressor progressor)
 		{
@@ -707,23 +642,36 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 			else
 			{
-				_firstFeature = null;
 				LogPromptForSelection();
-				await QueuedTask.Run(async () => { await SetupSelectionSketchAsync(); });
+				await QueuedTask.Run(async () => { await StartSelectionPhaseAsync(); });
 			}
 		}
 
-		protected virtual bool IsPickableTargetFeature([NotNull] Feature feature)
+		protected bool IsPickableTargetFeature([NotNull] Feature feature)
 		{
 			// assumes that editability is already checked at layer level
 
-			if (_firstFeature == null)
+			if (_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.FirstObject)
 			{
-				return true;
+				if (_firstFeature == null)
+				{
+					return true;
+				}
+
+				return _firstFeature.GetObjectID() != feature.GetObjectID() ||
+				       _firstFeature.GetTable().GetID() != feature.GetTable().GetID();
 			}
 
-			return _firstFeature.GetObjectID() != feature.GetObjectID() ||
-			       _firstFeature.GetTable().GetID() != feature.GetTable().GetID();
+			// MergeSurvivor == LargerObject
+			IList<Feature> selectedFeatures = GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+			bool alreadySelected = selectedFeatures.Any(selectedFeature =>
+				                                            selectedFeature.GetObjectID() ==
+				                                            feature.GetObjectID() &&
+				                                            selectedFeature.GetTable().GetID() ==
+				                                            feature.GetTable().GetID());
+
+			return ! alreadySelected;
 		}
 
 		[CanBeNull]

@@ -186,7 +186,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 
 			if (KeyboardUtils.IsShiftKey(args.Key))
 			{
-				await ShiftPressedAsync();
+				await ShiftPressedAsync(args);
 			}
 
 			if (args.Key == Key.Escape)
@@ -217,7 +217,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 		}
 	}
 
-	protected override async Task ShiftPressedAsync()
+	protected override async Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
 	{
 		if (! InConstructionPhase())
 		{
@@ -604,7 +604,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 			return false; // startContructionPhase = false
 		}
 
-		_symbolizedSketch?.SetSketchType(applicableSelection.Keys.First());
+		_symbolizedSketch?.SetSketchType();
 
 		return await ProcessSelectionCoreAsync(applicableSelection, progressor);
 	}

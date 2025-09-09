@@ -26,7 +26,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool CanToggleCurrentItemAllowed()
 		{
-			var currentItem = (DbStatusWorkItem) Current;
+			var currentItem = (DbStatusWorkItem) CurrentItem;
 
 			if (currentItem == null)
 			{
@@ -45,7 +45,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// <returns></returns>
 		public async Task<bool> ToggleCurrentItemAllowed()
 		{
-			var currentItem = (DbStatusWorkItem) Current;
+			var currentItem = (DbStatusWorkItem) CurrentItem;
 
 			if (currentItem == null)
 			{
@@ -57,7 +57,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			bool result = await QueuedTaskUtils.Run(
 				              async () =>
 				              {
-					              Row workItemRow = GetCurrentItemSourceRow();
+					              Row workItemRow = GetCurrentItemSourceRow(readOnly: false);
 
 					              if (workItemRow == null)
 					              {
@@ -115,12 +115,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				              });
 
 			return result;
-		}
-
-		protected override void LoadItemsCore(QueryFilter filter)
-		{
-			// Do nothing here. The item's status is not persisted in work list file
-			// for ProductionModelIssueWorkList, instead STATUS is persisted in DB.
 		}
 	}
 }

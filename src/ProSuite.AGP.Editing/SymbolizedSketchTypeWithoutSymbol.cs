@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing;
 
+[Obsolete("Use a null symbolized sketch type")]
 public class SymbolizedSketchTypeWithoutSymbol : ISymbolizedSketchType
 {
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
@@ -38,9 +40,10 @@ public class SymbolizedSketchTypeWithoutSymbol : ISymbolizedSketchType
 		ClearSketchSymbol();
 	}
 
-	public void ClearSketchSymbol()
+	public Task ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
@@ -51,9 +54,14 @@ public class SymbolizedSketchTypeWithoutSymbol : ISymbolizedSketchType
 		return Task.CompletedTask;
 	}
 
-	public void SetSketchType(BasicFeatureLayer featureLayer)
+	public void SetSketchType()
 	{
 		var type = _sketchGeometryTypeFunc?.Invoke() ?? _sketchGeometryType;
 		_tool.SetSketchType(type);
+	}
+
+	public Task SelectionChangedAsync(MapSelectionChangedEventArgs args)
+	{
+		return Task.CompletedTask;
 	}
 }

@@ -78,12 +78,12 @@ public class WorkListDbTest
 		watch.Start();
 
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
-		List<IWorkItem> items = wl.GetItems(null).ToList();
+		List<IWorkItem> items = wl.Search(null).ToList();
 		int itemsCount = items.Count;
 		
 		watch.Stop();
 
-		Assert.NotNull(wl.GetExtent());
+		Assert.NotNull(wl.Extent);
 		Console.WriteLine($"items count {itemsCount}");
 		Console.WriteLine($"{watch.ElapsedMilliseconds:N0} ms");
 
@@ -145,12 +145,12 @@ public class WorkListDbTest
 		watch.Start();
 
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
-		List<IWorkItem> items = wl.GetItems(null).ToList();
+		List<IWorkItem> items = wl.Search(null).ToList();
 		int itemsCount = items.Count;
 
 		watch.Stop();
 
-		Assert.NotNull(wl.GetExtent());
+		Assert.NotNull(wl.Extent);
 		Console.WriteLine($"items count {itemsCount}");
 		Console.WriteLine($"{watch.ElapsedMilliseconds:N0} ms");
 
@@ -218,9 +218,9 @@ public class WorkListDbTest
 			new Coordinate2D(2929350, 1186910), ch1903plus);
 
 		List<IWorkItem> items =
-			wl.GetItems(GdbQueryUtils.CreateSpatialFilter(visibleExtent)).ToList();
+			wl.Search(GdbQueryUtils.CreateSpatialFilter(visibleExtent)).ToList();
 
-		Envelope extent = wl.GetExtent();
+		Envelope extent = wl.Extent;
 		Assert.NotNull(extent);
 		Assert.False(extent.IsEmpty);
 		Assert.True(GeometryUtils.Intersects(visibleExtent, extent));
@@ -271,9 +271,9 @@ public class WorkListDbTest
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
-		List<IWorkItem> items = wl.GetItems(null).Take(20).ToList();
+		List<IWorkItem> items = wl.Search(null).Take(20).ToList();
 
-		Assert.NotNull(wl.GetExtent());
+		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(62, items.Count);
 	}
 
@@ -315,9 +315,9 @@ public class WorkListDbTest
 			new SelectionItemRepository(sourceClasses, new WorkItemStateRepositoryMock());
 
 		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
-		List<IWorkItem> items = wl.GetItems(null).ToList();
+		List<IWorkItem> items = wl.Search(null).ToList();
 
-		Assert.NotNull(wl.GetExtent());
+		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(9, items.Count);
 	}
 
@@ -455,9 +455,9 @@ public class WorkListDbTest
 			new SelectionItemRepository(sourceClasses, new WorkItemStateRepositoryMock());
 
 		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
-		List<IWorkItem> items = wl.GetItems(null).ToList();
+		List<IWorkItem> items = wl.Search(null).ToList();
 
-		Assert.NotNull(wl.GetExtent());
+		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(4, items.Count);
 	}
 

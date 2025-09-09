@@ -4,11 +4,14 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList;
 
 public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	private readonly IDictionary<Type, Func<string, IWorkEnvironment>>
 		_factoryMethodsWithStringParam = new Dictionary<Type, Func<string, IWorkEnvironment>>();
 
@@ -16,12 +19,14 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 		_factoryMethodsWithItemDatastoreParam =
 			new Dictionary<Type, Func<IWorkListItemDatastore, IWorkEnvironment>>();
 
+	private readonly IDictionary<Type, IWorkListItemDatastore> _datastoresByWorkListType =
+		new Dictionary<Type, IWorkListItemDatastore>();
+
 	private Type _currentWorkListType;
-	[CanBeNull] private IWorkListItemDatastore _itemStore;
 
 	private WorkListEnvironmentFactory() { }
 
-	public static IWorkListEnvironmentFactory Instance { get; } = new WorkListEnvironmentFactory();
+	public static IWorkListEnvironmentFactory Instance { get; set; } = new WorkListEnvironmentFactory();
 
 	public void WithPath(Func<string, IWorkEnvironment> createEnvironment)
 	{
@@ -47,9 +52,12 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 		}
 	}
 
-	public void AddStore(IWorkListItemDatastore store)
+	public void AddStore<T>(IWorkListItemDatastore store) where T : IWorkList
 	{
-		_itemStore = store;
+		Assert.False(_datastoresByWorkListType.ContainsKey(typeof(T)),
+		             $"Work list of type {typeof(T).Name} already has a work item datastore registered.");
+
+		_datastoresByWorkListType.Add(typeof(T), store);
 	}
 
 	public IWorkListEnvironmentFactory RegisterEnvironment<T>() where T : IWorkList
@@ -144,15 +152,21 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 			return createFromPath(path);
 		}
 
-		if (_itemStore == null)
+		if (_datastoresByWorkListType.TryGetValue(type, out var itemStore))
 		{
-			return null;
+			if (_factoryMethodsWithItemDatastoreParam.TryGetValue(
+				    type, out Func<IWorkListItemDatastore, IWorkEnvironment> createFromItemStore))
+			{
+				return createFromItemStore(itemStore);
+			}
+			else
+			{
+				_msg.Debug($"Work list of type {type.Name} has no factory method registered.");
+			}
 		}
-
-		if (_factoryMethodsWithItemDatastoreParam.TryGetValue(
-			    type, out Func<IWorkListItemDatastore, IWorkEnvironment> createFromItemStore))
+		else
 		{
-			return createFromItemStore(_itemStore);
+			_msg.Debug($"Work list of type {type.Name} has no work item datastore registered.");
 		}
 
 		throw new InvalidOperationException(

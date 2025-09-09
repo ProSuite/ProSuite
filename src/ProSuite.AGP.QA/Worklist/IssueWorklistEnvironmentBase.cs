@@ -20,12 +20,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 		// TODO: (daro) create different Environments for IssueWorkList and ErrorWorkList and...
 		protected IssueWorkListEnvironmentBase(
-			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
-			: base(workListItemDatastore) { }
-
-		// TODO: ...drop this ctor.
-		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
-			: base(new FileGdbIssueWorkListItemDatastore(path)) { }
+			[NotNull] IWorkListItemDatastore workListItemDatastore) :
+			base(workListItemDatastore) { }
 
 		protected override string FileSuffix => ".iwl";
 
@@ -155,6 +151,7 @@ namespace ProSuite.AGP.QA.WorkList
 			catch (Exception ex)
 			{
 				_msg.Debug(ex.Message, ex);
+				throw;
 			}
 			finally
 			{

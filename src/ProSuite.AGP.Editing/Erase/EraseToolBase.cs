@@ -35,9 +35,9 @@ namespace ProSuite.AGP.Editing.Erase
 		protected override SelectionCursors FirstPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
 
-		protected override ISymbolizedSketchType GetSymbolizedSketch()
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
-			return new SymbolizedSketchTypeWithoutSymbol(this, SketchGeometryType.Polygon);
+			return SketchGeometryType.Polygon;
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
@@ -90,10 +90,12 @@ namespace ProSuite.AGP.Editing.Erase
 
 			var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
 			var taskFlash =
-				QueuedTaskUtils.Run(
-					() => ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures));
+				QueuedTaskUtils.Run(() => ToolUtils.FlashResultPolygonsAsync(
+					                    activeView, resultFeatures));
 
 			await Task.WhenAll(taskFlash, taskSave);
+
+			await StartSelectionPhaseAsync();
 
 			return taskSave.Result;
 		}
@@ -165,7 +167,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 				FeatureClass featureClass = feature.GetTable();
 				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
-				GeometryType geometryType = classDefinition.GetShapeType();
+
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
 
@@ -182,26 +184,6 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat("Successfully stored {0} updated features.", result.Count);
 
 			return true;
-		}
-
-		private static IEnumerable<Dataset> GetDatasets(IEnumerable<MapMember> mapMembers)
-		{
-			foreach (MapMember mapMember in mapMembers)
-			{
-				var featureLayer = mapMember as FeatureLayer;
-
-				if (featureLayer != null)
-				{
-					yield return featureLayer.GetFeatureClass();
-				}
-
-				var standaloneTable = mapMember as StandaloneTable;
-
-				if (standaloneTable != null)
-				{
-					yield return standaloneTable.GetTable();
-				}
-			}
 		}
 
 		private static IEnumerable<Dataset> GetDatasets(IEnumerable<Feature> features)

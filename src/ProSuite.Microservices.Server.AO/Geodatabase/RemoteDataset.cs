@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf.Collections;
@@ -7,16 +12,12 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.GeoDb;
-using ProSuite.Microservices.AO;
-using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared.Gdb;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.Microservices.AO;
+using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Geodatabase
 {
@@ -88,7 +89,9 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			DataVerificationRequest moreData = GetData(response);
 
-			foreach (GdbObjectMsg gdbObjMsg in moreData.Data.GdbObjects)
+			GdbData gdbData = ConfirmDataReceived(moreData, response.DataRequest);
+
+			foreach (GdbObjectMsg gdbObjMsg in gdbData.GdbObjects)
 			{
 				return ProtobufConversionUtils.FromGdbObjectMsg(gdbObjMsg, _schema);
 			}
@@ -135,6 +138,18 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			_msg.DebugStopTiming(watch, "Received {0} objects", gdbData.GdbObjects.Count);
 			watch.Restart();
 
+			if (gdbData.GdbColumnarData != null)
+			{
+				// Column-based data was provided:
+				foreach (var row in ProcessColumnarData(gdbData.GdbColumnarData))
+				{
+					yield return row;
+				}
+
+				yield break;
+			}
+
+			// Row-based data was provided:
 			RepeatedField<GdbObjectMsg> foundGdbObjects = gdbData.GdbObjects;
 
 			if (foundGdbObjects == null || foundGdbObjects.Count == 0)
@@ -147,19 +162,19 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			if (! string.IsNullOrEmpty(subFields) && subFields != "*")
 			{
 				fieldIndexes = GetFieldsIndexes(((ITableSchemaDef) _schema).TableFields,
-				                                  StringUtils.SplitAndTrim(subFields, ','));
+				                                StringUtils.SplitAndTrim(subFields, ','));
 			}
 
 			foreach (GdbObjectMsg gdbObjMsg in foundGdbObjects)
 			{
-				yield return ProtobufConversionUtils.FromGdbObjectMsg(gdbObjMsg, _schema, fieldIndexes);
+				yield return ProtobufConversionUtils.FromGdbObjectMsg(
+					gdbObjMsg, _schema, fieldIndexes);
 			}
 
 			_msg.DebugStopTiming(watch, "Unpacked and yielded {0} objects",
 			                     gdbData.GdbObjects.Count);
 		}
 
-		
 		private static List<int> GetFieldsIndexes([NotNull] IReadOnlyList<ITableField> fields,
 		                                          [CanBeNull] IEnumerable<string> fieldNames)
 		{
@@ -207,12 +222,11 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		}
 
 		[NotNull]
-		private static GdbData ConfirmDataReceived(DataVerificationRequest moreData,
+		private static GdbData ConfirmDataReceived([CanBeNull] DataVerificationRequest moreData,
 		                                           [NotNull] DataRequest forRequest)
 		{
 			if (moreData == null)
 			{
-				// Very serious error:
 				throw new IOException(
 					$"The client failed to provide more data upon request {forRequest}");
 			}
@@ -231,9 +245,32 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 				$"Request:{Environment.NewLine}{forRequest}");
 		}
 
+		private IEnumerable<VirtualRow> ProcessColumnarData(
+			[NotNull] ColumnarGdbObjects columnarData)
+		{
+			_msg.DebugFormat("Processing {0} rows from columnar data", columnarData.RowCount);
+
+			var fieldMapping = new ColumnarFieldMapping(
+				((ITableSchemaDef) _schema).TableFields,
+				columnarData);
+
+			// Process each row
+			for (int rowIndex = 0; rowIndex < columnarData.RowCount; rowIndex++)
+			{
+				var valueList = new ColumnarValueList(
+					columnarData, rowIndex, fieldMapping,
+					shapeMsg => ProtobufGeometryUtils.FromShapeMsg(
+						shapeMsg, _schema.SpatialReference));
+
+				// Get OID
+				long oid = fieldMapping.GetOidForRow(columnarData, rowIndex, _schema.OIDFieldName);
+
+				yield return _schema.CreateObject(oid, valueList);
+			}
+		}
+
 		private IEnvelope GetExtent()
 		{
-			// TODO: Package and wire along with schema - is way cheaper
 			throw new NotImplementedException();
 		}
 	}

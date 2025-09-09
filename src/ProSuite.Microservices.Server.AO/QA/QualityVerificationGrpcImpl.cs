@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
@@ -1065,6 +1066,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 					transformerConfiguration,
 					new SimpleDatasetOpener(datasetContext));
 
+				foreach (IWorkspace workspace in tableTransformer.InvolvedTables.Select(
+					         t => t.Workspace))
+				{
+					WorkspaceUtils.TryRefreshVersion(workspace);
+				}
+
 				// When querying the field name predictability is more important than not having dots in the names:
 				if (tableTransformer is ITableTransformerFieldSettings transformerFieldSettings)
 				{
@@ -1112,6 +1119,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				//{
 				//	ServiceUtils.SetUnhealthy(Health, GetType());
 				//}
+
+				if (trackCancel?.Continue() == false || e.Message == "Already finished.")
+				{
+					// Typically: System.InvalidOperationException: Already finished.
+					_msg.Debug(
+						"The request has been cancelled and the client is already gone.", e);
+
+					return ServiceCallStatus.Cancelled;
+				}
 
 				SendResponse(new QueryDataResponse
 				             {
@@ -1377,6 +1393,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				            };
 
 				QueryDataRequest output = moreDataRequest(input);
+
+				if (output?.InputData == null)
+				{
+					return null;
+				}
 
 				return new DataVerificationRequest
 				       {

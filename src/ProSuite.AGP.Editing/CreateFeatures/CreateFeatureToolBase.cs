@@ -28,7 +28,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected CreateFeatureToolBase()
 		{
-			UseSnapping = true;
+			FireSketchEvents = true;
 
 			RequiresSelection = false;
 
@@ -68,10 +68,10 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override ISymbolizedSketchType GetSymbolizedSketch()
 		{
-			return new SymbolizedSketchTypeWithoutSymbol(this, GetSketchGeometryType);
+			return null;
 		}
 
-		private SketchGeometryType GetSketchGeometryType()
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			esriGeometryType? targetShapeType = GetTargetLayerShapeType();
 

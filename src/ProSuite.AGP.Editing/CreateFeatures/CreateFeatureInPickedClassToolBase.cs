@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -26,6 +27,13 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private GeometryType _currentFeatureGeometryType;
+
+	protected CreateFeatureInPickedClassToolBase()
+	{
+		FireSketchEvents = true;
+	}
+
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 
@@ -37,7 +45,9 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this);
+		return MapUtils.IsStereoMapView(ActiveMapView)
+			       ? null
+			       : new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
@@ -46,56 +56,29 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return false;
 	}
 
+	protected override SketchGeometryType GetEditSketchGeometryType()
+	{
+		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
+	}
+
 	protected override SketchGeometryType GetSelectionSketchGeometryType()
 	{
 		return SketchGeometryType.Rectangle;
 	}
 
-	protected override CancelableProgressorSource GetProgressorSource()
-	{
-		return null;
-	}
-
-	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
-	{
-		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.
-		// Set it on tool activate. In ctor is not enough.
-		CompleteSketchOnMouseUp = true;
-		GeomIsSimpleAsFeature = false;
-
-		return base.OnToolActivateCoreAsync(hasMapViewChanged);
-	}
-
-	protected override async Task HandleEscapeAsync()
-	{
-		await QueuedTask.Run(() => SelectionUtils.ClearSelection(ActiveMapView?.Map));
-	}
-
-	protected override async Task OnSelectionPhaseStartedAsync()
-	{
-		await base.OnSelectionPhaseStartedAsync();
-
-		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
-	}
-
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
-		Assert.ArgumentCondition(selectedFeatures.Count == 1, "selection count has to be 1");
-
-		Feature feature = selectedFeatures.FirstOrDefault();
-
-		// todo daro: assert instead?
-		if (feature == null)
+		if (selectedFeatures.Count is 0 or > 1)
 		{
-			_msg.Debug("no selection");
+			_msg.DebugFormat("Invalid feature count for Create Same: {0}", selectedFeatures.Count);
+			_currentFeatureGeometryType = GeometryType.Unknown;
 			return;
 		}
 
-		_msg.Info(
-			$"Currently selected template feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");
+		Feature feature = selectedFeatures.Single();
 
-		await StartSketchAsync();
+		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
 
 		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}
@@ -153,6 +136,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 				return false;
 			}
 		});
+
+		await StartSelectionPhaseAsync();
 
 		return false;
 	}

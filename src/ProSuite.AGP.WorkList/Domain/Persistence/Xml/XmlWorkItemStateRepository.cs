@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -14,9 +15,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 	public class XmlWorkItemStateRepository
 		: WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
 	{
-		public XmlWorkItemStateRepository(string filePath, string name, Type type,
-		                                  int? currentItemIndex = null) : base(
-			name, type, currentItemIndex)
+		public XmlWorkItemStateRepository(string filePath, string name, string displayName,
+		                                  Type type, int? currentItemIndex = null)
+			: base(name, displayName, type, currentItemIndex)
 		{
 			WorkListDefinitionFilePath = filePath;
 
@@ -38,7 +39,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override XmlWorkListDefinition CreateDefinition(
 			IDictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			IList<ISourceClass> sourceClasses,
-			IEnumerable<XmlWorkItemState> states)
+			IEnumerable<XmlWorkItemState> states,
+			Envelope extent)
 		{
 			int index = -1;
 			if (CurrentIndex.HasValue)
@@ -49,10 +51,13 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			var definition = new XmlWorkListDefinition
 			                 {
 				                 Name = Name,
+				                 DisplayName = DisplayName,
 				                 TypeName = Type.FullName,
 				                 AssemblyName = Type.Assembly.GetName().Name,
 				                 CurrentIndex = index
 			                 };
+
+			definition.Extent = extent?.ToXml();
 
 			definition.Items = new List<XmlWorkItemState>();
 
