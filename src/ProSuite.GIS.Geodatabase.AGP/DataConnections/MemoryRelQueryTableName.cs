@@ -1,4 +1,5 @@
 using ArcGIS.Core.CIM;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geodatabase.API;
 using esriDatasetType = ProSuite.GIS.Geodatabase.API.esriDatasetType;
 using esriRelCardinality = ProSuite.GIS.Geodatabase.API.esriRelCardinality;
@@ -9,37 +10,46 @@ namespace ProSuite.GIS.Geodatabase.AGP.DataConnections;
 /// The name implementation for a layer join (rel query table) in memory,
 /// representing a CIMRelQueryTableDataConnection in Pro.
 /// </summary>
-public class MemoryRelQueryTableName : DataConnectionName, IMemoryRelQueryTableName
+public class MemoryRelQueryTableName : CIMBasedDataConnectionName, IMemoryRelQueryTableName
 {
-	// TODO: abstract base rather than deriving from DataConnectionName.
-
-	private readonly DataConnectionName _sourceConnectionName;
-	private readonly DataConnectionName _destinationConnectionName;
+	private readonly CIMBasedDataConnectionName _sourceConnectionName;
+	private readonly CIMBasedDataConnectionName _destinationConnectionName;
 	private readonly esriJoinType _joinType;
 
 	public MemoryRelQueryTableName(CIMRelQueryTableDataConnection relQueryConnection)
-		: base(relQueryConnection.Name, esriDatasetType.esriDTRelationshipClass,
-		       DataConnectionWorkspaceName.FromDataConnection(relQueryConnection.SourceTable))
+		: this(relQueryConnection.Name,
+		       FromCIMDataConnection(relQueryConnection.SourceTable),
+		       FromCIMDataConnection(relQueryConnection.DestinationTable),
+		       relQueryConnection.PrimaryKey,
+		       relQueryConnection.ForeignKey,
+		       (esriRelCardinality) relQueryConnection.Cardinality,
+		       relQueryConnection.JoinType,
+		       relQueryConnection.JoinForward) { }
+
+	public MemoryRelQueryTableName(
+		[NotNull] string name,
+		[NotNull] CIMBasedDataConnectionName sourceConnectionName,
+		[NotNull] CIMBasedDataConnectionName destinationConnectionName,
+		[NotNull] string primaryKey,
+		[NotNull] string foreignKey,
+		esriRelCardinality cardinality,
+		esriJoinType joinType,
+		bool forwardDirection)
+		: base(name, esriDatasetType.esriDTRelationshipClass,
+		       sourceConnectionName.DataConnectionWorkspaceName)
 	{
 		// TODO: Proper enum translation -> ProSuite JoinCardinality, etc The enums don't match between AO and Pro!
-		ForwardDirection = relQueryConnection.JoinForward;
-		Cardinality = (esriRelCardinality) relQueryConnection.Cardinality;
 
-		_sourceConnectionName = FromCIMDataConnection(relQueryConnection.SourceTable);
-		_destinationConnectionName = FromCIMDataConnection(relQueryConnection.DestinationTable);
+		ForwardDirection = forwardDirection;
+		Cardinality = cardinality;
 
-		PrimaryKey = relQueryConnection.PrimaryKey;
-		ForeignKey = relQueryConnection.ForeignKey;
+		_sourceConnectionName = sourceConnectionName;
+		_destinationConnectionName = destinationConnectionName;
 
-		_joinType = relQueryConnection.JoinType;
-	}
+		PrimaryKey = primaryKey;
+		ForeignKey = foreignKey;
 
-	public MemoryRelQueryTableName(string name,
-	                               esriDatasetType type,
-	                               DataConnectionWorkspaceName workspaceName)
-		: base(name, type, workspaceName)
-	{
-		// TODO: Proper constructor
+		_joinType = joinType;
 	}
 
 	#region Implementation of IMemoryRelQueryTableName
@@ -55,7 +65,16 @@ public class MemoryRelQueryTableName : DataConnectionName, IMemoryRelQueryTableN
 
 	#endregion
 
-	public override void ChangeVersion(string newVersionName)
+	public override void ReplaceWorkspaceName(
+		[NotNull] DataConnectionWorkspaceName newWorkspaceName)
+	{
+		base.ReplaceWorkspaceName(newWorkspaceName);
+
+		_sourceConnectionName.ReplaceWorkspaceName(newWorkspaceName);
+		_destinationConnectionName.ReplaceWorkspaceName(newWorkspaceName);
+	}
+
+	public override void ChangeVersion([NotNull] string newVersionName)
 	{
 		_sourceConnectionName.ChangeVersion(newVersionName);
 		_destinationConnectionName.ChangeVersion(newVersionName);
@@ -63,7 +82,7 @@ public class MemoryRelQueryTableName : DataConnectionName, IMemoryRelQueryTableN
 
 	public override CIMDataConnection ToCIMDataConnection()
 	{
-		var result = new CIMRelQueryTableDataConnection()
+		var result = new CIMRelQueryTableDataConnection
 		             {
 			             Name = Name,
 			             Cardinality = (ArcGIS.Core.CIM.esriRelCardinality) Cardinality,
