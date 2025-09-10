@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Analyst3D;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
@@ -12,13 +8,17 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -34,6 +34,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		[CanBeNull] private IntermediateSketchStates _intermediateSketchStates;
 
 		[CanBeNull] private ISymbolizedSketchType _symbolizedSketch;
+
+		[CanBeNull] private MapPoint _lastLoggedVertex;
+		private int _lastLoggedVertexIndex = -1;
 
 		protected ConstructionToolBase()
 		{
@@ -193,6 +196,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			_symbolizedSketch?.Dispose();
 			_symbolizedSketch = null;
+
+			_lastLoggedVertex = null;
 		}
 
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -479,6 +484,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					RememberSketch(sketchGeometry);
 
+				_lastLoggedVertex = null;
+
 					return await OnEditSketchCompleteCoreAsync(
 						       sketchGeometry, currentTemplate, activeView, progressor);
 				}
@@ -518,6 +525,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual Task<bool> OnSketchCanceledAsyncCore()
 		{
+			_lastLoggedVertexIndex = -1;
 			return Task.FromResult(true);
 		}
 
@@ -589,11 +597,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 			}
 
+			_lastLoggedVertex = null;
+
 			await OnSketchPhaseStartedAsync();
 		}
 
 		protected virtual Task OnSketchPhaseStartedAsync()
 		{
+			_lastLoggedVertexIndex = -1;
 			return Task.CompletedTask;
 		}
 
@@ -645,6 +656,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSketchResetCore();
 
 			await StartSketchAsync();
+
+			_lastLoggedVertex = null;
 		}
 
 		protected void RememberSketch(Geometry knownSketch = null)
@@ -718,24 +731,40 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
-			await LogLastVertexZ(sketch);
-		}
 
-		private static async Task LogLastVertexZ(Geometry sketch)
-		{
-			if (! sketch.HasZ)
+			if (! sketch.HasZ || GetSketchType() == SketchGeometryType.Point)
 			{
 				return;
 			}
 
-			await QueuedTaskUtils.Run(() =>
+			int currentLastIndex;
+			if (sketch is Polygon)
+			{
+				currentLastIndex = sketch.PointCount - 2;
+			}
+			else
+			{
+				currentLastIndex = sketch.PointCount - 1;
+			}
+
+			_msg.DebugFormat("Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]", sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
+			if (currentLastIndex <= _lastLoggedVertexIndex)
+			{
+				_lastLoggedVertexIndex = currentLastIndex;
+				return;
+			}
+
+			await QueuedTask.Run(() =>
 			{
 				MapPoint lastPoint = GetLastPoint(sketch);
 
-				if (lastPoint != null)
+				if (lastPoint == null || double.IsNaN(lastPoint.Z))
 				{
-					_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
+					return;
 				}
+
+				_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
+				_lastLoggedVertexIndex = currentLastIndex;
 			});
 		}
 
