@@ -441,6 +441,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				}
 				else
 				{
+					// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+					// sketch remains that cannot be cleared with ESC!
+					await ClearSketchAsync();
 					await StartSketchPhaseAsync();
 				}
 			}
