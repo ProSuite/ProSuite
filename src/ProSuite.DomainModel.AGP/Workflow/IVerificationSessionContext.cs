@@ -4,15 +4,8 @@ using ProSuite.DomainModel.Core.Workflow;
 
 namespace ProSuite.DomainModel.AGP.Workflow
 {
-	public interface IVerificationSessionContext
+	public interface IVerificationSessionContext : ISessionContext
 	{
-		/// <summary>
-		/// The currently active project workspace.
-		/// </summary>
-		IProjectWorkspace ProjectWorkspace { get; }
-
-		event EventHandler ProjectWorkspaceChanged;
-
 		IQualityVerificationEnvironment VerificationEnvironment { get; }
 
 		event EventHandler QualitySpecificationsRefreshed;
