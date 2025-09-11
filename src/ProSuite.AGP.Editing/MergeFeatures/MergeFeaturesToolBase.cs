@@ -123,14 +123,11 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		{
 			try
 			{
-				await QueuedTask.Run(async () =>
-				{
-					ClearSelection();
+				await ClearSelectionAsync();
 
-					LogPromptForSelection();
+				LogPromptForSelection();
 
-					await StartSelectionPhaseAsync();
-				});
+				await StartSelectionPhaseAsync();
 			}
 			catch (Exception e)
 			{

@@ -833,7 +833,19 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected void ClearSelection()
 		{
 			var map = ActiveMapView?.Map;
+
 			map?.ClearSelection();
+		}
+
+		/// <summary>Clear the selection on the active map</summary>
+		protected async Task ClearSelectionAsync()
+		{
+			var map = ActiveMapView?.Map;
+
+			if (map != null)
+			{
+				await QueuedTask.Run(() => map.ClearSelection());
+			}
 		}
 
 		private static void LogSelectionInfo(NotificationCollection collection)
