@@ -212,8 +212,8 @@ namespace ProSuite.UI.DataModel
 			this._textBoxGridSizeInfo.Size = new System.Drawing.Size(242, 60);
 			this._textBoxGridSizeInfo.TabIndex = 8;
 			this._textBoxGridSizeInfo.TabStop = false;
-			this._textBoxGridSizeInfo.Text = "Issue features can be of very different sizes. It is recommended to use at least " +
-    "2 grid levels.\r\n\r\nThe grid sizes can be changed later in ArcCatalog.";
+			this._textBoxGridSizeInfo.Text = "Issue features can vary greatly in size. Use at least two grid levels." +
+    "\r\n\r\nGrid sizes can be changed later in ArcGIS Pro.";
 			// 
 			// _groupBoxPrivileges
 			// 
