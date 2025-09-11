@@ -213,6 +213,12 @@ namespace ProSuite.DomainServices.AO.QA
 
 				if (missingDatasets.Count > 0)
 				{
+					if (EnvironmentUtils.GetBooleanEnvironmentVariableValue("PROSUITE_EXPECT_ALL_DATASETS_EXIST"))
+					{
+						throw new InvalidOperationException("Missing datasets or unable to open: " +
+							StringUtils.Concatenate(missingDatasets, d => d.Name, ", "));
+					}
+
 					ReportConditionWithMissingDatasetsWarning(condition, missingDatasets);
 					continue;
 				}
