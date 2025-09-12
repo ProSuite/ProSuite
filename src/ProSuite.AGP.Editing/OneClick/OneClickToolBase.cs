@@ -729,11 +729,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
+			notifications ??= new NotificationCollection();
+
 			int count = SelectionUtils.GetFeatureCount(selectionByLayer);
 
 			if (count > 1 && ! AllowMultiSelection(out string reason))
 			{
-				notifications?.Add(reason);
+				if (string.IsNullOrEmpty(reason))
+				{
+					reason = "Multiple selection is not supported by this tool";
+				}
+
+				notifications.Add(reason);
 
 				_msg.Debug(
 					$"Cannot use selection: multi selection not allowed, selection count is {count}");
@@ -833,7 +840,19 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected void ClearSelection()
 		{
 			var map = ActiveMapView?.Map;
+
 			map?.ClearSelection();
+		}
+
+		/// <summary>Clear the selection on the active map</summary>
+		protected async Task ClearSelectionAsync()
+		{
+			var map = ActiveMapView?.Map;
+
+			if (map != null)
+			{
+				await QueuedTask.Run(() => map.ClearSelection());
+			}
 		}
 
 		private static void LogSelectionInfo(NotificationCollection collection)

@@ -664,7 +664,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					                 SpatialRelationship =
 						                 (SpatialRelationship) fcFilter.SpatialRel,
 					                 FilterGeometry =
-						                 ArcGeometryUtils.CreateProGeometry(fcFilter.Geometry),
+						                 ArcGeometryUtils.ToProGeometry(fcFilter.Geometry),
 					                 SpatialRelationshipDescription = fcFilter.SpatialRelDescription
 				                 };
 			}

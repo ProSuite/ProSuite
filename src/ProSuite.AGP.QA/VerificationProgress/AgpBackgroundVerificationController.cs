@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.QA.WorkList;
 using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -21,6 +17,12 @@ using ProSuite.Commons.UI;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Definitions.QA;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.QA.VerificationProgress
 {
@@ -178,8 +180,9 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			{
 				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
 				                verificationResult.IssuesGdbPath);
+
 				await ViewUtils.TryAsync(
-					_workListOpener.OpenFileGdbIssueWorkListAsync(MapView.Active.Extent, verificationResult.IssuesGdbPath,
+					_workListOpener.OpenFileGdbIssueWorkListAsync(null, verificationResult.IssuesGdbPath,
 						replaceExisting), _msg);
 			}
 		}

@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -38,20 +39,22 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private const int _timeoutMilliseconds = 300000;
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
-			[NotNull] ICollection<Table> tables,
+			[NotNull] IEnumerable<Table> tables,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
 			[CanBeNull] IModelFactory modelFactory = null)
 		{
 			var datastoresByHandle = new Dictionary<long, Datastore>();
 			var spatialReferencesByWkId = new Dictionary<long, SpatialReference>();
 
+			ICollection<Table> tableCollection = CollectionUtils.GetCollection(tables);
+
 			GetProjectWorkspacesRequest request =
 				await QueuedTask.Run(() =>
 				{
-					AddWorkspaces(tables, datastoresByHandle);
-					AddSpatialReferences(tables.OfType<FeatureClass>(), spatialReferencesByWkId);
+					AddWorkspaces(tableCollection, datastoresByHandle);
+					AddSpatialReferences(tableCollection.OfType<FeatureClass>(), spatialReferencesByWkId);
 
-					return CreateProjectWorkspacesRequest(tables);
+					return CreateProjectWorkspacesRequest(tableCollection);
 				});
 
 			if (request.ObjectClasses.Count == 0)

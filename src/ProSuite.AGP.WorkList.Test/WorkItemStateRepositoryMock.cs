@@ -6,6 +6,8 @@ namespace ProSuite.AGP.WorkList.Test;
 
 public class WorkItemStateRepositoryMock : IWorkItemStateRepository
 {
+	public void LoadAllStates() { }
+
 	public void Refresh(IWorkItem item) { }
 
 	public void UpdateState(IWorkItem item) { }

@@ -366,36 +366,32 @@ namespace ProSuite.AGP.Editing.OneClick
 				// In case we did not register the shift-up and the overlay is still lying around:
 				_intermediateSketchStates?.ResetSketchStates();
 
-				await QueuedTask.Run(
-					async () =>
+				if (IsInSketchMode)
+				{
+					if (! RequiresSelection)
 					{
-						if (IsInSketchMode)
+						// remain in sketch mode, just reset the sketch
+						await ResetSketchAsync();
+					}
+					else
+					{
+						// if sketch is empty, also remove selection and return to selection phase
+						if (await HasSketchAsync())
 						{
-							if (! RequiresSelection)
-							{
-								// remain in sketch mode, just reset the sketch
-								await ResetSketchAsync();
-							}
-							else
-							{
-								// if sketch is empty, also remove selection and return to selection phase
-								if (await HasSketchAsync())
-								{
-									await ResetSketchAsync();
-								}
-								else
-								{
-									ClearSelection();
-									await StartSelectionPhaseAsync();
-								}
-							}
+							await ResetSketchAsync();
 						}
 						else
 						{
-							await ClearSketchAsync();
-							ClearSelection();
+							await ClearSelectionAsync();
+							await StartSelectionPhaseAsync();
 						}
-					});
+					}
+				}
+				else
+				{
+					await ClearSketchAsync();
+					await ClearSelectionAsync();
+				}
 			}
 			catch (Exception e)
 			{
