@@ -341,7 +341,7 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 	}
 
-	public string PathName => _pathName ??= Geodatabase.GetPath().AbsolutePath;
+	public string PathName => _pathName ??= WorkspaceUtils.GetCatalogPath(Geodatabase);
 
 	public esriWorkspaceType Type =>
 		_workspaceType ??= (esriWorkspaceType) Geodatabase.GetGeodatabaseType();
