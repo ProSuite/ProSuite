@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.Commons.AGP.Core.Carto;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -28,41 +25,12 @@ public class IntermediateSketchStates
 
 	private readonly Stack<Geometry> _sketches = new();
 	private readonly SketchLatch _latch = new();
-	[CanBeNull] private List<IDisposable> _overlays;
+	[NotNull] private readonly SketchDrawer _sketchDrawer = new SketchDrawer();
 	private bool _active;
 	[CanBeNull] private SubscriptionToken _onSketchModifiedToken;
 	[CanBeNull] private SubscriptionToken _onSketchCompletedToken;
 
-	private CIMLineSymbol _lineSymbol;
-	private CIMPolygonSymbol _polygonSymbol;
-	private CIMPointSymbol _regularUnselectedSymbol;
-	private CIMPointSymbol _currentUnselectedSymbol;
-
 	public bool IsInIntermittentSelectionPhase { get; private set; }
-
-	public CIMLineSymbol LineSymbol
-	{
-		get => _lineSymbol ??= CreateLineSymbol();
-		set => _lineSymbol = value;
-	}
-
-	public CIMPolygonSymbol PolygonSymbol
-	{
-		get => _polygonSymbol ??= CreatePolygonSymbol();
-		set => _polygonSymbol = value;
-	}
-
-	public CIMPointSymbol RegularUnselectedSymbol
-	{
-		get => _regularUnselectedSymbol ??= CreateRegularUnselectedSymbol();
-		set => _regularUnselectedSymbol = value;
-	}
-
-	public CIMPointSymbol CurrentUnselectedSymbol
-	{
-		get => _currentUnselectedSymbol ??= CreateCurrentUnselectedSymbol();
-		set => _currentUnselectedSymbol = value;
-	}
 
 	public async Task ActivateAsync()
 	{
@@ -93,61 +61,9 @@ public class IntermediateSketchStates
 			return;
 		}
 
-		Geometry geometry = await mapView.GetCurrentSketchAsync();
+		Geometry sketch = await mapView.GetCurrentSketchAsync();
 
-		if (geometry is { IsEmpty: true })
-		{
-			return;
-		}
-
-		// add two extra for start (or end) point and sketch
-		int capacity = GeometryUtils.GetPointCount(geometry) + 2;
-		_overlays = new List<IDisposable>(capacity);
-
-		CIMSymbolReference regularUnselectedSymbRef = RegularUnselectedSymbol.MakeSymbolReference();
-		CIMSymbolReference currentUnselectedSymbRef = CurrentUnselectedSymbol.MakeSymbolReference();
-
-		if (geometry is Multipart multipart)
-		{
-			var builder = new MultipointBuilderEx(mapView.Map.SpatialReference);
-
-			foreach (MapPoint point in multipart.Points)
-			{
-				builder.AddPoint(point);
-			}
-
-			var multipoint = builder.ToGeometry();
-			_overlays.Add(await mapView.AddOverlayAsync(multipoint, regularUnselectedSymbRef));
-		}
-
-		if (geometry is Polyline polyline)
-		{
-			CIMSymbolReference lineSymbRef = LineSymbol.MakeSymbolReference();
-			_overlays.Add(await mapView.AddOverlayAsync(polyline, lineSymbRef));
-
-			var endPoint = GeometryUtils.GetEndPoint(polyline);
-			if (endPoint != null)
-			{
-				_overlays.Add(await mapView.AddOverlayAsync(endPoint, currentUnselectedSymbRef));
-			}
-		}
-		else if (geometry is Polygon polygon)
-		{
-			CIMSymbolReference polySymbRef = PolygonSymbol.MakeSymbolReference();
-			_overlays.Add(await mapView.AddOverlayAsync(polygon, polySymbRef));
-
-			// start and end point of a polygon are geometrically equal
-			var points = polygon.Points;
-			int count = points.Count;
-			if (count == 0) return;
-
-			MapPoint endPoint = count > 2 ? points[count - 2] : points[0];
-
-			if (endPoint != null)
-			{
-				_overlays.Add(await mapView.AddOverlayAsync(endPoint, currentUnselectedSymbRef));
-			}
-		}
+		await _sketchDrawer.ShowSketch(sketch, mapView);
 	}
 
 	/// <summary>
@@ -179,7 +95,7 @@ public class IntermediateSketchStates
 			_msg.Error($"Error setting current sketch: {e.Message}", e);
 		}
 
-		ClearOverlays();
+		_sketchDrawer.ClearSketch();
 	}
 
 	/// <summary>
@@ -192,7 +108,7 @@ public class IntermediateSketchStates
 
 		IsInIntermittentSelectionPhase = false;
 
-		ClearOverlays();
+		_sketchDrawer.ClearSketch();
 	}
 
 	/// <summary>
@@ -205,18 +121,6 @@ public class IntermediateSketchStates
 		_active = false;
 
 		ResetSketchStates();
-	}
-
-	private void ClearOverlays()
-	{
-		if (_overlays == null) return;
-
-		foreach (IDisposable overlay in _overlays)
-		{
-			overlay.Dispose();
-		}
-
-		_overlays.Clear();
 	}
 
 	private void TryPush(Geometry sketch, [CallerMemberName] string caller = null)
@@ -309,45 +213,6 @@ public class IntermediateSketchStates
 
 		_onSketchModifiedToken = null;
 		_onSketchCompletedToken = null;
-	}
-
-	private static CIMLineSymbol CreateLineSymbol()
-	{
-		return SymbolUtils.CreateLineSymbol(CreateSketchStrokes());
-	}
-
-	private static CIMPolygonSymbol CreatePolygonSymbol()
-	{
-		return SymbolUtils.CreatePolygonSymbol(CreateSketchStrokes());
-	}
-
-	private static CIMPointSymbol CreateCurrentUnselectedSymbol()
-	{
-		return CreateSketchVertexSymbol(ColorUtils.CreateRGB(255, 0, 0));
-	}
-
-	private static CIMPointSymbol CreateRegularUnselectedSymbol()
-	{
-		return CreateSketchVertexSymbol(ColorUtils.CreateRGB(0, 128, 0));
-	}
-
-	private static CIMSymbolLayer[] CreateSketchStrokes()
-	{
-		double width = 0.5;
-		var dashPattern = SymbolUtils.CreateDashPattern(3, 3, 3, 3);
-		var whiteStroke = SymbolUtils.CreateSolidStroke(ColorUtils.WhiteRGB, width);
-		var blackStroke = SymbolUtils.CreateSolidStroke(ColorUtils.BlackRGB, width)
-		                             .AddDashes(dashPattern, LineDashEnding.HalfPattern);
-		return new[] { blackStroke, whiteStroke };
-	}
-
-	private static CIMPointSymbol CreateSketchVertexSymbol(CIMRGBColor color)
-	{
-		var outline = SymbolUtils.CreateSolidStroke(color, 1.5);
-		CIMPolygonSymbol polygonSymbol = SymbolUtils.CreatePolygonSymbol(outline);
-		Geometry geometry = SymbolUtils.CreateMarkerGeometry(SymbolUtils.MarkerStyle.Square);
-		CIMVectorMarker marker = SymbolUtils.CreateMarker(geometry, polygonSymbol, 5);
-		return SymbolUtils.CreatePointSymbol(marker);
 	}
 
 	private class SketchLatch
