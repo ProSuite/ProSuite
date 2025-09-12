@@ -34,6 +34,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
+	protected virtual bool UseOldSymbolization => true;
+
 	private GeometryType _currentFeatureGeometryType;
 
 	protected override SelectionCursors FirstPhaseCursors { get; } =
@@ -64,7 +66,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
-		_feedback = new DestroyAndRebuildFeedback();
+		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization);
 
 		return base.OnToolActivateCoreAsync(hasMapViewChanged);
 	}
