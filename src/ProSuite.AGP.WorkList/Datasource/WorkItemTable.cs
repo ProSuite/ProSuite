@@ -142,6 +142,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 						? workItems.Search(spatialFilter)
 						: workItems.Search(filter);
 
+				// NOTE: If an exception is thrown from GetValues (i.e. cursor.MoveNext()), the
+				//       a notification appears in the Notifications pane:
+				//       "<layer name>: Invalid pointer function parameter"
+				// -> Deliberately not catch to make this state visible to the user (and explain
+				//    why nothing is drawn).
 				IEnumerable<object[]> resultRows =
 					resultItems.Select(item => GetValues(item, workItems, workItems.CurrentItem));
 
