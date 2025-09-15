@@ -122,9 +122,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 			catch (Exception e)
 			{
-				string message = $"Failed to open Datastore {GetDatastoreDisplayText(connector)}";
+				string message =
+					$"Failed to open Datastore {GetDatastoreDisplayText(connector)}: {e.Message}";
 				_msg.Debug(message, e);
-				throw new IOException($"{message}: {e.Message}", e);
+
+				throw new IOException(message, e);
 			}
 		}
 
