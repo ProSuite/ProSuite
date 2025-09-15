@@ -22,6 +22,8 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 
 	public string WorkListDefinitionFilePath { get; set; }
 
+	public void LoadAllStates() { }
+
 	public void Refresh(IWorkItem item) { }
 
 	public void UpdateState(IWorkItem item) { }

@@ -21,38 +21,58 @@ public class DestroyAndRebuildFeedback
 	private readonly CIMLineSymbol _lineSymbol;
 	private readonly CIMPointSymbol _startPointSymbol;
 	private readonly CIMPointSymbol _endPointSymbol;
-
 	private readonly CIMPolygonSymbol _polygonSymbol;
-
 	private readonly CIMPointSymbol _vertexMarkerSymbol;
 	private readonly CIMPointSymbol _controlPointMarkerSymbol;
+	private readonly bool _useOldSymbolization;
 
-	public DestroyAndRebuildFeedback()
+	public DestroyAndRebuildFeedback(bool useOldSymbolization = false)
 	{
+		_useOldSymbolization = useOldSymbolization;
 		const SymbolUtils.FillStyle noFill = SymbolUtils.FillStyle.Null;
+
+		var blue = ColorFactory.Instance.CreateRGBColor(0, 0, 200);
 		var red = ColorFactory.Instance.CreateRGBColor(255, 0, 0);
 		var cyan = ColorFactory.Instance.CreateRGBColor(0, 255, 255);
 		var green = ColorFactory.Instance.CreateRGBColor(0, 128, 0);
 		var magenta = ColorUtils.CreateRGB(240, 0, 248);
 
-		_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(magenta, 0.8);
+		if (_useOldSymbolization)
+		{
+			_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(blue, 2.0);
+			_startPointSymbol = QueuedTask
+			                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+				                         blue, 8, SimpleMarkerStyle.Circle)).Result;
+			_endPointSymbol = QueuedTask
+			                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+				                       red, 12, SimpleMarkerStyle.Diamond)).Result;
 
-		_startPointSymbol = QueuedTask
-		                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-			                         green, 6.5, SimpleMarkerStyle.Circle)).Result;
-		_endPointSymbol = QueuedTask
-		                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-			                       red, 6.5, SimpleMarkerStyle.Square)).Result; //Diamond
+			var stroke = SymbolUtils.CreateSolidStroke(blue, 2.0);
+			_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
 
-		_vertexMarkerSymbol = QueuedTask
-		                      .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-			                           cyan, 6.5, SimpleMarkerStyle.Square)).Result;
+			_vertexMarkerSymbol = null;
+			_controlPointMarkerSymbol = null;
+		}
+		else
+		{
+			_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(magenta, 0.8);
+			_startPointSymbol = QueuedTask
+			                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+				                         green, 6.5, SimpleMarkerStyle.Circle)).Result;
+			_endPointSymbol = QueuedTask
+			                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+				                       red, 6.5, SimpleMarkerStyle.Square)).Result; //Diamond
 
-		var stroke = SymbolUtils.CreateSolidStroke(magenta, 0.8);
-		_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
+			_vertexMarkerSymbol = QueuedTask
+			                      .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
+				                           cyan, 6.5, SimpleMarkerStyle.Square)).Result;
 
-		_controlPointMarkerSymbol =
-			CreateControlPointSymbol(6.5, cyan, ColorUtils.BlackRGB);
+			var stroke = SymbolUtils.CreateSolidStroke(magenta, 0.8);
+			_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
+
+			_controlPointMarkerSymbol =
+				CreateControlPointSymbol(6.5, cyan, ColorUtils.BlackRGB);
+		}
 	}
 
 	[CanBeNull]
@@ -108,7 +128,8 @@ public class DestroyAndRebuildFeedback
 			switch (geometryType)
 			{
 				case GeometryType.Point:
-					//_pointOverlay = AddOverlay(geometry, _pointSymbol);
+					// Use start point symbol for points, consistent across both versions
+					_overlays.Add(AddOverlay(geometry, _startPointSymbol));
 					break;
 				case GeometryType.Polyline:
 					_overlays.Add(AddOverlay(geometry, _lineSymbol));
@@ -117,10 +138,13 @@ public class DestroyAndRebuildFeedback
 					var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
 					_overlays.Add(AddOverlay(startPointL, _startPointSymbol));
 
-					CreateVertexMultipoint(geometry, out vertexMultipoint,
-					                       out controlMultipoint);
-					_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
-					_overlays.Add(AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+					if (! _useOldSymbolization)
+					{
+						CreateVertexMultipoint(geometry, out vertexMultipoint,
+						                       out controlMultipoint);
+						_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
+						_overlays.Add(AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+					}
 
 					_overlays.Add(AddOverlay(endPointL, _endPointSymbol));
 					break;
@@ -131,11 +155,14 @@ public class DestroyAndRebuildFeedback
 					var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
 					_overlays.Add(AddOverlay(startPointP, _startPointSymbol));
 
-					CreateVertexMultipoint(geometry, out vertexMultipoint,
-					                       out controlMultipoint);
-					_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
-					_overlays.Add(
-						AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+					if (! _useOldSymbolization)
+					{
+						CreateVertexMultipoint(geometry, out vertexMultipoint,
+						                       out controlMultipoint);
+						_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
+						_overlays.Add(
+							AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+					}
 
 					_overlays.Add(AddOverlay(endPointP, _endPointSymbol));
 					break;

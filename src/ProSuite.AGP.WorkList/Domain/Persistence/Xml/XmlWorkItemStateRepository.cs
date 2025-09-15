@@ -20,8 +20,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			: base(name, displayName, type, currentItemIndex)
 		{
 			WorkListDefinitionFilePath = filePath;
-
-			ReadStatesByRow();
 		}
 
 		public static XmlWorkListDefinition Import(string xmlFilePath)
@@ -88,11 +86,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			return definition;
 		}
 
-		protected override void ReadStatesByRowCore()
+		protected override void ReadStatesByRowCore(
+			Dictionary<GdbObjectReference, XmlWorkItemState> intoStates)
 		{
 			if (! File.Exists(WorkListDefinitionFilePath))
 			{
-				base.ReadStatesByRowCore();
+				base.ReadStatesByRowCore(intoStates);
 				return;
 			}
 
@@ -120,7 +119,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				var objectReference =
 					new GdbObjectReference(itemState.Row.TableId, itemState.Row.OID);
 
-				StatesByRow.Add(objectReference, itemState);
+				intoStates.Add(objectReference, itemState);
 			}
 		}
 

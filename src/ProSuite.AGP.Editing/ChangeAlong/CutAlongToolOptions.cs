@@ -23,7 +23,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			// Display Performance Options
 			CentralizableDisplayExcludeCutLines =
 				InitializeSetting<bool>(
-					ReflectionUtils.GetProperty(() => LocalOptions.DisplayLinesInVisibleExtentOnly), true);
+					ReflectionUtils.GetProperty(() => LocalOptions.DisplayLinesInVisibleExtentOnly), false);
 			CentralizableDisplayRecalculateCutLines =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RecalculateLinesOnExtentChange),
@@ -69,7 +69,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			CentralizableTargetFeatureSelection =
 				InitializeSetting<TargetFeatureSelection>(
 					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
-					TargetFeatureSelection.SameClass);
+					TargetFeatureSelection.VisibleSelectableFeatures);
 		}
 
 		#region Centralizable Properties

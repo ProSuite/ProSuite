@@ -201,6 +201,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return datastoreName1.Equals(datastoreName2, comparison);
 		}
 
+		public static string GetCatalogPath([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			Uri uri = geodatabase.GetPath();
+
+			// NOTE: AbsolutePath messes up blanks!
+			return uri.LocalPath;
+		}
+
 		[CanBeNull]
 		public static Version GetDefaultVersion([NotNull] Datastore datastore)
 		{
@@ -365,13 +373,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			switch (connector)
 			{
 				case DatabaseConnectionFile dbConnection:
-					return $"SDE connection {dbConnection.Path?.AbsolutePath ?? nullPathText}";
+					return $"SDE connection {dbConnection.Path?.LocalPath ?? nullPathText}";
 
 				case DatabaseConnectionProperties dbConnectionProps:
 					return GetConnectionDisplayText(dbConnectionProps);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return $"File Geodatabase {fileGdbConnection.Path.AbsolutePath}";
+					return $"File Geodatabase {fileGdbConnection.Path.LocalPath}";
 
 				case FileSystemConnectionPath fileSystemConnection:
 					return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";

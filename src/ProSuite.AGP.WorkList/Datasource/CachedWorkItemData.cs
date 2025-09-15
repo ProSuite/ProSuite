@@ -112,6 +112,7 @@ public class CachedWorkItemData : IWorkItemData
 
 	public string DisplayName { get; set; }
 
+	[CanBeNull]
 	public Envelope Extent { get; private set; }
 
 	public IEnumerable<IWorkItem> Search(QueryFilter filter)
@@ -126,7 +127,7 @@ public class CachedWorkItemData : IWorkItemData
 			return Enumerable.Empty<IWorkItem>();
 		}
 
-		SpatialReference spatialReference = Extent.SpatialReference;
+		SpatialReference spatialReference = Extent?.SpatialReference;
 
 		if (filter.ObjectIDs.Count == 0)
 		{
@@ -150,10 +151,12 @@ public class CachedWorkItemData : IWorkItemData
 		Predicate<IWorkItemState> predicate = item => item.Status == currentVisibility;
 
 		Geometry filterGeometry = filter?.FilterGeometry;
+		SpatialReference spatialReference = Extent?.SpatialReference;
+
 		if (filterGeometry == null || filterGeometry.IsEmpty)
 		{
 			return _spatialSearcher.Where(item => predicate(item))
-			                       .Select(xmlItem => ToWorkItem(xmlItem, Extent.SpatialReference));
+			                       .Select(xmlItem => ToWorkItem(xmlItem, spatialReference));
 		}
 
 		Envelope extent = filterGeometry.Extent;
@@ -162,7 +165,7 @@ public class CachedWorkItemData : IWorkItemData
 		return _spatialSearcher.Search(extent.XMin, extent.YMin,
 		                               extent.XMax, extent.YMax,
 		                               tolerance, predicate)
-		                       .Select(xmlItem => ToWorkItem(xmlItem, Extent.SpatialReference));
+		                       .Select(xmlItem => ToWorkItem(xmlItem, spatialReference));
 	}
 
 	public Geometry GetItemDisplayGeometry(IWorkItem item)
@@ -176,8 +179,8 @@ public class CachedWorkItemData : IWorkItemData
 
 	#endregion
 
-	private CachedWorkItem ToWorkItem(XmlWorkItemState xmlItem,
-	                                  SpatialReference spatialReference)
+	private CachedWorkItem ToWorkItem([NotNull] XmlWorkItemState xmlItem,
+	                                  [CanBeNull] SpatialReference spatialReference)
 	{
 		if (! _tablesById.TryGetValue(xmlItem.Row.TableId, out GdbTableIdentity tableIdentity))
 		{

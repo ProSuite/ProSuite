@@ -33,15 +33,18 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			DisplayName = displayName;
 			Type = type;
 			CurrentIndex = currentItemIndex;
-
-			ReadStatesByRow();
 		}
 
-		protected IDictionary<GdbObjectReference, TState> StatesByRow { get; set; }
+		protected Dictionary<GdbObjectReference, TState> StatesByRow { get; private set; }
 
 		public virtual void Rename(string name) { }
 
 		public int? CurrentIndex { get; set; }
+
+		public void LoadAllStates()
+		{
+			ReadStatesByRow();
+		}
 
 		public void Refresh(IWorkItem item)
 		{
@@ -120,13 +123,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		protected void ReadStatesByRow()
 		{
-			ReadStatesByRowCore();
+			StatesByRow = new Dictionary<GdbObjectReference, TState>();
+			ReadStatesByRowCore(StatesByRow);
 		}
 
-		protected virtual void ReadStatesByRowCore()
-		{
-			StatesByRow = new Dictionary<GdbObjectReference, TState>();
-		}
+		protected virtual void ReadStatesByRowCore(
+			[NotNull] Dictionary<GdbObjectReference, TState> intoStates) { }
 
 		protected virtual void RefreshCore([NotNull] IWorkItem item, [NotNull] TState state) { }
 

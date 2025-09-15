@@ -70,7 +70,8 @@ public class WorkListDbTest
 
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
+			                               WorkspaceUtils.GetCatalogPath(gdb));
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
@@ -137,7 +138,8 @@ public class WorkListDbTest
 
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
+			                               WorkspaceUtils.GetCatalogPath(gdb));
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
@@ -206,7 +208,8 @@ public class WorkListDbTest
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
+			                               WorkspaceUtils.GetCatalogPath(gdb));
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
@@ -267,7 +270,8 @@ public class WorkListDbTest
 		var gdb = (Geodatabase) datastoresByHandle.First().Value;
 
 		var itemRepository =
-			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(), gdb.GetPath());
+			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
+			                               WorkspaceUtils.GetCatalogPath(gdb));
 
 		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo

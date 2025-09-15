@@ -113,7 +113,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public IGeometry Geometry
 		{
 			get => ArcGeometry.Create(_proSpatialFilter.FilterGeometry);
-			set => _proSpatialFilter.FilterGeometry = ArcGeometryUtils.CreateProGeometry(value);
+			set => _proSpatialFilter.FilterGeometry = ArcGeometryUtils.ToProGeometry(value);
 		}
 
 		public string SpatialRelDescription
