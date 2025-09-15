@@ -188,10 +188,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+		{
+			await RememberSketchAsync();
+
+			await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
+		}
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			// TODO: Move as much as possible to OnToolDeactivateCoreAsync
 			_intermediateSketchStates?.Deactivate();
-			RememberSketch();
+
 			IsInSketchPhase = false;
 
 			_symbolizedSketch?.Dispose();
@@ -478,9 +486,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					IsCompletingEditSketch = true;
 
-					RememberSketch(sketchGeometry);
+					await RememberSketchAsync(sketchGeometry);
 
-				_lastLoggedVertex = null;
+					_lastLoggedVertex = null;
 
 					return await OnEditSketchCompleteCoreAsync(
 						       sketchGeometry, currentTemplate, activeView, progressor);
@@ -643,7 +651,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected async Task ResetSketchAsync()
 		{
-			RememberSketch();
+			await RememberSketchAsync();
 
 			await ClearSketchAsync();
 
@@ -656,14 +664,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			_lastLoggedVertex = null;
 		}
 
-		protected void RememberSketch(Geometry knownSketch = null)
+		protected async Task RememberSketchAsync(Geometry knownSketch = null)
 		{
 			if (! SupportRestoreLastSketch)
 			{
 				return;
 			}
 
-			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
+			var sketch = knownSketch ?? await GetCurrentSketchAsync();
 
 			if (sketch is { IsEmpty: false })
 			{
