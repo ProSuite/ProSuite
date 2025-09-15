@@ -103,6 +103,8 @@ namespace ProSuite.AGP.WorkList
 			IWorkItemStateRepository stateRepository =
 				CreateStateRepositoryCore(workListFile, uniqueName, displayName);
 
+			stateRepository.LoadAllStates();
+
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
 			                     workListFile);
 

@@ -26,7 +26,8 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 
 	private WorkListEnvironmentFactory() { }
 
-	public static IWorkListEnvironmentFactory Instance { get; set; } = new WorkListEnvironmentFactory();
+	public static IWorkListEnvironmentFactory Instance { get; set; } =
+		new WorkListEnvironmentFactory();
 
 	public void WithPath(Func<string, IWorkEnvironment> createEnvironment)
 	{
@@ -70,49 +71,14 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 			return this;
 		}
 
-		if (typeof(ProductionModelIssueWorkList).IsAssignableFrom(typeof(T)))
-		{
-			_currentWorkListType = typeof(ProductionModelIssueWorkList);
-			return this;
-		}
-
 		if (typeof(IssueWorkList).IsAssignableFrom(typeof(T)))
 		{
 			_currentWorkListType = typeof(IssueWorkList);
 			return this;
 		}
 
-		if (typeof(ConflictWorkList).IsAssignableFrom(typeof(T)))
-		{
-			_currentWorkListType = typeof(ConflictWorkList);
-			return this;
-		}
-
-		throw new ArgumentOutOfRangeException();
-	}
-
-	[CanBeNull]
-	public IWorkEnvironment CreateWorkEnvironment(string path)
-	{
-		if (path.EndsWith(".iwl", StringComparison.OrdinalIgnoreCase))
-		{
-			return CreateWorkEnvironment(path, "ProSuite.AGP.WorkList.Domain.IssueWorkList");
-		}
-
-		// TODO: (daro) introduce new ending for ProductionModelIssueWorkList
-		if (path.EndsWith(".ewl", StringComparison.OrdinalIgnoreCase))
-		{
-			throw new NotImplementedException(".ewl");
-			//return CreateWorkEnvironment(path, "ProSuite.AGP.WorkList.Domain.ErrorWorkList");
-		}
-
-		if (path.EndsWith(".swl", StringComparison.OrdinalIgnoreCase))
-		{
-			return CreateWorkEnvironment(path, "ProSuite.AGP.WorkList.Domain.SelectionWorkList");
-		}
-
-		throw new InvalidOperationException(
-			$"No work environment for {path} has been registered yet.");
+		throw new ArgumentOutOfRangeException(
+			$"Work list of type {nameof(T)} are not supported by this environment factory. Provide your own environment factory for other work list types");
 	}
 
 	[CanBeNull]
@@ -132,20 +98,10 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 		{
 			type = typeof(SelectionWorkList);
 		}
-		else if (typeString.Equals("ProductionModelIssueWorkList",
-		                           StringComparison.OrdinalIgnoreCase))
-		{
-			type = typeof(ProductionModelIssueWorkList);
-		}
-		else if (typeString.Equals("ConflictWorkList",
-		                           StringComparison.OrdinalIgnoreCase))
-		{
-			type = typeof(ConflictWorkList);
-		}
 		else
 		{
-			throw new ArgumentOutOfRangeException(
-				$"Cannot associate {typeString} with any know work list type");
+			throw new AssertionException(
+				$"Cannot associate {typeString} with any know work list type. Provide your own environment factory for other work list types.");
 		}
 
 		if (_factoryMethodsWithStringParam.TryGetValue(

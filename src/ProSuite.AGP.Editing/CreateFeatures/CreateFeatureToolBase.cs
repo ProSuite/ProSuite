@@ -134,7 +134,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
 				{
-					await QueuedTask.Run(ClearSelection);
+					await ClearSelectionAsync();
 				}
 				else
 				{

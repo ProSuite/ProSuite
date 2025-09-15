@@ -53,8 +53,7 @@ public class LoadWorkListLayersOperation : Operation
 				};
 
 				Gateway.CompositeOperation(
-					manager, "Doesn't matter as long as the operation is removed.",
-					loadLayers);
+					manager, "Load Work List layers", loadLayers);
 
 				Operation loadWorkListLayer = manager.PeekUndo();
 				manager.RemoveUndoOperation(loadWorkListLayer);

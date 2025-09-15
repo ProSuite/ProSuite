@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -146,7 +147,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 				var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
 				result = new DbStatusWorkItemRepository(sourceClasses, stateRepository,
-				                                        geodatabase.GetPath());
+				                                        WorkspaceUtils.GetCatalogPath(geodatabase));
 			}
 			catch (Exception ex)
 			{

@@ -171,15 +171,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			await QueuedTask.Run(
-				async () =>
-				{
-					ClearSelection();
+			await ClearSelectionAsync();
 
-					ResetDerivedGeometries();
+			ResetDerivedGeometries();
 
-					await StartSelectionPhaseAsync();
-				});
+			await StartSelectionPhaseAsync();
 		}
 
 		protected override Task OnSelectionPhaseStartedAsync()

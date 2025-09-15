@@ -113,20 +113,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
-			Task task = QueuedTask.Run(async () =>
+			if (IsInSubcurveSelectionPhase())
 			{
-				if (IsInSubcurveSelectionPhase())
-				{
-					ResetDerivedGeometries();
-				}
-				else
-				{
-					ClearSelection();
-					await StartSelectionPhaseAsync();
-				}
-			});
-
-			await ViewUtils.TryAsync(task, _msg);
+				ResetDerivedGeometries();
+			}
+			else
+			{
+				await ClearSelectionAsync();
+				await StartSelectionPhaseAsync();
+			}
 		}
 
 		protected override void OnToolActivatingCore()

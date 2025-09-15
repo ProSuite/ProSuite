@@ -1,3 +1,4 @@
+
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -60,7 +61,11 @@ namespace ProSuite.AGP.WorkList.ProjectItem
 			{
 				if (Project.Current.RemoveItem(this))
 				{
-					File.Delete(Path);
+					if (File.Exists(Path))
+					{
+						File.Delete(Path);
+					}
+
 					// necessary?
 					NotifyPropertyChanged();
 				}
