@@ -65,7 +65,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual SelectionCursors FirstPhaseCursors => SelectionCursors;
 
 		protected SelectionCursors SketchCursors { get; set; } =
-			SelectionCursors.CreateFromCursor(Resources.EditSketchCrosshair);
+			SelectionCursors.CreateFromCursor(Resources.EditSketchCrosshair, "Sketch");
 
 		/// <summary>
 		/// Whether the geometry sketch (as opposed to the selection sketch) is currently active
