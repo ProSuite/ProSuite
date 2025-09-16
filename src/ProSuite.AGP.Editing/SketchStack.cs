@@ -16,6 +16,7 @@ namespace ProSuite.AGP.Editing;
 /// </summary>
 public class SketchStack
 {
+	// TODO: Add a redo stack so we can track both undo and redo operations of sketch operations
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly Stack<Geometry> _sketches = new();
@@ -80,7 +81,7 @@ public class SketchStack
 			return false;
 		}
 
-		var sketch = _sketches.Pop();
+		_sketches.Pop();
 		_msg.VerboseDebug(() => $"HandleUndo pop: {_sketches.Count} sketches remaining");
 
 		// TODO: Understand and explain why this is necessary (it is!). Probably some previous sketch remains?

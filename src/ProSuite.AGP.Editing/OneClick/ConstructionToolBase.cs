@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Analyst3D;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
@@ -14,11 +18,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -742,7 +741,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
-
 			if (! sketch.HasZ || GetSketchType() == SketchGeometryType.Point)
 			{
 				return;
@@ -758,7 +756,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				currentLastIndex = sketch.PointCount - 1;
 			}
 
-			_msg.DebugFormat("Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]", sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
+			_msg.DebugFormat(
+				"Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]",
+				sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
 			if (currentLastIndex <= _lastLoggedVertexIndex)
 			{
 				_lastLoggedVertexIndex = currentLastIndex;
