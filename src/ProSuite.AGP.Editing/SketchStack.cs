@@ -14,7 +14,7 @@ namespace ProSuite.AGP.Editing;
 /// and replaying sketch operations. This class focuses on state management without
 /// event handling or drawing functionality.
 /// </summary>
-public class SketchStates
+public class SketchStack
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -66,13 +66,6 @@ public class SketchStates
 		var sketch = _sketches.Pop();
 		_msg.VerboseDebug(() => $"Pop: {_sketches.Count} sketches remaining");
 
-		// Clear the stack if only one sketch remains
-		if (_sketches.Count == 1)
-		{
-			_sketches.Clear();
-			_msg.VerboseDebug(() => "Cleared sketches after pop");
-		}
-
 		return sketch;
 	}
 
@@ -87,7 +80,16 @@ public class SketchStates
 			return false;
 		}
 
-		TryPop();
+		var sketch = _sketches.Pop();
+		_msg.VerboseDebug(() => $"HandleUndo pop: {_sketches.Count} sketches remaining");
+
+		// TODO: Understand and explain why this is necessary (it is!). Probably some previous sketch remains?
+		if (_sketches.Count == 1)
+		{
+			_sketches.Clear();
+			_msg.VerboseDebug(() => "Cleared sketches after undo (original logic)");
+		}
+
 		return true;
 	}
 
@@ -117,17 +119,30 @@ public class SketchStates
 		_msg.VerboseDebug(
 			() => $"Replay: {_sketches.Count} sketches to map view: {mapView.Map?.Name}");
 
+		if (_sketches.Count == 0)
+		{
+			_msg.VerboseDebug(() => "No sketches to replay");
+			return;
+		}
+
+		int latchIncrements = 0;
 		try
 		{
 			foreach (Geometry sketch in _sketches.Reverse())
 			{
 				_latch.Increment();
+				latchIncrements++;
 				await mapView.SetCurrentSketchAsync(sketch);
 			}
 		}
 		catch (Exception ex)
 		{
-			_msg.Error($"Error during sketch replay: {ex.Message}", ex);
+			_msg.Error(
+				$"Error during sketch replay after {latchIncrements} operations: {ex.Message}", ex);
+
+			// Reset latch to maintain consistency since replay failed
+			_latch.Reset();
+
 			throw;
 		}
 	}

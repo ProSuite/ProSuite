@@ -20,7 +20,7 @@ public class IntermediateSketchStates
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	[NotNull] private readonly SketchStates _sketchStates = new();
+	[NotNull] private readonly SketchStack _sketchStack = new();
 	[NotNull] private readonly SketchDrawer _sketchDrawer = new();
 	private bool _active;
 	[CanBeNull] private SubscriptionToken _onSketchModifiedToken;
@@ -31,7 +31,7 @@ public class IntermediateSketchStates
 	/// <summary>
 	/// Gets the underlying sketch states manager for direct access to sketch operations.
 	/// </summary>
-	public SketchStates SketchStates => _sketchStates;
+	public SketchStack SketchStack => _sketchStack;
 
 	public async Task ActivateAsync()
 	{
@@ -43,7 +43,7 @@ public class IntermediateSketchStates
 
 		Geometry sketch = await MapView.Active.GetCurrentSketchAsync();
 
-		_sketchStates.TryPush(sketch);
+		_sketchStack.TryPush(sketch);
 	}
 
 	/// <summary>
@@ -83,7 +83,7 @@ public class IntermediateSketchStates
 
 			IsInIntermittentSelectionPhase = false;
 
-			await _sketchStates.ReplaySketchesAsync();
+			await _sketchStack.ReplaySketchesAsync();
 		}
 		catch (Exception e)
 		{
@@ -98,7 +98,7 @@ public class IntermediateSketchStates
 	/// </summary>
 	public void ResetSketchStates()
 	{
-		_sketchStates.Clear();
+		_sketchStack.Clear();
 
 		IsInIntermittentSelectionPhase = false;
 
@@ -131,20 +131,20 @@ public class IntermediateSketchStates
 
 			Assert.True(_active, "not recording");
 
-			if (_sketchStates.IsLatched)
+			if (_sketchStack.IsLatched)
 			{
-				_sketchStates.DecrementLatch();
-				Assert.True(_sketchStates.LatchCount >= 0, "Sketch stack isn't in sync with latch");
+				_sketchStack.DecrementLatch();
+				Assert.True(_sketchStack.LatchCount >= 0, "Sketch stack isn't in sync with latch");
 				return;
 			}
 
-			if (args.IsUndo && _sketchStates.HasSketches)
+			if (args.IsUndo && _sketchStack.HasSketches)
 			{
-				_sketchStates.HandleUndo();
+				_sketchStack.HandleUndo();
 				return;
 			}
 
-			_sketchStates.TryPush(args.CurrentSketch);
+			_sketchStack.TryPush(args.CurrentSketch);
 		}
 		catch (Exception e)
 		{
@@ -161,9 +161,9 @@ public class IntermediateSketchStates
 			return;
 		}
 
-		_msg.VerboseDebug(() => $"{nameof(OnSketchCompleted)}: {_sketchStates.Count} sketches");
+		_msg.VerboseDebug(() => $"{nameof(OnSketchCompleted)}: {_sketchStack.Count} sketches");
 
-		_sketchStates.Clear();
+		_sketchStack.Clear();
 	}
 
 	private void WireEvents()
