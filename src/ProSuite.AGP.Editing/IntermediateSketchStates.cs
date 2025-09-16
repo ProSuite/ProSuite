@@ -128,23 +128,15 @@ public class IntermediateSketchStates
 		try
 		{
 			_msg.VerboseDebug(() => $"{args.SketchOperationType}");
-
 			Assert.True(_active, "not recording");
 
-			if (_sketchStack.IsLatched)
-			{
-				_sketchStack.DecrementLatch();
-				Assert.True(_sketchStack.LatchCount >= 0, "Sketch stack isn't in sync with latch");
-				return;
-			}
+			// Let SketchStack handle all the complexity
+			bool wasRecorded =
+				_sketchStack.ProcessSketchModification(args.IsUndo, args.CurrentSketch);
 
-			if (args.IsUndo && _sketchStack.HasSketches)
-			{
-				_sketchStack.HandleUndo();
-				return;
-			}
-
-			_sketchStack.TryPush(args.CurrentSketch);
+			_msg.VerboseDebug(() => wasRecorded
+				                        ? "Sketch operation recorded"
+				                        : "Sketch operation ignored/handled");
 		}
 		catch (Exception e)
 		{

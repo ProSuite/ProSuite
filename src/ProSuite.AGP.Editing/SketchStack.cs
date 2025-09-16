@@ -35,7 +35,7 @@ public class SketchStack
 	/// Gets a value indicating whether the replay latch is currently active.
 	/// This is used to prevent recording operations during replay.
 	/// </summary>
-	public bool IsLatched => _latch.IsLatched;
+	public bool IsReplayingSketches => _latch.IsLatched;
 
 	/// <summary>
 	/// Adds a sketch geometry to the state stack if it's not null or empty.
@@ -164,35 +164,30 @@ public class SketchStack
 	}
 
 	/// <summary>
-	/// Increments the latch counter. This should be called when starting a sketch replay
-	/// operation to prevent the replayed operations from being recorded again.
+	/// Processes a sketch modification event, handling replay synchronization automatically.
+	/// Returns true if the operation should be recorded, false if it should be ignored.
 	/// </summary>
-	public void IncrementLatch()
+	/// <param name="isUndo">Whether this is an undo operation</param>
+	/// <param name="currentSketch">The current sketch geometry</param>
+	/// <returns>True if the operation should be recorded as a new state</returns>
+	public bool ProcessSketchModification(bool isUndo, Geometry currentSketch)
 	{
-		_latch.Increment();
-	}
+		if (_latch.IsLatched)
+		{
+			_latch.Decrement();
+			return false; // Don't record - this is a replay operation
+		}
 
-	/// <summary>
-	/// Decrements the latch counter. This should be called when a replayed sketch operation
-	/// is processed to maintain synchronization with the operation stack.
-	/// </summary>
-	public void DecrementLatch()
-	{
-		_latch.Decrement();
-	}
+		if (isUndo && HasSketches)
+		{
+			HandleUndo();
+			return false; // Don't record - undo was handled internally
+		}
 
-	/// <summary>
-	/// Resets the latch counter to zero.
-	/// </summary>
-	public void ResetLatch()
-	{
-		_latch.Reset();
+		// Record this as a new sketch state
+		TryPush(currentSketch);
+		return true; // Operation was recorded
 	}
-
-	/// <summary>
-	/// Gets the current latch count, useful for debugging and synchronization verification.
-	/// </summary>
-	public int LatchCount => _latch.Count;
 
 	/// <summary>
 	/// Gets the most recent sketch geometry without removing it from the stack.
