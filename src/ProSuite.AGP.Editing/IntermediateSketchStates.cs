@@ -119,15 +119,16 @@ public class IntermediateSketchStates
 
 	private void OnSketchModified(SketchModifiedEventArgs args)
 	{
-		if (IsInIntermittentSelectionPhase)
-		{
-			// Do not record sketch states for the selection sketch!
-			return;
-		}
-
 		try
 		{
-			_msg.VerboseDebug(() => $"{args.SketchOperationType}");
+			if (IsInIntermittentSelectionPhase)
+			{
+				// Do not record sketch states for the selection sketch!
+				return;
+			}
+
+			_msg.VerboseDebug(() => $"OnSketchModified: {args.SketchOperationType}");
+
 			Assert.True(_active, "not recording");
 
 			// Let SketchStack handle all the complexity
@@ -146,16 +147,23 @@ public class IntermediateSketchStates
 
 	private void OnSketchCompleted(SketchCompletedEventArgs args)
 	{
-		Assert.True(_active, "not recording");
-
-		if (IsInIntermittentSelectionPhase)
+		try
 		{
-			return;
+			Assert.True(_active, "not recording");
+
+			if (IsInIntermittentSelectionPhase)
+			{
+				return;
+			}
+
+			_msg.VerboseDebug(() => $"{nameof(OnSketchCompleted)}: {_sketchStack.Count} sketches");
+
+			_sketchStack.Clear();
 		}
-
-		_msg.VerboseDebug(() => $"{nameof(OnSketchCompleted)}: {_sketchStack.Count} sketches");
-
-		_sketchStack.Clear();
+		catch (Exception e)
+		{
+			_msg.Error($"Error handling sketch completed: {e.Message}", e);
+		}
 	}
 
 	private void WireEvents()
