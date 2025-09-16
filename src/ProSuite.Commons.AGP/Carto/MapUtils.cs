@@ -95,6 +95,11 @@ namespace ProSuite.Commons.AGP.Carto
 
 		#endregion
 
+		public static bool IsStereoMapView([CanBeNull] MapView mapView)
+		{
+			return mapView?.ViewingMode == MapViewingMode.MapStereo;
+		}
+
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
 			[NotNull] Dictionary<MapMember, List<long>> oidsByLayer,
 			[CanBeNull] Predicate<Table> predicate = null)

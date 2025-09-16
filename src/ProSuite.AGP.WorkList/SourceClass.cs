@@ -61,26 +61,18 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		/// <summary>
-		/// Ensures the filter is valid with the correct subfields. If subfields are "*" the bool
-		/// excludeGeometry is always false.
+		/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
+		/// control whether it's called with a SpatialQueryFilter or a QueryFilter. Querying a table with a
+		/// spatial filter throws an exception, so we clone the filter to the correct type.
 		/// </summary>
 		/// <param name="filter"></param>
 		/// <param name="statusFilter"></param>
-		/// <param name="excludeGeometry">Always false if subfields are "*".</param>
+		/// <param name="excludeGeometry"></param>
 		public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
 		                              WorkItemStatus? statusFilter,
 		                              bool excludeGeometry)
 		{
 			QueryFilter result;
-
-			if (filter != null && string.Equals(filter.SubFields, "*"))
-			{
-				filter = HasGeometry
-					         ? GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter)
-					         : GdbQueryUtils.CloneFilter<QueryFilter>(filter);
-
-				return;
-			}
 
 			string relevantSubFields = GetRelevantSubFields(excludeGeometry);
 

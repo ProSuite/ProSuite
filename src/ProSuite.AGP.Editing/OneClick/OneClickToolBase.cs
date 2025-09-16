@@ -40,6 +40,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		private Geometry _lastSketch;
 		private DateTime _lastSketchFinishedTime;
 
+		// Implicitly not null because it is set in OnToolActivateCoreAsync
 		private SelectionCursors _selectionCursors;
 
 		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
@@ -86,7 +87,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		/// <summary>
-		/// Flag to indicate that currently the selection is changed by the <see cref="OnSelectionSketchCompleteAsync"/> method.
+		/// Flag to indicate that currently the selection is changed by the <see
+		/// cref="OnSelectionSketchCompleteAsync"/> method and selection events should be ignored.
 		/// </summary>
 		protected bool IsCompletingSelectionSketch { get; set; }
 
@@ -95,21 +97,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// The default is the cross with the selection icon.
 		/// </summary>
 		/// <returns></returns>
+		[NotNull]
 		protected SelectionCursors SelectionCursors
 		{
-			get
-			{
-				if (_selectionCursors == null)
-				{
-					_selectionCursors ??=
-						SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
-					_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
-				}
-
-				return _selectionCursors;
-			}
+			get => Assert.NotNull(_selectionCursors);
 			set
 			{
+				Assert.ArgumentNotNull(value);
+
 				_selectionCursors = value;
 				_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
 			}
@@ -129,6 +124,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			using var source = GetProgressorSource();
 			var progressor = source?.Progressor;
+
+			// Note: We set _selectionCursors here, exactly once on the UI thread. And not in the getter of SelectionCursors.
+			_selectionCursors ??= SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
+			_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
 
 			await QueuedTaskUtils.Run(async () =>
 			{
@@ -254,14 +253,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-		protected override async Task ShiftPressedAsync()
+		protected override async Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
 				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: true));
 			}
 
-			await ShiftPressedCoreAsync();
+			await ShiftPressedCoreAsync(keyArgs);
 		}
 
 		private async Task ShiftReleasedAsync()
@@ -278,8 +277,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// Allows implementors to start tasks when the shift key is pressed.
 		/// NOTE: ShiftPressedCoreAsync and ShiftReleasedAsync are not necessarily symmetrical!
 		/// </summary>
+		/// <param name="keyArgs"></param>
 		/// <returns></returns>
-		protected virtual Task ShiftPressedCoreAsync()
+		protected virtual Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 		{
 			return Task.CompletedTask;
 		}
@@ -308,12 +308,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			return currentSketch?.IsEmpty == false;
 		}
 
-		protected async Task SetupSelectionSketchAsync()
+		private async Task SetupSelectionSketchAsync()
 		{
-			if (await HasSketchAsync())
-			{
-				await ActiveMapView.ClearSketchAsync();
-			}
+			_msg.VerboseDebug(() => nameof(SetupSelectionSketchAsync));
+
+			await ClearSketchAsync();
 
 			SetupSketch();
 
@@ -385,11 +384,10 @@ namespace ProSuite.AGP.Editing.OneClick
 		                           bool completeSketchOnMouseUp = true,
 		                           bool enforceSimpleSketch = false)
 		{
-			_msg.VerboseDebug(
-				() =>
-					$"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
-					$"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
-					$"enforceSimplifySketch: {enforceSimpleSketch}");
+			_msg.VerboseDebug(() =>
+				                  $"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
+				                  $"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
+				                  $"enforceSimplifySketch: {enforceSimpleSketch}");
 
 			// screen coords are currently not supported and only relevant
 			// when selecting with the View being in 3D viewing mode
@@ -403,6 +401,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
 		}
 
+		/// <summary>
+		/// Subclasses override this method to execute tool-specific logic after the start of the
+		/// selection phase, such as specific cursors.
+		/// </summary>
+		/// <returns></returns>
 		protected virtual Task OnSelectionPhaseStartedAsync()
 		{
 			return Task.CompletedTask;
@@ -431,11 +434,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (! Enabled)
 				{
-					// It is possible to be the active tool but not enabled£
+					// It is possible to be the active tool but not enabled
 					return;
 				}
 
-				await QueuedTask.Run(() => OnMapSelectionChangedCoreAsync(args));
+				await OnMapSelectionChangedCoreAsync(args);
 			}
 			catch (Exception e)
 			{
@@ -495,7 +498,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
 
-		/// <remarks>Will be called on MCT</remarks>
+		/// <summary>
+		/// Method called on the UI thread to react to changes to map selection that typically do
+		/// not originate from the tool itself. Examples: Clear Selection Button, attribute table
+		/// or clearing the selection of a single layer in the 'List by Selection' tab of the TOC.
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns></returns>
+		/// <remarks>Will be called on the UI thread</remarks>
 		protected virtual Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
@@ -550,7 +560,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Geometry sketchGeometry)
 		{
 			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                            ActiveMapView.ClientToScreen(CurrentMousePosition));
+			                            ActiveMapView.ClientToScreen(CurrentMousePosition))
+			       {
+				       NoMultiselection = ! AllowMultiSelection(out _)
+			       };
 		}
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
@@ -663,10 +676,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! LayerUtils.IsVisible(layer, ActiveMapView))
 			{
-				NotificationUtils.Add(notifications, $"Layer is not visible in active map: {layerName}");
+				NotificationUtils.Add(notifications,
+				                      $"Layer is not visible in active map: {layerName}");
 				return false;
 			}
-			
+
 			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
 			{
 				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");
@@ -715,31 +729,23 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
-			void LogInfo(NotificationCollection collection)
-			{
-				if (collection == null)
-				{
-					return;
-				}
-
-				if (collection.Any()) _msg.Debug("Cannot use selection:");
-
-				foreach (INotification notification in collection)
-				{
-					_msg.Info(notification.Message);
-				}
-			}
+			notifications ??= new NotificationCollection();
 
 			int count = SelectionUtils.GetFeatureCount(selectionByLayer);
 
 			if (count > 1 && ! AllowMultiSelection(out string reason))
 			{
-				notifications?.Add(reason);
+				if (string.IsNullOrEmpty(reason))
+				{
+					reason = "Multiple selection is not supported by this tool";
+				}
+
+				notifications.Add(reason);
 
 				_msg.Debug(
 					$"Cannot use selection: multi selection not allowed, selection count is {count}");
 
-				LogInfo(notifications);
+				LogSelectionInfo(notifications);
 				return false;
 			}
 
@@ -834,7 +840,34 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected void ClearSelection()
 		{
 			var map = ActiveMapView?.Map;
+
 			map?.ClearSelection();
+		}
+
+		/// <summary>Clear the selection on the active map</summary>
+		protected async Task ClearSelectionAsync()
+		{
+			var map = ActiveMapView?.Map;
+
+			if (map != null)
+			{
+				await QueuedTask.Run(() => map.ClearSelection());
+			}
+		}
+
+		private static void LogSelectionInfo(NotificationCollection collection)
+		{
+			if (collection == null)
+			{
+				return;
+			}
+
+			if (collection.Any()) _msg.Debug("Cannot use selection:");
+
+			foreach (INotification notification in collection)
+			{
+				_msg.Info(notification.Message);
+			}
 		}
 
 		public void SetSketchType(SketchGeometryType? sketchType)

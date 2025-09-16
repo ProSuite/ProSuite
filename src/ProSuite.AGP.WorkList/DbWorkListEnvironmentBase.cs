@@ -20,18 +20,24 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	[NotNull]
 	protected IWorkListItemDatastore WorkListItemDatastore { get; }
 
 	protected DbWorkListEnvironmentBase(
-		[CanBeNull] IWorkListItemDatastore workListItemDatastore)
+		[NotNull] IWorkListItemDatastore workListItemDatastore)
 	{
+		Assert.ArgumentNotNull(workListItemDatastore, nameof(workListItemDatastore));
+
 		// TODO: Separate hierarchies for db-worklists vs memory-worklists
 		WorkListItemDatastore = workListItemDatastore;
 
-		if (WorkListItemDatastore != null &&
-		    ! WorkListItemDatastore.Validate(out string message))
+		// TODO: Flag? Explicit environment validation method? 
+		if (QueuedTask.OnWorker)
 		{
-			throw new ArgumentException($"Invalid issue datastore: {message}");
+			if (! WorkListItemDatastore.Validate(out string message))
+			{
+				throw new ArgumentException($"Invalid issue datastore: {message}");
+			}
 		}
 	}
 
@@ -39,7 +45,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 	{
 		IList<Table> dbTables = GetTablesCore().ToList();
 
-		if (dbTables.Count > 0 && WorkListItemDatastore != null)
+		if (dbTables.Count > 0)
 		{
 			dbTables = await WorkListItemDatastore.PrepareTableSchema(dbTables);
 		}
@@ -49,11 +55,6 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 	protected override async Task<bool> TryPrepareSchemaCoreAsync()
 	{
-		if (WorkListItemDatastore == null)
-		{
-			return false;
-		}
-
 		return await WorkListItemDatastore.TryPrepareSchema();
 	}
 
@@ -203,11 +204,6 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 	protected virtual IEnumerable<Table> GetTablesCore()
 	{
-		if (WorkListItemDatastore == null)
-		{
-			return Enumerable.Empty<Table>();
-		}
-
 		return WorkListItemDatastore.GetTables();
 	}
 

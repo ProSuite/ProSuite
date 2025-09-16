@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,9 +17,10 @@ public class ArcWorkspace : IFeatureWorkspace
 {
 	private static readonly Dictionary<long, ArcWorkspace> _workspacesByHandle = new();
 
-	private readonly Dictionary<string, ArcRelationshipClass> _relationshipClassesByName = new();
+	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName =
+		new();
 
-	private readonly Dictionary<string, ArcTable> _tablesByName = new();
+	private readonly ConcurrentDictionary<string, ArcTable> _tablesByName = new();
 
 	private List<IRelationshipClass> _allRelationshipClasses;
 
@@ -197,23 +199,13 @@ public class ArcWorkspace : IFeatureWorkspace
 			foreach (RelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<RelationshipClassDefinition>())
 			{
-				IDataset result = Open(definition);
-
-				if (result is IRelationshipClass relationshipClass)
-				{
-					_allRelationshipClasses.Add(relationshipClass);
-				}
+				TryAddRelClass(definition, _allRelationshipClasses);
 			}
 
 			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
 				         .GetDefinitions<AttributedRelationshipClassDefinition>())
 			{
-				IDataset result = Open(definition);
-
-				if (result is IRelationshipClass relationshipClass)
-				{
-					_allRelationshipClasses.Add(relationshipClass);
-				}
+				TryAddRelClass(definition, _allRelationshipClasses);
 			}
 		}
 
@@ -223,25 +215,53 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 	}
 
+	private void TryAddRelClass(RelationshipClassDefinition definition,
+	                            List<IRelationshipClass> toList)
+	{
+		try
+		{
+			IDataset result = Open(definition);
+
+			if (result is IRelationshipClass relationshipClass)
+			{
+				// Ensure that Origin/Destination can be opened as well, otherwise, skip
+
+				Assert.NotNull(relationshipClass.OriginClass);
+				Assert.NotNull(relationshipClass.DestinationClass);
+
+				toList.Add(relationshipClass);
+			}
+		}
+		catch (Exception e)
+		{
+			_msg.Warn(
+				$"Cannot open relationship class {definition.GetName()} or one of its related tables. " +
+				$"It will be ignored ({e.Message})", e);
+
+			// TODO: Could this also happen due to missing privileges? In which case assuming
+			// it does not exist is correct. Or: Add a placeholder relationship class that throws on use?
+		}
+	}
+
 	private IDataset Open(Definition definition)
 	{
 		if (definition is FeatureClassDefinition)
 		{
 			FeatureClass proTable =
-				Geodatabase.OpenDataset<FeatureClass>(definition.GetName());
+				DatasetUtils.OpenDataset<FeatureClass>(Geodatabase, definition.GetName());
 			return ArcGeodatabaseUtils.ToArcTable(proTable);
 		}
 
 		if (definition is TableDefinition)
 		{
-			Table proTable = Geodatabase.OpenDataset<Table>(definition.GetName());
+			Table proTable = DatasetUtils.OpenDataset<Table>(Geodatabase, definition.GetName());
 			return ArcGeodatabaseUtils.ToArcTable(proTable);
 		}
 
 		if (definition is RelationshipClassDefinition)
 		{
 			RelationshipClass proRelClass =
-				Geodatabase.OpenDataset<RelationshipClass>(definition.GetName());
+				DatasetUtils.OpenDataset<RelationshipClass>(Geodatabase, definition.GetName());
 			return ArcRelationshipClass.Create(proRelClass);
 		}
 
@@ -321,7 +341,7 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 	}
 
-	public string PathName => _pathName ??= Geodatabase.GetPath().AbsolutePath;
+	public string PathName => _pathName ??= WorkspaceUtils.GetCatalogPath(Geodatabase);
 
 	public esriWorkspaceType Type =>
 		_workspaceType ??= (esriWorkspaceType) Geodatabase.GetGeodatabaseType();
@@ -396,7 +416,8 @@ public class ArcWorkspace : IFeatureWorkspace
 			return result;
 		}
 
-		return ArcGeodatabaseUtils.ToArcTable(Geodatabase.OpenDataset<Table>(name));
+		Table proTable = DatasetUtils.OpenDataset<Table>(Geodatabase, name);
+		return ArcGeodatabaseUtils.ToArcTable(proTable);
 	}
 
 	public IFeatureClass OpenFeatureClass(string name)
@@ -441,8 +462,7 @@ public class ArcWorkspace : IFeatureWorkspace
 			return result;
 		}
 
-		var proRelClass = Geodatabase.OpenDataset<RelationshipClass>(name);
-
+		var proRelClass = DatasetUtils.OpenDataset<RelationshipClass>(Geodatabase, name);
 		return new ArcRelationshipClass(proRelClass);
 	}
 

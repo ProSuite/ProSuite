@@ -18,6 +18,8 @@ namespace ProSuite.Commons.AGP.Framework
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		public static bool IsBusy => QueuedTask.Busy;
+
 		public static Task Run(
 			[NotNull] Action action, Progressor progressor = null,
 			TaskCreationOptions options = TaskCreationOptions.None)

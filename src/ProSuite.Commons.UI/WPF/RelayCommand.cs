@@ -1,11 +1,11 @@
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.UI.WPF
 {
@@ -19,12 +19,26 @@ namespace ProSuite.Commons.UI.WPF
 		private readonly Func<Task> _executeTask;
 		private bool _previousCanExecute;
 
+		/// <summary>
+		/// Initializes a new instance of <see cref="RelayCommand"/>.
+		/// </summary>
+		/// <param name="execute">The execution logic. If an unhandled exception occurs during this
+		/// action, it is likely to cause the host application to crash!</param>
+		/// <param name="canExecute">The execution status logic. If null, <seealso cref="CanExecute"/>
+		/// will always return true.</param>
 		public RelayCommand(Action execute, Func<bool> canExecute)
 		{
 			_execute = execute;
 			_canExecute = canExecute;
 		}
 
+		/// <summary>
+		/// Initializes a new instance of <see cref="RelayCommand"/>.
+		/// </summary>
+		/// <param name="execute">The execution logic. If an unhandled exception occurs during this
+		/// action, it is likely to cause the host application to crash!</param>
+		/// <param name="canExecute">The execution status logic. If null, <seealso cref="CanExecute"/>
+		/// will always return true.</param>
 		public RelayCommand(Func<Task> execute, Func<bool> canExecute)
 		{
 			_executeTask = execute;
@@ -89,6 +103,7 @@ namespace ProSuite.Commons.UI.WPF
 				throw;
 			}
 		}
+
 		public event EventHandler CanExecuteChanged
 		{
 			add => CommandManager.RequerySuggested += value;
@@ -133,7 +148,8 @@ namespace ProSuite.Commons.UI.WPF
 		/// <summary>
 		/// Initializes a new instance of <see cref="RelayCommand{T}"/>.
 		/// </summary>
-		/// <param name="execute">The execution logic.</param>
+		/// <param name="execute">The execution logic. If an unhandled exception occurs during this
+		/// action, it is likely to cause the host application to crash!</param>
 		/// <param name="canExecute">The execution status logic. If null, <seealso cref="CanExecute"/>
 		/// will always return true.</param>
 		public RelayCommand([NotNull] Action<T> execute,

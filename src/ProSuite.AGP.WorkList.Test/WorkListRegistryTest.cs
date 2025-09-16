@@ -32,7 +32,7 @@ public class WorkListRegistryTest
 
 		Assert.Null(factory.CreateWorkEnvironment(path, typeName));
 
-		factory.AddStore(new WorkListItemDatastoreMock());
+		factory.AddStore<IssueWorkList>(new WorkListItemDatastoreMock());
 
 		Assert.NotNull(factory.CreateWorkEnvironment(path, typeName));
 	}
@@ -100,6 +100,8 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 		throw new NotImplementedException();
 	}
 
+	public bool AllowBackgroundLoading { get; set; }
+
 	public string WorkListFile { get; set; }
 
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
@@ -134,6 +136,8 @@ public class SelectionWorkListEnvironmentMock : IWorkEnvironment
 	{
 		throw new NotImplementedException();
 	}
+
+	public bool AllowBackgroundLoading { get; set; }
 
 	public Task<IWorkList> CreateWorkListAsync(string uniqueName)
 	{
@@ -185,7 +189,9 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public void ProcessChanges(Dictionary<Table, List<long>> inserts, Dictionary<Table, List<long>> deletes, Dictionary<Table, List<long>> updates)
+	public void ProcessChanges(Dictionary<Table, List<long>> inserts,
+	                           Dictionary<Table, List<long>> deletes,
+	                           Dictionary<Table, List<long>> updates)
 	{
 		throw new NotImplementedException();
 	}
@@ -198,15 +204,19 @@ public class WorkListMock : IWorkList
 	public string Name { get; set; }
 	public string DisplayName { get; }
 
-	public Envelope GetExtent()
-	{
-		throw new NotImplementedException();
-	}
+	public double MinimumScaleDenominator { get; set; }
+	public bool CacheBufferedItemGeometries { get; set; }
+	public bool AlwaysUseDraftMode { get; set; }
+	public double ItemDisplayBufferDistance { get; set; }
+	public int? MaxBufferedItemCount { get; set; }
+	public int? MaxBufferedShapePointCount { get; set; }
+
+	public Envelope Extent => throw new NotImplementedException();
 
 	public WorkItemVisibility? Visibility { get; set; }
 	public Geometry AreaOfInterest { get; set; }
 	public bool QueryLanguageSupported { get; }
-	public IWorkItem Current { get; }
+	public IWorkItem CurrentItem { get; }
 	public int CurrentIndex { get; set; }
 	public IWorkItemRepository Repository { get; }
 	public long? TotalCount { get; set; }
@@ -217,12 +227,13 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<IWorkItem> GetItems(SpatialQueryFilter filter)
+	public IEnumerable<IWorkItem> Search(SpatialQueryFilter filter)
 	{
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus, bool excludeGeometry = false)
+	public IEnumerable<IWorkItem> GetItems(QueryFilter filter, WorkItemStatus? itemStatus,
+	                                       bool excludeGeometry = false)
 	{
 		throw new NotImplementedException();
 	}
@@ -257,7 +268,8 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public void GoNearest(Geometry reference, Predicate<IWorkItem> match = null, params Polygon[] contextPerimeters)
+	public void GoNearest(Geometry reference, Predicate<IWorkItem> match = null,
+	                      params Polygon[] contextPerimeters)
 	{
 		throw new NotImplementedException();
 	}
@@ -322,7 +334,7 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public Geometry GetItemGeometry(IWorkItem item)
+	public Geometry GetItemDisplayGeometry(IWorkItem item)
 	{
 		throw new NotImplementedException();
 	}
@@ -357,7 +369,12 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public Row GetCurrentItemSourceRow()
+	public Row GetCurrentItemSourceRow(bool readOnly = true)
+	{
+		throw new NotImplementedException();
+	}
+
+	public void LoadItems()
 	{
 		throw new NotImplementedException();
 	}
@@ -367,9 +384,8 @@ public class WorkListMock : IWorkList
 		throw new NotImplementedException();
 	}
 
-	public void LoadItems(QueryFilter filter)
+	public void LoadItems(QueryFilter filter, WorkItemStatus? statusFilter = null)
 	{
 		throw new NotImplementedException();
 	}
 }
-

@@ -30,6 +30,34 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	[NotNull]
 	public IWorkItemStateRepository WorkItemStateRepository { get; }
 
+	[CanBeNull]
+	public SpatialReference SpatialReference
+	{
+		get
+		{
+			foreach (ISourceClass sourceClass in SourceClasses)
+			{
+				var featureClass = OpenTable(sourceClass) as FeatureClass;
+
+				if (featureClass == null)
+				{
+					continue;
+				}
+
+				using (featureClass)
+				{
+					return featureClass.GetDefinition().GetSpatialReference();
+				}
+			}
+
+			return null;
+		}
+	}
+
+	public Geometry AreaOfInterest { get; set; }
+
+	public Envelope Extent { get; set; }
+
 	[NotNull]
 	public IList<ISourceClass> SourceClasses { get; }
 
@@ -70,11 +98,11 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	}
 
 	[CanBeNull]
-	public Row GetSourceRow(ISourceClass sourceClass, long oid)
+	public Row GetSourceRow(ISourceClass sourceClass, long oid, bool recycle = true)
 	{
 		var filter = new QueryFilter { ObjectIDs = new List<long> { oid } };
 
-		return GetRows(sourceClass, filter).FirstOrDefault();
+		return GetRows(sourceClass, filter, recycle).FirstOrDefault();
 	}
 
 	public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
@@ -89,7 +117,8 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	public void Commit()
 	{
-		WorkItemStateRepository.Commit(SourceClasses);
+		Envelope extent = Extent ?? AreaOfInterest?.Extent;
+		WorkItemStateRepository.Commit(SourceClasses, extent);
 	}
 
 	public void SetCurrentIndex(int currentIndex)
@@ -182,7 +211,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	}
 
 	private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
-	                                 [CanBeNull] QueryFilter filter)
+	                                 [CanBeNull] QueryFilter filter, bool recycle = true)
 	{
 		Table table = OpenTable(sourceClass);
 
@@ -194,7 +223,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		try
 		{
-			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
+			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
 			{
 				yield return row;
 			}

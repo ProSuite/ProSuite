@@ -42,11 +42,12 @@ namespace ProSuite.AGP.QA.ProPlugins
 			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
-		protected abstract ISessionContext SessionContext { get; }
+		protected abstract IVerificationSessionContext SessionContext { get; }
 
 		protected abstract IWorkListOpener WorkListOpener { get; }
 
-		protected virtual Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
+		protected virtual
+			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
 		protected override Task<bool> OnClickAsyncCore()
@@ -103,7 +104,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
 
-			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
+			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
+			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController =
 				new AgpBackgroundVerificationController(WorkListOpener, mapView, perimeter,
@@ -122,8 +124,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
 
-			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               qaEnvironment.BackendDisplayName, actionTitle);
+			VerifyUtils.ShowProgressWindow(
+				window, qualitySpecification,
+				qaEnvironment.BackendDisplayName ?? "<not connected to service", actionTitle);
 
 			return Task.FromResult(true);
 		}

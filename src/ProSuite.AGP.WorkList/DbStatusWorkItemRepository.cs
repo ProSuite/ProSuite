@@ -8,7 +8,6 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList;
@@ -18,20 +17,20 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	/// <summary>
-	/// SDE file path to the single, current workspace in which all source tables reside.
+	/// SDE or GDB file path to the single, current workspace in which all source tables reside.
 	/// Pro creates a SDE file in C:\Users\USER\AppData\local\temp
 	/// </summary>
-	private readonly Uri _sdeFilePath;
+	private readonly string _catalogPath;
 
 	public DbStatusWorkItemRepository(IList<ISourceClass> sourceClasses,
 	                                  IWorkItemStateRepository workItemStateRepository,
-	                                  Uri sdeFilePath) : base(
+	                                  string catalogPath) : base(
 		sourceClasses, workItemStateRepository)
 	{
 		// Cannot inject geodatabase type here because it's created in a QueuedTask
 		// and used in a pluggable datasource worker thread. This throws a Pro
 		// CalledOnWrongThread exception.
-		_sdeFilePath = sdeFilePath;
+		_catalogPath = catalogPath;
 	}
 
 	public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
@@ -85,7 +84,12 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 
 		WorkItemStatus status = dbSourceClass.GetStatus(row);
 
-		return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), row, status);
+		// Create table identity only once for better performance:
+		GdbTableIdentity tableIdentity = dbSourceClass.TableIdentity;
+
+		var rowIdentity = new GdbRowIdentity(row.GetObjectID(), tableIdentity);
+
+		return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), rowIdentity, status);
 	}
 
 	protected override async Task SetStatusCoreAsync(IWorkItem item,
@@ -144,7 +148,7 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		Table table = null;
 		try
 		{
-			Geodatabase geodatabase = OpenGeodatabase(_sdeFilePath);
+			Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(_catalogPath);
 			table = geodatabase.OpenDataset<Table>(sourceClass.Name);
 		}
 		catch (Exception e)
@@ -153,28 +157,6 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 
 		return table;
-	}
-
-	[NotNull]
-	private static Geodatabase OpenGeodatabase(Uri path)
-	{
-		string filePath = path.AbsolutePath;
-
-		if (filePath.EndsWith(".sde"))
-		{
-			// NOTE: This ensures that no stale table instance is opened from no stale workspace instance.
-			var file = new DatabaseConnectionFile(new Uri(filePath));
-			return new Geodatabase(file);
-		}
-
-		if (filePath.EndsWith(".gdb"))
-		{
-			var fgdbPath =
-				new FileGeodatabaseConnectionPath(new Uri(filePath, UriKind.Absolute));
-			return new Geodatabase(fgdbPath);
-		}
-
-		throw new ArgumentOutOfRangeException($"Unknown PATH from {path}");
 	}
 
 	private static string GetOperationDescription(IWorkItem item)

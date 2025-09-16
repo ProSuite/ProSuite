@@ -17,6 +17,24 @@ public interface IWorkItemRepository
 
 	IWorkItemStateRepository WorkItemStateRepository { get; }
 
+	/// <summary>
+	/// The spatial reference of the work items, or null if the source classes do not have
+	/// a spatial reference.
+	/// </summary>
+	SpatialReference SpatialReference { get; }
+
+	/// <summary>
+	/// The area of interest for the work items, or null if no area of interest is defined.
+	/// Source features are filtered by this geometry if it is set.
+	/// </summary>
+	[CanBeNull]
+	Geometry AreaOfInterest { get; set; }
+
+	/// <summary>
+	/// The extent of all work items, or null if the extent has not been computed yet.
+	/// </summary>
+	Envelope Extent { get; set; }
+
 	long Count();
 
 	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter);
@@ -29,7 +47,7 @@ public interface IWorkItemRepository
 	                                                        QueryFilter filter,
 	                                                        WorkItemStatus? statusFilter,
 	                                                        bool excludeGeometry = false);
-	
+
 	void Commit();
 
 	void SetCurrentIndex(int currentIndex);
@@ -56,7 +74,7 @@ public interface IWorkItemRepository
 
 	bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema);
 
-	Row GetSourceRow([NotNull] ISourceClass sourceClass, long oid);
+	Row GetSourceRow([NotNull] ISourceClass sourceClass, long oid, bool recycle = true);
 
 	long GetNextOid();
 

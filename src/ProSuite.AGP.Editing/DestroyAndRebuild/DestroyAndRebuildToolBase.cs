@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -19,7 +20,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
@@ -27,14 +27,25 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected DestroyAndRebuildToolBase()
+	{
+		FireSketchEvents = true;
+	}
+
 	private DestroyAndRebuildFeedback _feedback;
+
+	protected virtual bool UseOldSymbolization => true;
+
+	private GeometryType _currentFeatureGeometryType;
 
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this);
+		return MapUtils.IsStereoMapView(ActiveMapView)
+			       ? null
+			       : new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
@@ -48,14 +59,14 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return SketchGeometryType.Rectangle;
 	}
 
+	protected override SketchGeometryType GetEditSketchGeometryType()
+	{
+		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
+	}
+
 	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
-		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.
-		// Set it on tool activate. In ctor is not enough.
-		CompleteSketchOnMouseUp = true;
-		GeomIsSimpleAsFeature = false;
-
-		_feedback = new DestroyAndRebuildFeedback();
+		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization);
 
 		return base.OnToolActivateCoreAsync(hasMapViewChanged);
 	}
@@ -66,13 +77,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		_feedback = null;
 
 		return base.OnToolDeactivateCoreAsync(hasMapViewChanged);
-	}
-
-	protected override async Task OnSelectionPhaseStartedAsync()
-	{
-		await base.OnSelectionPhaseStartedAsync();
-
-		await QueuedTask.Run(async () => { await ActiveMapView.ClearSketchAsync(); });
 	}
 
 	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
@@ -86,37 +90,23 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return await base.OnMapSelectionChangedCoreAsync(args);
 	}
 
-	protected override async Task HandleEscapeAsync()
-	{
-		var task = QueuedTask.Run(
-			() =>
-			{
-				SelectionUtils.ClearSelection(ActiveMapView?.Map);
-
-				_feedback.ClearSelection();
-			});
-		await ViewUtils.TryAsync(task, _msg);
-	}
-
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
-		Assert.ArgumentCondition(selectedFeatures.Count == 1, "selection count has to be 1");
-
-		Feature feature = selectedFeatures.FirstOrDefault();
-
-		// todo daro: assert instead?
-		if (feature == null)
+		if (selectedFeatures.Count is 0 or > 1)
 		{
-			_msg.Debug("no selection");
+			_msg.DebugFormat("Invalid feature count for D&R: {0}", selectedFeatures.Count);
 			_feedback.ClearSelection();
 			return;
 		}
 
+		Feature feature = selectedFeatures.Single();
+
+		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
+
 		_feedback?.UpdateSelection(selectedFeatures);
 
-		_msg.Info(
-			$"Destroy and rebuild feature {GdbObjectUtils.GetDisplayValue(feature, feature.GetTable().GetName())}");
+		_msg.Info($"Rebuild the geometry for {GdbObjectUtils.GetDisplayValue(feature)}");
 
 		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}

@@ -94,7 +94,7 @@ namespace ProSuite.AGP.WorkList
 				if (_rowCache.CanContain(table))
 				{
 					canContain = true;
-					_msg.IncrementIndentation($"{table.GetName()} is contained in row cache");
+					_msg.Debug($"{table.GetName()} is contained in row cache");
 				}
 				else
 				{
@@ -130,7 +130,8 @@ namespace ProSuite.AGP.WorkList
 
 			if (fullTableInvalidations.Count > 0)
 			{
-				_msg.Warn($"Invalidate all members: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
+				_msg.Info(
+					$"Re-reading tables: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
 				_rowCache.Invalidate(fullTableInvalidations);
 			}
 

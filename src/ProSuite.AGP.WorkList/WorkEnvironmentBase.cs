@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
@@ -35,9 +36,11 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		protected string UniqueName { get; set; }
 
+		public bool AllowBackgroundLoading { get; set; }
+
 		protected virtual Geometry GetAreaOfInterest()
 		{
-			return MapView.Active.Extent;
+			return null;
 		}
 
 		[ItemCanBeNull]
@@ -89,33 +92,49 @@ namespace ProSuite.AGP.WorkList
 			if (! await TryPrepareSchemaCoreAsync())
 			{
 				// null work list
+				_msg.WarnFormat("Work list schema preparation failed for {0}", uniqueName);
 				return await Task.FromResult(default(IWorkList));
 			}
 
 			var watch = Stopwatch.StartNew();
 
+			string displayName = Path.GetFileNameWithoutExtension(workListFile);
+
 			IWorkItemStateRepository stateRepository =
-				CreateStateRepositoryCore(workListFile, uniqueName);
+				CreateStateRepositoryCore(workListFile, uniqueName, displayName);
+
+			stateRepository.LoadAllStates();
 
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
 			                     workListFile);
 
 			IWorkItemRepository itemRepository =
-				await CreateItemRepositoryCoreAsync(stateRepository);
+				await QueuedTask.Run(async () =>
+					                     await CreateItemRepositoryCoreAsync(stateRepository));
 
 			if (itemRepository == null)
 			{
 				return await Task.FromResult<IWorkList>(null);
 			}
 
-			string displayName = Path.GetFileNameWithoutExtension(workListFile);
-			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
-			Assert.NotNull(result);
+			IWorkList result =
+				Assert.NotNull(CreateWorkListCore(itemRepository, uniqueName, displayName));
 
 			_msg.Debug($"Created {WorkListUtils.Format(result)}");
 
-			WorkListUtils.LoadItemsInBackground(result);
-			WorkListUtils.CountItemsInBackground(result);
+			ConfigureWorkList(result);
+
+			_msg.Debug($"Configured {WorkListUtils.Format(result)}. Start loading items...");
+
+			if (AllowBackgroundLoading)
+			{
+				WorkListUtils.LoadItemsInBackground(result);
+				WorkListUtils.CountItemsInBackground(result);
+			}
+			else
+			{
+				await QueuedTask.Run(() => { result.LoadItems(); });
+			}
 
 			return result;
 		}
@@ -125,6 +144,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			return null;
 		}
+
+		protected virtual void ConfigureWorkList(IWorkList workList) { }
 
 		/// <summary>
 		/// Loads the work list layer, containing the navigable items based on the plugin
@@ -191,7 +212,7 @@ namespace ProSuite.AGP.WorkList
 		                                                [NotNull] string displayName);
 
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
-			string path, string workListName);
+			string path, string workListName, string displayName);
 
 		[ItemCanBeNull]
 		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(

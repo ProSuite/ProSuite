@@ -6,7 +6,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.Selection
 {
@@ -53,14 +52,9 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override async Task HandleEscapeAsync()
 		{
-			Task task = QueuedTask.Run(async () =>
-			{
-				ClearSelection();
+			await ClearSelectionAsync();
 
-				await StartSelectionPhaseAsync();
-			});
-
-			await ViewUtils.TryAsync(task, _msg);
+			await StartSelectionPhaseAsync();
 		}
 
 		protected override void LogUsingCurrentSelection() { }

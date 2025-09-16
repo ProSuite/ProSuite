@@ -113,20 +113,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
-			Task task = QueuedTask.Run(async () =>
+			if (IsInSubcurveSelectionPhase())
 			{
-				if (IsInSubcurveSelectionPhase())
-				{
-					ResetDerivedGeometries();
-				}
-				else
-				{
-					ClearSelection();
-					await StartSelectionPhaseAsync();
-				}
-			});
-
-			await ViewUtils.TryAsync(task, _msg);
+				ResetDerivedGeometries();
+			}
+			else
+			{
+				await ClearSelectionAsync();
+				await StartSelectionPhaseAsync();
+			}
 		}
 
 		protected override void OnToolActivatingCore()
@@ -190,6 +185,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override Task OnSelectionPhaseStartedAsync()
 		{
 			SelectionCursors = InitialSelectionCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 			return base.OnSelectionPhaseStartedAsync();
 		}
 
@@ -203,14 +199,19 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-				Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
-				IList<Feature> applicableSelection =
-					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
+				await QueuedTask.Run(
+					() =>
+					{
+						// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+						Dictionary<MapMember, List<long>> selectionByLayer =
+							args.Selection.ToDictionary();
+						IList<Feature> applicableSelection =
+							GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
-				using var source = GetProgressorSource();
-				var progressor = source?.Progressor;
-				RefreshExistingChangeAlongCurves(applicableSelection, progressor);
+						using var source = GetProgressorSource();
+						var progressor = source?.Progressor;
+						RefreshExistingChangeAlongCurves(applicableSelection, progressor);
+					});
 			}
 
 			return true;
@@ -303,7 +304,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		protected override async Task ShiftPressedCoreAsync()
+		protected override async Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{

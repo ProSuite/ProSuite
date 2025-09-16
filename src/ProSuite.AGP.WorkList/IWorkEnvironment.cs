@@ -28,4 +28,10 @@ public interface IWorkEnvironment
 	string GetDisplayName();
 
 	bool WorkListFileExistsInProjectFolder(out string worklistFilePath);
+
+	/// <summary>
+	/// Indication whether this work environment supports loading the work list in the background
+	/// when the map is opened.
+	/// </summary>
+	bool AllowBackgroundLoading { get; }
 }

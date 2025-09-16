@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,12 +21,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 		// TODO: (daro) create different Environments for IssueWorkList and ErrorWorkList and...
 		protected IssueWorkListEnvironmentBase(
-			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
-			: base(workListItemDatastore) { }
-
-		// TODO: ...drop this ctor.
-		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
-			: base(new FileGdbIssueWorkListItemDatastore(path)) { }
+			[NotNull] IWorkListItemDatastore workListItemDatastore) :
+			base(workListItemDatastore) { }
 
 		protected override string FileSuffix => ".iwl";
 
@@ -150,11 +147,12 @@ namespace ProSuite.AGP.QA.WorkList
 
 				var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
 				result = new DbStatusWorkItemRepository(sourceClasses, stateRepository,
-				                                        geodatabase.GetPath());
+				                                        WorkspaceUtils.GetCatalogPath(geodatabase));
 			}
 			catch (Exception ex)
 			{
 				_msg.Debug(ex.Message, ex);
+				throw;
 			}
 			finally
 			{
