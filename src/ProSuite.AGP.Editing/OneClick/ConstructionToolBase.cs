@@ -429,6 +429,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			if (ShiftPressedToSelect)
+			{
+				// Intermittent selection phase: Selection change should be ignored
+				// -> it will be evaluated in ShiftReleasedCoreAsync()
+				return false;
+			}
+
 			// Short-cut to reduce unnecessary (and very frequent) selection evaluations
 			// despite the selection not having changed (and not even being present).
 			if (args.Selection.IsEmpty && IsInSketchPhase)
