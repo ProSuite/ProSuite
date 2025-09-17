@@ -1,11 +1,9 @@
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ESRI.ArcGIS.ItemIndex;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.ProjectItem
 {
-	[UsedImplicitly]
 	public class SelectionWorkListProjectItemBase : WorkListProjectItem
 	{
 		public SelectionWorkListProjectItemBase() { }

@@ -2,11 +2,9 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using ESRI.ArcGIS.ItemIndex;
 using ProSuite.AGP.WorkList.ProjectItem;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.QA.Worklist.ProjectItem
 {
-	[UsedImplicitly]
 	public class IssueWorkListProjectItemBase : WorkListProjectItem
 	{
 		public IssueWorkListProjectItemBase() { }
