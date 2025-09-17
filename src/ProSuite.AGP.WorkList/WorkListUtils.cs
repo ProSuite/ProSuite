@@ -678,7 +678,7 @@ namespace ProSuite.AGP.WorkList
 				IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
 
 				foreach (IWorkList workList in
-				         WorkListUtils.GetLoadedWorklists(WorkListRegistry.Instance, layers))
+				         GetLoadedWorklists(WorkListRegistry.Instance, layers))
 				{
 					WorkListRegistry.Instance.Remove(workList);
 
@@ -688,13 +688,84 @@ namespace ProSuite.AGP.WorkList
 					// Now also remove the associated layers:
 					//environment.RemoveAssociatedLayers();
 
-					await WorkListUtils.RemoveWorkListLayersAsync(workList);
+					await RemoveWorkListLayersAsync(workList);
 				}
 			}
 			catch (Exception ex)
 			{
 				_msg.Debug(ex.Message, ex);
 			}
+		}
+
+		public static List<Tuple<Layer, CIMStandardDataConnection>> ToLayerConnectionTuples(
+			[NotNull] IEnumerable<Layer> selectedWorkListLayers)
+		{
+			return selectedWorkListLayers.Select(layer =>
+				                                     new Tuple<Layer, CIMStandardDataConnection>(
+					                                     layer, GetWorkListDataConnection(layer)))
+			                             .ToList();
+		}
+
+		private static CIMStandardDataConnection GetWorkListDataConnection(Layer layer)
+		{
+			if (layer is GroupLayer groupLayer)
+			{
+				layer = groupLayer.Layers.FirstOrDefault(IsWorkListLayer);
+			}
+
+			return layer?.GetDataConnection() as CIMStandardDataConnection;
+		}
+
+		public static bool IsWorkListLayer(Layer layer)
+		{
+			bool isWorkListLayer = IsWorkListConnection(
+				layer.GetDataConnection(), out _);
+
+			if (isWorkListLayer)
+			{
+				return true;
+			}
+
+			if (layer is GroupLayer groupLayer)
+			{
+				if (groupLayer.Layers.Count(IsWorkListLayer) == 1)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public static bool IsWorkListConnection(CIMDataConnection dataConnection,
+		                                        out string workListFile)
+		{
+			workListFile = null;
+
+			if (dataConnection is not CIMStandardDataConnection standardDataConnection)
+			{
+				return false;
+			}
+
+			if (standardDataConnection.WorkspaceFactory != WorkspaceFactory.Custom)
+			{
+				return false;
+			}
+
+			var connectionStringBuilder =
+				new ConnectionStringBuilder(standardDataConnection.WorkspaceConnectionString);
+
+			if (! connectionStringBuilder.TryGetValue("IDENTIFIER", out string identifierValue))
+			{
+				return false;
+			}
+
+			if (identifierValue != "ProSuite_WorkListDatasource")
+			{
+				return false;
+			}
+
+			return connectionStringBuilder.TryGetValue("DATABASE", out workListFile);
 		}
 	}
 }
