@@ -9,6 +9,11 @@ namespace ProSuite.Commons.AGP.Picker
 		[NotNull]
 		string DisplayValue { get; }
 
+		/// <summary>
+		/// Value indicating whether this item should be highlighted, i.e. shown with a bold font.
+		/// </summary>
+		bool Highlight { get; }
+
 		bool Selected { get; set; }
 
 		[NotNull]

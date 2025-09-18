@@ -12,7 +12,7 @@ namespace ProSuite.AGP.Editing;
 
 public class SketchDrawer
 {
-	[CanBeNull] private List<IDisposable> _overlays;
+	[NotNull] private readonly List<IDisposable> _overlays = new List<IDisposable>(3);
 
 	private CIMLineSymbol _lineSymbol;
 	private CIMPolygonSymbol _polygonSymbol;
@@ -52,9 +52,8 @@ public class SketchDrawer
 			return;
 		}
 
-		// add two extra for start (or end) point and sketch
-		int capacity = GeometryUtils.GetPointCount(sketchGeometry) + 2;
-		_overlays = new List<IDisposable>(capacity);
+		// Consider updating existing geometries instead clearing
+		ClearSketch();
 
 		CIMSymbolReference regularUnselectedSymbRef =
 			RegularUnselectedSymbol.MakeSymbolReference();
@@ -109,8 +108,6 @@ public class SketchDrawer
 
 	public void ClearSketch()
 	{
-		if (_overlays == null) return;
-
 		foreach (IDisposable overlay in _overlays)
 		{
 			overlay.Dispose();

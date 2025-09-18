@@ -90,7 +90,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		}
 
 		protected override SelectionCursors FirstPhaseCursors { get; } =
-			SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay);
+			SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay,
+			                                    "Advanced Reshape Arrow");
 
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
 

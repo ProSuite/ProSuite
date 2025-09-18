@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Analyst3D;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing.Templates;
@@ -14,11 +18,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -65,7 +64,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual SelectionCursors FirstPhaseCursors => SelectionCursors;
 
 		protected SelectionCursors SketchCursors { get; set; } =
-			SelectionCursors.CreateFromCursor(Resources.EditSketchCrosshair);
+			SelectionCursors.CreateFromCursor(Resources.EditSketchCrosshair, "Sketch");
 
 		/// <summary>
 		/// Whether the geometry sketch (as opposed to the selection sketch) is currently active
@@ -188,10 +187,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+		{
+			await RememberSketchAsync();
+
+			await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
+		}
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			// TODO: Move as much as possible to OnToolDeactivateCoreAsync
 			_intermediateSketchStates?.Deactivate();
-			RememberSketch();
+
 			IsInSketchPhase = false;
 
 			_symbolizedSketch?.Dispose();
@@ -421,6 +428,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			if (ShiftPressedToSelect)
+			{
+				// Intermittent selection phase: Selection change should be ignored
+				// -> it will be evaluated in ShiftReleasedCoreAsync()
+				return false;
+			}
+
 			// Short-cut to reduce unnecessary (and very frequent) selection evaluations
 			// despite the selection not having changed (and not even being present).
 			if (args.Selection.IsEmpty && IsInSketchPhase)
@@ -478,9 +492,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					IsCompletingEditSketch = true;
 
-					RememberSketch(sketchGeometry);
+					await RememberSketchAsync(sketchGeometry);
 
-				_lastLoggedVertex = null;
+					_lastLoggedVertex = null;
 
 					return await OnEditSketchCompleteCoreAsync(
 						       sketchGeometry, currentTemplate, activeView, progressor);
@@ -643,7 +657,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected async Task ResetSketchAsync()
 		{
-			RememberSketch();
+			await RememberSketchAsync();
 
 			await ClearSketchAsync();
 
@@ -656,14 +670,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			_lastLoggedVertex = null;
 		}
 
-		protected void RememberSketch(Geometry knownSketch = null)
+		protected async Task RememberSketchAsync(Geometry knownSketch = null)
 		{
 			if (! SupportRestoreLastSketch)
 			{
 				return;
 			}
 
-			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
+			var sketch = knownSketch ?? await GetCurrentSketchAsync();
 
 			if (sketch is { IsEmpty: false })
 			{
@@ -727,7 +741,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
-
 			if (! sketch.HasZ || GetSketchType() == SketchGeometryType.Point)
 			{
 				return;
@@ -743,7 +756,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				currentLastIndex = sketch.PointCount - 1;
 			}
 
-			_msg.DebugFormat("Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]", sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
+			_msg.DebugFormat(
+				"Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]",
+				sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
 			if (currentLastIndex <= _lastLoggedVertexIndex)
 			{
 				_lastLoggedVertexIndex = currentLastIndex;

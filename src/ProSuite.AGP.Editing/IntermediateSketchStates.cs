@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
@@ -23,14 +20,18 @@ public class IntermediateSketchStates
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly Stack<Geometry> _sketches = new();
-	private readonly SketchLatch _latch = new();
-	[NotNull] private readonly SketchDrawer _sketchDrawer = new SketchDrawer();
+	[NotNull] private readonly SketchStack _sketchStack = new();
+	[NotNull] private readonly SketchDrawer _sketchDrawer = new();
 	private bool _active;
 	[CanBeNull] private SubscriptionToken _onSketchModifiedToken;
 	[CanBeNull] private SubscriptionToken _onSketchCompletedToken;
 
 	public bool IsInIntermittentSelectionPhase { get; private set; }
+
+	/// <summary>
+	/// Gets the underlying sketch states manager for direct access to sketch operations.
+	/// </summary>
+	public SketchStack SketchStack => _sketchStack;
 
 	public async Task ActivateAsync()
 	{
@@ -42,7 +43,7 @@ public class IntermediateSketchStates
 
 		Geometry sketch = await MapView.Active.GetCurrentSketchAsync();
 
-		TryPush(sketch);
+		_sketchStack.TryPush(sketch);
 	}
 
 	/// <summary>
@@ -82,13 +83,7 @@ public class IntermediateSketchStates
 
 			IsInIntermittentSelectionPhase = false;
 
-			_msg.VerboseDebug(() => $"Replay: {_sketches.Count} sketches");
-
-			foreach (Geometry sketch in _sketches.Reverse())
-			{
-				_latch.Increment();
-				await MapView.Active.SetCurrentSketchAsync(sketch);
-			}
+			await _sketchStack.ReplaySketchesAsync();
 		}
 		catch (Exception e)
 		{
@@ -99,12 +94,11 @@ public class IntermediateSketchStates
 	}
 
 	/// <summary>
-	/// Resets the recorded sketch states and aborts the intermittent selection phase, in case ist is active.
+	/// Resets the recorded sketch states and aborts the intermittent selection phase, in case it is active.
 	/// </summary>
 	public void ResetSketchStates()
 	{
-		_sketches.Clear();
-		_latch.Reset();
+		_sketchStack.Clear();
 
 		IsInIntermittentSelectionPhase = false;
 
@@ -123,54 +117,27 @@ public class IntermediateSketchStates
 		ResetSketchStates();
 	}
 
-	private void TryPush(Geometry sketch, [CallerMemberName] string caller = null)
-	{
-		if (sketch is not { IsEmpty: false })
-		{
-			return;
-		}
-
-		_sketches.Push(sketch);
-		_msg.VerboseDebug(() => $"{caller}: {_sketches.Count} sketches");
-	}
-
 	private void OnSketchModified(SketchModifiedEventArgs args)
 	{
-		if (IsInIntermittentSelectionPhase)
-		{
-			// Do not record sketch states for the selection sketch!
-			return;
-		}
-
 		try
 		{
-			_msg.VerboseDebug(() => $"{args.SketchOperationType}");
+			if (IsInIntermittentSelectionPhase)
+			{
+				// Do not record sketch states for the selection sketch!
+				return;
+			}
+
+			_msg.VerboseDebug(() => $"OnSketchModified: {args.SketchOperationType}");
 
 			Assert.True(_active, "not recording");
 
-			if (_latch.IsLatched)
-			{
-				_latch.Decrement();
-				Assert.True(_latch.Count >= 0, "Sketch stack isn't in sync with latch");
-				return;
-			}
+			// Let SketchStack handle all the complexity
+			bool wasRecorded =
+				_sketchStack.ProcessSketchModification(args.IsUndo, args.CurrentSketch);
 
-			if (args.IsUndo && _sketches.Count != 0)
-			{
-				Assert.NotNull(_sketches.Pop());
-				_msg.VerboseDebug(
-					() => $"{nameof(OnSketchModified)} pop: {_sketches.Count} sketches");
-
-				if (_sketches.Count == 1)
-				{
-					_sketches.Clear();
-					_msg.VerboseDebug(() => "clear sketches");
-				}
-
-				return;
-			}
-
-			TryPush(args.CurrentSketch);
+			_msg.VerboseDebug(() => wasRecorded
+				                        ? "Sketch operation recorded"
+				                        : "Sketch operation ignored/handled");
 		}
 		catch (Exception e)
 		{
@@ -180,17 +147,23 @@ public class IntermediateSketchStates
 
 	private void OnSketchCompleted(SketchCompletedEventArgs args)
 	{
-		Assert.True(_active, "not recording");
-
-		if (IsInIntermittentSelectionPhase)
+		try
 		{
-			return;
+			Assert.True(_active, "not recording");
+
+			if (IsInIntermittentSelectionPhase)
+			{
+				return;
+			}
+
+			_msg.VerboseDebug(() => $"{nameof(OnSketchCompleted)}: {_sketchStack.Count} sketches");
+
+			_sketchStack.Clear();
 		}
-
-		_msg.VerboseDebug(() => $"{nameof(OnSketchCompleted)}: {_sketches.Count} sketches");
-
-		_sketches.Clear();
-		_latch.Reset();
+		catch (Exception e)
+		{
+			_msg.Error($"Error handling sketch completed: {e.Message}", e);
+		}
 	}
 
 	private void WireEvents()
@@ -213,27 +186,5 @@ public class IntermediateSketchStates
 
 		_onSketchModifiedToken = null;
 		_onSketchCompletedToken = null;
-	}
-
-	private class SketchLatch
-	{
-		public int Count { get; private set; }
-
-		public bool IsLatched => Count > 0;
-
-		public void Increment()
-		{
-			Count++;
-		}
-
-		public void Decrement()
-		{
-			Count--;
-		}
-
-		public void Reset()
-		{
-			Count = 0;
-		}
 	}
 }
