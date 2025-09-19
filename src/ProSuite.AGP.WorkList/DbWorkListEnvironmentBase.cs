@@ -63,6 +63,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		AddToMapCore(GetTablesCore(), worklist);
 	}
 
+	// TODO: (daro) move to subclass because of IssueWorkList specific code: Attributes.IssueDescription
 	protected virtual void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
 	{
 		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
@@ -121,7 +122,8 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 				// NOTE: SetDisplyField is slow. In future the pr-prepared layers are stored and used.
 				//       They are not going to be created by code.
-				SetDisplayField(featureLayer, attributeReader.GetName(Attributes.IssueDescription));
+				string name = attributeReader.GetName(Attributes.IssueDescription);
+				LayerUtils.SetDisplayExpression(featureLayer, Assert.NotNull(name));
 
 				continue;
 			}
@@ -205,14 +207,5 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 	protected virtual IEnumerable<Table> GetTablesCore()
 	{
 		return WorkListItemDatastore.GetTables();
-	}
-
-	private static void SetDisplayField(FeatureLayer layer, string name)
-	{
-		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
-
-		definition.FeatureTable.DisplayField = name;
-
-		layer.SetDefinition(definition);
 	}
 }

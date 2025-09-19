@@ -876,5 +876,20 @@ namespace ProSuite.Commons.AGP.Carto
 				}
 			}
 		}
+
+		public static void SetDisplayExpression([NotNull] BasicFeatureLayer layer,
+		                                        [NotNull] string expression)
+		{
+			var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
+
+			var expressionInfo = new CIMExpressionInfo
+			                     {
+				                     Expression = expression
+			                     };
+
+			definition.FeatureTable.DisplayExpressionInfo = expressionInfo;
+
+			layer.SetDefinition(definition);
+		}
 	}
 }
