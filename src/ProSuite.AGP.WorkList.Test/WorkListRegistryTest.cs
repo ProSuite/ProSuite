@@ -204,6 +204,7 @@ public class WorkListMock : IWorkList
 	public string Name { get; set; }
 	public string DisplayName { get; }
 
+	public bool NavigateInAllMapViews { get; set; }
 	public double MinimumScaleDenominator { get; set; }
 	public bool CacheBufferedItemGeometries { get; set; }
 	public bool AlwaysUseDraftMode { get; set; }
