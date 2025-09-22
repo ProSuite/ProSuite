@@ -806,10 +806,12 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="expansionFactor">The expansion factor to apply to the extent. An expansion
 		/// factor of 1.1 enlarges the extent by 10% in both x and y</param>
 		/// <param name="minimumScale">The minimum scale denominator.</param>
+		/// <param name="duration"></param>
 		public static async Task<bool> ZoomToAsync([NotNull] MapView mapView,
 		                                           [NotNull] Envelope extent,
 		                                           double expansionFactor,
-		                                           double minimumScale)
+		                                           double minimumScale,
+		                                           TimeSpan? duration = null)
 		{
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
 			Assert.ArgumentNotNull(extent, nameof(extent));
@@ -831,7 +833,7 @@ namespace ProSuite.Commons.AGP.Carto
 			Envelope zoomExtent = GetZoomExtent(newExtentMap, currentExtent,
 			                                    currentScale, minimumScale);
 
-			await mapView.ZoomToAsync(zoomExtent);
+			await mapView.ZoomToAsync(zoomExtent, duration);
 
 			return true;
 		}
@@ -1011,10 +1013,10 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,
-		                                      [NotNull] Envelope currentExtent,
-		                                      double currentScale,
-		                                      double minimumScale)
+		public static Envelope GetZoomExtent([NotNull] Envelope newExtent,
+		                                     [NotNull] Envelope currentExtent,
+		                                     double currentScale,
+		                                     double minimumScale)
 		{
 			Assert.ArgumentNotNull(newExtent, nameof(newExtent));
 			Assert.ArgumentNotNull(currentExtent, nameof(currentExtent));
