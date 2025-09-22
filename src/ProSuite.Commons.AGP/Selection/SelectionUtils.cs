@@ -362,6 +362,50 @@ namespace ProSuite.Commons.AGP.Selection
 			return GetSelection(selectionChangedArgs.Selection);
 		}
 
+		[NotNull]
+		public static Dictionary<Table, List<long>> GetSelectionByTable(
+			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMember)
+		{
+			var result = new Dictionary<Table, List<long>>(oidsByMapMember.Count);
+
+			var tableByHandle = new Dictionary<IntPtr, Table>(oidsByMapMember.Count);
+
+			var oidsByHandle = new Dictionary<IntPtr, List<long>>();
+
+			foreach (var pair in oidsByMapMember)
+			{
+				MapMember mapMember = pair.Key;
+				IReadOnlyCollection<long> oids = pair.Value;
+
+				if (mapMember is not FeatureLayer featureLayer)
+				{
+					continue;
+				}
+
+				Table table = featureLayer.GetTable();
+
+				if (oidsByHandle.ContainsKey(table.Handle))
+				{
+					oidsByHandle[table.Handle].AddRange(oids);
+				}
+				else
+				{
+					tableByHandle.Add(table.Handle, table);
+					oidsByHandle.Add(table.Handle, oids.ToList());
+				}
+			}
+
+			foreach ((IntPtr handle, Table table) in tableByHandle)
+			{
+				if (oidsByHandle.TryGetValue(handle, out List<long> oids))
+				{
+					result.Add(table, oids.Distinct().ToList());
+				}
+			}
+
+			return result;
+		}
+
 		public static int GetFeatureCount(
 			[NotNull] IEnumerable<KeyValuePair<MapMember, List<long>>> selection)
 		{

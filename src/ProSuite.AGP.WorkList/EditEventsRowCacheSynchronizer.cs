@@ -149,9 +149,9 @@ namespace ProSuite.AGP.WorkList
 			var deletesByLayer = SelectionUtils.GetSelection(args.Deletes);
 			var modsByLayer = SelectionUtils.GetSelection(args.Modifies);
 
-			Dictionary<Table, List<long>> creates = GetOidsByTable(createsByLayer);
-			Dictionary<Table, List<long>> deletes = GetOidsByTable(deletesByLayer);
-			Dictionary<Table, List<long>> modifies = GetOidsByTable(modsByLayer);
+			Dictionary<Table, List<long>> creates = SelectionUtils.GetSelectionByTable(createsByLayer);
+			Dictionary<Table, List<long>> deletes = SelectionUtils.GetSelectionByTable(deletesByLayer);
+			Dictionary<Table, List<long>> modifies = SelectionUtils.GetSelectionByTable(modsByLayer);
 
 			try
 			{
@@ -173,57 +173,6 @@ namespace ProSuite.AGP.WorkList
 			{
 				table.Dispose();
 			}
-		}
-
-		private Dictionary<Table, List<long>> GetOidsByTable(
-			Dictionary<MapMember, List<long>> oidsByMapMember)
-		{
-			var result = new Dictionary<Table, List<long>>(oidsByMapMember.Count);
-
-			var tableByHandle = new Dictionary<IntPtr, Table>(oidsByMapMember.Count);
-
-			var oidsByHandle = new Dictionary<IntPtr, List<long>>();
-
-			foreach (var pair in oidsByMapMember)
-			{
-				MapMember mapMember = pair.Key;
-				IReadOnlyCollection<long> oids = pair.Value;
-
-				if (! (mapMember is FeatureLayer featureLayer))
-				{
-					continue;
-				}
-
-				Table table = featureLayer.GetTable();
-
-				if (! _rowCache.CanContain(table))
-				{
-					continue;
-				}
-
-				if (oidsByHandle.ContainsKey(table.Handle))
-				{
-					oidsByHandle[table.Handle].AddRange(oids);
-				}
-				else
-				{
-					tableByHandle.Add(table.Handle, table);
-					oidsByHandle.Add(table.Handle, oids.ToList());
-				}
-			}
-
-			foreach (KeyValuePair<IntPtr, Table> pair in tableByHandle)
-			{
-				IntPtr handle = pair.Key;
-				Table table = pair.Value;
-
-				if (oidsByHandle.TryGetValue(handle, out List<long> oids))
-				{
-					result.Add(table, oids.Distinct().ToList());
-				}
-			}
-
-			return result;
 		}
 
 		private void UnwireEvents()
