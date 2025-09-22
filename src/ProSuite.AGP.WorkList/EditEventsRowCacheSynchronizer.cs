@@ -107,32 +107,24 @@ namespace ProSuite.AGP.WorkList
 				return;
 			}
 
-			var fullTableInvalidations = new List<Table>();
-
-			// TODO: Try prevent too many calls
-			foreach (MapMember mapMember in args.InvalidateAllMembers)
+			// Invalidated is true for args.CompletionType == Discard. But that handled in the switch above.
+			// Some edits on the layer cause the InvalidateAllMembers to contain the layer
+			// e.g. FeatureLayer.SetCacheOptions or FeatureLayer.SetDefinitionQuery().
+			// In these cases args.CompletionType is Operation but args.Invalidated is false.
+			if (args.Invalidated)
 			{
-				if (mapMember is BasicFeatureLayer featureLayer)
+				var fullTableInvalidations = args.InvalidateAllMembers
+				                                 .OfType<BasicFeatureLayer>()
+				                                 .Select(lyr => lyr.GetTable())
+				                                 .Where(table => _rowCache.CanContain(table))
+				                                 .ToList();
+
+				if (fullTableInvalidations.Count > 0)
 				{
-					// Test if the layer is still in the map?
-					Table table = featureLayer.GetTable();
-
-					if (_rowCache.CanContain(table))
-					{
-						fullTableInvalidations.Add(table);
-					}
+					_msg.Info(
+						$"Re-reading tables: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
+					_rowCache.Invalidate(fullTableInvalidations);
 				}
-			}
-
-			fullTableInvalidations = args.InvalidateAllMembers.OfType<BasicFeatureLayer>()
-			                             .Select(lyr => lyr.GetTable())
-			                             .Where(table => _rowCache.CanContain(table)).ToList();
-
-			if (fullTableInvalidations.Count > 0)
-			{
-				_msg.Info(
-					$"Re-reading tables: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
-				_rowCache.Invalidate(fullTableInvalidations);
 			}
 
 			// Note This event is fired (to) many times!
