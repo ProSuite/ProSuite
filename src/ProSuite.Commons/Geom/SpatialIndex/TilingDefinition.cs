@@ -107,7 +107,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		/// <summary>
 		/// Efficiently calculates the number of tiles that intersect with the specified extent
-		/// without enumerating all tile indices. This is calculated as (tile-x difference + 1) * (tile-y difference + 1).
+		/// without enumerating all tile indices.
 		/// </summary>
 		/// <param name="xMin">The minimum X coordinate of the extent.</param>
 		/// <param name="yMin">The minimum Y coordinate of the extent.</param>
@@ -121,6 +121,35 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			int tileXDifference = maxIndex.East - minIndex.East + 1;
 			int tileYDifference = maxIndex.North - minIndex.North + 1;
+
+			return tileXDifference * tileYDifference;
+		}
+
+		/// <summary>
+		/// Efficiently calculates the number of tiles that intersect with the specified extent
+		/// without enumerating all tile indices.
+		/// </summary>
+		/// <param name="xMin">The minimum X coordinate of the extent.</param>
+		/// <param name="yMin">The minimum Y coordinate of the extent.</param>
+		/// <param name="xMax">The maximum X coordinate of the extent.</param>
+		/// <param name="yMax">The maximum Y coordinate of the extent.</param>
+		/// <param name="minimumIndex">The minimum tile index where data is expected.</param>
+		/// <param name="maximumIndex">The maximum tile index where data is expected.</param>
+		/// <returns>The number of intersecting tiles.</returns>
+		public long GetIntersectingTileCount(double xMin, double yMin, double xMax, double yMax,
+		                                     TileIndex minimumIndex, TileIndex maximumIndex)
+		{
+			TileIndex minExtentIndex = GetTileIndexAt(xMin, yMin);
+			TileIndex maxExtentIndex = GetTileIndexAt(xMax, yMax);
+
+			int minEast = Math.Max(minExtentIndex.East, minimumIndex.East);
+			int minNorth = Math.Max(minExtentIndex.North, minimumIndex.North);
+
+			int maxEast = Math.Min(maxExtentIndex.East, maximumIndex.East);
+			int maxNorth = Math.Min(maxExtentIndex.North, maximumIndex.North);
+
+			int tileXDifference = maxEast - minEast + 1;
+			int tileYDifference = maxNorth - minNorth + 1;
 
 			return tileXDifference * tileYDifference;
 		}

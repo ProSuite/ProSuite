@@ -55,7 +55,7 @@ namespace ProSuite.Commons.Test.Geom.SpatialIndex
 			// of total entries in the _tiles dictionary of the SpatialHashSearcher.
 
 			// Create a small number of items in a few tiles
-			var points = new[]
+			var points = new List<Pnt3D>
 			             {
 				             new Pnt3D(1200000, 2600000, 10), // tile (0, 0)
 				             new Pnt3D(1200001, 2600000, 20), // tile (0, 0) 
@@ -72,21 +72,60 @@ namespace ProSuite.Commons.Test.Geom.SpatialIndex
 
 			// Now search a huge area that would intersect many more tiles than we actually have
 			// This should trigger the optimization to iterate over all tiles instead of the search tiles
-			// Without the optimization this takes almost 10s!
+			// Without the optimization and without clamping to the data extent this takes almost 10s!
 			var foundPoints = searcher.Search(
-				1200020, 2600020,
-				1300000, 2700000,
-				0.0).ToList();
+				1200020, 2600020, 1300000, 2700000, 0.0).ToList();
 
 			watch.Stop();
 
 			Assert.AreEqual(2, foundPoints.Count);
 
-			Assert.Less(watch.ElapsedMilliseconds, 100);
+			Assert.Less(watch.ElapsedMilliseconds, 10);
 
 			// Verify we got all the expected points
 			var foundCoords = foundPoints.Select(p => new { p.X, p.Y }).OrderBy(p => p.X)
 			                             .ThenBy(p => p.Y).ToList();
+
+			Assert.AreEqual(1200100, foundCoords[0].X);
+			Assert.AreEqual(2600100, foundCoords[0].Y);
+			Assert.AreEqual(1200101, foundCoords[1].X);
+			Assert.AreEqual(2600101, foundCoords[1].Y);
+
+			// Add some points very far away that should not be found (and to make clamping less effective)
+			var pnt4 = new Pnt3D(1300100, 2700100, 70);
+			var pnt5 = new Pnt3D(1300101, 2700101, 80);
+			points.Add(pnt4); // tile (101, 101)
+			points.Add(pnt5); // tile (101, 101)
+
+			searcher.Add(pnt4, pnt4);
+			searcher.Add(pnt5, pnt5);
+
+			watch.Restart();
+
+			foundPoints = searcher.Search(1200020, 2600020, 1300000, 2700000, 0.0).ToList();
+
+			Assert.AreEqual(2, foundPoints.Count);
+
+			Assert.Less(watch.ElapsedMilliseconds, 10);
+
+			foundCoords = foundPoints.Select(p => new { p.X, p.Y }).OrderBy(p => p.X)
+			                         .ThenBy(p => p.Y).ToList();
+
+			Assert.AreEqual(1200100, foundCoords[0].X);
+			Assert.AreEqual(2600100, foundCoords[0].Y);
+			Assert.AreEqual(1200101, foundCoords[1].X);
+			Assert.AreEqual(2600101, foundCoords[1].Y);
+
+			// Now search a smaller area that still contains the same points (to use the traditional dictionary-based search)
+			watch.Restart();
+			foundPoints = searcher.Search(1200100, 2600100, 1200101, 2600101, 0.0).ToList();
+
+			Assert.AreEqual(2, foundPoints.Count);
+
+			Assert.Less(watch.ElapsedMilliseconds, 10);
+
+			foundCoords = foundPoints.Select(p => new { p.X, p.Y }).OrderBy(p => p.X)
+			                         .ThenBy(p => p.Y).ToList();
 
 			Assert.AreEqual(1200100, foundCoords[0].X);
 			Assert.AreEqual(2600100, foundCoords[0].Y);

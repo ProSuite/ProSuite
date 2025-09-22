@@ -286,9 +286,13 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			HashSet<T> resultList = _foundIdentifiers.Value;
 			resultList.Clear();
 
+			TileIndex dataMinTile = new TileIndex(MinTileEasting, MinTileNorthing);
+			TileIndex dataMaxTile = new TileIndex(MaxTileEasting, MaxTileNorthing);
+
 			// Efficiently calculate the number of tiles that would intersect with the search area
 			long intersectingTileCount =
-				TilingDefinition.GetIntersectingTileCount(xMin, yMin, xMax, yMax);
+				TilingDefinition.GetIntersectingTileCount(xMin, yMin, xMax, yMax,
+				                                          dataMinTile, dataMaxTile);
 
 			// Optimization: if the search area intersects more tiles than we actually have,
 			// it's more efficient to iterate over all existing tiles instead.
@@ -318,8 +322,9 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			else
 			{
 				// Use the normal approach: check the intersecting tiles
+				// make sure to clamp the search area to the actual data areas
 				foreach (TileIndex neighborTileIdx in TilingDefinition.GetIntersectingTiles(
-					         xMin, yMin, xMax, yMax))
+					         xMin, yMin, xMax, yMax, dataMinTile, dataMaxTile))
 				{
 					foreach (T geometryIdentifier in
 					         FindItemsWithinTile(neighborTileIdx, predicate))
