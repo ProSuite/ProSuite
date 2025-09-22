@@ -111,6 +111,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		protected Geometry AreaOfInterest => Repository.AreaOfInterest;
 
+		public bool NavigateInAllMapViews { get; set; }
+
 		public double MinimumScaleDenominator { get; set; }
 
 		public bool AlwaysUseDraftMode { get; set; } = true;
