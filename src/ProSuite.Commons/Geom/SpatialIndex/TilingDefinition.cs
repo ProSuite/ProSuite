@@ -94,6 +94,37 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			return GetAllTilesBetween(minEast, minNorth, maxEast, maxNorth);
 		}
 
+		/// <summary>
+		/// Efficiently calculates the number of tiles that intersect with the specified extent
+		/// without enumerating all tile indices.
+		/// </summary>
+		/// <param name="bounds">The bounds to check for intersection.</param>
+		/// <returns>The number of intersecting tiles.</returns>
+		public int GetIntersectingTileCount(IBoundedXY bounds)
+		{
+			return GetIntersectingTileCount(bounds.XMin, bounds.YMin, bounds.XMax, bounds.YMax);
+		}
+
+		/// <summary>
+		/// Efficiently calculates the number of tiles that intersect with the specified extent
+		/// without enumerating all tile indices. This is calculated as (tile-x difference + 1) * (tile-y difference + 1).
+		/// </summary>
+		/// <param name="xMin">The minimum X coordinate of the extent.</param>
+		/// <param name="yMin">The minimum Y coordinate of the extent.</param>
+		/// <param name="xMax">The maximum X coordinate of the extent.</param>
+		/// <param name="yMax">The maximum Y coordinate of the extent.</param>
+		/// <returns>The number of intersecting tiles.</returns>
+		public int GetIntersectingTileCount(double xMin, double yMin, double xMax, double yMax)
+		{
+			TileIndex minIndex = GetTileIndexAt(xMin, yMin);
+			TileIndex maxIndex = GetTileIndexAt(xMax, yMax);
+
+			int tileXDifference = maxIndex.East - minIndex.East + 1;
+			int tileYDifference = maxIndex.North - minIndex.North + 1;
+
+			return tileXDifference * tileYDifference;
+		}
+
 		public BoundedBox QueryTileBounds(TileIndex forTile)
 		{
 			double xMin;
@@ -101,16 +132,16 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			double xMax;
 			double yMax;
 			GetTileBounds(forTile, OriginX, OriginY, TileWidth, TileHeight,
-						  out xMin, out yMin, out xMax, out yMax);
+			              out xMin, out yMin, out xMax, out yMax);
 			return new BoundedBox(xMin, yMin, xMax, yMax);
 		}
 
 		public void QueryTileBounds(TileIndex forTile,
-									out double xMin, out double yMin,
-									out double xMax, out double yMax)
+		                            out double xMin, out double yMin,
+		                            out double xMax, out double yMax)
 		{
 			GetTileBounds(forTile, OriginX, OriginY, TileWidth, TileHeight,
-						  out xMin, out yMin, out xMax, out yMax);
+			              out xMin, out yMin, out xMax, out yMax);
 		}
 
 		public void QueryTileBounds(TileIndex forTile,
@@ -216,7 +247,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			if (visitedTiles.Contains(neighborTile))
 				return;
 
-			var distance2 = TileUtils.EuclideanTileDistance2(neighborTile, centerTile, TileWidth, TileHeight);
+			var distance2 =
+				TileUtils.EuclideanTileDistance2(neighborTile, centerTile, TileWidth, TileHeight);
 
 			if (distance2 <= maxDistance2)
 			{
