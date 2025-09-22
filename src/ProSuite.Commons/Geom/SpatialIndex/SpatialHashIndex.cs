@@ -287,7 +287,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			resultList.Clear();
 
 			// Efficiently calculate the number of tiles that would intersect with the search area
-			int intersectingTileCount =
+			long intersectingTileCount =
 				TilingDefinition.GetIntersectingTileCount(xMin, yMin, xMax, yMax);
 
 			// Optimization: if the search area intersects more tiles than we actually have,

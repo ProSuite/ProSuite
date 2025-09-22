@@ -100,7 +100,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// </summary>
 		/// <param name="bounds">The bounds to check for intersection.</param>
 		/// <returns>The number of intersecting tiles.</returns>
-		public int GetIntersectingTileCount(IBoundedXY bounds)
+		public long GetIntersectingTileCount(IBoundedXY bounds)
 		{
 			return GetIntersectingTileCount(bounds.XMin, bounds.YMin, bounds.XMax, bounds.YMax);
 		}
@@ -114,7 +114,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// <param name="xMax">The maximum X coordinate of the extent.</param>
 		/// <param name="yMax">The maximum Y coordinate of the extent.</param>
 		/// <returns>The number of intersecting tiles.</returns>
-		public int GetIntersectingTileCount(double xMin, double yMin, double xMax, double yMax)
+		public long GetIntersectingTileCount(double xMin, double yMin, double xMax, double yMax)
 		{
 			TileIndex minIndex = GetTileIndexAt(xMin, yMin);
 			TileIndex maxIndex = GetTileIndexAt(xMax, yMax);
