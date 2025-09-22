@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -80,12 +81,13 @@ public class IssueWorkListEnvironmentMock : IWorkEnvironment
 		return Task.FromResult<IWorkList>(worklist);
 	}
 
-	public void LoadWorkListLayer(IWorkList worklist, string workListDefinitionFilePath)
+	public void LoadWorkListLayer(MapView mapView, IWorkList worklist,
+	                              string workListDefinitionFilePath)
 	{
 		throw new NotImplementedException();
 	}
 
-	public void LoadAssociatedLayers(IWorkList worklist)
+	public void LoadAssociatedLayers(MapView mapView, IWorkList worklist)
 	{
 		throw new NotImplementedException();
 	}
@@ -117,12 +119,13 @@ public class SelectionWorkListEnvironmentMock : IWorkEnvironment
 		return Task.FromResult(default(IWorkList));
 	}
 
-	public void LoadWorkListLayer(IWorkList worklist, string workListDefinitionFilePath)
+	public void LoadWorkListLayer(MapView mapView, IWorkList worklist,
+	                              string workListDefinitionFilePath)
 	{
 		throw new NotImplementedException();
 	}
 
-	public void LoadAssociatedLayers(IWorkList worklist)
+	public void LoadAssociatedLayers(MapView mapView, IWorkList worklist)
 	{
 		throw new NotImplementedException();
 	}
