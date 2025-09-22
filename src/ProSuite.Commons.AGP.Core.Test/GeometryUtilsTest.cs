@@ -816,4 +816,185 @@ public class GeometryUtilsTest
 			}
 		}
 	}
+
+	[Test]
+	public void CanSetConstantZ()
+	{
+		const double testZ = 42.5;
+		const double delta = 1e-6;
+
+		// Test with null geometry
+		Assert.IsNull(GeometryUtils.SetConstantZ<Geometry>(null, testZ));
+
+		// Test with geometry that has no Z
+		var point2D = MapPointBuilderEx.CreateMapPoint(1.0, 2.0);
+		Assert.False(point2D.HasZ);
+
+		var resultPoint2D = GeometryUtils.SetConstantZ(point2D, testZ);
+		Assert.IsTrue(GeometryEngine.Instance.Equals(point2D, resultPoint2D));
+
+		// Test with MapPoint that has Z
+		var point3D = MapPointBuilderEx.CreateMapPoint(1.0, 2.0, 10.5);
+		Assert.True(point3D.HasZ);
+		var resultPoint3D = GeometryUtils.SetConstantZ(point3D, testZ);
+		Assert.AreNotSame(point3D, resultPoint3D); // Should be new instance
+		Assert.AreEqual(1.0, resultPoint3D.X, delta);
+		Assert.AreEqual(2.0, resultPoint3D.Y, delta);
+		Assert.AreEqual(testZ, resultPoint3D.Z, delta);
+
+		// Test with MapPoint that has Z and M
+		var pointZM = MapPointBuilderEx.CreateMapPoint(1.0, 2.0, 10.5, 99.9);
+		Assert.True(pointZM.HasZ);
+		Assert.True(pointZM.HasM);
+		var resultPointZM = GeometryUtils.SetConstantZ(pointZM, testZ);
+		Assert.AreEqual(1.0, resultPointZM.X, delta);
+		Assert.AreEqual(2.0, resultPointZM.Y, delta);
+		Assert.AreEqual(testZ, resultPointZM.Z, delta);
+		Assert.AreEqual(99.9, resultPointZM.M, delta); // M should be preserved
+
+		// Test with Multipoint
+		var multipoint = MultipointBuilderEx.CreateMultipoint(
+			new[]
+			{
+				MapPointBuilderEx.CreateMapPoint(1.0, 1.0, 5.0),
+				MapPointBuilderEx.CreateMapPoint(2.0, 2.0, 15.0),
+				MapPointBuilderEx.CreateMapPoint(3.0, 3.0, 25.0)
+			});
+
+		Assert.True(multipoint.HasZ);
+		var resultMultipoint = GeometryUtils.SetConstantZ(multipoint, testZ);
+		Assert.AreEqual(3, resultMultipoint.PointCount);
+		foreach (var point in resultMultipoint.Points)
+		{
+			Assert.AreEqual(testZ, point.Z, delta);
+		}
+
+		// Verify X,Y coordinates preserved
+		Assert.AreEqual(1.0, resultMultipoint.Points[0].X, delta);
+		Assert.AreEqual(2.0, resultMultipoint.Points[1].Y, delta);
+		Assert.AreEqual(3.0, resultMultipoint.Points[2].X, delta);
+
+		// Test with Polyline
+		var polyline = PolylineBuilderEx.CreatePolyline(
+			new[]
+			{
+				MapPointBuilderEx.CreateMapPoint(0.0, 0.0, 1.0),
+				MapPointBuilderEx.CreateMapPoint(1.0, 1.0, 2.0),
+				MapPointBuilderEx.CreateMapPoint(2.0, 0.0, 3.0)
+			});
+
+		Assert.True(polyline.HasZ);
+		var resultPolyline = GeometryUtils.SetConstantZ(polyline, testZ);
+		Assert.True(resultPolyline.HasZ);
+		Assert.AreEqual(3, resultPolyline.Points.Count);
+
+		foreach (var point in resultPolyline.Points)
+		{
+			Assert.AreEqual(testZ, point.Z, delta);
+		}
+
+		// Verify geometry structure preserved
+		Assert.AreEqual(polyline.PartCount, resultPolyline.PartCount);
+		Assert.AreEqual(polyline.PointCount, resultPolyline.PointCount);
+		Assert.AreEqual(polyline.Length, resultPolyline.Length, delta);
+
+		// Test with Polygon
+		var polygon = PolygonBuilderEx.CreatePolygon(new[]
+		                                             {
+			                                             MapPointBuilderEx.CreateMapPoint(
+				                                             0.0, 0.0, 1.0),
+			                                             MapPointBuilderEx.CreateMapPoint(
+				                                             0.0, 1.0, 2.0),
+			                                             MapPointBuilderEx.CreateMapPoint(
+				                                             1.0, 1.0, 3.0),
+			                                             MapPointBuilderEx.CreateMapPoint(
+				                                             1.0, 0.0, 4.0),
+			                                             MapPointBuilderEx.CreateMapPoint(
+				                                             0.0, 0.0, 1.0)
+		                                             });
+		Assert.True(polygon.HasZ);
+		var resultPolygon = GeometryUtils.SetConstantZ(polygon, testZ);
+		Assert.True(resultPolygon.HasZ);
+		foreach (var point in resultPolygon.Points)
+		{
+			Assert.AreEqual(testZ, point.Z, delta);
+		}
+
+		// Verify geometry properties preserved
+		Assert.AreEqual(polygon.PartCount, resultPolygon.PartCount);
+		Assert.AreEqual(polygon.PointCount, resultPolygon.PointCount);
+		Assert.AreEqual(polygon.Area, resultPolygon.Area, delta);
+		Assert.AreEqual(polygon.Length, resultPolygon.Length, delta);
+
+		// Test with multi-part polygon
+		var multiPolygon = CreateMultiPolygon();
+		var builder = new PolygonBuilderEx(multiPolygon);
+		builder.HasZ = true;
+		// Set some Z values on the vertices
+		for (int partIdx = 0; partIdx < builder.PartCount; partIdx++)
+		{
+			for (int segIdx = 0; segIdx < builder.GetSegmentCount(partIdx); segIdx++)
+			{
+				var segment = builder.GetSegment(partIdx, segIdx);
+				var newStart =
+					MapPointBuilderEx.CreateMapPoint(segment.StartPoint.X, segment.StartPoint.Y,
+					                                 partIdx * 10 + segIdx);
+				var newEnd =
+					MapPointBuilderEx.CreateMapPoint(segment.EndPoint.X, segment.EndPoint.Y,
+					                                 partIdx * 10 + segIdx + 1);
+				var newSegment = LineBuilderEx.CreateLineSegment(newStart, newEnd);
+				builder.ReplaceSegment(partIdx, segIdx, newSegment);
+			}
+		}
+
+		var multiPolygonZ = builder.ToGeometry();
+		Assert.True(multiPolygonZ.HasZ);
+
+		var resultMultiPolygon = GeometryUtils.SetConstantZ(multiPolygonZ, testZ);
+		Assert.True(resultMultiPolygon.HasZ);
+		foreach (var point in resultMultiPolygon.Points)
+		{
+			Assert.AreEqual(testZ, point.Z, delta);
+		}
+
+		// Verify structure preserved
+		Assert.AreEqual(multiPolygonZ.PartCount, resultMultiPolygon.PartCount);
+		Assert.AreEqual(multiPolygonZ.PointCount, resultMultiPolygon.PointCount);
+
+		// Test with Bézier curve segment in polyline
+		var bezierPolyline = CreatePolylineWithBezierSegment(testZ + 10); // Different Z values
+		Assert.True(bezierPolyline.HasZ);
+		var resultBezierPolyline = GeometryUtils.SetConstantZ(bezierPolyline, testZ);
+		Assert.True(resultBezierPolyline.HasZ);
+		foreach (var point in resultBezierPolyline.Points)
+		{
+			Assert.AreEqual(testZ, point.Z, delta);
+		}
+
+		// Verify it still has curves
+		Assert.True(resultBezierPolyline.HasCurves);
+	}
+
+	// Helper method to create a polyline with a Bézier segment for testing
+	private static Polyline CreatePolylineWithBezierSegment(double z)
+	{
+		var builder = new PolylineBuilderEx();
+		builder.HasZ = true;
+
+		// Add a line segment
+		var lineSegment = LineBuilderEx.CreateLineSegment(
+			MapPointBuilderEx.CreateMapPoint(0, 0, z),
+			MapPointBuilderEx.CreateMapPoint(1, 0, z + 1));
+		builder.AddSegment(lineSegment);
+
+		// Add a Bézier segment
+		var bezierSegment = CubicBezierBuilderEx.CreateCubicBezierSegment(
+			MapPointBuilderEx.CreateMapPoint(1, 0, z + 1),
+			MapPointBuilderEx.CreateMapPoint(1.5, 1, z + 2),
+			MapPointBuilderEx.CreateMapPoint(2.5, 1, z + 3),
+			MapPointBuilderEx.CreateMapPoint(3, 0, z + 4));
+		builder.AddSegment(bezierSegment);
+
+		return builder.ToGeometry();
+	}
 }
