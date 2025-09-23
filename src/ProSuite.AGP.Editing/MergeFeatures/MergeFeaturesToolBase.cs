@@ -675,7 +675,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 		private async Task<Feature> PickLastFeature(Geometry sketchGeometry,
 		                                            CancelableProgressor cancellabelProgressor)
 		{
-			IPickerPrecedence precedence = CreatePickerPrecedence(sketchGeometry);
+			IPickerPrecedence precedence = await CreatePickerPrecedenceAsync(sketchGeometry);
 
 			var featureFinder = new FeatureFinder(ActiveMapView,
 			                                      TargetFeatureSelection
