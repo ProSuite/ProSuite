@@ -6,6 +6,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
@@ -2129,6 +2130,22 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				// Single point geometry
 				yield return mapPoint;
 			}
+		}
+
+		public static EnvelopeXY GetCombinedExtent(IEnumerable<Feature> features)
+		{
+			var envelopeBuilder = new EnvelopeBuilderEx();
+
+			foreach (var feature in features)
+			{
+				var geometry = feature.GetShape();
+				envelopeBuilder.Union(geometry.Extent);
+			}
+
+			var combinedExtent = envelopeBuilder.ToGeometry();
+
+			return new EnvelopeXY(combinedExtent.XMin, combinedExtent.YMin, combinedExtent.XMax,
+			               combinedExtent.YMax);
 		}
 	}
 }
