@@ -316,7 +316,12 @@ public static class MarkerPlacements
 			{
 				double m = (L - A - E) / P;
 				double k =  Math.Max(Math.Round(m), 0.0); // number of pattern repeats
-				double s = L / (A + k * P + E); // stretch/squeeze factor
+				double stretchedLength = A + k * P + E;
+				if (stretchedLength == 0)
+				{
+					stretchedLength = L;
+				}
+				double s = L / stretchedLength; // stretch/squeeze factor
 
 				a = s * A;
 				e = s * E;

@@ -1,11 +1,11 @@
-using NUnit.Framework;
-using ProSuite.Commons.AGP.Hosting;
 using System;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Geometry;
+using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.Commons.AGP.Core.Test;
 
@@ -22,7 +22,7 @@ public class MarkerPlacementsTest
 	[Test]
 	public void CanAtExtremities()
 	{
-		// single and multi part; offset along line; 
+		// single and multipart; offset along line; 
 		throw new NotImplementedException();
 	}
 
@@ -59,7 +59,7 @@ public class MarkerPlacementsTest
 		Assert.AreEqual(1, placed.Length);
 		Assert.AreEqual(2, placed[0].PointCount);
 		AssertPoint(placed[0].Points[0], -cos45, sin45, delta);
-		AssertPoint(placed[0].Points[1], -cos45*2, sin45*2, delta);
+		AssertPoint(placed[0].Points[1], -cos45 * 2, sin45 * 2, delta);
 
 		// at end, angle-to-line, perp offs 1 unit
 		options.RelativeTo = MarkerPlacements.OnLinePosition.End;
@@ -111,7 +111,62 @@ public class MarkerPlacementsTest
 	[Test]
 	public void CanAlongLine()
 	{
-		throw new NotImplementedException();
+		var marker = PolylineBuilderEx.CreatePolyline(
+			new[] { Pt(0, 0), Pt(0, 1) });
+
+		var options = new MarkerPlacements.AlongLineOptions
+		              {
+			              AngleToLine = true,
+			              PlacePerPart = true,
+			              PerpendicularOffset = 0,
+			              Pattern = [10.0],
+			              OffsetAlongLine = 0,
+			              CustomEndingOffset = 0
+		              };
+
+		// Test that at least one point is always added (and that the calculation finishes)
+
+		var smallLine = PolylineBuilderEx.CreatePolyline(
+			new[] { Pt(0, 0), Pt(5, 0) });
+		var endings = Enum.GetValues(typeof(MarkerPlacements.EndingsType))
+		                  .Cast<MarkerPlacements.EndingsType>();
+		foreach (var ending in endings)
+		{
+			options.Endings = ending;
+
+			var placements = MarkerPlacements.AlongLine(marker, smallLine, options).ToArray();
+			Assert.AreEqual(1, placements.Length);
+			Assert.AreEqual(2, placements[0].PointCount);
+		}
+
+		// Test a line where multiple markers can be placed
+
+		var line = PolylineBuilderEx.CreatePolyline(
+			new[] { Pt(0, 0), Pt(100, 0) });
+		MarkerPlacements.EndingsType[] fullEndings =
+		[
+			MarkerPlacements.EndingsType.Unconstrained,
+			MarkerPlacements.EndingsType.Marker,
+			MarkerPlacements.EndingsType.Custom
+		];
+		foreach (var ending in fullEndings)
+		{
+			options.Endings = ending;
+
+			var placements = MarkerPlacements.AlongLine(marker, line, options).ToArray();
+			Assert.AreEqual(11, placements.Length);
+			Assert.AreEqual(2, placements[0].PointCount);
+		}
+
+		options.Endings = MarkerPlacements.EndingsType.HalfStep;
+		var placementsHalfStep = MarkerPlacements.AlongLine(marker, line, options).ToArray();
+		Assert.AreEqual(10, placementsHalfStep.Length);
+		Assert.AreEqual(2, placementsHalfStep[0].PointCount);
+
+		options.Endings = MarkerPlacements.EndingsType.FullStep;
+		var placementsFullStep = MarkerPlacements.AlongLine(marker, line, options).ToArray();
+		Assert.AreEqual(9, placementsFullStep.Length);
+		Assert.AreEqual(2, placementsFullStep[0].PointCount);
 	}
 
 	[Test]
