@@ -58,14 +58,16 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return await WorkListItemDatastore.TryPrepareSchema();
 	}
 
-	public override void LoadAssociatedLayers(IWorkList worklist)
+	public override void LoadAssociatedLayers(MapView mapView, IWorkList worklist)
 	{
-		AddToMapCore(GetTablesCore(), worklist);
+		AddToMapCore(mapView, GetTablesCore(), worklist);
 	}
 
-	protected virtual void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
+	protected virtual void AddToMapCore([NotNull] MapView mapView,
+	                                    [NotNull] IEnumerable<Table> tables,
+	                                    [NotNull] IWorkList worklist)
 	{
-		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
+		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>(mapView);
 
 		foreach (var table in tables)
 		{
@@ -139,10 +141,10 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return null;
 	}
 
-	protected void RemoveFromMapCore(IEnumerable<Table> tables)
+	protected void RemoveFromMapCore(MapView mapView, IEnumerable<Table> tables)
 	{
 		// Search inside the QA group layer for the tables to remove (to allow for renaming)
-		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
+		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>(mapView);
 
 		var tableList = tables.ToList();
 

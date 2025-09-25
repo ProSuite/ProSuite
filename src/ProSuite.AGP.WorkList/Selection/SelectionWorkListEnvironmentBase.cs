@@ -27,9 +27,9 @@ namespace ProSuite.AGP.WorkList.Selection
 			return $"{currentName}_{now}";
 		}
 
-		protected override T GetLayerContainerCore<T>()
+		protected override T GetLayerContainerCore<T>(MapView mapView)
 		{
-			return MapView.Active.Map as T;
+			return mapView.Map as T;
 		}
 
 		protected override IWorkItemStateRepository CreateStateRepositoryCore(

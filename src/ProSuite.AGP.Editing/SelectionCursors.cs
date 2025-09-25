@@ -24,26 +24,33 @@ namespace ProSuite.AGP.Editing
 		[NotNull] private Cursor _lassoShiftCursor;
 		[NotNull] private Cursor _polygonShiftCursor;
 
-		public static SelectionCursors CreateArrowCursors([NotNull] byte[] toolOverlay)
+		public static SelectionCursors CreateArrowCursors([NotNull] byte[] toolOverlay,
+		                                                  [CanBeNull] string name = "Arrow")
 		{
 			return new SelectionCursors(toolOverlay, Resources.Arrow);
 		}
 
-		public static SelectionCursors CreateCrossCursors([NotNull] byte[] toolOverlay)
+		public static SelectionCursors CreateCrossCursors([NotNull] byte[] toolOverlay,
+		                                                  [CanBeNull] string name = "Cross")
 		{
 			const int xHotspot = 10;
 			const int yHotspot = 10;
-			return new SelectionCursors(toolOverlay, Resources.Cross, xHotspot, yHotspot);
+			return new SelectionCursors(toolOverlay, Resources.Cross, xHotspot, yHotspot)
+			       {
+				       Name = name
+			       };
 		}
 
 		/// <summary>
 		/// Create SelectionCursors from a .cur file.
 		/// <param name="cursor">Data of the cursor file to be used for all cursor overlays (independent of sketch type and pressed keys)</param>
 		/// </summary>
-		public static SelectionCursors CreateFromCursor([NotNull] byte[] cursor)
+		public static SelectionCursors CreateFromCursor([NotNull] byte[] cursor,
+		                                                [CanBeNull] string name = "<no name")
 		{
 			var s = new SelectionCursors
 			        {
+				        Name = name,
 				        _rectangleCursor = ToolUtils.GetCursor(cursor),
 				        _lassoCursor = ToolUtils.GetCursor(cursor),
 				        _polygonCursor = ToolUtils.GetCursor(cursor),
@@ -98,6 +105,11 @@ namespace ProSuite.AGP.Editing
 				                       Resources.Shift,
 				                       xHotspot, yHotspot);
 		}
+
+		/// <summary>
+		/// Name of the cursor combination, for logging and debugging purposes.
+		/// </summary>
+		public string Name { get; set; } = "<no name>";
 
 		public SketchGeometryType DefaultSelectionSketchType { get; set; } =
 			SketchGeometryType.Rectangle;
@@ -182,6 +194,9 @@ namespace ProSuite.AGP.Editing
 
 		public Cursor GetCursor(SketchGeometryType? geometryType, bool shiftDown)
 		{
+			_msg.VerboseDebug(() => $"Getting cursor for {geometryType} (shift down: " +
+			                        $"{shiftDown}) from {Name} cursor");
+
 			switch (geometryType)
 			{
 				case SketchGeometryType.Rectangle:

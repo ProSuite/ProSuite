@@ -1,9 +1,8 @@
 using System;
-using ProSuite.Commons.Misc;
 
 namespace ProSuite.Commons.Geom.SpatialIndex
 {
-	public struct TileIndex
+	public readonly struct TileIndex : IEquatable<TileIndex>
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TileIndex"/> struct.
@@ -20,20 +19,20 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public int North { get; }
 
+		public bool Equals(TileIndex other)
+		{
+			return East == other.East && North == other.North;
+		}
+
 		public override bool Equals(object obj)
 		{
-			if (! (obj is TileIndex))
-			{
-				return false;
-			}
-
-			var rectangularTileIndex = (TileIndex) obj;
-			return East == rectangularTileIndex.East &&
-			       North == rectangularTileIndex.North;
+			return obj is TileIndex other && Equals(other);
 		}
 
 		public override int GetHashCode()
 		{
+			// TODO: Consider HashCode.Combine(East, North); for better collision avoidance
+			// but this requires .NET Standard 2.1 or .NET Core
 			return East + 29 * North;
 		}
 

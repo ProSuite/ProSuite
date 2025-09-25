@@ -12,7 +12,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -34,6 +33,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		[CanBeNull] private IntermediateSketchStates _intermediateSketchStates;
 
 		[CanBeNull] private ISymbolizedSketchType _symbolizedSketch;
+
+		[CanBeNull] private MapPoint _lastLoggedVertex;
+		private int _lastLoggedVertexIndex = -1;
 
 		protected ConstructionToolBase()
 		{
@@ -62,7 +64,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual SelectionCursors FirstPhaseCursors => SelectionCursors;
 
 		protected SelectionCursors SketchCursors { get; set; } =
-			SelectionCursors.CreateFromCursor(Resources.EditSketchCrosshair);
+			SelectionCursors.CreateFromCursor(Resources.EditSketchCrosshair, "Sketch");
 
 		/// <summary>
 		/// Whether the geometry sketch (as opposed to the selection sketch) is currently active
@@ -185,14 +187,24 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+		{
+			await RememberSketchAsync();
+
+			await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
+		}
+
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			// TODO: Move as much as possible to OnToolDeactivateCoreAsync
 			_intermediateSketchStates?.Deactivate();
-			RememberSketch();
+
 			IsInSketchPhase = false;
 
 			_symbolizedSketch?.Dispose();
 			_symbolizedSketch = null;
+
+			_lastLoggedVertex = null;
 		}
 
 		protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
@@ -416,6 +428,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			if (ShiftPressedToSelect)
+			{
+				// Intermittent selection phase: Selection change should be ignored
+				// -> it will be evaluated in ShiftReleasedCoreAsync()
+				return false;
+			}
+
 			// Short-cut to reduce unnecessary (and very frequent) selection evaluations
 			// despite the selection not having changed (and not even being present).
 			if (args.Selection.IsEmpty && IsInSketchPhase)
@@ -473,7 +492,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					IsCompletingEditSketch = true;
 
-					RememberSketch(sketchGeometry);
+					await RememberSketchAsync(sketchGeometry);
+
+					_lastLoggedVertex = null;
 
 					return await OnEditSketchCompleteCoreAsync(
 						       sketchGeometry, currentTemplate, activeView, progressor);
@@ -514,6 +535,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual Task<bool> OnSketchCanceledAsyncCore()
 		{
+			_lastLoggedVertexIndex = -1;
 			return Task.FromResult(true);
 		}
 
@@ -585,11 +607,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 			}
 
+			_lastLoggedVertex = null;
+
 			await OnSketchPhaseStartedAsync();
 		}
 
 		protected virtual Task OnSketchPhaseStartedAsync()
 		{
+			_lastLoggedVertexIndex = -1;
 			return Task.CompletedTask;
 		}
 
@@ -632,7 +657,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected async Task ResetSketchAsync()
 		{
-			RememberSketch();
+			await RememberSketchAsync();
 
 			await ClearSketchAsync();
 
@@ -641,16 +666,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSketchResetCore();
 
 			await StartSketchAsync();
+
+			_lastLoggedVertex = null;
 		}
 
-		protected void RememberSketch(Geometry knownSketch = null)
+		protected async Task RememberSketchAsync(Geometry knownSketch = null)
 		{
 			if (! SupportRestoreLastSketch)
 			{
 				return;
 			}
 
-			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
+			var sketch = knownSketch ?? await GetCurrentSketchAsync();
 
 			if (sketch is { IsEmpty: false })
 			{
@@ -714,24 +741,41 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Geometry sketch = await GetCurrentSketchAsync();
 
-			await LogLastVertexZ(sketch);
-		}
-
-		private static async Task LogLastVertexZ(Geometry sketch)
-		{
-			if (! sketch.HasZ)
+			if (! sketch.HasZ || GetSketchType() == SketchGeometryType.Point)
 			{
 				return;
 			}
 
-			await QueuedTaskUtils.Run(() =>
+			int currentLastIndex;
+			if (sketch is Polygon)
+			{
+				currentLastIndex = sketch.PointCount - 2;
+			}
+			else
+			{
+				currentLastIndex = sketch.PointCount - 1;
+			}
+
+			_msg.DebugFormat(
+				"Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]",
+				sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
+			if (currentLastIndex <= _lastLoggedVertexIndex)
+			{
+				_lastLoggedVertexIndex = currentLastIndex;
+				return;
+			}
+
+			await QueuedTask.Run(() =>
 			{
 				MapPoint lastPoint = GetLastPoint(sketch);
 
-				if (lastPoint != null)
+				if (lastPoint == null || double.IsNaN(lastPoint.Z))
 				{
-					_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
+					return;
 				}
+
+				_msg.InfoFormat("Vertex added, Z={0:N2}", lastPoint.Z);
+				_lastLoggedVertexIndex = currentLastIndex;
 			});
 		}
 

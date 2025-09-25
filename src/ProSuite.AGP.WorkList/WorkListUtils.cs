@@ -529,11 +529,11 @@ namespace ProSuite.AGP.WorkList
 			return loadedWorklist;
 		}
 
-		public static async Task RemoveWorkListLayersAsync(IWorkList workList)
+		public static async Task RemoveWorkListLayersAsync(MapView mapView, IWorkList workList)
 		{
 			await QueuedTask.Run(() =>
 			{
-				Map map = MapUtils.GetActiveMap();
+				Map map = mapView.Map;
 				IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
 
 				var worklistLayers =

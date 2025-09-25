@@ -39,10 +39,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_reshapeAlongToolOptions.TargetFeatureSelection;
 
 		protected override SelectionCursors InitialSelectionCursors { get; } =
-			SelectionCursors.CreateArrowCursors(Resources.ReshapeAlongOverlay);
+			SelectionCursors.CreateArrowCursors(Resources.ReshapeAlongOverlay, "Cut Along Arrow");
 
 		protected override SelectionCursors TargetSelectionCursors { get; } =
-			SelectionCursors.CreateCrossCursors(Resources.ReshapeAlongOverlay);
+			SelectionCursors.CreateCrossCursors(Resources.ReshapeAlongOverlay, "Cut Along Cross");
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{

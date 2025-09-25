@@ -149,17 +149,19 @@ namespace ProSuite.AGP.WorkList
 
 		/// <summary>
 		/// Loads the work list layer, containing the navigable items based on the plugin
-		/// datasource, into the map.
+		/// datasource, into the specified map view.
 		/// </summary>
+		/// <param name="mapView"></param>
 		/// <param name="worklist"></param>
 		/// <param name="workListDefinitionFilePath"></param>
-		public void LoadWorkListLayer([NotNull] IWorkList worklist,
+		public void LoadWorkListLayer(MapView mapView,
+		                              [NotNull] IWorkList worklist,
 		                              [NotNull] string workListDefinitionFilePath)
 		{
 			//Create the work list layer with basic properties and connect to datasource
 			FeatureLayer worklistLayer =
 				CreateWorklistLayer(worklist, workListDefinitionFilePath,
-				                    GetLayerContainerCore<ILayerContainerEdit>());
+				                    GetLayerContainerCore<ILayerContainerEdit>(mapView));
 
 			//Set some hard-coded properties
 			worklistLayer.SetScaleSymbols(false);
@@ -187,20 +189,23 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		/// <summary>
-		/// Loads associated layers of the work list layer into the map, if there are any.
+		/// Loads associated layers of the work list layer into the specified map view.
 		/// Typically, associated layers come with DB-status work lists, such as the layers of
 		/// the issue feature classes.
 		/// </summary>
-		public virtual void LoadAssociatedLayers(IWorkList worklist) { }
+		public virtual void LoadAssociatedLayers(MapView mapView, IWorkList worklist) { }
 
-		public virtual void RemoveAssociatedLayers() { }
+		public virtual void RemoveAssociatedLayers(MapView mapView) { }
 
 		/// <summary>
-		/// Returns the layer container (group layer or map) for the work list layer(s)
+		/// Returns the layer container (group layer or map) for the work list layer(s) to be added
+		/// to the specified map view.
 		/// </summary>
+		/// <param name="mapView"></param>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		protected abstract T GetLayerContainerCore<T>() where T : class, ILayerContainerEdit;
+		protected abstract T GetLayerContainerCore<T>(MapView mapView)
+			where T : class, ILayerContainerEdit;
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{
