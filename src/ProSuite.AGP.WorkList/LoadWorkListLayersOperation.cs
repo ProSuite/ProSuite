@@ -25,8 +25,8 @@ public class LoadWorkListLayersOperation : Operation
 	private readonly bool _loadInAllMaps;
 
 	public LoadWorkListLayersOperation([NotNull] IWorkEnvironment workEnvironment,
-									   [NotNull] string workListName,
-									   bool loadInAllMaps)
+	                                   [NotNull] string workListName,
+	                                   bool loadInAllMaps)
 	{
 		_workEnvironment = workEnvironment;
 		_workListName = workListName;
@@ -37,9 +37,6 @@ public class LoadWorkListLayersOperation : Operation
 	public override string Category => "Mapping";
 	public override bool DirtiesProject => true;
 
-	public event EventHandler<WorkListLayersArgs> WorkListLayersAdded;
-	public event EventHandler<WorkListLayersArgs> WorkListLayersRemoved;
-
 	protected override async Task DoAsync()
 	{
 		try
@@ -47,8 +44,8 @@ public class LoadWorkListLayersOperation : Operation
 			await QueuedTask.Run(() =>
 			{
 				List<MapView> mapViews = _loadInAllMaps
-											 ? MapViewUtils.GetAllMapViews().ToList()
-											 : new List<MapView>() { MapView.Active };
+					                         ? MapViewUtils.GetAllMapViews().ToList()
+					                         : new List<MapView>() { MapView.Active };
 
 				foreach (MapView mapView in mapViews)
 				{
@@ -59,8 +56,6 @@ public class LoadWorkListLayersOperation : Operation
 
 					Operation loadWorkListLayer = manager.PeekUndo();
 					manager.RemoveUndoOperation(loadWorkListLayer);
-
-					OnWorkListLayersAdded(mapView, _workListName);
 				}
 			});
 		}
@@ -75,8 +70,8 @@ public class LoadWorkListLayersOperation : Operation
 		try
 		{
 			IEnumerable<MapView> mapViews = _loadInAllMaps
-												? MapViewUtils.GetAllMapViews()
-												: new[] { MapView.Active };
+				                                ? MapViewUtils.GetAllMapViews()
+				                                : new[] { MapView.Active };
 
 			await QueuedTask.Run(() =>
 			{
@@ -100,8 +95,6 @@ public class LoadWorkListLayersOperation : Operation
 
 					Operation operation = manager.PeekUndo();
 					manager.RemoveUndoOperation(operation);
-
-					OnWorkListLayersRemoved(mapView, _workListName);
 				}
 			});
 		}
@@ -138,32 +131,10 @@ public class LoadWorkListLayersOperation : Operation
 		Assert.NotNull(workList);
 
 		string workListFile = workList.Repository.WorkItemStateRepository
-									  .WorkListDefinitionFilePath;
+		                              .WorkListDefinitionFilePath;
 		Assert.NotNullOrEmpty(workListFile);
 
 		_workEnvironment.LoadWorkListLayer(mapView, workList, workListFile);
 		_workEnvironment.LoadAssociatedLayers(mapView, workList);
-	}
-
-	private void OnWorkListLayersAdded(MapView mapView, string workListName)
-	{
-		WorkListLayersAdded?.Invoke(this, new WorkListLayersArgs(workListName, mapView));
-	}
-
-	private void OnWorkListLayersRemoved(MapView mapView, string workListName)
-	{
-		WorkListLayersRemoved?.Invoke(this, new WorkListLayersArgs(workListName, mapView));
-	}
-}
-
-public class WorkListLayersArgs : EventArgs
-{
-	public string WorkListName { get; }
-	public MapView MapView { get; }
-
-	public WorkListLayersArgs(string workListName, MapView mapView)
-	{
-		WorkListName = workListName;
-		MapView = mapView;
 	}
 }

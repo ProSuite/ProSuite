@@ -160,7 +160,6 @@ namespace ProSuite.AGP.WorkList
 			await manager.DoAsync(ops);
 		}
 
-
 		public static IEnumerable<ISourceClass> CreateSourceClasses([NotNull] Map map)
 		{
 			if (map is null)
@@ -696,8 +695,6 @@ namespace ProSuite.AGP.WorkList
 						await RemoveWorkListLayersAsync(mapView, workList);
 					}
 				}
-
-				
 			}
 			catch (Exception ex)
 			{
