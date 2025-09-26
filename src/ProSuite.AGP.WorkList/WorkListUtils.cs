@@ -154,10 +154,12 @@ namespace ProSuite.AGP.WorkList
 		{
 			OperationManager manager = MapView.Active.Map.OperationManager;
 
-			var ops = new LoadWorkListLayersOperation(environment, workList.Name);
+			var ops = new LoadWorkListLayersOperation(environment, workList.Name,
+			                                          workList.NavigateInAllMapViews);
 
 			await manager.DoAsync(ops);
 		}
+
 
 		public static IEnumerable<ISourceClass> CreateSourceClasses([NotNull] Map map)
 		{
@@ -674,22 +676,28 @@ namespace ProSuite.AGP.WorkList
 
 			try
 			{
-				Map map = MapUtils.GetActiveMap();
-				IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
-
-				foreach (IWorkList workList in
-				         GetLoadedWorklists(WorkListRegistry.Instance, layers))
+				foreach (MapView mapView in MapViewUtils.GetAllMapViews())
 				{
-					WorkListRegistry.Instance.Remove(workList);
+					Map map = mapView.Map;
 
-					// TODO:
-					// For the moment, do it the quick and dirty way. In the future, the work list
-					// should also maintain all associated layers or at least their URIs:
-					// Now also remove the associated layers:
-					//environment.RemoveAssociatedLayers();
+					IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
 
-					await RemoveWorkListLayersAsync(workList);
+					foreach (IWorkList workList in
+					         GetLoadedWorklists(WorkListRegistry.Instance, layers))
+					{
+						WorkListRegistry.Instance.Remove(workList);
+
+						// TODO:
+						// For the moment, do it the quick and dirty way. In the future, the work list
+						// should also maintain all associated layers or at least their URIs:
+						// Now also remove the associated layers:
+						//environment.RemoveAssociatedLayers();
+
+						await RemoveWorkListLayersAsync(mapView, workList);
+					}
 				}
+
+				
 			}
 			catch (Exception ex)
 			{
@@ -700,10 +708,20 @@ namespace ProSuite.AGP.WorkList
 		public static List<Tuple<Layer, CIMStandardDataConnection>> ToLayerConnectionTuples(
 			[NotNull] IEnumerable<Layer> selectedWorkListLayers)
 		{
-			return selectedWorkListLayers.Select(layer =>
-				                                     new Tuple<Layer, CIMStandardDataConnection>(
-					                                     layer, GetWorkListDataConnection(layer)))
+			return selectedWorkListLayers.Select(layer => GetLayerConnectionTuple(layer))
 			                             .ToList();
+		}
+
+		private static Tuple<Layer, CIMStandardDataConnection> GetLayerConnectionTuple(
+			[NotNull] Layer layer)
+		{
+			if (layer is GroupLayer groupLayer)
+			{
+				layer = groupLayer.Layers.FirstOrDefault(IsWorkListLayer);
+			}
+
+			return new Tuple<Layer, CIMStandardDataConnection>(
+				layer, GetWorkListDataConnection(layer));
 		}
 
 		private static CIMStandardDataConnection GetWorkListDataConnection(Layer layer)

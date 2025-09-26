@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -6,6 +8,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -19,17 +22,23 @@ public class LoadWorkListLayersOperation : Operation
 
 	private readonly IWorkEnvironment _workEnvironment;
 	private readonly string _workListName;
+	private readonly bool _loadInAllMaps;
 
 	public LoadWorkListLayersOperation([NotNull] IWorkEnvironment workEnvironment,
-	                                   [NotNull] string workListName)
+									   [NotNull] string workListName,
+									   bool loadInAllMaps)
 	{
 		_workEnvironment = workEnvironment;
 		_workListName = workListName;
+		_loadInAllMaps = loadInAllMaps;
 	}
 
 	public override string Name => GetName();
 	public override string Category => "Mapping";
 	public override bool DirtiesProject => true;
+
+	public event EventHandler<WorkListLayersArgs> WorkListLayersAdded;
+	public event EventHandler<WorkListLayersArgs> WorkListLayersRemoved;
 
 	protected override async Task DoAsync()
 	{
@@ -37,26 +46,22 @@ public class LoadWorkListLayersOperation : Operation
 		{
 			await QueuedTask.Run(() =>
 			{
-				OperationManager manager = MapView.Active.Map.OperationManager;
+				List<MapView> mapViews = _loadInAllMaps
+											 ? MapViewUtils.GetAllMapViews().ToList()
+											 : new List<MapView>() { MapView.Active };
 
-				Action loadLayers = () =>
+				foreach (MapView mapView in mapViews)
 				{
-					IWorkList workList = WorkListRegistry.Instance.Get(_workListName);
-					Assert.NotNull(workList);
+					OperationManager manager = mapView.Map.OperationManager;
 
-					string workListFile = workList.Repository.WorkItemStateRepository
-					                              .WorkListDefinitionFilePath;
-					Assert.NotNullOrEmpty(workListFile);
+					Gateway.CompositeOperation(
+						manager, "Load Work List layers", () => LoadLayers(mapView));
 
-					_workEnvironment.LoadWorkListLayer(workList, workListFile);
-					_workEnvironment.LoadAssociatedLayers(workList);
-				};
+					Operation loadWorkListLayer = manager.PeekUndo();
+					manager.RemoveUndoOperation(loadWorkListLayer);
 
-				Gateway.CompositeOperation(
-					manager, "Load Work List layers", loadLayers);
-
-				Operation loadWorkListLayer = manager.PeekUndo();
-				manager.RemoveUndoOperation(loadWorkListLayer);
+					OnWorkListLayersAdded(mapView, _workListName);
+				}
 			});
 		}
 		catch (Exception ex)
@@ -69,27 +74,35 @@ public class LoadWorkListLayersOperation : Operation
 	{
 		try
 		{
+			IEnumerable<MapView> mapViews = _loadInAllMaps
+												? MapViewUtils.GetAllMapViews()
+												: new[] { MapView.Active };
+
 			await QueuedTask.Run(() =>
 			{
-				OperationManager manager = MapView.Active.Map.OperationManager;
-
-				// ReSharper disable once AsyncVoidLambda
-				Action removeLayers = async () =>
+				foreach (MapView mapView in mapViews)
 				{
-					IWorkList workList = await WorkListRegistry.Instance.GetAsync(_workListName);
-					Assert.NotNull(workList);
+					OperationManager manager = mapView.Map.OperationManager;
 
-					WorkListRegistry.Instance.UnWire(workList);
+					// ReSharper disable once AsyncVoidLambda
+					Action removeLayers = async () =>
+					{
+						IWorkList workList =
+							await WorkListRegistry.Instance.GetAsync(_workListName);
+						Assert.NotNull(workList);
 
-					await WorkListUtils.RemoveWorkListLayersAsync(workList);
-				};
+						await WorkListUtils.RemoveWorkListLayersAsync(mapView, workList);
+					};
 
-				Gateway.CompositeOperation(
-					manager, "Doesn't matter as long as the operation is removed.",
-					removeLayers);
+					Gateway.CompositeOperation(
+						manager, "Doesn't matter as long as the operation is removed.",
+						removeLayers);
 
-				Operation operation = manager.PeekUndo();
-				manager.RemoveUndoOperation(operation);
+					Operation operation = manager.PeekUndo();
+					manager.RemoveUndoOperation(operation);
+
+					OnWorkListLayersRemoved(mapView, _workListName);
+				}
 			});
 		}
 		catch (Exception ex)
@@ -117,5 +130,40 @@ public class LoadWorkListLayersOperation : Operation
 		}
 
 		return _workListName;
+	}
+
+	private void LoadLayers(MapView mapView)
+	{
+		IWorkList workList = WorkListRegistry.Instance.Get(_workListName);
+		Assert.NotNull(workList);
+
+		string workListFile = workList.Repository.WorkItemStateRepository
+									  .WorkListDefinitionFilePath;
+		Assert.NotNullOrEmpty(workListFile);
+
+		_workEnvironment.LoadWorkListLayer(mapView, workList, workListFile);
+		_workEnvironment.LoadAssociatedLayers(mapView, workList);
+	}
+
+	private void OnWorkListLayersAdded(MapView mapView, string workListName)
+	{
+		WorkListLayersAdded?.Invoke(this, new WorkListLayersArgs(workListName, mapView));
+	}
+
+	private void OnWorkListLayersRemoved(MapView mapView, string workListName)
+	{
+		WorkListLayersRemoved?.Invoke(this, new WorkListLayersArgs(workListName, mapView));
+	}
+}
+
+public class WorkListLayersArgs : EventArgs
+{
+	public string WorkListName { get; }
+	public MapView MapView { get; }
+
+	public WorkListLayersArgs(string workListName, MapView mapView)
+	{
+		WorkListName = workListName;
+		MapView = mapView;
 	}
 }
