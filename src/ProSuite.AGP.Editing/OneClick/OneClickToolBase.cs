@@ -657,9 +657,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
 
+			bool allowMultiselection = AllowMultiSelection(out _);
+
 			if (applicableSelection.Count > 0 &&
 			    (AllowNotApplicableFeaturesInSelection ||
-			     applicableSelection.Count == selectionCount))
+			     applicableSelection.Count == selectionCount) &&
+			    (allowMultiselection || applicableSelection.Count == 1))
 			{
 				LogUsingCurrentSelection();
 
