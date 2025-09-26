@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
@@ -38,6 +39,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			_connector = connector;
 		}
 
+		private WorkspaceFactory WorkspaceFactory => WorkspaceUtils.GetWorkspaceFactory(_connector);
+
 		/// <summary>
 		/// Opens the associated datastore. This method must be run on the MCT.
 		/// </summary>
@@ -55,6 +58,20 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public bool References(Datastore datastore)
 		{
 			return Equals(datastore.GetConnector());
+		}
+
+		public bool References(WorkspaceFactory workspaceFactory, string connectionString,
+		                       DatastoreComparison comparison = DatastoreComparison.Exact)
+		{
+			if (workspaceFactory != WorkspaceFactory)
+			{
+				return false;
+			}
+
+			Connector otherConnector =
+				WorkspaceUtils.CreateConnector(workspaceFactory, connectionString);
+
+			return Equals(otherConnector, comparison);
 		}
 
 		public string GetDisplayText()
