@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -520,7 +521,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				IsCompletingSelectionSketch = true;
 
-				using var precedence = CreatePickerPrecedence(sketchGeometry);
+				using var precedence = await CreatePickerPrecedenceAsync(sketchGeometry);
 
 				await QueuedTaskUtils.Run(async () =>
 				{
@@ -556,14 +557,34 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnSelecting() { }
 
-		protected virtual IPickerPrecedence CreatePickerPrecedence(
+		protected virtual async Task<IPickerPrecedence> CreatePickerPrecedenceAsync(
 			[NotNull] Geometry sketchGeometry)
 		{
+			Point screenLocation = await GetPopupScreenLocation(sketchGeometry);
+
 			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                            ActiveMapView.ClientToScreen(CurrentMousePosition))
+			                            screenLocation)
 			       {
 				       NoMultiselection = ! AllowMultiSelection(out _)
 			       };
+		}
+
+		/// <summary>
+		/// Provides the screen location for displaying popups, based on the current mouse
+		/// location.
+		/// </summary>
+		/// <param name="sketchGeometry"></param>
+		/// <returns></returns>
+		protected async Task<Point> GetPopupScreenLocation([NotNull] Geometry sketchGeometry)
+		{
+			MapView activeMapView = ActiveMapView;
+
+			double zValue = sketchGeometry.HasZ ? sketchGeometry.Extent.ZMin : double.NaN;
+
+			Point screenLocation =
+				await MapUtils.ClientToScreenPointAsync(activeMapView, CurrentMousePosition,
+				                                        zValue);
+			return screenLocation;
 		}
 
 		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(

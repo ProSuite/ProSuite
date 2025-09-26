@@ -6,6 +6,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
@@ -1152,6 +1153,108 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return SimplifyZ(builder.ToGeometry());
 		}
 
+		public static T SetConstantZ<T>(T geometry, double z) where T : Geometry
+		{
+			if (geometry is null) return null;
+
+			var builder = geometry.ToBuilder();
+			builder.HasZ = true;
+
+			if (geometry is MapPoint)
+			{
+				var mapPointBuilder = (MapPointBuilderEx) builder;
+				mapPointBuilder.Z = z;
+				return (T) (Geometry) mapPointBuilder.ToGeometry();
+			}
+
+			if (geometry is Multipoint)
+			{
+				var multipointBuilder = (MultipointBuilderEx) builder;
+
+				IList<double> zValues = multipointBuilder.Zs;
+
+				for (var i = 0; i < zValues.Count; i++)
+				{
+					zValues[i] = z;
+				}
+
+				return (T) (Geometry) multipointBuilder.ToGeometry();
+			}
+
+			if (geometry is Multipart)
+			{
+				var multipartBuilder = (MultipartBuilderEx) builder;
+
+				for (int partIndex = 0; partIndex < multipartBuilder.PartCount; partIndex++)
+				{
+					var part = multipartBuilder.Parts[partIndex];
+					for (int segmentIndex = 0; segmentIndex < part.Count; segmentIndex++)
+					{
+						var segment = part[segmentIndex];
+						var newSegment = SetSegmentZ(segment, z);
+						multipartBuilder.ReplaceSegment(partIndex, segmentIndex, newSegment);
+					}
+				}
+
+				return (T) multipartBuilder.ToGeometry();
+			}
+
+			throw new NotSupportedException(
+				$"The provided geometry ({geometry.GeometryType}) type is not yet supported");
+		}
+
+		private static Segment SetSegmentZ(Segment segment, double z)
+		{
+			MapPoint segmentStartPoint = segment.StartPoint;
+			MapPoint segmentEndPoint = segment.EndPoint;
+
+			SpatialReference spatialReference = segmentStartPoint.SpatialReference;
+
+			MapPoint startPoint = MapPointBuilderEx.CreateMapPoint(
+				segmentStartPoint.X, segmentStartPoint.Y, z,
+				segmentStartPoint.HasM ? segmentStartPoint.M : double.NaN,
+				spatialReference);
+
+			MapPoint endPoint = MapPointBuilderEx.CreateMapPoint(
+				segmentEndPoint.X, segmentEndPoint.Y, z,
+				segmentEndPoint.HasM ? segmentEndPoint.M : double.NaN,
+				segmentEndPoint.SpatialReference);
+
+			if (segment is LineSegment)
+			{
+				return LineBuilderEx.CreateLineSegment(startPoint, endPoint);
+			}
+
+			if (segment is CubicBezierSegment bezier)
+			{
+				Coordinate2D bezierControlPoint1 = bezier.ControlPoint1;
+				Coordinate2D bezierControlPoint2 = bezier.ControlPoint2;
+
+				var cp1 = MapPointBuilderEx.CreateMapPoint(
+					bezierControlPoint1.X, bezierControlPoint1.Y, z, double.NaN, spatialReference);
+
+				var cp2 = MapPointBuilderEx.CreateMapPoint(
+					bezierControlPoint2.X, bezierControlPoint2.Y, z, double.NaN, spatialReference);
+
+				return CubicBezierBuilderEx.CreateCubicBezierSegment(
+					startPoint, cp1, cp2, endPoint);
+			}
+
+			if (segment is EllipticArcSegment arc)
+			{
+				var builder = new EllipticArcBuilderEx(arc);
+				builder.StartPoint = startPoint;
+				builder.EndPoint = endPoint;
+				return builder.ToSegment();
+			}
+
+			// For other segment types, use the generic builder approach
+			var segmentBuilder = segment.ToBuilder();
+			segmentBuilder.StartPoint = startPoint;
+			segmentBuilder.EndPoint = endPoint;
+			return segmentBuilder.ToSegment();
+		}
+
 		public static IGeometryEngine Engine
 		{
 			get => _engine ??= GeometryEngine.Instance;
@@ -2027,6 +2130,22 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				// Single point geometry
 				yield return mapPoint;
 			}
+		}
+
+		public static EnvelopeXY GetCombinedExtent(IEnumerable<Feature> features)
+		{
+			var envelopeBuilder = new EnvelopeBuilderEx();
+
+			foreach (var feature in features)
+			{
+				var geometry = feature.GetShape();
+				envelopeBuilder.Union(geometry.Extent);
+			}
+
+			var combinedExtent = envelopeBuilder.ToGeometry();
+
+			return new EnvelopeXY(combinedExtent.XMin, combinedExtent.YMin, combinedExtent.XMax,
+			               combinedExtent.YMax);
 		}
 	}
 }

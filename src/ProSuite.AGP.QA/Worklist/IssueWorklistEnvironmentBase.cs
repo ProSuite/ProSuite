@@ -36,23 +36,23 @@ namespace ProSuite.AGP.QA.WorkList
 			return "Issue Work List";
 		}
 
-		public override void RemoveAssociatedLayers()
+		public override void RemoveAssociatedLayers(MapView mapView)
 		{
-			RemoveFromMapCore(GetTablesCore());
+			RemoveFromMapCore(mapView, GetTablesCore());
 		}
 
-		protected override T GetLayerContainerCore<T>()
+		protected override T GetLayerContainerCore<T>(MapView mapView)
 		{
 			var qaGroupLayerName = "QA";
 
-			GroupLayer qaGroupLayer = MapView.Active.Map.FindLayers(qaGroupLayerName)
+			GroupLayer qaGroupLayer = mapView.Map.FindLayers(qaGroupLayerName)
 			                                 .OfType<GroupLayer>().FirstOrDefault();
 
 			if (qaGroupLayer == null)
 			{
 				_msg.DebugFormat("Creating new group layer {0}", qaGroupLayerName);
 				qaGroupLayer = LayerFactory.Instance.CreateGroupLayer(
-					MapView.Active.Map, 0, qaGroupLayerName);
+					mapView.Map, 0, qaGroupLayerName);
 			}
 
 #if ARCGISPRO_GREATER_3_2
@@ -64,7 +64,8 @@ namespace ProSuite.AGP.QA.WorkList
 			// - They should be deletable by the user (in which case a new layer should be re-added)
 			// - If the layer is moved outside the group a new layer should be added. Only layers within the
 			//   sub-group are considered to be part of the work list.
-			string groupName = GetDisplayName(); // _workListItemDatastore.SuggestWorkListGroupName();
+			string groupName = GetDisplayName();
+
 			if (groupName != null)
 			{
 				GroupLayer workListGroupLayer = qaGroupLayer.FindLayers(groupName)
@@ -99,7 +100,7 @@ namespace ProSuite.AGP.QA.WorkList
 		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
-			DbStatusWorkItemRepository result = null;
+			DbStatusWorkItemRepository result;
 
 			var watch = Stopwatch.StartNew();
 

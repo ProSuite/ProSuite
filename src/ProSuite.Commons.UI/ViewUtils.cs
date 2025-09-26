@@ -206,6 +206,26 @@ namespace ProSuite.Commons.UI
 			return Task.CompletedTask;
 		}
 
+		public static bool IsOnUIThread()
+		{
+			try
+			{
+				Dispatcher dispatcher = Application.Current?.Dispatcher;
+
+				if (dispatcher == null)
+				{
+					return false;
+				}
+
+				return dispatcher.CheckAccess();
+			}
+			catch (Exception)
+			{
+				// If we can't determine the thread context, assume we're not on the UI thread
+				return false;
+			}
+		}
+
 		private static Window GetMainWindow()
 		{
 			try

@@ -111,6 +111,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		protected Geometry AreaOfInterest => Repository.AreaOfInterest;
 
+		public bool NavigateInAllMapViews { get; set; }
+
 		public double MinimumScaleDenominator { get; set; }
 
 		public bool AlwaysUseDraftMode { get; set; } = true;
@@ -850,8 +852,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Assert.ArgumentNotNull(perimeters, nameof(perimeters));
 
-			_msg.VerboseDebug(
-				() => $"Getting work items for innermost context ({perimeters.Length} perimeters)");
+			_msg.VerboseDebug(() =>
+				                  $"Getting work items for innermost context ({perimeters.Length} perimeters)");
 
 			// TODO: DARO revise it's always Exclude Current
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
@@ -878,9 +880,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					if (workItems.Count == 0)
 					{
-						_msg.VerboseDebug(
-							() =>
-								"The intersection contains no items, searching partially contained items");
+						_msg.VerboseDebug(() =>
+							                  "The intersection contains no items, searching partially contained items");
 
 						workItems =
 							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection), currentSearch,
@@ -1583,7 +1584,18 @@ namespace ProSuite.AGP.WorkList.Domain
 				//       So far, the buffer distance is assumed to be in the data spatial reference units.
 				double bufferDistance = ItemDisplayBufferDistance;
 
-				item.SetBufferedGeometry(GeometryUtils.Buffer(shapeGeometry, bufferDistance));
+				Geometry buffer = GeometryUtils.Buffer(shapeGeometry, bufferDistance);
+
+				// NOTE: Buffer returns a 2D geometry even if the input has Z. This is important for
+				// correct display in scene and stereo views.
+				if (shapeGeometry.HasZ && buffer is Polygon bufferPolygon)
+				{
+					double averageZ = (shapeGeometry.Extent.ZMin + shapeGeometry.Extent.ZMax) / 2;
+
+					buffer = GeometryUtils.SetConstantZ(bufferPolygon, averageZ);
+				}
+
+				item.SetBufferedGeometry(buffer);
 			}
 			else
 			{
