@@ -386,8 +386,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				       Equals(a.Branch, b.Branch);
 			}
 
-			return Equals(a.User, b.User) &&
-			       Equals(a.Password, b.Password);
+			// Do not compare password (one can be empty, the other encrypted)
+			return Equals(a.User, b.User);
 		}
 
 		private static bool AreEqual([NotNull] RealtimeServiceConnectionProperties a,
