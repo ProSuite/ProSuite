@@ -137,7 +137,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 			}
 		});
 
-		await StartSelectionPhaseAsync();
+		// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+		// sketch remains that cannot be cleared with ESC!
+		await ClearSketchAsync();
+		await StartSketchPhaseAsync();
 
 		return false;
 	}
