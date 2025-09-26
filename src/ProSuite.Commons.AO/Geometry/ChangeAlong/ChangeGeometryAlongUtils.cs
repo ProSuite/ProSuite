@@ -51,6 +51,49 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		}
 
 		/// <summary>
+		/// Limited reshape curve calculation without support for multiple-sources-as-union, adjust and preview-calculation
+		/// </summary>
+		/// <param name="sourceFeatures"></param>
+		/// <param name="targetFeatures"></param>
+		/// <param name="visibleExtent"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="bufferOptions"></param>
+		/// <param name="filterOptions"></param>
+		/// <param name="trackCancel"></param>
+		/// <returns></returns>
+		public static ReshapeAlongResult CalculateReshapeCurves(
+			[NotNull] IList<IFeature> sourceFeatures,
+			[NotNull] IList<IFeature> targetFeatures,
+			[CanBeNull] IEnvelope visibleExtent,
+			double tolerance,
+			TargetBufferOptions bufferOptions,
+			ReshapeCurveFilterOptions filterOptions,
+			[CanBeNull] ITrackCancel trackCancel = null)
+		{
+			ISubcurveCalculator curveCalculator = new ReshapableSubcurveCalculator();
+
+			if (tolerance >= 0)
+			{
+				curveCalculator.CustomTolerance = tolerance;
+			}
+
+			var resultSubcurves = new List<CutSubcurve>();
+
+			ReshapeAlongCurveUsability usability = CalculateChangeAlongCurves(
+				sourceFeatures, targetFeatures, visibleExtent,
+				tolerance, bufferOptions, filterOptions,
+				resultSubcurves, curveCalculator, trackCancel);
+
+			IPolyline filterBuffer =
+				curveCalculator.SubcurveFilter.ExclusionOutsideSourceBufferLine;
+
+			return new ReshapeAlongResult(usability, resultSubcurves)
+			       {
+				       FilterBuffer = filterBuffer
+			       };
+		}
+
+		/// <summary>
 		/// Cut curve calculation.
 		/// </summary>
 		/// <param name="sourceFeatures"></param>

@@ -597,6 +597,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					                    ? GeometryUtils.GetZResolution(differentFrom) / 2
 					                    : GeometryUtils.GetZTolerance(differentFrom));
 
+			if (! GeometryUtils.IsZAware(onPolyline) || ! GeometryUtils.IsZAware(differentFrom))
+			{
+				zTolerance = double.NaN;
+			}
+
 			return ReshapeUtils.GetDifferencePolylineXyz(
 				onPolyline, differentFrom, xyTolerance, zTolerance);
 		}

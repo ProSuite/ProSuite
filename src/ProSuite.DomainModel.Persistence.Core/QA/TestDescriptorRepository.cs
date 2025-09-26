@@ -51,7 +51,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			using (ISession session = OpenSession(true))
 			{
-				return QualityRepositoryUtils.GetDescriptorWithSameImplementation(
+				return QualityRepositoryUtils.GetTestDescriptorWithSameImplementation(
 					session, testDescriptor);
 			}
 		}

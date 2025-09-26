@@ -42,9 +42,12 @@ namespace ProSuite.DomainModel.AO.Test.QA.TestReport
 
 			string html = writer.ToString();
 
+			const string reportName = "Qa_TestDescriptors.html";
+			Console.WriteLine(Path.GetFullPath(reportName));
+
 			Console.WriteLine(html);
 
-			FileSystemUtils.WriteTextFile(html, "Qa_TestDescriptors.html");
+			FileSystemUtils.WriteTextFile(html, reportName);
 		}
 
 		[Test]

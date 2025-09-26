@@ -1,10 +1,10 @@
 using System;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
-	public interface IModelView<T> : IBoundView<T, IModelObserver> where T : Model
+	public interface IModelView<T> : IBoundView<T, IModelObserver> where T : DdxModel
 	{
 		bool GoToSpatialReferenceEnabled { get; set; }
 

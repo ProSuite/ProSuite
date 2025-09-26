@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -100,8 +100,14 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			var selectionChanged = false;
 			var visibleRowsChanged = false;
+			CurrencyManager currencyManager = null; // This fixes ProSuite #236
 			try
 			{
+				BindingContext bindingContext = Assert.NotNull(BindingContext);
+
+				currencyManager = (CurrencyManager) bindingContext[DataSource];
+				currencyManager.SuspendBinding();
+
 				foreach (DataGridViewRow row in Rows)
 				{
 					if (row.IsNewRow)
@@ -126,6 +132,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			}
 			finally
 			{
+				currencyManager?.ResumeBinding();
+
 				_ignoreRowStateChange = wasIgnored;
 				if (! wasIgnored)
 				{

@@ -223,10 +223,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			{
 				Dataset dataset = verificationDataset.Dataset;
 
-				Model model = dataset.Model as Model;
+				DdxModel model = dataset.Model;
 
 				// TODO: only if WriteDetailedReport == true (use VerificationReporter from other service?)
-				IWorkspaceContext workspaceContext = model?.MasterDatabaseWorkspaceContext;
+				IWorkspaceContext workspaceContext = model?.GetMasterDatabaseWorkspaceContext();
 
 				IWorkspace workspace = workspaceContext?.Workspace;
 
@@ -380,6 +380,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				StringBuilder stringBuilder = new StringBuilder(
 					$"Starting quality verification using quality specification {qualitySpecification.Name}" +
 					$" with verification tile size {tileSize}");
+				stringBuilder.AppendLine();
 
 				_msg.InfoFormat("Quality specification: {0}", qualitySpecification.Name);
 				_msg.InfoFormat("Verification tile size: {0}", tileSize);
@@ -392,7 +393,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					{
 						const string testPerimeterIsEmpty = "Test perimeter is empty";
 						_msg.Warn(testPerimeterIsEmpty);
-						stringBuilder.Append(testPerimeterIsEmpty);
+						stringBuilder.AppendLine(testPerimeterIsEmpty);
 					}
 					else
 					{

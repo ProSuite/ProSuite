@@ -3,11 +3,12 @@ using ArcGIS.Core.Data;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
 
+// TODO: This class is not used anywhere!
 public class DatastoreComparer : IEqualityComparer<Datastore>
 {
 	public bool Equals(Datastore x, Datastore y)
 	{
-		return WorkspaceUtils.IsSameDatastore(x, y);
+		return WorkspaceUtils.IsSameDatastore(x, y, DatastoreComparison.ReferenceEquals);
 	}
 
 	public int GetHashCode(Datastore datastore)

@@ -431,7 +431,8 @@ namespace ProSuite.QA.Container
 
 				for (int i = iStart; i < elementCount; i++)
 				{
-					if (equalsFunc?.Invoke(list[i], element) ?? list[i] == element)
+					T listEntry = Assert.NotNull(list[i], "Null list entry in involved datasets");
+					if (equalsFunc?.Invoke(listEntry, element) ?? listEntry.Equals(element))
 					{
 						elementIndex = i;
 						break;
@@ -454,7 +455,7 @@ namespace ProSuite.QA.Container
 
 			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
 			{
-				if (InvolvedTables[tableIndex] == table)
+				if (InvolvedTables[tableIndex].Equals(table))
 				{
 					yield return tableIndex;
 				}
@@ -469,7 +470,7 @@ namespace ProSuite.QA.Container
 			{
 				IReadOnlyTable table = InvolvedTables[tableIndex];
 
-				if (table != row.Table)
+				if (! table.Equals(row.Table))
 				{
 					continue;
 				}
@@ -608,7 +609,7 @@ namespace ProSuite.QA.Container
 				return true;
 			}
 
-			if (row.Table != InvolvedTables[tableIndex])
+			if (! row.Table.Equals(InvolvedTables[tableIndex]))
 			{
 				throw new InvalidProgramException("row does not correspond to table index");
 			}
@@ -731,7 +732,7 @@ namespace ProSuite.QA.Container
 				return 0;
 			}
 
-			if (! (row is TerrainRow || row.Table == InvolvedTables[tableIndex]))
+			if (! (row is TerrainRow || row.Table.Equals(InvolvedTables[tableIndex])))
 			{
 				throw new InvalidOperationException(
 					"row does not correspond to table index");

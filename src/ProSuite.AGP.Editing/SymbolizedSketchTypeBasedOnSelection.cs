@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
+using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -16,7 +16,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.NamedValuesExpressions;
 
 namespace ProSuite.AGP.Editing;
 
@@ -62,7 +61,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// <summary>
 	/// Must be called on the MCT.
 	/// </summary>
-	public void SetSketchAppearanceBasedOnSelection()
+	public async Task SetSketchAppearanceBasedOnSelectionAsync()
 	{
 		Gateway.LogEntry(_msg);
 
@@ -71,7 +70,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-			TrySetSketchAppearance(featureLayer, oids);
+			await TrySetSketchAppearanceAsync(featureLayer, oids);
 		}
 		catch (Exception ex)
 		{
@@ -82,7 +81,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// <summary>
 	/// Is always on MCT.
 	/// </summary>
-	private void OnSketchModified(SketchModifiedEventArgs args)
+	private async void OnSketchModified(SketchModifiedEventArgs args)
 	{
 		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
 		    _showFeatureSketchSymbology)
@@ -99,7 +98,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
 			// only set sketch symbol not sketch type!
-			TrySetSketchAppearance(featureLayer, oids);
+			await TrySetSketchAppearanceAsync(featureLayer, oids);
 		}
 		catch (Exception ex)
 		{
@@ -118,11 +117,11 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		{
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
 
-			await QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
 				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-				TrySetSketchAppearance(featureLayer, oids);
+				await TrySetSketchAppearanceAsync(featureLayer, oids);
 			});
 		}
 		catch (Exception ex)
@@ -131,7 +130,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	private void TrySetSketchAppearance([CanBeNull] FeatureLayer featureLayer, [CanBeNull] IList<long> oids)
+	private async Task TrySetSketchAppearanceAsync([CanBeNull] FeatureLayer featureLayer, [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
@@ -143,7 +142,7 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 
 		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
 		{
-			if (_tool.CanSetConstructionSketchSymbol(geometryType))
+			if (await _tool.CanSetConstructionSketchSymbol(geometryType))
 			{
 				//SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
 				SetSketchSymbol(GetSymbolReference(featureLayer, oids));

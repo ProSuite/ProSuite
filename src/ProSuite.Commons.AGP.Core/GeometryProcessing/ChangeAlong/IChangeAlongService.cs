@@ -19,13 +19,13 @@ public interface IChangeAlongService
 		double? customTolerance,
 		CancellationToken cancellationToken);
 
-	ChangeAlongCurves CalculateCutLines(
-		[NotNull] IList<Feature> sourceFeatures,
-		[NotNull] IList<Feature> targetFeatures,
-		TargetBufferOptions targetBufferOptions,
-		IBoundedXY clipExtent,
-		ZValueSource zValueSource,
-		CancellationToken cancellationToken);
+	ChangeAlongCurves CalculateCutLines([NotNull] IList<Feature> sourceFeatures,
+	                                    [NotNull] IList<Feature> targetFeatures,
+	                                    TargetBufferOptions targetBufferOptions,
+	                                    IBoundedXY clipExtent,
+	                                    double? customTolerance,
+	                                    ZValueSource zValueSource,
+	                                    CancellationToken cancellationToken);
 
 	List<ResultFeature> ApplyReshapeLines(
 		[NotNull] IList<Feature> sourceFeatures,
@@ -38,14 +38,14 @@ public interface IChangeAlongService
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves);
 
-	List<ResultFeature> ApplyCutLines(
-		[NotNull] IList<Feature> sourceFeatures,
-		[NotNull] IList<Feature> targetFeatures,
-		[NotNull] IList<CutSubcurve> selectedReshapeLines,
-		TargetBufferOptions targetBufferOptions,
-		IBoundedXY clipExtent,
-		ZValueSource zValueSource,
-		bool insertVerticesInTarget,
-		CancellationToken cancellationToken,
-		out ChangeAlongCurves newChangeAlongCurves);
+	List<ResultFeature> ApplyCutLines([NotNull] IList<Feature> sourceFeatures,
+	                                  [NotNull] IList<Feature> targetFeatures,
+	                                  [NotNull] IList<CutSubcurve> selectedReshapeLines,
+	                                  TargetBufferOptions targetBufferOptions,
+	                                  IBoundedXY clipExtent,
+	                                  double? customTolerance,
+	                                  ZValueSource zValueSource,
+	                                  bool insertVerticesInTarget,
+	                                  CancellationToken cancellationToken,
+	                                  out ChangeAlongCurves newChangeAlongCurves);
 }

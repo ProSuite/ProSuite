@@ -355,16 +355,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IDatabaseConnectionInfo members
 
-		string IDatabaseConnectionInfo.ConnectedDatabase => throw new NotImplementedException();
-		string IDatabaseConnectionInfo2.ConnectedDatabase => throw new NotImplementedException();
+		public string ConnectedDatabase => "GdbWorkspace";
+		public string ConnectedUser => null;
 
 		esriGeodatabaseServerClassType IDatabaseConnectionInfo2.GeodatabaseServerClass =>
 			esriGeodatabaseServerClassType.esriServerClassUnknown;
 
-		string IDatabaseConnectionInfo.ConnectedUser => throw new NotImplementedException();
-		string IDatabaseConnectionInfo2.ConnectedUser => throw new NotImplementedException();
-
-		string IDatabaseConnectionInfo2.ConnectionServer => throw new NotImplementedException();
+		string IDatabaseConnectionInfo2.ConnectionServer => Environment.MachineName;
 
 		esriConnectionDBMS IDatabaseConnectionInfo2.ConnectionDBMS => ToEsriConnectionDbms(DbType);
 

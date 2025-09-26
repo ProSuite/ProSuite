@@ -370,7 +370,7 @@ namespace ProSuite.Commons.Geom
 			                                             tolerance);
 		}
 
-		public bool IntersectsPointXY([NotNull] IPnt point, double tolerance)
+		public bool IntersectsPointXY([NotNull] ICoordinates point, double tolerance)
 		{
 			if (! ExtentIntersectsXY(point, tolerance))
 			{
@@ -546,7 +546,7 @@ namespace ProSuite.Commons.Geom
 		/// projection of the test point falls within the line, below 0 if it is before the start point,
 		/// greater than 1 if it is after the end point.</param>
 		/// <returns></returns>
-		public double GetDistanceXYPerpendicularSigned(IPnt testPoint,
+		public double GetDistanceXYPerpendicularSigned(ICoordinates testPoint,
 		                                               out double distanceAlongRatio)
 		{
 			double vX = testPoint.X - StartPoint.X;

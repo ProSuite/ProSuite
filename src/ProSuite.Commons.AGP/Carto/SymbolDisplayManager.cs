@@ -17,6 +17,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	private readonly Dictionary<string, bool> _lmStateCache = new();
 	private readonly Dictionary<string, SymbolDisplaySettings> _settingsByMap = new();
 
+	private SubscriptionToken _mapViewInitializedToken;
 	private SubscriptionToken _activeMapViewChangedToken;
 	private SubscriptionToken _mapViewCameraChangedToken;
 	private SubscriptionToken _projectClosedToken;
@@ -75,12 +76,13 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 	#endregion
 
-	// Settings:
-	// write: set current and default
-	// read: get current (or default)
+	// The following settings are per map:
+	// - on write: set current and default
+	// - on read: get current (or default)
 
-	private IIndexedProperty<Map, bool?> WantSLD { get; }
-	private IIndexedProperty<Map, bool?> WantLM { get; }
+	// The user's last conscious SLD/LM preferences (from toggle buttons):
+	public IIndexedProperty<Map, bool?> WantSLD { get; }
+	public IIndexedProperty<Map, bool?> WantLM { get; }
 
 	public IIndexedProperty<Map, bool> NoMaskingWithoutSLD { get; }
 
@@ -95,6 +97,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			_defaultSettings = settings;
 		}
 
+		_mapViewInitializedToken ??= MapViewInitializedEvent.Subscribe(OnMapViewInitialized);
 		_activeMapViewChangedToken ??= ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
 		_mapViewCameraChangedToken ??= MapViewCameraChangedEvent.Subscribe(OnMapViewCameraChanged);
 		_projectClosedToken ??= ProjectClosedEvent.Subscribe(OnProjectClosed);
@@ -117,11 +120,35 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			ActiveMapViewChangedEvent.Unsubscribe(_activeMapViewChangedToken);
 		}
 
+		if (_mapViewInitializedToken is not null)
+		{
+			MapViewInitializedEvent.Unsubscribe(_mapViewInitializedToken);
+		}
+
 		ClearStateCache();
 		ClearSettings();
 	}
 
 	#region Event handling
+
+	private void OnMapViewInitialized(MapViewEventArgs args)
+	{
+		try
+		{
+			// MapViewInitialized fires when the map view's Camera is still null,
+			// so can't set _lastScaleDenom here (do so in OnActiveMapViewChanged)
+
+			var map = args.MapView?.Map;
+			if (map is not null)
+			{
+				QueuedTask.Run(() => InitializeDesiredState(map));
+			}
+		}
+		catch (Exception ex)
+		{
+			Gateway.LogError(ex, _msg, nameof(OnMapViewInitialized));
+		}
+	}
 
 	private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs args)
 	{
@@ -129,7 +156,13 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		{
 			var camera = args.IncomingView?.Camera;
 			_lastScaleDenom = camera?.Scale ?? 0.0;
-			// Note: MapViewInitialized fires when the map view's Camera is still null
+
+			var map = args.IncomingView?.Map;
+			if (map != null && (WantSLD[map] is null || WantLM[map] is null))
+			{
+				// Just a fallback in case we didn't get OnMapViewInitialized
+				QueuedTask.Run(() => InitializeDesiredState(map));
+			}
 		}
 		catch (Exception ex)
 		{
@@ -146,7 +179,9 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 			var currentScaleDenom = camera.Scale;
 
-			// Note: args.MapView is "ahead" of MapView.Active (the latter may still be null)
+			// Empirically, args.MapView is "ahead" of MapView.Active:
+			// the latter may still be null when we receive this event
+
 			var map = args.MapView?.Map;
 			if (map is null) return;
 
@@ -372,6 +407,21 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 	{
 		_sldStateCache.Clear();
 		_lmStateCache.Clear();
+	}
+
+	/// <remarks>Must run on MCT</remarks>
+	private void InitializeDesiredState(Map map)
+	{
+		_msg.Debug($"Initializing {GetType().Name} for map “{map?.Name ?? "(null)"}”");
+
+		using (_msg.IncrementIndentation())
+		{
+			const bool uncached = true;
+			WantSLD[map] = UsesSLD(map, uncached);
+			WantLM[map] = UsesLM(map, uncached);
+
+			_msg.Debug($"Want: SLD={WantSLD[map]}, LM={WantLM[map]}");
+		}
 	}
 
 	#endregion

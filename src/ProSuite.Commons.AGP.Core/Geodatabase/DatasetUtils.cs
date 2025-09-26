@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -303,6 +304,92 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return false;
 		}
 
+		public static FeatureClass OpenOrCreateFeatureClass(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[NotNull] string datasetName,
+			[NotNull] List<FieldDescription> fieldDescription,
+			[NotNull] GeometryType geometryType,
+			[NotNull] SpatialReference spatialReference)
+		{
+			TryOpenDataset<FeatureClass>(geodatabase, datasetName, out var fc);
+			if (fc != null)
+			{
+				if (! ValidateSchema(fc, geometryType, fieldDescription, spatialReference))
+				{
+					throw new ArgumentException(
+						$"Feature class {datasetName} already exists but has an incompatible schema.");
+				}
+
+				return fc;
+			}
+
+			return CreateFeatureClass(geodatabase, datasetName, fieldDescription, geometryType,
+			                          spatialReference);
+		}
+
+		private static bool ValidateSchema(FeatureClass featureClass,
+		                                   GeometryType expectedGeometryType,
+		                                   List<FieldDescription> expectedFields,
+		                                   SpatialReference spatialReference)
+		{
+			using (FeatureClassDefinition definition = featureClass.GetDefinition())
+			{
+				if (definition.GetShapeType() != expectedGeometryType)
+				{
+					return false;
+				}
+
+				if (! definition.GetSpatialReference().IsEqual(spatialReference))
+				{
+					return false;
+				}
+
+				var existingFields = definition.GetFields();
+
+				foreach (var expectedField in expectedFields)
+				{
+					var existingField = existingFields.FirstOrDefault(f =>
+							f.Name.Equals(expectedField.Name, StringComparison.OrdinalIgnoreCase));
+
+					if (existingField == null || existingField.FieldType != expectedField.FieldType)
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+		}
+
+		public static FeatureClass CreateFeatureClass(
+			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+			[NotNull] string datasetName,
+			[NotNull] List<FieldDescription> fieldDescription,
+			[NotNull] GeometryType geometryType,
+			[NotNull] SpatialReference spatialReference,
+			[NotNull] bool hasZ = true)
+		{
+			var shapeFieldDescription = new ShapeDescription(geometryType, spatialReference)
+			                            {
+				                            HasZ = hasZ
+			                            };
+			var featureClassDescription = new FeatureClassDescription(datasetName,
+				fieldDescription,
+				shapeFieldDescription);
+
+			SchemaBuilder schemaBuilder = new SchemaBuilder(geodatabase);
+			schemaBuilder.Create(featureClassDescription);
+			bool success = schemaBuilder.Build();
+
+			if (! success)
+			{
+				throw new Exception($"Failed to create feature class {datasetName}");
+			}
+
+			// Open and return the newly created feature class
+			return geodatabase.OpenDataset<FeatureClass>(datasetName);
+		}
+
 		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,
 		                                            ICollection<string> tableNames)
 		{
@@ -385,6 +472,46 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			// compare table name and workspace -- for now, give up and assume not same
 
 			return false;
+		}
+
+		/// <summary>
+		/// Determine if two object classes are the same in the sense
+		/// that they refer to the same database table, ignoring versions.
+		/// </summary>
+		/// <param name="class1">The first object class.</param>
+		/// <param name="class2">The other object class.</param>
+		/// <returns>
+		/// true if the two object classes are the same; otherwise, false.
+		/// </returns>
+		public static bool IsSameObjectClass([NotNull] FeatureClass class1,
+		                                     [NotNull] FeatureClass class2)
+		{
+			Assert.ArgumentNotNull(class1, nameof(class1));
+			Assert.ArgumentNotNull(class2, nameof(class2));
+
+			// Test for reference-equals in real ArcObjects object class instances but also allow
+			// synthetic and mock feature classes to provide their own equality implementation:
+			if (class1.Equals(class2))
+			{
+				return true;
+			}
+
+			if (class1.GetID() != class2.GetID())
+			{
+				return false;
+			}
+
+			var dataset1 = class1.GetFeatureDataset();
+			var dataset2 = class2.GetFeatureDataset();
+
+			if (! dataset1.GetName().Equals(dataset2.GetName()))
+			{
+				return false;
+			}
+
+			// class id and names are equal; could still be different db instances
+
+			return WorkspaceUtils.IsSameDatastore(dataset1.GetDatastore(), dataset2.GetDatastore());
 		}
 
 		public static IEnumerable<Table> Distinct(

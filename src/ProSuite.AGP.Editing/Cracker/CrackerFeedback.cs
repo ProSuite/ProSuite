@@ -12,10 +12,8 @@ using ProSuite.Commons.Logging;
 using CrackPoint = ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker.CrackPoint;
 
 namespace ProSuite.AGP.Editing.Cracker
-
 {
 	public class CrackerFeedback
-
 	{
 		private static CIMLineSymbol _overlapLineSymbol;
 
@@ -47,7 +45,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		private static CIMSymbolReference CreateOutlinedPointSymbol(
 			CIMColor fillColor, CIMColor strokeColor, double size, SymbolUtils.MarkerStyle style)
-
 		{
 			var stroke = SymbolUtils.CreateSolidStroke(strokeColor, size / 2);
 
@@ -64,7 +61,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		public CrackerFeedback()
-
 		{
 			_overlapLineSymbol =
 				SymbolUtils.CreateLineSymbol(255, 0, 0, 2);
@@ -106,7 +102,6 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		public void Update([CanBeNull] CrackerResult crackerResult, IList<Feature> selectedFeatures)
-
 		{
 			// clear any previous drawings
 
@@ -115,7 +110,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			// get all vertices of selected features
 
 			foreach (var feature in selectedFeatures)
-
 			{
 				IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature.GetShape());
 
@@ -132,7 +126,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			}
 
 			if (crackerResult == null)
-
 			{
 				return;
 			}
@@ -140,23 +133,18 @@ namespace ProSuite.AGP.Editing.Cracker
 			// draw crackpoints
 
 			foreach (var crackedFeature in crackerResult.ResultsByFeature)
-
 			{
 				foreach (CrackPoint crackPoint in crackedFeature.CrackPoints)
-
 				{
 					if (crackPoint.ViolatesMinimumSegmentLength)
-
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, redCircleMarker);
 
 						_overlays.Add(addedCrackPoint);
 					}
-
 					else if (crackPoint
 					         .TargetVertexOnlyDifferentInZ) //not implemented in server yet
-
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, mintCircleMarker);
@@ -165,7 +153,6 @@ namespace ProSuite.AGP.Editing.Cracker
 					}
 
 					else if (crackPoint.TargetVertexDifferentWithinTolerance)
-
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, greenSquareMarker);
@@ -174,7 +161,6 @@ namespace ProSuite.AGP.Editing.Cracker
 					}
 
 					else
-
 					{
 						IDisposable addedCrackPoint =
 							MapView.Active.AddOverlay(crackPoint.Point, greenCircleMarker);
@@ -186,12 +172,10 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		public void UpdateExtent(Envelope extent)
-
 		{
 			_extentOverlay?.Dispose();
 
 			if (extent == null)
-
 			{
 				return;
 			}
@@ -201,10 +185,11 @@ namespace ProSuite.AGP.Editing.Cracker
 			// Extent symbolization
 
 			var outlineSymbol = SymbolUtils.CreateLineSymbol(255, 255, 255, 5);
-			var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 2); 
-			
+			var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 2);
+
 			var polygonSymbol =
-				SymbolUtils.CreatePolygonSymbol(lineSymbol.SymbolLayers[0], outlineSymbol.SymbolLayers[0]);
+				SymbolUtils.CreatePolygonSymbol(lineSymbol.SymbolLayers[0],
+				                                outlineSymbol.SymbolLayers[0]);
 
 			_extentOverlay =
 				MapView.Active.AddOverlay(polygon, polygonSymbol.MakeSymbolReference());
@@ -213,10 +198,8 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		public void DisposeOverlays()
-
 		{
 			foreach (IDisposable overlay in _overlays)
-
 			{
 				overlay.Dispose();
 			}

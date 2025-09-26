@@ -105,14 +105,14 @@ namespace ProSuite.QA.Container.TestContainer
 				return false;
 			}
 
-			IEnvelope tileEnv = tile.FilterEnvelope;
+			IEnvelope filterEnvelope = tile.FilterEnvelope;
 			CachedTableProps props = _cachedTableProps[table];
 			if (props.HasGeotransformation != null)
 			{
-				tileEnv = props.HasGeotransformation.ProjectEx(tileEnv);
+				filterEnvelope = props.HasGeotransformation.ProjectEx(filterEnvelope);
 			}
 
-			if (! ((IRelationalOperator) tileEnv).Within(_loadedExtents[table]))
+			if (! ((IRelationalOperator) filterEnvelope).Within(_loadedExtents[table]))
 			{
 				return false;
 			}

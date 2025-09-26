@@ -1,13 +1,18 @@
+using System;
 using System.Linq;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+
 
 namespace ProSuite.Commons.AGP.Framework
 {
 	public static class PaneUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		// MapVIew.Active is null if any other pane is active, e.g. catalog pane, layout pane.
 		// But an open table is not a pane.
 
@@ -86,6 +91,34 @@ namespace ProSuite.Commons.AGP.Framework
 			if (! (pane is IFrameworkWindow window)) return;
 
 			window.Activate();
+		}
+
+		/// <summary>
+		/// Activate map given the name
+		/// </summary>
+		/// <param name="name"></param>
+		public static void ActivatePane(string name)
+		{
+			try
+			{
+				foreach (var pane in FrameworkApplication.Panes)
+				{
+					var viewStatePane = pane as ViewStatePane;
+					if (viewStatePane != null)
+					{
+						if (viewStatePane.Caption == name)
+						{
+							viewStatePane.Activate();
+							_msg.InfoFormat($"Activated map view '{name}'");
+							break;
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Error("Pane can not be activated.", ex);
+			}
 		}
 	}
 }

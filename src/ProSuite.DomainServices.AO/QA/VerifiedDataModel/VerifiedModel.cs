@@ -9,7 +9,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
-	public class VerifiedModel : Model
+	public class VerifiedModel : DdxModel, IModelMasterDatabase
 	{
 		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 
@@ -45,7 +45,17 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 		#region Overrides of Model
 
-		protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+		public override string QualifyModelElementName(string modelElementName)
+		{
+			return ModelUtils.QualifyModelElementName(this, modelElementName);
+		}
+
+		public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+		{
+			return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+		}
+
+		IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
 		{
 			IWorkspaceContext result = _workspaceContextFactory.Create(this);
 

@@ -35,7 +35,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			var gdb = (ArcGIS.Core.Data.Geodatabase) proRelationshipClass.GetDatastore();
 
-			ArcWorkspace existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
+			ArcWorkspace existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle.ToInt64());
 
 			ArcRelationshipClass found =
 				existingWorkspace?.GetRelClassByName(proRelationshipClass.GetName());
@@ -61,7 +61,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		                            bool cachePropertiesEagerly = false)
 		{
 			ProRelationshipClass = proRelationshipClass;
-			_proRelationshipClassDefinition = proRelationshipClass.GetDefinition();
+
+			// NOTE: The proRelationshipClass.GetDefinition() does NOT return an AttributedRelationshipClassDefinition!
+			// We have to call the AttributedRelationshipClass:
+			_proRelationshipClassDefinition =
+				proRelationshipClass is AttributedRelationshipClass attributedRelClass
+					? attributedRelClass.GetDefinition()
+					: proRelationshipClass.GetDefinition();
 
 			if (cachePropertiesEagerly)
 			{
@@ -224,6 +230,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				ProRelationshipClass.CreateRelationship(arcOriginObj.ProRow,
 				                                        arcDestinationObj.ProRow);
 
+			// Probably not necessary?
+			arcOriginObj.InvalidateCache();
+
+			// Make sure the new foreign key is used
+			arcDestinationObj.InvalidateCache();
+
 			return new ArcRelationship(aoRelationship, ProRelationshipClass);
 		}
 
@@ -267,6 +279,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			Row sourceRowProRow = sourceRow.ProRow;
 
 			DeleteRelationshipsFor(sourceRowProRow);
+
+			var arcRow = (ArcRow) anObject;
+			arcRow?.InvalidateCache();
 		}
 
 		private void DeleteRelationshipsFor(Row sourceRow)
@@ -532,7 +547,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public string Name => _name ??= _proRelationshipClassDefinition.GetName();
 
-		public IName FullName => new ArcDatasetName(this);
+		public IName FullName =>
+			new ArcRelationshipClassDefinitionName(_proRelationshipClassDefinition, ArcWorkspace);
 
 		public string BrowseName
 		{

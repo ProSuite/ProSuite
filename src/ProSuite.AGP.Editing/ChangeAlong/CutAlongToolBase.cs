@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -28,15 +27,31 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected CutAlongToolOptions _cutAlongToolOptions;
 
-		[CanBeNull]
-		private OverridableSettingsProvider<PartialCutAlongToolOptions> _settingsProvider;
+		[CanBeNull] private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
+
+		protected override bool RefreshSubcurvesOnRedraw =>
+			_cutAlongToolOptions.ClipLinesOnVisibleExtent &&
+			_cutAlongToolOptions.DisplayRecalculateCutLines;
 
 		protected override string EditOperationDescription => "Cut along";
 
 		protected string OptionsFileName => "CutAlongToolOptions.xml";
 
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_cutAlongToolOptions.TargetFeatureSelection;
+
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.CutPolygonAlongOverlay);
+		}
+
+		protected override SelectionCursors GetTargetSelectionCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.CutPolygonAlongOverlay);
+		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
@@ -77,12 +92,16 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
+			double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
+				                          ? _cutAlongToolOptions.MinimalTolerance
+				                          : null;
+
 			bool insertVerticesInTarget = _cutAlongToolOptions.InsertVerticesInTarget;
 
-			var updatedFeatures = MicroserviceClient.ApplyCutLines(
+			List<ResultFeature> updatedFeatures = MicroserviceClient.ApplyCutLines(
 				selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
-				zValueSource, insertVerticesInTarget,
-				cancellationToken, out newChangeAlongCurves);
+				customTolerance, zValueSource, insertVerticesInTarget, cancellationToken,
+				out newChangeAlongCurves);
 
 			return updatedFeatures;
 		}
@@ -158,9 +177,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
+			double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
+				                          ? _cutAlongToolOptions.MinimalTolerance
+				                          : null;
+
 			ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
-				selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, zValueSource,
-				cancellationToken);
+				selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, customTolerance,
+				zValueSource, cancellationToken);
 
 			return result;
 		}
@@ -175,10 +198,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			// For the time being, we always reload the options because they could have been updated in ArcMap
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialCutAlongToolOptions>(
+				new OverridableSettingsProvider<PartialCutAlongOptions>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
-			PartialCutAlongToolOptions localConfiguration, centralConfiguration;
+			PartialCutAlongOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
@@ -222,93 +245,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			var viewModel = GetCutAlongViewModel();
 			viewModel?.Hide();
 		}
-
-		#region first phase selection cursor
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#endregion
-
-		#region second phase target selection cursor
-
-		protected override Cursor GetTargetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay, 10,
-			                              10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Shift, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Lasso, Resources.Shift, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon, null, 10, 10);
-		}
-
-		protected override Cursor GetTargetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CutPolygonAlongOverlay,
-			                              Resources.Polygon, Resources.Shift, 10, 10);
-		}
-
-		#endregion
 
 		#region Tool Options DockPane
 

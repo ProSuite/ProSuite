@@ -12,10 +12,13 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList
 {
-	// todo daro: is this the right namespace for this type?
+	// TODO: (daro) implement subclass MapBasedEditEventsRowCacheSynchronizer and
+	//		 push ArcGIS.Desktop.Mapping code down?
+	// todo: daro is this the right namespace for this type?
 	public class EditEventsRowCacheSynchronizer : IDisposable
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -81,11 +84,28 @@ namespace ProSuite.AGP.WorkList
 
 		private void ProcessChanges(EditCompletedEventArgs args)
 		{
-			// On Undo and Redo e.Members is not empty
-			//if (! e.Members.Any(member => _rowCache.CanContain(member)))
-			//{
-			//	return;
-			//}
+			IEnumerable<BasicFeatureLayer> layers = args.Members.OfType<BasicFeatureLayer>();
+
+			var canContain = false;
+
+			foreach (BasicFeatureLayer layer in layers)
+			{
+				Table table = layer.GetTable();
+				if (_rowCache.CanContain(table))
+				{
+					canContain = true;
+					_msg.IncrementIndentation($"{table.GetName()} is contained in row cache");
+				}
+				else
+				{
+					_msg.Debug($"{table.GetName()} is not contained in row cache");
+				}
+			}
+
+			if (! canContain)
+			{
+				return;
+			}
 
 			var fullTableInvalidations = new List<Table>();
 
@@ -104,14 +124,19 @@ namespace ProSuite.AGP.WorkList
 				}
 			}
 
+			fullTableInvalidations = args.InvalidateAllMembers.OfType<BasicFeatureLayer>()
+			                             .Select(lyr => lyr.GetTable())
+			                             .Where(table => _rowCache.CanContain(table)).ToList();
+
 			if (fullTableInvalidations.Count > 0)
 			{
+				_msg.Warn($"Invalidate all members: {StringUtils.Concatenate(fullTableInvalidations, table => table.GetName(), ", ")}");
 				_rowCache.Invalidate(fullTableInvalidations);
 			}
 
 			// Note This event is fired (to) many times!
 			// Add work list to map -> it fires 6 times. There are
-			// 6 layers in group layer QA..
+			// 6 layers in group layer QA.
 			// Remove group layer, save project and add work list again.
 			// The event fires more often! Wtf..?!
 			if (args.Creates.IsEmpty && args.Deletes.IsEmpty && args.Modifies.IsEmpty)
@@ -137,6 +162,8 @@ namespace ProSuite.AGP.WorkList
 				Dispose(deletes.Keys);
 				Dispose(modifies.Keys);
 			}
+
+			_msg.DecrementIndentation();
 		}
 
 		private static void Dispose(Dictionary<Table, List<long>>.KeyCollection tables)

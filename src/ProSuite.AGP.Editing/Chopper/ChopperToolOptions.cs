@@ -7,42 +7,48 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.AGP.Editing.Chopper
 {
-	public class ChopperToolOptions : OptionsBase<PartialChopperToolOptions>, ICrackerToolOptions
+	public class ChopperToolOptions : OptionsBase<PartialChopperOptions>, ICrackerToolOptions
 	{
-		public ChopperToolOptions([CanBeNull] PartialChopperToolOptions centralOptions,
-		                          [CanBeNull] PartialChopperToolOptions localOptions)
+		public ChopperToolOptions([CanBeNull] PartialChopperOptions centralOptions,
+		                          [CanBeNull] PartialChopperOptions localOptions)
 		{
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ??
-			               new PartialChopperToolOptions();
+			               new PartialChopperOptions();
 
 			// Checkbox Snap
 			CentralizableSnapToTargetVertices =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapToTargetVertices), false);
+
 			// Numeric Spinner Tolerance
 			CentralizableSnapTolerance =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.SnapTolerance), 0.0);
+
 			// Checkbox Minimum Segment
 			CentralizableRespectMinimumSegmentLength =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.RespectMinimumSegmentLength),
 					false);
+
 			// Numeric Spinner Length
 			CentralizableMinimumSegmentLength =
 				InitializeSetting<double>(
 					ReflectionUtils.GetProperty(() => LocalOptions.MinimumSegmentLength), 0.0);
+
 			// Radio Intersect with
 			CentralizableTargetFeatureSelection =
 				InitializeSetting<TargetFeatureSelection>(
 					ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
 					TargetFeatureSelection.VisibleFeatures);
+
 			// Checkbox Z values
 			CentralizableUseSourceZs =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
+
 			// Checkbox T intersection
 			CentralizableExcludeInteriorInteriorIntersections =
 				InitializeSetting<bool>(

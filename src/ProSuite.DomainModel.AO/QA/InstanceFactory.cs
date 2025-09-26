@@ -115,7 +115,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 					IReadOnlyTable table = tableConstraint.Table;
 
-					if (!instance.InvolvedTables[tableIndex].Equals(table))
+					if (! instance.InvolvedTables[tableIndex].Equals(table))
 					{
 						throw new InvalidOperationException(
 							string.Format(
@@ -375,6 +375,26 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] TransformerConfiguration transformerConfiguration,
 			[NotNull] IOpenDataset datasetContext)
 		{
+			ITableTransformer tableTransformer =
+				CreateTransformer(transformerConfiguration, datasetContext);
+
+			try
+			{
+				return (IReadOnlyTable) tableTransformer.GetTransformed();
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(transformerConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
+			}
+		}
+
+		public static ITableTransformer CreateTransformer(
+			[NotNull] TransformerConfiguration transformerConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
 			try
 			{
 				TransformerFactory factory =
@@ -386,10 +406,7 @@ namespace ProSuite.DomainModel.AO.QA
 						$"Unable to create TransformerFactory for {transformerConfiguration}");
 				}
 
-				ITableTransformer tableTransformer =
-					factory.Create(datasetContext, transformerConfiguration);
-
-				return (IReadOnlyTable) tableTransformer.GetTransformed();
+				return factory.Create(datasetContext, transformerConfiguration);
 			}
 			catch (Exception e)
 			{

@@ -800,7 +800,7 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return result;
 		}
 
-		public static double GetDistanceSquaredXY([NotNull] IPnt point1, [NotNull] IPnt point2)
+		public static double GetDistanceSquaredXY([NotNull] ICoordinates point1, [NotNull] ICoordinates point2)
 		{
 			double dx = point2.X - point1.X;
 
@@ -813,7 +813,7 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return result;
 		}
 
-		public static double GetDistanceXY([NotNull] IPnt point1, [NotNull] IPnt point2)
+		public static double GetDistanceXY([NotNull] ICoordinates point1, [NotNull] ICoordinates point2)
 		{
 			double distanceSquared = GetDistanceSquaredXY(point1, point2);
 

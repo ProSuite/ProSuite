@@ -23,5 +23,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 		public bool OnlyResultingInRemovals { get; set; }
 
 		public bool ExcludeResultingInOverlaps { get; set; }
+
+		public bool ShowExcludeReshapeLinesToleranceBuffer { get; set; }
 	}
 }

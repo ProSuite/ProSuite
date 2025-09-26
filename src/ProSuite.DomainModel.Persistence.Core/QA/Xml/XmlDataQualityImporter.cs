@@ -55,7 +55,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
 			[CanBeNull] IDataQualityCategoryRepository categories,
 			[NotNull] IDatasetRepository datasets,
-			[NotNull] IDdxModelRepository models,
+			[NotNull] IModelRepository models,
 			[NotNull] IUnitOfWork unitOfWork,
 			[NotNull] IXmlWorkspaceConverter workspaceConverter,
 			[NotNull] ITestParameterDatasetValidator datasetValidator)
@@ -70,7 +70,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 		}
 
 		[NotNull]
-		private IDdxModelRepository Models { get; }
+		private IModelRepository Models { get; }
 
 		public ITestParameterDatasetValidator TestParameterDatasetValidator { get; set; }
 
@@ -224,7 +224,7 @@ namespace ProSuite.DomainModel.Persistence.Core.QA.Xml
 			XmlDataQualityUtils.AssertUniqueWorkspaceIds(document);
 			XmlDataQualityUtils.AssertUniqueQualifiedCategoryNames(document);
 
-			IList<DdxModel> models = Models.GetAllDdxModels();
+			IList<DdxModel> models = Models.GetAll();
 
 			IDictionary<string, DdxModel> modelsByWorkspaceId =
 				document.Workspaces == null

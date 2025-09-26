@@ -76,7 +76,7 @@ namespace ProSuite.Commons.UI.WPF
 			{
 				var format = GetFormat(parameter);
 				var num = dim.Value.ToString(format, culture);
-				return dim.Unit is null || double.IsInfinity(dim.Value) || double.IsNaN(dim.Value)
+				return dim.Unit is null || dim.Unit.Length == 0 || double.IsInfinity(dim.Value) || double.IsNaN(dim.Value)
 					       ? num
 					       : string.Concat(num, ' ', dim.Unit);
 			}

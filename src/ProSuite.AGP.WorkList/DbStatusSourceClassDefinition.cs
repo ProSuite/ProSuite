@@ -8,22 +8,31 @@ namespace ProSuite.AGP.WorkList
 	/// Defines the elements of a <see cref="DatabaseSourceClass"/>. Consider serializing this class
 	/// together with the work items in order to maintain the basic schema of the database source.
 	/// </summary>
-	public class DbStatusSourceClassDefinition
+	/// 
+	public class SourceClassDefinition
 	{
-		public DbStatusSourceClassDefinition([NotNull] Table table,
-		                                     [CanBeNull] string definitionQuery,
-		                                     [NotNull] WorkListStatusSchema statusSchema)
+		public SourceClassDefinition([NotNull] Table table,
+									 [NotNull] SourceClassSchema schema)
 		{
 			Table = table;
-			DefinitionQuery = definitionQuery;
-			StatusSchema = statusSchema;
+			Schema = schema;
 		}
 
 		[NotNull]
 		public Table Table { get; }
 
 		[NotNull]
-		public WorkListStatusSchema StatusSchema { get; }
+		public SourceClassSchema Schema { get; }
+	}
+
+	public class DbStatusSourceClassDefinition : SourceClassDefinition
+	{
+		public DbStatusSourceClassDefinition([NotNull] Table table,
+											 [CanBeNull] string definitionQuery,
+											 [NotNull] DbSourceClassSchema schema) : base(table, schema)
+		{
+			DefinitionQuery = definitionQuery;
+		}
 
 		[CanBeNull]
 		public string DefinitionQuery { get; }

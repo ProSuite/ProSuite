@@ -163,16 +163,16 @@ namespace ProSuite.DomainServices.AO.QA
 			string workspaceDisplayText = null;
 			ISpatialReference spatialReference = null;
 
+			IWorkspace workspace = workspaceContext?.Workspace;
+
+			workspaceDisplayText = workspace != null
+				                       ? WorkspaceUtils.GetWorkspaceDisplayText(workspace)
+				                       : "<N.A.>";
+
 			if (WriteDetailedVerificationReport)
 			{
 				try
 				{
-					IWorkspace workspace = workspaceContext?.Workspace;
-
-					workspaceDisplayText = workspace != null
-						                       ? WorkspaceUtils.GetWorkspaceDisplayText(workspace)
-						                       : "<N.A.>";
-
 					Dataset dataset = verificationDataset.Dataset;
 
 					if (dataset is IVectorDataset vectorDataset)

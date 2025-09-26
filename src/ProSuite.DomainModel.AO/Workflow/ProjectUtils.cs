@@ -30,7 +30,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 			where P : Project<M>
 			where M : ProductionModel
 		{
-			Model model = project.ProductionModel;
+			DdxModel model = project.ProductionModel;
 
 			if (model == null)
 			{
@@ -116,7 +116,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 			M model = project.ProductionModel;
 
 			IWorkspaceContext masterDatabaseWorkspaceContext =
-				model.MasterDatabaseWorkspaceContext;
+				model.GetMasterDatabaseWorkspaceContext();
 
 			bool isModelMasterDatabase = masterDatabaseWorkspaceContext != null &&
 			                             WorkspaceUtils.IsSameDatabase(
@@ -249,7 +249,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		[CanBeNull]
 		private static Dataset GetMatchingDatasetCandidate(
 			[NotNull] IObjectClass objectClass,
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			bool useOnlyModelDefaultDatabase,
 			[NotNull] IWorkspaceFilter childDatabaseWorkspaceFilter,
 			[NotNull] IDatasetNameTransformer datasetNameTransformer,
@@ -316,7 +316,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		}
 
 		[CanBeNull]
-		private static Dataset GetDataset([NotNull] Model model,
+		private static Dataset GetDataset([NotNull] DdxModel model,
 		                                  [NotNull] string datasetModelName,
 		                                  [CanBeNull] Predicate<Dataset> ignoreDataset)
 		{
@@ -336,7 +336,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		/// <param name="gdbElementName"></param>
 		/// <returns></returns>
 		private static bool IsFromOtherMasterDatabaseSchema(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] string gdbElementName)
 		{
 			if (model.ElementNamesAreQualified ||
@@ -375,7 +375,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		{
 			// called when activating a work context
 
-			Model model = project.ProductionModel;
+			DdxModel model = project.ProductionModel;
 			if (model == null)
 			{
 				return null;
@@ -405,7 +405,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		[CanBeNull]
 		private static string GetModelElementNameForChildDatabaseElement(
 			[NotNull] string gdbElementName,
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IDatasetNameTransformer datasetNameTransformer)
 		{
 			if (! model.ElementNamesAreQualified)
@@ -469,7 +469,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		private static string GetModelElementName(
 			[NotNull] string gdbElementName,
 			[NotNull] IDatasetNameTransformer datasetNameTransformer,
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			bool isModelMasterDatabase)
 		{
 			if (! isModelMasterDatabase)
@@ -507,7 +507,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		                                          [NotNull] ProductionModel model)
 		{
 			IWorkspaceContext masterDatabaseWorkspaceContext =
-				model.MasterDatabaseWorkspaceContext;
+				model.GetMasterDatabaseWorkspaceContext();
 
 			return masterDatabaseWorkspaceContext != null &&
 			       WorkspaceUtils.IsSameDatabase(
@@ -538,7 +538,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 			// called when activating a work context
 
 			// assume that the workspace is valid (according to the project) 
-			Model model = project.ProductionModel;
+			DdxModel model = project.ProductionModel;
 			if (model == null)
 			{
 				return null;
@@ -585,7 +585,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 		[NotNull]
 		private static IEnumerable<esriDatasetType> GetInvolvedDatasetTypes(
-			[NotNull] Model model)
+			[NotNull] DdxModel model)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
 

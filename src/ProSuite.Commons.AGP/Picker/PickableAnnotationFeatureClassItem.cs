@@ -12,10 +12,9 @@ namespace ProSuite.Commons.AGP.Picker
 		private BitmapImage _image;
 
 		public PickableAnnotationFeatureClassItem(string datasetName, IReadOnlyList<long> oids,
-		                                          Geometry geometry) :
-			base(datasetName, oids, geometry) { }
+		                                          [NotNull] Geometry geometry)
+			: base(datasetName, oids, geometry) { }
 
-		[NotNull]
 		public override ImageSource ImageSource =>
 			_image ??=
 				new BitmapImage(

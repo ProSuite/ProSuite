@@ -24,7 +24,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 			var watch = Stopwatch.StartNew();
 
 			GetFeatures(request.SourceFeatures, request.ClassDefinitions,
-			            out IList<IFeature> sourceFeatures);
+						out IList<IFeature> sourceFeatures);
 
 			_msg.DebugStopTiming(watch, "Unpacked feature lists from request params");
 
@@ -32,7 +32,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 
 			if (request.UnionFeatures)
 			{
-				HolesMsg holeMsg = CalculateHoleMsg(sourceFeatures, trackCancel);
+				HolesMsg holeMsg = CalculateHoleMsg(sourceFeatures, request.VisibleExtents, trackCancel);
 				result.Holes.Add(holeMsg);
 			}
 			else
@@ -41,7 +41,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 				foreach (IFeature feature in sourceFeatures)
 				{
 					HolesMsg holeMsg =
-						CalculateHoleMsg(new List<IFeature> { feature }, trackCancel);
+						CalculateHoleMsg(new List<IFeature> { feature }, request.VisibleExtents,
+										 trackCancel);
 					holeMsg.OriginalFeatureRef = ProtobufGdbUtils.ToGdbObjRefMsg(feature);
 					result.Holes.Add(holeMsg);
 				}
@@ -51,10 +52,24 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 		}
 
 		private static HolesMsg CalculateHoleMsg(IList<IFeature> sourceFeatures,
-		                                         ITrackCancel trackCancel)
+												 ICollection<EnvelopeMsg> envelopeMsgs,
+												 ITrackCancel trackCancel)
 		{
+			List<IEnvelope> envelopes = null;
+
+			if (envelopeMsgs != null)
+			{
+				envelopes = new List<IEnvelope>(envelopeMsgs.Count);
+
+				foreach (EnvelopeMsg envelopeMsg in envelopeMsgs)
+				{
+					IEnvelope envelope = ProtobufGeometryUtils.FromEnvelopeMsg(envelopeMsg);
+					envelopes.Add(envelope);
+				}
+			}
+
 			IList<IPolygon> holes = FillHoleUtils.CalculateHoles(
-				sourceFeatures, null, trackCancel);
+				sourceFeatures, envelopes, trackCancel);
 
 			var watch = Stopwatch.StartNew();
 
@@ -66,7 +81,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 			foreach (IPolygon holePolygon in holes)
 			{
 				holeMsg.HoleGeometries.Add(ProtobufGeometryUtils.ToShapeMsg(
-					                           holePolygon, shapeFormat, srFormat));
+											   holePolygon, shapeFormat, srFormat));
 			}
 
 			_msg.DebugStopTiming(watch, "Packed holes into response");
@@ -74,8 +89,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 		}
 
 		private static void GetFeatures([NotNull] RepeatedField<GdbObjectMsg> requestSourceFeatures,
-		                                [NotNull] RepeatedField<ObjectClassMsg> classDefinitions,
-		                                [NotNull] out IList<IFeature> sourceFeatures)
+										[NotNull] RepeatedField<ObjectClassMsg> classDefinitions,
+										[NotNull] out IList<IFeature> sourceFeatures)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 

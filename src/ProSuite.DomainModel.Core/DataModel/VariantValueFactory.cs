@@ -54,7 +54,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 			switch (fieldType)
 			{
 				case FieldType.ShortInteger:
-				case FieldType.LongInteger:
+				case FieldType.Integer:
 					valueType = VariantValueType.Integer;
 					return true;
 

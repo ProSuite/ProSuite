@@ -12,6 +12,8 @@ namespace ProSuite.AGP.Editing
 		private readonly CentralizableSetting<T> _centralizableSetting;
 		private readonly IReadOnlyList<CentralizableSetting<bool>> _controllingParents;
 		private bool _isChangeAllowedByParent;
+		private int _decimals = 2; // Default to 2 decimal places
+		private string _unitLabel = "meters";
 
 		public CentralizableSettingViewModel(
 			CentralizableSetting<T> centralizableSetting,
@@ -102,6 +104,40 @@ namespace ProSuite.AGP.Editing
 		}
 
 		public bool IsEnabled => IsChangeAllowedByParent && CanOverrideLocally;
+
+		/// <summary>
+		/// Gets or sets the number of decimal places to display for numeric values.
+		/// This property is primarily used by NumericSpinner controls.
+		/// </summary>
+		public int Decimals
+		{
+			get => _decimals;
+			set
+			{
+				if (_decimals != value)
+				{
+					_decimals = value;
+					OnPropertyChanged(nameof(Decimals));
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the unit label to display alongside the value.
+		/// This property is primarily used by controls that display units.
+		/// </summary>
+		public string UnitLabel
+		{
+			get => _unitLabel;
+			set
+			{
+				if (_unitLabel != value)
+				{
+					_unitLabel = value;
+					OnPropertyChanged(nameof(UnitLabel));
+				}
+			}
+		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
 

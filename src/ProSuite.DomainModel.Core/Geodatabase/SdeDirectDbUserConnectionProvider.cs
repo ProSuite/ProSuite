@@ -92,7 +92,11 @@ namespace ProSuite.DomainModel.Core.Geodatabase
 		[UsedImplicitly]
 		private EncryptedString EncryptedPassword => _encryptedPassword;
 
-		public string EncryptedPasswordValue => EncryptedPassword.EncryptedValue;
+		public string EncryptedPasswordValue
+		{
+			get => EncryptedPassword.EncryptedValue;
+			set => EncryptedPassword.EncryptedValue = value;
+		}
 
 		[NotNull]
 		private static string GetDefaultName([NotNull] string databaseName,

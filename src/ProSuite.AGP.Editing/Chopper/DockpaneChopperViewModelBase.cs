@@ -13,12 +13,6 @@ namespace ProSuite.AGP.Editing.Chopper
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
-		{
-			get => _targetFeatureSelectionVm;
-			private set => SetProperty(ref _targetFeatureSelectionVm, value);
-		}
-
 		public ICommand RevertToDefaultsCommand { get; }
 
 		public bool IsRevertToDefaultsEnabled => true;
@@ -84,6 +78,12 @@ namespace ProSuite.AGP.Editing.Chopper
 		{
 			get => _excludeInteriorInteriorIntersections;
 			set => SetProperty(ref _excludeInteriorInteriorIntersections, value);
+		}
+
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
 		}
 
 		public ChopperToolOptions Options

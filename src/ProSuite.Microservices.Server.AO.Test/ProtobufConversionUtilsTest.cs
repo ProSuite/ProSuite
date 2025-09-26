@@ -305,7 +305,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		private static void AssertCanConvertToDtoAndBack(GdbFeature feature)
 		{
 			GdbObjectMsg dehydrated =
-				ProtobufGdbUtils.ToGdbObjectMsg(feature);
+				ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyFeature) feature);
 
 			var featureClass = (GdbFeatureClass) feature.Class;
 

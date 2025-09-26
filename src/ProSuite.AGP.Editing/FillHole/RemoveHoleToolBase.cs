@@ -1,23 +1,28 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.FillHole
 {
@@ -29,16 +34,34 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		private HoleFeedback _feedback;
 
-		protected Envelope _calculationPerimeter;
+		protected Envelope _calculationExtent;
 
 		protected RemoveHoleToolBase()
 		{
 			GeomIsSimpleAsFeature = false;
 		}
 
-		protected FillHoleOptions RemoveHoleOptions { get; } = new FillHoleOptions();
+		protected HoleToolOptions _removeHoleToolOptions;
+
+		private OverridableSettingsProvider<PartialHoleOptions> _settingsProvider;
 
 		protected abstract ICalculateHolesService MicroserviceClient { get; }
+
+		protected virtual string OptionsFileName => "RemoveHoleToolOptions.xml";
+
+		[CanBeNull]
+		protected virtual string OptionsDockPaneID => null;
+
+		[CanBeNull]
+		protected virtual string CentralConfigDir => null;
+
+		/// <summary>
+		/// By default, the local configuration directory shall be in
+		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// </summary>
+		protected virtual string LocalConfigDir
+			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+				AppDataFolder.Roaming, "ToolDefaults");
 
 		protected override void OnUpdateCore()
 		{
@@ -48,17 +71,32 @@ namespace ProSuite.AGP.Editing.FillHole
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
+		protected override SelectionCursors GetSelectionCursors()
+		{
+			return SelectionCursors.CreateArrowCursors(Resources.RemoveHoleOverlay);
+		}
+
+		protected override SelectionCursors GetSecondPhaseCursors()
+		{
+			return SelectionCursors.CreateCrossCursors(Resources.RemoveHoleOverlay);
+		}
+
 		protected override Task OnToolActivatingCoreAsync()
 		{
-			_feedback = new HoleFeedback();
+			_removeHoleToolOptions = InitializeOptions();
+
+			_feedback = new HoleFeedback(_removeHoleToolOptions);
 
 			return base.OnToolActivatingCoreAsync();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
+			_settingsProvider?.StoreLocalConfiguration(_removeHoleToolOptions.LocalOptions);
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+
+			HideOptionsPane();
 		}
 
 		protected override void LogPromptForSelection()
@@ -72,9 +110,71 @@ namespace ProSuite.AGP.Editing.FillHole
 			return geometryType == GeometryType.Polygon;
 		}
 
+		public HoleToolOptions InitializeOptions()
+		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			// NOTE: by only reading the file locations we can save a couple of 100ms
+			string currentCentralConfigDir = CentralConfigDir;
+			string currentLocalConfigDir = LocalConfigDir;
+
+			// For the time being, we always reload the options because they could have been updated in ArcMap
+			_settingsProvider =
+				new OverridableSettingsProvider<PartialHoleOptions>(
+					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+
+			PartialHoleOptions localConfiguration, centralConfiguration;
+
+			_settingsProvider.GetConfigurations(out localConfiguration,
+			                                    out centralConfiguration);
+
+			var result =
+				new HoleToolOptions(centralConfiguration, localConfiguration);
+
+			result.PropertyChanged -= _removeHoleToolOptionsPropertyChanged;
+			result.PropertyChanged += _removeHoleToolOptionsPropertyChanged;
+
+			_msg.DebugStopTiming(watch, "Remove Hole Tool Options validated / initialized");
+
+			string optionsMessage = result.GetLocalOverridesMessage();
+
+			if (! string.IsNullOrEmpty(optionsMessage))
+			{
+				_msg.Info(optionsMessage);
+			}
+
+			return result;
+		}
+
+		private void _removeHoleToolOptionsPropertyChanged(object sender,
+		                                                   PropertyChangedEventArgs args)
+		{
+			try
+			{
+				QueuedTaskUtils.Run(() =>
+				{
+					var selectedFeatures =
+						GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+					using var source = GetProgressorSource();
+					var progressor = source?.Progressor;
+
+					CalculateDerivedGeometries(selectedFeatures, progressor);
+
+					LogDerivedGeometriesCalculated(progressor);
+				});
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating removable holes : {e.Message}", e);
+			}
+		}
+
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
+			_calculationExtent = ActiveMapView.Extent;
+
 			_msg.DebugFormat("Calculating removable holes for {0} selected features",
 			                 selectedFeatures.Count);
 
@@ -96,6 +196,8 @@ namespace ProSuite.AGP.Editing.FillHole
 			}
 
 			_feedback.Update(_holes);
+
+			_feedback.UpdateExtent(_calculationExtent);
 		}
 
 		protected override bool CanUseDerivedGeometries()
@@ -194,7 +296,7 @@ namespace ProSuite.AGP.Editing.FillHole
 						: $"Found {holeCount} holes{{0}}. ";
 
 				holeCountMsg = string.Format(holeCountMsg,
-				                             RemoveHoleOptions.LimitPreviewToExtent
+				                             _removeHoleToolOptions.LimitPreviewToExtent
 					                             ? " in current extent (shown in green)"
 					                             : string.Empty);
 
@@ -236,75 +338,52 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		#endregion
 
+		#region Tool Options Dockpane
+
+		[CanBeNull]
+		private DockPaneFillHoleViewModelBase GetRemoveHoleViewModel()
+		{
+			if (OptionsDockPaneID == null)
+			{
+				return null;
+			}
+
+			var viewModel =
+				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+					DockPaneFillHoleViewModelBase;
+
+			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+			                      OptionsDockPaneID);
+		}
+
+		protected override void ShowOptionsPane()
+		{
+			var viewModel = GetRemoveHoleViewModel();
+
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			viewModel.Options = _removeHoleToolOptions;
+
+			viewModel.Activate(true);
+		}
+
+		protected override void HideOptionsPane()
+		{
+			var viewModel = GetRemoveHoleViewModel();
+
+			viewModel?.Hide();
+		}
+
+		#endregion
+
 		protected abstract bool CalculateHoles(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor,
 		                                       CancellationToken cancellationToken);
 
 		protected abstract IList<Holes> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                            [NotNull] Geometry sketch);
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.RemoveHoleOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#region second phase cursors
-
-		protected override Cursor GetSecondPhaseCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.RemoveHoleOverlay,
-			                              Resources.Polygon, null, 10, 10);
-		}
-
-		#endregion
 	}
 }

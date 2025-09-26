@@ -10,6 +10,11 @@ namespace ProSuite.GIS.Geometry.AGP
 	                                   ISpatialReferenceResolution,
 	                                   ISpatialReferenceTolerance
 	{
+		public static ArcSpatialReference FromXml(string spatialRefXml)
+		{
+			return new ArcSpatialReference(spatialRefXml);
+		}
+
 		private readonly SpatialReference _proSpatialReference;
 
 		public ArcSpatialReference([NotNull] SpatialReference proSpatialReference)
@@ -19,7 +24,12 @@ namespace ProSuite.GIS.Geometry.AGP
 			_proSpatialReference = proSpatialReference;
 		}
 
+		public ArcSpatialReference([NotNull] string spatialRefXml)
+			: this(SpatialReferenceBuilder.FromXml(spatialRefXml)) { }
+
 		public SpatialReference ProSpatialReference => _proSpatialReference;
+
+		public object NativeImplementation => ProSpatialReference;
 
 		#region Implementation of ISpatialReferenceInfo
 

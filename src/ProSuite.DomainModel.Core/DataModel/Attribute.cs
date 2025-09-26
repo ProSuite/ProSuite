@@ -39,7 +39,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#endregion
 
 		/// <summary>
-		/// The clone Id can be set if this instance is a (remote) clone of a persistent DdxModel.
+		/// The clone Id can be set if this instance is a (remote) clone of a persistent Attribute.
 		/// </summary>
 		/// <param name="id"></param>
 		public void SetCloneId(int id)

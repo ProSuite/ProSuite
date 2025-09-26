@@ -5,13 +5,13 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public class ReshapeToolOptions : OptionsBase<PartialReshapeToolOptions>
+	public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 	{
-		public ReshapeToolOptions([CanBeNull] PartialReshapeToolOptions centralOptions,
-		                          [CanBeNull] PartialReshapeToolOptions localOptions)
+		public ReshapeToolOptions([CanBeNull] PartialAdvancedReshapeOptions centralOptions,
+		                          [CanBeNull] PartialAdvancedReshapeOptions localOptions)
 		{
 			CentralOptions = centralOptions;
-			LocalOptions = localOptions ?? new PartialReshapeToolOptions();
+			LocalOptions = localOptions ?? new PartialAdvancedReshapeOptions();
 			CentralizableShowPreview =
 				InitializeSetting<bool>(
 					ReflectionUtils.GetProperty(() => LocalOptions.ShowPreview), true);

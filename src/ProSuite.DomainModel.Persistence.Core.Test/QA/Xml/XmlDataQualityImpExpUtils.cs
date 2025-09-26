@@ -128,7 +128,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA.Xml
 			descriptorList = Substitute.For<IInstanceDescriptorRepository>();
 			specificationList = Substitute.For<IQualitySpecificationRepository>();
 			datasets = Substitute.For<IDatasetRepository>();
-			Substitute.For<IDdxModelRepository>();
+			Substitute.For<IModelRepository>();
 			categories = Substitute.For<IDataQualityCategoryRepository>();
 
 			configurationsList.GetAll().Returns(configurations);

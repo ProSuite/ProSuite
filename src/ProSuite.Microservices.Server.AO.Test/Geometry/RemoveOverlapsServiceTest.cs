@@ -53,8 +53,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbFeature targetFeature = GdbFeature.Create(43, fClass);
 			targetFeature.Shape = polygon2;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 
@@ -154,8 +154,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			overlap.SpatialReference = sr;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 

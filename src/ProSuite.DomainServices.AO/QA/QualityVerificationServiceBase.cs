@@ -148,9 +148,10 @@ namespace ProSuite.DomainServices.AO.QA
 		protected abstract IGdbTransaction CreateGdbTransaction();
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
-		                                [NotNull] Model model)
+		                                [NotNull] DdxModel model)
 		{
-			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.GetSpatialReference());
+			SetTestPerimeter(areaOfInterest,
+			                 model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
@@ -176,7 +177,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IDomainTransactionManager domainTransactions)
 		{
-			var involvedModels = new HashSet<Model>();
+			var involvedModels = new HashSet<DdxModel>();
 
 			foreach (var qcon in qualitySpecification.Elements
 			                                         .Select(e => e.QualityCondition)
@@ -198,7 +199,7 @@ namespace ProSuite.DomainServices.AO.QA
 						domainTransactions.Initialize(objectDataset.AssociationEnds);
 					}
 
-					involvedModels.Add((Model) dataset.Model);
+					involvedModels.Add((DdxModel) dataset.Model);
 				}
 			}
 
@@ -1292,21 +1293,8 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			ICollection<Dataset> verifiedDatasets = VerificationContext.GetVerifiedDatasets();
 
-			IncludeBaseDatasets(verifiedDatasets, VerificationContext);
-
 			return GetDatasetsInvolvedInSelection(verifiedDatasets);
 		}
-
-		/// <summary>
-		/// Allows subclasses to include additional datasets that might not exist in the list
-		/// of verified datasets of the verification context. This is currently used for base
-		/// datasets of terrains.
-		/// </summary>
-		/// <param name="verifiedDatasets"></param>
-		/// <param name="verificationContext"></param>
-		protected abstract void IncludeBaseDatasets(
-			[NotNull] ICollection<Dataset> verifiedDatasets,
-			[NotNull] IVerificationContext verificationContext);
 
 		private class ErrorPerimeterRelation
 		{

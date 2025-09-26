@@ -2,12 +2,12 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
 	public class CheckSpatialReferencesCommand<T> : ItemCommandBase<ModelItemBase<T>>
-		where T : Model
+		where T : DdxModel
 	{
 		private readonly CoreDomainModelItemModelBuilder _modelBuilder;
 
@@ -30,7 +30,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		{
 			get
 			{
-				var model = _modelBuilder.ReadOnlyTransaction<Model>(Item.GetEntity);
+				var model = _modelBuilder.ReadOnlyTransaction<DdxModel>(Item.GetEntity);
 
 				return model.SpatialReferenceDescriptor != null;
 			}

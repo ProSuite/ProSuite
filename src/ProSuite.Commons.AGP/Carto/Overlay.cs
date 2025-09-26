@@ -3,30 +3,37 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
 {
 	public class Overlay
 	{
-		private readonly Geometry _geometry;
-		private readonly CIMSymbolReference _symbolReference;
+		[NotNull] private readonly Geometry _geometry;
+		[CanBeNull] private readonly CIMSymbolReference _symbolReference;
 
-		public Overlay(Geometry geometry, CIMSymbolReference symbolReference)
+		public Overlay([NotNull] Geometry geometry,
+		               [CanBeNull] CIMSymbolReference symbolReference = null)
 		{
+			Assert.ArgumentNotNull(geometry, nameof(geometry));
+			Assert.ArgumentCondition(geometry is not GeometryBag,
+			                         "GeometryBag geometry type is not supported for overlays");
+
 			_geometry = geometry;
 			_symbolReference = symbolReference;
 		}
 
-		public Overlay(Geometry geometry, CIMSymbol symbol)
-		{
-			_geometry = geometry;
-			_symbolReference = symbol.MakeSymbolReference();
-		}
+		public Overlay([NotNull] Geometry geometry,
+		               [CanBeNull] CIMSymbol symbol)
+			: this(geometry, symbol?.MakeSymbolReference()) { }
 
-		public async Task<IDisposable> AddToMapAsync(MapView mapView, bool useReferenceScale = false)
+		public async Task<IDisposable> AddToMapAsync(MapView mapView,
+		                                             bool useReferenceScale = false)
 		{
 			return useReferenceScale
-				       ? await mapView.AddOverlayAsync(_geometry, _symbolReference, mapView.Map.ReferenceScale)
+				       ? await mapView.AddOverlayAsync(_geometry, _symbolReference,
+				                                       mapView.Map.ReferenceScale)
 				       : await mapView.AddOverlayAsync(_geometry, _symbolReference);
 		}
 

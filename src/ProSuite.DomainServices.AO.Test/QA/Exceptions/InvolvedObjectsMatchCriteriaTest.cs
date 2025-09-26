@@ -67,13 +67,23 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 			Assert.False(criteria.IgnoreDataset(dataset21));
 		}
 
-		private class DummyModel : Model
+		private class DummyModel : DdxModel, IModelMasterDatabase
 		{
 			public DummyModel(string name) : base(name) { }
 
-			protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+			public override string QualifyModelElementName(string modelElementName)
 			{
-				return CreateDefaultMasterDatabaseWorkspaceContext();
+				return ModelUtils.QualifyModelElementName(this, modelElementName);
+			}
+
+			public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+			{
+				return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+			}
+
+			IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
+			{
+				return ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(this);
 			}
 
 			protected override void CheckAssignSpecialDatasetCore(Dataset dataset) { }

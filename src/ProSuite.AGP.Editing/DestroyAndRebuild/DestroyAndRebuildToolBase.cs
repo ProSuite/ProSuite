@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
@@ -29,30 +28,14 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 
 	private DestroyAndRebuildFeedback _feedback;
 
+	protected override SelectionCursors GetSelectionCursors()
+	{
+		return SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
+	}
+
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
 		return new SymbolizedSketchTypeBasedOnSelection(this);
-	}
-
-	protected override Cursor GetSelectionCursor()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.DestroyAndRebuildOverlay,
-		                              null);
-	}
-
-	protected override Cursor GetSelectionCursorLasso()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.DestroyAndRebuildOverlay,
-		                              Resources.Lasso);
-	}
-
-	protected override Cursor GetSelectionCursorPolygon()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.DestroyAndRebuildOverlay,
-		                              Resources.Polygon);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)

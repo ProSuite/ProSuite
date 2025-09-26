@@ -2159,6 +2159,15 @@ namespace ProSuite.QA.Tests.IssueCodes {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Feature extent is below than the minimum limit.
+        /// </summary>
+        internal static string MinExtent_ExtentSmallerThanLimit {
+            get {
+                return ResourceManager.GetString("MinExtent_ExtentSmallerThanLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The length of the geometry is smaller than the minimum value.
         /// </summary>
         internal static string MinimumLength_LengthTooSmall {

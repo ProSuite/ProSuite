@@ -57,8 +57,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 				// 2nd check: equality with rest of object
 				else if (! definitions.ContainsValue(definition))
 				{
-					_msg.DebugFormat("Registering new {0} {1}", descriptor.TypeDisplayName,
-					                 descriptor);
+					_msg.InfoFormat("Registering new {0} {1}", descriptor.TypeDisplayName,
+					                descriptor);
 
 					definitions.Add(definition.Name, definition);
 

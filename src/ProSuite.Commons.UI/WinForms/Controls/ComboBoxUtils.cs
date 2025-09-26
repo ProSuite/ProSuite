@@ -33,9 +33,12 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				                     ? comboBox.Name
 				                     : comboBoxDisplayName;
 
-			Assert.ArgumentCondition(comboBox.IsHandleCreated,
-			                         "handle not yet created for combobox [{0}]",
-			                         displayName);
+			// Return current width if handle not created yet
+			if (!comboBox.IsHandleCreated)
+			{
+				_msg.DebugFormat("Handle not yet created for combobox [{0}], returning current width", displayName);
+				return comboBox.Width;
+			}
 
 			if (comboBox.Items.Count == 0)
 			{

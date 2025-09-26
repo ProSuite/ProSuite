@@ -12,7 +12,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 	public static class VerifiedModelUtils
 	{
 		[NotNull]
-		public static Model CreateModel([NotNull] IObjectClass objectClass)
+		public static DdxModel CreateModel([NotNull] IObjectClass objectClass)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 
@@ -25,12 +25,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 		}
 
 		[NotNull]
-		public static Model CreateModel([NotNull] IWorkspace workspace,
+		public static DdxModel CreateModel([NotNull] IWorkspace workspace,
 		                                [CanBeNull] ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
-			Model model = CreateModel(workspace);
+			DdxModel model = CreateModel(workspace);
 
 			if (spatialReference != null)
 			{
@@ -43,7 +43,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 
 		[NotNull]
 		public static Dataset GetDataset([NotNull] IObjectClass objectClass,
-		                                 [NotNull] Model model)
+		                                 [NotNull] DdxModel model)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 			Assert.ArgumentNotNull(model, nameof(model));
@@ -55,7 +55,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 
 		[NotNull]
 		public static Dataset CreateDataset([NotNull] IObjectClass objectClass,
-		                                    [NotNull] Model model)
+		                                    [NotNull] DdxModel model)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 			Assert.ArgumentNotNull(model, nameof(model));
@@ -69,7 +69,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 		[NotNull]
 		public static TableDataset CreateTableDataset(
 			[NotNull] IObjectClass objectClass,
-			[NotNull] Model model)
+			[NotNull] DdxModel model)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
 			Assert.ArgumentNotNull(model, nameof(model));
@@ -89,7 +89,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 		[NotNull]
 		public static VectorDataset CreateVectorDataset(
 			[NotNull] IFeatureClass featureClass,
-			[NotNull] Model model)
+			[NotNull] DdxModel model)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentNotNull(model, nameof(model));
@@ -113,7 +113,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 		}
 
 		[NotNull]
-		private static Model CreateModel([NotNull] IWorkspace workspace)
+		private static DdxModel CreateModel([NotNull] IWorkspace workspace)
 		{
 			string modelName = WorkspaceUtils.GetWorkspaceDisplayText(workspace);
 

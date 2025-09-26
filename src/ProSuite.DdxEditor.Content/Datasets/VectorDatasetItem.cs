@@ -1,24 +1,23 @@
 using ProSuite.Commons.DomainModels;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Datasets
 {
 	public class VectorDatasetItem<T> : ObjectDatasetItem<T> where T : VectorDataset
 	{
-		private readonly Model _datasetModel;
+		private readonly DdxModel _datasetModel;
 
 		public VectorDatasetItem(CoreDomainModelItemModelBuilder modelBuilder, T dataset,
 		                         IRepository<Dataset> repository,
-		                         Model model)
+		                         DdxModel model)
 			: base(modelBuilder, dataset, repository, model)
 		{
 			_datasetModel = model;
 		}
 
-		public Model DatasetModel => _datasetModel;
+		public DdxModel DatasetModel => _datasetModel;
 
 		protected override void AddEntityPanels(
 			ICompositeEntityControl<T, IViewObserver> compositeControl,

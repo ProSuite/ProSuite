@@ -62,6 +62,8 @@ namespace ProSuite.GIS.Geometry.API
 		double XYTolerance { get; }
 		double ZTolerance { get; }
 		double MTolerance { get; }
+
+		object NativeImplementation { get; }
 	}
 
 	public interface ISpatialReferenceResolution

@@ -53,8 +53,11 @@ namespace ProSuite.Commons.AGP.Hosting
 
 			if (versionString == null)
 			{
-				throw new InvalidOperationException(
-					"Version of ArcGIS Pro cannot be determined because the registry value is missing.");
+				// Likely it was installed in the past and the key still exists, but the Version value is gone:
+				version = new Version(0, 0);
+				_msg.Debug("The ArcGIS Pro 'Version' registry value was not found. " +
+				           "Assuming that ArcGIS Pro is not installed.");
+				return false;
 			}
 
 			version = new Version(versionString);

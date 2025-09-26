@@ -1287,9 +1287,19 @@ namespace ProSuite.Commons.AO.Geometry
 			return unitConverter.EsriUnitsAsString(distanceUnits, caseAppearance, plural);
 		}
 
+		/// <summary>
+		/// Projects the input geometry into the specified target spatial reference using the
+		/// specified transformation.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="geometry"></param>
+		/// <param name="targetSpatialReference"></param>
+		/// <param name="transformation"></param>
+		/// <param name="noNewInstance"></param>
+		/// <returns></returns>
 		public static T ProjectEx<T>(
 			[NotNull] T geometry,
-			[NotNull] ISpatialReference targetSr,
+			[NotNull] ISpatialReference targetSpatialReference,
 			[CanBeNull] string transformation = null,
 			bool noNewInstance = false)
 			where T : IGeometry
@@ -1299,26 +1309,28 @@ namespace ProSuite.Commons.AO.Geometry
 			if (sourceSr == null)
 			{
 				_msg.Warn($"no spatial reference for {GeometryUtils.ToString(geometry)}");
-				T result = noNewInstance ? geometry : SysUtils.Clone(geometry);
-				result.Project(targetSr);
+				T result = noNewInstance ? geometry : GeometryFactory.Clone(geometry);
+				result.Project(targetSpatialReference);
 				return result;
 			}
 
-			if (sourceSr.FactoryCode == targetSr.FactoryCode)
+			if (sourceSr.FactoryCode == targetSpatialReference.FactoryCode)
 			{
-				return noNewInstance ? geometry : SysUtils.Clone(geometry);
+				return noNewInstance ? geometry : GeometryFactory.Clone(geometry);
 			}
 
 			GeoTrans trans =
-				GetGeoTrans(sourceSr.FactoryCode, targetSr.FactoryCode, transformation);
+				GetGeoTrans(sourceSr.FactoryCode, targetSpatialReference.FactoryCode,
+				            transformation);
 
-			IGeometry2 geom = noNewInstance == false
-				                  ? (IGeometry2) SysUtils.Clone(geometry)
-				                  : (IGeometry2) geometry;
+			IGeometry2 resultGeometry = noNewInstance == false
+				                            ? (IGeometry2) GeometryFactory.Clone(geometry)
+				                            : (IGeometry2) geometry;
 
-			geom.ProjectEx(targetSr, trans.Dir, trans.GeogrTrans, false, 0, 0);
+			resultGeometry.ProjectEx(targetSpatialReference, trans.Dir, trans.GeogrTrans, false, 0,
+			                         0);
 
-			return (T) geom;
+			return (T) resultGeometry;
 		}
 
 		public static void GetGeoTrans(

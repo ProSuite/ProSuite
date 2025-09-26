@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface IWorkListFactory
@@ -5,5 +7,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		string Name { get; }
 
 		IWorkList Get();
+
+		Task<IWorkList> GetAsync();
 	}
 }

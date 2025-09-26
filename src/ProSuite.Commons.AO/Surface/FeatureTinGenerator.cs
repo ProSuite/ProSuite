@@ -377,7 +377,9 @@ namespace ProSuite.Commons.AO.Surface
 
 			if (areaWithMissingData.IsEmpty)
 			{
+				// There is no difference, no data is missing:
 				extentToEnlarge.SetEmpty();
+				return;
 			}
 
 			IEnvelope missingDataEnvelope = areaWithMissingData.Envelope;
@@ -531,8 +533,8 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		protected virtual void AddFeaturesToTin(ITinEdit tin, esriTinSurfaceType surfaceType,
-		                              IFeatureClass featureClass, IQueryFilter filter,
-		                              IGeometry inExtent)
+		                                        IFeatureClass featureClass, IQueryFilter filter,
+		                                        IGeometry inExtent)
 		{
 			// NOTE: According to the documentation, useShapeZ == false means that the
 			//       M-value should be used for height instead of Z -> always use shape's Z

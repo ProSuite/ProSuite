@@ -6,7 +6,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	// todo daro: rename to TableProxy?
+	// TODO: daro Create method?
+	// todo: daro rename to TableProxy?
 	public struct GdbTableIdentity : IEquatable<GdbTableIdentity>, IComparable<GdbTableIdentity>,
 	                                 ITableReference
 	{

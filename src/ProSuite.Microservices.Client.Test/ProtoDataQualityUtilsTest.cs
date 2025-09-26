@@ -429,6 +429,11 @@ namespace ProSuite.Microservices.Client.Test
 				return modelElementName;
 			}
 
+			public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+			{
+				return masterDatabaseDatasetName;
+			}
+
 			protected override void CheckAssignSpecialDatasetCore(Dataset dataset) { }
 
 			#endregion

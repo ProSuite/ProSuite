@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows.Media;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -26,5 +27,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <returns></returns>
 		[CanBeNull]
 		string GetName(Attributes attribute);
+
+		public Brush GetSeverityBackColor(string severity);
+
+		string GetSeverity(Row fromRow);
 	}
 }

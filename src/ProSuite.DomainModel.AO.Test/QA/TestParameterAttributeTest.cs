@@ -188,11 +188,21 @@ namespace ProSuite.DomainModel.AO.Test.QA
 			public TestVectorDataset(string name) : base(name) { }
 		}
 
-		private class TestModel : ProductionModel
+		private class TestModel : ProductionModel, IModelMasterDatabase
 		{
-			protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+			public override string QualifyModelElementName(string modelElementName)
 			{
-				return CreateDefaultMasterDatabaseWorkspaceContext();
+				return ModelUtils.QualifyModelElementName(this, modelElementName);
+			}
+
+			public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+			{
+				return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+			}
+
+			IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
+			{
+				return ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(this);
 			}
 		}
 	}

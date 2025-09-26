@@ -5,8 +5,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public interface IHasGeotransformation
 	{
-		T ProjectEx<T>([NotNull] T geometry)
-			where T : IGeometry;
+		T ProjectEx<T>([NotNull] T geometry) where T : IGeometry;
 
+		bool Equals(IHasGeotransformation other);
 	}
 }

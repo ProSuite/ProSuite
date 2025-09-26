@@ -4,9 +4,8 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 
 namespace ProSuite.DdxEditor.Content.AssociationEnds
 {
-	public class AssociationEndPresenter :
-		SimpleEntityItemPresenter<AssociationEndItem>,
-		IAssociationEndObserver
+	public class AssociationEndPresenter : SimpleEntityItemPresenter<AssociationEndItem>,
+	                                       IAssociationEndObserver
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AssociationEndPresenter"/> class.

@@ -10,9 +10,14 @@ namespace ProSuite.DomainModel.Core.Geodatabase
 	                                           INamed,
 	                                           IAnnotated
 	{
-		[UsedImplicitly] private string _name;
+		private int _cloneId = -1;
 
+		#region Persistent state
+
+		[UsedImplicitly] private string _name;
 		[UsedImplicitly] private string _description;
+
+		#endregion
 
 		#region Constructors
 
@@ -34,6 +39,29 @@ namespace ProSuite.DomainModel.Core.Geodatabase
 		}
 
 		#endregion
+
+		public new int Id
+		{
+			get
+			{
+				if (base.Id < 0 && _cloneId != -1)
+				{
+					return _cloneId;
+				}
+
+				return base.Id;
+			}
+		}
+
+		/// <summary>
+		/// The clone Id can be set if this instance is a (remote) clone of a persistent ConnectionProvider.
+		/// </summary>
+		/// <param name="id"></param>
+		public void SetCloneId(int id)
+		{
+			Assert.True(base.Id < 0, "Persistent entity or already initialized clone.");
+			_cloneId = id;
+		}
 
 		[Required]
 		[MaximumStringLength(100)]

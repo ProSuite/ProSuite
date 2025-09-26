@@ -6,13 +6,15 @@ namespace ProSuite.Commons.AGP.Picker
 {
 	public interface IPickableItem
 	{
+		[NotNull]
 		string DisplayValue { get; }
-		
+
 		bool Selected { get; set; }
 
-		[CanBeNull]
+		[NotNull]
 		Geometry Geometry { get; }
 
+		[NotNull]
 		ImageSource ImageSource { get; }
 
 		double Score { get; set; }

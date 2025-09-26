@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -218,7 +219,7 @@ namespace ProSuite.QA.Tests.Test
 
 				IList<ITest> tests =
 					factory.CreateTests(
-						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+						new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 				Assert.AreEqual(1, tests.Count);
 
 				IList<QaError> errors = Run(tests[0], 1000);

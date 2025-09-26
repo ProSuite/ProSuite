@@ -34,6 +34,16 @@ namespace ProSuite.DomainModel.AO.Test.QA
 			Number = number;
 		}
 
+		[Description("BaseTest Description - constructor 2")]
+		[UsedImplicitly]
+		public BaseTest([Description("Table Description")] IReadOnlyTable table,
+		                [Description("Number Description")] double number,
+		                [Description("Int list description")] IList<int> intList) :
+			this(table, number)
+		{
+			_intList = intList;
+		}
+
 		[UsedImplicitly]
 		public BaseTest(IReadOnlyTable table, string Format) :
 			this(table) { }

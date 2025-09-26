@@ -225,6 +225,14 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			//       because this triggers the notoriously slow GetDatasetMappings() method.
 			bool includePath = ! projectWorkspace.IsMasterDatabaseWorkspace;
 
+			VersionAccessType? versionAccessType = projectWorkspace.GetSdeVersionAccessType();
+			if (versionAccessType != null && versionAccessType != VersionAccessType.Public)
+			{
+				includePath = true;
+				_msg.Warn("The referenced SDE version is not public. " +
+				          "Using the (slower) workspace path.");
+			}
+
 			WorkspaceMsg workspaceMsg =
 				ProtobufConversionUtils.ToWorkspaceRefMsg(projectWorkspace.Datastore, includePath);
 

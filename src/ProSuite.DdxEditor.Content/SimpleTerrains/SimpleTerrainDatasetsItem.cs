@@ -11,7 +11,6 @@ using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 
@@ -121,7 +120,7 @@ namespace ProSuite.DdxEditor.Content.SimpleTerrains
 			RefreshChildren();
 		}
 
-		public void ExportSimpleTerrainDatasets([NotNull] string fileName, [CanBeNull] Model model)
+		public void ExportSimpleTerrainDatasets([NotNull] string fileName, [CanBeNull] DdxModel model)
 		{
 			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
 

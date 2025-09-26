@@ -9,11 +9,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		                                       int? currentItemIndex = null) : base(
 			filePath, name, type, currentItemIndex) { }
 
-		protected override IWorkItem RefreshCore(IWorkItem item, XmlWorkItemState state)
+		protected override void RefreshCore(IWorkItem item, XmlWorkItemState state)
 		{
 			item.Status = state.Status;
-
-			return item;
 		}
 	}
 }

@@ -18,6 +18,7 @@ using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.Workflow;
 using ProSuite.Microservices.Client.DataModel;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
@@ -161,6 +162,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
 			{
+				if (instanceDescriptors.Contains(descriptorMsg.Name))
+				{
+					continue;
+				}
+
 				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
 				instanceDescriptors.AddDescriptor(instanceDescriptor);
 			}
@@ -196,6 +202,36 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			QualitySpecification result =
 				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
+
+			return result;
+		}
+
+		public static DdxModel CreateFullModel([NotNull] IModelFactory modelFactory,
+		                                       [NotNull] ModelMsg modelMsg,
+		                                       [NotNull] ICollection<DatasetMsg> datasets,
+		                                       [NotNull] ICollection<AssociationMsg> associations)
+		{
+			DdxModel result = modelFactory.CreateModel(modelMsg);
+
+			foreach (var datasetById in FromDatasetMsgs(datasets, modelFactory))
+			{
+				Dataset dataset = (Dataset) datasetById.Value;
+
+				if (! result.Contains((IDdxDataset) dataset))
+				{
+					result.AddDataset<Dataset>(dataset);
+				}
+			}
+
+			foreach (AssociationMsg associationMsg in associations)
+			{
+				Association association = modelFactory.CreateAssociation(associationMsg);
+
+				if (! result.Contains(association))
+				{
+					result.AddAssociation(association);
+				}
+			}
 
 			return result;
 		}
@@ -396,33 +432,31 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static InstanceDescriptor GetInstanceDescriptor(
 			InstanceDescriptorMsg descriptorMessage)
 		{
+			InstanceType instanceType = (InstanceType) descriptorMessage.Type;
+
+			InstanceDescriptor result;
+
+			switch (instanceType)
 			{
-				InstanceType instanceType = (InstanceType) descriptorMessage.Type;
-
-				InstanceDescriptor result;
-
-				switch (instanceType)
-				{
-					case InstanceType.Test:
-						result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+				case InstanceType.Test:
+					result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+						descriptorMessage);
+					break;
+				case InstanceType.Transformer:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<TransformerDescriptor>(
 							descriptorMessage);
-						break;
-					case InstanceType.Transformer:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<TransformerDescriptor>(
-								descriptorMessage);
-						break;
-					case InstanceType.IssueFilter:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
-								descriptorMessage);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				return result;
+					break;
+				case InstanceType.IssueFilter:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+							descriptorMessage);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
+
+			return result;
 		}
 
 		private static IEnumerable<IssueFilterDescriptor> GetIssueFilterDescriptors(
@@ -631,12 +665,28 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
 					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
 
-				projectWorkspace.MinimumScaleDenominator =
-					projectMsg.MinimumScaleDenominator;
+				var projectSettings =
+					new ProjectSettings(projectMsg.ProjectId,
+					                    projectMsg.ShortName,
+					                    projectMsg.Name)
+					{
+						MinimumScaleDenominator = projectMsg.MinimumScaleDenominator,
 
-				projectWorkspace.ToolConfigDirectory = projectMsg.ToolConfigDirectory;
-				projectWorkspace.WorkListConfigDir = projectMsg.WorkListConfigDir;
-				projectWorkspace.AttributeEditorConfigDir = projectMsg.AttributeEditorConfigDir;
+						AttributeEditorConfigDirectory =
+							ProtobufGeomUtils.EmptyToNull(projectMsg.AttributeEditorConfigDir),
+						ToolConfigDirectory =
+							ProtobufGeomUtils.EmptyToNull(projectMsg.ToolConfigDirectory),
+						WorkListConfigDirectory =
+							ProtobufGeomUtils.EmptyToNull(projectMsg.WorkListConfigDir),
+					};
+
+				projectSettings.SetFullExtent(
+					projectMsg.FullExtentXMin,
+					projectMsg.FullExtentYMin,
+					projectMsg.FullExtentXMax,
+					projectMsg.FullExtentYMax);
+
+				projectWorkspace.ProjectSettings = projectSettings;
 
 				result.Add(projectWorkspace);
 			}

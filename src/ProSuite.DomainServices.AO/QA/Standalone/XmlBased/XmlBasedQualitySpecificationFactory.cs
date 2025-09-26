@@ -7,7 +7,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -279,7 +278,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			// Assign a unique, non-persistent model id in order to associate datasets with the model,
 			// e.g. if the resulting specification is converted to a proto-based specification.
 			int modelId = _currentModelId--;
-			Model result = ModelFactory.CreateModel(
+			DdxModel result = ModelFactory.CreateModel(
 				workspace, modelName, modelId, databaseName, schemaOwner, datasetNames);
 
 			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>

@@ -113,6 +113,12 @@ namespace ProSuite.Commons
 				{
 					try
 					{
+						// Remove namespace and type prefix if present for enum parsing from python
+						int lastDot = stringValue.LastIndexOf('.');
+						if (lastDot >= 0 && lastDot < stringValue.Length - 1)
+						{
+							stringValue = stringValue.Substring(lastDot + 1);
+						}
 						castValue = Enum.Parse(type, stringValue, true);
 						isValid = true;
 					}

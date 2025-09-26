@@ -7,13 +7,12 @@ using ProSuite.Commons.UI.ScreenBinding.Elements;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
 	public partial class ModelControl<T> : UserControl, IModelView<T>, IEntityPanel<T>
-		where T : Model
+		where T : DdxModel
 	{
 		private const string _title = "Model Properties";
 
@@ -231,7 +230,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 		[NotNull]
 		private static string GetElementNameQualificationStatusText(
-			[NotNull] Model model, out bool warn)
+			[NotNull] DdxModel model, out bool warn)
 		{
 			if (model.LastHarvestedDate != null)
 			{

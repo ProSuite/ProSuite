@@ -6,6 +6,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.Geometry;
 
@@ -65,11 +66,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole
 			bool unionFeatures,
 			CancellationToken cancellationToken)
 		{
+			Assert.ArgumentCondition(selectedFeatures.Count > 0, "No selection");
+
 			IEnumerable<Feature> intersectingFeatures =
 				clipEnvelopes.Count == 0
 					? selectedFeatures
-					: selectedFeatures.Where(
-						f => IntersectsAny(f.GetShape(), clipEnvelopes));
+					: selectedFeatures.Where(f => IntersectsAny(f.GetShape(), clipEnvelopes));
 
 			CalculateHolesRequest request =
 				CreateCalculateHolesRequest(intersectingFeatures, clipEnvelopes);

@@ -35,7 +35,9 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			WorkspaceMock workspace = new WorkspaceMock();
 
-			GdbFeatureClass fClass1 = CreateGdbFeatureClass(123, "TestFC1", sr, workspace, esriGeometryType.esriGeometryPolygon);
+			GdbFeatureClass fClass1 =
+				CreateGdbFeatureClass(123, "TestFC1", sr, workspace,
+				                      esriGeometryType.esriGeometryPolygon);
 
 			IPolygon polygon1 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
@@ -55,8 +57,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbFeature targetFeature = GdbFeature.Create(43, fClass1);
 			targetFeature.Shape = polygon2;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class, true);
 
@@ -138,7 +140,6 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			Assert.IsNull(resultByFeature.Insert);
 		}
 
-
 		[Test]
 		public void CanChopPolyline()
 		{
@@ -148,7 +149,9 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			WorkspaceMock workspace = new WorkspaceMock();
 
-			GdbFeatureClass fClass1 = CreateGdbFeatureClass(123, "TestFC1", sr, workspace, esriGeometryType.esriGeometryPolyline);
+			GdbFeatureClass fClass1 =
+				CreateGdbFeatureClass(123, "TestFC1", sr, workspace,
+				                      esriGeometryType.esriGeometryPolyline);
 
 			IPolyline polyline1 = GeometryFactory.CreatePolyline(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
@@ -168,8 +171,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbFeature targetFeature = GdbFeature.Create(43, fClass1);
 			targetFeature.Shape = polyline2;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class, true);
 
@@ -182,11 +185,11 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				};
 
 			CrackOptionsMsg options = new CrackOptionsMsg()
-			{
-				SnapToTargetVertices = true,
-				SnapTolerance = 0.1,
-				CrackOnlyWithinSameClass = true
-			};
+			                          {
+				                          SnapToTargetVertices = true,
+				                          SnapTolerance = 0.1,
+				                          CrackOnlyWithinSameClass = true
+			                          };
 
 			calculationRequest.CrackOptions = options;
 
@@ -228,8 +231,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			// Test feature references
 			var originalObjRef = new GdbObjectReference(
-				(int)updatedObj.Update.ClassHandle,
-				(int)updatedObj.Update.ObjectId);
+				(int) updatedObj.Update.ClassHandle,
+				(int) updatedObj.Update.ObjectId);
 
 			var expectedRef = new GdbObjectReference(sourceFeature);
 
@@ -244,7 +247,6 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			//
 			// Test geometries
 
-
 			// Update:
 			Assert.AreEqual(2, GeometryUtils.GetPointCount(polyline1));
 
@@ -256,7 +258,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			Assert.IsNotNull(updatedGeometry);
 			Assert.AreEqual(2, GeometryUtils.GetPointCount(updatedGeometry));
 			Assert.AreEqual(originalLength / 2, ((IPolyline) updatedGeometry).Length, 0.0001);
-			
+
 			Assert.IsNull(updatedObj.Insert);
 
 			// Insert
@@ -266,7 +268,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			Assert.IsNotNull(insertedGeometry);
 			Assert.AreEqual(2, GeometryUtils.GetPointCount(insertedGeometry));
-			Assert.AreEqual(originalLength / 2, ((IPolyline)insertedGeometry).Length, 0.0001);
+			Assert.AreEqual(originalLength / 2, ((IPolyline) insertedGeometry).Length, 0.0001);
 
 			Assert.IsNull(insertedObj.Update);
 		}
@@ -280,8 +282,12 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			WorkspaceMock workspace = new WorkspaceMock();
 
-			GdbFeatureClass fClass1 = CreateGdbFeatureClass(123, "TestFC1", sr, workspace, esriGeometryType.esriGeometryPolygon);
-			GdbFeatureClass fClass2 = CreateGdbFeatureClass(124, "TestFC2", sr, workspace, esriGeometryType.esriGeometryPolygon);
+			GdbFeatureClass fClass1 =
+				CreateGdbFeatureClass(123, "TestFC1", sr, workspace,
+				                      esriGeometryType.esriGeometryPolygon);
+			GdbFeatureClass fClass2 =
+				CreateGdbFeatureClass(124, "TestFC2", sr, workspace,
+				                      esriGeometryType.esriGeometryPolygon);
 
 			IPolygon polygon1 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
@@ -301,8 +307,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbFeature targetFeature = GdbFeature.Create(43, fClass2);
 			targetFeature.Shape = polygon2;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg1 = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class, true);
 			var objectClassMsg2 = ProtobufGdbUtils.ToObjectClassMsg(targetFeature.Class, true);

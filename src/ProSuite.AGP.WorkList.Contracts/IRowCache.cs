@@ -15,8 +15,5 @@ namespace ProSuite.AGP.WorkList.Contracts
 		                    [NotNull] Dictionary<Table, List<long>> updates);
 
 		bool CanContain([NotNull] Table table);
-		//bool CanContain(Func<MapMember, bool> featuresModified);
-
-		//bool CanContain(MapMember member);
 	}
 }

@@ -105,16 +105,16 @@ public abstract class ViewModelBase : Observable
 
 		Assert.NotNull(datasetParameter, "No dataset parameter found");
 
-		Model dataModel = (Model) datasetParameter.Model;
+		DdxModel dataModel = datasetParameter.Model;
 
-		if (! dataModel.IsMasterDatabaseAccessible)
+		if (! dataModel.IsMasterDatabaseAccessible())
 		{
 			throw new InvalidOperationException(
-				$"Master database is not accessible. Reason: {dataModel.MasterDatabaseNoAccessReason}");
+				$"Master database is not accessible. Reason: {dataModel.GetMasterDatabaseNoAccessReason()}");
 		}
 
 		IWorkspaceContext masterDbContext =
-			Assert.NotNull(dataModel.MasterDatabaseWorkspaceContext);
+			Assert.NotNull(dataModel.GetMasterDatabaseWorkspaceContext());
 
 		IOpenDataset datasetOpener = new SimpleDatasetOpener(masterDbContext);
 

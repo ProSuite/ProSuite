@@ -10,11 +10,11 @@
         d:DataContext="{d:DesignInstance {x:Type local:SymbolDisplaySettingsViewModel}, IsDesignTimeCreatable=False}"
         mc:Ignorable="d"
         Title="Symbol Display Settings"
-        Height="268" MinHeight="268" MaxHeight="320"
+        Height="272" MinHeight="272" MaxHeight="320"
         Width="400" MinWidth="400" MaxWidth="800"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Background="{DynamicResource Esri_DialogFrameBackgroundBrush}">
-    <DockPanel Margin="12" Background="{DynamicResource Esri_DialogClientAreaBackgroundBrush}">
+    <DockPanel Margin="8" Background="{DynamicResource Esri_DialogClientAreaBackgroundBrush}">
         <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="4,4,4,4">
             <Button DockPanel.Dock="Right" VerticalAlignment="Center"
                     Content="Cancel" IsCancel="True" TabIndex="99"
@@ -34,7 +34,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto"/>
-                <RowDefinition/>
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Margin="2">
                 <CheckBox Margin="4" IsChecked="{Binding AvoidSLMWithoutSLD }">Avoid SLM without SLD</CheckBox>
@@ -105,6 +104,11 @@
                     <Separator Width="8" Visibility="Hidden"/>
                     <TextBlock VerticalAlignment="Center">(min scale, e.g. 1:15000)</TextBlock>
                 </StackPanel>
+                <TextBlock Foreground="SlateGray" Margin="28,4,0,0">
+                    Want:
+                    SLD = <Run Text="{Binding WantSLD}"/>,
+                    SLM = <Run Text="{Binding WantLM}"/>
+                </TextBlock>
             </StackPanel>
             <Separator Grid.Row="3" />
         </Grid>

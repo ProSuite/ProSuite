@@ -154,11 +154,92 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Merge Features.
+        /// </summary>
+        internal static string MergeFeaturesTool_Caption {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected features cannot be merged. Reason(s): {0}.&amp;lt;br&amp;gt;Reselect the second feature or press [ESC] to start with a new merge operation..
+        /// </summary>
+        internal static string MergeFeaturesTool_DisjointGeometries {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_DisjointGeometries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected features cannot be merged. Reason(s): {0}.
+        /// </summary>
+        internal static string MergeFeaturesTool_DisjointGeometriesList {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_DisjointGeometriesList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the first feature to merge{0}. Press [O] for options..
+        /// </summary>
+        internal static string MergeFeaturesTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the second feature to be merged with the first.&lt;br&gt;Press [ESC] to reselect the first feature..
+        /// </summary>
+        internal static string MergeFeaturesTool_LogUsingCurrentSelection {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_LogUsingCurrentSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Merges two features with the same geometry type..
+        /// </summary>
+        internal static string MergeFeaturesTool_Message {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  (this feature will remain after the merge).
+        /// </summary>
+        internal static string MergeFeaturesTool_SurvivorFirstObject {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_SurvivorFirstObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  (the larger feature will remain after the merge).
+        /// </summary>
+        internal static string MergeFeaturesTool_SurvivorLargerObject {
+            get {
+                return ResourceManager.GetString("MergeFeaturesTool_SurvivorLargerObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select one or more polygon features which contain the hole(s) to be removed..
         /// </summary>
         internal static string RemoveHoleTool_LogPromptForSelection {
             get {
                 return ResourceManager.GetString("RemoveHoleTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more polygon features which contain the hole(s) to be removed..
+        /// </summary>
+        internal static string RemoveHoleTool_LogPromptForSelection1 {
+            get {
+                return ResourceManager.GetString("RemoveHoleTool_LogPromptForSelection1", resourceCulture);
             }
         }
         

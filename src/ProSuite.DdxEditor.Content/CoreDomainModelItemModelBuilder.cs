@@ -26,7 +26,6 @@ using ProSuite.DdxEditor.Content.SpatialRef;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.AttributeDependencies;
 using ProSuite.DomainModel.Core.AttributeDependencies.Repositories;
 using ProSuite.DomainModel.Core.AttributeDependencies.Xml;
@@ -145,7 +144,7 @@ namespace ProSuite.DdxEditor.Content
 		public abstract IEnumerable<Item> GetChildren([NotNull] ModelsItemBase modelItem);
 
 		public abstract IEnumerable<Item> GetChildren<E>([NotNull] ModelItemBase<E> modelItem)
-			where E : Model;
+			where E : DdxModel;
 
 		public abstract IEnumerable<Item> GetChildren(
 			AttributeTypesItem datasetCategoriesItem);
@@ -218,7 +217,7 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IEnumerable<Item> GetChildren<M>(
 			[NotNull] DatasetsItem<M> datasetsItem)
-			where M : Model;
+			where M : DdxModel;
 
 		public abstract IEnumerable<Item> GetChildren<T>(
 			[NotNull] ObjectDatasetItem<T> objectDatasetItem) where T : ObjectDataset;
@@ -236,11 +235,11 @@ namespace ProSuite.DdxEditor.Content
 
 		public abstract IEnumerable<Item> GetChildren<E>(
 			[NotNull] ObjectCategoriesItem<E> objectCategoriesItem,
-			[NotNull] Model model)
+			[NotNull] DdxModel model)
 			where E : ObjectDataset;
 
 		public abstract IEnumerable<Item> GetChildren<M>(AssociationsItem<M> item)
-			where M : Model;
+			where M : DdxModel;
 
 		public abstract IEnumerable<Item> GetChildren<T>(AssociationEndsItem<T> item)
 			where T : ObjectDataset;
@@ -365,7 +364,7 @@ namespace ProSuite.DdxEditor.Content
 		}
 
 		[NotNull]
-		public virtual IList<DependingItem> GetDependingItems([CanBeNull] Model model)
+		public virtual IList<DependingItem> GetDependingItems([CanBeNull] DdxModel model)
 		{
 			return new List<DependingItem>();
 		}

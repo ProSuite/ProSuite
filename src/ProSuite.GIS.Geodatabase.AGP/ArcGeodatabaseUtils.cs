@@ -9,7 +9,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public static class ArcGeodatabaseUtils
 	{
-		internal static IEnumerable<IRow> GetArcRows(
+		internal static IEnumerable<ArcRow> GetArcRows(
 			RowCursor cursor, ITable sourceTable = null)
 		{
 			while (cursor.MoveNext())
@@ -32,7 +32,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			if (gdb != null)
 			{
-				existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle);
+				existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle.ToInt64());
 
 				ArcTable found = existingWorkspace?.GetTableByName(databaseTable.GetName());
 
@@ -64,14 +64,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		public static ArcRow ToArcRow([NotNull] Row proRow,
-		                              [CanBeNull] ITable parent = null)
+		                              [CanBeNull] ITable parent = null,
+		                              bool cacheValues = false)
 		{
 			if (parent == null)
 			{
 				parent = ToArcTable(proRow.GetTable());
 			}
 
-			return ArcRow.Create(proRow, parent);
+			return ArcRow.Create(proRow, parent, cacheValues);
 		}
 
 		[CanBeNull]

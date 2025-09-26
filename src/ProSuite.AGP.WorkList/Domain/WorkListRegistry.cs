@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -14,7 +16,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly IDictionary<string, IWorkListFactory> _map =
 			new Dictionary<string, IWorkListFactory>();
 
-		public static WorkListRegistry Instance
+		public static IWorkListRegistry Instance
 		{
 			get
 			{
@@ -37,11 +39,61 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		[CanBeNull]
 		public IWorkList Get(string name)
 		{
 			lock (_registryLock)
 			{
 				return _map.TryGetValue(name, out IWorkListFactory factory) ? factory.Get() : null;
+			}
+		}
+
+		[ItemCanBeNull]
+		public async Task<IWorkList> GetAsync(string name)
+		{
+			bool exists;
+			IWorkListFactory factory;
+
+			lock (_registryLock)
+			{
+				exists = _map.TryGetValue(name, out factory);
+			}
+
+			if (exists)
+			{
+				return await factory.GetAsync();
+			}
+
+			return null;
+		}
+
+		public IEnumerable<IWorkList> Get()
+		{
+			ICollection<IWorkListFactory> factories;
+
+			lock (_registryLock)
+			{
+				factories = _map.Values;
+			}
+
+			foreach (IWorkListFactory factory in factories)
+			{
+				yield return factory.Get();
+			}
+		}
+
+		public async IAsyncEnumerable<IWorkList> GetAsync()
+		{
+			ICollection<IWorkListFactory> factories;
+
+			lock (_registryLock)
+			{
+				factories = _map.Values;
+			}
+
+			foreach (IWorkListFactory factory in factories)
+			{
+				yield return await factory.GetAsync();
 			}
 		}
 
@@ -108,7 +160,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					// In this case the work list has been created.
 					// XmlBasedWorkListFactory would create it in a non-canonical way (no schema info etc.)
 					// which might be fine for layer display purposes, but not for the NavigatorView. 
-					return factory is WorkListFactory;
+					return factory is WorkListFactoryBase;
 				}
 
 				return false;

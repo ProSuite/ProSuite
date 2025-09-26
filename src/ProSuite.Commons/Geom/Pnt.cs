@@ -108,6 +108,28 @@ namespace ProSuite.Commons.Geom
 			set { _coordinates[1] = value; }
 		}
 
+		public double Z
+		{
+			get
+			{
+				if (_coordinates.Length < 3)
+				{
+					return double.NaN;
+				}
+
+				return _coordinates[2];
+			}
+			set
+			{
+				if (_coordinates.Length < 3)
+				{
+					throw new InvalidOperationException("This point does not have a Z coordinate.");
+				}
+
+				_coordinates[2] = value;
+			}
+		}
+
 		public IPnt Clone()
 		{
 			return ClonePnt();
@@ -169,21 +191,50 @@ namespace ProSuite.Commons.Geom
 			return p;
 		}
 
-		public double Dist2([NotNull] IPnt point)
+		public double Dist2([NotNull] ICoordinates point)
 		{
-			return Dist2(point, Math.Min(Dimension, point.Dimension));
-		}
-
-		public double Dist2([NotNull] IPnt point, int dimension)
-		{
-			double dDist2 = 0;
-			for (var i = 0; i < dimension; i++)
+			// Old implementation if an IPnt is passed.
+			if (point is IPnt pnt)
 			{
-				double d = this[i] - point[i];
-				dDist2 += d * d;
+				return Dist2(pnt, pnt.Dimension);
 			}
 
-			return dDist2;
+			// New implementation if an ICoordinates is passed.
+			if (double.IsNaN(point.Z) || double.IsNaN(Z))
+			{
+				return Dist2(point, 2);
+			}
+			return Dist2(point, Math.Min(Dimension, 3));
+		}
+
+		public double Dist2([NotNull] ICoordinates point, int dimension)
+		{
+			if (dimension < 2 || dimension > 3)
+			{
+				throw new ArgumentException("Maximum supported dimension is 3", nameof(dimension));
+			}
+
+			double squaredDistance = 0;
+
+			double deltaX = X - point.X;
+			double deltaY = Y - point.Y;
+			squaredDistance += (deltaX * deltaX) + (deltaY * deltaY);
+
+			// Add Z distance calculation for 3D
+			if (dimension < 3)
+			{
+				return squaredDistance;
+			}
+
+			if (double.IsNaN(Z) || double.IsNaN(point.Z))
+			{
+				throw new ArgumentException("Point has NaN Z - cannot calculate 3D distance");
+			}
+
+			double deltaZ = Z - point.Z;
+			squaredDistance += deltaZ * deltaZ;
+
+			return squaredDistance;
 		}
 
 		public double OrigDist2()

@@ -19,6 +19,7 @@ using ProSuite.Commons.Xml;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Server.AO.QA;
 using Quaestor.LoadReporting;
+using Quaestor.ProcessAdministration;
 
 namespace ProSuite.Microservices.Server.AO
 {
@@ -51,19 +52,25 @@ namespace ProSuite.Microservices.Server.AO
 
 			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
 
+			ProcessAdministrationGrpcImpl processAdministration =
+				new ProcessAdministrationGrpcImpl();
+
 			int maxThreadCount = arguments.MaxParallel < 0
 				                     ? Environment.ProcessorCount - 1
 				                     : arguments.MaxParallel;
 
 			QualityVerificationGrpcImpl verificationServiceImpl =
 				CreateQualityVerificationGrpc(inputsFactory, loadReporting,
+				                              processAdministration.RequestAdmin,
 				                              markUnhealthyOnExceptions ? health : null,
 				                              maxThreadCount);
 
 			health.SetStatus(verificationServiceImpl.GetType(), true);
+			health.SetStatus(processAdministration.GetType(), true);
 
 			Grpc.Core.Server server =
-				StartGrpcServer(arguments, verificationServiceImpl, healthService, loadReporting);
+				StartGrpcServer(arguments, verificationServiceImpl, healthService, loadReporting,
+				                processAdministration);
 
 			_msg.InfoFormat("Service is listening on host {0}, port {1}.", arguments.HostName,
 			                arguments.Port);
@@ -76,19 +83,21 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] MicroserverArguments arguments,
 			[CanBeNull] Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactory,
 			[CanBeNull] LoadReportingGrpcImpl loadReporting,
+			[CanBeNull] IRequestAdmin requestAdmin,
 			[CanBeNull] IServiceHealth health)
 		{
 			int maxThreadCount = arguments.MaxParallel < 0
 				                     ? Environment.ProcessorCount - 1
 				                     : arguments.MaxParallel;
 
-			return CreateQualityVerificationGrpc(inputsFactory, loadReporting, health,
+			return CreateQualityVerificationGrpc(inputsFactory, loadReporting, requestAdmin, health,
 			                                     maxThreadCount);
 		}
 
 		public static QualityVerificationGrpcImpl CreateQualityVerificationGrpc(
 			[CanBeNull] Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactory,
 			[CanBeNull] LoadReportingGrpcImpl loadReporting,
+			[CanBeNull] IRequestAdmin requestAdmin,
 			[CanBeNull] IServiceHealth health,
 			int maxThreadCount)
 		{
@@ -104,7 +113,8 @@ namespace ProSuite.Microservices.Server.AO
 			var verificationServiceImpl =
 				new QualityVerificationGrpcImpl(inputsFactory, maxThreadCount)
 				{
-					CurrentLoad = serviceLoad
+					CurrentLoad = serviceLoad,
+					RequestAdmin = requestAdmin
 				};
 
 			if (health != null)
@@ -119,14 +129,16 @@ namespace ProSuite.Microservices.Server.AO
 			MicroserverArguments arguments,
 			[NotNull] QualityVerificationGrpcImpl verificationServiceImpl,
 			[NotNull] HealthServiceImpl healthService,
-			[NotNull] LoadReportingGrpcImpl loadReporting)
+			[NotNull] LoadReportingGrpcImpl loadReporting,
+			[NotNull] ProcessAdministrationGrpcImpl processAdministration)
 		{
 			var services = new List<ServerServiceDefinition>(
 				new[]
 				{
 					QualityVerificationGrpc.BindService(verificationServiceImpl),
 					Health.BindService(healthService),
-					LoadReportingGrpc.BindService(loadReporting)
+					LoadReportingGrpc.BindService(loadReporting),
+					ProcessAdministrationGrpc.BindService(processAdministration)
 				});
 
 			Grpc.Core.Server result = StartGrpcServer(services, arguments);
@@ -265,9 +277,9 @@ namespace ProSuite.Microservices.Server.AO
 
 				parsedArgs.WithParsed(arguments => { result = arguments; });
 
-				bool helpArg = args.Any(
-					a => a != null &&
-					     a.Equals("--help", StringComparison.InvariantCultureIgnoreCase));
+				bool helpArg = args.Any(a => a != null &&
+				                             a.Equals("--help",
+				                                      StringComparison.InvariantCultureIgnoreCase));
 
 				if (helpArg)
 				{
@@ -284,10 +296,14 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] string logConfigFileName,
 			[CanBeNull] ConfigurationDirectorySearcher configDirSearcher = null)
 		{
-			bool verboseArg = commandLineArgs.Any(
-				a => a != null &&
-				     (a.Equals("-v", StringComparison.InvariantCultureIgnoreCase) ||
-				      a.Equals("--verbose", StringComparison.InvariantCultureIgnoreCase)));
+			bool verboseArg = commandLineArgs.Any(a => a != null &&
+			                                           (a.Equals(
+				                                            "-v",
+				                                            StringComparison
+					                                            .InvariantCultureIgnoreCase) ||
+			                                            a.Equals("--verbose",
+			                                                     StringComparison
+				                                                     .InvariantCultureIgnoreCase)));
 
 			var parsedArgs = Parser.Default.ParseArguments<MicroserverArguments>(commandLineArgs);
 

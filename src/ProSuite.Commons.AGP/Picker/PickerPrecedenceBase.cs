@@ -38,7 +38,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	}
 
 	protected List<Key> PressedKeys { get; } = new();
-	
+
 	public int Tolerance { get; }
 
 	public bool IsPointClick { get; }
@@ -110,7 +110,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	[CanBeNull]
 	public virtual IPickableItem PickBest(IEnumerable<IPickableItem> items)
 	{
-		return items.FirstOrDefault();
+		return items.OrderBy(item => GeometryUtils.GetShapeDimension(item.Geometry.GeometryType))
+		            .FirstOrDefault();
 	}
 
 	public Point PickerLocation { get; set; }
@@ -132,22 +133,24 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.ShowPicker;
 		}
 
-		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
+		if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
 		{
-			// if area selection: show picker
+			modes |= PickerMode.ShowPicker;
+		}
+
+		int candidatesCount = candidates.Sum(fs => fs.GetCount());
+
+		if (NoMultiselection && candidatesCount > 1)
+		{
+			// If area selection: show picker
 			if (! IsPointClick)
 			{
 				modes |= PickerMode.ShowPicker;
 			}
-			// ...if not: pick best
+			// if not: pick best
 		}
 		else
 		{
-			if (CountLowestGeometryDimension(PickerUtils.OrderByGeometryDimension(candidates)) > 1)
-			{
-				modes |= PickerMode.ShowPicker;
-			}
-
 			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 			{
 				modes |= PickerMode.PickAll;
@@ -209,34 +212,5 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			PressedKeys.Add(Key.LeftShift);
 			PressedKeys.Add(Key.RightShift);
 		}
-	}
-
-	protected static int CountLowestGeometryDimension(
-		IEnumerable<FeatureSelectionBase> layerSelection)
-	{
-		var count = 0;
-
-		int? lastShapeDimension = null;
-
-		foreach (FeatureSelectionBase selection in layerSelection)
-		{
-			if (lastShapeDimension == null)
-			{
-				lastShapeDimension = selection.ShapeDimension;
-
-				count += selection.GetCount();
-
-				continue;
-			}
-
-			if (lastShapeDimension < selection.ShapeDimension)
-			{
-				continue;
-			}
-
-			count += selection.GetCount();
-		}
-
-		return count;
 	}
 }

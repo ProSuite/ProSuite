@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
@@ -22,12 +21,12 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		/// do not need to be harvested.</param>
 		/// <returns></returns>
 		[NotNull]
-		Model CreateModel([NotNull] IWorkspace workspace,
-		                  [NotNull] string modelName,
-		                  int modelId,
-		                  [CanBeNull] string databaseName,
-		                  [CanBeNull] string schemaOwner,
-		                  [CanBeNull] IList<string> usedDatasetNames = null);
+		DdxModel CreateModel([NotNull] IWorkspace workspace,
+		                     [NotNull] string modelName,
+		                     int modelId,
+		                     [CanBeNull] string databaseName,
+		                     [CanBeNull] string schemaOwner,
+		                     [CanBeNull] IList<string> usedDatasetNames = null);
 
 		/// <summary>
 		/// Assigns the spatial reference of the most frequently used datasets. The specified
@@ -37,7 +36,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		/// <param name="usedDatasets"></param>
 		/// <returns></returns>
 		void AssignMostFrequentlyUsedSpatialReference(
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IEnumerable<Dataset> usedDatasets);
 	}
 }

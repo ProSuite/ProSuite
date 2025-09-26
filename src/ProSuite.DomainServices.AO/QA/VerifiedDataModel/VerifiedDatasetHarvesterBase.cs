@@ -39,7 +39,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			}
 		}
 
-		public void AddDatasets(Model model)
+		public void AddDatasets(DdxModel model)
 		{
 			foreach (Dataset dataset in _datasets)
 			{

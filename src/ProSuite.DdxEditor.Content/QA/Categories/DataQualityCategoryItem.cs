@@ -19,7 +19,8 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DdxEditor.Framework.TableRows;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.Categories
@@ -508,17 +509,17 @@ namespace ProSuite.DdxEditor.Content.QA.Categories
 		}
 
 		[CanBeNull]
-		private Model FindModel([NotNull] IWin32Window owner,
+		private DdxModel FindModel([NotNull] IWin32Window owner,
 		                        params ColumnDescriptor[] columns)
 		{
 			Assert.ArgumentNotNull(owner, nameof(owner));
 
 			IModelRepository models = _modelBuilder.Models;
-			IList<Model> allModels = _modelBuilder.ReadOnlyTransaction(() => models.GetAll());
+			IList<DdxModel> allModels = _modelBuilder.ReadOnlyTransaction(() => models.GetAll());
 
 			// alternatively use a listitem (e.g. to display icon etc.)
 			// then the currently selected one could be non-selectable in the list
-			var finder = new Finder<Model>();
+			var finder = new Finder<DdxModel>();
 			return finder.ShowDialog(owner, allModels, columns);
 		}
 

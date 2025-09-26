@@ -6,24 +6,13 @@ namespace ProSuite.Commons.AGP.Carto;
 
 public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 {
-	private string _scopeMessage;
 	private bool _avoidSLMWithoutSLD;
 	private bool _useScaleRange;
 	private double _minScaleDenominator;
 	private double _maxScaleDenominator;
-
-	public string ScopeMessage
-	{
-		get => _scopeMessage;
-		set
-		{
-			if (_scopeMessage != value)
-			{
-				_scopeMessage = value;
-				OnPropertyChanged();
-			}
-		}
-	}
+	private bool? _wantSLD;
+	private bool? _wantLM;
+	private string _scopeMessage;
 
 	public bool AvoidSLMWithoutSLD
 	{
@@ -72,6 +61,45 @@ public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 			if (Math.Abs(_maxScaleDenominator - value) > double.Epsilon)
 			{
 				_maxScaleDenominator = value;
+				OnPropertyChanged();
+			}
+		}
+	}
+
+	public bool? WantSLD
+	{
+		get => _wantSLD;
+		set
+		{
+			if (_wantSLD != value)
+			{
+				_wantSLD = value;
+				OnPropertyChanged();
+			}
+		}
+	}
+
+	public bool? WantLM
+	{
+		get => _wantLM;
+		set
+		{
+			if (_wantLM != value)
+			{
+				_wantLM = value;
+				OnPropertyChanged();
+			}
+		}
+	}
+
+	public string ScopeMessage
+	{
+		get => _scopeMessage;
+		set
+		{
+			if (_scopeMessage != value)
+			{
+				_scopeMessage = value;
 				OnPropertyChanged();
 			}
 		}

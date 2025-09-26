@@ -3,7 +3,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,42 +11,24 @@ namespace ProSuite.AGP.WorkList.Domain
 {
 	public abstract class WorkItem : NotifyPropertyChangedBase, IWorkItem
 	{
-		// TODO: Make this configurable
 		private readonly double _extentExpansionFactor = 1.1;
 		private readonly double _minimumSizeDegrees = 0.001;
 		private readonly double _minimumSizeProjected = 30;
-
+			
 		private WorkItemStatus _status;
-		private bool _visited;
-
-		private double _xmax;
-		private double _xmin;
-		private double _ymax;
-		private double _ymin;
-		private double _zmax;
-		private double _zmin;
 		private Geometry _geometry;
-		private bool _hasFeatureGeometry;
+		private Envelope _extent;
+		private long _oid;
 
 		private static readonly object _obj = new();
 
-		public string Description { get; }
-
 		#region constructors
 
-		protected WorkItem(long itemId, long uniqueTableId, [NotNull] Row row)
-			: this(itemId, uniqueTableId, new GdbRowIdentity(row))
+		protected WorkItem(long uniqueTableId, [NotNull] Row row)
+			: this(uniqueTableId, new GdbRowIdentity(row)) { }
+
+		protected WorkItem(long uniqueTableId, GdbRowIdentity identity)
 		{
-			Description = GetDescription(row);
-
-			var feature = row as Feature;
-
-			SetGeometryFromFeature(feature);
-		}
-
-		protected WorkItem(long itemId, long uniqueTableId, GdbRowIdentity identity)
-		{
-			OID = itemId;
 			UniqueTableId = uniqueTableId;
 			GdbRowProxy = identity;
 			Status = WorkItemStatus.Todo;
@@ -55,49 +36,68 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public bool HasGeometry { get; private set; }
+		public bool HasExtent => _extent != null;
 
-		public bool HasFeatureGeometry
+		public bool HasFeatureGeometry => _geometry != null;
+
+		#region IWorkItem
+
+		#region thread safe
+
+		public long OID
 		{
 			get
 			{
 				lock (_obj)
 				{
-					return _hasFeatureGeometry;
+					return _oid;
 				}
 			}
-			private set
+			set
 			{
 				lock (_obj)
 				{
-					_hasFeatureGeometry = value;
+					_oid = value;
 				}
 			}
-		}
-
-		#region IWorkItem
-
-		public long OID { get; }
-
-		public long UniqueTableId { get; }
-
-		public long ObjectID => GdbRowProxy.ObjectId;
-
-		public bool Visited
-		{
-			get => _visited;
-			set { _visited = value; }
 		}
 
 		public WorkItemStatus Status
 		{
-			get => _status;
-			set { _status = value; }
+			get
+			{
+				lock (_obj)
+				{
+					return _status;
+				}
+			}
+			set
+			{
+				lock (_obj)
+				{
+					_status = value;
+				}
+			}
 		}
 
-		public GdbRowIdentity GdbRowProxy { get; }
-
-		public Envelope Extent { get; private set; }
+		public Envelope Extent
+		{
+			get
+			{
+				lock (_obj)
+				{
+					return _extent;
+				}
+			}
+			// Use SetExtent! Protected setter is only for unit testing.
+			protected set
+			{
+				lock (_obj)
+				{
+					_extent = value;
+				}
+			}
+		}
 
 		public Geometry Geometry
 		{
@@ -113,174 +113,109 @@ namespace ProSuite.AGP.WorkList.Domain
 				lock (_obj)
 				{
 					_geometry = value;
-					HasFeatureGeometry = true;
 				}
 			}
 		}
 
-		public GeometryType? GeometryType { get; set; }
+		#endregion
 
-		public void QueryPoints(out double xmin, out double ymin,
-		                        out double xmax, out double ymax,
-		                        out double zmax)
-		{
-			QueryPoints(out xmin, out ymin, out xmax, out ymax, out zmax, 0);
-		}
+		public long UniqueTableId { get; }
 
-		public void QueryPoints(out double xmin, out double ymin,
-		                        out double xmax, out double ymax,
-		                        out double zmax, double minimumSize)
-		{
-			// calculate offsets to meet minimum size
-			double offsetX = CalculateMinimumSizeOffset(_xmin, _xmax, minimumSize);
-			double offsetY = CalculateMinimumSizeOffset(_ymin, _ymax, minimumSize);
+		public long ObjectID => GdbRowProxy.ObjectId;
 
-			xmin = _xmin - offsetX;
-			ymin = _ymin - offsetY;
+		public bool Visited { get; set; }
 
-			xmax = _xmax + offsetX;
-			ymax = _ymax + offsetY;
+		public GdbRowIdentity GdbRowProxy { get; }
 
-			zmax = _zmax;
-		}
+		public GeometryType? GeometryType => _geometry?.GeometryType;
 
 		#endregion
 
 		public override string ToString()
 		{
-			return $"{GdbRowProxy}: {Status}, {Visited}";
+			return $"item id={OID}, row oid={ObjectID}, {GdbRowProxy.Table.Name}, {Status}, {Visited}";
 		}
 
 		[NotNull]
 		public string GetDescription()
 		{
-			// todo daro: this is copied from the old world. Why not set description in constructor?
-			Row row = GetRow();
-
-			return GetDescription(row);
+			return GetDescriptionCore(GdbRowProxy) ?? string.Empty;
 		}
 
-		[NotNull]
-		public string GetDescription(Row row)
+		private string GetDescriptionCore(GdbRowIdentity row)
 		{
-			return row == null
-				       ? "Row not found for work item"
-				       : GetDescriptionCore(row) ?? string.Empty;
+			string tableName = row.Table.Name;
+			return $"{tableName} OID={row.ObjectId} (item ID={OID})";
 		}
 
-		protected virtual string GetDescriptionCore(Row row)
+		public void SetGeometry([NotNull] Geometry geometry)
 		{
-			return
-				$"{DatasetUtils.GetTableDisplayName(row.GetTable())} OID={row.GetObjectID()} (item ID={OID})";
+			Geometry = geometry;
+
+			SetExtent(geometry.Extent);
 		}
 
-		[CanBeNull]
-		protected virtual Envelope GetExtent([CanBeNull] Feature feature)
+		public void SetExtent([NotNull] Envelope extent)
 		{
-			return feature?.GetShape().Extent;
-		}
+			double xmin;
+			double ymin;
+			double xmax;
+			double ymax;
 
-		[CanBeNull]
-		private Row GetRow()
-		{
-			return GdbRowProxy.GetRow();
-		}
+			double minimumSize = GetMinimumSize(extent.SpatialReference);
 
-		public void SetGeometryFromFeature([CanBeNull] Feature feature)
-		{
-			Geometry geometry = feature?.GetShape();
-
-			SetGeometry(geometry);
-		}
-
-		private void SetGeometry([CanBeNull] Geometry geometry)
-		{
-			Envelope extent = geometry?.Extent;
-			GeometryType = geometry?.GeometryType;
-
-			if (extent == null)
+			// calculate the boundary values in x and y, ensuring a minimum size
+			if (extent.Width < minimumSize)
 			{
-				return;
-			}
-
-			SetGeometry(extent);
-		}
-
-		public void SetGeometry([CanBeNull] Envelope extent)
-		{
-			if (extent == null || extent.IsEmpty)
-			{
-				HasGeometry = false;
-
-				_xmin = 0;
-				_ymin = 0;
-				_xmax = 0;
-				_ymax = 0;
-				_zmin = 0;
-				_zmax = 0;
+				double centerX = extent.XMin + extent.Width / 2;
+				xmin = centerX - minimumSize / 2;
+				xmax = centerX + minimumSize / 2;
 			}
 			else
 			{
-				HasGeometry = true;
+				xmin = extent.XMin;
+				xmax = extent.XMax;
+			}
 
-				double xmin;
-				double ymin;
-				double xmax;
-				double ymax;
+			if (extent.Height < minimumSize)
+			{
+				double centerY = extent.YMin + extent.Height / 2;
+				ymin = centerY - minimumSize / 2;
+				ymax = centerY + minimumSize / 2;
+			}
+			else
+			{
+				ymin = extent.YMin;
+				ymax = extent.YMax;
+			}
 
-				double minimumSize = GetMinimumSize(extent.SpatialReference);
+			// calculate the offset to apply for a given expansion factor
+			double offset = CalculateExpansionOffset(xmin, xmax, ymin, ymax,
+			                                         _extentExpansionFactor);
 
-				// calculate the boundary values in x and y, ensuring a minimum size
-				if (extent.Width < minimumSize)
-				{
-					double centerX = extent.XMin + extent.Width / 2;
-					xmin = centerX - minimumSize / 2;
-					xmax = centerX + minimumSize / 2;
-				}
-				else
-				{
-					xmin = extent.XMin;
-					xmax = extent.XMax;
-				}
+			// apply the offset
+			double xminOffset = xmin - offset;
+			double yminOffset = ymin - offset;
+			double xmaxOffset = xmax + offset;
+			double ymaxOffset = ymax + offset;
 
-				if (extent.Height < minimumSize)
-				{
-					double centerY = extent.YMin + extent.Height / 2;
-					ymin = centerY - minimumSize / 2;
-					ymax = centerY + minimumSize / 2;
-				}
-				else
-				{
-					ymin = extent.YMin;
-					ymax = extent.YMax;
-				}
+			// use the z boundary values unchanged
+			if (extent.HasZ)
+			{
+				double zminOffset = extent.ZMin;
+				double zmaxOffset = extent.ZMax;
 
-				// calculate the offset to apply for a given expansion factor
-				double offset = CalculateExpansionOffset(xmin, xmax, ymin, ymax,
-				                                         _extentExpansionFactor);
-
-				// apply the offset
-				_xmin = xmin - offset;
-				_ymin = ymin - offset;
-				_xmax = xmax + offset;
-				_ymax = ymax + offset;
-
-				// use the z boundary values unchanged
-				if (extent.HasZ)
-				{
-					_zmin = extent.ZMin;
-					_zmax = extent.ZMax;
-
-					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate3D(_xmin, _ymin, _zmin),
-					                                          new Coordinate3D(_xmax, _ymax, _zmax),
-					                                          extent.SpatialReference);
-				}
-				else
-				{
-					Extent = EnvelopeBuilderEx.CreateEnvelope(new Coordinate2D(_xmin, _ymin),
-					                                          new Coordinate2D(_xmax, _ymax),
-					                                          extent.SpatialReference);
-				}
+				Extent = EnvelopeBuilderEx.CreateEnvelope(
+					new Coordinate3D(xminOffset, yminOffset, zminOffset),
+					new Coordinate3D(xmaxOffset, ymaxOffset, zmaxOffset),
+					extent.SpatialReference);
+			}
+			else
+			{
+				Extent = EnvelopeBuilderEx.CreateEnvelope(
+					new Coordinate2D(xminOffset, yminOffset),
+					new Coordinate2D(xmaxOffset, ymaxOffset),
+					extent.SpatialReference);
 			}
 		}
 
@@ -331,6 +266,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : (max - min) * (expansionFactor - 1) / 2;
 		}
 
+		// TODO: (daro) drop!
 		/// <summary>
 		/// Calculates the offset to apply to expand a range by a given minimum size.
 		/// </summary>

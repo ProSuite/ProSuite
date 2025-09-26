@@ -12,8 +12,8 @@ using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.AttributeDependencies;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.AttributeDependencies
 {
@@ -145,7 +145,7 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 		}
 
 		public void ExportAttributeDependencies([NotNull] string fileName,
-		                                        [CanBeNull] Model model)
+		                                        [CanBeNull] DdxModel model)
 		{
 			Assert.ArgumentNotNullOrEmpty(fileName, nameof(fileName));
 

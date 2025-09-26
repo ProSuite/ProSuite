@@ -7,7 +7,7 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "Quaestor.ServiceDiscovery/0.9.2": {
+      "Quaestor.ServiceDiscovery/1.0.0": {
         "dependencies": {
           "Google.Protobuf": "3.24.0",
           "Grpc": "2.44.0",
@@ -105,7 +105,7 @@
     }
   },
   "libraries": {
-    "Quaestor.ServiceDiscovery/0.9.2": {
+    "Quaestor.ServiceDiscovery/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

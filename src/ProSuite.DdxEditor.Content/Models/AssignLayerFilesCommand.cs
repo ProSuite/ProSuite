@@ -5,12 +5,12 @@ using ProSuite.Commons.UI.Env;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
 	internal class AssignLayerFilesCommand<M> : ItemCommandBase<ModelItemBase<M>>
-		where M : Model
+		where M : DdxModel
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AssignLayerFilesCommand&lt;M&gt;"/> class.

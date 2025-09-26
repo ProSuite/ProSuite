@@ -14,18 +14,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
-		{
-			get => _targetFeatureSelectionVm;
-			private set => SetProperty(ref _targetFeatureSelectionVm, value);
-		}
-
-		public ZValueSourceSelectionViewModel ZValueSourceSelectionVM
-		{
-			get => _zValueSourceSelectionVm;
-			private set => SetProperty(ref _zValueSourceSelectionVm, value);
-		}
-
 		public ICommand RevertToDefaultsCommand { get; }
 
 		public bool IsRevertToDefaultsEnabled => true;
@@ -112,6 +100,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			get => _insertVertices;
 			set => SetProperty(ref _insertVertices, value);
+		}
+
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
+		}
+
+		public ZValueSourceSelectionViewModel ZValueSourceSelectionVM
+		{
+			get => _zValueSourceSelectionVm;
+			private set => SetProperty(ref _zValueSourceSelectionVm, value);
 		}
 
 		public CutAlongToolOptions Options

@@ -410,7 +410,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
     <value>Finds all features or feature parts in 'featureClass' where the largest extension of the bounding box is larger than 'limit'.</value>
   </data>
   <data name="QaExtent_featureClass" xml:space="preserve">
-    <value>polyline or polygon feature class</value>
+    <value>feature class</value>
   </data>
   <data name="QaExtent_limit" xml:space="preserve">
     <value>maximum extension in (x,y)-units</value>
@@ -4869,5 +4869,11 @@ Remarks: A source row may be exported several times with different tile ids.</va
   </data>
   <data name="QaSchemaSpatialReference_compareXYPrecision" xml:space="preserve">
     <value>Compare XY-Domain and XY-Resolution of the spatial references. If any value is different, an error is reported. If you want to compare only the XY-Domain or XY-Resolution, use the optional parameters CompareXYDomainOrigin or CompareXYResolution</value>
+  </data>
+  <data name="QaMinExtent_0" xml:space="preserve">
+    <value>Finds all features in 'featureClass' where the largest extension of the bounding box is smaller than 'limit'</value>
+  </data>
+  <data name="QaMinExtent_limit" xml:space="preserve">
+    <value>minimum extension in (x,y)-units</value>
   </data>
 </root>

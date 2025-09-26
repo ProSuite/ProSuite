@@ -4,6 +4,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
@@ -74,7 +75,7 @@ namespace ProSuite.QA.Tests.Test
 
 				IList<ITest> tests =
 					factory.CreateTests(
-						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+						new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 				Assert.AreEqual(1, tests.Count);
 
@@ -103,7 +104,7 @@ namespace ProSuite.QA.Tests.Test
 
 				IList<ITest> tests =
 					factory.CreateTests(
-						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+						new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 				Assert.AreEqual(1, tests.Count);
 				var runner = new QaTestRunner(tests[0]);
@@ -121,7 +122,7 @@ namespace ProSuite.QA.Tests.Test
 
 				IList<ITest> tests =
 					factory.CreateTests(
-						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+						new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 				Assert.AreEqual(1, tests.Count);
 				var runner = new QaTestRunner(tests[0]);
@@ -168,7 +169,7 @@ namespace ProSuite.QA.Tests.Test
 			var factory = new QaGdbConstraintFactory { Condition = condition };
 
 			IList<ITest> tests =
-				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				factory.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			Assert.AreEqual(1, tests.Count);
 
@@ -223,7 +224,7 @@ namespace ProSuite.QA.Tests.Test
 			var factory = new QaGdbConstraintFactory { Condition = condition };
 
 			IList<ITest> tests =
-				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				factory.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			Assert.AreEqual(1, tests.Count);
 

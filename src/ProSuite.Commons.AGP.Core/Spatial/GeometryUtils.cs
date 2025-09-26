@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
@@ -106,7 +108,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return 1;
 			}
 
-			throw new NotSupportedException($"Geometry of type {geometry.GetType().Name} is not supported");
+			throw new NotSupportedException(
+				$"Geometry of type {geometry.GetType().Name} is not supported");
 		}
 
 		/// <summary>
@@ -407,12 +410,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (geometry is Envelope extent)
 			{
 				// Note: GeometryEngine's Buffer() does not support Envelope
-				return extent.Expand(distance, distance, false);
+				return Buffer(extent, distance);
 			}
 
 			var buffer = Engine.Buffer(geometry, distance);
 			// Note: buffer may NOT be a Polygon if distance is almost zero!
 			return buffer;
+		}
+
+		public static Envelope Buffer(Envelope envelope, double distance)
+		{
+			if (envelope is null) return null;
+			if (envelope.IsEmpty) return envelope;
+			return envelope.Expand(distance, distance, false);
 		}
 
 		public static Geometry ConvexHull(Geometry geometry)
@@ -761,7 +771,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 					case CubicBezierSegment bezier:
 						path[i] = CubicBezierBuilderEx.CreateCubicBezierSegment(
-							bezier.EndPoint, bezier.ControlPoint2, bezier.ControlPoint1, bezier.StartPoint);
+							bezier.EndPoint, bezier.ControlPoint2, bezier.ControlPoint1,
+							bezier.StartPoint);
 						break;
 
 					case EllipticArcSegment arc:
@@ -869,6 +880,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static Polyline GetClippedPolyline(Polyline polyline, Envelope clipExtent)
 		{
 			return (Polyline) Engine.Clip(polyline, clipExtent);
+		}
+
+		public static Envelope Project(Envelope envelope, SpatialReference sref)
+		{
+			var projected = Engine.Project(envelope, sref);
+			return projected as Envelope ??
+			       throw UnexpectedResultFrom("Project", typeof(Envelope), projected);
 		}
 
 		/// <summary>
@@ -1016,7 +1034,87 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return multipart.Length;
 			}
 
+			if (geometry is Multipoint multipoint)
+			{
+				return multipoint.PointCount;
+			}
+
+			if (geometry is Multipatch multipatch)
+			{
+				Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
+
+				// TODO: Proper GetXyFootprint method that first unions the rings!
+				return polyhedron.RingGroups.Sum(r => r.GetArea2D());
+			}
+
 			return 0;
+		}
+
+		/// <summary>
+		/// Returns a reference to the largest (area for IArea objects, length for ICurve objects, 
+		/// point count for multipoint objects) geometry of the given geometries. If several 
+		/// geometries have the largest size, the first in the list will be returned.
+		/// </summary>
+		/// <param name="geometries">The geometries which must all be of the same geometry type.</param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static Geometry GetLargestGeometry(
+			[NotNull] IEnumerable<Geometry> geometries)
+		{
+			return GetLargest(geometries, geometry => geometry);
+		}
+
+		/// <summary>
+		/// Returns a reference to the largest (area for IArea objects, length for ICurve objects, 
+		/// point count for multipoint objects) geometry of the given geometries. If several 
+		/// geometries have the largest size, the first in the list will be returned.
+		/// </summary>
+		/// <param name="features">The geometries which must all be of the same geometry type.</param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static Feature GetLargestFeature(
+			[NotNull] IEnumerable<Feature> features)
+		{
+			return GetLargest(features, feature => feature.GetShape());
+			;
+		}
+
+		/// <summary>
+		/// Returns a reference to the largest (area for IArea objects, length for ICurve objects, 
+		/// point count for multipoint objects) geometry of the given geometries. If several 
+		/// geometries have the largest size, the first in the list will be returned.
+		/// </summary>
+		/// <param name="features">The objects that reference a geometry.</param>
+		/// <param name="getShape">The method that provides a geometry from a T object.</param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static T GetLargest<T>([NotNull] IEnumerable<T> features,
+		                              [NotNull] Func<T, Geometry> getShape)
+		{
+			Assert.ArgumentNotNull(features, nameof(features));
+
+			double largestSize = double.MinValue;
+
+			T result = default(T);
+
+			foreach (T feature in features)
+			{
+				Geometry geometry = getShape(feature);
+
+				Assert.True(geometry is Multipart or Multipatch or Multipoint,
+				            "GetLargest: Unsupported geometry type: {0}",
+				            geometry.GeometryType);
+
+				double size = GetGeometrySize(geometry);
+
+				if (size > largestSize)
+				{
+					largestSize = size;
+					result = feature;
+				}
+			}
+
+			return result;
 		}
 
 		public static Geometry EnsureGeometrySchema([NotNull] Geometry inputGeometry,
@@ -1165,7 +1263,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// Given a global (shape-wide) vertex index, get the
 		/// part index and the part-local vertex index.
 		/// </summary>
-		public static int GetLocalVertexIndex(Geometry shape, int globalVertexIndex, out int partIndex)
+		public static int GetLocalVertexIndex(Geometry shape, int globalVertexIndex,
+		                                      out int partIndex)
 		{
 			if (shape is Multipoint multipoint)
 			{
@@ -1198,7 +1297,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// Given a global (shape-wide) vertex index, get the part-local
 		/// vertex index and the part index
 		/// </summary>
-		public static int GetLocalVertexIndex(Multipart multipart, int globalVertexIndex, out int partIndex)
+		public static int GetLocalVertexIndex(Multipart multipart, int globalVertexIndex,
+		                                      out int partIndex)
 		{
 			if (multipart is null)
 				throw new ArgumentNullException(nameof(multipart));
@@ -1308,7 +1408,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return partIndex;
 			}
 
-			throw new ArgumentException("For a multipoint, part and vertex index must not be different");
+			throw new ArgumentException(
+				"For a multipoint, part and vertex index must not be different");
 		}
 
 		public static Geometry AddVertex(Geometry shape, MapPoint point)
@@ -1327,7 +1428,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// <returns>A new geometry with the vertex added</returns>
 		/// <remarks>For multipoints, just append the point, for polylines
 		/// and polygons, use <see cref="IGeometryEngine.SplitAtPoint"/></remarks>
-		public static Geometry AddVertex(Geometry shape, MapPoint point, out int partIndex, out int vertexIndex)
+		public static Geometry AddVertex(Geometry shape, MapPoint point, out int partIndex,
+		                                 out int vertexIndex)
 		{
 			if (shape is null)
 				throw new ArgumentNullException(nameof(shape));
@@ -1365,7 +1467,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				Geometry newShape = GeometryEngine.Instance.SplitAtPoint(
 					multipart, point, projectOnto, false,
 					out bool splitOccurred, out partIndex, out int segmentIndex);
-				if (!splitOccurred)
+				if (! splitOccurred)
 					throw new Exception($"Could not add vertex to {multipart.GeometryType}: " +
 					                    $"{nameof(GeometryEngine.Instance.SplitAtPoint)} says no split occurred");
 				// Returned partIndex and segmentIndex are for the segment *after* the
@@ -1373,13 +1475,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				vertexIndex = segmentIndex;
 				// SplitAtPoint interpolates Z and M attributes (good), but also seems to
 				// inherit the ID from neighbouring vertices: take ID from split point
-				newShape = ControlPointUtils.SetPointID(point.ID, newShape, partIndex, segmentIndex);
+				newShape =
+					ControlPointUtils.SetPointID(point.ID, newShape, partIndex, segmentIndex);
 				return newShape;
 			}
 
 			if (shape is Multipatch)
 			{
-				throw new NotImplementedException("Add Vertex is not implemented for MultiPatch geometries");
+				throw new NotImplementedException(
+					"Add Vertex is not implemented for MultiPatch geometries");
 			}
 
 			throw new NotSupportedException(
@@ -1449,11 +1553,12 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				throw new NotSupportedException("Cannot remove vertex on an Envelope");
 			}
 
-			throw new NotSupportedException($"Geometry type {shape.GetType().Name} is not supported");
+			throw new NotSupportedException(
+				$"Geometry type {shape.GetType().Name} is not supported");
 		}
 
-		public static void RemoveVertices(/*this*/ MultipartBuilderEx builder, int partIndex,
-		                                           int firstVertex, int lastVertex = -1)
+		public static void RemoveVertices( /*this*/ MultipartBuilderEx builder, int partIndex,
+		                                            int firstVertex, int lastVertex = -1)
 		{
 			switch (builder)
 			{
@@ -1478,8 +1583,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// against the given <paramref name="builder"/>. If no last vertex
 		/// is given, it defaults to the given first vertex.
 		/// </summary>
-		public static void RemoveVertices(/*this*/ PolylineBuilderEx builder, int partIndex,
-		                                  int firstVertex, int lastVertex = -1)
+		public static void RemoveVertices( /*this*/ PolylineBuilderEx builder, int partIndex,
+		                                            int firstVertex, int lastVertex = -1)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -1533,6 +1638,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				{
 					builder.RemoveSegment(partIndex, i, false);
 				}
+
 				var straight = LineBuilderEx.CreateLineSegment(startPoint, endPoint);
 				builder.ReplaceSegment(partIndex, firstVertex - 1, straight);
 			}
@@ -1546,8 +1652,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// The vertex indices are taken modulo the part's segment count,
 		/// that is, they are cyclic.
 		/// </summary>
-		public static void RemoveVertices(/*this*/ PolygonBuilderEx builder, int partIndex,
-		                                  int firstVertex, int lastVertex = -1)
+		public static void RemoveVertices( /*this*/ PolygonBuilderEx builder, int partIndex,
+		                                            int firstVertex, int lastVertex = -1)
 		{
 			if (builder is null)
 				throw new ArgumentNullException(nameof(builder));
@@ -1672,7 +1778,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		/// segment, move the control point(s) accordingly. For a
 		/// circular or elliptic arc, move the center decently.
 		/// </summary>
-		public static T UpdateEndpoints<T>([NotNull] T segment, MapPoint startPoint, MapPoint endPoint)
+		public static T UpdateEndpoints<T>([NotNull] T segment, MapPoint startPoint,
+		                                   MapPoint endPoint)
 			where T : Segment
 		{
 			if (segment is null)
@@ -1711,13 +1818,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (startPoint is not null)
 			{
 				controlPoint1.Move(startPoint.X - bezier.StartPoint.X,
-				         startPoint.Y - bezier.StartPoint.Y);
+				                   startPoint.Y - bezier.StartPoint.Y);
 			}
 
 			if (endPoint is not null)
 			{
 				controlPoint2.Move(endPoint.X - bezier.EndPoint.X,
-				         endPoint.Y - bezier.EndPoint.Y);
+				                   endPoint.Y - bezier.EndPoint.Y);
 			}
 
 			var sref = bezier.SpatialReference;
@@ -1749,7 +1856,6 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (arc.IsCircular)
 			{
-
 				var ds = startPoint is null
 					         ? new Coordinate2D(0, 0)
 					         : new Coordinate2D(startPoint) - new Coordinate2D(arc.StartPoint);
@@ -1762,7 +1868,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				var centerPt = arc.CenterPoint.Shifted(dc.X, dc.Y);
 
 				updated = EllipticArcBuilderEx.CreateCircularArc(
-					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint, centerPt, orientation, sref);
+					startPoint ?? arc.StartPoint, endPoint ?? arc.EndPoint, centerPt, orientation,
+					sref);
 			}
 			else
 			{

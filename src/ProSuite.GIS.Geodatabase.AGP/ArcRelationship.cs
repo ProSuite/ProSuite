@@ -1,4 +1,5 @@
 using ArcGIS.Core.Data;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geodatabase.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
@@ -26,6 +27,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			RelationshipClass = relationshipClass;
 		}
+
+		[CanBeNull]
+		public Relationship ProRelationship => _relationship;
 
 		#region Implementation of IRelationship
 

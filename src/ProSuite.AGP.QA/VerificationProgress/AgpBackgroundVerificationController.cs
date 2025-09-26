@@ -179,7 +179,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
 				                verificationResult.IssuesGdbPath);
 				await ViewUtils.TryAsync(
-					_workListOpener.OpenFileGdbIssueWorkListAsync(verificationResult.IssuesGdbPath,
+					_workListOpener.OpenFileGdbIssueWorkListAsync(MapView.Active.Extent, verificationResult.IssuesGdbPath,
 						replaceExisting), _msg);
 			}
 		}

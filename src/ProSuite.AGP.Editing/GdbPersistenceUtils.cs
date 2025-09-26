@@ -486,6 +486,13 @@ namespace ProSuite.AGP.Editing
 
 			value = attribute.CurrentValue;
 
+			//wenn guid leer ist (alles 0) dann ist Attribute.CurrentValue eine Guid und kein String
+			//wenn guid nicht leer ist dann ist Attribute.CurrentValue ein String
+			if (value is System.Guid guid)
+			{
+				value = guid.ToString("B").ToUpper();
+			}
+
 			return value != null && value != DBNull.Value;
 		}
 

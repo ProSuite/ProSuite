@@ -34,7 +34,9 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 
 		#region AttributedAssociation Attribute harvesting
 
-		public static void HarvestAttributes([NotNull] AttributedAssociation attributedAssociation)
+		public static void HarvestAttributes(
+			[NotNull] AttributedAssociation attributedAssociation,
+			[NotNull] IWorkspaceContext workspaceContext)
 		{
 			// TODO: support for configurator?
 
@@ -44,9 +46,11 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 				       "Harvesting attributes for attributed association {0}",
 				       attributedAssociation.Name))
 			{
-				const bool allowAlways = true;
+				//const bool allowAlways = true;
+				//IRelationshipClass relationshipClass =
+				//	ModelElementUtils.TryOpenFromMasterDatabase(attributedAssociation, allowAlways);
 				IRelationshipClass relationshipClass =
-					ModelElementUtils.TryOpenFromMasterDatabase(attributedAssociation, allowAlways);
+					workspaceContext.OpenRelationshipClass(attributedAssociation);
 				Assert.NotNull(relationshipClass,
 				               "Relationship class not found in model master database: {0}",
 				               attributedAssociation.Name);

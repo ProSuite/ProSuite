@@ -41,7 +41,7 @@ namespace ProSuite.QA.Container
 			IReadOnlyTable table0 = row0.Table;
 			IReadOnlyTable table1 = row1.Table;
 
-			if (table0 == table1)
+			if (table0.Equals(table1))
 			{
 				return CompareRelatedRows(row0, row1);
 			}

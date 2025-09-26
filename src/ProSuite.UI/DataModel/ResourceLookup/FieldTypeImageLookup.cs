@@ -115,9 +115,10 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 					       new FieldTypeImage(2, FieldTypeImages.FieldTypeUUID, "fld.guid")
 				       },
 				       {
-					       FieldType.LongInteger,
+					       FieldType.Integer,
 					       new FieldTypeImage(3, FieldTypeImages.FieldTypeInteger, "fld.int")
 				       },
+					   // TODO: BigInteger
 				       {
 					       FieldType.ShortInteger,
 					       new FieldTypeImage(4, FieldTypeImages.FieldTypeInteger, "fld.sint")

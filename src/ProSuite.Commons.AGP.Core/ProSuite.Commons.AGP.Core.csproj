@@ -20,12 +20,18 @@
 
 		<UseWPF>true</UseWPF>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.2 ">
+    <DefineConstants>ARCGISPRO_GREATER_3_2</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
@@ -33,9 +39,11 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />

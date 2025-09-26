@@ -92,7 +92,7 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// classes of the production model.
 		/// </summary>
 		/// <returns></returns>
-		bool CanSaveIssuesInProductionModel();
+		bool CanSaveIssuesInProductionModel(out IIssueStoreContext issueStoreContext);
 
 		/// <summary>
 		/// Stores the issues in the central issue feature classes of the production model.
@@ -105,6 +105,8 @@ namespace ProSuite.DomainModel.AGP.QA
 			IQualityVerificationResult verificationResult,
 			ErrorDeletionInPerimeter errorDeletion,
 			bool updateLatestTestDate);
+
+		ITransformerQueryService GetTransformerQueryService();
 
 		/// <summary>
 		/// Disable the current environment. All specifications are cleared.

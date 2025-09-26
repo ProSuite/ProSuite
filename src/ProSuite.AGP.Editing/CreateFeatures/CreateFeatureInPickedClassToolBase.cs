@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
@@ -32,30 +31,14 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return null;
 	}
 
+	protected override SelectionCursors GetSelectionCursors()
+	{
+		return SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
+	}
+
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
 		return new SymbolizedSketchTypeBasedOnSelection(this);
-	}
-
-	protected override Cursor GetSelectionCursor()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.CreateFeatureInPickedClassOverlay,
-		                              null);
-	}
-
-	protected override Cursor GetSelectionCursorLasso()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.CreateFeatureInPickedClassOverlay,
-		                              Resources.Lasso);
-	}
-
-	protected override Cursor GetSelectionCursorPolygon()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.CreateFeatureInPickedClassOverlay,
-		                              Resources.Polygon);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)

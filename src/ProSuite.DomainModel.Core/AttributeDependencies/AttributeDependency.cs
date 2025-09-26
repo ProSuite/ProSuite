@@ -111,7 +111,8 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 				}
 
 				if (fieldType == FieldType.ShortInteger ||
-				    fieldType == FieldType.LongInteger)
+				    fieldType == FieldType.Integer ||
+				    fieldType == FieldType.BigInteger)
 				{
 					if (string.Equals(s, "false", StringComparison.OrdinalIgnoreCase))
 					{
@@ -143,9 +144,10 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 			switch (fieldType)
 			{
 				case FieldType.ShortInteger:
-				case FieldType.LongInteger:
+				case FieldType.Integer:
 					return System.Convert.ToInt32(value, culture);
-
+				case FieldType.BigInteger:
+					return System.Convert.ToInt64(value, culture);
 				case FieldType.Float:
 					return System.Convert.ToSingle(value, culture);
 				case FieldType.Double:

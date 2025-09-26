@@ -13,12 +13,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
-		{
-			get => _targetFeatureSelectionVm;
-			private set => SetProperty(ref _targetFeatureSelectionVm, value);
-		}
-
 		public ICommand RevertToDefaultsCommand { get; }
 
 		public bool IsRevertToDefaultsEnabled => true;
@@ -77,6 +71,12 @@ namespace ProSuite.AGP.Editing.Cracker
 		{
 			get => _useSourceZs;
 			set => SetProperty(ref _useSourceZs, value);
+		}
+
+		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
+		{
+			get => _targetFeatureSelectionVm;
+			private set => SetProperty(ref _targetFeatureSelectionVm, value);
 		}
 
 		public CrackerToolOptions Options

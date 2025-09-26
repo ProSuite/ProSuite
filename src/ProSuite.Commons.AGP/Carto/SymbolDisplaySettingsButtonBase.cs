@@ -25,7 +25,9 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 			                AvoidSLMWithoutSLD = manager.NoMaskingWithoutSLD[map],
 			                UseScaleRange = manager.AutoSwitch[map],
 			                MinScaleDenominator = manager.AutoMinScaleDenom[map],
-			                MaxScaleDenominator = manager.AutoMaxScaleDenom[map]
+			                MaxScaleDenominator = manager.AutoMaxScaleDenom[map],
+							WantSLD = manager.WantSLD[map],
+							WantLM = manager.WantLM[map]
 		                };
 
 		var result = Gateway.ShowDialog<SymbolDisplaySettingsWindow>(viewModel);

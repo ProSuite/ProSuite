@@ -1,4 +1,7 @@
-﻿namespace ProSuite.Commons.Geom.SpatialIndex
+using System;
+using ProSuite.Commons.Misc;
+
+namespace ProSuite.Commons.Geom.SpatialIndex
 {
 	public struct TileIndex
 	{

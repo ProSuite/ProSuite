@@ -13,7 +13,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 	/// <summary>
 	/// Session provider implementation that directly uses the NHibernate session factory
 	/// and directly begins a transaction when opened. Sessions are managed on a per-thread
-	/// basis. Therefore the SessionProvider can be used in a multi-threaded environment.
+	/// basis. Therefore, the SessionProvider can be used in a multi-threaded environment.
 	/// </summary>
 	[UsedImplicitly]
 	public class SessionProvider : ISessionProvider
@@ -91,8 +91,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		/// <summary>
 		/// Creates a session wrapper that commits on Dispose() if it was the first to create
-		/// the NHibernate session. This allows for 'nested' transactions where the outer-most
-		/// does the commit while the inner sessions piggy-back onto the same underlying NH-session.
+		/// the NHibernate session. This allows for 'nested' transactions where the outermost
+		/// does the commit while the inner sessions piggyback onto the same underlying NH-session.
 		/// Hence, the commit-on-dispose is done if
 		/// - The session wrapper was the first to be created
 		/// - The session's <see cref="ISession.DefaultReadOnly"/> is false
@@ -112,7 +112,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 			}
 			else
 			{
-				// Use existing session an make sure it is not disposed (by wrapping it)
+				// Use existing session and make sure it is not disposed (by wrapping it)
 				nHibernateSession = CurrentSession;
 				isOutermost = false;
 			}

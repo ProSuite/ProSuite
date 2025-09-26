@@ -11,11 +11,13 @@ namespace ProSuite.Commons.AGP.Picker
 	{
 		private BitmapImage _image;
 
-		public PickableFeatureItem(BasicFeatureLayer layer, Feature feature,
-		                           Geometry geometry, long oid, string displayValue) : base(
-			layer, feature, geometry, oid, displayValue) { }
+		public PickableFeatureItem([NotNull] BasicFeatureLayer layer,
+		                           [NotNull] Feature feature,
+		                           [NotNull] Geometry geometry,
+		                           long oid,
+		                           string displayValue)
+			: base(layer, feature, geometry, oid, displayValue) { }
 
-		[NotNull]
 		public override ImageSource ImageSource =>
 			_image ??= new BitmapImage(PickerUtils.GetImagePath(Layer.ShapeType));
 	}

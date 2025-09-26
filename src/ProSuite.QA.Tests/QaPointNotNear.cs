@@ -12,7 +12,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
@@ -100,7 +99,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass referenceClass,
 			[Doc(nameof(DocStrings.QaPointNotNear_limit))]
 			double limit)
-			: this(pointClass, new[] {referenceClass}, limit) { }
+			: this(pointClass, new[] { referenceClass }, limit) { }
 
 		[Doc(nameof(DocStrings.QaPointNotNear_1))]
 		public QaPointNotNear(
@@ -111,7 +110,7 @@ namespace ProSuite.QA.Tests
 				referenceClasses,
 			[Doc(nameof(DocStrings.QaPointNotNear_limit))]
 			double limit)
-			: base(CastToTables(new[] {pointClass}, referenceClasses))
+			: base(CastToTables(new[] { pointClass }, referenceClasses))
 		{
 			Assert.ArgumentNotNull(pointClass, nameof(pointClass));
 			Assert.ArgumentNotNull(referenceClasses, nameof(referenceClasses));
@@ -171,7 +170,7 @@ namespace ProSuite.QA.Tests
 			[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceFlipExpressions))]
 			IList<string>
 				referenceFlipExpressions)
-			: base(CastToTables(new[] {pointClass}, referenceClasses))
+			: base(CastToTables(new[] { pointClass }, referenceClasses))
 		{
 			Assert.ArgumentNotNull(pointClass, nameof(pointClass));
 			Assert.ArgumentNotNull(referenceClasses, nameof(referenceClasses));
@@ -213,10 +212,12 @@ namespace ProSuite.QA.Tests
 			{
 				AddCustomQueryFilterExpression(sql);
 			}
+
 			foreach (string sql in _referenceRightSideDistanceSqls)
 			{
 				AddCustomQueryFilterExpression(sql);
 			}
+
 			foreach (string sql in _referenceFlipExpressions)
 			{
 				AddCustomQueryFilterExpression(sql);
@@ -498,11 +499,14 @@ namespace ProSuite.QA.Tests
 						out standardDistance, out rightSideDistance);
 					maxNeededDistance = Math.Max(maxNeededDistance, _pointClassXyTolerance);
 
-					bool isWithinPolygon;
-					bool onRightSide;
 					double distance = GetDistance(point, referenceFeature, _nearPoint,
 					                              geometryComponent, maxNeededDistance,
-					                              out isWithinPolygon, out onRightSide);
+					                              out bool isWithinPolygon, out bool onRightSide);
+
+					if (double.IsNaN(distance))
+					{
+						continue;
+					}
 
 					if (AllowCoincidentPoints &&
 					    IsSmallerThanXyTolerance(distance, referenceClassIndex))
@@ -742,8 +746,9 @@ namespace ProSuite.QA.Tests
 		}
 
 		/// <summary>
-		/// returns -1 if neighbourFeature is polygon, geometryComponent is entireGeometry and point lies within neighbourFeature.
-		/// otherwise returns distance.
+		/// Returns -1 if neighbourFeature is polygon, geometryComponent is entireGeometry and point lies within neighbourFeature.
+		/// Returns NaN if the geometry component of the neighbourFeature is empty, e.g. InteriorVertices of a 2-point line.
+		/// Otherwise, returns the distance of the point to the neighbourFeature.
 		/// </summary>
 		private static double GetDistance([NotNull] IPoint point,
 		                                  [NotNull] IReadOnlyFeature neighbourFeature,
@@ -795,6 +800,13 @@ namespace ProSuite.QA.Tests
 			{
 				return GetDistanceToCurve(point, neighbourFeature, nearestPoint,
 				                          maxNeededDistance, out onRightSide);
+			}
+
+			// DPS#248: GeometryComponent.InteriorVertices of 2-point lines the geometry is empty:
+			if (neighbourGeometry.IsEmpty)
+			{
+				onRightSide = false;
+				return double.NaN;
 			}
 
 			// Use IProximityOperator.QueryNearestPoint so that the error geometry can be constructed

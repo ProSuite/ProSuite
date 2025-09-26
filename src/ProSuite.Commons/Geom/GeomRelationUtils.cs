@@ -429,7 +429,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public static bool LinesContainXY([NotNull] ISegmentList segments,
-		                                  [NotNull] IPnt testPoint,
+		                                  [NotNull] ICoordinates testPoint,
 		                                  double tolerance)
 		{
 			foreach (KeyValuePair<int, Line3D> segmentsAroundPoint in
@@ -508,6 +508,24 @@ namespace ProSuite.Commons.Geom
 		#region AreaContains, IsContained
 
 		/// <summary>
+		/// Determines whether the specified bounds contain (including the boundary) the
+		/// specified test geometry. This method ignores the orientation.
+		/// </summary>
+		/// <param name="bounds"></param>
+		/// <param name="testPoint"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static bool BoundsContainXY([NotNull] IBoundedXY bounds,
+		                                   [NotNull] ICoordinates testPoint,
+		                                   double tolerance)
+		{
+			return testPoint.X >= bounds.XMin - tolerance &&
+			       testPoint.X <= bounds.XMax + tolerance &&
+			       testPoint.Y >= bounds.YMin - tolerance &&
+			       testPoint.Y <= bounds.YMax + tolerance;
+		}
+
+		/// <summary>
 		/// Determines whether the specified closed polycurve contains (including the boundary) the
 		/// specified test geometry. This method ignores the orientation.
 		/// </summary>
@@ -560,7 +578,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
 		public static bool PolycurveContainsXY([NotNull] ISegmentList closedPolycurve,
-		                                       [NotNull] IPnt testPoint,
+		                                       [NotNull] ICoordinates testPoint,
 		                                       double tolerance)
 		{
 			if (AreBoundsDisjoint(closedPolycurve, testPoint.X, testPoint.Y, tolerance))
@@ -839,7 +857,7 @@ namespace ProSuite.Commons.Geom
 		/// counter-clockwise.</param>
 		/// <returns>Null, if the point is on the boundary, true if the point is inside the ring.</returns>
 		public static bool? AreaContainsXY([NotNull] Linestring closedRing,
-		                                   [NotNull] IPnt testPoint,
+		                                   [NotNull] ICoordinates testPoint,
 		                                   double tolerance,
 		                                   bool disregardingOrientation = false)
 		{
@@ -880,7 +898,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <returns>Null, if the point is on the boundary, true if the point is inside the ring.</returns>
 		public static bool? AreaContainsXY([NotNull] ISegmentList closedRings,
-		                                   [NotNull] IPnt testPoint,
+		                                   [NotNull] ICoordinates testPoint,
 		                                   double tolerance)
 		{
 			Assert.ArgumentCondition(closedRings.IsClosed, "Rings must be closed");
@@ -1625,7 +1643,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
 		private static bool HasRayOddCrossingNumber([NotNull] ISegmentList segments,
-		                                            [NotNull] IPnt testPoint,
+		                                            [NotNull] ICoordinates testPoint,
 		                                            double tolerance)
 		{
 			bool result = false;

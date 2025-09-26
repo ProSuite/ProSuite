@@ -12,9 +12,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		}
 		#region RestoreDefaultsButton
 
-		public TargetFeatureSelectionViewModel TargetFeatureSelectionVM { get; private set; }
-
-
 		public ICommand RevertToDefaultsCommand { get; }
 
 		public bool IsRevertToDefaultsEnabled => true;

@@ -12,6 +12,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -728,7 +729,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.Condition = condition;
 
 				IList<ITest> tests =
-					fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+					fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 				Assert.AreEqual(1, tests.Count);
 
 				AssertErrors(1, Run(tests[0], 1000));
@@ -844,7 +845,7 @@ namespace ProSuite.QA.Tests.Test
 				fact.Condition = condition;
 
 				IList<ITest> tests =
-					fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+					fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 				Assert.AreEqual(1, tests.Count);
 
 				AssertErrors(1, Run(tests[0], 1000));
@@ -1180,7 +1181,7 @@ namespace ProSuite.QA.Tests.Test
 			fact.Condition = condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 
 			var testContainer = new TestContainer { TileSize = 10000 };
@@ -1449,7 +1450,7 @@ namespace ProSuite.QA.Tests.Test
 			fact.Condition = condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 
 			var testContainer = new TestContainer { TileSize = 20000 };
@@ -1530,7 +1531,7 @@ namespace ProSuite.QA.Tests.Test
 			fact.Condition = condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 
 			var testContainer = new TestContainer { TileSize = 10000 };

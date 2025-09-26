@@ -1,6 +1,6 @@
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.Workflow;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 
 namespace ProSuite.Microservices.AO

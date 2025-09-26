@@ -84,7 +84,11 @@ public class FlashService : IDisposable
 				throw new ArgumentOutOfRangeException();
 		}
 
-		QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
+		// TODO AE: Implement and assert not null!
+		if (flashGeometry != null)
+		{
+			QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
+		}
 
 		return this;
 	}

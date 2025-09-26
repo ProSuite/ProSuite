@@ -5,6 +5,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -107,7 +108,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Assert.IsNotNull(factory);
 
 			IList<ITest> tests = factory.CreateTests(
-				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			QaContainerTestRunner runner = new QaContainerTestRunner(1000, tests[0]);
 			runner.Execute();
@@ -187,7 +188,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Assert.IsNotNull(factory);
 
 			IList<ITest> tests = factory.CreateTests(
-				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			QaContainerTestRunner runner = new QaContainerTestRunner(1000, tests[0]);
 			runner.Execute();

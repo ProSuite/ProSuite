@@ -3,12 +3,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
-using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
 	public class RefreshModelContentCommand<E> : ItemCommandBase<ModelItemBase<E>>
-		where E : Model
+		where E : DdxModel
 	{
 		[NotNull] private static readonly Image _image;
 		private string _toolTip;

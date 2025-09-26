@@ -20,7 +20,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[NotNull] private readonly List<HtmlReportIssueGroup> _issueGroups;
 
 		public HtmlReportModel(
-			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] string specificationName,
 			[NotNull] IIssueStatistics statistics,
 			[NotNull] XmlVerificationReport verificationReport,
 			[NotNull] string outputDirectoryPath,
@@ -31,29 +31,28 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[CanBeNull] IEnumerable<string> qualitySpecificationReportFilePaths,
 			[NotNull] IHtmlDataQualityCategoryOptionsProvider categoryOptionsProvider)
 		{
-			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
+			Assert.ArgumentNotNullOrEmpty(specificationName, nameof(specificationName));
 			Assert.ArgumentNotNull(statistics, nameof(statistics));
 			Assert.ArgumentNotNull(verificationReport, nameof(verificationReport));
 			Assert.ArgumentNotNullOrEmpty(outputDirectoryPath, nameof(outputDirectoryPath));
 			Assert.ArgumentNotNullOrEmpty(verificationReportName,
-										  nameof(verificationReportName));
+			                              nameof(verificationReportName));
 			Assert.ArgumentNotNull(categoryOptionsProvider, nameof(categoryOptionsProvider));
 
 			_verificationReport = verificationReport;
 			HtmlReportFiles =
-				htmlReportFileNames.Select(
-									   fileName =>
-										   new OutputFile(
-											   Path.Combine(outputDirectoryPath, fileName)))
-								   .ToList();
+				htmlReportFileNames.Select(fileName =>
+					                           new OutputFile(
+						                           Path.Combine(outputDirectoryPath, fileName)))
+				                   .ToList();
 			IssueMapFiles = issueMapFilePaths?.Select(path => new OutputFile(path))
-											 .ToList() ?? new List<OutputFile>();
+			                                 .ToList() ?? new List<OutputFile>();
 			QualitySpecificationReportFiles =
 				qualitySpecificationReportFilePaths?.Select(path => new OutputFile(path))
-												   .ToList() ?? new List<OutputFile>();
+				                                   .ToList() ?? new List<OutputFile>();
 
 			Properties = new NameValuePairs(GetProperties(verificationReport.Properties));
-			QualitySpecification = qualitySpecification.Name;
+			QualitySpecification = specificationName;
 			VerificationWasCancelled = verificationReport.Cancelled;
 			HasVerificationExtent = verificationReport.TestExtent != null;
 
@@ -104,15 +103,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				_verificationReport.VerifiedDatasets.Select(xmld => new HtmlVerifiedDataset(xmld)));
 
 			WorkspaceDescriptions = new List<HtmlWorkspaceDescription>(
-				_verificationReport.DataSourceDescriptions.Select(
-					xmlw => new HtmlWorkspaceDescription(xmlw)));
+				_verificationReport.DataSourceDescriptions.Select(xmlw =>
+					new HtmlWorkspaceDescription(xmlw)));
 
 			HasWarnings = statistics.WarningCount > 0;
 			HasErrors = statistics.ErrorCount > 0;
-			HasIssues = !HasWarnings && !HasErrors;
+			HasIssues = ! HasWarnings && ! HasErrors;
 
 			IssueCount = HtmlReportUtils.Format(statistics.WarningCount +
-												statistics.ErrorCount);
+			                                    statistics.ErrorCount);
 			WarningCount = HtmlReportUtils.Format(statistics.WarningCount);
 			ErrorCount = HtmlReportUtils.Format(statistics.ErrorCount);
 			ExceptionCount = HtmlReportUtils.Format(statistics.ExceptionCount);
@@ -249,6 +248,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[NotNull]
 		[UsedImplicitly]
 		public List<HtmlReportDataQualityCategory> RootCategories { get; }
+
+		[UsedImplicitly]
+		public bool DatasetsHaveKnownSpatialReference =>
+			VerifiedDatasets?.Any(d => d.CoordinateSystem != null) ?? false;
 
 		[NotNull]
 		private static IEnumerable<KeyValuePair<string, string>> GetProperties(

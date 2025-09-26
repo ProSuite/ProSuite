@@ -12,6 +12,12 @@ namespace ProSuite.Microservices.Client.GrpcNet
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+#if NET8_0
+		// NOTE: We actually have to load the library in the desired version, otherwise Grpc.Net.Client will throw a System.IO.FileNotFoundException!
+		// TODO: In case a previously loaded Add-in has already loaded a lower version, do not fail here!
+		private static readonly object _unused = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+#endif
+
 		public static GrpcChannelOptions CreateChannelOptions(int maxMessageLength,
 		                                                      bool disableProxy = false)
 		{

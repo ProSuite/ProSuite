@@ -175,7 +175,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Assert.IsNotNull(testFct);
 
 			IList<ITest> tests = testFct.CreateTests(
-				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			Assert.AreEqual(1, tests.Count);
 			Assert.AreEqual(1, ((QaContainsOther) tests[0]).IssueFilters?.Count);
@@ -322,7 +322,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Assert.IsNotNull(testFct);
 
 			IList<ITest> tests = testFct.CreateTests(
-				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			Assert.AreEqual(1, tests.Count);
 		}
@@ -456,7 +456,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Assert.IsNotNull(testFct);
 
 			IList<ITest> tests = testFct.CreateTests(
-				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			Assert.AreEqual(1, tests.Count);
 			Assert.IsTrue(
@@ -639,7 +639,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			Assert.IsNotNull(testFct);
 
 			IList<ITest> tests = testFct.CreateTests(
-				new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 
 			Assert.AreEqual(1, tests.Count);
 

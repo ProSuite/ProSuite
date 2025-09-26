@@ -240,8 +240,7 @@
       <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\lib\licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt" 
-						             Link="Licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt">
+    <Content Include="..\..\lib\licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt" Link="Licenses\Stopbyte.MIT.WPF-Numeric-Spinner-NumericUpDown.licence.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Properties\Images\Browse.png" />

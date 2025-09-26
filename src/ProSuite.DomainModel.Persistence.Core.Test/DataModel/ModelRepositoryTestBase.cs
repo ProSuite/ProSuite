@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using ProSuite.Commons.GeoDb;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 {
@@ -59,7 +59,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 			InitializeModel();
 
 			Dataset ds1 = null;
-			Model model = null;
+			DdxModel model = null;
 			UnitOfWork.NewTransaction(
 				delegate
 				{
@@ -104,7 +104,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 			InitializeModel();
 
 			Dataset ds1 = null;
-			Model model = null;
+			DdxModel model = null;
 
 			VectorDataset duplicate = null;
 

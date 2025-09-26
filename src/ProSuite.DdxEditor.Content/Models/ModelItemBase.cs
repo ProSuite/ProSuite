@@ -31,8 +31,8 @@ using Path = System.IO.Path;
 
 namespace ProSuite.DdxEditor.Content.Models
 {
-	public abstract class ModelItemBase<E> : SubclassedEntityItem<E, Model>
-		where E : Model
+	public abstract class ModelItemBase<E> : SubclassedEntityItem<E, DdxModel>
+		where E : DdxModel
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -48,7 +48,7 @@ namespace ProSuite.DdxEditor.Content.Models
 		/// <param name="repository">The repository.</param>
 		protected ModelItemBase([NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 		                        [NotNull] E model,
-		                        [NotNull] IRepository<Model> repository)
+		                        [NotNull] IRepository<DdxModel> repository)
 			: base(model, repository)
 		{
 			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
@@ -211,8 +211,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 						E model = Assert.NotNull(GetEntity());
 
-						IWorkspaceContext workspaceContext =
-							model.AssertMasterDatabaseWorkspaceContextAccessible();
+						IWorkspaceContext workspaceContext = GetMasterWorkspaceContext(model);
 
 						foreach (Dataset dataset in model.GetDatasets())
 						{
@@ -269,9 +268,9 @@ namespace ProSuite.DdxEditor.Content.Models
 		public void CheckSpatialReferences()
 		{
 			SpatialReferenceProperties modelSpatialReferenceProperties = null;
-			IEnumerable<ModelDatasetSpatialReferenceComparison> comparisons =
+			IList<ModelDatasetSpatialReferenceComparison> comparisons =
 				_modelBuilder
-					.ReadOnlyTransaction<IEnumerable<ModelDatasetSpatialReferenceComparison>>(
+					.ReadOnlyTransaction<IList<ModelDatasetSpatialReferenceComparison>>(
 						() => GetSpatialReferenceComparisons(out modelSpatialReferenceProperties));
 			Assert.NotNull(modelSpatialReferenceProperties, "modelSpatialReferenceProperties");
 
@@ -316,7 +315,7 @@ namespace ProSuite.DdxEditor.Content.Models
 
 			if (entity.Name != null)
 			{
-				Model other = _modelBuilder.Models.Get(entity.Name);
+				DdxModel other = _modelBuilder.Models.Get(entity.Name);
 
 				if (other != null && other.Id != entity.Id)
 				{
@@ -372,9 +371,12 @@ namespace ProSuite.DdxEditor.Content.Models
 					AddMissingGeometryTypes(geometryTypeRepository,
 					                        geometryTypeRepository.GetAll());
 
+					var workspaceContext = GetMasterWorkspaceContext(model);
+
 					IEnumerable<ObjectAttributeType> attributeTypes =
-						model.Harvest(geometryTypeRepository.GetAll(),
-						              attributeTypeRepository.GetAll());
+						ModelHarvesting.Harvest(model,  workspaceContext,
+						                     geometryTypeRepository.GetAll(),
+						                     attributeTypeRepository.GetAll());
 
 					foreach (ObjectAttributeType attributeType in attributeTypes)
 					{
@@ -384,6 +386,38 @@ namespace ProSuite.DdxEditor.Content.Models
 						}
 					}
 				});
+		}
+
+		/// <summary>
+		/// Get the model's master workspace context, used for harvesting
+		/// and related tasks. If the model cannot create this workspace
+		/// context, a default master database workspace context will be
+		/// created. Override in subclass to modify this behaviour.
+		/// </summary>
+		[NotNull]
+		protected virtual IWorkspaceContext GetMasterWorkspaceContext(DdxModel model)
+		{
+			var workspaceContext = model.CachedMasterDatabaseWorkspaceContext as IWorkspaceContext;
+
+			if (workspaceContext is null)
+			{
+				if (model is IModelMasterDatabase masterDatabase)
+				{
+					_msg.DebugFormat(
+						"Creating master database workspace context for model “{0}”", model.Name);
+					workspaceContext = masterDatabase.CreateMasterDatabaseWorkspaceContext();
+				}
+				else
+				{
+					_msg.DebugFormat(
+						"Creating default database workspace context for model “{0}”", model.Name);
+					workspaceContext = ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(model);
+				}
+
+				model.CachedMasterDatabaseWorkspaceContext = workspaceContext;
+			}
+
+			return workspaceContext;
 		}
 
 		private static void AddMissingGeometryTypes(
@@ -554,11 +588,11 @@ namespace ProSuite.DdxEditor.Content.Models
 		}
 
 		[NotNull]
-		private IEnumerable<ModelDatasetSpatialReferenceComparison>
+		private IList<ModelDatasetSpatialReferenceComparison>
 			GetSpatialReferenceComparisons(
 				[NotNull] out SpatialReferenceProperties modelSpatialReferenceProperties)
 		{
-			Model model = Assert.NotNull(GetEntity());
+			DdxModel model = Assert.NotNull(GetEntity());
 
 			SpatialReferenceDescriptor spatialReferenceDescriptor =
 				model.SpatialReferenceDescriptor;
@@ -652,21 +686,14 @@ namespace ProSuite.DdxEditor.Content.Models
 		}
 
 		[CanBeNull]
-		private static ISpatialReference TryGetSpatialReference(
+		private ISpatialReference TryGetSpatialReference(
 			[NotNull] IVectorDataset vectorDataset,
 			[CanBeNull] out string message)
 		{
 			IFeatureClass featureClass;
 			try
 			{
-				IWorkspaceContext masterDatabaseWorkspaceContext =
-					ModelElementUtils.GetMasterDatabaseWorkspaceContext(vectorDataset);
-
-				if (masterDatabaseWorkspaceContext == null)
-				{
-					message = "Master database is not accessible";
-					return null;
-				}
+				var masterDatabaseWorkspaceContext = GetMasterWorkspaceContext(vectorDataset.Model);
 
 				featureClass = masterDatabaseWorkspaceContext.OpenFeatureClass(vectorDataset);
 				if (featureClass == null)
