@@ -62,8 +62,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
-			return geometryType == GeometryType.Polyline ||
-			       geometryType == GeometryType.Polygon;
+			return geometryType == GeometryType.Polygon;
 		}
 
 		protected override void LogUsingCurrentSelection()
