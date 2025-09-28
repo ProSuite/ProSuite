@@ -501,10 +501,13 @@ public class GeometryUtilsTest
 		// Can catch invalid arguments:
 		builder = polyline.ToBuilder();
 		// part index out of range:
-		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 2, 0, 0));
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.RemoveVertices(builder, 2, 0, 0));
 		// first/last vertex index out of range
-		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 2, 2));
-		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(builder, 1, 0, 2));
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.RemoveVertices(builder, 1, 2, 2));
+		Assert.Throws<ArgumentOutOfRangeException>(
+			() => GeometryUtils.RemoveVertices(builder, 1, 0, 2));
 	}
 
 	[Test]
@@ -594,7 +597,7 @@ public class GeometryUtilsTest
 		GeometryUtils.RemoveVertices(builder, 1, 0);
 		GeometryUtils.RemoveVertices(builder, 0, 0);
 		Assert.AreEqual(2, builder.PartCount);
-		Assert.AreEqual(1.0+1.0+sqrt2, builder.Parts[1].Sum(s => s.Length), delta);
+		Assert.AreEqual(1.0 + 1.0 + sqrt2, builder.Parts[1].Sum(s => s.Length), delta);
 		Assert.AreEqual(3.0 + 3.0 + 3 * sqrt2, builder.Parts[0].Sum(s => s.Length), delta);
 
 		// remove two vertices in inner part removes that part:
@@ -724,15 +727,15 @@ public class GeometryUtilsTest
 
 		var builder = new PolygonBuilderEx();
 
-		builder.AddPart(MakeCoords(1, 2,  1, 5,  4, 5,  4, 2,  1, 2)); // outer
-		builder.AddPart(MakeCoords(2, 3,  3, 3,  3, 4,  2, 4,  2, 3)); // inner
+		builder.AddPart(MakeCoords(1, 2, 1, 5, 4, 5, 4, 2, 1, 2)); // outer
+		builder.AddPart(MakeCoords(2, 3, 3, 3, 3, 4, 2, 4, 2, 3)); // inner
 
 		builder.AddPart(MakeCoords(5, 1, 5, 6, 12, 6, 12, 1, 5, 1)); // outer
 		builder.AddPart(MakeCoords(6, 2, 9, 2, 9, 5, 6, 5, 6, 2)); // inner
 		builder.AddPart(MakeCoords(7, 3, 7, 4, 8, 4, 8, 3, 7, 3)); // outer in inner
 		builder.AddPart(MakeCoords(10, 3, 11, 3, 11, 4, 10, 4, 10, 3)); // inner
 
-		builder.AddPart(MakeCoords(13, 3,  13, 4,  14, 4,  14, 3,  13, 3)); // outer
+		builder.AddPart(MakeCoords(13, 3, 13, 4, 14, 4, 14, 3, 13, 3)); // outer
 
 		return builder.ToGeometry();
 	}
@@ -791,8 +794,10 @@ public class GeometryUtilsTest
 		Polyline dateline =
 			PolylineBuilderEx.CreatePolyline(new List<MapPoint>
 			                                 {
-				                                 MapPointBuilderEx.CreateMapPoint(180, 90, SpatialReferences.WebMercator),
-				                                 MapPointBuilderEx.CreateMapPoint(180, -90, SpatialReferences.WebMercator)
+				                                 MapPointBuilderEx.CreateMapPoint(
+					                                 180, 90, SpatialReferences.WebMercator),
+				                                 MapPointBuilderEx.CreateMapPoint(
+					                                 180, -90, SpatialReferences.WebMercator)
 			                                 });
 
 		Geometry intersection =
@@ -897,6 +902,31 @@ public class GeometryUtilsTest
 		Assert.AreEqual(polyline.PartCount, resultPolyline.PartCount);
 		Assert.AreEqual(polyline.PointCount, resultPolyline.PointCount);
 		Assert.AreEqual(polyline.Length, resultPolyline.Length, delta);
+
+		// Test with Polyline that has a Bézier curve segment
+		SpatialReference sr = SpatialReferenceBuilder.CreateSpatialReference(2056, 5729);
+
+		CubicBezierSegment cubicBezierSegment = CubicBezierBuilderEx.CreateCubicBezierSegment(
+			MapPointBuilderEx.CreateMapPoint(2600000.0, 1200000.0, 500.0),
+			new Coordinate2D(2600005.0, 1200000.0),
+			new Coordinate2D(26000010.0, 1200005.0),
+			MapPointBuilderEx.CreateMapPoint(2600020.0, 1200020.0, 500.0), sr);
+
+		polyline = PolylineBuilderEx.CreatePolyline(cubicBezierSegment);
+
+		Assert.True(polyline.HasZ);
+		resultPolyline = GeometryUtils.SetConstantZ(polyline, testZ);
+		Assert.True(resultPolyline.HasZ);
+
+		// Test with Polyline that has elliptic arc segment:
+		EllipticArcSegment ellipticArcSegment = EllipticArcBuilderEx.CreateEllipticArcSegment(
+			new Coordinate2D(2600000.0, 1200000.0), 0, Math.PI / 3, 0, 1, 1);
+
+		polyline = PolylineBuilderEx.CreatePolyline(ellipticArcSegment, sr);
+
+		Assert.False(polyline.HasZ);
+		resultPolyline = GeometryUtils.SetConstantZ(polyline, testZ);
+		Assert.True(resultPolyline.HasZ);
 
 		// Test with Polygon
 		var polygon = PolygonBuilderEx.CreatePolygon(new[]

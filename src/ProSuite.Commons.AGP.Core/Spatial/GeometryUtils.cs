@@ -1242,10 +1242,22 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (segment is EllipticArcSegment arc)
 			{
-				var builder = new EllipticArcBuilderEx(arc);
-				builder.StartPoint = startPoint;
-				builder.EndPoint = endPoint;
-				return builder.ToSegment();
+				if (arc.IsCircular)
+				{
+					var arcBuilder =
+						new EllipticArcBuilderEx(startPoint, endPoint, arc.CenterPoint,
+						                         spatialReference);
+					return arcBuilder.ToSegment();
+				}
+
+				// Actual elliptic arc, not sure if it can have Z values.
+				var ellipseBuilder = new EllipticArcBuilderEx(arc);
+				// This throws System.ArgumentException: 'The point is not on the arc.'
+				//ellipseBuilder.StartPoint = startPoint;
+				//ellipseBuilder.EndPoint = endPoint;
+				//return ellipseBuilder.ToSegment();
+
+				throw new NotSupportedException("Cannot make ellipse with Z values");
 			}
 
 			// For other segment types, use the generic builder approach
@@ -2145,7 +2157,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var combinedExtent = envelopeBuilder.ToGeometry();
 
 			return new EnvelopeXY(combinedExtent.XMin, combinedExtent.YMin, combinedExtent.XMax,
-			               combinedExtent.YMax);
+			                      combinedExtent.YMax);
 		}
 	}
 }
