@@ -153,9 +153,9 @@ namespace ProSuite.Commons.UI
 			}
 		}
 
-		public static void RunOnUIThread([NotNull] Action action)
+		public static Task RunOnUIThread([NotNull] Action action)
 		{
-			RunOnUIThread(() =>
+			return RunOnUIThread(() =>
 			{
 				action();
 				return Task.CompletedTask;
