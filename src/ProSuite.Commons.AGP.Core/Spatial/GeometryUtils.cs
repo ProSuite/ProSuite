@@ -1242,29 +1242,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (segment is EllipticArcSegment arc)
 			{
-				if (arc.IsCircular)
-				{
-					var arcBuilder =
-						new EllipticArcBuilderEx(startPoint, endPoint, arc.CenterPoint,
-						                         spatialReference);
-					return arcBuilder.ToSegment();
-				}
+				ArcOrientation orientation = arc.IsCounterClockwise
+					                             ? ArcOrientation.ArcCounterClockwise
+					                             : ArcOrientation.ArcClockwise;
 
-				// Actual elliptic arc, not sure if it can have Z values.
-				var ellipseBuilder = new EllipticArcBuilderEx(arc);
-				// This throws System.ArgumentException: 'The point is not on the arc.'
-				//ellipseBuilder.StartPoint = startPoint;
-				//ellipseBuilder.EndPoint = endPoint;
-				//return ellipseBuilder.ToSegment();
+				MinorOrMajor minorOrMajor = arc.IsMinor ? MinorOrMajor.Minor : MinorOrMajor.Major;
 
-				throw new NotSupportedException("Cannot make ellipse with Z values");
+				var ellipseBuilder = new EllipticArcBuilderEx(
+					startPoint, endPoint, arc.SemiMajorAxis, arc.MinorMajorRatio, arc.RotationAngle,
+					minorOrMajor, orientation, spatialReference);
+				return ellipseBuilder.ToSegment();
 			}
 
-			// For other segment types, use the generic builder approach
-			var segmentBuilder = segment.ToBuilder();
-			segmentBuilder.StartPoint = startPoint;
-			segmentBuilder.EndPoint = endPoint;
-			return segmentBuilder.ToSegment();
+			throw new NotSupportedException($"Unsupported segment type: {segment.SegmentType}");
 		}
 
 		public static IGeometryEngine Engine

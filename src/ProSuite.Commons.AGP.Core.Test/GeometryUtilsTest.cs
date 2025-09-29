@@ -908,8 +908,8 @@ public class GeometryUtilsTest
 
 		CubicBezierSegment cubicBezierSegment = CubicBezierBuilderEx.CreateCubicBezierSegment(
 			MapPointBuilderEx.CreateMapPoint(2600000.0, 1200000.0, 500.0),
-			new Coordinate2D(2600005.0, 1200000.0),
-			new Coordinate2D(26000010.0, 1200005.0),
+			new Coordinate2D(2600020.0, 1200000.0),
+			new Coordinate2D(2600010.0, 1200020.0),
 			MapPointBuilderEx.CreateMapPoint(2600020.0, 1200020.0, 500.0), sr);
 
 		polyline = PolylineBuilderEx.CreatePolyline(cubicBezierSegment);
@@ -917,31 +917,43 @@ public class GeometryUtilsTest
 		Assert.True(polyline.HasZ);
 		resultPolyline = GeometryUtils.SetConstantZ(polyline, testZ);
 		Assert.True(resultPolyline.HasZ);
+		// 2D length must not change:
+		Assert.AreEqual(polyline.Length, resultPolyline.Length, 0.001);
 
-		// Test with Polyline that has elliptic arc segment:
+		// Test with Polyline that has circular arc segment:
+		EllipticArcBuilder arcBuilder = new EllipticArcBuilder(
+			MapPointBuilderEx.CreateMapPoint(2600000.0, 1200000.0, sr),
+			MapPointBuilderEx.CreateMapPoint(2600020.0, 1200020.0, sr),
+			new Coordinate2D(2600005.0, 1200005.0));
+		polyline = PolylineBuilderEx.CreatePolyline(arcBuilder.ToSegment(), sr);
+
+		Assert.False(polyline.HasZ);
+		resultPolyline = GeometryUtils.SetConstantZ(polyline, testZ);
+		Assert.True(resultPolyline.HasZ);
+		// 2D length must not change:
+		Assert.AreEqual(polyline.Length, resultPolyline.Length, 0.001);
+
+		// Proper elliptic arc:
 		EllipticArcSegment ellipticArcSegment = EllipticArcBuilderEx.CreateEllipticArcSegment(
-			new Coordinate2D(2600000.0, 1200000.0), 0, Math.PI / 3, 0, 1, 1);
+			new Coordinate2D(2600000.0, 1200000.0), 0, Math.PI / 3, 0.2, 10, 0.75);
 
 		polyline = PolylineBuilderEx.CreatePolyline(ellipticArcSegment, sr);
 
 		Assert.False(polyline.HasZ);
 		resultPolyline = GeometryUtils.SetConstantZ(polyline, testZ);
 		Assert.True(resultPolyline.HasZ);
+		// 2D length must not change:
+		Assert.AreEqual(polyline.Length, resultPolyline.Length, 0.001);
 
 		// Test with Polygon
-		var polygon = PolygonBuilderEx.CreatePolygon(new[]
-		                                             {
-			                                             MapPointBuilderEx.CreateMapPoint(
-				                                             0.0, 0.0, 1.0),
-			                                             MapPointBuilderEx.CreateMapPoint(
-				                                             0.0, 1.0, 2.0),
-			                                             MapPointBuilderEx.CreateMapPoint(
-				                                             1.0, 1.0, 3.0),
-			                                             MapPointBuilderEx.CreateMapPoint(
-				                                             1.0, 0.0, 4.0),
-			                                             MapPointBuilderEx.CreateMapPoint(
-				                                             0.0, 0.0, 1.0)
-		                                             });
+		var polygon = PolygonBuilderEx.CreatePolygon([
+			MapPointBuilderEx.CreateMapPoint(0.0, 0.0, 1.0),
+			MapPointBuilderEx.CreateMapPoint(0.0, 1.0, 2.0),
+			MapPointBuilderEx.CreateMapPoint(1.0, 1.0, 3.0),
+			MapPointBuilderEx.CreateMapPoint(1.0, 0.0, 4.0),
+			MapPointBuilderEx.CreateMapPoint(0.0, 0.0, 1.0)
+		]);
+
 		Assert.True(polygon.HasZ);
 		var resultPolygon = GeometryUtils.SetConstantZ(polygon, testZ);
 		Assert.True(resultPolygon.HasZ);
