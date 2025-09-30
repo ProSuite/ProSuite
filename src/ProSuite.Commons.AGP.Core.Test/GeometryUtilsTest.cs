@@ -946,13 +946,15 @@ public class GeometryUtilsTest
 		Assert.AreEqual(polyline.Length, resultPolyline.Length, 0.001);
 
 		// Test with Polygon
-		var polygon = PolygonBuilderEx.CreatePolygon([
-			MapPointBuilderEx.CreateMapPoint(0.0, 0.0, 1.0),
-			MapPointBuilderEx.CreateMapPoint(0.0, 1.0, 2.0),
-			MapPointBuilderEx.CreateMapPoint(1.0, 1.0, 3.0),
-			MapPointBuilderEx.CreateMapPoint(1.0, 0.0, 4.0),
-			MapPointBuilderEx.CreateMapPoint(0.0, 0.0, 1.0)
-		]);
+		var polygon = PolygonBuilderEx.CreatePolygon(
+			new List<MapPoint>
+			{
+				MapPointBuilderEx.CreateMapPoint(0.0, 0.0, 1.0),
+				MapPointBuilderEx.CreateMapPoint(0.0, 1.0, 2.0),
+				MapPointBuilderEx.CreateMapPoint(1.0, 1.0, 3.0),
+				MapPointBuilderEx.CreateMapPoint(1.0, 0.0, 4.0),
+				MapPointBuilderEx.CreateMapPoint(0.0, 0.0, 1.0)
+			}.AsReadOnly());
 
 		Assert.True(polygon.HasZ);
 		var resultPolygon = GeometryUtils.SetConstantZ(polygon, testZ);

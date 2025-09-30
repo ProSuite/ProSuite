@@ -506,9 +506,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			switch (connector)
 			{
+#if ARCGISPRO_GREATER_3_2
 				case BimFileConnectionProperties:
 					result = WorkspaceFactory.BIMFile;
 					break;
+#endif
 				case DatabaseConnectionFile:
 				case DatabaseConnectionProperties:
 					result = WorkspaceFactory.SDE;
