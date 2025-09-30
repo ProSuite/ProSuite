@@ -143,6 +143,12 @@ namespace ProSuite.AGP.QA.WorkList
 					                                          defaultDefinitionQuery));
 				}
 
+				if (datastoresByHandle.Count == 0)
+				{
+					throw new InvalidOperationException(
+						"No valid source classes found for the work list's tables.");
+				}
+
 				Assert.True(datastoresByHandle.Count == 1,
 				            "Multiple geodatabases are referenced by the work list's source classes.");
 
