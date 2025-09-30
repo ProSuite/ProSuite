@@ -496,5 +496,17 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			return sb.ToString();
 		}
+
+		/// <summary>
+		/// Very simple utility to determine whether the dataset or field is
+		/// unqualified. Works at least for Oracle DB.
+		/// </summary>
+		public static string Unqualified(string name)
+		{
+			if (name is null) return null;
+			int index = name.LastIndexOf('.');
+			if (index < 0) return name;
+			return name.Substring(index + 1);
+		}
 	}
 }
