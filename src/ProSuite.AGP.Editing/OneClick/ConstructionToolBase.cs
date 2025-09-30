@@ -321,6 +321,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
+			if (_intermediateSketchStates?.IsInIntermittentSelectionPhase != true)
+			{
+				// No intermediate sketch phase has been started
+				return;
+			}
+
 			bool restartSketch = await QueuedTask.Run(() => CanUseSelection(ActiveMapView));
 
 			if (restartSketch)
