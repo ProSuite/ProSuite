@@ -95,10 +95,16 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// Property which indicates whether the tool is in the sketch phase. The difference to
 		/// <see cref="IsInSketchMode"/> is that this property reflects the general phase of the
 		/// tool. Even during the sketch phase an intermittent selection can be performed.
-		/// In order to evaluate weather the actual sketch is currently visible and edited,
+		/// In order to evaluate whether the actual sketch is currently visible and edited,
 		/// use <see cref="IsInSketchMode"/>.
 		/// </summary>
 		protected bool IsInSketchPhase { get; set; }
+
+		/// <summary>
+		/// Whether this tool supports adding/removing from the current selection during the sketch
+		/// phase.
+		/// </summary>
+		protected virtual bool SupportIntermediateSelectionPhase => AllowMultiSelection(out _);
 
 		protected bool SupportRestoreLastSketch => true;
 
@@ -214,7 +220,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				return Task.FromResult(false);
 			}
 
-			if (shiftDown)
+			if (shiftDown && SupportIntermediateSelectionPhase)
 			{
 				return Task.FromResult(true);
 			}
