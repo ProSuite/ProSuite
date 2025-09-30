@@ -128,7 +128,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			// Does it make any difference what the return value is?
-			return await OnSketchModifiedAsyncCore();
+			if (_intermediateSketchStates?.IsReplayingSketches != true)
+			{
+				return await OnSketchModifiedAsyncCore();
+			}
+
+			return true;
 		}
 
 		protected override async Task<bool> OnSketchCanceledAsync()
@@ -246,8 +251,14 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (await CanStartSketchPhaseAsync(selectedFeatures))
 				{
 					await StartSketchPhaseAsync();
-					await Assert.NotNull(_intermediateSketchStates)
-					            .StopIntermittentSelectionAsync();
+					bool sketchRestored =
+						await Assert.NotNull(_intermediateSketchStates)
+						            .StopIntermittentSelectionAsync();
+
+					if (sketchRestored)
+					{
+						await OnSketchModifiedAsync();
+					}
 				}
 
 				return;
@@ -342,7 +353,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (_intermediateSketchStates != null)
 				{
-					await _intermediateSketchStates.StopIntermittentSelectionAsync();
+					bool sketchRestored =
+						await _intermediateSketchStates.StopIntermittentSelectionAsync();
+
+					if (sketchRestored)
+					{
+						await OnSketchModifiedAsync();
+					}
 				}
 			}
 			else
