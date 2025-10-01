@@ -69,13 +69,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
-		if (selectedFeatures.Count is 0 or > 1)
-		{
-			_msg.DebugFormat("Invalid feature count for Create Same: {0}", selectedFeatures.Count);
-			_currentFeatureGeometryType = GeometryType.Unknown;
-			return;
-		}
-
 		Feature feature = selectedFeatures.Single();
 
 		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
@@ -137,7 +130,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 			}
 		});
 
-		await StartSelectionPhaseAsync();
+		// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+		// sketch remains that cannot be cleared with ESC!
+		await ClearSketchAsync();
+		await StartSketchPhaseAsync();
 
 		return false;
 	}

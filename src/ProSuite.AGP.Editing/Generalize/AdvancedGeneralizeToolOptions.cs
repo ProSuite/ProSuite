@@ -95,10 +95,6 @@ namespace ProSuite.AGP.Editing.Generalize
 			CentralizableOnly2D = InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.Only2D),
 				false);
-
-			CentralizableShowDialog = InitializeSetting<bool>(
-				ReflectionUtils.GetProperty(() => LocalOptions.ShowDialog),
-				false);
 		}
 
 		public bool LimitToVisibleExtent
@@ -161,12 +157,6 @@ namespace ProSuite.AGP.Editing.Generalize
 			set { CentralizableOnly2D.CurrentValue = value; }
 		}
 
-		public bool ShowDialog
-		{
-			get { return CentralizableShowDialog.CurrentValue; }
-			set { CentralizableShowDialog.CurrentValue = value; }
-		}
-
 		#region Overrides of OptionsBase<PartialAdvancedGeneralizeOptions>
 
 		public override void RevertToDefaults()
@@ -190,8 +180,6 @@ namespace ProSuite.AGP.Editing.Generalize
 			CentralizableVertexProtectingFeatureSelection.RevertToDefault();
 
 			CentralizableOnly2D.RevertToDefault();
-
-			CentralizableShowDialog.RevertToDefault();
 		}
 
 		public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -259,14 +247,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			{
 				result = true;
 			}
-
-			if (HasLocalOverride(CentralizableShowDialog,
-			                     "Automatically show this dialog after making a selection",
-			                     notifications))
-			{
-				result = true;
-			}
-
+			
 			return result;
 		}
 

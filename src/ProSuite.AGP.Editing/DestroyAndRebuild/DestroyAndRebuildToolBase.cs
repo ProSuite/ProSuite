@@ -93,13 +93,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
-		if (selectedFeatures.Count is 0 or > 1)
-		{
-			_msg.DebugFormat("Invalid feature count for D&R: {0}", selectedFeatures.Count);
-			_feedback.ClearSelection();
-			return;
-		}
-
 		Feature feature = selectedFeatures.Single();
 
 		_currentFeatureGeometryType = feature.GetTable().GetShapeType();

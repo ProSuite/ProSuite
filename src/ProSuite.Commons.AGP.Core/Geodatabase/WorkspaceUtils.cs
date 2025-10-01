@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Knowledge;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Ado;
@@ -122,9 +123,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 			catch (Exception e)
 			{
-				string message = $"Failed to open Datastore {GetDatastoreDisplayText(connector)}";
+				string message =
+					$"Failed to open Datastore {GetDatastoreDisplayText(connector)}: {e.Message}";
 				_msg.Debug(message, e);
-				throw new IOException($"{message}: {e.Message}", e);
+
+				throw new IOException(message, e);
 			}
 		}
 
@@ -495,6 +498,55 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
 
 			return sb.ToString();
+		}
+
+		public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+		{
+			WorkspaceFactory result;
+
+			switch (connector)
+			{
+#if ARCGISPRO_GREATER_3_2
+				case BimFileConnectionProperties:
+					result = WorkspaceFactory.BIMFile;
+					break;
+#endif
+				case DatabaseConnectionFile:
+				case DatabaseConnectionProperties:
+					result = WorkspaceFactory.SDE;
+					break;
+				case FileGeodatabaseConnectionPath:
+					result = WorkspaceFactory.FileGDB;
+					break;
+				case FileSystemConnectionPath:
+					result = WorkspaceFactory.Shapefile;
+					break;
+				case KnowledgeGraphConnectionProperties:
+					result = WorkspaceFactory.KnowledgeGraph;
+					break;
+				case MemoryConnectionProperties:
+					result = WorkspaceFactory.InMemoryDB;
+					break;
+				case MobileGeodatabaseConnectionPath:
+				case SQLiteConnectionPath:
+					result = WorkspaceFactory.SQLite;
+					break;
+				case PluginDatasourceConnectionPath:
+					result = WorkspaceFactory.Custom;
+					break;
+				case RealtimeServiceConnectionProperties:
+					result = WorkspaceFactory.StreamService;
+					break;
+				case ServiceConnectionProperties:
+					result = WorkspaceFactory.FeatureService;
+					break;
+
+				default:
+					throw new NotImplementedException(
+						$"connector {connector.GetType()} is not implemented");
+			}
+
+			return result;
 		}
 	}
 }

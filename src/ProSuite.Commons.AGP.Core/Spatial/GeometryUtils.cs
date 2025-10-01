@@ -1242,17 +1242,19 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			if (segment is EllipticArcSegment arc)
 			{
-				var builder = new EllipticArcBuilderEx(arc);
-				builder.StartPoint = startPoint;
-				builder.EndPoint = endPoint;
-				return builder.ToSegment();
+				ArcOrientation orientation = arc.IsCounterClockwise
+					                             ? ArcOrientation.ArcCounterClockwise
+					                             : ArcOrientation.ArcClockwise;
+
+				MinorOrMajor minorOrMajor = arc.IsMinor ? MinorOrMajor.Minor : MinorOrMajor.Major;
+
+				var ellipseBuilder = new EllipticArcBuilderEx(
+					startPoint, endPoint, arc.SemiMajorAxis, arc.MinorMajorRatio, arc.RotationAngle,
+					minorOrMajor, orientation, spatialReference);
+				return ellipseBuilder.ToSegment();
 			}
 
-			// For other segment types, use the generic builder approach
-			var segmentBuilder = segment.ToBuilder();
-			segmentBuilder.StartPoint = startPoint;
-			segmentBuilder.EndPoint = endPoint;
-			return segmentBuilder.ToSegment();
+			throw new NotSupportedException($"Unsupported segment type: {segment.SegmentType}");
 		}
 
 		public static IGeometryEngine Engine
@@ -2145,7 +2147,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			var combinedExtent = envelopeBuilder.ToGeometry();
 
 			return new EnvelopeXY(combinedExtent.XMin, combinedExtent.YMin, combinedExtent.XMax,
-			               combinedExtent.YMax);
+			                      combinedExtent.YMax);
 		}
 	}
 }

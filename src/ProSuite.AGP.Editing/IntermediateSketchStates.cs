@@ -28,6 +28,8 @@ public class IntermediateSketchStates
 
 	public bool IsInIntermittentSelectionPhase { get; private set; }
 
+	public bool IsReplayingSketches => _sketchStack.IsReplayingSketches;
+
 	/// <summary>
 	/// Gets the underlying sketch states manager for direct access to sketch operations.
 	/// </summary>
@@ -71,19 +73,20 @@ public class IntermediateSketchStates
 	/// Stops the intermittent selection phase, restores the last sketch state and clears the overlays.
 	/// </summary>
 	/// <returns></returns>
-	public async Task StopIntermittentSelectionAsync()
+	public async Task<bool> StopIntermittentSelectionAsync()
 	{
+		bool result = false;
 		try
 		{
 			if (! IsInIntermittentSelectionPhase)
 			{
 				// This happens for example when the map is changed while pressing shift
-				return;
+				return false;
 			}
 
 			IsInIntermittentSelectionPhase = false;
 
-			await _sketchStack.ReplaySketchesAsync();
+			result = await _sketchStack.ReplaySketchesAsync();
 		}
 		catch (Exception e)
 		{
@@ -91,6 +94,8 @@ public class IntermediateSketchStates
 		}
 
 		_sketchDrawer.ClearSketch();
+
+		return result;
 	}
 
 	/// <summary>

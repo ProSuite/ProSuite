@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.QA.WorkList;
 using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -17,12 +21,6 @@ using ProSuite.Commons.UI;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
-using ProSuite.Microservices.Definitions.QA;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ProSuite.AGP.QA.VerificationProgress
 {
@@ -182,8 +180,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				                verificationResult.IssuesGdbPath);
 
 				await ViewUtils.TryAsync(
-					_workListOpener.OpenFileGdbIssueWorkListAsync(null, verificationResult.IssuesGdbPath,
-						replaceExisting), _msg);
+					_workListOpener.OpenFileGdbIssueWorkListAsync(
+						null, verificationResult.IssuesGdbPath, replaceExisting), _msg);
 			}
 		}
 
@@ -217,8 +215,11 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			if (_workListOpener.CanUseProductionModelIssueSchema())
 			{
 				reason =
-					"Open Issue Work List from project workspace using traditional error datasets";
-				return true;
+					_issuesSaved
+						? "Open Issue Work List from project workspace using traditional error datasets"
+						: "The work list can be opened after the issues have been saved using 'Update Issues'";
+
+				return _issuesSaved;
 			}
 
 			// No production model issue schema, use IssueGdb:

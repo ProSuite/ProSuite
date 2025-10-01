@@ -110,20 +110,20 @@ public class SketchStack
 	/// </summary>
 	/// <param name="mapView">The map view to apply the sketches to</param>
 	/// <returns>A task representing the asynchronous operation</returns>
-	public async Task ReplaySketchesAsync([NotNull] MapView mapView)
+	public async Task<bool> ReplaySketchesAsync([NotNull] MapView mapView)
 	{
 		if (mapView == null)
 		{
 			throw new ArgumentNullException(nameof(mapView));
 		}
 
-		_msg.VerboseDebug(
-			() => $"Replay: {_sketches.Count} sketches to map view: {mapView.Map?.Name}");
+		_msg.VerboseDebug(() =>
+			                  $"Replay: {_sketches.Count} sketches to map view: {mapView.Map?.Name}");
 
 		if (_sketches.Count == 0)
 		{
 			_msg.VerboseDebug(() => "No sketches to replay");
-			return;
+			return false;
 		}
 
 		int latchIncrements = 0;
@@ -135,6 +135,13 @@ public class SketchStack
 				latchIncrements++;
 				await mapView.SetCurrentSketchAsync(sketch);
 			}
+
+			// Reset the latch after successful replay
+			// Theoretically it should be 0 already, but the SketchModified events do not fire strictly
+			// once per sketch change (e.g. due to fast changes, some events could be dropped).
+			_latch.Reset();
+
+			return true;
 		}
 		catch (Exception ex)
 		{
@@ -153,7 +160,7 @@ public class SketchStack
 	/// </summary>
 	/// <returns>A task representing the asynchronous operation</returns>
 	/// <exception cref="InvalidOperationException">Thrown when there is no active map view</exception>
-	public async Task ReplaySketchesAsync()
+	public async Task<bool> ReplaySketchesAsync()
 	{
 		var activeMapView = MapView.Active;
 		if (activeMapView == null)
@@ -161,7 +168,7 @@ public class SketchStack
 			throw new InvalidOperationException("No active map view available for sketch replay");
 		}
 
-		await ReplaySketchesAsync(activeMapView);
+		return await ReplaySketchesAsync(activeMapView);
 	}
 
 	/// <summary>

@@ -1584,18 +1584,16 @@ namespace ProSuite.AGP.WorkList.Domain
 				//       So far, the buffer distance is assumed to be in the data spatial reference units.
 				double bufferDistance = ItemDisplayBufferDistance;
 
-				Geometry buffer = GeometryUtils.Buffer(shapeGeometry, bufferDistance);
+				Geometry buffer = TryBuffer(shapeGeometry, bufferDistance);
 
-				// NOTE: Buffer returns a 2D geometry even if the input has Z. This is important for
-				// correct display in scene and stereo views.
-				if (shapeGeometry.HasZ && buffer is Polygon bufferPolygon)
+				if (buffer != null)
 				{
-					double averageZ = (shapeGeometry.Extent.ZMin + shapeGeometry.Extent.ZMax) / 2;
-
-					buffer = GeometryUtils.SetConstantZ(bufferPolygon, averageZ);
+					item.SetBufferedGeometry(buffer);
 				}
-
-				item.SetBufferedGeometry(buffer);
+				else
+				{
+					item.SetExtent(shapeGeometry.Extent);
+				}
 			}
 			else
 			{
@@ -1603,6 +1601,35 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			return 1;
+		}
+
+		[CanBeNull]
+		private static Geometry TryBuffer([NotNull] Geometry shapeGeometry,
+		                                  double bufferDistance)
+		{
+			try
+			{
+				Geometry buffer = GeometryUtils.Buffer(shapeGeometry, bufferDistance);
+
+				// NOTE: Buffer returns a 2D geometry even if the input has Z. This is important for
+				// correct display in scene and stereo views.
+				if (shapeGeometry.HasZ && buffer is Polygon bufferPolygon)
+				{
+					double averageZ =
+						(shapeGeometry.Extent.ZMin + shapeGeometry.Extent.ZMax) / 2;
+
+					buffer = GeometryUtils.SetConstantZ(bufferPolygon, averageZ);
+				}
+
+				return buffer;
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error assigning Z values to buffer: {e.Message}. " +
+				          $"Using extent as fall-back", e);
+
+				return null;
+			}
 		}
 
 		private bool TryAddItem(IWorkItem item)
