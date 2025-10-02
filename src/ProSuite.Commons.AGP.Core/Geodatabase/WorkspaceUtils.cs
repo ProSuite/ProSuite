@@ -117,7 +117,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 					default:
 						throw new ArgumentOutOfRangeException(
-							$"Unsupported workspace type: {connector?.GetType()}");
+							$"Unsupported workspace type: {connector.GetType()}");
 				}
 			}
 			catch (Exception e)
@@ -406,7 +406,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				default:
 					throw new ArgumentOutOfRangeException(
-						$"Unsupported workspace type: {connector?.GetType()}");
+						$"Unsupported workspace type: {connector.GetType()}");
 			}
 		}
 
