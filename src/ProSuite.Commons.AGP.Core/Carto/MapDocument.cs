@@ -1,14 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace ProSuite.Commons.AGP.Core.Carto
 {
@@ -36,13 +36,16 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		public double ReferenceScale => CIM.MapDefinition?.ReferenceScale ?? 0.0;
 
+#if ARCGISPRO_GREATER_3_2
 		public bool UseMasking => CIM.MapDefinition?.UseMasking ?? false;
+#endif
 
 		public Envelope DefaultExtent => CIM.MapDefinition?.DefaultExtent;
 
 		public IReadOnlyList<CIMDefinition> RootLayers => GetRootLayers();
 
-		public IEnumerable<T> GetLayers<T>([InstantHandle] Predicate<T> predicate = null) where T : CIMDefinition
+		public IEnumerable<T> GetLayers<T>([InstantHandle] Predicate<T> predicate = null)
+			where T : CIMDefinition
 		{
 			// (CIMDefinition)
 			//   CIMStandaloneTable
@@ -114,6 +117,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					parentStack.Pop();
 					continue;
 				}
+
 				if (layersByUri.TryGetValue(uri, out var definition))
 				{
 					if (! visitor(definition, parentStack, state))
@@ -146,7 +150,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		public List<T> FindLayers<T>(string name, string parent = null, string ancestor = null,
-		                             bool wildMatch = false, bool ignoreCase = false) where T : CIMDefinition
+		                             bool wildMatch = false, bool ignoreCase = false)
+			where T : CIMDefinition
 		{
 			var list = new List<T>();
 
@@ -157,7 +162,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			bool Visitor(CIMDefinition member, Stack<CIMDefinition> parents, List<T> accumulator)
 			{
 				if (member is T t && Match(name, member.Name) &&
-					(parent is null || parents.Count > 0 && Match(parent, parents.Peek().Name)) &&
+				    (parent is null || parents.Count > 0 && Match(parent, parents.Peek().Name)) &&
 				    (ancestor is null || parents.Any(p => Match(ancestor, p.Name))))
 				{
 					accumulator.Add(t);
@@ -191,7 +196,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return list.FirstOrDefault();
 		}
 
-		private static bool IsLayerSource(CIMBasicFeatureLayer layer, string tableName, [InstantHandle] Datastore datastore)
+		private static bool IsLayerSource(CIMBasicFeatureLayer layer, string tableName,
+		                                  [InstantHandle] Datastore datastore)
 		{
 			if (layer is null)
 				throw new ArgumentNullException(nameof(layer));

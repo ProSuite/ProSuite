@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -10,9 +12,29 @@ namespace ProSuite.Commons.AGP.Framework
 {
 	public static class ProjectItemUtils
 	{
+		[CanBeNull]
+		public static string GetSelectedProjectItemPath()
+		{
+			var window = FrameworkApplication.ActiveWindow as IProjectWindow;
+
+			string path = window?.SelectedItems.FirstOrDefault()?.Path;
+
+			if (File.Exists(path))
+			{
+				return path;
+			}
+
+			string message = $"{path} does not exist.";
+			Gateway.ShowMessage(message, "File not found", MessageBoxButton.OK, MessageBoxImage.Error);
+
+			return null;
+		}
+
 		public static IEnumerable<T> Get<T>() where T : Item
 		{
-			return Project.Current.GetItems<T>();
+			Project project = Project.Current;
+
+			return project == null ? Enumerable.Empty<T>() : project.GetItems<T>();
 		}
 
 		[CanBeNull]
@@ -20,7 +42,14 @@ namespace ProSuite.Commons.AGP.Framework
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
-			foreach (T item in Project.Current.GetItems<T>())
+			Project project = Project.Current;
+
+			if (project == null)
+			{
+				return null;
+			}
+
+			foreach (T item in project.GetItems<T>())
 			{
 				// after adding the project item it's name has an file extension, e.g. "worklist.swl"
 				if (string.Equals(item.Name, name, StringComparison.OrdinalIgnoreCase))
@@ -46,7 +75,14 @@ namespace ProSuite.Commons.AGP.Framework
 		{
 			Assert.ArgumentNotNullOrEmpty(substring, nameof(substring));
 
-			return Project.Current.GetItems<T>()
+			Project project = Project.Current;
+
+			if (project == null)
+			{
+				return Enumerable.Empty<T>();
+			}
+
+			return project.GetItems<T>()
 			              .Where(item => item.Name.StartsWith(
 				                     substring, StringComparison.OrdinalIgnoreCase));
 		}
@@ -59,12 +95,19 @@ namespace ProSuite.Commons.AGP.Framework
 
 			var projectItem = ItemFactory.Instance.Create(path) as IProjectItem;
 
-			if (projectItem == null || ! Project.Current.AddItem(projectItem))
+			Project project = Project.Current;
+
+			if (project == null)
 			{
 				return false;
 			}
 
-			string itemName = Path.GetFileName(path);
+			if (projectItem == null || ! project.AddItem(projectItem))
+			{
+				return false;
+			}
+
+			string itemName = Path.GetFileNameWithoutExtension(path);
 
 			var result = Get<T>(itemName);
 
@@ -87,7 +130,14 @@ namespace ProSuite.Commons.AGP.Framework
 
 			var projectItem = ItemFactory.Instance.Create(path, type) as IProjectItem;
 
-			if (projectItem == null || ! Project.Current.AddItem(projectItem))
+			Project project = Project.Current;
+
+			if (project == null)
+			{
+				return false;
+			}
+
+			if (projectItem == null || ! project.AddItem(projectItem))
 			{
 				return false;
 			}
@@ -112,14 +162,16 @@ namespace ProSuite.Commons.AGP.Framework
 			var item = ItemFactory.Instance.Create(path) as IProjectItem;
 			Assert.NotNull(item);
 
-			return Project.Current.RemoveItem(item);
+			return Remove(item);
 		}
 
 		public static bool Remove([NotNull] IProjectItem item)
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
-			return Project.Current.RemoveItem(item);
+			Project project = Project.Current;
+
+			return project != null && project.RemoveItem(item);
 		}
 	}
 }

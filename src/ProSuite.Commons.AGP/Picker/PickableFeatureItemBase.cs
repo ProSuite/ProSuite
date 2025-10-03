@@ -33,6 +33,9 @@ namespace ProSuite.Commons.AGP.Picker
 
 		public BasicFeatureLayer Layer { get; }
 
+		// TODO: Highlight features that are in the primary workspace (ProjectWorkspace)
+		public bool Highlight => false;
+
 		public bool Selected
 		{
 			get => _selected;

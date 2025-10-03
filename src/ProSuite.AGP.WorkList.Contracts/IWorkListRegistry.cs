@@ -9,25 +9,11 @@ namespace ProSuite.AGP.WorkList.Contracts
 	{
 		IWorkList Get([NotNull] string name);
 
-		void Add([NotNull] IWorkList workList);
-
-		void Add([NotNull] IWorkListFactory factory);
+		bool TryAdd(IWorkList workList);
 
 		bool TryAdd([NotNull] IWorkListFactory factory);
 
 		bool Remove([NotNull] IWorkList workList);
-
-		bool Remove([NotNull] string name);
-
-		IEnumerable<string> GetNames();
-
-		/// <summary>
-		/// Whether the given name is a known work list. It could be registered only as
-		/// XmlWorkListFactory or exist as an opened work list.
-		/// </summary>
-		/// <param name="name"></param>
-		/// <returns></returns>
-		bool Contains([NotNull] string name);
 
 		/// <summary>
 		/// Determines whether the work list of the given name as already be instantiated,
@@ -45,5 +31,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IAsyncEnumerable<IWorkList> GetAsync();
 
 		IEnumerable<IWorkList> Get();
+
+		void UnWire(string name);
+
+		void UnWire(IWorkList workList);
 	}
 }

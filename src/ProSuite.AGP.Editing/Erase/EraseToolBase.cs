@@ -59,6 +59,13 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat(LocalizableStrings.EraseTool_LogPromptForSelection);
 		}
 
+		protected override bool CanSelectGeometryType(GeometryType geometryType)
+		{
+			return geometryType == GeometryType.Polyline ||
+				   geometryType == GeometryType.Polygon ||
+				   geometryType == GeometryType.Multipoint;
+		}
+
 		protected override bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection,
 		                                        NotificationCollection notifications = null)
 		{
@@ -67,7 +74,8 @@ namespace ProSuite.AGP.Editing.Erase
 			foreach (var layer in selection.Keys.OfType<FeatureLayer>())
 			{
 				if (layer.ShapeType == esriGeometryType.esriGeometryPolygon ||
-				    layer.ShapeType == esriGeometryType.esriGeometryPolyline)
+				    layer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+				    layer.ShapeType == esriGeometryType.esriGeometryMultipoint)
 				{
 					hasPolycurveSelection = true;
 				}
@@ -95,7 +103,11 @@ namespace ProSuite.AGP.Editing.Erase
 
 			await Task.WhenAll(taskFlash, taskSave);
 
-			await StartSelectionPhaseAsync();
+
+			// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+			// sketch remains that cannot be cleared with ESC!
+			await ClearSketchAsync();
+			await StartSketchPhaseAsync();
 
 			return taskSave.Result;
 		}

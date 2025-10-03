@@ -19,6 +19,11 @@ public interface IWorkList : IRowCache, IWorkItemData
 	long? TotalCount { get; set; }
 
 	/// <summary>
+	/// Whether navigation to the current work item should be performed in all open map views.
+	/// </summary>
+	bool NavigateInAllMapViews { get; set; }
+
+	/// <summary>
 	/// The minimum scale denominator, i.e. the maximum scale which should be applied when zooming
 	/// to a work item. The scale will also be determined by the item's display buffer distance.
 	/// </summary>

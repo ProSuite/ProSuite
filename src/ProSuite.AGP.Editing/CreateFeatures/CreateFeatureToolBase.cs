@@ -16,7 +16,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures
 {
@@ -154,7 +153,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			MapView activeView,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			bool success = await QueuedTaskUtils.Run(async () =>
+			await QueuedTaskUtils.Run(async () =>
 			{
 				try
 				{
@@ -230,17 +229,25 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		#endregion
 
-		private void OnActiveTemplateChanged(ActiveTemplateChangedEventArgs e)
+		private async void OnActiveTemplateChanged(ActiveTemplateChangedEventArgs e)
 		{
-			ViewUtils.Try(() =>
+			try
 			{
-				FeatureClass newTargetClass = GetCurrentTargetClass(out _);
+				await QueuedTaskUtils.Run(
+					async () =>
+					{
+						FeatureClass newFeatureClass = GetCurrentTargetClass(out _);
 
-				TargetClassChanged(newTargetClass);
-			}, _msg, true);
+						await TargetClassChangedAsync(newFeatureClass);
+					});
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Error processing object category change event: {ex.Message}", ex);
+			}
 		}
 
-		protected void TargetClassChanged(FeatureClass newTargetClass)
+		protected async Task TargetClassChangedAsync(FeatureClass newTargetClass)
 		{
 			if (DatasetUtils.IsSameTable(_targetFeatureClass, newTargetClass))
 			{
@@ -249,9 +256,9 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 			_targetFeatureClass = newTargetClass;
 
-			RememberSketch();
+			await RememberSketchAsync();
 
-			StartSketchPhaseAsync();
+			await StartSketchPhaseAsync();
 		}
 
 		private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,

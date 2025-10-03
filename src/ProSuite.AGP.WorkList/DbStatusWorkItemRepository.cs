@@ -22,6 +22,7 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 	/// </summary>
 	private readonly string _catalogPath;
 
+	// TODO: (daro) rename. Because ConflictWorkItemRepository is an DbStatusWorkItemRepository too.
 	public DbStatusWorkItemRepository(IList<ISourceClass> sourceClasses,
 	                                  IWorkItemStateRepository workItemStateRepository,
 	                                  string catalogPath) : base(

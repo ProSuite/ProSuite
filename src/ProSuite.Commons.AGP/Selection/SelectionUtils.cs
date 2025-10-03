@@ -78,7 +78,7 @@ namespace ProSuite.Commons.AGP.Selection
 			return aUri.Equals(bUri);
 		}
 
-		public static void SelectFeature(BasicFeatureLayer basicFeatureLayer,
+		public static void SelectFeature([NotNull] BasicFeatureLayer basicFeatureLayer,
 		                                 SelectionCombinationMethod selectionMethod,
 		                                 long objectId)
 		{
@@ -205,9 +205,9 @@ namespace ProSuite.Commons.AGP.Selection
 		/// <param name="combinationMethod"></param>
 		/// <param name="queryFilter"></param>
 		/// <returns>The number of actually selected rows.</returns>
-		public static long SelectRows(IDisplayTable tableBasedMapMember,
+		public static long SelectRows([NotNull] IDisplayTable tableBasedMapMember,
 		                              SelectionCombinationMethod combinationMethod,
-		                              QueryFilter queryFilter)
+		                              [CanBeNull] QueryFilter queryFilter)
 		{
 			using var selection =
 				tableBasedMapMember.Select(queryFilter, combinationMethod);
@@ -327,14 +327,15 @@ namespace ProSuite.Commons.AGP.Selection
 			}
 		}
 
-		public static Dictionary<MapMember, List<long>> GetSelection(Map map)
+		public static Dictionary<MapMember, List<long>> GetSelection([NotNull] Map map)
 		{
 			SelectionSet selectionSet = map.GetSelection();
 
 			return GetSelection(selectionSet);
 		}
 
-		public static Dictionary<T, List<long>> GetSelection<T>(Map map) where T : MapMember
+		public static Dictionary<T, List<long>> GetSelection<T>([NotNull] Map map)
+			where T : MapMember
 		{
 			SelectionSet selectionSet = map.GetSelection();
 
@@ -343,23 +344,67 @@ namespace ProSuite.Commons.AGP.Selection
 
 		[NotNull]
 		public static Dictionary<MapMember, List<long>> GetSelection(
-			SelectionSet selectionSet)
+			[NotNull] SelectionSet selectionSet)
 		{
 			return selectionSet.ToDictionary();
 		}
 
 		[NotNull]
 		public static Dictionary<T, List<long>> GetSelection<T>(
-			SelectionSet selectionSet) where T : MapMember
+			[NotNull] SelectionSet selectionSet) where T : MapMember
 		{
 			return selectionSet.ToDictionary<T>();
 		}
 
 		[NotNull]
 		public static Dictionary<MapMember, List<long>> GetSelection(
-			MapSelectionChangedEventArgs selectionChangedArgs)
+			[NotNull] MapSelectionChangedEventArgs selectionChangedArgs)
 		{
 			return GetSelection(selectionChangedArgs.Selection);
+		}
+
+		[NotNull]
+		public static Dictionary<Table, List<long>> GetSelectionByTable(
+			[NotNull] Dictionary<MapMember, List<long>> oidsByMapMember)
+		{
+			var result = new Dictionary<Table, List<long>>(oidsByMapMember.Count);
+
+			var tableByHandle = new Dictionary<IntPtr, Table>(oidsByMapMember.Count);
+
+			var oidsByHandle = new Dictionary<IntPtr, List<long>>();
+
+			foreach (var pair in oidsByMapMember)
+			{
+				MapMember mapMember = pair.Key;
+				IReadOnlyCollection<long> oids = pair.Value;
+
+				if (mapMember is not FeatureLayer featureLayer)
+				{
+					continue;
+				}
+
+				Table table = featureLayer.GetTable();
+
+				if (oidsByHandle.ContainsKey(table.Handle))
+				{
+					oidsByHandle[table.Handle].AddRange(oids);
+				}
+				else
+				{
+					tableByHandle.Add(table.Handle, table);
+					oidsByHandle.Add(table.Handle, oids.ToList());
+				}
+			}
+
+			foreach ((IntPtr handle, Table table) in tableByHandle)
+			{
+				if (oidsByHandle.TryGetValue(handle, out List<long> oids))
+				{
+					result.Add(table, oids.Distinct().ToList());
+				}
+			}
+
+			return result;
 		}
 
 		public static int GetFeatureCount(

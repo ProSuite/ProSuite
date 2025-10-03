@@ -81,11 +81,6 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-		<Reference Include="ArcGIS.Desktop.Layouts">
-      <HintPath>$(ProAssemblyPath)\bin\Extensions\Layouts\ArcGIS.Desktop.Layouts.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
 
   </ItemGroup>
 

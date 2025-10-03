@@ -107,6 +107,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public int EstimatedItemsPerTile { get; }
 
+		/// <summary>
+		/// Gets the actual number of tiles currently in the index.
+		/// </summary>
+		public int TileCount => _tiles.Count;
+
 		// @PLU: Decided to implement this with raw coordinates instead of EnvelopeXY because these are
 		// TileIndexes and not real coordinates. That's also why they're private. If we wanted to expose
 		// an envelope, we'd have to calculate it from these.
@@ -281,15 +286,51 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			HashSet<T> resultList = _foundIdentifiers.Value;
 			resultList.Clear();
 
-			// check the intersecting neighbour tiles:
-			foreach (TileIndex neighborTileIdx in
-			         TilingDefinition.GetIntersectingTiles(
-				         xMin, yMin, xMax, yMax))
+			TileIndex dataMinTile = new TileIndex(MinTileEasting, MinTileNorthing);
+			TileIndex dataMaxTile = new TileIndex(MaxTileEasting, MaxTileNorthing);
+
+			// Efficiently calculate the number of tiles that would intersect with the search area
+			long intersectingTileCount =
+				TilingDefinition.GetIntersectingTileCount(xMin, yMin, xMax, yMax,
+				                                          dataMinTile, dataMaxTile);
+
+			// Optimization: if the search area intersects more tiles than we actually have,
+			// it's more efficient to iterate over all existing tiles instead.
+			// The dictionary lookup should probably be double as fast as the intersection check
+			const double crossoverRatio = 0.5;
+			if (intersectingTileCount > crossoverRatio * _tiles.Count && _tiles.Count > 0)
 			{
-				foreach (T geometryIdentifier in
-				         FindItemsWithinTile(neighborTileIdx, predicate))
+				TileIndex minIndex = TilingDefinition.GetTileIndexAt(xMin, yMin);
+				TileIndex maxIndex = TilingDefinition.GetTileIndexAt(xMax, yMax);
+
+				foreach (var kvp in _tiles)
 				{
-					resultList.Add(geometryIdentifier);
+					if (! TileUtils.TileIntersects(kvp.Key, minIndex, maxIndex))
+					{
+						continue;
+					}
+
+					foreach (T geometryIdentifier in kvp.Value)
+					{
+						if (predicate == null || predicate(geometryIdentifier))
+						{
+							resultList.Add(geometryIdentifier);
+						}
+					}
+				}
+			}
+			else
+			{
+				// Use the normal approach: check the intersecting tiles
+				// make sure to clamp the search area to the actual data areas
+				foreach (TileIndex neighborTileIdx in TilingDefinition.GetIntersectingTiles(
+					         xMin, yMin, xMax, yMax, dataMinTile, dataMaxTile))
+				{
+					foreach (T geometryIdentifier in
+					         FindItemsWithinTile(neighborTileIdx, predicate))
+					{
+						resultList.Add(geometryIdentifier);
+					}
 				}
 			}
 

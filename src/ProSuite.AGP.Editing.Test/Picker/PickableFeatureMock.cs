@@ -9,6 +9,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 		public string DisplayValue { get; }
+		public bool Highlight { get; }
 		public bool Selected { get; set; }
 		public Geometry Geometry { get; set; }
 		public ImageSource ImageSource { get; }

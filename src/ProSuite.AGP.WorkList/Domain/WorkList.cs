@@ -111,6 +111,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		protected Geometry AreaOfInterest => Repository.AreaOfInterest;
 
+		public bool NavigateInAllMapViews { get; set; }
+
 		public double MinimumScaleDenominator { get; set; }
 
 		public bool AlwaysUseDraftMode { get; set; } = true;
@@ -438,8 +440,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			var rowMap = new ConcurrentDictionary<GdbRowIdentity, IWorkItem>();
 			var itemsWithExtent = new List<IWorkItem>();
 
-			Stopwatch watch =
-				_msg.DebugStartTiming($"{WorkListUtils.Format(this)} start loading items.");
+			Stopwatch watch = _msg.DebugStartTiming($"{this} start loading items.");
 
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
 				         filter, statusFilter))
@@ -466,8 +467,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
-			_msg.DebugStopTiming(
-				watch, $"{WorkListUtils.Format(this)} loaded {rowMap.Count} items.");
+			_msg.DebugStopTiming(watch, $"{this} loaded {rowMap.Count} items.");
 
 			Assert.True(xmin > double.MinValue, "Cannot get coordinate");
 			Assert.True(ymin > double.MinValue, "Cannot get coordinate");
@@ -614,13 +614,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Count()
 		{
-			var watch =
-				_msg.DebugStartTiming($"{WorkListUtils.Format(this)} start counting items.");
+			var watch = _msg.DebugStartTiming($"{this} start counting items.");
 
 			TotalCount ??= Repository.Count();
 
-			_msg.DebugStopTiming(
-				watch, $"{WorkListUtils.Format(this)} counted {TotalCount} items.");
+			_msg.DebugStopTiming(watch, $"{this} counted {TotalCount} items.");
 		}
 
 		#region Navigation public
@@ -854,8 +852,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Assert.ArgumentNotNull(perimeters, nameof(perimeters));
 
-			_msg.VerboseDebug(
-				() => $"Getting work items for innermost context ({perimeters.Length} perimeters)");
+			_msg.VerboseDebug(() =>
+				                  $"Getting work items for innermost context ({perimeters.Length} perimeters)");
 
 			// TODO: DARO revise it's always Exclude Current
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
@@ -882,9 +880,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					if (workItems.Count == 0)
 					{
-						_msg.VerboseDebug(
-							() =>
-								"The intersection contains no items, searching partially contained items");
+						_msg.VerboseDebug(() =>
+							                  "The intersection contains no items, searching partially contained items");
 
 						workItems =
 							GetItems(GdbQueryUtils.CreateSpatialFilter(intersection), currentSearch,
@@ -1587,7 +1584,16 @@ namespace ProSuite.AGP.WorkList.Domain
 				//       So far, the buffer distance is assumed to be in the data spatial reference units.
 				double bufferDistance = ItemDisplayBufferDistance;
 
-				item.SetBufferedGeometry(GeometryUtils.Buffer(shapeGeometry, bufferDistance));
+				Geometry buffer = TryBuffer(shapeGeometry, bufferDistance);
+
+				if (buffer != null)
+				{
+					item.SetBufferedGeometry(buffer);
+				}
+				else
+				{
+					item.SetExtent(shapeGeometry.Extent);
+				}
 			}
 			else
 			{
@@ -1595,6 +1601,35 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			return 1;
+		}
+
+		[CanBeNull]
+		private static Geometry TryBuffer([NotNull] Geometry shapeGeometry,
+		                                  double bufferDistance)
+		{
+			try
+			{
+				Geometry buffer = GeometryUtils.Buffer(shapeGeometry, bufferDistance);
+
+				// NOTE: Buffer returns a 2D geometry even if the input has Z. This is important for
+				// correct display in scene and stereo views.
+				if (shapeGeometry.HasZ && buffer is Polygon bufferPolygon)
+				{
+					double averageZ =
+						(shapeGeometry.Extent.ZMin + shapeGeometry.Extent.ZMax) / 2;
+
+					buffer = GeometryUtils.SetConstantZ(bufferPolygon, averageZ);
+				}
+
+				return buffer;
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error assigning Z values to buffer: {e.Message}. " +
+				          $"Using extent as fall-back", e);
+
+				return null;
+			}
 		}
 
 		private bool TryAddItem(IWorkItem item)
@@ -1708,5 +1743,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		#endregion
+
+		public virtual string ToString()
+		{
+			return $"{DisplayName}: {Name}";
+		}
 	}
 }

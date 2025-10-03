@@ -49,6 +49,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			OID = proRow?.GetObjectID() ?? -1;
 		}
 
+		[CanBeNull]
 		public Row ProRow
 		{
 			get => _proRow;

@@ -58,14 +58,17 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return await WorkListItemDatastore.TryPrepareSchema();
 	}
 
-	public override void LoadAssociatedLayers(IWorkList worklist)
+	public override void LoadAssociatedLayers(MapView mapView, IWorkList worklist)
 	{
-		AddToMapCore(GetTablesCore(), worklist);
+		AddToMapCore(mapView, GetTablesCore(), worklist);
 	}
 
-	protected virtual void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
+	// TODO: (daro) move to subclass because of IssueWorkList specific code: Attributes.IssueDescription
+	protected virtual void AddToMapCore([NotNull] MapView mapView,
+	                                    [NotNull] IEnumerable<Table> tables,
+	                                    [NotNull] IWorkList worklist)
 	{
-		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
+		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>(mapView);
 
 		foreach (var table in tables)
 		{
@@ -121,7 +124,8 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 				// NOTE: SetDisplyField is slow. In future the pr-prepared layers are stored and used.
 				//       They are not going to be created by code.
-				SetDisplayField(featureLayer, attributeReader.GetName(Attributes.IssueDescription));
+				string name = attributeReader.GetName(Attributes.IssueDescription);
+				LayerUtils.SetDisplayExpression(featureLayer, Assert.NotNull(name));
 
 				continue;
 			}
@@ -139,10 +143,10 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return null;
 	}
 
-	protected void RemoveFromMapCore(IEnumerable<Table> tables)
+	protected void RemoveFromMapCore(MapView mapView, IEnumerable<Table> tables)
 	{
 		// Search inside the QA group layer for the tables to remove (to allow for renaming)
-		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
+		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>(mapView);
 
 		var tableList = tables.ToList();
 
@@ -205,14 +209,5 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 	protected virtual IEnumerable<Table> GetTablesCore()
 	{
 		return WorkListItemDatastore.GetTables();
-	}
-
-	private static void SetDisplayField(FeatureLayer layer, string name)
-	{
-		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
-
-		definition.FeatureTable.DisplayField = name;
-
-		layer.SetDefinition(definition);
 	}
 }

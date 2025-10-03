@@ -19,10 +19,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IEnumerable<Assembly> _assemblies;
+		private readonly IEnumerable<Type> _types;
 
 		public MappingByCodeConfigurator(IEnumerable<Assembly> assemblies)
 		{
 			_assemblies = assemblies;
+		}
+
+		public MappingByCodeConfigurator(IEnumerable<Type> types)
+		{
+			_types = types;
 		}
 
 		/// <summary>
@@ -51,10 +57,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 			// many more), we could create much of our mapping by convention
 			//mapper.BeforeMapClass += Mapper_BeforeMapClass;
 			//mapper.AfterMapClass += Mapper_AfterMapClass;
-
-			foreach (Assembly assembly in _assemblies)
+			if (_assemblies != null)
 			{
-				mapper.AddMappings(assembly.GetExportedTypes());
+				foreach (Assembly assembly in _assemblies)
+				{
+					mapper.AddMappings(assembly.GetExportedTypes());
+				}
+			}
+			if (_types != null)
+			{
+				mapper.AddMappings(_types);
 			}
 
 			HbmMapping mapping = mapper.CompileMappingForAllExplicitlyAddedEntities();

@@ -8,10 +8,12 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core.UnitFormats;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -652,6 +654,74 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
+		/// Converts the mapView's client coordinates to screen coordinates. This overload
+		/// also returns the correct result for stereo maps in fixed cursor mode.
+		/// </summary>
+		/// <param name="mapView">The map view from which the client coordinates originate</param>
+		/// <param name="clientPoint">Client coordinates relative to the mapView</param>
+		/// <param name="mapZValue">Map z coordinate (used for stereo maps)</param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		public static async Task<Point> ClientToScreenPointAsync([NotNull] MapView mapView,
+		                                                         Point clientPoint,
+		                                                         double mapZValue)
+		{
+			Point defaultScreenLocation = mapView.ClientToScreen(clientPoint);
+
+			if (! IsStereoMapView(mapView))
+			{
+				return defaultScreenLocation;
+			}
+
+			bool isInFixedCursorMode = await IsInStereoFixedCursorMode(mapView);
+
+			if (! isInFixedCursorMode)
+			{
+				return defaultScreenLocation;
+			}
+
+			Envelope mapExtent = mapView.Extent;
+
+			MapPoint mapLowerLeft = GeometryFactory.CreatePoint(
+				mapExtent.XMin, mapExtent.YMin, mapZValue, mapExtent.SpatialReference);
+			MapPoint mapUpperRight = GeometryFactory.CreatePoint(
+				mapExtent.XMax, mapExtent.YMax, mapZValue, mapExtent.SpatialReference);
+
+			return await QueuedTask.Run(
+				       () =>
+				       {
+					       Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+					       Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+
+					       return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
+					                        (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+				       });
+		}
+
+		public static async Task<bool> IsInStereoFixedCursorMode([NotNull] MapView mapView)
+		{
+			bool isInFixedCursorMode = false;
+#if ARCGISPRO_GREATER_3_5
+
+			Map stereoMap = Assert.NotNull(mapView.Map);
+
+			// TODO: Hopefully at some point we can find out the stereo cursor mode in the UI thread!
+			isInFixedCursorMode = await QueuedTaskUtils.Run(() =>
+			{
+				CIMMap cimMap = Assert.NotNull(stereoMap.GetDefinition(),
+				                               "StereoMap's definition is null");
+
+				CIMMapStereoProperties stereoProps = cimMap.StereoProperties;
+
+				Assert.NotNull(stereoProps, $"No stereo properties for map {stereoMap.Name}");
+
+				return stereoProps.IsStereoCursorFixed;
+			});
+#endif
+			return isInFixedCursorMode;
+		}
+
+		/// <summary>
 		/// Converts a client point to a map point.
 		/// </summary>
 		/// <param name="mapView"></param>
@@ -806,10 +876,12 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="expansionFactor">The expansion factor to apply to the extent. An expansion
 		/// factor of 1.1 enlarges the extent by 10% in both x and y</param>
 		/// <param name="minimumScale">The minimum scale denominator.</param>
+		/// <param name="duration"></param>
 		public static async Task<bool> ZoomToAsync([NotNull] MapView mapView,
 		                                           [NotNull] Envelope extent,
 		                                           double expansionFactor,
-		                                           double minimumScale)
+		                                           double minimumScale,
+		                                           TimeSpan? duration = null)
 		{
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
 			Assert.ArgumentNotNull(extent, nameof(extent));
@@ -831,7 +903,7 @@ namespace ProSuite.Commons.AGP.Carto
 			Envelope zoomExtent = GetZoomExtent(newExtentMap, currentExtent,
 			                                    currentScale, minimumScale);
 
-			await mapView.ZoomToAsync(zoomExtent);
+			await mapView.ZoomToAsync(zoomExtent, duration);
 
 			return true;
 		}
@@ -1011,10 +1083,10 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,
-		                                      [NotNull] Envelope currentExtent,
-		                                      double currentScale,
-		                                      double minimumScale)
+		public static Envelope GetZoomExtent([NotNull] Envelope newExtent,
+		                                     [NotNull] Envelope currentExtent,
+		                                     double currentScale,
+		                                     double minimumScale)
 		{
 			Assert.ArgumentNotNull(newExtent, nameof(newExtent));
 			Assert.ArgumentNotNull(currentExtent, nameof(currentExtent));
