@@ -91,7 +91,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] Table featureClass,
 			[CanBeNull] QueryFilter filter,
-			bool recycling,
+			bool recycle,
 			CancellationToken cancellationToken = default)
 		{
 			Stopwatch watch = null;
@@ -100,7 +100,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				watch = Stopwatch.StartNew();
 			}
 
-			using RowCursor cursor = OpenCursor(featureClass, filter, recycling);
+			using RowCursor cursor = OpenCursor(featureClass, filter, recycle);
 
 			long rowCount = 0;
 
