@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{1E318F73-886F-4170-BD1A-26000ECCB862}</ProjectGuid>
 
@@ -16,6 +16,9 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">net6.0-windows</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -24,13 +27,6 @@
     <DebugType>pdbonly</DebugType>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Microservices.Client.GrpcNet.xml</DocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
@@ -44,8 +40,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.6.9" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
+
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net8.0'))">
+    <!--NOTE: "Microsoft.Extensions.Logging.Abstractions" Version="8.0 is here just to force loading of the
+         Microsoft.Extensions.Logging.Abstractions assembly version 8.0.0. This is to avoid a
+         System.IO.FileLoadException for other Add-ins that are loaded after us that require Version 8.
+         The ProSuite.Microservices.Client.GrpcNet references >=6.0, therefore by default it would load
+         Microsoft.Extensions.Logging.Abstractions Version 6.0.0, which is not compatible with Add-ins 
+         that require Version 8. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -55,6 +63,10 @@
     </Content>
     <Content Include="..\..\lib\licenses\grpc_Apache2.txt">
       <Link>Licenses\grpc_Apache2.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\lib\licenses\prosuite-microservice-definitions.license.txt">
+      <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

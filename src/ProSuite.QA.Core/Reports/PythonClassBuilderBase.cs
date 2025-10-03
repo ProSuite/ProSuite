@@ -123,8 +123,8 @@ namespace ProSuite.QA.Core.Reports
 		                                 StringBuilder sb)
 		{
 			string description = factory.TestDescription ?? string.Empty;
-			description  = description.Replace(Environment.NewLine, $"{Environment.NewLine}        ")
-			                          .Replace("/", @"\/");
+			description = description.Replace(Environment.NewLine, $"{Environment.NewLine}        ")
+			                         .Replace("/", @"\/");
 
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
@@ -143,13 +143,17 @@ namespace ProSuite.QA.Core.Reports
 				{
 					string parameterConstructor =
 						$"Parameter(\"{testParameter.Name}\", element)";
-					sb.AppendLine($"        if type({snakeCasePythonName}) == list:");
-					sb.AppendLine($"            for element in {snakeCasePythonName}:");
+					sb.AppendLine(
+						$"        if type({snakeCasePythonName}) == list:");
+					sb.AppendLine(
+						$"            for element in {snakeCasePythonName}:");
 					sb.AppendLine(
 						$"                result.parameters.append({parameterConstructor})");
-					sb.AppendLine($"        else:");
+					sb.AppendLine(
+						$"        elif {snakeCasePythonName} is not None:");
 					sb.AppendLine(
 						$"            result.parameters.append(Parameter(\"{testParameter.Name}\", {snakeCasePythonName}))");
+					// else: No value specified, do not add a parameter (the server will have to translate this to null)
 				}
 				else
 				{

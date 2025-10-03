@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -32,7 +33,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IAttributeReader CreateAttributeReader([NotNull] TableDefinition definition,
 		                                       [NotNull] params Attributes[] attributes);
 
-		WorkListStatusSchema CreateStatusSchema(TableDefinition tableDefinition);
+		DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition);
 
 		string SuggestWorkListName();
 
@@ -42,5 +43,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <param name="sourceClass"></param>
 		/// <returns></returns>
 		bool ContainsSourceClass(ISourceClass sourceClass);
+
+		IObjectDataset GetObjectDataset(TableDefinition tableDefinition);
 	}
 }

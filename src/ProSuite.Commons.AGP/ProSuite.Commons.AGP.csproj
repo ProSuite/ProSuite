@@ -16,6 +16,9 @@
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+    <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <!-- .net 6 Winforms and WPF references: -->
@@ -33,10 +36,19 @@
     <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.5 ">
+    <DefineConstants>$(DefineConstants);ARCGISPRO_GREATER_3_5</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.2 ">
+    <DefineConstants>$(DefineConstants);ARCGISPRO_GREATER_3_2</DefineConstants>
+  </PropertyGroup>
+
   <!-- Exclude file from legacy ArcGIS Pro versions. -->
   <ItemGroup Condition=" '$(ArcGISProVersion)' &lt; 3.3 ">
     <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.cs" />
     <Compile Remove="Framework\Controls\ToolStripCommandWrapperButton.Designer.cs" />
+    <Compile Remove="Framework\Controls\ToolStripUtils.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -95,6 +107,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\LayerMaskingOn32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\LayerMaskingUnknown32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\StatusCriticalError_12x_16x.png">

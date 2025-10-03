@@ -38,7 +38,7 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 		{
 			ObjectDataset dataset = CreateObjectDataset("test");
 			dataset.AddAttribute(new ObjectAttribute("ATT1",
-			                                         FieldType.LongInteger));
+			                                         FieldType.Integer));
 			Assert.AreEqual(1, dataset.Attributes.Count);
 			Assert.AreEqual(1, new List<ObjectAttribute>(dataset.GetAttributes()).Count);
 		}
@@ -50,7 +50,7 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 			Model.AddDataset(dataset);
 
 			dataset.AddAttribute(new ObjectAttribute("KUNSTBAUTE",
-			                                         FieldType.LongInteger));
+			                                         FieldType.Integer));
 
 			HarvestObjectTypes(dataset);
 
@@ -74,13 +74,13 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 			ObjectDataset dataset = CreateObjectDataset("test");
 
 			dataset.AddAttribute(new ObjectAttribute("ATT1",
-			                                         FieldType.LongInteger));
+			                                         FieldType.Integer));
 			dataset.AddAttribute(new ObjectAttribute("ATT2",
-			                                         FieldType.LongInteger));
+			                                         FieldType.Integer));
 			dataset.AddAttribute(new ObjectAttribute("ATT3",
-			                                         FieldType.LongInteger));
+			                                         FieldType.Integer));
 			dataset.AddAttribute(new ObjectAttribute("ATT4",
-			                                         FieldType.LongInteger));
+			                                         FieldType.Integer));
 
 			ObjectAttribute att = dataset.GetAttribute("ATT3");
 			Assert.IsNotNull(att);
@@ -93,14 +93,14 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 			ObjectDataset dataset = CreateObjectDataset("test");
 
 			dataset.AddAttribute(
-				new ObjectAttribute("ATT1", FieldType.LongInteger));
+				new ObjectAttribute("ATT1", FieldType.Integer));
 			dataset.AddAttribute(
-				new ObjectAttribute("ATT2", FieldType.LongInteger));
+				new ObjectAttribute("ATT2", FieldType.Integer));
 			dataset.AddAttribute(
 				new ObjectAttribute("ATT3", FieldType.Guid,
 				                    new ObjectAttributeType(AttributeRole.UUID)));
 			dataset.AddAttribute(
-				new ObjectAttribute("ATT4", FieldType.LongInteger));
+				new ObjectAttribute("ATT4", FieldType.Integer));
 
 			ObjectAttribute att = dataset.GetAttribute(AttributeRole.UUID);
 			Assert.IsNotNull(att);
@@ -113,9 +113,9 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 			ObjectDataset dataset = CreateObjectDataset("test");
 
 			dataset.AddAttribute(
-				new ObjectAttribute("ATT1", FieldType.LongInteger));
+				new ObjectAttribute("ATT1", FieldType.Integer));
 			dataset.AddAttribute(
-				new ObjectAttribute("ATT2", FieldType.LongInteger));
+				new ObjectAttribute("ATT2", FieldType.Integer));
 
 			ObjectAttribute att = dataset.GetAttribute("ATT3");
 			Assert.IsNull(att);
@@ -127,9 +127,9 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 			ObjectDataset dataset = CreateObjectDataset("test");
 
 			dataset.AddAttribute(
-				new ObjectAttribute("ATT1", FieldType.LongInteger));
+				new ObjectAttribute("ATT1", FieldType.Integer));
 			dataset.AddAttribute(
-				new ObjectAttribute("ATT2", FieldType.LongInteger));
+				new ObjectAttribute("ATT2", FieldType.Integer));
 
 			ObjectAttribute att = dataset.GetAttribute(AttributeRole.UUID);
 			Assert.IsNull(att);
@@ -246,7 +246,7 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 				{
 					ObjectDataset dataset = CreateObjectDataset("test");
 					dataset.Attributes.Add(
-						new ObjectAttribute("ATT1", FieldType.LongInteger));
+						new ObjectAttribute("ATT1", FieldType.Integer));
 				});
 		}
 
@@ -257,8 +257,8 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 				delegate
 				{
 					ObjectDataset dataset = CreateObjectDataset("test");
-					var att1 = new ObjectAttribute("ATT1", FieldType.LongInteger);
-					var att2 = new ObjectAttribute("ATT1", FieldType.LongInteger);
+					var att1 = new ObjectAttribute("ATT1", FieldType.Integer);
+					var att2 = new ObjectAttribute("ATT1", FieldType.Integer);
 
 					dataset.AddAttribute(att1);
 					dataset.AddAttribute(att2);
@@ -288,7 +288,7 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 		public void CannotAddAttributeTwice()
 		{
 			ObjectDataset dataset = CreateObjectDataset("test");
-			var att1 = new ObjectAttribute("ATT1", FieldType.LongInteger);
+			var att1 = new ObjectAttribute("ATT1", FieldType.Integer);
 			dataset.AddAttribute(att1);
 			try
 			{
@@ -317,7 +317,7 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 					const string attributeName = "KUNSTBAUTE";
 
 					dataset.AddAttribute(
-						new ObjectAttribute(attributeName, FieldType.LongInteger));
+						new ObjectAttribute(attributeName, FieldType.Integer));
 
 					HarvestObjectTypes(dataset);
 
@@ -337,7 +337,7 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 				{
 					ObjectDataset dataset = CreateObjectDataset("test");
 					ObjectAttribute att = dataset.AddAttribute(
-						new ObjectAttribute("ATT1", FieldType.LongInteger));
+						new ObjectAttribute("ATT1", FieldType.Integer));
 					dataset.Attributes.Remove(att);
 				});
 		}
@@ -384,8 +384,8 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 		{
 			ObjectDataset dataset = CreateObjectDataset("test");
 
-			var att1 = new ObjectAttribute("ATT1", FieldType.LongInteger);
-			var att2 = new ObjectAttribute("ATT2", FieldType.LongInteger);
+			var att1 = new ObjectAttribute("ATT1", FieldType.Integer);
+			var att2 = new ObjectAttribute("ATT2", FieldType.Integer);
 
 			dataset.AddAttribute(att1);
 			dataset.AddAttribute(att2);

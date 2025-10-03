@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
@@ -71,6 +72,76 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered");
+		}
+
+		[Test]
+		public void CanDetectUncoveredAreaWithManyCovering()
+		{
+			IFeatureClass coveringClass;
+			IFeatureClass coveredClass;
+			CreatePolygonFeatureClasses("CanDetectUncoveredAreaWithManyCovering",
+			                            out coveringClass,
+			                            out coveredClass);
+
+			StoreGeometrySlices(coveringClass);
+
+			IFeature coveredRow = coveredClass.CreateFeature();
+			coveredRow.Shape =
+				CurveConstruction.StartPoly(100, 100)
+				                 .LineTo(100, 201)
+				                 .LineTo(200, 201)
+				                 .LineTo(200, 100)
+				                 .ClosePolygon();
+			coveredRow.Store();
+
+			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
+
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
+			var runner = new QaContainerTestRunner(10000, test);
+
+			Stopwatch watch = Stopwatch.StartNew();
+			runner.Execute(verificationEnvelope);
+			watch.Stop();
+
+			AssertUtils.OneError(runner, "CoveredByOther.NotFullyCovered");
+			Console.WriteLine($"Executed in {watch.ElapsedMilliseconds}ms");
+		}
+
+		[Test]
+		public void CanCheckCoveredAreaWithManyCovering()
+		{
+			IFeatureClass coveringClass;
+			IFeatureClass coveredClass;
+			CreatePolygonFeatureClasses("CanCheckCoveredAreaWithManyCovering",
+			                            out coveringClass,
+			                            out coveredClass);
+
+			StoreGeometrySlices(coveringClass);
+
+			IFeature coveredRow = coveredClass.CreateFeature();
+			coveredRow.Shape =
+				CurveConstruction.StartPoly(100, 100)
+				                 .LineTo(100, 200)
+				                 .LineTo(200, 200)
+				                 .LineTo(200, 100)
+				                 .ClosePolygon();
+			coveredRow.Store();
+
+			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
+
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
+			var runner = new QaContainerTestRunner(100, test);
+
+			Stopwatch watch = Stopwatch.StartNew();
+			runner.Execute(verificationEnvelope);
+			watch.Stop();
+
+			AssertUtils.NoError(runner);
+			Console.WriteLine($"Executed in {watch.ElapsedMilliseconds}ms");
 		}
 
 		[Test]
@@ -1385,7 +1456,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(testExtent);
 
 			QaError error = AssertUtils.OneError(runner,
-			                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent");
+			                                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent");
 
 			Assert.AreEqual(1, runner.ErrorGeometries.Count);
 			Assert.AreEqual(1, GeometryUtils.GetPartCount(runner.ErrorGeometries[0]));
@@ -1428,7 +1499,7 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(testExtent);
 
 			QaError error = AssertUtils.OneError(runner,
-			                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent");
+			                                     "CoveredByOther.NotCoveredByAnyFeature.PartlyOutsideVerifiedExtent");
 
 			Assert.AreEqual(1, runner.ErrorGeometries.Count);
 			Assert.AreEqual(1, GeometryUtils.GetPartCount(runner.ErrorGeometries[0]));
@@ -1464,6 +1535,63 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		//[Ignore("uses local data")]
+		public void TestTop5955()
+		{
+			IFeatureWorkspace ws = WorkspaceUtils.OpenFileGdbFeatureWorkspace(
+				@"D:\Work\TestData\GeoCover\20201126_0545_RC2030-12-31.gdb");
+			IFeatureClass errorClass =
+				CreateFeatureClass("errors", esriGeometryType.esriGeometryPolygon, zAware: true);
+			QaIsCoveredByOther test =
+				new QaIsCoveredByOther(
+					new[]
+					{
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_SURFACES")),
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_UNCO_DESPOSIT")),
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_BEDROCK"))
+					},
+					new[]
+					{
+						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_MAPSHEET"))
+					});
+			test.SetConstraint(
+				0,
+				"KIND IN (12701001,12701002,12701003,10401001,10401002,10401003,10401004,10401005,10401006,10401007,10401008)");
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			var runner = new QaContainerTestRunner(5000, test);
+			runner.KeepGeometry = true;
+
+			double minX = 2634493.47;
+			double minY = 1110071.91;
+			runner.Execute(GeometryFactory.CreateEnvelope(minX, minY, minX + 75000, minY + 65000));
+
+			watch.Stop();
+
+			long elapsedSeconds = watch.ElapsedMilliseconds / 1000;
+			Console.WriteLine("TestTop5955: {0} s", elapsedSeconds);
+
+			int count = 0;
+			foreach (IGeometry geometry in runner.ErrorGeometries.OrderByDescending(
+				         GeometryUtils.GetGeometrySize))
+			{
+				if (count++ > 200)
+				{
+					break;
+				}
+
+				double geometrySize = GeometryUtils.GetGeometrySize(geometry);
+				Console.WriteLine(geometrySize);
+
+				Assert.Less(geometrySize, 281000);
+			}
+
+			Assert.Less(elapsedSeconds, 240, "Too slow");
+			Assert.IsTrue(runner.Errors.Count < 2);
+		}
+
+		[Test]
 		[Ignore("uses local data")]
 		public void TestDkm25()
 		{
@@ -1489,6 +1617,27 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(10000, test);
 
 			runner.Execute();
+		}
+
+		private static void StoreGeometrySlices(IFeatureClass coveringClass)
+		{
+			int sliceCount = 3000;
+			double sliceWidth = 100d / sliceCount;
+
+			for (int i = 0; i < sliceCount; i++)
+			{
+				double xMin = 100 + i * sliceWidth;
+				double xMax = 100 + (i + 1) * sliceWidth;
+
+				IFeature coveringRow = coveringClass.CreateFeature();
+				coveringRow.Shape =
+					CurveConstruction.StartPoly(xMin, 100)
+					                 .LineTo(xMin, 200)
+					                 .LineTo(xMax, 200)
+					                 .LineTo(xMax, 100)
+					                 .ClosePolygon();
+				coveringRow.Store();
+			}
 		}
 
 		private void CreatePolygonFeatureClasses([NotNull] string testName,

@@ -126,6 +126,41 @@ public static class DisplayUtils
 	}
 
 	/// <summary>
+	/// Return true iff the given map uses SLD on any layer
+	/// (therefore this method traverses the layer stack).
+	/// </summary>
+	public static bool UsesSLD([CanBeNull] Map map)
+	{
+		if (map is null) return false;
+
+		var layers = map.GetLayersAsFlattenedList();
+
+		foreach (var layer in layers)
+		{
+			if (layer is GroupLayer groupLayer)
+			{
+				var cim = groupLayer.GetDefinition();
+				if (cim is CIMGroupLayer cgl && cgl.SymbolLayerDrawing != null &&
+				    cgl.SymbolLayerDrawing.UseSymbolLayerDrawing)
+				{
+					return true;
+				}
+			}
+			else if (layer is FeatureLayer featureLayer)
+			{
+				var cim = featureLayer.GetDefinition();
+				if (cim is CIMFeatureLayer cfl && cfl.SymbolLayerDrawing != null &&
+				    cfl.SymbolLayerDrawing.UseSymbolLayerDrawing)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>
 	/// Return true iff the given layer CIM uses SLD.
 	/// Only Feature Layers and Group Layers can use SLD.
 	/// </summary>

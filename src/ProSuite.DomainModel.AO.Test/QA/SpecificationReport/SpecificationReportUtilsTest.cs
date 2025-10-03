@@ -7,11 +7,11 @@ using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.IO;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.SpecificationReport;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
@@ -73,7 +73,7 @@ namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
 			var geometryType = new GeometryTypeShape("Polygon",
 			                                         ProSuiteGeometryType.Polygon);
 
-			Model m = new TestModel("testmodel");
+			DdxModel m = new TestModel("testmodel");
 			m.UserConnectionProvider = new FileGdbConnectionProvider("C:\\doesnotexist.gdb");
 			Dataset ds0 = m.AddDataset(new TestVectorDataset("Dataset0"));
 			Dataset ds1 = m.AddDataset(new TestVectorDataset("Dataset1"));
@@ -142,13 +142,23 @@ namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
 			public TestVectorDataset([NotNull] string name) : base(name) { }
 		}
 
-		private class TestModel : Model
+		private class TestModel : DdxModel, IModelMasterDatabase
 		{
 			public TestModel([NotNull] string name) : base(name) { }
 
-			protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
+			public override string QualifyModelElementName(string modelElementName)
 			{
-				return CreateDefaultMasterDatabaseWorkspaceContext();
+				return ModelUtils.QualifyModelElementName(this, modelElementName);
+			}
+
+			public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+			{
+				return ModelUtils.TranslateToModelElementName(this, masterDatabaseDatasetName);
+			}
+
+			IWorkspaceContext IModelMasterDatabase.CreateMasterDatabaseWorkspaceContext()
+			{
+				return ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(this);
 			}
 
 			protected override void CheckAssignSpecialDatasetCore(Dataset dataset) { }

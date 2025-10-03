@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.QA
@@ -39,7 +38,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <param name="whereClause"></param>
 		/// <returns></returns>
 		IReadOnlyTable OpenQueryTable([NotNull] string associationName,
-		                              [NotNull] Model model,
+		                              [NotNull] DdxModel model,
 		                              [NotNull] IList<IReadOnlyTable> tables,
 		                              JoinType joinType,
 		                              [CanBeNull] string whereClause = null);
@@ -55,6 +54,6 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <param name="model"></param>
 		/// <returns></returns>
 		string GetRelationshipClassName([NotNull] string associationName,
-		                                [NotNull] Model model);
+		                                [NotNull] DdxModel model);
 	}
 }

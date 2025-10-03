@@ -4,11 +4,14 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -134,11 +137,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			}
 
 			var datasetCount = 0;
-			foreach (Dataset dataset in
-			         GetVerifiedDatasets(qualitySpecification, datasetContext))
+			foreach (QualityVerificationDataset verificationDataset in GetVerifiedDatasets(
+				         verification, datasetContext))
 			{
 				datasetCount++;
-				_verificationReportBuilder.AddVerifiedDataset(dataset);
+
+				AddDatasetToReportBuilder(verificationDataset);
 			}
 
 			Stopwatch watch = _msg.DebugStartTiming();
@@ -213,6 +217,48 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			return fulfilled;
 		}
 
+		private void AddDatasetToReportBuilder(QualityVerificationDataset verificationDataset)
+		{
+			try
+			{
+				Dataset dataset = verificationDataset.Dataset;
+
+				DdxModel model = dataset.Model;
+
+				// TODO: only if WriteDetailedReport == true (use VerificationReporter from other service?)
+				IWorkspaceContext workspaceContext = model?.GetMasterDatabaseWorkspaceContext();
+
+				IWorkspace workspace = workspaceContext?.Workspace;
+
+				string workspaceDisplayText =
+					workspace != null
+						? WorkspaceUtils.GetWorkspaceDisplayText(workspace)
+						: "<N.A.>";
+
+				ISpatialReference spatialReference = null;
+
+				if (dataset is IVectorDataset vectorDataset)
+				{
+					IFeatureClass featureClass =
+						workspaceContext?.OpenFeatureClass(vectorDataset);
+
+					if (featureClass != null)
+					{
+						spatialReference = DatasetUtils.GetSpatialReference(featureClass);
+					}
+				}
+
+				_verificationReportBuilder.AddVerifiedDataset(
+					verificationDataset, workspaceDisplayText, spatialReference);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn(
+					$"Failed to add verified dataset to report. {ExceptionUtils.FormatMessage(e)}",
+					e);
+			}
+		}
+
 		private static ITestRunner CreateSingleThreadedTestRunner(
 			VerificationElements verificationElements,
 			double tileSize)
@@ -266,34 +312,44 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		}
 
 		[NotNull]
-		private static IEnumerable<Dataset> GetVerifiedDatasets(
-			[NotNull] QualitySpecification qualitySpecification,
+		private static IEnumerable<QualityVerificationDataset> GetVerifiedDatasets(
+			[NotNull] QualityVerification qualityVerification,
 			[NotNull] IDatasetContext datasetContext)
 		{
 			var datasets = new SimpleSet<Dataset>();
 
-			foreach (
-				QualitySpecificationElement qualitySpecificationElement in
-				qualitySpecification.Elements)
+			foreach (QualityVerificationDataset qvds in qualityVerification.VerificationDatasets)
 			{
-				QualityCondition qualityCondition = qualitySpecificationElement.QualityCondition;
+				Dataset dataset = qvds.Dataset;
 
-				if (qualityCondition == null)
+				if (datasetContext.CanOpen(dataset))
 				{
-					continue;
-				}
-
-				foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
-					         includeSourceDatasets: true))
-				{
-					if (! datasets.Contains(dataset) && datasetContext.CanOpen(dataset))
-					{
-						datasets.Add(dataset);
-					}
+					yield return qvds;
 				}
 			}
 
-			return datasets;
+			//foreach (
+			//	QualitySpecificationElement qualitySpecificationElement in
+			//	qualityVerification.Elements)
+			//{
+			//	QualityCondition qualityCondition = qualitySpecificationElement.QualityCondition;
+
+			//	if (qualityCondition == null)
+			//	{
+			//		continue;
+			//	}
+
+			//	foreach (Dataset dataset in qualityCondition.GetDatasetParameterValues(
+			//		         includeSourceDatasets: true))
+			//	{
+			//		if (! datasets.Contains(dataset) && datasetContext.CanOpen(dataset))
+			//		{
+			//			datasets.Add(dataset);
+			//		}
+			//	}
+			//}
+
+			//return datasets;
 		}
 
 		#region Non-public
@@ -324,6 +380,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				StringBuilder stringBuilder = new StringBuilder(
 					$"Starting quality verification using quality specification {qualitySpecification.Name}" +
 					$" with verification tile size {tileSize}");
+				stringBuilder.AppendLine();
 
 				_msg.InfoFormat("Quality specification: {0}", qualitySpecification.Name);
 				_msg.InfoFormat("Verification tile size: {0}", tileSize);
@@ -336,7 +393,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 					{
 						const string testPerimeterIsEmpty = "Test perimeter is empty";
 						_msg.Warn(testPerimeterIsEmpty);
-						stringBuilder.Append(testPerimeterIsEmpty);
+						stringBuilder.AppendLine(testPerimeterIsEmpty);
 					}
 					else
 					{
@@ -388,7 +445,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			[CanBeNull] IExceptionStatistics exceptionStatistics)
 		{
 			StringBuilder streamMessage = new StringBuilder("Quality verification finished");
-
+			streamMessage.AppendLine();
 			streamMessage.AppendLine($"Number of verified datasets: {datasetCount:N0}.");
 			streamMessage.AppendLine($"Number of verified conditions: {qualityConditionCount}");
 

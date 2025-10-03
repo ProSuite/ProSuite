@@ -23,6 +23,9 @@ namespace ProSuite.Microservices.Client.QA
 
 		protected readonly ISupportedInstanceDescriptors InstanceDescriptors;
 
+		private readonly Dictionary<string, TransformerConfiguration> _transformerConfigsByName =
+			new Dictionary<string, TransformerConfiguration>();
+
 		protected IDictionary<string, DdxModel> ModelsByWorkspaceId { get; set; }
 
 		protected ProtoBasedQualitySpecificationFactoryBase(
@@ -47,6 +50,39 @@ namespace ProSuite.Microservices.Client.QA
 				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
 				return CreateQualitySpecificationCore(conditionListSpecificationMsg);
+			}
+			finally
+			{
+				Thread.CurrentThread.CurrentCulture = origCulture;
+			}
+		}
+
+		[NotNull]
+		public TransformerConfiguration CreateTransformerConfiguration(
+			[NotNull] InstanceConfigurationMsg transformerConfigurationMsg)
+		{
+			if (ModelsByWorkspaceId == null)
+			{
+				// TODO: Use other constructor that sets ModelsByWorkspaceId from some provided
+				//       remote workspace. Then we can remove this (and assert ModelsByWorkspaceId
+				//       is not null).
+				var dummySpecification = new ConditionListSpecificationMsg();
+				ModelsByWorkspaceId = GetModelsByWorkspaceId(dummySpecification);
+			}
+
+			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
+
+			DatasetSettings datasetSettings = new DatasetSettings(getDatasetsByName, false);
+
+			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+				TransformerConfiguration result =
+					CreateTransformerConfiguration(transformerConfigurationMsg, datasetSettings);
+
+				return Assert.NotNull(result);
 			}
 			finally
 			{
@@ -106,7 +142,13 @@ namespace ProSuite.Microservices.Client.QA
 				string conditionName = Assert.NotNullOrEmpty(
 					element.Condition.Name, "Empty or null condition name.");
 
-				QualityCondition qualityCondition = qualityConditionsByName[conditionName];
+				if (! qualityConditionsByName.TryGetValue(conditionName,
+				                                          out QualityCondition qualityCondition))
+				{
+					_msg.InfoFormat("Condition '{0}' was not created and will be skipped.",
+					                conditionName);
+					continue;
+				}
 
 				if (! string.IsNullOrEmpty(element.CategoryName))
 				{
@@ -169,7 +211,10 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			TestDescriptor testDescriptor = GetTestDescriptor(conditionMsg);
 
-			var result = new QualityCondition(conditionMsg.Name, testDescriptor);
+			var result = new QualityCondition(conditionMsg.Name, testDescriptor,
+			                                  conditionMsg.Description);
+			result.Url = conditionMsg.Url;
+
 			result.SetCloneId(conditionMsg.ConditionId);
 
 			AddIssueFilters(result, conditionMsg, datasetSettings);
@@ -193,6 +238,18 @@ namespace ProSuite.Microservices.Client.QA
 			[NotNull] InstanceConfigurationMsg transformerConfigurationMsg,
 			[NotNull] DatasetSettings datasetSettings)
 		{
+			TransformerConfiguration existing;
+			if (_transformerConfigsByName.TryGetValue(transformerConfigurationMsg.Name,
+			                                          out existing))
+			{
+				// Transformer config with ID -> just use the existing (trust that the provided IDs are correct)
+				if (transformerConfigurationMsg.Id >= 0 &&
+				    transformerConfigurationMsg.Id == existing.Id)
+				{
+					return existing;
+				}
+			}
+
 			TransformerDescriptor transformerDescriptor =
 				GetInstanceDescriptor<TransformerDescriptor>(transformerConfigurationMsg);
 
@@ -202,6 +259,45 @@ namespace ProSuite.Microservices.Client.QA
 			// The result will be set to null, if there are missing datasets:
 			result = ConfigureParameters(result, transformerConfigurationMsg.Parameters,
 			                             datasetSettings);
+
+			if (result != null && _transformerConfigsByName.TryGetValue(result.Name, out existing))
+			{
+				// Make sure the existing name has the same definition.
+				if (! result.TransformerDescriptor.Equals(existing.TransformerDescriptor))
+				{
+					throw new InvalidConfigurationException(
+						"Transformer configurations with same name but different descriptors " +
+						$"have been provided. Name: {result.Name}. Descriptor1: {result.TransformerDescriptor}, Descriptor2: {existing.TransformerDescriptor}");
+				}
+
+				if (result.ParameterValues.Count != existing.ParameterValues.Count)
+				{
+					throw new InvalidConfigurationException(
+						"Transformer configurations with same name but different number of parameters " +
+						$"have been provided. Name: {result.Name}");
+				}
+
+				foreach (TestParameterValue parameterValue in result.ParameterValues)
+				{
+					TestParameterValue existingParameter = existing.ParameterValues.Single(
+						p => p.TestParameterName == parameterValue.TestParameterName);
+
+					if (parameterValue.StringValue != existingParameter.StringValue)
+					{
+						throw new InvalidConfigurationException(
+							"Transformer configurations with different parameters " +
+							$"have been provided. Name: {result.Name}. Parameter with differences: {parameterValue.TestParameterName}");
+					}
+				}
+
+				// For later reference equality comparison, return the existing
+				return existing;
+			}
+
+			if (result != null)
+			{
+				_transformerConfigsByName.Add(result.Name, result);
+			}
 
 			return result;
 		}

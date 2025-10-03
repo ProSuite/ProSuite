@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -267,7 +268,7 @@ namespace ProSuite.QA.Tests.Test
 			fact.Condition = condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 
 			var runner = new QaContainerTestRunner(1000, tests[0]);

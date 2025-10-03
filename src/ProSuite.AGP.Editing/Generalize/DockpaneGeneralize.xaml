@@ -7,105 +7,105 @@
              xmlns:generalize="clr-namespace:ProSuite.AGP.Editing.Generalize"
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=generalize:DockPaneGeneralizeViewModelBase}" Width="475" Height="480" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=generalize:DockPaneGeneralizeViewModelBase}" Width="475"
+             Height="480" HorizontalAlignment="Left"
              VerticalAlignment="Top">
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
-                <ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+				<ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</UserControl.Resources>
 
-    <StackPanel
-        HorizontalAlignment="Left"
-        VerticalAlignment="Top">
+	<StackPanel
+		HorizontalAlignment="Left"
+		VerticalAlignment="Top">
 
-        <!-- Snapping and minimum segment length -->
-        <Label FontWeight="Medium" Content="Generalization methods"/>
-        <Grid HorizontalAlignment="Left" Width="Auto">
+		<!-- Snapping and minimum segment length -->
+		<Label FontWeight="Medium" Content="Generalization methods" />
+		<Grid HorizontalAlignment="Left" Width="Auto">
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
 
-            <CheckBox Grid.Row="0" Grid.Column="0"
-                          Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Generalize segments with tolerance"
-                          DataContext="{Binding Options.CentralizableWeed}" />
+			<CheckBox Grid.Row="0" Grid.Column="0"
+			          Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Generalize segments with tolerance"
+			          DataContext="{Binding Weed}" />
 
-            <Grid Grid.Row="0"  Grid.Column="1" >
-                <ContentControl 
-                        Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding Options.CentralizableWeedTolerance}" />
-            </Grid>
+			<Grid Grid.Row="0" Grid.Column="1">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsSpinner}"
+					DataContext="{Binding WeedTolerance}" />
+			</Grid>
 
-            <Grid Grid.Row="0" Grid.Column="2">
-                <ContentControl 
-                    Template="{StaticResource CentralizableSettingsLabel}"
-                    DataContext="{Binding Options.CentralizableWeedTolerance}" />
-            </Grid>
+			<Grid Grid.Row="0" Grid.Column="2">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsLabel}"
+					DataContext="{Binding WeedTolerance}" />
+			</Grid>
 
-            <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Include non-linear segments (all segments are linearized)"
-                      DataContext="{Binding Options.CentralizableWeedNonLinearSegments}" 
-                      Margin="20, 0, 0, 0"/>
+			<CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Include non-linear segments (all segments are linearized)"
+			          DataContext="{Binding WeedNonLinearSegments}"
+			          Margin="20, 0, 0, 0" />
 
-            <CheckBox Grid.Row="2" Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Respect a minimum segment length"
-                          DataContext="{Binding Options.CentralizableEnforceMinimumSegmentLength}"  />
+			<CheckBox Grid.Row="2" Grid.Column="0" Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Respect a minimum segment length"
+			          DataContext="{Binding EnforceMinimumSegmentLength}" />
 
-            <Grid Grid.Row="2" Grid.Column="1" >
-                <ContentControl 
-                        Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding Options.CentralizableMinimumSegmentLength}" />
-            </Grid>
-            <Grid Grid.Row="2" Grid.Column="2">
-                <ContentControl 
-                        Template="{StaticResource CentralizableSettingsLabel}"
-                        DataContext="{Binding Options.CentralizableMinimumSegmentLength}" 
-                    />
-            </Grid>
+			<Grid Grid.Row="2" Grid.Column="1">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsSpinner}"
+					DataContext="{Binding MinimumSegmentLength}" />
+			</Grid>
+			<Grid Grid.Row="2" Grid.Column="2">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsLabel}"
+					DataContext="{Binding MinimumSegmentLength}" />
+			</Grid>
 
-            <CheckBox Grid.Row="3"  Grid.Column="0" Grid.ColumnSpan="3" Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Use 2D distance for generalization also for geometries with Z"
-                      DataContext="{Binding Options.CentralizableOnly2D}"  />
+			<CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Use 2D distance for generalization also for geometries with Z"
+			          DataContext="{Binding Only2D}" />
 
-        </Grid>
-
-
-        <!-- Topological consitency with adjacent features -->
-
-        <Label FontWeight="Medium" Content="Topological consistency with adjacent features" Margin="0,15,0,0"/>
-        <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                  Content="Protect topologically important vertices, using"
-                  DataContext="{Binding Options.CentralizableProtectTopologicalVertices}" />
-
-        <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" 
-                                               HorizontalAlignment="Left" 
-                                               Margin="20,0, 0, 0"/>
-
-        <!-- Area of interest -->
-        <Label FontWeight="Medium" Content="Area of interest" Margin="0,15,0,0"/>
-        <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Apply only within visible extent"
-                      DataContext="{Binding Options.CentralizableLimitToVisibleExtent}" />
+		</Grid>
 
 
-        <!-- Restore Defaults -->
-        <Button Template="{StaticResource RestoreDefaultsButton}"
-        />
+		<!-- Topological consitency with adjacent features -->
+
+		<Label FontWeight="Medium" Content="Topological consistency with adjacent features" Margin="0,15,0,0" />
+		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+		          Content="Protect topologically important vertices, using"
+		          DataContext="{Binding ProtectTopologicalVertices}" />
+
+		<editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}"
+		                                       HorizontalAlignment="Left"
+		                                       Margin="20,0, 0, 0"
+		                                       IsEnabled="{Binding IsTargetFeatureSelectionEnabled}" />
+
+		<!-- Area of interest -->
+		<Label FontWeight="Medium" Content="Area of interest" Margin="0,15,0,0" />
+		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+		          Content="Apply only within visible extent"
+		          DataContext="{Binding LimitToVisibleExtent}" />
+
+
+		<!-- Restore Defaults -->
+		<Button Template="{StaticResource RestoreDefaultsButton}" />
 
 	</StackPanel>
 

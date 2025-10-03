@@ -8,14 +8,17 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core.UnitFormats;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using UnitType = ArcGIS.Core.Geometry.UnitType;
 
@@ -25,6 +28,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 	public static class MapUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Asserts an active MapView.
 		/// </summary>
@@ -92,8 +97,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 		#endregion
 
+		public static bool IsStereoMapView([CanBeNull] MapView mapView)
+		{
+			return mapView?.ViewingMode == MapViewingMode.MapStereo;
+		}
+
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
-			Dictionary<MapMember, List<long>> oidsByLayer)
+			[NotNull] Dictionary<MapMember, List<long>> oidsByLayer,
+			[CanBeNull] Predicate<Table> predicate = null)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
@@ -102,17 +113,20 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				Table table = DatasetUtils.GetDatabaseTable(GetTable(pair.Key));
 
+				if (predicate != null && ! predicate(table))
+				{
+					continue;
+				}
+
 				var tableId = new GdbTableIdentity(table);
 
-				if (! distinctTableIds.ContainsKey(tableId))
+				if (! distinctTableIds.TryGetValue(tableId, out Table distinctTable))
 				{
 					distinctTableIds.Add(tableId, table);
 					result.Add(table, new SimpleSet<long>(pair.Value));
 				}
 				else
 				{
-					Table distinctTable = distinctTableIds[tableId];
-
 					SimpleSet<long> ids = result[distinctTable];
 					foreach (long id in pair.Value)
 					{
@@ -346,14 +360,14 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		public static IEnumerable<IDisplayTable> GetFeatureLayersForSelection<T>(
-			[NotNull] Map map,
+			[NotNull] MapView mapView,
 			[CanBeNull] FeatureClass featureClass) where T : BasicFeatureLayer
 		{
 			// TODO: WorkspaceEquality.SameVersion
 			Predicate<T> sameTablePredicate =
 				l => DatasetUtils.IsSameTable(l.GetFeatureClass(), featureClass);
 
-			return GetFeatureLayersForSelection(map, sameTablePredicate);
+			return GetFeatureLayersForSelection(mapView, sameTablePredicate);
 		}
 
 		/// <summary>
@@ -361,14 +375,14 @@ namespace ProSuite.Commons.AGP.Carto
 		/// If all visible, selectable layers have a definition query, all layers are yielded.
 		/// </summary>
 		public static IEnumerable<T> GetFeatureLayersForSelection<T>(
-			[NotNull] Map map,
+			[NotNull] MapView mapView,
 			[NotNull] Predicate<T> layerPredicate) where T : BasicFeatureLayer
 		{
 			var filteredVisibleSelectableLayers = new List<T>();
 
 			foreach (T featureLayer in GetFeatureLayers<T>(
-				         map,
-				         l => LayerUtils.IsVisible(l) && l.IsSelectable))
+				         mapView.Map,
+				         l => l.IsSelectable && l.IsVisibleInView(mapView)))
 			{
 				if (! layerPredicate(featureLayer))
 				{
@@ -548,6 +562,84 @@ namespace ProSuite.Commons.AGP.Carto
 			return elevationUnitAbbreviation;
 		}
 
+		public static bool RemoveLayer(Map map, Layer layer)
+		{
+			try
+			{
+#if ARCGISPRO_GREATER_3_2
+				if (! map.CanRemoveLayer(layer))
+				{
+					return false;
+				}
+#endif
+
+				map.RemoveLayer(layer);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
+		}
+
+		public static bool RemoveLayers(Map map, ICollection<Layer> layers)
+		{
+			try
+			{
+#if ARCGISPRO_GREATER_3_2
+				if (! map.CanRemoveLayers(layers))
+				{
+					return false;
+				}
+#endif
+
+				map.RemoveLayers(layers);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug(ex.Message, ex);
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Gets the first elevation surface layer in the map with the specified name.
+		/// This layer contains the layers that provide the actual elevation.
+		/// </summary>
+		/// <param name="map"></param>
+		/// <param name="name"></param>
+		/// <param name="evenIfEmpty">Whether also empty surface layers containing no actual
+		/// elevation sources should be returned.</param>
+		/// <returns></returns>
+		public static ElevationSurfaceLayer GetElevationSurfaceGroupLayer(
+			[NotNull] Map map,
+			bool evenIfEmpty = false,
+			[CanBeNull] string name = "Ground")
+		{
+			ElevationSurfaceLayer existingSurfaceLayer = null;
+			foreach (ElevationSurfaceLayer elevationSurfaceLayer in map.GetElevationSurfaceLayers())
+			{
+				if (elevationSurfaceLayer.ElevationMode != ElevationMode.BaseGlobeSurface ||
+				    elevationSurfaceLayer.Name != name)
+				{
+					continue;
+				}
+
+				if (! evenIfEmpty && elevationSurfaceLayer.GetLayersAsFlattenedList().Count == 0)
+				{
+					continue;
+				}
+
+				existingSurfaceLayer = elevationSurfaceLayer;
+			}
+
+			return existingSurfaceLayer;
+		}
+
 		#region Not MapUtils --> move elsewhere
 
 		/// <summary>
@@ -559,6 +651,74 @@ namespace ProSuite.Commons.AGP.Carto
 		public static MapPoint ToMapPoint(MapView mapView, Point screenPoint)
 		{
 			return mapView.ScreenToMap(screenPoint);
+		}
+
+		/// <summary>
+		/// Converts the mapView's client coordinates to screen coordinates. This overload
+		/// also returns the correct result for stereo maps in fixed cursor mode.
+		/// </summary>
+		/// <param name="mapView">The map view from which the client coordinates originate</param>
+		/// <param name="clientPoint">Client coordinates relative to the mapView</param>
+		/// <param name="mapZValue">Map z coordinate (used for stereo maps)</param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		public static async Task<Point> ClientToScreenPointAsync([NotNull] MapView mapView,
+		                                                         Point clientPoint,
+		                                                         double mapZValue)
+		{
+			Point defaultScreenLocation = mapView.ClientToScreen(clientPoint);
+
+			if (! IsStereoMapView(mapView))
+			{
+				return defaultScreenLocation;
+			}
+
+			bool isInFixedCursorMode = await IsInStereoFixedCursorMode(mapView);
+
+			if (! isInFixedCursorMode)
+			{
+				return defaultScreenLocation;
+			}
+
+			Envelope mapExtent = mapView.Extent;
+
+			MapPoint mapLowerLeft = GeometryFactory.CreatePoint(
+				mapExtent.XMin, mapExtent.YMin, mapZValue, mapExtent.SpatialReference);
+			MapPoint mapUpperRight = GeometryFactory.CreatePoint(
+				mapExtent.XMax, mapExtent.YMax, mapZValue, mapExtent.SpatialReference);
+
+			return await QueuedTask.Run(
+				       () =>
+				       {
+					       Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+					       Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+
+					       return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
+					                        (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+				       });
+		}
+
+		public static async Task<bool> IsInStereoFixedCursorMode([NotNull] MapView mapView)
+		{
+			bool isInFixedCursorMode = false;
+#if ARCGISPRO_GREATER_3_5
+
+			Map stereoMap = Assert.NotNull(mapView.Map);
+
+			// TODO: Hopefully at some point we can find out the stereo cursor mode in the UI thread!
+			isInFixedCursorMode = await QueuedTaskUtils.Run(() =>
+			{
+				CIMMap cimMap = Assert.NotNull(stereoMap.GetDefinition(),
+				                               "StereoMap's definition is null");
+
+				CIMMapStereoProperties stereoProps = cimMap.StereoProperties;
+
+				Assert.NotNull(stereoProps, $"No stereo properties for map {stereoMap.Name}");
+
+				return stereoProps.IsStereoCursorFixed;
+			});
+#endif
+			return isInFixedCursorMode;
 		}
 
 		/// <summary>
@@ -658,6 +818,18 @@ namespace ProSuite.Commons.AGP.Carto
 			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
 		}
 
+		public static double ConvertScreenPixelToMapLength([NotNull] MapView mapView,
+		                                                   int pixels, Point screenPoint)
+		{
+			MapPoint atPoint = mapView.ScreenToMap(screenPoint);
+
+			// Add pixels to get a "radius".
+			var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
+			var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
+
+			return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		}
+
 		/// <summary>
 		/// Gets the pixel size for the specified map view in the map space without
 		/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3).
@@ -704,10 +876,12 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="expansionFactor">The expansion factor to apply to the extent. An expansion
 		/// factor of 1.1 enlarges the extent by 10% in both x and y</param>
 		/// <param name="minimumScale">The minimum scale denominator.</param>
+		/// <param name="duration"></param>
 		public static async Task<bool> ZoomToAsync([NotNull] MapView mapView,
 		                                           [NotNull] Envelope extent,
 		                                           double expansionFactor,
-		                                           double minimumScale)
+		                                           double minimumScale,
+		                                           TimeSpan? duration = null)
 		{
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
 			Assert.ArgumentNotNull(extent, nameof(extent));
@@ -729,7 +903,7 @@ namespace ProSuite.Commons.AGP.Carto
 			Envelope zoomExtent = GetZoomExtent(newExtentMap, currentExtent,
 			                                    currentScale, minimumScale);
 
-			await mapView.ZoomToAsync(zoomExtent);
+			await mapView.ZoomToAsync(zoomExtent, duration);
 
 			return true;
 		}
@@ -797,6 +971,57 @@ namespace ProSuite.Commons.AGP.Carto
 			return true;
 		}
 
+		public static void FlashGeometries(
+			[NotNull] MapView mapView,
+			IEnumerable<Geometry> geometries,
+			int milliseconds = 400,
+			CIMColor color = null,
+			bool useReferenceScale = false)
+		{
+			if (color == null)
+			{
+				color = ColorUtils.CreateRGB(0, 200, 0);
+			}
+
+			List<Overlay> overlays = new List<Overlay>();
+
+			CIMSymbol symbol = null;
+			foreach (var group in geometries.GroupBy(g => g.Dimension))
+			{
+				if (group.Key == 0)
+				{
+					symbol = SymbolUtils.CreateMarker(color, 4, SymbolUtils.MarkerStyle.Circle)
+					                    .MakePointSymbol();
+				}
+
+				if (group.Key == 1)
+				{
+					symbol = SymbolUtils.CreateLineSymbol(color, 2);
+				}
+
+				if (group.Key == 2)
+				{
+					symbol = SymbolUtils.CreatePolygonSymbol(SymbolUtils.CreateSolidFill(color));
+				}
+
+				if (group.Count() > 1)
+				{
+					Geometry union = GeometryEngine.Instance.Union(group);
+					overlays.Add(new Overlay(union, symbol));
+				}
+				else
+				{
+					overlays.AddRange(group.Select(geometry => new Overlay(geometry, symbol)));
+				}
+			}
+
+			if (overlays.Count > 0)
+			{
+				FlashGeometries(mapView, overlays, milliseconds,
+				                useReferenceScale);
+			}
+		}
+
 		public static bool FlashGeometries(
 			[NotNull] MapView mapView,
 			IEnumerable<Overlay> overlays,
@@ -818,7 +1043,8 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				foreach (IDisposable disposable in disposables)
 				{
-					disposable.Dispose();
+					// mapView.AddOverlay can return null (e.g. for GeometryBags).
+					disposable?.Dispose();
 				}
 			}
 
@@ -857,10 +1083,10 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		private static Envelope GetZoomExtent([NotNull] Envelope newExtent,
-		                                      [NotNull] Envelope currentExtent,
-		                                      double currentScale,
-		                                      double minimumScale)
+		public static Envelope GetZoomExtent([NotNull] Envelope newExtent,
+		                                     [NotNull] Envelope currentExtent,
+		                                     double currentScale,
+		                                     double minimumScale)
 		{
 			Assert.ArgumentNotNull(newExtent, nameof(newExtent));
 			Assert.ArgumentNotNull(currentExtent, nameof(currentExtent));

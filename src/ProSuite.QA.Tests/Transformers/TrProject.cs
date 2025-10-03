@@ -88,7 +88,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			public T ProjectEx<T>([NotNull] T geometry) where T : IGeometry
+			public T ProjectEx<T>(T geometry) where T : IGeometry
 			{
 				ISpatialReference targetSpatialReference = null;
 				if (geometry.SpatialReference?.FactoryCode ==
@@ -101,11 +101,36 @@ namespace ProSuite.QA.Tests.Transformers
 				if (targetSpatialReference == null)
 				{
 					throw new InvalidOperationException(
-						$"unhandles spatial reference {geometry.SpatialReference?.FactoryCode}");
+						$"Unhandled spatial reference: {geometry.SpatialReference?.FactoryCode}.");
 				}
 
-				return SpatialReferenceUtils.ProjectEx(
-					geometry, targetSpatialReference);
+				T result = SpatialReferenceUtils.ProjectEx(geometry, targetSpatialReference);
+
+				return result;
+			}
+
+			public bool Equals(IHasGeotransformation other)
+			{
+				if (other is null)
+				{
+					return false;
+				}
+
+				if (ReferenceEquals(this, other))
+				{
+					return true;
+				}
+
+				if (other.GetType() != GetType())
+				{
+					return false;
+				}
+
+				ProjectedFc otherTrProject = (ProjectedFc) other;
+
+				ISpatialReference otherSr = otherTrProject._transformer._targetSpatialReference;
+
+				return _transformer._targetSpatialReference.FactoryCode == otherSr.FactoryCode;
 			}
 
 			protected override IField CreateShapeField(IReadOnlyFeatureClass involvedFc)

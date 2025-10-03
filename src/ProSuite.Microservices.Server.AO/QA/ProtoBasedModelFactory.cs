@@ -45,7 +45,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		#region Implementation of IVerifiedModelFactory
 
-		public Model CreateModel(IWorkspace workspace,
+		public DdxModel CreateModel(IWorkspace workspace,
 		                         string modelName,
 		                         int modelId,
 		                         string databaseName,
@@ -62,7 +62,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				foreach (ObjectClassMsg objectClassMsg in _schemaMsg.ClassDefinitions)
 				{
-					if (objectClassMsg.WorkspaceHandle != modelId)
+					// 0 is not a possible model ID in the DDX (sequence starts at 1) and means
+					// it has not been initialized -> Allow datasets without model ID
+					if (objectClassMsg.DdxModelId != 0 && objectClassMsg.DdxModelId != modelId)
 					{
 						continue;
 					}
@@ -86,7 +88,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 						ISpatialReference sr = ProtobufGeometryUtils.FromSpatialReferenceMsg(
 							objectClassMsg.SpatialReference);
 
-						model.SpatialReferenceDescriptor = new SpatialReferenceDescriptor(sr);
+						model.SpatialReferenceDescriptor =
+							SpatialReferenceDescriptorExtensions.CreateFrom(sr);
 					}
 
 					model.AddDataset(dataset);
@@ -98,7 +101,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return model;
 		}
 
-		public void AssignMostFrequentlyUsedSpatialReference(Model model,
+		public void AssignMostFrequentlyUsedSpatialReference(DdxModel model,
 		                                                     IEnumerable<Dataset> usedDatasets)
 		{
 			ISpatialReference spatialReference = VerifiedModelFactory.GetMainSpatialReference(
@@ -107,7 +110,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			if (spatialReference != null)
 			{
 				model.SpatialReferenceDescriptor =
-					new SpatialReferenceDescriptor(spatialReference);
+					SpatialReferenceDescriptorExtensions.CreateFrom(spatialReference);
 			}
 		}
 

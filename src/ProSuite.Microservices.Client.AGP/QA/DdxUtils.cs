@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -18,6 +19,7 @@ using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.Workflow;
 using ProSuite.Microservices.Client.DataModel;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
@@ -33,23 +35,26 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// Sometimes it takes almost two minutes!
-		private const int _timeoutMilliseconds = 180000;
+		// From the US west cost to postgreSQL server in AWS europe even longer.
+		private const int _timeoutMilliseconds = 300000;
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
-			[NotNull] ICollection<Table> tables,
+			[NotNull] IEnumerable<Table> tables,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
 			[CanBeNull] IModelFactory modelFactory = null)
 		{
 			var datastoresByHandle = new Dictionary<long, Datastore>();
 			var spatialReferencesByWkId = new Dictionary<long, SpatialReference>();
 
+			ICollection<Table> tableCollection = CollectionUtils.GetCollection(tables);
+
 			GetProjectWorkspacesRequest request =
 				await QueuedTask.Run(() =>
 				{
-					AddWorkspaces(tables, datastoresByHandle);
-					AddSpatialReferences(tables.OfType<FeatureClass>(), spatialReferencesByWkId);
+					AddWorkspaces(tableCollection, datastoresByHandle);
+					AddSpatialReferences(tableCollection.OfType<FeatureClass>(), spatialReferencesByWkId);
 
-					return CreateProjectWorkspacesRequest(tables);
+					return CreateProjectWorkspacesRequest(tableCollection);
 				});
 
 			if (request.ObjectClasses.Count == 0)
@@ -160,6 +165,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
 			{
+				if (instanceDescriptors.Contains(descriptorMsg.Name))
+				{
+					continue;
+				}
+
 				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
 				instanceDescriptors.AddDescriptor(instanceDescriptor);
 			}
@@ -195,6 +205,36 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			QualitySpecification result =
 				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
+
+			return result;
+		}
+
+		public static DdxModel CreateFullModel([NotNull] IModelFactory modelFactory,
+		                                       [NotNull] ModelMsg modelMsg,
+		                                       [NotNull] ICollection<DatasetMsg> datasets,
+		                                       [NotNull] ICollection<AssociationMsg> associations)
+		{
+			DdxModel result = modelFactory.CreateModel(modelMsg);
+
+			foreach (var datasetById in FromDatasetMsgs(datasets, modelFactory))
+			{
+				Dataset dataset = (Dataset) datasetById.Value;
+
+				if (! result.Contains((IDdxDataset) dataset))
+				{
+					result.AddDataset<Dataset>(dataset);
+				}
+			}
+
+			foreach (AssociationMsg associationMsg in associations)
+			{
+				Association association = modelFactory.CreateAssociation(associationMsg);
+
+				if (! result.Contains(association))
+				{
+					result.AddAssociation(association);
+				}
+			}
 
 			return result;
 		}
@@ -316,7 +356,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (DatasetMsg datasetMsg in response.Datasets)
 			{
-				_msg.DebugFormat("Adding dataset details to {0}", datasetMsg.Name);
+				_msg.DebugFormat("Adding dataset details to {0} / ID: {1}", datasetMsg.Name,
+				                 datasetMsg.DatasetId);
 
 				// TODO: Move this to the model factory
 				if (! datasetsById.TryGetValue(datasetMsg.DatasetId, out IDdxDataset dataset))
@@ -369,8 +410,9 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				VectorDataset vectorDataset = vectorDatasets.FirstOrDefault(
 					vd => vd.Id == networkDatasetMsg.DatasetId);
 
-				Assert.NotNull(
-					$"Vector dataset <id> {networkDatasetMsg.DatasetId} not found in provided datasets");
+				Assert.NotNull(vectorDataset,
+				               $"Linear Network {linearNetworkMsg.Name}: Vector dataset <id> " +
+				               $"{networkDatasetMsg.DatasetId} not in editable datasets");
 
 				var networkDataset = new LinearNetworkDataset(vectorDataset);
 				networkDataset.WhereClause = networkDatasetMsg.WhereClause;
@@ -395,33 +437,31 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static InstanceDescriptor GetInstanceDescriptor(
 			InstanceDescriptorMsg descriptorMessage)
 		{
+			InstanceType instanceType = (InstanceType) descriptorMessage.Type;
+
+			InstanceDescriptor result;
+
+			switch (instanceType)
 			{
-				InstanceType instanceType = (InstanceType) descriptorMessage.Type;
-
-				InstanceDescriptor result;
-
-				switch (instanceType)
-				{
-					case InstanceType.Test:
-						result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+				case InstanceType.Test:
+					result = ProtoDataQualityUtils.FromInstanceDescriptorMsg<TestDescriptor>(
+						descriptorMessage);
+					break;
+				case InstanceType.Transformer:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<TransformerDescriptor>(
 							descriptorMessage);
-						break;
-					case InstanceType.Transformer:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<TransformerDescriptor>(
-								descriptorMessage);
-						break;
-					case InstanceType.IssueFilter:
-						result = ProtoDataQualityUtils
-							.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
-								descriptorMessage);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				return result;
+					break;
+				case InstanceType.IssueFilter:
+					result = ProtoDataQualityUtils
+						.FromInstanceDescriptorMsg<IssueFilterDescriptor>(
+							descriptorMessage);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
+
+			return result;
 		}
 
 		private static IEnumerable<IssueFilterDescriptor> GetIssueFilterDescriptors(
@@ -619,28 +659,45 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					                   .Select(datasetId => datasetsById[datasetId])
 					                   .ToList();
 
-				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
-				                                            projectMsg.Name,
-				                                            datasets, datastore, sr)
-				                       {
-					                       IsMasterDatabaseWorkspace =
-						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
-				                       };
+				var projectWorkspace =
+					new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
+					                     projectMsg.Name,
+					                     datasets, datastore, sr)
+					{
+						IsMasterDatabaseWorkspace = projectWorkspaceMsg.IsMasterDatabaseWorkspace,
+						ExcludeReadOnlyDatasetsFromProjectWorkspace =
+							projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace
+					};
 
-				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
-					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
+				var projectSettings =
+					new ProjectSettings(projectMsg.ProjectId, projectMsg.ShortName,
+					                    projectMsg.Name);
 
-				projectWorkspace.MinimumScaleDenominator =
-					projectMsg.MinimumScaleDenominator;
+				ReadProjectSettings(projectMsg, projectSettings);
 
-				projectWorkspace.ToolConfigDirectory = projectMsg.ToolConfigDirectory;
-				projectWorkspace.WorkListConfigDir = projectMsg.WorkListConfigDir;
-				projectWorkspace.AttributeEditorConfigDir = projectMsg.AttributeEditorConfigDir;
+				projectWorkspace.ProjectSettings = projectSettings;
 
 				result.Add(projectWorkspace);
 			}
 
 			return result;
+		}
+
+		public static void ReadProjectSettings([NotNull] ProjectMsg fromProjectMsg,
+		                                       [NotNull] IProjectSettings intoProjectSettings)
+		{
+			intoProjectSettings.MinimumScaleDenominator = fromProjectMsg.MinimumScaleDenominator;
+			intoProjectSettings.AttributeEditorConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.AttributeEditorConfigDir);
+			intoProjectSettings.ToolConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.ToolConfigDirectory);
+			intoProjectSettings.WorkListConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.WorkListConfigDir);
+
+			intoProjectSettings.FullExtentXMin = fromProjectMsg.FullExtentXMin;
+			intoProjectSettings.FullExtentYMin = fromProjectMsg.FullExtentYMin;
+			intoProjectSettings.FullExtentXMax = fromProjectMsg.FullExtentXMax;
+			intoProjectSettings.FullExtentYMax = fromProjectMsg.FullExtentYMax;
 		}
 
 		private static Dictionary<int, IDdxDataset> FromDatasetMsgs(

@@ -21,6 +21,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -100,10 +101,10 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 			{
 				if (_issueSpatialReference == null)
 				{
-					Model primaryModel =
+					DdxModel primaryModel =
 						StandaloneVerificationUtils.GetPrimaryModel(QualitySpecification);
 					_issueSpatialReference =
-						primaryModel?.SpatialReferenceDescriptor?.SpatialReference;
+						primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();
 				}
 
 				return _issueSpatialReference;
@@ -431,12 +432,8 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 				int modelId = ddxModel.Id;
 
-				ISpatialReference spatialReference = null;
-
-				if (ddxModel is Model model)
-				{
-					spatialReference = model.SpatialReferenceDescriptor?.SpatialReference;
-				}
+				ISpatialReference spatialReference =
+					ddxModel.SpatialReferenceDescriptor?.GetSpatialReference();
 
 				foreach (Dataset dataset in ddxModel.GetDatasets())
 				{
@@ -1221,7 +1218,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			foreach (KeyValuePair<int, DdxModel> kvp in usedModelsById)
 			{
-				var model = (Model) kvp.Value;
+				var model = kvp.Value;
 				string dataSourceId = kvp.Key.ToString(CultureInfo.InvariantCulture);
 
 				DataSourceMsg dataSourceMsg =

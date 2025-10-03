@@ -1,16 +1,21 @@
+using System.Collections.Generic;
+using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
 	public class SelectionSourceClass : SourceClass
 	{
-		public SelectionSourceClass(GdbTableIdentity tableIdentity,
-		                            [CanBeNull] IAttributeReader attributeReader = null)
-			: base(tableIdentity, attributeReader) { }
+		public List<long> Oids { get; }
 
-		#region Overrides of SourceClass
+		public SelectionSourceClass(GdbTableIdentity tableIdentity,
+		                            SourceClassSchema schema,
+		                            List<long> oids)
+			: base(tableIdentity, schema)
+		{
+			Oids = oids;
+		}
 
 		public override long GetUniqueTableId()
 		{
@@ -21,6 +26,16 @@ namespace ProSuite.AGP.WorkList
 			return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(TableIdentity);
 		}
 
-		#endregion
+		protected override void EnsureValidFilterCore(ref QueryFilter filter,
+		                                              WorkItemStatus? statusFilter)
+		{
+			filter.ObjectIDs = Oids;
+
+			if (filter is SpatialQueryFilter spatialFilter)
+			{
+				// Probably depends on the count of OIDs vs. the spatial filter's selectivity:
+				spatialFilter.SearchOrder = SearchOrder.Attribute;
+			}
+		}
 	}
 }

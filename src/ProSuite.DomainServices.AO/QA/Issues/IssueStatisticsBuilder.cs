@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.VerificationReports;
@@ -12,7 +11,9 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 	{
 		public void BeginVerification(AreaOfInterest areaOfInterest) { }
 
-		public void AddVerifiedDataset(Dataset dataset) { }
+		public void AddVerifiedDataset(QualityVerificationDataset verificationDataset,
+		                               string workspaceDisplayText,
+		                               ISpatialReference spatialReference) { }
 
 		public void AddIssue(Issue issue, IGeometry errorGeometry)
 		{

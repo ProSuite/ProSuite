@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
@@ -13,11 +14,12 @@ public interface IRemoveOverlapsService
 	Overlaps CalculateOverlaps(
 		[NotNull] IList<Feature> selectedFeatures,
 		[NotNull] IList<Feature> overlappingFeatures,
+		[CanBeNull] Envelope inExtent,
 		CancellationToken cancellationToken);
 
 	RemoveOverlapsResult RemoveOverlaps([NotNull] IEnumerable<Feature> selectedFeatures,
 	                                    [NotNull] Overlaps overlapsToRemove,
 	                                    [NotNull] IList<Feature> overlappingFeatures,
-	                                    [NotNull] RemoveOverlapsOptions options,
+	                                    [NotNull] RemoveOverlapsToolOptions options,
 	                                    CancellationToken cancellationToken);
 }

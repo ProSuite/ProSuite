@@ -7,7 +7,7 @@ using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geometry.AGP
 {
-	public abstract class ArcGeometry : IGeometry, IZAware, IMAware
+	public abstract class ArcGeometry : IGeometry, IZAware, IMAware, IRelationalOperator
 	{
 		public static IGeometry Create(ArcGIS.Core.Geometry.Geometry proGeometry)
 		{
@@ -192,6 +192,24 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		#endregion
 
+		#region Implementation of IRelationalOperator
+
+		public bool Touches(IGeometry other, double? tolerance = null)
+		{
+			var otherGeometry = (ArcGIS.Core.Geometry.Geometry) other.NativeImplementation;
+
+			return GeometryEngine.Instance.Touches(ProGeometry, otherGeometry);
+		}
+
+		public bool Intersects(IGeometry other, double? tolerance = null)
+		{
+			var otherGeometry = (ArcGIS.Core.Geometry.Geometry) other.NativeImplementation;
+
+			return GeometryEngine.Instance.Intersects(ProGeometry, otherGeometry);
+		}
+
+		#endregion
+
 		private esriGeometryType GetProGeometryType()
 		{
 			switch (ProGeometry.GeometryType)
@@ -215,6 +233,12 @@ namespace ProSuite.GIS.Geometry.AGP
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		public bool IsEqual(IClone other)
+		{
+			var geometry = (ArcGeometry) other;
+			return ProGeometry.IsEqual(geometry.ProGeometry);
 		}
 	}
 }

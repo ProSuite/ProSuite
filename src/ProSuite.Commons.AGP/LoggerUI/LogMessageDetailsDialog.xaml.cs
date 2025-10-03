@@ -12,9 +12,13 @@ namespace ProSuite.Commons.AGP.LoggerUI
 			InitializeComponent();
 		}
 
-		public void CloseWindow(bool? dialogResult)
+		public void CloseWindow(bool? dialogResult = null)
 		{
-			DialogResult = dialogResult;
+			if (dialogResult.HasValue)
+			{
+				DialogResult = dialogResult;
+			}
+
 			Close();
 		}
 	}

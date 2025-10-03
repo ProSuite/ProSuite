@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
@@ -38,10 +39,17 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			_connector = connector;
 		}
 
+		private WorkspaceFactory WorkspaceFactory => WorkspaceUtils.GetWorkspaceFactory(_connector);
+
 		/// <summary>
 		/// Opens the associated datastore. This method must be run on the MCT.
 		/// </summary>
-		/// <returns></returns>
+		/// <remarks>
+		/// NOTE: This can lead to different instances of the same workspace
+		///       because opening a new Geodatabase with the Connector of an existing Geodatabase
+		///       can in some cases result in a different instance!
+		/// </remarks>
+		[NotNull]
 		public Datastore Open()
 		{
 			return WorkspaceUtils.OpenDatastore(_connector);
@@ -50,6 +58,20 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public bool References(Datastore datastore)
 		{
 			return Equals(datastore.GetConnector());
+		}
+
+		public bool References(WorkspaceFactory workspaceFactory, string connectionString,
+		                       DatastoreComparison comparison = DatastoreComparison.Exact)
+		{
+			if (workspaceFactory != WorkspaceFactory)
+			{
+				return false;
+			}
+
+			Connector otherConnector =
+				WorkspaceUtils.CreateConnector(workspaceFactory, connectionString);
+
+			return Equals(otherConnector, comparison);
 		}
 
 		public string GetDisplayText()
@@ -236,8 +258,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 		#endregion
 
-		private bool Equals(Connector otherConnector)
+		public bool Equals(DatastoreName other, DatastoreComparison comparison)
 		{
+			if (other is null) return false;
+
+			Connector otherConnector = other._connector;
+
+			return Equals(otherConnector);
+		}
+
+		private bool Equals(Connector otherConnector,
+		                    DatastoreComparison comparison = DatastoreComparison.Exact)
+		{
+			_msg.VerboseDebug(() => $"Comparing datastore connectors {this} with {otherConnector}");
 			if (_connector.GetType() != otherConnector.GetType()) return false;
 
 			switch (_connector)
@@ -248,7 +281,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				case DatabaseConnectionProperties dbConnectionProps:
 					return AreEqual(dbConnectionProps,
-					                (DatabaseConnectionProperties) otherConnector);
+					                (DatabaseConnectionProperties) otherConnector, comparison);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
 					var otherFgdbConnection = (FileGeodatabaseConnectionPath) otherConnector;
@@ -331,19 +364,30 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		private static bool AreEqual([NotNull] DatabaseConnectionProperties a,
-		                             [CanBeNull] DatabaseConnectionProperties b)
+		                             [CanBeNull] DatabaseConnectionProperties b,
+		                             DatastoreComparison comparison)
 		{
 			if (b == null) return false;
 
-			return Equals(a.Instance, b.Instance) &&
-			       a.DBMS == b.DBMS &&
-			       Equals(a.Database, b.Database) &&
-			       a.AuthenticationMode == b.AuthenticationMode &&
-			       Equals(a.User, b.User) &&
-			       Equals(a.Password, b.Password) &&
-			       Equals(a.ProjectInstance, b.ProjectInstance) &&
-			       Equals(a.Version, b.Version) &&
-			       Equals(a.Branch, b.Branch);
+			bool basicEqual = Equals(a.Instance, b.Instance) &&
+			                  a.DBMS == b.DBMS &&
+			                  Equals(a.Database, b.Database) &&
+			                  a.AuthenticationMode == b.AuthenticationMode &&
+			                  Equals(a.ProjectInstance, b.ProjectInstance);
+
+			if (comparison == DatastoreComparison.AnyUserAnyVersion)
+			{
+				return basicEqual;
+			}
+
+			if (comparison == DatastoreComparison.AnyUserSameVersion)
+			{
+				return Equals(a.Version, b.Version) &&
+				       Equals(a.Branch, b.Branch);
+			}
+
+			// Do not compare password (one can be empty, the other encrypted)
+			return Equals(a.User, b.User);
 		}
 
 		private static bool AreEqual([NotNull] RealtimeServiceConnectionProperties a,

@@ -28,6 +28,8 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 
 		public IList<CutSubcurve> PreSelectedSubcurves { get; } = new List<CutSubcurve>();
 
+		public Polyline FilterBuffer { get; set; }
+
 		public void Update([NotNull] ChangeAlongCurves newState)
 		{
 			CurveUsability = newState.CurveUsability;
@@ -36,6 +38,7 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 			_reshapeSubcurves.AddRange(newState.ReshapeCutSubcurves);
 
 			TargetFeatures = newState.TargetFeatures;
+			FilterBuffer = newState.FilterBuffer;
 		}
 
 		public IReadOnlyCollection<CutSubcurve> ReshapeCutSubcurves =>
@@ -87,6 +90,8 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong
 				else if (subCurvePredicate == null || subCurvePredicate(cutSubcurve))
 				{
 					result.Add(cutSubcurve);
+					_msg.Info(
+						"The feature was not reshaped. Please select green or yellow lines to reshape along");
 				}
 			}
 

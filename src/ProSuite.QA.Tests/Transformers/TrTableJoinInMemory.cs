@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
@@ -7,6 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -15,7 +17,7 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
 	[TableTransformer]
-	public class TrTableJoinInMemory : TableTransformer<GdbTable>
+	public class TrTableJoinInMemory : TableTransformer<GdbTable>, ITableTransformerFieldSettings
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -105,7 +107,7 @@ namespace ProSuite.QA.Tests.Transformers
 			set => _manyToManyTableRightKey =
 				       StringUtils.IsNullOrEmptyOrBlank(value) ? null : value;
 		}
-
+		
 		#region Implementation of ITableTransformer
 
 		protected override GdbTable GetTransformedCore(string name)
@@ -122,7 +124,8 @@ namespace ProSuite.QA.Tests.Transformers
 				JoinedBackingDataset joinedDataset =
 					(JoinedBackingDataset) Assert.NotNull(_joinedTable.BackingDataset);
 
-				AddFields(association, joinedDataset, _joinedTable);
+				AddFields(association, joinedDataset, _joinedTable, null,
+				          null, FullyQualifyFieldNames);
 
 				// Once the schema is created, we can set up the field-lookups:
 				joinedDataset.SetupRowFactory();
@@ -130,6 +133,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 			return _joinedTable;
 		}
+
+		#endregion
+
+		#region Implementation of ITableTransformerFieldSettings
+
+		/// <summary>
+		/// Whether all field names in the output table should be fully qualified using the
+		/// SourceTableName.FieldName convention.
+		/// </summary>
+		public bool FullyQualifyFieldNames { get; set; }
 
 		#endregion
 
@@ -182,9 +195,12 @@ namespace ProSuite.QA.Tests.Transformers
 			return result;
 		}
 
-		private static void AddFields(AssociationDescription association,
-		                              JoinedBackingDataset joinedDataset,
-		                              GdbTable resultTable)
+		private static void AddFields([NotNull] AssociationDescription association,
+		                              [NotNull] JoinedBackingDataset joinedDataset,
+		                              [NotNull] GdbTable resultTable,
+		                              [CanBeNull] IList<string> leftTableAttributes,
+		                              [CanBeNull] IList<string> rightTableAttributes,
+		                              bool fullyQualifyFields = false)
 		{
 			// Suggestion for multi-table transformers: fields are only qualified to avoid duplicates
 			// using <input table name>_
@@ -194,8 +210,18 @@ namespace ProSuite.QA.Tests.Transformers
 			var rightTable = joinedDataset.RightTable;
 			var associationTable = joinedDataset.AssociationTable;
 
-			TransformedTableFields leftFields = new TransformedTableFields(leftTable);
-			TransformedTableFields rightFields = new TransformedTableFields(rightTable);
+			TransformedTableFields leftFields =
+				new TransformedTableFields(leftTable)
+				{
+					QualifyFieldsWithSourceTable = fullyQualifyFields
+				};
+
+			TransformedTableFields rightFields =
+				new TransformedTableFields(rightTable)
+				{
+					QualifyFieldsWithSourceTable = fullyQualifyFields
+				};
+
 			rightFields.ExcludeAllShapeFields();
 
 			joinedDataset.TableFieldsBySource.Add(leftTable, leftFields);
@@ -212,7 +238,6 @@ namespace ProSuite.QA.Tests.Transformers
 
 			IReadOnlyTable oidSourceTable =
 				TableJoinUtils.DetermineOIDTable(association, joinedDataset.JoinType, leftTable);
-			//IReadOnlyTable oidSourceTable = joinedDataset.ObjectIdSourceTable;
 
 			if (oidSourceTable != null && oidSourceTable.HasOID)
 			{
@@ -223,10 +248,25 @@ namespace ProSuite.QA.Tests.Transformers
 					qualifiedOidName);
 			}
 
-			leftFields.AddAllFields(resultTable);
+			if (leftTableAttributes != null)
+			{
+				leftFields.AddUserDefinedFields(leftTableAttributes, resultTable);
+			}
+			else
+			{
+				leftFields.AddAllFields(resultTable);
+			}
 
 			rightFields.PreviouslyAddedFields.Add(leftFields);
-			rightFields.AddAllFields(resultTable);
+
+			if (rightTableAttributes != null)
+			{
+				rightFields.AddUserDefinedFields(rightTableAttributes, resultTable);
+			}
+			else
+			{
+				rightFields.AddAllFields(resultTable);
+			}
 
 			bridgeTableFields?.PreviouslyAddedFields.Add(rightFields);
 			bridgeTableFields?.AddAllFields(resultTable);

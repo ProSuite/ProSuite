@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList;
@@ -22,18 +20,24 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	[NotNull]
 	protected IWorkListItemDatastore WorkListItemDatastore { get; }
 
 	protected DbWorkListEnvironmentBase(
-		[CanBeNull] IWorkListItemDatastore workListItemDatastore)
+		[NotNull] IWorkListItemDatastore workListItemDatastore)
 	{
+		Assert.ArgumentNotNull(workListItemDatastore, nameof(workListItemDatastore));
+
 		// TODO: Separate hierarchies for db-worklists vs memory-worklists
 		WorkListItemDatastore = workListItemDatastore;
 
-		if (WorkListItemDatastore != null &&
-		    ! WorkListItemDatastore.Validate(out string message))
+		// TODO: Flag? Explicit environment validation method? 
+		if (QueuedTask.OnWorker)
 		{
-			throw new ArgumentException($"Invalid issue datastore: {message}");
+			if (! WorkListItemDatastore.Validate(out string message))
+			{
+				throw new ArgumentException($"Invalid issue datastore: {message}");
+			}
 		}
 	}
 
@@ -41,7 +45,7 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 	{
 		IList<Table> dbTables = GetTablesCore().ToList();
 
-		if (dbTables.Count > 0 && WorkListItemDatastore != null)
+		if (dbTables.Count > 0)
 		{
 			dbTables = await WorkListItemDatastore.PrepareTableSchema(dbTables);
 		}
@@ -51,29 +55,20 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 	protected override async Task<bool> TryPrepareSchemaCoreAsync()
 	{
-		if (WorkListItemDatastore == null)
-		{
-			return false;
-		}
-
 		return await WorkListItemDatastore.TryPrepareSchema();
 	}
 
-	public override void LoadAssociatedLayers(IWorkList worklist)
+	public override void LoadAssociatedLayers(MapView mapView, IWorkList worklist)
 	{
-		AddToMapCore(GetTablesCore(), worklist);
+		AddToMapCore(mapView, GetTablesCore(), worklist);
 	}
 
-	public override bool IsSameWorkListDefinition(string existingDefinitionFilePath)
+	// TODO: (daro) move to subclass because of IssueWorkList specific code: Attributes.IssueDescription
+	protected virtual void AddToMapCore([NotNull] MapView mapView,
+	                                    [NotNull] IEnumerable<Table> tables,
+	                                    [NotNull] IWorkList worklist)
 	{
-		string suggestedWorkListName = Assert.NotNull(SuggestWorkListName());
-
-		return IsSameWorkListDefinition(existingDefinitionFilePath, suggestedWorkListName);
-	}
-
-	protected void AddToMapCore(IEnumerable<Table> tables, IWorkList worklist)
-	{
-		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
+		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>(mapView);
 
 		foreach (var table in tables)
 		{
@@ -100,7 +95,12 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 				featureLayer.SetExpanded(false);
 				featureLayer.SetVisibility(false);
-				featureLayer.SetDefinitionQuery(GetDefaultDefinitionQuery(table));
+				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
+
+				if (! string.IsNullOrEmpty(defaultDefinitionQuery))
+				{
+					featureLayer.SetDefinitionQuery(defaultDefinitionQuery);
+				}
 
 #if ARCGISPRO_GREATER_3_2
 				featureLayer.SetShowLayerAtAllScales(true);
@@ -124,7 +124,8 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 				// NOTE: SetDisplyField is slow. In future the pr-prepared layers are stored and used.
 				//       They are not going to be created by code.
-				SetDisplayField(featureLayer, attributeReader.GetName(Attributes.IssueDescription));
+				string name = attributeReader.GetName(Attributes.IssueDescription);
+				LayerUtils.SetDisplayExpression(featureLayer, Assert.NotNull(name));
 
 				continue;
 			}
@@ -142,10 +143,10 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 		return null;
 	}
 
-	protected void RemoveFromMapCore(IEnumerable<Table> tables)
+	protected void RemoveFromMapCore(MapView mapView, IEnumerable<Table> tables)
 	{
 		// Search inside the QA group layer for the tables to remove (to allow for renaming)
-		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>();
+		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>(mapView);
 
 		var tableList = tables.ToList();
 
@@ -207,32 +208,6 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 	protected virtual IEnumerable<Table> GetTablesCore()
 	{
-		if (WorkListItemDatastore == null)
-		{
-			return Enumerable.Empty<Table>();
-		}
-
 		return WorkListItemDatastore.GetTables();
-	}
-
-	private static bool IsSameWorkListDefinition(
-		[NotNull] string existingDefinitionFilePath,
-		[NotNull] string suggestedNewWorkListName)
-	{
-		string suggestedFileName =
-			FileSystemUtils.ReplaceInvalidFileNameChars(suggestedNewWorkListName, '_');
-
-		string existingFileName = Path.GetFileNameWithoutExtension(existingDefinitionFilePath);
-
-		return existingFileName.Equals(suggestedFileName);
-	}
-
-	private static void SetDisplayField(FeatureLayer layer, string name)
-	{
-		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
-
-		definition.FeatureTable.DisplayField = name;
-
-		layer.SetDefinition(definition);
 	}
 }

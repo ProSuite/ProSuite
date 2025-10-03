@@ -1,17 +1,22 @@
-using Microsoft.Win32.SafeHandles;
-using ProSuite.Commons.Essentials.Assertions;
-using System.Drawing.Drawing2D;
+using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Microsoft.Win32.SafeHandles;
+using ProSuite.Commons.Diagnostics;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Windows
 {
 	public static class CursorUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull]
 		public static Cursor GetCursor([NotNull] byte[] cursorBytes)
 		{
@@ -21,62 +26,118 @@ namespace ProSuite.Commons.AGP.Windows
 		}
 
 		public static Cursor CreateCursor(byte[] baseImage,
-										  byte[] overlayImage,
-										  int xHotspot = 0,
-										  int yHotspot = 0)
+		                                  byte[] overlayImage,
+		                                  int xHotspot = 0,
+		                                  int yHotspot = 0)
 		{
-			return CreateCursor(baseImage, overlayImage, overlay2: null, overlay3: null, xHotspot, yHotspot);
+			return CreateCursor(baseImage, overlayImage, overlay2: null, overlay3: null, xHotspot,
+			                    yHotspot);
 		}
 
 		public static Cursor CreateCursor(byte[] baseImage,
-										  byte[] overlay1 = null,
-										  byte[] overlay2 = null,
-										  byte[] overlay3 = null,
-										  int xHotspot = 0,
-										  int yHotspot = 0)
+		                                  byte[] overlay1 = null,
+		                                  byte[] overlay2 = null,
+		                                  byte[] overlay3 = null,
+		                                  int xHotspot = 0,
+		                                  int yHotspot = 0)
 		{
 			Assert.ArgumentNotNull(baseImage, nameof(baseImage));
 
-			var result = new Bitmap(32, 32);
-			var destinationRectangle = new Rectangle(0, 0, 32, 32);
-
-			using (var graphics = Graphics.FromImage(result))
+			try
 			{
-				graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+				var destinationRectangle = new Rectangle(0, 0, 32, 32);
 
-				graphics.DrawImage(CreateImage(baseImage), destinationRectangle);
-
-				if (overlay1 != null)
+				using var result = new Bitmap(32, 32);
+				using (Graphics graphics = Graphics.FromImage(result))
 				{
-					graphics.DrawImage(CreateImage(overlay1), destinationRectangle);
-				}
+					graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-				if (overlay2 != null)
-				{
-					graphics.DrawImage(CreateImage(overlay2), destinationRectangle);
-				}
+					var stream = new MemoryStream(baseImage);
+					MemoryStream stream1 = null;
+					MemoryStream stream2 = null;
+					MemoryStream stream3 = null;
 
-				if (overlay3 != null)
-				{
-					graphics.DrawImage(CreateImage(overlay3), destinationRectangle);
+					try
+					{
+						if (overlay1 != null)
+						{
+							stream1 = new MemoryStream(overlay1);
+						}
+
+						if (overlay2 != null)
+						{
+							stream2 = new MemoryStream(overlay2);
+						}
+
+						if (overlay3 != null)
+						{
+							stream3 = new MemoryStream(overlay3);
+						}
+
+						using (Bitmap tmp = new Bitmap(stream))
+						{
+							// https://jira.swisstopo.ch/browse/GOTOP-450
+							var bitmap = new Bitmap(tmp);
+							graphics.DrawImage(bitmap, destinationRectangle);
+						}
+
+						if (stream1 != null)
+						{
+							using (Bitmap tmp = new Bitmap(stream1))
+							{
+								var bitmap = new Bitmap(tmp);
+								graphics.DrawImage(bitmap, destinationRectangle);
+							}
+						}
+
+						if (stream2 != null)
+						{
+							using (Bitmap tmp = new Bitmap(stream2))
+							{
+								var bitmap = new Bitmap(tmp);
+								graphics.DrawImage(bitmap, destinationRectangle);
+							}
+						}
+
+						if (stream3 != null)
+						{
+							using (Bitmap tmp = new Bitmap(stream3))
+							{
+								var bitmap = new Bitmap(tmp);
+								graphics.DrawImage(bitmap, destinationRectangle);
+							}
+						}
+
+						using (Bitmap clone =
+						       result.Clone(destinationRectangle, result.PixelFormat))
+						{
+							var icon = new IconInfo();
+							GetIconInfo(clone.GetHicon(), ref icon);
+							icon.xHotspot = xHotspot;
+							icon.yHotspot = yHotspot;
+							icon.fIcon = false;
+
+							nint ptr = CreateIconIndirect(ref icon);
+
+							return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
+						}
+					}
+					finally
+					{
+						stream.Dispose();
+						stream1?.Dispose();
+						stream2?.Dispose();
+						stream3?.Dispose();
+					}
 				}
 			}
+			catch (Exception ex)
+			{
+				var info = new MemoryUsageInfo();
+				_msg.Debug($"PB: {info.PrivateBytes:N0}. {ex.Message}", ex);
 
-			var icon = new IconInfo();
-			GetIconInfo(result.GetHicon(), ref icon);
-			icon.xHotspot = xHotspot;
-			icon.yHotspot = yHotspot;
-			icon.fIcon = false;
-
-			nint ptr = CreateIconIndirect(ref icon);
-
-			return CursorInteropHelper.Create(new SafeIconHandle(ptr, true));
-		}
-
-		private static Image CreateImage(byte[] resource)
-		{
-			using var stream = new MemoryStream(resource);
-			return Image.FromStream(stream);
+				return Cursors.Cross;
+			}
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

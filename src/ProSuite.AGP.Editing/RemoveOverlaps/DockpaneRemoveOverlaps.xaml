@@ -25,12 +25,10 @@
         HorizontalAlignment="Left"
         VerticalAlignment="Top">
 
-
 	    <!-- Overlaps calculation -->
-	    <Label FontWeight="Medium" Content="Snapping and minimum segment length"/>
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Limit overlap calculation to current extent (not yet implemented)"
-		          DataContext="{Binding Options.CentralizableLimitOverlapCalculationToExtent}" />
+		          Content="Limit overlap calculation to current extent"
+		          DataContext="{Binding LimitOverlapCalculationToExtent}" />
 
         <!-- Calculate overlap areas with other -->
 		<Label FontWeight="Medium" Content="Calculate overlap areas with other" Margin="0,15,0,0"/>
@@ -45,11 +43,11 @@
 	    
 	    <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 	              Content="Explode multi-part result geometry into new features"
-	              DataContext="{Binding Options.CentralizableExplodeMultipartResults}" />
+	              DataContext="{Binding ExplodeMultipartResults}" />
         
 	    <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 	              Content="Insert vertices in target features for topological correctness"
-	              DataContext="{Binding Options.CentralizableInsertVerticesInTarget}" />
+	              DataContext="{Binding InsertVerticesInTarget}" />
 
 		<!-- Restore Defaults -->
 	    <Button Template="{StaticResource RestoreDefaultsButton}"

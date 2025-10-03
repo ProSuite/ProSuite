@@ -31,8 +31,25 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		[XmlElement("Row")]
 		public XmlGdbRowIdentity Row { get; set; }
 
+		[XmlElement("XMin")]
+		public double XMin { get; set; }
+
+		[XmlElement("XMax")]
+		public double XMax { get; set; }
+
+		[XmlElement("YMin")]
+		public double YMin { get; set; }
+
+		[XmlElement("YMax")]
+		public double YMax { get; set; }
+
 		// todo daro: replace with UUID as workspace id?
 		[XmlAttribute("connectionString")]
 		public string ConnectionString { get; set; }
+
+		public override string ToString()
+		{
+			return $"item id={OID}, row oid={Row.OID}, {Row.TableName}, {Status}, {Visited}";
+		}
 	}
 }

@@ -7,6 +7,8 @@ namespace ProSuite.Commons.AGP.Picker
 	{
 		List<BasicFeatureLayer> Layers { get; }
 
-		IReadOnlyList<long> Oids { get; }
+		ICollection<long> Oids { get; }
+
+		void AddOids(IEnumerable<long> oids);
 	}
 }

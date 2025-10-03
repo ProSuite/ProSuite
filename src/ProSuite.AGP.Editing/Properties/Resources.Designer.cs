@@ -141,16 +141,6 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap CutPolygonAlongTool {
-            get {
-                object obj = ResourceManager.GetObject("CutPolygonAlongTool", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] DestroyAndRebuildOverlay {
@@ -196,6 +186,26 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static byte[] Lasso {
             get {
                 object obj = ResourceManager.GetObject("Lasso", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] MergeFeaturesOverlay1 {
+            get {
+                object obj = ResourceManager.GetObject("MergeFeaturesOverlay1", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] MergeFeaturesOverlay2 {
+            get {
+                object obj = ResourceManager.GetObject("MergeFeaturesOverlay2", resourceCulture);
                 return ((byte[])(obj));
             }
         }

@@ -722,7 +722,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-			applyRequest.ChangedVerticesZSource = (int) ChangeAlongZSource.Target;
+			SetZSource(applyRequest, ChangeAlongZSource.Target);
 
 			ApplyCutLinesResponse applyResponse =
 				ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
@@ -754,7 +754,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-			applyRequest.ChangedVerticesZSource = (int) ChangeAlongZSource.InterpolatedSource;
+
+			SetZSource(applyRequest, ChangeAlongZSource.InterpolatedSource);
 
 			applyResponse = ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
 
@@ -795,7 +796,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			applyRequest.CutLines.Add(calculateResponse.CutLines[0]);
 			applyRequest.CalculationRequest = calculationRequest;
 			applyRequest.InsertVerticesInTarget = false;
-			applyRequest.ChangedVerticesZSource = (int) ChangeAlongZSource.SourcePlane;
+			SetZSource(applyRequest, ChangeAlongZSource.SourcePlane);
 
 			applyResponse = ChangeAlongServiceUtils.ApplyCutLines(applyRequest, null);
 
@@ -834,8 +835,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 					GeometryFactory.CreatePoint(2602000, 1202000));
 			cutFeature.Store();
 
-			var source1FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(source1Feature);
-			var source2FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(source2Feature);
+			var source1FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) source1Feature);
+			var source2FeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) source2Feature);
 
 			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(cutFeature);
 
@@ -1002,8 +1003,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		private static CalculateReshapeLinesRequest CreateCalculateReshapeLinesRequest(
 			GdbFeature sourceFeature, GdbFeature targetFeature)
 		{
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 
@@ -1074,6 +1075,18 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				default:
 					return -1;
 			}
+		}
+
+		private static void SetZSource(ApplyCutLinesRequest applyRequest,
+		                               ChangeAlongZSource zSource)
+		{
+			applyRequest.CalculationRequest.ZSources.Clear();
+
+			int intValue = (int) zSource;
+
+			var zSourceMsg = new DatasetZSource { ZSource = intValue };
+
+			applyRequest.CalculationRequest.ZSources.Add(zSourceMsg);
 		}
 	}
 }

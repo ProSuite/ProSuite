@@ -95,10 +95,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		}
 
 		[CanBeNull]
-		public static Model GetPrimaryModel(
+		public static DdxModel GetPrimaryModel(
 			[NotNull] QualitySpecification qualitySpecification)
 		{
-			var referenceCountByModel = new Dictionary<Model, int>();
+			var referenceCountByModel = new Dictionary<DdxModel, int>();
 
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
@@ -106,21 +106,21 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				foreach (Dataset dataset in condition.GetDatasetParameterValues(
 					         includeReferencedProcessors: true))
 				{
-					if (! referenceCountByModel.ContainsKey((Model) dataset.Model))
+					if (! referenceCountByModel.ContainsKey(dataset.Model))
 					{
-						referenceCountByModel.Add((Model) dataset.Model, 1);
+						referenceCountByModel.Add(dataset.Model, 1);
 					}
 					else
 					{
-						referenceCountByModel[(Model) dataset.Model]++;
+						referenceCountByModel[dataset.Model]++;
 					}
 				}
 			}
 
-			Model maxReferenceModel = null;
+			DdxModel maxReferenceModel = null;
 			var maxReferenceCount = 0;
 
-			foreach (KeyValuePair<Model, int> pair in referenceCountByModel)
+			foreach (KeyValuePair<DdxModel, int> pair in referenceCountByModel)
 			{
 				if (pair.Value <= maxReferenceCount)
 				{
@@ -303,7 +303,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			string reportFilePath = Path.Combine(directory, reportDefinition.FileName);
 
 			_msg.DebugFormat("Preparing html report model");
-			var reportModel = new HtmlReportModel(qualitySpecification,
+			var reportModel = new HtmlReportModel(qualitySpecification.Name,
 			                                      issueStatistics,
 			                                      verificationReport,
 			                                      directory,

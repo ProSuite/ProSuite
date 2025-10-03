@@ -264,7 +264,7 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		private static InstanceConfigurationMsg CreateInstanceConfigMsg<T>(
+		public static InstanceConfigurationMsg CreateInstanceConfigMsg<T>(
 			[NotNull] InstanceConfiguration instanceConfiguration,
 			[CanBeNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
 			[NotNull] IDictionary<int, DdxModel> usedModelsById)
@@ -557,7 +557,8 @@ namespace ProSuite.Microservices.Client.QA
 				                     End1CascadeDeleteOrphans =
 					                     association.End1.CascadeDeleteOrphans,
 				                     End2CascadeDeleteOrphans =
-					                     association.End2.CascadeDeleteOrphans
+					                     association.End2.CascadeDeleteOrphans,
+				                     ModelId = association.Model.Id
 			                     };
 
 			if (includeDetails)
@@ -600,7 +601,8 @@ namespace ProSuite.Microservices.Client.QA
 					AliasName = ProtobufGeomUtils.NullToEmpty(dataset.AliasName),
 					GeometryType = geometryType,
 					DatasetType = (int) dataset.DatasetType,
-					TypeCode = dataset.ImplementationType?.Id ?? 0
+					TypeCode = dataset.ImplementationType?.Id ?? 0,
+					ModelId = dataset.Model.Id
 				};
 
 			if (includeDetails)
@@ -619,6 +621,12 @@ namespace ProSuite.Microservices.Client.QA
 						datasetMsg.ObjectCategories.AddRange(ToObjectCategoryMsg(objectType));
 					}
 				}
+			}
+
+			if (dataset is ISpatialDataset spatialDataset)
+			{
+				datasetMsg.DefaultSymbology =
+					spatialDataset.DefaultLayerFile?.FileName ?? string.Empty;
 			}
 
 			return datasetMsg;
@@ -982,11 +990,17 @@ namespace ProSuite.Microservices.Client.QA
 					case FieldType.ShortInteger:
 						attributeValue.ShortIntValue = (int) valueObject;
 						break;
-					case FieldType.LongInteger:
-						attributeValue.LongIntValue = (int) valueObject;
+					case FieldType.Integer:
+						attributeValue.IntValue = (int) valueObject;
+						break;
+					case FieldType.BigInteger:
+						attributeValue.BigIntValue = (long) valueObject;
 						break;
 					case FieldType.Double:
 						attributeValue.DoubleValue = (double) valueObject;
+						break;
+					case FieldType.Float:
+						attributeValue.FloatValue = (float) valueObject;
 						break;
 					case FieldType.Text:
 						attributeValue.StringValue = (string) valueObject;
@@ -1054,8 +1068,11 @@ namespace ProSuite.Microservices.Client.QA
 				case AttributeValue.ValueOneofCase.ShortIntValue:
 					result = attributeValue.ShortIntValue;
 					break;
-				case AttributeValue.ValueOneofCase.LongIntValue:
-					result = attributeValue.LongIntValue;
+				case AttributeValue.ValueOneofCase.IntValue:
+					result = attributeValue.IntValue;
+					break;
+				case AttributeValue.ValueOneofCase.BigIntValue:
+					result = attributeValue.BigIntValue;
 					break;
 				case AttributeValue.ValueOneofCase.FloatValue:
 					result = attributeValue.FloatValue;

@@ -1,106 +1,120 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Contracts;
+
+public interface IWorkList : IRowCache, IWorkItemData
 {
-	public interface IWorkList : IRowCache, INotifyPropertyChanged
-	{
-		[NotNull]
-		string Name { get; set; }
+	WorkItemVisibility? Visibility { get; set; }
 
-		[NotNull]
-		string DisplayName { get; }
+	int CurrentIndex { get; }
 
-		[CanBeNull]
-		Envelope Extent { get; }
+	// TODO: daro hide?
+	IWorkItemRepository Repository { get; }
 
-		WorkItemVisibility Visibility { get; set; }
+	long? TotalCount { get; set; }
 
-		[CanBeNull]
-		Geometry AreaOfInterest { get; set; }
+	/// <summary>
+	/// Whether navigation to the current work item should be performed in all open map views.
+	/// </summary>
+	bool NavigateInAllMapViews { get; set; }
 
-		bool QueryLanguageSupported { get; }
+	/// <summary>
+	/// The minimum scale denominator, i.e. the maximum scale which should be applied when zooming
+	/// to a work item. The scale will also be determined by the item's display buffer distance.
+	/// </summary>
+	double MinimumScaleDenominator { get; set; }
 
-		[CanBeNull]
-		IWorkItem Current { get; }
+	/// <summary>
+	/// Allow the Worklist geometry service to calculate and set the work items' geometry
+	/// property to its buffered representation, if required.
+	/// NOTE: This service uses a background thread to access the items of the work list.
+	/// NOTE: This service therefore does not see up-to-date geometries.
+	/// </summary>
+	bool CacheBufferedItemGeometries { get; set; }
 
-		int CurrentIndex { get; set; }
+	/// <summary>
+	/// Whether the work items should always use the draft mode (envelope geometry). If false,
+	/// polyline and polygon geometries are buffered and provided in the
+	/// <see cref="IWorkItem.BufferedGeometry"/> property. If <see cref="CacheBufferedItemGeometries"/>
+	/// is true, all items are buffered, otherwise only the current item.
+	/// </summary>
+	bool AlwaysUseDraftMode { get; set; }
 
-		IWorkItemRepository Repository { get; }
+	/// <summary>
+	/// The buffer distance to be used to draw the display frame of the work items in the map.
+	/// </summary>
+	double ItemDisplayBufferDistance { get; set; }
 
-		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+	/// <summary>
+	/// The maximum number of items whose frame should be in the form of the buffered geometry.
+	/// </summary>
+	public int? MaxBufferedItemCount { get; set; }
 
-		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
-		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
-		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
-		/// <param name="startIndex"></param>
-		/// <returns></returns>
-		[NotNull]
-		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null,
-		                                bool ignoreListSettings = false,
-		                                int startIndex = -1);
+	/// <summary>
+	/// The maximum number of points per geometry to be used when buffering. Geometries that exceed
+	/// this number of points will not be buffered, but their envelope will be displayed instead.
+	/// </summary>
+	public int? MaxBufferedShapePointCount { get; set; }
 
-		int Count([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false);
+	event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
-		bool CanGoFirst();
+	long CountLoadedItems(out int todo);
 
-		void GoFirst();
+	bool CanGoFirst();
 
-		void GoTo(long oid);
+	void GoFirst();
 
-		bool CanGoNearest();
+	void GoTo(long oid);
 
-		void GoNearest([NotNull] Geometry reference,
-		               [CanBeNull] Predicate<IWorkItem> match = null,
-		               params Polygon[] contextPerimeters);
+	bool CanGoNearest();
 
-		bool CanGoNext();
+	void GoNearest([NotNull] Geometry reference,
+	               [CanBeNull] Predicate<IWorkItem> match = null,
+	               params Polygon[] contextPerimeters);
 
-		void GoNext();
+	bool CanGoNext();
 
-		bool CanGoPrevious();
+	void GoNext();
 
-		void GoPrevious();
+	bool CanGoPrevious();
 
-		bool CanSetStatus();
+	void GoPrevious();
 
-		void SetVisited([NotNull] IWorkItem item);
+	bool CanSetStatus();
 
-		void Commit();
+	//void SetVisited([NotNull] IWorkItem item);
+	void SetVisited(IList<IWorkItem> items, bool visited);
 
-		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
+	void Commit();
 
-		void RefreshItems();
+	Task SetStatusAsync([NotNull] IWorkItem item, WorkItemStatus status);
 
-		bool IsValid(out string message);
+	bool IsValid(out string message);
 
-		IAttributeReader GetAttributeReader(long forSourceClassId);
+	IAttributeReader GetAttributeReader(long forSourceClassId);
 
-		/// <summary>
-		/// Gets the current item's source row.
-		/// </summary>
-		/// <returns></returns>
-		[CanBeNull]
-		Row GetCurrentItemSourceRow();
+	void SetItemsGeometryDraftMode(bool enable);
 
-		/// <summary>
-		/// Ensures that the work list's row cache is synchronized with the underlying data store.
-		/// Edits to the associated source tables will be reflected in the row cache.
-		/// This is required for both the work list layer and the navigator to show the correct data.
-		/// </summary>
-		void EnsureRowCacheSynchronized();
+	void Rename(string name);
 
-		/// <summary>
-		/// Deactivate the synchronization of the work list's row cache with the underlying data store.
-		/// </summary>
-		void DeactivateRowCacheSynchronization();
+	void Invalidate(Envelope geometry);
 
-		Geometry GetItemGeometry(IWorkItem item);
+	void UpdateExistingItemGeometries(QueryFilter filter);
 
-		void SetItemsGeometryDraftMode(bool enable);
-	}
+	void Count();
+
+	Row GetCurrentItemSourceRow(bool readOnly = true);
+
+	/// <summary>
+	/// Loads all items using the current AOI and status settings.
+	/// </summary>
+	void LoadItems();
+
+	void LoadItems(QueryFilter filter,
+	               WorkItemStatus? statusFilter = null);
 }

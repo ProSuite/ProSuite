@@ -124,10 +124,13 @@ namespace ProSuite.Microservices.Client
 
 			try
 			{
+				_msg.VerboseDebug(() => $"Starting health check for {serviceName}...");
 				HealthCheckResponse healthResponse =
 					await healthClient
 					      .CheckAsync(new HealthCheckRequest() { Service = serviceName })
 					      .ConfigureAwait(false);
+
+				_msg.VerboseDebug(() => $"Health check for {serviceName} completed");
 
 				statusCode =
 					healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving
@@ -221,8 +224,8 @@ namespace ProSuite.Microservices.Client
 			return result;
 		}
 
-		private static CallOptions GetCallOptions(CancellationToken cancellationToken,
-		                                          int deadlineMilliseconds)
+		public static CallOptions GetCallOptions(CancellationToken cancellationToken,
+		                                         int deadlineMilliseconds)
 		{
 			CallOptions callOptions =
 				new CallOptions(null, DateTime.UtcNow.AddMilliseconds(deadlineMilliseconds),
@@ -255,7 +258,7 @@ namespace ProSuite.Microservices.Client
 				return default;
 			}
 
-			if (rpcException.StatusCode == StatusCode.DeadlineExceeded)	
+			if (rpcException.StatusCode == StatusCode.DeadlineExceeded)
 			{
 				Log("Operation timed out", noWarn);
 				return default;

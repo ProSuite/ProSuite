@@ -74,6 +74,11 @@ namespace ProSuite.Commons
 			_userNameProvider = userNameProvider;
 		}
 
+		public static IUserNameProvider GetUserNameProvider()
+		{
+			return _userNameProvider;
+		}
+
 		public static void SetUserEmailProvider([NotNull] IUserEmailProvider userEmailProvider)
 		{
 			Assert.ArgumentNotNull(userEmailProvider, nameof(userEmailProvider));

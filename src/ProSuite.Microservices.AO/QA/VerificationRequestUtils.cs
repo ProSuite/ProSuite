@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.QA;
@@ -13,6 +17,8 @@ namespace ProSuite.Microservices.AO.QA
 {
 	public static class VerificationRequestUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Creates the verification request using the specified work context message.
 		/// </summary>
@@ -117,6 +123,190 @@ namespace ProSuite.Microservices.AO.QA
 
 			request.Parameters.InvalidateExceptionsIfAnyInvolvedObjectChanged =
 				invalidateExceptionsIfAnyInvolvedObjectChanged;
+		}
+
+		public static ITableFilter CreateFilter([NotNull] IReadOnlyTable objectClass,
+		                                        [CanBeNull] string subFields,
+		                                        [CanBeNull] string whereClause,
+		                                        [CanBeNull] ShapeMsg searchGeometryMsg)
+		{
+			subFields = EnsureOIDFieldName(subFields, objectClass);
+
+			if (! (objectClass is IReadOnlyFeatureClass featureClass))
+			{
+				return CreateFilter(subFields, whereClause);
+			}
+
+			IGeometry searchGeometry = ProtobufGeometryUtils.FromShapeMsg(
+				searchGeometryMsg, featureClass.SpatialReference);
+
+			if (searchGeometry == null)
+			{
+				return CreateFilter(subFields, whereClause);
+			}
+
+			IFeatureClassFilter result = GdbQueryUtils.CreateFeatureClassFilter(searchGeometry);
+
+			SetSubfieldsAndWhereClause(result, subFields, whereClause);
+
+			return result;
+		}
+
+		public static string GetSubFieldForCounting(ITable objectClass,
+		                                            bool isRelQueryTable)
+		{
+			if (isRelQueryTable && objectClass is IFeatureClass featureClass)
+			{
+				// Workaround for TOP-4975: crash for certain joins/extents if OID field 
+				// (which was incorrectly changed by IName.Open()!) is used as only subfields field
+				// Note: when not crashing, the resulting row count was incorrect when that OID field was used.
+				return featureClass.ShapeFieldName;
+			}
+
+			return objectClass.OIDFieldName;
+		}
+
+		// TODO: Make obsolete, use other overload instead
+		public static GdbData ReadGdbData([NotNull] IReadOnlyTable roTable,
+		                                  [CanBeNull] ITableFilter filter,
+		                                  string subFields,
+		                                  long resultClassHandle)
+		{
+			GdbData featureData = new GdbData();
+
+			if (roTable is IReadOnlyFeatureClass fc)
+			{
+				_msg.VerboseDebug(() => $"{fc.Name} shape field is {fc.ShapeFieldName}");
+				_msg.VerboseDebug(() => $"{fc.Name} object id field is {fc.OIDFieldName}");
+			}
+
+			foreach (IReadOnlyRow row in roTable.EnumRows(filter, true))
+			{
+				try
+				{
+					GdbObjectMsg objectMsg =
+						ProtobufGdbUtils.ToGdbObjectMsg(row, false, true, subFields);
+
+					objectMsg.ClassHandle = resultClassHandle;
+
+					featureData.GdbObjects.Add(objectMsg);
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error converting {GdbObjectUtils.ToString(row)} to object message",
+					           e);
+					throw;
+				}
+			}
+
+			// Later, we could break up into several messages, if the total size gets too large
+			return featureData;
+		}
+
+		public static IEnumerable<GdbData> ReadGdbData([NotNull] IReadOnlyTable roTable,
+		                                               [CanBeNull] ITableFilter filter,
+		                                               string subFields,
+		                                               long resultClassHandle,
+		                                               long maxRowCount,
+		                                               bool countOnly)
+		{
+			GdbData featureData = new GdbData();
+
+			if (roTable is IReadOnlyFeatureClass fc)
+			{
+				_msg.VerboseDebug(() => $"{fc.Name} shape field is {fc.ShapeFieldName}");
+				_msg.VerboseDebug(() => $"{fc.Name} object id field is {fc.OIDFieldName}");
+			}
+
+			if (countOnly)
+			{
+				featureData.GdbObjectCount = roTable.RowCount(filter);
+
+				yield return featureData;
+				yield break;
+			}
+
+			long rowCount = 0;
+
+			foreach (IReadOnlyRow row in roTable.EnumRows(filter, true))
+			{
+				try
+				{
+					GdbObjectMsg objectMsg =
+						ProtobufGdbUtils.ToGdbObjectMsg(row, false, true, subFields);
+
+					objectMsg.ClassHandle = resultClassHandle;
+
+					featureData.GdbObjects.Add(objectMsg);
+
+					rowCount++;
+				}
+				catch (Exception e)
+				{
+					_msg.Debug($"Error converting {GdbObjectUtils.ToString(row)} to object message",
+					           e);
+					throw;
+				}
+
+				if (rowCount % maxRowCount == 0)
+				{
+					_msg.VerboseDebug(
+						() => $"Read {rowCount} rows from {roTable.Name} (max {maxRowCount})");
+					featureData.HasMoreData = true;
+
+					yield return featureData;
+
+					featureData = new GdbData(); // reset for next batch
+				}
+			}
+
+			// Later, we could break up into several messages, if the total size gets too large
+			yield return featureData;
+		}
+
+		private static string EnsureOIDFieldName(string subFields, IReadOnlyTable objectClass)
+		{
+			if (string.IsNullOrEmpty(subFields))
+			{
+				return subFields;
+			}
+
+			if (subFields.Contains("*"))
+			{
+				return subFields;
+			}
+
+			if (objectClass.HasOID && ! subFields.Contains(objectClass.OIDFieldName))
+			{
+				return objectClass.OIDFieldName + "," + subFields;
+			}
+
+			return subFields;
+		}
+
+		private static ITableFilter CreateFilter([CanBeNull] string subFields,
+		                                         [CanBeNull] string whereClause)
+		{
+			ITableFilter result = new AoTableFilter();
+
+			SetSubfieldsAndWhereClause(result, subFields, whereClause);
+
+			return result;
+		}
+
+		private static void SetSubfieldsAndWhereClause([NotNull] ITableFilter result,
+		                                               [CanBeNull] string subFields,
+		                                               [CanBeNull] string whereClause)
+		{
+			if (! string.IsNullOrEmpty(subFields))
+			{
+				result.SubFields = subFields;
+			}
+
+			if (! string.IsNullOrEmpty(whereClause))
+			{
+				result.WhereClause = whereClause;
+			}
 		}
 	}
 }

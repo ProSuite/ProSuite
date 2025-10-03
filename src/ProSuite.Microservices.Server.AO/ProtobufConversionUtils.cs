@@ -56,34 +56,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
-		private static IDictionary<long, GdbFeatureClass> CreateGdbClassByHandleDictionary(
-			[NotNull] ICollection<ObjectClassMsg> objectClassMsgs)
-		{
-			var result = new Dictionary<long, GdbFeatureClass>();
-
-			// Create minimal workspace (for equality comparisons)
-			var workspaces = new Dictionary<long, GdbWorkspace>();
-
-			foreach (ObjectClassMsg classMsg in objectClassMsgs)
-			{
-				if (! workspaces.TryGetValue(classMsg.WorkspaceHandle, out GdbWorkspace workspace))
-				{
-					workspace = GdbWorkspace.CreateEmptyWorkspace(classMsg.WorkspaceHandle);
-					workspaces.Add(classMsg.WorkspaceHandle, workspace);
-				}
-
-				if (! result.ContainsKey(classMsg.ClassHandle))
-				{
-					GdbFeatureClass gdbTable =
-						(GdbFeatureClass) FromObjectClassMsg(classMsg, workspace);
-
-					result.Add(classMsg.ClassHandle, gdbTable);
-				}
-			}
-
-			return result;
-		}
-
+		[NotNull]
 		public static IList<IFeature> FromGdbObjectMsgList(
 			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
 			[NotNull] GdbTableContainer container)
@@ -104,6 +77,15 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		/// <summary>
+		/// Creates a GdbTableContainer from the provided object class messages which represent DDX datasets.
+		/// The workspace handle is typically the DDX model ID, with a fall-back to the workspace handle.
+		/// </summary>
+		/// <param name="objectClassMessages"></param>
+		/// <param name="getRemoteDataFunc"></param>
+		/// <param name="workspace"></param>
+		/// <returns></returns>
+		[NotNull]
 		public static GdbTableContainer CreateGdbTableContainer(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] Func<DataVerificationResponse, DataVerificationRequest> getRemoteDataFunc,
@@ -115,9 +97,13 @@ namespace ProSuite.Microservices.Server.AO
 
 			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)
 			{
+				// TODO: Consider switching to actual workspace handle (and map via DataSourceMsg).
+				//       DdxModelId == 0 means not set
+				long workspaceHandleFromClient = GetContainerHandle(objectClassMsg);
+
 				if (workspaceHandle == null)
 				{
-					workspaceHandle = objectClassMsg.WorkspaceHandle;
+					workspaceHandle = workspaceHandleFromClient;
 
 					container = new GdbTableContainer();
 
@@ -125,11 +111,11 @@ namespace ProSuite.Microservices.Server.AO
 				}
 				else
 				{
-					Assert.AreEqual(workspaceHandle, objectClassMsg.WorkspaceHandle,
+					Assert.AreEqual(workspaceHandle, workspaceHandleFromClient,
 					                "Not all features are from the same workspace");
 				}
 
-				if (objectClassMsg.WorkspaceHandle == -1)
+				if (workspaceHandleFromClient == -1)
 				{
 					workspace = null;
 				}
@@ -143,7 +129,7 @@ namespace ProSuite.Microservices.Server.AO
 						                  new ClassDef
 						                  {
 							                  ClassHandle = objectClassMsg.ClassHandle,
-							                  WorkspaceHandle = objectClassMsg.WorkspaceHandle
+							                  WorkspaceHandle = workspaceHandleFromClient
 						                  });
 				}
 
@@ -153,9 +139,29 @@ namespace ProSuite.Microservices.Server.AO
 				container.TryAdd(gdbTable);
 			}
 
-			return container;
+			return Assert.NotNull(container, "No objectClassMessages provided");
 		}
 
+		/// <summary>
+		/// Returns the DDX model ID if set, otherwise the workspace handle.
+		/// </summary>
+		/// <param name="objectClassMsg"></param>
+		/// <returns></returns>
+		private static long GetContainerHandle(ObjectClassMsg objectClassMsg)
+		{
+			return objectClassMsg.DdxModelId != 0
+				       ? objectClassMsg.DdxModelId
+				       : objectClassMsg.WorkspaceHandle;
+		}
+
+		/// <summary>
+		/// Creates a GdbWorkspace from the provided workspace message and object class messages
+		/// which represent actual Gdb datasets. The DdxModelId is not used here.
+		/// </summary>
+		/// <param name="workspaceMessage"></param>
+		/// <param name="objectClassMessages"></param>
+		/// <returns></returns>
+		[NotNull]
 		public static GdbWorkspace CreateGdbWorkspace(
 			[NotNull] WorkspaceMsg workspaceMessage,
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages)
@@ -191,14 +197,15 @@ namespace ProSuite.Microservices.Server.AO
 			return gdbWorkspace;
 		}
 
+		[NotNull]
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] ICollection<ObjectClassMsg> relClassMessages = null,
 			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest = null)
 		{
 			var result = new List<GdbWorkspace>();
-			foreach (IGrouping<long, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
-				         c => c.WorkspaceHandle))
+			foreach (IGrouping<long, ObjectClassMsg> classGroup in
+			         objectClassMessages.GroupBy(GetContainerHandle))
 			{
 				GdbTableContainer gdbTableContainer =
 					CreateGdbTableContainer(classGroup, moreDataRequest,
@@ -213,7 +220,7 @@ namespace ProSuite.Microservices.Server.AO
 
 				foreach (ObjectClassMsg relTableMsg
 				         in relClassMessages.Where(
-					         r => r.WorkspaceHandle == gdbWorkspace.WorkspaceHandle))
+					         r => GetContainerHandle(r) == gdbWorkspace.WorkspaceHandle))
 				{
 					GdbTable relClassTable = FromObjectClassMsg(relTableMsg, gdbWorkspace);
 
@@ -224,6 +231,14 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		/// <summary>
+		/// Creates a GdbWorkspaces from the provided workspace message and object class messages
+		/// which represent actual Gdb datasets. The DdxModelId is never used here.
+		/// </summary>
+		/// <param name="objectClassMessages"></param>
+		/// <param name="workspaceMessages"></param>
+		/// <returns></returns>
+		[NotNull]
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[NotNull] ICollection<WorkspaceMsg> workspaceMessages)
@@ -246,6 +261,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static GdbTable FromObjectClassMsg(
 			[NotNull] ObjectClassMsg objectClassMsg,
 			[CanBeNull] IWorkspace workspace,
@@ -277,10 +293,14 @@ namespace ProSuite.Microservices.Server.AO
 				if (objectClassMsg.Fields == null || objectClassMsg.Fields.Count == 0)
 				{
 					// The shape field can be important to determine Z/M awareness, etc:
-					bool hasZ = result.SpatialReference.HasZPrecision();
-					bool hasM = result.SpatialReference.HasMPrecision();
+					ISpatialReference spatialReference = result.SpatialReference;
+
+					Assert.NotNull(spatialReference, "No spatial reference provided");
+
+					bool hasZ = spatialReference.HasZPrecision();
+					bool hasM = spatialReference.HasMPrecision();
 					IField shapeField = FieldUtils.CreateShapeField(
-						result.ShapeFieldName, geometryType, result.SpatialReference,
+						result.ShapeFieldName, geometryType, spatialReference,
 						0d, hasZ, hasM);
 
 					result.AddField(shapeField);
@@ -292,6 +312,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static GdbTable FromQueryTableMsg(
 			[NotNull] ObjectClassMsg objectClassMsg,
 			[NotNull] IWorkspace workspace,
@@ -326,6 +347,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		[NotNull]
 		public static GdbFeature FromGdbFeatureMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
 			[NotNull] Func<GdbFeatureClass> getClass)
@@ -340,7 +362,8 @@ namespace ProSuite.Microservices.Server.AO
 
 		public static GdbRow FromGdbObjectMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
-			[NotNull] GdbTable table)
+			[NotNull] GdbTable table,
+			[CanBeNull] List<int> fieldIndexesToReturn = null)
 		{
 			GdbRow result;
 			if (table is GdbFeatureClass featureClass)
@@ -352,7 +375,7 @@ namespace ProSuite.Microservices.Server.AO
 				result = new GdbRow((int) gdbObjectMsg.ObjectId, table);
 			}
 
-			ReadMsgValues(gdbObjectMsg, result, table);
+			ReadMsgValues(gdbObjectMsg, result, table, fieldIndexesToReturn);
 
 			return result;
 		}
@@ -410,10 +433,40 @@ namespace ProSuite.Microservices.Server.AO
 			return specificationElement;
 		}
 
+		[NotNull]
+		private static IDictionary<long, GdbFeatureClass> CreateGdbClassByHandleDictionary(
+			[NotNull] ICollection<ObjectClassMsg> objectClassMsgs)
+		{
+			var result = new Dictionary<long, GdbFeatureClass>();
+
+			// Create minimal workspace (for equality comparisons)
+			var workspaces = new Dictionary<long, GdbWorkspace>();
+
+			foreach (ObjectClassMsg classMsg in objectClassMsgs)
+			{
+				if (! workspaces.TryGetValue(classMsg.WorkspaceHandle, out GdbWorkspace workspace))
+				{
+					workspace = GdbWorkspace.CreateEmptyWorkspace(classMsg.WorkspaceHandle);
+					workspaces.Add(classMsg.WorkspaceHandle, workspace);
+				}
+
+				if (! result.ContainsKey(classMsg.ClassHandle))
+				{
+					GdbFeatureClass gdbTable =
+						(GdbFeatureClass) FromObjectClassMsg(classMsg, workspace);
+
+					result.Add(classMsg.ClassHandle, gdbTable);
+				}
+			}
+
+			return result;
+		}
+
+		[NotNull]
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
 		                                           GdbFeatureClass featureClass)
 		{
-			GdbFeature result = GdbFeature.Create((int) gdbObjectMsg.ObjectId, featureClass);
+			GdbFeature result = GdbFeature.Create(gdbObjectMsg.ObjectId, featureClass);
 
 			ShapeMsg shapeBuffer = gdbObjectMsg.Shape;
 
@@ -474,20 +527,31 @@ namespace ProSuite.Microservices.Server.AO
 			}
 		}
 
-		private static void ReadMsgValues(GdbObjectMsg gdbObjectMsg, GdbRow intoResult,
-		                                  ITable table)
+		private static void ReadMsgValues([NotNull] GdbObjectMsg gdbObjectMsg,
+		                                  [NotNull] GdbRow intoResult,
+		                                  [NotNull] ITable table,
+		                                  [CanBeNull] List<int> valueFields = null)
 		{
 			if (gdbObjectMsg.Values.Count == 0)
 			{
 				return;
 			}
 
-			Assert.AreEqual(table.Fields.FieldCount, gdbObjectMsg.Values.Count,
-			                "GdbObject message values do not correspond to table schema");
-
-			for (var index = 0; index < gdbObjectMsg.Values.Count; index++)
+			if (valueFields == null)
 			{
-				AttributeValue attributeValue = gdbObjectMsg.Values[index];
+				Assert.AreEqual(table.Fields.FieldCount, gdbObjectMsg.Values.Count,
+				                "GdbObject message values do not correspond to table schema");
+			}
+
+			for (var valueIndex = 0; valueIndex < gdbObjectMsg.Values.Count; valueIndex++)
+			{
+				int fieldIndex = valueIndex;
+				if (valueFields != null)
+				{
+					fieldIndex = valueFields[valueIndex];
+				}
+
+				AttributeValue attributeValue = gdbObjectMsg.Values[valueIndex];
 
 				object valueObj = ProtoDataQualityUtils.FromAttributeValue(attributeValue);
 
@@ -499,7 +563,7 @@ namespace ProSuite.Microservices.Server.AO
 
 				if (valueObj != null)
 				{
-					intoResult.set_Value(index, valueObj);
+					intoResult.set_Value(fieldIndex, valueObj);
 				}
 			}
 		}

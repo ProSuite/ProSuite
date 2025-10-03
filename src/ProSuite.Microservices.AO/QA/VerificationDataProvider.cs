@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
-using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -191,7 +190,7 @@ namespace ProSuite.Microservices.AO.QA
 				ProtobufGdbUtils.ToRelationshipClassMsg(relationshipClass);
 
 			// The currency for workspace handles in QA is the model ID.
-			relTableMsg.WorkspaceHandle = association.Model.Id;
+			relTableMsg.DdxModelId = association.Model.Id;
 
 			result.RelclassDefinitions.Add(relTableMsg);
 
@@ -246,7 +245,7 @@ namespace ProSuite.Microservices.AO.QA
 				                                  true, DatasetUtils.GetAliasName(objectClass));
 
 			// The currency for workspace handles in QA is the model ID.
-			objectClassMsg.WorkspaceHandle = objectDataset.Model.Id;
+			objectClassMsg.DdxModelId = objectDataset.Model.Id;
 
 			AddTable(objectClassMsg, (ITable) objectClass, result);
 		}
@@ -261,10 +260,11 @@ namespace ProSuite.Microservices.AO.QA
 
 		private static ClassDef CreateClassDef(ObjectClassMsg objectClassMsg)
 		{
+			// NOTE: We are using the model ID as the workspace handle here (DDX-verification)
 			return new ClassDef
 			       {
 				       ClassHandle = objectClassMsg.ClassHandle,
-				       WorkspaceHandle = objectClassMsg.WorkspaceHandle
+				       WorkspaceHandle = objectClassMsg.DdxModelId
 			       };
 		}
 
@@ -289,63 +289,38 @@ namespace ProSuite.Microservices.AO.QA
 					throw new ArgumentOutOfRangeException();
 			}
 
-			IQueryFilter filter = CreateFilter(table, dataRequest.SubFields,
-			                                   dataRequest.WhereClause, dataRequest.SearchGeometry);
+			IReadOnlyTable roTable = ReadOnlyTableFactory.Create(table);
 
-			GdbData featureData = new GdbData();
+			ITableFilter filter = VerificationRequestUtils.CreateFilter(
+				roTable, dataRequest.SubFields, dataRequest.WhereClause,
+				dataRequest.SearchGeometry);
 
 			if (dataRequest.CountOnly)
 			{
 				filter.SubFields =
-					GetSubFieldForCounting(table, dataRequest.RelQueryDef != null);
+					VerificationRequestUtils.GetSubFieldForCounting(
+						table, dataRequest.RelQueryDef != null);
 
-				featureData.GdbObjectCount = GdbQueryUtils.Count(table, filter);
+				GdbData featureData = new GdbData
+				                      {
+					                      GdbObjectCount = roTable.RowCount(filter)
+				                      };
+
+				return featureData;
 			}
-			else
+
+			long classHandle = -1;
+			if (table is IObjectClass objectClass)
 			{
-				if (table is IFeatureClass fc)
-				{
-					_msg.VerboseDebug(
-						() => $"{DatasetUtils.GetName(fc)} shape field is {fc.ShapeFieldName}");
-					_msg.VerboseDebug(
-						() => $"{DatasetUtils.GetName(fc)} object id field is {fc.OIDFieldName}");
-				}
-
-				long classHandle = -1;
-				if (table is IObjectClass objectClass)
-				{
-					classHandle = objectClass.ObjectClassID;
-				}
-				else if (table is IRelationshipClass relClass)
-				{
-					classHandle = relClass.RelationshipClassID;
-				}
-
-				foreach (IRow row in GdbQueryUtils.GetRows(table, filter, true))
-				{
-					try
-					{
-						GdbObjectMsg objectMsg =
-							ProtobufGdbUtils.ToGdbObjectMsg(
-								row, false, true, dataRequest.SubFields);
-
-						objectMsg.ClassHandle = classHandle;
-
-						featureData.GdbObjects.Add(objectMsg);
-					}
-					catch (Exception e)
-					{
-						_msg.Debug(
-							$"Error converting {GdbObjectUtils.ToString(row)} to object message",
-							e);
-						throw;
-					}
-				}
-
-				// Later, we could break up into several messages, if the total size gets too large
+				classHandle = objectClass.ObjectClassID;
+			}
+			else if (table is IRelationshipClass relClass)
+			{
+				classHandle = relClass.RelationshipClassID;
 			}
 
-			return featureData;
+			return VerificationRequestUtils.ReadGdbData(
+				roTable, filter, dataRequest.SubFields, classHandle);
 		}
 
 		private ITable GetQueryTable(RelationshipClassQuery queryDef)
@@ -376,94 +351,6 @@ namespace ProSuite.Microservices.AO.QA
 
 			throw new InvalidOperationException(
 				$"Class {classDef.ClassHandle} in model {classDef.WorkspaceHandle} is not part of the known schema.");
-		}
-
-		private static IQueryFilter CreateFilter([NotNull] ITable objectClass,
-		                                         [CanBeNull] string subFields,
-		                                         [CanBeNull] string whereClause,
-		                                         [CanBeNull] ShapeMsg searchGeometryMsg)
-		{
-			subFields = EnsureOIDFieldName(subFields, objectClass);
-
-			IFeatureClass featureClass = objectClass as IFeatureClass;
-
-			if (featureClass == null)
-			{
-				return CreateFilter(subFields, whereClause);
-			}
-
-			IGeometry searchGeometry = ProtobufGeometryUtils.FromShapeMsg(
-				searchGeometryMsg, DatasetUtils.GetSpatialReference(featureClass));
-
-			if (searchGeometry == null)
-			{
-				return CreateFilter(subFields, whereClause);
-			}
-
-			IQueryFilter result = GdbQueryUtils.CreateSpatialFilter(featureClass, searchGeometry);
-
-			SetSubfieldsAndWhereClause(result, subFields, whereClause);
-
-			return result;
-		}
-
-		private static string EnsureOIDFieldName(string subFields, ITable objectClass)
-		{
-			if (string.IsNullOrEmpty(subFields))
-			{
-				return subFields;
-			}
-
-			if (subFields.Contains("*"))
-			{
-				return subFields;
-			}
-
-			if (objectClass.HasOID && ! subFields.Contains(objectClass.OIDFieldName))
-			{
-				return objectClass.OIDFieldName + "," + subFields;
-			}
-
-			return subFields;
-		}
-
-		private static IQueryFilter CreateFilter([CanBeNull] string subFields,
-		                                         [CanBeNull] string whereClause)
-		{
-			IQueryFilter result = new QueryFilterClass();
-
-			SetSubfieldsAndWhereClause(result, subFields, whereClause);
-
-			return result;
-		}
-
-		private static string GetSubFieldForCounting(ITable objectClass,
-		                                             bool isRelQueryTable)
-		{
-			if (isRelQueryTable && objectClass is IFeatureClass featureClass)
-			{
-				// Workaround for TOP-4975: crash for certain joins/extents if OID field 
-				// (which was incorrectly changed by IName.Open()!) is used as only subfields field
-				// Note: when not crashing, the resulting row count was incorrect when that OID field was used.
-				return featureClass.ShapeFieldName;
-			}
-
-			return objectClass.OIDFieldName;
-		}
-
-		private static void SetSubfieldsAndWhereClause([NotNull] IQueryFilter result,
-		                                               [CanBeNull] string subFields,
-		                                               [CanBeNull] string whereClause)
-		{
-			if (! string.IsNullOrEmpty(subFields))
-			{
-				result.SubFields = subFields;
-			}
-
-			if (! string.IsNullOrEmpty(whereClause))
-			{
-				result.WhereClause = whereClause;
-			}
 		}
 
 		#endregion

@@ -32,7 +32,7 @@ namespace ProSuite.QA.Container.TestSupport
 		public bool IsFulfilled([NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
-			Assert.ArgumentCondition(row.Table == _table, "table does not match");
+			Assert.ArgumentCondition(row.Table.Equals(_table), "table does not match");
 
 			return _tableView?.MatchesConstraint(row) ?? _undefinedConstraintIsFulfilled;
 		}

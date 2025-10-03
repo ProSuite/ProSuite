@@ -41,7 +41,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public static bool CanOpenFromMasterDatabase([NotNull] IDdxDataset dataset)
 		{
-			Model model = dataset.Model as Model;
+			DdxModel model = dataset.Model;
 
 			if (model == null)
 			{
@@ -54,7 +54,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			IWorkspaceContext masterDatabaseWorkspaceContext =
-				model.MasterDatabaseWorkspaceContext;
+				model.GetMasterDatabaseWorkspaceContext();
 
 			if (masterDatabaseWorkspaceContext == null)
 			{
@@ -165,16 +165,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// if it is not accessible.
 		/// </summary>
 		/// <param name="modelElement"></param>
-		/// <param name="allowAlways">Whether it the context shall be used even if the model is
-		/// configured as 'Schema only'.</param>
-		/// <returns></returns>
+		/// <param name="allowAlways">Whether the context shall be used
+		/// even if the model is configured as 'Schema only'.</param>
 		[CanBeNull]
 		public static IWorkspaceContext GetMasterDatabaseWorkspaceContext(
 			[NotNull] IModelElement modelElement, bool allowAlways = false)
 		{
 			Assert.ArgumentNotNull(modelElement, nameof(modelElement));
 
-			Model model = modelElement.Model as Model;
+			DdxModel model = modelElement.Model;
 
 			if (model == null)
 			{
@@ -186,7 +185,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			return model.MasterDatabaseWorkspaceContext;
+			return model.GetMasterDatabaseWorkspaceContext();
 		}
 
 		/// <summary>
@@ -194,9 +193,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// if it is not accessible.
 		/// </summary>
 		/// <param name="modelElement"></param>
-		/// <param name="allowAlways">Whether it the context shall be used even if the model is
-		/// configured as 'Schema only'.</param>
-		/// <returns></returns>
+		/// <param name="allowAlways">Whether the context shall be used
+		/// even if the model is configured as 'Schema only'.</param>
 		/// <exception cref="InvalidOperationException"></exception>
 		[NotNull]
 		public static IWorkspaceContext GetAccessibleMasterDatabaseWorkspaceContext(
@@ -204,7 +202,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(modelElement, nameof(modelElement));
 
-			if (! (modelElement.Model is Model model))
+			if (! (modelElement.Model is DdxModel model))
 			{
 				throw new InvalidOperationException($"{modelElement.Name} has no model");
 			}
@@ -302,11 +300,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 		                                           [NotNull] string gdbDatasetName,
 		                                           [NotNull] IObjectDataset dataset)
 		{
-			Model model = (Model) dataset.Model;
-
 			return OpenObjectClass(workspace, gdbDatasetName,
 			                       dataset.GetAttribute(AttributeRole.ObjectID)?.Name,
-			                       model.SpatialReferenceDescriptor);
+			                       dataset.Model.SpatialReferenceDescriptor);
 		}
 
 		[NotNull]
@@ -378,7 +374,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (hasDubiousOid)
 			{
-				if (StringUtils.IsNotEmpty(oidFieldName))
+				if (StringUtils.IsNotEmpty(oidFieldName) &&
+					queryDescription.Fields.FindField(oidFieldName) >= 0)
 				{
 					_msg.DebugFormat("Opening {0} as view, using configured OID field {1}",
 					                 gdbDatasetName, oidFieldName);
@@ -400,7 +397,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (hasUnknownSref && queryDescription.IsSpatialQuery)
 			{
-				queryDescription.SpatialReference = spatialReferenceDescriptor?.SpatialReference;
+				queryDescription.SpatialReference =
+					spatialReferenceDescriptor?.GetSpatialReference();
 			}
 
 			string queryLayerName = null;

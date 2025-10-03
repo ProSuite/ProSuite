@@ -5,14 +5,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
@@ -32,9 +30,14 @@ namespace ProSuite.AGP.Editing.Cracker
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private CrackerToolOptions _crackerToolOptions;
-		private OverridableSettingsProvider<PartialCrackerToolOptions> _settingsProvider;
+
+		private OverridableSettingsProvider<PartialCrackerOptions> _settingsProvider;
+
 		private CrackerResult _resultCrackPoints;
+
 		private CrackerFeedback _feedback;
+
+		private Envelope _calculationExtent;
 
 		protected CrackerToolBase()
 		{
@@ -44,15 +47,18 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected string OptionsFileName => "CrackerToolOptions.xml";
 
 		[CanBeNull]
+
 		protected virtual string OptionsDockPaneID => null;
 
 		[CanBeNull]
+
 		protected virtual string CentralConfigDir => null;
 
 		/// <summary>
 		/// By default, the local configuration directory shall be in
 		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
 		/// </summary>
+
 		protected virtual string LocalConfigDir
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 				AppDataFolder.Roaming, "ToolDefaults");
@@ -62,8 +68,15 @@ namespace ProSuite.AGP.Editing.Cracker
 			Enabled = MicroserviceClient != null;
 
 			if (MicroserviceClient == null)
+
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
+
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.CrackerOverlay);
+
+		protected override SelectionCursors SecondPhaseCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.CrackerOverlay);
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
@@ -79,18 +92,10 @@ namespace ProSuite.AGP.Editing.Cracker
 			_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
 
 			_feedback?.DisposeOverlays();
+
 			_feedback = null;
 
 			HideOptionsPane();
-		}
-
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
-		{
-			bool result = base.OnMapSelectionChangedCore(args);
-
-			//_vertexLabels.UpdateLabels();
-
-			return result;
 		}
 
 		protected override void LogPromptForSelection()
@@ -108,12 +113,17 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
+			// Store current map extent
+
+			_calculationExtent = ActiveMapView.Extent;
+
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
 
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
 				_msg.Warn("Calculation of crack points was cancelled.");
+
 				return;
 			}
 
@@ -125,16 +135,13 @@ namespace ProSuite.AGP.Editing.Cracker
 			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
 				_msg.Warn("Calculation of crack points was cancelled.");
+
 				return;
 			}
 
-			//// TODO: Options
-			//bool insertVerticesInTarget = true;
-			//_overlappingFeatures = insertVerticesInTarget
-			//	                       ? intersectingFeatures
-			//	                       : null;
-
 			_feedback.Update(_resultCrackPoints, selectedFeatures);
+
+			_feedback.UpdateExtent(_calculationExtent);
 		}
 
 		protected override bool CanUseDerivedGeometries()
@@ -142,21 +149,33 @@ namespace ProSuite.AGP.Editing.Cracker
 			return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
 		}
 
-		protected override void ToggleVertices()
-		{
-			base.ToggleVertices();
+		// TODO: Show/hide Vertex labels, maybe impl on TopologicalCrackingToolBase / Shortcut T
 
-			try
-			{
-				//_vertexLabels.Toggle();
+		//protected override void ToggleVertices()
 
-				//_vertexLabels.UpdateLabels();
-			}
-			catch (Exception ex)
-			{
-				_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
-			}
-		}
+		//{
+
+		//	base.ToggleVertices();
+
+		//	try
+
+		//	{
+
+		//		//_vertexLabels.Toggle();
+
+		//		//_vertexLabels.UpdateLabels();
+
+		//	}
+
+		//	catch (Exception ex)
+
+		//	{
+
+		//		_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
+
+		//	}
+
+		//}
 
 		protected override async Task<bool> SelectAndProcessDerivedGeometry(
 			Dictionary<MapMember, List<long>> selection,
@@ -200,7 +219,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			{
 				Feature originalFeature = resultFeature.OriginalFeature;
 				Geometry updatedGeometry = resultFeature.NewGeometry;
-
 				if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
 				{
 					continue;
@@ -215,11 +233,8 @@ namespace ProSuite.AGP.Editing.Cracker
 			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
 				             editContext =>
 				             {
-					             _msg.DebugFormat("Saving {0} updates...",
-					                              updates.Count);
-
+					             _msg.DebugFormat("Saving {0} updates...", updates.Count);
 					             GdbPersistenceUtils.UpdateTx(editContext, updates);
-
 					             return true;
 				             },
 				             "Crack feature(s)", datasets);
@@ -229,6 +244,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			CalculateDerivedGeometries(currentSelection, progressor);
 
 			// TODO:
+
 			//_vertexLabels.UpdateLabels();
 
 			return saved;
@@ -237,6 +253,9 @@ namespace ProSuite.AGP.Editing.Cracker
 		protected override void ResetDerivedGeometries()
 		{
 			_resultCrackPoints = null;
+
+			_calculationExtent = null;
+
 			_feedback.DisposeOverlays();
 		}
 
@@ -267,6 +286,7 @@ namespace ProSuite.AGP.Editing.Cracker
 				_msg.DebugFormat("{0}: {1}",
 				                 GdbObjectUtils.ToString(originalFeature),
 				                 warning);
+
 				return false;
 			}
 
@@ -289,14 +309,17 @@ namespace ProSuite.AGP.Editing.Cracker
 			Stopwatch watch = _msg.DebugStartTiming();
 
 			// NOTE: by only reading the file locations we can save a couple of 100ms
+
 			string currentCentralConfigDir = CentralConfigDir;
+
 			string currentLocalConfigDir = LocalConfigDir;
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-			_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerToolOptions>(
+
+			_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialCrackerToolOptions localConfiguration, centralConfiguration;
+			PartialCrackerOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
@@ -305,6 +328,7 @@ namespace ProSuite.AGP.Editing.Cracker
 			                                    localConfiguration);
 
 			result.PropertyChanged -= _crackerToolOptions_PropertyChanged;
+
 			result.PropertyChanged += _crackerToolOptions_PropertyChanged;
 
 			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
@@ -321,12 +345,16 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		private void _crackerToolOptions_PropertyChanged(object sender,
 		                                                 PropertyChangedEventArgs eventArgs)
+
 		{
 			try
+
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
+
 			catch (Exception e)
+
 			{
 				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
 			}
@@ -336,8 +364,10 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		[CanBeNull]
 		private DockPaneCrackerViewModelBase GetCrackerViewModel()
+
 		{
 			if (OptionsDockPaneID == null)
+
 			{
 				return null;
 			}
@@ -351,10 +381,12 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		protected override void ShowOptionsPane()
+
 		{
 			var viewModel = GetCrackerViewModel();
 
 			if (viewModel == null)
+
 			{
 				return;
 			}
@@ -365,8 +397,10 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		protected override void HideOptionsPane()
+
 		{
 			var viewModel = GetCrackerViewModel();
+
 			viewModel?.Hide();
 		}
 
@@ -375,8 +409,10 @@ namespace ProSuite.AGP.Editing.Cracker
 		#region Search target features
 
 		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
+
 		{
 			if (featureLayer?.GetFeatureClass() == null)
+
 			{
 				return false;
 			}
@@ -389,10 +425,12 @@ namespace ProSuite.AGP.Editing.Cracker
 		}
 
 		private static bool IgnoreLayer(Layer layer, IEnumerable<string> ignoredClasses)
+
 		{
 			FeatureClass featureClass = (layer as FeatureLayer)?.GetTable() as FeatureClass;
 
 			if (featureClass == null)
+
 			{
 				return true;
 			}
@@ -400,78 +438,16 @@ namespace ProSuite.AGP.Editing.Cracker
 			string className = featureClass.GetName();
 
 			foreach (string ignoredClass in ignoredClasses)
+
 			{
 				if (className.EndsWith(ignoredClass, StringComparison.InvariantCultureIgnoreCase))
+
 				{
 					return true;
 				}
 			}
 
 			return false;
-		}
-
-		#endregion
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CrackerOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CrackerOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CrackerOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CrackerOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CrackerOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.CrackerOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
-		}
-
-		#region second phase cursors
-
-		protected override Cursor GetSecondPhaseCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay,
-			                              Resources.Lasso, null, 10, 10);
-		}
-
-		protected override Cursor GetSecondPhaseCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Cross, Resources.CrackerOverlay,
-			                              Resources.Polygon, null, 10, 10);
 		}
 
 		#endregion

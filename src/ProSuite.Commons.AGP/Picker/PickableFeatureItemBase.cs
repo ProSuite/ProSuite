@@ -12,8 +12,11 @@ namespace ProSuite.Commons.AGP.Picker
 		private readonly string _displayValue;
 		private bool _selected;
 
-		protected PickableFeatureItemBase(BasicFeatureLayer layer, Feature feature,
-		                                  Geometry geometry, long oid, string displayValue)
+		protected PickableFeatureItemBase([NotNull] BasicFeatureLayer layer,
+		                                  [NotNull] Feature feature,
+		                                  [NotNull] Geometry geometry,
+		                                  long oid,
+		                                  string displayValue)
 		{
 			Layer = layer;
 			Feature = feature;
@@ -22,16 +25,16 @@ namespace ProSuite.Commons.AGP.Picker
 			_displayValue = displayValue;
 		}
 
-		[NotNull]
 		public Feature Feature { get; }
 
 		public long Oid { get; }
 
-		[NotNull]
 		public Geometry Geometry { get; }
 
-		[NotNull]
 		public BasicFeatureLayer Layer { get; }
+
+		// TODO: Highlight features that are in the primary workspace (ProjectWorkspace)
+		public bool Highlight => false;
 
 		public bool Selected
 		{
@@ -39,7 +42,6 @@ namespace ProSuite.Commons.AGP.Picker
 			set => SetProperty(ref _selected, value);
 		}
 
-		[NotNull]
 		public string DisplayValue => ToString();
 
 		public abstract ImageSource ImageSource { get; }

@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -17,12 +18,24 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.Editing.CreateFeatures;
 
-public abstract class CreateFeatureInPickedClassToolBase : ToolBase
+public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private GeometryType _currentFeatureGeometryType;
+
+	protected CreateFeatureInPickedClassToolBase()
+	{
+		FireSketchEvents = true;
+	}
+
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 
 	[CanBeNull]
 	protected virtual ICollection<string> GetExclusionFieldNames()
@@ -32,28 +45,9 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this);
-	}
-
-	protected override Cursor GetSelectionCursor()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.CreateFeatureInPickedClassOverlay,
-									  null);
-	}
-
-	protected override Cursor GetSelectionCursorLasso()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.CreateFeatureInPickedClassOverlay,
-		                              Resources.Lasso);
-	}
-
-	protected override Cursor GetSelectionCursorPolygon()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.CreateFeatureInPickedClassOverlay,
-		                              Resources.Polygon);
+		return MapUtils.IsStereoMapView(ActiveMapView)
+			       ? null
+			       : new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
@@ -62,66 +56,51 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		return false;
 	}
 
-	protected override CancelableProgressorSource GetProgressorSource()
+	protected override SketchGeometryType GetEditSketchGeometryType()
 	{
-		return null;
+		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
 	}
 
-	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
+	protected override SketchGeometryType GetSelectionSketchGeometryType()
 	{
-		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.
-		// Set it on tool activate. In ctor is not enough.
-		CompleteSketchOnMouseUp = true;
-		GeomIsSimpleAsFeature = false;
-
-		return base.OnToolActivateCoreAsync(hasMapViewChanged);
+		return SketchGeometryType.Rectangle;
 	}
 
-	protected override async Task HandleEscapeAsync()
+	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+	                                                  CancelableProgressor progressor)
 	{
-		await QueuedTask.Run(() => SelectionUtils.ClearSelection(ActiveMapView?.Map));
+		Feature feature = selectedFeatures.Single();
+
+		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
+
+		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}
 
-	protected override async Task<bool> ProcessSelectionCoreAsync(
-		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
-		CancelableProgressor progressor = null)
+	protected override void LogEnteringSketchMode()
 	{
-		Assert.ArgumentCondition(featuresByLayer.Count == 1, "selection count has to be 1");
-
-		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
-
-		Feature feature = features?.FirstOrDefault();
-
-		// todo daro: assert instead?
-		if (feature == null)
-		{
-			_msg.Debug("no selection");
-			return false; // startContructionPhase = false
-		}
-
-		_msg.Info(
-			$"Currently selected template feature {GdbObjectUtils.GetDisplayValue(feature, layer.Name)}");
-
 		_msg.Info("Construct the new feature. Hit [ESC] to reselect the template feature.");
-
-		await StartSketchAsync();
-
-		return true; // startContructionPhase = true
 	}
 
-	protected override async Task<bool> OnConstructionSketchCompleteAsync(
-		Geometry geometry, IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
+		Geometry sketchGeometry,
+		EditingTemplate editTemplate,
+		MapView activeView,
+		CancelableProgressor cancelableProgressor = null)
 	{
-		// todo daro: assert instead?
-		if (selectionByLayer.Count == 0)
-		{
-			_msg.Debug("no selection");
-
-			return true; // startSelectionPhase = true;
-		}
-
 		await QueuedTaskUtils.Run(async () =>
 		{
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+
+			// todo daro: assert instead?
+			if (selectionByLayer.Count == 0)
+			{
+				_msg.Debug("no selection");
+
+				await StartSelectionPhaseAsync();
+				return true;
+			}
+
 			try
 			{
 				var applicableSelection =
@@ -139,18 +118,24 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
-				await StoreNewFeature(featureLayer, originalFeature, geometry, GetExclusionFieldNames());
+				await StoreNewFeature(featureLayer, originalFeature, sketchGeometry,
+				                      GetExclusionFieldNames(), cancelableProgressor);
 
-				return false; // startSelectionPhase = false;
+				return false;
 			}
 			catch (Exception ex)
 			{
 				_msg.Error(ex.Message, ex);
-				return false; // startSelectionPhase = false;
+				return false;
 			}
 		});
 
-		return false; // startSelectionPhase = false;
+		// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+		// sketch remains that cannot be cleared with ESC!
+		await ClearSketchAsync();
+		await StartSketchPhaseAsync();
+
+		return false;
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
@@ -178,12 +163,14 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		_msg.Info("Select a template feature");
 	}
 
-	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+	protected override bool CanSelectFromLayerCore(
+		BasicFeatureLayer basicFeatureLayer,
+		NotificationCollection notifications)
 	{
-		return layer is FeatureLayer;
+		return basicFeatureLayer is FeatureLayer;
 	}
 
-	protected override void StartConstructionPhaseCore()
+	protected override async Task OnSketchPhaseStartedAsync()
 	{
 		if (QueuedTask.OnWorker)
 		{
@@ -191,35 +178,37 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 		}
 		else
 		{
-			QueuedTask.Run(ResetSketchVertexSymbolOptions);
+			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 		}
+
+		await base.OnSketchPhaseStartedAsync();
 	}
 
-	protected override void StartSelectionPhaseCore()
+	protected override void SetSketchTypeCore(SketchGeometryType? sketchType)
 	{
-		if (QueuedTask.OnWorker)
+		if (sketchType == SketchGeometryType.Point)
 		{
-			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			base.SetSketchTypeCore(SketchGeometryType.Multipoint);
 		}
 		else
 		{
-			QueuedTask.Run(() =>
-			{
-				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-			});
+			base.SetSketchTypeCore(sketchType);
 		}
 	}
 
 	private async Task StoreNewFeature([NotNull] BasicFeatureLayer featureLayer,
 	                                   [NotNull] Feature originalFeature,
 	                                   [NotNull] Geometry sketchGeometry,
-	                                   [CanBeNull] ICollection<string> exclusionFieldNames)
+	                                   [CanBeNull] ICollection<string> exclusionFieldNames,
+	                                   CancelableProgressor progressor)
 	{
 		// Prevent invalid Z values and other non-simple geometries:
 		Geometry simplifiedSketch =
 			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
+
+		// todo: dispose?
+		// maybe don't dispose because it gets opened again
+		using FeatureClass targetFeatureClass = originalFeature.GetTable();
 
 		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
 
@@ -227,29 +216,112 @@ public abstract class CreateFeatureInPickedClassToolBase : ToolBase
 			                     ? featureSubtype.GetName()
 			                     : featureLayer.Name;
 
-		Feature newFeature = null;
-		bool transactionSucceeded =
+		var description = $"Create {subtypeName}";
+
+		List<Feature> newFeatures = null;
+
+		bool succeeded =
 			await GdbPersistenceUtils.ExecuteInTransactionAsync(
 				editContext =>
 				{
-					newFeature = GdbPersistenceUtils.InsertTx(
-						editContext, originalFeature, simplifiedSketch, exclusionFieldNames);
+					if (simplifiedSketch is Multipoint multipoint)
+					{
+						newFeatures = CreatePointFeatures(
+							editContext,
+							targetFeatureClass,
+							originalFeature,
+							multipoint,
+							exclusionFieldNames,
+							progressor).ToList();
+					}
+					else
+					{
+						newFeatures =
+							new List<Feature>
+							{
+								GdbPersistenceUtils.InsertTx(
+									editContext,
+									originalFeature,
+									simplifiedSketch,
+									exclusionFieldNames)
+							};
+					}
 
-					return true;
-				}, $"Create {subtypeName}",
-				new[] { originalFeature.GetTable() });
+					return newFeatures.Count > 0;
+				}, description, new List<Dataset> { targetFeatureClass });
 
-		if (transactionSucceeded)
+		if (succeeded)
 		{
+			Assert.NotNull(newFeatures);
+			Assert.True(newFeatures.Count > 0, "no result features");
+
 			SelectionUtils.ClearSelection(MapView.Active.Map);
-			SelectionUtils.SelectFeature(featureLayer, SelectionCombinationMethod.New,
-			                             newFeature.GetObjectID());
+
+			List<long> oids = newFeatures.Select(f => f.GetObjectID()).ToList();
+
+			// Select only the last point because it's a single selection tool.
+			SelectionUtils.SelectFeature(featureLayer, SelectionCombinationMethod.New, oids.Last());
+
 			_msg.Info(
-				$"Created new feature {featureLayer.Name} ({subtypeName}) ID: {newFeature.GetObjectID()}");
+				$"Created new {(oids.Count > 1 ? "features" : "feature")} {featureLayer.Name} ({subtypeName}) {(oids.Count > 1 ? "IDs" : "ID")}: {StringUtils.Concatenate(oids, ",")}");
 		}
 		else
 		{
 			_msg.Warn($"{Caption}: edit operation failed");
 		}
+	}
+
+	private static IEnumerable<Feature> CreatePointFeatures(EditOperation.IEditContext editContext,
+	                                                        FeatureClass targetFeatureClass,
+	                                                        Feature originalFeature,
+	                                                        Multipoint multipoint,
+	                                                        ICollection<string> exclusionFieldNames,
+	                                                        CancelableProgressor progressor = null)
+	{
+		using FeatureClassDefinition featureClassDefinition = targetFeatureClass.GetDefinition();
+
+		var pointGeometries = multipoint.Points.Select(
+			p => CreatePointGeometry(p, featureClassDefinition)).ToList();
+
+		var copies = new Dictionary<Feature, IList<Geometry>>
+		             { { originalFeature, pointGeometries } };
+
+		return GdbPersistenceUtils.InsertTx(editContext, copies, exclusionFieldNames, progressor);
+	}
+
+	private static Geometry CreatePointGeometry(MapPoint point,
+	                                            FeatureClassDefinition classDefinition)
+	{
+		GeometryType geometryType = classDefinition.GetShapeType();
+		bool classHasZ = classDefinition.HasZ();
+		bool classHasM = classDefinition.HasM();
+
+		Assert.True(geometryType == GeometryType.Point ||
+		            geometryType == GeometryType.Multipoint,
+		            "Invalid target feature class.");
+
+		return geometryType == GeometryType.Point
+			       ? CreatePoint(point, classHasZ, classHasM)
+			       : CreateSingleMultipoint(point, classHasZ, classHasM);
+	}
+
+	private static Geometry CreateSingleMultipoint(MapPoint point, bool zAware, bool mAware)
+	{
+		var mapPointBuilder = new MultipointBuilderEx(point);
+
+		mapPointBuilder.HasZ = zAware;
+		mapPointBuilder.HasM = mAware;
+
+		return mapPointBuilder.ToGeometry();
+	}
+
+	private static Geometry CreatePoint(MapPoint point, bool zAware, bool mAware)
+	{
+		var mapPointBuilder = new MapPointBuilderEx(point);
+
+		mapPointBuilder.HasZ = zAware;
+		mapPointBuilder.HasM = mAware;
+
+		return mapPointBuilder.ToGeometry();
 	}
 }

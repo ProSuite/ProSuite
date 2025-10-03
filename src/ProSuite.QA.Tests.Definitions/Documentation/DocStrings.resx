@@ -1181,7 +1181,7 @@ Remark: All feature classes in 'pointClass' and 'nearClasses' must have the same
     <value>polyline or polygon feature classes</value>
   </data>
   <data name="QaPointOnLine_pointClass" xml:space="preserve">
-    <value>point feature class</value>
+    <value>point or multipoint feature class</value>
   </data>
   <data name="QaPseudoNodes_0" xml:space="preserve">
     <value>Finds pseudo nodes: Finds all endpoints in 'polylineClasses', that correspond to exactly 2 From-/To-points of 'polylineClasses', the two involved features belong to the same feature class, the attributes values of the involved features do not differ and they are not separated by a point out of 'validPseudoNodes' 

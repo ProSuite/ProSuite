@@ -64,27 +64,27 @@
 
 				<ContentControl Grid.Row="0" Grid.Column="2"
                               Template="{StaticResource CentralizableSettingsSpinner}"
-                              DataContext="{Binding Options.CentralizableExcludeLinesTolerance}"/>
+                              DataContext="{Binding ExcludeLinesTolerance}"/>
 
 				<ContentControl Grid.Row="0" Grid.Column="3"
                               Template="{StaticResource CentralizableSettingsLabel}"
-                              DataContext="{Binding Options.CentralizableExcludeLinesTolerance}"/>
+                              DataContext="{Binding ExcludeLinesTolerance}"/>
 
 				<CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
                          Template="{StaticResource CentralizableSettingCheckbox}"
                          Content="Display reshape line tolerance buffer"
                          Margin="20,0,0,0"
-                         DataContext="{Binding Options.CentralizableExcludeLinesDisplay}"/>
+                         DataContext="{Binding ExcludeLinesDisplay}"/>
 
 				<CheckBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
                          Template="{StaticResource CentralizableSettingCheckbox}"
                          Content="Only show reshape lines that remove areas from polygons"
-                         DataContext="{Binding Options.CentralizableExcludeLinesShowOnlyRemove}"/>
+                         DataContext="{Binding ExcludeLinesShowOnlyRemove}"/>
 
 				<CheckBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
                          Template="{StaticResource CentralizableSettingCheckbox}"
                          Content="Exclude reshape lines that result in overlaps with target features"
-                         DataContext="{Binding Options.CentralizableExcludeLinesOverlaps}"/>
+                         DataContext="{Binding ExcludeLinesOverlaps}"/>
 			</Grid>
 		</StackPanel>
 
@@ -110,13 +110,13 @@
 				<CheckBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
                    Template="{StaticResource CentralizableSettingCheckbox}"
                    Content="Exclude reshape lines that are not completely within main map"
-                   DataContext="{Binding Options.CentralizableDisplayExcludeCutLines}"/>
+                   DataContext="{Binding DisplayExcludeCutLines}"/>
 
 				<CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
                    Template="{StaticResource CentralizableSettingCheckbox}"
                    Content="Recalculate reshape lines when the map extent changes"
                    Margin="20,0,0,0"
-                   DataContext="{Binding Options.CentralizableDisplayRecalculateCutLines}"/>
+                   DataContext="{Binding DisplayRecalculateCutLines}"/>
 			</Grid>
 		</StackPanel>
 
@@ -138,29 +138,29 @@
 				<CheckBox Grid.Row="0" Grid.Column="1"
                   Template="{StaticResource CentralizableSettingCheckbox}"
                   Content="Buffer the target geometry by"
-                  DataContext="{Binding Options.CentralizableBufferTarget}"/>
+                  DataContext="{Binding BufferTarget}"/>
 
 				<CheckBox Grid.Row="0" Grid.Column="1"
                   Template="{StaticResource CentralizableSettingCheckbox}"
                   Content="Enforce minimum buffer segment length"
                   Margin="20,27,10,0"
-                  DataContext="{Binding Options.CentralizableEnforceMinimumBufferSegmentLength}" Grid.RowSpan="2"/>
+                  DataContext="{Binding EnforceMinimumBufferSegmentLength}" Grid.RowSpan="2"/>
 
 				<ContentControl Grid.Row="0" Grid.Column="2"
                        Template="{StaticResource CentralizableSettingsSpinner}"
-                       DataContext="{Binding Options.CentralizableBufferTolerance}"/>
+                       DataContext="{Binding BufferTolerance}"/>
 
 				<ContentControl Grid.Row="0" Grid.Column="3"
                        Template="{StaticResource CentralizableSettingsLabel}"
-                       DataContext="{Binding Options.CentralizableBufferTolerance}"/>
+                       DataContext="{Binding BufferTolerance}"/>
 
 				<ContentControl Grid.Row="1" Grid.Column="2"
                        Template="{StaticResource CentralizableSettingsSpinner}"
-                       DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
+                       DataContext="{Binding MinBufferSegmentLength}"/>
 
 				<ContentControl Grid.Row="1" Grid.Column="3"
                        Template="{StaticResource CentralizableSettingsLabel}"
-                       DataContext="{Binding Options.CentralizableMinBufferSegmentLength}"/>
+                       DataContext="{Binding MinBufferSegmentLength}"/>
 			</Grid>
 		</StackPanel>
 
@@ -193,21 +193,21 @@
 				<CheckBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
                           Template="{StaticResource CentralizableSettingCheckbox}"
                           Content="Insert vertices on targets for topological correctness"
-                          DataContext="{Binding Options.CentralizableInsertVertices}"/>
+                          DataContext="{Binding InsertVertices}"/>
 
 
 				<CheckBox Grid.Row="1" Grid.Column="1"
                           Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Use custom minimal tolerance of "
-                          DataContext="{Binding Options.CentralizableMinimalToleranceApply}"/>
+                          Content="Use custom tolerance of "
+                          DataContext="{Binding MinimalToleranceApply}"/>
 
 				<ContentControl Grid.Row="1" Grid.Column="2"
                                 Template="{StaticResource CentralizableSettingsSpinner}"
-                                DataContext="{Binding Options.CentralizableMinimalTolerance}"/>
+                                DataContext="{Binding MinimalTolerance}"/>
 
 				<ContentControl Grid.Row="1" Grid.Column="3"
                                 Template="{StaticResource CentralizableSettingsLabel}"
-                                DataContext="{Binding Options.CentralizableMinimalTolerance}"/>
+                                DataContext="{Binding MinimalTolerance}"/>
 			</Grid>
 
 		</StackPanel>

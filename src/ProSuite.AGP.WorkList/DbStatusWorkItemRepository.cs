@@ -1,148 +1,70 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList;
+
+public class DbStatusWorkItemRepository : GdbItemRepository
 {
-	public class DbStatusWorkItemRepository : GdbItemRepository
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	/// <summary>
+	/// SDE or GDB file path to the single, current workspace in which all source tables reside.
+	/// Pro creates a SDE file in C:\Users\USER\AppData\local\temp
+	/// </summary>
+	private readonly string _catalogPath;
+
+	// TODO: (daro) rename. Because ConflictWorkItemRepository is an DbStatusWorkItemRepository too.
+	public DbStatusWorkItemRepository(IList<ISourceClass> sourceClasses,
+	                                  IWorkItemStateRepository workItemStateRepository,
+	                                  string catalogPath) : base(
+		sourceClasses, workItemStateRepository)
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		// Cannot inject geodatabase type here because it's created in a QueuedTask
+		// and used in a pluggable datasource worker thread. This throws a Pro
+		// CalledOnWrongThread exception.
+		_catalogPath = catalogPath;
+	}
 
-		#region Overrides of GdbItemRepository
+	public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+	{
+		return workListItemSchema != null &&
+		       SourceClasses.Any(workListItemSchema.ContainsSourceClass);
+	}
 
-		public DbStatusWorkItemRepository(
-			[NotNull] IList<DbStatusSourceClassDefinition> sourceClassDefinitions,
-			[NotNull] IWorkItemStateRepository workItemStateRepository)
-			: base(sourceClassDefinitions, workItemStateRepository) { }
-
-		public override bool CanUseTableSchema(IWorkListItemDatastore workListItemSchema)
+	public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
+	{
+		try
 		{
-			if (workListItemSchema == null)
-			{
-				return false;
-			}
-
 			foreach (ISourceClass sourceClass in SourceClasses)
 			{
-				if (workListItemSchema.ContainsSourceClass(sourceClass))
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		protected override void AdaptSourceFilter(QueryFilter filter, ISourceClass sourceClass)
-		{
-			// Consider doing this using definition expressions in the source classes
-		}
-
-		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
-		{
-			long id = GetNextOid(row);
-
-			DatabaseSourceClass dbSourceClass = (DatabaseSourceClass) sourceClass;
-
-			WorkItemStatus status = dbSourceClass.GetStatus(row);
-
-			return new DbStatusWorkItem(id, sourceClass.GetUniqueTableId(), row, status);
-		}
-
-		// TODO: Remove other two constructors who need this method
-		protected override ISourceClass CreateSourceClassCore(
-			GdbTableIdentity identity, IAttributeReader attributeReader,
-			WorkListStatusSchema statusSchema,
-			string definitionQuery = null)
-		{
-			throw new NotImplementedException();
-		}
-
-		protected override async Task SetStatusCoreAsync(IWorkItem item,
-		                                                 ISourceClass source)
-		{
-			Table table = OpenTable(source);
-			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
-
-			try
-			{
-				var databaseSourceClass = (DatabaseSourceClass) source;
-
-				string description = GetOperationDescription(item);
-
-				_msg.Info($"{description}, {item.GdbRowProxy}");
-
-				var operation = new EditOperation { Name = description };
-				operation.Callback(context =>
-				{
-					// ReSharper disable once AccessToDisposedClosure
-					Row row = GdbQueryUtils.GetRow(table, item.ObjectID);
-					context.Invalidate(row);
-				}, table);
-
-				// todo daro CancelMessage, AbortMessage
-				string fieldName = databaseSourceClass.StatusSchema.FieldName;
-				object value = databaseSourceClass.GetValue(item.Status);
-
-				operation.Modify(table, item.ObjectID, fieldName, value);
-
-				await operation.ExecuteAsync();
-			}
-			catch (Exception e)
-			{
-				_msg.Error($"Error set status of work item {item.OID}, {item.GdbRowProxy}", e);
-				throw;
-			}
-			finally
-			{
-				table.Dispose();
-			}
-		}
-
-		#endregion
-
-		private static string GetOperationDescription(IWorkItem item)
-		{
-			string operationDescription;
-			switch (item.Status)
-			{
-				case WorkItemStatus.Todo:
-					operationDescription =
-						$"Set status of work item OID={item.OID} to 'Not Corrected'";
-					break;
-
-				case WorkItemStatus.Done:
-					operationDescription = $"Set status of work item OID={item.OID} to 'Corrected'";
-					break;
-
-				default:
-					throw new ArgumentException($"Invalid status for operation: {item}");
-			}
-
-			return operationDescription;
-		}
-
-		public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
-		{
-			TableSchema = tableSchemaInfo;
-
-			foreach (ISourceClass sourceClass in SourceClasses)
-			{
-				Table table = OpenTable(sourceClass);
+				using Table table = OpenTable(sourceClass);
 
 				if (table != null)
 				{
-					sourceClass.AttributeReader = CreateAttributeReaderCore(
-						table.GetDefinition(), tableSchemaInfo);
+					using TableDefinition definition = table.GetDefinition();
+
+					// TODO: Make independent of attribute list, use standard AttributeRoles
+					var attributes = new[]
+					                 {
+						                 Attributes.QualityConditionName,
+						                 Attributes.IssueCodeDescription,
+						                 Attributes.InvolvedObjects,
+						                 Attributes.IssueSeverity,
+						                 Attributes.IssueCode,
+						                 Attributes.IssueDescription
+					                 };
+
+					sourceClass.AttributeReader =
+						tableSchemaInfo?.CreateAttributeReader(definition, attributes);
 				}
 				else
 				{
@@ -150,6 +72,108 @@ namespace ProSuite.AGP.WorkList
 						$"Cannot prepare table schema due to missing source table {sourceClass.Name}");
 				}
 			}
+		}
+		catch (Exception ex)
+		{
+			_msg.Debug(ex.Message, ex);
+		}
+	}
+
+	protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
+	{
+		var dbSourceClass = (DatabaseSourceClass) sourceClass;
+
+		WorkItemStatus status = dbSourceClass.GetStatus(row);
+
+		// Create table identity only once for better performance:
+		GdbTableIdentity tableIdentity = dbSourceClass.TableIdentity;
+
+		var rowIdentity = new GdbRowIdentity(row.GetObjectID(), tableIdentity);
+
+		return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), rowIdentity, status);
+	}
+
+	protected override async Task SetStatusCoreAsync(IWorkItem item,
+	                                                 WorkItemStatus status)
+	{
+		Table table = null;
+		try
+		{
+			GdbTableIdentity tableId = item.GdbRowProxy.Table;
+
+			var source = SourceClasses.OfType<DatabaseSourceClass>()
+			                          .FirstOrDefault(s => s.Uses(tableId));
+			Assert.NotNull(source);
+
+			table = OpenTable(source);
+			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
+
+			string description = GetOperationDescription(item);
+
+			_msg.Info($"{description}, {item.GdbRowProxy}");
+
+			var operation = new EditOperation { Name = description };
+			operation.Callback(context =>
+			{
+				// ReSharper disable once AccessToDisposedClosure
+				Row row = GdbQueryUtils.GetRow(table, item.ObjectID);
+
+				context.Invalidate(row);
+			}, table);
+
+			operation.Modify(table, item.ObjectID,
+			                 source.StatusField,
+			                 source.GetValue(status));
+
+			await operation.ExecuteAsync();
+
+			// NOTE: Important to call base.SetStatusCoreAsync() after operation.ExececuteAsync() because this triggers
+			//		 IRowCache.ProcessChanges > ProcessUpdates where the edit is evaluated whether it's only
+			//		 a status edit or the geometry has changed. The latter requires to update
+			//		 the work list's SpatialHashSearcher.
+			await base.SetStatusCoreAsync(item, status);
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Error set status of work item {item.OID}, {item.GdbRowProxy}", e);
+			throw;
+		}
+		finally
+		{
+			table?.Dispose();
+		}
+	}
+
+	protected override Table OpenTable(ISourceClass sourceClass)
+	{
+		Table table = null;
+		try
+		{
+			Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(_catalogPath);
+			table = geodatabase.OpenDataset<Table>(sourceClass.Name);
+		}
+		catch (Exception e)
+		{
+			_msg.Warn($"Error opening source table {sourceClass.Name}: {e.Message}.", e);
+		}
+
+		return table;
+	}
+
+	private static string GetOperationDescription(IWorkItem item)
+	{
+		WorkItemStatus oldState = item.Status;
+
+		switch (oldState)
+		{
+			case WorkItemStatus.Todo:
+				return $"Set status of work item OID={item.OID} to 'Corrected'";
+
+			case WorkItemStatus.Done:
+				return $"Set status of work item OID={item.OID} to 'Not Corrected'";
+
+			default:
+				throw new ArgumentException($"Invalid status for operation: {item}");
 		}
 	}
 }

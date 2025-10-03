@@ -32,7 +32,7 @@ using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class AdvancedReshapeToolBase : ConstructionToolBase, ISymbolizedSketchTool
+	public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -49,12 +49,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Update feedback on toggle layer visibility
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
-		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
 
 		[CanBeNull]
-		private OverridableSettingsProvider<PartialReshapeToolOptions> _settingsProvider;
+		private OverridableSettingsProvider<PartialAdvancedReshapeOptions> _settingsProvider;
 
 		private Task<bool> _updateFeedbackTask;
 
@@ -73,7 +72,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		/// <summary>
 		/// By default, the local configuration directory shall be in
-		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+		/// %APPDATA%\Roaming\ORGANIZATION\PRODUCT>\ToolDefaults.
 		/// </summary>
 		protected virtual string LocalConfigDir
 			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
@@ -90,7 +89,18 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
 
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay,
+			                                    "Advanced Reshape Arrow");
+
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
+
+		protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
+		{
+			return MapUtils.IsStereoMapView(ActiveMapView)
+				       ? null
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
+		}
 
 		protected override void OnUpdateCore()
 		{
@@ -166,20 +176,20 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			Stopwatch watch = _msg.DebugStartTiming();
 
 			// NOTE: by only reading the file locations we can save a couple of 100ms
-			string currentCentralConfigDir = CentralConfigDir;
-			string currentLocalConfigDir = LocalConfigDir;
+			string _ = CentralConfigDir;
+			string __ = LocalConfigDir;
 
 			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-			_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
+			_settingsProvider ??= new OverridableSettingsProvider<PartialAdvancedReshapeOptions>(
 				CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			PartialReshapeToolOptions localConfiguration, centralConfiguration;
+			PartialAdvancedReshapeOptions localConfiguration, centralConfiguration;
 
 			_settingsProvider.GetConfigurations(out localConfiguration,
 			                                    out centralConfiguration);
 
 			var result = new ReshapeToolOptions(centralConfiguration,
-			                                                     localConfiguration);
+			                                    localConfiguration);
 
 			result.PropertyChanged -= _advancedReshapeToolOptions_PropertyChanged;
 			result.PropertyChanged += _advancedReshapeToolOptions_PropertyChanged;
@@ -188,22 +198,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			string optionsMessage = result.GetLocalOverridesMessage();
 
-			if (!string.IsNullOrEmpty(optionsMessage))
+			if (! string.IsNullOrEmpty(optionsMessage))
 			{
 				_msg.Info(optionsMessage);
 			}
 
 			return result;
-
-			//// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-			//_settingsProvider ??= new OverridableSettingsProvider<PartialReshapeToolOptions>(
-			//	CentralConfigDir, LocalConfigDir, OptionsFileName);
-
-			//PartialReshapeToolOptions localConfiguration, centralConfiguration;
-			//_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
-
-			//_advancedReshapeToolOptions =
-			//	new ReshapeToolOptions(centralConfiguration, localConfiguration);
 		}
 
 		private void _advancedReshapeToolOptions_PropertyChanged(object sender,
@@ -211,47 +211,24 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			try
 			{
-				QueuedTaskUtils.Run(() => ProcessSelection());
+				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+				_msg.Error($"Error re-calculating preview: {e.Message}", e);
 			}
 		}
 
-		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this);
-			_symbolizedSketch.SetSketchAppearanceBasedOnSelection();
-
-			return base.OnToolActivatedCore(hasMapViewChanged);
-		}
-
-		protected override void OnSelectionPhaseStarted()
-		{
-			base.OnSelectionPhaseStarted();
-			_symbolizedSketch?.ClearSketchSymbol();
+			await base.OnSelectionPhaseStartedAsync();
 			_feedback?.Clear();
-		}
-
-		protected override void OnSketchPhaseStarted()
-		{
-			try
-			{
-				QueuedTask.Run(() => { _symbolizedSketch?.SetSketchAppearanceBasedOnSelection(); });
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message, ex);
-			}
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_settingsProvider?.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
 
-			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
@@ -260,7 +237,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			HideOptionsPane();
 		}
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			return SketchGeometryType.Line;
 		}
@@ -414,17 +391,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
-		public bool CanSelectFromLayer(Layer layer)
-		{
-			return base.CanSelectFromLayer(layer);
-		}
-
-		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
-		{
-			return base.CanUseSelection(selectionByLayer);
-		}
-
-		public bool CanSetConstructionSketchSymbol(GeometryType geometryType)
+		public override async Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 		{
 			bool result;
 			switch (geometryType)
@@ -445,7 +412,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
 			}
 
-			return result && ! IsInSelectionPhaseAsync().Result;
+			return result && ! await IsInSelectionPhaseAsync();
 		}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
@@ -456,7 +423,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var polyline = (Polyline) sketchGeometry;
 
-			SetCursor(Cursors.Wait);
+			SetToolCursor(Cursors.Wait);
 
 			bool success = false;
 			try
@@ -471,12 +438,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				if (success && ! _advancedReshapeToolOptions.RemainInSketchMode)
 				{
-					StartSelectionPhase();
+					await StartSelectionPhaseAsync();
 				}
 				else
 				{
+					// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+					// sketch remains that cannot be cleared with ESC!
 					await ClearSketchAsync();
-					StartSketchPhase();
+					await StartSketchPhaseAsync();
 				}
 			}
 
@@ -507,8 +476,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			int timeout = selection.Count * 10000;
 			_cancellationTokenSource = new CancellationTokenSource(timeout);
 
+			bool allowOpenJawReshape = _advancedReshapeToolOptions.AllowOpenJawReshape;
+
 			ReshapeResult result = MicroserviceClient.Reshape(
-				selection, sketchLine, potentiallyAffectedFeatures, true, true,
+				selection, sketchLine, potentiallyAffectedFeatures, allowOpenJawReshape, true,
 				_nonDefaultSideMode, _cancellationTokenSource.Token,
 				_advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
@@ -522,9 +493,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				if (! string.IsNullOrEmpty(result.FailureMessage))
 				{
 					_msg.Warn(result.FailureMessage);
-					{
-						return false;
-					}
+					return false;
 				}
 			}
 
@@ -768,54 +737,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			return await QueuedTaskUtils.Run(
 				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
-		}
-
-		public void SetSketchSymbol(CIMSymbolReference symbolReference)
-		{
-			SketchSymbol = symbolReference;
-		}
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.AdvancedReshapeOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
 		}
 	}
 }

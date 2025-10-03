@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -54,10 +56,25 @@ namespace ProSuite.Commons.UI.Env
 			return result;
 		}
 
+		public Task<DialogResult> ShowDialogAsync(IModalDialog modalDialog, IWin32Window owner,
+		                                          Action<DialogResult> procedure)
+		{
+			DialogResult result = ShowDialog(modalDialog, owner, procedure);
+
+			return Task.FromResult(result);
+		}
+
 		public CursorState ReleaseCursor()
 		{
 			Point position = Cursor.Position;
 			return new CursorState(position.X, position.Y);
+		}
+
+		public Task<CursorState> ReleaseCursorAsync()
+		{
+			CursorState result = ReleaseCursor();
+
+			return Task.FromResult(result);
 		}
 
 		public void WithReleasedCursor(Action procedure)
@@ -74,9 +91,33 @@ namespace ProSuite.Commons.UI.Env
 			}
 		}
 
+		public async Task WithReleasedCursorAsync(Func<Task> func)
+		{
+			CursorState cursorState = await ReleaseCursorAsync();
+
+			try
+			{
+				await func();
+			}
+			finally
+			{
+				if (cursorState != null)
+				{
+					await RestoreCursorAsync(cursorState);
+				}
+			}
+		}
+
 		public void RestoreCursor(CursorState cursorState)
 		{
 			// do nothing;
+		}
+
+		public Task RestoreCursorAsync(CursorState cursorState)
+		{
+			RestoreCursor(cursorState);
+
+			return Task.CompletedTask;
 		}
 
 		#endregion
@@ -84,6 +125,15 @@ namespace ProSuite.Commons.UI.Env
 		[CanBeNull]
 		private IWin32Window ChooseOwner([CanBeNull] IWin32Window owner)
 		{
+			// If not on the UI thread, do not impose the main window from the provider but
+			// what the caller suggested. Otherwise, the following exception occurs:
+			// The calling thread cannot access this object because a different thread owns it
+			// NOTE: Windows can be shown from other STA threads than the Main thread (with limitations)
+			if (Environment.CurrentManagedThreadId != 1 || Thread.CurrentThread.IsBackground)
+			{
+				return owner;
+			}
+
 			return owner ?? _mainWindowProvider.GetMainWindow();
 		}
 	}

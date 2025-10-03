@@ -42,24 +42,32 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 		[Test]
 		public void CanGetWithSameImplementation()
 		{
-			TestDescriptor d1 = new TestDescriptor(
-				"test1", new ClassDescriptor("factTypeName", "factAssemblyName"));
+			var classDesc1 = new ClassDescriptor("factTypeName", "factAssemblyName");
+			var classDesc2 = new ClassDescriptor("factTypeName", "factAssemblyName__");
 
-			TestDescriptor d2 = new TestDescriptor(
-				"test2", new ClassDescriptor("factTypeName", "factAssemblyName__"),
-				0, true, false, "desc");
+			TestDescriptor d1 = new TestDescriptor("test1", classDesc1); //this is a TestFactoryDescriptor
+			TestDescriptor d2 = new TestDescriptor("test2", classDesc2, 0, true, false, "desc");
+			TestDescriptor d3 = new TestDescriptor("test3", classDesc2, 1, true, false, "desc");
 
-			CreateSchema(d1, d2);
+			CreateSchema(d1, d2, d3);
 
 			UnitOfWork.NewTransaction(
 				delegate
 				{
 					AssertUnitOfWorkHasNoChanges();
+
 					TestDescriptor foundDescriptor = Repository.GetWithSameImplementation(d1);
-
 					Assert.NotNull(foundDescriptor);
+					Assert.AreEqual(d1.TestFactoryDescriptor, foundDescriptor.TestFactoryDescriptor);
 
-					Assert.AreEqual(d1.Class, foundDescriptor.Class);
+					TestDescriptor foundDescriptor2 = Repository.GetWithSameImplementation(d2);
+					Assert.NotNull(foundDescriptor2);
+					Assert.AreEqual(d2.TestClass, foundDescriptor2.TestClass);
+
+					TestDescriptor foundDescriptor3 = Repository.GetWithSameImplementation(d3);
+					Assert.NotNull(foundDescriptor3);
+					Assert.AreEqual(d2.TestClass, foundDescriptor3.TestClass);
+					Assert.AreNotEqual(d2.TestConstructorId, foundDescriptor3.TestConstructorId);
 				});
 		}
 

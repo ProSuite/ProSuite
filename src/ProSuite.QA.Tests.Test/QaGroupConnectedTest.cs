@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -2079,7 +2080,7 @@ namespace ProSuite.QA.Tests.Test
 			((IWorkspaceEdit) testWs).StopEditing(true);
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 			var test = (QaGroupConnected) tests[0];
 			test.CompleteGroupsOutsideTestArea = true;
@@ -2103,7 +2104,7 @@ namespace ProSuite.QA.Tests.Test
 			InstanceConfiguration condition = fact.Condition;
 
 			IList<ITest> tests =
-				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(1, tests.Count);
 
 			Assert.AreNotEqual(((QaGroupConnected) tests[0]).ErrorReporting,
@@ -2118,7 +2119,7 @@ namespace ProSuite.QA.Tests.Test
 			InstanceConfigurationUtils.AddParameterValue(
 				condition, nameof(QaGroupConnected.CompleteGroupsOutsideTestArea), true);
 
-			tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			tests = fact.CreateTests(new SimpleDatasetOpener(model.GetMasterDatabaseWorkspaceContext()));
 			Assert.AreEqual(((QaGroupConnected) tests[0]).ErrorReporting,
 			                GroupErrorReporting.ShortestGaps);
 			Assert.AreEqual(((QaGroupConnected) tests[0]).CompleteGroupsOutsideTestArea,

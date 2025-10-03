@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.AO.DataModel;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.Workflow
 {
@@ -243,7 +244,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 				                               _fullExtentYMax.Value);
 
 			extent.SpatialReference =
-				_productionModel.SpatialReferenceDescriptor.SpatialReference;
+				_productionModel.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return extent;
 		}

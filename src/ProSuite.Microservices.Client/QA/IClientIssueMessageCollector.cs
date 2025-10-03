@@ -29,6 +29,7 @@ namespace ProSuite.Microservices.Client.QA
 
 		/// <summary>
 		/// Update the actually verified perimeter by the background process.
+		/// NOTE: This method can be called on an MTA thread!
 		/// </summary>
 		/// <param name="perimeterMsg"></param>
 		void SetVerifiedPerimeter([CanBeNull] ShapeMsg perimeterMsg);

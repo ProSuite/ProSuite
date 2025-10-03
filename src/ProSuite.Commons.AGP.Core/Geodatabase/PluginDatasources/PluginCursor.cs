@@ -34,18 +34,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources
 
 		public override bool MoveNext()
 		{
-			bool result = false;
-
 			try
 			{
-				result = _enumerator.MoveNext();
+				return _enumerator.MoveNext();
 			}
 			catch (Exception ex)
 			{
-				_msg.Error($"Error getting next feature: {ex.Message}", ex);
+				_msg.Debug($"Error getting next feature ({ex.GetType().Name}): {ex.Message}", ex);
+				throw;
 			}
-
-			return result;
 		}
 	}
 }

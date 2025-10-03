@@ -3,91 +3,176 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.WorkList;
+using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
-using ProSuite.Commons.UI;
 using ProSuite.DomainModel.AGP.QA;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class SelectInvolvedObjectsCmdBase : Button
+	public abstract class SelectInvolvedObjectsCmdBase : ButtonCommandBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected SelectInvolvedObjectsCmdBase()
+		protected override async Task<bool> OnClickAsyncCore()
 		{
-			//Anything to do here?
-		}
-
-		protected override async void OnClick()
-		{
-			await ViewUtils.TryAsync(QueuedTask.Run(OnClickCore), _msg);
-		}
-
-		private static async Task OnClickCore()
-		{
-			Map map = MapView.Active?.Map;
+			MapView mapView = MapView.Active;
+			Map map = Assert.NotNull(mapView?.Map, "No active map");
 
 			if (! MapUtils.HasSelection(map))
 			{
 				_msg.Debug("No features or rows selected");
-				return;
+				return false;
 			}
 
-			//get selected issue objects from issue layers
-			List<Row> issueObjects = new List<Row>();
+			long selectedCount = await QueuedTaskUtils.Run(() => SelectInvolvedRows(mapView));
 
-			IEnumerable<FeatureLayer> layers = MapUtils.GetFeatureLayers<FeatureLayer>(
-				map,
-				fl => IssueGdbSchema.IssueFeatureClassNames.Contains(
-					fl.GetFeatureClass().GetName()));
+			return selectedCount > 0;
+		}
 
-			foreach (FeatureLayer layer in layers)
+		private long SelectInvolvedRows([NotNull] MapView mapView)
+		{
+			IEnumerable<IDisplayTable> displayTables = MapUtils.GetDisplayTables<IDisplayTable>(
+				mapView.Map.GetLayersAsFlattenedList(), null);
+
+			long selectedCount = 0;
+			foreach (IDisplayTable displayTable in displayTables)
 			{
-				issueObjects.AddRange(
-					await QueuedTask.Run(() => SelectionUtils.GetSelectedFeatures(layer)));
+				Table issueTable = displayTable.GetTable();
+
+				if (! IsIssueTable(issueTable, out bool fromProductionModel))
+				{
+					continue;
+				}
+
+				//get selected issue objects from issue layers
+				List<Row> issueObjects = new List<Row>();
+
+				if (displayTable is FeatureLayer featureLayer)
+				{
+					issueObjects.AddRange(SelectionUtils.GetSelectedFeatures(featureLayer));
+				}
+				else if (displayTable is StandaloneTable standaloneTable)
+				{
+					issueObjects.AddRange(StandaloneTableUtils.GetSelectedRows(standaloneTable));
+				}
+
+				IAttributeReader attributeReader =
+					GetInvolvedObjectsAttributeReader(issueTable, fromProductionModel);
+
+				_msg.DebugFormat("{0} issue objects selected from {1}", issueObjects.Count,
+				                 issueTable.GetName());
+
+				if (issueObjects.Count == 0)
+				{
+					continue;
+				}
+
+				// Getting involved rows (OIDs grouped by table) from issue objects:
+				Dictionary<string, List<long>> involvedRows =
+					GetInvolvedRows(issueObjects, attributeReader);
+
+				_msg.DebugFormat("Involved rows found from {0} object classes.",
+				                 involvedRows.Count);
+
+				//select features or rows based on involved rows
+				selectedCount += SelectRows(involvedRows, mapView);
 			}
 
-			var tables = MapUtils.GetStandaloneTables(
-				map,
-				tbl => IssueGdbSchema.IssueFeatureClassNames.Contains(
-					tbl.GetTable().GetName()));
+			return selectedCount;
+		}
 
-			foreach (StandaloneTable table in tables)
+		private static long SelectRows([NotNull] Dictionary<string, List<long>> involvedRows,
+		                               [NotNull] MapView mapView)
+		{
+			long selectedCount = 0;
+
+			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
 			{
-				issueObjects.AddRange(
-					await QueuedTask.Run(() => StandaloneTableUtils.GetSelectedRows(table)));
+				string tableName = keyValuePair.Key;
+				List<long> objectIds = keyValuePair.Value;
+
+				// TODO: More robust table comparison than just the name
+				Predicate<IDisplayTable> layerPredicate = l => IsBasedOnTable(l, tableName);
+
+				long selectedRowsForTable =
+					SelectionUtils.SelectRows(mapView, layerPredicate, objectIds);
+
+				if (selectedRowsForTable == 0)
+				{
+					_msg.Warn(
+						$"No object selected for {tableName}. No visible and selectable layer " +
+						$"contains the objects <oid> {StringUtils.Concatenate(objectIds, ", ")}");
+				}
+
+				selectedCount += selectedRowsForTable;
 			}
 
-			_msg.DebugFormat("{0} issue objects selected", issueObjects.Count);
+			return selectedCount;
+		}
 
-			if (issueObjects.Count == 0)
+		private static bool IsBasedOnTable([NotNull] IDisplayTable displayTable,
+		                                   [NotNull] string tableName)
+		{
+			// TODO: More robust table comparison than just the name!
+
+			string candidateName = displayTable.GetTable()?.GetName();
+
+			if (string.IsNullOrEmpty(candidateName))
 			{
-				return;
+				return false;
 			}
 
-			//get involved rows (OIDs grouped by table) from issue objects
+			// Typically the datasets written to the involved rows are harvested with unqualified names.
+			// But the layer typically references qualified dataset from the production model.
+			if (ModelElementNameUtils.IsQualifiedName(candidateName) &&
+			    ! ModelElementNameUtils.IsQualifiedName(tableName))
+			{
+				candidateName = ModelElementNameUtils.GetUnqualifiedName(candidateName);
+			}
+
+			// In issue tables the fully qualified table name is referenced - adapt for check-outs
+			// with un-qualified candidate names:
+			if (ModelElementNameUtils.IsQualifiedName(tableName) &&
+			    ! ModelElementNameUtils.IsQualifiedName(candidateName))
+			{
+				tableName = ModelElementNameUtils.GetUnqualifiedName(tableName);
+			}
+
+			return string.Equals(candidateName, tableName, StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static Dictionary<string, List<long>> GetInvolvedRows(
+			[NotNull] List<Row> issueObjects,
+			[NotNull] IAttributeReader attributeReader)
+		{
 			Dictionary<string, List<long>> involvedRows = new Dictionary<string, List<long>>();
 
 			foreach (Row issueObject in issueObjects)
 			{
-				int fieldIndex =
-					issueObject.GetTable().GetDefinition().FindField("InvolvedObjects");
+				string involvedObjectsString =
+					attributeReader.GetValue<string>(issueObject, Attributes.InvolvedObjects);
 
-				string involvedString = (string) issueObject[fieldIndex];
+				if (string.IsNullOrEmpty(involvedObjectsString))
+				{
+					_msg.DebugFormat("Empty involved objects value in issue {0}",
+					                 GdbObjectUtils.ToString(issueObject));
+					continue;
+				}
 
-				// todo daro see IssueWorkListViewModel.GetInvolvedMapMembersByLayer
-				// it is the same problem.
+				IList<InvolvedTable> involvedTables =
+					attributeReader.ParseInvolved(involvedObjectsString, issueObject is Feature);
 
-				var involvedTables =
-					IssueUtils.ParseInvolvedTables(involvedString, issueObject is Feature);
-				foreach (var involved in involvedTables)
+				foreach (InvolvedTable involved in involvedTables)
 				{
 					if (! involvedRows.ContainsKey(involved.TableName))
 					{
@@ -95,32 +180,31 @@ namespace ProSuite.AGP.QA.ProPlugins
 					}
 
 					involvedRows[involved.TableName]
-						.AddRange(involved.RowReferences.Select(rR => (long) rR.OID));
+						.AddRange(involved.RowReferences.Select(rr => (long) rr.OID));
 				}
 			}
 
-			_msg.DebugFormat("Involved rows found from {0} object classes.", involvedRows.Count);
+			return involvedRows;
+		}
 
-			//select features or rows based on involved rows
-			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
+		protected virtual IAttributeReader GetInvolvedObjectsAttributeReader(
+			[NotNull] Table issueTable,
+			bool fromProductionModel)
+		{
+			if (fromProductionModel)
 			{
-				string tableName = keyValuePair.Key;
-				List<long> objectIds = keyValuePair.Value;
-
-				// TODO: More robust table comparison than just the name
-				Predicate<IDisplayTable> layerPredicate =
-					l => string.Equals(l.GetTable()?.GetName(), tableName,
-					                   StringComparison.OrdinalIgnoreCase);
-
-				long selectedCount = SelectionUtils.SelectRows(map, layerPredicate, objectIds);
-
-				if (selectedCount == 0)
-				{
-					_msg.Warn(
-						$"No object selected for {tableName}. No visible and selectable layer " +
-						$"contains the objects <oid> {StringUtils.Concatenate(objectIds, ", ")}");
-				}
+				return null;
 			}
+
+			return new AttributeReader(issueTable.GetDefinition(), Attributes.InvolvedObjects);
+		}
+
+		protected virtual bool IsIssueTable([NotNull] Table candidate,
+		                                    out bool fromProductionModel)
+		{
+			// This is very hacky and should be improved:
+			fromProductionModel = false;
+			return IssueGdbSchema.IssueFeatureClassNames.Contains(candidate.GetName());
 		}
 	}
 }

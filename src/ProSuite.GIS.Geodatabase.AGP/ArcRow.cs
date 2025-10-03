@@ -3,10 +3,13 @@ using ArcGIS.Core;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
+using Subtype = ArcGIS.Core.Data.Subtype;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
@@ -14,10 +17,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private Row _proRow;
 		private readonly ITable _parentTable;
 
-		public static ArcRow Create(Row proRow, ITable parentTable)
+		private SimpleValueList _cachedValues;
+		private Row _proRow;
+
+		public static ArcRow Create(Row proRow, ITable parentTable, bool cacheValues = false)
 		{
 			Assert.NotNull(proRow, "No row provided");
 
@@ -25,26 +30,101 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				             ? new ArcFeature(feature, (IFeatureClass) parentTable)
 				             : new ArcRow(proRow, parentTable);
 
+			if (cacheValues)
+			{
+				result.CacheValues();
+			}
+
 			return result;
 		}
 
 		public static Func<ArcGIS.Core.Geometry.Geometry, IGeometry> GeometryFactory { get; set; } =
 			ArcGeometry.Create;
 
-		protected ArcRow(Row proRow, ITable parentTable)
+		protected ArcRow([CanBeNull] Row proRow, [NotNull] ITable parentTable)
 		{
-			_proRow = proRow;
-			OID = proRow.GetObjectID();
-
 			_parentTable = parentTable;
+
+			ProRow = proRow;
+			OID = proRow?.GetObjectID() ?? -1;
 		}
 
-		public Row ProRow => _proRow;
+		[CanBeNull]
+		public Row ProRow
+		{
+			get => _proRow;
+			protected set
+			{
+				_proRow = value;
+				InvalidateCache();
+			}
+		}
+
+		/// <summary>
+		/// Caches all field values from the underlying row for improved performance.
+		/// </summary>
+		/// <remarks>
+		/// This method should be called when a row will be accessed frequently,
+		/// especially in non-CIM threads where direct access to Pro SDK objects isn't available.
+		/// </remarks>
+		public void CacheValues()
+		{
+			if (_cachedValues != null)
+			{
+				return; // Values are already cached
+			}
+
+			try
+			{
+				int fieldCount = _parentTable.Fields.FieldCount;
+				_cachedValues = new SimpleValueList(fieldCount);
+
+				// Populate the cache for all fields
+				for (int i = 0; i < fieldCount; i++)
+				{
+					try
+					{
+						object value = ProRow[i];
+						_cachedValues[i] = value;
+					}
+					catch (Exception ex)
+					{
+						// Log the error but continue caching other fields
+						_msg.Debug($"Error caching field at index {i}: {ex.Message}", ex);
+						throw;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn($"Failed to cache row values for row {OID}: {ex.Message}", ex);
+				_cachedValues = null;
+			}
+		}
+
+		/// <summary>
+		/// Invalidates and re-reads the cached values.
+		/// </summary>
+		public void InvalidateCache()
+		{
+			bool hasCache = _cachedValues != null;
+			_cachedValues = null;
+
+			if (hasCache)
+			{
+				CacheValues();
+			}
+		}
 
 		#region Implementation of IRowBuffer
 
 		public virtual object get_Value(int index)
 		{
+			if (TryGetCachedValue(index, out object value))
+			{
+				return value ?? DBNull.Value;
+			}
+
 			object result = null;
 
 			TryOrRefreshRow<Row>(r => result = r[index]);
@@ -52,9 +132,29 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return result ?? DBNull.Value;
 		}
 
-		public void set_Value(int index, object value)
+		protected bool TryGetCachedValue(int index, out object value)
+		{
+			// Use cached values if available
+			if (_cachedValues != null && index >= 0 && index < _cachedValues.Count)
+			{
+				value = _cachedValues[index];
+				return true;
+			}
+
+			value = null;
+
+			return false;
+		}
+
+		public virtual void set_Value(int index, object value)
 		{
 			TryOrRefreshRow<Row>(r => r[index] = value);
+
+			// Update the cache if it's being used
+			if (_cachedValues != null && index >= 0 && index < _cachedValues.Count)
+			{
+				_cachedValues[index] = value;
+			}
 		}
 
 		public IFields Fields => _parentTable.Fields;
@@ -67,15 +167,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		//public bool HasOID => _proRow.HasOID;
 		public bool HasOID => OID >= 0;
 
-		public long OID { get; }
+		public long OID { get; protected set; }
 
 		public ITable Table => _parentTable;
 
-		public void Store()
+		public virtual void Store()
 		{
 			OnStoring();
 
 			TryOrRefreshRow<Row>(r => r.Store());
+
+			// After storing, refresh the cache if it was being used before
+			if (_cachedValues != null)
+			{
+				InvalidateCache();
+			}
 		}
 
 		protected virtual void OnStoring() { }
@@ -85,7 +191,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			TryOrRefreshRow<Row>(r => r.Delete());
 		}
 
-		public object NativeImplementation => _proRow;
+		public object NativeImplementation => ProRow;
 
 		#endregion
 
@@ -101,7 +207,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				try
 				{
-					_proRow.GetObjectID();
+					ProRow.GetObjectID();
 					return false;
 				}
 				catch (ObjectDisposedException)
@@ -125,12 +231,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				ArcRow refreshedArcRow = _parentTable.GetRow(OID) as ArcRow;
 
-				_proRow = refreshedArcRow?.ProRow;
+				ProRow = refreshedArcRow?.ProRow;
 			}
 
 			try
 			{
-				action((T) _proRow);
+				action((T) ProRow);
 			}
 			catch (Exception e)
 			{
@@ -146,22 +252,22 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			get
 			{
 				int? subtypeCode =
-					GdbObjectUtils.GetSubtypeCode(_proRow);
+					GdbObjectUtils.GetSubtypeCode(ProRow);
 
 				return subtypeCode ?? -1;
 			}
-			set => GdbObjectUtils.SetSubtypeCode(_proRow, value);
+			set => GdbObjectUtils.SetSubtypeCode(ProRow, value);
 		}
 
 		public void InitDefaultValues()
 		{
 			Subtype subtype =
-				GdbObjectUtils.GetSubtype(_proRow);
+				GdbObjectUtils.GetSubtype(ProRow);
 
 			ArcTable arcTable = (ArcTable) _parentTable;
 
 			GdbObjectUtils.SetNullValuesToGdbDefault(
-				_proRow, arcTable.ProTableDefinition, subtype);
+				ProRow, arcTable.ProTableDefinition, subtype);
 		}
 
 		#endregion
@@ -216,7 +322,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		protected virtual ArcGIS.Core.Geometry.Geometry GetProGeometry(IGeometry fromShape)
 		{
-			ArcGIS.Core.Geometry.Geometry result = null;
+			ArcGIS.Core.Geometry.Geometry result;
 
 			if (fromShape is ArcGeometry arcGeometry)
 			{
@@ -228,7 +334,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 			else
 			{
-				result = ArcGeometryUtils.CreateProGeometry(fromShape);
+				result = ArcGeometryUtils.TryConvertToProGeometry(fromShape);
 			}
 
 			return result;
@@ -262,9 +368,18 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					return _mutableGeometry;
 				}
 
+				int shapeFieldIdx = Fields.FindField(Class.ShapeFieldName);
+
 				ArcGIS.Core.Geometry.Geometry proGeometry = null;
 
-				TryOrRefreshRow<Feature>(r => proGeometry = r.GetShape());
+				if (TryGetCachedValue(shapeFieldIdx, out object cachedValue))
+				{
+					proGeometry = (ArcGIS.Core.Geometry.Geometry) cachedValue;
+				}
+				else
+				{
+					TryOrRefreshRow<Feature>(r => proGeometry = r.GetShape());
+				}
 
 				return GeometryFactory(proGeometry);
 			}
@@ -349,7 +464,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 			else
 			{
-				newGeometry = ArcGeometryUtils.CreateProGeometry(_mutableGeometry);
+				newGeometry = ArcGeometryUtils.TryConvertToProGeometry(_mutableGeometry);
 			}
 
 			TryOrRefreshRow<Feature>(f => { f.SetShape(newGeometry); });

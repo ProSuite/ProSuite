@@ -8,6 +8,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.Core.Geodatabase;
 using Cursor = System.Windows.Forms.Cursor;
 
 namespace ProSuite.DdxEditor.Content.Connections

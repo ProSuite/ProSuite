@@ -4,9 +4,11 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
@@ -18,6 +20,8 @@ namespace ProSuite.QA.Tests.Transformers
 	{
 		private readonly IReadOnlyFeatureClass _intersected;
 		private readonly IReadOnlyFeatureClass _intersecting;
+
+		private const int _defaultResultDimension = -1;
 
 		[DocTr(nameof(DocTrStrings.TrIntersect_0))]
 		public TrIntersect(
@@ -37,19 +41,65 @@ namespace ProSuite.QA.Tests.Transformers
 			: this((IReadOnlyFeatureClass) definition.Intersected,
 			       (IReadOnlyFeatureClass) definition.Intersecting) { }
 
+		[TestParameter(_defaultResultDimension)]
+		[DocTr(nameof(DocTrStrings.TrIntersect_ResultDimension))]
+		public int ResultDimension { get; set; } = _defaultResultDimension;	       
+			       
 		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
-			TransformedFc transformedFc = new TransformedFc(_intersected, _intersecting, name);
+			esriGeometryType resultGeometryType = GetResultGeometryType();
+
+			TransformedFc transformedFc =
+				new TransformedFc(_intersected, _intersecting, resultGeometryType, name);
+
 			return transformedFc;
+		}
+
+		private esriGeometryType GetResultGeometryType()
+		{
+			switch (ResultDimension)
+			{
+				case -1:
+					return _intersected.ShapeType;
+				case 0:
+					return _intersected.ShapeType == esriGeometryType.esriGeometryPoint
+						       ? esriGeometryType.esriGeometryPoint
+						       : esriGeometryType.esriGeometryMultipoint;
+				case 1:
+					return esriGeometryType.esriGeometryPolyline;
+				case 2:
+					return esriGeometryType.esriGeometryPolygon;
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unexpected result dimension: {ResultDimension}");
+			}
+		}
+
+		private static esriGeometryDimension GetGeometryDimension(esriGeometryType shapeType)
+		{
+			switch (shapeType)
+			{
+				case esriGeometryType.esriGeometryPoint:
+				case esriGeometryType.esriGeometryMultipoint:
+					return esriGeometryDimension.esriGeometry0Dimension;
+				case esriGeometryType.esriGeometryPolyline:
+					return esriGeometryDimension.esriGeometry1Dimension;
+				case esriGeometryType.esriGeometryPolygon:
+					return esriGeometryDimension.esriGeometry2Dimension;
+				default:
+					throw new ArgumentOutOfRangeException(
+						nameof(shapeType), "Unsupported geometry type.");
+			}
 		}
 
 		private class TransformedFc : TransformedFeatureClass, IDataContainerAware
 		{
 			public TransformedFc(IReadOnlyFeatureClass intersected,
 			                     IReadOnlyFeatureClass intersecting,
+			                     esriGeometryType shapeType,
 			                     string name = null)
 				: base(null, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
-				       intersected.ShapeType,
+				       shapeType,
 				       createBackingDataset: (t) =>
 					       new TransformedDataset((TransformedFc) t, intersected, intersecting),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
@@ -71,6 +121,7 @@ namespace ProSuite.QA.Tests.Transformers
 		private class TransformedDataset : TransformedBackingDataset
 		{
 			private const string PartIntersectedField = "PartIntersected";
+			private const string IntersectionRatioField = "IntersectionRatio";
 			private readonly IReadOnlyFeatureClass _intersected;
 			private readonly IReadOnlyFeatureClass _intersecting;
 
@@ -92,8 +143,11 @@ namespace ProSuite.QA.Tests.Transformers
 				IntersectedFields.AddAllFields(gdbTable);
 				IntersectingFields.AddAllFields(gdbTable);
 
+				//ToDo: PartIntersectedField is here for legacy reasons. Do remove once deployed everywhere.
 				PartIntersectedFieldIndex =
 					gdbTable.AddFieldT(FieldUtils.CreateDoubleField(PartIntersectedField));
+				IntersectionRatioFieldIndex =
+					gdbTable.AddFieldT(FieldUtils.CreateDoubleField(IntersectionRatioField));
 
 				Resulting.SpatialReference = intersected.SpatialReference;
 			}
@@ -102,6 +156,8 @@ namespace ProSuite.QA.Tests.Transformers
 			private TransformedTableFields IntersectingFields { get; }
 
 			private int PartIntersectedFieldIndex { get; }
+
+			private int IntersectionRatioFieldIndex { get; }
 
 			public override IEnvelope Extent => _intersected.Extent;
 
@@ -125,6 +181,8 @@ namespace ProSuite.QA.Tests.Transformers
 				intersectingFilter.SpatialRelationship =
 					esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
+				esriGeometryDimension dimension = GetGeometryDimension(Resulting.ShapeType);
+
 				bool sameFeatureClass = _intersected.Equals(_intersecting);
 				foreach (var toIntersect in DataContainer.Search(
 					         _intersected, filter, QueryHelpers[0]))
@@ -140,15 +198,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 						IGeometry intersectingGeom = ((IReadOnlyFeature) intersecting).Shape;
 						IGeometry toIntersectGeom = ((IReadOnlyFeature) toIntersect).Shape;
-						var op = (ITopologicalOperator) toIntersectGeom;
-						if (((IRelationalOperator) op).Disjoint(intersectingGeom))
+
+						if (((IRelationalOperator) toIntersectGeom).Disjoint(intersectingGeom))
 						{
 							continue;
 						}
 
-						IGeometry intersected = op.Intersect(
-							intersectingGeom,
-							toIntersectGeom.Dimension);
+						IGeometry intersected =
+							IntersectionUtils.Intersect(toIntersectGeom, intersectingGeom,
+							                            dimension);
 
 						if (intersected.IsEmpty)
 						{
@@ -187,11 +245,26 @@ namespace ProSuite.QA.Tests.Transformers
 				extraValues.Add(
 					new CalculatedValue(BaseRowsFieldIndex, baseRows));
 
-				double partIntersected =
-					GetPartIntersected(intersectedFeature.Shape, intersectionGeometry);
+				if (GetGeometryDimension(Resulting.ShapeType) ==
+				    GetGeometryDimension(_intersected.ShapeType))
+				{
+					double partIntersected =
+						GetPartIntersected(intersectedFeature.Shape, intersectionGeometry);
 
-				extraValues.Add(
-					new CalculatedValue(PartIntersectedFieldIndex, partIntersected));
+					extraValues.Add(
+						new CalculatedValue(PartIntersectedFieldIndex, partIntersected));
+
+					double intersectionRatio =
+						GetPartIntersected(intersectedFeature.Shape, intersectionGeometry);
+
+					extraValues.Add(
+						new CalculatedValue(IntersectionRatioFieldIndex, intersectionRatio));
+				}
+				else
+				{
+					extraValues.Add(new CalculatedValue(PartIntersectedFieldIndex, null));
+					extraValues.Add(new CalculatedValue(IntersectionRatioFieldIndex, null));
+				}
 
 				extraValues.Add(new CalculatedValue(Resulting.OidFieldIndex, null));
 

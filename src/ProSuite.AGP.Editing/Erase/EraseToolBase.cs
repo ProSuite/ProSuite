@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -33,7 +32,10 @@ namespace ProSuite.AGP.Editing.Erase
 			RequiresSelection = true;
 		}
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
+
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			return SketchGeometryType.Polygon;
 		}
@@ -57,6 +59,13 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat(LocalizableStrings.EraseTool_LogPromptForSelection);
 		}
 
+		protected override bool CanSelectGeometryType(GeometryType geometryType)
+		{
+			return geometryType == GeometryType.Polyline ||
+				   geometryType == GeometryType.Polygon ||
+				   geometryType == GeometryType.Multipoint;
+		}
+
 		protected override bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection,
 		                                        NotificationCollection notifications = null)
 		{
@@ -65,7 +74,8 @@ namespace ProSuite.AGP.Editing.Erase
 			foreach (var layer in selection.Keys.OfType<FeatureLayer>())
 			{
 				if (layer.ShapeType == esriGeometryType.esriGeometryPolygon ||
-				    layer.ShapeType == esriGeometryType.esriGeometryPolyline)
+				    layer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+				    layer.ShapeType == esriGeometryType.esriGeometryMultipoint)
 				{
 					hasPolycurveSelection = true;
 				}
@@ -88,10 +98,16 @@ namespace ProSuite.AGP.Editing.Erase
 
 			var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
 			var taskFlash =
-				QueuedTaskUtils.Run(
-					() => ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures));
+				QueuedTaskUtils.Run(() => ToolUtils.FlashResultPolygonsAsync(
+					                    activeView, resultFeatures));
 
 			await Task.WhenAll(taskFlash, taskSave);
+
+
+			// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+			// sketch remains that cannot be cleared with ESC!
+			await ClearSketchAsync();
+			await StartSketchPhaseAsync();
 
 			return taskSave.Result;
 		}
@@ -163,7 +179,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 				FeatureClass featureClass = feature.GetTable();
 				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
-				GeometryType geometryType = classDefinition.GetShapeType();
+
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
 
@@ -182,75 +198,12 @@ namespace ProSuite.AGP.Editing.Erase
 			return true;
 		}
 
-		private static IEnumerable<Dataset> GetDatasets(IEnumerable<MapMember> mapMembers)
-		{
-			foreach (MapMember mapMember in mapMembers)
-			{
-				var featureLayer = mapMember as FeatureLayer;
-
-				if (featureLayer != null)
-				{
-					yield return featureLayer.GetFeatureClass();
-				}
-
-				var standaloneTable = mapMember as StandaloneTable;
-
-				if (standaloneTable != null)
-				{
-					yield return standaloneTable.GetTable();
-				}
-			}
-		}
-
 		private static IEnumerable<Dataset> GetDatasets(IEnumerable<Feature> features)
 		{
 			foreach (Feature feature in features)
 			{
 				yield return feature.GetTable();
 			}
-		}
-
-		protected override Cursor GetSelectionCursor()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.EraseOverlay, null);
-		}
-
-		protected override Cursor GetSelectionCursorShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.EraseOverlay,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorLasso()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.EraseOverlay,
-			                              Resources.Lasso);
-		}
-
-		protected override Cursor GetSelectionCursorLassoShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.EraseOverlay,
-			                              Resources.Lasso,
-			                              Resources.Shift);
-		}
-
-		protected override Cursor GetSelectionCursorPolygon()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.EraseOverlay,
-			                              Resources.Polygon);
-		}
-
-		protected override Cursor GetSelectionCursorPolygonShift()
-		{
-			return ToolUtils.CreateCursor(Resources.Arrow,
-			                              Resources.EraseOverlay,
-			                              Resources.Polygon,
-			                              Resources.Shift);
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -12,6 +13,7 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Xml;
+using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -144,7 +146,7 @@ namespace ProSuite.DomainServices.AO.QA
 					WriteDetailedVerificationReport
 						? IssueReportingContexts.QualityConditionWithIssues
 						: IssueReportingContexts.None,
-					VerifiedConditionContexts.Summary,
+					VerifiedConditionContexts.Summary | VerifiedConditionContexts.Dataset,
 					ReportInvolvedTableForSchemaIssues);
 
 				reportBuilders.Add(_xmlVerificationReportBuilder);
@@ -155,12 +157,44 @@ namespace ProSuite.DomainServices.AO.QA
 			return _verificationReportBuilder;
 		}
 
-		public void AddVerifiedDatasets(IEnumerable<Dataset> datasets)
+		public void AddVerifiedDataset([NotNull] QualityVerificationDataset verificationDataset,
+		                               [CanBeNull] IWorkspaceContext workspaceContext)
 		{
-			foreach (Dataset dataset in datasets)
+			string workspaceDisplayText = null;
+			ISpatialReference spatialReference = null;
+
+			IWorkspace workspace = workspaceContext?.Workspace;
+
+			workspaceDisplayText = workspace != null
+				                       ? WorkspaceUtils.GetWorkspaceDisplayText(workspace)
+				                       : "<N.A.>";
+
+			if (WriteDetailedVerificationReport)
 			{
-				_verificationReportBuilder.AddVerifiedDataset(dataset);
+				try
+				{
+					Dataset dataset = verificationDataset.Dataset;
+
+					if (dataset is IVectorDataset vectorDataset)
+					{
+						IFeatureClass featureClass =
+							workspaceContext?.OpenFeatureClass(vectorDataset);
+
+						if (featureClass != null)
+						{
+							spatialReference = DatasetUtils.GetSpatialReference(featureClass);
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					_msg.Warn("Unable to get detailed dataset properties " +
+					          $"from {verificationDataset.Dataset}", e);
+				}
 			}
+
+			_verificationReportBuilder.AddVerifiedDataset(verificationDataset,
+			                                              workspaceDisplayText, spatialReference);
 		}
 
 		public void AddVerifiedConditions(IEnumerable<QualitySpecificationElement> elements)

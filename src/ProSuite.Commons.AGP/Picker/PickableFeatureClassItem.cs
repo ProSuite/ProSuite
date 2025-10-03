@@ -13,8 +13,9 @@ public class PickableFeatureClassItem : PickableFeatureClassItemBase
 {
 	private BitmapImage _image;
 
-	public PickableFeatureClassItem(string datasetName,
-	                                IReadOnlyList<long> oids, Geometry geometry) :
+	public PickableFeatureClassItem([NotNull] string datasetName,
+	                                [NotNull] IReadOnlyList<long> oids,
+	                                [NotNull] Geometry geometry) :
 		base(datasetName, oids, geometry) { }
 
 	[NotNull]

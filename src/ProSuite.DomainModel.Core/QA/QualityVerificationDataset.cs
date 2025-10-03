@@ -35,5 +35,45 @@ namespace ProSuite.DomainModel.Core.QA
 			get { return _loadTime; }
 			set { _loadTime = value; }
 		}
+
+		public double Tolerance { get; set; } = double.NaN;
+
+		public double Resolution { get; set; } = double.NaN;
+
+		public string CoordinateSystem { get; set; }
+
+		#region Equality members
+
+		protected bool Equals(QualityVerificationDataset other)
+		{
+			return Equals(_dataset, other._dataset);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is null)
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((QualityVerificationDataset) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return (_dataset != null ? _dataset.GetHashCode() : 0);
+		}
+
+		#endregion
 	}
 }

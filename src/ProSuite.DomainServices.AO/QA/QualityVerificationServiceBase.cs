@@ -148,9 +148,10 @@ namespace ProSuite.DomainServices.AO.QA
 		protected abstract IGdbTransaction CreateGdbTransaction();
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
-		                                [NotNull] Model model)
+		                                [NotNull] DdxModel model)
 		{
-			SetTestPerimeter(areaOfInterest, model.SpatialReferenceDescriptor.SpatialReference);
+			SetTestPerimeter(areaOfInterest,
+			                 model.SpatialReferenceDescriptor.GetSpatialReference());
 		}
 
 		protected void SetTestPerimeter([CanBeNull] AreaOfInterest areaOfInterest,
@@ -176,7 +177,7 @@ namespace ProSuite.DomainServices.AO.QA
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IDomainTransactionManager domainTransactions)
 		{
-			var involvedModels = new HashSet<Model>();
+			var involvedModels = new HashSet<DdxModel>();
 
 			foreach (var qcon in qualitySpecification.Elements
 			                                         .Select(e => e.QualityCondition)
@@ -198,7 +199,7 @@ namespace ProSuite.DomainServices.AO.QA
 						domainTransactions.Initialize(objectDataset.AssociationEnds);
 					}
 
-					involvedModels.Add((Model) dataset.Model);
+					involvedModels.Add((DdxModel) dataset.Model);
 				}
 			}
 
@@ -679,7 +680,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 					string aoiTableName = verificationReporter.WriteAreaOfInterest(
 						_externalIssueRepository, areaOfInterest,
-						_verificationContext.SpatialReferenceDescriptor.SpatialReference);
+						_verificationContext.SpatialReferenceDescriptor.GetSpatialReference());
 
 					#region Write MXD - TO BE DEPRECATED once AO 10.x support is dropped
 
@@ -727,8 +728,16 @@ namespace ProSuite.DomainServices.AO.QA
 			// TODO indicate if polygon, perimeter name, perimeter type etc.
 			reportBuilder.BeginVerification(areaOfInterest);
 
-			verificationReporter.AddVerifiedDatasets(
-				qualityVerification.VerificationDatasets.Select(vds => vds.Dataset));
+			foreach (var verificationDataset in qualityVerification.VerificationDatasets)
+			{
+				Dataset dataset = verificationDataset.Dataset;
+				double loadTime = verificationDataset.LoadTime;
+
+				IWorkspaceContext workspaceContext =
+					VerificationContext.GetWorkspaceContext(dataset);
+
+				verificationReporter.AddVerifiedDataset(verificationDataset, workspaceContext);
+			}
 
 			verificationReporter.AddVerifiedConditions(
 				qualityVerification.ConditionVerifications.Select(
@@ -749,7 +758,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// Take from the model (as in the standalone/XML service)
 			ISpatialReference spatialReference =
-				_verificationContext.SpatialReferenceDescriptor.SpatialReference;
+				_verificationContext.SpatialReferenceDescriptor.GetSpatialReference();
 
 			return spatialReference;
 		}
@@ -1284,21 +1293,8 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			ICollection<Dataset> verifiedDatasets = VerificationContext.GetVerifiedDatasets();
 
-			IncludeBaseDatasets(verifiedDatasets, VerificationContext);
-
 			return GetDatasetsInvolvedInSelection(verifiedDatasets);
 		}
-
-		/// <summary>
-		/// Allows subclasses to include additional datasets that might not exist in the list
-		/// of verified datasets of the verification context. This is currently used for base
-		/// datasets of terrains.
-		/// </summary>
-		/// <param name="verifiedDatasets"></param>
-		/// <param name="verificationContext"></param>
-		protected abstract void IncludeBaseDatasets(
-			[NotNull] ICollection<Dataset> verifiedDatasets,
-			[NotNull] IVerificationContext verificationContext);
 
 		private class ErrorPerimeterRelation
 		{

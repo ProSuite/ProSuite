@@ -66,36 +66,47 @@ namespace ProSuite.Commons.AGP.Picker
 			//       .SelectMany(fcs => fcs);
 		}
 
-		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry,
-		                                              int selectionTolerancePixels)
+		public static Geometry ExpandGeometryByPixels(Geometry sketchGeometry, int tolerancePixels)
 		{
-			double selectionToleranceMapUnits = MapUtils.ConvertScreenPixelToMapLength(
-				MapView.Active, selectionTolerancePixels, sketchGeometry.Extent.Center);
-
-			double envelopeExpansion = selectionToleranceMapUnits * 2;
-
 			Envelope envelope = sketchGeometry.Extent;
+			MapPoint center = envelope.Center;
+
+			double toleranceMapUnits =
+				MapUtils.ConvertScreenPixelToMapLength(MapView.Active, tolerancePixels, center);
+
+			double expansion = toleranceMapUnits * 2;
 
 			// NOTE: MapToScreen in stereo map is sensitive to Z value (Picker location!)
-
-			// Rather than creating a non-Z-aware polygon with elliptic arcs by using buffer...
-			//Geometry selectionGeometry =
-			//	GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-
-			// Just expand the envelope
-			// .. but PickerViewModel needs a polygon to display selection geometry (press space).
-
 			// HasZ, HasM and HasID are inherited from input geometry.
 			// There is no need for GeometryUtils.EnsureGeometrySchema()
 
 			return GeometryFactory.CreatePolygon(
-				envelope.Expand(envelopeExpansion, envelopeExpansion, false),
+				envelope.Expand(expansion, expansion, false),
 				envelope.SpatialReference);
 		}
 
-		public static bool IsSingleClick(Geometry sketch)
+		public static bool IsPointClick(Geometry geometry, double tolerance,
+		                                out MapPoint clickPoint)
 		{
-			return ! (sketch.Extent.Width > 0 || sketch.Extent.Height > 0);
+			clickPoint = null;
+
+			if (geometry is null) return false;
+			if (geometry.IsEmpty) return false;
+
+			if (geometry is MapPoint point)
+			{
+				clickPoint = point;
+				return true;
+			}
+
+			var extent = geometry.Extent;
+			if (extent.Length < tolerance)
+			{
+				clickPoint = extent.Center;
+				return true;
+			}
+
+			return false;
 		}
 
 		public static SpatialRelationship GetSpatialRelationship()
@@ -117,29 +128,68 @@ namespace ProSuite.Commons.AGP.Picker
 
 		#region Show Picker
 
+		/// <summary>
+		/// Returns a feature item from the provided feature selections filtered to the lowest
+		/// geometry dimension.
+		/// </summary>
+		/// <param name="selectionByLayer"></param>
+		/// <param name="precedence"></param>
+		/// <returns>The single feature item or null if no selected feature exists in any of the
+		/// feature selections or none has been picked.</returns>
+		/// <remarks>The provided feature selections are filtered to the lowest geometry
+		/// dimension that contains at least one feature. If the lowest geometry dimension contains
+		/// more than one feature, the picker UI is shown.</remarks>
+		[ItemCanBeNull]
+		public static async Task<IPickableFeatureItem> PickSingleAsync(
+			[NotNull] IEnumerable<FeatureSelectionBase> selectionByLayer,
+			[NotNull] IPickerPrecedence precedence)
+		{
+			IList<IPickableItem> lowestGeometryDimensionFeatures =
+				GetLowestGeometryDimensionFeatureItems(selectionByLayer);
+
+			return
+				(IPickableFeatureItem) await PickSingleAsync(
+					                       lowestGeometryDimensionFeatures, precedence);
+		}
+
+		/// <summary>
+		/// Returns the single item selected from the picker control if more than one item is
+		/// provided. Otherwise, returns the only item or null if no items are provided or none
+		/// has been selected by the user.
+		/// </summary>
+		/// <param name="items"></param>
+		/// <param name="precedence"></param>
+		/// <returns></returns>
+		[ItemCanBeNull]
+		public static async Task<IPickableItem> PickSingleAsync(
+			[NotNull] ICollection<IPickableItem> items,
+			[NotNull] IPickerPrecedence precedence)
+		{
+			Assert.ArgumentNotNull(precedence, nameof(precedence));
+
+			if (items.Count == 0)
+			{
+				return null;
+			}
+
+			if (items.Count == 1)
+			{
+				return items.First();
+			}
+
+			var vm = new PickerViewModel(precedence.GetSelectionGeometry());
+
+			PickerService service = new PickerService(precedence);
+
+			return await service.Pick(items, vm);
+		}
+
 		public static async Task<IPickableItem> ShowPickerAsync(
 			IPickerPrecedence precedence,
-			IEnumerable<FeatureSelectionBase> orderedSelection)
+			IEnumerable<FeatureSelectionBase> candidates,
+			IPickableItemsFactory factory)
 		{
-			return await ShowPickerAsync(precedence, orderedSelection,
-			                             precedence.CreateItemsFactory());
-		}
-
-		public static async Task<IPickableItem> ShowPickerAsync<T>(
-			IPickerPrecedence precedence,
-			IEnumerable<FeatureSelectionBase> orderedSelection)
-			where T : IPickableItem
-		{
-			return await ShowPickerAsync(precedence, orderedSelection,
-			                             precedence.CreateItemsFactory<T>());
-		}
-
-		private static async Task<IPickableItem> ShowPickerAsync(IPickerPrecedence precedence,
-		                                                         IEnumerable<FeatureSelectionBase>
-			                                                         orderedSelection,
-		                                                         IPickableItemsFactory factory)
-		{
-			var items = factory.CreateItems(orderedSelection).ToList();
+			var items = factory.CreateItems(candidates);
 			IPickerViewModel vm = factory.CreateViewModel(precedence.GetSelectionGeometry());
 
 			var picker = new PickerService(precedence);
@@ -147,61 +197,62 @@ namespace ProSuite.Commons.AGP.Picker
 			return await picker.Pick(items, vm);
 		}
 
-		public static async Task<List<IPickableItem>> GetItems(
-			IEnumerable<FeatureSelectionBase> candidates,
+		public static async Task<List<IPickableItem>> GetItemsAsync(
+			ICollection<FeatureSelectionBase> candidates,
 			IPickerPrecedence precedence)
 		{
-			var ordered = OrderByGeometryDimension(candidates).ToList();
+			IPickableItemsFactory itemsFactory = precedence.CreateItemsFactory();
 
-			switch (GetPickerMode(precedence, ordered))
+			switch (precedence.GetPickerMode(candidates))
 			{
+				// Return empty list instead of list with null item. Happens
+				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync(precedence, ordered);
-					return new List<IPickableItem> { pick };
+					IPickableItem pick =
+						await ShowPickerAsync(precedence, candidates, itemsFactory);
+					return pick == null
+						       ? new List<IPickableItem>()
+						       : new List<IPickableItem> { pick };
 
 				case PickerMode.PickAll:
-					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+					return itemsFactory.CreateItems(candidates).ToList();
 
 				case PickerMode.PickBest:
-					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
-					                                             .CreateItems(ordered);
+					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
 					return new List<IPickableItem> { precedence.PickBest(items) };
 
-				case null:
-					return new List<IPickableItem>(0);
+				case PickerMode.None:
+					return new List<IPickableItem>();
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		public static async Task<List<IPickableItem>> GetItems<T>(
+		public static async Task<List<T>> GetItemsAsync<T>(
 			IEnumerable<FeatureSelectionBase> candidates,
-			IPickerPrecedence precedence, PickerMode? pickerMode)
+			IPickerPrecedence precedence, PickerMode pickerMode)
 			where T : IPickableItem
 		{
-			var ordered = OrderByGeometryDimension(candidates).ToList();
-
-			if (! ordered.Any())
-			{
-				pickerMode = null;
-			}
+			IPickableItemsFactory itemsFactory = precedence.CreateItemsFactory<T>();
 
 			switch (pickerMode)
 			{
+				// Return empty list instead of list with null item. Happens
+				// when user doesn't pick an item from picker window.
 				case PickerMode.ShowPicker:
-					IPickableItem pick = await ShowPickerAsync<T>(precedence, ordered);
-					return new List<IPickableItem> { pick };
+					IPickableItem pick =
+						await ShowPickerAsync(precedence, candidates, itemsFactory);
+					return pick == null ? new List<T>() : new List<T> { (T) pick };
 
 				case PickerMode.PickAll:
-					return new PickableFeatureClassItemsFactory().CreateItems(ordered).ToList();
+					return itemsFactory.CreateItems(candidates).OfType<T>().ToList();
 
 				case PickerMode.PickBest:
-					IEnumerable<IPickableItem> items = precedence.CreateItemsFactory()
-					                                             .CreateItems(ordered);
-					return new List<IPickableItem> { precedence.PickBest(items) };
+					IEnumerable<IPickableItem> items = itemsFactory.CreateItems(candidates);
+					return new List<T> { (T) precedence.PickBest(items) };
 
-				case null:
-					return new List<IPickableItem>(0);
+				case PickerMode.None:
+					return new List<T>();
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -209,47 +260,114 @@ namespace ProSuite.Commons.AGP.Picker
 
 		#endregion
 
+		/// <summary>
+		/// Gets the count of features with the lowest non-empty geometry dimension.
+		/// </summary>
+		/// <param name="layerSelection">The layer selections</param>
+		/// <returns>The number of features with the lowest non-empty dimension.</returns>
+		public static int GetLowestGeometryDimensionFeatureCount(
+			[NotNull] IEnumerable<FeatureSelectionBase> layerSelection)
+		{
+			var count = 0;
+
+			// Initialize with sentinel value to detect the first dimension
+			int shapeDimension = -1;
+
+			foreach (FeatureSelectionBase selection in
+			         layerSelection.OrderBy(fcs => fcs.ShapeDimension))
+			{
+				if (shapeDimension < selection.ShapeDimension)
+				{
+					// If we've already counted features at a lower dimension, return that count
+					if (count > 0)
+					{
+						return count;
+					}
+
+					// If there are no rows at the current dimension, count objects in the next one
+					shapeDimension = selection.ShapeDimension;
+				}
+
+				// Add all features of the current dimension to the count
+				count += selection.GetCount();
+			}
+
+			// Return the total count (may be 0 if no features were found)
+			return count;
+		}
+
+		/// <summary>
+		/// Gets all features from the specified layer selections with the lowest dimension that
+		/// has at least one feature.
+		/// </summary>
+		/// <param name="layerSelection">The layer selections</param>
+		/// <returns>The list of features with the lowest non-empty dimension.</returns>
+		/// <remarks>This method iterates the features in the <see cref="layerSelection"/> only once
+		/// or not at all if a lower-selection</remarks>
+		public static IList<IPickableItem> GetLowestGeometryDimensionFeatureItems(
+			[NotNull] IEnumerable<FeatureSelectionBase> layerSelection)
+		{
+			var result = new List<IPickableItem>();
+
+			int shapeDimension = -1;
+
+			// Loop through feature selections (points, then lines, polygons/multipatches)
+			foreach (FeatureSelectionBase selection in
+			         layerSelection.OrderBy(fcs => fcs.ShapeDimension))
+			{
+				if (shapeDimension < selection.ShapeDimension)
+				{
+					// If we've already found features at a lower dimension, return them
+					if (result.Count > 0)
+					{
+						return result;
+					}
+
+					// If there are no rows at the current dimension, count objects in the next one
+					shapeDimension = selection.ShapeDimension;
+				}
+
+				// Add all features of the current dimension to the count
+				result.AddRange(PickableFeatureItemsFactory.CreatePickableFeatureItems(selection));
+			}
+
+			return result;
+		}
+
 		public static void Select(List<IPickableItem> items,
 		                          SelectionCombinationMethod selectionMethod)
 		{
-			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
+			// No candidate (user clicked into empty space).
+			// Don't clear selection if SelectionCombinationMethod.XOR (press shift).
+			if (items.Count == 0 && selectionMethod == SelectionCombinationMethod.And)
 			{
-				SelectionUtils.SelectRows(item.Layers.First(),
-				                          selectionMethod, item.Oids);
-			}
-
-			foreach (IPickableFeatureItem item in items.OfType<IPickableFeatureItem>())
-			{
-				SelectionUtils.SelectRows(item.Layer,
-				                          selectionMethod, new[] { item.Oid });
-			}
-		}
-
-		private static PickerMode? GetPickerMode(
-			[NotNull] IPickerPrecedence precedence, ICollection<FeatureSelectionBase> candidates)
-		{
-			SelectionCombinationMethod selectionMethod = precedence.SelectionCombinationMethod;
-
-			if (! candidates.Any() && selectionMethod == SelectionCombinationMethod.XOR)
-			{
-				// No addition to and no removal from selection
-				return null;
-			}
-
-			if (! candidates.Any())
-			{
-				// No candidate (user clicked into empty space):
 				ClearSelection();
-				return null;
+				return;
 			}
 
-			// Clear the selection on the map level, NOT on the layer level
+			// New selection: clear the selection on the map level, NOT on the layer level
 			if (selectionMethod == SelectionCombinationMethod.New)
 			{
 				ClearSelection();
 			}
 
-			return precedence.GetPickerMode(candidates);
+			foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
+			{
+				// Important to loop over each layer, they could have different definition queries!
+				foreach (BasicFeatureLayer layer in item.Layers)
+				{
+					SelectionUtils.SelectRows(layer, selectionMethod, item.Oids.ToList());
+				}
+			}
+
+			foreach (var itemsByLayer in items.OfType<IPickableFeatureItem>()
+			                                  .GroupBy(item => item.Layer))
+			{
+				BasicFeatureLayer layer = itemsByLayer.Key;
+				List<long> oids = itemsByLayer.Select(item => item.Oid).ToList();
+
+				SelectionUtils.SelectRows(layer, selectionMethod, oids);
+			}
 		}
 
 		private static void ClearSelection()

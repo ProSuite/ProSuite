@@ -9,12 +9,11 @@ namespace ProSuite.Commons.AGP.Gdb
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
-	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>, IComparable<GdbRowIdentity>,
-	                               IRowReference
+	public readonly struct GdbRowIdentity : IEquatable<GdbRowIdentity>, IComparable<GdbRowIdentity>,
+	                                        IRowReference
 	{
 		public GdbRowIdentity([NotNull] Row row)
 		{
-			// todo daro: GetTable() might be a performance issue?
 			using (Table table = row.GetTable())
 			{
 				Table = new GdbTableIdentity(table);

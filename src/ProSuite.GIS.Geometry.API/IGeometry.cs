@@ -1,6 +1,6 @@
 namespace ProSuite.GIS.Geometry.API
 {
-	public interface IGeometry
+	public interface IGeometry : IClone
 	{
 		esriGeometryType GeometryType { get; }
 
@@ -15,6 +15,8 @@ namespace ProSuite.GIS.Geometry.API
 		void QueryEnvelope(IEnvelope outEnvelope);
 
 		IEnvelope Envelope { get; }
+
+		// TODO: IHitTest on IGeometry (for SelectConnectedLinesTool and others)
 
 		// TODO: T Project<T>() where T : IGeometry
 		IGeometry Project(ISpatialReference outputSpatialReference);
@@ -31,6 +33,11 @@ namespace ProSuite.GIS.Geometry.API
 		// TODO: ZAware, MAware, PointIDAware
 
 		object NativeImplementation { get; }
+	}
+
+	public interface IClone
+	{
+		bool IsEqual(IClone other);
 	}
 
 	public interface IMutableGeometry //<T> where T : class

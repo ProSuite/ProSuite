@@ -12,6 +12,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -19,7 +20,7 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using Path = System.IO.Path;
-#if !Server
+#if !Server || ARCGIS_11_5_OR_GREATER
 using ESRI.ArcGIS.GeoDatabaseExtensions;
 #endif
 
@@ -1140,8 +1141,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                      [NotNull] string tableName)
 		{
 			Assert.ArgumentNotNullOrEmpty(tableName, nameof(tableName));
-			Assert.True(workspace is ISQLSyntax, "workspace is not ISQLSyntax");
 
+			if (string.IsNullOrEmpty(databaseName) && string.IsNullOrEmpty(ownerName))
+			{
+				return tableName;
+			}
+
+			// TODO: In case the workspace does not implement ISQLSyntax, use ModelElementNameUtils
 			var sqlSyntax = (ISQLSyntax) workspace;
 
 			return sqlSyntax.QualifyTableName(
@@ -1231,7 +1237,47 @@ namespace ProSuite.Commons.AO.Geodatabase
 				"Opening query layer with name {0} using the following query description: {1}",
 				name, QueryDescriptionToString(queryDescription));
 
-			ITable queryClass = sqlWorkspace.OpenQueryClass(name, queryDescription);
+			ITable queryClass = null;
+			try
+			{
+				queryClass = sqlWorkspace.OpenQueryClass(name, queryDescription);
+			}
+			catch (COMException e)
+			{
+				_msg.Debug("Error opening query class", e);
+
+				if (e.ErrorCode == (int) fdoError.FDO_E_TABLE_ALREADY_EXISTS ||
+				    e.ErrorCode == (int) fdoError.FDO_E_FEATURECLASS_ALREADY_EXISTS)
+				{
+					IFeatureWorkspace featureWorkspace = (sqlWorkspace as IFeatureWorkspace);
+
+					if (featureWorkspace != null)
+					{
+						_msg.WarnFormat(
+							"Query class {0} already exists. Trying to open and release the existing one to ensure correct query is used:{1}{2}",
+							name, Environment.NewLine, QueryDescriptionToString(queryDescription));
+
+						// The query class already exists, try opening the normal way but rather than directly using it,
+						queryClass = featureWorkspace.OpenTable(name);
+
+						// fully release it to 0 references, so it will be released on the COM side.
+						ComUtils.ReleaseComObject(queryClass);
+
+						// This seems particularly necessary when the process runs in one thread only (--maxparallel 1):
+						GC.Collect();
+						GC.WaitForPendingFinalizers();
+
+						// Now create it again (with the current sql, that could be different from the initial one):
+						queryClass = sqlWorkspace.OpenQueryClass(name, queryDescription);
+					}
+				}
+
+				if (queryClass == null)
+				{
+					throw;
+				}
+			}
+
 			return queryClass;
 		}
 
@@ -2408,7 +2454,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return relationshipClassName.FeatureDatasetName;
 			}
 
-#if !Server
 			var topologyName = datasetName as ITopologyName;
 			if (topologyName != null)
 			{
@@ -2421,16 +2466,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return geometricNetworkName.FeatureDatasetName;
 			}
 
+			var networkDatasetName = datasetName as INetworkDatasetName;
+			if (networkDatasetName != null)
+			{
+				return networkDatasetName.FeatureDatasetName;
+			}
+
+#if ARCGIS_11_5_OR_GREATER
 			var terrainName = datasetName as ITerrainName;
 			if (terrainName != null)
 			{
 				return terrainName.FeatureDatasetName;
 			}
+#endif
 
-			var networkDatasetName = datasetName as INetworkDatasetName;
-			if (networkDatasetName != null)
+#if !Server
+			var terrainName = datasetName as ITerrainName;
+			if (terrainName != null)
 			{
-				return networkDatasetName.FeatureDatasetName;
+				return terrainName.FeatureDatasetName;
 			}
 
 			var fabricName = datasetName as ICadastralFabricName;
@@ -2438,8 +2492,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return fabricName.FeatureDatasetName;
 			}
-
 #endif
+
 			// other dataset name, assume not in a feature dataset
 			return null;
 		}
@@ -3053,17 +3107,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return featureClass.FeatureDataset;
 			}
 
-#if !Server
+#if ARCGIS_11_5_OR_GREATER
 			if (dataset is ITerrain terrain)
 			{
 				return terrain.FeatureDataset;
 			}
+#endif
 
 			if (dataset is ITopology topology)
 			{
 				return topology.FeatureDataset;
 			}
-#endif
 
 			if (dataset is IRelationshipClass relationshipClass)
 			{
@@ -4311,6 +4365,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			try
 			{
 				table.DeleteSearchedRows(filter);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error deleting rows in {GetName(table)} using filter:", e);
+				GdbQueryUtils.LogFilterProperties(filter);
+				throw;
 			}
 			finally
 			{

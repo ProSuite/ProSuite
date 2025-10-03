@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -19,40 +19,33 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
+using ProSuite.Commons.Notifications;
 
 namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
-public abstract class DestroyAndRebuildToolBase : ToolBase
+public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected DestroyAndRebuildToolBase()
+	{
+		FireSketchEvents = true;
+	}
+
 	private DestroyAndRebuildFeedback _feedback;
+
+	protected virtual bool UseOldSymbolization => true;
+
+	private GeometryType _currentFeatureGeometryType;
+
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
-		return new SymbolizedSketchTypeBasedOnSelection(this);
-	}
-
-	protected override Cursor GetSelectionCursor()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.DestroyAndRebuildOverlay,
-		                              null);
-	}
-
-	protected override Cursor GetSelectionCursorLasso()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.DestroyAndRebuildOverlay,
-		                              Resources.Lasso);
-	}
-
-	protected override Cursor GetSelectionCursorPolygon()
-	{
-		return ToolUtils.CreateCursor(Resources.Arrow,
-		                              Resources.DestroyAndRebuildOverlay,
-		                              Resources.Polygon);
+		return MapUtils.IsStereoMapView(ActiveMapView)
+			       ? null
+			       : new SymbolizedSketchTypeBasedOnSelection(this);
 	}
 
 	protected override bool AllowMultiSelection(out string reason)
@@ -61,127 +54,117 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		return false;
 	}
 
+	protected override SketchGeometryType GetSelectionSketchGeometryType()
+	{
+		return SketchGeometryType.Rectangle;
+	}
+
+	protected override SketchGeometryType GetEditSketchGeometryType()
+	{
+		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
+	}
+
 	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
-		// NOTE CompleteSketchOnMouseUp has not to be set before the sketch geometry type.
-		// Set it on tool activate. In ctor is not enough.
-		CompleteSketchOnMouseUp = true;
-		GeomIsSimpleAsFeature = false;
-
-		_feedback = new DestroyAndRebuildFeedback();
+		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization);
 
 		return base.OnToolActivateCoreAsync(hasMapViewChanged);
 	}
 
 	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
-		_feedback?.Clear();
+		_feedback?.ClearSelection();
 		_feedback = null;
 
 		return base.OnToolDeactivateCoreAsync(hasMapViewChanged);
 	}
 
-	protected override async Task OnSelectionChangedCoreAsync(
+	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 		MapSelectionChangedEventArgs args)
 	{
 		if (args.Selection.Count == 0)
 		{
-			_feedback.Clear();
+			_feedback?.ClearSelection();
 		}
 
-		await base.OnSelectionChangedCoreAsync(args);
+		return await base.OnMapSelectionChangedCoreAsync(args);
 	}
 
-	protected override async Task HandleEscapeAsync()
+	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+	                                                  CancelableProgressor progressor)
 	{
-		var task = QueuedTask.Run(
-			() =>
-			{
-				SelectionUtils.ClearSelection(ActiveMapView?.Map);
+		Feature feature = selectedFeatures.Single();
 
-				_feedback.Clear();
-			});
-		await ViewUtils.TryAsync(task, _msg);
+		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
+
+		_feedback?.UpdateSelection(selectedFeatures);
+
+		_msg.Info($"Rebuild the geometry for {GdbObjectUtils.GetDisplayValue(feature)}");
+
+		await base.AfterSelectionAsync(selectedFeatures, progressor);
 	}
 
-	protected override async Task<bool> ProcessSelectionCoreAsync(
-		IDictionary<BasicFeatureLayer, List<Feature>> featuresByLayer,
-		CancelableProgressor progressor = null)
+	protected override void LogEnteringSketchMode()
 	{
-		Assert.ArgumentCondition(featuresByLayer.Count == 1, "selection count has to be 1");
-
-		(BasicFeatureLayer layer, List<Feature> features) = featuresByLayer.FirstOrDefault();
-
-		Feature feature = features?.FirstOrDefault();
-
-		// todo daro: assert instead?
-		if (feature == null)
-		{
-			_msg.Debug("no selection");
-			_feedback.Clear();
-			return false; // startConstructionPhase = false
-		}
-
-		_feedback.UpdatePreview(feature.GetShape());
-
-		_msg.Info(
-			$"Destroy and rebuild feature {GdbObjectUtils.GetDisplayValue(feature, layer.Name)}");
-
 		_msg.Info("Sketch the new geometry. Hit [ESC] to reselect the target feature.");
-
-		await StartSketchAsync();
-
-		return true; // startConstructionPhase = true
 	}
 
-	protected override async Task<bool> OnConstructionSketchCompleteAsync(
-		Geometry geometry, IDictionary<BasicFeatureLayer, List<long>> selectionByLayer)
+	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
+		Geometry sketchGeometry,
+		EditingTemplate editTemplate,
+		MapView activeView,
+		CancelableProgressor cancelableProgressor = null)
 	{
-		// todo daro: assert instead?
-		if (selectionByLayer.Count == 0)
-		{
-			_msg.Debug("no selection");
-			_feedback.Clear();
-
-			return true; // startSelectionPhase = true;
-		}
-
 		await QueuedTaskUtils.Run(async () =>
 		{
+			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+
+			// todo daro: assert instead?
+			if (selectionByLayer.Count == 0)
+			{
+				_msg.Debug("no selection");
+				_feedback?.ClearSelection();
+
+				return true;
+			}
+
 			try
 			{
 				var applicableSelection =
 					SelectionUtils.GetApplicableSelectedFeatures(
-						selectionByLayer, CanSelectFromLayer);
+						selectionByLayer, (layer) => CanSelectFromLayer(layer));
 
 				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
 
 				if (selectedFeatures == null || selectedFeatures.Count == 0)
 				{
 					_msg.Debug("no applicable selection");
-					_feedback.Clear();
+					_feedback?.ClearSelection();
 
-					return true; // startSelectionPhase = true;
+					return true;
 				}
 
 				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
-				await StoreUpdatedFeature(featureLayer, originalFeature, geometry);
+				await StoreUpdatedFeature(featureLayer, originalFeature, sketchGeometry);
 
-				_feedback.Clear();
+				_feedback?.ClearSelection();
 
 				LogPromptForSelection();
-				return true; // startSelectionPhase = true;
+
+				return true;
 			}
 			catch (Exception ex)
 			{
 				_msg.Error(ex.Message, ex);
-				return true; // startSelectionPhase = true;
+				return true;
 			}
 		});
 
-		return true; // startSelectionPhase = true;
+		await StartSelectionPhaseAsync();
+		return true;
 	}
 
 	private async Task StoreUpdatedFeature([NotNull] BasicFeatureLayer featureLayer,
@@ -262,12 +245,14 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		_msg.Info("Select feature for destroy and rebuild.");
 	}
 
-	protected override bool CanSelectFromLayerCore(BasicFeatureLayer layer)
+	protected override bool CanSelectFromLayerCore(
+		BasicFeatureLayer basicFeatureLayer,
+		NotificationCollection notifications)
 	{
-		return layer is FeatureLayer;
+		return basicFeatureLayer is FeatureLayer;
 	}
 
-	protected override void StartConstructionPhaseCore()
+	protected override async Task OnSketchPhaseStartedAsync()
 	{
 		if (QueuedTask.OnWorker)
 		{
@@ -275,24 +260,9 @@ public abstract class DestroyAndRebuildToolBase : ToolBase
 		}
 		else
 		{
-			QueuedTask.Run(ResetSketchVertexSymbolOptions);
+			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 		}
-	}
 
-	protected override void StartSelectionPhaseCore()
-	{
-		if (QueuedTask.OnWorker)
-		{
-			SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-			SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-		}
-		else
-		{
-			QueuedTask.Run(() =>
-			{
-				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-			});
-		}
+		await base.OnSketchPhaseStartedAsync();
 	}
 }

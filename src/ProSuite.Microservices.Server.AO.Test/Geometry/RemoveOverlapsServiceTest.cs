@@ -53,8 +53,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbFeature targetFeature = GdbFeature.Create(43, fClass);
 			targetFeature.Shape = polygon2;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 
@@ -120,12 +120,15 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		[Test]
 		public void CanRemoveOverlaps()
 		{
-			var fClass =
-				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
-
 			var sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95,
 				WellKnownVerticalCS.LN02);
+
+			var fClass =
+				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon)
+				{
+					SpatialReference = sr
+				};
 
 			IPolygon polygon1 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
@@ -151,8 +154,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			overlap.SpatialReference = sr;
 
-			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature);
 
 			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 

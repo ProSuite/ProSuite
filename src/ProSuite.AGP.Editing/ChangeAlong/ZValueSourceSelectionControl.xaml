@@ -15,7 +15,7 @@
     </UserControl.Resources>
     
     <StackPanel
-	    ToolTip="{Binding CentralizableSetting.ToolTip}" >
+	    ToolTip="{Binding ToolTip}" ToolTipService.ShowOnDisabled="True">
 		<StackPanel.Resources>
             <editing:ComparisonConverter x:Key="ComparisonConverter" />
         </StackPanel.Resources>

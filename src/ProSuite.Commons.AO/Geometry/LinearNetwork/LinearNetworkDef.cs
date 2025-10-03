@@ -99,7 +99,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			return IsNetworkFeatureClass(featureClass);
 		}
 
-		public bool IsEdgeFeature(IFeature feature)
+		public bool IsEdgeFeature([NotNull] IFeature feature,
+		                          bool ignoreWhereClause = false)
 		{
 			if (DatasetUtils.GetShapeType(feature.Class) != esriGeometryType.esriGeometryPolyline)
 			{
@@ -114,7 +115,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 					continue;
 				}
 
-				return edgeClassDef.IsInLinearNetworkClass(feature);
+				return ignoreWhereClause || edgeClassDef.IsInLinearNetworkClass(feature);
 			}
 
 			return false;

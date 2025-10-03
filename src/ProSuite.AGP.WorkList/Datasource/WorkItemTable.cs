@@ -1,39 +1,67 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Datasource
 {
+	/// <summary>
+	/// Represents a work list as a read-only table which is the source behind the work list layer.
+	/// </summary>
 	public class WorkItemTable : PluginTableTemplate
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IReadOnlyList<PluginField> _fields;
-		private readonly string _tableName;
+		[NotNull] private readonly string _tableName;
 
-		private readonly IWorkList _workList;
+		[NotNull] private readonly IReadOnlyList<PluginField> _fields;
 
-		public WorkItemTable(IWorkList workList, string tableName)
+		[CanBeNull] private readonly IWorkItemData _workItemData;
+
+		[CanBeNull] private readonly WorkListGeometryService _service;
+
+		public WorkItemTable([NotNull] string tableName,
+		                     [CanBeNull] IWorkItemData workItemData,
+		                     WorkListGeometryService service)
 		{
-			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
-			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
+			Assert.ArgumentNotNullOrEmpty(nameof(tableName));
+
+			_tableName = tableName;
+			_workItemData = workItemData;
+
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
 
-			// Now that the table is likely used by a layer, make sure its work list is initialized
-			// and correctly updated when source rows change.
-			// TODO: In order to avoid duplicate item caching (once the work list navigator is open and re-creates its work list)
-			//       try updating this work list rather than replacing it (just replace its repository?)
-			// Also, consider not a-priory caching the work list items but query through the source tables.
-			// this would likely also fix changing definition queries or updates that make the item disappear (set allowed).
-			_workList.EnsureRowCacheSynchronized();
+			_service = service;
+		}
+
+		/// <summary>
+		/// Provides access to non-null work item data at all times even when the map is being
+		/// initialized and no data source or metadata other than the work list definition file
+		/// is available yet.
+		/// </summary>
+		private IWorkItemData WorkItems
+		{
+			get
+			{
+				IWorkList workList = WorkListRegistry.Instance.Get(_tableName);
+
+				if (workList != null)
+				{
+					// If the work list has been registered, use it, otherwise fall back to the
+					return workList;
+				}
+
+				// cached work item data
+				return _workItemData;
+			}
 		}
 
 		public override string GetName()
@@ -41,16 +69,29 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return _tableName;
 		}
 
+		[NotNull]
 		public override IReadOnlyList<PluginField> GetFields()
 		{
 			return _fields;
 		}
 
+		[CanBeNull]
 		public override Envelope GetExtent()
 		{
-			// Do return not an empty envelope.
-			// Pluggable Datasource cannot handle an empty envelope.
-			return _workList.Extent;
+			try
+			{
+				// NOTE: Do return not an empty envelope. Pluggable Datasource cannot handle an
+				// empty envelope.
+				// NOTE: But also, do not return null, as the feature classes spatial reference is 
+				// determined by the envelope's spatial reference! Without spatial reference,
+				// downstream layer queries will fail (GOTOP-621).
+				return WorkItems?.Extent;
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn(ex.Message, ex);
+				return null;
+			}
 		}
 
 		public override GeometryType GetShapeType()
@@ -58,35 +99,96 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return GeometryType.Polygon;
 		}
 
-		public override PluginCursorTemplate Search(QueryFilter queryFilter)
+		// TODO: (daro) use creation date of definition file?
+		public override DateTime GetLastModifiedTime()
 		{
-			Stopwatch watch = _msg.DebugStartTiming();
-
-			const bool ignoreStatusFilter = false;
-			List<object[]> list = _workList.GetItems(queryFilter, ignoreStatusFilter)
-			                               .Select(item => GetValues(item, _workList, _workList.Current))
-			                               .ToList(); // TODO drop ToList, inline
-
-			_msg.DebugStopTiming(
-				watch, $"{nameof(WorkItemTable)}.{nameof(Search)}(): {list.Count} items");
-
-			return new WorkItemCursor(list);
+			return DateTime.Now;
 		}
 
-		public override PluginCursorTemplate Search(SpatialQueryFilter spatialQueryFilter)
+		[NotNull]
+		public override PluginCursorTemplate Search(QueryFilter filter)
 		{
-			return Search((QueryFilter) spatialQueryFilter);
+			// This is called on open table. Check QueryFilter.ObjectIDs.
+			try
+			{
+				// NOTE: If the Extent is null, the spatial reference will be null as well and all
+				//       filters with null OutputSpatialReference will fail in MoveNext with a
+				//       null-pointer from deep inside the Pro SDK
+				_msg.VerboseDebug(() =>
+				{
+					bool willFail = filter.OutputSpatialReference == null &&
+					                WorkItems.Extent == null;
+
+					return "Querying WorkItemTable '" + _tableName +
+					       (willFail
+						        ? "' with null OutputSpatialReference and null Extent (will likely fail in MoveNext)"
+						        : "...");
+				});
+
+				IWorkItemData workItems = WorkItems;
+
+				if (workItems == null)
+				{
+					// Even if unexpectedly no work items are available, return an empty cursor instead of throwing.
+					_msg.DebugFormat("No work items available! Returning no item for {0}",
+					                 _tableName);
+					return new WorkItemCursor(Enumerable.Empty<object[]>());
+				}
+
+				// NOTE: The spatial filtering is implemented significantly different. It matters which overload
+				//       of Search is called!
+				IEnumerable<IWorkItem> resultItems =
+					filter is SpatialQueryFilter spatialFilter
+						? workItems.Search(spatialFilter)
+						: workItems.Search(filter);
+
+				// NOTE: If an exception is thrown from GetValues (i.e. cursor.MoveNext()), the
+				//       a notification appears in the Notifications pane:
+				//       "<layer name>: Invalid pointer function parameter"
+				// -> Deliberately not catch to make this state visible to the user (and explain
+				//    why nothing is drawn).
+				IEnumerable<object[]> resultRows =
+					resultItems.Select(item => GetValues(item, workItems, workItems.CurrentItem));
+
+				return new WorkItemCursor(resultRows);
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn(ex.Message, ex);
+				return new WorkItemCursor(Enumerable.Empty<object[]>());
+			}
 		}
 
-		private static object[] GetValues([NotNull] IWorkItem item, IWorkList workList,
+		[NotNull]
+		public override PluginCursorTemplate Search(SpatialQueryFilter filter)
+		{
+			if (WorkItems is IWorkList workList && workList.CacheBufferedItemGeometries)
+			{
+				_service?.UpdateItemGeometries(_tableName, filter);
+			}
+
+			return Search((QueryFilter) filter);
+		}
+
+		[NotNull]
+		private static object[] GetValues([NotNull] IWorkItem item,
+		                                  IWorkItemData workListItems,
 		                                  IWorkItem current = null)
 		{
 			var values = new object[5];
-			values[0] = item.OID;
-			values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
-			values[2] = item.Visited ? 1 : 0;
-			values[3] = item == current ? 1 : 0;
-			values[4] = workList.GetItemGeometry(item);
+			try
+			{
+				values[0] = item.OID;
+				values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
+				values[2] = item.Visited ? 1 : 0;
+				values[3] = item == current ? 1 : 0;
+				values[4] = workListItems.GetItemDisplayGeometry(item);
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn(ex.Message, ex);
+			}
+
 			return values;
 		}
 
@@ -94,11 +196,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			var fields = new List<PluginField>(8)
 			             {
-				             new PluginField("OBJECTID", "ObjectID", FieldType.OID),
-				             new PluginField("STATUS", "Status", FieldType.Integer),
-				             new PluginField("VISITED", "Visited", FieldType.Integer),
-				             new PluginField("CURRENT", "Is Current", FieldType.Integer),
-				             new PluginField("SHAPE", "Shape", FieldType.Geometry)
+				             new("OBJECTID", "ObjectID", FieldType.OID),
+				             new("STATUS", "Status", FieldType.Integer),
+				             new("VISITED", "Visited", FieldType.Integer),
+				             new("CURRENT", "Is Current", FieldType.Integer),
+				             new("SHAPE", "Shape", FieldType.Geometry)
 			             };
 			return fields.ToArray();
 		}
@@ -106,7 +208,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		#region Native RowCount
 
 		// First shot: not supported; but we probably could easily!
-
 		public override bool IsNativeRowCountSupported()
 		{
 			return false;

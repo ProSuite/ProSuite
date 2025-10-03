@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.Generalize
 				}
 				else
 				{
-					IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature);
+					IEnumerable<MapPoint> vertices = GeometryUtils.GetVertices(feature.GetShape());
 
 					// draw vertices before drawing the rest
 					foreach (var vertex in vertices)

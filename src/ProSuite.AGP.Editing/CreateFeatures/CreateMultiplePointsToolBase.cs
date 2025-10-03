@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,8 +25,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected CreateMultiplePointsToolBase()
 		{
-			UseSnapping = true;
-
 			RequiresSelection = false;
 
 			// This does not work unless loadOnClick="false" in the daml.xml:
@@ -48,6 +47,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				"Select a point or multipoint feature template in the Create Features pane";
 		}
 
+		protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+
 		protected override void OnCurrentTemplateUpdated()
 		{
 			UpdateEnabled();
@@ -62,7 +63,14 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		#endregion
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
+		{
+			return MapUtils.IsStereoMapView(ActiveMapView)
+				       ? null
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
+		}
+
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			return SketchGeometryType.Multipoint;
 		}
@@ -100,7 +108,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			{
 				try
 				{
-					SetCursor(Cursors.Wait);
+					SetToolCursor(Cursors.Wait);
 
 					List<long> newFeatureIds;
 
@@ -136,7 +144,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				}
 				finally
 				{
-					SetCursor(SketchCursor);
+					SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
 				}
 			});
 
@@ -160,7 +168,19 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
 		{
-			return ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+			FeatureClass result;
+			try
+			{
+				result = ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+			}
+			catch (Exception e)
+			{
+				throw new InvalidOperationException(
+					$"{e.Message}. Please select a template that " +
+					"determines the type of the new features.");
+			}
+
+			return result;
 		}
 
 		protected virtual object GetFieldValue([NotNull] Field field,

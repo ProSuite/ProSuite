@@ -426,6 +426,45 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
+		public void CanTestPointNotNearTwoPointPolylineInteriorVertices_Repro_PS248()
+		{
+			IFeatureWorkspace testWs =
+				TestWorkspaceUtils.CreateInMemoryWorkspace("QaPointNotNearTest_Repro248");
+
+			IFieldsEdit fields = new FieldsClass();
+			fields.AddField(FieldUtils.CreateOIDField());
+			fields.AddField(FieldUtils.CreateShapeField(
+				                "Shape", esriGeometryType.esriGeometryPolyline,
+				                SpatialReferenceUtils.CreateSpatialReference
+				                ((int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95,
+				                 true), 1000, true));
+
+			IFeatureClass lineFC = DatasetUtils.CreateSimpleFeatureClass(
+				testWs, "polylineFc", fields);
+
+			IFeatureClass pointFc = CreatePointClass(testWs, "pointFc");
+
+			IFeature lineFeature = lineFC.CreateFeature();
+
+			lineFeature.Shape = CurveConstruction.StartLine(0, 0, 0)
+			                                     .LineTo(50, 100, 10)
+			                                     .Curve;
+			lineFeature.Store();
+
+			IFeature p1 = pointFc.CreateFeature();
+			p1.Shape = GeometryFactory.CreatePoint(45, 90, 0);
+			p1.Store();
+
+			// A 2-point line has no interior vertices, so the test should not report an error:
+			var test1 = new QaPointNotNear(
+				ReadOnlyTableFactory.Create(pointFc), ReadOnlyTableFactory.Create(lineFC), 95);
+			test1.GeometryComponents = new[] { GeometryComponent.InteriorVertices };
+			var runner = new QaContainerTestRunner(1000, test1);
+			runner.Execute();
+			AssertUtils.NoError(runner);
+		}
+
+		[Test]
 		[Ignore("requires connection to TOPGIST")]
 		public void PerformanceTest()
 		{

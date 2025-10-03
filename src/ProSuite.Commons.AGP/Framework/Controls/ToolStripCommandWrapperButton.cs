@@ -3,13 +3,16 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Drawing;
+using Color = System.Drawing.Color;
 
 namespace ProSuite.Commons.AGP.Framework.Controls
 {
@@ -101,7 +104,7 @@ namespace ProSuite.Commons.AGP.Framework.Controls
 					SetPluginWrapper(FrameworkApplication.GetPlugInWrapper(_damlId));
 				}
 
-				return Assert.NotNull(_pluginWrapper);
+				return Assert.NotNull(_pluginWrapper, $"Cannot create tool {_damlId}");
 			}
 		}
 
@@ -119,6 +122,9 @@ namespace ProSuite.Commons.AGP.Framework.Controls
 		{
 			try
 			{
+				// PROBLEM: When the Enabled value is false, the Image is not rendered.
+				// IDEA: Draw a greyed version of the Image as BackgroundImage, when Enabled is false.
+
 				// update Enabled
 				Enabled = PlugInWrapper.Enabled;
 
@@ -145,14 +151,34 @@ namespace ProSuite.Commons.AGP.Framework.Controls
 				if (Image == null || force)
 				{
 					// update Image
-					BitmapImage bitmapImage = PlugInWrapper.SmallImage as BitmapImage;
+					Bitmap bitmap = null;
+					if (PlugInWrapper.SmallImage is BitmapImage bitmapImage)
+					{
+						bitmap = BitmapUtils.CreateBitmap(bitmapImage);
+					}
 
-					UpdateButtonImage(bitmapImage);
+					if (PlugInWrapper.SmallImage is DrawingImage drawingImage)
+					{
+						bitmap = BitmapUtils.CreateBitmap(drawingImage);
+					}
+
+					if (bitmap != null)
+					{
+						Image = bitmap;
+
+						Color firstPixelValue = bitmap.GetPixel(0, 0);
+						if (firstPixelValue.A != 0)
+						{
+							ImageTransparentColor = bitmap.GetPixel(0, 0);
+						}
+					}
 				}
 			}
 			catch (Exception e)
 			{
-				_msg.Warn("Error updating appearance of wrapper control", e);
+				_msg.Warn(
+					$"Error updating appearance of wrapper control: {ExceptionUtils.FormatMessage(e)}",
+					e);
 			}
 		}
 
@@ -261,18 +287,6 @@ namespace ProSuite.Commons.AGP.Framework.Controls
 			{
 				Command.CanExecuteChanged -= _pluginWrapper_CanExecuteChanged;
 			}
-		}
-
-		private void UpdateButtonImage([CanBeNull] BitmapImage bitmapImage)
-		{
-			if (bitmapImage == null)
-			{
-				return;
-			}
-
-			Bitmap bitmap = BitmapUtils.CreateBitmap(bitmapImage);
-
-			Image = bitmap;
 		}
 
 		#endregion

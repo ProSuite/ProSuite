@@ -1,26 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
+using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -28,10 +37,13 @@ using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
+using ProSuite.Microservices.AO.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.QA.Distributed;
+using ProSuite.QA.Container;
 using Quaestor.LoadReporting;
+using Quaestor.ProcessAdministration;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -40,9 +52,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly StaTaskScheduler _staThreadScheduler;
-
-		private static readonly ThreadAffineUseNameProvider _userNameProvider =
-			new ThreadAffineUseNameProvider();
 
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
 			_verificationInputsFactoryMethod;
@@ -64,7 +73,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_staThreadScheduler = new StaTaskScheduler(maxThreadCount);
 
-			EnvironmentUtils.SetUserNameProvider(_userNameProvider);
+			var perThreadUserNameProvider =
+				EnvironmentUtils.GetUserNameProvider() as ThreadAffineUseNameProvider;
+
+			if (perThreadUserNameProvider == null)
+			{
+				var userNameProvider = new ThreadAffineUseNameProvider();
+				EnvironmentUtils.SetUserNameProvider(userNameProvider);
+			}
 		}
 
 		/// <summary>
@@ -82,6 +98,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		[CanBeNull]
 		public ServiceLoad CurrentLoad { get; set; }
+
+		/// <summary>
+		/// Admin interface to manage requests and their cancellation.
+		/// </summary>
+		public IRequestAdmin RequestAdmin { get; set; }
 
 		/// <summary>
 		/// The license checkout action to be performed before any service call is executed.
@@ -122,17 +143,43 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public bool KeepServingOnErrorDefaultValue { get; set; }
 
+		/// <summary>
+		/// Whether the service should be set to unhealthy after each verification. This allows
+		/// for process recycling after each verification to avoid GDB-locks.
+		/// </summary>
+		public bool SetUnhealthyAfterEachVerification { get; set; } =
+			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				"PROSUITE_QA_SERVER_SET_UNHEALTHY_AFTER_VERIFICATION");
+
+		/// <summary>
+		/// Whether the service should be set to unhealthy after a verification when the memory
+		/// allocation (private bytes) exceeds the specified amount in MB. This allows
+		/// for process recycling after verifications that fragment the process memory
+		/// which can lead to excessive memory pressure on the host.
+		/// </summary>
+		public double UnhealthyMemoryLimitMegaBytes { get; set; } = GetUnhealthyMemoryLimit();
+
 		public override async Task VerifyQuality(
 			VerificationRequest request,
 			IServerStreamWriter<VerificationResponse> responseStream,
 			ServerCallContext context)
 		{
+			CancelableRequest registeredRequest = null;
 			try
 			{
 				await StartRequest(request);
 
+				registeredRequest =
+					RegisterRequest(request.UserName, request.Environment,
+					                context.CancellationToken);
+
+				var trackCancellationToken =
+					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
+
+				// TODO: Adapt ITrackCancel, move to CancellationToken everywhere.
 				Func<ITrackCancel, ServiceCallStatus> func =
-					trackCancel => VerifyQualityCore(request, responseStream, trackCancel);
+					trackCancel =>
+						VerifyQualityCore(request, responseStream, trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -153,6 +200,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			finally
 			{
+				if (registeredRequest != null)
+				{
+					RequestAdmin.UnregisterRequest(registeredRequest);
+				}
+
 				EndRequest();
 			}
 		}
@@ -180,6 +232,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ServerCallContext context)
 		{
 			VerificationRequest request = null;
+			CancelableRequest registeredRequest = null;
 
 			try
 			{
@@ -192,21 +245,49 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				await StartRequest(request);
 
+				registeredRequest =
+					RegisterRequest(request.UserName, request.Environment,
+					                context.CancellationToken);
+
+				var trackCancellationToken =
+					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
+
 				// TODO: Separate data request handler class with async method
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
 					{
-						return Task.Run(async () =>
-							                await RequestMoreDataAsync(
-									                requestStream, responseStream, context, r)
-								                .ConfigureAwait(false))
-						           .Result;
+						Task<DataVerificationRequest> task = RequestMoreDataAsync(
+							requestStream, responseStream, context, r);
+
+						long timeOutMillis = 30 * 1000;
+						long elapsedMillis = 0;
+						int interval = 20;
+						while (! task.IsCompleted && elapsedMillis < timeOutMillis)
+						{
+							Thread.Sleep(interval);
+							elapsedMillis += interval;
+						}
+
+						if (task.IsFaulted)
+						{
+							throw task.Exception;
+						}
+
+						if (! task.IsCompleted)
+						{
+							throw new TimeoutException(
+								$"Client failed to provide data within {elapsedMillis}ms");
+						}
+
+						DataVerificationRequest moreData = task.Result;
+
+						return moreData;
 					};
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
 						VerifyDataQualityCore(initialRequest, moreDataRequest, responseStream,
-						                      trackCancel);
+						                      trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -221,6 +302,94 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error verifying quality for request {request}", e);
+
+				ServiceUtils.SendFatalException(e, responseStream);
+				ServiceUtils.SetUnhealthy(Health, GetType());
+			}
+			finally
+			{
+				if (registeredRequest != null)
+				{
+					RequestAdmin.UnregisterRequest(registeredRequest);
+				}
+
+				EndRequest();
+			}
+		}
+
+		public override async Task QueryData(IAsyncStreamReader<QueryDataRequest> requestStream,
+		                                     IServerStreamWriter<QueryDataResponse> responseStream,
+		                                     ServerCallContext context)
+		{
+			QueryDataRequest request = null;
+			try
+			{
+				Stopwatch watch = Stopwatch.StartNew();
+
+				Assert.True(await requestStream.MoveNext(), "No request");
+
+				request = Assert.NotNull(requestStream.Current, "No request");
+
+				await StartRequest(context.Peer, request, true);
+
+				// TODO: Separate data request handler class with async method
+				Func<QueryDataResponse, QueryDataRequest> moreDataRequest = null;
+
+				bool useclientData =
+					request.DataSources.Any(ds => string.IsNullOrEmpty(ds.CatalogPath));
+
+				if (useclientData)
+				{
+					moreDataRequest =
+						delegate(QueryDataResponse r)
+						{
+							Task<QueryDataRequest> task = RequestMoreDataAsync(
+								requestStream, responseStream, context, r);
+
+							long timeOutMillis = 30 * 1000;
+							long elapsedMillis = 0;
+							int interval = 20;
+							while (! task.IsCompleted && elapsedMillis < timeOutMillis)
+							{
+								Thread.Sleep(interval);
+								elapsedMillis += interval;
+							}
+
+							if (task.IsFaulted)
+							{
+								throw task.Exception;
+							}
+
+							if (! task.IsCompleted)
+							{
+								throw new TimeoutException(
+									$"Client failed to provide data within {elapsedMillis}ms");
+							}
+
+							QueryDataRequest moreData = task.Result;
+
+							return moreData;
+						};
+				}
+
+				Func<ITrackCancel, ServiceCallStatus> func = trackCancel =>
+					QueryDataCore(request, responseStream, moreDataRequest, trackCancel);
+
+				ServiceCallStatus result =
+					await GrpcServerUtils.ExecuteServiceCall(
+						func, context, _staThreadScheduler, true);
+
+				watch.Stop();
+
+				_msg.InfoFormat("Data request {0} ({1} ms)", result, watch.ElapsedMilliseconds);
+			}
+			catch (TaskCanceledException canceledException)
+			{
+				HandleCancellationException(request, context, canceledException);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error querying data for request {request}", e);
 
 				ServiceUtils.SendFatalException(e, responseStream);
 				ServiceUtils.SetUnhealthy(Health, GetType());
@@ -331,6 +500,47 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.DebugFormat("Remaining requests that are inprogress: {0}",
 				                 CurrentLoad.CurrentProcessCount);
 			}
+
+			if (Health?.IsAnyServiceUnhealthy() == true)
+			{
+				return;
+			}
+
+			if (SetUnhealthyAfterEachVerification)
+			{
+				ServiceUtils.SetUnhealthy(
+					Health, GetType(),
+					"Process is configured to be set to un-healthy after each request to allow for process recycling.");
+			}
+
+			if (UnhealthyMemoryLimitMegaBytes >= 0)
+			{
+				double privateBytesMb;
+				using (Process process = Process.GetCurrentProcess())
+				{
+					long privateBytes = process.PrivateMemorySize64;
+
+					const double mega = 1024 * 1024;
+
+					privateBytesMb = privateBytes / mega;
+				}
+
+				if (privateBytesMb > UnhealthyMemoryLimitMegaBytes)
+				{
+					string reason =
+						"High memory usage (allow for process recycling). " +
+						$"Private Memory: {privateBytesMb} MB. Configured limit: {UnhealthyMemoryLimitMegaBytes} MB";
+
+					ServiceUtils.SetUnhealthy(Health, GetType(), reason);
+				}
+				else
+				{
+					_msg.InfoFormat(
+						"Process is still healthy in terms of memory usage. " +
+						"Private Memory: {0} MB. Configured limit: {1} MB",
+						privateBytesMb, UnhealthyMemoryLimitMegaBytes);
+				}
+			}
 		}
 
 		private async Task<bool> EnsureLicenseAsync()
@@ -392,13 +602,56 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Task responseReaderTask = Task.Run(
 					async () =>
 					{
-						while (resultData == null)
+						// NOTE: The client should probably ensure that this call back
+						//       does not exceed a certain time span. Ideally this does
+						//       only block for a few seconds:
+
+						// This results in an eternal loop and using a timespan here has no effect
+						//while (resultData == null && elapsedMillis < timeOutMillis)
 						{
 							while (await requestStream.MoveNext().ConfigureAwait(false))
 							{
+								// TODO: only break if result_data.HasMoreDate is false
 								resultData = requestStream.Current;
 								break;
 							}
+						}
+					});
+
+				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await responseReaderTask.ConfigureAwait(false);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error getting more data for class id " +
+				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+			}
+
+			return resultData;
+		}
+
+		private static async Task<QueryDataRequest> RequestMoreDataAsync(
+			IAsyncStreamReader<QueryDataRequest> requestStream,
+			IServerStreamWriter<QueryDataResponse> responseStream,
+			ServerCallContext context,
+			QueryDataResponse r)
+		{
+			QueryDataRequest resultData = null;
+
+			try
+			{
+				Task responseReaderTask = Task.Run(
+					async () =>
+					{
+						// NOTE: The client should probably ensure that this call back
+						//       does not exceed a certain time span. Ideally this does
+						//       only block for a few seconds:
+
+						while (await requestStream.MoveNext().ConfigureAwait(false))
+						{
+							// TODO: only break if result_data.HasMoreDate is false
+							resultData = requestStream.Current;
+							break;
 						}
 					});
 
@@ -451,10 +704,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 				else
 				{
-					// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
-					// short-term objects (request) -> add to background verification inputs
 					IBackgroundVerificationInputs backgroundVerificationInputs =
-						_verificationInputsFactoryMethod(request);
+						CreateBackgroundVerificationInputs(request);
 
 					if (initialRequest.Schema != null)
 					{
@@ -473,7 +724,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					qaService = CreateVerificationService(
 						backgroundVerificationInputs, responseStreamer, trackCancel);
 
-					verification = qaService.Verify(backgroundVerificationInputs, trackCancel);
+					verification = WithCulture(
+						request.Parameters.ReportCultureCode,
+						() => qaService.Verify(backgroundVerificationInputs, trackCancel));
 
 					deletableAllowedErrorRefs.AddRange(
 						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
@@ -482,7 +735,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				ServiceUtils.SetUnhealthy(Health, GetType());
 			}
@@ -578,7 +831,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
-				cancellationMessage = $"Server error: {e.Message}";
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
@@ -595,12 +848,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
+		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
+		                                          [CanBeNull] string environment,
+		                                          CancellationToken token)
+		{
+			CancellationTokenSource combinedTokenSource =
+				CancellationTokenSource.CreateLinkedTokenSource(token);
+
+			return RequestAdmin?.RegisterRequest(requestUserName, environment, combinedTokenSource);
+		}
+
 		private ServiceCallStatus VerifyStandaloneXmlCore(
 			StandaloneVerificationRequest request,
 			VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
 			ITrackCancel trackCancel)
 		{
 			SetupUserNameProvider(request.UserName);
+
 			try
 			{
 				VerificationParametersMsg parameters = request.Parameters;
@@ -642,7 +906,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.DebugFormat("Error during processing of request {0}", request);
-				_msg.Error($"Error verifying quality: {e.Message}", e);
+				_msg.Error($"Error verifying quality: {ExceptionUtils.FormatMessage(e)}", e);
 
 				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
 				{
@@ -662,22 +926,39 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ITrackCancel trackCancel,
 			out BackgroundVerificationService qaService)
 		{
+			IBackgroundVerificationInputs backgroundVerificationInputs =
+				CreateBackgroundVerificationInputs(request);
+
+			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+
+			BackgroundVerificationService service = CreateVerificationService(
+				backgroundVerificationInputs, responseStreamer, trackCancel);
+
+			service.DistributedTestRunner = distributedTestRunner;
+
+			QualityVerification verification =
+				WithCulture(request.Parameters.ReportCultureCode,
+				            () => service.Verify(backgroundVerificationInputs, trackCancel));
+
+			qaService = service;
+			return verification;
+		}
+
+		private IBackgroundVerificationInputs CreateBackgroundVerificationInputs(
+			VerificationRequest request)
+		{
 			// TODO: Separate long-lived objects, such as datasetLookup, domainTransactions (add to this class) from
 			// short-term objects (request) -> add to background verification inputs
 			IBackgroundVerificationInputs backgroundVerificationInputs =
 				_verificationInputsFactoryMethod(request);
 
-			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
+			if (SupportedInstanceDescriptors != null)
+			{
+				backgroundVerificationInputs.SupportedInstanceDescriptors =
+					SupportedInstanceDescriptors;
+			}
 
-			qaService = CreateVerificationService(
-				backgroundVerificationInputs, responseStreamer, trackCancel);
-
-			qaService.DistributedTestRunner = distributedTestRunner;
-
-			QualityVerification verification =
-				qaService.Verify(backgroundVerificationInputs, trackCancel);
-
-			return verification;
+			return backgroundVerificationInputs;
 		}
 
 		private QualityVerification VerifyStandaloneXmlCore<T>(
@@ -715,10 +996,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				xmlService.ProgressStreamer = responseStreamer;
 			}
 
-			Model primaryModel =
+			DdxModel primaryModel =
 				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			responseStreamer.KnownIssueSpatialReference =
-				primaryModel?.SpatialReferenceDescriptor?.SpatialReference;
+				primaryModel?.SpatialReferenceDescriptor?.GetSpatialReference();
 
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb;
 
@@ -739,10 +1020,174 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ProtobufGeometryUtils.FromSpatialReferenceMsg(
 					parameters.IssueRepositorySpatialReference);
 
-			xmlService.ExecuteVerification(qualitySpecification, aoi, parameters.TileSize,
-			                               trackCancel);
+			WithCulture(parameters.ReportCultureCode,
+			            () => xmlService.ExecuteVerification(qualitySpecification, aoi,
+			                                                 parameters.TileSize, trackCancel));
 
 			return xmlService.Verification;
+		}
+
+		private ServiceCallStatus QueryDataCore(
+			[NotNull] QueryDataRequest request,
+			IServerStreamWriter<QueryDataResponse> responseStream,
+			Func<QueryDataResponse, QueryDataRequest> moreDataRequest,
+			ITrackCancel trackCancel)
+		{
+			SetupUserNameProvider(request.UserName);
+
+			try
+			{
+				// TODO: Allow trNoTransform with pass-through table name
+				InstanceConfigurationMsg transformerConfigurationMsg = request.Transformer;
+
+				IEnumerable<DataSourceMsg> dataSourceMsgs = request.DataSources;
+
+				DataRequest dataRequest = request.DataRequest;
+
+				//if (request.Schema != null)
+				//{
+				//	backgroundVerificationInputs.SetGdbSchema(
+				//		ProtobufConversionUtils.CreateSchema(
+				//			initialRequest.Schema.ClassDefinitions,
+				//			initialRequest.Schema.RelclassDefinitions, moreDataRequest));
+				//}
+				//else if (moreDataRequest != null)
+				//{
+				//	backgroundVerificationInputs.SetRemoteDataAccess(moreDataRequest);
+				//}
+
+				TransformerConfiguration transformerConfiguration =
+					CreateTransformerConfiguration(transformerConfigurationMsg, dataSourceMsgs,
+					                               request.Schema, moreDataRequest);
+
+				var datasetContext = new MasterDatabaseDatasetContext();
+
+				ITableTransformer tableTransformer = InstanceFactory.CreateTransformer(
+					transformerConfiguration,
+					new SimpleDatasetOpener(datasetContext));
+
+				foreach (IWorkspace workspace in tableTransformer.InvolvedTables.Select(
+					         t => t.Workspace))
+				{
+					WorkspaceUtils.TryRefreshVersion(workspace);
+				}
+
+				// When querying the field name predictability is more important than not having dots in the names:
+				if (tableTransformer is ITableTransformerFieldSettings transformerFieldSettings)
+				{
+					transformerFieldSettings.FullyQualifyFieldNames = true;
+				}
+
+				IReadOnlyTable table = (IReadOnlyTable) tableTransformer.GetTransformed();
+
+				ITableFilter filter = VerificationRequestUtils.CreateFilter(
+					table, dataRequest.SubFields, dataRequest.WhereClause,
+					dataRequest.SearchGeometry);
+
+				long maxRowCount = request.MaxRowCount > 0 ? request.MaxRowCount : 5000;
+				foreach (GdbData resultBatch in VerificationRequestUtils.ReadGdbData(
+					         table, filter, dataRequest.SubFields, -1, maxRowCount,
+					         dataRequest.CountOnly))
+				{
+					var response = new QueryDataResponse
+					               {
+						               Data = resultBatch,
+						               ServiceCallStatus =
+							               resultBatch.HasMoreData
+								               ? (int) ServiceCallStatus.Running
+								               : (int) ServiceCallStatus.Finished
+					               };
+
+					_msg.DebugFormat("Sending message with {0} rows back to client...",
+					                 resultBatch.GdbObjects.Count);
+
+					if (! SendResponse(response, responseStream, trackCancel))
+					{
+						return ServiceCallStatus.Failed;
+					}
+				}
+
+				return ServiceCallStatus.Finished;
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error querying data for request {request}", e);
+				_ = $"Server error: {ExceptionUtils.FormatMessage(e)}";
+
+				// Always keep serving if query failed
+				//if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				//{
+				//	ServiceUtils.SetUnhealthy(Health, GetType());
+				//}
+
+				if (trackCancel?.Continue() == false || e.Message == "Already finished.")
+				{
+					// Typically: System.InvalidOperationException: Already finished.
+					_msg.Debug(
+						"The request has been cancelled and the client is already gone.", e);
+
+					return ServiceCallStatus.Cancelled;
+				}
+
+				SendResponse(new QueryDataResponse
+				             {
+					             Message = new LogMsg()
+					                       {
+						                       Message =
+							                       $"Server error: {ExceptionUtils.FormatMessage(e)}",
+						                       MessageLevel = Level.Error.Value
+					                       },
+					             ServiceCallStatus = (int) ServiceCallStatus.Failed
+				             }, responseStream, trackCancel);
+
+				return ServiceCallStatus.Failed;
+				//throw;
+			}
+		}
+
+		private static bool SendResponse(QueryDataResponse response,
+		                                 IServerStreamWriter<QueryDataResponse> responseStream,
+		                                 ITrackCancel trackCancel)
+		{
+			try
+			{
+				responseStream.WriteAsync(response);
+			}
+			catch (InvalidOperationException ex)
+			{
+				if (trackCancel?.Continue() == false || ex.Message == "Already finished.")
+				{
+					// Typically: System.InvalidOperationException: Already finished.
+					_msg.Debug(
+						"The verification has been cancelled and the client is already gone.",
+						ex);
+
+					return false;
+				}
+
+				// For example: System.InvalidOperationException: Only one write can be pending at a time
+				_msg.Warn(
+					"Error sending progress to the client. Retrying the last response in 1s...",
+					ex);
+
+				// Re-try (only for final message)
+				Task.Delay(1000).Wait();
+				responseStream.WriteAsync(response);
+			}
+
+			return true;
+		}
+
+		private static T WithCulture<T>(string cultureCode, Func<T> func)
+		{
+			if (string.IsNullOrEmpty(cultureCode))
+			{
+				return func();
+			}
+
+			var culture = new CultureInfo(cultureCode, false);
+
+			return CultureInfoUtils.ExecuteUsing(culture, culture, func);
 		}
 
 		private bool IsStandAloneVerification([NotNull] VerificationRequest request,
@@ -791,31 +1236,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[CanBeNull] ICollection<int> excludedConditionIds = null)
 		{
 			var dataSources = new List<DataSource>();
+
+			// Initialize using valid data sources from XML:
+			dataSources.AddRange(QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
+
+			if (dataSources.Count > 0)
+			{
+				_msg.InfoFormat("Initialized {0} data sources from XML.", dataSources.Count);
+			}
+
 			if (xmlSpecification.DataSourceReplacements.Count > 0)
 			{
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
-					List<string> replacementStrings =
-						StringUtils.SplitAndTrim(replacement, '|');
-					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
-
-					var dataSource =
-						new DataSource(replacementStrings[0], replacementStrings[0])
-						{
-							WorkspaceAsText = replacementStrings[1]
-						};
-
-					dataSources.Add(dataSource);
+					AddOrReplace(replacement, dataSources);
 				}
-
-				_msg.DebugFormat("Using {0} provided data source replacements.", dataSources.Count);
-			}
-			else
-			{
-				dataSources.AddRange(
-					QualitySpecificationUtils.GetDataSources(xmlSpecification.Xml));
-				_msg.DebugFormat("Using {0} data sources from XML.", dataSources.Count);
 			}
 
 			QualitySpecification qualitySpecification =
@@ -836,6 +1271,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return qualitySpecification;
+		}
+
+		private static void AddOrReplace([NotNull] string replacementString,
+		                                 [NotNull] List<DataSource> dataSources)
+		{
+			List<string> replacementStrings =
+				StringUtils.SplitAndTrim(replacementString, '|');
+			Assert.AreEqual(2, replacementStrings.Count,
+			                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+
+			var dataSource =
+				new DataSource(replacementStrings[0], replacementStrings[0])
+				{
+					WorkspaceAsText = replacementStrings[1]
+				};
+
+			// Replace existing data source from XML if it exists:
+			int index = dataSources.FindIndex(ds => ds.ID == dataSource.ID);
+			if (index >= 0)
+			{
+				dataSources[index] = dataSource;
+				_msg.InfoFormat("Replaced data source <id> {0} with {1}", dataSource.ID,
+				                dataSource);
+			}
+			else
+			{
+				dataSources.Add(dataSource);
+				_msg.InfoFormat("Adding data source: {0}", dataSource);
+			}
 		}
 
 		private QualitySpecification SetupQualitySpecification(
@@ -876,6 +1340,101 @@ namespace ProSuite.Microservices.Server.AO.QA
 				conditionsSpecificationMsg);
 
 			return result;
+		}
+
+		private TransformerConfiguration CreateTransformerConfiguration(
+			InstanceConfigurationMsg transformerConfigurationMsg,
+			IEnumerable<DataSourceMsg> dataSourceMessages,
+			SchemaMsg knownSchemaMsg,
+			Func<QueryDataResponse, QueryDataRequest> moreDataRequest)
+		{
+			if (SupportedInstanceDescriptors == null || SupportedInstanceDescriptors.Count == 0)
+			{
+				throw new InvalidOperationException(
+					"No supported instance descriptors have been initialized.");
+			}
+
+			List<DataSource> dataSources = ProtobufQaUtils.GetDataSources(dataSourceMessages);
+
+			ProtoBasedQualitySpecificationFactory factory =
+				CreateSpecificationFactory(dataSources, SupportedInstanceDescriptors,
+				                           knownSchemaMsg, moreDataRequest);
+
+			return factory.CreateTransformerConfiguration(transformerConfigurationMsg);
+		}
+
+		private static ProtoBasedQualitySpecificationFactory CreateSpecificationFactory(
+			[NotNull] ICollection<DataSource> dataSources,
+			[NotNull] ISupportedInstanceDescriptors instanceDescriptors,
+			[NotNull] SchemaMsg knownSchemaMsg,
+			[CanBeNull] Func<QueryDataResponse, QueryDataRequest> moreDataRequest)
+		{
+			var contextFactory = new MasterDatabaseWorkspaceContextFactory();
+
+			IVerifiedModelFactory modelFactory =
+				new ProtoBasedModelFactory(knownSchemaMsg, contextFactory);
+
+			if (moreDataRequest == null)
+			{
+				// Data access via dataSources / model factory -> Review and adapt
+				return new ProtoBasedQualitySpecificationFactory(modelFactory, dataSources,
+				                                                 instanceDescriptors);
+			}
+
+			// Else: Data provided by client. Create virtual workspaces from provided SchemaMsg
+			Assert.NotNull(moreDataRequest);
+
+			Func<DataVerificationResponse, DataVerificationRequest> dataRequest = response =>
+			{
+				var input = new QueryDataResponse()
+				            {
+					            DataRequest = response.DataRequest,
+					            ServiceCallStatus = (int) ServiceCallStatus.Running
+				            };
+
+				QueryDataRequest output = moreDataRequest(input);
+
+				if (output?.InputData == null)
+				{
+					return null;
+				}
+
+				return new DataVerificationRequest
+				       {
+					       Data = output.InputData
+				       };
+			};
+
+			IList<GdbWorkspace> workspaces = ProtobufConversionUtils.CreateSchema(
+				knownSchemaMsg.ClassDefinitions,
+				knownSchemaMsg.RelclassDefinitions, dataRequest);
+
+			var modelsByWorkspaceId =
+				new Dictionary<string, DdxModel>(StringComparer.OrdinalIgnoreCase);
+
+			foreach (GdbWorkspace gdbWorkspace in workspaces)
+			{
+				foreach (DataSource dataSource in dataSources)
+				{
+					// TODO: Use DdxModelId instead of ID?
+					if (! int.TryParse(dataSource.ID, out int modelId))
+					{
+						continue;
+					}
+
+					modelsByWorkspaceId.Add(dataSource.ID,
+					                        modelFactory.CreateModel(gdbWorkspace,
+						                        dataSource.DisplayName,
+						                        modelId,
+						                        dataSource.DatabaseName,
+						                        dataSource.SchemaOwner));
+				}
+			}
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			return factory;
 		}
 
 		private static ProtoBasedQualitySpecificationFactory CreateSpecificationFactory(
@@ -948,14 +1507,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 			SetupUserNameProvider(userName);
 		}
 
-		private static void SetupUserNameProvider(string userName)
+		private static void SetupUserNameProvider([NotNull] string userName)
 		{
 			_msg.DebugFormat("New verification request from {0}", userName);
 
-			if (! string.IsNullOrEmpty(userName))
+			if (string.IsNullOrEmpty(userName))
 			{
-				_userNameProvider.SetDisplayName(userName);
+				return;
 			}
+
+			var perThreadProvider =
+				EnvironmentUtils.GetUserNameProvider() as ThreadAffineUseNameProvider;
+
+			Assert.NotNull(perThreadProvider, "No or unexpected type of user name provider");
+
+			perThreadProvider.SetDisplayName(userName);
 		}
 
 		private static void SendProgress<T>(
@@ -989,7 +1555,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private static void HandleCancellationException(VerificationRequest request,
+		private static void HandleCancellationException(object request,
 		                                                ServerCallContext context,
 		                                                TaskCanceledException canceledException)
 		{
@@ -997,6 +1563,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
 			           canceledException);
 			_msg.Warn("Task was cancelled, likely by the client");
+		}
+
+		private static double GetUnhealthyMemoryLimit()
+		{
+			const string envVarServerSetUnhealthyMemory =
+				"PROSUITE_QA_SERVER_UNHEALTHY_PROCESS_MEMORY";
+
+			string envVarValue = Environment.GetEnvironmentVariable(
+				envVarServerSetUnhealthyMemory);
+
+			if (! string.IsNullOrEmpty(envVarValue))
+			{
+				if (double.TryParse(envVarValue, out double memoryLimitMb))
+				{
+					return memoryLimitMb;
+				}
+
+				_msg.WarnFormat("Cannot parse environment variable {0} value ({1})",
+				                envVarServerSetUnhealthyMemory, envVarValue);
+			}
+
+			return -1;
 		}
 	}
 }

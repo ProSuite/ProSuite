@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
@@ -86,8 +87,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 				_msg.DebugFormat("Error adding issue with geometry {0}",
 				                 GeometryUtils.ToString(issueGeometry));
 				_msg.ErrorFormat("Error adding issue: {0} ({1})",
-				                 FormatIssue(issue),
-				                 e.Message);
+				                 FormatIssue(issue), ExceptionUtils.FormatMessage(e));
 				throw;
 			}
 		}
@@ -151,7 +151,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			var result =
 				new Dictionary<esriGeometryType, IssueWriter>
 				{
-					{esriGeometryType.esriGeometryNull, rowWriter}
+					{ esriGeometryType.esriGeometryNull, rowWriter }
 				};
 
 			foreach (IssueFeatureWriter featureWriter in featureWriters)

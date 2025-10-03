@@ -27,6 +27,7 @@ namespace ProSuite.Microservices.Client
 
 		private string _executable;
 		private string _executableArguments;
+		private string _executableCommandName;
 
 		protected MicroserviceClientBase([NotNull] string host = _localhost,
 		                                 int port = 5151,
@@ -108,11 +109,13 @@ namespace ProSuite.Microservices.Client
 
 		public async Task<bool> AllowStartingLocalServerAsync(
 			string executable,
-			string extraArguments = null)
+			string extraArguments = null,
+			string commandName = null)
 		{
 			// Remember in case we need to switch to different channel or re-start later on
 			_executable = executable;
 			_executableArguments = extraArguments;
+			_executableCommandName = commandName;
 
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
@@ -126,17 +129,19 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			StartLocalServer(executable, extraArguments);
+			StartLocalServer(executable, commandName, extraArguments);
 
 			return true;
 		}
 
 		public bool AllowStartingLocalServer(string executable,
-		                                     string extraArguments = null)
+		                                     string extraArguments = null,
+		                                     string commandName = null)
 		{
 			// Remember in case we need to switch to different channel or re-start later on
 			_executable = executable;
 			_executableArguments = extraArguments;
+			_executableCommandName = commandName;
 
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
@@ -148,7 +153,7 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			StartLocalServer(executable, extraArguments);
+			StartLocalServer(executable, extraArguments, commandName);
 
 			return true;
 		}
@@ -160,7 +165,7 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			StartLocalServer(_executable, _executableArguments);
+			StartLocalServer(_executable, _executableCommandName, _executableArguments);
 
 			return true;
 		}
@@ -175,12 +180,14 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
 			bool result =
 				GrpcClientUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
 
 			if (! result || ! logOnlyIfUnhealthy)
 			{
-				LogHealthStatus(statusCode);
+				LogHealthStatus(statusCode, stopwatch.ElapsedMilliseconds);
 			}
 
 			if (! result && allowFailOver)
@@ -200,10 +207,12 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
 			StatusCode statusCode = await GrpcClientUtils.IsServingAsync(healthClient, serviceName)
 			                                             .ConfigureAwait(false);
 
-			LogHealthStatus(statusCode);
+			LogHealthStatus(statusCode, stopwatch.ElapsedMilliseconds);
 
 			if (statusCode != StatusCode.OK && allowFailOver)
 			{
@@ -323,7 +332,8 @@ namespace ProSuite.Microservices.Client
 
 				// In case of localhost and known server exe:
 				if (! string.IsNullOrEmpty(_executable) &&
-				    AllowStartingLocalServer(_executable, _executableArguments))
+				    AllowStartingLocalServer(_executable, _executableArguments,
+				                             _executableCommandName))
 				{
 					return true;
 				}
@@ -374,7 +384,7 @@ namespace ProSuite.Microservices.Client
 			return null;
 		}
 
-		private void StartLocalServer(string executable, string extraArguments)
+		private void StartLocalServer(string executable, string commandName, string extraArguments)
 		{
 			if (Port < 0)
 			{
@@ -407,7 +417,8 @@ namespace ProSuite.Microservices.Client
 				}
 			}
 
-			string arguments = $"-h {HostName} -p {Port}";
+			string arguments = ! string.IsNullOrEmpty(commandName) ? $"{commandName} " : "";
+			arguments += $"-h {HostName} -p {Port}";
 
 			if (! string.IsNullOrEmpty(extraArguments))
 			{
@@ -530,12 +541,15 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		private void LogHealthStatus(StatusCode statusCode)
+		private void LogHealthStatus(StatusCode statusCode,
+		                             long latencyMilliseconds)
 		{
 			string address = GetAddress();
 
-			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
-			                 ChannelServiceName, address, statusCode, GetChannelState());
+			_msg.DebugFormat("Health status for service {0} at {1}: {2}. " +
+			                 "Channel state: {3}. Latency: {4}ms",
+			                 ChannelServiceName, address, statusCode, GetChannelState(),
+			                 latencyMilliseconds);
 		}
 
 		private int GetFreeTcpPort()

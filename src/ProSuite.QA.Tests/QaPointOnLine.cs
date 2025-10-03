@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -49,7 +50,7 @@ namespace ProSuite.QA.Tests
 			IList<IReadOnlyFeatureClass> nearClasses,
 			[Doc(nameof(DocStrings.QaPointOnLine_near))]
 			double near)
-			: base(CastToTables(new[] {pointClass}, nearClasses))
+			: base(CastToTables(new[] { pointClass }, nearClasses))
 		{
 			_spatialReference = pointClass.SpatialReference;
 			SearchDistance = near;
@@ -85,23 +86,27 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var point = (IPoint) feature.Shape;
+			IEnumerable<IPoint> points = GetPoints(feature);
 
 			bool near = false;
-			for (int involvedTableIndex = 1;
-			     involvedTableIndex < _tableCount;
-			     involvedTableIndex++)
+
+			foreach (IPoint point in points)
 			{
-				var featureClass = (IReadOnlyFeatureClass) InvolvedTables[involvedTableIndex];
-				_helper[involvedTableIndex].MinimumOID = -1;
-
-				if (! CheckTable(point, featureClass, involvedTableIndex))
+				for (int involvedTableIndex = 1;
+				     involvedTableIndex < _tableCount;
+				     involvedTableIndex++)
 				{
-					continue;
-				}
+					var featureClass = (IReadOnlyFeatureClass) InvolvedTables[involvedTableIndex];
+					_helper[involvedTableIndex].MinimumOID = -1;
 
-				near = true;
-				break;
+					if (! CheckTable(point, featureClass, involvedTableIndex))
+					{
+						continue;
+					}
+
+					near = true;
+					break;
+				}
 			}
 
 			if (near)
@@ -119,6 +124,29 @@ namespace ProSuite.QA.Tests
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(feature), error,
 				Codes[Code.PointNotNearLine], TestUtils.GetShapeFieldName(feature));
+		}
+
+		private static IEnumerable<IPoint> GetPoints(IReadOnlyFeature feature)
+		{
+			IGeometry geometry = feature.Shape;
+
+			if (geometry.GeometryType == esriGeometryType.esriGeometryPoint)
+			{
+				yield return (IPoint) geometry;
+			}
+			else if (geometry.GeometryType == esriGeometryType.esriGeometryMultipoint)
+			{
+				var multiPoint = (IPointCollection) geometry;
+				for (int i = 0; i < multiPoint.PointCount; i++)
+				{
+					yield return multiPoint.get_Point(i);
+				}
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException(
+					$"Invalid input geometry type for {feature.FeatureClass.Name}: {geometry.GeometryType}");
+			}
 		}
 
 		private bool CheckTable([NotNull] IPoint point,

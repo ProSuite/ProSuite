@@ -1,12 +1,15 @@
 using System;
-using System.Data.Common;
+using System.IO;
 using System.Text;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Knowledge;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Ado;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using Version = ArcGIS.Core.Data.Version;
 
@@ -35,31 +38,44 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <returns></returns>
 		public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(string catalogPath)
 		{
-			
-			if (System.IO.Path.GetExtension(catalogPath)
-			          .Equals(".sde", StringComparison.InvariantCultureIgnoreCase))
+			string extension = Path.GetExtension(catalogPath);
+
+			if (extension
+			    .Equals(".sde", StringComparison.InvariantCultureIgnoreCase))
 			{
 				DatabaseConnectionFile connector = new DatabaseConnectionFile(new Uri(catalogPath));
-				
+
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
 
-			if (System.IO.Path.GetExtension(catalogPath)
-			          .Equals(".gdb", StringComparison.InvariantCultureIgnoreCase)) {
+			if (extension
+			    .Equals(".gdb", StringComparison.InvariantCultureIgnoreCase))
+			{
 				var connector = new FileGeodatabaseConnectionPath(new Uri(catalogPath));
 
 				return new ArcGIS.Core.Data.Geodatabase(connector);
 			}
-		   
-			// TODO: SQLite, Mobile, other?
 
-			return null;
+			// Mobile Geodatabase
+			if (extension
+			    .Equals(".geodatabase", StringComparison.InvariantCultureIgnoreCase))
+			{
+				var connector = new MobileGeodatabaseConnectionPath(new Uri(catalogPath));
+
+				return new ArcGIS.Core.Data.Geodatabase(connector);
+			}
+
+			string message =
+				$"Finder: Unsupported geodatabase extension: {extension} for path: {catalogPath}";
+			_msg.Debug(message);
+			throw new NotSupportedException(message);
 		}
 
 		/// <summary>
 		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
 		/// </summary>
 		/// <returns></returns>
+		[NotNull]
 		public static Datastore OpenDatastore([NotNull] Connector connector)
 		{
 			try
@@ -107,18 +123,93 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Failed to open Datastore {GetDatastoreDisplayText(connector)}", e);
-				throw;
+				string message =
+					$"Failed to open Datastore {GetDatastoreDisplayText(connector)}: {e.Message}";
+				_msg.Debug(message, e);
+
+				throw new IOException(message, e);
 			}
 		}
 
-		public static bool IsSameDatastore(Datastore datastore1, Datastore datastore2)
+		/// <summary>
+		/// Creates a connector for the specified workspace factory and connection string.
+		/// </summary>
+		/// <param name="factory">The workspace factory type.</param>
+		/// <param name="connectionString">The connection string.</param>
+		/// <returns>A connector appropriate for the specified workspace factory.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when an unsupported workspace factory is specified.</exception>
+		[NotNull]
+		public static Connector CreateConnector(WorkspaceFactory factory,
+		                                        [NotNull] string connectionString)
 		{
-			// todo daro check ProProcessingUtils
-			if (ReferenceEquals(datastore1, datastore2)) return true;
-			if (Equals(datastore1.Handle, datastore2.Handle)) return true;
+			Assert.ArgumentNotNull(connectionString, nameof(connectionString));
 
-			return false;
+			switch (factory)
+			{
+				case WorkspaceFactory.FileGDB:
+					string filePath = connectionString;
+					// Extract actual path if it has a DATABASE= prefix
+					if (connectionString.StartsWith("DATABASE=",
+					                                StringComparison.OrdinalIgnoreCase))
+					{
+						filePath = connectionString.Substring("DATABASE=".Length);
+					}
+
+					return new FileGeodatabaseConnectionPath(new Uri(filePath, UriKind.Absolute));
+
+				case WorkspaceFactory.SDE:
+					DatabaseConnectionProperties connectionProperties =
+						GetConnectionProperties(connectionString);
+
+					return connectionProperties;
+
+				case WorkspaceFactory.Shapefile:
+					return new FileSystemConnectionPath(
+						new Uri(connectionString, UriKind.Absolute),
+						FileSystemDatastoreType.Shapefile);
+
+				// TODO: SQLite, others?
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(factory), factory,
+					                                      $"Unsupported workspace factory: {factory}");
+			}
+		}
+
+		public static bool IsSameDatastore([CanBeNull] Datastore datastore1,
+		                                   [CanBeNull] Datastore datastore2,
+		                                   DatastoreComparison comparison =
+			                                   DatastoreComparison.Exact)
+		{
+			// Comparison in case of null:
+			if (datastore1 == null && datastore2 == null)
+			{
+				return true;
+			}
+
+			if (datastore1 == null || datastore2 == null)
+			{
+				return false;
+			}
+
+			if (comparison == DatastoreComparison.ReferenceEquals)
+			{
+				return ReferenceEquals(datastore1, datastore2) ||
+				       Equals(datastore1.Handle, datastore2.Handle);
+			}
+
+			DatastoreName datastoreName1 = new DatastoreName(datastore1.GetConnector());
+			DatastoreName datastoreName2 = new DatastoreName(datastore2.GetConnector());
+
+			return datastoreName1.Equals(datastoreName2, comparison);
+		}
+
+		public static string GetCatalogPath([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			Uri uri = geodatabase.GetPath();
+
+			// NOTE: AbsolutePath messes up blanks!
+			return uri.LocalPath;
 		}
 
 		[CanBeNull]
@@ -216,6 +307,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					// Take the second last item
 					instance = strings[^2];
 				}
+				else if (lastItem.Contains('$'))
+				{
+					// Very legacy. E.g. oracle$TOPGIST
+					string server = builder["server"];
+					if (! string.IsNullOrEmpty(server))
+					{
+						instance = server;
+					}
+					else
+					{
+						instance = lastItem.Split('$')[^1];
+					}
+				}
 				else
 				{
 					instance = lastItem;
@@ -272,13 +376,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			switch (connector)
 			{
 				case DatabaseConnectionFile dbConnection:
-					return $"SDE connection {dbConnection.Path?.AbsolutePath ?? nullPathText}";
+					return $"SDE connection {dbConnection.Path?.LocalPath ?? nullPathText}";
 
 				case DatabaseConnectionProperties dbConnectionProps:
 					return GetConnectionDisplayText(dbConnectionProps);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return $"File Geodatabase {fileGdbConnection.Path.AbsolutePath}";
+					return $"File Geodatabase {fileGdbConnection.Path.LocalPath}";
 
 				case FileSystemConnectionPath fileSystemConnection:
 					return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";
@@ -307,6 +411,59 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					throw new ArgumentOutOfRangeException(
 						$"Unsupported workspace type: {connector?.GetType()}");
 			}
+		}
+
+		public static WorkspaceDbType GetWorkspaceDbType(Datastore datastore)
+		{
+			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+			{
+				GeodatabaseType gdbType = geodatabase.GetGeodatabaseType();
+
+				// TODO: Test newer workspace types, such as sqlite, Netezza
+
+				var connector = geodatabase.GetConnector();
+
+				if (gdbType == GeodatabaseType.LocalDatabase)
+				{
+					return WorkspaceDbType.FileGeodatabase;
+				}
+
+				if (gdbType == GeodatabaseType.FileSystem)
+				{
+					return WorkspaceDbType.FileSystem;
+				}
+
+				if (gdbType != GeodatabaseType.RemoteDatabase)
+				{
+					return WorkspaceDbType.Unknown;
+				}
+
+				if (connector is DatabaseConnectionProperties connectionProperties)
+				{
+					switch (connectionProperties.DBMS)
+					{
+						case EnterpriseDatabaseType.Oracle:
+							return WorkspaceDbType.ArcSDEOracle;
+						case EnterpriseDatabaseType.Informix:
+							return WorkspaceDbType.ArcSDEInformix;
+						case EnterpriseDatabaseType.SQLServer:
+							return WorkspaceDbType.ArcSDESqlServer;
+						case EnterpriseDatabaseType.PostgreSQL:
+							return WorkspaceDbType.ArcSDEPostgreSQL;
+						case EnterpriseDatabaseType.DB2:
+							return WorkspaceDbType.ArcSDEDB2;
+						case EnterpriseDatabaseType.SQLite:
+							return WorkspaceDbType.MobileGeodatabase;
+						default:
+							return WorkspaceDbType.ArcSDE;
+					}
+				}
+
+				// No connection properties (probably SDE file -> TODO: How to find the connection details? Connection string?)
+				return WorkspaceDbType.ArcSDE;
+			}
+
+			return WorkspaceDbType.Unknown;
 		}
 
 		private static string GetConnectionDisplayText(
@@ -341,6 +498,55 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
 
 			return sb.ToString();
+		}
+
+		public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+		{
+			WorkspaceFactory result;
+
+			switch (connector)
+			{
+#if ARCGISPRO_GREATER_3_2
+				case BimFileConnectionProperties:
+					result = WorkspaceFactory.BIMFile;
+					break;
+#endif
+				case DatabaseConnectionFile:
+				case DatabaseConnectionProperties:
+					result = WorkspaceFactory.SDE;
+					break;
+				case FileGeodatabaseConnectionPath:
+					result = WorkspaceFactory.FileGDB;
+					break;
+				case FileSystemConnectionPath:
+					result = WorkspaceFactory.Shapefile;
+					break;
+				case KnowledgeGraphConnectionProperties:
+					result = WorkspaceFactory.KnowledgeGraph;
+					break;
+				case MemoryConnectionProperties:
+					result = WorkspaceFactory.InMemoryDB;
+					break;
+				case MobileGeodatabaseConnectionPath:
+				case SQLiteConnectionPath:
+					result = WorkspaceFactory.SQLite;
+					break;
+				case PluginDatasourceConnectionPath:
+					result = WorkspaceFactory.Custom;
+					break;
+				case RealtimeServiceConnectionProperties:
+					result = WorkspaceFactory.StreamService;
+					break;
+				case ServiceConnectionProperties:
+					result = WorkspaceFactory.FeatureService;
+					break;
+
+				default:
+					throw new NotImplementedException(
+						$"connector {connector.GetType()} is not implemented");
+			}
+
+			return result;
 		}
 	}
 }

@@ -130,14 +130,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			ITable resultTable = DatasetUtils.OpenTable(workspace, _viewOrTableName);
 
-			GdbTable wrappedResult = resultTable is IFeatureClass featureClass
-				                         ? new GdbFeatureClass(featureClass, true)
-				                         : new GdbTable(resultTable, true);
-
-			// Wrap to allow assigning a custom name:
-			wrappedResult.Rename(TransformerName);
-
-			return wrappedResult;
+			return GetWrappedTable(resultTable);
 		}
 
 		private IReadOnlyTable CreateQueryLayerClass()
@@ -154,13 +147,33 @@ namespace ProSuite.QA.Tests.Transformers
 			ITable queryTable = DatasetUtils.CreateQueryLayerClass(
 				sqlWorksapce, _queryDescription, TransformerName);
 
+			GdbTable wrappedResult = GetWrappedTable(queryTable);
+
+			return wrappedResult;
+		}
+
+		private GdbTable GetWrappedTable(ITable aoTable)
+		{
 			// Wrap to allow assigning a custom name, rather than <currentUser>.%<assignedName>
-			GdbTable wrappedResult = queryTable is IFeatureClass featureClass
-				                         ? new GdbFeatureClass(featureClass, true)
-				                         : new GdbTable(queryTable, true);
+			GdbTable wrappedResult;
+
+			if (aoTable is IFeatureClass featureClass)
+			{
+				wrappedResult = new WrappedFeatureClass(featureClass, true)
+				                {
+					                InvolvedBaseClass =
+						                (IReadOnlyFeatureClass) _baseTable
+				                };
+			}
+			else
+			{
+				wrappedResult = new WrappedTable(aoTable, true)
+				                {
+					                InvolvedBaseClass = _baseTable
+				                };
+			}
 
 			wrappedResult.Rename(TransformerName);
-
 			return wrappedResult;
 		}
 

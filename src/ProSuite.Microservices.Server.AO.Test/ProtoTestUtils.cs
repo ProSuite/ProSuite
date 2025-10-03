@@ -15,13 +15,13 @@ namespace ProSuite.Microservices.Server.AO.Test
 		                                        int modelId)
 		{
 			// Initial harvest:
-			Model model = HarvestModel(gdbPath);
+			DdxModel model = HarvestModel(gdbPath);
 
 			// Create SchemaMsg (client side):
 			return CreateSchemaMsg(model, modelId);
 		}
 
-		public static Model HarvestModel(string gdbPath,
+		public static DdxModel HarvestModel(string gdbPath,
 		                                 bool harvestAttributes = false,
 		                                 bool harvestObjectTypes = false)
 		{
@@ -35,19 +35,19 @@ namespace ProSuite.Microservices.Server.AO.Test
 					HarvestObjectTypes = harvestObjectTypes
 				};
 
-			Model model = modelFactory.CreateModel(workspace, "TestModel", -100, null, null);
+			DdxModel model = modelFactory.CreateModel(workspace, "TestModel", -100, null, null);
 			modelFactory.AssignMostFrequentlyUsedSpatialReference(model, model.Datasets);
 			return model;
 		}
 
-		public static SchemaMsg CreateSchemaMsg(Model model, int modelId)
+		public static SchemaMsg CreateSchemaMsg(DdxModel model, int modelId)
 		{
 			SchemaMsg schemaMsg = new SchemaMsg();
 			foreach (Dataset dataset in model.GetDatasets())
 			{
 				// If persistent, use model id
 				ObjectClassMsg objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(
-					dataset, modelId, model.SpatialReferenceDescriptor.SpatialReference);
+					dataset, modelId, model.SpatialReferenceDescriptor.GetSpatialReference());
 
 				schemaMsg.ClassDefinitions.Add(objectClassMsg);
 			}
@@ -69,7 +69,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 					                                  DatasetUtils.GetAliasName(objectClass));
 
 				if (modelId >= 0)
-					objectClassMsg.WorkspaceHandle = modelId;
+					objectClassMsg.DdxModelId = modelId;
 
 				dataSchema.ClassDefinitions.Add(objectClassMsg);
 			}
@@ -82,7 +82,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 				relTableMsg.Name = DatasetUtils.GetName(relationshipClass);
 
 				if (modelId >= 0)
-					relTableMsg.WorkspaceHandle = modelId;
+					relTableMsg.DdxModelId = modelId;
 
 				dataSchema.RelclassDefinitions.Add(relTableMsg);
 			}

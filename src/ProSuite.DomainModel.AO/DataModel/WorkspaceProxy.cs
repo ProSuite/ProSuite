@@ -4,6 +4,7 @@ using ESRI.ArcGIS.DatasourcesRaster;
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {

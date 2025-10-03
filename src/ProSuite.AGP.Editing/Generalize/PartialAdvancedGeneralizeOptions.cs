@@ -40,9 +40,6 @@ namespace ProSuite.AGP.Editing.Generalize
 		[CanBeNull]
 		public OverridableSetting<bool> Only2D { get; set; }
 
-		[CanBeNull]
-		public OverridableSetting<bool> ShowDialog { get; set; }
-
 		#region Overrides of PartialOptionsBase
 
 		public override PartialOptionsBase Clone()
@@ -61,8 +58,7 @@ namespace ProSuite.AGP.Editing.Generalize
 			result.ProtectTopologicalVertices = TryClone(ProtectTopologicalVertices);
 			result.VertexProtectingFeatureSelection = VertexProtectingFeatureSelection;
 
-			result.Only2D = Only2D;
-			result.ShowDialog = ShowDialog;
+			result.Only2D = TryClone(Only2D);
 
 			return result;
 		}

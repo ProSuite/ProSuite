@@ -178,9 +178,10 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			{
 				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
 				                verificationResult.IssuesGdbPath);
+
 				await ViewUtils.TryAsync(
-					_workListOpener.OpenFileGdbIssueWorkListAsync(verificationResult.IssuesGdbPath,
-						replaceExisting), _msg);
+					_workListOpener.OpenFileGdbIssueWorkListAsync(
+						null, verificationResult.IssuesGdbPath, replaceExisting), _msg);
 			}
 		}
 
@@ -214,8 +215,11 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			if (_workListOpener.CanUseProductionModelIssueSchema())
 			{
 				reason =
-					"Open Issue Work List from project workspace using traditional error datasets";
-				return true;
+					_issuesSaved
+						? "Open Issue Work List from project workspace using traditional error datasets"
+						: "The work list can be opened after the issues have been saved using 'Update Issues'";
+
+				return _issuesSaved;
 			}
 
 			// No production model issue schema, use IssueGdb:

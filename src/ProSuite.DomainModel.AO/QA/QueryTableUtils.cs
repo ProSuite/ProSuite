@@ -15,7 +15,7 @@ namespace ProSuite.DomainModel.AO.QA
 	public static class QueryTableUtils
 	{
 		public static IReadOnlyTable OpenQueryTable([NotNull] string associationName,
-		                                            [NotNull] Model model,
+		                                            [NotNull] DdxModel model,
 		                                            [NotNull] IList<IReadOnlyTable> tables,
 		                                            [NotNull] IQueryTableContext queryTableContext,
 		                                            JoinType joinType,
@@ -37,7 +37,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		public static IReadOnlyTable OpenAoQueryTable([NotNull] string associationName,
-		                                              [NotNull] Model model,
+		                                              [NotNull] DdxModel model,
 		                                              [NotNull] IList<IReadOnlyTable> tables,
 		                                              [NotNull] IDatasetContext datasetContext,
 		                                              JoinType joinType,
@@ -56,7 +56,7 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		public static IRelationshipClass OpenRelationshipClass(
 			[NotNull] string associationName,
-			[NotNull] Model model,
+			[NotNull] DdxModel model,
 			[NotNull] IDatasetContext datasetContext)
 		{
 			// TODO REFACTORMODEL: what if the association is not in the primary dataset context (e.g. work unit), but from another model?
@@ -132,7 +132,7 @@ namespace ProSuite.DomainModel.AO.QA
 		private static IRelationshipClass OpenRelationshipClassFromMasterWorkspace(
 			[NotNull] IWorkspace masterWorkspace,
 			[NotNull] string associationName,
-			[NotNull] Model model)
+			[NotNull] DdxModel model)
 		{
 			string relClassName = GetRelationshipClassName(masterWorkspace, associationName,
 			                                               model);

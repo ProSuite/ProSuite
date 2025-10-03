@@ -28,7 +28,7 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 		return new PickerViewModel(selectionGeometry);
 	}
 
-	private static IEnumerable<IPickableItem> CreatePickableFeatureItems(
+	public static IEnumerable<IPickableItem> CreatePickableFeatureItems(
 		[NotNull] FeatureSelectionBase classSelection)
 	{
 		BasicFeatureLayer layer = classSelection.BasicFeatureLayer;
@@ -85,11 +85,14 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 		}
 		else
 		{
+			string layerName = layer.Name;
+
+			// TODO: Allow control over class or layer name?
 			foreach (var feature in classSelection.GetFeatures())
 			{
+				string displayValue = GdbObjectUtils.GetDisplayValue(feature, layerName);
 				yield return CreatePickableFeatureItem(layer, feature, feature.GetObjectID(),
-				                                       GdbObjectUtils.GetDisplayValue(feature),
-				                                       isAnnotation);
+				                                       displayValue, isAnnotation);
 			}
 		}
 	}

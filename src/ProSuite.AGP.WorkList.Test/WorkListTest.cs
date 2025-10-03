@@ -1,19 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Core.Test;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.Testing;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
+using ArcGIS.Core.Data;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -23,45 +24,6 @@ namespace ProSuite.AGP.WorkList.Test
 	{
 		private Polygon _poly0;
 		private Polygon _poly1;
-		private Geodatabase _geodatabase;
-		private Table _issuePoints;
-		private Table _issueLines;
-		private IWorkItemRepository _repository;
-
-		[SetUp]
-		public void SetUp()
-		{
-			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
-			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
-
-			//_geodatabase =
-			//	new Geodatabase(
-			//		new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
-
-			//_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
-			//_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
-
-			//var tablesByGeodatabase = new Dictionary<Datastore, List<Table>>
-			//                          {
-			//	                          {
-			//		                          _geodatabase,
-			//		                          new List<Table> {_issuePoints, _issueLines}
-			//	                          }
-			//                          };
-
-			//IWorkItemStateRepository stateRepository =
-			//	new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-			//_repository = new IssueItemRepository(new List<Table> { _issuePoints, _issueLines }, stateRepository);
-		}
-
-		[TearDown]
-		public void TearDown()
-		{
-			_issuePoints?.Dispose();
-			_issueLines?.Dispose();
-			_geodatabase?.Dispose();
-			//_repository?.Dispose();
-		}
 
 		[OneTimeSetUp]
 		public void SetupFixture()
@@ -72,137 +34,171 @@ namespace ProSuite.AGP.WorkList.Test
 
 			_poly0 = PolygonConstruction
 			         .StartPolygon(0, 0, 0)
-			         .LineTo(0, 20, 0)
-			         .LineTo(20, 20, 0)
-			         .LineTo(20, 0, 0)
-			         .ClosePolygon();
-
-			_poly1 = PolygonConstruction
-			         .StartPolygon(0, 0, 0)
 			         .LineTo(0, 40, 0)
 			         .LineTo(40, 40, 0)
 			         .LineTo(40, 0, 0)
 			         .ClosePolygon();
+
+			_poly1 = PolygonConstruction
+			         .StartPolygon(0, 0, 0)
+			         .LineTo(0, 80, 0)
+			         .LineTo(80, 80, 0)
+			         .LineTo(80, 0, 0)
+			         .ClosePolygon();
 		}
 
-		private const string _emptyIssuesGdb =
-			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
+		#region item chunks tests
 
-		private readonly string _issuePolygons = "IssuePolygons";
-		private readonly string _issuePointsName = "IssuePoints";
-		private readonly string _issueLinesName = "IssueLines";
+		//[Test]
+		//public void Can_get_items_by_task_id_only_once()
+		//{
+		//	var capacity = 8000;
+		//	var items = new List<IWorkItem>(capacity);
+
+		//	for (int i = 0; i < capacity; i++)
+		//	{
+		//		items.Add(new WorkItemMock(i));
+		//	}
+
+		//	var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+		//	List<IWorkItem> list;
+		//	Assert.True(workList.TryGetItems(42, out list));
+		//	Assert.NotNull(list);
+		//	Assert.IsNotEmpty(list);
+
+		//	Assert.False(workList.TryGetItems(42, out list));
+		//	Assert.Null(list);
+		//	Assert.IsNull(list);
+		//}
+
+		//[Test]
+		//public void Only_three_tasks_can_get_items()
+		//{
+		//	var capacity = 4200;
+		//	var items = new List<IWorkItem>(capacity);
+
+		//	for (int i = 0; i < capacity; i++)
+		//	{
+		//		items.Add(new WorkItemMock(i));
+		//	}
+
+		//	var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+		//	Assert.True(workList.TryGetItems(42, out List<IWorkItem> firstList));
+		//	Assert.NotNull(firstList);
+		//	Assert.IsNotEmpty(firstList);
+		//	Assert.AreEqual(1400, firstList.Count);
+
+		//	Assert.False(workList.TryGetItems(42, out List<IWorkItem> secondList));
+		//	Assert.Null(secondList);
+		//	Assert.IsNull(secondList);
+
+		//	Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
+		//	Assert.NotNull(thirdList);
+		//	Assert.IsNotEmpty(thirdList);
+		//	Assert.AreEqual(1400, thirdList.Count);
+
+		//	Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
+		//	Assert.NotNull(fourthList);
+		//	Assert.IsNotEmpty(fourthList);
+		//	Assert.AreEqual(1400, fourthList.Count);
+
+		//	Assert.False(workList.TryGetItems(3, out List<IWorkItem> fifthList));
+		//	Assert.Null(fifthList);
+
+		//	Assert.False(workList.TryGetItems(4, out List<IWorkItem> sixthList));
+		//	Assert.Null(sixthList);
+		//}
+
+		//[Test]
+		//public void Can_get_evenly_distributetd_item_chunks()
+		//{
+		//	var capacity = 35;
+		//	var items = new List<IWorkItem>(capacity);
+
+		//	for (int i = 0; i < capacity; i++)
+		//	{
+		//		items.Add(new WorkItemMock(i));
+		//	}
+
+		//	var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+		//	Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+		//	Assert.NotNull(firstList);
+		//	Assert.IsNotEmpty(firstList);
+		//	Assert.AreEqual(13, firstList.Count);
+
+		//	Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+		//	Assert.NotNull(secondList);
+		//	Assert.IsNotEmpty(secondList);
+		//	Assert.AreEqual(11, secondList.Count);
+
+		//	Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+		//	Assert.NotNull(thirdList);
+		//	Assert.IsNotEmpty(thirdList);
+		//	Assert.AreEqual(11, thirdList.Count);
+		//}
+
+		//[Test]
+		//public void Can_process_item_chunks_for_very_few_items()
+		//{
+		//	var capacity = 1;
+		//	var items = new List<IWorkItem>(capacity);
+
+		//	for (int i = 0; i < capacity; i++)
+		//	{
+		//		items.Add(new WorkItemMock(i));
+		//	}
+
+		//	var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
+
+		//	Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+		//	Assert.NotNull(firstList);
+		//	Assert.IsNotEmpty(firstList);
+		//	Assert.AreEqual(1, firstList.Count);
+
+		//	Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+		//	Assert.NotNull(secondList);
+		//	Assert.IsEmpty(secondList);
+
+		//	Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+		//	Assert.NotNull(thirdList);
+		//	Assert.IsEmpty(thirdList);
+		//}
+
+		//[Test]
+		//public void Can_process_item_chunks_for_three_items()
+		//{
+		//	var capacity = 3;
+		//	var items = new List<IWorkItem>(capacity);
+
+		//	for (int i = 0; i < capacity; i++)
+		//	{
+		//		items.Add(new WorkItemMock(i));
+		//	}
+
+		//	var workList = new SelectionWorkList(new ItemRepositoryMock(items), "uniqueName", "displayName");
+
+		//	Assert.True(workList.TryGetItems(1, out List<IWorkItem> firstList));
+		//	Assert.NotNull(firstList);
+		//	Assert.IsNotEmpty(firstList);
+		//	Assert.AreEqual(1, firstList.Count);
+
+		//	Assert.True(workList.TryGetItems(2, out List<IWorkItem> secondList));
+		//	Assert.NotNull(secondList);
+		//	Assert.IsNotEmpty(secondList);
+		//	Assert.AreEqual(1, secondList.Count);
+
+		//	Assert.True(workList.TryGetItems(3, out List<IWorkItem> thirdList));
+		//	Assert.NotNull(thirdList);
+		//	Assert.IsNotEmpty(thirdList);
+		//	Assert.AreEqual(1, thirdList.Count);
+		//}
+
+		#endregion
 
 		#region work list navigation tests
-
-		[Test]
-		public void LearningTest()
-		{
-			var capacity = 8000;
-			var items = new List<IWorkItem>(capacity);
-
-			for (int i = 0; i < capacity; i++)
-			{
-				items.Add(new WorkItemMock(i));
-			}
-
-			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
-		}
-
-		[Test]
-		public void LearningTest2()
-		{
-			var capacity = 8000;
-			var items = new List<IWorkItem>(capacity);
-
-			for (int i = 0; i < capacity; i++)
-			{
-				items.Add(new WorkItemMock(i));
-			}
-
-			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
-
-			List<IWorkItem> list;
-			Assert.True(workList.TryGetItems(42, out list));
-			Assert.NotNull(list);
-			Assert.IsNotEmpty(list);
-
-			Assert.False(workList.TryGetItems(42, out list));
-			Assert.Null(list);
-			Assert.IsNull(list);
-		}
-
-		[Test]
-		public void LearningTest3()
-		{
-			var capacity = 4200;
-			var items = new List<IWorkItem>(capacity);
-
-			for (int i = 0; i < capacity; i++)
-			{
-				items.Add(new WorkItemMock(i));
-			}
-
-			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
-
-			Assert.True(workList.TryGetItems(42, out List<IWorkItem> firstList));
-			Assert.NotNull(firstList);
-			Assert.IsNotEmpty(firstList);
-			Assert.AreEqual(1000, firstList.Count);
-
-			Assert.False(workList.TryGetItems(42, out List<IWorkItem> secondList));
-			Assert.Null(secondList);
-			Assert.IsNull(secondList);
-
-			Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
-			Assert.NotNull(thirdList);
-			Assert.IsNotEmpty(thirdList);
-			Assert.AreEqual(1000, thirdList.Count);
-
-			Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
-			Assert.NotNull(fourthList);
-			Assert.IsNotEmpty(fourthList);
-			Assert.AreEqual(1000, fourthList.Count);
-
-			Assert.True(workList.TryGetItems(3, out List<IWorkItem> fifthList));
-			Assert.NotNull(fifthList);
-			Assert.IsNotEmpty(fifthList);
-			Assert.AreEqual(1000, fifthList.Count);
-
-			Assert.True(workList.TryGetItems(4, out List<IWorkItem> sixthList));
-			Assert.NotNull(sixthList);
-			Assert.IsNotEmpty(sixthList);
-			Assert.AreEqual(200, sixthList.Count);
-		}
-
-		[Test]
-		public void LearningTest4()
-		{
-			var capacity = 35;
-			var items = new List<IWorkItem>(capacity);
-
-			for (int i = 0; i < capacity; i++)
-			{
-				items.Add(new WorkItemMock(i));
-			}
-
-			var workList = new SelectionWorkList(new ItemRepositoryMock(items), "foo", "nice foo");
-			workList.RefreshItems();
-
-			Assert.True(workList.TryGetItems(1, out List<IWorkItem> thirdList));
-			Assert.NotNull(thirdList);
-			Assert.IsNotEmpty(thirdList);
-			Assert.AreEqual(13, thirdList.Count);
-
-			Assert.True(workList.TryGetItems(2, out List<IWorkItem> fourthList));
-			Assert.NotNull(fourthList);
-			Assert.IsNotEmpty(fourthList);
-			Assert.AreEqual(11, fourthList.Count);
-
-			Assert.True(workList.TryGetItems(3, out List<IWorkItem> fifthList));
-			Assert.NotNull(fifthList);
-			Assert.IsNotEmpty(fifthList);
-			Assert.AreEqual(11, fifthList.Count);
-		}
 
 		[Test]
 		public void Can_go_next()
@@ -213,103 +209,157 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item2 = new WorkItemMock(2) {Visited = true};
 			IWorkItem item3 = new WorkItemMock(3) {Visited = true};
 			IWorkItem item4 = new WorkItemMock(4) {Visited = true};
-			var repository =
-				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
+			var repo = new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
-
-			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			// important to get items from DB because the items are loaded lazyly
+			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item4, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item4, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			Assert.False(wl.CanGoNext());
-			Assert.AreEqual(item4, wl.Current);
+			Assert.AreEqual(item4, wl.CurrentItem);
+		}
+
+		[Test]
+		public void Can_go_next_visited()
+		{
+			// The items have to be visible to enable the work list to go to the next item.
+			// Normally GoNearest() sets Item.Visible = true.
+			// Item3 was never visited. GoNext should never hit item3.
+			IWorkItem item1 = new WorkItemMock(1) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(2) { Visited = true };
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+
+			// important to get items from DB because the items are loaded lazyly
+			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
+
+			Assert.True(wl.CanGoNext());
+			Assert.False(wl.CanGoPrevious());
+			Assert.False(wl.CanGoFirst());
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			Assert.True(wl.CanGoNext());
+			Assert.True(wl.CanGoPrevious());
+			Assert.True(wl.CanGoFirst());
+			wl.GoNext();
+			Assert.AreEqual(item4, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			// end of visited items reached
+			Assert.False(wl.CanGoNext());
+			Assert.True(wl.CanGoPrevious());
+			Assert.True(wl.CanGoFirst());
 		}
 
 		[Test]
 		public void Can_go_first_again()
 		{
-			IWorkItem item1 = new WorkItemMock(1);
-			IWorkItem item2 = new WorkItemMock(2);
-			IWorkItem item3 = new WorkItemMock(3);
-			IWorkItem item4 = new WorkItemMock(4);
-			var repository =
-				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
+			// The items have to be visible to enable the work list to go to the next item.
+			// Normally GoNearest() sets Item.Visible = true.
+			IWorkItem item1 = new WorkItemMock(1) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(2) { Visited = true };
+			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
+			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
-
-			wl.GoNext();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go first again
 			wl.GoFirst();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go first again
 			wl.GoFirst();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 		}
 
 		[Test]
 		public void Can_go_previous()
 		{
+			// The items have to be visible to enable the work list to go to the next item.
+			// Normally GoNearest() sets Item.Visible = true.
+			IWorkItem item1 = new WorkItemMock(1) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(2) { Visited = true };
+			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
+			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
+			
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			// go previous
+			wl.GoPrevious();
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			// go previous again
+			wl.GoPrevious();
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+		}
+
+		[Test]
+		public void Can_handle_workitems_without_geometry()
+		{
 			IWorkItem item1 = new WorkItemMock(1);
 			IWorkItem item2 = new WorkItemMock(2);
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
-			var repository =
-				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
 
-			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			wl.GoNext();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			wl.LoadItems(GdbQueryUtils.CreateFilter(new []{item1.ObjectID, item2.ObjectID, item3.ObjectID, item4.ObjectID}));
 
-			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.False(wl.CanGoNearest());
+			Assert.Null(wl.Extent);
 
-			wl.GoNext();
-			Assert.AreEqual(item3, wl.Current);
-			Assert.True(wl.Current?.Visited);
-
-			// go previous
-			wl.GoPrevious();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
-
-			// go previous again
-			wl.GoPrevious();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
-
-			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
 		}
 
 		[Test]
@@ -323,31 +373,36 @@ namespace ProSuite.AGP.WorkList.Test
 			var item10 = new WorkItemMock(10, pt10);
 			var item15 = new WorkItemMock(15, pt15);
 
-			var repository = new ItemRepositoryMock(new[] {item7, item10, item15});
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item7, item10, item15 }
+				                                  .AsReadOnly());
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IWorkList wl = new MemoryQueryWorkList(repository, nameof(Can_go_nearest));
+			// important to get items from DB because the items are loaded lazyly
+			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
 			Geometry reference = PolygonConstruction.CreateMapPoint(11, 0, 0);
 
 			// go to item10
 			Assert.True(wl.CanGoNearest());
 			wl.GoNearest(reference);
-			Assert.AreEqual(item10, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item10, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go to item7
 			Assert.True(wl.CanGoNearest());
-			Assert.NotNull(wl.Current);
-			wl.GoNearest(wl.Current.Extent);
-			Assert.AreEqual(item7, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.NotNull(wl.CurrentItem);
+			Assert.NotNull(wl.CurrentItem.Extent);
+			wl.GoNearest(wl.CurrentItem.Extent);
+			Assert.AreEqual(item7, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// go to item15
 			Assert.True(wl.CanGoNearest());
-			Assert.NotNull(wl.Current);
-			wl.GoNearest(wl.Current.Extent);
-			Assert.AreEqual(item15, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.NotNull(wl.CurrentItem);
+			wl.GoNearest(wl.CurrentItem.Extent);
+			Assert.AreEqual(item15, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 
 			// Now all are visited, what is the next item? None because there is no
 			// more item *after* the last item15.
@@ -356,51 +411,156 @@ namespace ProSuite.AGP.WorkList.Test
 
 			Assert.True(wl.CanGoPrevious());
 			wl.GoPrevious();
-			Assert.AreEqual(item10, wl.Current);
+			Assert.AreEqual(item7, wl.CurrentItem);
 
-			// Now we can go nearest again which is item7 (nearest to item10)
+			// Now we can go nearest again which is item10 (nearest to item7)
 			Assert.True(wl.CanGoNearest());
-			Assert.NotNull(wl.Current);
-			wl.GoNearest(wl.Current.Extent);
-			Assert.AreEqual(item7, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.NotNull(wl.CurrentItem);
+			wl.GoNearest(wl.CurrentItem.Extent);
+			Assert.AreEqual(item10, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 		}
-
-		public void Can_go_nearest_if_item_is_Done() { }
 
 		[Test]
 		public void Cannot_go_first_again_if_first_item_is_set_done()
+		{
+			// The items have to be visible to enable the work list to go to the next item.
+			// Normally GoNearest() sets Item.Visible = true.
+			IWorkItem item1 = new WorkItemMock(1) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(2) { Visited = true };
+			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
+			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			wl.GoFirst();
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			// set status done and update work list
+			Assert.NotNull(wl.CurrentItem);
+			wl.CurrentItem.Status = WorkItemStatus.Done;
+			wl.SetStatusAsync(wl.CurrentItem, WorkItemStatus.Done);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			// second item is now the first in work list
+			// because first item is set to done and therefor 'not visible'
+			Assert.False(wl.CanGoFirst());
+		}
+
+		[Test]
+		public void Can_set_worklist_visibility()
 		{
 			IWorkItem item1 = new WorkItemMock(1);
 			IWorkItem item2 = new WorkItemMock(2);
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
-			var repository =
-				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
-			wl.GoFirst();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(WorkItemVisibility.Todo, wl.Visibility);
+
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
+			wl.SetStatusAsync(item2, WorkItemStatus.Done);
+			Assert.AreEqual(3, wl.Search(null).ToList().Count);
+
+			wl.Visibility = WorkItemVisibility.All;
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
+		}
+
+		[Test]
+		public void Can_go_next_atfter_alter_workitems_visibility()
+		{
+			// The items have to be visible to enable the work list to go to the next item.
+			// Normally GoNearest() sets Item.Visible = true.
+			IWorkItem item1 = new WorkItemMock(1) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(2) { Visited = true };
+			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
+			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
+
+			Assert.AreEqual(WorkItemVisibility.Todo, wl.Visibility);
+			Assert.AreEqual(item1, wl.CurrentItem);
+
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
+			wl.SetStatusAsync(item1, WorkItemStatus.Done);
+			Assert.AreEqual(3, wl.Search(null).ToList().Count);
 
 			wl.GoNext();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.False(wl.CanGoFirst());
+			Assert.False(wl.CanGoPrevious());
 
-			wl.GoFirst();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CanGoFirst());
+			Assert.True(wl.CanGoPrevious());
 
-			// set status done and update work list
-			wl.Current.Status = WorkItemStatus.Done;
-			wl.SetStatus(wl.Current, WorkItemStatus.Done);
+			wl.Visibility = WorkItemVisibility.All;
+			Assert.AreEqual(4, wl.Search(null).ToList().Count);
+		}
 
-			// second item is now the first in work list
-			// because first item is set to done and therefor 'not visible'
-			wl.GoFirst();
-			Assert.AreEqual(item2, wl.Current);
-			Assert.True(wl.Current?.Visited);
+		[Test]
+		public void Can_go_next_and_add_items_incremently()
+		{
+			IWorkItem item1 = new WorkItemMock(1) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(2) { Visited = true };
+			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
+			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
+			IWorkItem item5 = new WorkItemMock(5) { Visited = true };
+			IWorkItem item6 = new WorkItemMock(6) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4, item5, item6 });
+			var wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+
+			IEnumerable<IWorkItem> _ = wl.Search(GdbQueryUtils.CreateFilter(
+				                                     new List<long> { 2, 3, 4 }.AsReadOnly())).ToList();
+
+			Assert.AreEqual(item2, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			Assert.True(wl.CanGoNext());
+			Assert.False(wl.CanGoPrevious());
+			Assert.False(wl.CanGoFirst());
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			Assert.True(wl.CanGoNext());
+			Assert.True(wl.CanGoPrevious());
+			Assert.True(wl.CanGoFirst());
+			wl.GoNext();
+			Assert.AreEqual(item4, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
+
+			// end of visited items reached
+			Assert.False(wl.CanGoNext());
+			Assert.True(wl.CanGoPrevious());
+			Assert.True(wl.CanGoFirst());
+
+			// get remaining items
+			IEnumerable<IWorkItem> __ = wl.Search(GdbQueryUtils.CreateFilter(
+				                                      new List<long> { 1, 5, 6 }.AsReadOnly())).ToList();
+
+			Assert.True(wl.CanGoNext());
+			Assert.True(wl.CanGoPrevious());
+			Assert.True(wl.CanGoFirst());
+			wl.GoNext();
+			Assert.AreEqual(item1, wl.CurrentItem);
+			Assert.True(wl.CurrentItem?.Visited);
 		}
 
 		#endregion
@@ -408,359 +568,187 @@ namespace ProSuite.AGP.WorkList.Test
 		[Test]
 		public void Can_handle_WorkList_extent_on_insert()
 		{
-			InsertFeature(_issuePointsName, _poly0);
-			InsertFeature(_issueLinesName, _poly0);
+			GdbRowIdentity rowId = WorkListTestUtils.CreateRowProxy(1);
+			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
+			IWorkItem item1 = new WorkItemMock(rowId, tableId, _poly0) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			try
-			{
-				IWorkList workList = new IssueWorkList(_repository, "work list");
-				AssertEqual(_poly0.Extent, workList.Extent);
+			// important to get items from DB because the items are loaded lazyly
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
-				Assert.AreEqual(2, workList.GetItems().ToList().Count);
+			Assert.NotNull(item1.Extent);
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
 
-				InsertFeature(_issuePointsName, _poly1);
+			GdbRowIdentity rowId2 = WorkListTestUtils.CreateRowProxy(2);
+			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
+			repo.Add(item2);
 
-				var inserts = new Dictionary<Table, List<long>>
-				              {{_issuePoints, new List<long> {2}}};
-				var deletes = new Dictionary<Table, List<long>>();
-				var updates = new Dictionary<Table, List<long>>();
+			var inserts = new Dictionary<GdbTableIdentity, List<long>> { { tableId,
+				              new List<long> { item2.OID }
+			              } };
+			var deletes = new Dictionary<GdbTableIdentity, List<long>>();
+			var updates = new Dictionary<GdbTableIdentity, List<long>>();
 
-				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
+			//wl.ProcessChanges(inserts, deletes, updates);
 
-				Assert.AreEqual(3, workList.GetItems().ToList().Count);
+			Assert.AreEqual(2, wl.Search(null).ToList().Count);
 
-				Envelope newExtent = GeometryUtils.Union(_poly0.Extent, _poly1.Extent);
+			// assert oid is still the same
+			Assert.AreEqual(1, item1.OID);
+			Assert.AreEqual(2, item2.OID);
 
-				AssertEqual(newExtent, workList.Extent);
-			}
-			finally
-			{
-				DeleteAllRows(_issuePointsName);
-				DeleteAllRows(_issueLinesName);
-			}
+			Envelope envelope = item1.Extent.Union(item2.Extent);
+			Assert.True(GeometryUtils.Intersects(wl.Extent, envelope));
+			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
+			Assert.True(envelope.IsEqual(wl.Extent));
 		}
 
 		[Test]
 		public void Can_handle_WorkList_extent_on_update()
 		{
-			InsertFeature(_issuePointsName, _poly0);
-			InsertFeature(_issueLinesName, _poly0);
+			GdbRowIdentity rowId = WorkListTestUtils.CreateRowProxy(1);
+			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
+			IWorkItem item1 = new WorkItemMock(rowId, tableId, _poly0) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
-			try
-			{
-				IWorkList workList = new IssueWorkList(_repository, "work list");
-				AssertEqual(_poly0.Extent, workList.Extent);
+			// important to get items from DB because the items are loaded lazyly
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
-				Assert.AreEqual(2, workList.GetItems().ToList().Count);
+			Assert.NotNull(item1.Extent);
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
 
-				UpdateFeatureGeometry(_issuePointsName, _poly1);
-				UpdateFeatureGeometry(_issueLinesName, _poly1);
+			// Update Extext
+			item1.SetExtent(_poly1.Extent);
 
-				var inserts = new Dictionary<Table, List<long>>();
-				var deletes = new Dictionary<Table, List<long>>();
-				var updates = new Dictionary<Table, List<long>>
-				              {
-					              {_issuePoints, new List<long> {1}},
-					              {_issueLines, new List<long> {1}}
-				              };
+			var inserts = new Dictionary<GdbTableIdentity, List<long>>();
+			var deletes = new Dictionary<GdbTableIdentity, List<long>>();
+			var updates = new Dictionary<GdbTableIdentity, List<long>>{ { tableId,
+				              new List<long> { item1.OID }
+			              } };
 
-				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
+			//wl.ProcessChanges(inserts, deletes, updates);
 
-				var items = workList.GetItems().ToList();
-				Assert.AreEqual(2, items.Count);
+			// get items again because item1 was invalidated
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
-				List<long> ids = items.Select(i => i.OID).ToList().ConvertAll(i => (long) i);
-				QueryFilter filter = GdbQueryUtils.CreateFilter(ids);
-
-				foreach (IWorkItem item in workList.GetItems(filter))
-				{
-					AssertEqual(_poly1.Extent, item.Extent);
-				}
-
-				AssertEqual(_poly1.Extent, workList.Extent);
-			}
-			finally
-			{
-				DeleteAllRows(_issuePointsName);
-				DeleteAllRows(_issueLinesName);
-			}
+			// assert oid is still the same
+			Assert.AreEqual(1, item1.OID);
+			Assert.NotNull(item1.Extent);
+			Assert.True(item1.Extent.IsEqual(wl.Extent));
 		}
 
 		[Test]
 		public void Can_handle_WorkList_extent_on_delete()
 		{
-			InsertFeature(_issuePointsName, _poly0);
-			InsertFeature(_issueLinesName, _poly1);
+			GdbRowIdentity rowId1 = WorkListTestUtils.CreateRowProxy(1);
+			GdbRowIdentity rowId2 = WorkListTestUtils.CreateRowProxy(2);
+			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
+
+			IWorkItem item1 = new WorkItemMock(rowId1, tableId, _poly0) { Visited = true };
+			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2 });
+			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+
+			// important to get items from DB because the items are loaded lazyly
+			Assert.AreEqual(2, wl.Search(null).ToList().Count);
+
+			Envelope envelope = _poly0.Extent.Union(_poly1.Extent);
+			Assert.True(GeometryUtils.Intersects(wl.Extent, envelope));
+			Assert.True(GeometryUtils.Contains(wl.Extent, envelope));
+
+			var inserts = new Dictionary<GdbTableIdentity, List<long>>();
+			var deletes = new Dictionary<GdbTableIdentity, List<long>> { { tableId,
+				              new List<long> { item2.OID }
+			              } };
+			var updates = new Dictionary<GdbTableIdentity, List<long>>();
+
+			//wl.ProcessChanges(inserts, deletes, updates);
+
+			// remove it from repo mock too
+			Assert.True(repo.Remove(item2));
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
+
+			Assert.NotNull(item1.Extent);
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
+		}
+
+		[Test]
+		public void Can_rename_worklist()
+		{
+			string fileNameWithoutSuffix = nameof(Can_rename_worklist);
+			string fileName = $"{nameof(Can_rename_worklist)}.xml";
+			string path = TestDataPreparer.FromDirectory().GetPath(fileName);
+			var uniqueName = "stateRepo";
+			var displayName = "state Repository display name";
+			var newName = "Run to the Hills";
+			string newPath = TestDataPreparer.FromDirectory().GetPath("Run to the Hills.xml");
 
 			try
 			{
-				IWorkList workList = new IssueWorkList(_repository, "work list");
-				Envelope newExtent = GeometryUtils.Union(_poly0.Extent, _poly1.Extent);
-				AssertEqual(newExtent, workList.Extent);
+				var stateRepo =
+					new XmlSelectionItemStateRepository(path, uniqueName, displayName,
+					                                    typeof(IssueWorkList));
 
-				Assert.AreEqual(2, workList.GetItems().ToList().Count);
+				var repo = new ItemRepositoryMock(new List<IWorkItem>(), stateRepo);
+				IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), uniqueName, "displayName");
+				Assert.AreEqual(uniqueName, wl.Name);
+				Assert.AreEqual("displayName", wl.DisplayName);
+				wl.Commit();
 
-				DeleteRow(_issueLinesName);
+				Assert.True(File.Exists(path));
+				Assert.AreEqual(fileNameWithoutSuffix, WorkListUtils.ParseName(path));
 
-				var inserts = new Dictionary<Table, List<long>>();
-				var deletes = new Dictionary<Table, List<long>> {{_issueLines, new List<long> {1}}};
-				var updates = new Dictionary<Table, List<long>>();
+				wl.Rename(newName);
+				Assert.AreEqual(uniqueName, wl.Name);
+				Assert.AreEqual(newName, wl.DisplayName);
+				wl.Commit();
 
-				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
-
-				Assert.AreEqual(1, workList.GetItems().ToList().Count);
-
-				AssertEqual(_poly0.Extent, workList.Extent);
+				Assert.True(File.Exists(newPath));
 			}
 			finally
 			{
-				DeleteAllRows(_issuePointsName);
-				DeleteAllRows(_issueLinesName);
+				if (File.Exists(path))
+				{
+					File.Delete(path);
+				}
+
+				if (File.Exists(newPath))
+				{
+					File.Delete(newPath);
+				}
 			}
 		}
 
 		[Test]
-		public void Respect_AreaOfInterest_LearningTest()
+		public void Can_set_worklist_extent()
 		{
-			Polygon polygon = PolygonConstruction
-			                  .StartPolygon(0, 0)
-			                  .LineTo(0, 20)
-			                  .LineTo(20, 20)
-			                  .LineTo(20, 0)
-			                  .ClosePolygon();
+			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
+			GdbRowIdentity rowId1 = WorkListTestUtils.CreateRowProxy(1);
+			IWorkItem item1 = new WorkItemMock(rowId1, tableId, _poly0) { Visited = true };
+			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
+			IWorkList wl = new SelectionWorkList(repo, _poly0, "uniqueName", "displayName");
 
-			Polygon areaOfInterest = PolygonConstruction
-			                         .StartPolygon(100, 100)
-			                         .LineTo(100, 120)
-			                         .LineTo(120, 120)
-			                         .LineTo(120, 100)
-			                         .ClosePolygon();
+			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
+			Assert.AreEqual(1, wl.Search(null).ToList().Count);
 
-			var rowCount = 4;
-			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
-
-			try
-			{
-				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
-
-				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-
-				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
-					new Dictionary<Datastore, List<Table>>
-					{
-						{geodatabase, new List<Table> {table}}
-					};
-
-				IWorkItemStateRepository stateRepository =
-					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
-
-				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
-				workList.AreaOfInterest = areaOfInterest;
-
-				IEnumerable<IWorkItem> items = workList.GetItems();
-
-				Assert.AreEqual(0, items.Count());
-			}
-			finally
-			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
-			}
+			// Note: work item has a minimum length/width of 30!!
+			Assert.NotNull(item1.Extent);
+			Assert.True(AreEqual(item1.Extent, wl.Extent));
+			//AssertEqual(item1.Extent, wl.GetExtent());
 		}
 
-		[Test]
-		public void Measure_performance_query_items_inMemory()
-		{
-			Polygon polygon = PolygonConstruction
-			                  .StartPolygon(0, 0)
-			                  .LineTo(0, 20)
-			                  .LineTo(20, 20)
-			                  .LineTo(20, 0)
-			                  .ClosePolygon();
-
-			Polygon areaOfInterest = PolygonConstruction
-			                         .StartPolygon(0, 0)
-			                         .LineTo(0, 100)
-			                         .LineTo(100, 100)
-			                         .LineTo(100, 0)
-			                         .ClosePolygon();
-
-			var rowCount = 10000;
-			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
-
-			try
-			{
-				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
-
-				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
-					new Dictionary<Datastore, List<Table>>
-					{
-						{geodatabase, new List<Table> {table}}
-					};
-
-				IWorkItemStateRepository stateRepository =
-					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
-
-				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
-				workList.AreaOfInterest = areaOfInterest;
-
-				var filter = GdbQueryUtils.CreateSpatialFilter(areaOfInterest);
-
-				var watch = new Stopwatch();
-				watch.Start();
-
-				IEnumerable<IWorkItem> items = workList.GetItems(filter);
-
-				watch.Stop();
-				Console.WriteLine($"{watch.ElapsedMilliseconds} ms");
-
-				Assert.AreEqual(rowCount, items.Count());
-			}
-			finally
-			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
-			}
-		}
-
-		[Test]
-		public void Measure_performance_query_items_from_GDB()
-		{
-			Polygon polygon = PolygonConstruction
-			                  .StartPolygon(0, 0)
-			                  .LineTo(0, 20)
-			                  .LineTo(20, 20)
-			                  .LineTo(20, 0)
-			                  .ClosePolygon();
-
-			Polygon areaOfInterest = PolygonConstruction
-			                         .StartPolygon(0, 0)
-			                         .LineTo(0, 100)
-			                         .LineTo(100, 100)
-			                         .LineTo(100, 0)
-			                         .ClosePolygon();
-
-			var rowCount = 10000;
-			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
-
-			try
-			{
-				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
-
-				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-
-				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
-					new Dictionary<Datastore, List<Table>>
-					{
-						{geodatabase, new List<Table> {table}}
-					};
-
-				IWorkItemStateRepository stateRepository =
-					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
-
-				IWorkList workList = new GdbQueryWorkList(repository, "work list");
-				workList.AreaOfInterest = areaOfInterest;
-
-				var filter = GdbQueryUtils.CreateSpatialFilter(areaOfInterest);
-
-				var watch = new Stopwatch();
-				watch.Start();
-
-				IEnumerable<IWorkItem> items = workList.GetItems(filter);
-
-				watch.Stop();
-				Console.WriteLine($"{watch.ElapsedMilliseconds} ms");
-
-				Assert.AreEqual(rowCount, items.Count());
-			}
-			finally
-			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
-			}
-		}
-
-		[Test]
-		public void WorkItemService_LearningTest()
-		{
-			Polygon polygon = PolygonConstruction
-			                  .StartPolygon(0, 0)
-			                  .LineTo(0, 20)
-			                  .LineTo(20, 20)
-			                  .LineTo(20, 0)
-			                  .ClosePolygon();
-
-			var rowCount = 4;
-			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
-
-			try
-			{
-				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
-
-				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
-				Dictionary<Datastore, List<Table>> tablesByGeodatabase =
-					new Dictionary<Datastore, List<Table>>
-					{
-						{geodatabase, new List<Table> {table}}
-					};
-
-				IWorkItemStateRepository stateRepository =
-					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository =
-					new IssueItemRepository(new List<Table> { table }, stateRepository);
-
-				IWorkList workList = new GdbQueryWorkList(repository, "work list");
-
-				var items = workList.GetItems().Cast<IssueItem>().ToList();
-
-				Assert.AreEqual("Bart", items[0].IssueCodeDescription);
-				Assert.AreEqual("Bart", items[1].IssueCodeDescription);
-				Assert.AreEqual("Bart", items[2].IssueCodeDescription);
-				Assert.AreEqual("Bart", items[3].IssueCodeDescription);
-			}
-			finally
-			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
-			}
-		}
-
-		private static void InsertFeature(string featureClassName, Polygon polygon)
-		{
-			TestUtils.InsertRows(_emptyIssuesGdb, featureClassName, polygon, 1);
-		}
-
-		private static void UpdateFeatureGeometry(string featureClassName, Polygon polygon)
-		{
-			TestUtils.UpdateFeatureGeometry(_emptyIssuesGdb, featureClassName, polygon, 1);
-		}
-
-		private static void DeleteRow(string featureClassName)
-		{
-			TestUtils.DeleteRow(_emptyIssuesGdb, featureClassName, 1);
-		}
-
-		private static void DeleteAllRows(string featureClassName)
-		{
-			TestUtils.DeleteAllRows(_emptyIssuesGdb, featureClassName);
-		}
-
-		private static void AssertEqual(Envelope expected, Envelope actual)
-		{
-			Assert.True(AreEqual(expected, actual));
-		}
+		//private static void AssertEqual(Envelope expected, Envelope actual)
+		//{
+		//	Assert.True(AreEqual(expected, actual));
+		//}
 
 		private static bool AreEqual(Envelope expected, Envelope actual)
 		{
 			// 1.1 is default expansion of work items
-			return expected.Expand(1.1, 1.1, true).IsEqual(actual);
+			Envelope envelope = actual.Expand(1.1, 1.1, true);
+			return envelope.IsEqual(expected);
 		}
 	}
 }

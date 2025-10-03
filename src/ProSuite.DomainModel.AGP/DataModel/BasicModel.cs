@@ -31,6 +31,11 @@ namespace ProSuite.DomainModel.AGP.DataModel
 			throw new NotImplementedException();
 		}
 
+		public override string TranslateToModelElementName(string masterDatabaseDatasetName)
+		{
+			throw new NotImplementedException();
+		}
+
 		protected override void CheckAssignSpecialDatasetCore(Dataset dataset)
 		{
 			throw new NotImplementedException();
