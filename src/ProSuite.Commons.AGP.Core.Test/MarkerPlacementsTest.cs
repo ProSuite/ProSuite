@@ -119,7 +119,7 @@ public class MarkerPlacementsTest
 			              AngleToLine = true,
 			              PlacePerPart = true,
 			              PerpendicularOffset = 0,
-			              Pattern = [10.0],
+			              Pattern = new[] {10.0},
 			              OffsetAlongLine = 0,
 			              CustomEndingOffset = 0
 		              };
@@ -144,11 +144,12 @@ public class MarkerPlacementsTest
 		var line = PolylineBuilderEx.CreatePolyline(
 			new[] { Pt(0, 0), Pt(100, 0) });
 		MarkerPlacements.EndingsType[] fullEndings =
-		[
+		{
 			MarkerPlacements.EndingsType.Unconstrained,
 			MarkerPlacements.EndingsType.Marker,
 			MarkerPlacements.EndingsType.Custom
-		];
+		};
+
 		foreach (var ending in fullEndings)
 		{
 			options.Endings = ending;
