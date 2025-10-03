@@ -326,11 +326,58 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-		private record TestDefinitionCase(
-			Type TestType,
-			int ConstructorIndex = -1,
-			object[] ConstructorValues = null,
-			Dictionary<string, object> OptionalParamValues = null);
+		// TODO: This could be used as record once language version is upgraded:
+		//private record TestDefinitionCase(
+		//	Type TestType,
+		//	int ConstructorIndex = -1,
+		//	object[] ConstructorValues = null,
+		//	Dictionary<string, object> OptionalParamValues = null);
+		private class TestDefinitionCase
+		{
+			public Type TestType { get; }
+			public int ConstructorIndex { get; }
+			public object[] ConstructorValues { get; }
+			public Dictionary<string, object> OptionalParamValues { get; }
+
+			public TestDefinitionCase(
+				Type testType,
+				int constructorIndex = -1,
+				object[] constructorValues = null,
+				Dictionary<string, object> optionalParamValues = null)
+			{
+				TestType = testType;
+				ConstructorIndex = constructorIndex;
+				ConstructorValues = constructorValues;
+				OptionalParamValues = optionalParamValues;
+			}
+
+			public override bool Equals(object obj)
+			{
+				return obj is TestDefinitionCase other &&
+				       TestType == other.TestType &&
+				       ConstructorIndex == other.ConstructorIndex &&
+				       ReferenceEquals(ConstructorValues, other.ConstructorValues) &&
+				       ReferenceEquals(OptionalParamValues, other.OptionalParamValues);
+			}
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					int hash = 17;
+					hash = hash * 23 + (TestType?.GetHashCode() ?? 0);
+					hash = hash * 23 + ConstructorIndex.GetHashCode();
+					hash = hash * 23 + (ConstructorValues?.GetHashCode() ?? 0);
+					hash = hash * 23 + (OptionalParamValues?.GetHashCode() ?? 0);
+					return hash;
+				}
+			}
+
+			public override string ToString()
+			{
+				return $"TestDefinitionCase {{ TestType = {TestType}, ConstructorIndex = {ConstructorIndex}, ConstructorValues = {ConstructorValues}, OptionalParamValues = {OptionalParamValues} }}";
+			}
+		}
 
 		private static List<TestDefinitionCase> DefineTestCases(TestDataModel model)
 		{
@@ -3538,11 +3585,58 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-		private record IfDefinitionCase(
-			Type IssueFilterType,
-			int ConstructorIndex = -1,
-			object[] ConstructorValues = null,
-			Dictionary<string, object> OptionalParamValues = null);
+		// TODO: This could be used as record once language version is upgraded:
+		//private record IfDefinitionCase(
+		//	Type IssueFilterType,
+		//	int ConstructorIndex = -1,
+		//	object[] ConstructorValues = null,
+		//	Dictionary<string, object> OptionalParamValues = null);
+		private class IfDefinitionCase
+		{
+			public Type IssueFilterType { get; }
+			public int ConstructorIndex { get; }
+			public object[] ConstructorValues { get; }
+			public Dictionary<string, object> OptionalParamValues { get; }
+
+			public IfDefinitionCase(
+				Type issueFilterType,
+				int constructorIndex = -1,
+				object[] constructorValues = null,
+				Dictionary<string, object> optionalParamValues = null)
+			{
+				IssueFilterType = issueFilterType;
+				ConstructorIndex = constructorIndex;
+				ConstructorValues = constructorValues;
+				OptionalParamValues = optionalParamValues;
+			}
+
+			public override bool Equals(object obj)
+			{
+				return obj is IfDefinitionCase other &&
+				       IssueFilterType == other.IssueFilterType &&
+				       ConstructorIndex == other.ConstructorIndex &&
+				       ReferenceEquals(ConstructorValues, other.ConstructorValues) &&
+				       ReferenceEquals(OptionalParamValues, other.OptionalParamValues);
+			}
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					int hash = 17;
+					hash = hash * 23 + (IssueFilterType?.GetHashCode() ?? 0);
+					hash = hash * 23 + ConstructorIndex.GetHashCode();
+					hash = hash * 23 + (ConstructorValues?.GetHashCode() ?? 0);
+					hash = hash * 23 + (OptionalParamValues?.GetHashCode() ?? 0);
+					return hash;
+				}
+			}
+
+			public override string ToString()
+			{
+				return $"IfDefinitionCase {{ IssueFilterType = {IssueFilterType}, ConstructorIndex = {ConstructorIndex}, ConstructorValues = {ConstructorValues}, OptionalParamValues = {OptionalParamValues} }}";
+			}
+		}
 
 		private static List<IfDefinitionCase> DefineIfCases(TestDataModel model)
 		{
@@ -3811,11 +3905,59 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-		private record TrDefinitionCase(
-			Type TransformerType,
-			int ConstructorIndex = -1,
-			object[] ConstructorValues = null,
-			Dictionary<string, object> OptionalParamValues = null);
+		// TODO: This could be used as record once language version is upgraded:
+		//private record TrDefinitionCase(
+		//	Type TransformerType,
+		//	int ConstructorIndex = -1,
+		//	object[] ConstructorValues = null,
+		//	Dictionary<string, object> OptionalParamValues = null);
+		private class TrDefinitionCase
+		{
+			public Type TransformerType { get; }
+			public int ConstructorIndex { get; }
+			public object[] ConstructorValues { get; }
+			public Dictionary<string, object> OptionalParamValues { get; }
+
+			public TrDefinitionCase(
+				Type transformerType,
+				int constructorIndex = -1,
+				object[] constructorValues = null,
+				Dictionary<string, object> optionalParamValues = null)
+			{
+				TransformerType = transformerType;
+				ConstructorIndex = constructorIndex;
+				ConstructorValues = constructorValues;
+				OptionalParamValues = optionalParamValues;
+			}
+
+			public override bool Equals(object obj)
+			{
+				return obj is TrDefinitionCase other &&
+				       TransformerType == other.TransformerType &&
+				       ConstructorIndex == other.ConstructorIndex &&
+				       ReferenceEquals(ConstructorValues, other.ConstructorValues) &&
+				       ReferenceEquals(OptionalParamValues, other.OptionalParamValues);
+			}
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					int hash = 17;
+					hash = hash * 23 + (TransformerType?.GetHashCode() ?? 0);
+					hash = hash * 23 + ConstructorIndex.GetHashCode();
+					hash = hash * 23 + (ConstructorValues?.GetHashCode() ?? 0);
+					hash = hash * 23 + (OptionalParamValues?.GetHashCode() ?? 0);
+					return hash;
+				}
+			}
+
+			public override string ToString()
+			{
+				return $"TrDefinitionCase {{ TransformerType = {TransformerType}, ConstructorIndex = {ConstructorIndex}, ConstructorValues = {ConstructorValues}, OptionalParamValues = {OptionalParamValues} }}";
+			}
+		}
+
 
 		private static List<TrDefinitionCase> DefineTrCases(TestDataModel model)
 		{
@@ -4282,7 +4424,7 @@ namespace ProSuite.QA.Tests.Test
 		                                      QualityCondition testDefCondition)
 		{
 			// NOTE: For lists, multiple TestParameterValues can be added for the same TestParameter.
-			if (value is IEnumerable enumerable and not string)
+			if (value is IEnumerable enumerable && !(value is string))
 			{
 				foreach (object singleValue in enumerable)
 				{
@@ -4322,7 +4464,7 @@ namespace ProSuite.QA.Tests.Test
 			                                                 issueFilterDef)
 		{
 			// NOTE: For lists, multiple IssueFilterParameterValues can be added for the same IssueFilterParameter.
-			if (value is IEnumerable enumerable and not string)
+			if (value is IEnumerable enumerable && !(value is string))
 			{
 				foreach (object singleValue in enumerable)
 				{
@@ -4364,7 +4506,7 @@ namespace ProSuite.QA.Tests.Test
 			                                                 transformerDef)
 		{
 			// NOTE: For lists, multiple TranformerValues can be added for the same Transformer.
-			if (value is IEnumerable enumerable and not string)
+			if (value is IEnumerable enumerable && !(value is string))
 			{
 				foreach (object singleValue in enumerable)
 				{
