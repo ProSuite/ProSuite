@@ -1,5 +1,5 @@
 using System;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.WorkList;
 
@@ -10,8 +10,12 @@ public class WorkListEnvironmentFactory : IWorkListEnvironmentFactory
 	public static IWorkListEnvironmentFactory Instance { get; set; } =
 		new WorkListEnvironmentFactory();
 
-	[CanBeNull]
 	public IWorkEnvironment CreateWorkEnvironment(string path, string typeName)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task<IWorkEnvironment> CreateWorkEnvironmentAsync(string path, string typeName)
 	{
 		throw new NotImplementedException();
 	}

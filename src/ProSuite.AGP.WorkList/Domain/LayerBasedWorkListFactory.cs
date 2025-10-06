@@ -88,7 +88,8 @@ public class LayerBasedWorkListFactory : WorkListFactoryBase
 			}
 
 			IWorkEnvironment workEnvironment =
-				WorkListEnvironmentFactory.Instance.CreateWorkEnvironment(_path, _typeName);
+				await WorkListEnvironmentFactory.Instance.CreateWorkEnvironmentAsync(
+					_path, _typeName);
 
 			if (workEnvironment == null)
 			{
