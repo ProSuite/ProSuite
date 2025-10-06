@@ -15,6 +15,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IFeatureClassSchemaDef Intersecting { get; }
 
+		private const int _defaultResultDimension = -1;
+
 		[DocTr(nameof(DocTrStrings.TrIntersect_0))]
 		public TrIntersectDefinition(
 			[NotNull, DocTr(nameof(DocTrStrings.TrIntersect_intersected))]
@@ -26,5 +28,9 @@ namespace ProSuite.QA.Tests.Transformers
 			Intersected = intersecting;
 			Intersecting = intersected;
 		}
+
+		[TestParameter(_defaultResultDimension)]
+		[DocTr(nameof(DocTrStrings.TrIntersect_ResultDimension))]
+		public int ResultDimension { get; set; } = _defaultResultDimension;
 	}
 }
