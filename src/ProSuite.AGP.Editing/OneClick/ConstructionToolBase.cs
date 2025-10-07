@@ -842,7 +842,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (double.IsNaN(lastPoint.Z) && ! hasSurfaceAtLocation)
 				{
-					_msg.InfoFormat("Vertex added, no Z (no surface at location), Z=0.00");
+					_msg.InfoFormat("Vertex added, no surface at location, Z=0.00");
 					_lastLoggedVertexIndex = currentLastIndex;
 					return;
 				}
