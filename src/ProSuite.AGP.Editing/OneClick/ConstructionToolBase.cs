@@ -110,12 +110,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool LogSketchVertexZs { get; set; }
 
-		/// <summary>
-		/// Flag to indicate that currently the selection is changed by the <see
-		/// cref="OnSketchCompleteCoreAsync"/> method and selection events should be ignored.
-		/// </summary>
-		protected bool IsCompletingEditSketch { get; set; }
-
 		#region MapTool overrides
 
 		protected override async Task<bool> OnSketchModifiedAsync()
@@ -124,7 +118,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (LogSketchVertexZs && IsInSketchMode)
 			{
-				await LogLastSketchVertexZ();
+				Geometry sketch = await GetCurrentSketchAsync();
+
+				await LogLastSketchVertexZ(sketch);
 			}
 
 			// Does it make any difference what the return value is?
@@ -135,6 +131,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			return true;
 		}
+
+		/// <summary>
+		/// Flag to indicate that currently the selection is changed by the <see
+		/// cref="OnSketchCompleteCoreAsync"/> method and selection events should be ignored.
+		/// </summary>
+		protected bool IsCompletingEditSketch { get; set; }
 
 		protected override async Task<bool> OnSketchCanceledAsync()
 		{
@@ -512,6 +514,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (IsInSketchMode)
 			{
+				if (LogSketchVertexZs && sketchGeometry is MapPoint)
+				{
+					// NOTE: OnSketchModified for Point sketches is dysfunctional. The sketch is already empty!
+					//       Work-around:
+					_lastLoggedVertexIndex = -1;
+					await LogLastSketchVertexZ(sketchGeometry);
+				}
+
 				// take snapshots
 				//Todo: In Pro3 this.CurrentTemplate is null. Investigate further...
 				EditingTemplate currentTemplate = EditingTemplate.Current;
@@ -545,6 +555,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		protected abstract SketchGeometryType GetEditSketchGeometryType();
+
+		protected virtual Task<bool?> GetEditSketchHasZ()
+		{
+			return null;
+		}
 
 		/// <summary>
 		/// The template that can optionally be used to set up the sketch properties, such as
@@ -766,11 +781,14 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private async Task LogLastSketchVertexZ()
+		private async Task LogLastSketchVertexZ([NotNull] Geometry sketch)
 		{
-			Geometry sketch = await GetCurrentSketchAsync();
+			if (! sketch.HasZ)
+			{
+				return;
+			}
 
-			if (! sketch.HasZ || GetSketchType() == SketchGeometryType.Point)
+			if (await GetEditSketchHasZ() != true)
 			{
 				return;
 			}
@@ -798,8 +816,34 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				MapPoint lastPoint = GetLastPoint(sketch);
 
-				if (lastPoint == null || double.IsNaN(lastPoint.Z))
+				if (lastPoint == null)
 				{
+					_msg.VerboseDebug(() => "Last point is null");
+					return;
+				}
+
+				bool hasSurfaceAtLocation = HasSurfaceAtLocation(lastPoint) &&
+				                            ActiveMapView.ViewingMode == MapViewingMode.Map;
+
+				if (double.IsNaN(lastPoint.Z) && hasSurfaceAtLocation)
+				{
+					_msg.VerboseDebug(() =>
+						                  $"Last point has NaN Z but surface exists at ({lastPoint.X:F3} / {lastPoint.Y:F3})");
+					return;
+				}
+
+				//NOTE: OnSketchModified for Point sketches is dysfunctional. Workaround:
+				if (GetSketchType() == SketchGeometryType.Point && lastPoint.Z == 0.00)
+				{
+					_msg.VerboseDebug(() =>
+						                  $"Point sketch with Z=0.00 at ({lastPoint.X:F3} / {lastPoint.Y:F3})");
+					return;
+				}
+
+				if (double.IsNaN(lastPoint.Z) && ! hasSurfaceAtLocation)
+				{
+					_msg.InfoFormat("Vertex added, no Z (no surface at location), Z=0.00");
+					_lastLoggedVertexIndex = currentLastIndex;
 					return;
 				}
 
@@ -843,6 +887,45 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return lastPoint;
+		}
+
+		/// <summary>
+		/// Checks if there is elevation surface data available at the specified location in the active map view.
+		/// </summary>
+		/// <param name="point">The point to check for surface availability</param>
+		/// <returns>True if surface data is available at the location, false otherwise</returns>
+		private bool HasSurfaceAtLocation([NotNull] MapPoint point)
+		{
+			Map currentMap = ActiveMapView?.Map;
+
+			if (currentMap == null)
+			{
+				return false;
+			}
+
+			// Check if the map has elevation surfaces
+			IReadOnlyList<ElevationSurfaceLayer> elevationSurfaceLayers =
+				currentMap.GetElevationSurfaceLayers();
+
+			if (elevationSurfaceLayers == null || elevationSurfaceLayers.Count == 0)
+			{
+				return false;
+			}
+
+			try
+			{
+				// Try to get Z values from the map's elevation surfaces
+				SurfaceZsResult result = currentMap.GetZsFromSurface(point);
+
+				// Surface data is available if we got a valid result with geometry
+				return result?.Geometry != null && result.Status == SurfaceZsResultStatus.Ok;
+			}
+			catch (Exception ex)
+			{
+				_msg.VerboseDebug(() =>
+					                  $"Error checking surface at location {point.X:F3}, {point.Y:F3}: {ex.Message}");
+				return false;
+			}
 		}
 
 		public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
