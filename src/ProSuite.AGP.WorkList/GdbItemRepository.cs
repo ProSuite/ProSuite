@@ -18,7 +18,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	private int _lastUsedOid;
 
-	// TODO: Create basic record for each source class: Table, DefinitionQuery, Schema
+	// TODO: Create basic record for each source class: Table, DefaultDefinitionQuery, Schema
 	//		 re-use DbStatusSourceClassDefinition?
 	protected GdbItemRepository(IList<ISourceClass> sourceClasses,
 	                            IWorkItemStateRepository workItemStateRepository)
