@@ -61,30 +61,24 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	[NotNull]
 	public IList<ISourceClass> SourceClasses { get; }
 
-	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
+	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		QueryFilter filter,
+		WorkItemStatus? statusFilter)
 	{
-		return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter));
+		// - Consider re-naming to ReadItems (implying DB-Access)
+		// - Try get rid of QueryFilter (use filterGeometry, whereClause or more dedicated filter object.)
+		return SourceClasses.SelectMany(sourceClass =>
+			                                GetItems(sourceClass, filter, statusFilter));
 	}
 
 	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		Table table,
 		QueryFilter filter,
-		WorkItemStatus? statusFilter,
-		bool excludeGeometry = false)
-	{
-		return SourceClasses.SelectMany(sourceClass =>
-			                                GetItems(sourceClass, filter, statusFilter,
-			                                         excludeGeometry));
-	}
-
-	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
-		QueryFilter filter,
-		WorkItemStatus? statusFilter,
-		bool excludeGeometry = false)
+		WorkItemStatus? statusFilter)
 	{
 		return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
 		                    .SelectMany(sourceClass =>
-			                                GetItems(sourceClass, table, filter, statusFilter,
-			                                         excludeGeometry));
+			                                GetItems(sourceClass, table, filter, statusFilter));
 	}
 
 	public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
@@ -161,14 +155,13 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		ISourceClass sourceClass,
 		QueryFilter filter,
-		WorkItemStatus? statusFilter = null,
-		bool excludeGeometry = false)
+		WorkItemStatus? statusFilter = null)
 	{
 		var count = 0;
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, statusFilter, excludeGeometry);
+		sourceClass.EnsureValidFilter(ref filter, statusFilter, false);
 
 		foreach (Row row in GetRows(sourceClass, filter))
 		{
@@ -185,16 +178,16 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	}
 
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		ISourceClass sourceClass, Table table,
+		ISourceClass sourceClass,
+		Table table,
 		QueryFilter filter,
-		WorkItemStatus? statusFilter = null,
-		bool excludeGeometry = false)
+		WorkItemStatus? statusFilter = null)
 	{
 		var count = 0;
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, statusFilter, excludeGeometry);
+		sourceClass.EnsureValidFilter(ref filter, statusFilter, false);
 
 		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
 		{

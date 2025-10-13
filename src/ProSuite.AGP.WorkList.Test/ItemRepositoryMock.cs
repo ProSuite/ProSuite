@@ -32,8 +32,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 	}
 
 	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		QueryFilter filter, WorkItemStatus? statusFilter,
-		bool excludeGeometry = false)
+		QueryFilter filter, WorkItemStatus? statusFilter)
 	{
 		IEnumerable<IWorkItem> query =
 			statusFilter == null
@@ -62,15 +61,14 @@ public class ItemRepositoryMock : IWorkItemRepository
 
 	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		Table table, QueryFilter filter,
-		WorkItemStatus? statusFilter,
-		bool excludeGeometry = false)
+		WorkItemStatus? statusFilter)
 	{
 		throw new NotImplementedException();
 	}
 
 	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
 	{
-		return GetItems(filter, null, false);
+		return GetItems(filter, null);
 	}
 
 	public void Refresh(IWorkItem item)
