@@ -20,7 +20,6 @@ namespace ProSuite.QA.TestFactories
 	[AttributeTest]
 	public class QaRelConstraint : QaRelationTestFactory
 	{
-
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
@@ -37,7 +36,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (! (objParams[0] is IList<IReadOnlyTable>))
+			if (! (objParams[0] is IList<ITableSchemaDef>))
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -64,16 +63,17 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[3];
 
-			var tables = (IList<IReadOnlyTable>) objParams[0];
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 			var constraints = (IList<string>) objParams[3];
 
-			var factoryDef = (QaRelConstraintDefinition)FactoryDefinition;
+			var factoryDef = (QaRelConstraintDefinition) FactoryDefinition;
 
 			bool applyFilterInDatabase = GetParameterValue<bool>(testParameters,
 			                                                     datasetContext,
-			                                                     factoryDef.ParameterNameApplyFilterInDatabase);
+			                                                     factoryDef
+				                                                     .ParameterNameApplyFilterInDatabase);
 
 			IDictionary<string, string> replacements = GetTableNameReplacements(
 				Assert.NotNull(Condition).ParameterValues.OfType<DatasetTestParameterValue>(),
@@ -89,9 +89,8 @@ namespace ProSuite.QA.TestFactories
 			                                             whereClause,
 			                                             out string relationshipClassName);
 
-
-			if (!string.Equals(associationName, relationshipClassName,
-			                   StringComparison.OrdinalIgnoreCase))
+			if (! string.Equals(associationName, relationshipClassName,
+			                    StringComparison.OrdinalIgnoreCase))
 			{
 				replacements.Add(associationName, relationshipClassName);
 			}
@@ -164,9 +163,9 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
-			var factoryDef = (QaRelConstraintDefinition)FactoryDefinition;
+			var factoryDef = (QaRelConstraintDefinition) FactoryDefinition;
 			if (string.Equals(testParameter.Name,
-							   factoryDef.ParameterNameApplyFilterInDatabase,
+			                  factoryDef.ParameterNameApplyFilterInDatabase,
 			                  StringComparison.OrdinalIgnoreCase))
 			{
 				return;

@@ -34,7 +34,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] as IList<IReadOnlyTable> == null)
+			if (objParams[0] as IList<ITableSchemaDef> == null)
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -67,7 +67,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[4];
 
-			var tables = (IList<IReadOnlyTable>) objParams[0];
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 

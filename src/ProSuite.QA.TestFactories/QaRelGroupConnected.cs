@@ -23,7 +23,7 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaGroupConnected.Codes;
-		
+
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
 		                                 out List<TableConstraint> tableParameters)
@@ -36,7 +36,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (! (objParams[0] is IList<IReadOnlyTable>))
+			if (! (objParams[0] is IList<ITableSchemaDef>))
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -69,7 +69,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[4];
 
-			var tables = (IList<IReadOnlyTable>) objParams[0];
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 

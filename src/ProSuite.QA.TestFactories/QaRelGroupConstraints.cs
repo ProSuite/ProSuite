@@ -37,7 +37,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[6];
 
-			var tables = ValidateType<IList<IReadOnlyTable>>(objParams[0]);
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = ValidateType<string>(objParams[1]);
 			var join = ValidateType<JoinType>(objParams[2]);
 
@@ -89,7 +89,7 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
-			var factoryDef = (QaRelGroupConstraintsDefinition)FactoryDefinition;
+			var factoryDef = (QaRelGroupConstraintsDefinition) FactoryDefinition;
 			if (testParameter.Name == factoryDef.ExistsRowGroupFilterName)
 			{
 				((QaGroupConstraints) test).ExistsRowGroupFilters = new[] { (string) value };

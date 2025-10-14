@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,6 +9,9 @@ using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -35,12 +35,15 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			var tables = ValidateType<IList<IReadOnlyTable>>(objParams[0], "IList<ITable>");
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName =
 				ValidateType<string>(objParams[1], "string (for relation)");
 			var join = ValidateType<JoinType>(objParams[2]);
 
-			var nearClasses = ValidateType<IList<IReadOnlyFeatureClass>>(objParams[3]);
+			IList<IReadOnlyFeatureClass> nearClasses =
+				ToReadOnlyTableList<IReadOnlyFeatureClass>(objParams[3]);
+			//ValidateType<IList<IReadOnlyFeatureClass>>(objParams[3]);
+
 			var maximumDistance = ValidateType<double>(objParams[4]);
 
 			// TOP-5291: relevantRelationCondition is nullable in the test
