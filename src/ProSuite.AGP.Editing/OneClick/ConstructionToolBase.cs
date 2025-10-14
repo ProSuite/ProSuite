@@ -384,8 +384,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (CanFinishSketch(currentSketch))
 				{
-					await OnSketchCompleteAsync(currentSketch);
-					await ClearSketchAsync();
+					await FinishSketchAsync();
 				}
 			}
 
