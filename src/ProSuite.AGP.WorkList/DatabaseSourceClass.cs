@@ -27,7 +27,7 @@ namespace ProSuite.AGP.WorkList
 			TodoValue = schema.TodoValue;
 			DoneValue = schema.DoneValue;
 
-			DefinitionQuery = definitionQuery;
+			DefaultDefinitionQuery = definitionQuery;
 		}
 
 		public WorkItemStatus GetStatus([NotNull] Row row)
@@ -115,7 +115,7 @@ namespace ProSuite.AGP.WorkList
 					         : $"{StatusField} = {value}";
 			}
 
-			if (DefinitionQuery == null)
+			if (DefaultDefinitionQuery == null)
 			{
 				return;
 			}
@@ -125,7 +125,7 @@ namespace ProSuite.AGP.WorkList
 				result += " AND ";
 			}
 
-			result += DefinitionQuery;
+			result += DefaultDefinitionQuery;
 
 			filter.WhereClause = result;
 		}

@@ -37,16 +37,14 @@ public interface IWorkItemRepository
 
 	long Count();
 
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter);
+	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		[CanBeNull] QueryFilter filter,
+		[CanBeNull] WorkItemStatus? statusFilter = null);
 
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter,
-	                                                        WorkItemStatus? statusFilter,
-	                                                        bool excludeGeometry = false);
-
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
-	                                                        QueryFilter filter,
-	                                                        WorkItemStatus? statusFilter,
-	                                                        bool excludeGeometry = false);
+	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		[NotNull] Table table,
+		[NotNull] QueryFilter filter,
+		WorkItemStatus? statusFilter = null);
 
 	void Commit();
 

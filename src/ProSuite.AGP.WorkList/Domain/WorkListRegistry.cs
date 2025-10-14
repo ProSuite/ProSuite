@@ -27,6 +27,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					lock (_singletonLock)
 					{
+						// ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
 						if (_instance == null)
 						{
 							_instance = new WorkListRegistry();
@@ -38,7 +39,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		[CanBeNull]
 		public IWorkList Get(string name)
 		{
 			return _map.TryGetValue(name, out IWorkListFactory factory) ? factory.Get() : null;
@@ -47,9 +47,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[ItemCanBeNull]
 		public async Task<IWorkList> GetAsync(string name)
 		{
-			IWorkListFactory factory;
-
-			bool exists = _map.TryGetValue(name, out factory);
+			bool exists = _map.TryGetValue(name, out IWorkListFactory factory);
 
 			if (exists)
 			{
@@ -59,68 +57,59 @@ namespace ProSuite.AGP.WorkList.Domain
 			return null;
 		}
 
-		public IEnumerable<IWorkList> Get()
+		public bool TryGet<T>(string name, out T workList) where T : class, IWorkList
 		{
-			ICollection<IWorkListFactory> factories = _map.Values;
-
-			foreach (IWorkListFactory factory in factories)
+			foreach (var kvp in _map)
 			{
-				yield return factory.Get();
+				if (kvp.Value is not WorkListFactoryBase workListFactory)
+				{
+					// Not registered with an actual factory
+					continue;
+				}
+
+				if (! workListFactory.IsWorkListCreated)
+				{
+					// Not instantiated
+					continue;
+				}
+
+				T workListWithDesiredType = GetWorkList<T>(workListFactory);
+
+				if (! string.IsNullOrEmpty(name) && ! string.Equals(kvp.Key, name))
+				{
+					// Name does not match
+					continue;
+				}
+
+				if (workListWithDesiredType == null)
+				{
+					continue;
+				}
+
+				workList = workListWithDesiredType;
+				return true;
 			}
+
+			workList = null;
+
+			return false;
 		}
 
-		public async IAsyncEnumerable<IWorkList> GetAsync()
+		public bool WorklistExists(string name)
 		{
-			ICollection<IWorkListFactory> factories = _map.Values;
-
-			foreach (IWorkListFactory factory in factories)
+			// NOTE: This has been observed to deadlock between CIM-threads (without background loading)!
+			//       Never lock on something you cannot control who has access to
+			//lock (_registryLock)
+			if (_map.TryGetValue(name, out IWorkListFactory factory))
 			{
-				yield return await factory.GetAsync();
-			}
-		}
-
-		public void Add(IWorkList workList)
-		{
-			if (workList == null)
-				throw new ArgumentNullException(nameof(workList));
-
-			string name = workList.Name;
-			if (_map.ContainsKey(name))
-			{
-				throw new InvalidOperationException(
-					$"WorkList by that name already registered: '{name}'");
+				// In this case the work list has been created.
+				// XmlBasedWorkListFactory would create it in a non-canonical way (no schema info etc.)
+				// which might be fine for layer display purposes, but not for the NavigatorView. 
+				return factory is WorkListFactoryBase workListFactory &&
+				       workListFactory.IsWorkListCreated;
 			}
 
-			_map.Add(name, new WorkListFactory(workList));
-		}
-
-		public void Add(IWorkListFactory factory)
-		{
-			if (factory == null)
-				throw new ArgumentNullException(nameof(factory));
-
-			string name = factory.Name;
-			if (_map.ContainsKey(name))
-			{
-				throw new InvalidOperationException(
-					$"WorkList by that name already registered: '{name}'");
-			}
-
-			_map.Add(name, factory);
-		}
-
-		public bool TryAdd(IWorkList workList)
-		{
-			if (workList == null)
-				throw new ArgumentNullException(nameof(workList));
-
-			if (_map.ContainsKey(workList.Name))
-			{
-				return false;
-			}
-
-			Add(new WorkListFactory(workList));
-			return true;
+			return false;
 		}
 
 		public bool TryAdd(IWorkListFactory factory)
@@ -135,24 +124,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Add(factory);
 			return true;
-		}
-
-		public bool WorklistExists(string name)
-		{
-			// NOTE: This has been observed to deadlock between CIM-threads (without background loading)!
-			//       Never lock on somthing you cannot cantrol who has access to
-			//lock (_registryLock)
-			{
-				if (_map.TryGetValue(name, out IWorkListFactory factory))
-				{
-					// In this case the work list has been created.
-					// XmlBasedWorkListFactory would create it in a non-canonical way (no schema info etc.)
-					// which might be fine for layer display purposes, but not for the NavigatorView. 
-					return factory is WorkListFactoryBase;
-				}
-
-				return false;
-			}
 		}
 
 		public bool AddOrReplace(IWorkList worklist)
@@ -179,7 +150,30 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Remove(workList.Name);
 		}
 
-		public bool Remove(string name)
+		private void Add(IWorkListFactory factory)
+		{
+			if (factory == null)
+				throw new ArgumentNullException(nameof(factory));
+
+			string name = factory.Name;
+
+			if (! _map.TryAdd(name, factory))
+			{
+				throw new InvalidOperationException(
+					$"WorkList by that name already registered: '{name}'");
+			}
+		}
+
+		[CanBeNull]
+		private static T GetWorkList<T>([NotNull] WorkListFactoryBase workListFactory)
+			where T : class, IWorkList
+		{
+			IWorkList candidate = workListFactory.Get();
+
+			return candidate as T;
+		}
+
+		private bool Remove(string name)
 		{
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
@@ -189,15 +183,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return _map.Remove(name);
 		}
 
-		public void UnWire(IWorkList workList)
-		{
-			if (workList == null)
-				throw new ArgumentNullException(nameof(workList));
-
-			UnWire(workList.Name);
-		}
-
-		public void UnWire(string name)
+		private void UnWire(string name)
 		{
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
@@ -209,7 +195,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override string ToString()
 		{
-			return $"{_map.Count}";
+			return $"Work List Registry ({_map.Count}) registered work lists";
 		}
 	}
 }
