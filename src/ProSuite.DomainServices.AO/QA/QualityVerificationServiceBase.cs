@@ -517,6 +517,7 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				var gdbTransaction = CreateGdbTransaction();
 
+				// TODO: #255 Refactor to make the transaction only at the end!
 				gdbTransaction.Execute(
 					_verificationContext.PrimaryWorkspaceContext.Workspace,
 					delegate
