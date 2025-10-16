@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -123,6 +124,12 @@ namespace ProSuite.AGP.WorkList
 			_msg.Debug($"Created {result}");
 
 			ConfigureWorkList(result);
+
+			if (result is DbStatusWorkList dbStatusWorkList)
+			{
+				// This will add the filter definition expressions by the DatabaseSourceClass
+				dbStatusWorkList.UpdateDefinitionExpressions();
+			}
 
 			_msg.Debug($"Configured {result}. Start loading items...");
 

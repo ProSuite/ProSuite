@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
@@ -14,10 +17,14 @@ namespace ProSuite.AGP.WorkList
 
 		private readonly int _statusFieldIndex;
 
-		public DatabaseSourceClass(GdbTableIdentity tableIdentity,
-		                           [NotNull] DbSourceClassSchema schema,
-		                           [CanBeNull] IAttributeReader attributeReader,
-		                           [CanBeNull] string definitionQuery)
+		[NotNull] private readonly List<WorkListFilterDefinitionExpression> _expressions = new();
+
+		public DatabaseSourceClass(
+			GdbTableIdentity tableIdentity,
+			[NotNull] DbSourceClassSchema schema,
+			[CanBeNull] IAttributeReader attributeReader,
+			[CanBeNull] string definitionQuery,
+			WorkspaceDbType dbType = WorkspaceDbType.Unknown)
 			: base(tableIdentity, schema, attributeReader)
 		{
 			Assert.ArgumentNotNull(schema, nameof(schema));
@@ -28,6 +35,8 @@ namespace ProSuite.AGP.WorkList
 			DoneValue = schema.DoneValue;
 
 			DefaultDefinitionQuery = definitionQuery;
+
+			WorkspaceDbType = dbType;
 		}
 
 		public WorkItemStatus GetStatus([NotNull] Row row)
@@ -73,6 +82,8 @@ namespace ProSuite.AGP.WorkList
 
 		public string StatusField { get; }
 
+		public WorkspaceDbType WorkspaceDbType { get; }
+
 		public object GetValue(WorkItemStatus status)
 		{
 			switch (status)
@@ -92,6 +103,40 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
+		public void UpdateDefinitionFilterExpressions(
+			[NotNull] IEnumerable<WorkListFilterDefinitionExpression> definitionExpressions)
+		{
+			Assert.ArgumentNotNull(definitionExpressions, nameof(definitionExpressions));
+
+			foreach (WorkListFilterDefinitionExpression newExpression in definitionExpressions)
+			{
+				foreach (WorkListFilterDefinitionExpression expression in _expressions)
+				{
+					if (Equals(expression.FilterDefinition.Name,
+					           newExpression.FilterDefinition.Name))
+					{
+						expression.Expression = newExpression.Expression;
+						break;
+					}
+				}
+
+				// If it was not equal to any expression, it is a new expression
+				if (! _expressions.Contains(newExpression))
+				{
+					_expressions.Add(newExpression);
+				}
+			}
+		}
+
+		[CanBeNull]
+		public WorkListFilterDefinitionExpression GetExpression(
+			[CanBeNull] WorkListFilterDefinition definition)
+		{
+			return definition == null
+				       ? null
+				       : _expressions.FirstOrDefault(
+					       exp => exp.FilterDefinition.Equals(definition));
+		}
 
 		public override long GetUniqueTableId()
 		{
@@ -120,7 +165,7 @@ namespace ProSuite.AGP.WorkList
 				return;
 			}
 
-			if (!string.IsNullOrEmpty(result))
+			if (! string.IsNullOrEmpty(result))
 			{
 				result += " AND ";
 			}
@@ -136,6 +181,5 @@ namespace ProSuite.AGP.WorkList
 				       ? subFields
 				       : $"{subFields},{StatusField}";
 		}
-
 	}
 }

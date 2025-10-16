@@ -27,6 +27,13 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		WorkItemStateRepository = workItemStateRepository;
 	}
 
+	/// <summary>
+	/// The current filter definition to be used if one or more
+	/// filter expressions (<see cref="WorkListFilterDefinitionExpression"/>) are configured on the
+	/// source classes.
+	/// </summary>
+	public WorkListFilterDefinition CurrentFilterDefinition { get; set; }
+
 	[NotNull]
 	public IWorkItemStateRepository WorkItemStateRepository { get; }
 
@@ -214,6 +221,15 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			yield break;
 		}
 
+		if (CurrentFilterDefinition != null &&
+		    sourceClass is DatabaseSourceClass dbSourceClass)
+		{
+			WorkListFilterDefinitionExpression workListDefinitionExpression =
+				dbSourceClass.GetExpression(CurrentFilterDefinition);
+
+			filter = AdaptQueryFilter(filter, workListDefinitionExpression);
+		}
+
 		try
 		{
 			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
@@ -225,6 +241,34 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		{
 			table.Dispose();
 		}
+	}
+
+	[CanBeNull]
+	private static QueryFilter AdaptQueryFilter(
+		[CanBeNull] QueryFilter filter,
+		[CanBeNull] WorkListFilterDefinitionExpression forDefinitionExpression)
+	{
+		string expression = forDefinitionExpression?.Expression;
+
+		if (string.IsNullOrEmpty(expression))
+		{
+			return filter;
+		}
+
+		filter = filter is SpatialQueryFilter
+			         ? GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter)
+			         : GdbQueryUtils.CloneFilter<QueryFilter>(filter);
+
+		if (string.IsNullOrEmpty(filter.WhereClause))
+		{
+			filter.WhereClause = expression;
+		}
+		else
+		{
+			filter.WhereClause += $" AND ({expression})";
+		}
+
+		return filter;
 	}
 
 	private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
