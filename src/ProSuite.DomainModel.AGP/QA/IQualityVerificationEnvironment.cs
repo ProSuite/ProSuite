@@ -72,6 +72,9 @@ namespace ProSuite.DomainModel.AGP.QA
 		[CanBeNull]
 		string BackendDisplayName { get; }
 
+
+		IQualityConditionProvider ConditionProvider { get; }
+
 		/// <summary>
 		/// Verifies the provided perimeter or the full extent if no perimeter is provided.
 		/// </summary>
