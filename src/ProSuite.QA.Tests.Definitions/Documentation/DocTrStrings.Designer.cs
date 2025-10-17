@@ -303,7 +303,7 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to Specifies the dimensionality of the resulting intersection geometry.
-        ///- 1 (default): Automatically determines the result dimension by using the dimension of the intersected feature class.
+        ///- -1 (default): Automatically determines the result dimension by using the dimension of the intersected feature class.
         ///- 0: Forces the result to be points (e.g., intersection points of polylines).
         ///- 1: Forces the result to be polylines (e.g., overlapping line segments or polygon boundaries).
         ///- 2: Forces the result to be polygons (e.g., overlapping areas of polygons)..
