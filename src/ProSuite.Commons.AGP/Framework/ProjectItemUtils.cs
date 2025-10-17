@@ -2,16 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Framework
 {
 	public static class ProjectItemUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[CanBeNull]
 		public static string GetSelectedProjectItemPath()
 		{
@@ -19,15 +21,12 @@ namespace ProSuite.Commons.AGP.Framework
 
 			string path = window?.SelectedItems.FirstOrDefault()?.Path;
 
-			if (File.Exists(path))
+			if (! File.Exists(path))
 			{
-				return path;
+				_msg.DebugFormat("{0} does not exist", path);
 			}
 
-			string message = $"{path} does not exist.";
-			Gateway.ShowMessage(message, "File not found", MessageBoxButton.OK, MessageBoxImage.Error);
-
-			return null;
+			return path;
 		}
 
 		public static IEnumerable<T> Get<T>() where T : Item

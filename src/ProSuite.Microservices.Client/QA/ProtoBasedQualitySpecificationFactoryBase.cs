@@ -58,6 +58,30 @@ namespace ProSuite.Microservices.Client.QA
 		}
 
 		[NotNull]
+		public QualityCondition CreateQualityCondition(
+			[NotNull] QualityConditionMsg conditionMsg)
+		{
+			Assert.NotNull(ModelsByWorkspaceId);
+			//// Prepare models (if stand-alone, the models must be harvested):
+			//if (ModelsByWorkspaceId == null)
+			//{
+			//	ModelsByWorkspaceId = GetModelsByWorkspaceId(conditionMsg);
+			//}
+
+			CultureInfo origCulture = Thread.CurrentThread.CurrentCulture;
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+				return CreateQualityConditionCore(conditionMsg);
+			}
+			finally
+			{
+				Thread.CurrentThread.CurrentCulture = origCulture;
+			}
+		}
+
+		[NotNull]
 		public TransformerConfiguration CreateTransformerConfiguration(
 			[NotNull] InstanceConfigurationMsg transformerConfigurationMsg)
 		{
@@ -126,6 +150,23 @@ namespace ProSuite.Microservices.Client.QA
 			                 result.Elements.Count);
 
 			return result;
+		}
+
+		private QualityCondition CreateQualityConditionCore(
+			[NotNull] QualityConditionMsg conditionMsg)
+		{
+			const bool ignoreConditionsForUnknownDatasets = true;
+
+			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
+
+			DatasetSettings datasetSettings =
+				new DatasetSettings(getDatasetsByName, ignoreConditionsForUnknownDatasets);
+
+			QualityCondition qualityCondition =
+				CreateQualityCondition(conditionMsg, datasetSettings);
+
+			// Handle null (not created) condition?
+			return qualityCondition;
 		}
 
 		private static void AddElements(
@@ -279,8 +320,9 @@ namespace ProSuite.Microservices.Client.QA
 
 				foreach (TestParameterValue parameterValue in result.ParameterValues)
 				{
-					TestParameterValue existingParameter = existing.ParameterValues.Single(
-						p => p.TestParameterName == parameterValue.TestParameterName);
+					TestParameterValue existingParameter =
+						existing.ParameterValues.Single(p => p.TestParameterName ==
+						                                     parameterValue.TestParameterName);
 
 					if (parameterValue.StringValue != existingParameter.StringValue)
 					{
