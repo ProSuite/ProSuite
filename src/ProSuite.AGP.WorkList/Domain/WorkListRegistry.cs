@@ -130,6 +130,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			if (_map.TryGetValue(worklist.Name, out IWorkListFactory factory))
 			{
+				// NOTE: The saving in UnWire can result in 'The process cannot access the file
+				// because it is being used by another process'!
+
+				if (ReferenceEquals(factory.Get(), worklist))
+				{
+					return false;
+				}
+
 				factory.UnWire();
 
 				_map[worklist.Name] = new WorkListFactory(worklist);
