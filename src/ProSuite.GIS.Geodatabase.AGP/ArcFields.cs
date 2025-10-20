@@ -91,6 +91,11 @@ public class ArcFields : IFields
 
 	public int FindFieldByAliasName(string aliasName)
 	{
+		if (string.IsNullOrEmpty(aliasName))
+		{
+			return -1;
+		}
+
 		return FindField(
 			f => f.AliasName.Equals(aliasName, StringComparison.OrdinalIgnoreCase));
 	}
