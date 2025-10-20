@@ -8,7 +8,7 @@ using ProSuite.Commons.Validation;
 namespace ProSuite.DomainModel.Core.Commands
 {
 	public class CommandDescriptor : EntityWithMetadata, INamed, IAnnotated,
-	                                 IEquatable<CommandDescriptor>
+	                                 IEquatable<CommandDescriptor>, ICommandDescriptor
 	{
 		[UsedImplicitly] [NotNull] private readonly string _clsid;
 		[UsedImplicitly] private readonly int? _subtype;
@@ -73,6 +73,8 @@ namespace ProSuite.DomainModel.Core.Commands
 		}
 
 		#endregion
+
+		public string Identifier => _clsid + (_subtype != null ? ":" + _subtype : string.Empty);
 
 		[NotNull]
 		public static string GetCLSIDString(Guid clsid)
