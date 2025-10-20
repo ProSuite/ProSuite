@@ -66,7 +66,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			string message =
-				$"Finder: Unsupported geodatabase extension: {extension} for path: {catalogPath}";
+				$"Unsupported geodatabase extension: {extension} for path: {catalogPath}";
 			_msg.Debug(message);
 			throw new NotSupportedException(message);
 		}
@@ -74,10 +74,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <summary>
 		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
 		/// </summary>
-		/// <returns></returns>
 		[NotNull]
 		public static Datastore OpenDatastore([NotNull] Connector connector)
 		{
+			if (connector is null)
+				throw new ArgumentNullException(nameof(connector));
+
 			try
 			{
 				switch (connector)
@@ -498,18 +500,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
 
 			return sb.ToString();
-		}
-
-		/// <summary>
-		/// Very simple utility to determine whether the dataset or field is
-		/// unqualified. Works at least for Oracle DB.
-		/// </summary>
-		public static string Unqualified(string name)
-		{
-			if (name is null) return null;
-			int index = name.LastIndexOf('.');
-			if (index < 0) return name;
-			return name.Substring(index + 1);
 		}
 
 		public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
