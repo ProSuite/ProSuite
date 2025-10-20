@@ -22,6 +22,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private esriGeometryType? _shapeType;
 		private string _shapeFieldName;
 
+		[CanBeNull] private string _lengthFieldName;
+		[CanBeNull] private string _areaFieldName;
+
 		public ArcFeatureClass([NotNull] FeatureClass proFeatureClass,
 		                       bool cachePropertiesEagerly = false)
 			: base(proFeatureClass, false)
@@ -45,6 +48,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			_shapeType = ShapeType;
 			_shapeFieldName = ShapeFieldName;
+
+			_lengthFieldName = ProFeatureClassDefinition.GetLengthField();
+			_areaFieldName = ProFeatureClassDefinition.GetAreaField();
 		}
 
 		#region Implementation of IClass
@@ -317,9 +323,25 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
-		public IField AreaField => TryGetField(ProFeatureClassDefinition.GetAreaField());
+		public IField AreaField
+		{
+			get
+			{
+				_areaFieldName ??= ProFeatureClassDefinition.GetAreaField();
 
-		public IField LengthField => TryGetField(ProFeatureClassDefinition.GetLengthField());
+				return TryGetField(_areaFieldName);
+			}
+		}
+
+		public IField LengthField
+		{
+			get
+			{
+				_lengthFieldName ??= ProFeatureClassDefinition.GetLengthField();
+
+				return TryGetField(_lengthFieldName);
+			}
+		}
 
 		//public IFeatureDataset FeatureDataset => _proFeatureClass.FeatureDataset;
 
@@ -351,17 +373,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#endregion
 
-		private ArcField TryGetField(string fieldName)
+		private IField TryGetField(string fieldName)
 		{
 			if (string.IsNullOrEmpty(fieldName))
 			{
 				return null;
 			}
 
-			Field field = ProFeatureClassDefinition.GetFields()
-			                                       .FirstOrDefault(f => f.Name.Equals(fieldName));
-
-			return field == null ? null : new ArcField(field);
+			return Fields.FirstOrDefault(f => f.Name.Equals(fieldName));
 		}
 	}
 }
