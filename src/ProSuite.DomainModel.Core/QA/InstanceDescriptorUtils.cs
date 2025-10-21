@@ -20,7 +20,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns>InstanceInfo or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
 		private static IInstanceInfo GetInstanceInfo([NotNull] TestDescriptor testDescriptor,
-		                                             bool tryAlgorithmDefinition = false)
+		                                             bool tryAlgorithmDefinition = true)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
@@ -63,7 +63,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns></returns>
 		[CanBeNull]
 		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor,
-		                                            bool tryAlgorithmDefinition = false)
+		                                            bool tryAlgorithmDefinition = true)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 
