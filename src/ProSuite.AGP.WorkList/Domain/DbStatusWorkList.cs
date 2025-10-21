@@ -64,6 +64,7 @@ public abstract class DbStatusWorkList : WorkList
 		return Project.Current?.IsEditingEnabled == true;
 	}
 
+	[CanBeNull]
 	protected virtual IList<WorkListFilterDefinitionExpression> GetDefinitionExpressions(
 		[NotNull] ISourceClass sourceClass)
 	{
@@ -87,6 +88,11 @@ public abstract class DbStatusWorkList : WorkList
 
 			IList<WorkListFilterDefinitionExpression> expressions =
 				GetDefinitionExpressions(sourceClass);
+
+			if (expressions == null)
+			{
+				continue;
+			}
 
 			dbSourceClass.UpdateDefinitionFilterExpressions(expressions);
 
