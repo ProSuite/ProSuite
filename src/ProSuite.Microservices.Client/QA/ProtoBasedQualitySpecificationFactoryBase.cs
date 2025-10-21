@@ -320,16 +320,32 @@ namespace ProSuite.Microservices.Client.QA
 
 				foreach (TestParameterValue parameterValue in result.ParameterValues)
 				{
-					TestParameterValue existingParameter =
-						existing.ParameterValues.Single(p => p.TestParameterName ==
-						                                     parameterValue.TestParameterName);
+					List<TestParameterValue> matchingParameters = existing.ParameterValues
+						.Where(p => p.TestParameterName == parameterValue.TestParameterName)
+						.ToList();
 
-					if (parameterValue.StringValue != existingParameter.StringValue)
+					if (matchingParameters.Count == 0)
 					{
 						throw new InvalidConfigurationException(
-							"Transformer configurations with different parameters " +
-							$"have been provided. Name: {result.Name}. Parameter with differences: {parameterValue.TestParameterName}");
+							$"Transformer configuration '{result.Name}' has invalid parameter with " +
+							$"name '{parameterValue.TestParameterName}'. Parameter must exist at " +
+							$"least once. Found matches: {matchingParameters.Count}");
 					}
+
+					if (matchingParameters.Count == 1)
+					{
+						TestParameterValue existingParameter = matchingParameters[0];
+
+						if (parameterValue.StringValue != existingParameter.StringValue)
+						{
+							throw new InvalidConfigurationException(
+								"Transformer configurations with different parameters " +
+								$"have been provided. Name: {result.Name}. Parameter with differences: {parameterValue.TestParameterName}");
+						}
+					}
+
+					// else: list parameter. Not tested
+					// TOP-5968: Multiple parameters can have same name (list parameters)
 				}
 
 				// For later reference equality comparison, return the existing

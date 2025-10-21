@@ -93,11 +93,13 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return result;
 	}
 
-	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
+	protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
 		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization);
 
-		return base.OnToolActivateCoreAsync(hasMapViewChanged);
+		await QueuedTask.Run(_feedback.InitializeSymbolsQueued);
+
+		await base.OnToolActivateCoreAsync(hasMapViewChanged);
 	}
 
 	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)

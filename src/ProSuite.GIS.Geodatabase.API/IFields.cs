@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
-	public interface IFields
+	public interface IFields : IEnumerable<IField>
 	{
 		int FieldCount { get; }
 
