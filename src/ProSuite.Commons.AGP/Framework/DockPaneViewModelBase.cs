@@ -42,7 +42,7 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 			catch (Exception ex)
 			{
-				_msg.Error(ex.Message);
+				_msg.Error($"Error showing dock pane {Caption}: {ex.Message}", ex);
 			}
 		}
 
@@ -61,7 +61,7 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 			catch (Exception ex)
 			{
-				_msg.Error(ex.Message);
+				_msg.Error($"Error hiding dock pane {Caption}: {ex.Message}", ex);
 			}
 		}
 

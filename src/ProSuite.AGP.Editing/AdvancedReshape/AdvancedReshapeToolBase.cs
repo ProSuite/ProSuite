@@ -208,7 +208,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		protected override async Task OnToolActivatingCoreAsync()
 		{
 			_advancedReshapeToolOptions = InitializeOptions();
+
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
+
+			await QueuedTask.Run(() => { _feedback.InitializeSymbolsQueued(); });
 
 			await base.OnToolActivatingCoreAsync();
 		}

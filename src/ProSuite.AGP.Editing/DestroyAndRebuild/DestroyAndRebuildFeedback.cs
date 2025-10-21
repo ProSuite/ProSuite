@@ -4,7 +4,6 @@ using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -18,17 +17,25 @@ public class DestroyAndRebuildFeedback
 {
 	private static readonly List<IDisposable> _overlays = new List<IDisposable>();
 
-	private readonly CIMLineSymbol _lineSymbol;
-	private readonly CIMPointSymbol _startPointSymbol;
-	private readonly CIMPointSymbol _endPointSymbol;
-	private readonly CIMPolygonSymbol _polygonSymbol;
-	private readonly CIMPointSymbol _vertexMarkerSymbol;
-	private readonly CIMPointSymbol _controlPointMarkerSymbol;
+	private CIMLineSymbol _lineSymbol;
+	private CIMPointSymbol _startPointSymbol;
+	private CIMPointSymbol _endPointSymbol;
+	private CIMPolygonSymbol _polygonSymbol;
+	private CIMPointSymbol _vertexMarkerSymbol;
+	private CIMPointSymbol _controlPointMarkerSymbol;
 	private readonly bool _useOldSymbolization;
 
 	public DestroyAndRebuildFeedback(bool useOldSymbolization = false)
 	{
 		_useOldSymbolization = useOldSymbolization;
+	}
+
+	/// <summary>
+	///	Initializes the symbols used for rendering lines, points, and polygons. This method must
+	/// be called on a queued task before using the feedback.
+	/// </summary>
+	public void InitializeSymbolsQueued()
+	{
 		const SymbolUtils.FillStyle noFill = SymbolUtils.FillStyle.Null;
 
 		var blue = ColorFactory.Instance.CreateRGBColor(0, 0, 200);
@@ -40,12 +47,13 @@ public class DestroyAndRebuildFeedback
 		if (_useOldSymbolization)
 		{
 			_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(blue, 2.0);
-			_startPointSymbol = QueuedTask
-			                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                         blue, 8, SimpleMarkerStyle.Circle)).Result;
-			_endPointSymbol = QueuedTask
-			                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                       red, 12, SimpleMarkerStyle.Diamond)).Result;
+
+			_startPointSymbol = SymbolFactory.Instance.ConstructPointSymbol(
+				blue, 8, SimpleMarkerStyle.Circle);
+
+			_endPointSymbol =
+				SymbolFactory.Instance.ConstructPointSymbol(
+					red, 12, SimpleMarkerStyle.Diamond);
 
 			var stroke = SymbolUtils.CreateSolidStroke(blue, 2.0);
 			_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
@@ -56,16 +64,15 @@ public class DestroyAndRebuildFeedback
 		else
 		{
 			_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(magenta, 0.8);
-			_startPointSymbol = QueuedTask
-			                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                         green, 6.5, SimpleMarkerStyle.Circle)).Result;
-			_endPointSymbol = QueuedTask
-			                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                       red, 6.5, SimpleMarkerStyle.Square)).Result; //Diamond
 
-			_vertexMarkerSymbol = QueuedTask
-			                      .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-				                           cyan, 6.5, SimpleMarkerStyle.Square)).Result;
+			_startPointSymbol = SymbolFactory.Instance.ConstructPointSymbol(
+				green, 6.5, SimpleMarkerStyle.Circle);
+
+			_endPointSymbol = SymbolFactory.Instance.ConstructPointSymbol(
+				red, 6.5, SimpleMarkerStyle.Square); //Diamond
+
+			_vertexMarkerSymbol = SymbolFactory.Instance.ConstructPointSymbol(
+				cyan, 6.5, SimpleMarkerStyle.Square);
 
 			var stroke = SymbolUtils.CreateSolidStroke(magenta, 0.8);
 			_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
@@ -129,42 +136,45 @@ public class DestroyAndRebuildFeedback
 			{
 				case GeometryType.Point:
 					// Use start point symbol for points, consistent across both versions
-					_overlays.Add(AddOverlay(geometry, _startPointSymbol));
+					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
 					break;
 				case GeometryType.Polyline:
-					_overlays.Add(AddOverlay(geometry, _lineSymbol));
+					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_lineSymbol)));
 
 					var startPointL = GeometryUtils.GetStartPoint(geometry as Polyline);
 					var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
-					_overlays.Add(AddOverlay(startPointL, _startPointSymbol));
+					_overlays.Add(AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
-						_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
-						_overlays.Add(AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+						_overlays.Add(AddOverlay(vertexMultipoint,
+						                         Assert.NotNull(_vertexMarkerSymbol)));
+						_overlays.Add(AddOverlay(controlMultipoint,
+						                         Assert.NotNull(_controlPointMarkerSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointL, _endPointSymbol));
+					_overlays.Add(AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
 					break;
 				case GeometryType.Polygon:
-					_overlays.Add(AddOverlay(geometry, _polygonSymbol));
+					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_polygonSymbol)));
 
 					var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
 					var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
-					_overlays.Add(AddOverlay(startPointP, _startPointSymbol));
+					_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
-						_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
-						_overlays.Add(
-							AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+						_overlays.Add(AddOverlay(vertexMultipoint,
+						                         Assert.NotNull(_vertexMarkerSymbol)));
+						_overlays.Add(AddOverlay(controlMultipoint,
+						                         Assert.NotNull(_controlPointMarkerSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointP, _endPointSymbol));
+					_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
 					break;
 
 				default:
