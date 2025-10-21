@@ -49,7 +49,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Processing
 			}
 		}
 
-		public CartoProcessGroup Get(CommandDescriptor commandDescriptor)
+		public CartoProcessGroup Get(ICommandDescriptor commandDescriptor)
 		{
 			Assert.ArgumentNotNull(commandDescriptor, nameof(commandDescriptor));
 
