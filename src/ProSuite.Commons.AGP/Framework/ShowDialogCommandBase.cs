@@ -13,24 +13,24 @@ public abstract class ShowDialogCommandBase : ButtonCommandBase
 {
 	private bool _clicked;
 
-	protected override Task<bool> OnClickAsyncCore()
+	protected override async Task<bool> OnClickAsyncCore()
 	{
 		if (_clicked)
 		{
-			return Task.FromResult(false);
+			return false;
 		}
 
 		_clicked = true;
 		try
 		{
-			ProcessClickAsync();
+			await ProcessClickAsync();
 		}
 		finally
 		{
 			_clicked = false;
 		}
 
-		return Task.FromResult(true);
+		return true;
 	}
 
 	protected abstract Task ProcessClickAsync();

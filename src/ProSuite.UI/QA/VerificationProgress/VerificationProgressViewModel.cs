@@ -457,7 +457,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_openWorkListCommand == null)
 				{
 					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
-						vm => OpenWorkList(),
+						vm => _ = OpenWorkList(),
 						vm => CanOpenWorkList());
 				}
 
@@ -608,13 +608,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
 			{
-				ViewUtils.RunOnUIThread(
-					() =>
+				await ViewUtils.RunOnUIThread(
+					async () =>
 					{
 						try
 						{
-							ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
-							                                   true);
+							IQualityVerificationResult verificationResult =
+								Assert.NotNull(VerificationResult);
+
+							await ApplicationController.OpenWorkList(
+								verificationResult, replaceExisting: true);
 						}
 						catch (Exception ex)
 						{
