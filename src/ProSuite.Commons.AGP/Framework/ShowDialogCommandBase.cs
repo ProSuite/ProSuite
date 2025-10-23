@@ -67,6 +67,7 @@ public abstract class ShowDialogCommandBase : ButtonCommandBase
 		CursorState cursorState = await UIEnvironment.ReleaseCursorAsync();
 		try
 		{
+			Assert.NotNull(cursorState, "No cursor state");
 			showDialog(new Point(cursorState.X, cursorState.Y));
 		}
 		finally
