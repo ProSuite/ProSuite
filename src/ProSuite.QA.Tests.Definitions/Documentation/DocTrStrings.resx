@@ -417,4 +417,19 @@ In the resulting feature class, only attributes defined in 'Attributes' can be u
 - 1: Forces the result to be polylines (e.g., overlapping line segments or polygon boundaries).
 - 2: Forces the result to be polygons (e.g., overlapping areas of polygons).</value>
   </data>
+  <data name="TrProject_0" xml:space="preserve">
+    <value>Transforms the geometries of the featureClass to a new spatial reference defined by the targetSpatialReferenceId. The transformed feature class retains the attributes of the original featureClass, which can be accessed using t0.&lt;fieldName&gt;.</value>
+  </data>
+  <data name="TrProject_featureClass" xml:space="preserve">
+    <value>The feature class containing the geometries to be transformed. The geometries in this feature class will be projected to the spatial reference defined by the targetSpatialReferenceId.</value>
+  </data>
+  <data name="TrProject_targetSpatialReferenceId" xml:space="preserve">
+    <value>The ID of the target spatial reference to which the geometries in the featureClass will be projected. This ID corresponds to a specific coordinate system or projection, such as WGS 84 or another predefined spatial reference system.</value>
+  </data>
+  <data name="TrTableAppend_0" xml:space="preserve">
+    <value>Appends tables</value>
+  </data>
+  <data name="TrTableAppend_tables" xml:space="preserve">
+    <value>tables to append</value>
+  </data>
 </root>

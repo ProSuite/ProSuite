@@ -55,7 +55,25 @@ namespace ProSuite.QA.Tests
 			: base(featureClass, limit)
 		{
 			NumberFormat = "N1";
-			UsePerPart = perPart;
+
+			_perPart = perPart;
+		}
+
+		[InternallyUsedTest]
+		public QaExtent(
+		[NotNull] QaExtentDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass, definition.Limit, definition.PerPart)
+		{
+		}
+
+		public override bool IsQueriedTable(int tableIndex)
+		{
+			return false;
+		}
+
+		public override bool RetestRowsPerIntersectedTile(int tableIndex)
+		{
+			return false;
 		}
 
 		protected override int ExecutePartForRow(IReadOnlyRow row, IGeometry geometry)

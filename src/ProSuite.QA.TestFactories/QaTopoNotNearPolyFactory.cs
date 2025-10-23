@@ -21,7 +21,7 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[ProximityTest]
-	public class QaTopoNotNearPolyFactory : TestFactory
+	public class QaTopoNotNearPolyFactory : QaFactoryBase
 	{
 		private static ITestIssueCodes _codes;
 
@@ -30,24 +30,12 @@ namespace ProSuite.QA.TestFactories
 		public static ITestIssueCodes Codes =>
 			_codes ?? (_codes = QaTopoNotNear.Codes); // TODO, QaIntersectsOther.Codes);
 
-		public override string GetTestTypeDescription()
-		{
-			return nameof(QaTopoNotNear);
-		}
-
 		public override string TestDescription => DocStrings.QaTopoNotNearPolyFactory;
 
 		public const string FeatureClassParamName = "featureClass";
 		public const string ReferenceParamName = "reference";
 		public const string ReferenceSubtypesParamName = "referenceSubtypes";
 		public const string FeaturesubtypeRulesParamName = "featuresubtypeRules";
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			List<TestParameter> list = CreateParameterList();
-
-			return list.AsReadOnly();
-		}
 
 		public static List<TestParameter> CreateParameterList()
 		{

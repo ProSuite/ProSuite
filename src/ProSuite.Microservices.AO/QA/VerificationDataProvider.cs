@@ -190,7 +190,7 @@ namespace ProSuite.Microservices.AO.QA
 				ProtobufGdbUtils.ToRelationshipClassMsg(relationshipClass);
 
 			// The currency for workspace handles in QA is the model ID.
-			relTableMsg.WorkspaceHandle = association.Model.Id;
+			relTableMsg.DdxModelId = association.Model.Id;
 
 			result.RelclassDefinitions.Add(relTableMsg);
 
@@ -245,7 +245,7 @@ namespace ProSuite.Microservices.AO.QA
 				                                  true, DatasetUtils.GetAliasName(objectClass));
 
 			// The currency for workspace handles in QA is the model ID.
-			objectClassMsg.WorkspaceHandle = objectDataset.Model.Id;
+			objectClassMsg.DdxModelId = objectDataset.Model.Id;
 
 			AddTable(objectClassMsg, (ITable) objectClass, result);
 		}
@@ -260,10 +260,11 @@ namespace ProSuite.Microservices.AO.QA
 
 		private static ClassDef CreateClassDef(ObjectClassMsg objectClassMsg)
 		{
+			// NOTE: We are using the model ID as the workspace handle here (DDX-verification)
 			return new ClassDef
 			       {
 				       ClassHandle = objectClassMsg.ClassHandle,
-				       WorkspaceHandle = objectClassMsg.WorkspaceHandle
+				       WorkspaceHandle = objectClassMsg.DdxModelId
 			       };
 		}
 

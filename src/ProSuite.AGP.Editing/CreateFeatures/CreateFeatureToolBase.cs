@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -16,7 +17,6 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.CreateFeatures
 {
@@ -28,7 +28,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected CreateFeatureToolBase()
 		{
-			UseSnapping = true;
+			FireSketchEvents = true;
 
 			RequiresSelection = false;
 
@@ -53,6 +53,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			// "Select a point or multipoint feature template in the Create Features pane";
 		}
 
+		protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+
 		#region Overrides of PlugIn
 
 		protected override void OnUpdateCore()
@@ -64,7 +66,12 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected override void LogPromptForSelection() { }
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
+		{
+			return null;
+		}
+
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			esriGeometryType? targetShapeType = GetTargetLayerShapeType();
 
@@ -88,6 +95,22 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;
+		}
+
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			bool? result = await QueuedTask.Run(() =>
+			{
+				FeatureClass currentTargetClass = GetCurrentTargetClass(out _);
+
+				return currentTargetClass?.GetDefinition()?.HasZ();
+			});
+
+			_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
+
+			return result;
 		}
 
 		protected override Task OnToolActivatingCoreAsync()
@@ -127,7 +150,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 				if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
 				{
-					await QueuedTask.Run(ClearSelection);
+					await ClearSelectionAsync();
 				}
 				else
 				{
@@ -147,7 +170,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 			MapView activeView,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			bool success = await QueuedTaskUtils.Run(async () =>
+			await QueuedTaskUtils.Run(async () =>
 			{
 				try
 				{
@@ -223,17 +246,24 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		#endregion
 
-		private void OnActiveTemplateChanged(ActiveTemplateChangedEventArgs e)
+		private async void OnActiveTemplateChanged(ActiveTemplateChangedEventArgs e)
 		{
-			ViewUtils.Try(() =>
+			try
 			{
-				FeatureClass newTargetClass = GetCurrentTargetClass(out _);
+				await QueuedTaskUtils.Run(async () =>
+				{
+					FeatureClass newFeatureClass = GetCurrentTargetClass(out _);
 
-				TargetClassChanged(newTargetClass);
-			}, _msg, true);
+					await TargetClassChangedAsync(newFeatureClass);
+				});
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Error processing object category change event: {ex.Message}", ex);
+			}
 		}
 
-		protected void TargetClassChanged(FeatureClass newTargetClass)
+		protected async Task TargetClassChangedAsync(FeatureClass newTargetClass)
 		{
 			if (DatasetUtils.IsSameTable(_targetFeatureClass, newTargetClass))
 			{
@@ -242,9 +272,9 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 			_targetFeatureClass = newTargetClass;
 
-			RememberSketch();
+			await RememberSketchAsync();
 
-			StartSketchPhaseAsync();
+			await StartSketchPhaseAsync();
 		}
 
 		private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,

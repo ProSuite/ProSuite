@@ -207,7 +207,7 @@ namespace ProSuite.Microservices.AO.QA
 		                                               [CanBeNull] ITableFilter filter,
 		                                               string subFields,
 		                                               long resultClassHandle,
-		                                               int maxRowCount,
+		                                               long maxRowCount,
 		                                               bool countOnly)
 		{
 			GdbData featureData = new GdbData();
@@ -226,7 +226,7 @@ namespace ProSuite.Microservices.AO.QA
 				yield break;
 			}
 
-			int rowCount = 0;
+			long rowCount = 0;
 
 			foreach (IReadOnlyRow row in roTable.EnumRows(filter, true))
 			{

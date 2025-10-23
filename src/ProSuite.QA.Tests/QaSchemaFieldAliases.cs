@@ -10,6 +10,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Properties;
 using ProSuite.QA.Tests.Schema;
 
@@ -67,8 +68,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_requireUniqueAliasNames))]
 			bool requireUniqueAliasNames,
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_allowCustomSystemFieldAlias))]
-			bool
-				allowCustomSystemFieldAlias)
+			bool allowCustomSystemFieldAlias)
 			: this(table, maximumLength, expectedCase, requireUniqueAliasNames,
 			       allowCustomSystemFieldAlias,
 			       // ReSharper disable once IntroduceOptionalParameters.Global
@@ -85,11 +85,9 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_requireUniqueAliasNames))]
 			bool requireUniqueAliasNames,
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_allowCustomSystemFieldAlias))]
-			bool
-				allowCustomSystemFieldAlias,
+			bool allowCustomSystemFieldAlias,
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_expectedDifference))]
-			ExpectedStringDifference
-				expectedDifference)
+			ExpectedStringDifference expectedDifference)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -101,6 +99,14 @@ namespace ProSuite.QA.Tests
 			_allowCustomSystemFieldAlias = allowCustomSystemFieldAlias;
 			_expectedDifference = expectedDifference;
 		}
+
+		[InternallyUsedTest]
+		public QaSchemaFieldAliases(
+			[NotNull] QaSchemaFieldAliasesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.MaximumLength,
+			       definition.ExpectedCase,
+			       definition.RequireUniqueAliasNames, definition.AllowCustomSystemFieldAlias,
+			       definition.ExpectedDifference) { }
 
 		public override int Execute()
 		{

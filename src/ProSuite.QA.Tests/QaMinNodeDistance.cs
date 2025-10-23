@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
@@ -238,11 +240,35 @@ namespace ProSuite.QA.Tests
 				featureClasses, near, tolerance, is3D, _noMaxZDifference,
 				validRelationConstraint) { }
 
+		[InternallyUsedTest]
+		public QaMinNodeDistance(QaMinNodeDistanceDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.Near,
+			       GetXyTolerance(definition),
+			       definition.Is3D,
+			       definition.MaxZDifference,
+			       definition.ValidRelationConstraint) { }
+
+		private static double GetXyTolerance(QaMinNodeDistanceDefinition definition)
+		{
+			if (! double.IsNaN(definition.Tolerance))
+			{
+				return definition.Tolerance;
+			}
+
+			// The tolerance was not provided, take it from the feature class.
+			IFeatureClassSchemaDef featureClassSchemaDef = definition.FeatureClasses[0];
+			IReadOnlyFeatureClass featureClass = (IReadOnlyFeatureClass) featureClassSchemaDef;
+
+			return GeometryUtils.GetXyTolerance(featureClass.SpatialReference);
+		}
+
 		private QaMinNodeDistance(
 			[NotNull] IReadOnlyFeatureClass featureClass,
 			double near, double tolerance, bool is3D, double maxZDifference,
 			[CanBeNull] string validRelationConstraint)
-			: this(new[] {featureClass}, near, tolerance, is3D, maxZDifference,
+			: this(new[] { featureClass }, near, tolerance, is3D, maxZDifference,
 			       validRelationConstraint) { }
 
 		private QaMinNodeDistance(
@@ -482,7 +508,7 @@ namespace ProSuite.QA.Tests
 				return ReportError(
 					description, InvolvedRowUtils.GetInvolvedRows(row0, row1),
 					errorGeometry, issueCode, TestUtils.GetShapeFieldName(row0),
-					values: new object[] {dist});
+					values: new object[] { dist });
 			}
 
 			if (_maxZDifference >= 0 && pointDistanceSquared < _searchDistanceSquared)
@@ -520,7 +546,7 @@ namespace ProSuite.QA.Tests
 					return ReportError(
 						description, InvolvedRowUtils.GetInvolvedRows(row0, row1), errorGeometry,
 						issueCode, TestUtils.GetShapeFieldName(row0),
-						values: new object[] {absZDifference});
+						values: new object[] { absZDifference });
 				}
 			}
 

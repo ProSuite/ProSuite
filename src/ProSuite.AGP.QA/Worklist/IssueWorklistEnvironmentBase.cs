@@ -7,9 +7,11 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.QA.WorkList
@@ -20,12 +22,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 		// TODO: (daro) create different Environments for IssueWorkList and ErrorWorkList and...
 		protected IssueWorkListEnvironmentBase(
-			[CanBeNull] IWorkListItemDatastore workListItemDatastore)
-			: base(workListItemDatastore) { }
-
-		// TODO: ...drop this ctor.
-		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
-			: base(new FileGdbIssueWorkListItemDatastore(path)) { }
+			[NotNull] IWorkListItemDatastore workListItemDatastore) :
+			base(workListItemDatastore) { }
 
 		protected override string FileSuffix => ".iwl";
 
@@ -39,23 +37,23 @@ namespace ProSuite.AGP.QA.WorkList
 			return "Issue Work List";
 		}
 
-		public override void RemoveAssociatedLayers()
+		public override void RemoveAssociatedLayers(MapView mapView)
 		{
-			RemoveFromMapCore(GetTablesCore());
+			RemoveFromMapCore(mapView, GetTablesCore());
 		}
 
-		protected override T GetLayerContainerCore<T>()
+		protected override T GetLayerContainerCore<T>(MapView mapView)
 		{
 			var qaGroupLayerName = "QA";
 
-			GroupLayer qaGroupLayer = MapView.Active.Map.FindLayers(qaGroupLayerName)
+			GroupLayer qaGroupLayer = mapView.Map.FindLayers(qaGroupLayerName)
 			                                 .OfType<GroupLayer>().FirstOrDefault();
 
 			if (qaGroupLayer == null)
 			{
 				_msg.DebugFormat("Creating new group layer {0}", qaGroupLayerName);
 				qaGroupLayer = LayerFactory.Instance.CreateGroupLayer(
-					MapView.Active.Map, 0, qaGroupLayerName);
+					mapView.Map, 0, qaGroupLayerName);
 			}
 
 #if ARCGISPRO_GREATER_3_2
@@ -67,7 +65,8 @@ namespace ProSuite.AGP.QA.WorkList
 			// - They should be deletable by the user (in which case a new layer should be re-added)
 			// - If the layer is moved outside the group a new layer should be added. Only layers within the
 			//   sub-group are considered to be part of the work list.
-			string groupName = GetDisplayName(); // _workListItemDatastore.SuggestWorkListGroupName();
+			string groupName = GetDisplayName();
+
 			if (groupName != null)
 			{
 				GroupLayer workListGroupLayer = qaGroupLayer.FindLayers(groupName)
@@ -102,7 +101,7 @@ namespace ProSuite.AGP.QA.WorkList
 		protected override async Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
 			IWorkItemStateRepository stateRepository)
 		{
-			DbStatusWorkItemRepository result = null;
+			DbStatusWorkItemRepository result;
 
 			var watch = Stopwatch.StartNew();
 
@@ -138,11 +137,22 @@ namespace ProSuite.AGP.QA.WorkList
 					IAttributeReader attributeReader =
 						WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
 
-					datastoresByHandle.TryAdd(table.GetDatastore().Handle, table.GetDatastore());
+					Datastore datastore = table.GetDatastore();
 
-					sourceClasses.Add(new DatabaseSourceClass(new GdbTableIdentity(table), schema,
-					                                          attributeReader,
-					                                          defaultDefinitionQuery));
+					datastoresByHandle.TryAdd(datastore.Handle, datastore);
+
+					WorkspaceDbType dbType = WorkspaceUtils.GetWorkspaceDbType(datastore);
+
+					var databaseSourceClass = new DatabaseSourceClass(new GdbTableIdentity(table),
+						schema, attributeReader, defaultDefinitionQuery, dbType);
+
+					sourceClasses.Add(databaseSourceClass);
+				}
+
+				if (datastoresByHandle.Count == 0)
+				{
+					throw new InvalidOperationException(
+						"No valid source classes found for the work list's tables.");
 				}
 
 				Assert.True(datastoresByHandle.Count == 1,
@@ -150,11 +160,12 @@ namespace ProSuite.AGP.QA.WorkList
 
 				var geodatabase = (Geodatabase) datastoresByHandle.First().Value;
 				result = new DbStatusWorkItemRepository(sourceClasses, stateRepository,
-				                                        geodatabase.GetPath());
+				                                        WorkspaceUtils.GetCatalogPath(geodatabase));
 			}
 			catch (Exception ex)
 			{
 				_msg.Debug(ex.Message, ex);
+				throw;
 			}
 			finally
 			{

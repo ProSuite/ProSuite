@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -11,6 +12,7 @@ using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,8 +26,6 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		protected CreateMultiplePointsToolBase()
 		{
-			UseSnapping = true;
-
 			RequiresSelection = false;
 
 			// This does not work unless loadOnClick="false" in the daml.xml:
@@ -48,6 +48,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				"Select a point or multipoint feature template in the Create Features pane";
 		}
 
+		protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+
 		protected override void OnCurrentTemplateUpdated()
 		{
 			UpdateEnabled();
@@ -62,7 +64,14 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 		#endregion
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override ISymbolizedSketchType GetSymbolizedSketch()
+		{
+			return MapUtils.IsStereoMapView(ActiveMapView)
+				       ? null
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
+		}
+
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			return SketchGeometryType.Multipoint;
 		}
@@ -88,6 +97,22 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;
+		}
+
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			bool? result = await QueuedTask.Run(() =>
+			{
+				FeatureClass currentTargetClass = GetCurrentTargetClass(out _);
+
+				return currentTargetClass?.GetDefinition()?.HasZ();
+			});
+
+			_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
+
+			return result;
 		}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
@@ -136,7 +161,7 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 				}
 				finally
 				{
-					SetToolCursor(SketchCursor);
+					SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), false));
 				}
 			});
 
@@ -211,8 +236,8 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 
 			FeatureClassDefinition featureClassDefinition = targetFeatureClass.GetDefinition();
 
-			var pointGeometries = multipoint.Points.Select(
-				p => CreateResultGeometry(p, featureClassDefinition));
+			var pointGeometries =
+				multipoint.Points.Select(p => CreateResultGeometry(p, featureClassDefinition));
 
 			foreach (Feature newFeature in GdbPersistenceUtils.InsertTx(
 				         editContext, targetFeatureClass, targetSubtype,

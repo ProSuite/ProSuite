@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
@@ -8,6 +9,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
@@ -30,7 +32,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		[CanBeNull] private string _subtypeFieldName;
 		[CanBeNull] private int? _defaultSubtypeCode;
 
-		private Dictionary<int, Subtype> _subtypes;
+		private ConcurrentDictionary<int, Subtype> _subtypes;
 
 		private IFields _fields;
 
@@ -170,16 +172,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			throw new NotImplementedException();
 		}
 
-		public long RowCount(IQueryFilter queryFilter)
+		public long RowCount(ITableFilter filter)
 		{
-			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
+			QueryFilter proQueryFilter = GetProQueryFilter(filter);
 
 			return ProTable.GetCount(proQueryFilter);
 		}
 
-		public IEnumerable<IRow> Search(IQueryFilter queryFilter, bool recycling)
+		public IEnumerable<IRow> Search(ITableFilter filter, bool recycling)
 		{
-			QueryFilter proQueryFilter = GetProQueryFilter(queryFilter);
+			QueryFilter proQueryFilter = GetProQueryFilter(filter);
 
 			RowCursor cursor = ProTable.Search(proQueryFilter, recycling);
 
@@ -290,30 +292,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				{
 					yield return PrepareCached(relClass);
 				}
-
-				//RelationshipClass proRelClass = (RelationshipClass) relClass.NativeImplementation;
-				//var relClassDef = proRelClass.GetDefinition();
-
-				//string relClassName = relClass.Name;
-
-				//if (role == esriRelRole.esriRelRoleAny &&
-				//    (relClassDef.GetOriginClass() == thisTableName ||
-				//     relClassDef.GetDestinationClass() == thisTableName))
-				//{
-				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
-				//}
-
-				//if (role == esriRelRole.esriRelRoleOrigin &&
-				//    relClassDef.GetOriginClass() == thisTableName)
-				//{
-				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
-				//}
-
-				//if (role == esriRelRole.esriRelRoleDestination &&
-				//    relClassDef.GetDestinationClass() == thisTableName)
-				//{
-				//	yield return CreateArcRelationshipClass(geodatabase, relClassName);
-				//}
 			}
 		}
 
@@ -570,8 +548,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				if (_subtypes != null)
 				{
-					return _subtypes.Select(
-						kvp => new KeyValuePair<int, string>(kvp.Key, kvp.Value.Name));
+					return _subtypes.Select(kvp => new KeyValuePair<int, string>(
+						                        kvp.Key, kvp.Value.Name));
 				}
 
 				return ProTableDefinition.GetSubtypes()
@@ -594,7 +572,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		private void InitializeSubtypes()
 		{
-			_subtypes = new Dictionary<int, Subtype>();
+			_subtypes = new ConcurrentDictionary<int, Subtype>();
 
 			if (string.IsNullOrEmpty(SubtypeFieldName))
 			{
@@ -669,7 +647,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#endregion
 
-		private static QueryFilter GetProQueryFilter(IQueryFilter queryFilter)
+		private static QueryFilter GetProQueryFilter(ITableFilter queryFilter)
 		{
 			QueryFilter proQueryFilter;
 
@@ -686,7 +664,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					                 SpatialRelationship =
 						                 (SpatialRelationship) fcFilter.SpatialRel,
 					                 FilterGeometry =
-						                 ArcGeometryUtils.CreateProGeometry(fcFilter.Geometry),
+						                 ArcGeometryUtils.ToProGeometry(fcFilter.Geometry),
 					                 SpatialRelationshipDescription = fcFilter.SpatialRelDescription
 				                 };
 			}
@@ -711,10 +689,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			Field field =
 				ProTableDefinition.GetFields()
-				                  .FirstOrDefault(
-					                  f => f.Name.Equals(
-						                  fieldName,
-						                  StringComparison.CurrentCultureIgnoreCase));
+				                  .FirstOrDefault(f => f.Name.Equals(
+					                                  fieldName,
+					                                  StringComparison.CurrentCultureIgnoreCase));
 
 			if (field == null)
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");

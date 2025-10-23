@@ -41,7 +41,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private ChangeAlongFeedback _feedback;
 		private Geometry _lastDrawnExtent;
 
-		private SelectionCursors _laterPhaseCursors;
+		protected abstract SelectionCursors InitialSelectionCursors { get; }
+
+		protected abstract SelectionCursors TargetSelectionCursors { get; }
 
 		protected ChangeAlongToolBase()
 		{
@@ -111,20 +113,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
-			Task task = QueuedTask.Run(async () =>
+			if (IsInSubcurveSelectionPhase())
 			{
-				if (IsInSubcurveSelectionPhase())
-				{
-					ResetDerivedGeometries();
-				}
-				else
-				{
-					ClearSelection();
-					await StartSelectionPhaseAsync();
-				}
-			});
-
-			await ViewUtils.TryAsync(task, _msg);
+				ResetDerivedGeometries();
+			}
+			else
+			{
+				await ClearSelectionAsync();
+				await StartSelectionPhaseAsync();
+			}
 		}
 
 		protected override void OnToolActivatingCore()
@@ -132,8 +129,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			base.OnToolActivatingCore();
 
 			InitializeOptions();
-
-			_laterPhaseCursors = GetTargetSelectionCursors();
 		}
 
 		protected override Task OnToolActivatingCoreAsync()
@@ -187,6 +182,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_feedback = null;
 		}
 
+		protected override Task OnSelectionPhaseStartedAsync()
+		{
+			SelectionCursors = InitialSelectionCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
+			return base.OnSelectionPhaseStartedAsync();
+		}
+
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 			MapSelectionChangedEventArgs args)
 		{
@@ -197,14 +199,19 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-				Dictionary<MapMember, List<long>> selectionByLayer = args.Selection.ToDictionary();
-				IList<Feature> applicableSelection =
-					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
+				await QueuedTask.Run(
+					() =>
+					{
+						// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+						Dictionary<MapMember, List<long>> selectionByLayer =
+							args.Selection.ToDictionary();
+						IList<Feature> applicableSelection =
+							GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
-				using var source = GetProgressorSource();
-				var progressor = source?.Progressor;
-				RefreshExistingChangeAlongCurves(applicableSelection, progressor);
+						using var source = GetProgressorSource();
+						var progressor = source?.Progressor;
+						RefreshExistingChangeAlongCurves(applicableSelection, progressor);
+					});
 			}
 
 			return true;
@@ -292,11 +299,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			finally
 			{
 				// reset after 2. phase
-				await ResetSelectionSketchTypeAsync(_laterPhaseCursors);
+				SelectionCursors = TargetSelectionCursors;
+				await ResetSelectionSketchTypeAsync();
 			}
 		}
 
-		protected override async Task ShiftPressedCoreAsync()
+		protected override async Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
@@ -307,7 +315,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (! IsInSubcurveSelectionPhase())
 			{
 				// 2. Phase: target selection:
-				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: true);
+				Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), shiftDown: true);
 				SetToolCursor(cursor);
 			}
 
@@ -322,26 +330,27 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				Cursor cursor = _laterPhaseCursors.GetCursor(GetSketchType(), shiftDown: false);
+				Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), shiftDown: false);
 				SetToolCursor(cursor);
 			}
 		}
 
 		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
 			if (await IsInSelectionPhaseCoreAsync(KeyboardUtils.IsShiftDown()))
 			{
-				// Use base implementation
+				// First phase
+				SelectionCursors = InitialSelectionCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(
-					toggleSketchType, selectionCursors);
+					toggleSketchType);
 			}
 			else
 			{
-				// Second and third phase: use the _secondPhaseCursors
+				// Second and third phase
+				SelectionCursors = TargetSelectionCursors;
 				await base.ToggleSelectionSketchGeometryTypeAsync(
-					toggleSketchType, _laterPhaseCursors);
+					toggleSketchType);
 			}
 		}
 
@@ -411,8 +420,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return true;
 		}
 
-		protected abstract SelectionCursors GetTargetSelectionCursors();
-
 		protected abstract void LogAfterPickTarget(
 			ReshapeAlongCurveUsability reshapeCurveUsability);
 
@@ -431,7 +438,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			SetupSketch();
 
-			await ResetSelectionSketchTypeAsync(_laterPhaseCursors);
+			SelectionCursors = TargetSelectionCursors;
+			await ResetSelectionSketchTypeAsync();
 		}
 
 		protected ZSettingsModel GetZSettingsModel()

@@ -13,6 +13,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
@@ -277,6 +278,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug(
 					$"Failed to open {datasetName} from {displayText}: Invalid Dataset type for PluginDatastore: {nameof(T)}",
 					ex);
+				throw;
+			}
+			catch (Exception ex)
+			{
+				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+				_msg.Debug($"Error opening dataset {datasetName} from {displayText}: {ex.Message}");
 				throw;
 			}
 
@@ -960,6 +967,23 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			table.DeleteRows(filter);
 
 			_msg.DebugStopTiming(watch, "Rows deleted");
+		}
+
+		public static IEnumerable<Table> GetFromSameDatastore(
+			[NotNull] IEnumerable<Table> tables,
+			[NotNull] Datastore compareDatastore,
+			[NotNull] NotificationCollection notifications)
+		{
+			foreach (var table in tables)
+			{
+				if (WorkspaceUtils.IsSameDatastore(table.GetDatastore(), compareDatastore))
+				{
+					yield return table;
+					continue;
+				}
+
+				notifications.Add(GetTableDisplayName(table));
+			}
 		}
 	}
 }

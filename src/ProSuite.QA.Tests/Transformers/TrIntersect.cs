@@ -35,6 +35,15 @@ namespace ProSuite.QA.Tests.Transformers
 			_intersecting = intersecting;
 		}
 
+		[InternallyUsedTest]
+		public TrIntersect(
+			[NotNull] TrIntersectDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.Intersected,
+			       (IReadOnlyFeatureClass) definition.Intersecting)
+		{
+			ResultDimension = definition.ResultDimension;
+		}
+
 		[TestParameter(_defaultResultDimension)]
 		[DocTr(nameof(DocTrStrings.TrIntersect_ResultDimension))]
 		public int ResultDimension { get; set; } = _defaultResultDimension;

@@ -67,6 +67,18 @@ namespace ProSuite.QA.Tests
 				_defaultReportOnlySmallestRingsExceedingMaximumCount;
 		}
 
+		[InternallyUsedTest]
+		public QaInteriorRings(
+			[NotNull] QaInteriorRingsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.PolygonClass,
+			       definition.MaximumInteriorRingCount)
+		{
+			IgnoreInnerRingsLargerThan = definition.IgnoreInnerRingsLargerThan;
+			ReportIndividualRings = definition.ReportIndividualRings;
+			ReportOnlySmallestRingsExceedingMaximumCount =
+				definition.ReportOnlySmallestRingsExceedingMaximumCount;
+		}
+
 		[TestParameter(_defaultIgnoreInnerRingsLargerThan)]
 		[Doc(nameof(DocStrings.QaInteriorRings_IgnoreInnerRingsLargerThan))]
 		[UsedImplicitly]
@@ -244,7 +256,7 @@ namespace ProSuite.QA.Tests
 		private static IGeometry GetIndividualErrorGeometry([NotNull] IPolygon polygon,
 		                                                    [NotNull] IRing ring)
 		{
-			return CreatePolygonFromRings(new[] {ring}, polygon);
+			return CreatePolygonFromRings(new[] { ring }, polygon);
 		}
 
 		[NotNull]

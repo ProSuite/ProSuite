@@ -4,6 +4,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -30,18 +31,18 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			IWorkspace workspace = TestDataUtils.OpenTopgisTlm();
 			IFeatureClass lineFc =
-				((IFeatureWorkspace)workspace).OpenFeatureClass(
+				((IFeatureWorkspace) workspace).OpenFeatureClass(
 					"TOPGIS_TLM.TLM_STRASSE");
 
 			ITable table =
-				((IFeatureWorkspace)workspace).OpenTable(
+				((IFeatureWorkspace) workspace).OpenTable(
 					"TOPGIS_TLM.TLM_STRASSENROUTE");
 
 			string relName = "TOPGIS_TLM.TLM_STRASSENROUTE_STRASSE";
 
 			TrTableJoin joined =
 				new TrTableJoin(ReadOnlyTableFactory.Create(lineFc),
-								ReadOnlyTableFactory.Create(table), relName, JoinType.InnerJoin);
+				                ReadOnlyTableFactory.Create(table), relName, JoinType.InnerJoin);
 
 			VerifyTableJoin(joined);
 		}
@@ -49,10 +50,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void VerifyFgdbTableJoin()
 		{
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("VerifyFgdbTableJoin");
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace("VerifyFgdbTableJoin");
 
 			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
-				(int)esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
 
 			IFeatureClass pointFc = DatasetUtils.CreateSimpleFeatureClass(
 				ws, "TLM_STRASSE", null,
@@ -64,13 +66,14 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					sref, 1000));
 
 			ITable table = DatasetUtils.CreateTable(ws, "TLM_STRASSENROUTE",
-			                                 FieldUtils.CreateOIDField(),
-			                                 FieldUtils.CreateIntegerField("OBJEKTART"),
-			                                 FieldUtils.CreateTextField("ROUTENNUMMER", 100));
+			                                        FieldUtils.CreateOIDField(),
+			                                        FieldUtils.CreateIntegerField("OBJEKTART"),
+			                                        FieldUtils.CreateTextField(
+				                                        "ROUTENNUMMER", 100));
 
 			TestWorkspaceUtils.CreateSimple1NRelationship(
 				ws, "TLM_STRASSENROUTE_STRASSE",
-				table, (ITable)pointFc,
+				table, (ITable) pointFc,
 				table.OIDFieldName, "FKEY");
 
 			for (int iRow = 0; iRow < 20; iRow++)
@@ -89,6 +92,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					f.Shape = GeometryFactory.CreatePoint(2603000 + iRow, 1203000 + iFeature);
 					f.Store();
 				}
+
 				{
 					IFeature f = pointFc.CreateFeature();
 					f.Value[1] = routenNummer == "A1" ? 2 : 5;
@@ -107,11 +111,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			VerifyTableJoin(joined);
 		}
 
-
 		private void VerifyTableJoin(TrTableJoin joined)
 		{
 			IEnvelope area = GeometryFactory.CreateEnvelope(2601000, 1201000, 2604000, 1204000);
-			{ // full qualified field names without table filter
+			{
+				// full qualified field names without table filter
 				QaConstraint test =
 					new QaConstraint(joined.GetTransformed(),
 					                 "TOPGIS_TLM.TLM_STRASSE.OBJEKTART = 2");
@@ -121,16 +125,18 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				Assert.IsTrue(runner.Errors.Count > 3);
 			}
-			{ // full qualified field names without table filter
+			{
+				// full qualified field names without table filter
 				QaInteriorIntersectsSelf test =
-					new QaInteriorIntersectsSelf((IReadOnlyFeatureClass)joined.GetTransformed());
+					new QaInteriorIntersectsSelf((IReadOnlyFeatureClass) joined.GetTransformed());
 
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute(area);
 
 				Assert.IsTrue(runner.Errors.Count > 3);
 			}
-			{ // full qualified field names
+			{
+				// full qualified field names
 				QaConstraint test =
 					new QaConstraint(joined.GetTransformed(),
 					                 "TOPGIS_TLM.TLM_STRASSE.OBJEKTART = 2");
@@ -141,7 +147,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				Assert.IsTrue(runner.Errors.Count < 3);
 			}
-			{ // reduce field names
+			{
+				// reduce field names
 				QaConstraint test =
 					new QaConstraint(joined.GetTransformed(), "TLM_STRASSE.OBJEKTART = 2");
 				test.SetConstraint(0, "ROUTENNUMMER = 'A1'");
@@ -151,7 +158,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				Assert.IsTrue(runner.Errors.Count < 3);
 			}
-			{ // reduce field names
+			{
+				// reduce field names
 				QaConstraint test =
 					new QaConstraint(joined.GetTransformed(), "Dummy.TLM_STRASSE.OBJEKTART = 2");
 				test.SetConstraint(0, "Dummy.ROUTENNUMMER = 'A1'");
@@ -161,7 +169,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				Assert.IsTrue(runner.Errors.Count < 3);
 			}
-			{ // non-unique field names
+			{
+				// non-unique field names
 				QaConstraint test =
 					new QaConstraint(joined.GetTransformed(), "OBJEKTART = 2");
 				test.SetConstraint(0, "ROUTENNUMMER = 'A1'");
@@ -176,9 +185,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				{
 					failed = true;
 				}
+
 				Assert.IsTrue(failed);
 			}
-
 		}
 	}
 }

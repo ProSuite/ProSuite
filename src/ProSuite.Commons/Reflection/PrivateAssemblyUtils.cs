@@ -78,6 +78,9 @@ namespace ProSuite.Commons.Reflection
 						() => $"Loading assembly from {name} (codebase: {name.CodeBase})");
 				}
 
+				AppDomain.CurrentDomain.AssemblyResolve +=
+					(sender, args) => AssemblyResolveHandler(sender, args);
+
 				assembly = Assembly.Load(name);
 			}
 			catch (Exception)
@@ -95,6 +98,13 @@ namespace ProSuite.Commons.Reflection
 			}
 
 			return assembly;
+		}
+
+		private static Assembly AssemblyResolveHandler(object sender, ResolveEventArgs args)
+		{
+			_msg.DebugFormat("Resolving {0}", args.Name);
+
+			return null;
 		}
 
 		[NotNull]

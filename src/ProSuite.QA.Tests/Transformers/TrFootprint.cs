@@ -22,6 +22,14 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass multipatchClass)
 			: base(multipatchClass, esriGeometryType.esriGeometryPolygon) { }
 
+		[InternallyUsedTest]
+		public TrFootprint(
+			[NotNull] TrFootprintDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultipatchClass)
+		{
+			Tolerance = definition.Tolerance;
+		}
+
 		[TestParameter(_defaultToleranceValue)]
 		[DocTr(nameof(DocTrStrings.TrFootprint_Tolerance))]
 		public double Tolerance { get; set; }

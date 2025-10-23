@@ -11,7 +11,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -76,8 +75,6 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 
 	protected abstract void LogPromptForSelection();
 
-	protected abstract SelectionSettings GetSelectionSettings();
-
 	protected abstract bool CanSelectFromLayerCore([NotNull] BasicFeatureLayer layer);
 
 	[CanBeNull]
@@ -114,7 +111,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 				if (_symbolizedSketch != null)
 				{
 					await QueuedTask.Run(
-						() => _symbolizedSketch?.SetSketchAppearanceBasedOnSelectionAsync());
+						() => _symbolizedSketch?.SetSketchAppearanceAsync());
 				}
 
 				bool selectionProcessed = await ProcessSelectionAsync();
@@ -189,7 +186,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 
 			if (KeyboardUtils.IsShiftKey(args.Key))
 			{
-				await ShiftPressedAsync();
+				await ShiftPressedAsync(args);
 			}
 
 			if (args.Key == Key.Escape)
@@ -220,7 +217,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 		}
 	}
 
-	protected override async Task ShiftPressedAsync()
+	protected override async Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
 	{
 		if (! InConstructionPhase())
 		{
@@ -469,8 +466,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 	[NotNull]
 	protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
 	{
-		return new PickerPrecedence(sketchGeometry,
-		                            GetSelectionSettings().SelectionTolerancePixels,
+		return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
 		                            ActiveMapView.ClientToScreen(CurrentMousePosition));
 	}
 
@@ -608,7 +604,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 			return false; // startContructionPhase = false
 		}
 
-		_symbolizedSketch?.SetSketchType(applicableSelection.Keys.First());
+		_symbolizedSketch?.SetSketchType();
 
 		return await ProcessSelectionCoreAsync(applicableSelection, progressor);
 	}
@@ -856,7 +852,6 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 
 	protected virtual void StartConstructionPhaseCore() { }
 
-	
 	protected override CancelableProgressorSource GetProgressorSource()
 	{
 		var message = Caption ?? string.Empty;

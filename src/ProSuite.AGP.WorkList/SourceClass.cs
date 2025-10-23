@@ -34,13 +34,11 @@ namespace ProSuite.AGP.WorkList
 
 		public long ArcGISTableId => _tableIdentity.Id;
 
-		[NotNull]
 		public string Name => _tableIdentity.Name;
 
-		[CanBeNull]
 		public IAttributeReader AttributeReader { get; set; }
 
-		public string DefinitionQuery { get; protected set; }
+		public string DefaultDefinitionQuery { get; protected set; }
 
 		private string GetRelevantSubFields(bool excludeGeometry = false)
 		{
@@ -60,6 +58,14 @@ namespace ProSuite.AGP.WorkList
 			return subFields;
 		}
 
+		/// <summary>
+		/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
+		/// control whether it's called with a SpatialQueryFilter or a QueryFilter. Querying a table with a
+		/// spatial filter throws an exception, so we clone the filter to the correct type.
+		/// </summary>
+		/// <param name="filter"></param>
+		/// <param name="statusFilter"></param>
+		/// <param name="excludeGeometry"></param>
 		public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
 		                              WorkItemStatus? statusFilter,
 		                              bool excludeGeometry)
@@ -136,7 +142,7 @@ namespace ProSuite.AGP.WorkList
 
 		public override string ToString()
 		{
-			return string.IsNullOrEmpty(DefinitionQuery) ? Name : $"{Name}, {DefinitionQuery}";
+			return string.IsNullOrEmpty(DefaultDefinitionQuery) ? Name : $"{Name}, {DefaultDefinitionQuery}";
 		}
 	}
 }

@@ -73,8 +73,7 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 				IReadOnlyFeatureClass nodeClass,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-				IList<IReadOnlyFeatureClass>
-					nearClasses,
+				IList<IReadOnlyFeatureClass> nearClasses,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))]
 				double near)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -85,8 +84,7 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 				IReadOnlyFeatureClass nodeClass,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-				IList<IReadOnlyFeatureClass>
-					nearClasses,
+				IList<IReadOnlyFeatureClass> nearClasses,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))]
 				double near,
 				[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
@@ -99,34 +97,30 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 			IReadOnlyFeatureClass nodeClass,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-			IList<IReadOnlyFeatureClass>
-				nearClasses,
+			IList<IReadOnlyFeatureClass> nearClasses,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))]
 			double near,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 			bool ignoreNearEndpoints,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))]
 			bool is3D)
-			: this(nodeClass, nearClasses, new[] {near}, near, ignoreNearEndpoints, is3D) { }
+			: this(nodeClass, nearClasses, new[] { near }, near, ignoreNearEndpoints, is3D) { }
 
 		[Doc(nameof(DocStrings.QaNodeLineCoincidence_3))]
 		public QaNodeLineCoincidence(
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 			IReadOnlyFeatureClass nodeClass,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
-			IList<IReadOnlyFeatureClass>
-				nearClasses,
+			IList<IReadOnlyFeatureClass> nearClasses,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearTolerances))] [NotNull]
-			IList<double>
-				nearTolerances,
+			IList<double> nearTolerances,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_withinPolylineTolerance))]
-			double
-				withinPolylineTolerance,
+			double withinPolylineTolerance,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 			bool ignoreNearEndpoints,
 			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))]
 			bool is3D) :
-			base(CastToTables(new[] {nodeClass}, nearClasses))
+			base(CastToTables(new[] { nodeClass }, nearClasses))
 		{
 			Assert.ArgumentNotNull(nodeClass, nameof(nodeClass));
 			Assert.ArgumentNotNull(nearClasses, nameof(nearClasses));
@@ -166,6 +160,18 @@ namespace ProSuite.QA.Tests
 				_hasZ.Add(featureClass != null && DatasetUtils.GetGeometryDef(featureClass).HasZ);
 				_shapeTypes.Add(featureClass?.ShapeType ?? esriGeometryType.esriGeometryNull);
 			}
+		}
+
+		[InternallyUsedTest]
+		public QaNodeLineCoincidence(QaNodeLineCoincidenceDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.NodeClass,
+			       definition.NearClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.NearTolerances.Cast<double>().ToList(),
+			       definition.WithinPolylineTolerance, definition.IgnoreNearEndpoints,
+			       definition.Is3D)
+		{
+			CoincidenceTolerance = definition.CoincidenceTolerance;
 		}
 
 		[TestParameter(_defaultCoincidenceTolerance)]
@@ -346,7 +352,7 @@ namespace ProSuite.QA.Tests
 							description, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
 							Codes[Code.NodeTooCloseToLine_WithinFeature],
 							_shapeFieldName,
-							values: new object[] {tooClosePath.Distance, tooClosePath.PathIndex});
+							values: new object[] { tooClosePath.Distance, tooClosePath.PathIndex });
 					}
 				}
 			}
@@ -572,7 +578,7 @@ namespace ProSuite.QA.Tests
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(feature, neighborTooClose.Feature),
 				errorGeometry, issueCode, _shapeFieldName,
-				values: new object[] {neighborTooClose.Distance});
+				values: new object[] { neighborTooClose.Distance });
 		}
 
 		/// <summary>

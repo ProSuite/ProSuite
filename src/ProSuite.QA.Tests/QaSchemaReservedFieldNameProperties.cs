@@ -36,6 +36,15 @@ namespace ProSuite.QA.Tests
 			_fieldSpecificationsTable = fieldSpecificationsTable;
 		}
 
+		[InternallyUsedTest]
+		public QaSchemaReservedFieldNameProperties(
+			[NotNull] QaSchemaReservedFieldNamePropertiesDefinition definition)
+			: this((IReadOnlyTable) definition.Table,
+			       (IReadOnlyTable) definition.ReservedNamesTable,
+			       definition.ReservedNameFieldName, definition.ReservedReasonFieldName,
+			       definition.ValidNameFieldName,
+			       (IReadOnlyTable) definition.FieldSpecificationsTable) { }
+
 		[NotNull]
 		private ITableFilter GetQueryFilter()
 		{

@@ -9,5 +9,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IWorkList Get();
 
 		Task<IWorkList> GetAsync();
+
+		void UnWire();
 	}
 }

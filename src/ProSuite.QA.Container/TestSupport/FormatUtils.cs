@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Core.ParameterTypes;
 
 namespace ProSuite.QA.Container.TestSupport
 {

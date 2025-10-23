@@ -226,9 +226,22 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 
 		private void ApplyLocation([NotNull] T formState)
 		{
-			if (! formState.HasLocation)
+			if (! TryGetLocation(formState, out int left, out int top))
 			{
 				return;
+			}
+
+			// apply
+			Form.StartPosition = FormStartPosition.Manual;
+			Form.Location = new Point(left, top);
+		}
+
+		private static bool TryGetLocation(T formState, out int left, out int top)
+		{
+			if (! formState.HasLocation)
+			{
+				left = top = 0;
+				return false;
 			}
 
 			const int minVisibleOffset = 80;
@@ -243,17 +256,17 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 
 			// try to restore location. Make sure that location is within current
 			// screen dimensions
-			int left = formState.Left > maxLeft
-				           ? maxLeft
-				           : formState.Left < minLeft
-					           ? minLeft
-					           : formState.Left;
+			left = formState.Left > maxLeft
+				       ? maxLeft
+				       : formState.Left < minLeft
+					       ? minLeft
+					       : formState.Left;
 
-			int top = formState.Top > maxTop
-				          ? maxTop
-				          : formState.Top < minTop
-					          ? minTop
-					          : formState.Top;
+			top = formState.Top > maxTop
+				      ? maxTop
+				      : formState.Top < minTop
+					      ? minTop
+					      : formState.Top;
 
 			// log 
 			if (_msg.IsVerboseDebugEnabled)
@@ -263,9 +276,7 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 				_msg.DebugFormat("Restore location: {0} {1}", left, top);
 			}
 
-			// apply
-			Form.StartPosition = FormStartPosition.Manual;
-			Form.Location = new Point(left, top);
+			return true;
 		}
 
 		private void ApplySize([NotNull] T formState)

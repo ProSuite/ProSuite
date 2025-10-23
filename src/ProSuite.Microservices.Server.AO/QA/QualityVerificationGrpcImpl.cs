@@ -4,15 +4,18 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
@@ -314,25 +317,70 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		public override async Task QueryData(QueryDataRequest request,
+		public override async Task QueryData(IAsyncStreamReader<QueryDataRequest> requestStream,
 		                                     IServerStreamWriter<QueryDataResponse> responseStream,
 		                                     ServerCallContext context)
 		{
+			QueryDataRequest request = null;
 			try
 			{
 				Stopwatch watch = Stopwatch.StartNew();
 
+				Assert.True(await requestStream.MoveNext(), "No request");
+
+				request = Assert.NotNull(requestStream.Current, "No request");
+
 				await StartRequest(context.Peer, request, true);
 
-				Func<ITrackCancel, ServiceCallStatus> func =
-					trackCancel =>
-						QueryDataCore(request, responseStream, trackCancel);
+				// TODO: Separate data request handler class with async method
+				Func<QueryDataResponse, QueryDataRequest> moreDataRequest = null;
+
+				bool useclientData =
+					request.DataSources.Any(ds => string.IsNullOrEmpty(ds.CatalogPath));
+
+				if (useclientData)
+				{
+					moreDataRequest =
+						delegate(QueryDataResponse r)
+						{
+							Task<QueryDataRequest> task = RequestMoreDataAsync(
+								requestStream, responseStream, context, r);
+
+							long timeOutMillis = 30 * 1000;
+							long elapsedMillis = 0;
+							int interval = 20;
+							while (! task.IsCompleted && elapsedMillis < timeOutMillis)
+							{
+								Thread.Sleep(interval);
+								elapsedMillis += interval;
+							}
+
+							if (task.IsFaulted)
+							{
+								throw task.Exception;
+							}
+
+							if (! task.IsCompleted)
+							{
+								throw new TimeoutException(
+									$"Client failed to provide data within {elapsedMillis}ms");
+							}
+
+							QueryDataRequest moreData = task.Result;
+
+							return moreData;
+						};
+				}
+
+				Func<ITrackCancel, ServiceCallStatus> func = trackCancel =>
+					QueryDataCore(request, responseStream, moreDataRequest, trackCancel);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
 						func, context, _staThreadScheduler, true);
 
 				watch.Stop();
+
 				_msg.InfoFormat("Data request {0} ({1} ms)", result, watch.ElapsedMilliseconds);
 			}
 			catch (TaskCanceledException canceledException)
@@ -567,6 +615,43 @@ namespace ProSuite.Microservices.Server.AO.QA
 								resultData = requestStream.Current;
 								break;
 							}
+						}
+					});
+
+				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await responseReaderTask.ConfigureAwait(false);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error getting more data for class id " +
+				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+			}
+
+			return resultData;
+		}
+
+		private static async Task<QueryDataRequest> RequestMoreDataAsync(
+			IAsyncStreamReader<QueryDataRequest> requestStream,
+			IServerStreamWriter<QueryDataResponse> responseStream,
+			ServerCallContext context,
+			QueryDataResponse r)
+		{
+			QueryDataRequest resultData = null;
+
+			try
+			{
+				Task responseReaderTask = Task.Run(
+					async () =>
+					{
+						// NOTE: The client should probably ensure that this call back
+						//       does not exceed a certain time span. Ideally this does
+						//       only block for a few seconds:
+
+						while (await requestStream.MoveNext().ConfigureAwait(false))
+						{
+							// TODO: only break if result_data.HasMoreDate is false
+							resultData = requestStream.Current;
+							break;
 						}
 					});
 
@@ -945,27 +1030,47 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private ServiceCallStatus QueryDataCore(
 			[NotNull] QueryDataRequest request,
 			IServerStreamWriter<QueryDataResponse> responseStream,
+			Func<QueryDataResponse, QueryDataRequest> moreDataRequest,
 			ITrackCancel trackCancel)
 		{
 			SetupUserNameProvider(request.UserName);
 
 			try
 			{
+				// TODO: Allow trNoTransform with pass-through table name
 				InstanceConfigurationMsg transformerConfigurationMsg = request.Transformer;
 
 				IEnumerable<DataSourceMsg> dataSourceMsgs = request.DataSources;
 
 				DataRequest dataRequest = request.DataRequest;
 
+				//if (request.Schema != null)
+				//{
+				//	backgroundVerificationInputs.SetGdbSchema(
+				//		ProtobufConversionUtils.CreateSchema(
+				//			initialRequest.Schema.ClassDefinitions,
+				//			initialRequest.Schema.RelclassDefinitions, moreDataRequest));
+				//}
+				//else if (moreDataRequest != null)
+				//{
+				//	backgroundVerificationInputs.SetRemoteDataAccess(moreDataRequest);
+				//}
+
 				TransformerConfiguration transformerConfiguration =
 					CreateTransformerConfiguration(transformerConfigurationMsg, dataSourceMsgs,
-					                               request.Schema);
+					                               request.Schema, moreDataRequest);
 
 				var datasetContext = new MasterDatabaseDatasetContext();
 
 				ITableTransformer tableTransformer = InstanceFactory.CreateTransformer(
 					transformerConfiguration,
 					new SimpleDatasetOpener(datasetContext));
+
+				foreach (IWorkspace workspace in tableTransformer.InvolvedTables.Select(
+					         t => t.Workspace))
+				{
+					WorkspaceUtils.TryRefreshVersion(workspace);
+				}
 
 				// When querying the field name predictability is more important than not having dots in the names:
 				if (tableTransformer is ITableTransformerFieldSettings transformerFieldSettings)
@@ -979,7 +1084,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					table, dataRequest.SubFields, dataRequest.WhereClause,
 					dataRequest.SearchGeometry);
 
-				int maxRowCount = 5000;
+				long maxRowCount = request.MaxRowCount > 0 ? request.MaxRowCount : 5000;
 				foreach (GdbData resultBatch in VerificationRequestUtils.ReadGdbData(
 					         table, filter, dataRequest.SubFields, -1, maxRowCount,
 					         dataRequest.CountOnly))
@@ -1014,6 +1119,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				//{
 				//	ServiceUtils.SetUnhealthy(Health, GetType());
 				//}
+
+				if (trackCancel?.Continue() == false || e.Message == "Already finished.")
+				{
+					// Typically: System.InvalidOperationException: Already finished.
+					_msg.Debug(
+						"The request has been cancelled and the client is already gone.", e);
+
+					return ServiceCallStatus.Cancelled;
+				}
 
 				SendResponse(new QueryDataResponse
 				             {
@@ -1231,7 +1345,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private TransformerConfiguration CreateTransformerConfiguration(
 			InstanceConfigurationMsg transformerConfigurationMsg,
 			IEnumerable<DataSourceMsg> dataSourceMessages,
-			SchemaMsg knownSchemaMsg)
+			SchemaMsg knownSchemaMsg,
+			Func<QueryDataResponse, QueryDataRequest> moreDataRequest)
 		{
 			if (SupportedInstanceDescriptors == null || SupportedInstanceDescriptors.Count == 0)
 			{
@@ -1243,9 +1358,83 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			ProtoBasedQualitySpecificationFactory factory =
 				CreateSpecificationFactory(dataSources, SupportedInstanceDescriptors,
-				                           knownSchemaMsg);
+				                           knownSchemaMsg, moreDataRequest);
 
 			return factory.CreateTransformerConfiguration(transformerConfigurationMsg);
+		}
+
+		private static ProtoBasedQualitySpecificationFactory CreateSpecificationFactory(
+			[NotNull] ICollection<DataSource> dataSources,
+			[NotNull] ISupportedInstanceDescriptors instanceDescriptors,
+			[NotNull] SchemaMsg knownSchemaMsg,
+			[CanBeNull] Func<QueryDataResponse, QueryDataRequest> moreDataRequest)
+		{
+			var contextFactory = new MasterDatabaseWorkspaceContextFactory();
+
+			IVerifiedModelFactory modelFactory =
+				new ProtoBasedModelFactory(knownSchemaMsg, contextFactory);
+
+			if (moreDataRequest == null)
+			{
+				// Data access via dataSources / model factory -> Review and adapt
+				return new ProtoBasedQualitySpecificationFactory(modelFactory, dataSources,
+				                                                 instanceDescriptors);
+			}
+
+			// Else: Data provided by client. Create virtual workspaces from provided SchemaMsg
+			Assert.NotNull(moreDataRequest);
+
+			Func<DataVerificationResponse, DataVerificationRequest> dataRequest = response =>
+			{
+				var input = new QueryDataResponse()
+				            {
+					            DataRequest = response.DataRequest,
+					            ServiceCallStatus = (int) ServiceCallStatus.Running
+				            };
+
+				QueryDataRequest output = moreDataRequest(input);
+
+				if (output?.InputData == null)
+				{
+					return null;
+				}
+
+				return new DataVerificationRequest
+				       {
+					       Data = output.InputData
+				       };
+			};
+
+			IList<GdbWorkspace> workspaces = ProtobufConversionUtils.CreateSchema(
+				knownSchemaMsg.ClassDefinitions,
+				knownSchemaMsg.RelclassDefinitions, dataRequest);
+
+			var modelsByWorkspaceId =
+				new Dictionary<string, DdxModel>(StringComparer.OrdinalIgnoreCase);
+
+			foreach (GdbWorkspace gdbWorkspace in workspaces)
+			{
+				foreach (DataSource dataSource in dataSources)
+				{
+					// TODO: Use DdxModelId instead of ID?
+					if (! int.TryParse(dataSource.ID, out int modelId))
+					{
+						continue;
+					}
+
+					modelsByWorkspaceId.Add(dataSource.ID,
+					                        modelFactory.CreateModel(gdbWorkspace,
+						                        dataSource.DisplayName,
+						                        modelId,
+						                        dataSource.DatabaseName,
+						                        dataSource.SchemaOwner));
+				}
+			}
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			return factory;
 		}
 
 		private static ProtoBasedQualitySpecificationFactory CreateSpecificationFactory(

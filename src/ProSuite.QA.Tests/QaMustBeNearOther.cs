@@ -47,8 +47,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] [Doc(nameof(DocStrings.QaMustBeNearOther_featureClass))]
 			IReadOnlyFeatureClass featureClass,
 			[NotNull] [Doc(nameof(DocStrings.QaMustBeNearOther_nearClasses))]
-			ICollection<IReadOnlyFeatureClass>
-				nearClasses,
+			ICollection<IReadOnlyFeatureClass> nearClasses,
 			[Doc(nameof(DocStrings.QaMustBeNearOther_maximumDistance))]
 			double maximumDistance,
 			[Doc(nameof(DocStrings.QaMustBeNearOther_relevantRelationCondition))] [CanBeNull]
@@ -64,6 +63,17 @@ namespace ProSuite.QA.Tests
 					c => DatasetUtils.TryGetXyTolerance(c.SpatialReference, out double xy)
 						     ? xy
 						     : 0);
+		}
+
+		[InternallyUsedTest]
+		public QaMustBeNearOther(
+			[NotNull] QaMustBeNearOtherDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass,
+			       definition.NearClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+				   definition.MaximumDistance,
+				   definition.RelevantRelationCondition)
+		{
+			ErrorDistanceFormat = definition.ErrorDistanceFormat;
 		}
 
 		[CanBeNull]

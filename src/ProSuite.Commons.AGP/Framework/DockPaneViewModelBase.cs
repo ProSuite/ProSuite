@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -32,19 +33,25 @@ namespace ProSuite.Commons.AGP.Framework
 		/// </summary>
 		public override OperationManager OperationManager => MapView.Active?.Map.OperationManager;
 
-		protected override void OnShow(bool isVisible)
+		protected override async void OnShow(bool isVisible)
 		{
 			try
 			{
 				OnShowCore(isVisible);
+				await OnShowCoreAsync(isVisible);
 			}
 			catch (Exception ex)
 			{
-				_msg.Error(ex.Message);
+				_msg.Error($"Error showing dock pane {Caption}: {ex.Message}", ex);
 			}
 		}
 
 		protected virtual void OnShowCore(bool isVisible) { }
+
+		protected virtual Task OnShowCoreAsync(bool isVisible)
+		{
+			return Task.CompletedTask;
+		}
 
 		protected override void OnHidden()
 		{
@@ -54,7 +61,7 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 			catch (Exception ex)
 			{
-				_msg.Error(ex.Message);
+				_msg.Error($"Error hiding dock pane {Caption}: {ex.Message}", ex);
 			}
 		}
 

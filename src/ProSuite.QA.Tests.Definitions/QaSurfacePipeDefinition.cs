@@ -122,9 +122,7 @@ namespace ProSuite.QA.Tests
 			double startEndIgnoreLength,
 			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
-			: base(
-				featureClass, rasterMosaic, limit,
-				zOffsetConstraint)
+			: base(featureClass, rasterMosaic, limit, zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
 

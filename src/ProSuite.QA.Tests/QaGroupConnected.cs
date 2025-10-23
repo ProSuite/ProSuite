@@ -22,6 +22,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -41,77 +42,6 @@ namespace ProSuite.QA.Tests
 	[LinearNetworkTest]
 	public class QaGroupConnected : QaGroupNetworkBase<DirectedRow>
 	{
-		#region ShapeAllowed enum
-
-		/// <summary>
-		/// allowed topology types
-		/// </summary>
-		[Flags]
-		public enum ShapeAllowed
-		{
-			/// <summary>
-			/// Reported shape errors:
-			/// -Branches
-			/// -Cycles
-			/// -InsideBranches
-			/// </summary>
-			None = 0,
-
-			/// <summary>
-			/// Circular connected lines are allowed
-			/// 
-			/// Reported shape errors:
-			/// -InsideBranches
-			/// </summary>
-			Cycles = 1,
-
-			/// <summary>
-			/// Branching lines are allowed, that means common end points of 3 or more lines
-			/// 
-			/// Reported shape errors:
-			/// -Cycles
-			/// -InsideBranches
-			/// </summary>
-			Branches = 2,
-
-			/// <summary>
-			/// A branch toward the inside of a circular area may exist
-			/// 
-			/// Reported shape errors:
-			/// -Cycles
-			/// </summary>
-			InsideBranches = 4,
-
-			/// <summary>
-			/// Cycles and branches are allowed
-			/// 
-			/// Reported shape errors:
-			/// -InsideBranches
-			/// </summary>
-			CyclesAndBranches = 3,
-
-			/// <summary>
-			/// Cycles and branches and inside branches are allowed
-			/// 
-			/// Reported shape errors:
-			/// ---
-			/// </summary>
-			All = 7
-		}
-
-		#endregion
-
-		#region ErrorReporting enum
-
-		public enum GroupErrorReporting
-		{
-			ReferToFirstPart = 1,
-			ShortestGaps = 2,
-			CombineParts = 4
-		}
-
-		#endregion
-
 		#region nested classes
 
 		private class EndsGap
@@ -335,8 +265,7 @@ namespace ProSuite.QA.Tests
 			[DefaultValue(GroupErrorReporting.ShortestGaps)]
 			GroupErrorReporting errorReporting,
 			[Doc(nameof(DocStrings.QaGroupConnected_minimumErrorConnectionLineLength))]
-			double
-				minimumErrorConnectionLineLength)
+			double minimumErrorConnectionLineLength)
 			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), groupBy)
 		{
 			Assert.ArgumentNotNull(groupBy, nameof(groupBy));
@@ -352,6 +281,17 @@ namespace ProSuite.QA.Tests
 				new Dictionary<Group, List<InvolvedGroupEnds>>(groupByComparer);
 
 			ValueSeparatorBase = valueSeparator;
+		}
+
+		[InternallyUsedTest]
+		public QaGroupConnected(QaGroupConnectedDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.GroupBy, definition.ValueSeparator, definition.AllowedShape,
+			       definition.ErrorReporting, definition.MinimumErrorConnectionLineLength)
+		{
+			ReportIndividualGaps = definition.ReportIndividualGaps;
+			IgnoreGapsLongerThan = definition.IgnoreGapsLongerThan;
+			CompleteGroupsOutsideTestArea = definition.CompleteGroupsOutsideTestArea;
 		}
 
 		[TestParameter(_defaultReportIndividualGaps)]

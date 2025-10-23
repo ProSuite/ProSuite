@@ -81,6 +81,11 @@ namespace ProSuite.QA.Tests
 			_spatialReference = featureClass.SpatialReference;
 		}
 
+		[InternallyUsedTest]
+		public QaNonEmptyGeometry([NotNull] QaNonEmptyGeometryDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.DontFilterPolycurvesByZeroLength) { }
+
 		#region ITest Members
 
 		public override int Execute()

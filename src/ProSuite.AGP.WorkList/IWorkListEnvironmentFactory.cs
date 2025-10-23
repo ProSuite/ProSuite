@@ -1,19 +1,12 @@
-using System;
-using ProSuite.AGP.WorkList.Contracts;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.WorkList;
 
 public interface IWorkListEnvironmentFactory
 {
-	void WithPath(Func<string, IWorkEnvironment> createEnvironment);
-
-	void WithItemStore(Func<IWorkListItemDatastore, IWorkEnvironment> createEnvironment);
-
-	void AddStore(IWorkListItemDatastore store);
-
-	IWorkListEnvironmentFactory RegisterEnvironment<T>() where T : IWorkList;
-
+	// todo: (daro): make generic instead of strings?
 	IWorkEnvironment CreateWorkEnvironment(string path, string typeName);
 
-	IWorkEnvironment CreateWorkEnvironment(string path);
+	// TODO: No implementation uses async functionality so far. Consider removing.
+	Task<IWorkEnvironment> CreateWorkEnvironmentAsync(string path, string typeName);
 }

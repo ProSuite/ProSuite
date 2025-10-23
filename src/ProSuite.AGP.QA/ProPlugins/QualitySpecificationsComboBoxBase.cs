@@ -16,7 +16,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			WireEvent();
 		}
 
-		protected abstract ISessionContext SessionContext { get; }
+		protected abstract IVerificationSessionContext SessionContext { get; }
 
 		protected void QualitySpecificationsRefreshed(object sender, EventArgs e)
 		{

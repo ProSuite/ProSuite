@@ -18,6 +18,14 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			IReadOnlyFeatureClass containing)
 			: base(featureClassToFilter, containing) { }
 
+		[InternallyUsedTest]
+		public TrOnlyContainedFeatures(TrOnlyContainedFeaturesDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClassToFilter,
+			       (IReadOnlyFeatureClass) definition.Containing)
+		{
+			FilteringSearchOption = definition.FilteringSearchOption;
+		}
+
 		#region Overrides of TrSpatiallyFiltered
 
 		protected override SpatiallyFilteredBackingDataset CreateFilteredDataset(

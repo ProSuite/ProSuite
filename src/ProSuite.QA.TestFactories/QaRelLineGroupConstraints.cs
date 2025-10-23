@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -18,64 +19,9 @@ namespace ProSuite.QA.TestFactories
 	[LinearNetworkTest]
 	public class QaRelLineGroupConstraints : QaRelationTestFactory
 	{
-		private const string _groupConditionName = "GroupCondition";
-
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaLineGroupConstraints.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelLineGroupConstraints).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-					                  DocStrings.QaRelGroupConnected_relationTables),
-					new TestParameter("relation", typeof(string),
-					                  DocStrings.QaRelGroupConnected_relation),
-					new TestParameter("join", typeof(JoinType),
-					                  DocStrings.QaRelGroupConnected_join),
-					new TestParameter(
-						"minGap", typeof(double),
-						Tests.Documentation.DocStrings.QaLineGroupConstraints_minGap),
-					new TestParameter(
-						"minGroupLength", typeof(double),
-						Tests.Documentation.DocStrings
-						     .QaLineGroupConstraints_minGroupLength),
-					new TestParameter(
-						"minDangleLength", typeof(double),
-						Tests.Documentation.DocStrings
-						     .QaLineGroupConstraints_minDangleLength),
-					new TestParameter(
-						"groupBy", typeof(string),
-						Tests.Documentation.DocStrings.QaLineGroupConstraints_groupBy),
-					new TestParameter(
-						_groupConditionName, typeof(string),
-						DocStrings.QaRelLineGroupConstraints_GroupCondition,
-						isConstructorParameter: false)
-				};
-
-			AddOptionalTestParameters(
-				list, typeof(QaLineGroupConstraints),
-				ignoredTestParameters: new[]
-				                       {
-					                       nameof(QaLineGroupConstraints
-						                              .GroupConditions)
-				                       });
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelLineGroupConstraints;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -133,8 +79,8 @@ namespace ProSuite.QA.TestFactories
 		protected override ITest CreateTestInstance(object[] args)
 		{
 			var test = new QaLineGroupConstraints(
-				new[] {(IReadOnlyFeatureClass) args[0]}, (double) args[1], (double) args[2],
-				(double) args[3], new[] {(string) args[4]});
+				new[] { (IReadOnlyFeatureClass) args[0] }, (double) args[1], (double) args[2],
+				(double) args[3], new[] { (string) args[4] });
 
 			return test;
 		}
@@ -142,9 +88,10 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
-			if (testParameter.Name == _groupConditionName)
+			var factoryDef = (QaRelLineGroupConstraintsDefinition)FactoryDefinition;
+			if (testParameter.Name == factoryDef.GroupConditionName)
 			{
-				((QaLineGroupConstraints) test).GroupConditions = new[] {(string) value};
+				((QaLineGroupConstraints) test).GroupConditions = new[] { (string) value };
 			}
 			else
 			{

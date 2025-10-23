@@ -4,8 +4,8 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -20,44 +20,9 @@ namespace ProSuite.QA.TestFactories
 	[AttributeTest]
 	public class QaRelConstraint : QaRelationTestFactory
 	{
-		private const string _parameterNameApplyFilterInDatabase =
-			"ApplyFilterExpressionsInDatabase";
-
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelationConstraint).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// relationTables is partly redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list = new List<TestParameter>
-			           {
-				           new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-				                             DocStrings.QaRelConstraint_relationTables),
-				           new TestParameter("relation", typeof(string),
-				                             DocStrings.QaRelConstraint_relation),
-				           new TestParameter("join", typeof(JoinType),
-				                             DocStrings.QaRelConstraint_join),
-				           new TestParameter("constraint", typeof(IList<string>),
-				                             DocStrings.QaRelConstraint_constraint),
-				           new TestParameter(
-					           _parameterNameApplyFilterInDatabase, typeof(bool),
-					           DocStrings.QaRelConstraint_ApplyFilterExpressionsInDatabase,
-					           isConstructorParameter: false) {DefaultValue = false}
-			           };
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelConstraint;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -71,7 +36,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (! (objParams[0] is IList<IReadOnlyTable>))
+			if (! (objParams[0] is IList<ITableSchemaDef>))
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -98,14 +63,17 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[3];
 
-			var tables = (IList<IReadOnlyTable>) objParams[0];
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 			var constraints = (IList<string>) objParams[3];
 
+			var factoryDef = (QaRelConstraintDefinition) FactoryDefinition;
+
 			bool applyFilterInDatabase = GetParameterValue<bool>(testParameters,
 			                                                     datasetContext,
-			                                                     _parameterNameApplyFilterInDatabase);
+			                                                     factoryDef
+				                                                     .ParameterNameApplyFilterInDatabase);
 
 			IDictionary<string, string> replacements = GetTableNameReplacements(
 				Assert.NotNull(Condition).ParameterValues.OfType<DatasetTestParameterValue>(),
@@ -121,9 +89,8 @@ namespace ProSuite.QA.TestFactories
 			                                             whereClause,
 			                                             out string relationshipClassName);
 
-
-			if (!string.Equals(associationName, relationshipClassName,
-			                   StringComparison.OrdinalIgnoreCase))
+			if (! string.Equals(associationName, relationshipClassName,
+			                    StringComparison.OrdinalIgnoreCase))
 			{
 				replacements.Add(associationName, relationshipClassName);
 			}
@@ -196,8 +163,9 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
+			var factoryDef = (QaRelConstraintDefinition) FactoryDefinition;
 			if (string.Equals(testParameter.Name,
-			                  _parameterNameApplyFilterInDatabase,
+			                  factoryDef.ParameterNameApplyFilterInDatabase,
 			                  StringComparison.OrdinalIgnoreCase))
 			{
 				return;

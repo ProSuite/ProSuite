@@ -51,6 +51,39 @@ public static class RelationshipClassUtils
 		}
 	}
 
+	public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitionsForAnnotation([NotNull] Dataset originClass)
+	{
+		string originClassName = originClass.GetName();
+		using Datastore datastore = originClass.GetDatastore();
+		if (datastore is not ArcGIS.Core.Data.PluginDatastore.PluginDatastore)
+		{
+			using var geodatabase = datastore as ArcGIS.Core.Data.Geodatabase;
+			if (geodatabase != null)
+			{
+				Predicate<RelationshipClassDefinition> predicate =
+					relClass => string.Equals(relClass.GetOriginClass(),
+					                          originClassName,
+					                          StringComparison.OrdinalIgnoreCase);
+
+				foreach (RelationshipClassDefinition definition in
+				         RelationshipClassUtils.GetRelationshipClassDefinitions(geodatabase, predicate))
+				{
+					string destinationClassName = definition.GetDestinationClass();
+					if (!string.IsNullOrEmpty(destinationClassName))
+					{
+						using Table destinationClass = DatasetUtils.OpenDataset<Table>(geodatabase, destinationClassName);
+
+						if (destinationClass is ArcGIS.Core.Data.Mapping.AnnotationFeatureClass)
+						{
+							yield return definition;
+						}
+					}
+				}
+			}
+		}
+	}
+
+
 	public static RelationshipClass OpenRelationshipClass(
 		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 		[NotNull] string relClassName)

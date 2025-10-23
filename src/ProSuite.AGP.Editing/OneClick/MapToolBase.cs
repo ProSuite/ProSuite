@@ -102,9 +102,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				// TODO: Activated here...
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				ErrorHandler.HandleError(ex, _msg);
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -121,15 +121,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await OnToolDeactivateCoreAsync(hasMapViewChanged);
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				_msg.Warn(ex.Message, ex);
+				ErrorHandler.LogWarn(e, _msg);
 			}
 		}
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs args)
 		{
-			ViewUtils.Try(() =>
+			try
 			{
 				_msg.VerboseDebug(() => nameof(OnToolKeyDown));
 
@@ -147,7 +147,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				OnKeyDownCore(args);
-			}, _msg, suppressErrorMessageBox: true);
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.LogError(e, _msg);
+			}
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
@@ -158,7 +162,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (KeyboardUtils.IsShiftKey(args.Key))
 				{
-					await ShiftPressedAsync();
+					await ShiftPressedAsync(args);
 				}
 
 				if (args.Key == Key.Escape)
@@ -168,10 +172,9 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await HandleKeyDownCoreAsync(args);
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				// Use ErrorHandler to allow custom implementation of DialogService
-				ErrorHandler.HandleError(ex, _msg);
+				ErrorHandler.LogError(e, _msg);
 			}
 		}
 
@@ -193,7 +196,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ViewUtils.ShowError(e, _msg, true);
+				ErrorHandler.LogError(e, _msg);
 			}
 			finally
 			{
@@ -209,10 +212,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				await HandleKeyUpCoreAsync(args);
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
 				// Use ErrorHandler to allow custom implementation of DialogService
-				ErrorHandler.HandleError(ex, _msg);
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -405,7 +408,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
-		protected virtual Task ShiftPressedAsync()
+		protected virtual Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
 		{
 			return Task.CompletedTask;
 		}

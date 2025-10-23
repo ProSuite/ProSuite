@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -113,14 +114,30 @@ namespace ProSuite.Commons.UI.Env
 			return Implementation.ReleaseCursor();
 		}
 
+		[ItemCanBeNull]
+		public static async Task<CursorState> ReleaseCursorAsync()
+		{
+			return await Implementation.ReleaseCursorAsync();
+		}
+
 		public static void WithReleasedCursor([NotNull] Action procedure)
 		{
 			Implementation.WithReleasedCursor(procedure);
 		}
 
+		public static async Task WithReleasedCursorAsync([NotNull] Func<Task> function)
+		{
+			await Implementation.WithReleasedCursorAsync(function);
+		}
+
 		public static void RestoreCursor(CursorState cursorState)
 		{
 			Implementation.RestoreCursor(cursorState);
+		}
+
+		public static async Task RestoreCursorAsync(CursorState cursorState)
+		{
+			await Implementation.RestoreCursorAsync(cursorState);
 		}
 
 		#region Non-public methods

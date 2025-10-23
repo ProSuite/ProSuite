@@ -24,6 +24,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const float equalFloatValue = 1.111000001f;
 			const float unequalFloatValue = 1.11100001f;
 
+			DateTime dateTimeValue = new DateTime(2020, 1, 1, 12, 0, 0);
+			DateTime sameTimeValue = new DateTime(2020, 1, 1, 12, 0, 0);
+			DateTime differentTimeValue = new DateTime(2020, 1, 1, 12, 0, 1);
+
 			Assert.True(FieldUtils.AreValuesEqual(int16Value, int32Value));
 			Assert.True(FieldUtils.AreValuesEqual(int32Value, int16Value));
 
@@ -43,6 +47,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.False(FieldUtils.AreValuesEqual("aa", "AA"));
 			Assert.True(FieldUtils.AreValuesEqual("aa", "AA", caseSensitive: false));
+
+			Assert.True(FieldUtils.AreValuesEqual(dateTimeValue, dateTimeValue));
+			Assert.True(FieldUtils.AreValuesEqual(dateTimeValue, sameTimeValue));
+			Assert.False(FieldUtils.AreValuesEqual(dateTimeValue, differentTimeValue));
 		}
 
 		[Test]

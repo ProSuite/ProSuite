@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace ProSuite.GIS.Geodatabase.API
@@ -8,8 +9,8 @@ namespace ProSuite.GIS.Geodatabase.API
 		public int Code { get; }
 		public string Name { get; }
 
-		private readonly Dictionary<string, object> _defaultValues =
-			new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+		private readonly ConcurrentDictionary<string, object> _defaultValues =
+			new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
 		private readonly Dictionary<string, IDomain> _domains =
 			new Dictionary<string, IDomain>(StringComparer.OrdinalIgnoreCase);

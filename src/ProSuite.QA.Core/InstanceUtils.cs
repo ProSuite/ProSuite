@@ -70,6 +70,11 @@ namespace ProSuite.QA.Core
 				implementationAssemblyName = substituteAssembly;
 			}
 
+			if (implementationAssemblyName.EndsWith(AssemblyDefinitionsSuffix))
+			{
+				return implementationAssemblyName;
+			}
+
 			return $"{implementationAssemblyName}.{AssemblyDefinitionsSuffix}";
 		}
 
@@ -84,6 +89,7 @@ namespace ProSuite.QA.Core
 
 			return null;
 		}
+
 		/// <summary>
 		/// Returns test/instance definition name for the specified
 		/// test/instance implementation name (both have the same namespace), e.g.
@@ -92,6 +98,11 @@ namespace ProSuite.QA.Core
 		/// </summary>
 		public static string GetAlgorithmDefinitionName(string algorithmName)
 		{
+			if (algorithmName.EndsWith(AlgorithmDefinitionSuffix))
+			{
+				return algorithmName;
+			}
+
 			return $"{algorithmName}{AlgorithmDefinitionSuffix}";
 		}
 

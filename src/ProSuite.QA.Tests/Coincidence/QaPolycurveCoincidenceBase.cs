@@ -336,7 +336,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				if (! processed1.ContainsKey(poly1))
 				{
-					var list = new SegmentParts {poly1};
+					var list = new SegmentParts { poly1 };
 
 					list.IsComplete = true;
 					processed1.Add(poly1, list);
@@ -392,7 +392,7 @@ namespace ProSuite.QA.Tests.Coincidence
 					SegmentProxy neighbor = segments.GetSegment(partIndex, nbIndex0);
 					IList<double[]> limits;
 					SegmentUtils_.CutCurveCircle(neighbor, start, searchDistanceSquared, as3D,
-					                            out limits);
+					                             out limits);
 
 					double limit1 = 0;
 					foreach (double[] limit in limits)
@@ -437,7 +437,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				SegmentProxy neighbor = segments.GetSegment(partIndex, nbIndex0);
 				IList<double[]> limits;
 				SegmentUtils_.CutCurveCircle(neighbor, end, searchDistanceSquared, as3D,
-				                            out limits);
+				                             out limits);
 
 				double limit0 = 1;
 				foreach (double[] limit in limits)
@@ -1985,6 +1985,11 @@ namespace ProSuite.QA.Tests.Coincidence
 					"unexpected number of expressions " +
 					"(must be 1 or # of tables)");
 			}
+
+			public ExpressionBasedDistanceProvider(
+				ExpressionBasedDistanceProviderDefinition definition)
+				: this(definition.Expressions,
+				       definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList()) { }
 
 			[NotNull]
 			protected List<DoubleFieldExpression> Expressions

@@ -11,7 +11,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
@@ -73,15 +72,11 @@ namespace ProSuite.AGP.Editing.Cracker
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.CrackerOverlay);
-		}
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.CrackerOverlay);
 
-		protected override SelectionCursors GetSecondPhaseCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.CrackerOverlay);
-		}
+		protected override SelectionCursors SecondPhaseCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.CrackerOverlay);
 
 		protected override Task OnToolActivatingCoreAsync()
 		{
@@ -101,16 +96,6 @@ namespace ProSuite.AGP.Editing.Cracker
 			_feedback = null;
 
 			HideOptionsPane();
-		}
-
-		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
-			MapSelectionChangedEventArgs args)
-		{
-			bool result = await base.OnMapSelectionChangedCoreAsync(args);
-
-			//_vertexLabels.UpdateLabels();
-
-			return result;
 		}
 
 		protected override void LogPromptForSelection()

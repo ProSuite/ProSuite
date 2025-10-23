@@ -1,5 +1,5 @@
 using System;
-using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -9,9 +9,135 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.UI.WPF
 {
+	public class RelayCommand : ICommand
+	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private readonly Action _execute;
+		private readonly Func<bool> _canExecute;
+
+		private readonly Func<Task> _executeTask;
+		private bool _previousCanExecute;
+
+		/// <summary>
+		/// Initializes a new instance of <see cref="RelayCommand"/>.
+		/// </summary>
+		/// <param name="execute">The execution logic. If an unhandled exception occurs during this
+		/// action, it is likely to cause the host application to crash!</param>
+		/// <param name="canExecute">The execution status logic. If null, <seealso cref="CanExecute"/>
+		/// will always return true.</param>
+		public RelayCommand(Action execute, Func<bool> canExecute)
+		{
+			_execute = execute;
+			_canExecute = canExecute;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of <see cref="RelayCommand"/>.
+		/// </summary>
+		/// <param name="execute">The execution logic. If an unhandled exception occurs during this
+		/// action, it is likely to cause the host application to crash!</param>
+		/// <param name="canExecute">The execution status logic. If null, <seealso cref="CanExecute"/>
+		/// will always return true.</param>
+		public RelayCommand(Func<Task> execute, Func<bool> canExecute)
+		{
+			_executeTask = execute;
+			_canExecute = canExecute;
+		}
+
+		public void RaiseCanExecuteChanged(bool knownChanged = false,
+		                                   object parameter = null)
+		{
+			if (_canExecute == null)
+			{
+				return;
+			}
+
+			if (! knownChanged)
+			{
+				// This will test the Can method and trigger this method with knownChanged == true.
+				CanExecute(parameter);
+				return;
+			}
+
+			// NOTE (WinForms): Application.Current is null in ArcMap. Supposedly the non-modal
+			// dialog has it's own message pump which ensures the correct state of the UI.
+
+			// NOTE (WPF): When setting properties on objects that implement INotifyPropertyChanged
+			// from a background thread, WPF automatically invokes the setter on the UI thread
+			// which is necessary to avoid InvalidOperationExceptions ('The calling thread cannot
+			// access this object because a different thread owns it').
+			// However, for raising events this is not the case! The command and the event handler
+			// were created on the UI thread and hence must be accessed on the UI thread:
+			Application.Current?.Dispatcher.BeginInvoke(
+				new Action(delegate
+				{
+					// This invokes the CommandManager.RequerySuggested event which fires the
+					// CanExecuteChanged event below.
+					CommandManager.InvalidateRequerySuggested();
+				}),
+				DispatcherPriority.ApplicationIdle);
+		}
+
+		#region ICommand Members
+
+		public bool CanExecute(object parameter)
+		{
+			try
+			{
+				bool result = _canExecute?.Invoke() ?? true;
+
+				if (result != _previousCanExecute)
+				{
+					_previousCanExecute = result;
+
+					RaiseCanExecuteChanged(true);
+				}
+
+				return result;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Error in relay command's CanExecute method", e);
+
+				throw;
+			}
+		}
+
+		public event EventHandler CanExecuteChanged
+		{
+			add => CommandManager.RequerySuggested += value;
+			remove => CommandManager.RequerySuggested -= value;
+		}
+
+		public async void Execute(object parameter)
+		{
+			try
+			{
+				if (_executeTask != null)
+				{
+					await _executeTask();
+					return;
+				}
+
+				_execute();
+			}
+			catch (Exception e)
+			{
+				// Throwing from here can crash the (WinForms host) application.
+				// Just for diagnostic purposes, log the exception.
+				_msg.Debug("Error in relay command's Execute method", e);
+
+				throw;
+			}
+		}
+
+		#endregion
+	}
+
 	public class RelayCommand<T> : ICommand
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly Action<T> _execute;
 		private readonly Predicate<T> _canExecute;
@@ -22,7 +148,8 @@ namespace ProSuite.Commons.UI.WPF
 		/// <summary>
 		/// Initializes a new instance of <see cref="RelayCommand{T}"/>.
 		/// </summary>
-		/// <param name="execute">The execution logic.</param>
+		/// <param name="execute">The execution logic. If an unhandled exception occurs during this
+		/// action, it is likely to cause the host application to crash!</param>
 		/// <param name="canExecute">The execution status logic. If null, <seealso cref="CanExecute"/>
 		/// will always return true.</param>
 		public RelayCommand([NotNull] Action<T> execute,

@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
@@ -38,20 +39,23 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private const int _timeoutMilliseconds = 300000;
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
-			[NotNull] ICollection<Table> tables,
+			[NotNull] IEnumerable<Table> tables,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
 			[CanBeNull] IModelFactory modelFactory = null)
 		{
 			var datastoresByHandle = new Dictionary<long, Datastore>();
 			var spatialReferencesByWkId = new Dictionary<long, SpatialReference>();
 
+			ICollection<Table> tableCollection = CollectionUtils.GetCollection(tables);
+
 			GetProjectWorkspacesRequest request =
 				await QueuedTask.Run(() =>
 				{
-					AddWorkspaces(tables, datastoresByHandle);
-					AddSpatialReferences(tables.OfType<FeatureClass>(), spatialReferencesByWkId);
+					AddWorkspaces(tableCollection, datastoresByHandle);
+					AddSpatialReferences(tableCollection.OfType<FeatureClass>(),
+					                     spatialReferencesByWkId);
 
-					return CreateProjectWorkspacesRequest(tables);
+					return CreateProjectWorkspacesRequest(tableCollection);
 				});
 
 			if (request.ObjectClasses.Count == 0)
@@ -141,6 +145,68 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				CreateQualitySpecification(response, supportedInstanceDescriptors);
 
 			result.SetCloneId(specificationId);
+
+			return result;
+		}
+
+		public static QualityCondition CreateQualityCondition(
+			[NotNull] GetConditionResponse getConditionResponse,
+			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors = null)
+		{
+			// TODO: Copyied from below. Extract common method(s)!
+			IEnumerable<InstanceDescriptorMsg> descriptorsMsg =
+				getConditionResponse.ReferencedInstanceDescriptors;
+
+			if (instanceDescriptors == null)
+			{
+				instanceDescriptors = new SupportedInstanceDescriptors(
+					new List<TestDescriptor>(),
+					new List<TransformerDescriptor>(),
+					new List<IssueFilterDescriptor>());
+			}
+
+			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
+			{
+				if (instanceDescriptors.Contains(descriptorMsg.Name))
+				{
+					continue;
+				}
+
+				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
+				instanceDescriptors.AddDescriptor(instanceDescriptor);
+			}
+
+			Dictionary<int, IDdxDataset> datasetsById =
+				FromDatasetMsgs(getConditionResponse.ReferencedDatasets);
+
+			var models = new List<DdxModel>();
+
+			foreach (ModelMsg modelMsg in getConditionResponse.ReferencedModels)
+			{
+				DdxModel model =
+					CreateDdxModel(modelMsg, (msg) => new BasicModel(msg.ModelId, msg.Name));
+
+				foreach (int datasetId in modelMsg.DatasetIds)
+				{
+					if (datasetsById.TryGetValue(datasetId, out IDdxDataset dataset) &&
+					    ! model.Contains(dataset))
+					{
+						model.AddDataset((Dataset) dataset);
+					}
+				}
+
+				models.Add(model);
+			}
+
+			IDictionary<string, DdxModel> modelsByWorkspaceId =
+				models.ToDictionary(m => m.Id.ToString(CultureInfo.InvariantCulture),
+				                    m => (DdxModel) m);
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			QualityCondition result =
+				factory.CreateQualityCondition(getConditionResponse.Condition);
 
 			return result;
 		}
@@ -353,7 +419,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (DatasetMsg datasetMsg in response.Datasets)
 			{
-				_msg.DebugFormat("Adding dataset details to {0}", datasetMsg.Name);
+				_msg.DebugFormat("Adding dataset details to {0} / ID: {1}", datasetMsg.Name,
+				                 datasetMsg.DatasetId);
 
 				// TODO: Move this to the model factory
 				if (! datasetsById.TryGetValue(datasetMsg.DatasetId, out IDdxDataset dataset))
@@ -403,11 +470,12 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (NetworkDatasetMsg networkDatasetMsg in linearNetworkMsg.NetworkDatasets)
 			{
-				VectorDataset vectorDataset = vectorDatasets.FirstOrDefault(
-					vd => vd.Id == networkDatasetMsg.DatasetId);
+				VectorDataset vectorDataset =
+					vectorDatasets.FirstOrDefault(vd => vd.Id == networkDatasetMsg.DatasetId);
 
-				Assert.NotNull(
-					$"Vector dataset <id> {networkDatasetMsg.DatasetId} not found in provided datasets");
+				Assert.NotNull(vectorDataset,
+				               $"Linear Network {linearNetworkMsg.Name}: Vector dataset <id> " +
+				               $"{networkDatasetMsg.DatasetId} not in editable datasets");
 
 				var networkDataset = new LinearNetworkDataset(vectorDataset);
 				networkDataset.WhereClause = networkDatasetMsg.WhereClause;
@@ -533,8 +601,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				request.ObjectClasses.Add(objectClassMsg);
 
 				WorkspaceMsg workspaceMsg =
-					workspaceMessages.FirstOrDefault(
-						wm => wm.WorkspaceHandle == objectClassMsg.WorkspaceHandle);
+					workspaceMessages.FirstOrDefault(wm => wm.WorkspaceHandle ==
+					                                       objectClassMsg.WorkspaceHandle);
 
 				if (workspaceMsg == null)
 				{
@@ -654,37 +722,21 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					                   .Select(datasetId => datasetsById[datasetId])
 					                   .ToList();
 
-				var projectWorkspace = new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
-				                                            projectMsg.Name,
-				                                            datasets, datastore, sr)
-				                       {
-					                       IsMasterDatabaseWorkspace =
-						                       projectWorkspaceMsg.IsMasterDatabaseWorkspace
-				                       };
-
-				projectWorkspace.ExcludeReadOnlyDatasetsFromProjectWorkspace =
-					projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace;
-
-				var projectSettings =
-					new ProjectSettings(projectMsg.ProjectId,
-					                    projectMsg.ShortName,
-					                    projectMsg.Name)
+				var projectWorkspace =
+					new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
+					                     projectMsg.Name,
+					                     datasets, datastore, sr)
 					{
-						MinimumScaleDenominator = projectMsg.MinimumScaleDenominator,
-
-						AttributeEditorConfigDirectory =
-							ProtobufGeomUtils.EmptyToNull(projectMsg.AttributeEditorConfigDir),
-						ToolConfigDirectory =
-							ProtobufGeomUtils.EmptyToNull(projectMsg.ToolConfigDirectory),
-						WorkListConfigDirectory =
-							ProtobufGeomUtils.EmptyToNull(projectMsg.WorkListConfigDir),
+						IsMasterDatabaseWorkspace = projectWorkspaceMsg.IsMasterDatabaseWorkspace,
+						ExcludeReadOnlyDatasetsFromProjectWorkspace =
+							projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace
 					};
 
-				projectSettings.SetFullExtent(
-					projectMsg.FullExtentXMin,
-					projectMsg.FullExtentYMin,
-					projectMsg.FullExtentXMax,
-					projectMsg.FullExtentYMax);
+				var projectSettings =
+					new ProjectSettings(projectMsg.ProjectId, projectMsg.ShortName,
+					                    projectMsg.Name);
+
+				ReadProjectSettings(projectMsg, projectSettings);
 
 				projectWorkspace.ProjectSettings = projectSettings;
 
@@ -692,6 +744,23 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 
 			return result;
+		}
+
+		public static void ReadProjectSettings([NotNull] ProjectMsg fromProjectMsg,
+		                                       [NotNull] IProjectSettings intoProjectSettings)
+		{
+			intoProjectSettings.MinimumScaleDenominator = fromProjectMsg.MinimumScaleDenominator;
+			intoProjectSettings.AttributeEditorConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.AttributeEditorConfigDir);
+			intoProjectSettings.ToolConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.ToolConfigDirectory);
+			intoProjectSettings.WorkListConfigDirectory =
+				ProtobufGeomUtils.EmptyToNull(fromProjectMsg.WorkListConfigDir);
+
+			intoProjectSettings.FullExtentXMin = fromProjectMsg.FullExtentXMin;
+			intoProjectSettings.FullExtentYMin = fromProjectMsg.FullExtentYMin;
+			intoProjectSettings.FullExtentXMax = fromProjectMsg.FullExtentXMax;
+			intoProjectSettings.FullExtentYMax = fromProjectMsg.FullExtentYMax;
 		}
 
 		private static Dictionary<int, IDdxDataset> FromDatasetMsgs(
