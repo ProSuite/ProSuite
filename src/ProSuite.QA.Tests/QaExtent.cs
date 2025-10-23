@@ -56,7 +56,7 @@ namespace ProSuite.QA.Tests
 		{
 			NumberFormat = "N1";
 
-			_perPart = perPart;
+			UsePerPart = perPart;
 		}
 
 		[InternallyUsedTest]
