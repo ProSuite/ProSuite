@@ -50,6 +50,11 @@ public abstract class AboutButtonBase : ButtonCommandBase
 	[CanBeNull]
 	protected abstract IConfigFileSearcher GetConfigFileSearcher();
 
+	protected virtual IEnumerable<KeyValuePair<string, string>> GetSessionContext()
+	{
+		yield break;
+	}
+
 	private void CollectInformation([NotNull] ICollection<AboutItem> items,
 	                                [CanBeNull] IConfigFileSearcher configFileSearcher)
 	{
@@ -111,6 +116,20 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		catch (Exception ex)
 		{
 			Add(items, currentSection, "Error", ex.Message, "error getting config info");
+		}
+
+		currentSection = AboutItem.SessionSection;
+
+		try
+		{
+			foreach (var pair in GetSessionContext())
+			{
+				Add(items, currentSection, pair.Key, pair.Value);
+			}
+		}
+		catch (Exception ex)
+		{
+			Add(items, currentSection, "Error", ex.Message);
 		}
 
 		currentSection = AboutItem.ProcessSection;
@@ -205,6 +224,7 @@ public class AboutItem
 
 	public static readonly string AddinSection = "Addin";
 	public static readonly string ConfigSection = "Config";
+	public static readonly string SessionSection = "Session";
 	public static readonly string ProcessSection = "Process";
 	public static readonly string RuntimeSection = "Runtime";
 
@@ -224,10 +244,12 @@ public class AboutItem
 			return 1;
 		if (string.Equals(section, ConfigSection, StringComparison.OrdinalIgnoreCase))
 			return 2;
-		if (string.Equals(section, ProcessSection, StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(section, SessionSection, StringComparison.OrdinalIgnoreCase))
 			return 3;
-		if (string.Equals(section, RuntimeSection, StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(section, ProcessSection, StringComparison.OrdinalIgnoreCase))
 			return 4;
+		if (string.Equals(section, RuntimeSection, StringComparison.OrdinalIgnoreCase))
+			return 5;
 
 		return 999;
 	}

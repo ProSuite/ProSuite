@@ -118,7 +118,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 					default:
 						throw new ArgumentOutOfRangeException(
-							$"Unsupported workspace type: {connector?.GetType()}");
+							$"Unsupported workspace type: {connector.GetType()}");
 				}
 			}
 			catch (Exception e)
@@ -409,7 +409,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				default:
 					throw new ArgumentOutOfRangeException(
-						$"Unsupported workspace type: {connector?.GetType()}");
+						$"Unsupported workspace type: {connector.GetType()}");
 			}
 		}
 
@@ -498,6 +498,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
 
 			return sb.ToString();
+		}
+
+		/// <summary>
+		/// Very simple utility to determine whether the dataset or field is
+		/// unqualified. Works at least for Oracle DB.
+		/// </summary>
+		public static string Unqualified(string name)
+		{
+			if (name is null) return null;
+			int index = name.LastIndexOf('.');
+			if (index < 0) return name;
+			return name.Substring(index + 1);
 		}
 
 		public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)

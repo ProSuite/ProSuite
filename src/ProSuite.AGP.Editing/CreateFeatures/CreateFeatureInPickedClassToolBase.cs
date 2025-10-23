@@ -146,6 +146,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
+				// TODO exclude fields: pass table/featureClass
 				await StoreNewFeature(featureLayer, originalFeature, sketchGeometry,
 				                      GetExclusionFieldNames(), cancelableProgressor);
 
