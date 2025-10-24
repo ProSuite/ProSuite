@@ -169,6 +169,7 @@ namespace ProSuite.QA.Tests.Test
 					                             typeof(QaMeasuresAtPoints),
 					                             typeof(QaMinAngle),
 					                             typeof(QaMinArea),
+					                             typeof(QaMinExtent),
 					                             typeof(QaMinIntersect),
 					                             typeof(QaMinLength),
 					                             typeof(QaMinMeanSegmentLength),
@@ -501,6 +502,7 @@ namespace ProSuite.QA.Tests.Test
 			AddQaLineIntersectZCases(model, testCases);
 			AddQaMaxSlopeCases(model, testCases);
 			AddQaMinAngleCases(model, testCases);
+			AddQaMinExtentCases(model, testCases);
 			AddQaMinSegAngleCases(model, testCases);
 			AddQaMonotonicZCases(model, testCases);
 			AddQaMpFootprintHolesCases(model, testCases);
@@ -1988,6 +1990,21 @@ namespace ProSuite.QA.Tests.Test
 					                                     model.GetVectorDataset(),
 					                                     model.GetVectorDataset()
 				                                     },
+				                                     1
+			                                     },
+			                                     optionalValues));
+		}
+
+		private static void AddQaMinExtentCases(TestDataModel model,
+		                                        ICollection<TestDefinitionCase> testCases)
+		{
+			var optionalValues = new Dictionary<string, object>();
+			optionalValues.Add("PerPart", false);
+
+			testCases.Add(new TestDefinitionCase(typeof(QaMinExtent), 0,
+			                                     new object[]
+			                                     {
+				                                     model.GetVectorDataset(),
 				                                     1
 			                                     },
 			                                     optionalValues));
