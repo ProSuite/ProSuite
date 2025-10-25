@@ -11,6 +11,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Misc;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Dialogs;
@@ -63,6 +64,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private string _zoomToVerifiedPerimeterToolTip;
 		private ICommand _openWorkListCommand;
 		private string _openWorkListToolTip;
+
+		private readonly Latch _latch = new Latch();
 
 		#endregion
 
@@ -457,7 +460,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_openWorkListCommand == null)
 				{
 					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
-						vm => OpenWorkList(),
+						vm => _ = OpenWorkList(),
 						vm => CanOpenWorkList());
 				}
 
@@ -528,7 +531,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		[CanBeNull]
 		private IQualityVerificationResult VerificationResult =>
-			ProgressTracker.QualityVerificationResult;
+			ProgressTracker?.QualityVerificationResult;
 
 		public async Task<ServiceCallStatus> RunBackgroundVerificationAsync()
 		{
@@ -608,13 +611,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
 			{
-				ViewUtils.RunOnUIThread(
-					() =>
+				await ViewUtils.RunOnUIThread(
+					async () =>
 					{
 						try
 						{
-							ApplicationController.OpenWorkList(Assert.NotNull(VerificationResult),
-							                                   true);
+							IQualityVerificationResult verificationResult =
+								Assert.NotNull(VerificationResult);
+
+							await ApplicationController.OpenWorkList(
+								verificationResult, replaceExisting: true);
 						}
 						catch (Exception ex)
 						{
@@ -748,6 +754,12 @@ namespace ProSuite.UI.QA.VerificationProgress
 					    SaveErrorsToolTip = "Save found issues once the verification is finished";
 					    result = false;
 				    }
+
+				    if (_latch.IsLatched)
+				    {
+					    SaveErrorsToolTip = "Issues are already being saved";
+					    result = false;
+				    }
 				    else
 				    {
 					    string reason = null;
@@ -778,11 +790,29 @@ namespace ProSuite.UI.QA.VerificationProgress
 					return;
 				}
 
-				await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
-				                                            UpdateOptions.ErrorDeletionType,
-				                                            ! UpdateOptions.KeepPreviousIssues);
+				if (_latch.IsLatched)
+				{
+					_msg.Debug("SaveIssues already running, returning");
+					return;
+				}
 
-				_saveErrorsCommand?.RaiseCanExecuteChanged();
+				try
+				{
+					_latch.Increment();
+
+					Mouse.OverrideCursor = Cursors.Wait;
+
+					await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
+					                                            UpdateOptions.ErrorDeletionType,
+					                                            ! UpdateOptions.KeepPreviousIssues);
+
+					_saveErrorsCommand?.RaiseCanExecuteChanged();
+				}
+				finally
+				{
+					_latch.Decrement();
+					Mouse.OverrideCursor = null;
+				}
 			}
 			catch (Exception e)
 			{

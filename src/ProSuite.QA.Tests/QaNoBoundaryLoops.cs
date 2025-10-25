@@ -13,6 +13,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -100,6 +101,11 @@ namespace ProSuite.QA.Tests
 				SpatialReferenceUtils.GetXyResolution(polygonClass.SpatialReference);
 			_xyTolerance = xyTolerance;
 		}
+
+		[InternallyUsedTest]
+		public QaNoBoundaryLoops([NotNull] QaNoBoundaryLoopsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.PolygonClass, definition.ErrorGeometry,
+			       definition.AreaRelation, definition.AreaLimit) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{

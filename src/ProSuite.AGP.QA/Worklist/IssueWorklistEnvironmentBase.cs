@@ -11,6 +11,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.QA.WorkList
@@ -136,11 +137,16 @@ namespace ProSuite.AGP.QA.WorkList
 					IAttributeReader attributeReader =
 						WorkListItemDatastore.CreateAttributeReader(tableDefinition, attributes);
 
-					datastoresByHandle.TryAdd(table.GetDatastore().Handle, table.GetDatastore());
+					Datastore datastore = table.GetDatastore();
 
-					sourceClasses.Add(new DatabaseSourceClass(new GdbTableIdentity(table), schema,
-					                                          attributeReader,
-					                                          defaultDefinitionQuery));
+					datastoresByHandle.TryAdd(datastore.Handle, datastore);
+
+					WorkspaceDbType dbType = WorkspaceUtils.GetWorkspaceDbType(datastore);
+
+					var databaseSourceClass = new DatabaseSourceClass(new GdbTableIdentity(table),
+						schema, attributeReader, defaultDefinitionQuery, dbType);
+
+					sourceClasses.Add(databaseSourceClass);
 				}
 
 				if (datastoresByHandle.Count == 0)

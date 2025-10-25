@@ -59,7 +59,8 @@ namespace ProSuite.DomainModel.AO.Test.QA
 			var condition = new QualityCondition("BaseCondition", testDesc);
 			TestParameterValueUtils.AddParameterValue(condition, "table", dataset);
 			const string format = "N1";
-			TestParameterValueUtils.AddParameterValue(condition, "Format", format);
+
+			InstanceConfigurationUtils.AddScalarParameterValue(condition, "Format", format);
 
 			var factory = TestFactoryUtils.CreateTestFactory(condition);
 			Assert.IsNotNull(factory);
@@ -126,7 +127,7 @@ namespace ProSuite.DomainModel.AO.Test.QA
 			var condition = new QualityCondition("BaseCondition", testDesc);
 			TestParameterValueUtils.AddParameterValue(condition, "table", dataset);
 			const string value = "obsoleteValue";
-			TestParameterValueUtils.AddParameterValue(condition, "Obsolete", value);
+			InstanceConfigurationUtils.AddScalarParameterValue(condition, "Obsolete", value);
 
 			var factory = TestFactoryUtils.CreateTestFactory(condition);
 			Assert.IsNotNull(factory);
@@ -151,7 +152,8 @@ namespace ProSuite.DomainModel.AO.Test.QA
 
 			TestParameterValueUtils.AddParameterValue(condition, "table", dataset);
 			const string format = "N1";
-			TestParameterValueUtils.AddParameterValue(condition, "Format", format);
+			InstanceConfigurationUtils.AddScalarParameterValue(
+				condition, "Format", format);
 
 			var factory = TestFactoryUtils.CreateTestFactory(condition);
 			Assert.IsNotNull(factory);

@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -39,8 +40,16 @@ namespace ProSuite.QA.Tests.Transformers
 			_t1 = t1;
 			_relationName = relationName;
 			_joinType = joinType;
-			_involved = new List<IReadOnlyTable> {t0, t1};
+			_involved = new List<IReadOnlyTable> { t0, t1 };
 		}
+
+		[InternallyUsedTest]
+		public TrTableJoin(TrTableJoinDefinition definition)
+			: this((IReadOnlyTable)definition.T0,
+			       (IReadOnlyTable)definition.T1,
+			       definition.RelationName,
+			       definition.JoinType)
+		{ }
 
 		IList<IReadOnlyTable> IInvolvesTables.InvolvedTables => _involved;
 

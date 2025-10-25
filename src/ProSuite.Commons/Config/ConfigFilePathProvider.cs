@@ -5,16 +5,16 @@ namespace ProSuite.Commons.Config
 {
 	public class ConfigFilePathProvider : IConfigFilePathProvider
 	{
-		[NotNull] private readonly ConfigurationDirectorySearcher _appConfigDirSearcher;
-		[NotNull] private readonly ConfigurationDirectorySearcher _loggingConfigDirSearcher;
+		[NotNull] private readonly IConfigFileSearcher _appConfigDirSearcher;
+		[NotNull] private readonly IConfigFileSearcher _loggingConfigDirSearcher;
 
 		public ConfigFilePathProvider(
-			[NotNull] ConfigurationDirectorySearcher configDirSearcher)
+			[NotNull] IConfigFileSearcher configDirSearcher)
 			: this(configDirSearcher, configDirSearcher) { }
 
 		public ConfigFilePathProvider(
-			[NotNull] ConfigurationDirectorySearcher appConfigDirSearcher,
-			[NotNull] ConfigurationDirectorySearcher loggingConfigDirSearcher)
+			[NotNull] IConfigFileSearcher appConfigDirSearcher,
+			[NotNull] IConfigFileSearcher loggingConfigDirSearcher)
 		{
 			_appConfigDirSearcher = appConfigDirSearcher;
 			_loggingConfigDirSearcher = loggingConfigDirSearcher;

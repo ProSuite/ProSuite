@@ -88,12 +88,12 @@ namespace ProSuite.Microservices.Client.QA
 			//       The caller must assign the catalog path or connection props, if necessary.
 
 			result.DataSources.AddRange(
-				usedModelsById.Select(
-					kvp => new DataSourceMsg
-					       {
-						       Id = kvp.Key.ToString(CultureInfo.InvariantCulture),
-						       ModelName = kvp.Value.Name
-					       }));
+				usedModelsById.Select(kvp => new DataSourceMsg
+				                             {
+					                             Id = kvp.Key.ToString(
+						                             CultureInfo.InvariantCulture),
+					                             ModelName = kvp.Value.Name
+				                             }));
 
 			return result;
 		}
@@ -786,8 +786,9 @@ namespace ProSuite.Microservices.Client.QA
 			}
 
 			var objectTypeBySubtypeCode = new Dictionary<int, ObjectType>();
-			foreach (ObjectCategoryMsg objectTypeMsg in detailedDatasetMsg.ObjectCategories.Where(
-				         m => m.ObjectSubtypeCriterion.Count == 0))
+			foreach (ObjectCategoryMsg objectTypeMsg in
+			         detailedDatasetMsg.ObjectCategories.Where(m => m.ObjectSubtypeCriterion
+				                                                   .Count == 0))
 			{
 				ObjectType objectType =
 					objectDataset.AddObjectType(objectTypeMsg.SubtypeCode, objectTypeMsg.Name);
@@ -798,8 +799,9 @@ namespace ProSuite.Microservices.Client.QA
 			}
 
 			// ObjectSubtypes:
-			foreach (ObjectCategoryMsg subTypeMsg in detailedDatasetMsg.ObjectCategories.Where(
-				         m => m.ObjectSubtypeCriterion.Count > 0))
+			foreach (ObjectCategoryMsg subTypeMsg in
+			         detailedDatasetMsg.ObjectCategories.Where(m => m.ObjectSubtypeCriterion.Count >
+				                                                   0))
 			{
 				ObjectType objectType = objectTypeBySubtypeCode[subTypeMsg.SubtypeCode];
 
@@ -1135,6 +1137,10 @@ namespace ProSuite.Microservices.Client.QA
 					break;
 				case GeometryTypeTerrain _:
 					geometryType = ProSuiteGeometryType.Terrain;
+					break;
+				case GeometryTypeGeometricNetwork _:
+					// It is possible that there are still geometric networks around!
+					geometryType = ProSuiteGeometryType.Unknown;
 					break;
 				default:
 					throw new ArgumentOutOfRangeException(

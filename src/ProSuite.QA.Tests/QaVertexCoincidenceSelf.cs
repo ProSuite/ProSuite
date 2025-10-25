@@ -97,6 +97,22 @@ namespace ProSuite.QA.Tests
 			UpdateSearchDistance();
 		}
 
+		[InternallyUsedTest]
+		public QaVertexCoincidenceSelf([NotNull] QaVertexCoincidenceSelfDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.AllowedNonCoincidenceCondition)
+		{
+			PointTolerance = definition.PointTolerance;
+			EdgeTolerance = definition.EdgeTolerance;
+			RequireVertexOnNearbyEdge = definition.RequireVertexOnNearbyEdge;
+			CoincidenceTolerance = definition.CoincidenceTolerance;
+			Is3D = definition.Is3D;
+			VerifyWithinFeature = definition.VerifyWithinFeature;
+			ZTolerance = definition.ZTolerance;
+			ZCoincidenceTolerance = definition.ZCoincidenceTolerance;
+			ReportCoordinates = definition.ReportCoordinates;
+		}
+
 		[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_PointTolerance))]
 		[TestParameter(_defaultUseXyTolerance)]
 		public double PointTolerance

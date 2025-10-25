@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
@@ -29,7 +30,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			TestUtils.InitializeLicense(activateAdvancedLicense:true);
+			TestUtils.InitializeLicense(activateAdvancedLicense: true);
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaMustBeNearOtherTest");
 		}

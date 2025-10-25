@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -16,9 +17,20 @@ namespace ProSuite.QA.Tests.Transformers
 	{
 		private readonly ISpatialReference _targetSpatialReference;
 
-		public TrProject(IReadOnlyFeatureClass featureClass, int targetSpatialReferenceId)
+		[DocTr(nameof(DocTrStrings.TrProject_0))]
+		public TrProject(
+			[NotNull][DocTr(nameof(DocTrStrings.TrProject_featureClass))]
+			IReadOnlyFeatureClass featureClass,
+			[NotNull][DocTr(nameof(DocTrStrings.TrProject_targetSpatialReferenceId))]
+			int targetSpatialReferenceId)
 			: this(featureClass,
 			       SpatialReferenceUtils.CreateSpatialReference(targetSpatialReferenceId)) { }
+
+		[InternallyUsedTest]
+		public TrProject(
+			[NotNull] TrProjectDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.TargetSpatialReferenceId) { }
 
 		private TrProject(IReadOnlyFeatureClass featureClass,
 		                  ISpatialReference targetSpatialReference)

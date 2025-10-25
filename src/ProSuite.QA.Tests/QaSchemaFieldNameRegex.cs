@@ -64,6 +64,11 @@ namespace ProSuite.QA.Tests
 			_regex = new Regex(pattern, RegexOptions.Compiled);
 		}
 
+		[InternallyUsedTest]
+		public QaSchemaFieldNameRegex([NotNull] QaSchemaFieldNameRegexDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.Pattern,
+			       definition.MatchIsError, definition.PatternDescription) { }
+
 		public override int Execute()
 		{
 			int errorCount = 0;

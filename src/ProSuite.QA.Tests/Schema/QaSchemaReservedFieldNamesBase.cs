@@ -40,6 +40,33 @@ namespace ProSuite.QA.Tests.Schema
 
 		#endregion
 
+		protected QaSchemaReservedFieldNamesBase(
+			[NotNull] QaSchemaReservedFieldNamesDefinition definition)
+			: base((IReadOnlyTable) definition.Table,
+			       new[] { (IReadOnlyTable) definition.ReservedNamesTable })
+		{
+			_table = (IReadOnlyTable) definition.Table;
+
+			if (definition.ReservedNames != null)
+			{
+				_reservedNames = ToReservedNames(definition.ReservedNames);
+			}
+			else
+			{
+				Assert.ArgumentNotNull(definition.ReservedNamesTable,
+				                       nameof(definition.ReservedNamesTable));
+				Assert.ArgumentNotNull(definition.ReservedNameFieldName,
+				                       nameof(definition.ReservedNameFieldName));
+				Assert.ArgumentNotNullOrEmpty(definition.ReservedReasonFieldName,
+				                              nameof(definition.ReservedReasonFieldName));
+
+				_reservedNamesTable = (IReadOnlyTable) definition.ReservedNamesTable;
+				_reservedNameFieldName = definition.ReservedNameFieldName;
+				_reservedReasonFieldName = definition.ReservedReasonFieldName;
+				_validNameFieldName = definition.ValidNameFieldName;
+			}
+		}
+
 		protected QaSchemaReservedFieldNamesBase([NotNull] IReadOnlyTable table,
 		                                         [NotNull] IEnumerable<string> reservedNames)
 			: base(table)
@@ -49,11 +76,7 @@ namespace ProSuite.QA.Tests.Schema
 
 			_table = table;
 
-			_reservedNames = new List<ReservedName>();
-			foreach (string reservedName in reservedNames)
-			{
-				_reservedNames.Add(new ReservedName(reservedName));
-			}
+			_reservedNames = ToReservedNames(reservedNames);
 		}
 
 		protected QaSchemaReservedFieldNamesBase([NotNull] IReadOnlyTable table,
@@ -66,7 +89,7 @@ namespace ProSuite.QA.Tests.Schema
 		                                         [CanBeNull] string reservedReasonFieldName,
 		                                         [CanBeNull] string validNameFieldName,
 		                                         [CanBeNull] IReadOnlyTable referenceTable = null)
-			: base(table, new[] {reservedNamesTable, referenceTable})
+			: base(table, new[] { reservedNamesTable, referenceTable })
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(reservedNamesTable, nameof(reservedNamesTable));
@@ -274,6 +297,18 @@ namespace ProSuite.QA.Tests.Schema
 
 			issueCode = Codes[Code.FieldNameIsReserved];
 			return sb.ToString();
+		}
+
+		private static List<ReservedName> ToReservedNames(IEnumerable<string> reservedNames)
+		{
+			var result = new List<ReservedName>();
+
+			foreach (string reservedName in reservedNames)
+			{
+				result.Add(new ReservedName(reservedName));
+			}
+
+			return result;
 		}
 
 		private class ReservedName

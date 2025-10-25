@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -55,6 +56,13 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMinIntersect_limit))]
 			double limit)
 			: this(new[] {polygonClass}, limit) { }
+
+		[InternallyUsedTest]
+		public QaMinIntersect(QaMinIntersectDefinition definition)
+			: this(definition.PolygonClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.Limit)
+		{ }
 
 		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
 		                                  IReadOnlyRow row2, int tableIndex2)

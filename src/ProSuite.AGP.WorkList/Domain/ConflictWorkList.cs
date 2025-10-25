@@ -7,7 +7,8 @@ namespace ProSuite.AGP.WorkList.Domain;
 public class ConflictWorkList : DbStatusWorkList
 {
 	public ConflictWorkList([NotNull] IWorkItemRepository repository,
-	                        [NotNull] Geometry areaOfInterest, [NotNull] string name,
+	                        [NotNull] Geometry areaOfInterest,
+	                        [NotNull] string name,
 	                        [NotNull] string displayName) : base(
 		repository, areaOfInterest, name, displayName) { }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -66,6 +67,33 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return SketchGeometryType.Rectangle;
 	}
 
+	protected override async Task<bool?> GetEditSketchHasZ()
+	{
+		Stopwatch watch = Stopwatch.StartNew();
+
+		bool? result = await QueuedTask.Run(() =>
+		{
+			var selectedOidByLayer =
+				SelectionUtils.GetSelection(ActiveMapView.Map).FirstOrDefault();
+
+			FeatureLayer layer = selectedOidByLayer.Key as FeatureLayer;
+
+			if (layer == null)
+			{
+				_msg.Debug($"{Caption}: no feature layer found in selection");
+				return null;
+			}
+
+			FeatureClass featureClass = layer.GetFeatureClass();
+
+			return featureClass?.GetDefinition()?.HasZ();
+		});
+
+		_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
+
+		return result;
+	}
+
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{
@@ -118,6 +146,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
+				// TODO exclude fields: pass table/featureClass
 				await StoreNewFeature(featureLayer, originalFeature, sketchGeometry,
 				                      GetExclusionFieldNames(), cancelableProgressor);
 
@@ -280,8 +309,9 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 	{
 		using FeatureClassDefinition featureClassDefinition = targetFeatureClass.GetDefinition();
 
-		var pointGeometries = multipoint.Points.Select(
-			p => CreatePointGeometry(p, featureClassDefinition)).ToList();
+		var pointGeometries = multipoint.Points
+		                                .Select(p => CreatePointGeometry(p, featureClassDefinition))
+		                                .ToList();
 
 		var copies = new Dictionary<Feature, IList<Geometry>>
 		             { { originalFeature, pointGeometries } };

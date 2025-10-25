@@ -96,6 +96,13 @@ namespace ProSuite.QA.Tests
 			AddCustomQueryFilterExpression(validDuplicateConstraint);
 		}
 
+		[InternallyUsedTest]
+		public QaDuplicateGeometrySelf(
+			[NotNull] QaDuplicateGeometrySelfDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass,
+			       definition.ValidDuplicateConstraint, definition.ReportSingleErrorPerDuplicateSet)
+		{ }
+
 		public override bool RetestRowsPerIntersectedTile(int tableIndex)
 		{
 			// if no duplicate is found in the first tile, then there is none

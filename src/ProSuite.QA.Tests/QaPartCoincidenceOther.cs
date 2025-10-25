@@ -116,6 +116,16 @@ namespace ProSuite.QA.Tests
 
 		protected override bool IsDirected => true;
 
+		[InternallyUsedTest]
+		public QaPartCoincidenceOther([NotNull] QaPartCoincidenceOtherDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       (IReadOnlyFeatureClass) definition.Reference, definition.Near,
+			       definition.ConnectedMinLength, definition.DisjointMinLength,
+			       definition.Is3D, definition.TileSize, definition.CoincidenceTolerance)
+		{
+			IgnoreNeighborCondition = definition.IgnoreNeighborCondition;
+		}
+
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_IgnoreNeighborCondition))]
 		public string IgnoreNeighborCondition

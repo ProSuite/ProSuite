@@ -193,6 +193,26 @@ namespace ProSuite.QA.Tests
 				new Dictionary<Group, NetGrower<NodesDirectedRow>>(groupByComparer);
 		}
 
+		[InternallyUsedTest]
+		public QaLineGroupConstraints(QaLineGroupConstraintsDefinition definition)
+			: this(definition.NetworkFeatureClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.MinGap,
+			       definition.MinGroupLength, definition.MinDangleLength,definition.GroupBy)
+		{
+			ValueSeparator = definition.ValueSeparator;
+			GroupConditions = definition.GroupConditions;
+			MinGapToOtherGroupType = definition.MinGapToOtherGroupType;
+			MinDangleLengthContinued = definition.MinDangleLengthContinued;
+			MinDangleLengthAtForkContinued = definition.MinDangleLengthAtForkContinued;
+			MinDangleLengthAtFork = definition.MinDangleLengthAtForkContinued;
+			MinGapToSameGroupTypeCovered = definition.MinGapToSameGroupTypeCovered;
+			MinGapToSameGroupTypeAtFork = definition.MinGapToSameGroupTypeAtFork;
+			MinGapToSameGroupTypeAtForkCovered = definition.MinGapToSameGroupTypeAtForkCovered;
+			MinGapToOtherGroupTypeAtFork = definition.MinGapToOtherGroupTypeAtFork;
+			MinGapToSameGroup = definition.MinGapToSameGroupTypeAtFork;
+		}
+
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaLineGroupConstraints_ValueSeparator))]
 		public string ValueSeparator

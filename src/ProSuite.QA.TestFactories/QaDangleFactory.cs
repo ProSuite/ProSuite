@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
@@ -14,29 +15,11 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[LinearNetworkTest]
-	public class QaDangleFactory : TestFactory
+	public class QaDangleFactory : QaFactoryBase
 	{
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConnections.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaConnections).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			var list = new List<TestParameter>
-			           {
-				           new TestParameter("polylineClasses", typeof(IReadOnlyFeatureClass[]),
-				                             DocStrings.QaDangleFactory_polylineClasses)
-			           };
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaDangleFactory;
 
 		protected override object[] Args(
 			[NotNull] IOpenDataset datasetContext,
@@ -50,17 +33,17 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] is IReadOnlyFeatureClass[] == false)
+			if (objParams[0] is IFeatureClassSchemaDef[] == false)
 			{
 				throw new ArgumentException(string.Format(
-					                            "expected IReadOnlyFeatureClass[], got {0}",
+					                            "expected IFeatureClassSchemaDef[], got {0}",
 					                            objParams[0].GetType()));
 			}
 
 			var objects = new object[2];
 			objects[0] = objParams[0];
 
-			var featureClasses = (IReadOnlyFeatureClass[]) objParams[0];
+			var featureClasses = (IFeatureClassSchemaDef[]) objParams[0];
 
 			int featureClassCount = featureClasses.Length;
 			var rules = new string[featureClassCount];
@@ -92,10 +75,12 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var featureClasses = (IReadOnlyFeatureClass[]) args[0];
+			var featureClasses = (IFeatureClassSchemaDef[]) args[0];
 			var rules = (IList<string[]>) args[1];
 
-			return new QaConnections(featureClasses, rules);
+			var connectionDefinition = new QaConnectionsDefinition(featureClasses, rules);
+
+			return new QaConnections(connectionDefinition);
 		}
 	}
 }

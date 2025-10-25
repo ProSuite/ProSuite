@@ -34,13 +34,11 @@ namespace ProSuite.AGP.WorkList
 
 		public long ArcGISTableId => _tableIdentity.Id;
 
-		[NotNull]
 		public string Name => _tableIdentity.Name;
 
-		[CanBeNull]
 		public IAttributeReader AttributeReader { get; set; }
 
-		public string DefinitionQuery { get; protected set; }
+		public string DefaultDefinitionQuery { get; protected set; }
 
 		private string GetRelevantSubFields(bool excludeGeometry = false)
 		{
@@ -144,7 +142,7 @@ namespace ProSuite.AGP.WorkList
 
 		public override string ToString()
 		{
-			return string.IsNullOrEmpty(DefinitionQuery) ? Name : $"{Name}, {DefinitionQuery}";
+			return string.IsNullOrEmpty(DefaultDefinitionQuery) ? Name : $"{Name}, {DefaultDefinitionQuery}";
 		}
 	}
 }

@@ -76,6 +76,12 @@ namespace ProSuite.QA.Tests
 				featureClass, limit,
 				featureClass.ShapeType == esriGeometryType.esriGeometryMultiPatch) { }
 
+		[InternallyUsedTest]
+		public QaSegmentLength(
+			[NotNull] QaSegmentLengthDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.Limit,
+			       definition.Is3D) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			AssertValidInvolvedTableIndex(tableIndex);

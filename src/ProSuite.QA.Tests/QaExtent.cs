@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -18,12 +16,8 @@ namespace ProSuite.QA.Tests
 	/// </summary>
 	[UsedImplicitly]
 	[GeometryTest]
-	public class QaExtent : ContainerTest
+	public class QaExtent : QaExtentBase
 	{
-		private readonly double _limit;
-		private readonly bool _perPart;
-		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
-
 		#region issue codes
 
 		[CanBeNull] private static TestIssueCodes _codes;
@@ -58,12 +52,18 @@ namespace ProSuite.QA.Tests
 			double limit,
 			[Doc(nameof(DocStrings.QaExtent_perPart))]
 			bool perPart)
-			: base(featureClass)
+			: base(featureClass, limit)
 		{
-			_limit = limit;
 			NumberFormat = "N1";
 
-			_perPart = perPart;
+			UsePerPart = perPart;
+		}
+
+		[InternallyUsedTest]
+		public QaExtent(
+		[NotNull] QaExtentDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass, definition.Limit, definition.PerPart)
+		{
 		}
 
 		public override bool IsQueriedTable(int tableIndex)
@@ -76,58 +76,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
-		{
-			var feature = (IReadOnlyFeature) row;
-
-			IGeometry shape = feature.Shape;
-
-			if (! _perPart)
-			{
-				return ExecutePart(row, shape);
-			}
-
-			int errorCount = 0;
-
-			foreach (IGeometry part in GetParts(shape))
-			{
-				errorCount += ExecutePart(row, part);
-
-				if (part != shape)
-				{
-					// the part is some sub-component of the feature, either 
-					// a ring, path or a connected-component polygon
-					// -> release it to avoid pushing the VM allocation up
-					Marshal.ReleaseComObject(part);
-				}
-			}
-
-			return errorCount;
-		}
-
-		[NotNull]
-		private static IEnumerable<IGeometry> GetParts([NotNull] IGeometry shape)
-		{
-			var polygon = shape as IPolygon;
-			if (polygon != null)
-			{
-				foreach (
-					IGeometry part in
-					TestUtils.GetParts(polygon, PolygonPartType.ExteriorRing))
-				{
-					yield return part;
-				}
-			}
-			else
-			{
-				foreach (IGeometry part in GeometryUtils.GetParts((IGeometryCollection) shape))
-				{
-					yield return part;
-				}
-			}
-		}
-
-		private int ExecutePart([NotNull] IReadOnlyRow row, [NotNull] IGeometry geometry)
+		protected override int ExecutePartForRow(IReadOnlyRow row, IGeometry geometry)
 		{
 			IEnvelope envelope = GetEnvelope(geometry);
 
@@ -138,35 +87,21 @@ namespace ProSuite.QA.Tests
 
 			double max = Math.Max(envelope.Width, envelope.Height);
 
-			if (max <= _limit)
+			if (max <= Limit)
 			{
 				return NoError;
 			}
 
-			string description = string.Format("Extent {0}",
-			                                   FormatLengthComparison(
-				                                   max, ">", _limit,
-				                                   geometry.SpatialReference));
+			string description = string.Format(
+				"Extent {0}",
+				FormatLengthComparison(max, ">", Limit, geometry.SpatialReference));
+
+			IGeometry errorGeometry = GeometryUtils.GetHighLevelGeometry(geometry);
+
 			return ReportError(
 				description, InvolvedRowUtils.GetInvolvedRows(row),
-				geometry, Codes[Code.ExtentLargerThanLimit],
+				errorGeometry, Codes[Code.ExtentLargerThanLimit],
 				TestUtils.GetShapeFieldName(row));
-		}
-
-		[NotNull]
-		private IEnvelope GetEnvelope([NotNull] IGeometry geometry)
-		{
-			try
-			{
-				geometry.QueryEnvelope(_envelopeTemplate);
-			}
-			catch (COMException)
-			{
-				// empty geometry?
-				_envelopeTemplate.SetEmpty();
-			}
-
-			return _envelopeTemplate;
 		}
 	}
 }

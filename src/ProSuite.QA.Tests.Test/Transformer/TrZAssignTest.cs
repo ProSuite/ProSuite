@@ -12,6 +12,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.AO.Test;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.Test.Construction;
@@ -171,7 +172,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			IReadOnlyFeatureClass roFc = ReadOnlyTableFactory.Create(fc);
 			TrZAssign tr = new TrZAssign(roFc, rds)
-			               { ZAssignOption = TrZAssign.AssignOption.All };
+			               { ZAssignOption = AssignOption.All };
 			QaZDifferenceSelf test =
 				new QaZDifferenceSelf(tr.GetTransformed(), 1, 2, ZComparisonMethod.BoundingBox,
 				                      null);
@@ -218,7 +219,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				tr.ZAssignOption = TrZAssign.AssignOption.All;
+				tr.ZAssignOption = AssignOption.All;
 
 				var runner = new QaContainerTestRunner(2000, test);
 				runner.Execute();
@@ -267,7 +268,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.AreEqual(1, runner.Errors.Count);
 			}
 			{
-				tr.ZAssignOption = TrZAssign.AssignOption.All;
+				tr.ZAssignOption = AssignOption.All;
 
 				var runner = new QaContainerTestRunner(2000, test);
 				runner.Execute();

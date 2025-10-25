@@ -211,7 +211,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				{
 					Id = sourceClass.GetUniqueTableId(),
 					Name = tableIdentity.Name,
-					DefinitionQuery = sourceClass.DefinitionQuery
+					DefinitionQuery = sourceClass.DefaultDefinitionQuery
 				};
 
 			if (sourceClass is DatabaseSourceClass dbStatusSourceClass)

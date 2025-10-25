@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -91,6 +92,11 @@ public class ArcFields : IFields
 
 	public int FindFieldByAliasName(string aliasName)
 	{
+		if (string.IsNullOrEmpty(aliasName))
+		{
+			return -1;
+		}
+
 		return FindField(
 			f => f.AliasName.Equals(aliasName, StringComparison.OrdinalIgnoreCase));
 	}
@@ -109,6 +115,20 @@ public class ArcFields : IFields
 
 		return -1;
 	}
+
+	#region Implementation of IEnumerable
+
+	public IEnumerator<IField> GetEnumerator()
+	{
+		return _fields.GetEnumerator();
+	}
+
+	IEnumerator IEnumerable.GetEnumerator()
+	{
+		return GetEnumerator();
+	}
+
+	#endregion
 }
 
 public class ArcField : IField

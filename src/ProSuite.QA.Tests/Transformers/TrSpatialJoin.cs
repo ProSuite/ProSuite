@@ -11,6 +11,7 @@ using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -18,12 +19,6 @@ namespace ProSuite.QA.Tests.Transformers
 	[TableTransformer]
 	public class TrSpatialJoin : TableTransformer<TransformedFeatureClass>
 	{
-		public enum SearchOption
-		{
-			Tile,
-			All
-		}
-
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 
 		[DocTr(nameof(DocTrStrings.TrSpatialJoin_0))]
@@ -33,6 +28,20 @@ namespace ProSuite.QA.Tests.Transformers
 			[NotNull] [DocTr(nameof(DocTrStrings.TrSpatialJoin_t1))]
 			IReadOnlyFeatureClass t1)
 			: base(CastToTables(t0, t1)) { }
+
+		[InternallyUsedTest]
+		public TrSpatialJoin(
+			[NotNull] TrSpatialJoinDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.T0, (IReadOnlyFeatureClass) definition.T1)
+		{
+			Constraint = definition.Constraint;
+			OuterJoin = definition.OuterJoin;
+			NeighborSearchOption = (SearchOption) definition.NeighborSearchOption;
+			Grouped = definition.Grouped;
+			T0Attributes = definition.T0Attributes;
+			T1Attributes = definition.T1Attributes;
+			T1CalcAttributes = definition.T1CalcAttributes;
+		}
 
 		[TestParameter]
 		[DocTr(nameof(DocTrStrings.TrSpatialJoin_Constraint))]

@@ -556,6 +556,33 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Transforms the geometries of the featureClass to a new spatial reference defined by the targetSpatialReferenceId. The transformed feature class retains the attributes of the original featureClass, which can be accessed using t0.&lt;fieldName&gt;..
+        /// </summary>
+        public static string TrProject_0 {
+            get {
+                return ResourceManager.GetString("TrProject_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class containing the geometries to be transformed. The geometries in this feature class will be projected to the spatial reference defined by the targetSpatialReferenceId..
+        /// </summary>
+        public static string TrProject_featureClass {
+            get {
+                return ResourceManager.GetString("TrProject_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ID of the target spatial reference to which the geometries in the featureClass will be projected. This ID corresponds to a specific coordinate system or projection, such as WGS 84 or another predefined spatial reference system..
+        /// </summary>
+        public static string TrProject_targetSpatialReferenceId {
+            get {
+                return ResourceManager.GetString("TrProject_targetSpatialReferenceId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms features of &apos;t0&apos; and features of &apos;t1&apos; to features, with shape of &apos;t0&apos; if they intersect..
         /// </summary>
         public static string TrSpatialJoin_0 {
@@ -668,6 +695,24 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string TrSpatiallyFiltered_FilteringSearchOption {
             get {
                 return ResourceManager.GetString("TrSpatiallyFiltered_FilteringSearchOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Appends tables.
+        /// </summary>
+        public static string TrTableAppend_0 {
+            get {
+                return ResourceManager.GetString("TrTableAppend_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to tables to append.
+        /// </summary>
+        public static string TrTableAppend_tables {
+            get {
+                return ResourceManager.GetString("TrTableAppend_tables", resourceCulture);
             }
         }
         

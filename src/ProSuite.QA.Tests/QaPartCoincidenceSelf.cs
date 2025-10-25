@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
@@ -116,7 +117,7 @@ namespace ProSuite.QA.Tests
 		// TODO document
 		[InternallyUsedTest] // not yet for public use
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_7))]
-		public QaPartCoincidenceSelf(
+		private QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
 			ICollection<IReadOnlyFeatureClass> featureClasses,
 			double searchDistance,
@@ -134,6 +135,18 @@ namespace ProSuite.QA.Tests
 			       new ExpressionBasedDistanceProvider(disjointMinLengthExpressionsSql,
 			                                           featureClasses),
 			       is3D, coincidenceTolerance) { }
+
+		[InternallyUsedTest]
+		public QaPartCoincidenceSelf([NotNull] QaPartCoincidenceSelfDefinition definition)
+	: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>(),
+		   definition.Near, definition.ConnectedMinLength, definition.DisjointMinLength,
+		   definition.Is3D, definition.TileSize, definition.CoincidenceTolerance)
+		{
+			if (definition.IgnoreNeighborConditions != null)
+			{
+				IgnoreNeighborConditions = definition.IgnoreNeighborConditions;
+			}
+		}
 
 		/// <summary>
 		/// needed to set sqlCaseSensitivity

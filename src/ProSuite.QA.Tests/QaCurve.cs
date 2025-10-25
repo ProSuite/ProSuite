@@ -60,6 +60,15 @@ namespace ProSuite.QA.Tests
 			_shapeFieldName = featureClass.ShapeFieldName;
 		}
 
+		[InternallyUsedTest]
+		public QaCurve(
+		[NotNull] QaCurveDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass)
+		{
+			AllowedNonLinearSegmentTypes = definition.AllowedNonLinearSegmentTypes;
+			GroupIssuesBySegmentType = definition.GroupIssuesBySegmentType;
+		}
+
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaCurve_AllowedNonLinearSegmentTypes))]
 		public IList<NonLinearSegmentType> AllowedNonLinearSegmentTypes { get; set; }

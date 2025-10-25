@@ -11,6 +11,7 @@ using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -75,6 +76,16 @@ namespace ProSuite.QA.Tests
 
 			AngleUnit = AngleUnit.Degree;
 		}
+
+		[InternallyUsedTest]
+		public QaMpHorizontalAzimuths(
+			[NotNull] QaMpHorizontalAzimuthsDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.MultiPatchClass,
+			       definition.NearAngle,
+			       definition.AzimuthTolerance,
+			       definition.HorizontalTolerance,
+			       definition.PerRing)
+		{ }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{

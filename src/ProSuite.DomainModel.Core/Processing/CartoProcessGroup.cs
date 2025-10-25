@@ -15,7 +15,7 @@ namespace ProSuite.DomainModel.Core.Processing
 
 		[UsedImplicitly] private string _name;
 		[UsedImplicitly] private string _description;
-		[UsedImplicitly] private CommandDescriptor _associatedCommand;
+		[UsedImplicitly] private ICommandDescriptor _associatedCommand;
 		[UsedImplicitly] private string _associatedCommandIcon;
 		[UsedImplicitly] private CartoProcessType _associatedGroupProcessType;
 
@@ -61,7 +61,7 @@ namespace ProSuite.DomainModel.Core.Processing
 
 		#endregion
 
-		public CommandDescriptor AssociatedCommand
+		public ICommandDescriptor AssociatedCommand
 		{
 			get { return _associatedCommand; }
 			set { _associatedCommand = value; }

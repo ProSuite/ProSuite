@@ -210,8 +210,7 @@ namespace ProSuite.Microservices.Server.AO.QA.Distributed
 
 			IList<SubVerification> subVerifications = CreateSubVerifications(
 				_originalRequest, QualitySpecification,
-				qcGroups,
-				_originalRequest.MaxParallelProcessing);
+				qcGroups, _originalRequest.MaxParallelProcessing);
 
 			// TODO: Create a structure to check which tileParallel verifications are completed
 

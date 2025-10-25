@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -11,7 +12,7 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.TestFactories
 {
-	public abstract class QaRelationTestFactory : TestFactory
+	public abstract class QaRelationTestFactory : QaFactoryBase
 	{
 		[NotNull]
 		protected static string CombineTableParameters(

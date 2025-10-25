@@ -114,7 +114,7 @@ namespace ProSuite.Commons.UI.Env
 			return Implementation.ReleaseCursor();
 		}
 
-		[NotNull]
+		[ItemCanBeNull]
 		public static async Task<CursorState> ReleaseCursorAsync()
 		{
 			return await Implementation.ReleaseCursorAsync();

@@ -36,6 +36,14 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// </summary>
 		public bool IncludeXmlFiles { get; set; }
 
+		/// <summary>
+		/// Iff non-<c>null</c>, write mapping files to this directory.
+		/// The written mapping files may help debug mapping issues.
+		/// The directory will be created. CAUTION: if the directory
+		/// already exists, all contained .hbm.xml files WILL BE DELETED.
+		/// </summary>
+		public string MappingFilesOutputPath { get; set; }
+
 		public void ConfigureMapping(Configuration nhConfiguration)
 		{
 			if (IncludeXmlFiles)
@@ -67,11 +75,12 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 			nhConfiguration.AddMapping(mapping);
 
-#if DEBUG
-			// This will write all the XML into the bin/mappings folder
-			var mappings = mapper.CompileMappingForEachExplicitlyAddedEntity();
-			AdaptMappings(mappings).WriteAllXmlMapping();
-#endif
+			if (!string.IsNullOrEmpty(MappingFilesOutputPath))
+			{
+				// This will write all the mappings as .hbm.xml into the given folder (useful for debugging)
+				var mappings = mapper.CompileMappingForEachExplicitlyAddedEntity();
+				AdaptMappings(mappings).WriteAllXmlMapping(MappingFilesOutputPath);
+			}
 		}
 
 		/// <summary>

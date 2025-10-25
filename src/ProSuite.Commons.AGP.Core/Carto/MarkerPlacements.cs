@@ -315,8 +315,13 @@ public static class MarkerPlacements
 			if (options.Endings != EndingsType.Unconstrained)
 			{
 				double m = (L - A - E) / P;
-				double k = Math.Round(m); // number of pattern repeats
-				double s = L / (A + k * P + E); // stretch/squeeze factor
+				double k =  Math.Max(Math.Round(m), 0.0); // number of pattern repeats
+				double stretchedLength = A + k * P + E;
+				if (stretchedLength == 0)
+				{
+					stretchedLength = L;
+				}
+				double s = L / stretchedLength; // stretch/squeeze factor
 
 				a = s * A;
 				e = s * E;
@@ -333,10 +338,12 @@ public static class MarkerPlacements
 			double linePos = a; // -p + a;
 			int index = 0;
 
-			while (linePos <= L - e)
+			// TODO: Use either an integer loop or a relative tolerance
+			const double tolerance = 1e-5;
+			while (linePos <= L - e + tolerance)
 			{
 				// TODO Optimization: walk segments in parallel to this while loop, not nested in QueryXY call
-				if (QueryXY(part, linePos, out double x, out double y))
+				if (QueryXY(part, Math.Min(linePos, L - e), out double x, out double y))
 				{
 					yield return Translated(marker, x, y);
 				}

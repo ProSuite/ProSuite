@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -94,6 +95,22 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;
+		}
+
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			bool? result = await QueuedTask.Run(() =>
+			{
+				FeatureClass currentTargetClass = GetCurrentTargetClass(out _);
+
+				return currentTargetClass?.GetDefinition()?.HasZ();
+			});
+
+			_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
+
+			return result;
 		}
 
 		protected override Task OnToolActivatingCoreAsync()
@@ -233,13 +250,12 @@ namespace ProSuite.AGP.Editing.CreateFeatures
 		{
 			try
 			{
-				await QueuedTaskUtils.Run(
-					async () =>
-					{
-						FeatureClass newFeatureClass = GetCurrentTargetClass(out _);
+				await QueuedTaskUtils.Run(async () =>
+				{
+					FeatureClass newFeatureClass = GetCurrentTargetClass(out _);
 
-						await TargetClassChangedAsync(newFeatureClass);
-					});
+					await TargetClassChangedAsync(newFeatureClass);
+				});
 			}
 			catch (Exception ex)
 			{

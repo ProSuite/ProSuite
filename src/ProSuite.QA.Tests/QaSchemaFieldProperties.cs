@@ -37,6 +37,13 @@ namespace ProSuite.QA.Tests
 			                                             expectedDomainName, fieldIsOptional);
 		}
 
+		[InternallyUsedTest]
+		public QaSchemaFieldProperties([NotNull] QaSchemaFieldPropertiesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.FieldName,
+			       (esriFieldType) definition.ExpectedFieldType, definition.ExpectedFieldLength,
+			       definition.ExpectedAliasName, definition.ExpectedDomainName,
+			       definition.FieldIsOptional) { }
+
 		protected override IEnumerable<FieldSpecification> GetFieldSpecifications()
 		{
 			return new[] {_fieldSpecification};

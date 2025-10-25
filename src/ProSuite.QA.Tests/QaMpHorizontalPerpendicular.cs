@@ -9,10 +9,9 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -82,6 +81,16 @@ namespace ProSuite.QA.Tests
 
 			AngleUnit = AngleUnit.Degree;
 		}
+
+		[InternallyUsedTest]
+		public QaMpHorizontalPerpendicular(
+			[NotNull] QaMpHorizontalPerpendicularDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass,
+			       definition.NearAngle,
+			       definition.AzimuthTolerance,
+			       definition.HorizontalTolerance,
+			       definition.ConnectedOnly,
+			       definition.ConnectedTolerance) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{

@@ -69,6 +69,55 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 		}
 
 		[Test]
+		public void CanTransformToFromConditionMsg()
+		{
+			// TODO: Remove once Definitions are added
+			string serverBinDir = Environment.GetEnvironmentVariable("GOTOP_SERVER_DIR");
+			Assert.IsNotNull(serverBinDir, "GOTOP_SERVER_DIR not set");
+
+			PrivateAssemblyUtils.AddCodeBaseDir(serverBinDir);
+
+			QualitySpecification qualitySpecification = CreateQualitySpecification();
+
+			//
+			// Pack:
+			ConditionListSpecificationMsg specificationMsg =
+				ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
+					qualitySpecification, null, out var modelsById);
+
+			QualityConditionMsg condition0 = specificationMsg.Elements[0].Condition;
+
+			GetConditionResponse getConditionResponse = new GetConditionResponse()
+			                                            {
+				                                            Condition = condition0
+			                                            };
+
+			getConditionResponse.ReferencedInstanceDescriptors.AddRange(
+				ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
+
+			RepeatedField<DatasetMsg> referencedDatasets =
+				getConditionResponse.ReferencedDatasets;
+
+			foreach (DdxModel model in modelsById.Values)
+			{
+				ModelMsg modelMsg = ToModelMsg(model, referencedDatasets);
+				getConditionResponse.ReferencedModels.Add(modelMsg);
+			}
+
+			//
+			// Unpack:
+			QualityCondition rehydradetCondition =
+				DdxUtils.CreateQualityCondition(getConditionResponse);
+
+			Assert.AreEqual(qualitySpecification.Elements[0].QualityCondition.Name,
+			                rehydradetCondition.Name);
+
+			QualityCondition original = qualitySpecification.Elements[0].QualityCondition;
+
+			Assert.IsTrue(original.Equals(rehydradetCondition));
+		}
+
+		[Test]
 		public void CanTransformFromToDetailedDataset()
 		{
 			DdxModel model = CreateModel(out Dataset ds0, out Dataset ds1);

@@ -71,6 +71,16 @@ namespace ProSuite.QA.Tests
 			FlipExpression = _defaultFlipExpression;
 		}
 
+		[InternallyUsedTest]
+		public QaMonotonicZ(
+			[NotNull] QaMonotonicZDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.LineClass)
+		{
+			AllowConstantValues = definition.AllowConstantValues;
+			ExpectedMonotonicity = definition.ExpectedMonotonicity;
+			FlipExpression = definition.FlipExpression;
+		}
+
 		[Doc(nameof(DocStrings.QaMonotonicZ_AllowConstantValues))]
 		[TestParameter(_defaultAllowConstantValues)]
 		public bool AllowConstantValues { get; set; }

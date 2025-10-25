@@ -28,12 +28,12 @@ namespace ProSuite.QA.Tests
 
 		private readonly IReadOnlyFeatureClass _featureClass;
 		private readonly ISpatialReference _expectedSpatialReference;
-		private readonly bool _compareXyPrecision;
-		private readonly bool _compareZPrecision;
-		private readonly bool _compareMPrecision;
+		private bool _compareXyPrecision;
+		private bool _compareZPrecision;
+		private bool _compareMPrecision;
 		private readonly bool _compareXyTolerance;
-		private readonly bool _compareZTolerance;
-		private readonly bool _compareMTolerance;
+		private bool _compareZTolerance;
+		private bool _compareMTolerance;
 		private readonly bool _compareVerticalCoordinateSystems;
 		private readonly string _shapeFieldName;
 
@@ -98,10 +98,9 @@ namespace ProSuite.QA.Tests
 			bool compareMPrecision, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass, SpatialReferenceUtils.FromXmlString(spatialReferenceXml),
-				   compareXYPrecision, compareZPrecision, compareMPrecision,
-				   compareTolerances, compareTolerances, compareTolerances,
-				   compareVerticalCoordinateSystems)
-		{ }
+			       compareXYPrecision, compareZPrecision, compareMPrecision,
+			       compareTolerances, compareTolerances, compareTolerances,
+			       compareVerticalCoordinateSystems) { }
 
 		[Doc(nameof(DocStrings.QaSchemaSpatialReference_2))]
 		public QaSchemaSpatialReference(
@@ -132,15 +131,14 @@ namespace ProSuite.QA.Tests
 			bool compareUsedPrecisions, bool compareTolerances,
 			bool compareVerticalCoordinateSystems)
 			: this(featureClass,
-				   SpatialReferenceUtils.FromXmlString(spatialReferenceXml),
-				   compareUsedPrecisions,
-				   compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasZ,
-				   compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasM,
-				   compareTolerances,
-				   compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasZ,
-				   compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasM,
-				   compareVerticalCoordinateSystems)
-		{ }
+			       SpatialReferenceUtils.FromXmlString(spatialReferenceXml),
+			       compareUsedPrecisions,
+			       compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasZ,
+			       compareUsedPrecisions && DatasetUtils.GetGeometryDef(featureClass).HasM,
+			       compareTolerances,
+			       compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasZ,
+			       compareTolerances && DatasetUtils.GetGeometryDef(featureClass).HasM,
+			       compareVerticalCoordinateSystems) { }
 
 		/// <summary>
 		/// Prevents a default instance of the <see cref="QaSchemaSpatialReference"/> class from being created.
@@ -169,6 +167,45 @@ namespace ProSuite.QA.Tests
 			CompareXYDomainOrigin = _defaultCompareXyDomainOrigin;
 			CompareZDomainOrigin = _defaultCompareZDomainOrigin;
 			CompareMDomainOrigin = _defaultCompareMDomainOrigin;
+		}
+
+		/// <summary>
+		/// Constructor using Definition. Must always be the last constructor!
+		/// </summary>
+		/// <param name = "schemaSpatialReferenceDef" ></param >
+		[InternallyUsedTest]
+		public QaSchemaSpatialReference(
+			[NotNull] QaSchemaSpatialReferenceDefinition schemaSpatialReferenceDef)
+			: base((IReadOnlyFeatureClass) schemaSpatialReferenceDef.FeatureClass)
+		{
+			_featureClass = (IReadOnlyFeatureClass) schemaSpatialReferenceDef.FeatureClass;
+			_compareXyTolerance = schemaSpatialReferenceDef.CompareTolerances;
+			_compareVerticalCoordinateSystems =
+				schemaSpatialReferenceDef.CompareVerticalCoordinateSystems;
+			_shapeFieldName = schemaSpatialReferenceDef.FeatureClass.ShapeFieldName;
+
+			bool hasReferenceFeatureClass = schemaSpatialReferenceDef.ReferenceFeatureClass != null;
+			bool hasCompareUsedPrecisions =
+				schemaSpatialReferenceDef.CompareUsedPrecisions.HasValue;
+
+			if (hasReferenceFeatureClass)
+			{
+				_expectedSpatialReference = GetSpatialReference(
+					(IReadOnlyFeatureClass) schemaSpatialReferenceDef.ReferenceFeatureClass);
+				AddDummyTable(
+					(IReadOnlyFeatureClass) schemaSpatialReferenceDef.ReferenceFeatureClass);
+
+				SetPrecisionAndToleranceValues(schemaSpatialReferenceDef,
+				                               hasCompareUsedPrecisions);
+			}
+			else
+			{
+				_expectedSpatialReference =
+					SpatialReferenceUtils.FromXmlString(
+						schemaSpatialReferenceDef.SpatialReferenceXml);
+				SetPrecisionAndToleranceValues(schemaSpatialReferenceDef,
+				                               hasCompareUsedPrecisions);
+			}
 		}
 
 		[TestParameter(_defaultCompareXyDomainOrigin)]
@@ -214,6 +251,44 @@ namespace ProSuite.QA.Tests
 			protected override bool EqualsCore(IReadOnlyTable obj)
 			{
 				return _referenceFc == obj;
+			}
+		}
+
+		private void SetPrecisionAndToleranceValues(
+			QaSchemaSpatialReferenceDefinition schemaSpatialReferenceDef,
+			bool hasCompareUsedPrecisions)
+		{
+			if (hasCompareUsedPrecisions)
+			{
+				_compareXyPrecision =
+					Assert.NotNull(schemaSpatialReferenceDef.CompareUsedPrecisions).Value;
+
+				_compareZPrecision =
+					Assert.NotNull(schemaSpatialReferenceDef.CompareUsedPrecisions).Value &&
+					DatasetUtils.GetGeometryDef(
+						(IReadOnlyFeatureClass) schemaSpatialReferenceDef.FeatureClass).HasZ;
+				_compareMPrecision =
+					Assert.NotNull(schemaSpatialReferenceDef.CompareUsedPrecisions).Value &&
+					DatasetUtils.GetGeometryDef(
+						(IReadOnlyFeatureClass) schemaSpatialReferenceDef.FeatureClass).HasM;
+
+				_compareZTolerance =
+					schemaSpatialReferenceDef.CompareTolerances &&
+					DatasetUtils
+						.GetGeometryDef(
+							(IReadOnlyFeatureClass) schemaSpatialReferenceDef.FeatureClass).HasZ;
+				_compareMTolerance =
+					schemaSpatialReferenceDef.CompareTolerances && DatasetUtils.GetGeometryDef(
+						(IReadOnlyFeatureClass) schemaSpatialReferenceDef
+							.FeatureClass).HasM;
+			}
+			else
+			{
+				_compareXyPrecision = schemaSpatialReferenceDef.CompareXYPrecision;
+				_compareZPrecision = schemaSpatialReferenceDef.CompareZPrecision;
+				_compareMPrecision = schemaSpatialReferenceDef.CompareMPrecision;
+				_compareZTolerance = schemaSpatialReferenceDef.CompareTolerances;
+				_compareMTolerance = schemaSpatialReferenceDef.CompareTolerances;
 			}
 		}
 

@@ -17,6 +17,14 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			IReadOnlyFeatureClass intersecting)
 			: base(featureClassToFilter, intersecting) { }
 
+		[InternallyUsedTest]
+		public TrOnlyIntersectingFeatures(TrOnlyIntersectingFeaturesDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClassToFilter,
+			       (IReadOnlyFeatureClass)definition.Intersecting)
+		{
+			FilteringSearchOption = definition.FilteringSearchOption;
+		}
+
 		protected override SpatiallyFilteredBackingDataset CreateFilteredDataset(
 			FilteredFeatureClass resultClass)
 		{

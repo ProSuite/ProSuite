@@ -71,6 +71,12 @@ namespace ProSuite.QA.Tests
 			_invalidValue = invalidValue;
 		}
 
+		[InternallyUsedTest]
+		public QaMeasures(
+			[NotNull] QaMeasuresDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.InvalidValue) { }
+
 		#region Overrides of ContainerTest
 
 		public override bool IsQueriedTable(int tableIndex)
