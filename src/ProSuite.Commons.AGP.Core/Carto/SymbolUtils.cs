@@ -252,26 +252,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			{
 				foreach (var symbolLayer in multiLayerSymbol.SymbolLayers)
 				{
-					if (symbolLayer is CIMSolidFill soldFill)
-					{
-						soldFill.Color.SetAlpha(alpha);
-					}
-					else if (symbolLayer is CIMSolidStroke solidStroke)
-					{
-						solidStroke.Color.SetAlpha(alpha);
-					}
-					else if (symbolLayer is CIMVectorMarker vectorMarker &&
-					         vectorMarker.MarkerGraphics != null)
-					{
-						foreach (var markerGraphic in vectorMarker.MarkerGraphics)
-						{
-							markerGraphic.Symbol.SetAlpha(alpha);
-						}
-					}
-					else if (symbolLayer is CIMCharacterMarker characterMarker)
-					{
-						characterMarker.Symbol.SetAlpha(alpha);
-					}
+					symbolLayer.SetAlpha(alpha);
 				}
 			}
 			else if (symbol is CIMTextSymbol textSymbol)
@@ -281,6 +262,36 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			// else: should not occur (all symbols are either MultiLayer or Text)
 
 			return symbol;
+		}
+
+		/// <summary>
+		/// Same as <see cref="SetAlpha(CIMSymbol,float)"/>
+		/// but for an individual symbol layer.
+		/// </summary>
+		public static CIMSymbolLayer SetAlpha(this CIMSymbolLayer symbolLayer, float alpha)
+		{
+			if (symbolLayer is CIMSolidFill soldFill)
+			{
+				soldFill.Color.SetAlpha(alpha);
+			}
+			else if (symbolLayer is CIMSolidStroke solidStroke)
+			{
+				solidStroke.Color.SetAlpha(alpha);
+			}
+			else if (symbolLayer is CIMVectorMarker vectorMarker &&
+			         vectorMarker.MarkerGraphics != null)
+			{
+				foreach (var markerGraphic in vectorMarker.MarkerGraphics)
+				{
+					markerGraphic.Symbol.SetAlpha(alpha);
+				}
+			}
+			else if (symbolLayer is CIMCharacterMarker characterMarker)
+			{
+				characterMarker.Symbol.SetAlpha(alpha);
+			}
+
+			return symbolLayer;
 		}
 
 		/// <summary>
@@ -384,6 +395,26 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			hatchFill.Separation = separation;
 			hatchFill.LineSymbol = CreateLineSymbol(color);
 			return hatchFill;
+		}
+
+		public static T SetJoinStyle<T>(this T stroke, LineJoinStyle style) where T : CIMStroke
+		{
+			if (stroke is not null)
+			{
+				stroke.JoinStyle = style;
+			}
+
+			return stroke;
+		}
+
+		public static T SetCapStyle<T>(this T stroke, LineCapStyle style) where T : CIMStroke
+		{
+			if (stroke is not null)
+			{
+				stroke.CapStyle = style;
+			}
+
+			return stroke;
 		}
 
 		/// <remarks>
@@ -620,10 +651,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return layer;
 		}
 
-		public static CIMSymbolLayer AddOffset(
-			this CIMSymbolLayer layer, double offset,
+		public static T AddOffset<T>(
+			this T layer, double offset,
 			GeometricEffectOffsetMethod method = GeometricEffectOffsetMethod.Bevelled,
 			GeometricEffectOffsetOption option = GeometricEffectOffsetOption.Accurate)
+			where T : CIMSymbolLayer
 		{
 			return layer.AddEffect(CreateEffectOffset(offset, method, option));
 		}
