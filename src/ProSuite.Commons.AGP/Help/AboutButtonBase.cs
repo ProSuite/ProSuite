@@ -44,6 +44,11 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		return Task.FromResult(true);
 	}
 
+	protected virtual string EnvironmentName => "Production";
+
+	protected virtual string AddInVersion => "0.1.0"; // SemVer default
+	protected virtual string AddInFileName => null; // unknown
+
 	[CanBeNull]
 	protected abstract string GetConfigDirEnvVar();
 
@@ -64,15 +69,10 @@ public abstract class AboutButtonBase : ButtonCommandBase
 
 		try
 		{
-			var assembly = Assembly.GetExecutingAssembly();
-			var version = assembly.GetName().Version;
-
-			Add(items, currentSection, "Addin Version", Convert.ToString(version), "reflected");
-
-			var proVersion = Assembly.GetEntryAssembly()?.GetName().Version;
-
-			Add(items, currentSection, "ArcGIS Pro Version", Convert.ToString(proVersion),
-			    "reflected");
+			Add(items, currentSection, "Addin Version", AddInVersion, "reflected");
+			Add(items, currentSection, "Addin file name", AddInFileName, "reflected");
+			
+			Add(items, currentSection, "ArcGIS Pro Version", GetProVersion(), "reflected");
 		}
 		catch (Exception ex)
 		{
@@ -83,6 +83,8 @@ public abstract class AboutButtonBase : ButtonCommandBase
 
 		try
 		{
+			Add(items, currentSection, "Environment", EnvironmentName);
+
 			string configDirEnvVar = GetConfigDirEnvVar();
 
 			if (configDirEnvVar == null)
@@ -177,6 +179,20 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		//{
 		//	Add(items, "All Addins", "Error", ex.Message, "getting all Addin infos failed");
 		//}
+	}
+
+	protected virtual string GetProVersion()
+	{
+		try
+		{
+			var assembly = Assembly.GetEntryAssembly();
+			var assemblyName = assembly?.GetName();
+			return Convert.ToString(assemblyName?.Version);
+		}
+		catch (Exception ex)
+		{
+			return ex.Message;
+		}
 	}
 
 	private static void GetAllAddinInfos(ICollection<AboutItem> items)
