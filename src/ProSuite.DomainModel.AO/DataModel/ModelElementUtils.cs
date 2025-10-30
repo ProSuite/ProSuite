@@ -355,13 +355,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 					spatialReferenceDescriptor == null &&
 					knownGeometryType == esriGeometryType.esriGeometryNull;
 
-				string query = $"SELECT * FROM {gdbDatasetName}";
+				string fieldList = GetFieldList((IWorkspace) workspace, gdbDatasetName);
+
+				string query = $"SELECT {fieldList} FROM {gdbDatasetName}";
 
 				ISqlWorkspace2 sqlWorkspace2 = (ISqlWorkspace2) sqlWorkspace;
-				
-				sqlWorkspace2.GetQueryDescription2(query, discoverSpatialProperties);
 
-				queryDescription = sqlWorkspace.GetQueryDescription(query);
+				// NOTE: discoverSpatialProperties = false is only fast if the field list is not '*'
+				queryDescription = sqlWorkspace2.GetQueryDescription2(query, discoverSpatialProperties);
 
 				if (knownGeometryType != esriGeometryType.esriGeometryNull)
 				{
@@ -416,8 +417,18 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (hasUnknownSref && queryDescription.IsSpatialQuery)
 			{
-				queryDescription.SpatialReference =
+				ISpatialReference spatialReference =
 					spatialReferenceDescriptor?.GetSpatialReference();
+
+				if (spatialReference != null)
+				{
+					queryDescription.SpatialReference = spatialReference;
+					queryDescription.Srid = spatialReference.FactoryCode.ToString();
+				}
+				else
+				{
+					_msg.DebugFormat("No spatial reference provided by spatial reference descriptor!");
+				}
 			}
 
 			string queryLayerName = null;
@@ -605,6 +616,41 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			return null;
+		}
+		private static string GetFieldList(IWorkspace sqlWorkspace, string tableName)
+		{
+			var sqlWs = sqlWorkspace as ISqlWorkspace;
+
+			if (sqlWs == null)
+			{
+				return "*";
+			}
+
+			try
+			{
+				var queryDescription =
+					sqlWs.GetQueryDescription($"SELECT * FROM {tableName} WHERE 1=0");
+
+				var result = new List<string>();
+
+				foreach (IField field in DatasetUtils.EnumFields(queryDescription.Fields))
+				{
+					if (field.Type != esriFieldType.esriFieldTypeBlob &&
+					    field.Type != esriFieldType.esriFieldTypeRaster)
+					{
+						result.Add(field.Name);
+					}
+				}
+
+				return StringUtils.Concatenate(result, ","); ;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Error getting field list from {tableName}: " +
+				           $"{ex.Message}. Using '*' instead", ex);
+
+				return "*";
+			}
 		}
 	}
 }
