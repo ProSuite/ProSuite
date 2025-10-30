@@ -94,9 +94,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public bool UpdateIssuesInVerifiedModelContext { get; set; }
 
-		// The following properties in the region are irrelevant for GP verification
 		public ErrorDeletionInPerimeter IssueDeletionInPerimeter { get; set; }
 
+		// The following properties in the region are irrelevant for GP verification
 		public bool DeleteObsoleteAllowedErrors => false;
 
 		public bool InvalidateAllowedErrorsIfQualityConditionWasUpdated { get; set; }

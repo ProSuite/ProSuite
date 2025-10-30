@@ -573,6 +573,12 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private void DeleteErrors([CanBeNull] IObjectSelection objectSelection)
 		{
+			if (ErrorDeletionInPerimeter == ErrorDeletionInPerimeter.None)
+			{
+				_msg.Debug("No existing errors are deleted (ErrorDeletionInPerimeter: None)");
+				return;
+			}
+
 			ReportPreProcessing("Deleting existing issues in verification perimeter...");
 
 			_verificationContextIssueRepository.DeleteErrors(
@@ -603,10 +609,9 @@ namespace ProSuite.DomainServices.AO.QA
 					return _qualityConditions;
 
 				default:
-					throw new ArgumentOutOfRangeException(
-						nameof(errorDeletionInPerimeter),
-						errorDeletionInPerimeter,
-						$@"Invalid value: {errorDeletionInPerimeter}");
+					throw new ArgumentOutOfRangeException(nameof(errorDeletionInPerimeter),
+					                                      errorDeletionInPerimeter,
+					                                      $@"Invalid value: {errorDeletionInPerimeter}");
 			}
 		}
 
