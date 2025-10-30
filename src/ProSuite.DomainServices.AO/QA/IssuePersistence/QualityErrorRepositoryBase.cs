@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
@@ -661,9 +662,12 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="issueWriter">The error Table.</param>
 		/// <param name="queryFilter">The filter to be adapted. Note that it can already contain a
 		/// spatial filter and a where clause. Additional criteria need to be appended.</param>
-		protected virtual void AdaptFilterToContext(
+		protected virtual IQueryFilter AdaptFilterToContext(
 			[NotNull] IssueDatasetWriter issueWriter,
-			[NotNull] IQueryFilter queryFilter) { }
+			[NotNull] IQueryFilter queryFilter)
+		{
+			return queryFilter;
+		}
 
 		private void DeleteIssuesForAllQualityConditions(
 			[NotNull] IQueryFilter queryFilter,
@@ -750,6 +754,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			                                   FieldNameQualityConditionId,
 			                                   commaSeparatedQualityConditionIds);
 
+			queryFilter = (IQueryFilter) ((IClone) queryFilter).Clone();
+
 			queryFilter.WhereClause =
 				StringUtils.IsNotEmpty(queryFilter.WhereClause)
 					? string.Format("{0} AND {1}", queryFilter.WhereClause, whereClause)
@@ -768,11 +774,11 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			foreach (IssueDatasetWriter issueWriter in IssueDatasets.GetIssueWriters())
 			{
 				// add project-specific filter logic
-				AdaptFilterToContext(issueWriter, queryFilter);
+				IQueryFilter adaptedFilter = AdaptFilterToContext(issueWriter, queryFilter);
 
 				if (objectSelection == null)
 				{
-					issueWriter.DeleteErrorObjects(queryFilter);
+					issueWriter.DeleteErrorObjects(adaptedFilter);
 				}
 				else
 				{
@@ -783,7 +789,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 					var determineDeletableRow = new DeletableErrorRowFilter(issueWriter,
 						objectSelection);
 
-					issueWriter.DeleteErrorObjects(queryFilter,
+					issueWriter.DeleteErrorObjects(adaptedFilter,
 					                               determineDeletableRow,
 					                               qualityConditionsById);
 				}
