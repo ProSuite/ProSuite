@@ -340,9 +340,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNull(gdbDatasetName, nameof(gdbDatasetName));
 
-			var sqlWorksace = workspace as ISqlWorkspace;
+			var sqlWorkspace = workspace as ISqlWorkspace;
 
-			if (sqlWorksace == null ||
+			if (sqlWorkspace == null ||
 			    DatasetUtils.IsRegisteredAsObjectClass((IWorkspace) workspace, gdbDatasetName))
 			{
 				return DatasetUtils.OpenTable(workspace, gdbDatasetName);
@@ -351,8 +351,17 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IQueryDescription queryDescription;
 			try
 			{
+				bool discoverSpatialProperties =
+					spatialReferenceDescriptor == null &&
+					knownGeometryType == esriGeometryType.esriGeometryNull;
+
 				string query = $"SELECT * FROM {gdbDatasetName}";
-				queryDescription = sqlWorksace.GetQueryDescription(query);
+
+				ISqlWorkspace2 sqlWorkspace2 = (ISqlWorkspace2) sqlWorkspace;
+				
+				sqlWorkspace2.GetQueryDescription2(query, discoverSpatialProperties);
+
+				queryDescription = sqlWorkspace.GetQueryDescription(query);
 
 				if (knownGeometryType != esriGeometryType.esriGeometryNull)
 				{
@@ -432,8 +441,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				_msg.DebugFormat("Opening query layer with name {0}", queryLayerName);
 
-				ITable queryClass = sqlWorksace.OpenQueryClass(queryLayerName, queryDescription);
-
+				ITable queryClass = sqlWorkspace.OpenQueryClass(queryLayerName, queryDescription);
+				
 				// This is probably not the case any more, or just in specific situations (oracle?):
 				// NOTE: the query class is owned by the *connected* user, not by the owner of the underlying table/view
 
