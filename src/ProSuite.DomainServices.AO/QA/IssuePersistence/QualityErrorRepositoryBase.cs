@@ -42,6 +42,8 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		private readonly IQualityConditionObjectDatasetResolver _datasetResolver;
 		private readonly IQualityConditionRepository _qualityConditionRepository;
 
+		private readonly List<QaError> _errorQueue = new List<QaError>();
+
 		#endregion
 
 		#region Constructors
@@ -51,7 +53,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// </summary>
 		/// <param name="verificationContext">The model context.</param>
 		/// <param name="testsByQualityCondition">The dictionary of tests by quality condition.
-		/// It can be empty in case the <see cref="AddError"/> method is never used and the
+		/// It can be empty in case the <see cref="StoreError"/> method is never used and the
 		/// <see cref="VerifiedQualityConditions"/> property is set.</param>
 		/// <param name="datasetResolver">The dataset resolver.</param>
 		/// <param name="qualityConditionRepository">The quality condition repository.</param>
@@ -323,16 +325,34 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 		#region Writing issues
 
+		public void QueueError([NotNull] QaError qaError)
+		{
+			ISpatialReference spatialReference = IssueDatasets.SpatialReference;
+
+			ICollection<esriGeometryType> supportedGeometryTypes =
+				IssueDatasets.GetIssueWritersByGeometryType().Keys;
+
+			// create valid Error geometry (geometry type, min dimensions) if possible
+			IGeometry geometry = ErrorRepositoryUtils.GetGeometryToStore(
+				qaError.Geometry, spatialReference, supportedGeometryTypes);
+
+			// This geometry will not be 'reduced' to null:
+			qaError.SetGeometryInModelSpatialReference(geometry);
+
+			_errorQueue.Add(qaError);
+		}
+
 		/// <summary>
-		/// Adds an error to the error repository. Call <see cref="SavePendingErrors"/> to
-		/// save all the pending errors added to the repository.
+		/// Adds an error to the error repository and writes it to the database.
+		/// Call <see cref="SavePendingErrors"/> to save all the pending errors added to the
+		/// repository.
 		/// </summary>
 		/// <param name="qaError"></param>
 		/// <param name="qualityCondition"></param>
 		/// <param name="isAllowable"></param>
-		public void AddError([NotNull] QaError qaError,
-		                     [NotNull] QualityCondition qualityCondition,
-		                     bool isAllowable)
+		public void StoreError([NotNull] QaError qaError,
+		                       [NotNull] QualityCondition qualityCondition,
+		                       bool isAllowable)
 		{
 			Assert.ArgumentNotNull(qaError, nameof(qaError));
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
@@ -362,9 +382,30 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <summary>
 		/// Saves the pending errors previously added to the repository.
 		/// </summary>
-		public void SavePendingErrors()
+		public void SavePendingErrors([CanBeNull] VerificationElements verificationElements)
 		{
+			if (_errorQueue.Count > 0)
+			{
+				Assert.NotNull(verificationElements,
+				               "To save queued errors, provide verificationElements");
+
+				foreach (QaError qaError in _errorQueue)
+				{
+					QualityConditionVerification qualityConditionVerification =
+						verificationElements.GetQualityConditionVerification(qaError.Test);
+
+					QualityCondition qualityCondition =
+						Assert.NotNull(qualityConditionVerification.QualityCondition);
+
+					bool isAllowable = qualityConditionVerification.AllowErrors;
+
+					StoreError(qaError, qualityCondition, isAllowable);
+				}
+			}
+
 			IssueDatasets.SavePendingIssues();
+
+			_errorQueue.Clear();
 		}
 
 		[NotNull]
@@ -376,7 +417,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		{
 			// create valid Error geometry (geometry type, min dimensions) if possible
 			IGeometry geometry = ErrorRepositoryUtils.GetGeometryToStore(
-				qaError.Geometry,
+				qaError.GetGeometryInModelSpatialRef(),
 				IssueDatasets.SpatialReference,
 				IssueDatasets.GetIssueWritersByGeometryType().Keys,
 				_isPre10Geodatabase,
@@ -754,6 +795,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			                                   FieldNameQualityConditionId,
 			                                   commaSeparatedQualityConditionIds);
 
+			// To avoid downstream side effects, clone the filter:
 			queryFilter = (IQueryFilter) ((IClone) queryFilter).Clone();
 
 			queryFilter.WhereClause =

@@ -513,22 +513,33 @@ namespace ProSuite.DomainServices.AO.QA
 			testRunner.TestAssembler = testAssembler;
 			testRunner.QualityVerification = qualityVerification;
 
-			if (UpdateErrorsInVerifiedModelContext)
+			if (! OverrideAllowedErrors)
+			{
+				// but still honour invalidated allowed errors (they might be deleted remotely)
+				_verificationContextIssueRepository.InvalidateAllowedErrors(
+					_qualityConditions,
+					InvalidateAllowedErrorsIfAnyInvolvedObjectChanged,
+					InvalidateAllowedErrorsIfQualityConditionWasUpdated);
+			}
+
+			Verify(tests, qualitySpecification, qualityVerification,
+			       areaOfInterest, testRunner);
+
+			if (UpdateErrorsInVerifiedModelContext &&
+			    ! CancellationTokenSource.IsCancellationRequested)
 			{
 				var gdbTransaction = CreateGdbTransaction();
 
-				// TODO: #255 Refactor to make the transaction only at the end!
 				gdbTransaction.Execute(
 					_verificationContext.PrimaryWorkspaceContext.Workspace,
 					delegate
 					{
 						DeleteErrors(_objectSelection);
 
-						Verify(tests, qualitySpecification, qualityVerification,
-						       areaOfInterest, testRunner);
+						_verificationContextIssueRepository.SavePendingErrors(
+							_verificationElements);
 
-						if (! CancellationTokenSource.IsCancellationRequested &&
-						    ! KeepUnusedAllowedErrors &&
+						if (! KeepUnusedAllowedErrors &&
 						    ! OverrideAllowedErrors &&
 						    ! qualitySpecification.IsCustom)
 						{
@@ -536,21 +547,6 @@ namespace ProSuite.DomainServices.AO.QA
 						}
 					}, "Quality Verification"
 				);
-			}
-			else
-			{
-				// no need to run within an edit operation
-				if (! OverrideAllowedErrors)
-				{
-					// but still honour invalidated allowed errors (they might be deleted remotely)
-					_verificationContextIssueRepository.InvalidateAllowedErrors(
-						_qualityConditions,
-						InvalidateAllowedErrorsIfAnyInvolvedObjectChanged,
-						InvalidateAllowedErrorsIfQualityConditionWasUpdated);
-				}
-
-				Verify(tests, qualitySpecification, qualityVerification,
-				       areaOfInterest, testRunner);
 			}
 
 			QualitySpecificationUtils.LogQualityVerification(qualityVerification);
@@ -658,11 +654,6 @@ namespace ProSuite.DomainServices.AO.QA
 				testRunner.Execute(tests, areaOfInterest, CancellationTokenSource);
 
 				CancellationMessage = testRunner.CancellationMessage;
-
-				if (UpdateErrorsInVerifiedModelContext)
-				{
-					_verificationContextIssueRepository.SavePendingErrors();
-				}
 
 				_verificationReportBuilder.AddRowsWithStopConditions(
 					testRunner.RowsWithStopConditions.GetRowsWithStopConditions());
@@ -1068,8 +1059,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (UpdateErrorsInVerifiedModelContext)
 			{
-				_verificationContextIssueRepository.AddError(qaError, qualityCondition,
-				                                             isAllowable);
+				_verificationContextIssueRepository.QueueError(qaError);
 			}
 
 			if (_externalIssueRepository != null || _verificationReportBuilder != null)
