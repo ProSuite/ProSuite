@@ -1,11 +1,12 @@
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -18,11 +19,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <param name="oidFieldName">Name of the oid field to be used if the table is not registered with the geodatabase, and no OID field can be automatically determined.</param>
 		/// <param name="spatialReferenceDescriptor">The spatial reference descriptor to be used if the table is not registered with the geodatabase, is a spatial dataset (query layer),
 		/// but the spatial reference could not be automatically determined.</param>
+		/// <param name="knownGeometryType">The known geometry type. Providing this can result in better performance because the query does not need to be executed for the
+		/// schema information</param>
 		/// <returns></returns>
 		[NotNull]
 		ITable OpenTable([NotNull] string name,
 		                 [CanBeNull] string oidFieldName = null,
-		                 [CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor = null);
+		                 [CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor = null,
+		                 esriGeometryType knownGeometryType = esriGeometryType.esriGeometryNull);
 
 		[NotNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] string name);
