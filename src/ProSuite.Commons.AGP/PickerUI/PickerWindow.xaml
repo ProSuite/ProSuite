@@ -111,13 +111,22 @@
 			         ItemTemplate="{StaticResource SinglePickTemplate}"
 			         SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
 			         Style="{StaticResource ListBox}">
+				<behaviors:Interaction.Behaviors>
+					<pickerUi:ListBoxKeyUpBehavior 
+						CloseWindowAction="{Binding CloseWindowCommand}" />
+				</behaviors:Interaction.Behaviors>
 
 				<ListBox.ItemContainerStyle>
-					<!--when this block is not here (it does not even have content), 
+
+					<Style TargetType="{x:Type ListBoxItem}">
+
+						<!--when this block is not here (it does not even have content), 
                         the background color of highlighted items is blackish 
                         (bad contrast). -->
-					<Style TargetType="{x:Type ListBoxItem}">
 						<Setter Property="IsSelected" Value="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+						<!-- close on mouse-up on the item -->
+						<EventSetter Event="MouseLeftButtonUp" Handler="ListBoxItem_MouseLeftButtonUp" />
 					</Style>
 				</ListBox.ItemContainerStyle>
 
