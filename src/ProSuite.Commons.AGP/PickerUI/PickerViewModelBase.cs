@@ -42,6 +42,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 		DeactivatedCommand = new RelayCommand<ICloseable>(OnWindowDeactivated);
 		PressEscapeCommand = new RelayCommand<ICloseable>(OnPressEscape);
 		PressSpaceCommand = new ActionCommand(OnPressSpace);
+		CloseWindowCommand = new RelayCommand<ICloseable>(CloseWindow);
 	}
 
 	protected PickerViewModelBase([NotNull] Geometry selectionGeometry) : this()
@@ -58,6 +59,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 	public ICommand DeactivatedCommand { get; }
 	public ICommand PressSpaceCommand { get; }
 	public ICommand PressEscapeCommand { get; }
+	public ICommand CloseWindowCommand { get; }
 
 	/// <summary>
 	/// The awaitable task that provides the result when the dialog is closed.
@@ -123,7 +125,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 					return;
 				}
 
-				window?.Close();
+				//window?.Close();
 			});
 		}, _msg, true);
 	}
@@ -175,6 +177,11 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 				                             polygonSymbol.MakeSymbolReference());
 			}
 		});
+	}
+
+	private void CloseWindow(ICloseable window)
+	{
+		window?.Close();
 	}
 
 	public void Dispose()

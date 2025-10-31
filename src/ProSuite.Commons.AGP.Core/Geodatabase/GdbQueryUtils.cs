@@ -334,6 +334,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return true;
 		}
 
+		public static QueryFilter CloneFilter([CanBeNull] QueryFilter filter)
+		{
+			filter = filter is SpatialQueryFilter
+				         ? CloneFilter<SpatialQueryFilter>(filter)
+				         : CloneFilter<QueryFilter>(filter);
+
+			return filter;
+		}
+
 		public static T CloneFilter<T>([CanBeNull] QueryFilter filter) where T : QueryFilter
 		{
 			filter ??= new QueryFilter();

@@ -247,6 +247,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static T OpenDataset<T>([NotNull] Datastore datastore, [NotNull] string datasetName)
 			where T : Dataset
 		{
+			Assert.ArgumentNotNull(datastore, nameof(datastore));
+
 			try
 			{
 				if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)

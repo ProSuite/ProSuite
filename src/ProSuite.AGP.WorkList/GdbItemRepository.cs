@@ -255,9 +255,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			return filter;
 		}
 
-		filter = filter is SpatialQueryFilter
-			         ? GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter)
-			         : GdbQueryUtils.CloneFilter<QueryFilter>(filter);
+		filter = GdbQueryUtils.CloneFilter(filter);
 
 		if (string.IsNullOrEmpty(filter.WhereClause))
 		{
