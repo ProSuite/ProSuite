@@ -203,6 +203,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		//   - LM info on DrawingOrder entries is authoritative
 		//   - LM info SymbolLevels entries shall be consistent (but may not be if CIM is manipulated outside the Pro UI)
 		//   - this means: masks(z,l) are the same for all levels z and child layers l in the group layer
+		ValidateMaskingConsistency(config, feedback);
 
 		// TODO Check there is only one SLD controlling layer (not required by Pro, but needed by our import tool(?))
 
@@ -256,6 +257,66 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		}
 
 		return valid;
+	}
+
+	private static void ValidateMaskingConsistency(Config config, IFeedback feedback)
+	{
+		// Check that layer masking is consistent with SLD ordering:
+		// - LM info on DrawingOrder entries is authoritative
+		// - LM info SymbolLevels entries shall be consistent (but may not be if CIM is manipulated outside the Pro UI)
+		// - this means: masks(z,l) are the same for all levels z and child layers l in the group layer
+
+		bool hasExtraMaskedBy = config.SymbolLevels
+		                         .SelectMany(layer => layer.Symbols)
+		                         .SelectMany(symbol => symbol.Levels)
+		                         .Any(sl => sl.MaskedBy.Any());
+
+		if (! hasExtraMaskedBy)
+		{
+			// Assume this config was created without extra masking info,
+			// so there is no consistency we can validate.
+			return;
+		}
+
+		// Make a dictionary level-name => List of MaskedBy:
+
+		var dict = config.DrawingOrder
+		                 .SelectMany(l => l.Levels)
+		                 .ToDictionary(l => l.Name, l => l.MaskedBy.ToList());
+
+		// For each level in SymbolLevels, check if its MaskedBy are
+		// the same as those in DrawingOrder for the like-named level:
+
+		foreach (var layer in config.SymbolLevels)
+		{
+			foreach (var symbol in layer.Symbols)
+			{
+				foreach (var level in symbol.Levels)
+				{
+					if (dict.TryGetValue(level.Name, out var maskedBy))
+					{
+						if (! SameMaskedBy(maskedBy, level.MaskedBy))
+						{
+							feedback.Warning($"Inconsistent MaskedBy's on level {level.Name} in symbol {symbol.Match} (label {symbol.Label}) of layer {layer.Name} (parent {layer.Parent})");
+						}
+					}
+					else if (level.MaskedBy.Any())
+					{
+						feedback.Warning($"Inconsistent MaskedBy's on level {level.Name} in symbol {symbol.Match} (label {symbol.Label}) of layer {layer.Name} (parent {layer.Parent})");
+					}
+				}
+			}
+		}
+	}
+
+	private static bool SameMaskedBy(IEnumerable<Config.MaskLayer> a,
+	                                 IEnumerable<Config.MaskLayer> b)
+	{
+		if (a is null && b is null) return true;
+		if (a is null || b is null) return false;
+
+		return a.OrderBy(m => m.Uri)
+		        .SequenceEqual(b.OrderBy(m => m.Uri), Config.MaskLayerComparer.Instance);
 	}
 
 	/// <remarks>Must run on MCT</remarks>
@@ -945,6 +1006,27 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			{
 				return Xml.Elements("MaskedBy").Select(x => new MaskLayer(x));
 			}
+		}
+
+		public class MaskLayerComparer : IEqualityComparer<MaskLayer>
+		{
+			public bool Equals(MaskLayer x, MaskLayer y)
+			{
+				if (x is null && y is null) return true;
+				if (x is null || y is null) return false;
+				return string.Equals(x.Name, y.Name) &&
+				       string.Equals(x.Parent, y.Parent) &&
+				       string.Equals(x.Uri, y.Uri, StringComparison.OrdinalIgnoreCase);
+			}
+
+			public int GetHashCode(MaskLayer obj)
+			{
+				return HashCode.Combine(obj.Name, obj.Parent, obj.Uri.ToLowerInvariant());
+			}
+
+			public static MaskLayerComparer Instance { get; } = new();
+
+			private MaskLayerComparer() {}
 		}
 
 		#endregion
