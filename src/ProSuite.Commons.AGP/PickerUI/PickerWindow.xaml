@@ -42,7 +42,7 @@
 			<ResourceDictionary.MergedDictionaries>
 				<!--for loading Pro XAML styles (DynamicResources) in Design Mode-->
 				<extensions:DesignOnlyResourceDictionary
-					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component/Themes/Default.xaml" />
 			</ResourceDictionary.MergedDictionaries>
 
 			<Style x:Key="TextBlock" TargetType="TextBlock">
@@ -100,19 +100,26 @@
 			                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
 		</behaviors:EventTrigger>
 	</behaviors:Interaction.Triggers>
+	
 
 	<Grid Background="Transparent">
 		<DockPanel Background="Transparent">
 
 			<!-- Listbox visibility is set in viewmodel 
             and depends on Single/Multiselection mode. -->
-			<ListBox DockPanel.Dock="Top"
-			         ItemsSource="{Binding Path=Items}"
-			         ItemTemplate="{StaticResource SinglePickTemplate}"
-			         SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
-			         Style="{StaticResource ListBox}">
+			<ListBox x:Name="ItemListBox"				
+			                                               DockPanel.Dock="Top"
+			                                               ItemsSource="{Binding Path=Items}"
+			                                               ItemTemplate="{StaticResource SinglePickTemplate}"
+			                                               SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
+			                                               Style="{StaticResource ListBox}"
+			                                               Focusable="True"
+			                                               KeyboardNavigation.DirectionalNavigation="Contained"
+			                                               KeyboardNavigation.TabNavigation="Local">
+
 				<behaviors:Interaction.Behaviors>
 					<pickerUi:ListBoxKeyUpBehavior 
+						FlashItemCommand="{Binding FlashItemCommand}"
 						CloseWindowAction="{Binding CloseWindowCommand}" />
 				</behaviors:Interaction.Behaviors>
 
