@@ -136,7 +136,7 @@ public static class Utils
 
 	private static void AppendMessages(StringBuilder sb, ImportSLDLMButtonBase.IFeedback feedback, int maxMessages)
 	{
-		var messages = Enumerable.ToList<string>(feedback.Messages);
+		var messages = feedback.Messages.ToList();
 
 		foreach (var message in messages.Take(maxMessages))
 		{

@@ -14,13 +14,15 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 	private GroupLayerComboItem _groupLayer;
 	private string _configFilePath;
 	private string _remark;
-	private bool _omitMasks;
+	private bool _includeMaskingInfo;
+	private bool _extraMaskingInfo;
 	private readonly List<GroupLayerComboItem> _groupLayers;
 
 	private string _rememberedLayerURI;
 	private string _rememberedConfigPath;
 	private string _rememberedRemark;
-	private bool? _rememberedOmitMasks;
+	private bool? _rememberedIncludeMaskingInfo;
+	private bool? _rememberedExtraMaskingInfo;
 
 	public ExportSLDLMOptions()
 	{
@@ -62,19 +64,21 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 		_rememberedLayerURI = GroupLayerItem?.GroupLayer?.URI;
 		_rememberedConfigPath = ConfigFilePath;
 		_rememberedRemark = Remark;
-		_rememberedOmitMasks = OmitMasks;
+		_rememberedIncludeMaskingInfo = IncludeMaskingInfo;
+		_rememberedExtraMaskingInfo = ExtraMaskingInfo;
 	}
 
 	public void RestoreOptions()
 	{
-		// find group layer by URI (may be null)
+		// find group layer by URI (can be null)
 		var restore = _groupLayers.FirstOrDefault(
 			item => string.Equals(item?.GroupLayer?.URI, _rememberedLayerURI));
 
 		GroupLayerItem = restore;
 		ConfigFilePath = _rememberedConfigPath;
 		Remark = _rememberedRemark ?? string.Empty;
-		OmitMasks = _rememberedOmitMasks ?? false;
+		IncludeMaskingInfo = _rememberedIncludeMaskingInfo ?? true;
+		ExtraMaskingInfo = _rememberedExtraMaskingInfo ?? false;
 	}
 
 	public string MapName { get; private set; }
@@ -121,18 +125,41 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 		}
 	}
 
-	public bool OmitMasks
+	public bool IncludeMaskingInfo
 	{
-		get => _omitMasks;
+		get => _includeMaskingInfo;
 		set
 		{
-			if (_omitMasks != value)
+			if (_includeMaskingInfo != value)
 			{
-				_omitMasks = value;
+				_includeMaskingInfo = value;
+				OnPropertyChanged();
+
+				if (! value && _extraMaskingInfo)
+				{
+					_extraMaskingInfo = false;
+					OnPropertyChanged(nameof(ExtraMaskingInfo));
+				}
+
+				OnPropertyChanged(nameof(ExtraMaskingInfoEnabled));
+			}
+		}
+	}
+
+	public bool ExtraMaskingInfo
+	{
+		get => _extraMaskingInfo;
+		set
+		{
+			if (_extraMaskingInfo != value)
+			{
+				_extraMaskingInfo = value;
 				OnPropertyChanged();
 			}
 		}
 	}
+
+	public bool ExtraMaskingInfoEnabled => IncludeMaskingInfo;
 
 	public bool ExportButtonEnabled => ! string.IsNullOrWhiteSpace(ConfigFilePath);
 
