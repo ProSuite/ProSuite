@@ -347,14 +347,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <summary>
 		/// Gets a displayable text describing a given workspace.
 		/// </summary>
-		/// <param name="datastore">The workspace.</param>
-		/// <returns></returns>
+		/// <param name="datastore">The workspace</param>
 		[NotNull]
-		public static string GetDatastoreDisplayText([NotNull] Datastore datastore)
+		public static string GetDatastoreDisplayText(Datastore datastore)
 		{
-			Assert.ArgumentNotNull(datastore, nameof(datastore));
-
-			Connector connector = datastore.GetConnector();
+			Connector connector = datastore?.GetConnector();
 
 			return GetDatastoreDisplayText(connector);
 		}
@@ -362,21 +359,18 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <summary>
 		/// Gets a displayable text describing a given datastore connector.
 		/// </summary>
-		/// <param name="connector">The connector.</param>
-		/// <returns></returns>
+		/// <param name="connector">The connector</param>
 		public static string GetDatastoreDisplayText([CanBeNull] Connector connector)
 		{
-			// TODO: Add parameter bool detailed which includes the full info including user names etc.
-
-			if (connector == null)
-			{
-				return "<null>";
-			}
+			// TODO: parameter "detailed" to include full info (but no passwords)
 
 			const string nullPathText = "<undefined path>";
 
 			switch (connector)
 			{
+				case null:
+					return "<null>";
+
 				case DatabaseConnectionFile dbConnection:
 					return $"SDE connection {dbConnection.Path?.LocalPath ?? nullPathText}";
 
@@ -400,18 +394,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 						$"Plug-in {pluginConnectionPath.PluginIdentifier} {pluginConnectionPath.DatasourcePath}";
 
 				case RealtimeServiceConnectionProperties realtimeServiceConnection:
-					return
-						$"Real-Time connection ({realtimeServiceConnection.Type}) {realtimeServiceConnection.URL}";
+					return $"Real-Time connection ({realtimeServiceConnection.Type}) {realtimeServiceConnection.URL}";
 
 				case ServiceConnectionProperties serviceConnection:
 					return $"Service connection {serviceConnection.URL}";
 
 				case SQLiteConnectionPath sqLiteConnection:
-					return $"SQLite Database {sqLiteConnection.Path}";
+					return $"SQLite database {sqLiteConnection.Path}";
 
 				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported workspace type: {connector.GetType()}");
+					return $"Unknown connection of type {connector.GetType().Name}";
 			}
 		}
 
