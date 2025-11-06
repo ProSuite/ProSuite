@@ -278,6 +278,21 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 		}
 
+		public IEnumerable<T> FindIdentifiers(Predicate<T> predicate = null, bool sorted = false)
+		{
+			if (! sorted)
+			{
+				return GetTileData()
+				       .SelectMany(tileData => tileData.items)
+				       .Where(item => predicate == null || predicate(item));
+			}
+			return GetTileData()
+			       .OrderBy(tileData => tileData.east)
+			       .ThenBy(tileData => tileData.north)
+			       .SelectMany(tileData => tileData.items)
+			       .Where(item => predicate == null || predicate(item));
+		}
+
 		public IEnumerable<T> FindIdentifiers(
 			double xMin, double yMin, double xMax, double yMax,
 			[CanBeNull] Predicate<T> predicate = null)
