@@ -79,6 +79,11 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
+		[InternallyUsedTest]
+		public TrMultilineToLine(
+			[NotNull] TrMultilineToLineDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass) { }
+
 		protected override IList<int> AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
 			return new List<int>(

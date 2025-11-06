@@ -62,6 +62,12 @@ namespace ProSuite.QA.Tests
 			_maxSlopeRadians = MathUtils.ToRadians(maxSlopeDegrees);
 		}
 
+		[InternallyUsedTest]
+		public QaSurfaceSpikes([NotNull] QaSurfaceSpikesDefinition definition)
+			: this((TerrainReference)definition.Terrain, definition.TerrainTolerance, definition.MaxSlopeDegrees,
+			       definition.MaxDeltaZ)
+		{ }
+
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			return NoError;

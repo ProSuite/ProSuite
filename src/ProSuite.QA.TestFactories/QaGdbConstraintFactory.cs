@@ -16,7 +16,7 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[AttributeTest]
-	public class QaGdbConstraintFactory : TestFactory
+	public class QaGdbConstraintFactory : QaFactoryBase
 	{
 		#region issue codes
 
@@ -124,15 +124,15 @@ namespace ProSuite.QA.TestFactories
 			return result;
 		}
 
-		//Change to DefinitionVersion below once this derives from QaFactoryBase again
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
+			var factoryDef = (QaGdbConstraintFactoryDefinition) FactoryDefinition;
 			var ignoredParameters = new[]
 			                        {
-				                        _allowNullValuesForCodedValueDomains,
-				                        _allowNullValuesForRangeDomains,
-				                        _fields
+				                        factoryDef.AllowNullValuesForCodedValueDomains,
+				                        factoryDef.AllowNullValuesForRangeDomains,
+				                        factoryDef.FieldsParameterName
 			                        };
 
 			if (ignoredParameters.Any(
@@ -144,77 +144,5 @@ namespace ProSuite.QA.TestFactories
 
 			base.SetPropertyValue(test, testParameter, value);
 		}
-
-		//protected override void SetPropertyValue(object test, TestParameter testParameter,
-		//                                         object value)
-		//{
-		//	var factoryDef = (QaGdbConstraintFactoryDefinition) FactoryDefinition;
-		//	var ignoredParameters = new[]
-		//	                        {
-		//		                        factoryDef.AllowNullValuesForCodedValueDomains,
-		//		                        factoryDef.AllowNullValuesForRangeDomains,
-		//		                        factoryDef.FieldsParameterName
-		//	                        };
-
-		//	if (ignoredParameters.Any(
-		//		    param => string.Equals(testParameter.Name, param,
-		//		                           StringComparison.OrdinalIgnoreCase)))
-		//	{
-		//		return;
-		//	}
-
-		//	base.SetPropertyValue(test, testParameter, value);
-		//}
-
-
-
-		#region Delete once this derives from QaFactoryBase again
-
-		private const string _fields = "Fields";
-
-		private const string _allowNullValuesForCodedValueDomains =
-			"AllowNullValuesForCodedValueDomains";
-
-		private const string _allowNullValuesForRangeDomains =
-			"AllowNullValuesForRangeDomains";
-
-		public override string GetTestTypeDescription()
-		{
-			return nameof(QaConstraint);
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			return new List<TestParameter>
-			       {
-				       new TestParameter("table", typeof(IReadOnlyTable),
-				                         DocStrings.QaGdbConstraintFactory_table),
-				       new TestParameter(_allowNullValuesForCodedValueDomains,
-				                         typeof(bool),
-				                         description: DocStrings
-					                         .QaGdbConstraintFactory_AllowNullValuesForCodedValueDomains,
-				                         isConstructorParameter: false)
-				       {
-					       DefaultValue = true
-				       },
-				       new TestParameter(_allowNullValuesForRangeDomains,
-				                         typeof(bool),
-				                         description: DocStrings
-					                         .QaGdbConstraintFactory_AllowNullValuesForRangeDomains,
-				                         isConstructorParameter: false)
-				       {
-					       DefaultValue = true
-				       },
-				       new TestParameter(_fields,
-				                         typeof(IList<string>),
-				                         description: DocStrings
-					                         .QaGdbConstraintFactory_Fields,
-				                         isConstructorParameter: false),
-			       }.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaGdbConstraintFactory;
-
-		#endregion
 	}
 }

@@ -163,10 +163,55 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return layer is FeatureLayer;
 		}
 
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int selectionCount = 0;
+			bool? result = await QueuedTask.Run(() =>
+			{
+				var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+
+				if (selectionByLayer.Count == 0)
+				{
+					_msg.Debug($"{Caption}: no feature layer found in selection");
+					return null;
+				}
+
+				bool? hasAnyZ = false;
+
+				foreach (var selectedOidByLayer in selectionByLayer)
+				{
+					if (selectedOidByLayer.Key is FeatureLayer layer)
+					{
+						FeatureClass featureClass = layer.GetFeatureClass();
+						bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+
+						if (layerHasZ == true)
+						{
+							hasAnyZ = true;
+							break;
+						}
+					}
+				}
+
+				return hasAnyZ;
+			});
+
+			_msg.DebugStopTiming(
+				watch, "Determined sketch has Z: {0} (evaluated {1} selected layers)", result,
+				selectionCount);
+
+			return result;
+		}
+
 		protected override async Task OnToolActivatingCoreAsync()
 		{
 			_advancedReshapeToolOptions = InitializeOptions();
+
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
+
+			await QueuedTask.Run(() => { _feedback.InitializeSymbolsQueued(); });
 
 			await base.OnToolActivatingCoreAsync();
 		}
@@ -428,9 +473,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			bool success = false;
 			try
 			{
-				success = await QueuedTaskUtils.Run(
-					          async () =>
-						          await Reshape(polyline, activeView, cancelableProgressor));
+				success = await QueuedTaskUtils.Run(async () =>
+					                                    await Reshape(
+						                                    polyline, activeView,
+						                                    cancelableProgressor));
 			}
 			finally
 			{
@@ -571,28 +617,27 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			List<Feature> polygonSelection;
 
 			bool result =
-				await QueuedTaskUtils.Run(
-					async () =>
-					{
-						List<Feature> selection =
-							GetApplicableSelectedFeatures(activeMapView).ToList();
+				await QueuedTaskUtils.Run(async () =>
+				{
+					List<Feature> selection =
+						GetApplicableSelectedFeatures(activeMapView).ToList();
 
-						polylineSelection =
-							GdbObjectUtils.Filter(selection, GeometryType.Polyline).ToList();
+					polylineSelection =
+						GdbObjectUtils.Filter(selection, GeometryType.Polyline).ToList();
 
-						polygonSelection =
-							GdbObjectUtils.Filter(selection, GeometryType.Polygon).ToList();
+					polygonSelection =
+						GdbObjectUtils.Filter(selection, GeometryType.Polygon).ToList();
 
-						bool updated =
-							await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
-								polylineSelection);
+					bool updated =
+						await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
+						                                         polylineSelection);
 
-						updated |= await UpdatePolygonResultPreviewAsync(
-							           nonDefaultSide, sketchPolyline,
-							           polygonSelection);
+					updated |= await UpdatePolygonResultPreviewAsync(
+						           nonDefaultSide, sketchPolyline,
+						           polygonSelection);
 
-						return updated;
-					});
+					return updated;
+				});
 
 			return result;
 		}
@@ -639,8 +684,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				foundFeatures.AddRange(keyValuePair.GetFeatures());
 			}
 
-			foundFeatures.RemoveAll(
-				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
+			foundFeatures.RemoveAll(f =>
+				                        selectedFeatures.Any(s => GdbObjectUtils
+					                                             .IsSameFeature(f, s)));
 
 			return foundFeatures;
 		}
@@ -735,8 +781,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			//FrameworkApplication.QueueIdleAction(
 			//	() => _feedback?.UpdatePreview(reshapeResult.ResultFeatures));
 
-			return await QueuedTaskUtils.Run(
-				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
+			return await QueuedTaskUtils.Run(() => _feedback?.UpdatePreview(
+				                                 reshapeResult?.ResultFeatures));
 		}
 	}
 }

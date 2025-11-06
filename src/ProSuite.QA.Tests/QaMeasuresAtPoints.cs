@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -74,8 +75,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_pointClass))] [NotNull]
 			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_expectedMValueExpression))] [CanBeNull]
-			string
-				expectedMValueExpression,
+			string expectedMValueExpression,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> lineClasses,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
@@ -96,8 +96,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_pointClass))] [NotNull]
 			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_expectedMValueExpression))] [CanBeNull]
-			string
-				expectedMValueExpression,
+			string expectedMValueExpression,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> lineClasses,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
@@ -109,13 +108,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_requireLine))]
 			bool requireLine,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_ignoreUndefinedExpectedMValue))]
-			bool
-				ignoreUndefinedExpectedMValue,
+			bool ignoreUndefinedExpectedMValue,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_matchExpression))] [CanBeNull]
 			string matchExpression)
 			: base(
 				CastToTables(
-					(IEnumerable<IReadOnlyFeatureClass>) Union(new[] {pointClass}, lineClasses)))
+					(IEnumerable<IReadOnlyFeatureClass>) Union(new[] { pointClass }, lineClasses)))
 		{
 			Assert.NotNull(pointClass, "pointClass");
 			Assert.NotNull(lineClasses, "lineClasses");
@@ -140,6 +138,19 @@ namespace ProSuite.QA.Tests
 
 			_mTolerance = GetMTolerances(lineClasses, mTolerance, _tableCount);
 		}
+
+		[InternallyUsedTest]
+		public QaMeasuresAtPoints(
+			[NotNull] QaMeasuresAtPointsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.PointClass,
+			       definition.ExpectedMValueExpression,
+			       definition.LineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.SearchDistance,
+			       definition.MTolerance,
+			       definition.LineMSource,
+			       definition.RequireLine,
+			       definition.IgnoreUndefinedExpectedMValue,
+			       definition.MatchExpression) { }
 
 		[CanBeNull]
 		private MatchExpression GetMatchExpressionHelper(

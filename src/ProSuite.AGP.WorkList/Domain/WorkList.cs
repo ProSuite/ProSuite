@@ -421,8 +421,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			WorkItemStatus? status = null;
 
 			string aoiText = AreaOfInterest != null ? " within area of interest" : string.Empty;
+			string filterText = GetFilterDisplayText();
 
-			_msg.InfoFormat("Loading work list items for {0}{1}...", DisplayName, aoiText);
+			if (! string.IsNullOrEmpty(filterText))
+			{
+				filterText = $" ({filterText})";
+			}
+
+			_msg.InfoFormat("Loading work list items for {0}{1}{2}...", DisplayName, aoiText,
+			                filterText);
 
 			LoadItems(filter, status);
 
@@ -430,6 +437,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			                DisplayName);
 
 			TotalCount = _items.Count;
+		}
+
+		protected virtual string GetFilterDisplayText()
+		{
+			return string.Empty;
 		}
 
 		public void LoadItems([NotNull] QueryFilter filter, WorkItemStatus? statusFilter = null)

@@ -16,6 +16,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.KeySets;
+using System.Linq;
 
 namespace ProSuite.QA.Tests
 {
@@ -77,6 +78,13 @@ namespace ProSuite.QA.Tests
 
 			_referencedTableKey = GetUniqueReferencedTableKey(relations);
 		}
+
+		[InternallyUsedTest]
+		public QaUnreferencedRows([NotNull] QaUnreferencedRowsDefinition definition)
+			: this((IReadOnlyTable) definition.ReferencedTable,
+			       definition.ReferencingTables.Cast<IReadOnlyTable>().ToList(),
+			       definition.Relations)
+		{ }
 
 		#region Overrides of TestBase
 

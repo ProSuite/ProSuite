@@ -53,8 +53,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_0))]
 		public QaMpNonIntersectingRingFootprints(
 			[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_multiPatchClass))] [NotNull]
-			IReadOnlyFeatureClass
-				multiPatchClass,
+			IReadOnlyFeatureClass multiPatchClass,
 			[Doc(nameof(DocStrings
 				            .QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds))]
 			bool allowIntersectionsForDifferentPointIds)
@@ -65,6 +64,15 @@ namespace ProSuite.QA.Tests
 			_allowIntersectionsForDifferentPointIds = allowIntersectionsForDifferentPointIds;
 			_spatialReference = multiPatchClass.SpatialReference;
 			_shapeFieldName = multiPatchClass.ShapeFieldName;
+		}
+
+		[InternallyUsedTest]
+		public QaMpNonIntersectingRingFootprints(
+			[NotNull] QaMpNonIntersectingRingFootprintsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass,
+			       definition.AllowIntersectionsForDifferentPointIds)
+		{
+			ResolutionFactor = definition.ResolutionFactor;
 		}
 
 		[UsedImplicitly]

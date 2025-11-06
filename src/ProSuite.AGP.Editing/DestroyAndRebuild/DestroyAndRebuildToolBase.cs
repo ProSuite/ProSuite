@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -37,6 +38,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	protected virtual bool UseOldSymbolization => true;
 
 	private GeometryType _currentFeatureGeometryType;
+	//private bool? _currentFeatureHasZ;
 
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
@@ -64,11 +66,40 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
 	}
 
-	protected override Task OnToolActivateCoreAsync(bool hasMapViewChanged)
+	protected override async Task<bool?> GetEditSketchHasZ()
+	{
+		Stopwatch watch = Stopwatch.StartNew();
+
+		bool? result = await QueuedTask.Run(() =>
+		{
+			var selectedOidByLayer =
+				SelectionUtils.GetSelection(ActiveMapView.Map).FirstOrDefault();
+
+			FeatureLayer layer = selectedOidByLayer.Key as FeatureLayer;
+
+			if (layer == null)
+			{
+				_msg.Debug($"{Caption}: no feature layer found in selection");
+				return null;
+			}
+
+			FeatureClass featureClass = layer.GetFeatureClass();
+
+			return featureClass?.GetDefinition()?.HasZ();
+		});
+
+		_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
+
+		return result;
+	}
+
+	protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
 		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization);
 
-		return base.OnToolActivateCoreAsync(hasMapViewChanged);
+		await QueuedTask.Run(_feedback.InitializeSymbolsQueued);
+
+		await base.OnToolActivateCoreAsync(hasMapViewChanged);
 	}
 
 	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
@@ -95,7 +126,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	{
 		Feature feature = selectedFeatures.Single();
 
-		_currentFeatureGeometryType = feature.GetTable().GetShapeType();
+		FeatureClass featureClass = feature.GetTable();
+		_currentFeatureGeometryType = featureClass.GetShapeType();
 
 		_feedback?.UpdateSelection(selectedFeatures);
 

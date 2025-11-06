@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations

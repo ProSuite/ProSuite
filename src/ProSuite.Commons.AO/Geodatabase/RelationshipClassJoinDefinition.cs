@@ -4,6 +4,7 @@ using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geodatabase

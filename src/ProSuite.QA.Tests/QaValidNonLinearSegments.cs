@@ -73,6 +73,12 @@ namespace ProSuite.QA.Tests
 			_xyTolerance = GeometryUtils.GetXyTolerance(featureClass.SpatialReference);
 		}
 
+		[InternallyUsedTest]
+		public QaValidNonLinearSegments([NotNull] QaValidNonLinearSegmentsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.MinimumChordHeight)
+		{ }
+
 		#region Overrides of TestBase
 
 		public override int Execute()

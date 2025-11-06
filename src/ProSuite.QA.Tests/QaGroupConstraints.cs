@@ -7,10 +7,10 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.TablesBased;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
@@ -146,6 +146,20 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
+		[InternallyUsedTest]
+		public QaGroupConstraints(QaGroupConstraintsDefinition definition)
+			: this(definition.Tables.Cast<IReadOnlyTable>()
+			                 .ToList(),
+			       definition.GroupByExpressions,
+			       definition.DistinctExpressions,
+			       definition.MinDistinctCount,
+			       definition.MaxDistinctCount,
+			       definition.LimitToTestedRows
+			)
+		{
+			ExistsRowGroupFilters = definition.ExistsRowGroupFilters;
+		}
+
 		[TestParameter]
 		public IList<string> ExistsRowGroupFilters
 		{
@@ -159,7 +173,7 @@ namespace ProSuite.QA.Tests
 				                         "(must be 0, 1, or equal to the number of tables");
 
 				_existsRowGroupFiltersSql = new ReadOnlyList<string>(value?.ToList() ??
-					new List<string>());
+						new List<string>());
 				_existsRowGroupFilter = null;
 			}
 		}

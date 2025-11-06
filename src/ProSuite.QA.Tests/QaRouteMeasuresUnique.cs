@@ -81,6 +81,11 @@ namespace ProSuite.QA.Tests
 			_xyTolerances = TestUtils.GetXyTolerances(polylineClasses);
 		}
 
+		[InternallyUsedTest]
+		public QaRouteMeasuresUnique([NotNull] QaRouteMeasuresUniqueDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.RouteIdFields) { }
+
 		public override int Execute()
 		{
 			return CheckFeatures(GetFeatures((IGeometry) null));

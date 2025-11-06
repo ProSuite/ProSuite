@@ -18,6 +18,14 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			IReadOnlyFeatureClass disjoint)
 			: base(featureClassToFilter, disjoint) { }
 
+		[InternallyUsedTest]
+		public TrOnlyDisjointFeatures(TrOnlyDisjointFeaturesDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClassToFilter,
+			       (IReadOnlyFeatureClass)definition.Disjoint)
+		{
+			FilteringSearchOption = definition.FilteringSearchOption;
+		}
+
 		#region Overrides of TrSpatiallyFiltered
 
 		protected override SpatiallyFilteredBackingDataset CreateFilteredDataset(

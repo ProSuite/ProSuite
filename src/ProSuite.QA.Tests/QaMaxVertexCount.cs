@@ -54,6 +54,12 @@ namespace ProSuite.QA.Tests
 			_shapeFieldName = featureClass.ShapeFieldName;
 		}
 
+		[InternallyUsedTest]
+		public QaMaxVertexCount(
+			[NotNull] QaMaxVertexCountDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.Limit, definition.PerPart) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;

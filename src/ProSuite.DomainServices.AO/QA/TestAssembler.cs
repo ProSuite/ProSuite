@@ -182,21 +182,21 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		internal IList<QualityConditionGroup> BuildQcGroups(
-			[NotNull] IList<ITest> tests,
+			[NotNull] IList<ITest> containerTests,
 			[NotNull] IList<TestsWithRelatedGeometry> testsWithRelatedGeom,
 			bool singleProcess)
 		{
 			Dictionary<QualityCondition, IList<ITest>> qcTests =
 				new Dictionary<QualityCondition, IList<ITest>>();
-			Dictionary<ITest, QualityCondition> testQc = new Dictionary<ITest, QualityCondition>();
+			Dictionary<ITest, QualityCondition> qualityConditionsByTest =
+				new Dictionary<ITest, QualityCondition>();
 
-			List<IList<ITest>> testEnums = new List<IList<ITest>>();
-			testEnums.Add(tests);
-			testEnums.AddRange(testsWithRelatedGeom.Select(x => x.Tests));
+			List<IList<ITest>> testLists = new List<IList<ITest>> { containerTests };
+			testLists.AddRange(testsWithRelatedGeom.Select(x => x.Tests));
 
-			foreach (IEnumerable<ITest> testEnum in testEnums)
+			foreach (IList<ITest> testList in testLists)
 			{
-				foreach (ITest test in testEnum)
+				foreach (ITest test in testList)
 				{
 					QualityCondition qc = _getQualityCondition(test);
 					if (! qcTests.TryGetValue(qc, out IList<ITest> qcList))
@@ -206,7 +206,7 @@ namespace ProSuite.DomainServices.AO.QA
 					}
 
 					qcList.Add(test);
-					testQc[test] = qc;
+					qualityConditionsByTest[test] = qc;
 				}
 			}
 
@@ -214,11 +214,11 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				QualityConditionGroup single =
 					new QualityConditionGroup(QualityConditionExecType.Mixed, qcTests);
-				return new List<QualityConditionGroup> {single};
+				return new List<QualityConditionGroup> { single };
 			}
 
 			GroupTests(
-				tests, testsWithRelatedGeom, testQc, qcTests,
+				containerTests, testsWithRelatedGeom, qualityConditionsByTest, qcTests,
 				out HashSet<QualityCondition> nonContainerQcs,
 				out QualityConditionGroup nonTileParallelTest,
 				out QualityConditionGroup tileParallelTest);
@@ -238,7 +238,7 @@ namespace ProSuite.DomainServices.AO.QA
 		private void GroupTests(
 			[NotNull] IList<ITest> tests,
 			[NotNull] IList<TestsWithRelatedGeometry> testsWithRelatedGeom,
-			[NotNull] Dictionary<ITest, QualityCondition> testQc,
+			[NotNull] Dictionary<ITest, QualityCondition> conditionByTest,
 			[NotNull] Dictionary<QualityCondition, IList<ITest>> qcTests,
 			out HashSet<QualityCondition> nonContainerQcs,
 			out QualityConditionGroup nonTileParallelTest,
@@ -249,17 +249,17 @@ namespace ProSuite.DomainServices.AO.QA
 			                        out IList<ITest> nonContainerTests);
 
 			nonContainerQcs = new HashSet<QualityCondition>();
-			AddQcs(nonContainerQcs, nonContainerTests, testQc);
+			AddQcs(nonContainerQcs, nonContainerTests, conditionByTest);
 			// Add geom-related tests to nonContainer tests
 			foreach (var relTests in testsWithRelatedGeom)
 			{
-				AddQcs(nonContainerQcs, relTests.Tests, testQc);
+				AddQcs(nonContainerQcs, relTests.Tests, conditionByTest);
 			}
 
 			HashSet<QualityCondition> containerQcs = new HashSet<QualityCondition>();
 			foreach (ContainerTest test in containerTests)
 			{
-				QualityCondition qc = testQc[test];
+				QualityCondition qc = conditionByTest[test];
 				if (! nonContainerQcs.Contains(qc))
 				{
 					containerQcs.Add(qc);

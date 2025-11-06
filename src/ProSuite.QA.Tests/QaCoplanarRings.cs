@@ -6,6 +6,7 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
+using System.Linq;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -39,9 +40,7 @@ namespace ProSuite.QA.Tests
 
 		private class Code : LocalTestIssueCodes
 		{
-			public const string FaceDoesNotDefineValidPlane =
-				"FaceDoesNotDefineValidPlane";
-
+			public const string FaceDoesNotDefineValidPlane = "FaceDoesNotDefineValidPlane";
 			public const string FaceNotCoplanar = "FaceNotCoplanar";
 
 			public Code() : base("CoplanarRings") { }
@@ -63,10 +62,19 @@ namespace ProSuite.QA.Tests
 			_includeAssociatedParts = includeAssociatedParts;
 			_shapeType = featureClass.ShapeType;
 
-			var srt = (ISpatialReferenceResolution) featureClass.SpatialReference;
+			var srt = (ISpatialReferenceResolution)featureClass.SpatialReference;
 			_xyResolution = srt.XYResolution[false];
 			_zResolution = srt.XYResolution[false];
 		}
+
+		[InternallyUsedTest]
+		public QaCoplanarRings(
+			[NotNull] QaCoplanarRingsDefinition definition)
+				: this((IReadOnlyFeatureClass)definition.FeatureClass,
+					definition.CoplanarityTolerance,
+					definition.IncludeAssociatedParts)
+		{ }
+
 
 		public override bool IsQueriedTable(int tableIndex)
 		{

@@ -13,6 +13,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
@@ -76,7 +77,18 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaIntersectsSelf_validRelationConstraint))]
 			string validRelationConstraint)
-			: this(new[] {featureClass}, validRelationConstraint) { }
+			: this(new[] { featureClass }, validRelationConstraint) { }
+
+		[InternallyUsedTest]
+		public QaIntersectsSelf(QaIntersectsSelfDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.ValidRelationConstraint)
+		{
+			ReportIntersectionsAsMultipart = definition.ReportIntersectionsAsMultipart;
+			ValidIntersectionGeometryConstraint = definition.ValidIntersectionGeometryConstraint;
+			GeometryComponents = definition.GeometryComponents;
+		}
 
 		#region Overrides of QaSpatialRelationSelfBase
 

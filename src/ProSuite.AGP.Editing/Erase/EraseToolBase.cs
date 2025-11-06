@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
@@ -14,6 +15,7 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -45,6 +47,48 @@ namespace ProSuite.AGP.Editing.Erase
 			return SketchGeometryType.Rectangle;
 		}
 
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int selectionCount = 0;
+			bool? result = await QueuedTask.Run(() =>
+			{
+				var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+
+				if (selectionByLayer.Count == 0)
+				{
+					_msg.Debug($"{Caption}: no feature layer found in selection");
+					return null;
+				}
+
+				bool? hasAnyZ = false;
+
+				foreach (var selectedOidByLayer in selectionByLayer)
+				{
+					if (selectedOidByLayer.Key is FeatureLayer layer)
+					{
+						FeatureClass featureClass = layer.GetFeatureClass();
+						bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+
+						if (layerHasZ == true)
+						{
+							hasAnyZ = true;
+							break;
+						}
+					}
+				}
+
+				return hasAnyZ;
+			});
+
+			_msg.DebugStopTiming(
+				watch, "Determined sketch has Z: {0} (evaluated {1} selected layers)", result,
+				selectionCount);
+
+			return result;
+		}
+
 		protected override void LogEnteringSketchMode()
 		{
 			_msg.Info(LocalizableStrings.EraseTool_LogEnteringSketchMode);
@@ -62,8 +106,8 @@ namespace ProSuite.AGP.Editing.Erase
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
 			return geometryType == GeometryType.Polyline ||
-				   geometryType == GeometryType.Polygon ||
-				   geometryType == GeometryType.Multipoint;
+			       geometryType == GeometryType.Polygon ||
+			       geometryType == GeometryType.Multipoint;
 		}
 
 		protected override bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection,
@@ -102,7 +146,6 @@ namespace ProSuite.AGP.Editing.Erase
 					                    activeView, resultFeatures));
 
 			await Task.WhenAll(taskFlash, taskSave);
-
 
 			// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
 			// sketch remains that cannot be cleared with ESC!

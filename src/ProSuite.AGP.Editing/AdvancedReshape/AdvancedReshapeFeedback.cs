@@ -24,32 +24,23 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		private IDisposable _polygonPreviewOverlayRemove;
 
 		private CIMPointSymbol _openJawEndSymbol;
-		private readonly CIMPolygonSymbol _addAreaSymbol;
-		private readonly CIMPolygonSymbol _removeAreaSymbol;
+		private CIMPolygonSymbol _addAreaSymbol;
+		private CIMPolygonSymbol _removeAreaSymbol;
 		private readonly ReshapeToolOptions _advancedReshapeToolOptions;
 
 		private MapPoint _lastDrawnOpenJawPoint;
 
 		private static readonly List<IDisposable> _overlays = new List<IDisposable>();
 
-		private readonly CIMPolygonSymbol _polygonSymbol;
-		private readonly CIMLineSymbol _lineSymbol;
-		private readonly CIMPointSymbol _startPointSymbol;
-		private readonly CIMPointSymbol _endPointSymbol;
-		private readonly CIMPointSymbol _vertexMarkerSymbol;
-		private readonly CIMPointSymbol _controlPointMarkerSymbol;
+		private CIMPolygonSymbol _polygonSymbol;
+		private CIMLineSymbol _lineSymbol;
+		private CIMPointSymbol _startPointSymbol;
+		private CIMPointSymbol _endPointSymbol;
+		private CIMPointSymbol _vertexMarkerSymbol;
+		private CIMPointSymbol _controlPointMarkerSymbol;
 
-		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions,
-		                               bool useProStyle = false)
+		public AdvancedReshapeFeedback(ReshapeToolOptions advancedReshapeToolOptions)
 		{
-			const SymbolUtils.FillStyle noFill = SymbolUtils.FillStyle.Null;
-			var transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
-			var blue = ColorFactory.Instance.CreateRGBColor(0, 0, 200);
-			var red = ColorFactory.Instance.CreateRGBColor(255, 0, 0);
-			var cyan = ColorFactory.Instance.CreateRGBColor(0, 255, 255);
-			var green = ColorFactory.Instance.CreateRGBColor(0, 128, 0);
-			var magenta = ColorUtils.CreateRGB(240, 0, 248);
-
 			_advancedReshapeToolOptions = advancedReshapeToolOptions;
 			_advancedReshapeToolOptions.PropertyChanged += (sender, args) =>
 			{
@@ -63,6 +54,22 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					QueuedTask.Run(() => UpdatePreview(null));
 				}
 			};
+		}
+
+		/// <summary>
+		/// Initializes the symbols for the feedback. Must be called on the QueuedTask before any
+		/// feedback is drawn.
+		/// </summary>
+		/// <param name="useProStyle"></param>
+		public void InitializeSymbolsQueued(bool useProStyle = false)
+		{
+			const SymbolUtils.FillStyle noFill = SymbolUtils.FillStyle.Null;
+
+			var blue = ColorFactory.Instance.CreateRGBColor(0, 0, 200);
+			var red = ColorFactory.Instance.CreateRGBColor(255, 0, 0);
+			var cyan = ColorFactory.Instance.CreateRGBColor(0, 255, 255);
+			var green = ColorFactory.Instance.CreateRGBColor(0, 128, 0);
+			var magenta = ColorUtils.CreateRGB(240, 0, 248);
 
 			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
@@ -97,16 +104,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(magenta, 0.8);
 
-				_startPointSymbol = QueuedTask
-				                    .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-					                         green, 6.5, SimpleMarkerStyle.Circle)).Result;
-				_endPointSymbol = QueuedTask
-				                  .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-					                       red, 6.5, SimpleMarkerStyle.Square)).Result; //Diamond
-
-				_vertexMarkerSymbol = QueuedTask
-				                      .Run(() => SymbolFactory.Instance.ConstructPointSymbol(
-					                           cyan, 6.5, SimpleMarkerStyle.Square)).Result;
+				_startPointSymbol =
+					SymbolFactory.Instance.ConstructPointSymbol(
+						green, 6.5, SimpleMarkerStyle.Circle);
+				_endPointSymbol =
+					SymbolFactory.Instance.ConstructPointSymbol(red, 6.5, SimpleMarkerStyle.Square);
+				_vertexMarkerSymbol =
+					SymbolFactory.Instance.ConstructPointSymbol(
+						cyan, 6.5, SimpleMarkerStyle.Square);
 
 				var stroke = SymbolUtils.CreateSolidStroke(magenta, 0.8);
 				_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
@@ -174,8 +179,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				Polygon polygonRemoveArea =
 					GeometryEngine.Instance.Union(removeGeometries) as Polygon;
 
-				_polygonPreviewOverlayAdd = AddOverlay(polygonAddArea, _addAreaSymbol);
-				_polygonPreviewOverlayRemove = AddOverlay(polygonRemoveArea, _removeAreaSymbol);
+				_polygonPreviewOverlayAdd =
+					AddOverlay(polygonAddArea, Assert.NotNull(_addAreaSymbol));
+				_polygonPreviewOverlayRemove =
+					AddOverlay(polygonRemoveArea, Assert.NotNull(_removeAreaSymbol));
 			}
 
 			return Task.FromResult(true);
@@ -289,33 +296,37 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 						//_pointOverlay = AddOverlay(geometry, _pointSymbol);
 						break;
 					case GeometryType.Polyline:
-						_overlays.Add(AddOverlay(geometry, _lineSymbol));
+						_overlays.Add(AddOverlay(geometry, Assert.NotNull(_lineSymbol)));
 
 						var startPointL = GeometryUtils.GetStartPoint(geometry as Polyline);
 						var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
-						_overlays.Add(AddOverlay(startPointL, _startPointSymbol));
+						_overlays.Add(AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
 
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
-						_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
-						_overlays.Add(AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+						_overlays.Add(AddOverlay(vertexMultipoint,
+						                         Assert.NotNull(_vertexMarkerSymbol)));
+						_overlays.Add(AddOverlay(controlMultipoint,
+						                         Assert.NotNull(_controlPointMarkerSymbol)));
 
-						_overlays.Add(AddOverlay(endPointL, _endPointSymbol));
+						_overlays.Add(AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
 						break;
 					case GeometryType.Polygon:
-						_overlays.Add(AddOverlay(geometry, _polygonSymbol));
+						_overlays.Add(AddOverlay(geometry, Assert.NotNull(_polygonSymbol)));
 
 						var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
 						var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
-						_overlays.Add(AddOverlay(startPointP, _startPointSymbol));
+						_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
 
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
-						_overlays.Add(AddOverlay(vertexMultipoint, _vertexMarkerSymbol));
+						_overlays.Add(AddOverlay(vertexMultipoint,
+						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(
-							AddOverlay(controlMultipoint, _controlPointMarkerSymbol));
+							AddOverlay(controlMultipoint,
+							           Assert.NotNull(_controlPointMarkerSymbol)));
 
-						_overlays.Add(AddOverlay(endPointP, _endPointSymbol));
+						_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
 						break;
 
 					default:

@@ -10,9 +10,9 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -66,6 +66,13 @@ namespace ProSuite.QA.Tests
 
 			_xyTolerance = GeometryUtils.GetXyTolerance(multiPatchClass.SpatialReference);
 		}
+
+		[InternallyUsedTest]
+		public QaMpVerticalFaces(
+			[NotNull] QaMpVerticalFacesDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass,
+			       definition.NearAngle,
+			       definition.ToleranceAngle) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{
@@ -217,7 +224,7 @@ namespace ProSuite.QA.Tests
 				int currentPart = Assert.NotNull(_segmentsEnum.Current).PartIndex;
 				int segmentCount = _indexedSegments.GetPartSegmentCount(currentPart);
 
-				var partSegments = new List<SegmentProxy>(segmentCount) {_segmentsEnum.Current};
+				var partSegments = new List<SegmentProxy>(segmentCount) { _segmentsEnum.Current };
 
 				if (_segmentsEnum.Current == null)
 				{

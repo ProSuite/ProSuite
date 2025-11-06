@@ -10,8 +10,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -63,11 +61,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpFootprintHoles_0))]
 		public QaMpFootprintHoles(
 			[Doc(nameof(DocStrings.QaMpFootprintHoles_multiPatchClass))] [NotNull]
-			IReadOnlyFeatureClass
-				multiPatchClass,
+			IReadOnlyFeatureClass multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpFootprintHoles_innerRingHandling))]
-			InnerRingHandling
-				innerRingHandling)
+			InnerRingHandling innerRingHandling)
 			: base(multiPatchClass)
 		{
 			Assert.ArgumentNotNull(multiPatchClass, nameof(multiPatchClass));
@@ -78,6 +74,19 @@ namespace ProSuite.QA.Tests
 			_innerRingHandling = innerRingHandling;
 			_spatialReference = multiPatchClass.SpatialReference;
 			_shapeFieldName = multiPatchClass.ShapeFieldName;
+		}
+
+		[InternallyUsedTest]
+		public QaMpFootprintHoles(
+			[NotNull] QaMpFootprintHolesDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass,
+			       definition.InnerRingHandling)
+		{
+			HorizontalZTolerance = definition.HorizontalZTolerance;
+			ResolutionFactor = definition.ResolutionFactor;
+			MinimumArea = definition.MinimumArea;
+			ReportVerticalPatchesNotCompletelyWithinFootprint =
+				definition.ReportVerticalPatchesNotCompletelyWithinFootprint;
 		}
 
 		[UsedImplicitly]
@@ -304,7 +313,7 @@ namespace ProSuite.QA.Tests
 					description, InvolvedRowUtils.GetInvolvedRows(row),
 					GeometryFactory.CreatePolygon(ring),
 					Codes[Code.FootprintHasInnerRing],
-					_shapeFieldName, values: new object[] {area});
+					_shapeFieldName, values: new object[] { area });
 			}
 
 			return errorCount;

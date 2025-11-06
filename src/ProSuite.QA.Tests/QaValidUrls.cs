@@ -155,6 +155,13 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
+		[InternallyUsedTest]
+		public QaValidUrls([NotNull] QaValidUrlsDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.UrlExpression)
+		{
+			MaximumParallelTasks = definition.MaximumParallelTasks;
+		}
+
 		[TestParameter(_defaultMaximumParallelTasks)]
 		[Doc(nameof(DocStrings.QaValidUrls_MaximumParallelTasks))]
 		public int MaximumParallelTasks

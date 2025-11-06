@@ -10,9 +10,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -66,6 +66,12 @@ namespace ProSuite.QA.Tests
 
 			AngleUnit = AngleUnit.Degree;
 		}
+
+		[InternallyUsedTest]
+		public QaHorizontalSegments(
+			[NotNull] QaHorizontalSegmentsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.Limit, definition.Tolerance) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{
@@ -354,7 +360,7 @@ namespace ProSuite.QA.Tests
 			                                     int endSegmentIndex)
 			{
 				return ProxyUtils.GetSubpart(_segments, partIndex, startSegmentIndex,
-				                                  endSegmentIndex);
+				                             endSegmentIndex);
 			}
 
 			public override void Dispose()

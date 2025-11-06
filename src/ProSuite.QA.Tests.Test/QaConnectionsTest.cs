@@ -5,9 +5,10 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
-using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
@@ -55,7 +56,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConnections", fields,
 				                                      null);
-			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
+			IList<ITableSchemaDef> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);
@@ -113,7 +114,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestConnections", fields,
 				                                      null);
-			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
+			IList<ITableSchemaDef> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
 
 			{
 				IFeature row = fc.CreateFeature();
@@ -166,7 +167,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				DatasetUtils.CreateSimpleFeatureClass(ws, "TestWithTolerance", fields,
 				                                      null);
-			IList<IReadOnlyTable> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
+			IList<ITableSchemaDef> tbls = new[] { ReadOnlyTableFactory.Create(fc) };
 
 			// make sure the table is known by the workspace
 			((IWorkspaceEdit) ws).StartEditing(false);

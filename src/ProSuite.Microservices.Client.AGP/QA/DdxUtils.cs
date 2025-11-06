@@ -52,7 +52,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				await QueuedTask.Run(() =>
 				{
 					AddWorkspaces(tableCollection, datastoresByHandle);
-					AddSpatialReferences(tableCollection.OfType<FeatureClass>(), spatialReferencesByWkId);
+					AddSpatialReferences(tableCollection.OfType<FeatureClass>(),
+					                     spatialReferencesByWkId);
 
 					return CreateProjectWorkspacesRequest(tableCollection);
 				});
@@ -144,6 +145,68 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				CreateQualitySpecification(response, supportedInstanceDescriptors);
 
 			result.SetCloneId(specificationId);
+
+			return result;
+		}
+
+		public static QualityCondition CreateQualityCondition(
+			[NotNull] GetConditionResponse getConditionResponse,
+			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors = null)
+		{
+			// TODO: Copyied from below. Extract common method(s)!
+			IEnumerable<InstanceDescriptorMsg> descriptorsMsg =
+				getConditionResponse.ReferencedInstanceDescriptors;
+
+			if (instanceDescriptors == null)
+			{
+				instanceDescriptors = new SupportedInstanceDescriptors(
+					new List<TestDescriptor>(),
+					new List<TransformerDescriptor>(),
+					new List<IssueFilterDescriptor>());
+			}
+
+			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
+			{
+				if (instanceDescriptors.Contains(descriptorMsg.Name))
+				{
+					continue;
+				}
+
+				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
+				instanceDescriptors.AddDescriptor(instanceDescriptor);
+			}
+
+			Dictionary<int, IDdxDataset> datasetsById =
+				FromDatasetMsgs(getConditionResponse.ReferencedDatasets);
+
+			var models = new List<DdxModel>();
+
+			foreach (ModelMsg modelMsg in getConditionResponse.ReferencedModels)
+			{
+				DdxModel model =
+					CreateDdxModel(modelMsg, (msg) => new BasicModel(msg.ModelId, msg.Name));
+
+				foreach (int datasetId in modelMsg.DatasetIds)
+				{
+					if (datasetsById.TryGetValue(datasetId, out IDdxDataset dataset) &&
+					    ! model.Contains(dataset))
+					{
+						model.AddDataset((Dataset) dataset);
+					}
+				}
+
+				models.Add(model);
+			}
+
+			IDictionary<string, DdxModel> modelsByWorkspaceId =
+				models.ToDictionary(m => m.Id.ToString(CultureInfo.InvariantCulture),
+				                    m => (DdxModel) m);
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			QualityCondition result =
+				factory.CreateQualityCondition(getConditionResponse.Condition);
 
 			return result;
 		}
@@ -407,8 +470,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (NetworkDatasetMsg networkDatasetMsg in linearNetworkMsg.NetworkDatasets)
 			{
-				VectorDataset vectorDataset = vectorDatasets.FirstOrDefault(
-					vd => vd.Id == networkDatasetMsg.DatasetId);
+				VectorDataset vectorDataset =
+					vectorDatasets.FirstOrDefault(vd => vd.Id == networkDatasetMsg.DatasetId);
 
 				Assert.NotNull(vectorDataset,
 				               $"Linear Network {linearNetworkMsg.Name}: Vector dataset <id> " +
@@ -538,8 +601,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				request.ObjectClasses.Add(objectClassMsg);
 
 				WorkspaceMsg workspaceMsg =
-					workspaceMessages.FirstOrDefault(
-						wm => wm.WorkspaceHandle == objectClassMsg.WorkspaceHandle);
+					workspaceMessages.FirstOrDefault(wm => wm.WorkspaceHandle ==
+					                                       objectClassMsg.WorkspaceHandle);
 
 				if (workspaceMsg == null)
 				{

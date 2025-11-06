@@ -14,6 +14,7 @@ using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -21,12 +22,6 @@ namespace ProSuite.QA.Tests.Transformers
 	[ZValuesTest]
 	public class TrZAssign : TrGeometryTransform
 	{
-		public enum AssignOption
-		{
-			Tile,
-			All
-		}
-
 		private const AssignOption _defaultZAssignOption = AssignOption.Tile;
 		private readonly RasterReference _raster;
 
@@ -59,6 +54,15 @@ namespace ProSuite.QA.Tests.Transformers
 			: base(featureClass, featureClass.ShapeType)
 		{
 			_raster = rasterMosaic;
+		}
+
+		[InternallyUsedTest]
+		public TrZAssign(
+			[NotNull] TrZAssignDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       (RasterDatasetReference) definition.Raster)
+		{
+			ZAssignOption = (AssignOption) definition.ZAssignOption;
 		}
 
 		[TestParameter(_defaultZAssignOption)]

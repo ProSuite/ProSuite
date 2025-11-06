@@ -157,6 +157,20 @@ namespace ProSuite.QA.Tests
 			_spatialReference = featureClass.SpatialReference;
 		}
 
+		[InternallyUsedTest]
+		public QaValidCoordinateFields([NotNull] QaValidCoordinateFieldsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.XCoordinateFieldName,
+			       definition.YCoordinateFieldName, definition.ZCoordinateFieldName,
+			       definition.XyTolerance, definition.ZTolerance, definition.Culture)
+		{
+			AllowXYFieldValuesForUndefinedShape = definition.AllowXYFieldValuesForUndefinedShape;
+			AllowZFieldValueForUndefinedShape = definition.AllowZFieldValueForUndefinedShape;
+			AllowMissingZFieldValueForDefinedShape =
+				definition.AllowMissingZFieldValueForDefinedShape;
+			AllowMissingXYFieldValueForDefinedShape =
+				definition.AllowMissingXYFieldValueForDefinedShape;
+		}
+
 		[TestParameter(false)]
 		[Doc(nameof(DocStrings.QaValidCoordinateFields_AllowXYFieldValuesForUndefinedShape))]
 		public bool AllowXYFieldValuesForUndefinedShape { get; set; }

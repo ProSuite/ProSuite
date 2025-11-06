@@ -54,6 +54,8 @@ public abstract class WorkListFactoryBase : IWorkListFactory
 		}
 	}
 
+	public bool IsWorkListCreated => _workList != null;
+
 	public abstract string Name { get; }
 
 	public void UnWire()
@@ -213,7 +215,8 @@ public abstract class WorkListFactoryBase : IWorkListFactory
 					// TablePaneViewModel implements IMapPane as well! Not only "real" map panes.
 					foreach (Map map in FrameworkApplication.Panes
 					                                        .OfType<IMapPane>()
-					                                        .Where(mapPane => mapPane.MapView != null)
+					                                        .Where(mapPane =>
+							                                        mapPane.MapView != null)
 					                                        .Select(mapPane => mapPane.MapView.Map))
 					{
 						if (map == null)
@@ -223,15 +226,18 @@ public abstract class WorkListFactoryBase : IWorkListFactory
 
 						// Removing a layer that's not part of a layer container throws an exception.
 						// Check whether the layers are part of the map.
-						foreach (Layer layer in WorkListUtils.GetWorklistLayersByPath(map, item.Path))
+						foreach (Layer layer in WorkListUtils.GetWorklistLayersByPath(
+							         map, item.Path))
 						{
-							_msg.Debug($"Remove project item {item.Name} and work list layer {layer.Name}");
+							_msg.Debug(
+								$"Remove project item {item.Name} and work list layer {layer.Name}");
 
 							// this does NOT call the OnLayerRemovingAsync event handler!!
 							// OnLayerRemovingAsync is called when the layer is removes manually
 							map.RemoveLayer(layer);
 
-							IWorkList workList = WorkListUtils.GetLoadedWorklist(WorkListRegistry.Instance, layer);
+							IWorkList workList =
+								WorkListUtils.GetLoadedWorklist(WorkListRegistry.Instance, layer);
 							Assert.NotNull(workList);
 
 							// no need to persist work list state, work list gets deleted

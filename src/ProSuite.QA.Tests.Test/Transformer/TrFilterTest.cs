@@ -13,6 +13,7 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -171,7 +172,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var trFullSearch = new TrOnlyIntersectingFeatures(ReadOnlyTableFactory.Create(lineFc),
 			                                                  ReadOnlyTableFactory.Create(polyFc));
-			trFullSearch.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			trFullSearch.FilteringSearchOption = SearchOption.All;
 			{
 				var test = new QaMinLength(trFullSearch.GetTransformed(), 500);
 
@@ -319,7 +320,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 			var trFullSearch = new TrOnlyDisjointFeatures(ReadOnlyTableFactory.Create(lineFc),
 			                                              ReadOnlyTableFactory.Create(polyFc));
-			trFullSearch.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			trFullSearch.FilteringSearchOption = SearchOption.All;
 			{
 				var test = new QaMaxLength(trFullSearch.GetTransformed(), 400);
 
@@ -758,7 +759,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrDissolve trDissolveDisjoint =
 				new TrDissolve(trDisjoint.GetTransformed())
 				{
-					NeighborSearchOption = TrDissolve.SearchOption.All,
+					NeighborSearchOption = SearchOption.All,
 					Attributes = new List<string>
 					             { "COUNT(TLM_STEHENDES_GEWAESSER_OBJECTID) AS ANZAHL_LAEUFE" },
 					GroupBy = new List<string> { "GEWISS_NR" },
@@ -769,7 +770,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrSpatialJoin(trDissolveDisjoint.GetTransformed(), gk)
 				{
 					OuterJoin = false,
-					NeighborSearchOption = TrSpatialJoin.SearchOption.All,
+					NeighborSearchOption = SearchOption.All,
 					Grouped = true,
 					T1Attributes = new List<string>
 					               {

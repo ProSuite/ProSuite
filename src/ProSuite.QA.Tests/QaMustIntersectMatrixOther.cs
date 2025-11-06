@@ -53,14 +53,11 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_0))]
 		public QaMustIntersectMatrixOther(
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_featureClass))] [NotNull]
-			IReadOnlyFeatureClass
-				featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClass))] [NotNull]
-			IReadOnlyFeatureClass
-				otherFeatureClass,
+			IReadOnlyFeatureClass otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
 			[CanBeNull]
 			string
@@ -73,25 +70,19 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_1))]
 		public QaMustIntersectMatrixOther(
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_featureClass))] [NotNull]
-			IReadOnlyFeatureClass
-				featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClass))] [NotNull]
-			IReadOnlyFeatureClass
-				otherFeatureClass,
+			IReadOnlyFeatureClass otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
 			[CanBeNull]
-			string
-				relevantRelationCondition,
+			string relevantRelationCondition,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_requiredIntersectionDimensions))]
-			string
-				requiredIntersectionDimensions,
+			string requiredIntersectionDimensions,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_unallowedIntersectionDimensions))]
-			string
-				unallowedIntersectionDimensions)
-			: this(new[] {featureClass}, new[] {otherFeatureClass},
+			string unallowedIntersectionDimensions)
+			: this(new[] { featureClass }, new[] { otherFeatureClass },
 			       intersectionMatrix, relevantRelationCondition,
 			       requiredIntersectionDimensions, unallowedIntersectionDimensions)
 		{
@@ -106,8 +97,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClasses))] [NotNull]
 			ICollection<IReadOnlyFeatureClass> otherFeatureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
 			[CanBeNull]
 			string
@@ -125,20 +115,16 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_otherFeatureClasses))] [NotNull]
 			ICollection<IReadOnlyFeatureClass> otherFeatureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_intersectionMatrix))] [NotNull]
-			string
-				intersectionMatrix,
+			string intersectionMatrix,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_relevantRelationCondition))]
 			[CanBeNull]
-			string
-				relevantRelationCondition,
+			string relevantRelationCondition,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_requiredIntersectionDimensions))]
 			[CanBeNull]
-			string
-				requiredIntersectionDimensions,
+			string requiredIntersectionDimensions,
 			[Doc(nameof(DocStrings.QaMustIntersectMatrixOther_unallowedIntersectionDimensions))]
 			[CanBeNull]
-			string
-				unallowedIntersectionDimensions)
+			string unallowedIntersectionDimensions)
 			: base(featureClasses, otherFeatureClasses, relevantRelationCondition)
 		{
 			Assert.ArgumentNotNullOrEmpty(intersectionMatrix, nameof(intersectionMatrix));
@@ -158,6 +144,16 @@ namespace ProSuite.QA.Tests
 			                                    _requiredDimensions,
 			                                    _unallowedDimensions);
 		}
+
+		[InternallyUsedTest]
+		public QaMustIntersectMatrixOther(
+			[NotNull] QaMustIntersectMatrixOtherDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.OtherFeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.IntersectionMatrix,
+			       definition.RelevantRelationCondition,
+			       definition.RequiredIntersectionDimensions,
+			       definition.UnallowedIntersectionDimensions) { }
 
 		protected override CrossTileFeatureState<PendingFeature>
 			CreateCrossTileFeatureState()

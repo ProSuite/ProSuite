@@ -133,9 +133,9 @@ namespace ProSuite.QA.Tests
 			{
 				_constraintNodes = constraintDef.ConstraintNodes.Select(c => new ConstraintNode(c))
 				                                .ToList();
-
-				_usesSimpleConstraint = false;
 			}
+			_usesSimpleConstraint = constraintDef.UsesSimpleConstraint;
+			_errorDescriptionVersion= constraintDef.ErrorDescriptionVersion;
 		}
 
 		#endregion

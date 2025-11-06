@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -172,6 +173,7 @@ namespace ProSuite.DomainModel.AO.QA
 			return result;
 		}
 
+		[Obsolete("Use method InstanceConfigurationUtils.AddScalarParameterValue")]
 		[CanBeNull]
 		public static TestParameterValue AddParameterValue(
 			[NotNull] InstanceConfiguration instanceConfiguration,

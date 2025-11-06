@@ -83,6 +83,14 @@ namespace ProSuite.QA.Tests
 			_allowConstantValues = allowConstantValues;
 		}
 
+		[InternallyUsedTest]
+		public QaMonotonicMeasures(
+			[NotNull] QaMonotonicMeasuresDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.LineClass,
+			       definition.AllowConstantValues,
+			       definition.ExpectedMonotonicity,
+			       definition.FlipExpression) { }
+
 		#region Overrides of ContainerTest
 
 		public override bool IsQueriedTable(int tableIndex)

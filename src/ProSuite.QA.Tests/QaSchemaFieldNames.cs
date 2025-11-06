@@ -10,6 +10,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Properties;
 using ProSuite.QA.Tests.Schema;
 
@@ -66,6 +67,11 @@ namespace ProSuite.QA.Tests
 			_expectedCase = expectedCase;
 			_uniqueSubstringLength = uniqueSubstringLength;
 		}
+
+		[InternallyUsedTest]
+		public QaSchemaFieldNames([NotNull] QaSchemaFieldNamesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.MaximumLength,
+			       definition.ExpectedCase, definition.UniqueSubstringLength) { }
 
 		#region Overrides of QaSchemaTestBase
 

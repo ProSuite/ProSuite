@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -108,6 +109,16 @@ namespace ProSuite.QA.Tests
 			       new[] { isWithin },
 			       isContainingCondition,
 			       reportIndividualParts) { }
+
+		[InternallyUsedTest]
+		public QaContainsOther(QaContainsOtherDefinition definition)
+			: this(definition.Contains.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.IsWithin.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.IsContainingCondition,
+			       definition.ReportIndividualParts
+			) { }
 
 		protected override void ConfigureQueryFilter(int tableIndex, ITableFilter filter)
 		{

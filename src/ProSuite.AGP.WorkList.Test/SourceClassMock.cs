@@ -12,7 +12,7 @@ public class SourceClassMock : ISourceClass
 	public GdbTableIdentity TableIdentity { get; } = WorkListTestUtils.CreateTableProxy();
 	public IAttributeReader AttributeReader { get; set; }
 	public bool HasGeometry { get; }
-	public string DefinitionQuery { get; }
+	public string DefaultDefinitionQuery { get; }
 	public string OIDField { get; set; }
 	public string ShapeField { get; set; }
 	public string StatusField { get; set; }

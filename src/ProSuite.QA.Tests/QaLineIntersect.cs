@@ -15,6 +15,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
@@ -138,6 +139,17 @@ namespace ProSuite.QA.Tests
 				_xyResolutions.Add(
 					SpatialReferenceUtils.GetXyResolution(polylineClass.SpatialReference));
 			}
+		}
+
+		[InternallyUsedTest]
+		public QaLineIntersect(QaLineIntersectDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
+							 .ToList(),
+				   definition.ValidRelationConstraint,
+				   definition.AllowedEndpointInteriorIntersections,
+				   definition.ReportOverlaps)
+		{
+			AllowedInteriorIntersections = definition.AllowedInteriorIntersections;
 		}
 
 		[TestParameter(_defaultAllowedInteriorIntersections)]
