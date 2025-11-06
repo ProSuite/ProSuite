@@ -13,8 +13,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// <param name="maxEast"></param>
 		/// <param name="maxNorth"></param>
 		/// <returns></returns>
-		public static IEnumerable<TileIndex> GetAllTilesBetween(
-			int minEast, int minNorth, int maxEast, int maxNorth)
+		public static IEnumerable<TileIndex> GetAllTilesBetween(int minEast, int minNorth, int maxEast, int maxNorth)
 		{
 			int width = maxEast - minEast + 1;
 			int height = maxNorth - minNorth + 1;
@@ -27,9 +26,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				quadSize *= 2;
 			}
 
+			// Center the quadtree on the actual extent
+			int centerEast = (minEast + maxEast) / 2;
+			int centerNorth = (minNorth + maxNorth) / 2;
+			int startEast = centerEast - quadSize / 2;
+			int startNorth = centerNorth - quadSize / 2;
+
 			// Recursively traverse the quadtree
-			foreach (var tile in TraverseQuadTree(minEast, minNorth, quadSize, minEast, minNorth,
-			                                      maxEast, maxNorth))
+			foreach (var tile in TraverseQuadTree(startEast, startNorth, quadSize, minEast, minNorth, maxEast, maxNorth))
 			{
 				yield return tile;
 			}
@@ -43,11 +47,10 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			if (size == 1)
 			{
 				if (startEast >= minEast && startEast <= maxEast &&
-				    startNorth >= minNorth && startNorth <= maxNorth)
+					startNorth >= minNorth && startNorth <= maxNorth)
 				{
 					yield return new TileIndex(startEast, startNorth);
 				}
-
 				yield break;
 			}
 
@@ -55,7 +58,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			// Check if this quadrant intersects with our bounds
 			if (startEast > maxEast || startEast + size - 1 < minEast ||
-			    startNorth > maxNorth || startNorth + size - 1 < minNorth)
+				startNorth > maxNorth || startNorth + size - 1 < minNorth)
 			{
 				yield break;
 			}
@@ -64,23 +67,19 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			// (0,0), (1,0), (0,1), (1,1) pattern
 
 			// Bottom-left quadrant (0, 0)
-			foreach (var tile in TraverseQuadTree(startEast, startNorth, halfSize, minEast,
-			                                      minNorth, maxEast, maxNorth))
+			foreach (var tile in TraverseQuadTree(startEast, startNorth, halfSize, minEast, minNorth, maxEast, maxNorth))
 				yield return tile;
 
 			// Bottom-right quadrant (1, 0)
-			foreach (var tile in TraverseQuadTree(startEast + halfSize, startNorth, halfSize,
-			                                      minEast, minNorth, maxEast, maxNorth))
+			foreach (var tile in TraverseQuadTree(startEast + halfSize, startNorth, halfSize, minEast, minNorth, maxEast, maxNorth))
 				yield return tile;
 
 			// Top-left quadrant (0, 1)
-			foreach (var tile in TraverseQuadTree(startEast, startNorth + halfSize, halfSize,
-			                                      minEast, minNorth, maxEast, maxNorth))
+			foreach (var tile in TraverseQuadTree(startEast, startNorth + halfSize, halfSize, minEast, minNorth, maxEast, maxNorth))
 				yield return tile;
 
 			// Top-right quadrant (1, 1)
-			foreach (var tile in TraverseQuadTree(startEast + halfSize, startNorth + halfSize,
-			                                      halfSize, minEast, minNorth, maxEast, maxNorth))
+			foreach (var tile in TraverseQuadTree(startEast + halfSize, startNorth + halfSize, halfSize, minEast, minNorth, maxEast, maxNorth))
 				yield return tile;
 		}
 	}
