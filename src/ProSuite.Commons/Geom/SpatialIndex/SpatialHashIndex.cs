@@ -166,27 +166,6 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			Add(identifier, intersectedTiles);
 		}
 
-		public void Remove(T identifier, double xMin, double yMin, double xMax, double yMax)
-		{
-			IEnumerable<TileIndex> intersectedTiles =
-				TilingDefinition.GetIntersectingTiles(xMin, yMin, xMax, yMax);
-
-			foreach (TileIndex intersectedTileIdx in intersectedTiles)
-			{
-				List<T> tileGeometryRefs;
-
-				if (! _tiles.TryGetValue(intersectedTileIdx, out tileGeometryRefs))
-				{
-					continue;
-				}
-
-				if (tileGeometryRefs.Contains(identifier))
-				{
-					tileGeometryRefs.Remove(identifier);
-				}
-			}
-		}
-
 		public void Add(T identifier, double xMin, double yMin, double xMax, double yMax)
 		{
 			IEnumerable<TileIndex> intersectedTiles =
@@ -234,46 +213,23 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 		}
 
-		/// <summary>
-		/// Get Identifiers per tile, starting with the tile containing to the given point sorted according to the given DistanceMetric.
-		/// </summary>
-		/// <param name="x">X coordinate</param>
-		/// <param name="y">Y coordinate</param>
-		/// <param name="metric">The type of distance you want to use to order the tiles</param>
-		/// <param name="maxDistance">The maximum distance until which tiles are returned.</param>
-		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
-		/// <param name="returnEmptyTiles">Whether to return tiles that do not contain points</param>
-		/// <returns></returns>
-		public IEnumerable<IEnumerable<T>> FindTilesAround(double x, double y,
-		                                                   double maxDistance = double.MaxValue,
-		                                                   DistanceMetric metric =
-			                                                   DistanceMetric.EuclideanDistance,
-		                                                   [CanBeNull] Predicate<T> predicate =
-			                                                   null,
-		                                                   bool returnEmptyTiles = false)
+		public void Remove(T identifier, double xMin, double yMin, double xMax, double yMax)
 		{
-			if (_tiles.Count == 0)
-				yield break;
+			IEnumerable<TileIndex> intersectedTiles =
+				TilingDefinition.GetIntersectingTiles(xMin, yMin, xMax, yMax);
 
-			double maxExistingTileDistance = Math.Ceiling(GetDistanceToFurthestPopulatedTile(x, y));
-
-			// Note: We take the ceiling of the actual distance to ensure that all points that are within the defined radius
-			//		 are actually returned. In some cases this might lead to points being returned that are further away
-			//		 than the max distance.
-			double effectiveMaxDistance =
-				Math.Ceiling((Math.Min(maxExistingTileDistance, maxDistance)));
-
-			foreach (var tileIndex in TilingDefinition.GetTileIndexAround(
-				         x, y, metric, effectiveMaxDistance))
+			foreach (TileIndex intersectedTileIdx in intersectedTiles)
 			{
-				// Only yield tiles that exist and have items
-				if (_tiles.ContainsKey(tileIndex))
+				List<T> tileGeometryRefs;
+
+				if (! _tiles.TryGetValue(intersectedTileIdx, out tileGeometryRefs))
 				{
-					yield return FindItemsWithinTile(tileIndex, predicate);
+					continue;
 				}
-				else if (returnEmptyTiles)
+
+				if (tileGeometryRefs.Contains(identifier))
 				{
-					yield return new List<T>();
+					tileGeometryRefs.Remove(identifier);
 				}
 			}
 		}
@@ -379,6 +335,50 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			[CanBeNull] Predicate<T> predicate = null)
 		{
 			return FindIdentifiers(box.Min.X, box.Min.Y, box.Max.X, box.Max.Y, predicate);
+		}
+
+		/// <summary>
+		/// Get Identifiers per tile, starting with the tile containing to the given point sorted according to the given DistanceMetric.
+		/// </summary>
+		/// <param name="x">X coordinate</param>
+		/// <param name="y">Y coordinate</param>
+		/// <param name="metric">The type of distance you want to use to order the tiles</param>
+		/// <param name="maxDistance">The maximum distance until which tiles are returned.</param>
+		/// <param name="predicate">Predicate to restrict which Elements are returned</param>
+		/// <param name="returnEmptyTiles">Whether to return tiles that do not contain points</param>
+		/// <returns></returns>
+		public IEnumerable<IEnumerable<T>> FindTilesAround(double x, double y,
+		                                                   double maxDistance = double.MaxValue,
+		                                                   DistanceMetric metric =
+			                                                   DistanceMetric.EuclideanDistance,
+		                                                   [CanBeNull] Predicate<T> predicate =
+			                                                   null,
+		                                                   bool returnEmptyTiles = false)
+		{
+			if (_tiles.Count == 0)
+				yield break;
+
+			double maxExistingTileDistance = Math.Ceiling(GetDistanceToFurthestPopulatedTile(x, y));
+
+			// Note: We take the ceiling of the actual distance to ensure that all points that are within the defined radius
+			//		 are actually returned. In some cases this might lead to points being returned that are further away
+			//		 than the max distance.
+			double effectiveMaxDistance =
+				Math.Ceiling((Math.Min(maxExistingTileDistance, maxDistance)));
+
+			foreach (var tileIndex in TilingDefinition.GetTileIndexAround(
+				         x, y, metric, effectiveMaxDistance))
+			{
+				// Only yield tiles that exist and have items
+				if (_tiles.ContainsKey(tileIndex))
+				{
+					yield return FindItemsWithinTile(tileIndex, predicate);
+				}
+				else if (returnEmptyTiles)
+				{
+					yield return new List<T>();
+				}
+			}
 		}
 
 		public override string ToString()
