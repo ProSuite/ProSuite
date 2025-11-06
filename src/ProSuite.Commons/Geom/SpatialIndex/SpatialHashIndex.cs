@@ -278,19 +278,33 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 		}
 
+		/// <summary>
+		/// Get all identifiers in the index, optionally filtered by a predicate and sorted by tile indices in a quadtree order.
+		/// </summary>
+		/// <param name="predicate"></param>
+		/// <param name="sorted"></param>
+		/// <returns></returns>
 		public IEnumerable<T> FindIdentifiers(Predicate<T> predicate = null, bool sorted = false)
 		{
 			if (! sorted)
 			{
 				return GetTileData()
-				       .SelectMany(tileData => tileData.items)
-				       .Where(item => predicate == null || predicate(item));
+				             .SelectMany(tileData => tileData.items)
+				             .Where(item => predicate == null || predicate(item));
 			}
-			return GetTileData()
-			       .OrderBy(tileData => tileData.east)
-			       .ThenBy(tileData => tileData.north)
-			       .SelectMany(tileData => tileData.items)
-			       .Where(item => predicate == null || predicate(item));
+
+			UpdateTileIndexEnvelope();
+			var tiles = QuadTreeUtils
+			            .GetAllTilesBetween(MinTileEasting, MinTileNorthing, MaxTileEasting,
+			                                MaxTileNorthing)
+			            .Where(tileIndex => _tiles.ContainsKey(tileIndex)).ToList();
+
+			var tilesSet = new HashSet<TileIndex>(tiles);
+			if (!tilesSet.IsSupersetOf(_tiles.Keys))
+			{
+				throw new InvalidOperationException("Trying to return incompleted tile set.");
+			}
+			return tiles.SelectMany(tileIndex => _tiles[tileIndex].Where(item => predicate == null || predicate(item)));
 		}
 
 		public IEnumerable<T> FindIdentifiers(
