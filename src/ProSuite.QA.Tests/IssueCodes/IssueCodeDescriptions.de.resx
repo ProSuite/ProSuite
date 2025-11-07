@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1223,5 +1223,8 @@
   </data>
   <data name="ContainedPoints_NotClosedLine" xml:space="preserve">
     <value>Nicht geschlossene Linie</value>
+  </data>
+  <data name="Extent_ExtentSmallerThanLimit" xml:space="preserve">
+    <value>Ausdehnung des Features ist kleiner als der definierte Minimalwert</value>
   </data>
 </root>

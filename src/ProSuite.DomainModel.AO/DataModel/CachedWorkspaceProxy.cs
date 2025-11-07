@@ -1,15 +1,16 @@
+using System;
+using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.DataModel;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
-using System;
-using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -47,10 +48,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public override IFeatureWorkspace FeatureWorkspace { get; }
 
-		public override ITable OpenTable(string name,
-		                                 string oidFieldName = null,
-		                                 SpatialReferenceDescriptor spatialReferenceDescriptor =
-			                                 null)
+		public override ITable OpenTable(
+			string name,
+			string oidFieldName = null,
+			SpatialReferenceDescriptor spatialReferenceDescriptor = null,
+			esriGeometryType knownGeometryType = esriGeometryType.esriGeometryNull)
 		{
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
@@ -60,7 +62,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 				table = ModelElementUtils.OpenTable(FeatureWorkspace,
 				                                    name,
 				                                    oidFieldName,
-				                                    spatialReferenceDescriptor);
+				                                    spatialReferenceDescriptor,
+				                                    knownGeometryType);
 				_tablesByName.Add(name, table);
 			}
 

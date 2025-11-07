@@ -7,9 +7,11 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
@@ -300,9 +302,19 @@ namespace ProSuite.DomainModel.AO.DataModel
 		                                           [NotNull] string gdbDatasetName,
 		                                           [NotNull] IObjectDataset dataset)
 		{
+			esriGeometryType esriShapeType = esriGeometryType.esriGeometryNull;
+
+			if (dataset.GeometryType is GeometryTypeShape shapeType)
+			{
+				ProSuiteGeometryType proSuiteGeometryType = shapeType.ShapeType;
+
+				esriShapeType = (esriGeometryType)proSuiteGeometryType;
+			}
+
 			return OpenObjectClass(workspace, gdbDatasetName,
 			                       dataset.GetAttribute(AttributeRole.ObjectID)?.Name,
-			                       dataset.Model.SpatialReferenceDescriptor);
+			                       dataset.Model.SpatialReferenceDescriptor,
+			                       esriShapeType);
 		}
 
 		[NotNull]
@@ -310,10 +322,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string gdbDatasetName,
 			[CanBeNull] string oidFieldName = null,
-			[CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor = null)
+			[CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor = null,
+			esriGeometryType shapeType = esriGeometryType.esriGeometryNull)
 		{
 			return (IObjectClass) OpenTable(workspace, gdbDatasetName, oidFieldName,
-			                                spatialReferenceDescriptor);
+			                                spatialReferenceDescriptor, shapeType);
 		}
 
 		[NotNull]
@@ -321,14 +334,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string gdbDatasetName,
 			[CanBeNull] string oidFieldName = null,
-			[CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor = null)
+			[CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor = null,
+			esriGeometryType knownGeometryType = esriGeometryType.esriGeometryNull)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNull(gdbDatasetName, nameof(gdbDatasetName));
 
-			var sqlWorksace = workspace as ISqlWorkspace;
+			var sqlWorkspace = workspace as ISqlWorkspace;
 
-			if (sqlWorksace == null ||
+			if (sqlWorkspace == null ||
 			    DatasetUtils.IsRegisteredAsObjectClass((IWorkspace) workspace, gdbDatasetName))
 			{
 				return DatasetUtils.OpenTable(workspace, gdbDatasetName);
@@ -337,8 +351,23 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IQueryDescription queryDescription;
 			try
 			{
-				string query = $"SELECT * FROM {gdbDatasetName}";
-				queryDescription = sqlWorksace.GetQueryDescription(query);
+				bool discoverSpatialProperties =
+					spatialReferenceDescriptor == null &&
+					knownGeometryType == esriGeometryType.esriGeometryNull;
+
+				string fieldList = GetFieldList((IWorkspace) workspace, gdbDatasetName);
+
+				string query = $"SELECT {fieldList} FROM {gdbDatasetName}";
+
+				ISqlWorkspace2 sqlWorkspace2 = (ISqlWorkspace2) sqlWorkspace;
+
+				// NOTE: discoverSpatialProperties = false is only fast if the field list is not '*'
+				queryDescription = sqlWorkspace2.GetQueryDescription2(query, discoverSpatialProperties);
+
+				if (knownGeometryType != esriGeometryType.esriGeometryNull)
+				{
+					queryDescription.GeometryType = knownGeometryType;
+				}
 			}
 			catch (Exception ex)
 			{
@@ -374,31 +403,32 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (hasDubiousOid)
 			{
-				if (StringUtils.IsNotEmpty(oidFieldName) &&
-					queryDescription.Fields.FindField(oidFieldName) >= 0)
-				{
-					_msg.DebugFormat("Opening {0} as view, using configured OID field {1}",
-					                 gdbDatasetName, oidFieldName);
-					queryDescription.OIDFields = oidFieldName;
-				}
-				else
-				{
-					IField uniqueIntegerField = GetUniqueIntegerField(workspace, gdbDatasetName);
+				string resolvedOidFieldName =
+					TryDetermineOidFieldName(queryDescription, gdbDatasetName, oidFieldName,
+					                         workspace);
 
-					if (uniqueIntegerField != null)
-					{
-						_msg.DebugFormat("Determined {0} as OID field for {1}",
-						                 uniqueIntegerField.Name, gdbDatasetName);
-
-						queryDescription.OIDFields = uniqueIntegerField.Name;
-					}
+				if (! string.IsNullOrEmpty(resolvedOidFieldName))
+				{
+					_msg.DebugFormat("Opening {0} as view, using resolved OID field {1}",
+					                 gdbDatasetName, resolvedOidFieldName);
+					queryDescription.OIDFields = resolvedOidFieldName;
 				}
 			}
 
 			if (hasUnknownSref && queryDescription.IsSpatialQuery)
 			{
-				queryDescription.SpatialReference =
+				ISpatialReference spatialReference =
 					spatialReferenceDescriptor?.GetSpatialReference();
+
+				if (spatialReference != null)
+				{
+					queryDescription.SpatialReference = spatialReference;
+					queryDescription.Srid = spatialReference.FactoryCode.ToString();
+				}
+				else
+				{
+					_msg.DebugFormat("No spatial reference provided by spatial reference descriptor!");
+				}
 			}
 
 			string queryLayerName = null;
@@ -422,8 +452,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				_msg.DebugFormat("Opening query layer with name {0}", queryLayerName);
 
-				ITable queryClass = sqlWorksace.OpenQueryClass(queryLayerName, queryDescription);
-
+				ITable queryClass = sqlWorkspace.OpenQueryClass(queryLayerName, queryDescription);
+				
 				// This is probably not the case any more, or just in specific situations (oracle?):
 				// NOTE: the query class is owned by the *connected* user, not by the owner of the underlying table/view
 
@@ -559,6 +589,68 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			return DatasetUtils.GetUniqueIntegerField(table) ??
 			       DatasetUtils.GetUniqueIntegerField(table, requireUniqueIndex: false);
+		}
+
+		[CanBeNull]
+		private static string TryDetermineOidFieldName(
+			[NotNull] IQueryDescription queryDescription,
+			[NotNull] string gdbDatasetName,
+			[CanBeNull] string oidFieldName,
+			[NotNull] IFeatureWorkspace workspace)
+		{
+			if (StringUtils.IsNotEmpty(oidFieldName) &&
+			    queryDescription.Fields.FindField(oidFieldName) >= 0)
+			{
+				_msg.DebugFormat("Opening {0} as view, using configured OID field {1}",
+				                 gdbDatasetName, oidFieldName);
+				return oidFieldName;
+			}
+
+			IField uniqueIntegerField = GetUniqueIntegerField(workspace, gdbDatasetName);
+
+			if (uniqueIntegerField != null)
+			{
+				_msg.DebugFormat("Determined {0} as OID field for {1}",
+				                 uniqueIntegerField.Name, gdbDatasetName);
+				return uniqueIntegerField.Name;
+			}
+
+			return null;
+		}
+		private static string GetFieldList(IWorkspace sqlWorkspace, string tableName)
+		{
+			var sqlWs = sqlWorkspace as ISqlWorkspace;
+
+			if (sqlWs == null)
+			{
+				return "*";
+			}
+
+			try
+			{
+				var queryDescription =
+					sqlWs.GetQueryDescription($"SELECT * FROM {tableName} WHERE 1=0");
+
+				var result = new List<string>();
+
+				foreach (IField field in DatasetUtils.EnumFields(queryDescription.Fields))
+				{
+					if (field.Type != esriFieldType.esriFieldTypeBlob &&
+					    field.Type != esriFieldType.esriFieldTypeRaster)
+					{
+						result.Add(field.Name);
+					}
+				}
+
+				return StringUtils.Concatenate(result, ","); ;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Error getting field list from {tableName}: " +
+				           $"{ex.Message}. Using '*' instead", ex);
+
+				return "*";
+			}
 		}
 	}
 }

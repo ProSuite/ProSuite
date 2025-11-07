@@ -2916,17 +2916,40 @@ namespace ProSuite.Commons.AO.Geodatabase
 				yield break;
 			}
 
-			IEnumConfigurationKeyword keywords =
-				workspaceConfiguration.ConfigurationKeywords;
-			keywords.Reset();
+			var list = new List<IConfigurationKeyword>();
 
-			IConfigurationKeyword keyword;
-			while ((keyword = keywords.Next()) != null)
+			try
 			{
-				if (match == null || match(keyword))
+				IEnumConfigurationKeyword keywords =
+					workspaceConfiguration.ConfigurationKeywords;
+				keywords.Reset();
+
+				IConfigurationKeyword keyword;
+				while ((keyword = keywords.Next()) != null)
 				{
-					yield return getResult(keyword);
+					if (match == null || match(keyword))
+					{
+						list.Add(keyword);
+					}
 				}
+			}
+			catch (COMException e)
+			{
+				if (e.ErrorCode == (int) fdoError.FDO_E_SE_DBMS_DOES_NOT_SUPPORT &&
+				    IsMobileGeodatabase(workspace))
+				{
+					// Mobile geodatabases implement IWorkspaceConfiguration
+					// but iterating IEnumConfigurationKeyword fails...
+				}
+				else
+				{
+					throw;
+				}
+			}
+
+			foreach (IConfigurationKeyword keyword in list)
+			{
+				yield return getResult(keyword);
 			}
 		}
 
