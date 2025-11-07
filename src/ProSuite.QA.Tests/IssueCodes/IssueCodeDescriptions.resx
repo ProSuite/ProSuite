@@ -1326,4 +1326,7 @@
   <data name="AttributeDependency_TargetValuesNotDefined" xml:space="preserve">
     <value>Target values not defined in Attribute Dependency (given matching source values)</value>
   </data>
+  <data name="MinExtent_ExtentSmallerThanLimit" xml:space="preserve">
+    <value>Feature extent is below than the minimum limit</value>
+  </data>
 </root>

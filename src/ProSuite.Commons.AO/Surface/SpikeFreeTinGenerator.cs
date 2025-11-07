@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -8,6 +6,11 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProSuite.Commons.AO.Surface
 {
@@ -51,15 +54,6 @@ namespace ProSuite.Commons.AO.Surface
 			                              .Select(feature => feature.Shape)
 			                              .Where(shape => !shape.IsEmpty);
 
-			bool isClipping =
-				(surfaceType == esriTinSurfaceType.esriTinHardClip ||
-				 surfaceType == esriTinSurfaceType.esriTinSoftClip) &&
-				featureClass.ShapeType == esriGeometryType.esriGeometryPolygon;
-			if (isClipping)
-			{
-				geometries = geometries.Where(shape => !IsClipped(inExtent, shape));
-			}
-
 			if(_areasWithSpikes != null)
 			{
 				_msg.Info("SpikeFree algorithm is only applied to specified areas");
@@ -69,33 +63,91 @@ namespace ProSuite.Commons.AO.Surface
 					             .ToList();
 
 				var pointInSpikeFreeAreas = new List<(double x, double y, double z)>();
+				var intersectingAreasWithSpikes = new List<IGeometry>(4);
 
 
 				foreach (var geometry in geometries)
 				{
-					if (areasWithSpikes.Any(area => GeometryUtils.Intersects(area, geometry)))
+					intersectingAreasWithSpikes.Clear();
+					foreach (var area in areasWithSpikes)
 					{
-						pointInSpikeFreeAreas.AddRange(ExpandToCoodinates(geometry));
+						if (GeometryUtils.Intersects(area, geometry))
+							intersectingAreasWithSpikes.Add(area);
+					}
+
+					if (intersectingAreasWithSpikes.Count > 0)
+					{
+						CoordinateTransformer?.Transform(geometry);
+
+						switch (geometry)
+						{
+							case IPointCollection pointCollection:
+							{
+								int pc = pointCollection.PointCount;
+								for (int i = 0; i < pc; i++)
+								{
+									IPoint point = pointCollection.get_Point(i);
+
+									bool inside = false;
+									foreach (IGeometry t in intersectingAreasWithSpikes)
+									{
+										if (GeometryUtils.Contains(t, point))
+										{
+											inside = true;
+											break;
+										}
+									}
+
+									if (inside)
+										pointInSpikeFreeAreas.Add((point.X, point.Y, point.Z));
+									else
+										tin.AddPointZ(point, TagValue);
+								}
+
+								break;
+							}
+							case IPoint point:
+							{
+								bool inside = false;
+								foreach (IGeometry t in intersectingAreasWithSpikes)
+								{
+									if (GeometryUtils.Contains(t, point))
+									{
+										inside = true;
+										break;
+									}
+								}
+
+								if (inside)
+									pointInSpikeFreeAreas.Add((point.X, point.Y, point.Z));
+								else
+									tin.AddPointZ(point, TagValue);
+								break;
+							}
+							default:
+								_msg.WarnFormat("Unexpected feature type {0}", geometry.GeometryType.ToString());
+								break;
+						}
 					}
 					else
 					{
-						// Not Spike Free
+						// Nicht Spike Free
 						CoordinateTransformer?.Transform(geometry);
 						tin.AddShapeZ(geometry, surfaceType, 0, ref useShapeZ);
 					}
 				}
-
 				AddPointsToTinUsingSpikeFree(tin, pointInSpikeFreeAreas);
 			}
 			else
 			{
 				_msg.Info("SpikeFree algorithm is applied to entire area.");
-				AddPointsToTinUsingSpikeFree(tin, geometries.SelectMany(ExpandToCoodinates));
+				AddPointsToTinUsingSpikeFree(tin, geometries.SelectMany(ExpandPointCollectionToCoodinates));
 			}
 
 		}
 
-		public void AddPointsToTinUsingSpikeFree(ITinEdit tin, IEnumerable<(double x, double y, double z)> points)
+		public void AddPointsToTinUsingSpikeFree(ITinEdit tin,
+		                                         IEnumerable<(double x, double y, double z)> points)
 		{
 			// Unfortunately some of the methods we required for the spike free tin are in the ITinEdit and some are in the ITinAdvancade interface.
 			// However, to avoid having to use the actual class we use two variables both pointing at the same object here.
@@ -110,16 +162,16 @@ namespace ProSuite.Commons.AO.Surface
 			int ignoredPoints = 0;
 
 			var point = new PointClass();
-			var adjacentTriangles = new ITinTriangle[]
-			                        {
-										new TinTriangleClass(),
-										new TinTriangleClass(),
-										new TinTriangleClass(),
-			                        };
+			var adjacentTriangle1 = new TinTriangleClass();
+			var adjacentTriangle2 = new TinTriangleClass();
+			var adjacentTriangle3 = new TinTriangleClass();
+
 			foreach ((double x, double y, double z) in coordinates)
 			{
 				point.PutCoords(x, y);
 				point.Z = z;
+
+
 
 				ITinTriangle triangle = advancedTin.FindTriangle(point);
 				if(IsFrozen(triangle))
@@ -135,10 +187,21 @@ namespace ProSuite.Commons.AO.Surface
 					continue;
 				}
 
-				GetAdjacentTriangles(triangle, adjacentTriangles)
-					.Where(t => !IsFrozen(t) && IsPointSpike(t, point))
-					.ToList()
-					.ForEach(t => Freeze(tin, t));
+				triangle.QueryAdjacentTriangles(adjacentTriangle1, adjacentTriangle2, adjacentTriangle3);
+				if (! IsFrozen(adjacentTriangle1) && IsPointSpike(adjacentTriangle1, point))
+				{
+					Freeze(tin, adjacentTriangle1);
+				}
+
+				if (!IsFrozen(adjacentTriangle2) && IsPointSpike(adjacentTriangle2, point))
+				{
+					Freeze(tin, adjacentTriangle2);
+				}
+
+				if (!IsFrozen(adjacentTriangle3) && IsPointSpike(adjacentTriangle3, point))
+				{
+					Freeze(tin, adjacentTriangle3);
+				}
 
 				addedPoints++;
 				tin.AddPointZ(point, TagValue);
@@ -146,6 +209,18 @@ namespace ProSuite.Commons.AO.Surface
 
 			_msg.InfoFormat("Added {0} points to the TIN. {1} points where identified as spike and ignored.", addedPoints, ignoredPoints);
 		}
+
+		private IEnumerable<(double x, double y, double z)> ExpandPointCollectionToCoodinates(
+			IGeometry geometry)
+		{
+			var pointCollection = geometry as IPointCollection;
+			for (int i = 0; i < pointCollection.PointCount; i++)
+			{
+				IPoint point = pointCollection.get_Point(i);
+				yield return (point.X, point.Y, point.Z);
+			}
+		}
+
 
 		// The Spike-Free algorithm yields different results if points are sorted and added to the TIN feature by feature instead of globally.
 		// Therefore, it is necessary to globally sort the points before adding them to the TIN.
@@ -190,39 +265,47 @@ namespace ProSuite.Commons.AO.Surface
 
 		private bool IsPointSpike(ITinTriangle triangle, IPoint point)
 		{
-			if(triangle.IsEmpty)
+			if (triangle.IsEmpty)
 			{
 				return false;
 			}
 
-			if (GetEdges(triangle).Any(e => e.Length >= _freezeDistance))
+
+			double freezeSq = _freezeDistance * _freezeDistance;
+			double thresholdZ = point.Z + _insertionBuffer;
+
+			WKSPointZ v0, v1, v2;
+			triangle.QueryVertices(out v0, out v1, out v2);
+
+			if (SquaredDist2D(v0, v1) >= freezeSq) return false;
+			if (SquaredDist2D(v1, v2) >= freezeSq) return false;
+			if (SquaredDist2D(v2, v0) >= freezeSq) return false;
+
+			if (v0.Z < thresholdZ)
 			{
 				return false;
 			}
 
-			// Points where sorted in descending z order before, thus value is always positive.
-			var zDistance = GetEdges(triangle).Min(edge => edge.FromNode.Z) - point.Z;
-			var result = zDistance >= _insertionBuffer;
-			return result;
-		}
-
-		private static IEnumerable<ITinEdge> GetEdges(ITinTriangle triangle)
-		{
-			if(triangle.IsEmpty)
+			if (v1.Z < thresholdZ)
 			{
-				yield break;
+				return false;
 			}
 
-			for (int i = 0; i < 3; i++)
+			if (v2.Z < thresholdZ)
 			{
-				yield return triangle.Edge[i];
+				return false;
 			}
+
+			return true;
 		}
 
-		private static IEnumerable<ITinTriangle> GetAdjacentTriangles(ITinTriangle triangle, ITinTriangle[] triangleArray)
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static double SquaredDist2D(WKSPointZ a, WKSPointZ b)
 		{
-			triangle.QueryAdjacentTriangles(triangleArray[0], triangleArray[1], triangleArray[2]);
-			return triangleArray;
+			double dx = a.X - b.X;
+			double dy = a.Y - b.Y;
+			return dx * dx + dy * dy;
 		}
 
 		private static bool IsFrozen(ITinTriangle triangle)
@@ -233,9 +316,9 @@ namespace ProSuite.Commons.AO.Surface
 		private static void Freeze(ITinEdit tin, ITinTriangle triangle)
 		{
 			tin.SetTriangleTagValue(triangle.Index, FrozenTag);
-			foreach (var edge in GetEdges(triangle))
+			for (int i = 0; i < 3; i++)
 			{
-				tin.SetEdgeType(edge.Index, esriTinEdgeType.esriTinHardEdge);
+				tin.SetEdgeType(triangle.Edge[i].Index, esriTinEdgeType.esriTinHardEdge);
 			}
 		}
 	}

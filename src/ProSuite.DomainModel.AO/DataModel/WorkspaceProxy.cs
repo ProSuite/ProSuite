@@ -1,10 +1,11 @@
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.DomainModel.Core.DataModel;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -14,10 +15,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public IWorkspace Workspace => (IWorkspace) FeatureWorkspace;
 
-		public abstract ITable OpenTable(string name,
-		                                 string oidFieldName = null,
-		                                 SpatialReferenceDescriptor spatialReferenceDescriptor =
-			                                 null);
+		public abstract ITable OpenTable(
+			string name,
+			string oidFieldName = null,
+			SpatialReferenceDescriptor spatialReferenceDescriptor = null,
+			esriGeometryType knownGeometryType = esriGeometryType.esriGeometryNull);
 
 		public abstract IRelationshipClass OpenRelationshipClass(string name);
 

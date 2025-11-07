@@ -1,16 +1,18 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -52,10 +54,19 @@ namespace ProSuite.DomainModel.AO.DataModel
 			SpatialReferenceDescriptor spatialReferenceDescriptor =
 				dataset.Model?.SpatialReferenceDescriptor;
 
+			esriGeometryType esriShapeType = esriGeometryType.esriGeometryNull;
+
+			if (dataset.GeometryType is GeometryTypeShape shapeType)
+			{
+				ProSuiteGeometryType proSuiteGeometryType = shapeType.ShapeType;
+
+				esriShapeType = (esriGeometryType) proSuiteGeometryType;
+			}
+
 			return (IObjectClass) _workspaceProxy.OpenTable(
 				GetGdbElementName(dataset),
 				dataset.GetAttribute(AttributeRole.ObjectID)?.Name,
-				spatialReferenceDescriptor);
+				spatialReferenceDescriptor, esriShapeType);
 		}
 
 		public override TopologyReference OpenTopology(ITopologyDataset dataset)
