@@ -98,5 +98,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 					   ? string.Concat(qualifier, tableName)
 					   : string.Concat(qualifier, QualifierSeparator, tableName);
 		}
+
+		public static string UnqualifyDatasetName(string datasetName)
+		{
+			return QualifyDatasetName(datasetName);
+		}
 	}
 }

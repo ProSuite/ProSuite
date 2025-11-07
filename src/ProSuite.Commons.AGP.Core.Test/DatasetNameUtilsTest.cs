@@ -116,5 +116,16 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.AreEqual("PRE.NAME", DatasetNameUtils.QualifyDatasetName("ANY.NAME", "PRE."));
 			Assert.AreEqual("PRE.NAME", DatasetNameUtils.QualifyDatasetName(" NAME ", " PRE . "));
 		}
+
+		[Test]
+		public void CanUnqualifyDatasetName()
+		{
+			Assert.IsNull(DatasetNameUtils.UnqualifyDatasetName(null));
+			Assert.IsEmpty(DatasetNameUtils.UnqualifyDatasetName(string.Empty));
+			Assert.AreEqual("NAME", DatasetNameUtils.UnqualifyDatasetName("NAME"));
+			Assert.AreEqual("NAME", DatasetNameUtils.UnqualifyDatasetName("PRE.NAME"));
+			Assert.AreEqual("NAME", DatasetNameUtils.UnqualifyDatasetName(" NAME "));
+			Assert.AreEqual("NAME", DatasetNameUtils.UnqualifyDatasetName(" PRE . NAME "));
+		}
 	}
 }
