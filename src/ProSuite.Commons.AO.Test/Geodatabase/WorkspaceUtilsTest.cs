@@ -152,6 +152,21 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IWorkspace workspace =
 				WorkspaceUtils.OpenMobileGdbWorkspace(TestData.GetMobileGdbPath());
 
+			#region learning IWorkspaceConfiguration
+			var workspaceConfiguration = workspace as IWorkspaceConfiguration;
+			Assert.IsNotNull(workspaceConfiguration);
+
+			IEnumConfigurationKeyword keywords = workspaceConfiguration.ConfigurationKeywords;
+			keywords.Reset();
+
+			//.Next() fails
+			Assert.Catch<COMException>(() =>
+			{
+				IConfigurationKeyword k = keywords.Next();
+			});
+			#endregion
+
+			#region learning IVersionedWorkspace
 			var versionedWorkspace = workspace as IVersionedWorkspace;
 			Console.WriteLine("Is versioneWorkspace: {0}",
 			                  versionedWorkspace != null ? "true" : "false");
@@ -168,6 +183,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				bool b = version.IsRedefined;
 			});
 #endif
+			#endregion
 		}
 
 		[Test]
