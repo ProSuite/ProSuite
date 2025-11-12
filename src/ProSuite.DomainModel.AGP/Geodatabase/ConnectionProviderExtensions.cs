@@ -1,7 +1,6 @@
 using System;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.Geodatabase;
 
@@ -12,68 +11,85 @@ namespace ProSuite.DomainModel.AGP.Geodatabase
 		public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(
 			this ConnectionProvider connectionProvider)
 		{
+			Connector connector = GetConnector(connectionProvider);
+
+			Datastore datastore = WorkspaceUtils.OpenDatastore(connector);
+
+			return datastore as ArcGIS.Core.Data.Geodatabase ??
+			       throw new InvalidOperationException("Not a Geodatabase instance");
+		}
+
+		[NotNull]
+		private static Connector GetConnector(ConnectionProvider connectionProvider)
+		{
 			if (connectionProvider is null)
 				throw new ArgumentNullException(nameof(connectionProvider));
 
-			Connector connector;
-
-			switch (connectionProvider)
+			if (connectionProvider is FileGdbConnectionProvider fileGdbProvider)
 			{
-				case FileGdbConnectionProvider fileGdbConnectionProvider:
-					connector =
-						new FileGeodatabaseConnectionPath(new Uri(fileGdbConnectionProvider.Path));
-					break;
-				case MobileGdbConnectionProvider mobileGdbConnectionProvider:
-					connector =
-						new MobileGeodatabaseConnectionPath(
-							new Uri(mobileGdbConnectionProvider.Path));
-					break;
-				case ConnectionFileConnectionProvider connectionFileConnectionProvider:
-					connector =
-						new DatabaseConnectionFile(new Uri(connectionFileConnectionProvider.Path));
-					break;
-				case SdeDirectConnectionProvider sdeDirectConnectionProvider:
-					connector = GetDatabaseConnectionProperties(sdeDirectConnectionProvider);
-					break;
-				default:
-					throw new NotSupportedException(
-						$"Connection provider type not supported: {connectionProvider.GetType().Name}");
+				var path = new Uri(fileGdbProvider.Path);
+				return new FileGeodatabaseConnectionPath(path);
 			}
 
-			return (ArcGIS.Core.Data.Geodatabase) WorkspaceUtils.OpenDatastore(
-				Assert.NotNull(connector));
+			if (connectionProvider is MobileGdbConnectionProvider mobileGdbProvider)
+			{
+				var path = new Uri(mobileGdbProvider.Path);
+				return new MobileGeodatabaseConnectionPath(path);
+			}
+
+			if (connectionProvider is ConnectionFileConnectionProvider connectionFileProvider)
+			{
+				var path = new Uri(connectionFileProvider.Path);
+				return new DatabaseConnectionFile(path);
+			}
+
+			if (connectionProvider is SdeDirectConnectionProvider sdeDirectConnectionProvider)
+			{
+				var properties = GetDatabaseConnectionProperties(sdeDirectConnectionProvider);
+				return properties;
+			}
+
+			throw new NotSupportedException(
+				$"Connection provider type not supported: {connectionProvider.GetType().Name}");
 		}
 
+		[NotNull]
 		private static DatabaseConnectionProperties GetDatabaseConnectionProperties(
 			[NotNull] SdeDirectConnectionProvider dcConnectionProvider)
 		{
+			if (dcConnectionProvider is null)
+				throw new ArgumentNullException(nameof(dcConnectionProvider));
+
 			EnterpriseDatabaseType enterpriseDatabaseType =
 				ToEnterpriseDatabaseType(dcConnectionProvider.DatabaseType);
 
 			var result = new DatabaseConnectionProperties(enterpriseDatabaseType);
 
 			AuthenticationMode authMode;
-			string user = null, plainTextPassword = null;
+			string userName;
+			string password;
 
 			if (dcConnectionProvider is SdeDirectDbUserConnectionProvider
 			    sdeDirectDbUserConnectionProvider)
 			{
 				authMode = AuthenticationMode.DBMS;
-				user = sdeDirectDbUserConnectionProvider.UserName;
-				plainTextPassword = sdeDirectDbUserConnectionProvider.PlainTextPassword;
+				userName = sdeDirectDbUserConnectionProvider.UserName;
+				password = sdeDirectDbUserConnectionProvider.PlainTextPassword;
 			}
 			else
 			{
 				authMode = AuthenticationMode.OSA;
+				userName = null;
+				password = null;
 			}
 
 			result.AuthenticationMode = authMode;
+			result.User = userName;
+			result.Password = password;
+
 			result.Instance = dcConnectionProvider.DatabaseName;
 			result.Database = dcConnectionProvider.RepositoryName;
-
 			result.Version = dcConnectionProvider.VersionName;
-			result.User = user;
-			result.Password = plainTextPassword;
 
 			return result;
 		}
@@ -89,11 +105,8 @@ namespace ProSuite.DomainModel.AGP.Geodatabase
 					return EnterpriseDatabaseType.PostgreSQL;
 
 				case DatabaseType.Oracle:
-
 				case DatabaseType.Oracle9:
-
 				case DatabaseType.Oracle10:
-
 				case DatabaseType.Oracle11:
 					return EnterpriseDatabaseType.Oracle;
 
