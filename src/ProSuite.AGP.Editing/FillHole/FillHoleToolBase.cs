@@ -189,7 +189,9 @@ namespace ProSuite.AGP.Editing.FillHole
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
-			_calculationExtent = ActiveMapView.Extent;
+			bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
+
+			_calculationExtent = isStereoMap ? null : ActiveMapView.Extent;
 
 			_msg.DebugFormat("Calculating fillable holes for {0} selected features",
 			                 selectedFeatures.Count);
@@ -218,7 +220,10 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			_feedback.Update(_holes);
 
-			_feedback.UpdateExtent(_calculationExtent);
+			if (! isStereoMap)
+			{
+				_feedback.UpdateExtent(_calculationExtent);
+			}
 		}
 
 		protected override bool CanUseDerivedGeometries()

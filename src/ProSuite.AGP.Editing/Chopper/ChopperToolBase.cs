@@ -103,7 +103,9 @@ namespace ProSuite.AGP.Editing.Chopper
 		                                                   CancelableProgressor progressor)
 		{
 			// Store current map extent
-			_calculationExtent = ActiveMapView.Extent;
+			bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
+
+			_calculationExtent = isStereoMap ? null : ActiveMapView.Extent;
 
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
@@ -126,7 +128,11 @@ namespace ProSuite.AGP.Editing.Chopper
 			}
 
 			_feedback.Update(_resultChopPoints, selectedFeatures);
-			_feedback.UpdateExtent(_calculationExtent);
+
+			if (! isStereoMap)
+			{
+				_feedback.UpdateExtent(_calculationExtent);
+			}
 		}
 
 		protected override bool CanUseDerivedGeometries()

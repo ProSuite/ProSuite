@@ -114,8 +114,9 @@ namespace ProSuite.AGP.Editing.Cracker
 		                                                   CancelableProgressor progressor)
 		{
 			// Store current map extent
+			bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
 
-			_calculationExtent = ActiveMapView.Extent;
+			_calculationExtent = isStereoMap ? null : ActiveMapView.Extent;
 
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
@@ -141,7 +142,10 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			_feedback.Update(_resultCrackPoints, selectedFeatures);
 
-			_feedback.UpdateExtent(_calculationExtent);
+			if (! isStereoMap)
+			{
+				_feedback.UpdateExtent(_calculationExtent);
+			}
 		}
 
 		protected override bool CanUseDerivedGeometries()
