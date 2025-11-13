@@ -160,6 +160,35 @@ namespace ProSuite.Commons.AGP.Hosting
 			return installDir;
 		}
 
+		public static string GetProArcPyEnvironment()
+		{
+			RegistryKey proRegKey = GetProductRegKey(_arcProRegistryKeyName);
+
+			if (proRegKey == null)
+			{
+				throw new InvalidOperationException(
+					$"The registry key for {_arcProRegistryKeyName} was not found.");
+			}
+
+			// Get the Python Conda Root path from registry
+			object pythonCondaRoot = proRegKey.GetValue("PythonCondaRoot");
+
+			if (pythonCondaRoot != null)
+			{
+				string pythonPath = pythonCondaRoot.ToString();
+				string executablePath = Path.Combine(pythonPath, @"Scripts\propy.bat");
+
+				if (File.Exists(executablePath))
+				{
+					return executablePath;
+				}
+			}
+
+			// Fallback: return empty string or throw exception based on requirements
+			throw new InvalidOperationException(
+				"Could not locate ArcGIS Pro Python environment (PythonCondaRoot not found in registry).");
+		}
+
 		public static void SetupProAssemblyResolver(string installDir)
 		{
 			//Resolve ArcGIS Pro assemblies.
