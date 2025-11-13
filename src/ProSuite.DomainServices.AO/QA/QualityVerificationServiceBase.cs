@@ -281,7 +281,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private bool FilterTableRowsUsingRelatedGeometry { get; set; }
 
-		private bool OverrideAllowedErrors { get; set; }
+		protected bool OverrideAllowedErrors { get; set; }
 
 		private bool KeepUnusedAllowedErrors { get; set; }
 
