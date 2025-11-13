@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Knowledge;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Ado;
@@ -117,14 +118,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 					default:
 						throw new ArgumentOutOfRangeException(
-							$"Unsupported workspace type: {connector?.GetType()}");
+							$"Unsupported workspace type: {connector.GetType()}");
 				}
 			}
 			catch (Exception e)
 			{
-				string message = $"Failed to open Datastore {GetDatastoreDisplayText(connector)}";
+				string message =
+					$"Failed to open Datastore {GetDatastoreDisplayText(connector)}: {e.Message}";
 				_msg.Debug(message, e);
-				throw new IOException($"{message}: {e.Message}", e);
+
+				throw new IOException(message, e);
 			}
 		}
 
@@ -199,6 +202,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			DatastoreName datastoreName2 = new DatastoreName(datastore2.GetConnector());
 
 			return datastoreName1.Equals(datastoreName2, comparison);
+		}
+
+		public static string GetCatalogPath([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			Uri uri = geodatabase.GetPath();
+
+			// NOTE: AbsolutePath messes up blanks!
+			return uri.LocalPath;
 		}
 
 		[CanBeNull]
@@ -365,13 +376,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			switch (connector)
 			{
 				case DatabaseConnectionFile dbConnection:
-					return $"SDE connection {dbConnection.Path?.AbsolutePath ?? nullPathText}";
+					return $"SDE connection {dbConnection.Path?.LocalPath ?? nullPathText}";
 
 				case DatabaseConnectionProperties dbConnectionProps:
 					return GetConnectionDisplayText(dbConnectionProps);
 
 				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return $"File Geodatabase {fileGdbConnection.Path.AbsolutePath}";
+					return $"File Geodatabase {fileGdbConnection.Path.LocalPath}";
 
 				case FileSystemConnectionPath fileSystemConnection:
 					return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";
@@ -398,7 +409,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				default:
 					throw new ArgumentOutOfRangeException(
-						$"Unsupported workspace type: {connector?.GetType()}");
+						$"Unsupported workspace type: {connector.GetType()}");
 			}
 		}
 
@@ -487,6 +498,67 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
 
 			return sb.ToString();
+		}
+
+		/// <summary>
+		/// Very simple utility to determine whether the dataset or field is
+		/// unqualified. Works at least for Oracle DB.
+		/// </summary>
+		public static string Unqualified(string name)
+		{
+			if (name is null) return null;
+			int index = name.LastIndexOf('.');
+			if (index < 0) return name;
+			return name.Substring(index + 1);
+		}
+
+		public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+		{
+			WorkspaceFactory result;
+
+			switch (connector)
+			{
+#if ARCGISPRO_GREATER_3_2
+				case BimFileConnectionProperties:
+					result = WorkspaceFactory.BIMFile;
+					break;
+#endif
+				case DatabaseConnectionFile:
+				case DatabaseConnectionProperties:
+					result = WorkspaceFactory.SDE;
+					break;
+				case FileGeodatabaseConnectionPath:
+					result = WorkspaceFactory.FileGDB;
+					break;
+				case FileSystemConnectionPath:
+					result = WorkspaceFactory.Shapefile;
+					break;
+				case KnowledgeGraphConnectionProperties:
+					result = WorkspaceFactory.KnowledgeGraph;
+					break;
+				case MemoryConnectionProperties:
+					result = WorkspaceFactory.InMemoryDB;
+					break;
+				case MobileGeodatabaseConnectionPath:
+				case SQLiteConnectionPath:
+					result = WorkspaceFactory.SQLite;
+					break;
+				case PluginDatasourceConnectionPath:
+					result = WorkspaceFactory.Custom;
+					break;
+				case RealtimeServiceConnectionProperties:
+					result = WorkspaceFactory.StreamService;
+					break;
+				case ServiceConnectionProperties:
+					result = WorkspaceFactory.FeatureService;
+					break;
+
+				default:
+					throw new NotImplementedException(
+						$"connector {connector.GetType()} is not implemented");
+			}
+
+			return result;
 		}
 	}
 }

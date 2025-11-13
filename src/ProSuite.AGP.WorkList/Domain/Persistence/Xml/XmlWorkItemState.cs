@@ -33,10 +33,13 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 		[XmlElement("XMin")]
 		public double XMin { get; set; }
+
 		[XmlElement("XMax")]
 		public double XMax { get; set; }
+
 		[XmlElement("YMin")]
 		public double YMin { get; set; }
+
 		[XmlElement("YMax")]
 		public double YMax { get; set; }
 

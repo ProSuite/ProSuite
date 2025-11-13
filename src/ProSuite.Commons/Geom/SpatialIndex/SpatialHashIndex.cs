@@ -17,7 +17,6 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		// This is most likely due to more efficient memory management when creating one large array rather than many small ones (most likely not even on the LOH)
 		// TODO: ConcurrentDictionary, Parallel.Foreach
 		[NotNull] private readonly Dictionary<TileIndex, List<T>> _tiles;
-		[NotNull] private readonly TilingDefinition _tilingDefinition;
 
 		private int _maxTileEasting = int.MinValue;
 		private int _maxTileNorthing = int.MinValue;
@@ -26,9 +25,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		private bool _envelopeUpToDate;
 
-		private readonly int _estimatedItemsPerTile;
-
-		private ThreadLocal<HashSet<T>> _foundIdentifiers =
+		private readonly ThreadLocal<HashSet<T>> _foundIdentifiers =
 			new ThreadLocal<HashSet<T>>(() => new HashSet<T>());
 
 		public SpatialHashIndex(EnvelopeXY envelope, double gridsize, double estimatedItemsPerTile)
@@ -50,7 +47,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			int estimatedMaxTileCount,
 			double estimatedItemsPerTile)
 		{
-			_tilingDefinition = tilingDefinition;
+			TilingDefinition = tilingDefinition;
 
 			// 10M is the value that was experimentally found to work.
 			const int maxDictionaryLengthFor32BitProcess = 10000000;
@@ -74,12 +71,46 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				estimatedItemsPerTile = 1;
 			}
 
-			_estimatedItemsPerTile = (int) Math.Ceiling(estimatedItemsPerTile);
+			EstimatedItemsPerTile = (int) Math.Ceiling(estimatedItemsPerTile);
 		}
 
-		public double GridSize => _tilingDefinition.TileWidth;
-		public double OriginX => _tilingDefinition.OriginX;
-		public double OriginY => _tilingDefinition.OriginY;
+		/// <summary>
+		/// Constructor that allows pre-populating the index with data. It is primarily intended for deserialization scenarios.
+		/// </summary>
+		public SpatialHashIndex(
+			[NotNull] TilingDefinition tilingDefinition,
+			int estimatedItemsPerTile,
+			IEnumerable<(int east, int north, List<T> items)> tileData)
+		{
+			TilingDefinition = tilingDefinition;
+			EstimatedItemsPerTile = estimatedItemsPerTile;
+
+			// Pre-calculate capacity based on tile data
+			var tileDataList = tileData.ToList();
+			_tiles = new Dictionary<TileIndex, List<T>>(tileDataList.Count);
+
+			foreach (var (east, north, items) in tileDataList)
+			{
+				var tileIndex = new TileIndex(east, north);
+				_tiles.Add(tileIndex, items);
+			}
+
+			_envelopeUpToDate = false;
+		}
+
+		[NotNull]
+		public TilingDefinition TilingDefinition { get; }
+
+		public double GridSize => TilingDefinition.TileWidth;
+		public double OriginX => TilingDefinition.OriginX;
+		public double OriginY => TilingDefinition.OriginY;
+
+		public int EstimatedItemsPerTile { get; }
+
+		/// <summary>
+		/// Gets the actual number of tiles currently in the index.
+		/// </summary>
+		public int TileCount => _tiles.Count;
 
 		// @PLU: Decided to implement this with raw coordinates instead of EnvelopeXY because these are
 		// TileIndexes and not real coordinates. That's also why they're private. If we wanted to expose
@@ -122,14 +153,14 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public void Add(T identifier, double x, double y)
 		{
-			TileIndex tileIndex = _tilingDefinition.GetTileIndexAt(x, y);
+			TileIndex tileIndex = TilingDefinition.GetTileIndexAt(x, y);
 			Add(identifier, tileIndex);
 		}
 
 		public void Add(T identifier, Box box)
 		{
 			IEnumerable<TileIndex> intersectedTiles =
-				_tilingDefinition.GetIntersectingTiles(
+				TilingDefinition.GetIntersectingTiles(
 					box.Min.X, box.Min.Y, box.Max.X, box.Max.Y);
 
 			Add(identifier, intersectedTiles);
@@ -138,7 +169,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public void Remove(T identifier, double xMin, double yMin, double xMax, double yMax)
 		{
 			IEnumerable<TileIndex> intersectedTiles =
-				_tilingDefinition.GetIntersectingTiles(xMin, yMin, xMax, yMax);
+				TilingDefinition.GetIntersectingTiles(xMin, yMin, xMax, yMax);
 
 			foreach (TileIndex intersectedTileIdx in intersectedTiles)
 			{
@@ -159,7 +190,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public void Add(T identifier, double xMin, double yMin, double xMax, double yMax)
 		{
 			IEnumerable<TileIndex> intersectedTiles =
-				_tilingDefinition.GetIntersectingTiles(xMin, yMin, xMax, yMax);
+				TilingDefinition.GetIntersectingTiles(xMin, yMin, xMax, yMax);
 
 			Add(identifier, intersectedTiles);
 		}
@@ -170,13 +201,13 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			if (! _tiles.TryGetValue(tileIndex, out tileGeometryRefs))
 			{
-				tileGeometryRefs = new List<T>(_estimatedItemsPerTile);
+				tileGeometryRefs = new List<T>(EstimatedItemsPerTile);
 				_tiles.Add(tileIndex, tileGeometryRefs);
 				_envelopeUpToDate = false;
 			}
 
 			if (_msg.IsVerboseDebugEnabled &&
-			    tileGeometryRefs.Count >= _estimatedItemsPerTile)
+			    tileGeometryRefs.Count >= EstimatedItemsPerTile)
 			{
 				_msg.DebugFormat(
 					"Number of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
@@ -188,9 +219,18 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		public void Add(T identifier, IEnumerable<TileIndex> intersectedTiles)
 		{
+			int count = 0;
 			foreach (TileIndex intersectedTileIdx in intersectedTiles)
 			{
 				Add(identifier, intersectedTileIdx);
+				count++;
+			}
+
+			if (count > 100 && _msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat(
+					"Identifier {0} intersects {1} tiles. This might be an indication of too small tile size (or very varied object size).",
+					identifier, count);
 			}
 		}
 
@@ -214,15 +254,16 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		{
 			if (_tiles.Count == 0)
 				yield break;
-			
+
 			double maxExistingTileDistance = Math.Ceiling(GetDistanceToFurthestPopulatedTile(x, y));
 
 			// Note: We take the ceiling of the actual distance to ensure that all points that are within the defined radius
 			//		 are actually returned. In some cases this might lead to points being returned that are further away
 			//		 than the max distance.
-			double effectiveMaxDistance = Math.Ceiling((Math.Min(maxExistingTileDistance, maxDistance)));
+			double effectiveMaxDistance =
+				Math.Ceiling((Math.Min(maxExistingTileDistance, maxDistance)));
 
-			foreach (var tileIndex in _tilingDefinition.GetTileIndexAround(
+			foreach (var tileIndex in TilingDefinition.GetTileIndexAround(
 				         x, y, metric, effectiveMaxDistance))
 			{
 				// Only yield tiles that exist and have items
@@ -245,15 +286,51 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			HashSet<T> resultList = _foundIdentifiers.Value;
 			resultList.Clear();
 
-			// check the intersecting neighbour tiles:
-			foreach (TileIndex neighborTileIdx in
-			         _tilingDefinition.GetIntersectingTiles(
-				         xMin, yMin, xMax, yMax))
+			TileIndex dataMinTile = new TileIndex(MinTileEasting, MinTileNorthing);
+			TileIndex dataMaxTile = new TileIndex(MaxTileEasting, MaxTileNorthing);
+
+			// Efficiently calculate the number of tiles that would intersect with the search area
+			long intersectingTileCount =
+				TilingDefinition.GetIntersectingTileCount(xMin, yMin, xMax, yMax,
+				                                          dataMinTile, dataMaxTile);
+
+			// Optimization: if the search area intersects more tiles than we actually have,
+			// it's more efficient to iterate over all existing tiles instead.
+			// The dictionary lookup should probably be double as fast as the intersection check
+			const double crossoverRatio = 0.5;
+			if (intersectingTileCount > crossoverRatio * _tiles.Count && _tiles.Count > 0)
 			{
-				foreach (T geometryIdentifier in
-				         FindItemsWithinTile(neighborTileIdx, predicate))
+				TileIndex minIndex = TilingDefinition.GetTileIndexAt(xMin, yMin);
+				TileIndex maxIndex = TilingDefinition.GetTileIndexAt(xMax, yMax);
+
+				foreach (var kvp in _tiles)
 				{
-					resultList.Add(geometryIdentifier);
+					if (! TileUtils.TileIntersects(kvp.Key, minIndex, maxIndex))
+					{
+						continue;
+					}
+
+					foreach (T geometryIdentifier in kvp.Value)
+					{
+						if (predicate == null || predicate(geometryIdentifier))
+						{
+							resultList.Add(geometryIdentifier);
+						}
+					}
+				}
+			}
+			else
+			{
+				// Use the normal approach: check the intersecting tiles
+				// make sure to clamp the search area to the actual data areas
+				foreach (TileIndex neighborTileIdx in TilingDefinition.GetIntersectingTiles(
+					         xMin, yMin, xMax, yMax, dataMinTile, dataMaxTile))
+				{
+					foreach (T geometryIdentifier in
+					         FindItemsWithinTile(neighborTileIdx, predicate))
+					{
+						resultList.Add(geometryIdentifier);
+					}
 				}
 			}
 
@@ -278,8 +355,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		public override string ToString()
 		{
 			return $"SpatialHashIndex with {_tiles.Count} tiles, estimated items per tile: " +
-			       $"{_estimatedItemsPerTile}, {_tiles.Count(kvp => kvp.Value.Count > _estimatedItemsPerTile)} " +
-			       $"tiles exceed the estimated item count. Tiling: {_tilingDefinition}";
+			       $"{EstimatedItemsPerTile}, {_tiles.Count(kvp => kvp.Value.Count > EstimatedItemsPerTile)} " +
+			       $"tiles exceed the estimated item count. Tiling: {TilingDefinition}";
 		}
 
 		public IEnumerator<T> GetEnumerator()
@@ -304,6 +381,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			return GetEnumerator();
 		}
 
+		public IEnumerable<(int east, int north, List<T> items)> GetTileData()
+		{
+			return _tiles.Select(kvp => (kvp.Key.East, kvp.Key.North, kvp.Value));
+		}
+
 		private IEnumerable<T> FindItemsWithinTile(TileIndex tileIndex,
 		                                           [CanBeNull] Predicate<T> predicate)
 		{
@@ -326,7 +408,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 		private double GetDistanceToFurthestPopulatedTile(double x, double y)
 		{
-			var centerTile = _tilingDefinition.GetTileIndexAt(x, y);
+			var centerTile = TilingDefinition.GetTileIndexAt(x, y);
 
 			int furthestEasting = Math.Abs(MaxTileEasting - centerTile.East) >
 			                      Math.Abs(MinTileEasting - centerTile.East)
@@ -340,8 +422,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			var furthestTile = new TileIndex(furthestEasting, furthestNorthing);
 
-			return TileUtils.TileDistance(centerTile, furthestTile, _tilingDefinition.TileWidth,
-			                              _tilingDefinition.TileHeight);
+			return TileUtils.TileDistance(centerTile, furthestTile, TilingDefinition.TileWidth,
+			                              TilingDefinition.TileHeight);
 		}
 
 		private void UpdateTileIndexEnvelope()

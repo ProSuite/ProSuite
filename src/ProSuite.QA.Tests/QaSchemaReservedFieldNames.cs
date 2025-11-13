@@ -41,5 +41,10 @@ namespace ProSuite.QA.Tests
 			string validNameFieldName)
 			: base(table, reservedNamesTable, reservedNameFieldName, reservedReasonFieldName,
 			       validNameFieldName) { }
+
+		[InternallyUsedTest]
+		public QaSchemaReservedFieldNames(
+			[NotNull] QaSchemaReservedFieldNamesDefinition definition)
+			: base(definition) { }
 	}
 }

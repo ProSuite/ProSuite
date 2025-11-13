@@ -75,6 +75,11 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
+		[InternallyUsedTest]
+		public QaMustTouchSelf([NotNull] QaMustTouchSelfDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.RelevantRelationCondition) { }
+
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_queryFilter == null)

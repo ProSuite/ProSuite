@@ -96,6 +96,12 @@ namespace ProSuite.QA.Tests
 				featureClass.ShapeType == esriGeometryType.esriGeometryPoint;
 		}
 
+		[InternallyUsedTest]
+		public QaWithinZRange([NotNull] QaWithinZRangeDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.MinimumZValue,
+			       definition.MaximumZValue, definition.AllowedZValues)
+		{ }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;

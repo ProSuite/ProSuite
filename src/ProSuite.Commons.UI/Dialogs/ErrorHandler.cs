@@ -12,6 +12,36 @@ namespace ProSuite.Commons.UI.Dialogs
 	{
 		private const string _title = "An error has occurred";
 
+		/// <summary>
+		/// Logs the formatted exception on log level Error using the provided message sink.
+		/// </summary>
+		/// <param name="exception"></param>
+		/// <param name="msg"></param>
+		public static void LogError([NotNull] Exception exception,
+		                            [NotNull] IMsg msg)
+		{
+			Assert.ArgumentNotNull(exception, nameof(exception));
+
+			string message = ExceptionUtils.FormatMessage(exception);
+
+			msg.Error(message, exception);
+		}
+
+		/// <summary>
+		/// Logs the formatted exception on log level Warn using the provided message sink.
+		/// </summary>
+		/// <param name="exception"></param>
+		/// <param name="msg"></param>
+		public static void LogWarn([NotNull] Exception exception,
+		                           [NotNull] IMsg msg)
+		{
+			Assert.ArgumentNotNull(exception, nameof(exception));
+
+			string message = ExceptionUtils.FormatMessage(exception);
+
+			msg.Warn(message, exception);
+		}
+
 		public static void HandleError([NotNull] Exception exception,
 		                               [CanBeNull] IMsg msg = null,
 		                               [CanBeNull] IWin32Window owner = null,

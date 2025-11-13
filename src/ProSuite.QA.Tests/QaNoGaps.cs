@@ -13,7 +13,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -101,7 +100,7 @@ namespace ProSuite.QA.Tests
 			double subtileWidth,
 			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 			bool findGapsBelowTolerance)
-			: this(new List<IReadOnlyFeatureClass> {polygonClass}, sliverLimit, maxArea,
+			: this(new List<IReadOnlyFeatureClass> { polygonClass }, sliverLimit, maxArea,
 			       subtileWidth, 0,
 			       findGapsBelowTolerance, new List<IReadOnlyFeatureClass>(0)) { }
 
@@ -130,8 +129,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaNoGaps_maxArea))]
 			double maxArea,
 			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
-			IList<IReadOnlyFeatureClass>
-				areaOfInterestClasses)
+			IList<IReadOnlyFeatureClass> areaOfInterestClasses)
 			: this(polygonClasses, sliverLimit, maxArea, 0d, false, areaOfInterestClasses) { }
 
 		[Doc(nameof(DocStrings.QaNoGaps_5))]
@@ -147,8 +145,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 			bool findGapsBelowTolerance,
 			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
-			IList<IReadOnlyFeatureClass>
-				areaOfInterestClasses)
+			IList<IReadOnlyFeatureClass> areaOfInterestClasses)
 			: this(polygonClasses, sliverLimit, maxArea,
 			       subtileWidth, 0,
 			       findGapsBelowTolerance, areaOfInterestClasses) { }
@@ -159,7 +156,7 @@ namespace ProSuite.QA.Tests
 		                double maxArea,
 		                int tileSubdivisionCount)
 			: this(
-				new List<IReadOnlyFeatureClass> {polygonClass}, sliverLimit, maxArea,
+				new List<IReadOnlyFeatureClass> { polygonClass }, sliverLimit, maxArea,
 				0, tileSubdivisionCount, false, new List<IReadOnlyFeatureClass>()) { }
 
 		[Obsolete]
@@ -193,6 +190,17 @@ namespace ProSuite.QA.Tests
 
 			KeepRows = true;
 		}
+
+		[InternallyUsedTest]
+		public QaNoGaps(QaNoGapsDefinition definition)
+			: this(definition.PolygonClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.SliverLimit,
+			       definition.MaxArea,
+			       definition.SubtileWidth,
+			       definition.FindGapsBelowTolerance,
+			       definition.AreaOfInterestClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList()) { }
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
@@ -245,7 +253,6 @@ namespace ProSuite.QA.Tests
 				_spatialReference = GetUniqueSpatialReference(polygonClasses, out _tolerance);
 				_minimumSubtileWidth = _tolerance * 100;
 			}
-
 		}
 
 		protected override void BeginTileCore(BeginTileParameters parameters)
@@ -253,7 +260,8 @@ namespace ProSuite.QA.Tests
 			if (_allBox == null)
 			{
 				Assert.NotNull(parameters.TestRunEnvelope, "parameters.TestRunEnvelope");
-				_allBox = ProxyUtils.CreateBox(Assert.NotNull(parameters.TestRunEnvelope, "AllBox"));
+				_allBox = ProxyUtils.CreateBox(
+					Assert.NotNull(parameters.TestRunEnvelope, "AllBox"));
 				EnsureSpatialReference();
 			}
 		}
@@ -815,7 +823,8 @@ namespace ProSuite.QA.Tests
 					result = Clone(spatialReference);
 				}
 
-				allXyPrecisionsEqual &= ((ISpatialReference2)spatialReference).IsXYPrecisionEqual(result);
+				allXyPrecisionsEqual &=
+					((ISpatialReference2) spatialReference).IsXYPrecisionEqual(result);
 
 				double xyResolution = SpatialReferenceUtils.GetXyResolution(spatialReference);
 
@@ -849,7 +858,8 @@ namespace ProSuite.QA.Tests
 				else
 				{
 					Pnt d = 0.01 * (allBox.Max - allBox.Min);
-					result.SetDomain(allBox.Min.X - d.X, allBox.Max.X + d.X, allBox.Min.Y - d.Y, allBox.Max.Y + d.Y);
+					result.SetDomain(allBox.Min.X - d.X, allBox.Max.X + d.X, allBox.Min.Y - d.Y,
+					                 allBox.Max.Y + d.Y);
 					srResolution = SpatialReferenceUtils.GetXyResolution(result);
 					tolerance = srResolution;
 					result.GetDomain(out txMin, out txMax, out tyMin, out tyMax);
@@ -860,7 +870,7 @@ namespace ProSuite.QA.Tests
 			else
 			{
 				// If the domains are different: be more conservativ because of snapping between different domains
-				((ISpatialReferenceTolerance)result).XYTolerance = maxResolution;
+				((ISpatialReferenceTolerance) result).XYTolerance = maxResolution;
 			}
 
 			return result;

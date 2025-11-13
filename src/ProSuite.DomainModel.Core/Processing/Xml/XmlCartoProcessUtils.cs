@@ -107,7 +107,7 @@ namespace ProSuite.DomainModel.Core.Processing.Xml
 		public static CartoProcessGroup CreateCartoProcessGroup(
 			[NotNull] XmlCartoProcessGroup xmlGroup,
 			[NotNull] IList<CartoProcess> groupProcesses,
-			[CanBeNull] CommandDescriptor groupCommandDescriptor,
+			[CanBeNull] ICommandDescriptor groupCommandDescriptor,
 			[CanBeNull] CartoProcessType groupProcessType)
 		{
 			Assert.ArgumentNotNull(xmlGroup, nameof(xmlGroup));

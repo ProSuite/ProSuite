@@ -93,13 +93,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			foreach (IssueDatasetName datasetName in _errorDatasetSchema.IssueDatasetNames)
 			{
+				ITable table;
 				string qualifiedName;
 				if (ExistsDataset(schemaOwnerWorkspace, datasetName.Name, out qualifiedName))
 				{
+					if (readerCollection.Count > 0 || writerCollection.Count > 0)
+					{
+						_msg.InfoFormat("Dataset {0} already exists, granting privileges...",
+						                datasetName.Name);
+
+						table = GetTable(schemaOwnerWorkspace, qualifiedName);
+						Assert.NotNull(table, $"Could not open existing table {datasetName.Name}");
+						GrantPrivileges(table, readerCollection, writerCollection);
+
+						// TODO: Also register as versioned? -> Checkbox on UI?
+					}
+
 					continue;
 				}
-
-				ITable table;
 
 				if (datasetName.GeometryType == null)
 				{
@@ -309,8 +320,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 				_msg.DebugFormat("Granting privileges on {0} to {1}: {2}",
 				                 DatasetUtils.GetName(table), userName, privileges);
 
-				const bool withGrant = false;
-				sqlPrivilege.Grant(userName, (int) privileges, withGrant);
+				try
+				{
+					sqlPrivilege.Grant(userName, (int) privileges, withGrant: false);
+				}
+				catch (Exception e)
+				{
+					throw new Exception(
+						$"Error granting privilege {sqlPrivilege} to {userName}: {e.Message}", e);
+				}
 			}
 		}
 
@@ -323,8 +341,17 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return;
 			}
 
-			const bool isVersioned = true;
-			versionedObject.RegisterAsVersioned(isVersioned);
+			try
+			{
+				const bool isVersioned = true;
+				versionedObject.RegisterAsVersioned(isVersioned);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn($"Error registering {DatasetUtils.GetName(table)} as versioned: " +
+				          $"{e.Message}. If necessary, manually register as versioned and " +
+				          $"grant privileges again.", e);
+			}
 		}
 
 		private IFields CreateFeatureClassFields(

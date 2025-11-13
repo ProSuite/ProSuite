@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -11,6 +12,7 @@ using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -21,45 +23,6 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaGroupConnected.Codes;
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelGroupConnected).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-					                  DocStrings.QaRelGroupConnected_relationTables),
-					new TestParameter("relation", typeof(string),
-					                  DocStrings.QaRelGroupConnected_relation),
-					new TestParameter("join", typeof(JoinType),
-					                  DocStrings.QaRelGroupConnected_join),
-					new TestParameter("groupBy", typeof(IList<string>),
-					                  DocStrings.QaRelGroupConnected_groupBy),
-					new TestParameter("allowedShape",
-					                  typeof(QaGroupConnected.ShapeAllowed),
-					                  DocStrings.QaRelGroupConnected_allowedShape)
-				};
-
-			AddOptionalTestParameters(
-				list, typeof(QaGroupConnected),
-				additionalProperties: new[]
-				                      {
-					                      nameof(QaGroupConnected.ErrorReporting)
-				                      });
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelGroupConnected;
 
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
@@ -73,7 +36,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (! (objParams[0] is IList<IReadOnlyTable>))
+			if (! (objParams[0] is IList<ITableSchemaDef>))
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -98,7 +61,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams[3].GetType()));
 			}
 
-			if (objParams[4].GetType() != typeof(QaGroupConnected.ShapeAllowed))
+			if (objParams[4].GetType() != typeof(ShapeAllowed))
 			{
 				throw new ArgumentException(string.Format("expected ShapeAllowed, got {0}",
 				                                          objParams[4].GetType()));
@@ -106,7 +69,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[4];
 
-			var tables = (IList<IReadOnlyTable>) objParams[0];
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 
@@ -145,7 +108,7 @@ namespace ProSuite.QA.TestFactories
 		{
 			var test = new QaGroupConnected((IReadOnlyFeatureClass) args[0],
 			                                (IList<string>) args[1],
-			                                (QaGroupConnected.ShapeAllowed) args[2]);
+			                                (ShapeAllowed) args[2]);
 			return test;
 		}
 	}

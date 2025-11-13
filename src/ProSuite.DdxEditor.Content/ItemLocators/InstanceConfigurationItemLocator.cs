@@ -18,13 +18,12 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 			return instanceConfig.Category;
 		}
 
-		protected override IItemTreeNode GetContainerNode(DataQualityCategory category,
+		protected override IItemTreeNode GetContainerNode(Entity entity,
+		                                                  DataQualityCategory category,
 		                                                  IItemTreeNode categoryNode)
 		{
 			// search beneath QualityConditionsItem (or respective item) child node
-			return FindNode(categoryNode,
-			                node =>
-				                node.IsBasedOnEntityType<InstanceConfiguration>());
+			return FindNode(categoryNode, node => node.IsBasedOnEntityType(entity));
 		}
 	}
 }

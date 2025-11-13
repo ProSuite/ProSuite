@@ -60,7 +60,7 @@ namespace ProSuite.QA.Tests
 			string dangleCountExpression,
 			[Doc(nameof(DocStrings.QaDangleCount_tolerance))]
 			double tolerance)
-			: this(new[] {polylineClass}, new[] {dangleCountExpression}, tolerance) { }
+			: this(new[] { polylineClass }, new[] { dangleCountExpression }, tolerance) { }
 
 		[Doc(nameof(DocStrings.QaDangleCount_1))]
 		public QaDangleCount(
@@ -89,6 +89,14 @@ namespace ProSuite.QA.Tests
 			_polylineClasses = polylineClasses.ToList();
 			_dangleCountExpressionsSql = dangleCountExpressions.ToList();
 		}
+
+		[InternallyUsedTest]
+		public QaDangleCount(QaDangleCountDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.DangleCountExpressions,
+			       definition.Tolerance
+			) { }
 
 		[NotNull]
 		private List<TableView> GetDangleCountExpressions(
@@ -260,7 +268,7 @@ namespace ProSuite.QA.Tests
 			else
 			{
 				var addedColumnNames = new SimpleSet<string>(
-					new[] {_dangleCountPlaceHolder},
+					new[] { _dangleCountPlaceHolder },
 					StringComparer.InvariantCultureIgnoreCase);
 
 				constraintValues = tableView.ToString(featureDangleCount.Feature,

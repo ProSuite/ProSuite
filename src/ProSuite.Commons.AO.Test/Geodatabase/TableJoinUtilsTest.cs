@@ -12,6 +12,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Testing;
 using ProSuite.Commons.Text;
 
@@ -402,7 +403,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			 * 601345;585283;39377;Shape: 804 segments
 			 * 601345;573121;39378;Shape: 6598 segments
 			 * 601345;585283;39378;Shape: 804 segments
-			 * 
+			 *
 			 * SDE:
 			 * 601345;573121;39377;Shape: 6598 segments
 			 * 601345;585283;39377;Shape: 6598 segments
@@ -493,8 +494,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable oidOnlyTable = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin,
-				includeOnlyOIDFields,
-				excludeShapeField);
+				includeOnlyOIDFields: includeOnlyOIDFields,
+				excludeShapeField: excludeShapeField);
 			Assert.AreEqual(rowCount, GetRowCount(oidOnlyTable));
 			// row count will be larger than origin row count due to :n row duplication
 
@@ -528,8 +529,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin,
+			                                               includeOnlyOIDFields:
 			                                               includeOnlyOIDFields,
-			                                               excludeShapeField);
+			                                               excludeShapeField: excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
 
 			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
@@ -620,8 +622,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin,
+			                                               includeOnlyOIDFields:
 			                                               includeOnlyOIDFields,
-			                                               excludeShapeField);
+			                                               excludeShapeField: excludeShapeField);
 
 			// Right join uses destination table as primary key:
 			Assert.AreEqual(rightSideOidField, table.OIDFieldName);
@@ -669,8 +672,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin,
+			                                               includeOnlyOIDFields:
 			                                               includeOnlyOIDFields,
-			                                               excludeShapeField);
+			                                               excludeShapeField: excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
 			Assert.AreEqual(originRowCount, featureCount);
 
@@ -717,8 +721,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin,
+			                                               includeOnlyOIDFields:
 			                                               includeOnlyOIDFields,
-			                                               excludeShapeField);
+			                                               excludeShapeField: excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
 
 			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
@@ -763,8 +768,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin,
+			                                               includeOnlyOIDFields:
 			                                               includeOnlyOIDFields,
-			                                               excludeShapeField);
+			                                               excludeShapeField: excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
 
 			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
@@ -825,8 +831,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable oidOnlyTable = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin,
-				includeOnlyOIDFields,
-				excludeShapeField);
+				includeOnlyOIDFields: includeOnlyOIDFields,
+				excludeShapeField: excludeShapeField);
 			Assert.AreEqual(rowCount, GetRowCount(oidOnlyTable));
 			Assert.AreEqual(destinationRowCount, rowCount);
 
@@ -865,8 +871,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable oidOnlyTable = TableJoinUtils.CreateQueryTable(rc, JoinType.LeftJoin,
-				includeOnlyOIDFields,
-				excludeShapeField);
+				includeOnlyOIDFields: includeOnlyOIDFields,
+				excludeShapeField: excludeShapeField);
 			Assert.AreEqual(rowCount, GetRowCount(oidOnlyTable));
 			// row count will be larger than origin row count due to :n row duplication
 
@@ -915,8 +921,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.RightJoin,
+			                                               includeOnlyOIDFields:
 			                                               includeOnlyOIDFields,
-			                                               excludeShapeField);
+			                                               excludeShapeField: excludeShapeField);
 
 			// TODO: this fails, the oid-only, non-shape result has a larger count (on HIACE)
 			// full feature count: 1759433
@@ -961,8 +968,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			const bool includeOnlyOIDFields = true;
 			const bool excludeShapeField = true;
 			ITable table = TableJoinUtils.CreateQueryTable(rc, JoinType.InnerJoin,
+			                                               includeOnlyOIDFields:
 			                                               includeOnlyOIDFields,
-			                                               excludeShapeField);
+			                                               excludeShapeField: excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
 
 			IFeatureClass geometryEndClass = RelationshipClassUtils.GetFeatureClasses(rc).Single();

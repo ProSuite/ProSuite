@@ -9,7 +9,6 @@ using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -83,6 +82,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		#endregion
+
+		[InternallyUsedTest]
+		public QaMinMeanSegmentLength(
+			[NotNull] QaMinMeanSegmentLengthDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.Limit, definition.PerPart, definition.Is3D) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{

@@ -19,16 +19,30 @@ namespace ProSuite.Commons.Orm.NHibernate
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IEnumerable<Assembly> _assemblies;
+		private readonly IEnumerable<Type> _types;
 
 		public MappingByCodeConfigurator(IEnumerable<Assembly> assemblies)
 		{
 			_assemblies = assemblies;
 		}
 
+		public MappingByCodeConfigurator(IEnumerable<Type> types)
+		{
+			_types = types;
+		}
+
 		/// <summary>
 		/// To allow mixed mapping by code and by XML files, set this property to true.
 		/// </summary>
 		public bool IncludeXmlFiles { get; set; }
+
+		/// <summary>
+		/// Iff non-<c>null</c>, write mapping files to this directory.
+		/// The written mapping files may help debug mapping issues.
+		/// The directory will be created. CAUTION: if the directory
+		/// already exists, all contained .hbm.xml files WILL BE DELETED.
+		/// </summary>
+		public string MappingFilesOutputPath { get; set; }
 
 		public void ConfigureMapping(Configuration nhConfiguration)
 		{
@@ -43,10 +57,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 			// many more), we could create much of our mapping by convention
 			//mapper.BeforeMapClass += Mapper_BeforeMapClass;
 			//mapper.AfterMapClass += Mapper_AfterMapClass;
-
-			foreach (Assembly assembly in _assemblies)
+			if (_assemblies != null)
 			{
-				mapper.AddMappings(assembly.GetExportedTypes());
+				foreach (Assembly assembly in _assemblies)
+				{
+					mapper.AddMappings(assembly.GetExportedTypes());
+				}
+			}
+			if (_types != null)
+			{
+				mapper.AddMappings(_types);
 			}
 
 			HbmMapping mapping = mapper.CompileMappingForAllExplicitlyAddedEntities();
@@ -55,11 +75,12 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 			nhConfiguration.AddMapping(mapping);
 
-#if DEBUG
-			// This will write all the XML into the bin/mappings folder
-			var mappings = mapper.CompileMappingForEachExplicitlyAddedEntity();
-			AdaptMappings(mappings).WriteAllXmlMapping();
-#endif
+			if (!string.IsNullOrEmpty(MappingFilesOutputPath))
+			{
+				// This will write all the mappings as .hbm.xml into the given folder (useful for debugging)
+				var mappings = mapper.CompileMappingForEachExplicitlyAddedEntity();
+				AdaptMappings(mappings).WriteAllXmlMapping(MappingFilesOutputPath);
+			}
 		}
 
 		/// <summary>

@@ -7,10 +7,12 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Tests.IssueFilters;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
@@ -495,7 +497,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			TrSpatialJoin trSj = new TrSpatialJoin(ge, gk);
 			trSj.Constraint = "t0.UUID = t1.TLM_GEBAEUDEEINHEIT_UUID";
 			trSj.OuterJoin = false;
-			trSj.NeighborSearchOption = TrSpatialJoin.SearchOption.All;
+			trSj.NeighborSearchOption = SearchOption.All;
 			trSj.Grouped = true;
 			trSj.T0Attributes = new[] { "UUID" };
 			trSj.T1Attributes = new[] { "SUM(GEBAEUDEKOERPER) AS ANZAHL_GEBAEUDEKOERPER" };
@@ -594,7 +596,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new TrOnlyDisjointFeatures((IReadOnlyFeatureClass) trIm.GetTransformed(),
 				                           trEp.GetTransformed());
 			trDj.TransformerName = "trDj";
-			trDj.FilteringSearchOption = TrSpatiallyFiltered.SearchOption.All;
+			trDj.FilteringSearchOption = SearchOption.All;
 
 			QaExportTables test = new QaExportTables(
 				new List<IReadOnlyTable>

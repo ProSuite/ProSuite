@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{1745D9A7-BF58-414E-A840-6A3EE1847FE0}</ProjectGuid>
 
@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.6" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.9" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -78,6 +78,11 @@
     </Reference>
     <Reference Include="ArcGIS.Desktop.Mapping">
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.ItemIndex">
+      <HintPath>$(ProAssemblyPath)\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
@@ -107,5 +112,10 @@
       <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Properties\Images\NavigateErrorsCmd16.png" />
+    <Resource Include="Properties\Images\NavigateErrorsCmd32.png" />
   </ItemGroup>
 </Project>

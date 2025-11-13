@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -79,6 +80,11 @@ namespace ProSuite.QA.Tests
 			_routeIdFieldIndexes = TestUtils.GetFieldIndexes(polylineClasses, routeIdFields);
 			_mTolerances = TestUtils.GetMTolerances(polylineClasses);
 		}
+
+		[InternallyUsedTest]
+		public QaRouteMeasuresContinuous([NotNull] QaRouteMeasuresContinuousDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.RouteIdFields) { }
 
 		#region Overrides of ContainerTest
 

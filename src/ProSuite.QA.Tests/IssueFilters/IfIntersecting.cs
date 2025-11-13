@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.IssueFilters
@@ -19,6 +20,10 @@ namespace ProSuite.QA.Tests.IssueFilters
 			[DocIf(nameof(DocIfStrings.IfIntersecting_featureClass))]
 			IReadOnlyFeatureClass featureClass)
 			: base(new[] {featureClass}) { }
+
+		[InternallyUsedTest]
+		public IfIntersecting([NotNull] IfIntersectingDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass) { }
 
 		public override bool Check(QaErrorEventArgs error)
 		{

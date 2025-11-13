@@ -55,14 +55,21 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpSinglePartFootprint_0))]
 		public QaMpSinglePartFootprint(
 			[Doc(nameof(DocStrings.QaMpSinglePartFootprint_multiPatchClass))] [NotNull]
-			IReadOnlyFeatureClass
-				multiPatchClass)
+			IReadOnlyFeatureClass multiPatchClass)
 			: base(multiPatchClass)
 		{
 			Assert.ArgumentNotNull(multiPatchClass, nameof(multiPatchClass));
 
 			_spatialReference = multiPatchClass.SpatialReference;
 			_shapeFieldName = multiPatchClass.ShapeFieldName;
+		}
+
+		[InternallyUsedTest]
+		public QaMpSinglePartFootprint(
+			[NotNull] QaMpSinglePartFootprintDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass)
+		{
+			ResolutionFactor = definition.ResolutionFactor;
 		}
 
 		public override bool RetestRowsPerIntersectedTile(int tableIndex)

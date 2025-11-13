@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -14,6 +13,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -99,6 +99,11 @@ namespace ProSuite.QA.Tests
 			_ruleHelpers = QaConnectionRuleHelper.CreateList(rules, out _tableFilterHelpers);
 		}
 
+		[InternallyUsedTest]
+		public QaConnections([NotNull] QaConnectionsDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.Rules, definition.Tolerance) { }
+
 		#endregion
 
 		protected override int CompleteTileCore(TileInfo args)
@@ -142,7 +147,8 @@ namespace ProSuite.QA.Tests
 
 			foreach (string[] rule in rules)
 			{
-				ruleList.Add(new QaConnectionRule(InvolvedTables, rule));
+				List<ITableSchemaDef> tables = InvolvedTables.Cast<ITableSchemaDef>().ToList();
+				ruleList.Add(new QaConnectionRule(tables, rule));
 			}
 
 			_ruleHelpers = QaConnectionRuleHelper.CreateList(ruleList, out _tableFilterHelpers);

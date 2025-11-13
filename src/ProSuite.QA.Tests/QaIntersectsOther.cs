@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -77,8 +78,20 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass intersectingClass,
 			[Doc(nameof(DocStrings.QaIntersectsOther_validRelationConstraint))]
 			string validRelationConstraint)
-			: this(new[] {intersectedClass}, new[] {intersectingClass}, validRelationConstraint
+			: this(new[] { intersectedClass }, new[] { intersectingClass }, validRelationConstraint
 			) { }
+
+		[InternallyUsedTest]
+		public QaIntersectsOther(QaIntersectsOtherDefinition definition)
+			: this(definition.IntersectedClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.IntersectingClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.ValidRelationConstraint)
+		{
+			ReportIntersectionsAsMultipart = definition.ReportIntersectionsAsMultipart;
+			ValidIntersectionGeometryConstraint = definition.ValidIntersectionGeometryConstraint;
+		}
 
 		#region Overrides of QaSpatialRelationOtherBase
 

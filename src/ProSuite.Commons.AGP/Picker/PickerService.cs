@@ -7,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.UI.Env;
 using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.Commons.AGP.Picker
@@ -29,7 +30,8 @@ namespace ProSuite.Commons.AGP.Picker
 			_precedence = precedence ?? throw new ArgumentNullException(nameof(precedence));
 		}
 
-		public Task<IPickableItem> Pick(IEnumerable<IPickableItem> items, IPickerViewModel viewModel)
+		public Task<IPickableItem> Pick(IEnumerable<IPickableItem> items,
+		                                IPickerViewModel viewModel)
 		{
 			viewModel.Items = new ObservableCollection<IPickableItem>(_precedence.Order(items));
 
@@ -41,7 +43,7 @@ namespace ProSuite.Commons.AGP.Picker
 		{
 			var dispatcher = Application.Current.Dispatcher;
 
-			List<Geometry> geometries = new() { };
+			List<Geometry> geometries = new();
 			WindowPositioner positioner =
 				new WindowPositioner(geometries, WindowPositioner.PreferredPlacement.MainWindow,
 				                     WindowPositioner.EvaluationMethod.DistanceToRect);
@@ -54,9 +56,13 @@ namespace ProSuite.Commons.AGP.Picker
 
 				positioner.SetWindow(window, location);
 
-				window.Show();
+				IPickableItem pickable = null;
 
-				IPickableItem pickable = await window.Task;
+				await UIEnvironment.WithReleasedCursorAsync(async () =>
+				{
+					window.Show();
+					pickable = await window.Task;
+				});
 
 				return pickable;
 			});

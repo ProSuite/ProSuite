@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.QA

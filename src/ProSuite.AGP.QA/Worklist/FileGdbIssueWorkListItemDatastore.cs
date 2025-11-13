@@ -197,7 +197,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 			n => n.Equals(sourceClass.Name, StringComparison.InvariantCultureIgnoreCase));
 	}
 
-	public IObjectDataset GetObjetDataset(TableDefinition tableDefinition)
+	public IObjectDataset GetObjectDataset(TableDefinition tableDefinition)
 	{
 		IObjectDataset dataset;
 

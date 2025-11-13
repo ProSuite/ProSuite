@@ -6,10 +6,10 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WPF;
+using RelayCommand = ProSuite.Commons.UI.WPF.RelayCommand;
 
 namespace ProSuite.Commons.AGP.Help;
 
@@ -51,7 +51,7 @@ public class AboutViewModel : INotifyPropertyChanged
 
 	private ICommand _copyCommand;
 	public ICommand CopyCommand =>
-		_copyCommand ??= new RelayCommand(CopyItems);
+		_copyCommand ??= new RelayCommand(CopyItems, () => true);
 
 	private ICommand _closeCommand;
 	public ICommand CloseCommand =>

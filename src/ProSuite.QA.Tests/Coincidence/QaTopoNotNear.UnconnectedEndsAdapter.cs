@@ -4,9 +4,11 @@ using System.Data;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -657,8 +659,11 @@ namespace ProSuite.QA.Tests.Coincidence
 					List<string> tableRules = string.IsNullOrWhiteSpace(JunctionIsEndExpression)
 						                          ? new List<string> { "false" }
 						                          : new List<string> { JunctionIsEndExpression };
-					var rule = new QaConnectionRule(new[] { junctionSegments[0].BaseFeature.Table },
-					                                tableRules);
+
+					ITableSchemaDef table = (ITableSchemaDef) junctionSegments[0].BaseFeature.Table;
+
+					var rule = new QaConnectionRule(new[] { table }, tableRules);
+
 					IList<QaConnectionRuleHelper> helpers = QaConnectionRuleHelper.CreateList(
 						new[] { rule },
 						out TableView[] tableFilterHelpers);

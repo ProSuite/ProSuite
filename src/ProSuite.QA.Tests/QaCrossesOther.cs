@@ -1,9 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
@@ -73,7 +73,13 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass crossingClass,
 			[Doc(nameof(DocStrings.QaCrossesOther_validRelationConstraint))]
 			string validRelationConstraint)
-			: this(new[] {crossedClass}, new[] {crossingClass}, validRelationConstraint) { }
+			: this(new[] { crossedClass }, new[] { crossingClass }, validRelationConstraint) { }
+
+		[InternallyUsedTest]
+		public QaCrossesOther(QaCrossesOtherDefinition definition)
+			: this(definition.CrossedClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.CrossingClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.ValidRelationConstraint) { }
 
 		#region Overrides of QaSpatialRelationOtherBase
 

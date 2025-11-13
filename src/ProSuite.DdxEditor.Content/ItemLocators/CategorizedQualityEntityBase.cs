@@ -25,7 +25,7 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 				return null;
 			}
 
-			IItemTreeNode containerNode = GetContainerNode(category, categoryNode);
+			IItemTreeNode containerNode = GetContainerNode(entity, category, categoryNode);
 
 			return containerNode != null
 				       ? FindItem(containerNode, node => node.IsBasedOnEntity(entity))
@@ -53,8 +53,8 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 		protected abstract DataQualityCategory GetCategory([NotNull] Entity entity);
 
 		[CanBeNull]
-		protected abstract IItemTreeNode GetContainerNode(
-			[CanBeNull] DataQualityCategory category,
-			[NotNull] IItemTreeNode categoryNode);
+		protected abstract IItemTreeNode GetContainerNode([NotNull] Entity entity,
+		                                                  [CanBeNull] DataQualityCategory category,
+		                                                  [NotNull] IItemTreeNode categoryNode);
 	}
 }

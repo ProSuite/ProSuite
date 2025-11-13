@@ -44,6 +44,14 @@ namespace ProSuite.QA.Tests
 			double limit)
 			: base(featureClass, limit) { }
 
+		[InternallyUsedTest]
+		public QaMinExtent(
+			[NotNull] QaMinExtentDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.Limit)
+		{
+			PerPart = definition.PerPart;
+		}
+
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaExtent_perPart))]
 		public bool PerPart

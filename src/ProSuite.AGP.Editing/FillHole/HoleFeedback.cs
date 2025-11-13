@@ -30,7 +30,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			_holeOutlineSymbol =
 				SymbolUtils.CreateLineSymbol(0, 255, 0, 2);
 
-			_holeSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, lineWidth: 0.5);
+			_holeSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 		}
 
 		public void Update([CanBeNull] IEnumerable<Holes> holes)
@@ -53,11 +53,9 @@ namespace ProSuite.AGP.Editing.FillHole
 					MapView.Active.AddOverlay(holeGeometry, _holeSymbol.MakeSymbolReference());
 				_overlays.Add(addedOverlay);
 			}
-
 		}
 
 		public void UpdateExtent(Envelope extent)
-
 		{
 			_extentOverlay?.Dispose();
 

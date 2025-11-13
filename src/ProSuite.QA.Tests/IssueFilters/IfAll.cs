@@ -2,6 +2,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.IssueFilters
@@ -16,6 +17,13 @@ namespace ProSuite.QA.Tests.IssueFilters
 			: base(new IReadOnlyFeatureClass[] { })
 		{
 			Filter = _defaultFilter;
+		}
+
+		[InternallyUsedTest]
+		public IfAll([NotNull] IfAllDefinition definition)
+			: this()
+		{
+			Filter = definition.Filter;
 		}
 
 		[DocIf(nameof(DocIfStrings.IfAll_Filter))]

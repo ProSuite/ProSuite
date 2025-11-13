@@ -8,9 +8,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>,
-	                                     IComparable<GdbWorkspaceIdentity>,
-	                                     IDatastoreReference
+	public readonly struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>,
+	                                              IComparable<GdbWorkspaceIdentity>,
+	                                              IDatastoreReference
 	{
 		[NotNull] private readonly DatastoreName _datastoreName;
 

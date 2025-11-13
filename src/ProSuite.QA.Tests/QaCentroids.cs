@@ -101,6 +101,13 @@ namespace ProSuite.QA.Tests
 			Init(constraint);
 		}
 
+		[InternallyUsedTest]
+		public QaCentroids(QaCentroidsDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.PointClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.Constraint
+			) { }
+
 		private void Init(string constraint)
 		{
 			_grower =

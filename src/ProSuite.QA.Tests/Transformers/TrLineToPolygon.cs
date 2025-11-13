@@ -14,12 +14,6 @@ namespace ProSuite.QA.Tests.Transformers
 	[GeometryTransformer]
 	public class TrLineToPolygon : TrGeometryTransform
 	{
-		public enum PolylineConversion
-		{
-			AsIs,
-			AsPolygonIfClosedElseIgnore
-		}
-
 		private const PolylineConversion _defaultPolylineUsage =
 			PolylineConversion.AsPolygonIfClosedElseIgnore;
 
@@ -30,6 +24,14 @@ namespace ProSuite.QA.Tests.Transformers
 			: base(closedLineClass, esriGeometryType.esriGeometryPolygon)
 		{
 			PolylineUsage = _defaultPolylineUsage;
+		}
+
+		[InternallyUsedTest]
+		public TrLineToPolygon(
+			[NotNull] TrLineToPolygonDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.ClosedLineClass)
+		{
+			PolylineUsage = (PolylineConversion) definition.PolylineUsage;
 		}
 
 		[TestParameter(_defaultPolylineUsage)]

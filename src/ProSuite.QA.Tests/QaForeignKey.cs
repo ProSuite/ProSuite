@@ -131,6 +131,16 @@ namespace ProSuite.QA.Tests
 			                    out _referencedKeyFieldTypes);
 		}
 
+		[InternallyUsedTest]
+		public QaForeignKey([NotNull] QaForeignKeyDefinition definition)
+			: this((IReadOnlyTable)definition.Table,
+			       definition.ForeignKeyFields,
+			       (IReadOnlyTable)definition.ReferencedTable,
+			       definition.ReferencedKeyFields,
+			       definition.ReferenceIsError)
+		{ }
+
+
 		#region Overrides of TestBase
 
 		public override int Execute()

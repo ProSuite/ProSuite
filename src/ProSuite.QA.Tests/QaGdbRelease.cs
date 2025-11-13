@@ -73,6 +73,13 @@ namespace ProSuite.QA.Tests
 			                 Equals(_minimumVersion, _maximumVersion);
 		}
 
+		[InternallyUsedTest]
+		public QaGdbRelease([NotNull] QaGdbReleaseDefinition definition)
+			: this((IReadOnlyTable)definition.Table,
+			       definition.MinimumVersion,
+			       definition.MaximumVersion)
+		{ }
+
 		public override int Execute()
 		{
 			IWorkspace workspace = _table.Workspace;

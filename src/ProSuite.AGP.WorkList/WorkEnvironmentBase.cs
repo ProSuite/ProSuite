@@ -6,8 +6,10 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -35,9 +37,11 @@ namespace ProSuite.AGP.WorkList
 		/// </summary>
 		protected string UniqueName { get; set; }
 
+		public bool AllowBackgroundLoading { get; set; }
+
 		protected virtual Geometry GetAreaOfInterest()
 		{
-			return MapView.Active.Extent;
+			return null;
 		}
 
 		[ItemCanBeNull]
@@ -89,33 +93,55 @@ namespace ProSuite.AGP.WorkList
 			if (! await TryPrepareSchemaCoreAsync())
 			{
 				// null work list
+				_msg.WarnFormat("Work list schema preparation failed for {0}", uniqueName);
 				return await Task.FromResult(default(IWorkList));
 			}
 
 			var watch = Stopwatch.StartNew();
 
+			string displayName = Path.GetFileNameWithoutExtension(workListFile);
+
 			IWorkItemStateRepository stateRepository =
-				CreateStateRepositoryCore(workListFile, uniqueName);
+				CreateStateRepositoryCore(workListFile, uniqueName, displayName);
+
+			stateRepository.LoadAllStates();
 
 			_msg.DebugStopTiming(watch, "Created work list state repository in {0}",
 			                     workListFile);
 
 			IWorkItemRepository itemRepository =
-				await CreateItemRepositoryCoreAsync(stateRepository);
+				await QueuedTask.Run(async () =>
+					                     await CreateItemRepositoryCoreAsync(stateRepository));
 
 			if (itemRepository == null)
 			{
 				return await Task.FromResult<IWorkList>(null);
 			}
 
-			string displayName = Path.GetFileNameWithoutExtension(workListFile);
-			IWorkList result = CreateWorkListCore(itemRepository, uniqueName, displayName);
-			Assert.NotNull(result);
+			IWorkList result =
+				Assert.NotNull(CreateWorkListCore(itemRepository, uniqueName, displayName));
 
-			_msg.Debug($"Created {WorkListUtils.Format(result)}");
+			_msg.Debug($"Created {result}");
 
-			WorkListUtils.LoadItemsInBackground(result);
-			WorkListUtils.CountItemsInBackground(result);
+			ConfigureWorkList(result);
+
+			if (result is DbStatusWorkList dbStatusWorkList)
+			{
+				// This will add the filter definition expressions by the DatabaseSourceClass
+				dbStatusWorkList.UpdateDefinitionExpressions();
+			}
+
+			_msg.Debug($"Configured {result}. Start loading items...");
+
+			if (AllowBackgroundLoading)
+			{
+				WorkListUtils.LoadItemsInBackground(result);
+				WorkListUtils.CountItemsInBackground(result);
+			}
+			else
+			{
+				await QueuedTask.Run(() => { result.LoadItems(); });
+			}
 
 			return result;
 		}
@@ -126,19 +152,23 @@ namespace ProSuite.AGP.WorkList
 			return null;
 		}
 
+		protected virtual void ConfigureWorkList(IWorkList workList) { }
+
 		/// <summary>
 		/// Loads the work list layer, containing the navigable items based on the plugin
-		/// datasource, into the map.
+		/// datasource, into the specified map view.
 		/// </summary>
+		/// <param name="mapView"></param>
 		/// <param name="worklist"></param>
 		/// <param name="workListDefinitionFilePath"></param>
-		public void LoadWorkListLayer([NotNull] IWorkList worklist,
+		public void LoadWorkListLayer(MapView mapView,
+		                              [NotNull] IWorkList worklist,
 		                              [NotNull] string workListDefinitionFilePath)
 		{
 			//Create the work list layer with basic properties and connect to datasource
 			FeatureLayer worklistLayer =
 				CreateWorklistLayer(worklist, workListDefinitionFilePath,
-				                    GetLayerContainerCore<ILayerContainerEdit>());
+				                    GetLayerContainerCore<ILayerContainerEdit>(mapView));
 
 			//Set some hard-coded properties
 			worklistLayer.SetScaleSymbols(false);
@@ -166,20 +196,23 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		/// <summary>
-		/// Loads associated layers of the work list layer into the map, if there are any.
+		/// Loads associated layers of the work list layer into the specified map view.
 		/// Typically, associated layers come with DB-status work lists, such as the layers of
 		/// the issue feature classes.
 		/// </summary>
-		public virtual void LoadAssociatedLayers(IWorkList worklist) { }
+		public virtual void LoadAssociatedLayers(MapView mapView, IWorkList worklist) { }
 
-		public virtual void RemoveAssociatedLayers() { }
+		public virtual void RemoveAssociatedLayers(MapView mapView) { }
 
 		/// <summary>
-		/// Returns the layer container (group layer or map) for the work list layer(s)
+		/// Returns the layer container (group layer or map) for the work list layer(s) to be added
+		/// to the specified map view.
 		/// </summary>
+		/// <param name="mapView"></param>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		protected abstract T GetLayerContainerCore<T>() where T : class, ILayerContainerEdit;
+		protected abstract T GetLayerContainerCore<T>(MapView mapView)
+			where T : class, ILayerContainerEdit;
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{
@@ -191,7 +224,7 @@ namespace ProSuite.AGP.WorkList
 		                                                [NotNull] string displayName);
 
 		protected abstract IWorkItemStateRepository CreateStateRepositoryCore(
-			string path, string workListName);
+			string path, string workListName, string displayName);
 
 		[ItemCanBeNull]
 		protected abstract Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
@@ -7,10 +8,10 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -32,6 +33,7 @@ namespace ProSuite.QA.Tests
 		private readonly double _limitCstr;
 
 		private double _limitRad;
+		private AngleUnit _angularUnit;
 
 		#region issue codes
 
@@ -67,13 +69,14 @@ namespace ProSuite.QA.Tests
 			_limitCstr = limit;
 
 			_is3D = is3d;
+			AngularUnit = _defaultAngularUnit;
 		}
 
 		[Obsolete(
 			"Incorrect parameter name will be renamed in a future release, use other constructor"
 		)]
 		public QaLineIntersectAngle([NotNull] IReadOnlyFeatureClass table, double limit, bool is3d)
-			: this(new[] {table}, limit, is3d) { }
+			: this(new[] { table }, limit, is3d) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
@@ -91,9 +94,17 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))]
 			double limit)
-			: this(new[] {polylineClass}, limit) { }
+			: this(new[] { polylineClass }, limit) { }
 
 		#endregion
+
+		[InternallyUsedTest]
+		public QaLineIntersectAngle([NotNull] QaLineIntersectAngleDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.Limit, definition.Is3d)
+		{
+			AngularUnit = definition.AngularUnit;
+		}
 
 		[TestParameter(_defaultAngularUnit)]
 		[Doc(nameof(DocStrings.QaLineIntersectAngle_AngularUnit))]
@@ -164,7 +175,7 @@ namespace ProSuite.QA.Tests
 					GeometryFactory.Clone(intersection.At),
 					Codes[Code.IntersectionAngleSmallerThanLimit],
 					TestUtils.GetShapeFieldName(row1),
-					values: new object[] {MathUtils.ToDegrees(angleRadians)});
+					values: new object[] { MathUtils.ToDegrees(angleRadians) });
 			}
 
 			return errorCount;

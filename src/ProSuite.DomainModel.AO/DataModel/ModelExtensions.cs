@@ -82,18 +82,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public static bool IsMasterDatabaseAccessible(this DdxModel model)
 		{
-			if (model is IModelMasterDatabase)
+			if (! model.CachedIsMasterDatabaseAccessible.HasValue)
 			{
-				if (! model.CachedIsMasterDatabaseAccessible.HasValue)
-				{
-					model.CachedIsMasterDatabaseAccessible =
-						DetermineMasterDatabaseWorkspaceAccessibility(model);
-				}
-
-				return model.CachedIsMasterDatabaseAccessible.Value;
+				model.CachedIsMasterDatabaseAccessible =
+					DetermineMasterDatabaseWorkspaceAccessibility(model);
 			}
 
-			return false;
+			return model.CachedIsMasterDatabaseAccessible.Value;
 		}
 
 		public static string GetMasterDatabaseNoAccessReason(this DdxModel model)

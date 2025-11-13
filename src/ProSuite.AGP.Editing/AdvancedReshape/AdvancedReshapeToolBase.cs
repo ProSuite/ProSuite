@@ -32,7 +32,7 @@ using ProSuite.Commons.UI;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
-	public abstract class AdvancedReshapeToolBase : ConstructionToolBase, ISymbolizedSketchTool
+	public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -49,7 +49,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Update feedback on toggle layer visibility
 
 		[CanBeNull] private AdvancedReshapeFeedback _feedback;
-		[CanBeNull] private SymbolizedSketchTypeBasedOnSelection _symbolizedSketch;
 
 		protected ReshapeToolOptions _advancedReshapeToolOptions;
 
@@ -90,7 +89,18 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			HandledKeys.Add(_keyToggleMoveEndJunction);
 		}
 
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay,
+			                                    "Advanced Reshape Arrow");
+
 		protected abstract IAdvancedReshapeService MicroserviceClient { get; }
+
+		protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
+		{
+			return MapUtils.IsStereoMapView(ActiveMapView)
+				       ? null
+				       : new SymbolizedSketchTypeBasedOnSelection(this);
+		}
 
 		protected override void OnUpdateCore()
 		{
@@ -153,14 +163,55 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return layer is FeatureLayer;
 		}
 
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int selectionCount = 0;
+			bool? result = await QueuedTask.Run(() =>
+			{
+				var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+
+				if (selectionByLayer.Count == 0)
+				{
+					_msg.Debug($"{Caption}: no feature layer found in selection");
+					return null;
+				}
+
+				bool? hasAnyZ = false;
+
+				foreach (var selectedOidByLayer in selectionByLayer)
+				{
+					if (selectedOidByLayer.Key is FeatureLayer layer)
+					{
+						FeatureClass featureClass = layer.GetFeatureClass();
+						bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+
+						if (layerHasZ == true)
+						{
+							hasAnyZ = true;
+							break;
+						}
+					}
+				}
+
+				return hasAnyZ;
+			});
+
+			_msg.DebugStopTiming(
+				watch, "Determined sketch has Z: {0} (evaluated {1} selected layers)", result,
+				selectionCount);
+
+			return result;
+		}
+
 		protected override async Task OnToolActivatingCoreAsync()
 		{
 			_advancedReshapeToolOptions = InitializeOptions();
+
 			_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
-			_symbolizedSketch =
-				new SymbolizedSketchTypeBasedOnSelection(this);
-			await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
+			await QueuedTask.Run(() => { _feedback.InitializeSymbolsQueued(); });
 
 			await base.OnToolActivatingCoreAsync();
 		}
@@ -215,51 +266,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task OnSelectionPhaseStartedAsync()
 		{
-			await QueuedTask.Run(async () =>
-			{
-				await base.OnSelectionPhaseStartedAsync();
-				_symbolizedSketch?.ClearSketchSymbol();
-				_feedback?.Clear();
-				await ActiveMapView.ClearSketchAsync();
-			});
-		}
-
-		protected override async Task OnSketchPhaseStartedAsync()
-		{
-			try
-			{
-				Assert.NotNull(_symbolizedSketch);
-
-				// OnSketchPhaseStartedAsync is sometimes called in QueuedTask and sometimes not
-				// Therefor use QueuedTask.Run() here.
-				// For some strange reason calling ActiveMapView.ClearSketchAsync()
-				// inside a QueuedTask makes the sketch symbol appear correctly. Calling
-				// ActiveMapView.ClearSketchAsync() outside QueuedTask leads to a
-				// not symbolised sketch. It's not documented that ActiveMapView.ClearSketchAsync()
-				// has to be put inside QueuedTask!!! May Teutates be with us!
-				await QueuedTask.Run(async () =>
-				{
-					await _symbolizedSketch.SetSketchAppearanceBasedOnSelectionAsync();
-
-					if (await HasSketchAsync())
-					{
-						return;
-					}
-
-					await ActiveMapView.ClearSketchAsync();
-				});
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message, ex);
-			}
+			await base.OnSelectionPhaseStartedAsync();
+			_feedback?.Clear();
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_settingsProvider?.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
 
-			_symbolizedSketch?.Dispose();
 			_feedback?.Clear();
 			_feedback = null;
 
@@ -268,14 +282,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			HideOptionsPane();
 		}
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			return SketchGeometryType.Line;
-		}
-
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
@@ -427,17 +436,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//	}
 		//}
 
-		public bool CanSelectFromLayer(Layer layer)
-		{
-			return base.CanSelectFromLayer(layer);
-		}
-
-		public bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selectionByLayer)
-		{
-			return base.CanUseSelection(selectionByLayer);
-		}
-
-		public async Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
+		public override async Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 		{
 			bool result;
 			switch (geometryType)
@@ -474,9 +473,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			bool success = false;
 			try
 			{
-				success = await QueuedTaskUtils.Run(
-					          async () =>
-						          await Reshape(polyline, activeView, cancelableProgressor));
+				success = await QueuedTaskUtils.Run(async () =>
+					                                    await Reshape(
+						                                    polyline, activeView,
+						                                    cancelableProgressor));
 			}
 			finally
 			{
@@ -488,7 +488,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				}
 				else
 				{
-					await ActiveMapView.ClearSketchAsync();
+					// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+					// sketch remains that cannot be cleared with ESC!
+					await ClearSketchAsync();
 					await StartSketchPhaseAsync();
 				}
 			}
@@ -615,28 +617,27 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			List<Feature> polygonSelection;
 
 			bool result =
-				await QueuedTaskUtils.Run(
-					async () =>
-					{
-						List<Feature> selection =
-							GetApplicableSelectedFeatures(activeMapView).ToList();
+				await QueuedTaskUtils.Run(async () =>
+				{
+					List<Feature> selection =
+						GetApplicableSelectedFeatures(activeMapView).ToList();
 
-						polylineSelection =
-							GdbObjectUtils.Filter(selection, GeometryType.Polyline).ToList();
+					polylineSelection =
+						GdbObjectUtils.Filter(selection, GeometryType.Polyline).ToList();
 
-						polygonSelection =
-							GdbObjectUtils.Filter(selection, GeometryType.Polygon).ToList();
+					polygonSelection =
+						GdbObjectUtils.Filter(selection, GeometryType.Polygon).ToList();
 
-						bool updated =
-							await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
-								polylineSelection);
+					bool updated =
+						await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
+						                                         polylineSelection);
 
-						updated |= await UpdatePolygonResultPreviewAsync(
-							           nonDefaultSide, sketchPolyline,
-							           polygonSelection);
+					updated |= await UpdatePolygonResultPreviewAsync(
+						           nonDefaultSide, sketchPolyline,
+						           polygonSelection);
 
-						return updated;
-					});
+					return updated;
+				});
 
 			return result;
 		}
@@ -683,8 +684,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				foundFeatures.AddRange(keyValuePair.GetFeatures());
 			}
 
-			foundFeatures.RemoveAll(
-				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
+			foundFeatures.RemoveAll(f =>
+				                        selectedFeatures.Any(s => GdbObjectUtils
+					                                             .IsSameFeature(f, s)));
 
 			return foundFeatures;
 		}
@@ -779,13 +781,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			//FrameworkApplication.QueueIdleAction(
 			//	() => _feedback?.UpdatePreview(reshapeResult.ResultFeatures));
 
-			return await QueuedTaskUtils.Run(
-				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
-		}
-
-		public void SetSketchSymbol(CIMSymbolReference symbolReference)
-		{
-			SketchSymbol = symbolReference;
+			return await QueuedTaskUtils.Run(() => _feedback?.UpdatePreview(
+				                                 reshapeResult?.ResultFeatures));
 		}
 	}
 }

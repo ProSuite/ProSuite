@@ -1777,7 +1777,7 @@ Example: G1.Level &lt;&gt; G2.Level</value>
     <value>Indicates if descriptions of domains must be unique. Domain descriptions are compared in case-insensitive manner, i.e. domain descriptions that differ only in character case are considered duplicates.</value>
   </data>
   <data name="QaSchemaFieldDomainDescriptions_targetWorkspaceTable" xml:space="preserve">
-    <value>A table in another workspace to check for duplicates. Optional, if undefined the workspace of the table to be tested is checked. The table merely points at the workspace to compare against^.</value>
+    <value>A table in another workspace to check for duplicates. The table merely points at the workspace to compare against.</value>
   </data>
   <data name="QaSchemaFieldAliases_0" xml:space="preserve">
     <value>Finds fields with invalid alias names.</value>

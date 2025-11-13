@@ -55,6 +55,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaGdbTopology_featureClasses))] [NotNull]
 			IList<IReadOnlyFeatureClass> featureClasses)
 			: this(GetTopologies(featureClasses), featureClasses) { }
+
+		[InternallyUsedTest]
+		public QaGdbTopology([NotNull] QaGdbTopologyDefinition definition)
+			: this(GetTopologies(definition),
+			       definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()) { }
+
 		private QaGdbTopology([NotNull] IList<ITopology> topologies,
 		                      [NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses)
 			: base(featureClasses)
@@ -151,6 +157,24 @@ namespace ProSuite.QA.Tests
 
 			return topologies;
 		}
+
+		private static IList<ITopology> GetTopologies([NotNull] QaGdbTopologyDefinition definition)
+		{
+			if (definition.FeatureClasses.Count == 0)
+			{
+				if (definition.Topology != null)
+				{
+					TopologyReference topoReference = (TopologyReference) definition.Topology;
+					return new List<ITopology> { topoReference.Topology };
+				}
+
+				throw new ArgumentException(
+					"Either the topology or better the feature classes must be defined.");
+			}
+
+			return GetTopologies(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>());
+		}
+
 		private static IFeatureClass ExpectFeatureClass(IReadOnlyFeatureClass featureClass)
 		{
 			ReadOnlyFeatureClass roFeatureClass = featureClass as ReadOnlyFeatureClass;
@@ -261,8 +285,7 @@ namespace ProSuite.QA.Tests
 				{
 					if (! errorFeature.IsException && ! errorFeature.IsDeleted)
 					{
-						string topologyName = ((IDataset) topology).Name;
-						string description = $"{GetRuleName(rule)} ({topologyName})";
+						string description = $"{GetRuleName(rule)} ({GetName(topology)})";
 
 						errorCount += ReportError(
 							description, GetInvolvedRows(errorFeature),
@@ -398,18 +421,29 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			IPolygon dirtyArea = topology.DirtyArea[GetAsPolygon(geometry)];
+			IPolygon dirtyArea = null;
+			try
+			{
+				dirtyArea = topology.DirtyArea[GetAsPolygon(geometry)];
+			}
+			catch (COMException comException)
+			{
+				// For example System.Runtime.InteropServices.COMException (0x80046197): 0x80046197
+				// happens if the topology has a schema change and must be validated as schema owner
+				// in the un-versioned state
+				throw new InvalidOperationException(
+					$"Error getting dirty areas for topology {GetName(topology)}. Try validating " +
+					$"the topology in ArcGIS as schema owner.", comException);
+			}
 
 			if (dirtyArea == null || dirtyArea.IsEmpty)
 			{
 				return NoError;
 			}
 
-			string topologyName = ((IDataset) topology).Name;
-
 			IssueCode issueCode;
 			string description =
-				GetErrorDescription(topologyName, validationException, out issueCode);
+				GetErrorDescription(GetName(topology), validationException, out issueCode);
 
 			return ReportError(
 				description, GetInvolvedDatasets(topology),
@@ -475,6 +509,11 @@ namespace ProSuite.QA.Tests
 			}
 
 			return GeometryFactory.CreatePolygon(envelope);
+		}
+
+		private static string GetName(ITopology topology)
+		{
+			return ((IDataset) topology).Name;
 		}
 	}
 }

@@ -1,36 +1,34 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	// TODO: (daro) delete unused usages
 	public interface IWorkListRegistry
 	{
+		[CanBeNull]
 		IWorkList Get([NotNull] string name);
 
-		void Add([NotNull] IWorkList workList);
-
-		void Add([NotNull] IWorkListFactory factory);
+		/// <summary>
+		/// Determines whether the work list of the given type has already been instantiated,
+		/// i.e. opened in the navigator. If only the XmlWorkList factory has been registered,
+		/// e.g. for display purposes, false is returned. Otherwise, true is returned
+		/// </summary>
+		/// <typeparam name="T">The work list type.</typeparam>
+		/// <param name="name">The optional name of the work list. Only needed for work list types
+		/// without single-instance semantics, such as selection work lists. </param>
+		/// <param name="workList">The work list of the specified type, if it has been
+		/// created</param>
+		/// <returns></returns>
+		bool TryGet<T>([CanBeNull] string name, out T workList) where T : class, IWorkList;
 
 		bool TryAdd([NotNull] IWorkListFactory factory);
 
+		bool AddOrReplace(IWorkList worklist);
+
 		bool Remove([NotNull] IWorkList workList);
 
-		bool Remove([NotNull] string name);
-
-		IEnumerable<string> GetNames();
-
 		/// <summary>
-		/// Whether the given name is a known work list. It could be registered only as
-		/// XmlWorkListFactory or exist as an opened work list.
-		/// </summary>
-		/// <param name="name"></param>
-		/// <returns></returns>
-		bool Contains([NotNull] string name);
-
-		/// <summary>
-		/// Determines whether the work list of the given name as already be instantiated,
+		/// Determines whether the work list of the given name has already been instantiated,
 		/// i.e. opened in the navigator. If only the XmlWorkList factory has been registered,
 		/// e.g. for display purposes, false is returned.
 		/// </summary>
@@ -38,12 +36,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <returns></returns>
 		bool WorklistExists([NotNull] string name);
 
-		bool AddOrReplace(IWorkList worklist);
-
 		Task<IWorkList> GetAsync(string name);
-
-		IAsyncEnumerable<IWorkList> GetAsync();
-
-		IEnumerable<IWorkList> Get();
 	}
 }

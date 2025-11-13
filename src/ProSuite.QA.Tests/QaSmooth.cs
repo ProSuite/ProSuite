@@ -12,6 +12,7 @@ using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -60,6 +61,13 @@ namespace ProSuite.QA.Tests
 			: base(featureClass)
 		{
 			_limitCstr = limit;
+		}
+
+		[InternallyUsedTest]
+		public QaSmooth([NotNull] QaSmoothDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.Limit)
+		{
+			AngularUnit = definition.AngularUnit;
 		}
 
 		[TestParameter(_defaultAngularUnit)]

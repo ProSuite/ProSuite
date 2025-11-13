@@ -43,15 +43,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override TargetFeatureSelection TargetFeatureSelection =>
 			_cutAlongToolOptions.TargetFeatureSelection;
 
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.CutPolygonAlongOverlay);
-		}
+		protected override SelectionCursors InitialSelectionCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.CutPolygonAlongOverlay,
+			                                    "Cut Along Arrow");
 
-		protected override SelectionCursors GetTargetSelectionCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.CutPolygonAlongOverlay);
-		}
+		protected override SelectionCursors TargetSelectionCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.CutPolygonAlongOverlay,
+			                                    "Cut Along Cross");
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
@@ -64,8 +62,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
-			return geometryType == GeometryType.Polyline ||
-			       geometryType == GeometryType.Polygon;
+			return geometryType == GeometryType.Polygon;
 		}
 
 		protected override void LogUsingCurrentSelection()

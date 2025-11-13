@@ -26,6 +26,16 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return new QueryFilter { ObjectIDs = oids };
 		}
 
+		public static QueryFilter CreateFilter([CanBeNull] string whereClause = "",
+		                                       [CanBeNull] string subFields = null)
+		{
+			return new QueryFilter
+			       {
+				       WhereClause = whereClause,
+				       SubFields = subFields
+			       };
+		}
+
 		[NotNull]
 		public static SpatialQueryFilter CreateSpatialFilter(
 			[NotNull] Geometry filterGeometry,
@@ -81,7 +91,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] Table featureClass,
 			[CanBeNull] QueryFilter filter,
-			bool recycling,
+			bool recycle,
 			CancellationToken cancellationToken = default)
 		{
 			Stopwatch watch = null;
@@ -90,7 +100,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				watch = Stopwatch.StartNew();
 			}
 
-			using RowCursor cursor = OpenCursor(featureClass, filter, recycling);
+			using RowCursor cursor = OpenCursor(featureClass, filter, recycle);
 
 			long rowCount = 0;
 
@@ -411,6 +421,10 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					sb.Append(
 						$"Output spatial reference: {spatialFilter.OutputSpatialReference.Name}");
+				}
+				else
+				{
+					sb.Append("Output spatial reference is null");
 				}
 			}
 

@@ -10,22 +10,24 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing;
 
 // todo 3D, test multipatch sketch symbol!
-public class SymbolizedSketchTypeBasedOnSelection : IDisposable
+public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly ISymbolizedSketchTool _tool;
 	private bool _showFeatureSketchSymbology;
+	private readonly Func<SketchGeometryType> _sketchGeometryTypeFunc;
 
 	/// <summary>
 	/// Sets sketch geometry type based on current selection.
@@ -35,35 +37,38 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	/// first FeatureLayer if many features are selected from many FeatureLayers.
 	/// </summary>
 	/// <param name="tool"></param>
-	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool)
+	/// <param name="sketchType">Optional sketch type method that replaces the default sketch type</param>
+	public SymbolizedSketchTypeBasedOnSelection([NotNull] ISymbolizedSketchTool tool,
+	                                            Func<SketchGeometryType> sketchType = null)
 	{
 		_tool = tool;
+		_sketchGeometryTypeFunc = sketchType;
 
 		_showFeatureSketchSymbology = ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
 
 		SketchModifiedEvent.Subscribe(OnSketchModified);
-		MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
 	}
 
 	public void Dispose()
 	{
 		SketchModifiedEvent.Unsubscribe(OnSketchModified);
-		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 
-		ClearSketchSymbol();
+		_ = ClearSketchSymbol();
 	}
 
-	public void ClearSketchSymbol()
+	public async Task ClearSketchSymbol()
 	{
 		_tool.SetSketchSymbol(null);
+
+		await ApplySketchSymbolWorkAround();
 	}
 
 	/// <summary>
 	/// Must be called on the MCT.
 	/// </summary>
-	public async Task SetSketchAppearanceBasedOnSelectionAsync()
+	public async Task SetSketchAppearanceAsync()
 	{
-		Gateway.LogEntry(_msg);
+		_msg.VerboseDebug(() => nameof(SetSketchAppearanceAsync));
 
 		try
 		{
@@ -78,22 +83,35 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
+	public async Task SelectionChangedAsync(MapSelectionChangedEventArgs args)
+	{
+		var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
+
+		await QueuedTask.Run(async () =>
+		{
+			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
+
+			await TrySetSketchAppearanceAsync(featureLayer, oids);
+		});
+	}
+
 	/// <summary>
 	/// Is always on MCT.
 	/// </summary>
 	private async void OnSketchModified(SketchModifiedEventArgs args)
 	{
-		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
-		    _showFeatureSketchSymbology)
-		{
-			return;
-		}
-
-		_showFeatureSketchSymbology =
-			ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
-
 		try
 		{
+			// TODO: If this is a relevant use case, we should request an OptionChangedEvent
+			if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology ==
+			    _showFeatureSketchSymbology)
+			{
+				return;
+			}
+
+			_showFeatureSketchSymbology =
+				ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology;
+
 			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(MapView.Active.Map);
 			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
@@ -106,35 +124,12 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		}
 	}
 
-	/// <summary>
-	/// Is always on worker thread.
-	/// </summary>
-	private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
-	{
-		Gateway.LogEntry(_msg);
-
-		try
-		{
-			var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
-
-			await QueuedTask.Run(async () =>
-			{
-				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
-
-				await TrySetSketchAppearanceAsync(featureLayer, oids);
-			});
-		}
-		catch (Exception ex)
-		{
-			_msg.Error(ex.Message, ex);
-		}
-	}
-
-	private async Task TrySetSketchAppearanceAsync([CanBeNull] FeatureLayer featureLayer, [CanBeNull] IList<long> oids)
+	private async Task TrySetSketchAppearanceAsync([CanBeNull] FeatureLayer featureLayer,
+	                                               [CanBeNull] IList<long> oids)
 	{
 		if (featureLayer == null || oids == null)
 		{
-			ClearSketchSymbol();
+			await ClearSketchSymbol();
 			return;
 		}
 
@@ -144,32 +139,34 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		{
 			if (await _tool.CanSetConstructionSketchSymbol(geometryType))
 			{
-				//SetSketchSymbol(GetSymbolReference(featureLayer, oids.FirstOrDefault()));
-				SetSketchSymbol(GetSymbolReference(featureLayer, oids));
+				await SetSketchSymbol(GetSymbolReference(featureLayer, oids));
 			}
 			else
 			{
 				_msg.Debug($"Cannot set sketch symbol for geometry type {geometryType}");
-				ClearSketchSymbol();
+				await ClearSketchSymbol();
 			}
 		}
 		else
 		{
 			_msg.Debug(
 				"Cannot set sketch symbol. Show feature symbology in sketch is turned off.");
-			ClearSketchSymbol();
+			await ClearSketchSymbol();
 		}
 	}
 
-	private void SetSketchSymbol(CIMSymbolReference symbolReference)
+	private async Task SetSketchSymbol(CIMSymbolReference symbolReference)
 	{
 		_tool.SetSketchSymbol(symbolReference);
+
+		await ApplySketchSymbolWorkAround();
 	}
 
-	public void SetSketchType([NotNull] BasicFeatureLayer featureLayer)
+	public void SetSketchType()
 	{
-		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-		_tool.SetSketchType(GetApplicableSketchType(geometryType));
+		Assert.NotNull(_sketchGeometryTypeFunc, "No _sketchGeometryTypeFunc");
+
+		_tool.SetSketchType(_sketchGeometryTypeFunc());
 	}
 
 	private List<long> GetApplicableSelection(
@@ -214,29 +211,14 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 	}
 
 	[CanBeNull]
-	private static CIMSymbolReference GetSymbolReference([NotNull] FeatureLayer layer, long oid)
-	{
-		CIMSymbol symbol = layer.LookupSymbol(oid, MapView.Active);
-
-		if (symbol == null)
-		{
-			_msg.Debug(
-				$"Cannot set sketch symbol: no symbol found in layer {layer.Name} for oid {oid}.");
-			return null;
-		}
-
-		return symbol.MakeSymbolReference();
-	}
-
-	[CanBeNull]
-	private static CIMSymbolReference GetSymbolReference([NotNull] FeatureLayer layer, [CanBeNull] IList<long> oids)
+	private static CIMSymbolReference GetSymbolReference([NotNull] FeatureLayer layer,
+	                                                     [CanBeNull] IList<long> oids)
 	{
 		if (oids == null || oids.Count < 1)
 		{
 			return null;
 		}
 
-		CIMSymbol symbol = null;
 		CIMSymbolReference symbolReference = null;
 
 		var activeMap = MapView.Active?.Map;
@@ -259,9 +241,9 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			var feature = GetFeature(layer, oid);
 			//var shape = feature.GetShape();
 			var values = new NamedValues(feature);
-			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out var overrides);
+			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out _);
 
-			if (! cimSymbolReferences.Any(s => s.ToJson() == symref.ToJson()))
+			if (cimSymbolReferences.All(s => s.ToJson() != symref.ToJson()))
 			{
 				cimSymbolReferences.Add(symref);
 			}
@@ -282,8 +264,10 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 			}
 			else
 			{
-				_msg.Debug($"Cannot set sketch symbol: found different symbols in selection of in layer {layer.Name}.");
+				_msg.Debug(
+					$"Cannot set sketch symbol: found different symbols in selection of in layer {layer.Name}.");
 			}
+
 			return null;
 		}
 
@@ -291,34 +275,28 @@ public class SymbolizedSketchTypeBasedOnSelection : IDisposable
 		return symbolReference;
 	}
 
-	private static ArcGIS.Core.Data.Feature GetFeature(FeatureLayer layer, long oid)
+	private static Feature GetFeature(FeatureLayer layer, long oid)
 	{
 		using var featureClass = layer.GetFeatureClass();
 		if (featureClass is null) return null;
-		return ProSuite.Commons.AGP.Core.Geodatabase.GdbQueryUtils.GetFeature(featureClass, oid);
+		return GdbQueryUtils.GetFeature(featureClass, oid);
 	}
 
-	private static SketchGeometryType GetApplicableSketchType(GeometryType geometryType)
+	private static async Task ApplySketchSymbolWorkAround()
 	{
-		switch (geometryType)
+		Geometry sketch = await MapView.Active.GetCurrentSketchAsync();
+
+		if (sketch?.IsEmpty == false)
 		{
-			case GeometryType.Point:
-			case GeometryType.Multipoint:
-				return SketchGeometryType.Point;
-			case GeometryType.Polyline:
-				return SketchGeometryType.Line;
-			case GeometryType.Polygon:
-				return SketchGeometryType.Polygon;
-			case GeometryType.Multipatch:
-				return SketchGeometryType.Multipatch;
-			case GeometryType.Unknown:
-			case GeometryType.Envelope:
-			case GeometryType.GeometryBag:
-				throw new ArgumentOutOfRangeException(nameof(geometryType),
-				                                      $@"Cannot apply sketch geometry type for {nameof(geometryType)}");
-			default:
-				throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
+			// We could be in the middle of a sketch phase and de-select some irrelevant selection
+			// on an unrelated layer. Rather continue with the wrong sketch symbol than losing the
+			// entire sketch!
+			return;
 		}
+
+		// This is needed (apparently inside a QueuedTask) to make the sketch symbol take effect.
+		// It likely triggers the relevant events internally...
+		await MapView.Active.ClearSketchAsync();
 	}
 
 	#region Nestsed type: NamedValues

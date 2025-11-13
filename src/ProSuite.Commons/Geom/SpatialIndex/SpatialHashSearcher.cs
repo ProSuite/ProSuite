@@ -41,7 +41,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 
 			var gridSize =
-				EstimateOptimalGridSize(new[] {forLinestring});
+				EstimateOptimalGridSize(new[] { forLinestring });
 
 			// Avoid very small grid sizes for very vertical geometries
 			if (gridSize < double.Epsilon)
@@ -161,37 +161,35 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				values.Select(getBoundsFunc).ToList();
 
 			EnvelopeXY fullExtent;
-			double averageEnvLateralLength;
-			GetEnvelopeStatistics(valueEnvelopes, out fullExtent,
-			                      out averageEnvLateralLength);
+			double? suggestedGridSize = SuggestTileSize(valueEnvelopes, out fullExtent);
 
-			if (double.IsNaN(averageEnvLateralLength))
+			if (double.IsNaN(gridSize))
 			{
-				if (double.IsNaN(gridSize))
+				if (suggestedGridSize == null)
 				{
 					throw new ArgumentException(
 						"Cannot derive grid size from values, please provide a grid size > 0.");
 				}
 
-				averageEnvLateralLength = gridSize;
+				gridSize = suggestedGridSize.Value;
 			}
 
 			Assert.NotNull(fullExtent);
 
-			double maxTileCount = fullExtent.Width * fullExtent.Height /
-			                      (averageEnvLateralLength * averageEnvLateralLength);
+			// Wild guess: only one in four tiles will contain items
+			const double estimatedEmptyTileRatio = 4;
+			double estimatedTileCount =
+				fullExtent.Width * fullExtent.Height / (gridSize * gridSize) /
+				estimatedEmptyTileRatio;
 
-			if (maxTileCount < 1) maxTileCount = 1;
+			if (estimatedTileCount < 1) estimatedTileCount = 1;
 
-			if (double.IsNaN(gridSize))
-			{
-				gridSize = averageEnvLateralLength * 2;
-			}
-
-			double estimatedItemsPerTile = values.Count / maxTileCount;
+			double estimatedItemsPerTile = values.Count / estimatedTileCount;
 
 			// If maxTileCount is extremely large, it could be that there is an outlier in the items -> large empty space!
-			int dictAllocation = maxTileCount > int.MaxValue ? -1 : (int)maxTileCount;
+			const int maxDictionarySize = int.MaxValue / 2;
+			int dictAllocation =
+				estimatedTileCount > maxDictionarySize ? -1 : (int) estimatedTileCount;
 
 			var result =
 				new SpatialHashSearcher<T>(
@@ -369,21 +367,20 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			}
 		}
 
-		private static void GetEnvelopeStatistics(
+		public static double? SuggestTileSize(
 			[NotNull] ICollection<IBoundedXY> envelopes,
-			[CanBeNull] out EnvelopeXY unionedEnvelope,
-			out double averageDensity)
+			[CanBeNull] out EnvelopeXY unionedEnvelope)
 		{
 			Assert.ArgumentNotNull(envelopes, nameof(envelopes));
 
 			unionedEnvelope = null;
 
-			int count = 0;
+			int totalCount = 0;
+			int nonPointCount = 0;
 			double totalSideLengths = 0;
+
 			foreach (IBoundedXY envelope in envelopes)
 			{
-				count++;
-
 				if (unionedEnvelope == null)
 				{
 					unionedEnvelope = new EnvelopeXY(envelope);
@@ -393,26 +390,42 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 					unionedEnvelope.EnlargeToInclude(envelope);
 				}
 
-				totalSideLengths += envelope.XMax - envelope.XMin;
-				totalSideLengths += envelope.YMax - envelope.YMin;
+				double width = envelope.XMax - envelope.XMin;
+				double height = envelope.YMax - envelope.YMin;
+
+				if (width != 0 || height != 0)
+				{
+					totalSideLengths += width;
+					totalSideLengths += height;
+
+					nonPointCount++;
+				}
+
+				totalCount++;
 			}
 
+			double? result;
 			if (totalSideLengths > 0)
 			{
-				averageDensity = count > 0
-					                 ? totalSideLengths / count / 2
-					                 : double.NaN;
+				// Non-points: Use average size, we want to limit the number of tiles per item:
+				result = nonPointCount > 0
+					         ? totalSideLengths / nonPointCount
+					         : double.NaN;
 			}
-			else if (unionedEnvelope != null)
+			else if (unionedEnvelope != null &&
+			         unionedEnvelope.Width > 0 && unionedEnvelope.Height > 0)
 			{
-				averageDensity = count > 1
-					                 ? (unionedEnvelope.Width + unionedEnvelope.Height) / count / 2
-					                 : double.NaN;
+				// All points: Use density, we want to limit the number of items per tile:
+				result = totalCount > 1
+					         ? (unionedEnvelope.Width + unionedEnvelope.Height) / totalCount
+					         : double.NaN;
 			}
 			else
 			{
-				averageDensity = double.NaN;
+				result = null;
 			}
+
+			return result;
 		}
 
 		public IEnumerator<T> GetEnumerator()

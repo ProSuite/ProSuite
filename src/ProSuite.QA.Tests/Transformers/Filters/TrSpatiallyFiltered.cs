@@ -4,17 +4,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers.Filters
 {
 	public abstract class TrSpatiallyFiltered : TableTransformer<FilteredFeatureClass>
 	{
-		public enum SearchOption
-		{
-			Tile,
-			All
-		}
-
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 
 		[NotNull] protected readonly IReadOnlyFeatureClass _featureClassToFilter;

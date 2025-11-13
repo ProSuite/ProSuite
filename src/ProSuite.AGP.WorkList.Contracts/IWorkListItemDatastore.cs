@@ -44,6 +44,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <returns></returns>
 		bool ContainsSourceClass(ISourceClass sourceClass);
 
-		IObjectDataset GetObjetDataset(TableDefinition tableDefinition);
+		IObjectDataset GetObjectDataset(TableDefinition tableDefinition);
 	}
 }

@@ -343,6 +343,29 @@ namespace ProSuite.AGP.Editing
 			return featureLayer;
 		}
 
+		public static SketchGeometryType GetSketchGeometryType(GeometryType geometryType)
+		{
+			switch (geometryType)
+			{
+				case GeometryType.Point:
+				case GeometryType.Multipoint:
+					return SketchGeometryType.Point;
+				case GeometryType.Polyline:
+					return SketchGeometryType.Line;
+				case GeometryType.Polygon:
+					return SketchGeometryType.Polygon;
+				case GeometryType.Multipatch:
+					return SketchGeometryType.Multipatch;
+				case GeometryType.Unknown:
+				case GeometryType.Envelope:
+				case GeometryType.GeometryBag:
+					throw new ArgumentOutOfRangeException(nameof(geometryType),
+					                                      $@"Cannot apply sketch geometry type for {nameof(geometryType)}");
+				default:
+					throw new ArgumentOutOfRangeException(nameof(geometryType), geometryType, null);
+			}
+		}
+
 		public static SketchGeometryType GetSketchGeometryType()
 		{
 			return MapView.Active?.GetSketchType() ?? SketchGeometryType.None;

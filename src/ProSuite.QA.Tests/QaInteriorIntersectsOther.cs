@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -52,7 +53,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass relatedClass,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_constraint))] [CanBeNull]
 			string constraint)
-			: this(new[] {featureClass}, new[] {relatedClass}, constraint) { }
+			: this(new[] { featureClass }, new[] { relatedClass }, constraint) { }
 
 		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_2))]
 		public QaInteriorIntersectsOther(
@@ -79,6 +80,18 @@ namespace ProSuite.QA.Tests
 		}
 
 		#endregion
+
+		[InternallyUsedTest]
+		public QaInteriorIntersectsOther(QaInteriorIntersectsOtherDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.RelatedClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.Constraint
+			)
+		{
+			ValidIntersectionGeometryConstraint = definition.ValidIntersectionGeometryConstraint;
+		}
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_ValidIntersectionGeometryConstraint))]

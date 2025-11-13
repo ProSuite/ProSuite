@@ -14,6 +14,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -154,6 +155,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		#endregion
+
+		[InternallyUsedTest]
+		public QaRegularExpression([NotNull] QaRegularExpressionDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.Pattern,
+			       definition.FieldNames, definition.MatchIsError, definition.PatternDescription)
+		{
+			FieldListType = definition.FieldListType;
+		}
 
 		[Doc(nameof(DocStrings.QaRegularExpression_FieldListType))]
 		[TestParameter(FieldListType.RelevantFields)]

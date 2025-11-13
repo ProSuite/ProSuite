@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -19,18 +20,24 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 	private IReadOnlyList<string> _tableNames;
 	private string _path;
 
-	[CanBeNull]
-	private static WorkListGeometryService _service;
+	// Thread-safe static tracking of logged work list names
+	private static readonly ConcurrentDictionary<string, object> _loggedWorkListNames = new();
 
-	[NotNull]
-	private static WorkListGeometryService Service
+	private XmlWorkListDefinition _xmlWorkListDefinition;
+
+	[CanBeNull] private static WorkListGeometryService _service;
+
+	/// <summary>
+	/// Subclasses can globally enable/disable the background service.
+	/// </summary>
+	[CanBeNull]
+	protected virtual WorkListGeometryService Service
 	{
 		get
 		{
 			if (_service == null)
 			{
 				_service = new WorkListGeometryService();
-				_service.Start();
 			}
 
 			return _service;
@@ -39,53 +46,78 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 
 	public override void Open([NotNull] Uri connectionPath) // "open workspace"
 	{
-		try
+		if (connectionPath is null)
+			throw new ArgumentNullException(nameof(connectionPath));
+
+		_msg.Debug($"Try to open {connectionPath}");
+
+		_path = connectionPath.IsAbsoluteUri
+			        ? connectionPath.LocalPath
+			        : connectionPath.ToString();
+
+		if (! File.Exists(_path))
 		{
-			Assert.ArgumentNotNull(connectionPath, nameof(connectionPath));
-
-			_msg.Debug($"Try to open {connectionPath}");
-
-			// Empirical: when opening a project (.aprx) with a saved layer
-			// using our Plugin Datasource, the connectionPath will be
-			// prepended with the project file's directory path and
-			// two times URL encoded (e.g., ' ' => %20 => %2520)!
-
-			_path = connectionPath.IsAbsoluteUri
-				        ? connectionPath.LocalPath
-				        : connectionPath.ToString();
-
-			_path = HttpUtility.UrlDecode(_path);
-			_path = HttpUtility.UrlDecode(_path);
-
-			// TODO: (DARO) path might have been moved. How to set data source invalid?
-			if (! File.Exists(_path))
-			{
-				_msg.Debug($"{_path} does not exists");
-			}
-
-			string name = WorkListUtils.GetWorklistName(_path, out string typeName);
-
-			IWorkListRegistry registry = WorkListRegistry.Instance;
-			if (! registry.WorklistExists(name))
-			{
-				registry.TryAdd(new LayerBasedWorkListFactory(name, typeName, _path));
-			}
-
-			// the following situation: when work list layer is already in TOC
-			// and its data source (work list definition file) is renamed
-			// Pro still opens the old data source (old file name) which
-			// doesn't exist anymore
-			if (string.IsNullOrEmpty(name))
-			{
-				return;
-			}
-
-			_tableNames = new ReadOnlyCollection<string>(new List<string> { name });
+			throw new FileNotFoundException(
+				$"Work list definition file not found: {_path}");
 		}
-		catch (Exception ex)
+
+		_msg.DebugFormat("Reading work list definition {0}", _path);
+
+		// Read the work list definition only once - this is the expensive part (but still about
+		// more one or two orders of magnitude faster than opening a real work list):
+		_xmlWorkListDefinition = XmlWorkItemStateRepository.Import(_path);
+
+		string tableName = _xmlWorkListDefinition.Name;
+
+		// the following situation: when work list layer is already in TOC
+		// and its data source (work list definition file) is renamed
+		// Pro still opens the old data source (old file name) which
+		// doesn't exist anymore
+		// TODO: Is this still relevant?
+		if (string.IsNullOrEmpty(tableName))
 		{
-			_msg.Debug("Error opening work list data source", ex);
+			return;
 		}
+
+		_msg.DebugFormat("Read work list definition {0} with {1} items.",
+		                 tableName, _xmlWorkListDefinition.Items.Count);
+
+		IWorkListRegistry registry = WorkListRegistry.Instance;
+
+		if (! registry.WorklistExists(tableName))
+		{
+			IWorkEnvironment workEnvironment = null;
+			try
+			{
+				workEnvironment = WorkListEnvironmentFactory.Instance.CreateWorkEnvironment(
+					_path, _xmlWorkListDefinition.TypeName);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error creating work environment for {tableName}", e);
+			}
+
+			// Mechanism to start creating the work list and loading all items in the background
+			// so that it is ready when the user opens the navigator. This is currently opt-in by
+			// the <see	cref="IWorkEnvironment.AllowBackgroundLoading"/> flat. However, the items
+			// loaded in the background come from the saved workspace state and can be outdated.
+			// Only use for read-only work list items.
+			bool allowBackgroundLoading = workEnvironment?.AllowBackgroundLoading == true;
+
+			if (allowBackgroundLoading)
+			{
+				var layerBasedWorkListFactory =
+					new LayerBasedWorkListFactory(tableName, _xmlWorkListDefinition.TypeName,
+					                              _path);
+				registry.TryAdd(layerBasedWorkListFactory);
+			}
+
+			// In all other cases, the proper work list is created and registered when the user
+			// opens it in the navigator.
+		}
+
+		_tableNames =
+			new ReadOnlyCollection<string>(new List<string> { tableName });
 	}
 
 	/// <summary>
@@ -96,12 +128,18 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 		_service?.Stop();
 		_service = null;
 
+		// Clear the logged state for this work list when closing
+		if (_xmlWorkListDefinition?.Name != null)
+		{
+			_loggedWorkListNames.TryRemove(_xmlWorkListDefinition.Name, out _);
+		}
+
 		_msg.Debug("WorkListDataSource.Close()");
 	}
 
 	public override PluginTableTemplate OpenTable([NotNull] string name)
 	{
-		Assert.ArgumentNotNull(name, nameof(name));
+		Assert.NotNullOrEmpty(name, nameof(name));
 
 		WorkItemTable result = null;
 		try
@@ -109,14 +147,45 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 			// The given name is one of those returned by GetTableNames()
 			_msg.Debug($"Open table '{name}'");
 
-			result = new WorkItemTable(name, Service);
+			// The work list could already be registered before the layer is made visible in the TOC:
+			bool canUseActualWorkList = WorkListRegistry.Instance.Get(name) != null;
+
+			CachedWorkItemData cachedWorkItemData =
+				canUseActualWorkList
+					? null
+					: new CachedWorkItemData(_xmlWorkListDefinition);
+
+			LogCachedWorkItemUsage(canUseActualWorkList);
+
+			result = new WorkItemTable(name, cachedWorkItemData, Service);
 		}
 		catch (Exception ex)
 		{
-			_msg.Debug(ex.Message, ex);
+			_msg.Debug(
+				$"Error opening work item table: {ex.Message}. Definition: {_xmlWorkListDefinition}",
+				ex);
 		}
 
 		return result;
+	}
+
+	private void LogCachedWorkItemUsage(bool canUseActualWorkList)
+	{
+		if (canUseActualWorkList || _xmlWorkListDefinition?.Name == null)
+		{
+			return;
+		}
+
+		string workListName = _xmlWorkListDefinition.Name;
+
+		// Thread-safe one-time logging per work list name - no explicit lock needed
+		if (_loggedWorkListNames.TryAdd(workListName, null))
+		{
+			_msg.InfoFormat(
+				"Work list layer for '{0}': Showing cached work items. Opening " +
+				"the Work List Navigator will re-read the items from the data store.",
+				_xmlWorkListDefinition.DisplayName ?? workListName);
+		}
 	}
 
 	public override IReadOnlyList<string> GetTableNames()
@@ -128,6 +197,5 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 	{
 		// TODO: Pro calls this before Open(), i.e., when _workList is still null!
 		return false;
-		//return _workList?.QueryLanguageSupported ?? false;
 	}
 }

@@ -143,6 +143,7 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(pointClasses2, nameof(pointClasses2));
 			Assert.ArgumentNotNull(borderClass2, nameof(borderClass2));
 
+
 			SearchDistance = searchDistance;
 
 			foreach (IReadOnlyFeatureClass pointClass in Union(pointClasses1, pointClasses2))
@@ -191,6 +192,33 @@ namespace ProSuite.QA.Tests
 			AllowNoFeatureWithinSearchDistance = _defaultAllowNoFeatureWithinSearchDistance;
 			AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled =
 				_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
+		}
+
+		[InternallyUsedTest]
+		public QaEdgeMatchBorderingPoints(
+			[NotNull] QaEdgeMatchBorderingPointsDefinition definition)
+			: this(definition.PointClasses1.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass)definition.BorderClass1,
+			       definition.PointClasses2.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass)definition.BorderClass2,
+			       definition.SearchDistance)
+		{
+			PointClass1BorderMatchCondition = definition.PointClass1BorderMatchCondition;
+			PointClass2BorderMatchCondition = definition.PointClass2BorderMatchCondition;
+			BorderingPointMatchCondition = definition.BorderingPointMatchCondition;
+			BorderingPointAttributeConstraint = definition.BorderingPointAttributeConstraint;
+			IsBorderingPointAttributeConstraintSymmetric = definition.IsBorderingPointAttributeConstraintSymmetric;
+			BorderingPointEqualAttributes = definition.BorderingPointEqualAttributes;
+			BorderingPointEqualAttributeOptions =
+				definition.BorderingPointEqualAttributeOptions;
+			ReportIndividualAttributeConstraintViolations =
+				definition.ReportIndividualAttributeConstraintViolations;
+			CoincidenceTolerance =
+				definition.CoincidenceTolerance;
+			AllowDisjointCandidateFeatureIfBordersAreNotCoincident = definition.AllowDisjointCandidateFeatureIfBordersAreNotCoincident;
+			AllowNoFeatureWithinSearchDistance = definition.AllowNoFeatureWithinSearchDistance;
+			AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled = definition
+				.AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
 		}
 
 		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_PointClass1BorderMatchCondition))]

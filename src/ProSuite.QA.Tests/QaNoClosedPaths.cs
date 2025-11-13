@@ -49,6 +49,12 @@ namespace ProSuite.QA.Tests
 			_shapeFieldName = polyLineClass.ShapeFieldName;
 		}
 
+		[InternallyUsedTest]
+		public QaNoClosedPaths(
+			[NotNull] QaNoClosedPathsDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.PolyLineClass)
+		{ }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;

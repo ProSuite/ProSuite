@@ -138,13 +138,13 @@ namespace ProSuite.QA.Tests.Schema
 		}
 
 		[NotNull]
-		private static IEnumerable<IReadOnlyTable> GetTables([NotNull] IReadOnlyTable table,
-		                                                     [CanBeNull]
-		                                                     IReadOnlyTable referenceTable)
+		protected static IEnumerable<IReadOnlyTable> GetTables([NotNull] IReadOnlyTable table,
+		                                                       [CanBeNull]
+		                                                       IReadOnlyTable referenceTable)
 		{
 			return referenceTable == null
-				       ? new[] {table}
-				       : new[] {table, referenceTable};
+				       ? new[] { table }
+				       : new[] { table, referenceTable };
 		}
 
 		[NotNull]
@@ -152,9 +152,22 @@ namespace ProSuite.QA.Tests.Schema
 			[NotNull] IReadOnlyTable table,
 			[CanBeNull] IEnumerable<IReadOnlyTable> referenceTables)
 		{
-			return referenceTables == null
-				       ? new[] {table}
-				       : Union(new[] {table}, new List<IReadOnlyTable>(referenceTables));
+			var tables = new List<IReadOnlyTable> { table };
+
+			if (referenceTables == null)
+			{
+				return tables;
+			}
+
+			foreach (IReadOnlyTable referenceTable in referenceTables)
+			{
+				if (referenceTable != null)
+				{
+					tables.Add(referenceTable);
+				}
+			}
+
+			return tables;
 		}
 
 		#endregion

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 
     <SignAssembly>true</SignAssembly>
@@ -19,6 +19,11 @@
 
     <!-- This can be changed to 12 once only .NET 8 (and Pro 3.2) support is dropped. -->
     <LangVersion>10</LangVersion>
+  </PropertyGroup>
+
+  <!-- WPF references -->
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.2 ">
@@ -60,6 +65,11 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ESRI.ArcGIS.ItemIndex">
+      <HintPath>$(ProAssemblyPath)\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
@@ -72,5 +82,15 @@
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Properties\Images\NavigateSelectionCmd16.png">
+    </Resource>
+    <Resource Include="Properties\Images\NavigateSelectionCmd32.png">
+    </Resource>
+    <Resource Include="Properties\Images\WorkListsFolder16.png">
+    </Resource>
+    <Resource Include="Properties\Images\WorkListsFolder32.png">
+    </Resource>
   </ItemGroup>
 </Project>

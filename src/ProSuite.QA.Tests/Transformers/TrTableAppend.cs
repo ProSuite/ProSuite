@@ -6,10 +6,11 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.TestCategories;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -20,8 +21,15 @@ namespace ProSuite.QA.Tests.Transformers
 		private AppendedTable _transformedTable;
 		private string _transformerName;
 
-		public TrTableAppend([NotNull] IList<IReadOnlyTable> tables)
+		[DocTr(nameof(DocTrStrings.TrTableAppend_0))]
+		public TrTableAppend(
+			[NotNull] [DocTr(nameof(DocTrStrings.TrTableAppend_tables))]
+			IList<IReadOnlyTable> tables)
 			: base(tables) { }
+
+		[InternallyUsedTest]
+		public TrTableAppend(TrTableAppendDefinition definition)
+			: this((IList<IReadOnlyTable>) definition.Tables) { }
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
 

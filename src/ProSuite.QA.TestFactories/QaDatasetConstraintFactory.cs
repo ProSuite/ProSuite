@@ -17,35 +17,11 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[AttributeTest]
-	public class QaDatasetConstraintFactory : TestFactory
+	public class QaDatasetConstraintFactory : QaFactoryBase
 	{
-		public static readonly string TableAttribute = "table";
-		public static readonly string ConstraintAttribute = "constraint";
-
 		[NotNull]
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaConstraint.Codes;
-
-		public override string TestDescription => DocStrings.QaDatasetConstraintFactory;
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter(TableAttribute, typeof(IReadOnlyTable),
-					                  DocStrings.QaDatasetConstraintFactory_table),
-					new TestParameter(ConstraintAttribute, typeof(IList<string>),
-					                  DocStrings.QaDatasetConstraintFactory_constraint)
-				};
-
-			return list.AsReadOnly();
-		}
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaConstraint).Name;
-		}
 
 		protected override object[] Args(
 			IOpenDataset datasetContext,

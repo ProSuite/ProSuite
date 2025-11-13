@@ -8,6 +8,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
@@ -73,6 +74,13 @@ namespace ProSuite.QA.Tests
 		}
 
 		#endregion
+
+		[InternallyUsedTest]
+		public QaSchemaFieldDomainNames(
+			[NotNull] QaSchemaFieldDomainNamesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.ExpectedPrefix,
+			       definition.MaximumLength, definition.MustContainFieldName,
+			       definition.ExpectedCase) { }
 
 		public override int Execute()
 		{

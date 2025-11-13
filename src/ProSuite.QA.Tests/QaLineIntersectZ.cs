@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -123,6 +124,18 @@ namespace ProSuite.QA.Tests
 				_zDifferenceColumnValue = new Dictionary<string, object>();
 			}
 			AddCustomQueryFilterExpression(constraint);
+		}
+
+		[InternallyUsedTest]
+		public QaLineIntersectZ(QaLineIntersectZDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.MinimumZDifference,
+			       definition.MaximumZDifference, definition.Constraint
+			)
+		{
+			MinimumZDifferenceExpression = definition.MinimumZDifferenceExpression;
+			MaximumZDifferenceExpression = definition.MaximumZDifferenceExpression;
 		}
 
 		[TestParameter]

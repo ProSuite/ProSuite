@@ -21,8 +21,9 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	/// the work unit concept in a simplified way, i.e. provide the datasets that are relevant
 	/// and their representation in an actual workspace, together with project-specific settings.
 	/// </summary>
-	public class ProjectWorkspace
+	public class ProjectWorkspace : IProjectWorkspace
 	{
+		// Consider re-naminig to ProProjectWorkspace
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public ProjectWorkspace(int projectId,

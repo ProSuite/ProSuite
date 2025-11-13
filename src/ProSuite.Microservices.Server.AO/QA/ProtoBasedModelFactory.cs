@@ -62,7 +62,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				foreach (ObjectClassMsg objectClassMsg in _schemaMsg.ClassDefinitions)
 				{
-					if (objectClassMsg.WorkspaceHandle != modelId)
+					// 0 is not a possible model ID in the DDX (sequence starts at 1) and means
+					// it has not been initialized -> Allow datasets without model ID
+					if (objectClassMsg.DdxModelId != 0 && objectClassMsg.DdxModelId != modelId)
 					{
 						continue;
 					}

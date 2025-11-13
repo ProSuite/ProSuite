@@ -49,6 +49,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			OID = proRow?.GetObjectID() ?? -1;
 		}
 
+		[CanBeNull]
 		public Row ProRow
 		{
 			get => _proRow;
@@ -333,7 +334,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 			else
 			{
-				result = ArcGeometryUtils.CreateProGeometry(fromShape);
+				result = ArcGeometryUtils.TryConvertToProGeometry(fromShape);
 			}
 
 			return result;
@@ -463,7 +464,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 			else
 			{
-				newGeometry = ArcGeometryUtils.CreateProGeometry(_mutableGeometry);
+				newGeometry = ArcGeometryUtils.TryConvertToProGeometry(_mutableGeometry);
 			}
 
 			TryOrRefreshRow<Feature>(f => { f.SetShape(newGeometry); });

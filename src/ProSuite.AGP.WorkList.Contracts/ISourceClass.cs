@@ -1,22 +1,26 @@
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface ISourceClass
 	{
+		[NotNull]
 		string Name { get; }
 
 		GdbTableIdentity TableIdentity { get; }
 
+		[CanBeNull]
 		IAttributeReader AttributeReader { get; set; }
 
 		bool HasGeometry { get; }
 
-		string DefinitionQuery { get; }
+		[CanBeNull]
+		string DefaultDefinitionQuery { get; }
 
-		bool Uses(ITableReference tableReference);
+		bool Uses([NotNull] ITableReference tableReference);
 
 		/// <summary>
 		/// Opens the table.

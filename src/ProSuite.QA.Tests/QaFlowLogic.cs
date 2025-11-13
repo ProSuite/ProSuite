@@ -103,6 +103,15 @@ namespace ProSuite.QA.Tests
 			_allowMultipleOutgoingLines = allowMultipleOutgoingLines;
 		}
 
+		[InternallyUsedTest]
+		public QaFlowLogic(QaFlowLogicDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
+				  .ToList(),
+				  definition.FlipExpressions,
+				  definition.AllowMultipleOutgoingLines
+				   )
+		{ }
+
 		#endregion
 
 		protected override void ConfigureQueryFilter(int tableIndex,

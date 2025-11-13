@@ -84,11 +84,16 @@ public class WorkListGeometryService
 		{
 			if (_thread == null)
 			{
-				_msg.Debug("Service has not been started.");
-				return;
+				_msg.Debug("Service has not been started. Starting now...");
+				if (! Start())
+				{
+					_msg.Warn("Could not start service. No geometries will be cached.");
+					return;
+				}
 			}
 
-			Assert.True(_thread.IsAlive, "Thread is dead. Maybe an exception occurred.");
+			bool isAlive = Assert.NotNull(_thread, "Thread is null").IsAlive;
+			Assert.True(isAlive, "Thread is dead. Maybe an exception occurred.");
 
 			if (_queue.IsAddingCompleted)
 			{

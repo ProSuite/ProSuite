@@ -12,10 +12,12 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Test.Transformer
 {
@@ -377,19 +379,19 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Assert.AreEqual(3, runner.Errors.Count);
 			}
 			{
-				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.OuterRings;
+				tr.TransformedParts = PolygonPart.OuterRings;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 			{
-				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.InnerRings;
+				tr.TransformedParts = PolygonPart.InnerRings;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 			{
-				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.AllRings;
+				tr.TransformedParts = PolygonPart.AllRings;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(4, runner.Errors.Count);
@@ -432,13 +434,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				new QaOverlapsOther(tr.GetTransformed(), ReadOnlyTableFactory.Create(lineFc));
 			test.SetConstraint(1, "ObjectId = 2");
 			{
-				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.AllRings;
+				tr.TransformedParts = PolygonPart.AllRings;
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(0, runner.Errors.Count);
 			}
 			{
-				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.AllRings;
+				tr.TransformedParts = PolygonPart.AllRings;
 				var runner = new QaContainerTestRunner(20, test);
 				runner.Execute();
 				Assert.AreEqual(0, runner.Errors.Count);

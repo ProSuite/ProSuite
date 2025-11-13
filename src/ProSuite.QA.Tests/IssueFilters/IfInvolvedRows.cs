@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.IssueFilters
@@ -20,6 +23,16 @@ namespace ProSuite.QA.Tests.IssueFilters
 			: base(new IReadOnlyTable[] { })
 		{
 			_constraint = constraint;
+		}
+
+		[InternallyUsedTest]
+		public IfInvolvedRows([NotNull] IfInvolvedRowsDefinition definition)
+			: this(definition.Constraint)
+		{
+			if (definition.Tables?.Count > 0)
+			{
+				Tables = definition.Tables.Cast<IReadOnlyTable>().ToList();
+			}
 		}
 
 		[TestParameter]

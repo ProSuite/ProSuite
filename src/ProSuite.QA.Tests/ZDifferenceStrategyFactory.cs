@@ -1,6 +1,7 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {

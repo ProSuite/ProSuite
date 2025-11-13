@@ -36,8 +36,12 @@
     <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.5 ">
+    <DefineConstants>$(DefineConstants);ARCGISPRO_GREATER_3_5</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.2 ">
-    <DefineConstants>ARCGISPRO_GREATER_3_2</DefineConstants>
+    <DefineConstants>$(DefineConstants);ARCGISPRO_GREATER_3_2</DefineConstants>
   </PropertyGroup>
 
   <!-- Exclude file from legacy ArcGIS Pro versions. -->

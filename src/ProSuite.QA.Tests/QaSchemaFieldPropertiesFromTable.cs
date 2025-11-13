@@ -32,6 +32,13 @@ namespace ProSuite.QA.Tests
 			_fieldSpecificationsTable = fieldSpecificationsTable;
 		}
 
+		[InternallyUsedTest]
+		public QaSchemaFieldPropertiesFromTable(
+			[NotNull] QaSchemaFieldPropertiesFromTableDefinition definition)
+			: this((IReadOnlyTable) definition.Table,
+			       (IReadOnlyTable) definition.FieldSpecificationsTable,
+			       definition.MatchAliasName) { }
+
 		[NotNull]
 		private ITableFilter GetQueryFilter()
 		{

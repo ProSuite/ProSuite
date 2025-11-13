@@ -1141,8 +1141,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                      [NotNull] string tableName)
 		{
 			Assert.ArgumentNotNullOrEmpty(tableName, nameof(tableName));
-			Assert.True(workspace is ISQLSyntax, "workspace is not ISQLSyntax");
 
+			if (string.IsNullOrEmpty(databaseName) && string.IsNullOrEmpty(ownerName))
+			{
+				return tableName;
+			}
+
+			// TODO: In case the workspace does not implement ISQLSyntax, use ModelElementNameUtils
 			var sqlSyntax = (ISQLSyntax) workspace;
 
 			return sqlSyntax.QualifyTableName(

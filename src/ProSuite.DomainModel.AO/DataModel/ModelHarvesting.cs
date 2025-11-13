@@ -54,6 +54,18 @@ namespace ProSuite.DomainModel.AO.DataModel
 			               "DatasetListBuilderFactory not assigned to model");
 
 			return Harvest(model, workspaceContext, datasetListBuilderFactory,
+			               existingAttributeTypes);
+		}
+
+		[NotNull]
+		public static IEnumerable<ObjectAttributeType> Harvest(
+			[NotNull] DdxModel model, [NotNull] IWorkspaceContext workspaceContext,
+			[NotNull] IDatasetListBuilderFactory datasetListBuilderFactory,
+			[CanBeNull] IEnumerable<AttributeType> existingAttributeTypes = null)
+		{
+			Assert.ArgumentNotNull(datasetListBuilderFactory, nameof(datasetListBuilderFactory));
+
+			return Harvest(model, workspaceContext, datasetListBuilderFactory,
 			               GetAttributeConfigurator(model, existingAttributeTypes));
 		}
 

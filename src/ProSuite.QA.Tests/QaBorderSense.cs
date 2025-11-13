@@ -58,7 +58,7 @@ namespace ProSuite.QA.Tests
 			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaBorderSense_clockwise))]
 			bool clockwise)
-			: this(new[] {polylineClass}, clockwise) { }
+			: this(new[] { polylineClass }, clockwise) { }
 
 		[Doc(nameof(DocStrings.QaBorderSense_1))]
 		public QaBorderSense(
@@ -72,6 +72,11 @@ namespace ProSuite.QA.Tests
 			_grower = new RingGrower<DirectedRow>(DirectedRow.Reverse);
 			_grower.GeometryCompleted += RingGeometryCompleted;
 		}
+
+		[InternallyUsedTest]
+		public QaBorderSense(QaBorderSenseDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.Clockwise) { }
 
 		protected override int CompleteTileCore(TileInfo args)
 		{

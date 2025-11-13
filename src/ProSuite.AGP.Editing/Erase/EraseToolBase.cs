@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
@@ -14,6 +15,7 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -32,19 +34,59 @@ namespace ProSuite.AGP.Editing.Erase
 			RequiresSelection = true;
 		}
 
-		protected override SketchGeometryType GetSketchGeometryType()
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
+
+		protected override SketchGeometryType GetEditSketchGeometryType()
 		{
 			return SketchGeometryType.Polygon;
-		}
-
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
 			return SketchGeometryType.Rectangle;
+		}
+
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int selectionCount = 0;
+			bool? result = await QueuedTask.Run(() =>
+			{
+				var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+
+				if (selectionByLayer.Count == 0)
+				{
+					_msg.Debug($"{Caption}: no feature layer found in selection");
+					return null;
+				}
+
+				bool? hasAnyZ = false;
+
+				foreach (var selectedOidByLayer in selectionByLayer)
+				{
+					if (selectedOidByLayer.Key is FeatureLayer layer)
+					{
+						FeatureClass featureClass = layer.GetFeatureClass();
+						bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+
+						if (layerHasZ == true)
+						{
+							hasAnyZ = true;
+							break;
+						}
+					}
+				}
+
+				return hasAnyZ;
+			});
+
+			_msg.DebugStopTiming(
+				watch, "Determined sketch has Z: {0} (evaluated {1} selected layers)", result,
+				selectionCount);
+
+			return result;
 		}
 
 		protected override void LogEnteringSketchMode()
@@ -61,6 +103,13 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat(LocalizableStrings.EraseTool_LogPromptForSelection);
 		}
 
+		protected override bool CanSelectGeometryType(GeometryType geometryType)
+		{
+			return geometryType == GeometryType.Polyline ||
+			       geometryType == GeometryType.Polygon ||
+			       geometryType == GeometryType.Multipoint;
+		}
+
 		protected override bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection,
 		                                        NotificationCollection notifications = null)
 		{
@@ -69,7 +118,8 @@ namespace ProSuite.AGP.Editing.Erase
 			foreach (var layer in selection.Keys.OfType<FeatureLayer>())
 			{
 				if (layer.ShapeType == esriGeometryType.esriGeometryPolygon ||
-				    layer.ShapeType == esriGeometryType.esriGeometryPolyline)
+				    layer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+				    layer.ShapeType == esriGeometryType.esriGeometryMultipoint)
 				{
 					hasPolycurveSelection = true;
 				}
@@ -92,10 +142,15 @@ namespace ProSuite.AGP.Editing.Erase
 
 			var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
 			var taskFlash =
-				QueuedTaskUtils.Run(
-					() => ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures));
+				QueuedTaskUtils.Run(() => ToolUtils.FlashResultPolygonsAsync(
+					                    activeView, resultFeatures));
 
 			await Task.WhenAll(taskFlash, taskSave);
+
+			// Clear sketch is necessary if finishing sketch by F2. Otherwise, a defunct
+			// sketch remains that cannot be cleared with ESC!
+			await ClearSketchAsync();
+			await StartSketchPhaseAsync();
 
 			return taskSave.Result;
 		}
@@ -167,7 +222,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 				FeatureClass featureClass = feature.GetTable();
 				FeatureClassDefinition classDefinition = featureClass.GetDefinition();
-				GeometryType geometryType = classDefinition.GetShapeType();
+
 				bool classHasZ = classDefinition.HasZ();
 				bool classHasM = classDefinition.HasM();
 
@@ -184,26 +239,6 @@ namespace ProSuite.AGP.Editing.Erase
 			_msg.InfoFormat("Successfully stored {0} updated features.", result.Count);
 
 			return true;
-		}
-
-		private static IEnumerable<Dataset> GetDatasets(IEnumerable<MapMember> mapMembers)
-		{
-			foreach (MapMember mapMember in mapMembers)
-			{
-				var featureLayer = mapMember as FeatureLayer;
-
-				if (featureLayer != null)
-				{
-					yield return featureLayer.GetFeatureClass();
-				}
-
-				var standaloneTable = mapMember as StandaloneTable;
-
-				if (standaloneTable != null)
-				{
-					yield return standaloneTable.GetTable();
-				}
-			}
 		}
 
 		private static IEnumerable<Dataset> GetDatasets(IEnumerable<Feature> features)

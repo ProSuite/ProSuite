@@ -165,24 +165,19 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_4))]
 		public QaLineConnectionFieldValues(
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClasses))] [NotNull]
-			IList<IReadOnlyFeatureClass>
-				lineClasses,
+			IList<IReadOnlyFeatureClass> lineClasses,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFields))] [NotNull]
 			IList<string> lineFields,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClasses))] [NotNull]
-			IList<IReadOnlyFeatureClass>
-				pointClasses,
+			IList<IReadOnlyFeatureClass> pointClasses,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFields))] [CanBeNull]
-			IList<string>
-				pointFields,
+			IList<string> pointFields,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
 			PointFieldValuesConstraint pointFieldValuesConstraint,
 			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_allowedPointsExpressions))]
-			[CanBeNull]
-			IList<string>
-				allowedPointsExpressions)
+			[CanBeNull] IList<string> allowedPointsExpressions)
 			: base(CastToTables(lineClasses, pointClasses),
 			       tolerance: 0,
 			       includeBorderNodes: false,
@@ -220,6 +215,17 @@ namespace ProSuite.QA.Tests
 			_pointClassesMaxIndex = _pointClassesMinIndex + pointClasses.Count;
 			_usePointFields = _pointFields != null;
 		}
+
+		[InternallyUsedTest]
+		public QaLineConnectionFieldValues(QaLineConnectionFieldValuesDefinition definition)
+			: this(definition.LineClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+				   definition.LineFields,
+				   definition.LineFieldValuesConstraint,
+				   definition.PointClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+				   definition.PointFields,
+				   definition.PointFieldValuesConstraint,
+				   definition.AllowedPointsExpressions)
+		{ }
 
 		[NotNull]
 		private List<TableView> CreateTableViews()

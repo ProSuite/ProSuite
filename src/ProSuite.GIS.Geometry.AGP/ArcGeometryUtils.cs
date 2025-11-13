@@ -33,7 +33,28 @@ namespace ProSuite.GIS.Geometry.AGP
 				                           : new ArcSpatialReference(mapPoint.SpatialReference));
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry CreateProGeometry(
+		public static ArcGIS.Core.Geometry.Geometry ToProGeometry(
+			[NotNull] IGeometry geometry)
+		{
+			ArcGIS.Core.Geometry.Geometry result;
+
+			if (geometry is ArcGeometry arcGeometry)
+			{
+				result = arcGeometry.ProGeometry;
+			}
+			else if (geometry is IMutableGeometry mutable)
+			{
+				result = (ArcGIS.Core.Geometry.Geometry) mutable.ToNativeImplementation();
+			}
+			else
+			{
+				result = TryConvertToProGeometry(geometry);
+			}
+
+			return result;
+		}
+
+		public static ArcGIS.Core.Geometry.Geometry TryConvertToProGeometry(
 			[NotNull] IGeometry geometry)
 		{
 			ArcSpatialReference arcSpatialReference =

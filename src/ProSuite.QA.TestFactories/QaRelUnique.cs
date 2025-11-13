@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -22,37 +23,6 @@ namespace ProSuite.QA.TestFactories
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaUnique.Codes;
 
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaRelUnique).Name;
-		}
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			// relationTables is redundant with relation, but needed for following reasons: 
-			// - used to derive dataset constraints
-			// - needed to be displayed in Tests displayed by dataset !!
-
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
-					                  DocStrings.QaRelUnique_relationTables),
-					new TestParameter("relation", typeof(string),
-					                  DocStrings.QaRelUnique_relation),
-					new TestParameter("join", typeof(JoinType),
-					                  DocStrings.QaRelUnique_join),
-					new TestParameter("unique", typeof(string),
-					                  DocStrings.QaRelUnique_unique),
-					new TestParameter("maxRows", typeof(int),
-					                  DocStrings.QaRelUnique_maxRows)
-				};
-
-			return list.AsReadOnly();
-		}
-
-		public override string TestDescription => DocStrings.QaRelUnique;
-
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
 		                                 out List<TableConstraint> tableParameters)
@@ -64,7 +34,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] as IList<IReadOnlyTable> == null)
+			if (objParams[0] as IList<ITableSchemaDef> == null)
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -97,7 +67,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[4];
 
-			var tables = (IList<IReadOnlyTable>) objParams[0];
+			List<IReadOnlyTable> tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 

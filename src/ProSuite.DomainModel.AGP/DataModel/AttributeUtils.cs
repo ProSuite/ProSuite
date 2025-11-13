@@ -27,7 +27,7 @@ namespace ProSuite.DomainModel.AGP.DataModel
 		}
 
 		public static int GetFieldIndex([NotNull] Table table,
-		                                [NotNull] string fieldName,
+		                                [CanBeNull] string fieldName,
 		                                [CanBeNull] AttributeRole role,
 		                                [CanBeNull] FieldIndexCache fieldIndexCache = null)
 		{

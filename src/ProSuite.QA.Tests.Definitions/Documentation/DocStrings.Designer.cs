@@ -8603,7 +8603,7 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A table in another workspace to check for duplicates. Optional, if undefined the workspace of the table to be tested is checked. The table merely points at the workspace to compare against^..
+        ///   Looks up a localized string similar to A table in another workspace to check for duplicates. The table merely points at the workspace to compare against..
         /// </summary>
         public static string QaSchemaFieldDomainDescriptions_targetWorkspaceTable {
             get {

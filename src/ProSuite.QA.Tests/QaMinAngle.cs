@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -8,10 +9,10 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
@@ -92,6 +93,17 @@ namespace ProSuite.QA.Tests
 				double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
+
+		[InternallyUsedTest]
+		public QaMinAngle(QaMinAngleDefinition definition)
+			: this(definition.PolylineClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.Limit,
+			       definition.Is3D
+			)
+		{
+			AngularUnit = definition.AngularUnit;
+		}
 
 		[TestParameter(_defaultAngularUnit)]
 		[Doc(nameof(DocStrings.QaMinAngle_AngularUnit))]
@@ -364,7 +376,7 @@ namespace ProSuite.QA.Tests
 						description, InvolvedRowUtils.GetInvolvedRows(feature, compareFeature),
 						GeometryFactory.Clone(connectPoint),
 						Codes[Code.AngleTooSmall], TestUtils.GetShapeFieldName(feature),
-						values: new object[] {MathUtils.ToDegrees(angleRadians)});
+						values: new object[] { MathUtils.ToDegrees(angleRadians) });
 				}
 			}
 

@@ -7,8 +7,10 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Network
 {
@@ -21,7 +23,7 @@ namespace ProSuite.QA.Tests.Network
 		private string _countFilter;
 		private List<TableView> _countRuleFilterHelpers;
 
-		private QaConnectionRuleHelper([NotNull] ICollection<IReadOnlyTable> tables)
+		private QaConnectionRuleHelper([NotNull] ICollection<ITableSchemaDef> tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 
@@ -85,7 +87,7 @@ namespace ProSuite.QA.Tests.Network
 			[NotNull] IList<QaConnectionRule> rules,
 			[NotNull] out TableView[] tableFilterHelpers)
 		{
-			IList<IReadOnlyTable> tableList = rules[0].TableList;
+			IList<ITableSchemaDef> tableList = rules[0].TableList;
 
 			foreach (QaConnectionRule rule in rules)
 			{
@@ -141,12 +143,13 @@ namespace ProSuite.QA.Tests.Network
 
 			for (int tableIndex = 0; tableIndex < tableCount; tableIndex++)
 			{
-				IReadOnlyTable table = tableList[tableIndex];
+				ITableSchemaDef table = tableList[tableIndex];
 
 				string lowerCaseCondition =
 					baseConditions[tableIndex].ToString().ToLower().Replace(startsInLower, "true");
 
-				TableView tableFilterHelper = TableViewFactory.Create(table, lowerCaseCondition);
+				TableView tableFilterHelper =
+					TableViewFactory.Create((IReadOnlyTable) table, lowerCaseCondition);
 				tableFilterHelper.Constraint = null;
 
 				if (((IReadOnlyFeatureClass) table).ShapeType ==

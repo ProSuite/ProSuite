@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using System.Linq;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -28,25 +29,28 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMustTouchOther_featureClass))] [NotNull]
 			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMustTouchOther_otherFeatureClass))] [NotNull]
-			IReadOnlyFeatureClass
-				otherFeatureClass,
+			IReadOnlyFeatureClass otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustTouchOther_relevantRelationCondition))] [CanBeNull]
-			string
-				relevantRelationCondition)
-			: base(featureClass, otherFeatureClass, relevantRelationCondition) { }
+			string relevantRelationCondition)
+			: this(new[] {featureClass}, new[] {otherFeatureClass}, relevantRelationCondition) { }
 
 		[Doc(nameof(DocStrings.QaMustTouchOther_1))]
 		public QaMustTouchOther(
 			[Doc(nameof(DocStrings.QaMustTouchOther_featureClass))] [NotNull]
-			ICollection<IReadOnlyFeatureClass>
-				featureClasses,
+			ICollection<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMustTouchOther_otherFeatureClass))] [NotNull]
-			ICollection<IReadOnlyFeatureClass>
-				otherFeatureClasses,
+			ICollection<IReadOnlyFeatureClass> otherFeatureClasses,
 			[Doc(nameof(DocStrings.QaMustTouchOther_relevantRelationCondition))] [CanBeNull]
-			string
-				relevantRelationCondition)
+			string relevantRelationCondition)
 			: base(featureClasses, otherFeatureClasses, relevantRelationCondition) { }
+
+		[InternallyUsedTest]
+		public QaMustTouchOther(
+			[NotNull] QaMustTouchOtherDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+				   definition.OtherFeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+				   definition.RelevantRelationCondition)
+		{ }
 
 		protected override CrossTileFeatureState<PendingFeature>
 			CreateCrossTileFeatureState()

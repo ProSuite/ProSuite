@@ -14,6 +14,6 @@ namespace ProSuite.DomainModel.Core.Processing.Repositories
 		IList<CartoProcessGroup> Get([NotNull] CartoProcess cartoProcess);
 
 		[CanBeNull]
-		CartoProcessGroup Get([NotNull] CommandDescriptor commandDescriptor);
+		CartoProcessGroup Get([NotNull] ICommandDescriptor commandDescriptor);
 	}
 }

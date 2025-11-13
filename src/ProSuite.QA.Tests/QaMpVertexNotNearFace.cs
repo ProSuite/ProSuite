@@ -94,7 +94,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_minimumDistanceBelow))]
 			double minimumDistanceBelow)
 			: base(
-				CastToTables(Union(new[] {multiPatchClass}, vertexClasses)
+				CastToTables(Union(new[] { multiPatchClass }, vertexClasses)
 					             .Cast<IReadOnlyFeatureClass>()))
 		{
 			_minimumDistanceAbove = minimumDistanceAbove;
@@ -111,6 +111,25 @@ namespace ProSuite.QA.Tests
 			var srt = (ISpatialReferenceTolerance) geodataset.SpatialReference;
 			_xySrTolerance = srt.XYTolerance;
 			_zSrTolerance = srt.ZTolerance;
+		}
+
+		[InternallyUsedTest]
+		public QaMpVertexNotNearFace(QaMpVertexNotNearFaceDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass,
+			       definition.VertexClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.MinimumDistanceAbove,
+			       definition.MinimumDistanceBelow
+			)
+		{
+			CoplanarityTolerance = definition.CoplanarityTolerance;
+			ReportNonCoplanarity = definition.ReportNonCoplanarity;
+			IgnoreNonCoplanarFaces = definition.IgnoreNonCoplanarFaces;
+			VerifyWithinFeature = definition.VerifyWithinFeature;
+			PointCoincidence = definition.PointCoincidence;
+			EdgeCoincidence = definition.EdgeCoincidence;
+			PlaneCoincidence = definition.PlaneCoincidence;
+			MinimumSlopeDegrees = definition.MinimumSlopeDegrees;
 		}
 
 		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_CoplanarityTolerance))]

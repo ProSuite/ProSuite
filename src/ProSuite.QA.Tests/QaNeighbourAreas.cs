@@ -15,6 +15,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
@@ -105,8 +106,7 @@ namespace ProSuite.QA.Tests
 			string fieldsString,
 			[Doc(nameof(DocStrings.QaNeighbourAreas_fieldListType))]
 			FieldListType fieldListType)
-			: this(polygonClass, allowPointIntersection,
-			       TestUtils.GetTokens(fieldsString),
+			: this(polygonClass, allowPointIntersection, TestUtils.GetTokens(fieldsString),
 			       fieldListType) { }
 
 		[Doc(nameof(DocStrings.QaNeighbourAreas_4))]
@@ -132,6 +132,34 @@ namespace ProSuite.QA.Tests
 				GetCompareFieldIndexes(polygonClass, fieldList, fieldListType));
 
 			AddCustomQueryFilterExpression(string.Concat(fieldList.Select(x => $"{x} ")));
+		}
+
+		[InternallyUsedTest]
+		public QaNeighbourAreas([NotNull] QaNeighbourAreasDefinition definition)
+			: base((IReadOnlyFeatureClass) definition.PolygonClass)
+
+		{
+			_polygonClass = (IReadOnlyFeatureClass) definition.PolygonClass;
+			_allowPointIntersection = definition.AllowPointIntersection;
+
+			if (definition.Fields != null)
+			{
+				List<string> fieldList = new List<string>(definition.Fields);
+
+				_compareFieldIndexes = new List<int>(
+					GetCompareFieldIndexes(_polygonClass, fieldList, definition.FieldListType));
+
+				AddCustomQueryFilterExpression(string.Concat(fieldList.Select(x => $"{x} ")));
+			}
+
+			else
+			{
+				_constraint = StringUtils.IsNotEmpty(definition.Constraint)
+					              ? definition.Constraint
+					              : null;
+
+				AddCustomQueryFilterExpression(definition.Constraint);
+			}
 		}
 
 		#endregion

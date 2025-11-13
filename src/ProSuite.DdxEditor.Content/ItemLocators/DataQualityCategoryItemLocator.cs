@@ -1,4 +1,4 @@
-﻿using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.DomainModels;
 using ProSuite.DdxEditor.Framework.NavigationPanel;
 using ProSuite.DomainModel.Core.QA;
 
@@ -18,7 +18,8 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 			return qualityCondition.ParentCategory;
 		}
 
-		protected override IItemTreeNode GetContainerNode(DataQualityCategory category,
+		protected override IItemTreeNode GetContainerNode(Entity entity,
+		                                                  DataQualityCategory category,
 		                                                  IItemTreeNode categoryNode)
 		{
 			return categoryNode;

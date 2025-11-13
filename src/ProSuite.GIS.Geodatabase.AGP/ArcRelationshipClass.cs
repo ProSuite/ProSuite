@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -176,7 +177,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				string originClassName = _proRelationshipClassDefinition.GetOriginClass();
 
-				Table originClass = geodatabase.OpenDataset<Table>(originClassName);
+				Table originClass = DatasetUtils.OpenDataset<Table>(geodatabase, originClassName);
 
 				return _originClass =
 					       ArcGeodatabaseUtils.ToArcTable(originClass, _cachePropertiesEagerly);
@@ -199,7 +200,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				string destinationClassName = _proRelationshipClassDefinition.GetDestinationClass();
 
-				Table destinationClass = geodatabase.OpenDataset<Table>(destinationClassName);
+				Table destinationClass =
+					DatasetUtils.OpenDataset<Table>(geodatabase, destinationClassName);
 
 				return _destinationClass =
 					       ArcGeodatabaseUtils.ToArcTable(destinationClass,
@@ -369,8 +371,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					// Find the origin object(s):
 
 					int foundCount = 0;
-					foreach (T relatedSourceObj in sourceDictionary.Values.Where(
-						         d => HasFieldValue(d, originPrimaryKeyIdx, foreignKeyValue)))
+					foreach (T relatedSourceObj in sourceDictionary.Values.Where(d => HasFieldValue(
+						         d, originPrimaryKeyIdx, foreignKeyValue)))
 					{
 						destinationTable ??=
 							ArcGeodatabaseUtils.ToArcTable(proDestinationRow.GetTable());

@@ -18,19 +18,17 @@ public class SelectionItemRepository : GdbItemRepository
 
 	public override IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		QueryFilter filter,
-		WorkItemStatus? statusFilter,
-		bool excludeGeometry = false)
+		WorkItemStatus? statusFilter)
 	{
-		return base.GetItems(filter, statusFilter, excludeGeometry)
+		return base.GetItems(filter, statusFilter)
 		           .Where(kvp => FilterByStatus(kvp, statusFilter));
 	}
 
 	public override IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
 		QueryFilter filter,
-		WorkItemStatus? statusFilter,
-		bool excludeGeometry = false)
+		WorkItemStatus? statusFilter)
 	{
-		return base.GetItems(table, filter, statusFilter, excludeGeometry)
+		return base.GetItems(table, filter, statusFilter)
 		           .Where(kvp => FilterByStatus(kvp, statusFilter));
 	}
 

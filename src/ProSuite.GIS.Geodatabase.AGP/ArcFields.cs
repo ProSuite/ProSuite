@@ -1,7 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Interop;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -19,7 +20,7 @@ public class ArcFields : IFields
 
 	private readonly IReadOnlyList<ArcField> _fields;
 
-	private Dictionary<string, int> _fieldIndexByName;
+	private ConcurrentDictionary<string, int> _fieldIndexByName;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="ArcFields"/> class.
@@ -54,12 +55,12 @@ public class ArcFields : IFields
 	{
 		if (_fieldIndexByName == null)
 		{
-			_fieldIndexByName = new Dictionary<string, int>();
+			_fieldIndexByName = new ConcurrentDictionary<string, int>();
 
 			int fieldIndex = 0;
 			foreach (ArcField field in _fields)
 			{
-				_fieldIndexByName.Add(field.Name, fieldIndex++);
+				_fieldIndexByName.TryAdd(field.Name, fieldIndex++);
 			}
 		}
 
@@ -69,13 +70,15 @@ public class ArcFields : IFields
 			// i.e. 'Shape' instead of 'SHAPE', which is the actual field name. The default FindField
 			// implementation also finds when searching with different case search strings, i.e. the search
 			// is case insensitive!
-			for (int i= 0; i < _fields.Count; i++)
+			for (int i = 0; i < _fields.Count; i++)
 			{
 				ArcField field = _fields[i];
 
 				if (field.Name.ToUpper() == fieldName.ToUpper())
 				{
-					_msg.DebugFormat("Field {0} found in field list but only using case-insensitive search.", fieldName);
+					_msg.DebugFormat(
+						"Field {0} found in field list but only using case-insensitive search.",
+						fieldName);
 					return i;
 				}
 			}
@@ -89,6 +92,11 @@ public class ArcFields : IFields
 
 	public int FindFieldByAliasName(string aliasName)
 	{
+		if (string.IsNullOrEmpty(aliasName))
+		{
+			return -1;
+		}
+
 		return FindField(
 			f => f.AliasName.Equals(aliasName, StringComparison.OrdinalIgnoreCase));
 	}
@@ -107,6 +115,20 @@ public class ArcFields : IFields
 
 		return -1;
 	}
+
+	#region Implementation of IEnumerable
+
+	public IEnumerator<IField> GetEnumerator()
+	{
+		return _fields.GetEnumerator();
+	}
+
+	IEnumerator IEnumerable.GetEnumerator()
+	{
+		return GetEnumerator();
+	}
+
+	#endregion
 }
 
 public class ArcField : IField

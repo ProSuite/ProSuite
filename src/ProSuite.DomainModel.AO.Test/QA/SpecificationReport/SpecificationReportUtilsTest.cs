@@ -108,7 +108,7 @@ namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
 				            Url = "another_url.html",
 				            Description = "This test does absolutely nothing"
 			            };
-			TestParameterValueUtils.AddParameterValue(cond0, "limit", "0.5");
+			InstanceConfigurationUtils.AddScalarParameterValue(cond0, "limit", "0.5");
 			TestParameterValueUtils.AddParameterValue(cond0, "featureClass", ds0);
 
 			qs.AddElement(cond0);
@@ -118,7 +118,8 @@ namespace ProSuite.DomainModel.AO.Test.QA.SpecificationReport
 				            Category = cat1_1,
 				            Url = "yet_another_url.html"
 			            };
-			TestParameterValueUtils.AddParameterValue(cond1, "limit", "0.5");
+			InstanceConfigurationUtils.AddScalarParameterValue(
+				cond1, "limit", "0.5");
 			TestParameterValueUtils.AddParameterValue(cond1, "featureClass", ds1);
 
 			qs.AddElement(cond1, allowErrorsOverride: true);

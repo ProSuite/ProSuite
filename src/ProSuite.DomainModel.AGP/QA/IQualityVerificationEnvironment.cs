@@ -62,10 +62,18 @@ namespace ProSuite.DomainModel.AGP.QA
 		Geometry LastVerificationPerimeter { get; set; }
 
 		/// <summary>
+		/// Gets or sets the date for filtering issues by the 'Latest verification'.
+		/// </summary>
+		DateTime? LastVerificationFilterStartDate { get; set; }
+
+		/// <summary>
 		/// Display name of the backend, such as 'localhost'
 		/// </summary>
 		[CanBeNull]
 		string BackendDisplayName { get; }
+
+
+		IQualityConditionProvider ConditionProvider { get; }
 
 		/// <summary>
 		/// Verifies the provided perimeter or the full extent if no perimeter is provided.

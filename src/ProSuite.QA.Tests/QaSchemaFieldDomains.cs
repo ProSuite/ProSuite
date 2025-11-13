@@ -44,6 +44,10 @@ namespace ProSuite.QA.Tests
 			_table = table;
 		}
 
+		[InternallyUsedTest]
+		public QaSchemaFieldDomains([NotNull] QaSchemaFieldDomainsDefinition definition)
+			: this((IReadOnlyTable) definition.Table) { }
+
 		public override int Execute()
 		{
 			var errorCount = 0;

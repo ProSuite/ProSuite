@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -58,6 +59,12 @@ namespace ProSuite.QA.Tests
 			_tableCount = InvolvedTables.Count;
 			_nearPoint = new PointClass();
 		}
+
+		[InternallyUsedTest]
+		public QaPointOnLine([NotNull] QaPointOnLineDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.PointClass,
+			       definition.NearClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.Near) { }
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{

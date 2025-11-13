@@ -6,8 +6,6 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry.Proxy;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Container.TestContainer;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -60,6 +58,13 @@ namespace ProSuite.QA.Tests
 			_nearHeight = nearHeight;
 			_heightTolerance = heightTolerance;
 		}
+
+		[InternallyUsedTest]
+		public QaMpHorizontalHeights(
+			[NotNull] QaMpHorizontalHeightsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.MultiPatchClass,
+			       definition.NearHeight,
+			       definition.HeightTolerance) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{
@@ -120,7 +125,7 @@ namespace ProSuite.QA.Tests
 
 			while (unhandledPairs.Count > 0)
 			{
-				var relatedPairs = new List<HeightSegmentPair> {unhandledPairs[0]};
+				var relatedPairs = new List<HeightSegmentPair> { unhandledPairs[0] };
 				unhandledPairs.RemoveAt(0);
 
 				SegmentPairUtils.AddRelatedPairsRecursive(relatedPairs, unhandledPairs);

@@ -10,7 +10,7 @@ public interface ITransformerQueryService
 {
 	IEnumerable<object[]> QueryRows(
 		[NotNull] TransformerConfiguration transformerConfiguration,
-		[NotNull] IDictionary<string, Datastore> dataStoreByWorkspaceId,
+		[NotNull] IDictionary<int, Datastore> dataStoreByModelId,
 		[CanBeNull] Geometry searchGeometry,
 		[CanBeNull] string subFields,
 		[CanBeNull] string whereClause);

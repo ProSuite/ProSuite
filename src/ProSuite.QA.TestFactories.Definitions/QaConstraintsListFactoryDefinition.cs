@@ -18,10 +18,6 @@ namespace ProSuite.QA.TestFactories
 		private const string _expressionIsError = "expressionIsError";
 		private const string _descriptionField = "descriptionField";
 
-		//[NotNull]
-		//[UsedImplicitly]
-		//public static ITestIssueCodes Codes => QaConstraint.Codes;
-
 		public override string TestDescription => DocStrings.QaConstraintsListFactory;
 
 		protected override IList<TestParameter> CreateParameters()

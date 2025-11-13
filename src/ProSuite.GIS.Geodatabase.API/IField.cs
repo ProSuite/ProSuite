@@ -6,6 +6,10 @@ namespace ProSuite.GIS.Geodatabase.API
 	{
 		string Name { get; }
 
+		/// <summary>
+		/// The field's alias name. This can be null (e.g. for SHAPE.AREA etc.)
+		/// </summary>
+		[CanBeNull]
 		string AliasName { get; }
 
 		esriFieldType Type { get; }

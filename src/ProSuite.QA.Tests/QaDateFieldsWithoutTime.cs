@@ -58,8 +58,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
 			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_dateFieldNames))] [NotNull]
-			IEnumerable<string>
-				dateFieldNames)
+			IEnumerable<string> dateFieldNames)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(dateFieldNames, nameof(dateFieldNames));
@@ -89,6 +88,14 @@ namespace ProSuite.QA.Tests
 
 				_dateFieldIndices.Add(index);
 			}
+		}
+
+		[InternallyUsedTest]
+		public QaDateFieldsWithoutTime(
+			[NotNull] QaDateFieldsWithoutTimeDefinition definition)
+			: this((IReadOnlyTable) definition.Table,
+			       definition.DateFieldNames)
+		{
 		}
 
 		#endregion

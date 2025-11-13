@@ -53,7 +53,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				}
 				else
 				{
-					Assert.True(patchType == PatchType.Ring, "Unsupported ring type");
+					Assert.True(patchType == PatchType.Ring, $"Unsupported ring type: {patchType}");
 
 					var ring = new Linestring(GetPoints(pointCollection, patchStartPointIndex,
 					                                    patchPointCount));

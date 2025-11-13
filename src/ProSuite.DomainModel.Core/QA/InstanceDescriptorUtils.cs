@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -19,7 +20,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns>InstanceInfo or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
 		private static IInstanceInfo GetInstanceInfo([NotNull] TestDescriptor testDescriptor,
-		                                             bool tryAlgorithmDefinition = false)
+		                                             bool tryAlgorithmDefinition = true)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
@@ -62,7 +63,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns></returns>
 		[CanBeNull]
 		public static IInstanceInfo GetInstanceInfo([NotNull] InstanceDescriptor descriptor,
-		                                            bool tryAlgorithmDefinition = false)
+		                                            bool tryAlgorithmDefinition = true)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 
@@ -263,7 +264,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		private static Type GetDefinitionType([NotNull] ClassDescriptor classDescriptor)
 		{
-			string assemblyName = GetDefinitionsAssemblyName(classDescriptor);
+			string assemblyName = GetDefinitionsAssemblyName(classDescriptor, true);
 
 			string typeName = GetDefinitionTypeName(classDescriptor);
 
@@ -289,12 +290,24 @@ namespace ProSuite.DomainModel.Core.QA
 			return InstanceUtils.GetAlgorithmDefinitionName(typeName);
 		}
 
-		private static string GetDefinitionsAssemblyName([NotNull] ClassDescriptor classDescriptor)
+		private static string GetDefinitionsAssemblyName([NotNull] ClassDescriptor classDescriptor,
+		                                                 bool fullName)
 		{
 			string assemblyName =
 				Assert.NotNullOrEmpty(classDescriptor.AssemblyName, "No assembly name");
 
-			return InstanceUtils.GetDefinitionsAssemblyName(assemblyName);
+			string definitionName = InstanceUtils.GetDefinitionsAssemblyName(assemblyName);
+
+			if (! fullName)
+			{
+				return definitionName;
+			}
+
+			AssemblyName resultAssemblyName = Assembly.GetExecutingAssembly().GetName();
+
+			resultAssemblyName.Name = definitionName;
+
+			return resultAssemblyName.FullName;
 		}
 	}
 }

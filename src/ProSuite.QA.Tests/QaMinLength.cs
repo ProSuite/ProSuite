@@ -62,6 +62,15 @@ namespace ProSuite.QA.Tests
 			bool perPart)
 			: base(featureClass, limit, is3D, perPart) { }
 
+		[InternallyUsedTest]
+		public QaMinLength(
+			[NotNull] QaMinLengthDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass,
+			       definition.Limit,
+			       definition.Is3D,
+			       definition.PerPart)
+		{ }
+
 		protected override int CheckLength(double length, ICurve curve, IReadOnlyRow row)
 		{
 			if (length >= Limit)

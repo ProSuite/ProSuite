@@ -164,6 +164,11 @@ namespace ProSuite.QA.Tests
 			       GetDateTimeRelativeToNow(maximumDateTimeRelativeToNow),
 			       TestUtils.GetTokens(dateFieldNamesString)) { }
 
+		[InternallyUsedTest]
+		public QaValidDateValues([NotNull] QaValidDateValuesDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.MinimumDateValue,
+			       definition.MaximumDateValue, definition.DateFieldNames) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;

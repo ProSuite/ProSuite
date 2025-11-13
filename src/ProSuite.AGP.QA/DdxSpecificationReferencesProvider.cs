@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.Workflow;
 using ProSuite.Microservices.Client.AGP.QA;
 using ProSuite.Microservices.Client.QA;
 
@@ -11,10 +13,10 @@ namespace ProSuite.AGP.QA
 {
 	public class DdxSpecificationReferencesProvider : IQualitySpecificationReferencesProvider
 	{
-		[NotNull] private readonly ISessionContext _sessionContext;
+		[NotNull] private readonly IVerificationSessionContext _sessionContext;
 		[NotNull] private readonly IQualityVerificationClient _client;
 
-		public DdxSpecificationReferencesProvider([NotNull] ISessionContext sessionContext,
+		public DdxSpecificationReferencesProvider([NotNull] IVerificationSessionContext sessionContext,
 		                                          [NotNull] IQualityVerificationClient client)
 		{
 			_sessionContext = sessionContext;
@@ -36,14 +38,16 @@ namespace ProSuite.AGP.QA
 		{
 			var result = new List<IQualitySpecificationReference>();
 
-			ProjectWorkspace projectWorkspace = _sessionContext.ProjectWorkspace;
+			IProjectWorkspace projectWorkspace = _sessionContext.ProjectWorkspace;
 
 			if (projectWorkspace == null)
 			{
 				return result;
 			}
 
-			return await DdxUtils.LoadSpecificationsRpcAsync(projectWorkspace.GetDatasetIds(),
+			var datasetIds = projectWorkspace.Datasets.Select(d => d.Id).ToList();
+
+			return await DdxUtils.LoadSpecificationsRpcAsync(datasetIds,
 			                                                 IncludeHiddenSpecifications,
 			                                                 Assert.NotNull(_client.DdxClient));
 		}

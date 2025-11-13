@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -93,6 +94,11 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			_component = component;
 		}
+
+		[InternallyUsedTest]
+		public TrGeometryToPoints(
+			[NotNull] TrGeometryToPointsDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass, definition.Component) { }
 
 		protected override IList<int> AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{

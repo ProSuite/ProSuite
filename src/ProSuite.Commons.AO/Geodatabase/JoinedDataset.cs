@@ -351,9 +351,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//	spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 			//}
 
-			// TODO: Deal with where-clause
+			// TODO: Deal with where-clause: if it is restrictive on the left table, it should be applied
+			//       -> Compare feature count on left table (with potential where clause) with feature count
+			//          on right table (with potential where clause) and use the smaller one for
+			//          initial read. Open question: Can we determine for sure which table is affected
+			//          exclusively by the where clause?
 
-			IEnumerable<IReadOnlyRow> leftFeatures = GeometryEndClass.EnumRows(filter, true);
+			bool queryLeftTableFirst =
+				(filter is IFeatureClassFilter spatialFilter &&
+				 spatialFilter.FilterGeometry != null) ||
+				! string.IsNullOrEmpty(filter.WhereClause);
+
+			IEnumerable<IReadOnlyRow> leftFeatures =
+				queryLeftTableFirst ? GeometryEndClass.EnumRows(filter, true) : null;
 
 			IDictionary<string, IList<IReadOnlyRow>> otherRows =
 				GetOtherRowsByFeatureKey(leftFeatures);
@@ -365,31 +375,36 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
-			[NotNull] IEnumerable<IReadOnlyRow> leftFeatures)
+			[CanBeNull] IEnumerable<IReadOnlyRow> leftFeatures)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			HashSet<string> fClassKeys = new HashSet<string>();
+			HashSet<string> fClassKeys = null;
 
-			// TODO: If the filter is null or it's no spatial filter: compare row count to determine
-			//       which table should be queried first.
-
-			int featureCount = 0;
-
-			foreach (IReadOnlyRow feature in leftFeatures)
+			if (leftFeatures != null)
 			{
-				featureCount++;
+				fClassKeys = new HashSet<string>();
 
-				string keyValue = GetKeyValue(feature, GeometryClassKeyFieldIndex);
+				// TODO: If the filter is null or it's no spatial filter: compare row count to determine
+				//       which table should be queried first.
 
-				if (keyValue != null)
+				int featureCount = 0;
+
+				foreach (IReadOnlyRow feature in leftFeatures)
 				{
-					fClassKeys.Add(keyValue);
-				}
-			}
+					featureCount++;
 
-			_msg.DebugStopTiming(watch, "Initial search found {0} geo-keys in {1} features",
-			                     fClassKeys.Count, featureCount);
+					string keyValue = GetKeyValue(feature, GeometryClassKeyFieldIndex);
+
+					if (keyValue != null)
+					{
+						fClassKeys.Add(keyValue);
+					}
+				}
+
+				_msg.DebugStopTiming(watch, "Initial search found {0} geo-keys in {1} features",
+				                     fClassKeys.Count, featureCount);
+			}
 
 			IDictionary<string, IList<IReadOnlyRow>> otherRows =
 				GetOtherRowListsByFeatureKey(fClassKeys);
@@ -654,7 +669,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowListsByFeatureKey(
-			HashSet<string> fClassKeys)
+			[CanBeNull] HashSet<string> fClassKeys)
 		{
 			IDictionary<string, IList<IReadOnlyRow>> result =
 				new Dictionary<string, IList<IReadOnlyRow>>();
@@ -668,9 +683,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 					GeoKeysByOtherKeyManyToMany(fClassKeys, m2n);
 
 				_msg.DebugStopTiming(
-					watch,
-					"Searched with {0} geo-keys, found {1} other keys.",
-					fClassKeys.Count, geoKeysByOtherKey.Count);
+					watch, "Searched with {0} geo-keys, found {1} other keys.",
+					fClassKeys?.Count ?? -1, geoKeysByOtherKey.Count);
 
 				watch = _msg.DebugStartTiming();
 
@@ -702,9 +716,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return result;
 			}
 
+			IEnumerable<IReadOnlyRow> otherRows;
+
+			if (fClassKeys == null)
+			{
+				otherRows = OtherEndClass.EnumRows(null, true);
+			}
+			else
+			{
+				otherRows = TableFilterUtils.GetRowsInList(
+					OtherEndClass, OtherClassKeyField, fClassKeys, false);
+			}
+
 			// Get the non-feature-rows:
-			foreach (IReadOnlyRow row in TableFilterUtils.GetRowsInList(
-				         OtherEndClass, OtherClassKeyField, fClassKeys, false))
+			foreach (IReadOnlyRow row in otherRows)
 			{
 				string otherRowKey = GetKeyValue(row, OtherClassKeyFieldIndex);
 
@@ -742,8 +767,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Many-to-many row access
 
+		/// <summary>
+		/// Returns the lists of geo-keys per other-table key by searching the bridge table.
+		/// If <paramref name="geoKeys"/> is null, all rows from the bridge table are searched.
+		/// </summary>
+		/// <param name="geoKeys"></param>
+		/// <param name="m2nAssociation"></param>
+		/// <returns></returns>
 		private Dictionary<string, List<string>> GeoKeysByOtherKeyManyToMany(
-			[NotNull] HashSet<string> geoKeys,
+			[CanBeNull] HashSet<string> geoKeys,
 			[NotNull] ManyToManyAssociationDescription m2nAssociation)
 		{
 			Dictionary<string, List<string>> geoKeysByOtherKey =
@@ -768,8 +800,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_associationRows?.Clear();
 
 			var recycle = _associationRows == null;
-			foreach (IReadOnlyRow row in FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
-				         bridgeTableGeoKeyField, recycle))
+
+			IEnumerable<IReadOnlyRow> bridgeTableRows;
+			if (geoKeys == null)
+			{
+				ITableFilter
+					filter = null; // TODO: if the filter only references bridge table fields, use it here
+				bridgeTableRows = bridgeTable.EnumRows(filter, recycle);
+			}
+			else
+			{
+				bridgeTableRows = FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
+				                                            bridgeTableGeoKeyField, recycle);
+			}
+
+			foreach (IReadOnlyRow row in bridgeTableRows)
 			{
 				// The primary key of the other table. This can be null, for example if the bridge
 				// table is not a relationship table but a regular table with m:1 and 1:m
@@ -789,7 +834,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				// NOTE: For long-term global caching if memory was no issue, the bridgeRow could be cached already here
 
 				// Double check, the fetch might use a FTS or deliver the full cache:
-				if (! geoKeys.Contains(bridgeGeoKeyValue))
+				if (geoKeys?.Contains(bridgeGeoKeyValue) == false)
 				{
 					continue;
 				}

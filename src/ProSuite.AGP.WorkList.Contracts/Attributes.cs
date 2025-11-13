@@ -86,6 +86,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		ExportedExceptionObjectId,
 
-		IssueType
+		IssueType,
+		Remark
 	}
 }

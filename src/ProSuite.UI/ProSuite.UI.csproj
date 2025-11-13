@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}</ProjectGuid>
     <SignAssembly>true</SignAssembly>
@@ -390,7 +390,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.7" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.9" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
 

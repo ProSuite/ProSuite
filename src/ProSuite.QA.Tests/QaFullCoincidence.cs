@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -77,12 +78,12 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))]
 			double tileSize)
 			: base(
-				new[] {featureClass, reference}, near,
+				new[] { featureClass, reference }, near,
 				new ConstantFeatureDistanceProvider(near / 2), is3D)
 		{
 			Assert.ArgumentNotNull(reference, nameof(reference));
 
-			_referenceList = new[] {reference};
+			_referenceList = new[] { reference };
 		}
 
 		[Doc(nameof(DocStrings.QaFullCoincidence_2))]
@@ -111,7 +112,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))]
 			double tileSize)
 			: base(
-				Union(new[] {featureClass}, references), near,
+				Union(new[] { featureClass }, references), near,
 				new ConstantFeatureDistanceProvider(near / 2), is3D)
 		{
 			Assert.ArgumentNotNull(references, nameof(references));
@@ -141,6 +142,18 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))]
 			double tileSize)
 			: this(featureClass, references, near, false, tileSize) { }
+
+		[InternallyUsedTest]
+		public QaFullCoincidence(QaFullCoincidenceDefinition definition)
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.References.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.Near,
+			       definition.TileSize
+			)
+		{
+			IgnoreNeighborConditions = definition.IgnoreNeighborConditions;
+		}
 
 		protected override bool IsDirected => true;
 

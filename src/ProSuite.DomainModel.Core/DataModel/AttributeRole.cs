@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -86,11 +86,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public static readonly AttributeRole ReleaseID = new AttributeRole(816);
 
-		private static readonly Dictionary<int, AttributeRole> _roles =
-			new Dictionary<int, AttributeRole>();
+		private static readonly ConcurrentDictionary<int, AttributeRole> _roles =
+			new ConcurrentDictionary<int, AttributeRole>();
 
-		private static readonly Dictionary<int, string> _roleNames =
-			new Dictionary<int, string>();
+		private static readonly ConcurrentDictionary<int, string> _roleNames =
+			new ConcurrentDictionary<int, string>();
 
 		static AttributeRole()
 		{
@@ -178,8 +178,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 					}
 
 					// the field is an AttributeRole, make sure it is in the dictionary
-					string existingName;
-					if (! _roleNames.TryGetValue(attributeRole.Id, out existingName))
+					if (! _roleNames.TryGetValue(attributeRole.Id, out string _))
 					{
 						// don't use add to avoid threading issues
 						_roleNames[attributeRole.Id] = string.Format(
@@ -241,7 +240,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		private static void Add([NotNull] AttributeRole role)
 		{
-			_roles.Add(role.Id, role);
+			_roles.TryAdd(role.Id, role);
 		}
 
 		#region Object overrides
@@ -253,7 +252,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public override bool Equals(object obj)
 		{
-			if (this == obj)
+			if (ReferenceEquals(this, obj))
 			{
 				return true;
 			}

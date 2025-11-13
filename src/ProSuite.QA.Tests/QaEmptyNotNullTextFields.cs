@@ -50,8 +50,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
 			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_notNullTextFields))] [NotNull]
-			string[]
-				notNullTextFields)
+			string[] notNullTextFields)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(notNullTextFields, nameof(notNullTextFields));
@@ -67,6 +66,28 @@ namespace ProSuite.QA.Tests
 			}
 
 			_notNullTextFieldIndices = fieldIndices;
+		}
+
+		[InternallyUsedTest]
+		public QaEmptyNotNullTextFields([NotNull] QaEmptyNotNullTextFieldsDefinition definition)
+			: base((IReadOnlyTable) definition.Table)
+		{
+			if (definition.NotNullTextFields == null)
+			{
+				var fieldIndices =
+					new List<int>(GetNotNullTextFields((IReadOnlyTable) definition.Table).Length);
+				foreach (string notNullTextField in GetNotNullTextFields(
+					         (IReadOnlyTable) definition.Table))
+				{
+					int fieldIndex = definition.Table.FindField(notNullTextField);
+					Assert.True(fieldIndex >= 0, "field '{0}' not found in table '{1}'",
+					            notNullTextField, definition.Table.Name);
+
+					fieldIndices.Add(fieldIndex);
+				}
+
+				_notNullTextFieldIndices = fieldIndices;
+			}
 		}
 
 		#endregion

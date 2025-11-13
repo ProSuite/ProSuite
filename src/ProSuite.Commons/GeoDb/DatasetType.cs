@@ -12,6 +12,7 @@ namespace ProSuite.Commons.GeoDb
 		Topology = 8,
 		Raster = 12,
 		RasterMosaic = 29,
-		Terrain = 20
+		Terrain = 20,
+		Multipatch = 30
 	}
 }

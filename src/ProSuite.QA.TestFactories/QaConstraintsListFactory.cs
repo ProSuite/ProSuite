@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Container;
@@ -17,7 +17,7 @@ namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
 	[AttributeTest]
-	public class QaConstraintsListFactory : TestFactory
+	public class QaConstraintsListFactory : QaFactoryBase
 	{
 		[NotNull]
 		[UsedImplicitly]
@@ -186,42 +186,5 @@ namespace ProSuite.QA.TestFactories
 		{
 			return new QaConstraint((IReadOnlyTable) args[0], (IList<ConstraintNode>) args[1]);
 		}
-
-		#region Delete once this derives from QaFactoryBase again
-
-		private const string _tableAttribute = "table";
-		private const string _constraintsTableAttribute = "constraintsTable";
-		private const string _expressionField = "expressionField";
-		private const string _expressionIsError = "expressionIsError";
-		private const string _descriptionField = "descriptionField";
-
-		public override string TestDescription => DocStrings.QaConstraintsListFactory;
-
-		protected override IList<TestParameter> CreateParameters()
-		{
-			var list =
-				new List<TestParameter>
-				{
-					new TestParameter(_tableAttribute, typeof(IReadOnlyTable),
-					                  DocStrings.QaConstraintsListFactory_table),
-					new TestParameter(_constraintsTableAttribute, typeof(IReadOnlyTable),
-					                  DocStrings.QaConstraintsListFactory_constraintsTable),
-					new TestParameter(_expressionField, typeof(string),
-					                  DocStrings.QaConstraintsListFactory_expressionField),
-					new TestParameter(_expressionIsError, typeof(bool),
-					                  DocStrings.QaConstraintsListFactory_expressionIsError),
-					new TestParameter(_descriptionField, typeof(string),
-					                  DocStrings.QaConstraintsListFactory_descriptionField),
-				};
-
-			return list.AsReadOnly();
-		}
-
-		public override string GetTestTypeDescription()
-		{
-			return typeof(QaConstraint).Name;
-		}
-
-		#endregion
 	}
 }

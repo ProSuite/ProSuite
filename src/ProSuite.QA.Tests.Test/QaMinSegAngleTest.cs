@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestSupport;
+using ProSuite.QA.Core.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
 

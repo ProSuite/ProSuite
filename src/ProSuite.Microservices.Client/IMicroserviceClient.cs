@@ -57,10 +57,12 @@ namespace ProSuite.Microservices.Client
 		/// </summary>
 		/// <param name="executable"></param>
 		/// <param name="extraArguments"></param>
+		/// <param name="command"></param>
 		/// <returns></returns>
 		Task<bool> AllowStartingLocalServerAsync(
 			[NotNull] string executable,
-			[CanBeNull] string extraArguments = null);
+			[CanBeNull] string extraArguments = null,
+			[CanBeNull] string command = null);
 
 		/// <summary>
 		/// Starts a local server process if the precondions are met, such as HostName being
@@ -68,9 +70,11 @@ namespace ProSuite.Microservices.Client
 		/// </summary>
 		/// <param name="executable"></param>
 		/// <param name="extraArguments"></param>
+		/// <param name="command"></param>
 		/// <returns></returns>
 		bool AllowStartingLocalServer([NotNull] string executable,
-		                              [CanBeNull] string extraArguments = null);
+		                              [CanBeNull] string extraArguments = null,
+		                              [CanBeNull] string command = null);
 
 		bool TryRestart();
 

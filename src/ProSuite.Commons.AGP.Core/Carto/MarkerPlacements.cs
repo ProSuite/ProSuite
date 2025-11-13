@@ -265,10 +265,127 @@ public static class MarkerPlacements
 	}
 
 	public static IEnumerable<T> AlongLine<T>(
-		T marker, Geometry reference, AlongLineOptions options)
+		T marker, Geometry reference, AlongLineOptions options) where T : Geometry
 	{
-		throw new NotImplementedException(
-			$"Marker placement {nameof(AlongLine)} not yet implemented");
+		if (marker is null) yield break;
+		if (reference is not Multipart multipart) yield break;
+		if (options is null) throw new ArgumentNullException(nameof(options));
+
+		var pattern = options.Pattern;
+		if (pattern is not { Length: > 0 }) yield break;
+		if (! pattern.All(s => s > 0)) yield break;
+
+		// Always assume options.PlacePerPart: the UI does not even show it
+
+		double P = pattern.Sum();
+		double A = options.OffsetAlongLine % P;
+		double E = 0.0; // offset at end
+
+		// Model:
+		//   L = s * (A + k*P + E)
+		// where
+		//   L length of line (known)
+		//   P,A,E as above (all known)
+		//   k pattern repeat count (an integer >= 0)
+		//   s stretch/squeeze factor to attain desired endings (as close to 1 as possible)
+
+		switch (options.Endings)
+		{
+			case EndingsType.Marker:
+				A = E = 0;
+				break;
+			case EndingsType.HalfStep:
+				A = E = options.Pattern[0] * 0.5;
+				break;
+			case EndingsType.FullStep:
+				A = E = options.Pattern[0] * 0.999999; // minimally shy to avoid marker at start/end
+				break;
+			case EndingsType.Custom:
+				A = options.OffsetAlongLine % P;
+				E = options.CustomEndingOffset % P;
+				break;
+		}
+
+		foreach (var part in multipart.Parts)
+		{
+			double L = part.Sum(segment => segment.Length);
+			double a, e;
+			double[] pat;
+
+			if (options.Endings != EndingsType.Unconstrained)
+			{
+				double m = (L - A - E) / P;
+				double k =  Math.Max(Math.Round(m), 0.0); // number of pattern repeats
+				double stretchedLength = A + k * P + E;
+				if (stretchedLength == 0)
+				{
+					stretchedLength = L;
+				}
+				double s = L / stretchedLength; // stretch/squeeze factor
+
+				a = s * A;
+				e = s * E;
+				pat = ScaledArray(pattern, s);
+			}
+			else
+			{
+				a = A;
+				e = E;
+				pat = pattern;
+			}
+
+			//double p = pat.Sum();
+			double linePos = a; // -p + a;
+			int index = 0;
+
+			// TODO: Use either an integer loop or a relative tolerance
+			const double tolerance = 1e-5;
+			while (linePos <= L - e + tolerance)
+			{
+				// TODO Optimization: walk segments in parallel to this while loop, not nested in QueryXY call
+				if (QueryXY(part, Math.Min(linePos, L - e), out double x, out double y))
+				{
+					yield return Translated(marker, x, y);
+				}
+
+				double step = pat[index % pat.Length];
+
+				index += 1;
+				linePos += step;
+			}
+		}
+	}
+
+	private static bool QueryXY(
+		ReadOnlySegmentCollection part, double distanceAlong,
+		out double x, out double y)
+	{
+		if (part is null)
+			throw new ArgumentNullException(nameof(part));
+
+		x = y = double.NaN;
+
+		if (distanceAlong >= 0)
+		{
+			foreach (Segment segment in part)
+			{
+				if (distanceAlong > segment.Length)
+				{
+					distanceAlong -= segment.Length;
+				}
+				else
+				{
+					var point = GeometryEngine.Instance.QueryPoint(
+						segment, SegmentExtensionType.NoExtension,
+						distanceAlong, AsRatioOrLength.AsLength);
+					x = point.X;
+					y = point.Y;
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	public enum PolygonCenterType
@@ -391,7 +508,7 @@ public static class MarkerPlacements
 					break;
 				case PolygonMarkerClipping.CenterInsideBoundary:
 					var point = MapPointBuilderEx.CreateMapPoint(tx, ty, polygon.SpatialReference);
-					if (GeometryUtils.Contains(point, polygon))
+					if (GeometryUtils.Contains(polygon, point))
 						yield return positioned;
 					break;
 				case PolygonMarkerClipping.FullyInsideBoundary:
@@ -584,6 +701,13 @@ public static class MarkerPlacements
 		}
 
 		return Translated(marker, position.X, position.Y);
+	}
+
+	private static double[] ScaledArray(double[] array, double factor)
+	{
+		if (array is null) return null;
+		if (array.Length < 1) return array;
+		return array.Select(num => num * factor).ToArray();
 	}
 
 	#endregion

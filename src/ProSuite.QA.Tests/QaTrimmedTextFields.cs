@@ -11,6 +11,7 @@ using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Properties;
 
 namespace ProSuite.QA.Tests
@@ -130,6 +131,11 @@ namespace ProSuite.QA.Tests
 			_textFieldIndices = new List<int>(
 				GetFieldIndices(table, textFieldNames, fieldListType));
 		}
+
+		[InternallyUsedTest]
+		public QaTrimmedTextFields([NotNull] QaTrimmedTextFieldsDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.AllowedWhiteSpaceOnlyCount,
+			       definition.TextFieldNames) { }
 
 		[NotNull]
 		private static IEnumerable<int> GetFieldIndices(

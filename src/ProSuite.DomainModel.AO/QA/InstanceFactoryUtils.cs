@@ -200,8 +200,63 @@ namespace ProSuite.DomainModel.AO.QA
 			return sb;
 		}
 
+
+		/// <summary>
+		/// Gets the test factory based on the IssueFilterDefinition. Requires the issue filter class or the issue filter
+		/// factory descriptor to be defined.
+		/// </summary>
+		/// <param name="descriptor"></param>
+		/// <returns>IssueFilterFactory or null if neither the issue filter class nor the issue filter factory descriptor are defined.</returns>
 		[CanBeNull]
-		private static IssueFilterFactory CreateIssueFilterFactory(
+		public static IssueFilterFactory GetIssueFilterDefinitionFactory(
+			[NotNull] IssueFilterDescriptor descriptor)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
+
+			if (classDescriptor != null)
+			{
+				bool hasDefinitionClass = InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					classDescriptor, out Type definitionType);
+
+				Assert.True(hasDefinitionClass, "Issue filter {0} has no definition class.", descriptor);
+
+				return new IssueFilterFactory(definitionType, descriptor.ConstructorId);
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Gets the transformer factory based on the TransformerDefinition. Requires the transformer class or the transformer
+		/// factory descriptor to be defined.
+		/// </summary>
+		/// <param name="descriptor"></param>
+		/// <returns>TransformerFactory or null if neither the transfomrer class nor the transformer factory descriptor are defined.</returns>
+		[CanBeNull]
+		public static TransformerFactory GetTransformerDefinitionFactory(
+			[NotNull] TransformerDescriptor descriptor)
+		{
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
+
+			ClassDescriptor classDescriptor = descriptor.Class;
+
+			if (classDescriptor != null)
+			{
+				bool hasDefinitionClass = InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+					classDescriptor, out Type definitionType);
+
+				Assert.True(hasDefinitionClass, "Transformer {0} has no definition class.", descriptor);
+
+				return new TransformerFactory(definitionType, descriptor.ConstructorId);
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		public static IssueFilterFactory CreateIssueFilterFactory(
 			[NotNull] IssueFilterDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
@@ -216,7 +271,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[CanBeNull]
-		private static TransformerFactory CreateTransformerFactory(
+		public static TransformerFactory CreateTransformerFactory(
 			[NotNull] TransformerDescriptor descriptor)
 		{
 			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
@@ -228,6 +283,65 @@ namespace ProSuite.DomainModel.AO.QA
 				                                classDescriptor.TypeName,
 				                                descriptor.ConstructorId)
 				       : null;
+		}
+
+		public static IIssueFilter CreateIssueFilter(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			try
+			{
+				IssueFilterFactory factory =
+					InstanceFactoryUtils.CreateIssueFilterFactory(issueFilterConfiguration);
+
+				if (factory == null)
+				{
+					throw new ArgumentException(
+						$"Unable to create IssueFilterFactory for {issueFilterConfiguration}");
+				}
+
+				IIssueFilter filter = factory.Create(datasetContext, issueFilterConfiguration);
+				filter.Name = issueFilterConfiguration.Name;
+
+				return filter;
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(issueFilterConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
+			}
+		}
+
+		public static ITableTransformer CreateTransformer(
+			[NotNull] TransformerConfiguration transformerConfiguration,
+			[NotNull] IOpenDataset datasetContext)
+		{
+			try
+			{
+				TransformerFactory factory =
+					InstanceFactoryUtils.CreateTransformerFactory(transformerConfiguration);
+
+				if (factory == null)
+				{
+					throw new ArgumentException(
+						$"Unable to create TransformerFactory for {transformerConfiguration}");
+				}
+
+				ITableTransformer transformer =
+					factory.Create(datasetContext, transformerConfiguration);
+				transformer.TransformerName = transformerConfiguration.Name;
+
+				return transformer;
+			}
+			catch (Exception e)
+			{
+				StringBuilder sb =
+					InstanceFactoryUtils.GetErrorMessageWithDetails(transformerConfiguration, e);
+
+				throw new InvalidOperationException(sb.ToString(), e);
+			}
 		}
 
 		public static string GetDefaultDescriptorName([NotNull] Type instanceType,

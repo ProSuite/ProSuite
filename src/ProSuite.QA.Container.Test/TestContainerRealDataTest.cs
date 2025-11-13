@@ -11,7 +11,9 @@ using ProSuite.Commons.AO.Test;
 using ProSuite.QA.Tests;
 using ProSuite.QA.Tests.IssueFilters;
 using ProSuite.QA.Tests.Transformers;
+using ProSuite.QA.Tests.ParameterTypes;
 using Path = System.IO.Path;
+using SearchOption = ProSuite.QA.Tests.ParameterTypes.SearchOption;
 
 namespace ProSuite.QA.Container.Test
 {
@@ -80,7 +82,7 @@ namespace ProSuite.QA.Container.Test
 			IReadOnlyFeatureClass fcDachFootprint = trFootprint.GetTransformed();
 
 			TrDissolve trDachFootprintDissolve = new TrDissolve(fcDachFootprint);
-			trDachFootprintDissolve.NeighborSearchOption = TrDissolve.SearchOption.Tile;
+			trDachFootprintDissolve.NeighborSearchOption = SearchOption.Tile;
 			trDachFootprintDissolve.Search = 100;
 			trDachFootprintDissolve.GroupBy = new List<string> { "TLM_GEBAEUDEEINHEIT_UUID" };
 			trDachFootprintDissolve.TransformerName = "DachFootprintDissolved";
@@ -102,7 +104,7 @@ namespace ProSuite.QA.Container.Test
 			IReadOnlyFeatureClass fcIntersect = trIntersect.GetTransformed();
 
 			TrDissolve trDissolve = new TrDissolve(fcIntersect);
-			trDissolve.NeighborSearchOption = TrDissolve.SearchOption.Tile;
+			trDissolve.NeighborSearchOption = SearchOption.Tile;
 			trDissolve.Search = 100;
 			trDissolve.CreateMultipartFeatures = true;
 			IReadOnlyFeatureClass fcDissolve = trDissolve.GetTransformed();

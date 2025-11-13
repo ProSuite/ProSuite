@@ -21,17 +21,13 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private SelectionCursors _secondPhaseCursors;
+		protected abstract SelectionCursors FirstPhaseCursors { get; }
+
+		protected abstract SelectionCursors SecondPhaseCursors { get; }
 
 		protected TwoPhaseEditToolBase()
 		{
 			IsSketchTool = true;
-		}
-
-		protected override void OnToolActivatingCore()
-		{
-			base.OnToolActivatingCore();
-			_secondPhaseCursors = GetSecondPhaseCursors();
 		}
 
 		protected override async Task<bool> OnMapSelectionChangedCoreAsync(
@@ -47,18 +43,23 @@ namespace ProSuite.AGP.Editing.OneClick
 				await StartSelectionPhaseAsync();
 			}
 
-			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-			Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
+			await QueuedTask.Run(
+				async () =>
+				{
+					// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+					Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
 
-			var applicableSelection =
-				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection).ToList();
+					var applicableSelection =
+						GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+							.ToList();
 
-			if (applicableSelection.Count > 0)
-			{
-				using var source = GetProgressorSource();
-				var progressor = source?.Progressor;
-				await AfterSelectionAsync(applicableSelection, progressor);
-			}
+					if (applicableSelection.Count > 0)
+					{
+						using var source = GetProgressorSource();
+						var progressor = source?.Progressor;
+						await AfterSelectionAsync(applicableSelection, progressor);
+					}
+				});
 
 			return true;
 		}
@@ -170,15 +171,18 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
-			await QueuedTask.Run(
-				async () =>
-				{
-					ClearSelection();
+			await ClearSelectionAsync();
 
-					ResetDerivedGeometries();
+			ResetDerivedGeometries();
 
-					await StartSelectionPhaseAsync();
-				});
+			await StartSelectionPhaseAsync();
+		}
+
+		protected override Task OnSelectionPhaseStartedAsync()
+		{
+			SelectionCursors = FirstPhaseCursors;
+			SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
+			return base.OnSelectionPhaseStartedAsync();
 		}
 
 		protected override async Task ShiftReleasedCoreAsync()
@@ -189,21 +193,22 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				SetToolCursor(_secondPhaseCursors.GetCursor(GetSketchType(), shiftDown: false));
+				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: false));
 			}
 		}
 
 		protected override async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType,
-			SelectionCursors selectionCursors = null)
+			SketchGeometryType toggleSketchType)
 		{
 			if (await IsInSelectionPhaseAsync())
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, selectionCursors);
+				SelectionCursors = FirstPhaseCursors;
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 			else
 			{
-				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType, _secondPhaseCursors);
+				SelectionCursors = SecondPhaseCursors;
+				await base.ToggleSelectionSketchGeometryTypeAsync(toggleSketchType);
 			}
 		}
 
@@ -216,8 +221,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			return SketchGeometryType.Rectangle;
 		}
-
-		protected abstract SelectionCursors GetSecondPhaseCursors();
 
 		protected abstract void CalculateDerivedGeometries(
 			[NotNull] IList<Feature> selectedFeatures,
@@ -291,7 +294,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			SetupSketch();
 
-			await ResetSelectionSketchTypeAsync(_secondPhaseCursors);
+			SelectionCursors = SecondPhaseCursors;
+			await ResetSelectionSketchTypeAsync();
 		}
 	}
 }

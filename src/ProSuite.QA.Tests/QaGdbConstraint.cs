@@ -65,6 +65,10 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
+		[InternallyUsedTest]
+		public QaGdbConstraint([NotNull] QaGdbConstraintDefinition definition)
+			: this((IReadOnlyTable) definition.Table) { }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			return false;
@@ -86,7 +90,7 @@ namespace ProSuite.QA.Tests
 			int? iSubtype = null;
 			IAttributeRule invalidRule = null;
 
-			IRow baseRow = Assert.NotNull((ReadOnlyRow)readOnlyRow).BaseRow;
+			IRow baseRow = Assert.NotNull((ReadOnlyRow) readOnlyRow).BaseRow;
 			foreach (IAttributeRule rule in _attrRules)
 			{
 				string message = string.Empty;

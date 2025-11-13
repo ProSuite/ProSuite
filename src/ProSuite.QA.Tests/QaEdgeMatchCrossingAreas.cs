@@ -254,6 +254,35 @@ namespace ProSuite.QA.Tests
 				_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
 		}
 
+		[InternallyUsedTest]
+		public QaEdgeMatchCrossingAreas(
+			[NotNull] QaEdgeMatchCrossingAreasDefinition definition)
+			: this(definition.AreaClasses1.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass)definition.BorderClass1,
+			       definition.AreaClasses2.Cast<IReadOnlyFeatureClass>().ToList(),
+			       (IReadOnlyFeatureClass)definition.BorderClass2,
+			       definition.SearchDistance,
+			       definition.BoundingClasses1.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.BoundingClasses2.Cast<IReadOnlyFeatureClass>().ToList())
+		{
+			AreaClass1BorderMatchCondition = definition.AreaClass1BorderMatchCondition;
+			AreaClass1BoundingFeatureMatchCondition = definition.AreaClass1BoundingFeatureMatchCondition;
+			AreaClass2BoundingFeatureMatchCondition = definition.AreaClass2BoundingFeatureMatchCondition;
+			AreaClass2BorderMatchCondition = definition.AreaClass2BorderMatchCondition;
+			CrossingAreaMatchCondition = definition.CrossingAreaMatchCondition;
+			CrossingAreaAttributeConstraint = definition.CrossingAreaAttributeConstraint;
+			IsCrossingAreaAttributeConstraintSymmetric =
+				definition.IsCrossingAreaAttributeConstraintSymmetric;
+			CrossingAreaEqualAttributes = definition.CrossingAreaEqualAttributes;
+			CrossingAreaEqualAttributeOptions = definition.CrossingAreaEqualAttributeOptions;
+			ReportIndividualAttributeConstraintViolations = definition.ReportIndividualAttributeConstraintViolations;
+			AllowNoFeatureWithinSearchDistance = definition.AllowNoFeatureWithinSearchDistance;
+			AllowDisjointCandidateFeatureIfBordersAreNotCoincident = definition
+				.AllowDisjointCandidateFeatureIfBordersAreNotCoincident;
+			AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled =
+				definition.AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
+		}
+
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_AreaClass1BorderMatchCondition))]
 		public string AreaClass1BorderMatchCondition

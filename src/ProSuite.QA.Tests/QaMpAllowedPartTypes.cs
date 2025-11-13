@@ -70,6 +70,16 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
+		[InternallyUsedTest]
+		public QaMpAllowedPartTypes(
+			[NotNull] QaMpAllowedPartTypesDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.MultiPatchClass,
+			       definition.AllowRings,
+			       definition.AllowTriangleFans,
+			       definition.AllowTriangleStrips,
+			       definition.AllowTriangles)
+		{ }
+
 		public override bool IsQueriedTable(int tableIndex)
 		{
 			AssertValidInvolvedTableIndex(tableIndex);

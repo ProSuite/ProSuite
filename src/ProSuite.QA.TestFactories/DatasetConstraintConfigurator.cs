@@ -59,16 +59,16 @@ namespace ProSuite.QA.TestFactories
 
 			foreach (TestParameterValue value in parameterValues)
 			{
-				if (Equals(value.TestParameterName, QaDatasetConstraintFactory.TableAttribute))
+				if (Equals(value.TestParameterName, QaDatasetConstraintFactoryDefinition.TableAttribute))
 				{
 					Assert.Null(Dataset,
 					            "Multiple Attribute " +
-					            QaDatasetConstraintFactory.TableAttribute);
+					            QaDatasetConstraintFactoryDefinition.TableAttribute);
 
 					Dataset = (ObjectDataset) ((DatasetTestParameterValue) value).DatasetValue;
 				}
 				else if (Equals(value.TestParameterName,
-				                QaDatasetConstraintFactory.ConstraintAttribute))
+				                QaDatasetConstraintFactoryDefinition.ConstraintAttribute))
 				{
 					constraints.Add(value.StringValue);
 				}
@@ -79,7 +79,7 @@ namespace ProSuite.QA.TestFactories
 			}
 
 			Assert.NotNull(Dataset,
-			               "Missing Attribute: {0}", QaDatasetConstraintFactory.TableAttribute);
+			               "Missing Attribute: {0}", QaDatasetConstraintFactoryDefinition.TableAttribute);
 
 			Constraints = HierarchicalConstraintUtils.GetConstraintHierarchy(constraints);
 		}
@@ -160,7 +160,7 @@ namespace ProSuite.QA.TestFactories
 			var qc = new QualityCondition("qc_dataset_" + Dataset.Name, testDesc);
 
 			InstanceConfigurationUtils.AddParameterValue(
-				qc, QaDatasetConstraintFactory.TableAttribute, Dataset);
+				qc, QaDatasetConstraintFactoryDefinition.TableAttribute, Dataset);
 			AddParameters(qc, Constraints, "");
 
 			return qc;
@@ -444,7 +444,7 @@ namespace ProSuite.QA.TestFactories
 			foreach (ConstraintNode node in nodes)
 			{
 				InstanceConfigurationUtils.AddParameterValue(
-					qualityCondition, QaDatasetConstraintFactory.ConstraintAttribute,
+					qualityCondition, QaDatasetConstraintFactoryDefinition.ConstraintAttribute,
 					prefix + node.Condition);
 
 				AddParameters(qualityCondition, node.Nodes, subPrefix);

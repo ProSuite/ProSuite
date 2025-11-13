@@ -14,7 +14,6 @@ using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Framework;
@@ -148,9 +147,10 @@ public class AddRemovePointsTool : MapTool
 
 	protected virtual bool SelectNewFeatures => true;
 
-	protected virtual SelectionSettings GetSelectionSettings()
+	protected virtual int GetSelectionTolerancePixels()
 	{
-		return new SelectionSettings();
+		// Subclasses can choose to use fixed settings or some other custom implementation.
+		return SelectionEnvironment.SelectionTolerance;
 	}
 
 	protected virtual bool AllowEscapeToDefaultTool => false;
@@ -545,8 +545,7 @@ public class AddRemovePointsTool : MapTool
 		//   - if within eps of existing point feature: of type Remove
 		//   - otherwise: of type Add
 
-		var settings = GetSelectionSettings();
-		var tolerancePixels = settings.SelectionTolerancePixels;
+		var tolerancePixels = GetSelectionTolerancePixels();
 		var delta = MapUtils.ConvertScreenPixelToMapLength(ActiveMapView, tolerancePixels, point);
 
 		var element = FindElement(_elements, point, delta);

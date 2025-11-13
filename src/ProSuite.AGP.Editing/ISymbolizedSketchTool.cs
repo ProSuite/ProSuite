@@ -16,6 +16,6 @@ public interface ISymbolizedSketchTool
 	void SetSketchSymbol([CanBeNull] CIMSymbolReference symbolReference);
 
 	bool CanSelectFromLayer([CanBeNull] Layer layer);
-	
+
 	bool CanUseSelection([NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer);
 }

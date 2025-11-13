@@ -72,15 +72,11 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
 		}
 
-		protected override SelectionCursors GetSelectionCursors()
-		{
-			return SelectionCursors.CreateArrowCursors(Resources.RemoveOverlapsOverlay);
-		}
+		protected override SelectionCursors FirstPhaseCursors { get; } =
+			SelectionCursors.CreateArrowCursors(Resources.RemoveOverlapsOverlay);
 
-		protected override SelectionCursors GetSecondPhaseCursors()
-		{
-			return SelectionCursors.CreateCrossCursors(Resources.RemoveOverlapsOverlay);
-		}
+		protected override SelectionCursors SecondPhaseCursors { get; } =
+			SelectionCursors.CreateCrossCursors(Resources.RemoveOverlapsOverlay);
 
 		protected override Task OnToolActivatingCoreAsync()
 		{

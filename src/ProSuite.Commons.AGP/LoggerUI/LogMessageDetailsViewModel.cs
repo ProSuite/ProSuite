@@ -1,11 +1,11 @@
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WPF;
+using RelayCommand = ProSuite.Commons.UI.WPF.RelayCommand;
 
 namespace ProSuite.Commons.AGP.LoggerUI
 {
@@ -44,9 +44,9 @@ namespace ProSuite.Commons.AGP.LoggerUI
 		private RelayCommand _cmdCopyDetails;
 
 		[UsedImplicitly]
-		public ICommand CmdCloseDialog => _cmdCloseDialog ??= new RelayCommand(
-			                                  CloseWindow, () => true);
-		private RelayCommand _cmdCloseDialog;
+		public ICommand CmdCloseDialog => _cmdCloseDialog ??= new RelayCommand<object>(
+			                                  CloseWindow, _ => true);
+		private ICommand _cmdCloseDialog;
 
 		private void CopyDetails()
 		{

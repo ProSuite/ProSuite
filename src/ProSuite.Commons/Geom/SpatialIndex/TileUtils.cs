@@ -15,7 +15,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 		/// <param name="distanceMetric">Which distance to calculate</param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentException"></exception>
-		public static double TileDistance(TileIndex t1, TileIndex t2, double tileWidth, double tileHeight,
+		public static double TileDistance(TileIndex t1, TileIndex t2, double tileWidth,
+		                                  double tileHeight,
 		                                  DistanceMetric distanceMetric =
 			                                  DistanceMetric.EuclideanDistance)
 		{
@@ -52,22 +53,30 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			return dx * dx + dy * dy;
 		}
 
-		private static double EuclideanTileDistance(TileIndex t1, TileIndex t2, double tileWidth, double tileHeight)
+		public static bool TileIntersects(TileIndex tile, TileIndex minIndex, TileIndex maxIndex)
+		{
+			return tile.East >= minIndex.East && tile.East <= maxIndex.East &&
+			       tile.North >= minIndex.North && tile.North <= maxIndex.North;
+		}
+
+		private static double EuclideanTileDistance(TileIndex t1, TileIndex t2, double tileWidth,
+		                                            double tileHeight)
 		{
 			return Math.Sqrt(EuclideanTileDistance2(t1, t2, tileWidth, tileHeight));
 		}
 
-		private static double ManhattanTileDistance(TileIndex t1, TileIndex t2, double tileWidth, double tileHeight)
+		private static double ManhattanTileDistance(TileIndex t1, TileIndex t2, double tileWidth,
+		                                            double tileHeight)
 		{
 			return Math.Abs(t1.East * tileWidth - t2.East * tileWidth) +
 			       Math.Abs(t1.North * tileHeight - t2.North * tileHeight);
 		}
 
-		private static double ChebyshevTileDistance(TileIndex t1, TileIndex t2, double tileWidth, double tileHeight)
+		private static double ChebyshevTileDistance(TileIndex t1, TileIndex t2, double tileWidth,
+		                                            double tileHeight)
 		{
 			throw new NotImplementedException(
 				"Chebyshev Distance is not implemented for Tile indexes");
 		}
 	}
 }
-

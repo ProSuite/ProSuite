@@ -150,7 +150,7 @@ namespace ProSuite.Commons.AGP.Framework.Controls
 		}
 
 		[NotNull]
-		private static ToolStripCommandWrapperButton CreateCommandWrapper(
+		public static ToolStripCommandWrapperButton CreateCommandWrapper(
 			[NotNull] string damlId,
 			ToolStripItemAlignment alignment,
 			[CanBeNull] Action onClick)

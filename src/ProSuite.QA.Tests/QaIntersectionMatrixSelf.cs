@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -105,6 +106,14 @@ namespace ProSuite.QA.Tests
 			AddCustomQueryFilterExpression(constraint);
 			_validIntersectionDimensions = validIntersectionDimensions;
 		}
+
+		[InternallyUsedTest]
+		public QaIntersectionMatrixSelf(QaIntersectionMatrixSelfDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>()
+			                 .ToList(),
+			       definition.IntersectionMatrix,
+			       definition.Constraint, definition.ValidIntersectionDimensions)
+		{ }
 
 		#endregion
 

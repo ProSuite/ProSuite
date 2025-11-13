@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -6,6 +7,7 @@ using ProSuite.QA.Core;
 using ProSuite.QA.Core.IssueCodes;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.SpatialRelations;
 
 namespace ProSuite.QA.Tests
@@ -46,7 +48,7 @@ namespace ProSuite.QA.Tests
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
-			: this(new[] {featureClass}, limit, zComparisonMethod,
+			: this(new[] { featureClass }, limit, zComparisonMethod,
 			       zRelationConstraint) { }
 
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_1))]
@@ -59,7 +61,8 @@ namespace ProSuite.QA.Tests
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
-			: this(featureClasses, limit, 0, zComparisonMethod, zRelationConstraint) { }
+			: this(featureClasses, limit, 0, zComparisonMethod,
+			       zRelationConstraint) { }
 
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_2))]
 		public QaZDifferenceSelf(
@@ -73,7 +76,7 @@ namespace ProSuite.QA.Tests
 			ZComparisonMethod zComparisonMethod,
 			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
-			: this(new[] {featureClass}, minimumZDifference, maximumZDifference,
+			: this(new[] { featureClass }, minimumZDifference, maximumZDifference,
 			       zComparisonMethod, zRelationConstraint) { }
 
 		[Doc(nameof(DocStrings.QaZDifferenceSelf_3))]
@@ -95,6 +98,16 @@ namespace ProSuite.QA.Tests
 			_zComparisonMethod = zComparisonMethod;
 			_zRelationConstraint = zRelationConstraint;
 			AddCustomQueryFilterExpression(zRelationConstraint);
+		}
+
+		[InternallyUsedTest]
+		public QaZDifferenceSelf([NotNull] QaZDifferenceSelfDefinition definition)
+			: this(definition.FeatureClasses.Cast<IReadOnlyFeatureClass>().ToList(),
+			       definition.MinimumZDifference, definition.MaximumZDifference,
+			       definition.ZComparisonMethod, definition.ZRelationConstraint)
+		{
+			MinimumZDifferenceExpression = definition.MinimumZDifferenceExpression;
+			MaximumZDifferenceExpression = definition.MaximumZDifferenceExpression;
 		}
 
 		[TestParameter]

@@ -11,6 +11,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using Path = System.IO.Path;
 
@@ -34,6 +35,14 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaExportTables_fileGdbPath))][NotNull] string fileGdbPath) : base(tables)
 		{
 			_fileGdbPathOrTemplate = fileGdbPath;
+		}
+
+		[InternallyUsedTest]
+		public QaExportTables([NotNull] QaExportTablesDefinition definition)
+			: this(definition.Tables.Cast<IReadOnlyTable>().ToList(), definition.FileGdbPath)
+		{
+			ExportTileIds = definition.ExportTileIds;
+			ExportTiles = definition.ExportTiles;
 		}
 
 		[Doc(nameof(DocStrings.QaExportTables_ExportTileIds))]

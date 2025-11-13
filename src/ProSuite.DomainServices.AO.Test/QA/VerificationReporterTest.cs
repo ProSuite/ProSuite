@@ -116,7 +116,7 @@ namespace ProSuite.DomainServices.AO.Test.QA
 
 			Assert.IsTrue(Directory.Exists($@"{tempDir}\progress.gdb"));
 
-			// The second time the FC creation fails because it already exists
+			// The second time the FeatureClass creation fails because it already exists
 			Assert.Throws<DataException>(
 				() => subVerificationObserver =
 					      reporter.CreateSubVerificationObserver(IssueRepositoryType.FileGdb, sr));

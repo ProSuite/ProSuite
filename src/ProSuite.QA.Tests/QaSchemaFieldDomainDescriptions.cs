@@ -50,13 +50,10 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_maximumLength))]
 			int maximumLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_requireUniqueDescriptions))]
-			bool
-				requireUniqueDescriptions,
+			bool requireUniqueDescriptions,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_targetWorkspaceTable))]
-			[CanBeNull]
-			IReadOnlyTable
-				targetWorkspaceTable)
-			: base(table)
+			[CanBeNull] IReadOnlyTable targetWorkspaceTable)
+			: base(table,targetWorkspaceTable)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
@@ -73,10 +70,16 @@ namespace ProSuite.QA.Tests
 				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_maximumLength))]
 				int maximumLength,
 				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_requireUniqueDescriptions))]
-				bool
-					requireUniqueDescriptions)
+				bool requireUniqueDescriptions)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, maximumLength, requireUniqueDescriptions, null) { }
+
+		[InternallyUsedTest]
+		public QaSchemaFieldDomainDescriptions(
+			[NotNull] QaSchemaFieldDomainDescriptionsDefinition definition)
+			: this((IReadOnlyTable) definition.Table, definition.MaximumLength,
+			       definition.RequireUniqueDescriptions,
+			       (IReadOnlyTable) definition.TargetWorkspaceTable) { }
 
 		public override int Execute()
 		{

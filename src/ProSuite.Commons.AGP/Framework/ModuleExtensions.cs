@@ -41,14 +41,14 @@ public static class ModuleExtensions
 		}
 	}
 
-	public static void Add(this ModuleSettingsWriter settings, string name, bool flag)
+	public static void Add(this ModuleSettingsWriter settings, string name, bool? flag)
 	{
 		if (settings is null)
 			throw new ArgumentNullException(nameof(settings));
 		if (name is null)
 			throw new ArgumentNullException(nameof(name));
 
-		var text = flag.ToString(CultureInfo.InvariantCulture);
+		var text = flag?.ToString(CultureInfo.InvariantCulture);
 		settings.Add(name, text);
 	}
 
@@ -64,6 +64,11 @@ public static class ModuleExtensions
 		{
 			var text = Convert.ToString(setting);
 
+			if (string.IsNullOrEmpty(text))
+			{
+				return null;
+			}
+
 			bool canParse = double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture,
 			                                out value);
 
@@ -76,14 +81,54 @@ public static class ModuleExtensions
 		}
 	}
 
-	public static void Add(this ModuleSettingsWriter settings, string name, double value)
+	public static void Add(this ModuleSettingsWriter settings, string name, double? value)
 	{
 		if (settings is null)
 			throw new ArgumentNullException(nameof(settings));
 		if (name is null)
 			throw new ArgumentNullException(nameof(name));
 
-		var text = value.ToString(CultureInfo.InvariantCulture);
+		var text = value?.ToString(CultureInfo.InvariantCulture);
+		settings.Add(name, text);
+	}
+
+	public static int? GetInt32(this ModuleSettingsReader settings, string name)
+	{
+		if (settings is null || name is null) return null;
+
+		var setting = settings.Get(name);
+		if (setting is null) return null;
+		if (setting is int value) return value;
+
+		try
+		{
+			var text = Convert.ToString(setting);
+
+			if (string.IsNullOrEmpty(text))
+			{
+				return null;
+			}
+
+			bool canParse = int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture,
+			                             out value);
+
+			return canParse ? value : null;
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"Cannot convert project setting {name} to {nameof(Int32)}: {ex.Message}");
+			return null;
+		}
+	}
+
+	public static void Add(this ModuleSettingsWriter settings, string name, int? value)
+	{
+		if (settings is null)
+			throw new ArgumentNullException(nameof(settings));
+		if (name is null)
+			throw new ArgumentNullException(nameof(name));
+
+		var text = value?.ToString(CultureInfo.InvariantCulture);
 		settings.Add(name, text);
 	}
 

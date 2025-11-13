@@ -19,6 +19,11 @@ namespace ProSuite.QA.Tests.Transformers
 			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
+		[InternallyUsedTest]
+		public TrPolygonToLine(
+			[NotNull] TrPolygonToLineDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClass) { }
+
 		protected override IEnumerable<GdbFeature> Transform(IGeometry source, long? sourceOid)
 		{
 			IPolygon poly = (IPolygon) source;

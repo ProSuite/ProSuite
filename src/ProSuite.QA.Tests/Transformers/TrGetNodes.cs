@@ -37,6 +37,14 @@ namespace ProSuite.QA.Tests.Transformers
 			_toDissolve = lineClass;
 		}
 
+		[InternallyUsedTest]
+		public TrGetNodes(
+			[NotNull] TrGetNodesDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.LineClass)
+		{
+			Attributes = definition.Attributes;
+		}
+
 		[TestParameter]
 		[DocTr(nameof(DocTrStrings.TrGetNodes_Attributes))]
 		public IList<string> Attributes { get; set; }

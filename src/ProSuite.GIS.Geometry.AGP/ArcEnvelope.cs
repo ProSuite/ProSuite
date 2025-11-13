@@ -258,5 +258,11 @@ namespace ProSuite.GIS.Geometry.AGP
 		}
 
 		#endregion
+
+		public bool IsEqual(IClone other)
+		{
+			var geometry = (ArcGeometry) other;
+			return _proEnvelope.IsEqual(geometry.ProGeometry);
+		}
 	}
 }

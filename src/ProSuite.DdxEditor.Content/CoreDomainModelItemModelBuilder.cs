@@ -203,7 +203,7 @@ namespace ProSuite.DdxEditor.Content
 		}
 
 		[NotNull]
-		public IEnumerable<Item> GetChildren([NotNull] ConnectionProvidersItem parent)
+		public virtual IEnumerable<Item> GetChildren([NotNull] ConnectionProvidersItem parent)
 		{
 			Assert.ArgumentNotNull(parent, nameof(parent));
 
@@ -510,7 +510,7 @@ namespace ProSuite.DdxEditor.Content
 		}
 
 		[NotNull]
-		private Item CreateConnectionProviderItem(
+		protected Item CreateConnectionProviderItem(
 			[NotNull] ConnectionProvider descriptor,
 			[NotNull] IRepository<ConnectionProvider> repository)
 		{

@@ -44,6 +44,14 @@ namespace ProSuite.QA.Tests.Transformers.Filters
 			}
 		}
 
+		[InternallyUsedTest]
+		public TrCombinedFilter(
+			[NotNull] TrCombinedFilterDefinition definition)
+			: this((IReadOnlyFeatureClass)definition.FeatureClassToFilter,
+				   definition.InputFilters.Cast<IReadOnlyFeatureClass>().ToList(),
+				   definition.Expression)
+		{ }
+
 		#region Overrides of TableTransformer<FilteredFeatureClass>
 
 		protected override FilteredFeatureClass GetTransformedCore(string tableName)

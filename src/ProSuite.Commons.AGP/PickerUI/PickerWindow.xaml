@@ -49,6 +49,15 @@
 				<Setter Property="Foreground" Value="Black" />
 			</Style>
 
+			<Style x:Key="HighlightableTextBlock" TargetType="TextBlock">
+				<Setter Property="Foreground" Value="Black" />
+				<Style.Triggers>
+					<DataTrigger Binding="{Binding Highlight}" Value="True">
+						<Setter Property="FontWeight" Value="Bold" />
+					</DataTrigger>
+				</Style.Triggers>
+			</Style>
+
 			<Style x:Key="Image" TargetType="Image">
 				<Setter Property="Margin" Value="0,0,5,0" />
 			</Style>
@@ -70,7 +79,7 @@
 						</behaviors:EventTrigger>
 					</behaviors:Interaction.Triggers>
 					<Image Source="{Binding ImageSource}" Style="{StaticResource Image}" />
-					<TextBlock Text="{Binding DisplayValue}" Style="{StaticResource TextBlock}" />
+					<TextBlock Text="{Binding DisplayValue}" Style="{StaticResource HighlightableTextBlock}" />
 				</DockPanel>
 			</DataTemplate>
 

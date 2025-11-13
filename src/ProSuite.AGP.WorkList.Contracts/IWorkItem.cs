@@ -10,7 +10,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// The work item id.
 		/// </summary>
 		long OID { get; set; }
-		
+
 		/// <summary>
 		/// Object ID of the work item's source row
 		/// </summary>
@@ -23,8 +23,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// </summary>
 		long UniqueTableId { get; }
 
-		bool Visited { get; set; }
-
 		/// <summary>
 		/// The reference to the GdbObject that represents the work item's source row.
 		/// This should become obsolete or at least Nullable or member of a derived IGdbWorkItem
@@ -32,22 +30,30 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// </summary>
 		GdbRowIdentity GdbRowProxy { get; }
 
+		bool Visited { get; set; }
+
 		WorkItemStatus Status { get; set; }
 
 		[CanBeNull]
 		Envelope Extent { get; }
 
-		// TODO: (daro) GetGeometry?
+		/// <summary>
+		/// The buffered wireframe geometry of the work item, if applicable.
+		/// </summary>
 		[CanBeNull]
-		Geometry Geometry { get; }
+		Geometry BufferedGeometry { get; }
 
-		GeometryType? GeometryType { get; }
+		/// <summary>
+		/// The geometry type of the work item's source feature, if any.
+		/// </summary>
+		[CanBeNull]
+		GeometryType? SourceGeometryType { get; set; }
 
 		bool HasExtent { get; }
 
-		bool HasFeatureGeometry { get; }
+		bool HasBufferedGeometry { get; }
 
-		void SetGeometry(Geometry geometry);
+		void SetBufferedGeometry(Geometry geometry);
 
 		void SetExtent(Envelope extent);
 

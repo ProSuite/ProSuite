@@ -156,12 +156,12 @@ namespace ProSuite.UI.MicroserverState
 			}
 
 			public Task<bool> AllowStartingLocalServerAsync(
-				string executable, string extraArguments = null)
+				string executable, string extraArguments = null, string command = null)
 			{
 				return Task.FromResult(false);
 			}
 
-			public bool AllowStartingLocalServer(string executable, string extraArguments = null)
+			public bool AllowStartingLocalServer(string executable, string extraArguments = null, string command = null)
 			{
 				return false;
 			}
