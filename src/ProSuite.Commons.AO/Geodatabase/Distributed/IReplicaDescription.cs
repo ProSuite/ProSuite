@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase.Distributed
 {
 	public interface IReplicaDescription
 	{
+		[CanBeNull]
 		IGeometry FilterGeometry { get; set; }
 
 		/// <summary>
@@ -21,10 +23,23 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		IList<IRelationshipClassInfo> GetRelationshipClassInfos();
 
 		/// <summary>
+		/// Returns all the (previously configured) relationship class infos for the specified table.
+		/// </summary>
+		/// <param name="relatedClass"></param>
+		/// <param name="relationToParentOnly">Determines whether the relationship class should
+		/// be returned only if it relates the specified table to a (spatial) dataset that
+		/// controls the related records in the specified table</param>
+		/// <returns></returns>
+		IEnumerable<IRelationshipClassInfo> GetRelationshipClassInfos(
+			[NotNull] IObjectClass relatedClass,
+			bool relationToParentOnly);
+
+		/// <summary>
 		/// Returns the dataset filter to be configured for the specified dataset.
 		/// </summary>
 		/// <param name="dataset"></param>
 		/// <returns></returns>
+		[CanBeNull]
 		IDatasetReplicaFilter GetDatasetFilter(IDataset dataset);
 
 		/// <summary>
