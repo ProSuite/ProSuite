@@ -238,6 +238,22 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			Assert.NotNull(_holes);
 
+			MapView activeMapView = MapView.Active;
+
+			if (! GeometryUtils.Contains(_calculationExtent, sketch))
+			{
+				// The extent has changed since the holes were calculated -> recalculate
+				List<Feature> selectedFeatures = MapUtils.GetFeatures(
+					                                         selection, true,
+					                                         activeMapView.Map.SpatialReference)
+				                                         .Where(f => GeometryUtils.Intersects(
+					                                                _calculationExtent,
+					                                                f.GetShape().Extent))
+				                                         .ToList();
+
+				CalculateHoles(selectedFeatures, null, CancellationToken.None);
+			}
+
 			IList<Polygon> holesToFill = SelectHoles(_holes, sketch);
 
 			_msg.DebugFormat("Selected {0} out of {1} holes to fill",
@@ -247,8 +263,6 @@ namespace ProSuite.AGP.Editing.FillHole
 			{
 				return false;
 			}
-
-			MapView activeMapView = MapView.Active;
 
 			FeatureClass currentTargetClass = GetCurrentTargetClass(out Subtype targetSubtype);
 
@@ -351,8 +365,9 @@ namespace ProSuite.AGP.Editing.FillHole
 						: $"Found {holeCount} holes{{0}}. ";
 
 				holeCountMsg = string.Format(holeCountMsg,
+				                             _fillHoleToolOptions.ShowPreview &&
 				                             _fillHoleToolOptions.LimitPreviewToExtent
-					                             ? " in current extent (shown in green)"
+					                             ? " in current extent (shown as a green rectangle)"
 					                             : string.Empty);
 
 				EditingTemplate editTemplate = EditingTemplate.Current;

@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.FillHole
 				return;
 			}
 
-			if (! _fillHoleToolOptions.LimitPreviewToExtent)
+			if (! _fillHoleToolOptions.ShowPreview || ! _fillHoleToolOptions.LimitPreviewToExtent)
 			{
 				return;
 			}
