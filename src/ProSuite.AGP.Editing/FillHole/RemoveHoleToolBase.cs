@@ -213,6 +213,23 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			Assert.NotNull(_holes);
 
+			MapView activeMapView = MapView.Active;
+
+			List<Feature> selectedFeatures;
+
+			if (! GeometryUtils.Contains(_calculationExtent, sketch))
+			{
+				// The extent has changed since the holes were calculated -> recalculate
+				selectedFeatures =
+					MapUtils.GetFeatures(
+						        selection, true, activeMapView.Map.SpatialReference)
+					        .Where(f => GeometryUtils.Intersects(
+						               _calculationExtent, f.GetShape().Extent))
+					        .ToList();
+
+				CalculateHoles(selectedFeatures, null, CancellationToken.None);
+			}
+
 			IList<Holes> featuresWithHoles = SelectHoles(_holes, sketch);
 
 			_msg.DebugFormat("Selected {0} out of {1} hole features to remove holes",
@@ -223,9 +240,7 @@ namespace ProSuite.AGP.Editing.FillHole
 				return false;
 			}
 
-			MapView activeMapView = MapView.Active;
-
-			var selectedFeatures = MapUtils.GetFeatures(
+			selectedFeatures = MapUtils.GetFeatures(
 				selection, true, activeMapView.Map.SpatialReference).ToList();
 
 			var updates = new Dictionary<Feature, Geometry>();
@@ -300,8 +315,9 @@ namespace ProSuite.AGP.Editing.FillHole
 						: $"Found {holeCount} holes{{0}}. ";
 
 				holeCountMsg = string.Format(holeCountMsg,
+				                             _removeHoleToolOptions.ShowPreview &&
 				                             _removeHoleToolOptions.LimitPreviewToExtent
-					                             ? " in current extent (shown in green)"
+					                             ? " in current extent (shown as a green rectangle)"
 					                             : string.Empty);
 
 				string clickHoleMsg =
