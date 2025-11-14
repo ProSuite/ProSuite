@@ -171,7 +171,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
 
-			_calculationExtent = isStereoMap ? null : ActiveMapView.Extent;
+			_calculationExtent = ActiveMapView.Extent;
 
 			_msg.DebugFormat("Calculating removable holes for {0} selected features",
 			                 selectedFeatures.Count);

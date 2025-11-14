@@ -105,7 +105,7 @@ namespace ProSuite.AGP.Editing.Chopper
 			// Store current map extent
 			bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
 
-			_calculationExtent = isStereoMap ? null : ActiveMapView.Extent;
+			_calculationExtent = ActiveMapView.Extent;
 
 			IList<Feature> intersectingFeatures =
 				GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
