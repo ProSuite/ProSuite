@@ -759,6 +759,16 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 			return false;
 		}
 
+		using (FeatureClass featureClass = layer.GetFeatureClass())
+		{
+			if (featureClass is null)
+			{
+				NotificationUtils.Add(notifications,
+				                      $"Layer has no valid data source: {layerName}");
+				return false;
+			}
+		}
+
 		return CanSelectFromLayerCore(layer);
 	}
 
