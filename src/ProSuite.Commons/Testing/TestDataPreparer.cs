@@ -19,8 +19,15 @@ namespace ProSuite.Commons.Testing
 		private const string _tempUnitTestData = @"C:\temp\UnitTestData";
 
 		/// <summary>
-		/// Create a ZIP of PGDB (*.mdb) and use FromZip()
+		/// Normal use:
+		/// <code>
+		/// TestDataPreparer.ExtractZip("TestData.gdb.zip").GetPath();
+		/// </code>
+		/// Extracts the ZIP file to C:\temp and returns the full path.
 		/// </summary>
+		/// <param name="archiveName">Has to be the name of a ZIP file, e.g. "TestData.gdb.zip"</param>
+		/// <param name="dirRelativeToProject"></param>
+		/// <returns></returns>
 		[NotNull]
 		public static ITestDataArchive ExtractZip([NotNull] string archiveName,
 		                                          string dirRelativeToProject = _defaultTestDataDir)
