@@ -86,7 +86,7 @@ public static class Gateway
 
 			return dispatcher.Invoke(() =>
 			{
-				// Available only on thread that created the Application:
+				// Available only on the thread that created the Application:
 				Window owner = Application.Current.MainWindow;
 
 				var dialog = (Window) Activator.CreateInstance(typeof(T));
@@ -326,6 +326,64 @@ public static class Gateway
 		}
 
 		return result;
+	}
+
+	public static bool IsOnUI
+	{
+		get
+		{
+			try
+			{
+				var dispatcher = Application.Current?.Dispatcher;
+				return dispatcher?.CheckAccess() ?? false;
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug("Could not determine if call is on UI thread, assuming not", ex);
+				return false;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Run the given callback on the UI thread
+	/// </summary>
+	public static void RunOnUI(Action callback)
+	{
+		if (callback is null)
+			throw new ArgumentNullException(nameof(callback));
+
+		var dispatcher = Application.Current?.Dispatcher;
+
+		if (dispatcher is not null)
+		{
+			dispatcher.Invoke(callback);
+		}
+		else
+		{
+			// No dispatcher, just call on current thread:
+			callback();
+		}
+	}
+
+	/// <summary>
+	/// Run the given callback on the UI thread
+	/// </summary>
+	/// <returns>The result of the given callback</returns>
+	public static T RunOnUI<T>(Func<T> callback)
+	{
+		if (callback is null)
+			throw new ArgumentNullException(nameof(callback));
+
+		var dispatcher = Application.Current?.Dispatcher;
+
+		if (dispatcher is not null)
+		{
+			return dispatcher.Invoke(callback);
+		}
+
+		// no dispatcher, just call on current thread:
+		return callback();
 	}
 
 	private static Window GetMainWindow()
