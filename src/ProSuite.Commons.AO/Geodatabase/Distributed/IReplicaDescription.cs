@@ -16,6 +16,8 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		/// </summary>
 		ICollection<IDataset> Datasets { get; }
 
+		IFeatureWorkspace ParentWorkspace { get; }
+
 		/// <summary>
 		/// Returns the relevant relationship class infos which can be configured by client code.
 		/// </summary>
