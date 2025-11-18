@@ -766,6 +766,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (IsInSketchMode)
 				{
+					_lastLoggedVertexIndex = -1;
 					await SetCurrentSketchAsync(_previousSketch);
 				}
 				else
@@ -810,7 +811,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			_msg.DebugFormat(
 				"Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]",
 				sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
+
+			//Undo of last vertex
 			if (currentLastIndex <= _lastLoggedVertexIndex)
+			{
+				_lastLoggedVertexIndex = currentLastIndex;
+				return;
+			}
+
+			//Sketch restore with R
+			if (currentLastIndex > 0 && _lastLoggedVertexIndex == -1)
 			{
 				_lastLoggedVertexIndex = currentLastIndex;
 				return;
