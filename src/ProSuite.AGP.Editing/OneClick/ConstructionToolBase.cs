@@ -299,6 +299,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
+			if (! ShiftPressedToSelect)
+			{
+				// Not exclusively shift, e.g. Ctrl + Shift + Y
+				return;
+			}
+
 			if (! IsInSketchPhase)
 			{
 				// In the selection phase already, no intermittent selection needed.
