@@ -787,6 +787,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
+			if (_intermediateSketchStates?.IsReplayingSketches == true)
+			{
+				return;
+			}
+
 			if (await GetEditSketchHasZ() != true)
 			{
 				return;
