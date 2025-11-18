@@ -37,6 +37,18 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 			bool relationToParentOnly);
 
 		/// <summary>
+		/// Returns the relationship class chains for the specified table. A relationship class
+		/// chain is a list of relationship classes that connect the specified table to a
+		/// feature class that is part of the replica's root datasets.
+		/// </summary>
+		/// <param name="relatedClass"></param>
+		/// <param name="relationToParentOnly"></param>
+		/// <returns></returns>
+		IEnumerable<List<IRelationshipClass>> GetRelationshipClassChains(
+			[NotNull] IObjectClass relatedClass,
+			bool relationToParentOnly);
+
+		/// <summary>
 		/// Returns the dataset filter to be configured for the specified dataset.
 		/// </summary>
 		/// <param name="dataset"></param>
