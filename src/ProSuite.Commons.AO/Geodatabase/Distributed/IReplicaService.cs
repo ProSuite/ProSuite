@@ -9,13 +9,17 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		/// Checks out a replica based on the specified replica description and replica name.
 		/// </summary>
 		/// <param name="replicaDescription"></param>
-		/// <param name="reuseSchema">Whether an existing schema in the check-out workspace should
-		/// be re-used.</param>
 		/// <param name="replicaName">The name to be used to name the replica version in the
 		/// central workspace.</param>
+		/// <param name="checkoutDatabasePath"></param>
+		/// <param name="checkoutDatabaseName"></param>
+		/// <param name="reuseSchema">Whether an existing schema in the check-out workspace should
+		/// be re-used.</param>
 		/// <returns>The checked-out workspace.</returns>
 		IWorkspace CheckOut([NotNull] IReplicaDescription replicaDescription,
 		                    [NotNull] string replicaName,
+		                    [NotNull] string checkoutDatabasePath,
+		                    [NotNull] string checkoutDatabaseName,
 		                    bool reuseSchema);
 
 		/// <summary>
@@ -29,7 +33,22 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		                      [NotNull] string replicaName,
 		                      [NotNull] IWorkspace checkoutWorkspace);
 
-		bool ExistsCheckoutDatabase(string checkOutDatabaseName);
+		/// <summary>
+		/// Determines whether a check-out database with the specified name exists at the given path.
+		/// </summary>
+		/// <param name="checkoutDatabasePath"></param>
+		/// <param name="checkOutDatabaseName"></param>
+		/// <returns></returns>
+		bool ExistsCheckoutDatabase([NotNull] string checkoutDatabasePath,
+		                            [NotNull] string checkOutDatabaseName);
+
+		/// <summary>
+		/// Deletes the check-out database with the specified name at the given path.
+		/// </summary>
+		/// <param name="checkoutDatabasePath"></param>
+		/// <param name="checkOutDatabaseName"></param>
+		void DeleteCheckoutDatabase([NotNull] string checkoutDatabasePath,
+		                            [NotNull] string checkOutDatabaseName);
 
 		/// <summary>
 		/// Determines whether the parent replica in the central workspace exists.
@@ -40,7 +59,5 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		bool ExistsReplica(IWorkspace workspace, string replicaName);
 
 		void UnregisterReplica(IWorkspace workspace, string replicaName);
-
-		void DeleteCheckoutDatabase(string databaseName);
 	}
 }
