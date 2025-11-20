@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -15,9 +14,9 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		/// <param name="replicaName">The name to be used to name the replica version in the
 		/// central workspace.</param>
 		/// <returns>The checked-out workspace.</returns>
-		Task<IWorkspace> CheckOut([NotNull] IReplicaDescription replicaDescription,
-		                          [NotNull] string replicaName,
-		                          bool reuseSchema);
+		IWorkspace CheckOut([NotNull] IReplicaDescription replicaDescription,
+		                    [NotNull] string replicaName,
+		                    bool reuseSchema);
 
 		/// <summary>
 		/// Checks in the specified replica by applying the delta from the check-out workspace to
@@ -26,9 +25,9 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		/// <param name="parentWorkspace"></param>
 		/// <param name="replicaName"></param>
 		/// <param name="checkoutWorkspace"></param>
-		Task<ICheckInDelta> CheckIn([NotNull] IWorkspace parentWorkspace,
-		                            [NotNull] string replicaName,
-		                            [NotNull] IWorkspace checkoutWorkspace);
+		ICheckInDelta CheckIn([NotNull] IWorkspace parentWorkspace,
+		                      [NotNull] string replicaName,
+		                      [NotNull] IWorkspace checkoutWorkspace);
 
 		bool ExistsCheckoutDatabase(string checkOutDatabaseName);
 
@@ -38,10 +37,10 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		/// <param name="workspace"></param>
 		/// <param name="replicaName"></param>
 		/// <returns></returns>
-		Task<bool> ExistsReplica(IWorkspace workspace, string replicaName);
+		bool ExistsReplica(IWorkspace workspace, string replicaName);
 
-		Task<bool> UnregisterReplica(IWorkspace workspace, string replicaName);
+		void UnregisterReplica(IWorkspace workspace, string replicaName);
 
-		Task<bool> DeleteCheckoutDatabase(string databaseName);
+		void DeleteCheckoutDatabase(string databaseName);
 	}
 }
