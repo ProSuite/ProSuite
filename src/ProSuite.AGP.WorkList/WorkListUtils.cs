@@ -35,6 +35,8 @@ namespace ProSuite.AGP.WorkList
 
 		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
 
+		private static readonly string IssueWorkListGroupLayerName = "QA";
+
 		public static PluginDatastore GetPluginDatastore([NotNull] Uri dataSource)
 		{
 			Assert.ArgumentNotNull(dataSource, nameof(dataSource));
@@ -593,8 +595,8 @@ namespace ProSuite.AGP.WorkList
 					continue;
 				}
 
-				_msg.VerboseDebug(
-					() => $"'work list layer {layer.Name} is loaded: work list {worklistName}");
+				_msg.VerboseDebug(() =>
+					                  $"'work list layer {layer.Name} is loaded: work list {worklistName}");
 
 				yield return layer;
 			}
@@ -650,8 +652,7 @@ namespace ProSuite.AGP.WorkList
 				Map map = mapView.Map;
 				IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
 
-				var worklistLayers =
-					GetWorklistLayers(layers, workList).ToList();
+				var worklistLayers = GetWorklistLayers(layers, workList).ToList();
 
 				Assert.True(MapUtils.RemoveLayers(map, worklistLayers),
 				            "map doesn't contain work list layer");
@@ -661,11 +662,11 @@ namespace ProSuite.AGP.WorkList
 					return;
 				}
 
-				// NOTE: magic string!!!!
 				map.RemoveLayers(
 					MapUtils.GetLayers<GroupLayer>(
 						map,
-						l => string.Equals(l.Name, "QA", StringComparison.OrdinalIgnoreCase)));
+						l => string.Equals(l.Name, IssueWorkListGroupLayerName,
+						                   StringComparison.OrdinalIgnoreCase)));
 			});
 		}
 
