@@ -454,6 +454,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Stopwatch watch = _msg.DebugStartTiming($"{this} start loading items.");
 
+			IWorkItem oldCurrentItem = CurrentItem;
+			IWorkItem newCurrentItem = null;
+
+			// TODO: Consider keeping the updated items if they already exist in the _rowMap. Also consider
+			//       not re-reading everything if only the filter has changed?
+
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
 				         filter, statusFilter))
 			{
@@ -461,6 +467,11 @@ namespace ProSuite.AGP.WorkList.Domain
 				Assert.True(item.OID > 0, "item is not initialized");
 
 				Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Could not add {item}");
+
+				if (item.GdbRowProxy.Equals(oldCurrentItem?.GdbRowProxy))
+				{
+					newCurrentItem = item;
+				}
 
 				// it's an unknown item > refresh it's state (status, visited) either
 				// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
@@ -502,9 +513,26 @@ namespace ProSuite.AGP.WorkList.Domain
 				_searcher = searcher;
 			}
 
-			OnWorkListChanged();
-
 			LoadItemsCore(filter);
+
+			if (newCurrentItem != null)
+			{
+				// OnWorkListChanged will be called from SetCurrentItemCore
+				SetCurrentItem(newCurrentItem);
+			}
+			else
+			{
+				Envelope extent = oldCurrentItem?.Extent ?? MapView.Active?.Extent;
+
+				if (extent != null)
+				{
+					GoNearest(extent);
+				}
+				else
+				{
+					OnWorkListChanged();
+				}
+			}
 		}
 
 		public IEnumerable<IWorkItem> Search([NotNull] QueryFilter filter)

@@ -145,10 +145,29 @@ namespace ProSuite.AGP.WorkList.Datasource
 				// NOTE: If an exception is thrown from GetValues (i.e. cursor.MoveNext()), the
 				//       a notification appears in the Notifications pane:
 				//       "<layer name>: Invalid pointer function parameter"
-				// -> Deliberately not catch to make this state visible to the user (and explain
+				// -> Deliberately not caught to make this state visible to the user (and explain
 				//    why nothing is drawn).
-				IEnumerable<object[]> resultRows =
-					resultItems.Select(item => GetValues(item, workItems, workItems.CurrentItem));
+
+				IWorkItem currentItem = workItems.CurrentItem;
+
+				var resultRows = new List<object[]>();
+
+				foreach (IWorkItem item in resultItems)
+				{
+					if (item == currentItem)
+					{
+						continue;
+					}
+
+					resultRows.Add(GetValues(item, workItems, false));
+				}
+
+				// Provide the current item at the end so it should be drawn on top. Unfortunately,
+				// this works only in few cases. Symbol layer drawing must be enabled!
+				if (currentItem != null)
+				{
+					resultRows.Add(GetValues(currentItem, workItems, true));
+				}
 
 				return new WorkItemCursor(resultRows);
 			}
@@ -173,7 +192,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 		[NotNull]
 		private static object[] GetValues([NotNull] IWorkItem item,
 		                                  IWorkItemData workListItems,
-		                                  IWorkItem current = null)
+		                                  bool isCurrent)
 		{
 			var values = new object[5];
 			try
@@ -181,7 +200,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 				values[0] = item.OID;
 				values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
 				values[2] = item.Visited ? 1 : 0;
-				values[3] = item == current ? 1 : 0;
+				values[3] = isCurrent ? 1 : 0;
 				values[4] = workListItems.GetItemDisplayGeometry(item);
 			}
 			catch (Exception ex)

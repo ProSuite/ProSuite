@@ -295,6 +295,20 @@ namespace ProSuite.Commons.Test.Collections
 		}
 
 		[Test]
+		public void IsSubsetOfWorks()
+		{
+			IList<int> listOne = CreateList(1, 2, 3, 4);
+			IList<int> listTwo = CreateList(1, 2, 3, 4, 5);
+			IList<int> listThree = CreateList(1, 2, 2, 1, 3);
+
+			Assert.IsTrue(CollectionUtils.IsSubsetOf(listOne, listOne));
+			Assert.IsTrue(CollectionUtils.IsSubsetOf(listOne, listTwo));
+			Assert.IsFalse(CollectionUtils.IsSubsetOf(listTwo, listOne));
+
+			Assert.IsTrue(CollectionUtils.IsSubsetOf(listThree, listOne));
+		}
+
+		[Test]
 		public void CanGetFrequenciesInt()
 		{
 			var values = new[] {1, 2, 3, 2, 3, 7, 3};

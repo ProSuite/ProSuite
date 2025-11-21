@@ -6,6 +6,7 @@ using System.Text;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
@@ -191,12 +192,14 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			var tableName = featureClass.GetName();
 			using var datastore = featureClass.GetDatastore();
 
-			using var definition = featureClass.GetDefinition();
+			tableName = DatasetNameUtils.UnqualifyDatasetName(tableName);
+
 			var list = GetLayers<T>(lyr => IsLayerSource(lyr, tableName, datastore)).ToList();
+
 			return list.FirstOrDefault();
 		}
 
-		private static bool IsLayerSource(CIMBasicFeatureLayer layer, string tableName,
+		private static bool IsLayerSource(CIMBasicFeatureLayer layer, string unqualifiedTableName,
 		                                  [InstantHandle] Datastore datastore)
 		{
 			if (layer is null)
@@ -214,7 +217,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				if (sdc.DatasetType != esriDatasetType.esriDTFeatureClass)
 					return false;
 
-				if (! string.Equals(sdc.Dataset, tableName, StringComparison.OrdinalIgnoreCase))
+				var unqualified = DatasetNameUtils.UnqualifyDatasetName(sdc.Dataset);
+				if (! string.Equals(unqualified, unqualifiedTableName, StringComparison.OrdinalIgnoreCase))
 					return false;
 
 				// TODO compare datastore... how?
@@ -229,7 +233,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 				if (fdc.DatasetType != esriDatasetType.esriDTFeatureClass)
 					return false;
-				if (! string.Equals(fdc.Dataset, tableName, StringComparison.OrdinalIgnoreCase))
+
+				var unqualified = DatasetNameUtils.UnqualifyDatasetName(fdc.Dataset);
+				if (! string.Equals(unqualified, unqualifiedTableName, StringComparison.OrdinalIgnoreCase))
 					return false;
 
 				// TODO compare datastore... how?

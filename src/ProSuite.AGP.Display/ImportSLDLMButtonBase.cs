@@ -182,8 +182,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		                              .ToHashSet(); // implicitly distinct
 
 		// Check that all level names in DrawingOrder occur in at least one SymbolLevels entry:
-		var undefinedLevels = usedLevelNames.Except(definedLevelNames);
-		if (undefinedLevels.Any())
+		var undefinedLevels = usedLevelNames.Except(definedLevelNames).ToList();
+		if (undefinedLevels.Count > 0)
 		{
 			valid = false;
 			var text = string.Join(", ", undefinedLevels.OrderBy(name => name));
@@ -191,8 +191,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		}
 
 		// Check that all level names in SymbolLevels are referenced from DrawingOrder:
-		var unusedLevels = definedLevelNames.Except(usedLevelNames);
-		if (unusedLevels.Any())
+		var unusedLevels = definedLevelNames.Except(usedLevelNames).ToList();
+		if (unusedLevels.Count > 0)
 		{
 			// don't invalidate: it's a smell, but not an error
 			var text = string.Join(", ", unusedLevels.OrderBy(name => name));
@@ -203,6 +203,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		//   - LM info on DrawingOrder entries is authoritative
 		//   - LM info SymbolLevels entries shall be consistent (but may not be if CIM is manipulated outside the Pro UI)
 		//   - this means: masks(z,l) are the same for all levels z and child layers l in the group layer
+		ValidateMaskingConsistency(config, feedback);
 
 		// TODO Check there is only one SLD controlling layer (not required by Pro, but needed by our import tool(?))
 
@@ -211,7 +212,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		                            .Where(layer => !string.Equals(layer.Renderer?.Type, Config.Renderer.SimpleType) &&
 		                                            !string.Equals(layer.Renderer?.Type, Config.Renderer.UniqueValueType))
 		                            .ToList();
-		if (missingRenderer.Any())
+		if (missingRenderer.Count > 0)
 		{
 			valid = false;
 			var lyrs = missingRenderer.Select(item => item.AppendLineInfo(FormatLayer(item)));
@@ -224,7 +225,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var badSimpleRenderers = config.SymbolLevels
 		                                    .Where(item => string.Equals(item.Renderer?.Type, Config.Renderer.SimpleType))
 		                                    .Where(item => item.Symbols.Count() != 1).ToList();
-		if (badSimpleRenderers.Any())
+		if (badSimpleRenderers.Count > 0)
 		{
 			valid = false;
 			var lyrs = badSimpleRenderers.Select(item => item.AppendLineInfo(FormatLayer(item)));
@@ -236,7 +237,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var badUniqueRenderers = config.SymbolLevels
 		                               .Where(item => string.Equals(item.Renderer?.Type, Config.Renderer.UniqueValueType))
 		                               .Where(item => !item.Symbols.Any()).ToList();
-		if (badUniqueRenderers.Any())
+		if (badUniqueRenderers.Count > 0)
 		{
 			valid = false;
 			var lyrs = badUniqueRenderers.Select(item => item.AppendLineInfo(FormatLayer(item)));
@@ -246,8 +247,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 		// Check no duplicate layer (by URI) in DrawingOrder:
 		var duplicateLayerUris = config.DrawingOrder.GroupBy(layer => layer.Uri)
-		                               .Where(g => g.Count() > 1);
-		if (duplicateLayerUris.Any())
+		                               .Where(g => g.Count() > 1).ToList();
+		if (duplicateLayerUris.Count > 0)
 		{
 			valid = false;
 			var lyrs = duplicateLayerUris.Select(g => g.First().AppendLineInfo(g.Key));
@@ -256,6 +257,66 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		}
 
 		return valid;
+	}
+
+	private static void ValidateMaskingConsistency(Config config, IFeedback feedback)
+	{
+		// Check that layer masking is consistent with SLD ordering:
+		// - LM info on DrawingOrder entries is authoritative
+		// - LM info SymbolLevels entries shall be consistent (but may not be if CIM is manipulated outside the Pro UI)
+		// - this means: masks(z,l) are the same for all levels z and child layers l in the group layer
+
+		bool hasExtraMaskedBy = config.SymbolLevels
+		                         .SelectMany(layer => layer.Symbols)
+		                         .SelectMany(symbol => symbol.Levels)
+		                         .Any(sl => sl.MaskedBy.Any());
+
+		if (! hasExtraMaskedBy)
+		{
+			// Assume this config was created without extra masking info,
+			// so there is no consistency we can validate.
+			return;
+		}
+
+		// Make a dictionary level-name => List of MaskedBy:
+
+		var dict = config.DrawingOrder
+		                 .SelectMany(l => l.Levels)
+		                 .ToDictionary(l => l.Name, l => l.MaskedBy.ToList());
+
+		// For each level in SymbolLevels, check if its MaskedBy are
+		// the same as those in DrawingOrder for the like-named level:
+
+		foreach (var layer in config.SymbolLevels)
+		{
+			foreach (var symbol in layer.Symbols)
+			{
+				foreach (var level in symbol.Levels)
+				{
+					if (dict.TryGetValue(level.Name, out var maskedBy))
+					{
+						if (! SameMaskedBy(maskedBy, level.MaskedBy))
+						{
+							feedback.Warning($"Inconsistent MaskedBy's on level {level.Name} in symbol {symbol.Match} (label {symbol.Label}) of layer {layer.Name} (parent {layer.Parent})");
+						}
+					}
+					else if (level.MaskedBy.Any())
+					{
+						feedback.Warning($"Inconsistent MaskedBy's on level {level.Name} in symbol {symbol.Match} (label {symbol.Label}) of layer {layer.Name} (parent {layer.Parent})");
+					}
+				}
+			}
+		}
+	}
+
+	private static bool SameMaskedBy(IEnumerable<Config.MaskLayer> a,
+	                                 IEnumerable<Config.MaskLayer> b)
+	{
+		if (a is null && b is null) return true;
+		if (a is null || b is null) return false;
+
+		return a.OrderBy(m => m.Uri)
+		        .SequenceEqual(b.OrderBy(m => m.Uri), Config.MaskLayerComparer.Instance);
 	}
 
 	/// <remarks>Must run on MCT</remarks>
@@ -543,7 +604,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 					var relevantLevels = relevantMasking.Select(g => subnames.Intersect(g));
 
 					cim.LayerMasks = MakeLayerMasks(relevantMasking.Select(g => g.Key)); // empty if none
-					cim.MaskedSymbolLayers = MakeSymbolLayerMasking(relevantLevels); // null if none
+					cim.MaskedSymbolLayers = MakeSymbolLayerMaskings(relevantLevels); // null if none
 				}
 				else if (itemsByUri.TryGetValue(featureLayer.URI, out var item))
 				{
@@ -553,21 +614,21 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 						// advanced layer masking (i.e., selected symbol layers only)
 						var masking = RegroupMaskingConfig(item.Levels).ToList();
 
-						// LayerMasks and MaskedSymbolLayers must be are parallel arrays!
+						// LayerMasks and MaskedSymbolLayers are parallel arrays!
 						cim.LayerMasks = MakeLayerMasks(masking.Select(g => g.Key));
-						cim.MaskedSymbolLayers = MakeSymbolLayerMasking(masking);
+						cim.MaskedSymbolLayers = MakeSymbolLayerMaskings(masking);
 					}
 					else
 					{
 						// regular layer masking (i.e., mask entire symbols)
 						cim.LayerMasks = MakeLayerMasks(item.MaskedBy.Select(m => m.Uri));
-						cim.MaskedSymbolLayers = MakeSymbolLayerMasking(null);
+						cim.MaskedSymbolLayers = MakeSymbolLayerMaskings(null);
 					}
 				}
 				else
 				{
 					cim.LayerMasks = MakeLayerMasks(null);
-					cim.MaskedSymbolLayers = MakeSymbolLayerMasking(null);
+					cim.MaskedSymbolLayers = MakeSymbolLayerMaskings(null);
 				}
 
 				featureLayer.SetDefinition(cim);
@@ -642,7 +703,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 	#region Creating CIM objects
 
-	private static CIMSymbolLayerDrawing MakeSymbolLayerDrawing(IEnumerable<Config.LayerLevel> levels, CIMSymbolLayerDrawing previous)
+	private static CIMSymbolLayerDrawing MakeSymbolLayerDrawing(IReadOnlyList<Config.LayerLevel> levels, CIMSymbolLayerDrawing previous)
 	{
 		// preserve the UseSLD flag, if it existed before; otherwise, turn it on
 		var useSLD = previous?.SymbolLayers is null ||
@@ -671,13 +732,18 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		return layerUris?.ToArray() ?? Array.Empty<string>();
 	}
 
-	private static CIMSymbolLayerMasking[] MakeSymbolLayerMasking(IEnumerable<IEnumerable<string>> levels)
+	private static CIMSymbolLayerMasking[] MakeSymbolLayerMaskings(IEnumerable<IEnumerable<string>> levels)
 	{
 		// unlike CIM.LayerMasks, CIM.SymbolLayerMasking is null if none
 		if (levels is null) return null;
-		if (! levels.Any()) return null;
-		return levels.Select(names => new CIMSymbolLayerMasking { SymbolLayers = names.Select(MakeSymbolLayerIdentifier).ToArray() })
-		             .ToArray();
+		var maskings = levels.Select(MakeSymbolLayerMasking).ToArray();
+		return maskings.Length > 0 ? maskings : null;
+	}
+
+	private static CIMSymbolLayerMasking MakeSymbolLayerMasking(IEnumerable<string> names)
+	{
+		var identifiers = names.Select(MakeSymbolLayerIdentifier).ToArray();
+		return new CIMSymbolLayerMasking { SymbolLayers = identifiers };
 	}
 
 	private static CIMSymbolLayerIdentifier MakeSymbolLayerIdentifier(string name)
@@ -788,7 +854,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 		public string MapName => (string) Xml.Attribute("map");
 		public string GroupName => (string) Xml.Attribute("groupLayer");
-		public bool OmitMasks => (bool?) Xml.Attribute("omitMasks") ?? false;
+		//public bool IncludeMasking => (bool?) Xml.Attribute("includeMasking") ?? false;
+		//public bool ExtraMasking => (bool?) Xml.Attribute("extraMasking") ?? false;
 		public string Remark => (string) Xml.Element("Remark");
 
 		public IEnumerable<OrderItem> DrawingOrder => GetDrawingOrder();
@@ -939,6 +1006,27 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			{
 				return Xml.Elements("MaskedBy").Select(x => new MaskLayer(x));
 			}
+		}
+
+		public class MaskLayerComparer : IEqualityComparer<MaskLayer>
+		{
+			public bool Equals(MaskLayer x, MaskLayer y)
+			{
+				if (x is null && y is null) return true;
+				if (x is null || y is null) return false;
+				return string.Equals(x.Name, y.Name) &&
+				       string.Equals(x.Parent, y.Parent) &&
+				       string.Equals(x.Uri, y.Uri, StringComparison.OrdinalIgnoreCase);
+			}
+
+			public int GetHashCode(MaskLayer obj)
+			{
+				return HashCode.Combine(obj.Name, obj.Parent, obj.Uri.ToLowerInvariant());
+			}
+
+			public static MaskLayerComparer Instance { get; } = new();
+
+			private MaskLayerComparer() {}
 		}
 
 		#endregion
