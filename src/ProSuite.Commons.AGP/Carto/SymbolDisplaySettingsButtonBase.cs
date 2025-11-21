@@ -1,14 +1,20 @@
 using System;
 using System.Threading.Tasks;
+using System.Windows;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto;
 
 public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 {
-	protected virtual ISymbolDisplayManager Manager => SymbolDisplayManager.Instance;
+	[NotNull]
+	protected abstract ISymbolDisplayManager SymbolDisplayManager { get; }
+
+	[CanBeNull]
+	protected abstract IPerimeterDisplayManager PerimeterDisplayManager { get; }
 
 	protected override Task<bool> OnClickAsyncCore()
 	{
@@ -17,7 +23,7 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 			                ? "Default settings"
 			                : $"Settings for current map “{map.Name}”";
 
-		var manager = Manager ?? throw new InvalidOperationException();
+		var manager = SymbolDisplayManager ?? throw new InvalidOperationException();
 
 		var viewModel = new SymbolDisplaySettingsViewModel
 		                {
@@ -26,9 +32,11 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 			                UseScaleRange = manager.AutoSwitch[map],
 			                MinScaleDenominator = manager.AutoMinScaleDenom[map],
 			                MaxScaleDenominator = manager.AutoMaxScaleDenom[map],
-							WantSLD = manager.WantSLD[map],
-							WantLM = manager.WantLM[map]
+			                WantSLD = manager.WantSLD[map],
+			                WantLM = manager.WantLM[map]
 		                };
+
+		RefreshPerimeterSettings(viewModel);
 
 		var result = Gateway.ShowDialog<SymbolDisplaySettingsWindow>(viewModel);
 
@@ -38,9 +46,41 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 			manager.AutoSwitch[map] = viewModel.UseScaleRange;
 			manager.AutoMaxScaleDenom[map] = viewModel.MaxScaleDenominator;
 			manager.AutoMinScaleDenom[map] = viewModel.MinScaleDenominator;
+
 			Project.Current?.SetDirty();
+
+			UpdatePerimeterSettings(viewModel);
 		}
 
 		return Task.FromResult(result ?? false);
+	}
+
+	private void RefreshPerimeterSettings(SymbolDisplaySettingsViewModel viewModel)
+	{
+		var manager = PerimeterDisplayManager;
+
+		if (manager is not null)
+		{
+			viewModel.WantPerimeter = manager.WantPerimeter;
+			viewModel.PerimeterSettingsVisibility = Visibility.Visible;
+		}
+		else
+		{
+			viewModel.WantPerimeter = false;
+			viewModel.PerimeterSettingsVisibility = Visibility.Collapsed;
+		}
+
+	}
+
+	private void UpdatePerimeterSettings(SymbolDisplaySettingsViewModel viewModel)
+	{
+		var manager = PerimeterDisplayManager;
+
+		if (manager is not null)
+		{
+			manager.WantPerimeter = viewModel.WantPerimeter;
+
+			manager.Refresh();
+		}
 	}
 }

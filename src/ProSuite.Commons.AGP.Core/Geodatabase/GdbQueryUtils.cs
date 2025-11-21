@@ -52,6 +52,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			       };
 		}
 
+		[CanBeNull]
 		public static Feature GetFeature([NotNull] FeatureClass featureClass, long oid)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
@@ -167,6 +168,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return GetRow<Row>(table, oid);
 		}
 
+		[CanBeNull]
 		public static T GetRow<T>([NotNull] Table table, long oid)
 			where T : Row
 		{

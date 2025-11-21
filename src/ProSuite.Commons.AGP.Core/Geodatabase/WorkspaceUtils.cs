@@ -66,7 +66,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			string message =
-				$"Finder: Unsupported geodatabase extension: {extension} for path: {catalogPath}";
+				$"Unsupported geodatabase extension: {extension} for path: {catalogPath}";
 			_msg.Debug(message);
 			throw new NotSupportedException(message);
 		}
@@ -74,10 +74,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <summary>
 		/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
 		/// </summary>
-		/// <returns></returns>
 		[NotNull]
 		public static Datastore OpenDatastore([NotNull] Connector connector)
 		{
+			if (connector is null)
+				throw new ArgumentNullException(nameof(connector));
+
 			try
 			{
 				switch (connector)
@@ -345,14 +347,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <summary>
 		/// Gets a displayable text describing a given workspace.
 		/// </summary>
-		/// <param name="datastore">The workspace.</param>
-		/// <returns></returns>
+		/// <param name="datastore">The workspace</param>
 		[NotNull]
-		public static string GetDatastoreDisplayText([NotNull] Datastore datastore)
+		public static string GetDatastoreDisplayText(Datastore datastore)
 		{
-			Assert.ArgumentNotNull(datastore, nameof(datastore));
-
-			Connector connector = datastore.GetConnector();
+			Connector connector = datastore?.GetConnector();
 
 			return GetDatastoreDisplayText(connector);
 		}
@@ -360,22 +359,19 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <summary>
 		/// Gets a displayable text describing a given datastore connector.
 		/// </summary>
-		/// <param name="connector">The connector.</param>
-		/// <returns></returns>
+		/// <param name="connector">The connector</param>
 		public static string GetDatastoreDisplayText([CanBeNull] Connector connector)
 		{
-			// TODO: Add parameter bool detailed which includes the full info including user names etc.
-
-			if (connector == null)
-			{
-				return "<null>";
-			}
+			// TODO: parameter "detailed" to include full info (but no passwords)
 
 			const string nullPathText = "<undefined path>";
 			try
 			{
 				switch (connector)
 				{
+					case null:
+						return "<null>";
+
 					case DatabaseConnectionFile dbConnection:
 						return $"SDE connection {dbConnection.Path?.LocalPath ?? nullPathText}";
 
@@ -409,8 +405,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 						return $"SQLite Database {sqLiteConnection.Path}";
 
 					default:
-						throw new ArgumentOutOfRangeException(
-							$"Unsupported workspace type: {connector.GetType()}");
+						return $"Unknown connection of type {connector.GetType().Name}";
 				}
 			}
 			catch (Exception e)
@@ -505,18 +500,6 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			sb.Append("Project Instance: ").Append(dbConnectionProps.ProjectInstance);
 
 			return sb.ToString();
-		}
-
-		/// <summary>
-		/// Very simple utility to determine whether the dataset or field is
-		/// unqualified. Works at least for Oracle DB.
-		/// </summary>
-		public static string Unqualified(string name)
-		{
-			if (name is null) return null;
-			int index = name.LastIndexOf('.');
-			if (index < 0) return name;
-			return name.Substring(index + 1);
 		}
 
 		public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)

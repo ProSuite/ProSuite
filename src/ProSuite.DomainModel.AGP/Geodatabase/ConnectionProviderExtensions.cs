@@ -12,6 +12,9 @@ namespace ProSuite.DomainModel.AGP.Geodatabase
 		public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(
 			this ConnectionProvider connectionProvider)
 		{
+			if (connectionProvider is null)
+				throw new ArgumentNullException(nameof(connectionProvider));
+
 			Connector connector;
 
 			switch (connectionProvider)
@@ -33,7 +36,8 @@ namespace ProSuite.DomainModel.AGP.Geodatabase
 					connector = GetDatabaseConnectionProperties(sdeDirectConnectionProvider);
 					break;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(connectionProvider));
+					throw new NotSupportedException(
+						$"Connection provider type not supported: {connectionProvider.GetType().Name}");
 			}
 
 			return (ArcGIS.Core.Data.Geodatabase) WorkspaceUtils.OpenDatastore(

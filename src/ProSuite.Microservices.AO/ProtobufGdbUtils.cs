@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
@@ -488,11 +489,20 @@ namespace ProSuite.Microservices.AO
 					case esriFieldType.esriFieldTypeBlob:
 
 						// The base row field is not officially part of the schema
-						if (field.Name != InvolvedRowUtils.BaseRowField)
+						if (field.Name != InvolvedRowUtils.BaseRowField &&
+						    valueObject is IMemoryBlobStreamVariant blobStream)
 						{
-							// TODO: Test and make this work or skip blobs altogether?
-							attributeValue.BlobValue =
-								ByteString.CopyFrom((byte[]) valueObject);
+							blobStream.ExportToVariant(out var variant);
+
+							if (variant is byte[] bytes)
+							{
+								attributeValue.BlobValue =
+									ByteString.CopyFrom(bytes);
+							}
+							else
+							{
+								throw new InvalidOperationException($"Unexpected variant type: {variant.GetType()}");
+							}
 						}
 
 						break;

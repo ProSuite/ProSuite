@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -29,10 +30,9 @@ public abstract class AboutButtonBase : ButtonCommandBase
 
 	protected override Task<bool> OnClickAsyncCore()
 	{
-		var configFileSearcher = GetConfigFileSearcher();
-
 		var items = new List<AboutItem>();
-		CollectInformation(items, configFileSearcher);
+
+		CollectInformation(items);
 
 		var message = AboutItem.GetPlainText(items);
 
@@ -44,8 +44,15 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		return Task.FromResult(true);
 	}
 
-	[CanBeNull]
-	protected abstract string GetConfigDirEnvVar();
+	protected virtual string EnvironmentName => "Production";
+
+	protected virtual string AddInVersion => "0.1.0"; // SemVer default
+	protected virtual string AddInFileName => null; // unknown
+
+	protected virtual IEnumerable<KeyValuePair<string, string>> GetEnvironmentVariables()
+	{
+		yield break;
+	}
 
 	[CanBeNull]
 	protected abstract IConfigFileSearcher GetConfigFileSearcher();
@@ -55,54 +62,54 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		yield break;
 	}
 
-	private void CollectInformation([NotNull] ICollection<AboutItem> items,
-	                                [CanBeNull] IConfigFileSearcher configFileSearcher)
+	private void CollectInformation([NotNull] ICollection<AboutItem> items)
 	{
-		if (items is null) throw new ArgumentNullException(nameof(items));
+		if (items is null)
+			throw new ArgumentNullException(nameof(items));
 
 		string currentSection = AboutItem.AddinSection;
 
 		try
 		{
-			var assembly = Assembly.GetExecutingAssembly();
-			var version = assembly.GetName().Version;
-
-			Add(items, currentSection, "Addin Version", Convert.ToString(version), "reflected");
-
-			var proVersion = Assembly.GetEntryAssembly()?.GetName().Version;
-
-			Add(items, currentSection, "ArcGIS Pro Version", Convert.ToString(proVersion),
-			    "reflected");
+			Add(items, currentSection, "Addin version", AddInVersion);
+			Add(items, currentSection, "Addin file name", AddInFileName);
+			
+			Add(items, currentSection, "ArcGIS Pro product version", GetProProductVersion());
+			Add(items, currentSection, "ArcGIS Pro assembly version", GetProAssemblyVersion());
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message, "version retrieval failed");
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
+		}
+
+		currentSection = AboutItem.EnvVarSection;
+
+		try
+		{
+			foreach (var pair in GetEnvironmentVariables())
+			{
+				string remark = pair.Value is null ? "(undefined)" : null;
+				Add(items, currentSection, pair.Key, pair.Value, remark);
+			}
+		}
+
+		catch (Exception ex)
+		{
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
 		currentSection = AboutItem.ConfigSection;
 
 		try
 		{
-			string configDirEnvVar = GetConfigDirEnvVar();
+			Add(items, currentSection, "Environment", EnvironmentName);
 
-			if (configDirEnvVar == null)
-			{
-				Add(items, currentSection, "ConfigDirEnvVar", string.Empty,
-				    "config dir env var undefined");
-			}
-			else
-			{
-				string configDir = Environment.GetEnvironmentVariable(configDirEnvVar);
-
-				Add(items, currentSection, $"{configDirEnvVar}",
-				    configDir ?? "environment variable is not defined", "env var");
-			}
-
+			var configFileSearcher = GetConfigFileSearcher();
 			var searchPaths = configFileSearcher?.GetSearchPaths().ToList();
 			if (searchPaths is not null)
 			{
 				int count = searchPaths.Count;
-				var remarks = new[] { "tried first", "tried second", "etc." };
+				var remarks = new[] { "searched first", "searched second", "etc." };
 				Add(items, currentSection, "Config Search Path",
 				    $"{count} entr{(count == 1 ? "y" : "ies")}");
 				for (int i = 0; i < count; i++)
@@ -115,7 +122,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message, "error getting config info");
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
 		currentSection = AboutItem.SessionSection;
@@ -129,7 +136,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message);
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
 		currentSection = AboutItem.ProcessSection;
@@ -145,7 +152,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message);
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
 		currentSection = AboutItem.RuntimeSection;
@@ -166,7 +173,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message);
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
 		//try
@@ -177,6 +184,35 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		//{
 		//	Add(items, "All Addins", "Error", ex.Message, "getting all Addin infos failed");
 		//}
+	}
+
+	protected virtual string GetProProductVersion()
+	{
+		try
+		{
+			var assembly = Assembly.GetEntryAssembly();
+			if (assembly is null) return null;
+			var info = FileVersionInfo.GetVersionInfo(assembly.Location);
+			return Canonical(info.ProductVersion) ?? Canonical(info.FileVersion);
+		}
+		catch (Exception ex)
+		{
+			return ex.Message;
+		}
+	}
+
+	protected virtual string GetProAssemblyVersion()
+	{
+		try
+		{
+			var assembly = Assembly.GetEntryAssembly();
+			var assemblyName = assembly?.GetName();
+			return Convert.ToString(assemblyName?.Version);
+		}
+		catch (Exception ex)
+		{
+			return ex.Message;
+		}
 	}
 
 	private static void GetAllAddinInfos(ICollection<AboutItem> items)
@@ -213,6 +249,13 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		if (string.IsNullOrEmpty(key)) return;
 		result.Add(new AboutItem(section, key, value, remark));
 	}
+
+	private static string Canonical(string s)
+	{
+		if (s is null) return null;
+		s = s.Trim();
+		return s.Length > 0 ? s : null;
+	}
 }
 
 public class AboutItem
@@ -223,7 +266,8 @@ public class AboutItem
 	public string Remark { get; }
 
 	public static readonly string AddinSection = "Addin";
-	public static readonly string ConfigSection = "Config";
+	public static readonly string EnvVarSection = "Environment Variables";
+	public static readonly string ConfigSection = "Configuration";
 	public static readonly string SessionSection = "Session";
 	public static readonly string ProcessSection = "Process";
 	public static readonly string RuntimeSection = "Runtime";
@@ -242,14 +286,16 @@ public class AboutItem
 			return 0;
 		if (string.Equals(section, AddinSection, StringComparison.OrdinalIgnoreCase))
 			return 1;
-		if (string.Equals(section, ConfigSection, StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(section, EnvVarSection, StringComparison.OrdinalIgnoreCase))
 			return 2;
-		if (string.Equals(section, SessionSection, StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(section, ConfigSection, StringComparison.OrdinalIgnoreCase))
 			return 3;
-		if (string.Equals(section, ProcessSection, StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(section, SessionSection, StringComparison.OrdinalIgnoreCase))
 			return 4;
-		if (string.Equals(section, RuntimeSection, StringComparison.OrdinalIgnoreCase))
+		if (string.Equals(section, ProcessSection, StringComparison.OrdinalIgnoreCase))
 			return 5;
+		if (string.Equals(section, RuntimeSection, StringComparison.OrdinalIgnoreCase))
+			return 6;
 
 		return 999;
 	}
