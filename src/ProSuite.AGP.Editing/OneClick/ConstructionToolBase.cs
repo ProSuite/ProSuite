@@ -299,6 +299,12 @@ namespace ProSuite.AGP.Editing.OneClick
 				return;
 			}
 
+			if (! ShiftPressedToSelect)
+			{
+				// Not exclusively shift, e.g. Ctrl + Shift + Y
+				return;
+			}
+
 			if (! IsInSketchPhase)
 			{
 				// In the selection phase already, no intermittent selection needed.
@@ -766,6 +772,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (IsInSketchMode)
 				{
+					_lastLoggedVertexIndex = -1;
 					await SetCurrentSketchAsync(_previousSketch);
 				}
 				else
@@ -783,6 +790,11 @@ namespace ProSuite.AGP.Editing.OneClick
 		private async Task LogLastSketchVertexZ([NotNull] Geometry sketch)
 		{
 			if (! sketch.HasZ)
+			{
+				return;
+			}
+
+			if (_intermediateSketchStates?.IsReplayingSketches == true)
 			{
 				return;
 			}
@@ -805,7 +817,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			_msg.DebugFormat(
 				"Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]",
 				sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
+
+			//Undo of last vertex
 			if (currentLastIndex <= _lastLoggedVertexIndex)
+			{
+				_lastLoggedVertexIndex = currentLastIndex;
+				return;
+			}
+
+			//Sketch restore with R
+			if (currentLastIndex > 0 && _lastLoggedVertexIndex == -1)
 			{
 				_lastLoggedVertexIndex = currentLastIndex;
 				return;

@@ -88,6 +88,24 @@ namespace ProSuite.Commons.Geom
 				new Pnt2D(max.X + expansionDistance, max.Y + expansionDistance));
 		}
 
+		public static EnvelopeXY GetEnvelopeXY([NotNull] IEnumerable<ICoordinates> points)
+		{
+			double minX = double.MaxValue;
+			double minY = double.MaxValue;
+			double maxX = double.MinValue;
+			double maxY = double.MinValue;
+
+			foreach (ICoordinates point in points)
+			{
+				minX = Math.Min(minX, point.X);
+				minY = Math.Min(minY, point.Y);
+				maxX = Math.Max(maxX, point.X);
+				maxY = Math.Max(maxY, point.Y);
+			}
+
+			return new EnvelopeXY(minX, minY, maxX, maxY);
+		}
+
 		public static IBox GetBoundingBox3D([NotNull] IEnumerable<Pnt3D> points)
 		{
 			const int resultDimension = 3;

@@ -69,7 +69,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			if (parent == null)
 			{
-				parent = ToArcTable(proRow.GetTable());
+				parent = ToArcTable(proRow.GetTable(), cacheValues);
 			}
 
 			return ArcRow.Create(proRow, parent, cacheValues);

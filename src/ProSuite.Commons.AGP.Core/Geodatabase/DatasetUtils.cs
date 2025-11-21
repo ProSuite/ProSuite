@@ -247,6 +247,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static T OpenDataset<T>([NotNull] Datastore datastore, [NotNull] string datasetName)
 			where T : Dataset
 		{
+			Assert.ArgumentNotNull(datastore, nameof(datastore));
+
 			try
 			{
 				if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
@@ -522,7 +524,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		public static IEnumerable<Table> Distinct(
-			IEnumerable<Table> tables)
+			[NotNull] IEnumerable<Table> tables)
 		{
 			return tables.Distinct(new TableComparer());
 		}
@@ -533,7 +535,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		/// <param name="tableWithJoin"></param>
 		/// <returns></returns>
 		/// <exception cref="NotImplementedException"></exception>
-		public static Table GetDatabaseTable(Table tableWithJoin)
+		public static Table GetDatabaseTable([NotNull] Table tableWithJoin)
 		{
 			if (! tableWithJoin.IsJoinedTable())
 			{
@@ -611,20 +613,20 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
-		public static bool HasM(FeatureClass featureClass)
+		public static bool HasM([NotNull] FeatureClass featureClass)
 		{
 			using var definition = featureClass.GetDefinition();
 			return definition.HasM();
 		}
 
-		public static bool HasZ(FeatureClass featureClass)
+		public static bool HasZ([NotNull] FeatureClass featureClass)
 		{
 			using var definition = featureClass.GetDefinition();
 			return definition.HasZ();
 		}
 
 		[CanBeNull]
-		public static string GetAreaFieldName(FeatureClass featureClass)
+		public static string GetAreaFieldName([CanBeNull] FeatureClass featureClass)
 		{
 			if (featureClass is null) return null;
 
@@ -654,7 +656,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static string GetLengthFieldName(FeatureClass featureClass)
+		public static string GetLengthFieldName([CanBeNull] FeatureClass featureClass)
 		{
 			if (featureClass is null) return null;
 
@@ -664,7 +666,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
-		public static string GetLengthFieldName(FeatureClassDefinition featureClassDefinition)
+		public static string GetLengthFieldName(
+			[NotNull] FeatureClassDefinition featureClassDefinition)
 		{
 			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
 
@@ -699,7 +702,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static string GetSubtypeFieldName(TableDefinition definition)
+		public static string GetSubtypeFieldName([NotNull] TableDefinition definition)
 		{
 			try
 			{
@@ -731,7 +734,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return GetSubtypeFieldIndex(definition);
 		}
 
-		public static int GetSubtypeFieldIndex(TableDefinition definition)
+		public static int GetSubtypeFieldIndex([NotNull] TableDefinition definition)
 		{
 			string subtypeFieldName = GetSubtypeFieldName(definition);
 
@@ -754,7 +757,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
-		public static string GetObjectIdFieldName(TableDefinition definition)
+		public static string GetObjectIdFieldName([NotNull] TableDefinition definition)
 		{
 			if (! definition.HasObjectID())
 			{

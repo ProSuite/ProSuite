@@ -365,45 +365,53 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			// TODO: parameter "detailed" to include full info (but no passwords)
 
 			const string nullPathText = "<undefined path>";
-
-			switch (connector)
+			try
 			{
-				case null:
-					return "<null>";
+				switch (connector)
+				{
+					case null:
+						return "<null>";
 
-				case DatabaseConnectionFile dbConnection:
-					return $"SDE connection {dbConnection.Path?.LocalPath ?? nullPathText}";
+					case DatabaseConnectionFile dbConnection:
+						return $"SDE connection {dbConnection.Path?.LocalPath ?? nullPathText}";
 
-				case DatabaseConnectionProperties dbConnectionProps:
-					return GetConnectionDisplayText(dbConnectionProps);
+					case DatabaseConnectionProperties dbConnectionProps:
+						return GetConnectionDisplayText(dbConnectionProps);
 
-				case FileGeodatabaseConnectionPath fileGdbConnection:
-					return $"File Geodatabase {fileGdbConnection.Path.LocalPath}";
+					case FileGeodatabaseConnectionPath fileGdbConnection:
+						return $"File Geodatabase {fileGdbConnection.Path.LocalPath}";
 
-				case FileSystemConnectionPath fileSystemConnection:
-					return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";
+					case FileSystemConnectionPath fileSystemConnection:
+						return $"{fileSystemConnection.Type} datastore {fileSystemConnection.Path}";
 
-				case MemoryConnectionProperties memoryConnectionProperties:
-					return $"In-Memory Geodatabase {memoryConnectionProperties.Name}";
+					case MemoryConnectionProperties memoryConnectionProperties:
+						return $"In-Memory Geodatabase {memoryConnectionProperties.Name}";
 
-				case MobileGeodatabaseConnectionPath mobileConnectionProperties:
-					return $"Mobile Geodatabase {mobileConnectionProperties.Path}";
+					case MobileGeodatabaseConnectionPath mobileConnectionProperties:
+						return $"Mobile Geodatabase {mobileConnectionProperties.Path}";
 
-				case PluginDatasourceConnectionPath pluginConnectionPath:
-					return
-						$"Plug-in {pluginConnectionPath.PluginIdentifier} {pluginConnectionPath.DatasourcePath}";
+					case PluginDatasourceConnectionPath pluginConnectionPath:
+						return
+							$"Plug-in {pluginConnectionPath.PluginIdentifier} {pluginConnectionPath.DatasourcePath}";
 
-				case RealtimeServiceConnectionProperties realtimeServiceConnection:
-					return $"Real-Time connection ({realtimeServiceConnection.Type}) {realtimeServiceConnection.URL}";
+					case RealtimeServiceConnectionProperties realtimeServiceConnection:
+						return
+							$"Real-Time connection ({realtimeServiceConnection.Type}) {realtimeServiceConnection.URL}";
 
-				case ServiceConnectionProperties serviceConnection:
-					return $"Service connection {serviceConnection.URL}";
+					case ServiceConnectionProperties serviceConnection:
+						return $"Service connection {serviceConnection.URL}";
 
-				case SQLiteConnectionPath sqLiteConnection:
-					return $"SQLite database {sqLiteConnection.Path}";
+					case SQLiteConnectionPath sqLiteConnection:
+						return $"SQLite Database {sqLiteConnection.Path}";
 
-				default:
-					return $"Unknown connection of type {connector.GetType().Name}";
+					default:
+						return $"Unknown connection of type {connector.GetType().Name}";
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error getting connector display text: {e.Message}", e);
+				return $"<error: {e.Message}>";
 			}
 		}
 

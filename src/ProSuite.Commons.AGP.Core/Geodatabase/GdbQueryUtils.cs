@@ -67,6 +67,17 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			bool recycle,
 			CancellationToken cancellationToken = default)
 		{
+			return GetRows<Feature>(featureClass, objectIds, outputSpatialReference, recycle,
+			                        cancellationToken);
+		}
+
+		public static IEnumerable<T> GetRows<T>(
+			[NotNull] Table table,
+			[NotNull] IEnumerable<long> objectIds,
+			[CanBeNull] SpatialReference outputSpatialReference,
+			bool recycle,
+			CancellationToken cancellationToken = default) where T : Row
+		{
 			IReadOnlyList<long> oidList = objectIds.ToList();
 
 			try
@@ -75,7 +86,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 				filter.OutputSpatialReference = outputSpatialReference;
 
-				return GetFeatures(featureClass, filter, recycle, cancellationToken);
+				return GetRows<T>(table, filter, recycle, cancellationToken);
 			}
 			catch (Exception e)
 			{
@@ -83,8 +94,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				_msg.Debug("Error getting rows by OID-list", e);
 
 				const int maxRowCount = 1000;
-				return GetRowsByObjectIdsBatched<Feature>(
-					featureClass, oidList, outputSpatialReference, recycle, maxRowCount,
+				return GetRowsByObjectIdsBatched<T>(
+					table, oidList, outputSpatialReference, recycle, maxRowCount,
 					cancellationToken);
 			}
 		}
@@ -334,6 +345,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			result = StringUtils.Concatenate(existingFields, ",");
 
 			return true;
+		}
+
+		public static QueryFilter CloneFilter([CanBeNull] QueryFilter filter)
+		{
+			filter = filter is SpatialQueryFilter
+				         ? CloneFilter<SpatialQueryFilter>(filter)
+				         : CloneFilter<QueryFilter>(filter);
+
+			return filter;
 		}
 
 		public static T CloneFilter<T>([CanBeNull] QueryFilter filter) where T : QueryFilter
