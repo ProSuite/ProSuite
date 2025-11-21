@@ -611,22 +611,21 @@ namespace ProSuite.UI.QA.VerificationProgress
 			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
 			{
-				await ViewUtils.RunOnUIThread(
-					async () =>
+				await ViewUtils.RunOnUIThread(async () =>
+				{
+					try
 					{
-						try
-						{
-							IQualityVerificationResult verificationResult =
-								Assert.NotNull(VerificationResult);
+						IQualityVerificationResult verificationResult =
+							Assert.NotNull(VerificationResult);
 
-							await ApplicationController.OpenWorkList(
-								verificationResult, replaceExisting: true);
-						}
-						catch (Exception ex)
-						{
-							ErrorHandler.HandleError(ex, _msg);
-						}
-					});
+						await ApplicationController.OpenWorkList(
+							verificationResult, replaceExisting: true);
+					}
+					catch (Exception ex)
+					{
+						ErrorHandler.HandleError(ex, _msg);
+					}
+				});
 			}
 
 			return result;
