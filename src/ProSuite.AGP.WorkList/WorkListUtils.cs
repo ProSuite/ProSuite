@@ -35,6 +35,8 @@ namespace ProSuite.AGP.WorkList
 
 		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
 
+		private static readonly string IssueWorkListGroupLayerName = "QA";
+
 		public static PluginDatastore GetPluginDatastore([NotNull] Uri dataSource)
 		{
 			Assert.ArgumentNotNull(dataSource, nameof(dataSource));
@@ -593,8 +595,8 @@ namespace ProSuite.AGP.WorkList
 					continue;
 				}
 
-				_msg.VerboseDebug(
-					() => $"'work list layer {layer.Name} is loaded: work list {worklistName}");
+				_msg.VerboseDebug(() =>
+					                  $"'work list layer {layer.Name} is loaded: work list {worklistName}");
 
 				yield return layer;
 			}
@@ -650,8 +652,7 @@ namespace ProSuite.AGP.WorkList
 				Map map = mapView.Map;
 				IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
 
-				var worklistLayers =
-					GetWorklistLayers(layers, workList).ToList();
+				var worklistLayers = GetWorklistLayers(layers, workList).ToList();
 
 				Assert.True(MapUtils.RemoveLayers(map, worklistLayers),
 				            "map doesn't contain work list layer");
@@ -661,15 +662,19 @@ namespace ProSuite.AGP.WorkList
 					return;
 				}
 
-				// NOTE: magic string!!!!
 				map.RemoveLayers(
 					MapUtils.GetLayers<GroupLayer>(
 						map,
-						l => string.Equals(l.Name, "QA", StringComparison.OrdinalIgnoreCase)));
+						l => string.Equals(l.Name, IssueWorkListGroupLayerName,
+						                   StringComparison.OrdinalIgnoreCase)));
 			});
 		}
 
-		public static async Task UnloadWorklists()
+		/// <summary>
+		/// Removes all issue work list layers in the 'QA' group layers. Open Navigator windows
+		/// that reference any of the removed layers are also closed as a result.
+		/// </summary>
+		public static void RemoveAllIssueWorkLists()
 		{
 			_msg.Debug("Unload all work lists");
 
@@ -679,27 +684,31 @@ namespace ProSuite.AGP.WorkList
 				{
 					Map map = mapView.Map;
 
-					IReadOnlyList<Layer> layers = map.GetLayersAsFlattenedList();
+					GroupLayer qaGroupLayer = GetIssueWorkListsGroupLayer(map);
 
-					foreach (IWorkList workList in
-					         GetLoadedWorklists(WorkListRegistry.Instance, layers))
-					{
-						WorkListRegistry.Instance.Remove(workList);
-
-						// TODO:
-						// For the moment, do it the quick and dirty way. In the future, the work list
-						// should also maintain all associated layers or at least their URIs:
-						// Now also remove the associated layers:
-						//environment.RemoveAssociatedLayers();
-
-						await RemoveWorkListLayersAsync(mapView, workList);
-					}
+					map.RemoveLayer(qaGroupLayer);
 				}
 			}
 			catch (Exception ex)
 			{
 				_msg.Debug(ex.Message, ex);
 			}
+		}
+
+		/// <summary>
+		/// Returns the top-most QA group layer containing all the issue work lists, unless
+		/// the layer has been renamed in which case it is considered 'unmanaged' and will be
+		/// left alone!
+		/// </summary>
+		/// <param name="map"></param>
+		/// <returns></returns>
+		private static GroupLayer GetIssueWorkListsGroupLayer([NotNull] Map map)
+		{
+			var qaGroupLayer = MapUtils.GetLayers<GroupLayer>(
+				map,
+				l => string.Equals(l.Name, IssueWorkListGroupLayerName,
+				                   StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+			return qaGroupLayer;
 		}
 
 		public static List<Tuple<Layer, CIMStandardDataConnection>> ToLayerConnectionTuples(
