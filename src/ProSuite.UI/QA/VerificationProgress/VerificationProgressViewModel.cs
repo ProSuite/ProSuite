@@ -62,7 +62,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private string _flashProgressToolTip;
 		private ICommand _zoomToPerimeterCommand;
 		private string _zoomToVerifiedPerimeterToolTip;
-		private ICommand _openWorkListCommand;
+		private RelayCommand<VerificationProgressViewModel> _openWorkListCommand;
 		private string _openWorkListToolTip;
 
 		private readonly Latch _latch = new Latch();
@@ -807,6 +807,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 					                                            ! UpdateOptions.KeepPreviousIssues);
 
 					_saveErrorsCommand?.RaiseCanExecuteChanged();
+					_openWorkListCommand?.RaiseCanExecuteChanged();
 				}
 				finally
 				{
