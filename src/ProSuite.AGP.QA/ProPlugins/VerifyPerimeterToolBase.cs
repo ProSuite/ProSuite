@@ -140,8 +140,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(sketchGeometry, progressTracker, resultsPath),
-					ApplicationController = appController,
-					KeepPreviousIssuesDisabled = true
+					ApplicationController = appController
 				};
 
 			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);

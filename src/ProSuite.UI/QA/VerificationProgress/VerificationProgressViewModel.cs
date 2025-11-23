@@ -342,6 +342,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		/// <summary>
 		/// Whether the save option to keep previous issues in the work list is disabled or not.
+		/// The default is enabled (false).
 		/// </summary>
 		public bool KeepPreviousIssuesDisabled
 		{
