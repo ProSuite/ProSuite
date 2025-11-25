@@ -759,15 +759,17 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 			return false;
 		}
 
-		using (FeatureClass featureClass = layer.GetFeatureClass())
-		{
-			if (featureClass is null)
-			{
-				NotificationUtils.Add(notifications,
-				                      $"Layer has no valid data source: {layerName}");
-				return false;
-			}
-		}
+		//valid datasource should be checked somewhere here, but currently raises an exception:
+		// "This method or property must be called on the thread this object was created on."
+		//using (FeatureClass featureClass = layer.GetFeatureClass())
+		//{
+		//	if (featureClass is null)
+		//	{
+		//		NotificationUtils.Add(notifications,
+		//		                      $"Layer has no valid data source: {layerName}");
+		//		return false;
+		//	}
+		//}
 
 		return CanSelectFromLayerCore(layer);
 	}
