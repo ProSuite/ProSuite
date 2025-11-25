@@ -43,10 +43,15 @@ namespace ProSuite.Commons.AGP.Picker
 		{
 			var dispatcher = Application.Current.Dispatcher;
 
-			List<Geometry> geometries = new();
 			WindowPositioner positioner =
-				new WindowPositioner(geometries, WindowPositioner.PreferredPlacement.MainWindow,
-				                     WindowPositioner.EvaluationMethod.DistanceToRect);
+				await QueuedTaskUtils.Run(() =>
+				{
+					List<Geometry> geometries = new();
+
+					return new WindowPositioner(geometries,
+					                            WindowPositioner.PreferredPlacement.MainWindow,
+					                            WindowPositioner.EvaluationMethod.DistanceToRect);
+				});
 
 			return await dispatcher.Invoke(async () =>
 			{
