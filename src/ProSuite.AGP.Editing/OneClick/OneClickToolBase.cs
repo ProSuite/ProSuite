@@ -428,6 +428,12 @@ namespace ProSuite.AGP.Editing.OneClick
 					return;
 				}
 
+				if (args.Map != ActiveMapView.Map)
+				{
+					// Selection changed on a different map (e.g. by SyncSelection)
+					return;
+				}
+
 				if (RequiresEditSession && Project.Current?.IsEditingEnabled != true)
 				{
 					return;
