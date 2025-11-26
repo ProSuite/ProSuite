@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
@@ -105,25 +106,31 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 			                          .FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
-			table = OpenTable(source);
-			Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
+			EditOperation operation =
+				await QueuedTask.Run(() =>
+				{
+					table = OpenTable(source);
+					Assert.NotNull(table, $"Cannot set status for missing table {source.Name}");
 
-			string description = GetOperationDescription(item);
+					string description = GetOperationDescription(item);
 
-			_msg.Info($"{description}, {item.GdbRowProxy}");
+					_msg.Info($"{description}, {item.GdbRowProxy}");
 
-			var operation = new EditOperation { Name = description };
-			operation.Callback(context =>
-			{
-				// ReSharper disable once AccessToDisposedClosure
-				Row row = GdbQueryUtils.GetRow(table, item.ObjectID);
+					operation = new EditOperation { Name = description };
+					operation.Callback(context =>
+					{
+						// ReSharper disable once AccessToDisposedClosure
+						Row row = GdbQueryUtils.GetRow(table, item.ObjectID);
 
-				context.Invalidate(row);
-			}, table);
+						context.Invalidate(row);
+					}, table);
 
-			operation.Modify(table, item.ObjectID,
-			                 source.StatusField,
-			                 source.GetValue(status));
+					operation.Modify(table, item.ObjectID,
+					                 source.StatusField,
+					                 source.GetValue(status));
+
+					return operation;
+				});
 
 			await operation.ExecuteAsync();
 

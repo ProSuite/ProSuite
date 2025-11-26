@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
@@ -727,28 +728,74 @@ namespace ProSuite.AGP.WorkList.Domain
 		                              Predicate<IWorkItem> match = null,
 		                              params Polygon[] contextPerimeters)
 		{
+			// TODO: Get rid of this overload
 			Assert.ArgumentNotNull(reference, nameof(reference));
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			// first, try to go to an unvisited item
-			bool found = TryGoNearest(contextPerimeters, reference,
-			                          VisitedSearchOption.ExcludeVisited);
+			IWorkItem foundItem =
+				TryFindNearest(contextPerimeters, reference,
+				               VisitedSearchOption.ExcludeVisited);
 
-			if (! found)
+			if (foundItem == null)
 			{
 				// if none found, search also the visited ones, but
 				// only those *after* the current item
-				found = TryGoNearest(contextPerimeters, reference,
-				                     VisitedSearchOption.IncludeVisited);
+				foundItem = TryFindNearest(contextPerimeters, reference,
+				                           VisitedSearchOption.IncludeVisited);
 			}
 
-			if (! found && HasCurrentItem() && CurrentItem != null)
+			if (foundItem != null)
+			{
+				SetCurrentItem(foundItem, CurrentItem);
+			}
+			else if (HasCurrentItem() && CurrentItem != null)
 			{
 				ClearCurrentItem(CurrentItem);
 			}
 
 			_msg.DebugStopTiming(watch, nameof(GoNearest));
+		}
+
+		public async Task<bool> GoNearestAsync(Geometry reference,
+		                                       Predicate<IWorkItem> match = null,
+		                                       params Polygon[] contextPerimeters)
+		{
+			Assert.ArgumentNotNull(reference, nameof(reference));
+
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			IWorkItem foundItem =
+				await QueuedTask.Run(() =>
+				{
+					// first, try to go to an unvisited item
+					foundItem = TryFindNearest(contextPerimeters, reference,
+					                           VisitedSearchOption.ExcludeVisited);
+
+					if (foundItem == null)
+					{
+						// if none found, search also the visited ones, but
+						// only those *after* the current item
+						foundItem = TryFindNearest(contextPerimeters, reference,
+						                           VisitedSearchOption.IncludeVisited);
+					}
+
+					return foundItem;
+				});
+
+			// Set the Item (UI!) on the main thread:
+			if (foundItem != null)
+			{
+				SetCurrentItem(foundItem, CurrentItem);
+			}
+			else if (HasCurrentItem() && CurrentItem != null)
+			{
+				ClearCurrentItem(CurrentItem);
+			}
+
+			_msg.DebugStopTiming(watch, nameof(GoNearest));
+
+			return foundItem != null;
 		}
 
 		public virtual bool CanGoNext()
@@ -819,9 +866,9 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region Navigation non-public
 
-		private bool TryGoNearest([NotNull] Polygon[] contextPerimeters,
-		                          [NotNull] Geometry reference,
-		                          VisitedSearchOption visitedSearchOption)
+		private IWorkItem TryFindNearest([NotNull] Polygon[] contextPerimeters,
+		                                 [NotNull] Geometry reference,
+		                                 VisitedSearchOption visitedSearchOption)
 		{
 			IList<IWorkItem> candidates;
 			IWorkItem nearest;
@@ -842,13 +889,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				nearest = GetNearest(reference, candidates);
 			}
 
-			if (nearest == null)
-			{
-				return false;
-			}
-
-			SetCurrentItem(nearest, CurrentItem);
-			return true;
+			return nearest;
 		}
 
 		private bool TryGetItemsForInnermostContext(Polygon[] contextPerimeters,
