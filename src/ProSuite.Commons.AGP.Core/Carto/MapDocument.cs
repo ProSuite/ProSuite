@@ -35,7 +35,13 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return new MapDocument(cim);
 		}
 
+		public string Name => CIM.MapDefinition?.Name; // may change when loaded
+
+		public string URI => CIM.MapDefinition?.URI; // changes when loaded
+
 		public double ReferenceScale => CIM.MapDefinition?.ReferenceScale ?? 0.0;
+
+		public SpatialReference SpatialReference => CIM.MapDefinition?.SpatialReference;
 
 #if ARCGISPRO_GREATER_3_2
 		public bool UseMasking => CIM.MapDefinition?.UseMasking ?? false;
