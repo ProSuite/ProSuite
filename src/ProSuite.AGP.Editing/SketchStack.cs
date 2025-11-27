@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
@@ -129,6 +130,8 @@ public class SketchStack
 		int latchIncrements = 0;
 		try
 		{
+			Stopwatch watch = Stopwatch.StartNew();
+
 			foreach (Geometry sketch in _sketches.Reverse())
 			{
 				_latch.Increment();
@@ -140,6 +143,10 @@ public class SketchStack
 			// Theoretically it should be 0 already, but the SketchModified events do not fire strictly
 			// once per sketch change (e.g. due to fast changes, some events could be dropped).
 			_latch.Reset();
+
+			_msg.VerboseDebug(
+				() => $"Re-applied sketch states to map view {mapView.Map?.Name} in " +
+				      $"{watch.ElapsedMilliseconds}ms.");
 
 			return true;
 		}
