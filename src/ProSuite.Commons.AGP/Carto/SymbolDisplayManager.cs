@@ -193,7 +193,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		}
 	}
 
-	private void OnProjectClosed(ProjectEventArgs obj)
+	private void OnProjectClosed(ProjectEventArgs args)
 	{
 		try
 		{

@@ -10,7 +10,7 @@
         d:DataContext="{d:DesignInstance {x:Type local:SymbolDisplaySettingsViewModel}, IsDesignTimeCreatable=False}"
         mc:Ignorable="d"
         Title="Symbol Display Settings"
-        Height="272" MinHeight="272" MaxHeight="320"
+        Height="219" MinHeight="292" MaxHeight="320"
         Width="400" MinWidth="400" MaxWidth="800"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Background="{DynamicResource Esri_DialogFrameBackgroundBrush}">
@@ -33,7 +33,8 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Margin="2">
                 <CheckBox Margin="4" IsChecked="{Binding AvoidSLMWithoutSLD }">Avoid SLM without SLD</CheckBox>
@@ -111,6 +112,11 @@
                 </TextBlock>
             </StackPanel>
             <Separator Grid.Row="3" />
+            <CheckBox Grid.Row="4"
+                      Visibility="{Binding PerimeterSettingsVisibility}"
+                      IsChecked="{Binding WantPerimeter}"
+                      Content="Show work unit perimeter on active map" Margin="4,4,8,52"
+                      ToolTip="Tentatively here -- until we have a better place" />
         </Grid>
     </DockPanel>
     <controls:ProWindow.Resources>

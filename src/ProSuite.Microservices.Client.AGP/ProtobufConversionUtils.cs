@@ -656,11 +656,30 @@ public static class ProtobufConversionUtils
 		Stream memoryStream = new MemoryStream(wkb);
 		IBoundedXY geom = wkbReader.ReadGeometry(memoryStream, out WkbGeometryType wkbType);
 
-		// Currently the only type that cannot be transferred via esri shape:
-		if (wkbType == WkbGeometryType.PolyhedralSurface ||
-		    wkbType == WkbGeometryType.MultiSurface)
+		// Currently the only types that cannot be transferred via esri shape are
+		// WkbGeometryType.PolyhedralSurface and WkbGeometryType.MultiSurface
+
+		if (wkbType != WkbGeometryType.PolyhedralSurface &&
+		    wkbType != WkbGeometryType.MultiSurface)
 		{
-			return GeomConversionUtils.CreateMultipatch((Polyhedron) geom, spatialReference);
+			throw new InvalidOperationException("Unexpected geometry types for wkb transfer");
+		}
+
+		if (geom is Polyhedron polyhedron)
+		{
+			return GeomConversionUtils.CreateMultipatch(polyhedron, spatialReference);
+		}
+
+		if (geom is MultiPolyhedron multiPolyhedron)
+		{
+			List<Multipatch> multipatches = new List<Multipatch>();
+
+			foreach (Polyhedron part in multiPolyhedron.Polyhedra)
+			{
+				multipatches.Add(GeomConversionUtils.CreateMultipatch(part, spatialReference));
+			}
+
+			GeometryUtils.Union(multipatches);
 		}
 
 		throw new NotImplementedException();

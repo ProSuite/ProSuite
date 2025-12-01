@@ -114,6 +114,7 @@ namespace ProSuite.AGP.Editing.Cracker
 		                                                   CancelableProgressor progressor)
 		{
 			// Store current map extent
+			bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
 
 			_calculationExtent = ActiveMapView.Extent;
 
@@ -141,7 +142,10 @@ namespace ProSuite.AGP.Editing.Cracker
 
 			_feedback.Update(_resultCrackPoints, selectedFeatures);
 
-			_feedback.UpdateExtent(_calculationExtent);
+			if (! isStereoMap)
+			{
+				_feedback.UpdateExtent(_calculationExtent);
+			}
 		}
 
 		protected override bool CanUseDerivedGeometries()

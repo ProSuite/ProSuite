@@ -535,6 +535,12 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 					mapPoints, multipoint.GetAttributeFlags());
 			}
 
+			if (geometry is Multipatch)
+			{
+				// Currently, we're assuming multipatches are z-simple. TODO: Check all vertices
+				return geometry;
+			}
+
 			throw new NotImplementedException("The provided geometry type is not yet supported");
 		}
 

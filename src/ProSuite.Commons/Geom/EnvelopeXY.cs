@@ -65,6 +65,27 @@ namespace ProSuite.Commons.Geom
 			return new Pnt2D(XMax, YMax);
 		}
 
+        public void Expand(double dx, double dy, bool asRatio)
+        {
+            if (asRatio)
+            {
+                double width = Width;
+                double height = Height;
+
+                XMin -= dx * width;
+                XMax += dx * width;
+                YMin -= dy * height;
+                YMax += dy * height;
+            }
+            else
+            {
+                XMin -= dx;
+                XMax += dx;
+                YMin -= dy;
+                YMax += dy;
+            }
+        }
+
 		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 		public bool Equals([CanBeNull] EnvelopeXY other,
 		                   double tolerance)

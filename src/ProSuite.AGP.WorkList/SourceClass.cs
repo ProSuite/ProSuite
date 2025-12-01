@@ -77,14 +77,12 @@ namespace ProSuite.AGP.WorkList
 			List<string> subfields =
 				StringUtils.SplitAndTrim(relevantSubFields, ",");
 
-			// safety net
-			if (HasGeometry)
+			if (HasGeometry && filter is SpatialQueryFilter)
 			{
 				result = GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter);
 			}
 			else
 			{
-				Assert.False(subfields.Contains("SHAPE"), "Should not contain shape field");
 				result = GdbQueryUtils.CloneFilter<QueryFilter>(filter);
 			}
 
@@ -142,7 +140,9 @@ namespace ProSuite.AGP.WorkList
 
 		public override string ToString()
 		{
-			return string.IsNullOrEmpty(DefaultDefinitionQuery) ? Name : $"{Name}, {DefaultDefinitionQuery}";
+			return string.IsNullOrEmpty(DefaultDefinitionQuery)
+				       ? Name
+				       : $"{Name}, {DefaultDefinitionQuery}";
 		}
 	}
 }

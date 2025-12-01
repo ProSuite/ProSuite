@@ -44,10 +44,10 @@ namespace ProSuite.Commons.AGP.Framework
 
 		protected override async void OnClick()
 		{
-			_msg.Debug($"{Caption}.OnClick");
-
 			try
 			{
+				_msg.Debug($"{Caption}.OnClick");
+
 				bool success = await OnClickAsyncCore();
 
 				if (! success)

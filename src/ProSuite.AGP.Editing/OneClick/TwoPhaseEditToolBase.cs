@@ -100,7 +100,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						catch (Exception e)
 						{
 							// Do not re-throw or the application could crash (e.g. in undo)
-							_msg.Error($"Error calculating reshape curves: {e.Message}", e);
+							_msg.Error($"Error calculating derived geometries: {e.Message}", e);
 						}
 					});
 			}

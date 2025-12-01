@@ -10,6 +10,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Dialogs;
+using ProSuite.Commons.UI.Env;
 using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick
@@ -141,11 +142,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					args.Handled = true;
 				}
 
-				if (args.Key == _keyShowOptionsPane)
-				{
-					ShowOptionsPane();
-				}
-
 				OnKeyDownCore(args);
 			}
 			catch (Exception e)
@@ -168,6 +164,13 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (args.Key == Key.Escape)
 				{
 					await HandleEscapeAsync();
+				}
+
+				if (args.Key == _keyShowOptionsPane)
+				{
+					await UIEnvironment.ReleaseCursorAsync();
+
+					ShowOptionsPane();
 				}
 
 				await HandleKeyDownCoreAsync(args);

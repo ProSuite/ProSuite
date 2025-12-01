@@ -173,6 +173,16 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 		}
 
+		/// <summary>
+		/// Returns the canonical name for an instance descriptor, i.e. the class name of the actual
+		/// algorithm (without namespace) and the constructor index in parentheses, if it is a test.
+		/// For test factories, provide <see cref="constructorId"/> -1 to return the algorithm to
+		/// return just the class name of the factory.
+		/// </summary>
+		/// <param name="typeName">The type name of the test (factory) or the test (factory)
+		/// definition.</param>
+		/// <param name="constructorId">The constructor index or -1 for factories.</param>
+		/// <returns></returns>
 		public static string GetCanonicalInstanceDescriptorName(
 			[NotNull] string typeName,
 			int constructorId)
@@ -180,7 +190,9 @@ namespace ProSuite.DomainModel.Core.QA
 			int start = typeName.LastIndexOf('.') + 1;
 			string className = typeName.Substring(start);
 
-			return constructorId < 0 ? className : $"{className}({constructorId})";
+			string algorithmClassName = InstanceUtils.TryGetAlgorithmName(className) ?? className;
+
+			return constructorId < 0 ? className : $"{algorithmClassName}({constructorId})";
 		}
 
 		public static bool TryExtractClassInfo([NotNull] string descriptorName,

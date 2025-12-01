@@ -42,7 +42,7 @@ namespace ProSuite.AGP.Editing.FillHole
 				_currentHoles = holes;
 			}
 
-			if (_currentHoles == null || !_fillHoleToolOptions.ShowPreview)
+			if (_currentHoles == null || ! _fillHoleToolOptions.ShowPreview)
 			{
 				return;
 			}
@@ -59,15 +59,17 @@ namespace ProSuite.AGP.Editing.FillHole
 		{
 			_extentOverlay?.Dispose();
 
-			if (!_fillHoleToolOptions.LimitPreviewToExtent)
-
+			if (extent == null)
 			{
 				return;
 			}
 
-			Envelope activeExtent = extent ?? MapView.Active?.Extent;
+			if (! _fillHoleToolOptions.ShowPreview || ! _fillHoleToolOptions.LimitPreviewToExtent)
+			{
+				return;
+			}
 
-			var polygon = GeometryFactory.CreatePolygon(activeExtent);
+			var polygon = GeometryFactory.CreatePolygon(extent);
 
 			// Extent symbolization
 
@@ -75,7 +77,8 @@ namespace ProSuite.AGP.Editing.FillHole
 			var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 2);
 
 			var polygonSymbol =
-				SymbolUtils.CreatePolygonSymbol(lineSymbol.SymbolLayers[0], outlineSymbol.SymbolLayers[0]);
+				SymbolUtils.CreatePolygonSymbol(lineSymbol.SymbolLayers[0],
+				                                outlineSymbol.SymbolLayers[0]);
 
 			_extentOverlay =
 				MapView.Active.AddOverlay(polygon, polygonSymbol.MakeSymbolReference());

@@ -459,12 +459,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return featureWorkspace.OpenRelationshipClass(name);
 			}
-			catch (Exception e)
+			catch (COMException comException)
 			{
-				var ws = WorkspaceUtils.WorkspaceToString(featureWorkspace);
-				throw new InvalidOperationException(
-					$"Error opening relationship class '{name}' from workspace {ws}: {e.Message}",
-					e);
+				string ws = WorkspaceUtils.WorkspaceToString(featureWorkspace);
+
+				// The standard message is useless.
+				// Re-throw COMException because that is what callers expect:
+				if (comException.ErrorCode == (int) fdoError.FDO_E_ITEM_NOT_FOUND)
+				{
+					throw new COMException(
+						$"Relationship class '{name}' does not exist in workspace {ws}");
+				}
+
+				throw new COMException(
+					$"Error opening relationship class '{name}' from workspace {ws}: {comException.Message}",
+					comException);
 			}
 		}
 

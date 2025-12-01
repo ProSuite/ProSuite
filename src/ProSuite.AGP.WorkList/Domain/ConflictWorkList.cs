@@ -11,4 +11,6 @@ public class ConflictWorkList : DbStatusWorkList
 	                        [NotNull] string name,
 	                        [NotNull] string displayName) : base(
 		repository, areaOfInterest, name, displayName) { }
+
+	public override void UpdateDefinitionExpressions() { }
 }

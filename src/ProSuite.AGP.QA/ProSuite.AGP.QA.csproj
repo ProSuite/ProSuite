@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.9" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.7.0" />
   </ItemGroup>
 
 	<ItemGroup>

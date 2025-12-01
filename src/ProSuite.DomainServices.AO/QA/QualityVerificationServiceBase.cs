@@ -513,7 +513,20 @@ namespace ProSuite.DomainServices.AO.QA
 			testRunner.TestAssembler = testAssembler;
 			testRunner.QualityVerification = qualityVerification;
 
-			if (UpdateErrorsInVerifiedModelContext)
+			if (! OverrideAllowedErrors)
+			{
+				// but still honour invalidated allowed errors (they might be deleted remotely)
+				_verificationContextIssueRepository.InvalidateAllowedErrors(
+					_qualityConditions,
+					InvalidateAllowedErrorsIfAnyInvolvedObjectChanged,
+					InvalidateAllowedErrorsIfQualityConditionWasUpdated);
+			}
+
+			Verify(tests, qualitySpecification, qualityVerification,
+			       areaOfInterest, testRunner);
+
+			if (UpdateErrorsInVerifiedModelContext &&
+			    ! CancellationTokenSource.IsCancellationRequested)
 			{
 				var gdbTransaction = CreateGdbTransaction();
 
@@ -523,11 +536,10 @@ namespace ProSuite.DomainServices.AO.QA
 					{
 						DeleteErrors(_objectSelection);
 
-						Verify(tests, qualitySpecification, qualityVerification,
-						       areaOfInterest, testRunner);
+						_verificationContextIssueRepository.SavePendingErrors(
+							_verificationElements);
 
-						if (! CancellationTokenSource.IsCancellationRequested &&
-						    ! KeepUnusedAllowedErrors &&
+						if (! KeepUnusedAllowedErrors &&
 						    ! OverrideAllowedErrors &&
 						    ! qualitySpecification.IsCustom)
 						{
@@ -535,21 +547,6 @@ namespace ProSuite.DomainServices.AO.QA
 						}
 					}, "Quality Verification"
 				);
-			}
-			else
-			{
-				// no need to run within an edit operation
-				if (! OverrideAllowedErrors)
-				{
-					// but still honour invalidated allowed errors (they might be deleted remotely)
-					_verificationContextIssueRepository.InvalidateAllowedErrors(
-						_qualityConditions,
-						InvalidateAllowedErrorsIfAnyInvolvedObjectChanged,
-						InvalidateAllowedErrorsIfQualityConditionWasUpdated);
-				}
-
-				Verify(tests, qualitySpecification, qualityVerification,
-				       areaOfInterest, testRunner);
 			}
 
 			QualitySpecificationUtils.LogQualityVerification(qualityVerification);
@@ -576,6 +573,12 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private void DeleteErrors([CanBeNull] IObjectSelection objectSelection)
 		{
+			if (ErrorDeletionInPerimeter == ErrorDeletionInPerimeter.None)
+			{
+				_msg.Debug("No existing errors are deleted (ErrorDeletionInPerimeter: None)");
+				return;
+			}
+
 			ReportPreProcessing("Deleting existing issues in verification perimeter...");
 
 			_verificationContextIssueRepository.DeleteErrors(
@@ -606,10 +609,9 @@ namespace ProSuite.DomainServices.AO.QA
 					return _qualityConditions;
 
 				default:
-					throw new ArgumentOutOfRangeException(
-						nameof(errorDeletionInPerimeter),
-						errorDeletionInPerimeter,
-						$@"Invalid value: {errorDeletionInPerimeter}");
+					throw new ArgumentOutOfRangeException(nameof(errorDeletionInPerimeter),
+					                                      errorDeletionInPerimeter,
+					                                      $@"Invalid value: {errorDeletionInPerimeter}");
 			}
 		}
 
@@ -657,11 +659,6 @@ namespace ProSuite.DomainServices.AO.QA
 				testRunner.Execute(tests, areaOfInterest, CancellationTokenSource);
 
 				CancellationMessage = testRunner.CancellationMessage;
-
-				if (UpdateErrorsInVerifiedModelContext)
-				{
-					_verificationContextIssueRepository.SavePendingErrors();
-				}
 
 				_verificationReportBuilder.AddRowsWithStopConditions(
 					testRunner.RowsWithStopConditions.GetRowsWithStopConditions());
@@ -1067,8 +1064,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (UpdateErrorsInVerifiedModelContext)
 			{
-				_verificationContextIssueRepository.AddError(qaError, qualityCondition,
-				                                             isAllowable);
+				_verificationContextIssueRepository.QueueError(qaError);
 			}
 
 			if (_externalIssueRepository != null || _verificationReportBuilder != null)
