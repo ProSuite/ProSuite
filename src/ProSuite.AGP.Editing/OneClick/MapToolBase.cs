@@ -6,6 +6,7 @@ using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
@@ -105,7 +106,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
@@ -218,7 +219,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			catch (Exception e)
 			{
 				// Use ErrorHandler to allow custom implementation of DialogService
-				ErrorHandler.HandleError(e, _msg);
+				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
@@ -240,7 +241,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
@@ -252,7 +253,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
@@ -266,7 +267,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception ex)
 			{
-				ErrorHandler.HandleError(ex, _msg);
+				ErrorHandler.HandleError(ex, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
@@ -300,7 +301,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
@@ -314,7 +315,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
@@ -333,7 +334,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				// Consider Task.FromException? --> no, as it throws once awaited!
 				ErrorHandler.HandleError(
-					$"{Caption}: Error completing sketch ({e.Message})", e, _msg);
+					$"{Caption}: Error completing sketch ({e.Message})", e, _msg,
+					WindowsUtils.GetWin32MainWindow());
 
 				return await Task.FromResult(true);
 			}

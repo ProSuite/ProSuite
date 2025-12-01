@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 
@@ -57,7 +58,7 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 			catch (Exception ex)
 			{
-				ErrorHandler.HandleError(ex, _msg);
+				ErrorHandler.HandleError(ex, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 

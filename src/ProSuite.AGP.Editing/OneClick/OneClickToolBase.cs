@@ -19,6 +19,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -241,7 +242,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				// Consider Task.FromException? --> no, as it throws once awaited!
 				ErrorHandler.HandleError($"{Caption}: Error completing sketch." +
-				                         $"{Environment.NewLine}{e.Message}", e, _msg);
+				                         $"{Environment.NewLine}{e.Message}", e, _msg,
+				                         WindowsUtils.GetWin32MainWindow());
 
 				return await Task.FromResult(true);
 			}

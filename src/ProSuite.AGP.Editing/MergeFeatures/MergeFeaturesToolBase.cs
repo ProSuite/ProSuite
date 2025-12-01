@@ -23,6 +23,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -131,7 +132,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg);
+				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
 			}
 		}
 
