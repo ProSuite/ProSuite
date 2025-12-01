@@ -313,16 +313,66 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			var allLayers = map.GetLayersAsFlattenedList();
+			var allLayers = map.GetLayersAsFlattenedList()
+			                   .OfType<T>();
 
 			foreach (var layer in allLayers)
 			{
-				if (layer is T layerAsT)
+				if (LayerUtils.MatchPattern(layer, pattern, ignoreCase, separator))
 				{
-					if (LayerUtils.MatchPattern(layer, pattern, ignoreCase, separator))
-					{
-						yield return layerAsT;
-					}
+					yield return layer;
+				}
+			}
+		}
+
+		/// <summary>
+		/// On the given <paramref name="map"/>, make all layers that
+		/// pull data from <paramref name="findDatastore"/> to pull it
+		/// from <paramref name="replaceDatastore"/>.
+		/// </summary>
+		/// <remarks>Same as <see cref="Map.ReplaceDatasource(Datastore, Datastore, bool)"/>
+		/// but should work around a Pro SDK bug in the SDE--FGDB replacement case</remarks>
+		public static void ReplaceDataSource(
+			Map map, Geodatabase findDatastore, Geodatabase replaceDatastore)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+			if (findDatastore is null)
+				throw new ArgumentNullException(nameof(findDatastore));
+			if (replaceDatastore is null)
+				throw new ArgumentNullException(nameof(replaceDatastore));
+
+			// Sadly, map.ReplaceDatasource(findDatastore, replaceDatastore)
+			// is buggy when going from SDE to FGDB (at least at Pro 3.5).
+			// So we try to do it "manually", layer by layer:
+
+			var geodatabaseType = replaceDatastore.GetGeodatabaseType();
+			var schemaOwner = WorkspaceUtils.FindSchemaOwner(replaceDatastore);
+
+			var layers = map.GetLayersAsFlattenedList()
+							.OfType<BasicFeatureLayer>().ToList();
+
+			foreach (var layer in layers)
+			{
+				//var cimBefore = layer.GetDataConnection(); // TESTING
+
+				using var featureClass = layer.GetFeatureClass();
+				if (featureClass is null) continue; // skip invalid layer
+
+				using var datastore = featureClass.GetDatastore();
+				if (datastore is not Geodatabase geodatabase) continue;
+
+				bool isSame = WorkspaceUtils.IsSameDatastore(geodatabase, findDatastore);
+
+				if (isSame)
+				{
+					var originName = featureClass.GetName();
+					var targetName = DatasetNameUtils.QualifyDatasetName(originName, schemaOwner);
+
+					var dataset = replaceDatastore.OpenDataset<Table>(targetName);
+					layer.ReplaceDataSource(dataset);
+
+					//var cimAfter = layer.GetDataConnection(); // TESTING
 				}
 			}
 		}
