@@ -370,14 +370,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
 
 			GetProjectWorkspacesResponse response = null;
-			_domainTransactions.UseTransaction(
-				() =>
-				{
-					projectWorkspaces =
-						verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
+			_domainTransactions.UseTransaction(() =>
+			{
+				projectWorkspaces =
+					verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
 
-					response = PackProjectWorkspaceResponse(projectWorkspaces);
-				});
+				response = PackProjectWorkspaceResponse(projectWorkspaces);
+			});
 
 			return response;
 		}
@@ -464,13 +463,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 				               "Data Dictionary access has not been configured or failed.");
 
 			IList<QualitySpecification> foundSpecifications = null;
-			_domainTransactions.UseTransaction(
-				() =>
-				{
-					foundSpecifications =
-						verificationDataDictionary.GetQualitySpecifications(
-							request.DatasetIds, request.IncludeHidden);
-				});
+			_domainTransactions.UseTransaction(() =>
+			{
+				foundSpecifications =
+					verificationDataDictionary.GetQualitySpecifications(
+						request.DatasetIds, request.IncludeHidden);
+			});
 
 			response.QualitySpecifications.AddRange(
 				foundSpecifications.Select(qs => new QualitySpecificationRefMsg
@@ -491,35 +489,34 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			_domainTransactions.UseTransaction(
-				() =>
+			_domainTransactions.UseTransaction(() =>
+			{
+				QualitySpecification qualitySpecification =
+					verificationDataDictionary.GetQualitySpecification(
+						request.QualitySpecificationId);
+
+				if (qualitySpecification == null)
 				{
-					QualitySpecification qualitySpecification =
-						verificationDataDictionary.GetQualitySpecification(
-							request.QualitySpecificationId);
+					return;
+				}
 
-					if (qualitySpecification == null)
-					{
-						return;
-					}
+				ConditionListSpecificationMsg specificationMsg =
+					ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
+						qualitySpecification, SupportedInstanceDescriptors,
+						out IDictionary<int, DdxModel> modelsById);
 
-					ConditionListSpecificationMsg specificationMsg =
-						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-							qualitySpecification, SupportedInstanceDescriptors,
-							out IDictionary<int, DdxModel> modelsById);
+				response.Specification = specificationMsg;
 
-					response.Specification = specificationMsg;
+				response.ReferencedInstanceDescriptors.AddRange(
+					ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
 
-					response.ReferencedInstanceDescriptors.AddRange(
-						ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
-
-					RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
-					foreach (DdxModel model in modelsById.Values)
-					{
-						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
-						response.ReferencedModels.Add(modelMsg);
-					}
-				});
+				RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+				foreach (DdxModel model in modelsById.Values)
+				{
+					ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+					response.ReferencedModels.Add(modelMsg);
+				}
+			});
 
 			return response;
 		}
@@ -532,40 +529,39 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			_domainTransactions.UseTransaction(
-				() =>
+			_domainTransactions.UseTransaction(() =>
+			{
+				QualityCondition qualityCondition =
+					verificationDataDictionary.GetQualityCondition(request.ConditionName);
+
+				if (qualityCondition == null)
 				{
-					QualityCondition qualityCondition =
-						verificationDataDictionary.GetQualityCondition(request.ConditionName);
+					return;
+				}
 
-					if (qualityCondition == null)
-					{
-						return;
-					}
+				// The parameters must be initialized!
+				InstanceConfigurationUtils.InitializeParameterValues(qualityCondition);
 
-					// The parameters must be initialized!
-					InstanceConfigurationUtils.InitializeParameterValues(qualityCondition);
+				IDictionary<int, DdxModel> modelsById = new Dictionary<int, DdxModel>();
 
-					IDictionary<int, DdxModel> modelsById = new Dictionary<int, DdxModel>();
+				QualityConditionMsg conditionMsg =
+					ProtoDataQualityUtils.CreateQualityConditionMsg(
+						qualityCondition, null, modelsById);
 
-					QualityConditionMsg conditionMsg =
-						ProtoDataQualityUtils.CreateQualityConditionMsg(
-							qualityCondition, null, modelsById);
+				response.Condition = conditionMsg;
+				response.CategoryName = qualityCondition.Category?.Name ?? string.Empty;
 
-					response.Condition = conditionMsg;
-					response.CategoryName = qualityCondition.Category?.Name ?? string.Empty;
+				response.ReferencedInstanceDescriptors.AddRange(
+					ProtoDataQualityUtils.GetInstanceDescriptorMsgs(
+						new[] { qualityCondition }));
 
-					response.ReferencedInstanceDescriptors.AddRange(
-						ProtoDataQualityUtils.GetInstanceDescriptorMsgs(
-							new[] { qualityCondition }));
-
-					RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
-					foreach (DdxModel model in modelsById.Values)
-					{
-						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
-						response.ReferencedModels.Add(modelMsg);
-					}
-				});
+				RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+				foreach (DdxModel model in modelsById.Values)
+				{
+					ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+					response.ReferencedModels.Add(modelMsg);
+				}
+			});
 
 			return response;
 		}
@@ -578,41 +574,40 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			_domainTransactions.UseTransaction(
-				() =>
+			_domainTransactions.UseTransaction(() =>
+			{
+				IList<Dataset> datasets =
+					verificationDataDictionary.GetDatasets(request.DatasetIds);
+
+				// TODO: Review batch size of lazy collections in mappings.
+
+				foreach (Dataset dataset in datasets)
 				{
-					IList<Dataset> datasets =
-						verificationDataDictionary.GetDatasets(request.DatasetIds);
+					DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(dataset, true);
 
-					// TODO: Review batch size of lazy collections in mappings.
+					response.Datasets.Add(datasetMsg);
+				}
 
-					foreach (Dataset dataset in datasets)
+				IList<Association> associations =
+					verificationDataDictionary.GetAssociations(request.DatasetIds);
+
+				foreach (Association association in associations)
+				{
+					if (association.Deleted)
 					{
-						DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(dataset, true);
-
-						response.Datasets.Add(datasetMsg);
+						continue;
 					}
 
-					IList<Association> associations =
-						verificationDataDictionary.GetAssociations(request.DatasetIds);
+					AssociationMsg associationMsg =
+						ProtoDataQualityUtils.ToAssociationMsg(association, true);
 
-					foreach (Association association in associations)
-					{
-						if (association.Deleted)
-						{
-							continue;
-						}
+					response.Associations.Add(associationMsg);
 
-						AssociationMsg associationMsg =
-							ProtoDataQualityUtils.ToAssociationMsg(association, true);
-
-						response.Associations.Add(associationMsg);
-
-						// And make sure all the referenced datasets are included in the response
-						EnsureDatasetAdded(association.End1.ObjectDataset, response.Datasets);
-						EnsureDatasetAdded(association.End2.ObjectDataset, response.Datasets);
-					}
-				});
+					// And make sure all the referenced datasets are included in the response
+					EnsureDatasetAdded(association.End1.ObjectDataset, response.Datasets);
+					EnsureDatasetAdded(association.End2.ObjectDataset, response.Datasets);
+				}
+			});
 
 			return response;
 		}
