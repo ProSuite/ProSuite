@@ -14,7 +14,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		protected VirtualFeatureClass(string name) : base(name) { }
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		long IFeatureClass.FeatureCount(IQueryFilter queryFilter) => TableRowCount(queryFilter);
 #else
 		int IFeatureClass.FeatureCount(IQueryFilter queryFilter) =>
@@ -223,7 +223,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual VirtualRow CreateRow() =>
 			throw new NotImplementedException("Implement in derived class");
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		IRow ITable.GetRow(long oid) => GetRow(oid);
 
 		public IFeature GetFeature(long oid) => (IFeature) GetRow(oid);
@@ -276,7 +276,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual void DeleteSearchedRows(IQueryFilter queryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		long ITable.RowCount(IQueryFilter queryFilter) => TableRowCount(queryFilter);
 #else
 		int ITable.RowCount(IQueryFilter queryFilter) => (int) TableRowCount(queryFilter);

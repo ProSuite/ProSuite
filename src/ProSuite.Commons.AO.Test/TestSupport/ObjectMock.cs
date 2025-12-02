@@ -78,7 +78,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		public bool HasOID => _objectClassMock.HasOID;
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		public long OID => _oid;
 #else
 		long IDbRow.OID => _oid;

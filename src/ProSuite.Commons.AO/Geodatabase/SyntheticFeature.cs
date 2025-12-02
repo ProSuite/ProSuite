@@ -267,7 +267,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public bool HasOID => _featureClass.HasOID;
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		public long OID
 #else
 		public int OID

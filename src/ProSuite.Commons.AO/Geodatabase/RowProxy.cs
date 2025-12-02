@@ -36,7 +36,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public bool HasOID => Table.HasOID;
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		public long OID => _oid;
 #else
 		public int OID => (int) _oid;

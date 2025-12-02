@@ -13,7 +13,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		ITable IFeature.Table => Table;
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		long IFeature.OID => (int) OID;
 #else
 		int IFeature.OID => (int) OID;
@@ -68,7 +68,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual bool HasOID =>
 			throw new NotImplementedException("Implement in derived class");
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		long IRow.OID => OID;
 		long IObject.OID => OID;
 #else

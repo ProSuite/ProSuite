@@ -134,6 +134,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			LogFeatureClassProperties(annoFc);
 		}
 
+#if !ARCGIS_12_0_OR_GREATER
 		[Test]
 		[Ignore("Learning test: dependes on local data")]
 		public void Can_create_and_update_annotation_FeatureClass_with_AO11_1()
@@ -182,6 +183,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.NotNull(annoFc);
 			LogFeatureClassProperties(annoFc);
 		}
+#endif
 
 		[Test]
 		[Ignore("Learning test: dependes on local data")]
@@ -249,6 +251,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			LogFeatureClassProperties(annoFc);
 		}
 
+#if !ARCGIS_12_0_OR_GREATER
 		[Test]
 		[Ignore("Learning test: dependes on local data")]
 		public void Can_create_and_update_annotation_FeatureClass_with_AO11_3()
@@ -601,6 +604,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				annoFeature.Store();
 			}
 		}
+#endif
 
 		[Test]
 		[Ignore("Learning test: dependes on local data")]

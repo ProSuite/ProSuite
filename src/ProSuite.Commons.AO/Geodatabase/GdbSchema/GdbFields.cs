@@ -59,7 +59,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return added;
 		}
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		void IFields.FindFieldIgnoreQualification(ISQLSyntax sqlSyntax, string Name, out int Index)
 		{
 			throw new NotImplementedException();

@@ -123,7 +123,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			return CreateFeature();
 		}
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		IFeature IFeatureClass.GetFeature(long OID) => throw new NotImplementedException();
 #else
 		IFeature IFeatureClass.GetFeature(int OID) => throw new NotImplementedException();
@@ -139,7 +139,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException();
 #else

@@ -31,7 +31,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 					name, StringComparison.OrdinalIgnoreCase));
 		}
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 		public void FindFieldIgnoreQualification(ISQLSyntax sqlSyntax, string Name, out int Index)
 		{
 			throw new NotImplementedException();

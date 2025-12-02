@@ -32,6 +32,10 @@
     <DefineConstants>$(DefineConstants);ARCGIS_11_5_OR_GREATER</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt;= 12.0 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_12_0_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
   </PropertyGroup>

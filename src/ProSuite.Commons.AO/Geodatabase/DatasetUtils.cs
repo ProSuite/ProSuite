@@ -2468,13 +2468,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return topologyName.FeatureDatasetName;
 			}
-
+#if !ARCGIS_12_0_OR_GREATER
 			var geometricNetworkName = datasetName as IGeometricNetworkName;
 			if (geometricNetworkName != null)
 			{
 				return geometricNetworkName.FeatureDatasetName;
 			}
-
+#endif
 			var networkDatasetName = datasetName as INetworkDatasetName;
 			if (networkDatasetName != null)
 			{

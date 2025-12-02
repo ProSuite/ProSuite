@@ -1411,7 +1411,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			try
 			{
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 				var version2 = version;
 #else
 				var version2 = (IVersion2) version;
@@ -1668,7 +1668,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_msg.DebugFormat("Reconciling user is: {0}",
 			                 GetConnectedUser((IWorkspace) editVersion));
 
-#if Server11
+#if Server11 || ARCGIS_12_0_OR_GREATER
 			var versionEdit = (IVersionEdit) editVersion;
 #else
 			var versionEdit = (IVersionEdit4) editVersion;
