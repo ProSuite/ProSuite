@@ -17,6 +17,10 @@ namespace ProSuite.Commons.AGP.Windows
 			}
 		}
 
+		/// <summary>
+		/// Converts the handle of the main window to an IWin32Window.
+		/// </summary>
+		/// <remarks>This method needs to be called on the UI thread. Otherwise, the return value is null.</remarks>
 		public static IWin32Window GetWin32MainWindow()
 		{
 			var mainWnd = Application.Current.MainWindow;
