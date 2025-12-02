@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -570,7 +571,15 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			//if (geodatabaseType != GeodatabaseType.RemoteDatabase)
 			//	return null; // not 100% sure
 
-			var definitions = geodatabase.GetDefinitions<TableDefinition>();
+			var definitions = new List<Definition>();
+			var tdefs = geodatabase.GetDefinitions<TableDefinition>();
+			definitions.AddRange(tdefs);
+			var fdefs = geodatabase.GetDefinitions<FeatureClassDefinition>();
+			definitions.AddRange(fdefs);
+
+			// GetDefinitions<TableDefinition>() returns ONLY table definitions,
+			// not feature class definitions, despite them being a subclass.
+			// However, FeatureClassDefinitions subsumes annotation definitions!
 			// Calling GetDefintions<Definition> fails with: "This type of geodatabase
 			// (LocalDatabase) does not currently support definition of type Definition."
 
