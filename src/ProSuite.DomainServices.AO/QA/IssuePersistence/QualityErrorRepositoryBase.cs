@@ -382,7 +382,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <summary>
 		/// Saves the pending errors previously added to the repository.
 		/// </summary>
-		public void SavePendingErrors([CanBeNull] VerificationElements verificationElements)
+		public void SavePendingErrors([CanBeNull] IQualityConditionLookup verificationElements)
 		{
 			if (_errorQueue.Count > 0)
 			{
