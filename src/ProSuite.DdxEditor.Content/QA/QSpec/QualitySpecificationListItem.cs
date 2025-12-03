@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Drawing;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.QA.ResourceLookup;
+using ProSuite.UI.Core.QA.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {

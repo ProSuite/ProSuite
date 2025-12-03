@@ -3,7 +3,7 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.UI.DataModel.ResourceLookup;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.Attributes
 {

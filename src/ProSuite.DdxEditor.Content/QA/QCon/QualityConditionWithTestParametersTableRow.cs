@@ -8,7 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.QA.ResourceLookup;
+using ProSuite.UI.Core.QA.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {

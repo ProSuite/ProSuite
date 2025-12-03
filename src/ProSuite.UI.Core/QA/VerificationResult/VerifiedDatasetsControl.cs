@@ -14,8 +14,6 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.UI.Core.Properties;
-using ProSuite.UI.Core.QA;
-using ProSuite.UI.Core.Properties;
 
 namespace ProSuite.UI.Core.QA.VerificationResult
 {

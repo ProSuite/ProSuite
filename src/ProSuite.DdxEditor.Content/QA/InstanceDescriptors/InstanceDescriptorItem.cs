@@ -18,7 +18,7 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.UI.QA.ResourceLookup;
+using ProSuite.UI.Core.QA.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
