@@ -330,9 +330,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// pull data from <paramref name="findDatastore"/> to pull it
 		/// from <paramref name="replaceDatastore"/>.
 		/// </summary>
+		/// <returns>The number of layers that were (re)connected</returns>
 		/// <remarks>Same as <see cref="Map.ReplaceDatasource(Datastore, Datastore, bool)"/>
 		/// but should work around a Pro SDK bug in the SDE--FGDB replacement case</remarks>
-		public static void ReplaceDataSource(
+		public static int ReplaceDataSource(
 			Map map, Geodatabase findDatastore, Geodatabase replaceDatastore)
 		{
 			if (map is null)
@@ -342,11 +343,13 @@ namespace ProSuite.Commons.AGP.Carto
 			if (replaceDatastore is null)
 				throw new ArgumentNullException(nameof(replaceDatastore));
 
+			int count = 0;
+
 			// Sadly, map.ReplaceDatasource(findDatastore, replaceDatastore)
 			// is buggy when going from SDE to FGDB (at least at Pro 3.5).
 			// So we try to do it "manually", layer by layer:
 
-			var geodatabaseType = replaceDatastore.GetGeodatabaseType();
+			//var geodatabaseType = replaceDatastore.GetGeodatabaseType();
 			var schemaOwner = WorkspaceUtils.FindSchemaOwner(replaceDatastore);
 
 			var layers = map.GetLayersAsFlattenedList()
@@ -373,8 +376,12 @@ namespace ProSuite.Commons.AGP.Carto
 					layer.ReplaceDataSource(dataset);
 
 					//var cimAfter = layer.GetDataConnection(); // TESTING
+
+					count += 1;
 				}
 			}
+
+			return count;
 		}
 
 		/// <summary>
