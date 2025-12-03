@@ -1075,8 +1075,17 @@ namespace ProSuite.QA.Container.TestContainer
 					if (preloadedCache?.IsLoaded(cachedTable, tile) == true)
 					{
 						cachedRows = preloadedCache.TransferCachedRows(tileCache, cachedTable);
-						_msg.Debug($"{tableProps.Table.Name}: Using {cachedRows.Count} " +
-						           $"previously cached rows in {tile}");
+
+						if (cachedRows == null)
+						{
+							_msg.Debug($"{tableProps.Table.Name}: No previously cached rows " +
+							           $"in {tile}");
+						}
+						else
+						{
+							_msg.Debug($"{tableProps.Table.Name}: Using {cachedRows.Count} " +
+							           $"previously cached rows in {tile}");
+						}
 					}
 
 					cachedRows = cachedRows ?? LoadCachedTableRows(tableProps, tile, tileCache);

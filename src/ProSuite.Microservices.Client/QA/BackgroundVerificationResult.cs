@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
@@ -64,8 +63,7 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
 
-			Stopwatch watch = _msg.DebugStartTiming(
-				"Replacing existing errors with new issues, deleting obsolete allowed errors...");
+			Stopwatch watch = _msg.DebugStartTiming("Replacing existing errors with new issues...");
 
 			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
 			int issueCount = _resultIssueCollector.SaveIssues(verifiedConditions);
@@ -81,8 +79,7 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
 
-			Stopwatch watch = _msg.DebugStartTiming(
-				"Replacing existing errors with new issues, deleting obsolete allowed errors...");
+			Stopwatch watch = _msg.DebugStartTiming("Replacing existing errors with new issues...");
 
 			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
 			int issueCount = await _resultIssueCollector.SaveIssuesAsync(verifiedConditions);
