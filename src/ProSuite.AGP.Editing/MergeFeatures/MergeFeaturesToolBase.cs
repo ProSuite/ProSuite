@@ -132,7 +132,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 

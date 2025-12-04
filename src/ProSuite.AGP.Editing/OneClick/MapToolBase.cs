@@ -106,7 +106,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -219,7 +219,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			catch (Exception e)
 			{
 				// Use ErrorHandler to allow custom implementation of DialogService
-				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -241,7 +241,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -253,7 +253,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -267,7 +267,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception ex)
 			{
-				ErrorHandler.HandleError(ex, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(ex, _msg);
 			}
 		}
 
@@ -301,7 +301,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -315,7 +315,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			catch (Exception e)
 			{
-				ErrorHandler.HandleError(e, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(e, _msg);
 			}
 		}
 
@@ -334,8 +334,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				// Consider Task.FromException? --> no, as it throws once awaited!
 				ErrorHandler.HandleError(
-					$"{Caption}: Error completing sketch ({e.Message})", e, _msg,
-					WindowsUtils.GetWin32MainWindow());
+					$"{Caption}: Error completing sketch ({e.Message})", e, _msg);
 
 				return await Task.FromResult(true);
 			}

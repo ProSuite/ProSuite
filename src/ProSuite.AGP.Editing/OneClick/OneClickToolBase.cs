@@ -242,8 +242,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				// Consider Task.FromException? --> no, as it throws once awaited!
 				ErrorHandler.HandleError($"{Caption}: Error completing sketch." +
-				                         $"{Environment.NewLine}{e.Message}", e, _msg,
-				                         WindowsUtils.GetWin32MainWindow());
+				                         $"{Environment.NewLine}{e.Message}", e, _msg);
 
 				return await Task.FromResult(true);
 			}

@@ -58,7 +58,7 @@ namespace ProSuite.Commons.AGP.Framework
 			}
 			catch (Exception ex)
 			{
-				ErrorHandler.HandleError(ex, _msg, WindowsUtils.GetWin32MainWindow());
+				ErrorHandler.HandleError(ex, _msg);
 			}
 		}
 
