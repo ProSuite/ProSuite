@@ -127,7 +127,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 				fieldInfo.Visible = fieldOptions.Visible == TrueFalseDefault.@true;
 			}
 
-#if Server11 || ARCGIS_12_0_OR_GREATER
+#if ARCGIS_11_0_OR_GREATER
 			IFieldInfo fieldInfoExt = fieldInfo;
 #else
 			IFieldInfo3 fieldInfoExt = (IFieldInfo3) fieldInfo;

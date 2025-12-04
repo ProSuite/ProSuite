@@ -415,7 +415,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return null;
 			}
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			// long is expected:
 			if (value is long longValue)
 			{
@@ -446,7 +446,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return null;
 			}
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			// long is expected:
 			if (value is long longValue)
 			{

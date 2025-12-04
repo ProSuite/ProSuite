@@ -415,7 +415,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			Assert.NotNull(annoFc);
 			LogFeatureClassProperties(annoFc);
 		}
+#endif
 
+#if !ARCGIS_12_0_OR_GREATER
 		[Test]
 		[Ignore("Learning test: dependes on local data")]
 		public void Can_copy_annotation_features_with_AO11_4()

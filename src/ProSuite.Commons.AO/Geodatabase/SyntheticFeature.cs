@@ -267,7 +267,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public bool HasOID => _featureClass.HasOID;
 
-#if Server11 || ARCGIS_12_0_OR_GREATER
+#if ARCGIS_11_0_OR_GREATER
 		public long OID
 #else
 		public int OID
@@ -284,7 +284,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				// Use convert because it could be either an int or a long
 				object fieldValue = _fieldValues[_oidFieldIndex];
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 				return Convert.ToInt64(fieldValue);
 #else
 				return Convert.ToInt32(fieldValue);

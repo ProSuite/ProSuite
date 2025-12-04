@@ -32,7 +32,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			ShapeType = template.ShapeType;
 		}
 
-#if Server11 || ARCGIS_12_0_OR_GREATER
+#if ARCGIS_11_0_OR_GREATER
 		long IFeatureClass.FeatureCount(IQueryFilter QueryFilter) => TableRowCount(QueryFilter);
 #else
 		int IFeatureClass.FeatureCount(IQueryFilter QueryFilter) =>
