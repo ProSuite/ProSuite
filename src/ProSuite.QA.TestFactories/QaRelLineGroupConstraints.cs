@@ -37,7 +37,15 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[6];
 
-			var tables = ValidateType<IList<IReadOnlyTable>>(objParams[0], "IList<IReadOnlyTable>");
+			if (! (objParams[0] is IList<ITableSchemaDef>))
+			{
+				throw new ArgumentException(string.Format(
+					                            "expected IList<ITableSchemaDef>, got {0}",
+					                            objParams[0].GetType()));
+			}
+
+			var tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
+
 			var associationName =
 				ValidateType<string>(objParams[1], "string (for relation)");
 			var join = ValidateType<JoinType>(objParams[2]);
@@ -88,7 +96,7 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
-			var factoryDef = (QaRelLineGroupConstraintsDefinition)FactoryDefinition;
+			var factoryDef = (QaRelLineGroupConstraintsDefinition) FactoryDefinition;
 			if (testParameter.Name == factoryDef.GroupConditionName)
 			{
 				((QaLineGroupConstraints) test).GroupConditions = new[] { (string) value };
