@@ -160,7 +160,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 				}
 				catch (Exception e)
 				{
-					_msg.Debug(e.Message);
+					_msg.Debug(e.Message, e);
 				}
 			}
 

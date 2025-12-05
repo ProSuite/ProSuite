@@ -148,7 +148,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 				}
 				catch (Exception e)
 				{
-					_msg.Debug(e.Message);
+					_msg.Debug(e.Message, e);
 				}
 			}
 

@@ -1429,8 +1429,8 @@ namespace ProSuite.Commons.AO.Geometry
 				{
 					_msg.DebugFormat("Error in Difference(): {0}", comEx.Message);
 
-					_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry));
-					_msg.Debug(GeometryUtils.ToString(g2));
+					_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry), comEx);
+					_msg.Debug(GeometryUtils.ToString(g2), comEx);
 
 					throw;
 				}
@@ -1443,8 +1443,8 @@ namespace ProSuite.Commons.AO.Geometry
 				{
 					_msg.DebugFormat("Error in Difference(): {0}", comEx.Message);
 
-					_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry));
-					_msg.Debug(GeometryUtils.ToString(g2));
+					_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry), comEx);
+					_msg.Debug(GeometryUtils.ToString(g2), comEx);
 
 					throw;
 				}
@@ -1478,8 +1478,8 @@ namespace ProSuite.Commons.AO.Geometry
 					_msg.DebugFormat("Error in workaround for Difference(): {0}",
 					                 ex.Message);
 
-					_msg.Debug(GeometryUtils.ToString((IGeometry) topoOp));
-					_msg.Debug(GeometryUtils.ToString(g2));
+					_msg.Debug(GeometryUtils.ToString((IGeometry) topoOp), ex);
+					_msg.Debug(GeometryUtils.ToString(g2), ex);
 
 					throw;
 				}
@@ -1488,8 +1488,8 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				_msg.DebugFormat("Error in Difference(): {0}", ex.Message);
 
-				_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry));
-				_msg.Debug(GeometryUtils.ToString(g2));
+				_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry), ex);
+				_msg.Debug(GeometryUtils.ToString(g2), ex);
 
 				throw;
 			}
@@ -1617,8 +1617,8 @@ namespace ProSuite.Commons.AO.Geometry
 					_msg.DebugFormat("Error in Intersect() for {0}: {1}",
 					                 dimension, comEx.Message);
 
-					_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry));
-					_msg.Debug(GeometryUtils.ToString(g2));
+					_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry), comEx);
+					_msg.Debug(GeometryUtils.ToString(g2), comEx);
 
 					throw;
 				}
@@ -1633,8 +1633,8 @@ namespace ProSuite.Commons.AO.Geometry
 					_msg.DebugFormat("Error in Intersect() for {0}: {1}",
 					                 dimension, comEx.Message);
 
-					_msg.Debug(GeometryUtils.ToString(geometry));
-					_msg.Debug(GeometryUtils.ToString(g2));
+					_msg.Debug(GeometryUtils.ToString(geometry), comEx);
+					_msg.Debug(GeometryUtils.ToString(g2), comEx);
 
 					throw;
 				}
@@ -1668,8 +1668,8 @@ namespace ProSuite.Commons.AO.Geometry
 					_msg.DebugFormat("Error in Intersect() workaround for {0}: {1}",
 					                 dimension, ex.Message);
 
-					_msg.Debug(GeometryUtils.ToString(geometry));
-					_msg.Debug(GeometryUtils.ToString(g2));
+					_msg.Debug(GeometryUtils.ToString(geometry), ex);
+					_msg.Debug(GeometryUtils.ToString(g2), ex);
 
 					throw;
 				}
@@ -1683,8 +1683,8 @@ namespace ProSuite.Commons.AO.Geometry
 				_msg.DebugFormat("Error in Intersect() for {0}: {1}",
 				                 dimension, ex.Message);
 
-				_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry));
-				_msg.Debug(GeometryUtils.ToString(g2));
+				_msg.Debug(GeometryUtils.ToString(topoOp as IGeometry), ex);
+				_msg.Debug(GeometryUtils.ToString(g2), ex);
 
 				throw;
 			}
