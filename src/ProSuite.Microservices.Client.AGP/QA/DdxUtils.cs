@@ -153,60 +153,31 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[NotNull] GetConditionResponse getConditionResponse,
 			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors = null)
 		{
-			// TODO: Copyied from below. Extract common method(s)!
+			QualityConditionMsg conditionMsg = getConditionResponse.Condition;
+
+			if (conditionMsg == null)
+			{
+				return null;
+			}
+
 			IEnumerable<InstanceDescriptorMsg> descriptorsMsg =
 				getConditionResponse.ReferencedInstanceDescriptors;
 
-			if (instanceDescriptors == null)
-			{
-				instanceDescriptors = new SupportedInstanceDescriptors(
-					new List<TestDescriptor>(),
-					new List<TransformerDescriptor>(),
-					new List<IssueFilterDescriptor>());
-			}
-
-			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
-			{
-				if (instanceDescriptors.Contains(descriptorMsg.Name))
-				{
-					continue;
-				}
-
-				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
-				instanceDescriptors.AddDescriptor(instanceDescriptor);
-			}
+			instanceDescriptors =
+				AddMissingInstanceDescriptors(instanceDescriptors, descriptorsMsg);
 
 			Dictionary<int, IDdxDataset> datasetsById =
 				FromDatasetMsgs(getConditionResponse.ReferencedDatasets);
 
-			var models = new List<DdxModel>();
-
-			foreach (ModelMsg modelMsg in getConditionResponse.ReferencedModels)
-			{
-				DdxModel model =
-					CreateDdxModel(modelMsg, (msg) => new BasicModel(msg.ModelId, msg.Name));
-
-				foreach (int datasetId in modelMsg.DatasetIds)
-				{
-					if (datasetsById.TryGetValue(datasetId, out IDdxDataset dataset) &&
-					    ! model.Contains(dataset))
-					{
-						model.AddDataset((Dataset) dataset);
-					}
-				}
-
-				models.Add(model);
-			}
+			IEnumerable<ModelMsg> refrencedModelMsgs = getConditionResponse.ReferencedModels;
 
 			IDictionary<string, DdxModel> modelsByWorkspaceId =
-				models.ToDictionary(m => m.Id.ToString(CultureInfo.InvariantCulture),
-				                    m => (DdxModel) m);
+				GetModelsByWorkspaceId(refrencedModelMsgs, datasetsById);
 
 			var factory = new ProtoBasedQualitySpecificationFactory(
 				modelsByWorkspaceId, instanceDescriptors);
 
-			QualityCondition result =
-				factory.CreateQualityCondition(getConditionResponse.Condition);
+			QualityCondition result = factory.CreateQualityCondition(conditionMsg);
 
 			return result;
 		}
@@ -218,31 +189,34 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			IEnumerable<InstanceDescriptorMsg> descriptorsMsg =
 				getSpecificationResponse.ReferencedInstanceDescriptors;
 
-			if (instanceDescriptors == null)
-			{
-				instanceDescriptors = new SupportedInstanceDescriptors(
-					new List<TestDescriptor>(),
-					new List<TransformerDescriptor>(),
-					new List<IssueFilterDescriptor>());
-			}
-
-			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
-			{
-				if (instanceDescriptors.Contains(descriptorMsg.Name))
-				{
-					continue;
-				}
-
-				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
-				instanceDescriptors.AddDescriptor(instanceDescriptor);
-			}
+			instanceDescriptors =
+				AddMissingInstanceDescriptors(instanceDescriptors, descriptorsMsg);
 
 			Dictionary<int, IDdxDataset> datasetsById =
 				FromDatasetMsgs(getSpecificationResponse.ReferencedDatasets);
 
+			IEnumerable<ModelMsg> refrencedModelMsgs = getSpecificationResponse.ReferencedModels;
+
+			IDictionary<string, DdxModel> modelsByWorkspaceId =
+				GetModelsByWorkspaceId(refrencedModelMsgs, datasetsById);
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			QualitySpecification result =
+				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
+
+			return result;
+		}
+
+		[NotNull]
+		private static IDictionary<string, DdxModel> GetModelsByWorkspaceId(
+			[NotNull] IEnumerable<ModelMsg> refrencedModelMsgs,
+			[NotNull] Dictionary<int, IDdxDataset> datasetsById)
+		{
 			var models = new List<DdxModel>();
 
-			foreach (ModelMsg modelMsg in getSpecificationResponse.ReferencedModels)
+			foreach (ModelMsg modelMsg in refrencedModelMsgs)
 			{
 				DdxModel model =
 					CreateDdxModel(modelMsg, (msg) => new BasicModel(msg.ModelId, msg.Name));
@@ -261,15 +235,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			IDictionary<string, DdxModel> modelsByWorkspaceId =
 				models.ToDictionary(m => m.Id.ToString(CultureInfo.InvariantCulture),
-				                    m => (DdxModel) m);
-
-			var factory = new ProtoBasedQualitySpecificationFactory(
-				modelsByWorkspaceId, instanceDescriptors);
-
-			QualitySpecification result =
-				factory.CreateQualitySpecification(getSpecificationResponse.Specification);
-
-			return result;
+				                    m => m);
+			return modelsByWorkspaceId;
 		}
 
 		public static DdxModel CreateFullModel([NotNull] IModelFactory modelFactory,
@@ -495,6 +462,29 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			result.EnforceFlowDirection = linearNetworkMsg.EnforceFlowDirection;
 
 			return result;
+		}
+
+		private static ISupportedInstanceDescriptors AddMissingInstanceDescriptors(
+			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors,
+			[NotNull] IEnumerable<InstanceDescriptorMsg> descriptorsMsg)
+		{
+			instanceDescriptors ??= new SupportedInstanceDescriptors(
+				new List<TestDescriptor>(),
+				new List<TransformerDescriptor>(),
+				new List<IssueFilterDescriptor>());
+
+			foreach (InstanceDescriptorMsg descriptorMsg in descriptorsMsg)
+			{
+				if (instanceDescriptors.Contains(descriptorMsg.Name))
+				{
+					continue;
+				}
+
+				InstanceDescriptor instanceDescriptor = GetInstanceDescriptor(descriptorMsg);
+				instanceDescriptors.AddDescriptor(instanceDescriptor);
+			}
+
+			return instanceDescriptors;
 		}
 
 		private static InstanceDescriptor GetInstanceDescriptor(
