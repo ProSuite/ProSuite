@@ -109,7 +109,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		public long? TotalCount { get; set; }
 
 		[CanBeNull]
-		protected Geometry AreaOfInterest => Repository.AreaOfInterest;
+		public Geometry AreaOfInterest => Repository.AreaOfInterest;
 
 		public bool NavigateInAllMapViews { get; set; }
 
@@ -553,30 +553,27 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public IEnumerable<IWorkItem> Search([CanBeNull] SpatialQueryFilter filter)
 		{
-			if (_searcher == null)
-			{
-				return Enumerable.Empty<IWorkItem>();
-			}
-
-			if (filter == null)
-			{
-				return _searcher;
-			}
-
 			WorkItemStatus? currentVisibility = GetStatus(Visibility);
 
+			// spatial search - use index:
 			Predicate<IWorkItem> predicate = null;
 			if (currentVisibility.HasValue)
 			{
 				predicate = item => item.Status == currentVisibility;
 			}
 
+			if (_searcher == null || filter == null)
+			{
+				// all non-spatial items or non-spatial search:
+				return _items.Where(i => predicate == null || predicate(i)).ToList();
+			}
+
 			Envelope extent = filter.FilterGeometry.Extent;
 
-			// TODO: (daro) tolerance?
+			double tolerance = GeometryUtils.GetXyTolerance(filter.FilterGeometry);
+
 			return _searcher.Search(extent.XMin, extent.YMin,
-			                        extent.XMax, extent.YMax,
-			                        0.001, predicate);
+			                        extent.XMax, extent.YMax, tolerance, predicate);
 		}
 
 		protected virtual void LoadItemsCore(QueryFilter filter)
@@ -587,7 +584,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		private IEnumerable<IWorkItem> GetItems([NotNull] SpatialQueryFilter filter,
+		private IEnumerable<IWorkItem> GetItems([CanBeNull] SpatialQueryFilter filter,
 		                                        CurrentSearchOption currentSearch,
 		                                        VisitedSearchOption visitedSearch)
 		{
@@ -844,11 +841,19 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (nearest == null)
 			{
-				return false;
+				// Nothing found so far. Search entire work list:
+				var allItemQuery =
+					GetItems(null, CurrentSearchOption.ExcludeCurrent, visitedSearchOption);
+
+				nearest = allItemQuery.FirstOrDefault();
 			}
 
-			SetCurrentItem(nearest, CurrentItem);
-			return true;
+			if (nearest != null)
+			{
+				SetCurrentItem(nearest, CurrentItem);
+			}
+
+			return nearest != null;
 		}
 
 		private bool TryGetItemsForInnermostContext(Polygon[] contextPerimeters,
