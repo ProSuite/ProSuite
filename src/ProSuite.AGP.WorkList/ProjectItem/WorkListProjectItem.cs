@@ -131,7 +131,7 @@ namespace ProSuite.AGP.WorkList.ProjectItem
 				foreach (Layer worklistLayer in
 				         WorkListUtils.GetWorklistLayers(layers, WorkListName))
 				{
-					LayerUtils.Rename(worklistLayer, fileName);
+					worklistLayer.SetName(fileName);
 				}
 
 				return true;
