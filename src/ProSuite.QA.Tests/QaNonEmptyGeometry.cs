@@ -184,7 +184,7 @@ namespace ProSuite.QA.Tests
 							? "Error getting feature with presumably empty geometry. Using fall-back implementation (slow) to identify object id."
 							: "Error getting feature. Using fall-back implementation (slow) to identify object id.";
 
-					_msg.Debug(msg, e);
+					_msg.Debug(msg);
 					tryFallbackImplementation = true;
 				}
 

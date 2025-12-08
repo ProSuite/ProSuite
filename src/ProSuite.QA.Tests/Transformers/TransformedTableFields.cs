@@ -551,7 +551,7 @@ namespace ProSuite.QA.Tests.Transformers
 			catch (Exception e)
 			{
 				_msg.Debug($"Error adding field {field.Name} to {toOutputClass.Name}.", e);
-				_msg.Debug(GetFieldListMessage(toOutputClass), e);
+				_msg.Debug(GetFieldListMessage(toOutputClass));
 
 				throw;
 			}
