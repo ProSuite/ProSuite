@@ -13,6 +13,9 @@ namespace ProSuite.Commons
 	/// DimensionConverter and DimensionValidation</remarks>
 	public struct Dimension : IEquatable<Dimension>
 	{
+		// TODO: Change these from "set" to "init" once we are on
+		//		 language version 9. Then the struct can be changed
+		//		 back to readonly as well.
 		public double Value { get; set; }
 		public string Unit { get; set; }
 
