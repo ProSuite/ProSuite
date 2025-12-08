@@ -22,8 +22,8 @@ using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA.SpecificationReport;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.QA;
-using ProSuite.UI.QA.ResourceLookup;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {

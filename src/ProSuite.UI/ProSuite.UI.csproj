@@ -29,11 +29,11 @@
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
-    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.UI.xml</DocumentationFile>
   </PropertyGroup>
 
@@ -53,18 +53,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
 
-  <!-- Legacy property editors with AO dependency, replaced by blazor in .net 6: 
-       Can be removed for 'Server' once the QualityConditionControl does not reference 
-       the property editors any more. -->
-  <ItemGroup Condition=" '$(VSArcGISProduct)' != 'ArcGIS' And '$(VSArcGISProduct)' != 'Server' ">
-    <Compile Remove="QA\PropertyEditors\**" />
-    <EmbeddedResource Remove="QA\PropertyEditors\**" />
-    <None Remove="QA\PropertyEditors\**" />
-    <Page Remove="QA\PropertyEditors\**" />
-  </ItemGroup>
-
   <!-- AO dependency due to legacy property editors: -->
-  <ItemGroup Condition=" '$(VSArcGISProduct)' == 'ArcGIS' Or '$(VSArcGISProduct)' == 'Server' ">
+  <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
@@ -82,6 +72,9 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
@@ -91,227 +84,18 @@
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
     <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(VSArcGISProduct)' == 'ArcGIS' Or '$(VSArcGISProduct)' == 'Server' ">
+    <ProjectReference Include="..\ProSuite.UI.Core\ProSuite.UI.Core.csproj" />
     <!-- ProSuite.DomainModel.AO is used by legacy property editors -->
     <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
   </ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-		<Compile Update="DataModel\DatasetCatalogControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="DataModel\DatasetCatalogControl.Designer.cs">
-			<DependentUpon>DatasetCatalogControl.cs</DependentUpon>
-		</Compile>
-    <Compile Update="DataModel\IssueDatasetParametersForm.cs" />
-		<Compile Update="Properties\AssociationEndImages.Designer.cs">
-			<DependentUpon>AssociationEndImages.resx</DependentUpon>
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-		</Compile>
-		<Compile Update="Properties\AssociationImages.Designer.cs">
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-			<DependentUpon>AssociationImages.resx</DependentUpon>
-		</Compile>
-		<Compile Update="Properties\DatasetTypeImages.Designer.cs">
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-			<DependentUpon>DatasetTypeImages.resx</DependentUpon>
-		</Compile>
-		<Compile Update="Properties\FieldTypeImages.Designer.cs">
-			<DependentUpon>FieldTypeImages.resx</DependentUpon>
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-		</Compile>
-		<Compile Update="Properties\LocalizableStrings.Designer.cs">
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-			<DependentUpon>LocalizableStrings.resx</DependentUpon>
-		</Compile>
-		<Compile Update="Properties\QualitySpecificationImages.Designer.cs">
-			<DependentUpon>QualitySpecificationImages.resx</DependentUpon>
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-		</Compile>
-		<Compile Update="Properties\QualityVerificationImages.Designer.cs">
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-			<DependentUpon>QualityVerificationImages.resx</DependentUpon>
-		</Compile>
-		<Compile Update="Properties\VerificationResultImages.Designer.cs">
-		  <DependentUpon>VerificationResultImages.resx</DependentUpon>
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		</Compile>
-		<Compile Update="Properties\Resources.Designer.cs">
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-			<DependentUpon>Resources.resx</DependentUpon>
-		</Compile>
-		<Compile Update="Properties\TestTypeImages.Designer.cs">
-			<AutoGen>True</AutoGen>
-			<DesignTime>True</DesignTime>
-			<DependentUpon>TestTypeImages.resx</DependentUpon>
-		</Compile>
-		<Compile Update="QA\Controls\QualityConditionControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Controls\QualityConditionControl.Designer.cs">
-			<DependentUpon>QualityConditionControl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\Controls\QualityConditionParametersControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Controls\QualityConditionTableViewControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Controls\QualityConditionTableViewControl.Designer.cs">
-			<DependentUpon>QualityConditionTableViewControl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\Controls\TestDescriptorControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Controls\TestDescriptorControl.Designer.cs">
-			<DependentUpon>TestDescriptorControl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\Customize\ConditionDatasetsControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\ConditionListControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\ConditionsLayerViewControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\CustomizeQASpecForm.cs">
-		  <SubType>Form</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\TestParameterValuesEditorForm.cs">
-		  <SubType>Form</SubType>
-		</Compile>
-		<Compile Update="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
-			<DependentUpon>UpdateIssuesOptionsControl.xaml</DependentUpon>
-		</Compile>
-		<Compile Update="QA\VerificationProgress\VerificationProgressWpfControl.xaml.cs">
-			<DependentUpon>VerificationProgressWpfControl.xaml</DependentUpon>
-		</Compile>
-		<Compile Update="QA\VerificationResult\QAVerificationForm.cs">
-			<SubType>Form</SubType>
-		</Compile>
-		<Compile Update="QA\VerificationResult\QAVerificationForm.Designer.cs">
-			<DependentUpon>QAVerificationForm.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\VerificationResult\QualityConditionVerificationControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\VerificationResult\QualityConditionVerificationControl.Designer.cs">
-			<DependentUpon>QualityConditionVerificationControl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\Controls\TestTreeViewControl.cs">
-			<SubType>Component</SubType>
-		</Compile>
-		<Compile Update="QA\Controls\TestTreeViewControl.Designer.cs">
-			<DependentUpon>TestTreeViewControl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedConditionsControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedConditionsControl.Designer.cs">
-			<DependentUpon>VerifiedConditionsControl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.Designer.cs">
-			<DependentUpon>VerifiedConditionsHierarchyControl.cs</DependentUpon>
-		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedDatasetsControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedDatasetsControl.Designer.cs">
-			<DependentUpon>VerifiedDatasetsControl.cs</DependentUpon>
-		</Compile>
+    <Compile Update="Properties\LocalizableStrings.Designer.cs">
+      <DependentUpon>LocalizableStrings.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
 	</ItemGroup>
-
-	<ItemGroup>
-    <EmbeddedResource Update="DataModel\DatasetCatalogControl.resx">
-      <DependentUpon>DatasetCatalogControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\AssociationEndImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>AssociationEndImages.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\AssociationImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>AssociationImages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\DatasetTypeImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>DatasetTypeImages.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\FieldTypeImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FieldTypeImages.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\VerificationResultImages.resx">
-      <SubType>Designer</SubType>
-      <LastGenOutput>VerificationResultImages.Designer.cs</LastGenOutput>
-      <Generator>ResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\TestTypeImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>TestTypeImages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\Controls\QualityConditionControl.resx">
-      <DependentUpon>QualityConditionControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\Controls\QualityConditionParametersControl.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\Controls\QualityConditionTableViewControl.resx">
-      <DependentUpon>QualityConditionTableViewControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\Controls\TestDescriptorControl.resx">
-      <DependentUpon>TestDescriptorControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\Customize\CustomizeQASpecForm.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\VerificationResult\QAVerificationForm.resx">
-      <DependentUpon>QAVerificationForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\VerificationResult\QualityConditionVerificationControl.resx">
-      <DependentUpon>QualityConditionVerificationControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\VerificationResult\VerifiedConditionsControl.resx">
-      <DependentUpon>VerifiedConditionsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.resx">
-      <DependentUpon>VerifiedConditionsHierarchyControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="QA\VerificationResult\VerifiedDatasetsControl.resx">
-      <DependentUpon>VerifiedDatasetsControl.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\..\lib\licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt">
@@ -322,71 +106,6 @@
       <Link>Licenses\prosuite-microservice-definitions.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-
-    <Content Include="Properties\AssociationEndImages\AssociationEndDeleted.png" />
-    <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany1.png" />
-    <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany2.png" />
-    <Content Include="Properties\AssociationEndImages\AssociationEndManyToOne.png" />
-    <Content Include="Properties\AssociationEndImages\AssociationEndOneToMany.png" />
-    <Content Include="Properties\AssociationEndImages\AssociationEndOneToOneFK.png" />
-    <Content Include="Properties\AssociationEndImages\AssociationEndOneToOnePK.png" />
-    <Content Include="Properties\AssociationEndImages\AssociationEndUnknown.png" />
-    <Content Include="Properties\AssociationImages\AssociationDeleted.png" />
-    <Content Include="Properties\AssociationImages\AssociationManyToMany.png" />
-    <Content Include="Properties\AssociationImages\AssociationManyToOne.png" />
-    <Content Include="Properties\AssociationImages\AssociationOneToOne.png" />
-    <Content Include="Properties\AssociationImages\AssociationUnknown.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeDeleted.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeGeometricNetwork.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeLine.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeMosaicDataset.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeMultipatch.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypePoint.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypePolygon.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeRasterDataset.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeTable.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeTerrain.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeTopology.png" />
-    <Content Include="Properties\DatasetTypeImages\DatasetTypeUnknown.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeBinary.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeDateTime.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeDeleted.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeFloat.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeInteger.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeOID.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeRaster.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeShape.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeText.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeUnknown.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeUUID.png" />
-    <Content Include="Properties\FieldTypeImages\FieldTypeXml.png" />
-    <Content Include="Properties\Images\CheckAll.png" />
-    <Content Include="Properties\Images\DatasetCategory.png" />
-    <Content Include="Properties\Images\DatasetCategorySelected.png" />
-    <Content Include="Properties\Images\Edit.png" />
-    <Content Include="Properties\Images\Empty.bmp" />
-    <Content Include="Properties\Images\Exit.png" />
-    <Content Include="Properties\Images\UncheckAll.png" />
-    <Content Include="Properties\Images\Undo_16x.png" />
-    <Resource Include="Properties\Images\FlashProgressCmd.png" />
-    <Content Include="Properties\Images\Full.bmp" />
-    <Content Include="Properties\Images\Half.bmp" />
-    <Resource Include="Properties\Images\NavigateErrorsCmd.png" />
-    <Resource Include="Properties\Images\ZoomToVerifiedCmd.png" />
-    <Content Include="Properties\QualitySpecificationImages\QualitySpecification.png" />
-    <Content Include="Properties\QualitySpecificationImages\QualitySpecificationHidden.png" />
-    <Content Include="Properties\QualityVerificationImages\QualityVerificationFulfilledNoIssues.png" />
-    <Content Include="Properties\QualityVerificationImages\QualityVerificationFulfilledWarnings.png" />
-    <Content Include="Properties\QualityVerificationImages\QualityVerificationNotFulfilled.png" />
-    <Content Include="Properties\TestTypeImages\IssueFilter.png" />
-    <Content Include="Properties\TestTypeImages\TestTypeError.png" />
-    <Content Include="Properties\TestTypeImages\TestTypeStop.png" />
-    <Content Include="Properties\TestTypeImages\TestTypeUnknown.png" />
-    <Content Include="Properties\TestTypeImages\TestTypeWarning.png" />
-    <Content Include="Properties\TestTypeImages\Transformer.png" />
-    <Content Include="Properties\VerificationResultImages\Error.png" />
-    <Content Include="Properties\VerificationResultImages\OK.png" />
-    <Content Include="Properties\VerificationResultImages\Warning.png" />
   </ItemGroup>
 
   <ItemGroup>
