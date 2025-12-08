@@ -21,6 +21,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		private SimpleValueList _cachedValues;
 		[CanBeNull] private Row _proRow;
+		private long _oid = -1;
 
 		public static ArcRow Create(Row proRow, ITable parentTable, bool cacheValues = false)
 		{
@@ -204,9 +205,31 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		// TODO: Discuss this
 		//public bool HasOID => _proRow.HasOID;
-		public bool HasOID => OID >= 0;
+		public bool HasOID => _oid >= 0;
 
-		public long OID { get; protected set; }
+		public long OID
+		{
+			get
+			{
+				if (HasOID)
+				{
+					return _oid;
+				}
+
+				int OidFieldIndex = Fields.FindField(_parentTable.OIDFieldName);
+
+				object value = get_Value(OidFieldIndex);
+
+				if (value != DBNull.Value)
+				{
+					_oid = Convert.ToInt64(value);
+				}
+
+				return _oid;
+			}
+
+			protected set => _oid = value;
+		}
 
 		public ITable Table => _parentTable;
 
