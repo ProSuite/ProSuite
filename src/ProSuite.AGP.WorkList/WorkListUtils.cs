@@ -124,6 +124,10 @@ namespace ProSuite.AGP.WorkList
 					Assert.NotNull(worklist);
 				}
 			}
+			else
+			{
+				await environment.UpdateConfigurationAsync(worklist);
+			}
 
 			// Commit writes work list definition to disk.
 			// Necessary for adding project item.
