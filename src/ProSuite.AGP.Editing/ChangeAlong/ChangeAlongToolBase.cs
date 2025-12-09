@@ -475,6 +475,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
 				                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
+			bool isInStereoFixedCursorMode =
+				await QueuedTask.Run(async () =>
+					                     await MapUtils.IsInStereoFixedCursorMode(MapView.Active));
+
+			if (isInStereoFixedCursorMode)
+			{
+				pickerPrecedence.PositionPreference = PickerPositionPreference.MouseLocationMainWindowOptimized;
+			}
+
 			Task<IEnumerable<Feature>> task = QueuedTaskUtils.Run(async () =>
 			{
 				List<FeatureSelectionBase> candidates =

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Core.Geometry;
+using System.Windows.Threading;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
@@ -30,28 +30,23 @@ namespace ProSuite.Commons.AGP.Picker
 			_precedence = precedence ?? throw new ArgumentNullException(nameof(precedence));
 		}
 
-		public Task<IPickableItem> Pick(IEnumerable<IPickableItem> items,
-		                                IPickerViewModel viewModel)
+		public Task<IPickableItem> Pick(
+			IEnumerable<IPickableItem> items,
+			IPickerViewModel viewModel)
 		{
 			viewModel.Items = new ObservableCollection<IPickableItem>(_precedence.Order(items));
 
 			return ShowPickerControlAsync(viewModel, _precedence.PickerLocation);
 		}
 
-		private static async Task<IPickableItem> ShowPickerControlAsync(
+		private async Task<IPickableItem> ShowPickerControlAsync(
 			IPickerViewModel vm, Point location)
 		{
-			var dispatcher = Application.Current.Dispatcher;
+			WindowPositioner positioner = GetWindowPositioner(_precedence.PositionPreference);
 
-			WindowPositioner positioner =
-				await QueuedTaskUtils.Run(() =>
-				{
-					List<Geometry> geometries = new();
+			IPickableItem pickable = null;
 
-					return new WindowPositioner(geometries,
-					                            WindowPositioner.PreferredPlacement.MainWindow,
-					                            WindowPositioner.EvaluationMethod.DistanceToRect);
-				});
+			Dispatcher dispatcher = Assert.NotNull(Application.Current?.Dispatcher);
 
 			return await dispatcher.Invoke(async () =>
 			{
@@ -59,9 +54,7 @@ namespace ProSuite.Commons.AGP.Picker
 
 				SetWindowLocation(window, location);
 
-				positioner.SetWindow(window, location);
-
-				IPickableItem pickable = null;
+				positioner?.SetWindow(window, location);
 
 				await UIEnvironment.WithReleasedCursorAsync(async () =>
 				{
@@ -96,6 +89,27 @@ namespace ProSuite.Commons.AGP.Picker
 		private static bool LocationUnknown(Point location)
 		{
 			return double.IsNaN(location.X) || double.IsNaN(location.Y);
+		}
+
+		private static WindowPositioner GetWindowPositioner(
+			PickerPositionPreference positionPreference)
+		{
+			if (positionPreference == PickerPositionPreference.MouseLocation)
+			{
+				return null;
+			}
+
+			WindowPositioner.PreferredPlacement preferredPlacement = positionPreference switch
+			{
+				PickerPositionPreference.MouseLocationMapOptimized =>
+					WindowPositioner.PreferredPlacement.MapView,
+				PickerPositionPreference.MouseLocationMainWindowOptimized =>
+					WindowPositioner.PreferredPlacement.MainWindow,
+				_ => throw new ArgumentOutOfRangeException(nameof(positionPreference))
+			};
+
+			return new WindowPositioner(preferredPlacement,
+			                            WindowPositioner.EvaluationMethod.DistanceToRect);
 		}
 	}
 }

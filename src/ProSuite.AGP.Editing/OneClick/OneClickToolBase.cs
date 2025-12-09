@@ -568,11 +568,24 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Point screenLocation = await GetPopupScreenLocation(sketchGeometry);
 
-			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                            screenLocation)
-			       {
-				       NoMultiselection = ! AllowMultiSelection(out _)
-			       };
+			var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
+			                                  screenLocation)
+			             {
+				             NoMultiselection = ! AllowMultiSelection(out _)
+			             };
+
+			MapView mapView = MapView.Active;
+
+			bool isInStereoFixedCursorMode =
+				MapUtils.IsStereoMapView(mapView) &&
+				await QueuedTask.Run(async () => await MapUtils.IsInStereoFixedCursorMode(mapView));
+
+			if (isInStereoFixedCursorMode)
+			{
+				result.PositionPreference = PickerPositionPreference.MouseLocation;
+			}
+
+			return result;
 		}
 
 		/// <summary>
