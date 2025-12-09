@@ -108,6 +108,24 @@ public class WindowPositioner
 		}
 	}
 
+	/// <summary>
+	/// This constructor doest not have to be called in a QueuedTask.
+	/// </summary>
+	/// <param name="placement"></param>
+	/// <param name="method"></param>
+	public WindowPositioner(PreferredPlacement placement,
+	                        EvaluationMethod method)
+	{
+		_method = method;
+
+		Rect mapViewArea = GetMapViewScreenRect();
+
+		if (placement == PreferredPlacement.MapView)
+		{
+			_preferredAreas.Add(mapViewArea);
+		}
+	}
+
 	public WindowPositioner(List<Rect> preferredAreas,
 	                        List<Rect> areasToAvoid,
 	                        EvaluationMethod method)
