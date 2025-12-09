@@ -13,7 +13,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -332,8 +331,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// from <paramref name="replaceDatastore"/>.
 		/// </summary>
 		/// <returns>The number of layers that were (re)connected</returns>
-		/// <remarks>Same as <see cref="Map.ReplaceDatasource(Datastore, Datastore, bool)"/>
-		/// but should work around a Pro SDK bug in the SDE--FGDB replacement case</remarks>
+		/// <remarks>Layers having an invalid data source (Pro shows red
+		/// exclamation mark) will not be replaced! Otherwise, the same as
+		/// <see cref="Map.ReplaceDatasource(Datastore, Datastore, bool)"/>
+		/// but works around a Pro SDK bug in the SDE--FGDB replacement case</remarks>
 		public static int ReplaceDataSource(
 			Map map, Geodatabase findDatastore, Geodatabase replaceDatastore)
 		{
