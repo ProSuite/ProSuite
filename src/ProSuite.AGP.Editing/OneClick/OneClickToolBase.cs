@@ -667,7 +667,15 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected async Task ProcessSelectionAsync(
 			[CanBeNull] CancelableProgressor progressor = null)
 		{
-			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+			Map map = ActiveMapView?.Map;
+
+			if (map == null)
+			{
+				// This happens sometimes when switching map views in the middle of a picker:
+				return;
+			}
+
+			var selectionByLayer = SelectionUtils.GetSelection(map);
 
 			var notifications = new NotificationCollection();
 			var applicableSelection =
