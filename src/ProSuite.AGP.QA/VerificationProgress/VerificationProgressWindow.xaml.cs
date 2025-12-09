@@ -1,6 +1,6 @@
 using System.Windows;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.UI.QA.VerificationProgress;
+using ProSuite.UI.Core.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.VerificationProgress
 {
