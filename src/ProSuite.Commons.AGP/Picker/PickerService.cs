@@ -60,6 +60,9 @@ namespace ProSuite.Commons.AGP.Picker
 				{
 					window.Show();
 					pickable = await window.Task;
+
+					// Closing the window on mouse-up does not always work. Ensure it here.
+					window.Close();
 				});
 
 				return pickable;
