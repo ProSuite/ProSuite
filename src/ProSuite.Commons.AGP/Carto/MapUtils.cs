@@ -304,7 +304,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="pattern">The glob-like search pattern</param>
 		/// <param name="ignoreCase">Whether to ignore case in pattern matching</param>
 		/// <param name="separator">The separator character used in <paramref name="pattern"/></param>
-		/// <returns></returns>
+		/// TODO Swap ignoreCase and separator arguments (the latter belongs to pattern)
 		public static IEnumerable<T> FindLayers<T>(
 			Map map, string pattern, bool ignoreCase = false, char separator = '\\') where T : Layer
 		{
