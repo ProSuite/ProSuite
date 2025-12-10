@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -58,11 +59,19 @@ namespace ProSuite.Commons.AGP.Picker
 
 				await UIEnvironment.WithReleasedCursorAsync(async () =>
 				{
+					Window activeWindow = Application.Current.Windows
+					                                 .OfType<Window>()
+					                                 .FirstOrDefault(w => w.IsActive);
+
 					window.Show();
 					pickable = await window.Task;
 
 					// Closing the window on mouse-up does not always work. Ensure it here.
 					window.Close();
+
+					// Important: This seems to work for both fixed// seems to work!
+					activeWindow?.Activate();
+					activeWindow?.Focus();
 				});
 
 				return pickable;
@@ -74,7 +83,10 @@ namespace ProSuite.Commons.AGP.Picker
 		{
 			Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
 
-			window.Owner = ownerWindow;
+			// Important: setting the owner results in incorrect re-'activation' of the stereo map
+			// in a way that it does not receive keyboard input. Explicitly Activate() and Focus()
+			// seems to work!
+			//window.Owner = ownerWindow;
 
 			if (LocationUnknown(location))
 			{
