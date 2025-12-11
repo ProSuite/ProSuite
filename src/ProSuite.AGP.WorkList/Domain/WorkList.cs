@@ -895,12 +895,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				nearest = allItemQuery.FirstOrDefault();
 			}
 
-			if (nearest != null)
-			{
-				SetCurrentItem(nearest, CurrentItem);
-			}
-
-			return nearest != null;
+			return nearest;
 		}
 
 		private bool TryGetItemsForInnermostContext(Polygon[] contextPerimeters,
