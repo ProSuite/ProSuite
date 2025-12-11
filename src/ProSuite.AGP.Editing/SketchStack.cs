@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -47,6 +49,15 @@ public class SketchStack
 		if (sketch is not { IsEmpty: false })
 		{
 			return;
+		}
+
+		if (_sketches.TryPeek(out Geometry last))
+		{
+			// TODO: 3D equality!
+			if (GeometryUtils.Engine.Equals(last, sketch))
+			{
+				return;
+			}
 		}
 
 		_sketches.Push(sketch);
@@ -129,6 +140,8 @@ public class SketchStack
 		int latchIncrements = 0;
 		try
 		{
+			Stopwatch watch = Stopwatch.StartNew();
+
 			foreach (Geometry sketch in _sketches.Reverse())
 			{
 				_latch.Increment();
@@ -140,6 +153,10 @@ public class SketchStack
 			// Theoretically it should be 0 already, but the SketchModified events do not fire strictly
 			// once per sketch change (e.g. due to fast changes, some events could be dropped).
 			_latch.Reset();
+
+			_msg.VerboseDebug(() =>
+				                  $"Re-applied sketch states to map view {mapView.Map?.Name} in " +
+				                  $"{watch.ElapsedMilliseconds}ms.");
 
 			return true;
 		}

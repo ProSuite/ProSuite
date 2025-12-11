@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -363,7 +364,7 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test]
-		public void Can_go_nearest()
+		public async Task Can_go_nearest()
 		{
 			MapPoint pt7 = PolygonConstruction.CreateMapPoint(7, 0, 0);
 			MapPoint pt10 = PolygonConstruction.CreateMapPoint(10, 0, 0);
@@ -385,7 +386,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			// go to item10
 			Assert.True(wl.CanGoNearest());
-			wl.GoNearest(reference);
+			await wl.GoNearestAsync(reference);
 			Assert.AreEqual(item10, wl.CurrentItem);
 			Assert.True(wl.CurrentItem?.Visited);
 
@@ -393,14 +394,14 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.CanGoNearest());
 			Assert.NotNull(wl.CurrentItem);
 			Assert.NotNull(wl.CurrentItem.Extent);
-			wl.GoNearest(wl.CurrentItem.Extent);
+			await wl.GoNearestAsync(wl.CurrentItem.Extent);
 			Assert.AreEqual(item7, wl.CurrentItem);
 			Assert.True(wl.CurrentItem?.Visited);
 
 			// go to item15
 			Assert.True(wl.CanGoNearest());
 			Assert.NotNull(wl.CurrentItem);
-			wl.GoNearest(wl.CurrentItem.Extent);
+			await wl.GoNearestAsync(wl.CurrentItem.Extent);
 			Assert.AreEqual(item15, wl.CurrentItem);
 			Assert.True(wl.CurrentItem?.Visited);
 
@@ -416,7 +417,7 @@ namespace ProSuite.AGP.WorkList.Test
 			// Now we can go nearest again which is item10 (nearest to item7)
 			Assert.True(wl.CanGoNearest());
 			Assert.NotNull(wl.CurrentItem);
-			wl.GoNearest(wl.CurrentItem.Extent);
+			await wl.GoNearestAsync(wl.CurrentItem.Extent);
 			Assert.AreEqual(item10, wl.CurrentItem);
 			Assert.True(wl.CurrentItem?.Visited);
 		}
