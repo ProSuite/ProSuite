@@ -1205,6 +1205,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				return (T) multipartBuilder.ToGeometry();
 			}
 
+			if (geometry is Envelope envelope)
+			{
+				Coordinate3D ll = new Coordinate3D(envelope.XMin, envelope.YMin, z);
+				Coordinate3D ur = new Coordinate3D(envelope.XMax, envelope.YMax, z);
+
+				return (T) (Geometry) EnvelopeBuilderEx.CreateEnvelope(
+					ll, ur, envelope.SpatialReference);
+			}
+
 			throw new NotSupportedException(
 				$"The provided geometry ({geometry.GeometryType}) type is not yet supported");
 		}
