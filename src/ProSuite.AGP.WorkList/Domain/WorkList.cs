@@ -1790,7 +1790,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public virtual string ToString()
+		public override string ToString()
 		{
 			return $"{DisplayName}: {Name}";
 		}
