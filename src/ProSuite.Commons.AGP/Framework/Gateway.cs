@@ -355,13 +355,21 @@ public static class Gateway
 
 		var dispatcher = Application.Current?.Dispatcher;
 
-		if (dispatcher is not null)
+		if (dispatcher is not null && ! dispatcher.CheckAccess())
 		{
-			dispatcher.Invoke(callback);
+			bool foo = dispatcher.HasShutdownStarted;
+			bool isAlive = dispatcher.Thread.IsAlive;
+			var state = dispatcher.Thread.ThreadState;
+			_msg.Info($"RunOnUI: must dispatch, ThreadState={state}, IsAlive={isAlive}, HasShutdownStarted={foo}");
+
+			dispatcher.Invoke(callback); // tends to hang when Pro is shutting down
+			//dispatcher.Invoke(callback, TimeSpan.FromSeconds(2));
+			//await dispatcher.InvokeAsync(callback); exception in callback flows through Task (good)
+			//dispatcher.BeginInvoke() plays badly with exceptions, use InvokeAsync() instead
 		}
 		else
 		{
-			// No dispatcher, just call on current thread:
+			// No dispatcher or on proper thread: just call
 			callback();
 		}
 	}
