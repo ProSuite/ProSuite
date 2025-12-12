@@ -73,7 +73,7 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
 
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+		IWorkList wl = new IssueWorkList(itemRepository, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 		var watch = new Stopwatch();
 		watch.Start();
@@ -141,7 +141,7 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
 
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+		IWorkList wl = new IssueWorkList(itemRepository, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 		var watch = new Stopwatch();
 		watch.Start();
@@ -211,7 +211,7 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
 
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+		IWorkList wl = new IssueWorkList(itemRepository, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 
 		SpatialReference ch1903plus = SpatialReferenceBuilder.CreateSpatialReference(2056);
@@ -273,7 +273,7 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
 
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+		IWorkList wl = new IssueWorkList(itemRepository, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 		List<IWorkItem> items = wl.Search(null).Take(20).ToList();
 
@@ -295,11 +295,11 @@ public class WorkListDbTest
 		using var polygons = geodatabase.OpenDataset<FeatureClass>("IssuePolygons");
 
 		Dictionary<Table, List<long>> selection = new Dictionary<Table, List<long>>();
-		selection.Add(rows, new List<long> { });
+		selection.Add(rows, new List<long>());
 		selection.Add(lines, new List<long> { 1, 2, 3, 4, 5 });
-		selection.Add(multipatchs, new List<long> { });
+		selection.Add(multipatchs, new List<long>());
 		selection.Add(multipoints, new List<long> { 5, 7, 12, 9 });
-		selection.Add(polygons, new List<long> { });
+		selection.Add(polygons, new List<long>());
 
 		var sourceClasses = new List<ISourceClass>(selection.Count);
 
@@ -318,7 +318,7 @@ public class WorkListDbTest
 		var repository =
 			new SelectionItemRepository(sourceClasses, new WorkItemStateRepositoryMock());
 
-		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+		var wl = new SelectionWorkList(repository, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		List<IWorkItem> items = wl.Search(null).ToList();
 
 		Assert.NotNull(wl.Extent);
@@ -458,7 +458,7 @@ public class WorkListDbTest
 		var repository =
 			new SelectionItemRepository(sourceClasses, new WorkItemStateRepositoryMock());
 
-		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+		var wl = new SelectionWorkList(repository, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 		List<IWorkItem> items = wl.Search(null).ToList();
 
 		Assert.NotNull(wl.Extent);

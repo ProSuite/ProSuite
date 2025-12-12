@@ -12,9 +12,8 @@ using ProSuite.Commons.Testing;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
-using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Carto;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -210,7 +209,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) {Visited = true};
 			IWorkItem item4 = new WorkItemMock(4) {Visited = true};
 			var repo = new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
@@ -243,7 +242,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
@@ -279,7 +278,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
@@ -316,7 +315,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 			
@@ -352,7 +351,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item4 = new WorkItemMock(4);
 
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			wl.LoadItems(GdbQueryUtils.CreateFilter(new []{item1.ObjectID, item2.ObjectID, item3.ObjectID, item4.ObjectID}));
 
@@ -375,7 +374,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item7, item10, item15 }
 				                                  .AsReadOnly());
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			//IEnumerable<IWorkItem> _ = wl.GetItems(GdbQueryUtils.CreateFilter(new List<long>(2){2,3}));
@@ -431,7 +430,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
@@ -465,7 +464,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
@@ -489,7 +488,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item3 = new WorkItemMock(3) { Visited = true };
 			IWorkItem item4 = new WorkItemMock(4) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 
@@ -524,7 +523,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item5 = new WorkItemMock(5) { Visited = true };
 			IWorkItem item6 = new WorkItemMock(6) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4, item5, item6 });
-			var wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			var wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.Search(GdbQueryUtils.CreateFilter(
 				                                     new List<long> { 2, 3, 4 }.AsReadOnly())).ToList();
@@ -572,7 +571,7 @@ namespace ProSuite.AGP.WorkList.Test
 			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
 			IWorkItem item1 = new WorkItemMock(rowId, tableId, _poly0) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(1, wl.Search(null).ToList().Count);
@@ -611,7 +610,7 @@ namespace ProSuite.AGP.WorkList.Test
 			GdbTableIdentity tableId = WorkListTestUtils.CreateTableProxy();
 			IWorkItem item1 = new WorkItemMock(rowId, tableId, _poly0) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(1, wl.Search(null).ToList().Count);
@@ -649,7 +648,7 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item1 = new WorkItemMock(rowId1, tableId, _poly0) { Visited = true };
 			IWorkItem item2 = new WorkItemMock(rowId2, tableId, _poly1) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1, item2 });
-			IWorkList wl = new SelectionWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			// important to get items from DB because the items are loaded lazyly
 			Assert.AreEqual(2, wl.Search(null).ToList().Count);
@@ -692,7 +691,8 @@ namespace ProSuite.AGP.WorkList.Test
 					                                    typeof(IssueWorkList));
 
 				var repo = new ItemRepositoryMock(new List<IWorkItem>(), stateRepo);
-				IWorkList wl = new IssueWorkList(repo, WorkListTestUtils.GetAOI(), uniqueName, "displayName");
+				IMapViewContext mapViewContext = new MapViewContextMock();
+				IWorkList wl = new IssueWorkList(repo, mapViewContext, WorkListTestUtils.GetAOI(), uniqueName, "displayName");
 				Assert.AreEqual(uniqueName, wl.Name);
 				Assert.AreEqual("displayName", wl.DisplayName);
 				wl.Commit();
@@ -728,7 +728,7 @@ namespace ProSuite.AGP.WorkList.Test
 			GdbRowIdentity rowId1 = WorkListTestUtils.CreateRowProxy(1);
 			IWorkItem item1 = new WorkItemMock(rowId1, tableId, _poly0) { Visited = true };
 			var repo = new ItemRepositoryMock(new List<IWorkItem> { item1 });
-			IWorkList wl = new SelectionWorkList(repo, _poly0, "uniqueName", "displayName");
+			IWorkList wl = new SelectionWorkList(repo, new MapViewContextMock(), _poly0, "uniqueName", "displayName");
 
 			IEnumerable<IWorkItem> _ = wl.Search(null).ToList();
 			Assert.AreEqual(1, wl.Search(null).ToList().Count);

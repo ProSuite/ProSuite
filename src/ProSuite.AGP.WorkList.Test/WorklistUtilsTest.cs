@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Data;
 using NUnit.Framework;
-using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Hosting;
-using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Testing;
-using ProSuite.DomainModel.Core;
 
 namespace ProSuite.AGP.WorkList.Test
 {
