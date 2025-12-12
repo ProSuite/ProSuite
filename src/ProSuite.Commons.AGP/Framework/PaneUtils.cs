@@ -4,9 +4,9 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-
 
 namespace ProSuite.Commons.AGP.Framework
 {
@@ -101,9 +101,10 @@ namespace ProSuite.Commons.AGP.Framework
 		{
 			try
 			{
-				foreach (var pane in FrameworkApplication.Panes)
+				foreach (Pane pane in FrameworkApplication.Panes)
 				{
 					var viewStatePane = pane as ViewStatePane;
+
 					if (viewStatePane != null)
 					{
 						if (viewStatePane.Caption == name)
@@ -119,6 +120,33 @@ namespace ProSuite.Commons.AGP.Framework
 			{
 				_msg.Error("Pane can not be activated.", ex);
 			}
+		}
+
+		public static void ActivatePane([NotNull] MapView ofMapView)
+		{
+			try
+			{
+				IMapPane mapPane = Assert.NotNull(GetMapPane(ofMapView));
+
+				var viewStatePane = mapPane as ViewStatePane;
+
+				if (viewStatePane != null)
+				{
+					viewStatePane.Activate();
+					_msg.InfoFormat($"Activated map view '{ofMapView.Map.Name}'");
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Error("Pane can not be activated.", ex);
+			}
+		}
+
+		public static IMapPane GetMapPane(MapView ofMapView)
+		{
+			return FrameworkApplication.Panes
+			                           .OfType<IMapPane>()
+			                           .FirstOrDefault(mapPane => mapPane.MapView == ofMapView);
 		}
 	}
 }
