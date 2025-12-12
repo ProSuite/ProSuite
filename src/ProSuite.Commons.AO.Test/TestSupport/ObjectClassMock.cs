@@ -257,7 +257,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			return CreateObject(GetNextOID());
 		}
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 		IRow ITable.GetRow(long OID) => throw new NotImplementedException();
 
 		public IFeature GetFeature(long OID) => throw new NotImplementedException();
@@ -292,7 +292,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		long IReadOnlyTable.RowCount(ITableFilter filter) =>
 			RowCount(TableFilterUtils.GetQueryFilter(filter));
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 		long ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
 #else
 		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);

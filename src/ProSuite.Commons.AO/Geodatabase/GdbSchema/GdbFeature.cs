@@ -97,7 +97,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IFeature implementation
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 		long IFeature.OID => OID;
 #else
 		int IFeature.OID => (int) OID;

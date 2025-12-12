@@ -110,8 +110,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(selection, progressTracker, resultsPath),
-					ApplicationController = appController,
-					KeepPreviousIssuesDisabled = true
+					ApplicationController = appController
 				};
 
 			string actionTitle = $"{qualitySpecification.Name}: Verify Selection";

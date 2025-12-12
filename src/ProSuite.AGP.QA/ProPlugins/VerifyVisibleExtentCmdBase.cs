@@ -94,8 +94,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
-					ApplicationController = appController,
-					KeepPreviousIssuesDisabled = true
+					ApplicationController = appController
 				};
 
 			string actionTitle = $"{qualitySpecification.Name}: Verify Visible Extent";

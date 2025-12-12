@@ -30,11 +30,11 @@ namespace ProSuite.AGP.Editing.FillHole
 	{
 		protected static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected IList<Holes> _holes;
+		[CanBeNull] protected IList<Holes> _holes;
 
 		private HoleFeedback _feedback;
 
-		protected Envelope _calculationExtent;
+		[CanBeNull] protected Envelope _calculationExtent;
 
 		protected RemoveHoleToolBase()
 		{
@@ -217,14 +217,13 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			List<Feature> selectedFeatures;
 
-			if (! GeometryUtils.Contains(_calculationExtent, sketch))
+			if (_calculationExtent != null &&
+			    ! GeometryUtils.Contains(_calculationExtent, sketch))
 			{
 				// The extent has changed since the holes were calculated -> recalculate
 				selectedFeatures =
 					MapUtils.GetFeatures(
 						        selection, true, activeMapView.Map.SpatialReference)
-					        .Where(f => GeometryUtils.Intersects(
-						               _calculationExtent, f.GetShape().Extent))
 					        .ToList();
 
 				CalculateHoles(selectedFeatures, null, CancellationToken.None);
@@ -233,7 +232,7 @@ namespace ProSuite.AGP.Editing.FillHole
 			IList<Holes> featuresWithHoles = SelectHoles(_holes, sketch);
 
 			_msg.DebugFormat("Selected {0} out of {1} hole features to remove holes",
-			                 featuresWithHoles.Count, _holes.Count);
+			                 featuresWithHoles.Count, _holes?.Count);
 
 			if (featuresWithHoles.Count == 0)
 			{
@@ -403,6 +402,7 @@ namespace ProSuite.AGP.Editing.FillHole
 		                                       CancelableProgressor progressor,
 		                                       CancellationToken cancellationToken);
 
+		[NotNull]
 		protected abstract IList<Holes> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                            [NotNull] Geometry sketch);
 	}

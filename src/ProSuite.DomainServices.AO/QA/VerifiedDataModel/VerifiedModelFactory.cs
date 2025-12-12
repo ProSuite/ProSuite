@@ -150,9 +150,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				//        qn, schema, harvestedNames);
 				Harvest(ws, names, esriDatasetType.esriDTTerrain, () => new TinNameClass(),
 				        qn, schema, harvestedNames); // TODO: verify
+#if !ARCGIS_12_0_OR_GREATER
 				Harvest(ws, names, esriDatasetType.esriDTGeometricNetwork,
 				        () => new GeometricNetworkNameClass(),
 				        qn, schema, harvestedNames);
+#endif
 				Harvest(ws, names, esriDatasetType.esriDTRasterDataset,
 				        () => new RasterDatasetNameClass(),
 				        qn, schema, harvestedNames);

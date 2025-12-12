@@ -38,8 +38,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				{
 					ProgressTracker = verificationRun.Progress,
 					VerificationAction = VerificationAction,
-					ApplicationController = appController,
-					KeepPreviousIssuesDisabled = true
+					ApplicationController = appController
 				};
 
 			VerificationProgressWpfControl progressControl = new VerificationProgressWpfControl();

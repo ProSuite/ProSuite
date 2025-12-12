@@ -29,5 +29,39 @@ public class WorkListFilterDefinition
 
 	#endregion
 
-	public string Name { get; private set; }
+	public string Name { get; }
+
+	#region Object overrides
+
+	public override string ToString()
+	{
+		return Name;
+	}
+
+	public bool Equals(WorkListFilterDefinition other)
+	{
+		if (other == null)
+		{
+			return false;
+		}
+
+		return Equals(Name, other.Name);
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (ReferenceEquals(this, obj))
+		{
+			return true;
+		}
+
+		return Equals(obj as WorkListFilterDefinition);
+	}
+
+	public override int GetHashCode()
+	{
+		return Name.GetHashCode();
+	}
+
+	#endregion
 }
