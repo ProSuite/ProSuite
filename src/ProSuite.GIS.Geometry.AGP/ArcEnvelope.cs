@@ -18,7 +18,7 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		#region Implementation of IGeometry
 
-		public esriGeometryType GeometryType => (esriGeometryType) _proEnvelope.GeometryType;
+		public esriGeometryType GeometryType => esriGeometryType.esriGeometryEnvelope;
 
 		public esriGeometryDimension Dimension => (esriGeometryDimension) _proEnvelope.Dimension;
 
@@ -187,7 +187,6 @@ namespace ProSuite.GIS.Geometry.AGP
 			var aoEnvelope = ((ArcEnvelope) other).ProEnvelope;
 
 			_proEnvelope = _proEnvelope.Union(aoEnvelope);
-
 		}
 
 		public void Intersect(IEnvelope inEnvelope)
@@ -219,7 +218,8 @@ namespace ProSuite.GIS.Geometry.AGP
 		{
 			if (asRatio)
 			{
-				_proEnvelope = _proEnvelope.Expand(dx * _proEnvelope.Width, dy * _proEnvelope.Height, false);
+				_proEnvelope =
+					_proEnvelope.Expand(dx * _proEnvelope.Width, dy * _proEnvelope.Height, false);
 			}
 			else
 			{

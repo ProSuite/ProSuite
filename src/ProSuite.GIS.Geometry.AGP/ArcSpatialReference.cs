@@ -189,6 +189,10 @@ namespace ProSuite.GIS.Geometry.AGP
 		public double ZTolerance => ProSpatialReference.ZTolerance;
 		public double MTolerance => ProSpatialReference.MTolerance;
 
+		public bool IsGeographic => ProSpatialReference.IsGeographic;
+
+		public bool IsUnknown => ProSpatialReference.IsUnknown;
+
 		#endregion
 
 		#region Equality members

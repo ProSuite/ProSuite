@@ -63,6 +63,10 @@ namespace ProSuite.GIS.Geometry.API
 		double ZTolerance { get; }
 		double MTolerance { get; }
 
+		bool IsGeographic { get; }
+
+		bool IsUnknown { get; }
+
 		object NativeImplementation { get; }
 	}
 
