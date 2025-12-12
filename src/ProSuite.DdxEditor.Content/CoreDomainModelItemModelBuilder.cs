@@ -37,7 +37,7 @@ using ProSuite.DomainModel.Core.Geodatabase.Repositories;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.DomainModel.Core.QA.Xml;
-using ProSuite.UI.QA;
+using ProSuite.UI.Core.QA;
 
 namespace ProSuite.DdxEditor.Content
 {

@@ -1,3 +1,8 @@
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -8,11 +13,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 
 namespace ProSuite.DomainModel.AO.DataModel
 {

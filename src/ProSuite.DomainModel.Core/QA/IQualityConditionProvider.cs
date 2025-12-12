@@ -1,3 +1,5 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
 namespace ProSuite.DomainModel.Core.QA
 {
 	/// <summary>
@@ -10,6 +12,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <param name="qualityConditionName"></param>
 		/// <returns></returns>
-		QualityCondition GetCondition(string qualityConditionName);
+		[CanBeNull]
+		QualityCondition GetCondition([NotNull] string qualityConditionName);
 	}
 }

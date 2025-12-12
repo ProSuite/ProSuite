@@ -337,6 +337,30 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			return FindIdentifiers(box.Min.X, box.Min.Y, box.Max.X, box.Max.Y, predicate);
 		}
 
+		public bool FindIdentifiers(TileIndex tileIndex, out List<T> items)
+		{
+			return _tiles.TryGetValue(tileIndex, out items);
+		}
+
+		public IEnumerable<TileIndex> FindTiles(TileIndexSorting indexSorting = TileIndexSorting.QuadTree)
+		{
+			if (indexSorting == TileIndexSorting.QuadTree)
+			{
+				UpdateTileIndexEnvelope();
+				foreach (TileIndex tileIndex in QuadTreeUtils
+							 .GetAllTilesBetween(MinTileEasting, MinTileNorthing,
+												 MaxTileEasting, MaxTileNorthing))
+				{
+					yield return tileIndex;
+				}
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException(nameof(indexSorting), indexSorting,
+													  "Unsupported TileIndexSorting value");
+			}
+		}
+
 		/// <summary>
 		/// Get Identifiers per tile, starting with the tile containing to the given point sorted according to the given DistanceMetric.
 		/// </summary>

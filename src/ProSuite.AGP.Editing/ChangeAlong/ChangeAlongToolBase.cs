@@ -199,19 +199,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 			else
 			{
-				await QueuedTask.Run(
-					() =>
-					{
-						// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-						Dictionary<MapMember, List<long>> selectionByLayer =
-							args.Selection.ToDictionary();
-						IList<Feature> applicableSelection =
-							GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
+				await QueuedTask.Run(() =>
+				{
+					// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+					Dictionary<MapMember, List<long>> selectionByLayer =
+						args.Selection.ToDictionary();
+					IList<Feature> applicableSelection =
+						GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
-						using var source = GetProgressorSource();
-						var progressor = source?.Progressor;
-						RefreshExistingChangeAlongCurves(applicableSelection, progressor);
-					});
+					using var source = GetProgressorSource();
+					var progressor = source?.Progressor;
+					RefreshExistingChangeAlongCurves(applicableSelection, progressor);
+				});
 			}
 
 			return true;
@@ -475,6 +474,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
 				                     ActiveMapView.ClientToScreen(CurrentMousePosition));
 
+			bool isInStereoFixedCursorMode =
+				await QueuedTask.Run(async () =>
+					                     await MapUtils.IsInStereoFixedCursorMode(MapView.Active));
+
+			if (isInStereoFixedCursorMode)
+			{
+				pickerPrecedence.PositionPreference = PickerPositionPreference.MouseLocationMainWindowOptimized;
+			}
+
 			Task<IEnumerable<Feature>> task = QueuedTaskUtils.Run(async () =>
 			{
 				List<FeatureSelectionBase> candidates =
@@ -488,17 +496,21 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					return new List<Feature>();
 				}
 
-				if (pickerPrecedence.IsPointClick && candidates.Count > 1)
+				if (pickerPrecedence.IsPointClick)
 				{
-					List<IPickableFeatureItem> items =
-						await PickerUtils.GetItemsAsync<IPickableFeatureItem>(
-							candidates, pickerPrecedence, PickerMode.ShowPicker);
+					if (candidates.Count > 1 ||
+					    candidates.FirstOrDefault()?.GetFeatures()?.Count() > 1)
+					{
+						List<IPickableFeatureItem> items =
+							await PickerUtils.GetItemsAsync<IPickableFeatureItem>(
+								candidates, pickerPrecedence, PickerMode.ShowPicker);
 
-					IPickableFeatureItem item = items.FirstOrDefault();
+						IPickableFeatureItem item = items.FirstOrDefault();
 
-					return item == null
-						       ? Enumerable.Empty<Feature>()
-						       : new List<Feature> { item.Feature };
+						return item == null
+							       ? Enumerable.Empty<Feature>()
+							       : new List<Feature> { item.Feature };
+					}
 				}
 
 				return candidates.SelectMany(c => c.GetFeatures());

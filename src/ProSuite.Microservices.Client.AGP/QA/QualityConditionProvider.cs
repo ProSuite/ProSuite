@@ -1,3 +1,4 @@
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
 
@@ -17,6 +18,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 		public QualityCondition GetCondition(string qualityConditionName)
 		{
+			Assert.ArgumentNotNullOrEmpty(qualityConditionName, nameof(qualityConditionName));
+
 			GetConditionRequest request = new GetConditionRequest()
 			                              {
 				                              ConditionName = qualityConditionName

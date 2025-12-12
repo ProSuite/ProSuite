@@ -256,7 +256,18 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					}
 				}
 
-				result.AddRange(GeometryUtils.GetParts(resultCollection));
+				bool inputIsZAware = GeometryUtils.IsZAware(inputPolygon);
+
+				foreach (IGeometry resultGeometry in GeometryUtils.GetParts(resultCollection))
+				{
+					// Bug DPS/#258: Non-Z-aware polygons become Z-aware by Cut
+					if (! inputIsZAware && GeometryUtils.IsZAware(resultGeometry))
+					{
+						GeometryUtils.MakeNonZAware(resultGeometry);
+					}
+
+					result.Add(resultGeometry);
+				}
 			}
 			catch (Exception e)
 			{
@@ -691,10 +702,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				IRing ringTemplate = GeometryFactory.CreateEmptyRing(inputPolygon);
 
 				var cutResults =
-					cutRingGroups.Select(
-						             rg =>
-							             GeometryConversionUtils.CreatePolygon(
-								             inputPolygon, ringTemplate, rg))
+					cutRingGroups.Select(rg =>
+						                     GeometryConversionUtils.CreatePolygon(
+							                     inputPolygon, ringTemplate, rg))
 					             .ToList();
 
 				var largest = GeometryUtils.GetLargestGeometry(cutResults);
@@ -814,8 +824,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			GeometryUtils.Simplify(cutLine, true, true);
 
 			MultiPolycurve cutLinestrings = new MultiPolycurve(
-				GeometryUtils.GetPaths(cutLine).Select(
-					cutPath => GeometryConversionUtils.CreateLinestring(cutPath, ! cutLineHasZs)));
+				GeometryUtils.GetPaths(cutLine).Select(cutPath =>
+					                                       GeometryConversionUtils.CreateLinestring(
+						                                       cutPath, ! cutLineHasZs)));
 
 			IList<RingGroup> resultGroups =
 				GeomTopoOpUtils.CutPlanar(ringGroup, cutLinestrings, tolerance);

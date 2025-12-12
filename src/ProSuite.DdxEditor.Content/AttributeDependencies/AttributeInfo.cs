@@ -7,7 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.UI.DataModel.ResourceLookup;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
 
 namespace ProSuite.DdxEditor.Content.AttributeDependencies

@@ -788,8 +788,64 @@ namespace ProSuite.Commons.AGP.Carto
 				       });
 		}
 
+		/// <summary>
+		/// Determines the correct screen point from the specified screen point depending on the map.
+		/// This is relevant for stereo maps in fixed cursor mode, where the stereo cursor is always
+		/// in the center of the map but the input mouse screen position can be elsewhere.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <param name="screenPoint"></param>
+		/// <param name="zValue">The current Z value of the screen point to be transformed</param>
+		/// <returns></returns>
+		public static async Task<Point> GetCorrectedScreenPoint([NotNull] MapView mapView,
+		                                                        Point screenPoint,
+		                                                        double zValue)
+		{
+			if (! IsStereoMapView(mapView))
+			{
+				return screenPoint;
+			}
+
+			bool isInFixedCursorMode = await IsInStereoFixedCursorMode(mapView);
+
+			if (! isInFixedCursorMode)
+			{
+				return screenPoint;
+			}
+
+			Envelope extent = mapView.Extent;
+
+			// Fixed cursor mode: Use map center
+			// TODO: Is there a more WPF-native way like Screen.GetWorkingArea?
+			MapPoint mapCenterPoint = extent.Center;
+
+			Point centerScreen =
+				await QueuedTask.Run(() =>
+				{
+					MapPoint stereoMapCenterWithZ =
+						GeometryFactory.CreatePoint(mapCenterPoint.X, mapCenterPoint.Y, zValue,
+						                            mapCenterPoint.SpatialReference);
+
+					Point screenCenter = mapView.MapToScreen(stereoMapCenterWithZ);
+
+					return screenCenter;
+				});
+
+			return centerScreen;
+		}
+
+		/// <summary>
+		/// Determines whether the stereo map view is in fixed cursor mode. Must be called on MCT.
+		/// </summary>
+		/// <param name="mapView"></param>
+		/// <returns></returns>
 		public static async Task<bool> IsInStereoFixedCursorMode([NotNull] MapView mapView)
 		{
+			if (! IsStereoMapView(mapView))
+			{
+				return false;
+			}
+
 			bool isInFixedCursorMode = false;
 #if ARCGISPRO_GREATER_3_5
 

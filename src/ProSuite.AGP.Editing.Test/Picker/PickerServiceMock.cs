@@ -8,7 +8,8 @@ namespace ProSuite.AGP.Editing.Test.Picker
 {
 	public class PickerServiceMock : IPickerService
 	{
-		public Task<IPickableItem> Pick(IEnumerable<IPickableItem> items, IPickerViewModel viewModel)
+		public Task<IPickableItem> Pick(IEnumerable<IPickableItem> items,
+		                                IPickerViewModel viewModel)
 		{
 			throw new NotImplementedException();
 		}
