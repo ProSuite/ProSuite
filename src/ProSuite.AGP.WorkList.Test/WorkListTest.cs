@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Carto;
 
 namespace ProSuite.AGP.WorkList.Test
