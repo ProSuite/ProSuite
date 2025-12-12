@@ -429,6 +429,12 @@ namespace ProSuite.AGP.Editing.OneClick
 					return;
 				}
 
+				if (args.Map != ActiveMapView.Map)
+				{
+					// Selection changed on a different map (e.g. by SyncSelection)
+					return;
+				}
+
 				if (RequiresEditSession && Project.Current?.IsEditingEnabled != true)
 				{
 					return;
@@ -563,11 +569,24 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Point screenLocation = await GetPopupScreenLocation(sketchGeometry);
 
-			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                            screenLocation)
-			       {
-				       NoMultiselection = ! AllowMultiSelection(out _)
-			       };
+			var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
+			                                  screenLocation)
+			             {
+				             NoMultiselection = ! AllowMultiSelection(out _)
+			             };
+
+			MapView mapView = MapView.Active;
+
+			bool isInStereoFixedCursorMode =
+				MapUtils.IsStereoMapView(mapView) &&
+				await QueuedTask.Run(async () => await MapUtils.IsInStereoFixedCursorMode(mapView));
+
+			if (isInStereoFixedCursorMode)
+			{
+				result.PositionPreference = PickerPositionPreference.MouseLocation;
+			}
+
+			return result;
 		}
 
 		/// <summary>
@@ -649,7 +668,15 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected async Task ProcessSelectionAsync(
 			[CanBeNull] CancelableProgressor progressor = null)
 		{
-			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+			Map map = ActiveMapView?.Map;
+
+			if (map == null)
+			{
+				// This happens sometimes when switching map views in the middle of a picker:
+				return;
+			}
+
+			var selectionByLayer = SelectionUtils.GetSelection(map);
 
 			var notifications = new NotificationCollection();
 			var applicableSelection =

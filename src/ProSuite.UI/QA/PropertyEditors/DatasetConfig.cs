@@ -9,7 +9,8 @@ using ProSuite.Commons.UI.Finder;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.QA.BoundTableRows;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.BoundTableRows;
 
 namespace ProSuite.UI.QA.PropertyEditors
 {

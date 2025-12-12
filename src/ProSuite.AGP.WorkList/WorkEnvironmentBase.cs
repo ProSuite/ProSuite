@@ -39,6 +39,19 @@ namespace ProSuite.AGP.WorkList
 
 		public bool AllowBackgroundLoading { get; set; }
 
+		public async Task UpdateConfigurationAsync(IWorkList workList)
+		{
+			// Consider separating volatile and one-time only state and make two methods
+			ConfigureWorkList(workList);
+
+			if (workList is DbStatusWorkList dbStatusWorkList)
+			{
+				dbStatusWorkList.UpdateDefinitionExpressions();
+			}
+
+			await QueuedTask.Run(() => workList.Invalidate());
+		}
+
 		protected virtual Geometry GetAreaOfInterest()
 		{
 			return null;

@@ -1,5 +1,7 @@
+using System;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Datasource;
@@ -56,4 +58,44 @@ public class CachedWorkItem : IWorkItem
 	public Geometry BufferedGeometry => null;
 
 	public GeometryType? SourceGeometryType { get; set; }
+
+	#region Equality members
+
+	protected bool Equals(WorkItem other)
+	{
+		return UniqueTableId == other.UniqueTableId && ObjectID == other.ObjectID;
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (obj is null)
+		{
+			return false;
+		}
+
+		if (ReferenceEquals(this, obj))
+		{
+			return true;
+		}
+
+		if (obj.GetType() != GetType())
+		{
+			return false;
+		}
+
+		return Equals((WorkItem) obj);
+	}
+
+	public override int GetHashCode()
+	{
+		return HashCode.Combine(UniqueTableId, GdbRowProxy);
+	}
+
+	#endregion
+
+	public override string ToString()
+	{
+		return
+			$"item id={OID}, row oid={ObjectID}, {GdbRowProxy.Table.Name}, {Status}, {Visited}";
+	}
 }

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{4305B6A0-BB38-4D12-85BB-95282FFAA8A1}</ProjectGuid>
 
@@ -12,27 +12,32 @@
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
 
-    <ArcGISServerVersion Condition="$(VSArcGISVersion.StartsWith('11.'))">Server11</ArcGISServerVersion>
-
     <!-- CA1416: Disable platform compatibility validation, because net6.0-windows is not enough. -->		
     <NoWarn>1591;CA1416;</NoWarn>
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
-
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
     <!-- .net framework: -->
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants>$(VSArcGISProduct)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt;= 11.0 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_11_0_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
-    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
     <PlatformTarget Condition=" '$(VSArcGISProduct)' == 'ArcGIS' ">x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DefineConstants>TRACE;$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

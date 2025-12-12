@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,6 +15,8 @@ public class SketchDrawer
 {
 	[NotNull] private readonly List<IDisposable> _overlays = new List<IDisposable>(3);
 
+	private static readonly CIMRGBColor _sketchGreen = ColorUtils.CreateRGB(0, 125, 0);
+
 	private CIMLineSymbol _lineSymbol;
 	private CIMPolygonSymbol _polygonSymbol;
 	private CIMPointSymbol _regularUnselectedSymbol;
@@ -21,7 +24,15 @@ public class SketchDrawer
 
 	public CIMLineSymbol LineSymbol
 	{
+		// NOTE: This line symbol crashes the application by grabbing all the memory
+		//       -> use other symbol in stereo!
 		get => _lineSymbol ??= CreateLineSymbol();
+		set => _lineSymbol = value;
+	}
+
+	public CIMLineSymbol LineSymbolStereo
+	{
+		get => _lineSymbol ??= CreateStereoLineSymbol();
 		set => _lineSymbol = value;
 	}
 
@@ -31,15 +42,33 @@ public class SketchDrawer
 		set => _polygonSymbol = value;
 	}
 
+	public CIMPolygonSymbol PolygonSymbolStereo
+	{
+		get => _polygonSymbol ??= CreateStereoPolygonSymbol();
+		set => _polygonSymbol = value;
+	}
+
 	public CIMPointSymbol RegularUnselectedSymbol
 	{
 		get => _regularUnselectedSymbol ??= CreateRegularUnselectedSymbol();
 		set => _regularUnselectedSymbol = value;
 	}
 
+	public CIMPointSymbol RegularUnselectedSymbolStereo
+	{
+		get => _regularUnselectedSymbol ??= CreateStereoRegularUnselectedSymbol();
+		set => _regularUnselectedSymbol = value;
+	}
+
 	public CIMPointSymbol CurrentUnselectedSymbol
 	{
 		get => _currentUnselectedSymbol ??= CreateCurrentUnselectedSymbol();
+		set => _currentUnselectedSymbol = value;
+	}
+
+	public CIMPointSymbol CurrentUnselectedSymbolStereo
+	{
+		get => _currentUnselectedSymbol ??= CreateStereoCurrentUnselectedSymbol();
 		set => _currentUnselectedSymbol = value;
 	}
 
@@ -55,10 +84,17 @@ public class SketchDrawer
 		// Consider updating existing geometries instead clearing
 		ClearSketch();
 
+		bool isStereo = MapUtils.IsStereoMapView(inMapView);
+
 		CIMSymbolReference regularUnselectedSymbRef =
-			RegularUnselectedSymbol.MakeSymbolReference();
+			isStereo
+				? RegularUnselectedSymbolStereo.MakeSymbolReference()
+				: RegularUnselectedSymbol.MakeSymbolReference();
+
 		CIMSymbolReference currentUnselectedSymbRef =
-			CurrentUnselectedSymbol.MakeSymbolReference();
+			isStereo
+				? CurrentUnselectedSymbolStereo.MakeSymbolReference()
+				: CurrentUnselectedSymbol.MakeSymbolReference();
 
 		if (sketchGeometry is Multipart multipart)
 		{
@@ -69,6 +105,7 @@ public class SketchDrawer
 				builder.AddPoint(point);
 			}
 
+			// NOTE: The multipoints are not shown in stereo! TODO: repro & report
 			var multipoint = builder.ToGeometry();
 			_overlays.Add(
 				await inMapView.AddOverlayAsync(multipoint, regularUnselectedSymbRef));
@@ -76,7 +113,11 @@ public class SketchDrawer
 
 		if (sketchGeometry is Polyline polyline)
 		{
-			CIMSymbolReference lineSymbRef = LineSymbol.MakeSymbolReference();
+			CIMSymbolReference lineSymbRef =
+				isStereo
+					? LineSymbolStereo.MakeSymbolReference()
+					: LineSymbol.MakeSymbolReference();
+
 			_overlays.Add(await inMapView.AddOverlayAsync(polyline, lineSymbRef));
 
 			var endPoint = GeometryUtils.GetEndPoint(polyline);
@@ -121,9 +162,26 @@ public class SketchDrawer
 		return SymbolUtils.CreateLineSymbol(CreateSketchStrokes());
 	}
 
+	private static CIMLineSymbol CreateStereoLineSymbol()
+	{
+		return SymbolFactory.Instance.ConstructLineSymbol(_sketchGreen, 1.6);
+	}
+
 	private static CIMPolygonSymbol CreatePolygonSymbol()
 	{
 		return SymbolUtils.CreatePolygonSymbol(CreateSketchStrokes());
+	}
+
+	private static CIMPolygonSymbol CreateStereoPolygonSymbol()
+	{
+		var solidStroke = new CIMSolidStroke
+		                  {
+			                  Color = _sketchGreen,
+			                  Width = 1.6
+		                  };
+
+		return SymbolFactory.Instance.ConstructPolygonSymbol(
+			_sketchGreen, SimpleFillStyle.Null, solidStroke);
 	}
 
 	private static CIMPointSymbol CreateCurrentUnselectedSymbol()
@@ -131,9 +189,25 @@ public class SketchDrawer
 		return CreateSketchVertexSymbol(ColorUtils.CreateRGB(255, 0, 0));
 	}
 
+	private static CIMPointSymbol CreateStereoCurrentUnselectedSymbol()
+	{
+		return SymbolFactory.Instance.ConstructPointSymbol(
+			ColorUtils.RedRGB, 4, SimpleMarkerStyle.Square);
+	}
+
 	private static CIMPointSymbol CreateRegularUnselectedSymbol()
 	{
 		return CreateSketchVertexSymbol(ColorUtils.CreateRGB(0, 128, 0));
+	}
+
+	private static CIMPointSymbol CreateStereoRegularUnselectedSymbol()
+	{
+		var result = SymbolFactory.Instance.ConstructPointSymbol(
+			ColorUtils.GreenRGB, 4, SimpleMarkerStyle.Square);
+
+		result.HaloSize = 1;
+
+		return result;
 	}
 
 	private static CIMSymbolLayer[] CreateSketchStrokes()

@@ -7,7 +7,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,8 +23,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull] private static readonly ThreadLocal<IDictionary<string, string>>
 			_tableNamesByQueryClassNames =
-				new ThreadLocal<IDictionary<string, string>>(
-					() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+				new ThreadLocal<IDictionary<string, string>>(() => new Dictionary<string, string>(
+					                                             StringComparer.OrdinalIgnoreCase));
 
 		public static bool IsInSchema([NotNull] IWorkspace workspace,
 		                              [NotNull] string gdbDatasetName,
@@ -65,8 +64,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			if (dataset is IDatasetCollection datasetCollection)
 			{
-				return datasetCollection.ContainedDatasets.All(
-					containedDataset => masterDatabaseWorkspaceContext.Contains(containedDataset));
+				return datasetCollection.ContainedDatasets.All(containedDataset =>
+					                                               masterDatabaseWorkspaceContext
+						                                               .Contains(containedDataset));
 			}
 
 			return masterDatabaseWorkspaceContext.Contains(dataset);
@@ -308,7 +308,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			{
 				ProSuiteGeometryType proSuiteGeometryType = shapeType.ShapeType;
 
-				esriShapeType = (esriGeometryType)proSuiteGeometryType;
+				esriShapeType = (esriGeometryType) proSuiteGeometryType;
 			}
 
 			return OpenObjectClass(workspace, gdbDatasetName,
@@ -362,7 +362,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 				ISqlWorkspace2 sqlWorkspace2 = (ISqlWorkspace2) sqlWorkspace;
 
 				// NOTE: discoverSpatialProperties = false is only fast if the field list is not '*'
-				queryDescription = sqlWorkspace2.GetQueryDescription2(query, discoverSpatialProperties);
+				queryDescription =
+					sqlWorkspace2.GetQueryDescription2(query, discoverSpatialProperties);
 
 				if (knownGeometryType != esriGeometryType.esriGeometryNull)
 				{
@@ -378,16 +379,35 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return DatasetUtils.OpenTable(workspace, gdbDatasetName);
 			}
 
-			bool hasUnknownSref =
-				queryDescription.SpatialReference == null ||
-				queryDescription.SpatialReference is IUnknownCoordinateSystem;
+			bool hasUnknownSref = HasUnknownSpatialReference(queryDescription);
+
+			if (hasUnknownSref && queryDescription.IsSpatialQuery)
+			{
+				// In case it was provided, set it
+				ISpatialReference spatialReference =
+					spatialReferenceDescriptor?.GetSpatialReference();
+
+				if (spatialReference != null)
+				{
+					queryDescription.SpatialReference = spatialReference;
+					queryDescription.Srid = spatialReference.FactoryCode.ToString();
+
+					hasUnknownSref = HasUnknownSpatialReference(queryDescription);
+				}
+				else
+				{
+					_msg.DebugFormat(
+						"No spatial reference provided by spatial reference descriptor!");
+				}
+			}
 
 			// NOTE: We want to distinguish between un-registered tables with proper OIDField etc.
-			// such as PostGIS tables and views that might or might not contain a decent OIDFIeld
-			// candidate.
-			// In case it is a dataset from a data dictionary, it could have been configured there
-			// but in standalone situations, we have to rely on some heuristics if it a view (which
-			// we would like to avoid in case of a proper PostGIS spatial table).
+			// such as PostGIS tables (they can be updated!) and views that might or might not
+			// contain a decent OIDField candidate.
+			// In case it is a dataset from a data dictionary, the OID field, geometry type, SR
+			// could have been configured there but in standalone situations, we have to rely on
+			// some heuristics to determine whether it is a view. Actual PostGIS should ideally
+			// be opened as a table to allow updates.
 			// NOTE: queryDescription.IsOIDMappedColumn is always false in 11.3 and cannot be used
 			// for this distinction (if this was ever the case).
 
@@ -415,22 +435,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 				}
 			}
 
-			if (hasUnknownSref && queryDescription.IsSpatialQuery)
-			{
-				ISpatialReference spatialReference =
-					spatialReferenceDescriptor?.GetSpatialReference();
-
-				if (spatialReference != null)
-				{
-					queryDescription.SpatialReference = spatialReference;
-					queryDescription.Srid = spatialReference.FactoryCode.ToString();
-				}
-				else
-				{
-					_msg.DebugFormat("No spatial reference provided by spatial reference descriptor!");
-				}
-			}
-
 			string queryLayerName = null;
 
 			try
@@ -453,7 +457,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				_msg.DebugFormat("Opening query layer with name {0}", queryLayerName);
 
 				ITable queryClass = sqlWorkspace.OpenQueryClass(queryLayerName, queryDescription);
-				
+
 				// This is probably not the case any more, or just in specific situations (oracle?):
 				// NOTE: the query class is owned by the *connected* user, not by the owner of the underlying table/view
 
@@ -473,6 +477,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				return DatasetUtils.OpenTable(workspace, gdbDatasetName);
 			}
+		}
+
+		private static bool HasUnknownSpatialReference(IQueryDescription queryDescription)
+		{
+			bool hasUnknownSref =
+				queryDescription.SpatialReference == null ||
+				queryDescription.SpatialReference is IUnknownCoordinateSystem;
+			return hasUnknownSref;
 		}
 
 		private static bool HasDubiousOid(IFields fields,
@@ -617,6 +629,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			return null;
 		}
+
 		private static string GetFieldList(IWorkspace sqlWorkspace, string tableName)
 		{
 			var sqlWs = sqlWorkspace as ISqlWorkspace;
@@ -642,7 +655,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 					}
 				}
 
-				return StringUtils.Concatenate(result, ","); ;
+				return StringUtils.Concatenate(result, ",");
+				;
 			}
 			catch (Exception ex)
 			{

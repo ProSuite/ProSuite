@@ -37,6 +37,9 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		AreModifierKeysPressed();
 	}
 
+	public PickerPositionPreference PositionPreference { get; set; } =
+		PickerPositionPreference.MouseLocationMapOptimized;
+
 	protected List<Key> PressedKeys { get; } = new();
 
 	public int Tolerance { get; }

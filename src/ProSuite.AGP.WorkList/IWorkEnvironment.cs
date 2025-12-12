@@ -39,4 +39,13 @@ public interface IWorkEnvironment
 	/// when the map is opened.
 	/// </summary>
 	bool AllowBackgroundLoading { get; }
+
+	/// <summary>
+	/// Updates a work lists' configuration according to the current environment. Some more volatile
+	/// state could be maintained in the VerificationEnvironment, such as the LastFilterDate which
+	/// should be updated before a (dormant) work list from the registry is re-opened.
+	/// Also, the underlying data might have changed and must be re-read.
+	/// </summary>
+	/// <param name="worklist"></param>
+	Task UpdateConfigurationAsync(IWorkList worklist);
 }

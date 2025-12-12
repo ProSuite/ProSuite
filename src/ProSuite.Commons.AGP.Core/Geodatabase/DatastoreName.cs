@@ -264,7 +264,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			Connector otherConnector = other._connector;
 
-			return Equals(otherConnector);
+			return Equals(otherConnector, comparison);
 		}
 
 		private bool Equals(Connector otherConnector,

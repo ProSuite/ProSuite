@@ -16,27 +16,34 @@
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
 
-    <ArcGISServerVersion Condition="$(VSArcGISVersion.StartsWith('11.'))">Server11</ArcGISServerVersion>
-
     <NoWarn>1591</NoWarn>
 
     <TargetFramework>netstandard2.0</TargetFramework>
-
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants>$(VSArcGISProduct);$(ArcGISServerVersion)</DefineConstants>
+    <DefineConstants>$(VSArcGISProduct)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt;= 11.0 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_11_0_OR_GREATER</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt; 11.4 ">
     <DefineConstants>$(DefineConstants);ARCGIS_11_5_OR_GREATER</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt;= 12.0 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_12_0_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.AO.xml</DocumentationFile>
   </PropertyGroup>
 
@@ -73,6 +80,9 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>

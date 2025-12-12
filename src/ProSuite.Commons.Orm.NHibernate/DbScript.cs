@@ -105,7 +105,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 			}
 			catch (Exception e)
 			{
-				_msg.Warn(e.Message);
+				_msg.Warn(e.Message, e);
 			}
 		}
 

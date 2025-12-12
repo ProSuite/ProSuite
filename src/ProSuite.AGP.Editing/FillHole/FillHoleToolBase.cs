@@ -40,11 +40,11 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		private OverridableSettingsProvider<PartialHoleOptions> _settingsProvider;
 
-		protected IList<Holes> _holes;
+		[CanBeNull] protected IList<Holes> _holes;
 
 		private HoleFeedback _feedback;
 
-		protected Envelope _calculationExtent;
+		[CanBeNull] protected Envelope _calculationExtent;
 
 		protected FillHoleToolBase()
 		{
@@ -240,16 +240,13 @@ namespace ProSuite.AGP.Editing.FillHole
 
 			MapView activeMapView = MapView.Active;
 
-			if (! GeometryUtils.Contains(_calculationExtent, sketch))
+			if (_calculationExtent != null &&
+			    ! GeometryUtils.Contains(_calculationExtent, sketch))
 			{
 				// The extent has changed since the holes were calculated -> recalculate
-				List<Feature> selectedFeatures = MapUtils.GetFeatures(
-					                                         selection, true,
-					                                         activeMapView.Map.SpatialReference)
-				                                         .Where(f => GeometryUtils.Intersects(
-					                                                _calculationExtent,
-					                                                f.GetShape().Extent))
-				                                         .ToList();
+				List<Feature> selectedFeatures =
+					MapUtils.GetFeatures(selection, true, activeMapView.Map.SpatialReference)
+					        .ToList();
 
 				CalculateHoles(selectedFeatures, null, CancellationToken.None);
 			}
