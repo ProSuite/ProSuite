@@ -26,8 +26,12 @@ namespace ProSuite.Commons.Testing
 		/// Extracts the ZIP file to C:\temp and returns the full path.
 		/// </summary>
 		/// <param name="archiveName">Has to be the name of a ZIP file, e.g. "TestData.gdb.zip"</param>
-		/// <param name="dirRelativeToProject"></param>
-		/// <returns></returns>
+		/// <param name="dirRelativeToProject">Relative path to test data. From where the .csproj file is to the directory with test data.
+		/// </param>
+		/// <example>
+		/// TestDataPreparer.ExtractZip("unit_test_data_conflicts.gdb.zip").GetPath();
+		/// TestDataPreparer.ExtractZip("unit_test_data_conflicts.gdb.zip", @"..\..\..\ProSuite.Shared\src\ProSuite.Shared.AGP.ConflictResolution.Test\TestData").GetPath()
+		/// </example>
 		[NotNull]
 		public static ITestDataArchive ExtractZip([NotNull] string archiveName,
 		                                          string dirRelativeToProject = _defaultTestDataDir)
