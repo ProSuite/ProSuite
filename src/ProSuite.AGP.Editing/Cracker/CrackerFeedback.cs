@@ -15,10 +15,6 @@ namespace ProSuite.AGP.Editing.Cracker
 {
 	public class CrackerFeedback
 	{
-		private static CIMLineSymbol _overlapLineSymbol;
-
-		private readonly CIMPolygonSymbol _overlapPolygonSymbol;
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private static CIMSymbolReference _outlinedPointSymRef;
@@ -62,11 +58,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 		public CrackerFeedback()
 		{
-			_overlapLineSymbol =
-				SymbolUtils.CreateLineSymbol(255, 0, 0, 2);
-
-			_overlapPolygonSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
-
 			CIMColor red = ColorUtils.CreateRGB(255, 0, 0);
 
 			CIMColor green = ColorUtils.CreateRGB(0, 200, 0);
