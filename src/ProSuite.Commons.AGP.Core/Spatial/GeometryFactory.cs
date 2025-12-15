@@ -129,8 +129,21 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			double halfWidth = width / 2;
 			double halfHeight = height / 2;
 
-			var p0 = new Coordinate2D(center.X - halfWidth, center.Y - halfHeight);
-			var p1 = new Coordinate2D(center.X + halfWidth, center.Y + halfHeight);
+			double xMin = center.X - halfWidth;
+			double yMin = center.Y - halfHeight;
+			double xMax = center.X + halfWidth;
+			double yMax = center.Y + halfHeight;
+
+			if (center.HasZ)
+			{
+				var ll = new Coordinate3D(xMin, yMin, center.Z);
+				var ur = new Coordinate3D(xMax, yMax, center.Z);
+
+				return EnvelopeBuilderEx.CreateEnvelope(ll, ur, sref);
+			}
+
+			var p0 = new Coordinate2D(xMin, yMin);
+			var p1 = new Coordinate2D(xMax, yMax);
 
 			return EnvelopeBuilderEx.CreateEnvelope(p0, p1, sref);
 		}

@@ -855,7 +855,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <returns></returns>
 		/// <remarks>Must run on MCT</remarks>
 		public static double ConvertScreenPixelToMapLength(
-			MapView mapView,
+			[NotNull] MapView mapView,
 			int pixels,
 			[NotNull] MapPoint atPoint)
 		{
@@ -894,10 +894,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="mapView"></param>
 		/// <param name="atPoint"></param>
 		/// <returns></returns>
-		private static double GetPixelSizeInMapUnits(MapView mapView,
+		private static double GetPixelSizeInMapUnits([NotNull] MapView mapView,
 		                                             [NotNull] MapPoint atPoint)
 		{
-			Envelope mapExtent = mapView.Map.GetDefaultExtent();
+			Envelope mapExtent = Assert.NotNull(mapView.Extent);
 			SpatialReference sr = mapExtent.SpatialReference;
 
 			double z = atPoint.Z;
