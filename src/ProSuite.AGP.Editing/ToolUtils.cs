@@ -528,5 +528,29 @@ namespace ProSuite.AGP.Editing
 				return defaultColor;
 			}
 		}
+
+		public static bool IsStoreRequired([NotNull] Feature originalFeature,
+		                                   [NotNull] Geometry updatedGeometry,
+		                                   [NotNull] HashSet<long> editableClassHandles)
+		{
+			if (! GdbPersistenceUtils.CanChange(originalFeature,
+			                                    editableClassHandles, out string warning))
+			{
+				_msg.Debug($"{GdbObjectUtils.ToString(originalFeature)}: {warning}");
+				return false;
+			}
+
+			Geometry originalGeometry = originalFeature.GetShape();
+
+			if (originalGeometry != null &&
+			    originalGeometry.IsEqual(updatedGeometry))
+			{
+				_msg.Debug(
+					$"The geometry of feature {GdbObjectUtils.ToString(originalFeature)} is unchanged. It will not be stored");
+				return false;
+			}
+
+			return true;
+		}
 	}
 }

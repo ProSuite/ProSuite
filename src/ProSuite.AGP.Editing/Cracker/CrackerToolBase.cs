@@ -14,7 +14,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Framework;
@@ -223,7 +222,8 @@ namespace ProSuite.AGP.Editing.Cracker
 			{
 				Feature originalFeature = resultFeature.OriginalFeature;
 				Geometry updatedGeometry = resultFeature.NewGeometry;
-				if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
+				if (! ToolUtils.IsStoreRequired(originalFeature, updatedGeometry,
+				                                editableClassHandles))
 				{
 					continue;
 				}
@@ -279,33 +279,6 @@ namespace ProSuite.AGP.Editing.Cracker
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
-		}
-
-		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
-		                                    HashSet<long> editableClassHandles)
-		{
-			if (! GdbPersistenceUtils.CanChange(originalFeature,
-			                                    editableClassHandles, out string warning))
-			{
-				_msg.DebugFormat("{0}: {1}",
-				                 GdbObjectUtils.ToString(originalFeature),
-				                 warning);
-
-				return false;
-			}
-
-			Geometry originalGeometry = originalFeature.GetShape();
-
-			if (originalGeometry != null &&
-			    originalGeometry.IsEqual(updatedGeometry))
-			{
-				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
-				                 GdbObjectUtils.ToString(originalFeature));
-
-				return false;
-			}
-
-			return true;
 		}
 
 		private CrackerToolOptions InitializeOptions()

@@ -186,7 +186,7 @@ namespace ProSuite.AGP.Editing.Chopper
 
 				Geometry newGeometry = resultFeature.NewGeometry;
 
-				if (! IsStoreRequired(originalFeature, newGeometry, editableClassHandles))
+				if (! ToolUtils.IsStoreRequired(originalFeature, newGeometry, editableClassHandles))
 				{
 					continue;
 				}
@@ -263,33 +263,6 @@ namespace ProSuite.AGP.Editing.Chopper
 
 				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
 			}
-		}
-
-		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
-		                                    HashSet<long> editableClassHandles)
-		{
-			if (! GdbPersistenceUtils.CanChange(originalFeature,
-			                                    editableClassHandles, out string warning))
-			{
-				_msg.DebugFormat("{0}: {1}",
-				                 GdbObjectUtils.ToString(originalFeature),
-				                 warning);
-
-				return false;
-			}
-
-			Geometry originalGeometry = originalFeature.GetShape();
-
-			if (originalGeometry != null &&
-			    originalGeometry.IsEqual(updatedGeometry))
-			{
-				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
-				                 GdbObjectUtils.ToString(originalFeature));
-
-				return false;
-			}
-
-			return true;
 		}
 
 		private ChopperToolOptions InitializeOptions()

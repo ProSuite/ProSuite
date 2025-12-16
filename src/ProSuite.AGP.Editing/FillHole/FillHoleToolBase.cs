@@ -17,7 +17,6 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -391,32 +390,6 @@ namespace ProSuite.AGP.Editing.FillHole
 
 		protected abstract IList<Polygon> SelectHoles([CanBeNull] IList<Holes> holes,
 		                                              [NotNull] Geometry sketch);
-
-		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
-		                                    HashSet<long> editableClassHandles)
-		{
-			if (! GdbPersistenceUtils.CanChange(originalFeature,
-			                                    editableClassHandles, out string warning))
-			{
-				_msg.DebugFormat("{0}: {1}",
-				                 GdbObjectUtils.ToString(originalFeature),
-				                 warning);
-				return false;
-			}
-
-			Geometry originalGeometry = originalFeature.GetShape();
-
-			if (originalGeometry != null &&
-			    originalGeometry.IsEqual(updatedGeometry))
-			{
-				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
-				                 GdbObjectUtils.ToString(originalFeature));
-
-				return false;
-			}
-
-			return true;
-		}
 
 		private static List<Polygon> GetSourcePolygons(
 			[NotNull] ICollection<Feature> selectedFeatures,
