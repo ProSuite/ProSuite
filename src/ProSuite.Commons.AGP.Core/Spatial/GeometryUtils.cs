@@ -2147,6 +2147,13 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				// Single point geometry
 				yield return mapPoint;
 			}
+			else if (geometry is Multipatch multipatch)
+			{
+				foreach(var point in multipatch.Points)
+				{
+					yield return point;
+				}
+			}
 		}
 
 		public static EnvelopeXY GetCombinedExtent(IEnumerable<Feature> features)
