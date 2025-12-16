@@ -13,7 +13,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -303,11 +302,10 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <typeparam name="T">The type of layers to find</typeparam>
 		/// <param name="map">The map from which to find layers</param>
 		/// <param name="pattern">The glob-like search pattern</param>
-		/// <param name="ignoreCase">Whether to ignore case in pattern matching</param>
 		/// <param name="separator">The separator character used in <paramref name="pattern"/></param>
-		/// TODO Swap ignoreCase and separator arguments (the latter belongs to pattern)
+		/// <param name="ignoreCase">Whether to ignore case in pattern matching</param>
 		public static IEnumerable<T> FindLayers<T>(
-			Map map, string pattern, bool ignoreCase = false, char separator = '\\') where T : Layer
+			Map map, string pattern, char separator = '\\', bool ignoreCase = false) where T : Layer
 		{
 			if (map is null || pattern is null)
 			{
