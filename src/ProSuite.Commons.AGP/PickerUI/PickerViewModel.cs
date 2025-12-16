@@ -6,12 +6,18 @@ namespace ProSuite.Commons.AGP.PickerUI
 {
 	public class PickerViewModel : PickerViewModelBase<IPickableItem>
 	{
-		public PickerViewModel([NotNull] Geometry selectionGeometry) : base(selectionGeometry) { }
+		private readonly bool _flashAllMapViews;
+
+		public PickerViewModel([NotNull] Geometry selectionGeometry,
+		                       bool flashAllMapViews = false) : base(selectionGeometry)
+		{
+			_flashAllMapViews = flashAllMapViews;
+		}
 
 		[NotNull]
 		protected override FlashService CreateFlashService()
 		{
-			return new FlashService();
+			return new FlashService(_flashAllMapViews);
 		}
 	}
 }
