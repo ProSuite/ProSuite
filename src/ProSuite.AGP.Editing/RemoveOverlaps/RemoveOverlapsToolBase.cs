@@ -168,6 +168,12 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 					_removeOverlapsToolOptions,
 					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
+			if (result == null)
+			{
+				_msg.Warn("No overlaps were removed.");
+				return false;
+			}
+
 			var updates = new Dictionary<Feature, Geometry>();
 			var inserts = new Dictionary<Feature, IList<Geometry>>();
 
@@ -277,8 +283,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 		}
 
-		private Overlaps CalculateOverlaps(IList<Feature> selectedFeatures,
-		                                   IList<Feature> overlappingFeatures,
+		[CanBeNull]
+		private Overlaps CalculateOverlaps([NotNull] IList<Feature> selectedFeatures,
+		                                   [NotNull] IList<Feature> overlappingFeatures,
 		                                   CancelableProgressor progressor)
 		{
 			CancellationToken cancellationToken;
@@ -394,7 +401,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			                                    out centralConfiguration);
 
 			var result = new RemoveOverlapsToolOptions(centralConfiguration,
-			                                       localConfiguration);
+			                                           localConfiguration);
 
 			result.PropertyChanged -= OptionsPropertyChanged;
 			result.PropertyChanged += OptionsPropertyChanged;
@@ -525,7 +532,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			var featureLayer = layer as FeatureLayer;
 
 			List<string>
-				ignoredClasses = new List<string>(); // RemoveOverlapsToolOptions.IgnoreFeatureClasses;
+				ignoredClasses =
+					new List<string>(); // RemoveOverlapsToolOptions.IgnoreFeatureClasses;
 
 			return CanOverlapGeometryType(featureLayer) &&
 			       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
