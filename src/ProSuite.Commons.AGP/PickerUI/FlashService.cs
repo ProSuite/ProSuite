@@ -133,8 +133,13 @@ public class FlashService : IDisposable
 		DisposeOverlays();
 	}
 
-	private static Geometry GetPolygonGeometry(Geometry geometry)
+	private Geometry GetPolygonGeometry(Geometry geometry)
 	{
+		if (_flashInAllMaps)
+		{
+			return geometry;
+		}
+
 		Envelope clipExtent = MapView.Active?.Extent;
 
 		if (clipExtent == null)
