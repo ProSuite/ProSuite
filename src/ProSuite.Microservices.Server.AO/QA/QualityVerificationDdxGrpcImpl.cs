@@ -352,6 +352,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private GetProjectWorkspacesResponse GetProjectWorkspacesCore(
 			GetProjectWorkspacesRequest request)
 		{
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
 			IList<GdbWorkspace> gdbWorkspaces =
 				ProtobufConversionUtils.CreateSchema(request.ObjectClasses,
 				                                     request.Workspaces);
@@ -363,11 +369,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				objectClasses.AddRange(gdbWorkspace.GetDatasets());
 			}
 
-			IVerificationDataDictionary<TModel> verificationDataDictionary =
-				Assert.NotNull(VerificationDdx,
-				               "Data Dictionary access has not been configured or failed.");
-
-			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
+			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces;
 
 			GetProjectWorkspacesResponse response = null;
 			_domainTransactions.UseTransaction(() =>
@@ -462,6 +464,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
 			IList<QualitySpecification> foundSpecifications = null;
 			_domainTransactions.UseTransaction(() =>
 			{
@@ -488,6 +492,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IVerificationDataDictionary<TModel> verificationDataDictionary =
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
+
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
 			_domainTransactions.UseTransaction(() =>
 			{
@@ -528,6 +534,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IVerificationDataDictionary<TModel> verificationDataDictionary =
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
+
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
 			_domainTransactions.UseTransaction(() =>
 			{
@@ -573,6 +581,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IVerificationDataDictionary<TModel> verificationDataDictionary =
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
+
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
 			_domainTransactions.UseTransaction(() =>
 			{
