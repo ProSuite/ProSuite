@@ -1447,7 +1447,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// a line width could be derived; false otherwise.</returns>
 		/// <remarks>To get overall line width, add <paramref name="leftPoints"/>
 		/// and <paramref name="rightPoints"/> together.</remarks>
-		public static bool GetLineWidth(CIMLineSymbol symbol,
+		public static bool GetLineWidth(CIMMultiLayerSymbol symbol,
 		                                out double leftPoints, out double rightPoints)
 		{
 			leftPoints = rightPoints = double.NaN;

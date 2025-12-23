@@ -7,14 +7,17 @@ namespace ProSuite.Commons
 	/// A dimension is a value (double) with a unit (string).
 	/// The unit is an arbitrary (trimmed) string; it is the
 	/// client's responsibility to impose restrictions and provide
-	/// conversions. Immutable type.
+	/// conversions.
 	/// </summary>
 	/// <remarks>When binding in WPF, consider using the classes
 	/// DimensionConverter and DimensionValidation</remarks>
-	public readonly struct Dimension : IEquatable<Dimension>
+	public struct Dimension : IEquatable<Dimension>
 	{
-		public double Value { get; }
-		public string Unit { get; }
+		// TODO: Change these from "set" to "init" once we are on
+		//		 language version 9. Then the struct can be changed
+		//		 back to readonly as well.
+		public double Value { get; set; }
+		public string Unit { get; set; }
 
 		public Dimension(double value, string unit)
 		{

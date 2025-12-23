@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
@@ -33,6 +33,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		private static readonly object _obj = new();
 		private static readonly int _initialCapacity = 1000;
 
+		[NotNull] private readonly IMapViewContext _mapViewContext;
+
 		private List<IWorkItem> _items = new(_initialCapacity);
 		private ConcurrentDictionary<GdbRowIdentity, IWorkItem> _rowMap = new();
 
@@ -40,6 +42,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[NotNull] private string _displayName;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
+		                   [NotNull] IMapViewContext mapViewContext,
 		                   [CanBeNull] Geometry areaOfInterest,
 		                   [NotNull] string name,
 		                   [NotNull] string displayName)
@@ -53,6 +56,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Name = name;
 
+			_mapViewContext = mapViewContext;
 			_displayName = displayName;
 
 			CurrentIndex = repository.GetCurrentIndex();
@@ -523,7 +527,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			else
 			{
-				Envelope extent = oldCurrentItem?.Extent ?? MapView.Active?.Extent;
+				Envelope extent = oldCurrentItem?.Extent ?? _mapViewContext.Extent;
 
 				if (extent != null)
 				{
@@ -1399,9 +1403,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			LoadItems();
 
-			if (! HasCurrentItem())
+			Envelope extent = _mapViewContext.Extent;
+
+			if (! HasCurrentItem() && extent != null)
 			{
-				GoNearest(MapView.Active.Extent);
+				GoNearest(extent);
 			}
 
 			OnWorkListChanged();
@@ -1831,7 +1837,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public virtual string ToString()
+		public override string ToString()
 		{
 			return $"{DisplayName}: {Name}";
 		}

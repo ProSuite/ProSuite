@@ -1,32 +1,54 @@
+using System;
 using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI;
 
-namespace ProSuite.Commons.AGP.Carto
+namespace ProSuite.Commons.AGP.Carto;
+
+public abstract class ToggleHalosButtonBase : Button
 {
-	public abstract class ToggleHalosButtonBase : Button
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	protected ToggleHalosButtonBase()
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		// Assume no halos if current state is unknown
+		IsChecked = Halos.Instance.ToggleState ?? false;
+	}
 
-		protected ToggleHalosButtonBase()
+	protected override async void OnClick()
+	{
+		try
 		{
-			this.IsChecked = Halos.Instance.ToggleState;
+			Gateway.LogEntry(_msg);
+
+			var mapView = MapView.Active;
+			if (mapView?.Map is null) return;
+
+			IsChecked = ! IsChecked;
+
+			await QueuedTask.Run(() => ToggleHalos(mapView, IsChecked));
 		}
-
-		protected override void OnClick()
+		catch (Exception ex)
 		{
-			ViewUtils.Try(OnClickCore, _msg);
+			Gateway.ShowError(ex, _msg);
 		}
+	}
 
-		private async void OnClickCore()
+	private static void ToggleHalos(MapView mapView, bool on)
+	{
+		var map = mapView.Map ?? throw new InvalidOperationException();
+		var substitutionType = on
+			                       ? SymbolSubstitutionType.IndividualSubordinate
+			                       : SymbolSubstitutionType.None;
+
+		var modified = Halos.Instance.ToggleHalo(map, substitutionType);
+
+		if (modified)
 		{
-			this.IsChecked = this.IsChecked ? false : true;
-
-			QueuedTask.Run(() => Halos.Instance.ToggleHalo(this.IsChecked
-				                                               ? SymbolSubstitutionType.IndividualSubordinate
-				                                               : SymbolSubstitutionType.None));
+			mapView.Redraw(false);
 		}
 	}
 }

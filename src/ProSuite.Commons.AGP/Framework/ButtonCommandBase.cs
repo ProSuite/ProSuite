@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.AGP.Windows;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 

@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Selection
@@ -83,7 +84,8 @@ namespace ProSuite.AGP.WorkList.Selection
 		                                                string uniqueName,
 		                                                string displayName)
 		{
-			return new SelectionWorkList(repository, GetAreaOfInterest(), uniqueName, displayName);
+			return new SelectionWorkList(repository, new MapViewContext(), GetAreaOfInterest(),
+			                             uniqueName, displayName);
 		}
 	}
 }

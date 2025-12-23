@@ -10,6 +10,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Carto
 {
@@ -33,6 +34,68 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// Check if a layer (and optionally its parents) matches a pattern.
+		/// Pattern matching behaves roughly like gitignore patterns:
+		/// - no separator in pattern: match pattern against layer's name only
+		/// - separator(s) in pattern: match pattern against entire "path" of layer
+		/// - separator at end of pattern: layer must be composite (e.g. a group layer)
+		/// - "?" in pattern matches any single character, except the separator
+		/// - "*" in pattern matches any character sequence, except the separator
+		/// - leading "**/" in pattern matches any parent path
+		/// - trailing "/**" in pattern matches everything inside
+		/// - "/**/" in pattern matches zero(!) or more container layers
+		/// </summary>
+		/// <param name="layer">The layer to check</param>
+		/// <param name="pattern">The gitignore-like pattern</param>
+		/// <param name="ignoreCase">Whether to consider (default) or ignore case</param>
+		/// <param name="separator">The separator character used in <paramref name="pattern"/></param>
+		/// <returns>True iff the pattern matches</returns>
+		public static bool MatchPattern(Layer layer, string pattern, bool ignoreCase = false, char separator = '\\')
+		{
+			if (layer is null || pattern is null) return false;
+
+			bool match;
+			bool hasSeparator = pattern.Contains(separator);
+
+			if (hasSeparator)
+			{
+				var names = new List<string>();
+
+				names.Add(layer.Name);
+
+				// Walk up parent layers, if any, stopping just before the Map:
+
+				Layer candidate = layer;
+				while (candidate.Parent is Layer parent)
+				{
+					names.Add(parent.Name);
+					candidate = parent;
+				}
+
+				names.Reverse();
+
+				var patterns = pattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+				// "/foo/bar///" => ["foo", "bar"] (layer names CAN be empty, but we don't handle this)
+
+				match = TextMatching.PathMatch(patterns, names, ignoreCase);
+			}
+			else
+			{
+				// No separator in pattern: just match against layer's name
+				match = TextMatching.WildMatch(pattern, layer.Name, ignoreCase);
+			}
+
+			if (match)
+			{
+				// If pattern ends with separator: layer must be composite
+				bool wantComposite = pattern.EndsWith(separator);
+				return !wantComposite || layer is ILayerContainer;
+			}
+
+			return false;
 		}
 
 		/// <summary>
@@ -859,6 +922,7 @@ namespace ProSuite.Commons.AGP.Carto
 			CIMBaseLayer cimLayer = layer.GetDefinition();
 			cimLayer.Name = name;
 			layer.SetDefinition(cimLayer);
+			// TODO why not simply: layer.SetName(name);
 		}
 
 		public static void Flatten([NotNull] IEnumerable<Layer> layers,

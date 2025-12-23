@@ -224,6 +224,26 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return definition?.GetShapeType() ?? GeometryType.Unknown;
 		}
 
+		/// <summary>See <see cref="IsVersioned(Dataset, out bool)"/></summary>
+		public static bool IsVersioned(this Dataset dataset)
+		{
+			return dataset.IsVersioned(out _);
+		}
+
+		/// <returns>true iff the given dataset is registered as versioned
+		/// (with or without the option to move edits to base table)</returns>
+		public static bool IsVersioned(this Dataset dataset, out bool withMoveToBase)
+		{
+			if (dataset is null)
+				throw new ArgumentNullException(nameof(dataset));
+			
+			var registrationType = dataset.GetRegistrationType();
+
+			withMoveToBase = registrationType == RegistrationType.VersionedWithMoveToBase;
+
+			return registrationType != RegistrationType.Nonversioned;
+		}
+
 		public static T GetDatasetDefinition<T>(Datastore datastore, string datasetName)
 			where T : Definition
 		{

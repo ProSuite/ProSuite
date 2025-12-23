@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -126,7 +128,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			catch (Exception e)
 			{
 				string message =
-					$"Failed to open Datastore {GetDatastoreDisplayText(connector)}: {e.Message}";
+					$"Failed to open {GetDatastoreDisplayText(connector)}: {e.Message}";
 				_msg.Debug(message, e);
 
 				throw new IOException(message, e);
@@ -549,6 +551,53 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Get the schema owner (aka schema name or "qualifier") of
+		/// the datasets in the given <paramref name="geodatabase"/>.
+		/// </summary>
+		/// <returns>The schema owner (qualifier), or null
+		/// if the database has no schema owner</returns>
+		/// <remarks>Note that the schema owner name may itself be
+		/// qualified (like "database.schema"), e.g. with PostgreSQL.
+		/// The file geodatabase does not have a schema owner.</remarks>
+		public static string FindSchemaOwner(ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			if (geodatabase is null)
+				throw new ArgumentNullException(nameof(geodatabase));
+
+			//var geodatabaseType = geodatabase.GetGeodatabaseType();
+			//if (geodatabaseType != GeodatabaseType.RemoteDatabase)
+			//	return null; // not 100% sure
+
+			var definitions = new List<Definition>();
+			var tdefs = geodatabase.GetDefinitions<TableDefinition>();
+			definitions.AddRange(tdefs);
+			var fdefs = geodatabase.GetDefinitions<FeatureClassDefinition>();
+			definitions.AddRange(fdefs);
+
+			// GetDefinitions<TableDefinition>() returns ONLY table definitions,
+			// not feature class definitions, despite them being a subclass.
+			// However, FeatureClassDefinitions subsumes annotation definitions!
+			// Calling GetDefintions<Definition> fails with: "This type of geodatabase
+			// (LocalDatabase) does not currently support definition of type Definition."
+
+			var qualifiers = definitions
+				.Select(d => DatasetNameUtils.GetQualifier(d.GetName()))
+				.Where(q => !string.IsNullOrEmpty(q))
+				.Distinct().ToList();
+
+			switch (qualifiers.Count)
+			{
+				case 0:
+					return null; // assume unqualified names
+				case 1:
+					return qualifiers.Single();
+				default:
+					var joined = string.Join(", ", qualifiers);
+					throw new NotSupportedException($"More than one qualifier in geodatabase: {joined}");
+			}
 		}
 	}
 }

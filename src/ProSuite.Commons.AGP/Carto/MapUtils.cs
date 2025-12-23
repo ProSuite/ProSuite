@@ -297,6 +297,96 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		/// <summary>
+		/// Find layers whose name and parent names match a pattern,
+		/// see <see cref="LayerUtils.MatchPattern"/> for details.
+		/// </summary>
+		/// <typeparam name="T">The type of layers to find</typeparam>
+		/// <param name="map">The map from which to find layers</param>
+		/// <param name="pattern">The glob-like search pattern</param>
+		/// <param name="separator">The separator character used in <paramref name="pattern"/></param>
+		/// <param name="ignoreCase">Whether to ignore case in pattern matching</param>
+		public static IEnumerable<T> FindLayers<T>(
+			Map map, string pattern, char separator = '\\', bool ignoreCase = false) where T : Layer
+		{
+			if (map is null || pattern is null)
+			{
+				yield break;
+			}
+
+			var allLayers = map.GetLayersAsFlattenedList()
+			                   .OfType<T>();
+
+			foreach (var layer in allLayers)
+			{
+				if (LayerUtils.MatchPattern(layer, pattern, ignoreCase, separator))
+				{
+					yield return layer;
+				}
+			}
+		}
+
+		/// <summary>
+		/// On the given <paramref name="map"/>, make all layers that
+		/// pull data from <paramref name="findDatastore"/> to pull it
+		/// from <paramref name="replaceDatastore"/>.
+		/// </summary>
+		/// <returns>The number of layers that were (re)connected</returns>
+		/// <remarks>Layers having an invalid data source (Pro shows red
+		/// exclamation mark) will not be replaced! Otherwise, the same as
+		/// <see cref="Map.ReplaceDatasource(Datastore, Datastore, bool)"/>
+		/// but works around a Pro SDK bug in the SDE--FGDB replacement case</remarks>
+		public static int ReplaceDataSource(
+			Map map, Geodatabase findDatastore, Geodatabase replaceDatastore)
+		{
+			if (map is null)
+				throw new ArgumentNullException(nameof(map));
+			if (findDatastore is null)
+				throw new ArgumentNullException(nameof(findDatastore));
+			if (replaceDatastore is null)
+				throw new ArgumentNullException(nameof(replaceDatastore));
+
+			int count = 0;
+
+			// Sadly, map.ReplaceDatasource(findDatastore, replaceDatastore)
+			// is buggy when going from SDE to FGDB (at least at Pro 3.5).
+			// So we try to do it "manually", layer by layer:
+
+			//var geodatabaseType = replaceDatastore.GetGeodatabaseType();
+			var schemaOwner = WorkspaceUtils.FindSchemaOwner(replaceDatastore);
+
+			var layers = map.GetLayersAsFlattenedList()
+							.OfType<BasicFeatureLayer>().ToList();
+
+			foreach (var layer in layers)
+			{
+				//var cimBefore = layer.GetDataConnection(); // TESTING
+
+				using var featureClass = layer.GetFeatureClass();
+				if (featureClass is null) continue; // skip invalid layer
+
+				using var datastore = featureClass.GetDatastore();
+				if (datastore is not Geodatabase geodatabase) continue;
+
+				bool isSame = WorkspaceUtils.IsSameDatastore(geodatabase, findDatastore);
+
+				if (isSame)
+				{
+					var originName = featureClass.GetName();
+					var targetName = DatasetNameUtils.QualifyDatasetName(originName, schemaOwner);
+
+					var dataset = replaceDatastore.OpenDataset<Table>(targetName);
+					layer.ReplaceDataSource(dataset);
+
+					//var cimAfter = layer.GetDataConnection(); // TESTING
+
+					count += 1;
+				}
+			}
+
+			return count;
+		}
+
+		/// <summary>
 		/// Returns feature layers and stand-alone tables that contain a set of specified OIDs.
 		/// This method can be used to filter layers that have a restrictive definition query
 		/// which potentially excludes the specified OIDs. These layers ca be used for flashing

@@ -103,5 +103,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			return QualifyDatasetName(datasetName);
 		}
+
+		public static string GetQualifier(string datasetName)
+		{
+			ParseDatasetName(datasetName, out _, out string qualifier);
+			return qualifier;
+		}
 	}
 }
