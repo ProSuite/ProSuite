@@ -16,8 +16,9 @@ namespace ProSuite.AGP.QA
 		[NotNull] private readonly IVerificationSessionContext _sessionContext;
 		[NotNull] private readonly IQualityVerificationClient _client;
 
-		public DdxSpecificationReferencesProvider([NotNull] IVerificationSessionContext sessionContext,
-		                                          [NotNull] IQualityVerificationClient client)
+		public DdxSpecificationReferencesProvider(
+			[NotNull] IVerificationSessionContext sessionContext,
+			[NotNull] IQualityVerificationClient client)
 		{
 			_sessionContext = sessionContext;
 			_client = client;
@@ -47,16 +48,20 @@ namespace ProSuite.AGP.QA
 
 			var datasetIds = projectWorkspace.Datasets.Select(d => d.Id).ToList();
 
-			return await DdxUtils.LoadSpecificationsRpcAsync(datasetIds,
-			                                                 IncludeHiddenSpecifications,
-			                                                 Assert.NotNull(_client.DdxClient));
+			return await DdxUtils.LoadSpecificationsRpcAsync(
+				       datasetIds,
+				       IncludeHiddenSpecifications,
+				       Assert.NotNull(_client.DdxClient),
+				       _sessionContext.VerificationEnvironment.DdxEnvironmentName);
 		}
 
 		public async Task<QualitySpecification> GetCurrentQualitySpecification(int ddxId)
 		{
-			return await DdxUtils.LoadFullSpecification(ddxId,
-			                                            KnownInstanceDescriptors,
-			                                            Assert.NotNull(_client.DdxClient));
+			return await DdxUtils.LoadFullSpecification(
+				       ddxId,
+				       KnownInstanceDescriptors,
+				       Assert.NotNull(_client.DdxClient),
+				       _sessionContext.VerificationEnvironment.DdxEnvironmentName);
 		}
 
 		public Task<IQualitySpecificationReference> GetQualitySpecification(string name)

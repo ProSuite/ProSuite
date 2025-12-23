@@ -13,6 +13,13 @@ namespace ProSuite.DomainModel.AGP.QA
 	public interface IQualityVerificationEnvironment
 	{
 		/// <summary>
+		/// The name of the DDX environment associated with this verification environment. This is
+		/// relevant for multi-ddx setups on the server side.
+		/// </summary>
+		[CanBeNull]
+		string DdxEnvironmentName { get; }
+
+		/// <summary>
 		/// Gets or sets the current quality specification.
 		/// </summary>
 		/// <value>The current quality specification.</value>
@@ -71,7 +78,6 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// </summary>
 		[CanBeNull]
 		string BackendDisplayName { get; }
-
 
 		IQualityConditionProvider ConditionProvider { get; }
 

@@ -41,7 +41,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] IEnumerable<Table> tables,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
-			[CanBeNull] IModelFactory modelFactory = null)
+			[CanBeNull] IModelFactory modelFactory = null,
+			string ddxEnvironment = null)
 		{
 			var datastoresByHandle = new Dictionary<long, Datastore>();
 			var spatialReferencesByWkId = new Dictionary<long, SpatialReference>();
@@ -55,7 +56,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					AddSpatialReferences(tableCollection.OfType<FeatureClass>(),
 					                     spatialReferencesByWkId);
 
-					return CreateProjectWorkspacesRequest(tableCollection);
+					return CreateProjectWorkspacesRequest(tableCollection, ddxEnvironment);
 				});
 
 			if (request.ObjectClasses.Count == 0)
@@ -74,10 +75,12 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		public static async Task<IList<IQualitySpecificationReference>> LoadSpecificationsRpcAsync(
 			[NotNull] IList<int> datasetIds,
 			bool includeHiddenSpecifications,
-			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
+			[CanBeNull] string ddxEnvironment)
 		{
 			var request = new GetSpecificationRefsRequest()
 			              {
+				              Environment = ProtobufGeomUtils.NullToEmpty(ddxEnvironment),
 				              IncludeHidden = includeHiddenSpecifications
 			              };
 
@@ -118,10 +121,12 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		public static async Task<QualitySpecification> LoadFullSpecification(
 			int specificationId,
 			[NotNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
-			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
+			[CanBeNull] string ddxEnvironment = null)
 		{
-			var request = new GetSpecificationRequest()
+			var request = new GetSpecificationRequest
 			              {
+				              Environment = ProtobufGeomUtils.NullToEmpty(ddxEnvironment),
 				              QualitySpecificationId = specificationId
 			              };
 
@@ -361,10 +366,15 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		public static void AddDatasetsDetailsAsync(
 			IList<Dataset> datasets,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
-			[NotNull] IModelFactory modelFactory)
+			[NotNull] IModelFactory modelFactory,
+			[CanBeNull] string ddxEnvironment = null)
 		{
 			// Get the details
-			var request = new GetDatasetDetailsRequest();
+			var request = new GetDatasetDetailsRequest
+			              {
+				              Environment = ProtobufGeomUtils.NullToEmpty(ddxEnvironment)
+			              };
+
 			request.DatasetIds.AddRange(datasets.Select(d => d.Id));
 
 			_msg.DebugFormat("Getting dataset details for {0} datasets.",
@@ -572,9 +582,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		}
 
 		private static GetProjectWorkspacesRequest CreateProjectWorkspacesRequest(
-			[NotNull] IEnumerable<Table> objectClasses)
+			[NotNull] IEnumerable<Table> objectClasses,
+			[CanBeNull] string ddxEnvironment)
 		{
-			var request = new GetProjectWorkspacesRequest();
+			var request = new GetProjectWorkspacesRequest
+			              {
+				              Environment = ProtobufGeomUtils.NullToEmpty(ddxEnvironment)
+			              };
 
 			List<WorkspaceMsg> workspaceMessages = new List<WorkspaceMsg>();
 
