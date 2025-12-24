@@ -60,14 +60,11 @@ namespace ProSuite.Microservices.AO
 
 			result.ObjectId = featureOrObject.OID;
 
-#if ARCGIS_12_0_OR_GREATER
-			ShapeMsg.FormatOneofCase format = ShapeMsg.FormatOneofCase.EsriShape;
-#else
 			ShapeMsg.FormatOneofCase format =
 				geometry?.GeometryType == esriGeometryType.esriGeometryMultiPatch
 					? ShapeMsg.FormatOneofCase.Wkb
 					: ShapeMsg.FormatOneofCase.EsriShape;
-#endif
+
 			result.Shape = ProtobufGeometryUtils.ToShapeMsg(geometry, format, spatialRefFormat);
 
 			return result;
