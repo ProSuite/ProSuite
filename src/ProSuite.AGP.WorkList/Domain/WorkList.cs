@@ -9,6 +9,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -33,8 +34,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		private static readonly object _obj = new();
 		private static readonly int _initialCapacity = 1000;
 
-		[NotNull] private readonly IMapViewContext _mapViewContext;
-
 		private List<IWorkItem> _items = new(_initialCapacity);
 		private ConcurrentDictionary<GdbRowIdentity, IWorkItem> _rowMap = new();
 
@@ -42,7 +41,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		[NotNull] private string _displayName;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
-		                   [NotNull] IMapViewContext mapViewContext,
 		                   [CanBeNull] Geometry areaOfInterest,
 		                   [NotNull] string name,
 		                   [NotNull] string displayName)
@@ -56,11 +54,17 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Name = name;
 
-			_mapViewContext = mapViewContext;
 			_displayName = displayName;
 
 			CurrentIndex = repository.GetCurrentIndex();
 		}
+
+		/// <summary>
+		/// Optional property that provides the current map view extent. Set this property to enable
+		/// navigation features that require knowledge of the current view extent.
+		/// </summary>
+		[CanBeNull]
+		public IMapViewContext ExtentProvider { get; set; } = new MapViewContext();
 
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
@@ -527,7 +531,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 			else
 			{
-				Envelope extent = oldCurrentItem?.Extent ?? _mapViewContext.Extent;
+				Envelope extent = oldCurrentItem?.Extent ?? ExtentProvider?.Extent;
 
 				if (extent != null)
 				{
@@ -589,6 +593,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		// TODO: All callers use ExcludeCurrent. Rename to GetCandidates?
 		private IEnumerable<IWorkItem> GetItems([CanBeNull] SpatialQueryFilter filter,
 		                                        CurrentSearchOption currentSearch,
 		                                        VisitedSearchOption visitedSearch)
@@ -936,7 +941,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
-		// TODO: (daro) rename to GetItemsForInnermostContext
 		[NotNull]
 		private IList<IWorkItem> GetWorkItemsForInnermostContext([NotNull] Polygon[] perimeters,
 		                                                         VisitedSearchOption visitedSearch)
@@ -946,7 +950,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			_msg.VerboseDebug(() =>
 				                  $"Getting work items for innermost context ({perimeters.Length} perimeters)");
 
-			// TODO: DARO revise it's always Exclude Current
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
 
 			for (var index = 0; index < perimeters.Length; index++)
@@ -1403,7 +1406,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			LoadItems();
 
-			Envelope extent = _mapViewContext.Extent;
+			Envelope extent = ExtentProvider?.Extent;
 
 			if (! HasCurrentItem() && extent != null)
 			{

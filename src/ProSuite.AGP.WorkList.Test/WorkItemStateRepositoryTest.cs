@@ -41,7 +41,7 @@ public class WorkItemStateRepositoryTest
 		var repo =
 			new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 }, stateRepo);
 		IWorkList wl =
-			new IssueWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+			new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 		List<IWorkItem> items = wl.Search(new SpatialQueryFilter()).ToList();
 
@@ -71,7 +71,7 @@ public class WorkItemStateRepositoryTest
 				new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 },
 				                       stateRepo);
 			IWorkList wl =
-				new IssueWorkList(repo, new MapViewContextMock(), WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
+				new IssueWorkList(repo, WorkListTestUtils.GetAOI(), "uniqueName", "displayName");
 
 			List<IWorkItem> items = wl.Search(null).ToList();
 

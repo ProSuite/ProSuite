@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain;
@@ -12,11 +11,10 @@ public abstract class DbStatusWorkList : WorkList
 	private readonly List<WorkListFilterDefinition> _filterDefinitions;
 
 	protected DbStatusWorkList([NotNull] IWorkItemRepository repository,
-	                           [NotNull] IMapViewContext mapViewContext,
 	                           [NotNull] Geometry areaOfInterest,
 	                           [NotNull] string name,
 	                           [NotNull] string displayName)
-		: base(repository, mapViewContext, areaOfInterest, name, displayName)
+		: base(repository, areaOfInterest, name, displayName)
 	{
 		_filterDefinitions = new List<WorkListFilterDefinition>();
 	}
