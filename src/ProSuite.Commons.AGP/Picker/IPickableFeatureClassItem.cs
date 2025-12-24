@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using ArcGIS.Desktop.Mapping;
 
-namespace ProSuite.Commons.AGP.Picker
+namespace ProSuite.Commons.AGP.Picker;
+
+public interface IPickableFeatureClassItem : IPickableItem
 {
-	public interface IPickableFeatureClassItem : IPickableItem
-	{
-		List<BasicFeatureLayer> Layers { get; }
+	List<BasicFeatureLayer> Layers { get; }
 
-		ICollection<long> Oids { get; }
+	ICollection<long> Oids { get; }
 
-		void AddOids(IEnumerable<long> oids);
-	}
+	void AddOids(IEnumerable<long> oids);
 }

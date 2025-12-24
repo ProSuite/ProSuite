@@ -6,84 +6,83 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 
-namespace ProSuite.DomainModel.AGP.DataModel
+namespace ProSuite.DomainModel.AGP.DataModel;
+
+public class FieldIndexCache
 {
-	public class FieldIndexCache
+	[NotNull] private readonly Dictionary<Table, FieldIndexes> _fieldIndexesByTable =
+		new Dictionary<Table, FieldIndexes>();
+
+	public int GetFieldIndex(Table table, string fieldName, AttributeRole role = null)
 	{
-		[NotNull] private readonly Dictionary<Table, FieldIndexes> _fieldIndexesByTable =
-			new Dictionary<Table, FieldIndexes>();
-		
-		public int GetFieldIndex(Table table, string fieldName, AttributeRole role = null)
+		FieldIndexes fieldIndexes;
+		if (! _fieldIndexesByTable.TryGetValue(table, out fieldIndexes))
 		{
-			FieldIndexes fieldIndexes;
-			if (! _fieldIndexesByTable.TryGetValue(table, out fieldIndexes))
-			{
-				fieldIndexes = new FieldIndexes(table);
-				_fieldIndexesByTable.Add(table, fieldIndexes);
-			}
-
-			return fieldIndexes.GetFieldIndex(fieldName, role);
+			fieldIndexes = new FieldIndexes(table);
+			_fieldIndexesByTable.Add(table, fieldIndexes);
 		}
 
-		public int GetSubtypeFieldIndex(Table table)
-		{
-			FieldIndexes fieldIndexes;
-			if (! _fieldIndexesByTable.TryGetValue(table, out fieldIndexes))
-			{
-				fieldIndexes = new FieldIndexes(table);
-				_fieldIndexesByTable.Add(table, fieldIndexes);
-			}
+		return fieldIndexes.GetFieldIndex(fieldName, role);
+	}
 
-			return fieldIndexes.GetSubtypeFieldIndex();
+	public int GetSubtypeFieldIndex(Table table)
+	{
+		FieldIndexes fieldIndexes;
+		if (! _fieldIndexesByTable.TryGetValue(table, out fieldIndexes))
+		{
+			fieldIndexes = new FieldIndexes(table);
+			_fieldIndexesByTable.Add(table, fieldIndexes);
 		}
 
-		public void Clear([NotNull] Table table)
+		return fieldIndexes.GetSubtypeFieldIndex();
+	}
+
+	public void Clear([NotNull] Table table)
+	{
+		_fieldIndexesByTable.Remove(table);
+	}
+
+	public void ClearAll()
+	{
+		_fieldIndexesByTable.Clear();
+	}
+
+	private class FieldIndexes
+	{
+		[NotNull] private readonly Table _table;
+
+		private readonly Dictionary<string, int> _fieldIndexes = new Dictionary
+			<string, int>(StringComparer.OrdinalIgnoreCase);
+
+		private int? _subtypeFieldIndex;
+
+		public FieldIndexes([NotNull] Table table)
 		{
-			_fieldIndexesByTable.Remove(table);
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			_table = table;
 		}
 
-		public void ClearAll()
+		public int GetFieldIndex([NotNull] string fieldName, [CanBeNull] AttributeRole role)
 		{
-			_fieldIndexesByTable.Clear();
+			int fieldIndex;
+			if (! _fieldIndexes.TryGetValue(fieldName, out fieldIndex))
+			{
+				fieldIndex = AttributeUtils.GetFieldIndex(_table, fieldName, role);
+				_fieldIndexes.Add(fieldName, fieldIndex);
+			}
+
+			return fieldIndex;
 		}
 
-		private class FieldIndexes
+		public int GetSubtypeFieldIndex()
 		{
-			[NotNull] private readonly Table _table;
-
-			private readonly Dictionary<string, int> _fieldIndexes = new Dictionary
-				<string, int>(StringComparer.OrdinalIgnoreCase);
-
-			private int? _subtypeFieldIndex;
-
-			public FieldIndexes([NotNull] Table table)
+			if (_subtypeFieldIndex == null)
 			{
-				Assert.ArgumentNotNull(table, nameof(table));
-
-				_table = table;
+				_subtypeFieldIndex = DatasetUtils.GetSubtypeFieldIndex(_table);
 			}
 
-			public int GetFieldIndex([NotNull] string fieldName, [CanBeNull] AttributeRole role)
-			{
-				int fieldIndex;
-				if (! _fieldIndexes.TryGetValue(fieldName, out fieldIndex))
-				{
-					fieldIndex = AttributeUtils.GetFieldIndex(_table, fieldName, role);
-					_fieldIndexes.Add(fieldName, fieldIndex);
-				}
-
-				return fieldIndex;
-			}
-
-			public int GetSubtypeFieldIndex()
-			{
-				if (_subtypeFieldIndex == null)
-				{
-					_subtypeFieldIndex = DatasetUtils.GetSubtypeFieldIndex(_table);
-				}
-
-				return _subtypeFieldIndex.Value;
-			}
+			return _subtypeFieldIndex.Value;
 		}
 	}
 }

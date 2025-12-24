@@ -53,7 +53,7 @@ public class WhiteSelectionFeedback : IDisposable
 		get => _selectionVertexSize;
 		set
 		{
-			if (!(value >= 0 && double.IsFinite(value)))
+			if (! (value >= 0 && double.IsFinite(value)))
 				throw new ArgumentOutOfRangeException(nameof(value));
 			_selectionVertexSize = value;
 			InvalidateCachedSymbols();
@@ -130,11 +130,13 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 		else if (_unselectedVertexOverlay is null)
 		{
-			_unselectedVertexOverlay = mapView.AddOverlay(unselectedVertices, unselectedVertexSymbol);
+			_unselectedVertexOverlay =
+				mapView.AddOverlay(unselectedVertices, unselectedVertexSymbol);
 		}
 		else
 		{
-			UpdateOverlay(mapView, _unselectedVertexOverlay, unselectedVertices, unselectedVertexSymbol);
+			UpdateOverlay(mapView, _unselectedVertexOverlay, unselectedVertices,
+			              unselectedVertexSymbol);
 		}
 
 		var unselectedControlSymbol = GetUnselectedControlPointSymRef();
@@ -147,11 +149,13 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 		else if (_unselectedControlPointOverlay is null)
 		{
-			_unselectedControlPointOverlay = mapView.AddOverlay(unselectedControlPoints, unselectedControlSymbol);
+			_unselectedControlPointOverlay =
+				mapView.AddOverlay(unselectedControlPoints, unselectedControlSymbol);
 		}
 		else
 		{
-			UpdateOverlay(mapView, _unselectedControlPointOverlay, unselectedControlPoints, unselectedControlSymbol);
+			UpdateOverlay(mapView, _unselectedControlPointOverlay, unselectedControlPoints,
+			              unselectedControlSymbol);
 		}
 
 		var selectedVertexSymbol = GetSelectedVertexSymRef();
@@ -181,11 +185,13 @@ public class WhiteSelectionFeedback : IDisposable
 		}
 		else if (_selectedControlPointOverlay is null)
 		{
-			_selectedControlPointOverlay = mapView.AddOverlay(selectedControlPoints, selectedControlSymbol);
+			_selectedControlPointOverlay =
+				mapView.AddOverlay(selectedControlPoints, selectedControlSymbol);
 		}
 		else
 		{
-			UpdateOverlay(mapView, _selectedControlPointOverlay, selectedControlPoints, selectedControlSymbol);
+			UpdateOverlay(mapView, _selectedControlPointOverlay, selectedControlPoints,
+			              selectedControlSymbol);
 		}
 	}
 
@@ -247,9 +253,10 @@ public class WhiteSelectionFeedback : IDisposable
 		Clear();
 	}
 
-	private static void UpdateOverlay(MapView mapView, IDisposable overlay, Geometry geometry, CIMSymbolReference symbol)
+	private static void UpdateOverlay(MapView mapView, IDisposable overlay, Geometry geometry,
+	                                  CIMSymbolReference symbol)
 	{
-		if (!mapView.UpdateOverlay(overlay, geometry, symbol))
+		if (! mapView.UpdateOverlay(overlay, geometry, symbol))
 		{
 			_msg.Warn("UpdateOverlay() returned false; display feedback may be wrong; see K2#37");
 			// ask Redlands when this can happen and what we should do (K2#37)
@@ -375,7 +382,8 @@ public class WhiteSelectionFeedback : IDisposable
 			double factor = Math.Sqrt(2);
 			var color = SelectionColor;
 			var size = SelectionVertexSize * factor; // to compensate diamond vs square (rot 45°)
-			var symbol = SymbolUtils.CreatePointSymbol(color, size, SymbolUtils.MarkerStyle.Diamond);
+			var symbol =
+				SymbolUtils.CreatePointSymbol(color, size, SymbolUtils.MarkerStyle.Diamond);
 			_selectedControlPointSymRef = symbol.MakeSymbolReference();
 		}
 
@@ -390,7 +398,9 @@ public class WhiteSelectionFeedback : IDisposable
 			var color = SelectionColor;
 			var size = SelectionVertexSize;
 			var stroke = SymbolUtils.CreateSolidStroke(color, size / 5);
-			var polySym = SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid, stroke);
+			var polySym =
+				SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid,
+				                                stroke);
 			var marker = SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Square, polySym, size);
 			var symbol = SymbolUtils.CreatePointSymbol(marker);
 			_unselectedVertexSymRef = symbol.MakeSymbolReference();
@@ -408,7 +418,9 @@ public class WhiteSelectionFeedback : IDisposable
 			var color = SelectionColor;
 			var size = SelectionVertexSize * factor; // to compensate diamond vs square (rot 45°)
 			var stroke = SymbolUtils.CreateSolidStroke(color, size / 5);
-			var polySym = SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid, stroke);
+			var polySym =
+				SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid,
+				                                stroke);
 			var marker = SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, size);
 			var symbol = SymbolUtils.CreatePointSymbol(marker);
 			_unselectedControlPointSymRef = symbol.MakeSymbolReference();

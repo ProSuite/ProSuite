@@ -254,7 +254,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 
 		bool noMaskingWithoutSLD = NoMaskingWithoutSLD[map];
 
-		if (noMaskingWithoutSLD && !turnOn && UsesLM(map))
+		if (noMaskingWithoutSLD && ! turnOn && UsesLM(map))
 		{
 			modified |= ToggleLM(map, false);
 		}
@@ -329,22 +329,22 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		if (Math.Abs(delta) < double.Epsilon) return; // no change
 
 		var min = AutoMinScaleDenom[map];
-		if (!(min > 0)) min = 0;
+		if (! (min > 0)) min = 0;
 
 		var max = AutoMaxScaleDenom[map];
-		if (!(max > 0)) max = double.MaxValue;
+		if (! (max > 0)) max = double.MaxValue;
 
 		bool lastInRange = min <= _lastScaleDenom && _lastScaleDenom <= max;
 		bool currentInRange = min <= currentScaleDenom && currentScaleDenom <= max;
 
 		_lastScaleDenom = currentScaleDenom;
 
-		if (currentInRange && !lastInRange)
+		if (currentInRange && ! lastInRange)
 		{
 			QueuedTask.Run(() => EnterRange(map));
 		}
 
-		if (lastInRange && !currentInRange)
+		if (lastInRange && ! currentInRange)
 		{
 			QueuedTask.Run(() => LeaveRange(map));
 		}
@@ -357,12 +357,12 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		bool wantSLD = WantSLD[map] ??= UsesSLD(map, uncached);
 		bool wantLM = WantLM[map] ??= UsesLM(map, uncached);
 
-		if (wantSLD && !UsesSLD(map))
+		if (wantSLD && ! UsesSLD(map))
 		{
 			SetSLD(map, true);
 		}
 
-		if (wantLM && !UsesLM(map))
+		if (wantLM && ! UsesLM(map))
 		{
 			SetLM(map, true);
 		}
@@ -435,7 +435,8 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 		private readonly Func<SymbolDisplaySettings> _getDefaults;
 
 		public IndexedProperty(
-			string propertyName, Dictionary<string, SymbolDisplaySettings> settings, Func<SymbolDisplaySettings> getDefaults)
+			string propertyName, Dictionary<string, SymbolDisplaySettings> settings,
+			Func<SymbolDisplaySettings> getDefaults)
 		{
 			_propertyName = propertyName ?? throw new ArgumentNullException(nameof(propertyName));
 			_settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -456,7 +457,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 				{
 					if (map.URI is null) throw MapHasNoUri();
 
-					if (!_settings.TryGetValue(map.URI, out var settings))
+					if (! _settings.TryGetValue(map.URI, out var settings))
 					{
 						settings = new SymbolDisplaySettings(_getDefaults());
 						_settings.Add(map.URI, settings);
@@ -476,8 +477,8 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
 			var type = settings.GetType();
 			var property = type.GetProperty(_propertyName, flags)
-						   ?? throw PropertyNotFound();
-			return (T)property.GetValue(settings);
+			               ?? throw PropertyNotFound();
+			return (T) property.GetValue(settings);
 		}
 
 		private void SetValue(SymbolDisplaySettings settings, T value)
@@ -487,8 +488,8 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
 			var type = settings.GetType();
 			var property = type.GetProperty(_propertyName, flags)
-						   ?? throw new InvalidOperationException(
-							   $"No such property: {_propertyName}");
+			               ?? throw new InvalidOperationException(
+				               $"No such property: {_propertyName}");
 			property.SetValue(settings, value);
 		}
 

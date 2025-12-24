@@ -28,559 +28,558 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.AGP.Editing.RemoveOverlaps
+namespace ProSuite.AGP.Editing.RemoveOverlaps;
+
+public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 {
-	public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private RemoveOverlapsToolOptions _removeOverlapsToolOptions;
+	private OverridableSettingsProvider<PartialRemoveOverlapsOptions> _settingsProvider;
+
+	private Overlaps _overlaps;
+	private RemoveOverlapsFeedback _feedback;
+	private IList<Feature> _overlappingFeatures;
+
+	protected RemoveOverlapsToolBase()
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		GeomIsSimpleAsFeature = false;
+	}
 
-		private RemoveOverlapsToolOptions _removeOverlapsToolOptions;
-		private OverridableSettingsProvider<PartialRemoveOverlapsOptions> _settingsProvider;
+	protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
 
-		private Overlaps _overlaps;
-		private RemoveOverlapsFeedback _feedback;
-		private IList<Feature> _overlappingFeatures;
+	[CanBeNull]
+	protected virtual string OptionsDockPaneID => null;
 
-		protected RemoveOverlapsToolBase()
+	[CanBeNull]
+	protected virtual string CentralConfigDir => null;
+
+	/// <summary>
+	/// By default, the local configuration directory shall be in
+	/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+	/// </summary>
+	protected virtual string LocalConfigDir
+		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+			AppDataFolder.Roaming, "ToolDefaults");
+
+	protected abstract IRemoveOverlapsService MicroserviceClient { get; }
+
+	protected override void OnUpdateCore()
+	{
+		Enabled = MicroserviceClient != null;
+
+		if (MicroserviceClient == null)
+			DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+	}
+
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.RemoveOverlapsOverlay);
+
+	protected override SelectionCursors SecondPhaseCursors { get; } =
+		SelectionCursors.CreateCrossCursors(Resources.RemoveOverlapsOverlay);
+
+	protected override Task OnToolActivatingCoreAsync()
+	{
+		_removeOverlapsToolOptions = InitializeOptions();
+
+		_feedback = new RemoveOverlapsFeedback();
+
+		return base.OnToolActivatingCoreAsync();
+	}
+
+	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	{
+		_feedback?.DisposeOverlays();
+		_feedback = null;
+
+		_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
+		HideOptionsPane();
+	}
+
+	protected override void LogPromptForSelection()
+	{
+		_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
+	}
+
+	protected override bool CanSelectGeometryType(GeometryType geometryType)
+	{
+		return geometryType == GeometryType.Polyline ||
+		       geometryType == GeometryType.Polygon ||
+		       geometryType == GeometryType.Multipatch;
+	}
+
+	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
+	                                                   CancelableProgressor progressor)
+	{
+		IList<Feature> overlappingFeatures =
+			GetOverlappingFeatures(selectedFeatures, progressor);
+
+		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 		{
-			GeomIsSimpleAsFeature = false;
+			_msg.Warn("Calculation of removable overlaps was cancelled.");
+			return;
 		}
 
-		protected virtual string OptionsFileName => "RemoveOverlapsToolOptions.xml";
+		_overlaps = CalculateOverlaps(selectedFeatures, overlappingFeatures, progressor);
 
-		[CanBeNull]
-		protected virtual string OptionsDockPaneID => null;
-
-		[CanBeNull]
-		protected virtual string CentralConfigDir => null;
-
-		/// <summary>
-		/// By default, the local configuration directory shall be in
-		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
-		/// </summary>
-		protected virtual string LocalConfigDir
-			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
-				AppDataFolder.Roaming, "ToolDefaults");
-
-		protected abstract IRemoveOverlapsService MicroserviceClient { get; }
-
-		protected override void OnUpdateCore()
+		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 		{
-			Enabled = MicroserviceClient != null;
-
-			if (MicroserviceClient == null)
-				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+			_msg.Warn("Calculation of removable overlaps was cancelled.");
+			return;
 		}
 
-		protected override SelectionCursors FirstPhaseCursors { get; } =
-			SelectionCursors.CreateArrowCursors(Resources.RemoveOverlapsOverlay);
+		_overlappingFeatures = overlappingFeatures;
 
-		protected override SelectionCursors SecondPhaseCursors { get; } =
-			SelectionCursors.CreateCrossCursors(Resources.RemoveOverlapsOverlay);
+		_feedback.Update(_overlaps);
+	}
 
-		protected override Task OnToolActivatingCoreAsync()
+	protected override bool CanUseDerivedGeometries()
+	{
+		return _overlaps != null && _overlaps.HasOverlaps();
+	}
+
+	protected override async Task<bool> SelectAndProcessDerivedGeometry(
+		Dictionary<MapMember, List<long>> selection,
+		Geometry sketch,
+		CancelableProgressor progressor)
+	{
+		Assert.NotNull(_overlaps);
+
+		Overlaps overlapsToRemove = SelectOverlaps(_overlaps, sketch);
+
+		if (! overlapsToRemove.HasOverlaps())
 		{
-			_removeOverlapsToolOptions = InitializeOptions();
-
-			_feedback = new RemoveOverlapsFeedback();
-
-			return base.OnToolActivatingCoreAsync();
+			return false;
 		}
 
-		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
-		{
-			_feedback?.DisposeOverlays();
-			_feedback = null;
+		MapView activeMapView = MapView.Active;
 
-			_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
-			HideOptionsPane();
+		var distinctSelectionByFeatureClass =
+			MapUtils.GetDistinctSelectionByTable(selection)
+			        .ToDictionary(kvp => (FeatureClass) kvp.Key,
+			                      kvp => kvp.Value);
+
+		IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
+			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference);
+
+		RemoveOverlapsResult result =
+			MicroserviceClient.RemoveOverlaps(
+				selectedFeatures, overlapsToRemove, _overlappingFeatures,
+				_removeOverlapsToolOptions,
+				progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+
+		if (result == null)
+		{
+			_msg.Warn("No overlaps were removed.");
+			return false;
 		}
 
-		protected override void LogPromptForSelection()
-		{
-			_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
-		}
+		var updates = new Dictionary<Feature, Geometry>();
+		var inserts = new Dictionary<Feature, IList<Geometry>>();
 
-		protected override bool CanSelectGeometryType(GeometryType geometryType)
-		{
-			return geometryType == GeometryType.Polyline ||
-			       geometryType == GeometryType.Polygon ||
-			       geometryType == GeometryType.Multipatch;
-		}
+		HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
 
-		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
-		                                                   CancelableProgressor progressor)
+		foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
 		{
-			IList<Feature> overlappingFeatures =
-				GetOverlappingFeatures(selectedFeatures, progressor);
+			Feature originalFeature = resultPerFeature.OriginalFeature;
+			Geometry updatedGeometry = resultPerFeature.UpdatedGeometry;
 
-			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+			if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
 			{
-				_msg.Warn("Calculation of removable overlaps was cancelled.");
-				return;
+				continue;
 			}
 
-			_overlaps = CalculateOverlaps(selectedFeatures, overlappingFeatures, progressor);
+			updates.Add(originalFeature, updatedGeometry);
 
-			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+			if (resultPerFeature.InsertGeometries.Count > 0)
 			{
-				_msg.Warn("Calculation of removable overlaps was cancelled.");
-				return;
+				inserts.Add(originalFeature,
+				            resultPerFeature.InsertGeometries);
 			}
-
-			_overlappingFeatures = overlappingFeatures;
-
-			_feedback.Update(_overlaps);
 		}
 
-		protected override bool CanUseDerivedGeometries()
+		if (result.TargetFeaturesToUpdate != null)
 		{
-			return _overlaps != null && _overlaps.HasOverlaps();
-		}
-
-		protected override async Task<bool> SelectAndProcessDerivedGeometry(
-			Dictionary<MapMember, List<long>> selection,
-			Geometry sketch,
-			CancelableProgressor progressor)
-		{
-			Assert.NotNull(_overlaps);
-
-			Overlaps overlapsToRemove = SelectOverlaps(_overlaps, sketch);
-
-			if (! overlapsToRemove.HasOverlaps())
+			var updatedTargets = new List<Feature>();
+			foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
 			{
-				return false;
-			}
-
-			MapView activeMapView = MapView.Active;
-
-			var distinctSelectionByFeatureClass =
-				MapUtils.GetDistinctSelectionByTable(selection)
-				        .ToDictionary(kvp => (FeatureClass) kvp.Key,
-				                      kvp => kvp.Value);
-
-			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference);
-
-			RemoveOverlapsResult result =
-				MicroserviceClient.RemoveOverlaps(
-					selectedFeatures, overlapsToRemove, _overlappingFeatures,
-					_removeOverlapsToolOptions,
-					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
-
-			if (result == null)
-			{
-				_msg.Warn("No overlaps were removed.");
-				return false;
-			}
-
-			var updates = new Dictionary<Feature, Geometry>();
-			var inserts = new Dictionary<Feature, IList<Geometry>>();
-
-			HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
-
-			foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
-			{
-				Feature originalFeature = resultPerFeature.OriginalFeature;
-				Geometry updatedGeometry = resultPerFeature.UpdatedGeometry;
-
-				if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
+				if (! IsStoreRequired(kvp.Key, kvp.Value, editableClassHandles))
 				{
 					continue;
 				}
 
-				updates.Add(originalFeature, updatedGeometry);
+				updatedTargets.Add(kvp.Key);
+				updates.Add(kvp.Key, kvp.Value);
+			}
 
-				if (resultPerFeature.InsertGeometries.Count > 0)
+			if (updatedTargets.Count > 0)
+			{
+				_msg.InfoFormat("Target features with potential vertex insertions: {0}",
+				                StringUtils.Concatenate(updatedTargets,
+				                                        GdbObjectUtils.GetDisplayValue, ", "));
+			}
+		}
+
+		IEnumerable<Dataset> datasets =
+			GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys, inserts.Keys);
+
+		var newFeatures = new List<Feature>();
+
+		bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+			             editContext =>
+			             {
+				             _msg.DebugFormat("Saving {0} updates and {1} inserts...",
+				                              updates.Count,
+				                              inserts.Count);
+
+				             GdbPersistenceUtils.UpdateTx(editContext, updates);
+
+				             newFeatures.AddRange(
+					             GdbPersistenceUtils.InsertTx(editContext, inserts));
+
+				             return true;
+			             },
+			             "Remove overlaps", datasets);
+
+		ToolUtils.SelectNewFeatures(newFeatures, activeMapView, false);
+
+		var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
+
+		CalculateDerivedGeometries(currentSelection, progressor);
+
+		return saved;
+	}
+
+	protected override void ResetDerivedGeometries()
+	{
+		_overlaps = null;
+		_feedback.DisposeOverlays();
+	}
+
+	protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
+	{
+		if (_overlaps != null && _overlaps.Notifications.Count > 0)
+		{
+			_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
+
+			if (! _overlaps.HasOverlaps())
+			{
+				_msg.InfoFormat("Select one or more different features.");
+			}
+		}
+		else if (_overlaps == null || ! _overlaps.HasOverlaps())
+		{
+			_msg.Info(
+				"No overlap of other polygons with current selection found. Select one or more different features.");
+		}
+
+		if (_overlaps != null && _overlaps.HasOverlaps())
+		{
+			string msg = _overlaps.OverlapGeometries.Count == 1
+				             ? "Select the overlap to subtract from the selection"
+				             : "Select one or more overlaps to subtract from the selection. Draw a box to select overlaps completely within the box.";
+
+			_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
+		}
+	}
+
+	[CanBeNull]
+	private Overlaps CalculateOverlaps([NotNull] IList<Feature> selectedFeatures,
+	                                   [NotNull] IList<Feature> overlappingFeatures,
+	                                   CancelableProgressor progressor)
+	{
+		CancellationToken cancellationToken;
+
+		if (progressor != null)
+		{
+			cancellationToken = progressor.CancellationToken;
+		}
+		else
+		{
+			var cancellationTokenSource = new CancellationTokenSource();
+			cancellationToken = cancellationTokenSource.Token;
+		}
+
+		if (MicroserviceClient == null)
+		{
+			throw new InvalidConfigurationException("Microservice has not been started.");
+		}
+
+		Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
+			                    ? ActiveMapView.Extent
+			                    : null;
+
+		Overlaps overlaps = MicroserviceClient.CalculateOverlaps(
+			selectedFeatures, overlappingFeatures, inExtent, cancellationToken);
+
+		return overlaps;
+	}
+
+	private Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
+	{
+		if (overlaps == null)
+		{
+			return new Overlaps();
+		}
+
+		sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+		                                          out bool singlePick);
+
+		// in case of single pick the line has priority...
+		Overlaps result =
+			overlaps.SelectNewOverlaps(o => o.GeometryType == GeometryType.Polyline &&
+			                                ToolUtils.IsSelected(sketch, o, singlePick));
+
+		// ... over the polygon
+		if (! result.HasOverlaps() || ! singlePick)
+		{
+			result.AddGeometries(overlaps,
+			                     g => g.GeometryType == GeometryType.Polygon &&
+			                          ToolUtils.IsSelected(sketch, g, singlePick));
+		}
+
+		if (singlePick)
+		{
+			// Filter to the smallest overlap
+			foreach (var overlap in result.OverlapGeometries)
+			{
+				IList<Geometry> geometries = overlap.Value;
+
+				if (geometries.Count > 1)
 				{
-					inserts.Add(originalFeature,
-					            resultPerFeature.InsertGeometries);
+					Geometry smallest = GeometryUtils.GetSmallestGeometry(geometries);
+
+					geometries.Clear();
+					geometries.Add(smallest);
 				}
 			}
-
-			if (result.TargetFeaturesToUpdate != null)
-			{
-				var updatedTargets = new List<Feature>();
-				foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
-				{
-					if (! IsStoreRequired(kvp.Key, kvp.Value, editableClassHandles))
-					{
-						continue;
-					}
-
-					updatedTargets.Add(kvp.Key);
-					updates.Add(kvp.Key, kvp.Value);
-				}
-
-				if (updatedTargets.Count > 0)
-				{
-					_msg.InfoFormat("Target features with potential vertex insertions: {0}",
-					                StringUtils.Concatenate(updatedTargets,
-					                                        GdbObjectUtils.GetDisplayValue, ", "));
-				}
-			}
-
-			IEnumerable<Dataset> datasets =
-				GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys, inserts.Keys);
-
-			var newFeatures = new List<Feature>();
-
-			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
-				             editContext =>
-				             {
-					             _msg.DebugFormat("Saving {0} updates and {1} inserts...",
-					                              updates.Count,
-					                              inserts.Count);
-
-					             GdbPersistenceUtils.UpdateTx(editContext, updates);
-
-					             newFeatures.AddRange(
-						             GdbPersistenceUtils.InsertTx(editContext, inserts));
-
-					             return true;
-				             },
-				             "Remove overlaps", datasets);
-
-			ToolUtils.SelectNewFeatures(newFeatures, activeMapView, false);
-
-			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
-
-			CalculateDerivedGeometries(currentSelection, progressor);
-
-			return saved;
 		}
 
-		protected override void ResetDerivedGeometries()
+		return result;
+	}
+
+	private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
+	                                    HashSet<long> editableClassHandles)
+	{
+		if (! GdbPersistenceUtils.CanChange(originalFeature,
+		                                    editableClassHandles, out string warning))
 		{
-			_overlaps = null;
-			_feedback.DisposeOverlays();
+			_msg.DebugFormat("{0}: {1}",
+			                 GdbObjectUtils.ToString(originalFeature),
+			                 warning);
+			return false;
 		}
 
-		protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
+		Geometry originalGeometry = originalFeature.GetShape();
+
+		if (originalGeometry != null &&
+		    originalGeometry.IsEqual(updatedGeometry))
 		{
-			if (_overlaps != null && _overlaps.Notifications.Count > 0)
-			{
-				_msg.Info(_overlaps.Notifications.Concatenate(Environment.NewLine));
-
-				if (! _overlaps.HasOverlaps())
-				{
-					_msg.InfoFormat("Select one or more different features.");
-				}
-			}
-			else if (_overlaps == null || ! _overlaps.HasOverlaps())
-			{
-				_msg.Info(
-					"No overlap of other polygons with current selection found. Select one or more different features.");
-			}
-
-			if (_overlaps != null && _overlaps.HasOverlaps())
-			{
-				string msg = _overlaps.OverlapGeometries.Count == 1
-					             ? "Select the overlap to subtract from the selection"
-					             : "Select one or more overlaps to subtract from the selection. Draw a box to select overlaps completely within the box.";
-
-				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
-			}
-		}
-
-		[CanBeNull]
-		private Overlaps CalculateOverlaps([NotNull] IList<Feature> selectedFeatures,
-		                                   [NotNull] IList<Feature> overlappingFeatures,
-		                                   CancelableProgressor progressor)
-		{
-			CancellationToken cancellationToken;
-
-			if (progressor != null)
-			{
-				cancellationToken = progressor.CancellationToken;
-			}
-			else
-			{
-				var cancellationTokenSource = new CancellationTokenSource();
-				cancellationToken = cancellationTokenSource.Token;
-			}
-
-			if (MicroserviceClient == null)
-			{
-				throw new InvalidConfigurationException("Microservice has not been started.");
-			}
-
-			Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
-				                    ? ActiveMapView.Extent
-				                    : null;
-
-			Overlaps overlaps = MicroserviceClient.CalculateOverlaps(
-				selectedFeatures, overlappingFeatures, inExtent, cancellationToken);
-
-			return overlaps;
-		}
-
-		private Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
-		{
-			if (overlaps == null)
-			{
-				return new Overlaps();
-			}
-
-			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
-			                                          out bool singlePick);
-
-			// in case of single pick the line has priority...
-			Overlaps result =
-				overlaps.SelectNewOverlaps(o => o.GeometryType == GeometryType.Polyline &&
-				                                ToolUtils.IsSelected(sketch, o, singlePick));
-
-			// ... over the polygon
-			if (! result.HasOverlaps() || ! singlePick)
-			{
-				result.AddGeometries(overlaps,
-				                     g => g.GeometryType == GeometryType.Polygon &&
-				                          ToolUtils.IsSelected(sketch, g, singlePick));
-			}
-
-			if (singlePick)
-			{
-				// Filter to the smallest overlap
-				foreach (var overlap in result.OverlapGeometries)
-				{
-					IList<Geometry> geometries = overlap.Value;
-
-					if (geometries.Count > 1)
-					{
-						Geometry smallest = GeometryUtils.GetSmallestGeometry(geometries);
-
-						geometries.Clear();
-						geometries.Add(smallest);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
-		                                    HashSet<long> editableClassHandles)
-		{
-			if (! GdbPersistenceUtils.CanChange(originalFeature,
-			                                    editableClassHandles, out string warning))
-			{
-				_msg.DebugFormat("{0}: {1}",
-				                 GdbObjectUtils.ToString(originalFeature),
-				                 warning);
-				return false;
-			}
-
-			Geometry originalGeometry = originalFeature.GetShape();
-
-			if (originalGeometry != null &&
-			    originalGeometry.IsEqual(updatedGeometry))
-			{
-				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
-				                 GdbObjectUtils.ToString(originalFeature));
-
-				return false;
-			}
-
-			return true;
-		}
-
-		private RemoveOverlapsToolOptions InitializeOptions()
-		{
-			Stopwatch watch = _msg.DebugStartTiming();
-
-			string currentCentralConfigDir = CentralConfigDir;
-			string currentLocalConfigDir = LocalConfigDir;
-
-			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-			_settingsProvider ??= new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
-				CentralConfigDir, LocalConfigDir, OptionsFileName);
-
-			PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
-
-			_settingsProvider.GetConfigurations(out localConfiguration,
-			                                    out centralConfiguration);
-
-			var result = new RemoveOverlapsToolOptions(centralConfiguration,
-			                                           localConfiguration);
-
-			result.PropertyChanged -= OptionsPropertyChanged;
-			result.PropertyChanged += OptionsPropertyChanged;
-
-			_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
-
-			string optionsMessage = result.GetLocalOverridesMessage();
-
-			if (! string.IsNullOrEmpty(optionsMessage))
-			{
-				_msg.Info(optionsMessage);
-			}
-
-			return result;
-		}
-
-		private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
-		{
-			try
-			{
-				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
-			}
-			catch (Exception e)
-			{
-				_msg.Error($"Error re-calculating removable overlaps : {e.Message}", e);
-			}
-		}
-
-		#region Tool Options DockPane
-
-		[CanBeNull]
-		private DockPaneRemoveOverlapsViewModelBase GetRemoveOverlapsViewModel()
-		{
-			if (OptionsDockPaneID == null)
-			{
-				return null;
-			}
-
-			var viewModel =
-				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
-					DockPaneRemoveOverlapsViewModelBase;
-
-			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
-			                      OptionsDockPaneID);
-		}
-
-		protected override void ShowOptionsPane()
-		{
-			var viewModel = GetRemoveOverlapsViewModel();
-
-			if (viewModel == null)
-			{
-				return;
-			}
-
-			viewModel.Options = _removeOverlapsToolOptions;
-
-			viewModel.Activate(true);
-		}
-
-		protected override void HideOptionsPane()
-		{
-			var viewModel = GetRemoveOverlapsViewModel();
-			viewModel?.Hide();
-		}
-
-		#endregion
-
-		#region Search target features
-
-		[NotNull]
-		private IList<Feature> GetOverlappingFeatures(
-			[NotNull] ICollection<Feature> selectedFeatures,
-			[CanBeNull] CancelableProgressor cancellabelProgressor)
-		{
-			Dictionary<MapMember, List<long>> selection =
-				SelectionUtils.GetSelection(ActiveMapView.Map);
-
-			Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
-				                    ? ActiveMapView.Extent
-				                    : null;
-
-			TargetFeatureSelection targetFeatureSelection =
-				_removeOverlapsToolOptions.TargetFeatureSelection;
-
-			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
-			                    {
-				                    FeatureClassPredicate = GetTargetFeatureClassPredicate()
-			                    };
-
-			// They might be stored (insert target vertices):
-			featureFinder.ReturnUnJoinedFeatures = true;
-
-			IEnumerable<FeatureSelectionBase> featureClassSelections =
-				featureFinder.FindIntersectingFeaturesByFeatureClass(
-					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
-
-			if (cancellabelProgressor != null &&
-			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
-			{
-				return new List<Feature>();
-			}
-
-			var foundFeatures = new List<Feature>();
-
-			foreach (var classSelection in featureClassSelections)
-			{
-				foundFeatures.AddRange(classSelection.GetFeatures());
-			}
-
-			// Remove the selected features from the set of overlapping features.
-			// This is also important to make sure the geometries don't get mixed up / reset 
-			// by inserting target vertices
-			foundFeatures.RemoveAll(f =>
-				                        selectedFeatures.Any(s => GdbObjectUtils
-					                                             .IsSameFeature(f, s)));
-
-			return foundFeatures;
-		}
-
-		protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
-		{
-			return null;
-		}
-
-		private bool CanOverlapLayer(Layer layer)
-		{
-			var featureLayer = layer as FeatureLayer;
-
-			List<string>
-				ignoredClasses =
-					new List<string>(); // RemoveOverlapsToolOptions.IgnoreFeatureClasses;
-
-			return CanOverlapGeometryType(featureLayer) &&
-			       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
-		}
-
-		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
-		{
-			if (featureLayer?.GetFeatureClass() == null)
-			{
-				return false;
-			}
-
-			esriGeometryType shapeType = featureLayer.ShapeType;
-
-			return shapeType == esriGeometryType.esriGeometryPolygon ||
-			       shapeType == esriGeometryType.esriGeometryMultiPatch;
-		}
-
-		private static bool IgnoreLayer(Layer layer, IEnumerable<string> ignoredClasses)
-		{
-			FeatureClass featureClass = (layer as FeatureLayer)?.GetTable() as FeatureClass;
-
-			if (featureClass == null)
-			{
-				return true;
-			}
-
-			if (featureClass.GetDataConnection() is CIMStandardDataConnection connection &&
-			    connection.WorkspaceFactory == WorkspaceFactory.Custom)
-			{
-				// Exclude Plug-in data sources:
-				return true;
-			}
-
-			string className = featureClass.GetName();
-
-			foreach (string ignoredClass in ignoredClasses)
-			{
-				if (className.EndsWith(ignoredClass, StringComparison.InvariantCultureIgnoreCase))
-				{
-					return true;
-				}
-			}
+			_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
+			                 GdbObjectUtils.ToString(originalFeature));
 
 			return false;
 		}
 
-		#endregion
+		return true;
 	}
+
+	private RemoveOverlapsToolOptions InitializeOptions()
+	{
+		Stopwatch watch = _msg.DebugStartTiming();
+
+		string currentCentralConfigDir = CentralConfigDir;
+		string currentLocalConfigDir = LocalConfigDir;
+
+		// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
+		_settingsProvider ??= new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(
+			CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+		PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
+
+		_settingsProvider.GetConfigurations(out localConfiguration,
+		                                    out centralConfiguration);
+
+		var result = new RemoveOverlapsToolOptions(centralConfiguration,
+		                                           localConfiguration);
+
+		result.PropertyChanged -= OptionsPropertyChanged;
+		result.PropertyChanged += OptionsPropertyChanged;
+
+		_msg.DebugStopTiming(watch, "Remove Overlap Tool Options validated / initialized");
+
+		string optionsMessage = result.GetLocalOverridesMessage();
+
+		if (! string.IsNullOrEmpty(optionsMessage))
+		{
+			_msg.Info(optionsMessage);
+		}
+
+		return result;
+	}
+
+	private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
+	{
+		try
+		{
+			QueuedTaskUtils.Run(() => ProcessSelectionAsync());
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Error re-calculating removable overlaps : {e.Message}", e);
+		}
+	}
+
+	#region Tool Options DockPane
+
+	[CanBeNull]
+	private DockPaneRemoveOverlapsViewModelBase GetRemoveOverlapsViewModel()
+	{
+		if (OptionsDockPaneID == null)
+		{
+			return null;
+		}
+
+		var viewModel =
+			FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+				DockPaneRemoveOverlapsViewModelBase;
+
+		return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+		                      OptionsDockPaneID);
+	}
+
+	protected override void ShowOptionsPane()
+	{
+		var viewModel = GetRemoveOverlapsViewModel();
+
+		if (viewModel == null)
+		{
+			return;
+		}
+
+		viewModel.Options = _removeOverlapsToolOptions;
+
+		viewModel.Activate(true);
+	}
+
+	protected override void HideOptionsPane()
+	{
+		var viewModel = GetRemoveOverlapsViewModel();
+		viewModel?.Hide();
+	}
+
+	#endregion
+
+	#region Search target features
+
+	[NotNull]
+	private IList<Feature> GetOverlappingFeatures(
+		[NotNull] ICollection<Feature> selectedFeatures,
+		[CanBeNull] CancelableProgressor cancellabelProgressor)
+	{
+		Dictionary<MapMember, List<long>> selection =
+			SelectionUtils.GetSelection(ActiveMapView.Map);
+
+		Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
+			                    ? ActiveMapView.Extent
+			                    : null;
+
+		TargetFeatureSelection targetFeatureSelection =
+			_removeOverlapsToolOptions.TargetFeatureSelection;
+
+		var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+		                    {
+			                    FeatureClassPredicate = GetTargetFeatureClassPredicate()
+		                    };
+
+		// They might be stored (insert target vertices):
+		featureFinder.ReturnUnJoinedFeatures = true;
+
+		IEnumerable<FeatureSelectionBase> featureClassSelections =
+			featureFinder.FindIntersectingFeaturesByFeatureClass(
+				selection, CanOverlapLayer, inExtent, cancellabelProgressor);
+
+		if (cancellabelProgressor != null &&
+		    cancellabelProgressor.CancellationToken.IsCancellationRequested)
+		{
+			return new List<Feature>();
+		}
+
+		var foundFeatures = new List<Feature>();
+
+		foreach (var classSelection in featureClassSelections)
+		{
+			foundFeatures.AddRange(classSelection.GetFeatures());
+		}
+
+		// Remove the selected features from the set of overlapping features.
+		// This is also important to make sure the geometries don't get mixed up / reset 
+		// by inserting target vertices
+		foundFeatures.RemoveAll(f =>
+			                        selectedFeatures.Any(s => GdbObjectUtils
+				                                             .IsSameFeature(f, s)));
+
+		return foundFeatures;
+	}
+
+	protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()
+	{
+		return null;
+	}
+
+	private bool CanOverlapLayer(Layer layer)
+	{
+		var featureLayer = layer as FeatureLayer;
+
+		List<string>
+			ignoredClasses =
+				new List<string>(); // RemoveOverlapsToolOptions.IgnoreFeatureClasses;
+
+		return CanOverlapGeometryType(featureLayer) &&
+		       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
+	}
+
+	private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
+	{
+		if (featureLayer?.GetFeatureClass() == null)
+		{
+			return false;
+		}
+
+		esriGeometryType shapeType = featureLayer.ShapeType;
+
+		return shapeType == esriGeometryType.esriGeometryPolygon ||
+		       shapeType == esriGeometryType.esriGeometryMultiPatch;
+	}
+
+	private static bool IgnoreLayer(Layer layer, IEnumerable<string> ignoredClasses)
+	{
+		FeatureClass featureClass = (layer as FeatureLayer)?.GetTable() as FeatureClass;
+
+		if (featureClass == null)
+		{
+			return true;
+		}
+
+		if (featureClass.GetDataConnection() is CIMStandardDataConnection connection &&
+		    connection.WorkspaceFactory == WorkspaceFactory.Custom)
+		{
+			// Exclude Plug-in data sources:
+			return true;
+		}
+
+		string className = featureClass.GetName();
+
+		foreach (string ignoredClass in ignoredClasses)
+		{
+			if (className.EndsWith(ignoredClass, StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	#endregion
 }

@@ -14,7 +14,7 @@
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 				<ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
@@ -38,20 +38,20 @@
 				</Grid.RowDefinitions>
 
 				<CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                          Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Show preview of holes that can be filled"
-                          DataContext="{Binding ShowPreview}" />
+				          Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Show preview of holes that can be filled"
+				          DataContext="{Binding ShowPreview}" />
 
 				<CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                          Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Calculate preview only in visible extent for better performance"
-                          Margin="20,0,0,0"
-                          DataContext="{Binding LimitPreviewToExtent}" />
+				          Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Calculate preview only in visible extent for better performance"
+				          Margin="20,0,0,0"
+				          DataContext="{Binding LimitPreviewToExtent}" />
 
 				<!-- Restore Defaults Button -->
 				<Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                        Template="{StaticResource RestoreDefaultsButton}"
-                        Content="Restore Defaults" />
+				        Template="{StaticResource RestoreDefaultsButton}"
+				        Content="Restore Defaults" />
 			</Grid>
 		</StackPanel>
 	</Grid>

@@ -360,7 +360,8 @@ public static class Gateway
 			bool foo = dispatcher.HasShutdownStarted;
 			bool isAlive = dispatcher.Thread.IsAlive;
 			var state = dispatcher.Thread.ThreadState;
-			_msg.Info($"RunOnUI: must dispatch, ThreadState={state}, IsAlive={isAlive}, HasShutdownStarted={foo}");
+			_msg.Info(
+				$"RunOnUI: must dispatch, ThreadState={state}, IsAlive={isAlive}, HasShutdownStarted={foo}");
 
 			dispatcher.Invoke(callback); // tends to hang when Pro is shutting down
 			//dispatcher.Invoke(callback, TimeSpan.FromSeconds(2));

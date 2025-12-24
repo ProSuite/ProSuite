@@ -74,9 +74,9 @@ public static class GeometricEffects
 		if (shape.IsEmpty) return shape;
 		if (shape is not Polyline polyline) return shape;
 
-		if (!(beginCut > 0)) beginCut = 0;
-		if (!(endCut > 0)) endCut = 0;
-		if (!(middleCut > 0)) middleCut = 0;
+		if (! (beginCut > 0)) beginCut = 0;
+		if (! (endCut > 0)) endCut = 0;
+		if (! (middleCut > 0)) middleCut = 0;
 
 		// Do the cut for each part of the (potentially) multipart shape!
 
@@ -92,6 +92,7 @@ public static class GeometricEffects
 				{
 					builder.AddParts(line.Parts);
 				}
+
 				continue;
 			}
 
@@ -189,7 +190,8 @@ public static class GeometricEffects
 				auxiliary.SetEmpty();
 				auxiliary.AddSegments(part);
 				var section = auxiliary.ToGeometry();
-				DoDashLine(result, section, pattern, lineEnding, lineEnding, offsetAlongLine, customEndOffset);
+				DoDashLine(result, section, pattern, lineEnding, lineEnding, offsetAlongLine,
+				           customEndOffset);
 			}
 		}
 		else
@@ -209,7 +211,8 @@ public static class GeometricEffects
 					              ? lineEnding
 					              : controlPointEnding;
 
-				DoDashLine(result, section, pattern, startType, endType, offsetAlongLine, customEndOffset);
+				DoDashLine(result, section, pattern, startType, endType, offsetAlongLine,
+				           customEndOffset);
 			}
 		}
 
@@ -254,8 +257,8 @@ public static class GeometricEffects
 			{
 				k = 1; // squeeze pattern at least once
 			}
-			double s = L / (k * P - A + E);
 
+			double s = L / (k * P - A + E);
 
 			pattern = pattern.Select(v => v * s).ToArray(); // scale pattern
 			offsetAlongLine *= s; // and scale offset accordingly
@@ -296,7 +299,8 @@ public static class GeometricEffects
 		}
 	}
 
-	private static double GetDashesOffsetAlong(DashEndings endings, double[] pattern, double offsetAlongLine)
+	private static double GetDashesOffsetAlong(DashEndings endings, double[] pattern,
+	                                           double offsetAlongLine)
 	{
 		if (pattern is not { Length: > 0 })
 			throw new ArgumentException("Need at least one element", nameof(pattern));
@@ -313,7 +317,8 @@ public static class GeometricEffects
 		};
 	}
 
-	private static double GetDashesCustomEndOffset(DashEndings endings, double[] pattern, double customEndOffset)
+	private static double GetDashesCustomEndOffset(DashEndings endings, double[] pattern,
+	                                               double customEndOffset)
 	{
 		return endings switch
 		{
@@ -396,7 +401,7 @@ public static class GeometricEffects
 					{
 						// emit what we traveled since last state change:
 						const bool startNewPart = true;
-						builder.AddSegments(Range(segments, i0, i-i0+1), startNewPart);
+						builder.AddSegments(Range(segments, i0, i - i0 + 1), startNewPart);
 					}
 					else
 					{
@@ -405,7 +410,7 @@ public static class GeometricEffects
 				}
 			}
 
-			if (i > i0 && !suppress)
+			if (i > i0 && ! suppress)
 			{
 				var segs = Range(segments, i0, i - i0).ToArray();
 
@@ -451,7 +456,8 @@ public static class GeometricEffects
 
 	#region Private utilities
 
-	private static IEnumerable<Segment> Range(ReadOnlySegmentCollection segments, int start, int count)
+	private static IEnumerable<Segment> Range(ReadOnlySegmentCollection segments, int start,
+	                                          int count)
 	{
 		for (int i = 0; i < count; i++)
 		{
@@ -541,7 +547,8 @@ public static class GeometricEffects
 	private static Pair GetTangent(Segment segment, double t)
 	{
 		if (segment is null) throw new ArgumentNullException(nameof(segment));
-		if (t < 0) t = 0; else if (t > 1) t = 1; // clamp
+		if (t < 0) t = 0;
+		else if (t > 1) t = 1; // clamp
 		var line = GeometryEngine.Instance.QueryTangent(
 			segment, SegmentExtensionType.NoExtension,
 			t, AsRatioOrLength.AsRatio, 1.0);

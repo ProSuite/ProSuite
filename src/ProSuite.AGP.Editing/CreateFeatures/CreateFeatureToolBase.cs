@@ -18,343 +18,342 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.Editing.CreateFeatures
+namespace ProSuite.AGP.Editing.CreateFeatures;
+
+public abstract class CreateFeatureToolBase : ConstructionToolBase
 {
-	public abstract class CreateFeatureToolBase : ConstructionToolBase
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private FeatureClass _targetFeatureClass;
+
+	protected CreateFeatureToolBase()
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		FireSketchEvents = true;
 
-		private FeatureClass _targetFeatureClass;
+		RequiresSelection = false;
 
-		protected CreateFeatureToolBase()
+		// This does not work unless loadOnClick="false" in the daml.xml:
+		// And the tags are not recognized either...
+
+		//Tooltip =
+		// "Create a new feature for the current feature template." +
+		// Environment.NewLine +
+		// Environment.NewLine +
+		// "Shortcuts:" + Environment.NewLine +
+		// "ESC: Delete sketch points" + Environment.NewLine +
+		// "F2:  Finish sketch";
+
+		//// how to set up shortcuts?
+		//if (Shortcuts != null)
+		//{
+		// Tooltip += string.Concat(Shortcuts.Select(shortCut => shortCut.DisplayString));
+		//}
+
+		//DisabledTooltip =
+		// "Select a point or multipoint feature template in the Create Features pane";
+	}
+
+	protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+
+	#region Overrides of PlugIn
+
+	protected override void OnUpdateCore()
+	{
+		Enabled = IsTargetObjectTypeSet();
+	}
+
+	#endregion
+
+	protected override void LogPromptForSelection() { }
+
+	protected override ISymbolizedSketchType GetSymbolizedSketch()
+	{
+		return null;
+	}
+
+	protected override SketchGeometryType GetEditSketchGeometryType()
+	{
+		esriGeometryType? targetShapeType = GetTargetLayerShapeType();
+
+		switch (targetShapeType)
 		{
-			FireSketchEvents = true;
+			case esriGeometryType.esriGeometryPoint:
+				return SketchGeometryType.Point;
+			case esriGeometryType.esriGeometryMultipoint:
+				return SketchGeometryType.Multipoint;
+			case esriGeometryType.esriGeometryPolyline:
+				return SketchGeometryType.Line;
+			case esriGeometryType.esriGeometryPolygon:
+				return SketchGeometryType.Polygon;
 
-			RequiresSelection = false;
-
-			// This does not work unless loadOnClick="false" in the daml.xml:
-			// And the tags are not recognized either...
-
-			//Tooltip =
-			// "Create a new feature for the current feature template." +
-			// Environment.NewLine +
-			// Environment.NewLine +
-			// "Shortcuts:" + Environment.NewLine +
-			// "ESC: Delete sketch points" + Environment.NewLine +
-			// "F2:  Finish sketch";
-
-			//// how to set up shortcuts?
-			//if (Shortcuts != null)
-			//{
-			// Tooltip += string.Concat(Shortcuts.Select(shortCut => shortCut.DisplayString));
-			//}
-
-			//DisabledTooltip =
-			// "Select a point or multipoint feature template in the Create Features pane";
+			default:
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported sketch type: {targetShapeType}");
 		}
+	}
 
-		protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
+	protected override SketchGeometryType GetSelectionSketchGeometryType()
+	{
+		return SketchGeometryType.Rectangle;
+	}
 
-		#region Overrides of PlugIn
+	protected override async Task<bool?> GetEditSketchHasZ()
+	{
+		Stopwatch watch = Stopwatch.StartNew();
 
-		protected override void OnUpdateCore()
+		bool? result = await QueuedTask.Run(() =>
 		{
-			Enabled = IsTargetObjectTypeSet();
-		}
+			FeatureClass currentTargetClass = GetCurrentTargetClass(out _);
 
-		#endregion
+			return currentTargetClass?.GetDefinition()?.HasZ();
+		});
 
-		protected override void LogPromptForSelection() { }
+		_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
 
-		protected override ISymbolizedSketchType GetSymbolizedSketch()
+		return result;
+	}
+
+	protected override Task OnToolActivatingCoreAsync()
+	{
+		_targetFeatureClass = GetCurrentTargetClass(out _);
+
+		ActiveTemplateChangedEvent.Subscribe(OnActiveTemplateChanged);
+
+		return base.OnToolActivatingCoreAsync();
+	}
+
+	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	{
+		ActiveTemplateChangedEvent.Unsubscribe(OnActiveTemplateChanged);
+		base.OnToolDeactivateCore(hasMapViewChanged);
+	}
+
+	protected override EditingTemplate GetSketchTemplate()
+	{
+		return EditingTemplate.Current;
+	}
+
+	protected override void LogEnteringSketchMode()
+	{
+		string layerName = GetTargetObjectTypeName();
+
+		_msg.InfoFormat(
+			"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
+			layerName);
+	}
+
+	protected override async Task HandleEscapeAsync()
+	{
+		try
 		{
-			return null;
-		}
+			Geometry sketch = await GetCurrentSketchAsync();
 
-		protected override SketchGeometryType GetEditSketchGeometryType()
-		{
-			esriGeometryType? targetShapeType = GetTargetLayerShapeType();
-
-			switch (targetShapeType)
+			if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
 			{
-				case esriGeometryType.esriGeometryPoint:
-					return SketchGeometryType.Point;
-				case esriGeometryType.esriGeometryMultipoint:
-					return SketchGeometryType.Multipoint;
-				case esriGeometryType.esriGeometryPolyline:
-					return SketchGeometryType.Line;
-				case esriGeometryType.esriGeometryPolygon:
-					return SketchGeometryType.Polygon;
-
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported sketch type: {targetShapeType}");
-			}
-		}
-
-		protected override SketchGeometryType GetSelectionSketchGeometryType()
-		{
-			return SketchGeometryType.Rectangle;
-		}
-
-		protected override async Task<bool?> GetEditSketchHasZ()
-		{
-			Stopwatch watch = Stopwatch.StartNew();
-
-			bool? result = await QueuedTask.Run(() =>
-			{
-				FeatureClass currentTargetClass = GetCurrentTargetClass(out _);
-
-				return currentTargetClass?.GetDefinition()?.HasZ();
-			});
-
-			_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
-
-			return result;
-		}
-
-		protected override Task OnToolActivatingCoreAsync()
-		{
-			_targetFeatureClass = GetCurrentTargetClass(out _);
-
-			ActiveTemplateChangedEvent.Subscribe(OnActiveTemplateChanged);
-
-			return base.OnToolActivatingCoreAsync();
-		}
-
-		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
-		{
-			ActiveTemplateChangedEvent.Unsubscribe(OnActiveTemplateChanged);
-			base.OnToolDeactivateCore(hasMapViewChanged);
-		}
-
-		protected override EditingTemplate GetSketchTemplate()
-		{
-			return EditingTemplate.Current;
-		}
-
-		protected override void LogEnteringSketchMode()
-		{
-			string layerName = GetTargetObjectTypeName();
-
-			_msg.InfoFormat(
-				"Draw one or more points. Finish the sketch to create the individual point features in '{0}'.",
-				layerName);
-		}
-
-		protected override async Task HandleEscapeAsync()
-		{
-			try
-			{
-				Geometry sketch = await GetCurrentSketchAsync();
-
-				if (sketch is { IsEmpty: true } && MapUtils.HasSelection(ActiveMapView))
-				{
-					await ClearSelectionAsync();
-				}
-				else
-				{
-					await ClearSketchAsync();
-				}
-			}
-			catch (Exception ex)
-			{
-				Gateway.ShowError(ex, _msg);
-			}
-		}
-
-		#region Overrides of ConstructionToolBase
-
-		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
-			Geometry sketchGeometry, EditingTemplate editTemplate,
-			MapView activeView,
-			CancelableProgressor cancelableProgressor = null)
-		{
-			await QueuedTaskUtils.Run(async () =>
-			{
-				try
-				{
-					FeatureClass featureClass = GetCurrentTargetClass(out Subtype subtype);
-
-					await StoreNewFeature(sketchGeometry, featureClass, subtype);
-
-					return true;
-				}
-				catch (Exception ex)
-				{
-					_msg.Error(ex.Message, ex);
-					return false;
-				}
-			});
-
-			return false;
-		}
-
-		#endregion
-
-		#region Virtual members
-
-		protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
-		{
-			FeatureClass result;
-			try
-			{
-				result = ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
-			}
-			catch (Exception e)
-			{
-				throw new InvalidOperationException(
-					$"{e.Message}. Please select a template that " +
-					"determines the type of the new feature.");
-			}
-
-			return result;
-		}
-
-		protected virtual string GetTargetObjectTypeName()
-		{
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			return ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
-		}
-
-		protected virtual bool IsTargetObjectTypeSet()
-		{
-			return EditingTemplate.Current != null;
-		}
-
-		protected virtual esriGeometryType? GetTargetLayerShapeType()
-		{
-			EditingTemplate editTemplate = EditingTemplate.Current;
-
-			FeatureLayer currentTargetLayer = ToolUtils.CurrentTargetLayer(editTemplate);
-
-			esriGeometryType? geometryType = currentTargetLayer?.ShapeType;
-
-			return geometryType;
-		}
-
-		protected virtual void SetPredefinedFields(RowBuffer rowBuffer)
-		{
-			EditingTemplate template = EditingTemplate.Current;
-
-			if (template != null && template.Inspector.HasAttributes)
-			{
-				GdbPersistenceUtils.CopyAttributeValues(template.Inspector, rowBuffer);
-			}
-		}
-
-		#endregion
-
-		private async void OnActiveTemplateChanged(ActiveTemplateChangedEventArgs e)
-		{
-			try
-			{
-				await QueuedTaskUtils.Run(async () =>
-				{
-					FeatureClass newFeatureClass = GetCurrentTargetClass(out _);
-
-					await TargetClassChangedAsync(newFeatureClass);
-				});
-			}
-			catch (Exception ex)
-			{
-				_msg.Error($"Error processing object category change event: {ex.Message}", ex);
-			}
-		}
-
-		protected async Task TargetClassChangedAsync(FeatureClass newTargetClass)
-		{
-			if (DatasetUtils.IsSameTable(_targetFeatureClass, newTargetClass))
-			{
-				return;
-			}
-
-			_targetFeatureClass = newTargetClass;
-
-			await RememberSketchAsync();
-
-			await StartSketchPhaseAsync();
-		}
-
-		private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,
-		                                   [NotNull] FeatureClass featureClass,
-		                                   [CanBeNull] Subtype subtype)
-		{
-			// Prevent invalid Z values and other non-simple geometries:
-			Geometry simplifiedSketch =
-				Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
-
-			FeatureClassDefinition featureClassDef = featureClass.GetDefinition();
-
-			string tableName = featureClassDef.GetAliasName() ?? featureClassDef.GetName();
-
-			string subtypeName = subtype != null
-				                     ? subtype.GetName()
-				                     : tableName;
-
-			Feature newFeature = null;
-			bool transactionSucceeded =
-				await GdbPersistenceUtils.ExecuteInTransactionAsync(
-					editContext =>
-					{
-						RowBuffer rowBuffer = featureClass.CreateRowBuffer(subtype);
-
-						SetPredefinedFields(rowBuffer);
-
-						GdbObjectUtils.SetNullValuesToGdbDefault(
-							rowBuffer, featureClassDef, subtype);
-
-						Geometry projected =
-							MakeGeometryStorable(simplifiedSketch, featureClassDef);
-
-						GdbPersistenceUtils.SetShape(rowBuffer, projected, featureClass);
-
-						newFeature = featureClass.CreateRow(rowBuffer);
-
-						GdbPersistenceUtils.StoreShape(newFeature, projected, editContext);
-
-						return true;
-					}, $"Create {subtypeName}",
-					new[] { featureClass });
-
-			if (transactionSucceeded)
-			{
-				SelectionUtils.ClearSelection(MapView.Active.Map);
-
-				foreach (IDisplayTable displayTable in MapUtils
-					         .GetFeatureLayersForSelection<FeatureLayer>(
-						         MapView.Active, featureClass))
-				{
-					if (displayTable is FeatureLayer featureLayer)
-					{
-						SelectionUtils.SelectFeature(featureLayer, SelectionCombinationMethod.New,
-						                             newFeature.GetObjectID());
-					}
-				}
-
-				_msg.Info(
-					$"Created new feature {tableName} ({subtypeName}) ID: {newFeature.GetObjectID()}");
+				await ClearSelectionAsync();
 			}
 			else
 			{
-				_msg.Warn($"{Caption}: edit operation failed");
+				await ClearSketchAsync();
 			}
 		}
-
-		private static Geometry MakeGeometryStorable(Geometry simplifiedSketch,
-		                                             FeatureClassDefinition featureClassDef)
+		catch (Exception ex)
 		{
-			bool classHasZ = featureClassDef.HasZ();
-			bool classHasM = featureClassDef.HasM();
-
-			Geometry geometryToStore =
-				GeometryUtils.EnsureGeometrySchema(
-					simplifiedSketch, classHasZ, classHasM);
-
-			Geometry projected = GeometryUtils.EnsureSpatialReference(
-				geometryToStore, featureClassDef.GetSpatialReference());
-			return projected;
+			Gateway.ShowError(ex, _msg);
 		}
+	}
+
+	#region Overrides of ConstructionToolBase
+
+	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
+		Geometry sketchGeometry, EditingTemplate editTemplate,
+		MapView activeView,
+		CancelableProgressor cancelableProgressor = null)
+	{
+		await QueuedTaskUtils.Run(async () =>
+		{
+			try
+			{
+				FeatureClass featureClass = GetCurrentTargetClass(out Subtype subtype);
+
+				await StoreNewFeature(sketchGeometry, featureClass, subtype);
+
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message, ex);
+				return false;
+			}
+		});
+
+		return false;
+	}
+
+	#endregion
+
+	#region Virtual members
+
+	protected virtual FeatureClass GetCurrentTargetClass(out Subtype subtype)
+	{
+		FeatureClass result;
+		try
+		{
+			result = ToolUtils.GetCurrentTargetFeatureClass(true, out subtype);
+		}
+		catch (Exception e)
+		{
+			throw new InvalidOperationException(
+				$"{e.Message}. Please select a template that " +
+				"determines the type of the new feature.");
+		}
+
+		return result;
+	}
+
+	protected virtual string GetTargetObjectTypeName()
+	{
+		EditingTemplate editTemplate = EditingTemplate.Current;
+
+		return ToolUtils.CurrentTargetLayer(editTemplate)?.Name ?? string.Empty;
+	}
+
+	protected virtual bool IsTargetObjectTypeSet()
+	{
+		return EditingTemplate.Current != null;
+	}
+
+	protected virtual esriGeometryType? GetTargetLayerShapeType()
+	{
+		EditingTemplate editTemplate = EditingTemplate.Current;
+
+		FeatureLayer currentTargetLayer = ToolUtils.CurrentTargetLayer(editTemplate);
+
+		esriGeometryType? geometryType = currentTargetLayer?.ShapeType;
+
+		return geometryType;
+	}
+
+	protected virtual void SetPredefinedFields(RowBuffer rowBuffer)
+	{
+		EditingTemplate template = EditingTemplate.Current;
+
+		if (template != null && template.Inspector.HasAttributes)
+		{
+			GdbPersistenceUtils.CopyAttributeValues(template.Inspector, rowBuffer);
+		}
+	}
+
+	#endregion
+
+	private async void OnActiveTemplateChanged(ActiveTemplateChangedEventArgs e)
+	{
+		try
+		{
+			await QueuedTaskUtils.Run(async () =>
+			{
+				FeatureClass newFeatureClass = GetCurrentTargetClass(out _);
+
+				await TargetClassChangedAsync(newFeatureClass);
+			});
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"Error processing object category change event: {ex.Message}", ex);
+		}
+	}
+
+	protected async Task TargetClassChangedAsync(FeatureClass newTargetClass)
+	{
+		if (DatasetUtils.IsSameTable(_targetFeatureClass, newTargetClass))
+		{
+			return;
+		}
+
+		_targetFeatureClass = newTargetClass;
+
+		await RememberSketchAsync();
+
+		await StartSketchPhaseAsync();
+	}
+
+	private async Task StoreNewFeature([NotNull] Geometry sketchGeometry,
+	                                   [NotNull] FeatureClass featureClass,
+	                                   [CanBeNull] Subtype subtype)
+	{
+		// Prevent invalid Z values and other non-simple geometries:
+		Geometry simplifiedSketch =
+			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
+
+		FeatureClassDefinition featureClassDef = featureClass.GetDefinition();
+
+		string tableName = featureClassDef.GetAliasName() ?? featureClassDef.GetName();
+
+		string subtypeName = subtype != null
+			                     ? subtype.GetName()
+			                     : tableName;
+
+		Feature newFeature = null;
+		bool transactionSucceeded =
+			await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				editContext =>
+				{
+					RowBuffer rowBuffer = featureClass.CreateRowBuffer(subtype);
+
+					SetPredefinedFields(rowBuffer);
+
+					GdbObjectUtils.SetNullValuesToGdbDefault(
+						rowBuffer, featureClassDef, subtype);
+
+					Geometry projected =
+						MakeGeometryStorable(simplifiedSketch, featureClassDef);
+
+					GdbPersistenceUtils.SetShape(rowBuffer, projected, featureClass);
+
+					newFeature = featureClass.CreateRow(rowBuffer);
+
+					GdbPersistenceUtils.StoreShape(newFeature, projected, editContext);
+
+					return true;
+				}, $"Create {subtypeName}",
+				new[] { featureClass });
+
+		if (transactionSucceeded)
+		{
+			SelectionUtils.ClearSelection(MapView.Active.Map);
+
+			foreach (IDisplayTable displayTable in MapUtils
+				         .GetFeatureLayersForSelection<FeatureLayer>(
+					         MapView.Active, featureClass))
+			{
+				if (displayTable is FeatureLayer featureLayer)
+				{
+					SelectionUtils.SelectFeature(featureLayer, SelectionCombinationMethod.New,
+					                             newFeature.GetObjectID());
+				}
+			}
+
+			_msg.Info(
+				$"Created new feature {tableName} ({subtypeName}) ID: {newFeature.GetObjectID()}");
+		}
+		else
+		{
+			_msg.Warn($"{Caption}: edit operation failed");
+		}
+	}
+
+	private static Geometry MakeGeometryStorable(Geometry simplifiedSketch,
+	                                             FeatureClassDefinition featureClassDef)
+	{
+		bool classHasZ = featureClassDef.HasZ();
+		bool classHasM = featureClassDef.HasM();
+
+		Geometry geometryToStore =
+			GeometryUtils.EnsureGeometrySchema(
+				simplifiedSketch, classHasZ, classHasM);
+
+		Geometry projected = GeometryUtils.EnsureSpatialReference(
+			geometryToStore, featureClassDef.GetSpatialReference());
+		return projected;
 	}
 }

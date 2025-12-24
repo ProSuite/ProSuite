@@ -12,948 +12,948 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.Commons.AGP.Carto
+namespace ProSuite.Commons.AGP.Carto;
+
+public static class LayerUtils
 {
-	public static class LayerUtils
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	/// <summary>
+	/// Given a layer, find the map to which it belongs.
+	/// </summary>
+	public static Map FindMap(Layer layer)
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		var parent = layer.Parent;
 
-		/// <summary>
-		/// Given a layer, find the map to which it belongs.
-		/// </summary>
-		public static Map FindMap(Layer layer)
+		while (parent != null)
 		{
-			var parent = layer.Parent;
+			if (parent is Map map) return map;
+			if (parent is not Layer other) break;
 
-			while (parent != null)
-			{
-				if (parent is Map map) return map;
-				if (parent is not Layer other) break;
-
-				parent = other.Parent;
-			}
-
-			return null;
+			parent = other.Parent;
 		}
 
-		/// <summary>
-		/// Check if a layer (and optionally its parents) matches a pattern.
-		/// Pattern matching behaves roughly like gitignore patterns:
-		/// - no separator in pattern: match pattern against layer's name only
-		/// - separator(s) in pattern: match pattern against entire "path" of layer
-		/// - separator at end of pattern: layer must be composite (e.g. a group layer)
-		/// - "?" in pattern matches any single character, except the separator
-		/// - "*" in pattern matches any character sequence, except the separator
-		/// - leading "**/" in pattern matches any parent path
-		/// - trailing "/**" in pattern matches everything inside
-		/// - "/**/" in pattern matches zero(!) or more container layers
-		/// </summary>
-		/// <param name="layer">The layer to check</param>
-		/// <param name="pattern">The gitignore-like pattern</param>
-		/// <param name="ignoreCase">Whether to consider (default) or ignore case</param>
-		/// <param name="separator">The separator character used in <paramref name="pattern"/></param>
-		/// <returns>True iff the pattern matches</returns>
-		public static bool MatchPattern(Layer layer, string pattern, bool ignoreCase = false, char separator = '\\')
+		return null;
+	}
+
+	/// <summary>
+	/// Check if a layer (and optionally its parents) matches a pattern.
+	/// Pattern matching behaves roughly like gitignore patterns:
+	/// - no separator in pattern: match pattern against layer's name only
+	/// - separator(s) in pattern: match pattern against entire "path" of layer
+	/// - separator at end of pattern: layer must be composite (e.g. a group layer)
+	/// - "?" in pattern matches any single character, except the separator
+	/// - "*" in pattern matches any character sequence, except the separator
+	/// - leading "**/" in pattern matches any parent path
+	/// - trailing "/**" in pattern matches everything inside
+	/// - "/**/" in pattern matches zero(!) or more container layers
+	/// </summary>
+	/// <param name="layer">The layer to check</param>
+	/// <param name="pattern">The gitignore-like pattern</param>
+	/// <param name="ignoreCase">Whether to consider (default) or ignore case</param>
+	/// <param name="separator">The separator character used in <paramref name="pattern"/></param>
+	/// <returns>True iff the pattern matches</returns>
+	public static bool MatchPattern(Layer layer, string pattern, bool ignoreCase = false,
+	                                char separator = '\\')
+	{
+		if (layer is null || pattern is null) return false;
+
+		bool match;
+		bool hasSeparator = pattern.Contains(separator);
+
+		if (hasSeparator)
 		{
-			if (layer is null || pattern is null) return false;
+			var names = new List<string>();
 
-			bool match;
-			bool hasSeparator = pattern.Contains(separator);
+			names.Add(layer.Name);
 
-			if (hasSeparator)
+			// Walk up parent layers, if any, stopping just before the Map:
+
+			Layer candidate = layer;
+			while (candidate.Parent is Layer parent)
 			{
-				var names = new List<string>();
-
-				names.Add(layer.Name);
-
-				// Walk up parent layers, if any, stopping just before the Map:
-
-				Layer candidate = layer;
-				while (candidate.Parent is Layer parent)
-				{
-					names.Add(parent.Name);
-					candidate = parent;
-				}
-
-				names.Reverse();
-
-				var patterns = pattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-				// "/foo/bar///" => ["foo", "bar"] (layer names CAN be empty, but we don't handle this)
-
-				match = TextMatching.PathMatch(patterns, names, ignoreCase);
-			}
-			else
-			{
-				// No separator in pattern: just match against layer's name
-				match = TextMatching.WildMatch(pattern, layer.Name, ignoreCase);
+				names.Add(parent.Name);
+				candidate = parent;
 			}
 
-			if (match)
-			{
-				// If pattern ends with separator: layer must be composite
-				bool wantComposite = pattern.EndsWith(separator);
-				return !wantComposite || layer is ILayerContainer;
-			}
+			names.Reverse();
 
-			return false;
+			var patterns = pattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+			// "/foo/bar///" => ["foo", "bar"] (layer names CAN be empty, but we don't handle this)
+
+			match = TextMatching.PathMatch(patterns, names, ignoreCase);
+		}
+		else
+		{
+			// No separator in pattern: just match against layer's name
+			match = TextMatching.WildMatch(pattern, layer.Name, ignoreCase);
 		}
 
-		/// <summary>
-		/// Returns the Rows or features found by the layer/standalone table search. Honors
-		/// definition queries, layer time, etc. defined on the layer. According to the
-		/// documentation, valid rows returned by a cursor should be disposed.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="layer"></param>
-		/// <param name="filter"></param>
-		/// <param name="predicate"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
-		public static IEnumerable<T> SearchRows<T>([NotNull] IDisplayTable layer,
-		                                           [CanBeNull] QueryFilter filter = null,
-		                                           [CanBeNull] Predicate<T> predicate = null,
-		                                           CancellationToken cancellationToken = default)
-			where T : Row
+		if (match)
 		{
-			if (layer is null)
-				throw new ArgumentNullException(nameof(layer));
+			// If pattern ends with separator: layer must be composite
+			bool wantComposite = pattern.EndsWith(separator);
+			return ! wantComposite || layer is ILayerContainer;
+		}
 
-			if (predicate == null)
-			{
-				predicate = _ => true;
-			}
+		return false;
+	}
 
-			// NOTE: An invalid filter (e.g. subfields "*,OBJECTID") can crash the application.
-			_msg.VerboseDebug(() => $"Querying layer {((MapMember) layer).Name} using filter: " +
-			                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
+	/// <summary>
+	/// Returns the Rows or features found by the layer/standalone table search. Honors
+	/// definition queries, layer time, etc. defined on the layer. According to the
+	/// documentation, valid rows returned by a cursor should be disposed.
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	/// <param name="layer"></param>
+	/// <param name="filter"></param>
+	/// <param name="predicate"></param>
+	/// <param name="cancellationToken"></param>
+	/// <returns></returns>
+	public static IEnumerable<T> SearchRows<T>([NotNull] IDisplayTable layer,
+	                                           [CanBeNull] QueryFilter filter = null,
+	                                           [CanBeNull] Predicate<T> predicate = null,
+	                                           CancellationToken cancellationToken = default)
+		where T : Row
+	{
+		if (layer is null)
+			throw new ArgumentNullException(nameof(layer));
 
-			RowCursor cursor = null;
+		if (predicate == null)
+		{
+			predicate = _ => true;
+		}
+
+		// NOTE: An invalid filter (e.g. subfields "*,OBJECTID") can crash the application.
+		_msg.VerboseDebug(() => $"Querying layer {((MapMember) layer).Name} using filter: " +
+		                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
+
+		RowCursor cursor = null;
+		try
+		{
 			try
 			{
-				try
-				{
-					cursor = layer.Search(filter);
-				}
-				catch (Exception e)
-				{
-					_msg.Debug($"Error querying layer {((MapMember) layer).Name} using filter: " +
-					           $"{GdbQueryUtils.FilterPropertiesToString(filter)} ", e);
-					throw;
-				}
-
-				if (cursor is null) yield break; // no valid data source
-
-				while (cursor.MoveNext())
-				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						yield break;
-					}
-
-					T currentRow = (T) cursor.Current;
-
-					if (predicate(currentRow))
-					{
-						yield return currentRow;
-					}
-				}
+				cursor = layer.Search(filter);
 			}
-			finally
+			catch (Exception e)
 			{
-				cursor?.Dispose();
-			}
-		}
-
-		/// <summary>
-		/// Returns the Object IDs of features found by the layer / standalone table search.
-		/// Honors definition queries, layer time, etc. defined on the layer.
-		/// </summary>
-		public static IEnumerable<long> SearchObjectIds(
-			[NotNull] IDisplayTable layer,
-			[CanBeNull] QueryFilter filter = null,
-			[CanBeNull] Predicate<Feature> predicate = null,
-			CancellationToken cancellationToken = default)
-		{
-			using var table = layer.GetTable();
-			using var definition = table?.GetDefinition();
-			var oidField = definition?.GetObjectIDField();
-
-			if (string.IsNullOrEmpty(oidField))
-			{
-				yield break; // no OIDs
+				_msg.Debug($"Error querying layer {((MapMember) layer).Name} using filter: " +
+				           $"{GdbQueryUtils.FilterPropertiesToString(filter)} ", e);
+				throw;
 			}
 
-			if (filter == null)
-			{
-				filter = new QueryFilter { SubFields = oidField };
-			}
-			else if (GdbQueryUtils.EnsureSubField(oidField, filter.SubFields,
-			                                      out string newSubFields))
-			{
-				filter.SubFields = newSubFields;
-			}
+			if (cursor is null) yield break; // no valid data source
 
-			foreach (Feature row in SearchRows(layer, filter, predicate))
+			while (cursor.MoveNext())
 			{
 				if (cancellationToken.IsCancellationRequested)
 				{
 					yield break;
 				}
 
-				yield return row.GetObjectID();
+				T currentRow = (T) cursor.Current;
 
-				// Documentation: If a valid Row is returned by RowCursor.Current, it should be Disposed.
-				row.Dispose();
-			}
-		}
-
-		/// <summary>
-		/// Get the single layer definition of type <typeparamref name="T"/>
-		/// from the given <paramref name="layerDocument"/>; return null if
-		/// there is no single such layer definition in the document.
-		/// </summary>
-		public static T GetSingleLayerCIM<T>(LayerDocument layerDocument) where T : CIMBaseLayer
-		{
-			if (layerDocument is null) return null;
-			var cim = layerDocument.GetCIMLayerDocument();
-			var definitions = cim?.LayerDefinitions;
-			var matches = definitions?.OfType<T>().ToArray();
-			return matches?.Length != 1 ? null : matches.Single();
-		}
-
-		/// <remarks>
-		/// A layer document (.lyrx file) can contain one or more layer definitions!
-		/// </remarks>
-		[CanBeNull]
-		public static CIMRenderer GetRenderer(LayerDocument layerDocument,
-		                                      Func<CIMDefinition, bool> predicate = null)
-		{
-			if (layerDocument is null) return null;
-
-			CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
-			var definitions = cim?.LayerDefinitions;
-			if (definitions is null || definitions.Length <= 0) return null;
-
-			var definition = predicate is null
-				                 ? definitions.First()
-				                 : definitions.First(predicate);
-
-			return definition is CIMFeatureLayer featureLayer
-				       ? featureLayer.Renderer
-				       : null;
-		}
-
-		/// <summary>
-		/// Get first renderer from <paramref name="layerDocument"/>
-		/// compatible with the given <paramref name="targetLayer"/>.
-		/// </summary>
-		[CanBeNull]
-		public static CIMRenderer GetRenderer(
-			LayerDocument layerDocument, FeatureLayer targetLayer)
-		{
-			return GetRenderer(layerDocument, IsCompatible);
-
-			bool IsCompatible(CIMDefinition cimDefinition)
-			{
-				if (targetLayer is null) return true;
-				return cimDefinition is CIMFeatureLayer cimFeatureLayer &&
-				       targetLayer.CanSetRenderer(cimFeatureLayer.Renderer);
-			}
-		}
-
-		[NotNull]
-		public static LayerDocument OpenLayerDocument([NotNull] string filePath)
-		{
-			if (! File.Exists(filePath))
-			{
-				throw new ArgumentException($"{filePath} does not exist");
-			}
-
-			// todo daro no valid .lyrx file
-
-			return new LayerDocument(filePath);
-		}
-
-		[NotNull]
-		public static FeatureLayerCreationParams CreateLayerParams(
-			[NotNull] FeatureClass featureClass, string alias = null)
-		{
-			if (featureClass is null) throw new ArgumentNullException(nameof(featureClass));
-
-			if (string.IsNullOrEmpty(alias))
-			{
-				alias = featureClass.GetName();
-			}
-
-			return new FeatureLayerCreationParams(featureClass)
-			       {
-				       IsVisible = true,
-				       Name = alias,
-				       MapMemberPosition = MapMemberPosition.AddToTop
-			       };
-		}
-
-		/// <summary>
-		/// Gets the ObjectIDs of selected features from the given <paramref name="layer"/>.
-		/// </summary>
-		/// <remarks>
-		/// Although a layer data source is broken BasicFeatureLayer.SelectionCount
-		/// can return a valid result.
-		/// </remarks>
-		public static IEnumerable<long> GetSelectionOids(this BasicFeatureLayer layer)
-		{
-			using (ArcGIS.Core.Data.Selection selection = layer?.GetSelection())
-			{
-				return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
-			}
-		}
-
-		public static bool HasSelection([CanBeNull] BasicFeatureLayer layer)
-		{
-			return layer?.SelectionCount > 0;
-		}
-
-		public static void SetLayerSelectability([NotNull] BasicFeatureLayer layer,
-		                                         bool selectable = true)
-		{
-			var cimDefinition = (CIMFeatureLayer) layer.GetDefinition();
-			cimDefinition.Selectable = selectable;
-			layer.SetDefinition(cimDefinition);
-		}
-
-		/// <summary>
-		/// Whether the layer is displayed in the specified mapView.
-		/// </summary>
-		public static bool IsVisible([CanBeNull] Layer layer,
-		                             [CanBeNull] MapView inMapView)
-		{
-			if (layer is null || inMapView is null) return false;
-
-			if (! layer.IsVisible)
-			{
-				return false;
-			}
-
-			return layer.IsVisibleInView(inMapView);
-		}
-
-		/// <remarks>A layer is considered valid if it has a non-null data table</remarks>
-		public static bool IsLayerValid([CanBeNull] BasicFeatureLayer featureLayer)
-		{
-			using var table = featureLayer?.GetTable();
-			return table != null;
-		}
-
-		/// <summary>
-		/// Determines whether the specified layer uses the specified feature class.
-		/// </summary>
-		/// <param name="layer"></param>
-		/// <param name="featureClass"></param>
-		/// <returns></returns>
-		public static bool LayerUsesFeatureClass([NotNull] FeatureLayer layer,
-		                                         [NotNull] FeatureClass featureClass)
-		{
-			FeatureClass layerFeatureClass = layer.GetFeatureClass();
-
-			return ReferencesSameGdbFeatureClass(layerFeatureClass, featureClass);
-		}
-
-		/// <summary>
-		/// Determines if the specified layers use the same feature class. One or both layers might
-		/// have joins. The actual geodatabase feature classes are compared. 
-		/// </summary>
-		/// <param name="layer1"></param>
-		/// <param name="layer2"></param>
-		/// <returns></returns>
-		public static bool LayersUseSameFeatureClass([NotNull] FeatureLayer layer1,
-		                                             [NotNull] FeatureLayer layer2)
-		{
-			FeatureClass featureClass1 = layer1.GetFeatureClass();
-			FeatureClass featureClass2 = layer2.GetFeatureClass();
-
-			return ReferencesSameGdbFeatureClass(featureClass1, featureClass2);
-		}
-
-		/// <summary>
-		/// Determines if the specified feature classes are the same or, in case one or both
-		/// feature classes are joined, the actual geodatabase feature classes are compared. 
-		/// </summary>
-		/// <param name="featureClass1"></param>
-		/// <param name="featureClass2"></param>
-		/// <returns></returns>
-		private static bool ReferencesSameGdbFeatureClass(FeatureClass featureClass1,
-		                                                  FeatureClass featureClass2)
-		{
-			if (ReferenceEquals(featureClass1, featureClass2))
-			{
-				return true;
-			}
-
-			if (featureClass1 == null || featureClass2 == null)
-			{
-				return false;
-			}
-
-			if (featureClass1.IsJoinedTable())
-			{
-				featureClass1 = DatasetUtils.GetDatabaseFeatureClass(featureClass1);
-			}
-
-			if (featureClass2.IsJoinedTable())
-			{
-				featureClass2 = DatasetUtils.GetDatabaseFeatureClass(featureClass2);
-			}
-
-			return DatasetUtils.IsSameTable(featureClass1, featureClass2);
-		}
-
-		/// <summary>
-		/// Determines if two layers reference the same data source.
-		/// </summary>
-		/// <param name="layer1">The first layer.</param>
-		/// <param name="layer2">The second layer.</param>
-		/// <param name="requireSameVersion">Whether the layers must reference the same version.</param>
-		/// <param name="requireSameDefinition">Whether the layers must have the same definition (e.g., same definition query).</param>
-		/// <returns>True if the layers reference the same data source; otherwise, false.</returns>
-		public static bool DataSourcesAreEqual([NotNull] Layer layer1,
-		                                       [NotNull] Layer layer2,
-		                                       bool requireSameVersion,
-		                                       bool requireSameDefinition = false)
-		{
-			Assert.ArgumentNotNull(layer1, nameof(layer1));
-			Assert.ArgumentNotNull(layer2, nameof(layer2));
-
-			// Handle group layers
-			if (layer1 is GroupLayer groupLayer1 && layer2 is GroupLayer groupLayer2)
-			{
-				return DataSourcesAreEqual(groupLayer1, groupLayer2,
-				                           requireSameVersion, requireSameDefinition);
-			}
-
-			// Handle case where a data layer is compared with a group layer
-			if (layer1 is FeatureLayer && layer2 is GroupLayer groupLayer)
-			{
-				// Replace the existing layer if any of the sub layers of the
-				// new group layer matches
-				foreach (Layer subLayer in groupLayer.Layers)
+				if (predicate(currentRow))
 				{
-					if (DataSourcesAreEqual(layer1, subLayer, requireSameVersion,
-					                        requireSameDefinition))
-					{
-						return true;
-					}
+					yield return currentRow;
 				}
-
-				return false;
 			}
+		}
+		finally
+		{
+			cursor?.Dispose();
+		}
+	}
 
-			// Handle feature layers and stand-alone tables
-			if (layer1 is IDisplayTable displayTable1 && layer2 is IDisplayTable displayTable2)
+	/// <summary>
+	/// Returns the Object IDs of features found by the layer / standalone table search.
+	/// Honors definition queries, layer time, etc. defined on the layer.
+	/// </summary>
+	public static IEnumerable<long> SearchObjectIds(
+		[NotNull] IDisplayTable layer,
+		[CanBeNull] QueryFilter filter = null,
+		[CanBeNull] Predicate<Feature> predicate = null,
+		CancellationToken cancellationToken = default)
+	{
+		using var table = layer.GetTable();
+		using var definition = table?.GetDefinition();
+		var oidField = definition?.GetObjectIDField();
+
+		if (string.IsNullOrEmpty(oidField))
+		{
+			yield break; // no OIDs
+		}
+
+		if (filter == null)
+		{
+			filter = new QueryFilter { SubFields = oidField };
+		}
+		else if (GdbQueryUtils.EnsureSubField(oidField, filter.SubFields,
+		                                      out string newSubFields))
+		{
+			filter.SubFields = newSubFields;
+		}
+
+		foreach (Feature row in SearchRows(layer, filter, predicate))
+		{
+			if (cancellationToken.IsCancellationRequested)
 			{
-				return DataSourcesAreEqual(displayTable1, displayTable2,
-				                           requireSameVersion, requireSameDefinition);
+				yield break;
 			}
 
-			if (layer1.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn1 &&
-			    layer2.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn2)
-			{
-				return vectorTileConn1.URI.Equals(vectorTileConn2.URI);
-			}
+			yield return row.GetObjectID();
 
-			if (layer1.GetDefinition() is CIMServiceLayer serviceLayer1 &&
-			    layer2.GetDefinition() is CIMServiceLayer serviceLayer2)
-			{
-				return DataSourcesAreEqual(serviceLayer1, serviceLayer2);
-			}
+			// Documentation: If a valid Row is returned by RowCursor.Current, it should be Disposed.
+			row.Dispose();
+		}
+	}
 
-			// TODO: Other layers, Service layers etc.
-			//// Handle raster layers
-			//if (layer1 is RasterLayer rasterLayer1 && layer2 is RasterLayer rasterLayer2)
-			//{
-			//	return CompareRasterLayers(rasterLayer1, rasterLayer2, requireSameVersion);
-			//}
+	/// <summary>
+	/// Get the single layer definition of type <typeparamref name="T"/>
+	/// from the given <paramref name="layerDocument"/>; return null if
+	/// there is no single such layer definition in the document.
+	/// </summary>
+	public static T GetSingleLayerCIM<T>(LayerDocument layerDocument) where T : CIMBaseLayer
+	{
+		if (layerDocument is null) return null;
+		var cim = layerDocument.GetCIMLayerDocument();
+		var definitions = cim?.LayerDefinitions;
+		var matches = definitions?.OfType<T>().ToArray();
+		return matches?.Length != 1 ? null : matches.Single();
+	}
 
-			// Different layer types - not equal
+	/// <remarks>
+	/// A layer document (.lyrx file) can contain one or more layer definitions!
+	/// </remarks>
+	[CanBeNull]
+	public static CIMRenderer GetRenderer(LayerDocument layerDocument,
+	                                      Func<CIMDefinition, bool> predicate = null)
+	{
+		if (layerDocument is null) return null;
+
+		CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+		var definitions = cim?.LayerDefinitions;
+		if (definitions is null || definitions.Length <= 0) return null;
+
+		var definition = predicate is null
+			                 ? definitions.First()
+			                 : definitions.First(predicate);
+
+		return definition is CIMFeatureLayer featureLayer
+			       ? featureLayer.Renderer
+			       : null;
+	}
+
+	/// <summary>
+	/// Get first renderer from <paramref name="layerDocument"/>
+	/// compatible with the given <paramref name="targetLayer"/>.
+	/// </summary>
+	[CanBeNull]
+	public static CIMRenderer GetRenderer(
+		LayerDocument layerDocument, FeatureLayer targetLayer)
+	{
+		return GetRenderer(layerDocument, IsCompatible);
+
+		bool IsCompatible(CIMDefinition cimDefinition)
+		{
+			if (targetLayer is null) return true;
+			return cimDefinition is CIMFeatureLayer cimFeatureLayer &&
+			       targetLayer.CanSetRenderer(cimFeatureLayer.Renderer);
+		}
+	}
+
+	[NotNull]
+	public static LayerDocument OpenLayerDocument([NotNull] string filePath)
+	{
+		if (! File.Exists(filePath))
+		{
+			throw new ArgumentException($"{filePath} does not exist");
+		}
+
+		// todo daro no valid .lyrx file
+
+		return new LayerDocument(filePath);
+	}
+
+	[NotNull]
+	public static FeatureLayerCreationParams CreateLayerParams(
+		[NotNull] FeatureClass featureClass, string alias = null)
+	{
+		if (featureClass is null) throw new ArgumentNullException(nameof(featureClass));
+
+		if (string.IsNullOrEmpty(alias))
+		{
+			alias = featureClass.GetName();
+		}
+
+		return new FeatureLayerCreationParams(featureClass)
+		       {
+			       IsVisible = true,
+			       Name = alias,
+			       MapMemberPosition = MapMemberPosition.AddToTop
+		       };
+	}
+
+	/// <summary>
+	/// Gets the ObjectIDs of selected features from the given <paramref name="layer"/>.
+	/// </summary>
+	/// <remarks>
+	/// Although a layer data source is broken BasicFeatureLayer.SelectionCount
+	/// can return a valid result.
+	/// </remarks>
+	public static IEnumerable<long> GetSelectionOids(this BasicFeatureLayer layer)
+	{
+		using (ArcGIS.Core.Data.Selection selection = layer?.GetSelection())
+		{
+			return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
+		}
+	}
+
+	public static bool HasSelection([CanBeNull] BasicFeatureLayer layer)
+	{
+		return layer?.SelectionCount > 0;
+	}
+
+	public static void SetLayerSelectability([NotNull] BasicFeatureLayer layer,
+	                                         bool selectable = true)
+	{
+		var cimDefinition = (CIMFeatureLayer) layer.GetDefinition();
+		cimDefinition.Selectable = selectable;
+		layer.SetDefinition(cimDefinition);
+	}
+
+	/// <summary>
+	/// Whether the layer is displayed in the specified mapView.
+	/// </summary>
+	public static bool IsVisible([CanBeNull] Layer layer,
+	                             [CanBeNull] MapView inMapView)
+	{
+		if (layer is null || inMapView is null) return false;
+
+		if (! layer.IsVisible)
+		{
 			return false;
 		}
 
-		private static bool DataSourcesAreEqual([NotNull] CompositeLayer groupLayer1,
-		                                        [NotNull] CompositeLayer groupLayer2,
-		                                        bool requireSameVersion,
-		                                        bool requireSameDefinition)
+		return layer.IsVisibleInView(inMapView);
+	}
+
+	/// <remarks>A layer is considered valid if it has a non-null data table</remarks>
+	public static bool IsLayerValid([CanBeNull] BasicFeatureLayer featureLayer)
+	{
+		using var table = featureLayer?.GetTable();
+		return table != null;
+	}
+
+	/// <summary>
+	/// Determines whether the specified layer uses the specified feature class.
+	/// </summary>
+	/// <param name="layer"></param>
+	/// <param name="featureClass"></param>
+	/// <returns></returns>
+	public static bool LayerUsesFeatureClass([NotNull] FeatureLayer layer,
+	                                         [NotNull] FeatureClass featureClass)
+	{
+		FeatureClass layerFeatureClass = layer.GetFeatureClass();
+
+		return ReferencesSameGdbFeatureClass(layerFeatureClass, featureClass);
+	}
+
+	/// <summary>
+	/// Determines if the specified layers use the same feature class. One or both layers might
+	/// have joins. The actual geodatabase feature classes are compared. 
+	/// </summary>
+	/// <param name="layer1"></param>
+	/// <param name="layer2"></param>
+	/// <returns></returns>
+	public static bool LayersUseSameFeatureClass([NotNull] FeatureLayer layer1,
+	                                             [NotNull] FeatureLayer layer2)
+	{
+		FeatureClass featureClass1 = layer1.GetFeatureClass();
+		FeatureClass featureClass2 = layer2.GetFeatureClass();
+
+		return ReferencesSameGdbFeatureClass(featureClass1, featureClass2);
+	}
+
+	/// <summary>
+	/// Determines if the specified feature classes are the same or, in case one or both
+	/// feature classes are joined, the actual geodatabase feature classes are compared. 
+	/// </summary>
+	/// <param name="featureClass1"></param>
+	/// <param name="featureClass2"></param>
+	/// <returns></returns>
+	private static bool ReferencesSameGdbFeatureClass(FeatureClass featureClass1,
+	                                                  FeatureClass featureClass2)
+	{
+		if (ReferenceEquals(featureClass1, featureClass2))
 		{
-			// Only equal if all contained layers match
-			if (groupLayer1.Layers.Count != groupLayer2.Layers.Count)
-			{
-				return false;
-			}
-
-			// Check if all child layers match (in order)
-			for (int i = 0; i < groupLayer1.Layers.Count; i++)
-			{
-				if (! DataSourcesAreEqual(groupLayer1.Layers[i], groupLayer2.Layers[i],
-				                          requireSameVersion, requireSameDefinition))
-				{
-					return false;
-				}
-			}
-
 			return true;
 		}
 
-		private static bool DataSourcesAreEqual([NotNull] IDisplayTable layer1,
-		                                        [NotNull] IDisplayTable layer2,
-		                                        bool requireSameVersion,
-		                                        bool requireSameDefinition)
+		if (featureClass1 == null || featureClass2 == null)
 		{
-			// Check if both layers are valid
-			var featureClass1 = layer1.GetTable();
-			var featureClass2 = layer2.GetTable();
+			return false;
+		}
 
-			if (featureClass1 == null || featureClass2 == null)
+		if (featureClass1.IsJoinedTable())
+		{
+			featureClass1 = DatasetUtils.GetDatabaseFeatureClass(featureClass1);
+		}
+
+		if (featureClass2.IsJoinedTable())
+		{
+			featureClass2 = DatasetUtils.GetDatabaseFeatureClass(featureClass2);
+		}
+
+		return DatasetUtils.IsSameTable(featureClass1, featureClass2);
+	}
+
+	/// <summary>
+	/// Determines if two layers reference the same data source.
+	/// </summary>
+	/// <param name="layer1">The first layer.</param>
+	/// <param name="layer2">The second layer.</param>
+	/// <param name="requireSameVersion">Whether the layers must reference the same version.</param>
+	/// <param name="requireSameDefinition">Whether the layers must have the same definition (e.g., same definition query).</param>
+	/// <returns>True if the layers reference the same data source; otherwise, false.</returns>
+	public static bool DataSourcesAreEqual([NotNull] Layer layer1,
+	                                       [NotNull] Layer layer2,
+	                                       bool requireSameVersion,
+	                                       bool requireSameDefinition = false)
+	{
+		Assert.ArgumentNotNull(layer1, nameof(layer1));
+		Assert.ArgumentNotNull(layer2, nameof(layer2));
+
+		// Handle group layers
+		if (layer1 is GroupLayer groupLayer1 && layer2 is GroupLayer groupLayer2)
+		{
+			return DataSourcesAreEqual(groupLayer1, groupLayer2,
+			                           requireSameVersion, requireSameDefinition);
+		}
+
+		// Handle case where a data layer is compared with a group layer
+		if (layer1 is FeatureLayer && layer2 is GroupLayer groupLayer)
+		{
+			// Replace the existing layer if any of the sub layers of the
+			// new group layer matches
+			foreach (Layer subLayer in groupLayer.Layers)
+			{
+				if (DataSourcesAreEqual(layer1, subLayer, requireSameVersion,
+				                        requireSameDefinition))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		// Handle feature layers and stand-alone tables
+		if (layer1 is IDisplayTable displayTable1 && layer2 is IDisplayTable displayTable2)
+		{
+			return DataSourcesAreEqual(displayTable1, displayTable2,
+			                           requireSameVersion, requireSameDefinition);
+		}
+
+		if (layer1.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn1 &&
+		    layer2.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn2)
+		{
+			return vectorTileConn1.URI.Equals(vectorTileConn2.URI);
+		}
+
+		if (layer1.GetDefinition() is CIMServiceLayer serviceLayer1 &&
+		    layer2.GetDefinition() is CIMServiceLayer serviceLayer2)
+		{
+			return DataSourcesAreEqual(serviceLayer1, serviceLayer2);
+		}
+
+		// TODO: Other layers, Service layers etc.
+		//// Handle raster layers
+		//if (layer1 is RasterLayer rasterLayer1 && layer2 is RasterLayer rasterLayer2)
+		//{
+		//	return CompareRasterLayers(rasterLayer1, rasterLayer2, requireSameVersion);
+		//}
+
+		// Different layer types - not equal
+		return false;
+	}
+
+	private static bool DataSourcesAreEqual([NotNull] CompositeLayer groupLayer1,
+	                                        [NotNull] CompositeLayer groupLayer2,
+	                                        bool requireSameVersion,
+	                                        bool requireSameDefinition)
+	{
+		// Only equal if all contained layers match
+		if (groupLayer1.Layers.Count != groupLayer2.Layers.Count)
+		{
+			return false;
+		}
+
+		// Check if all child layers match (in order)
+		for (int i = 0; i < groupLayer1.Layers.Count; i++)
+		{
+			if (! DataSourcesAreEqual(groupLayer1.Layers[i], groupLayer2.Layers[i],
+			                          requireSameVersion, requireSameDefinition))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static bool DataSourcesAreEqual([NotNull] IDisplayTable layer1,
+	                                        [NotNull] IDisplayTable layer2,
+	                                        bool requireSameVersion,
+	                                        bool requireSameDefinition)
+	{
+		// Check if both layers are valid
+		var featureClass1 = layer1.GetTable();
+		var featureClass2 = layer2.GetTable();
+
+		if (featureClass1 == null || featureClass2 == null)
+		{
+			return false;
+		}
+
+		// Check if they reference the same dataset
+		if (! DatasetUtils.IsSameTable(featureClass1, featureClass2))
+		{
+			return false;
+		}
+
+		// Check versions if required
+		if (requireSameVersion)
+		{
+			// Get connection properties to compare version info
+			var gdb1 = featureClass1.GetDatastore() as Geodatabase;
+			var gdb2 = featureClass2.GetDatastore() as Geodatabase;
+
+			// Check if versions are specified
+			bool hasVersion1 = gdb1?.IsVersioningSupported() == true;
+			bool hasVersion2 = gdb2?.IsVersioningSupported() == true;
+
+			// If only one has a version, they're not equal
+			if (hasVersion1 != hasVersion2)
 			{
 				return false;
 			}
 
-			// Check if they reference the same dataset
-			if (! DatasetUtils.IsSameTable(featureClass1, featureClass2))
+			// If both have versions, compare them
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+			if (hasVersion1 && hasVersion2)
+			{
+				string version1 = gdb1.GetVersionManager().GetCurrentVersion().GetName();
+				string version2 = gdb2.GetVersionManager().GetCurrentVersion().GetName();
+
+				if (! string.Equals(version1, version2, StringComparison.OrdinalIgnoreCase))
+				{
+					return false;
+				}
+			}
+		}
+
+		// Check definitions if required
+		if (requireSameDefinition)
+		{
+			// Compare definition queries
+			string defQuery1 = GetDefinitionQuery(layer1);
+			string defQuery2 = GetDefinitionQuery(layer2);
+
+			if (! string.Equals(defQuery1, defQuery2, StringComparison.OrdinalIgnoreCase))
 			{
 				return false;
 			}
+		}
 
-			// Check versions if required
-			if (requireSameVersion)
-			{
-				// Get connection properties to compare version info
-				var gdb1 = featureClass1.GetDatastore() as Geodatabase;
-				var gdb2 = featureClass2.GetDatastore() as Geodatabase;
+		return true;
+	}
 
-				// Check if versions are specified
-				bool hasVersion1 = gdb1?.IsVersioningSupported() == true;
-				bool hasVersion2 = gdb2?.IsVersioningSupported() == true;
+	private static bool DataSourcesAreEqual(CIMServiceLayer serviceLayer1,
+	                                        CIMServiceLayer serviceLayer2)
+	{
+		// Check for same service layer type
+		if (serviceLayer1.GetType() != serviceLayer2.GetType())
+		{
+			return false;
+		}
 
-				// If only one has a version, they're not equal
-				if (hasVersion1 != hasVersion2)
-				{
-					return false;
-				}
+		// Handle case where service connections might be null
+		if (serviceLayer1.ServiceConnection == null || serviceLayer2.ServiceConnection == null)
+		{
+			// If both null, they're equal; if only one is null, they're not equal
+			return serviceLayer1.ServiceConnection == null &&
+			       serviceLayer2.ServiceConnection == null;
+		}
 
-				// If both have versions, compare them
-				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-				if (hasVersion1 && hasVersion2)
-				{
-					string version1 = gdb1.GetVersionManager().GetCurrentVersion().GetName();
-					string version2 = gdb2.GetVersionManager().GetCurrentVersion().GetName();
+		// Check for different service connection types
+		if (serviceLayer1.ServiceConnection.GetType() !=
+		    serviceLayer2.ServiceConnection.GetType())
+		{
+			return false;
+		}
 
-					if (! string.Equals(version1, version2, StringComparison.OrdinalIgnoreCase))
-					{
-						return false;
-					}
-				}
-			}
+		// Compare CIMAGSServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMAGSServiceConnection agsServiceConn1 &&
+		    serviceLayer2.ServiceConnection is CIMAGSServiceConnection agsServiceConn2)
+		{
+			return string.Equals(agsServiceConn1.URL,
+			                     agsServiceConn2.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
 
-			// Check definitions if required
-			if (requireSameDefinition)
-			{
-				// Compare definition queries
-				string defQuery1 = GetDefinitionQuery(layer1);
-				string defQuery2 = GetDefinitionQuery(layer2);
+		// Compare CIMWMSServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMWMSServiceConnection wmsServiceConn1 &&
+		    serviceLayer2.ServiceConnection is CIMWMSServiceConnection wmsServiceConn2)
+		{
+			return string.Equals(wmsServiceConn1.ServerConnection?.URL,
+			                     wmsServiceConn2.ServerConnection?.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
 
-				if (! string.Equals(defQuery1, defQuery2, StringComparison.OrdinalIgnoreCase))
-				{
-					return false;
-				}
-			}
+		// Compare CIMWMTSServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn1 &&
+		    serviceLayer2.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn2)
+		{
+			return string.Equals(wmtsServiceConn1.ServerConnection?.URL,
+			                     wmtsServiceConn2.ServerConnection?.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
 
+		// Compare CIMWFSServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMWFSServiceConnection wfsServiceConn1 &&
+		    serviceLayer2.ServiceConnection is CIMWFSServiceConnection wfsServiceConn2)
+		{
+			return string.Equals(wfsServiceConn1.ServerConnection?.URL,
+			                     wfsServiceConn2.ServerConnection?.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
+
+		// Compare CIMStandardServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMStandardServiceConnection
+			    standardServiceConn1 &&
+		    serviceLayer2.ServiceConnection is CIMStandardServiceConnection
+			    standardServiceConn2)
+		{
+			return string.Equals(standardServiceConn1.URL,
+			                     standardServiceConn2.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
+
+		// Compare CIMWCSServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMWCSServiceConnection wcsServiceConn1 &&
+		    serviceLayer2.ServiceConnection is CIMWCSServiceConnection wcsServiceConn2)
+		{
+			return string.Equals(wcsServiceConn1.ServerConnection?.URL,
+			                     wcsServiceConn2.ServerConnection?.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
+
+		// Compare CIMOGCAPIMapTilesServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
+			    ogcApiMapTilesConn1 &&
+		    serviceLayer2.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
+			    ogcApiMapTilesConn2)
+		{
+			return string.Equals(ogcApiMapTilesConn1.ServerConnection?.URL,
+			                     ogcApiMapTilesConn2.ServerConnection?.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
+
+		// Compare CIMOGCAPIServiceConnection
+		if (serviceLayer1.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn1 &&
+		    serviceLayer2.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn2)
+		{
+			return string.Equals(ogcApiConn1.ServerConnection?.URL,
+			                     ogcApiConn2.ServerConnection?.URL,
+			                     StringComparison.OrdinalIgnoreCase);
+		}
+
+		_msg.WarnFormat(
+			"Cannot compare unknown or unsupported service layers. Layer 1: {0}. Layer 2: {1}",
+			serviceLayer1.Name, serviceLayer2.Name);
+
+		return false;
+	}
+
+	public static string GetDefinitionQuery(IDisplayTable displayTable)
+	{
+		if (displayTable is StandaloneTable standaloneTable)
+		{
+			return GetDefinitionQuery(standaloneTable);
+		}
+
+		if (displayTable is BasicFeatureLayer featureLayer)
+		{
+			return GetDefinitionQuery(featureLayer);
+		}
+
+		throw new NotImplementedException("Unsupported type of display table");
+	}
+
+	public static string GetDefinitionQuery(BasicFeatureLayer featureLayer)
+	{
+		return featureLayer.DefinitionQuery;
+	}
+
+	public static string GetDefinitionQuery(StandaloneTable standaloneTable)
+	{
+		return standaloneTable.DefinitionQuery;
+	}
+
+	/// <summary>
+	/// Returns the feature class which is referenced by the specified layer. In case the
+	/// feature class is a joined table and the <see cref="unJoined"/> parameter is true,
+	/// the actual geodatabase feature class is returned.
+	/// </summary>
+	/// <param name="featureLayer"></param>
+	/// <param name="unJoined"></param>
+	/// <returns></returns>
+	public static FeatureClass GetFeatureClass(BasicFeatureLayer featureLayer,
+	                                           bool unJoined)
+	{
+		Assert.ArgumentNotNull(featureLayer, nameof(featureLayer));
+
+		FeatureClass featureClass = GetFeatureClass(featureLayer);
+
+		if (featureClass == null)
+		{
+			return null;
+		}
+
+		return unJoined ? DatasetUtils.GetDatabaseFeatureClass(featureClass) : featureClass;
+	}
+
+	/// <summary>
+	/// Returns the table referenced by the specified map member. In case the table is a joined
+	/// table and the <paramref name="unJoined"/> parameter is true, the actual geodatabase
+	/// table is returned.
+	/// </summary>
+	/// <param name="tableBasedMapMember"></param>
+	/// <param name="unJoined"></param>
+	/// <returns></returns>
+	/// <exception cref="ArgumentException"></exception>
+	[CanBeNull]
+	public static Table GetTable([NotNull] IDisplayTable tableBasedMapMember,
+	                             bool unJoined)
+	{
+		Assert.ArgumentNotNull(tableBasedMapMember, nameof(tableBasedMapMember));
+
+		Table table = tableBasedMapMember.GetTable();
+
+		if (table == null)
+		{
+			return null;
+		}
+
+		return unJoined ? DatasetUtils.GetDatabaseTable(table) : table;
+	}
+
+	[CanBeNull]
+	public static FeatureClass GetFeatureClass(this Layer layer)
+	{
+		// BasicFeatureLayer is the abstract base class for:
+		// FeatureLayer, AnnotationLayer, DimensionLayer;
+		// they all have a feature class as their data source, but,
+		// sadly, BasicFeatureLayer has no GetFeatureClass() method.
+
+		if (layer is FeatureLayer featureLayer)
+		{
+			return featureLayer.GetFeatureClass();
+		}
+
+		if (layer is AnnotationLayer annotationLayer)
+		{
+			return annotationLayer.GetFeatureClass();
+		}
+
+		if (layer is BasicFeatureLayer basicFeatureLayer)
+		{
+			return basicFeatureLayer.GetTable() as FeatureClass;
+		}
+
+		return null;
+	}
+
+	#region Underlying dataset properties
+
+	// Roughly following the "ArcGIS Pro SDK for .NET: Advanced Editing and Edit Operations"
+	// from a DevSummit tech session recording at https://youtu.be/U4vcNDEkj1w?t=2729
+
+	/// <summary>
+	/// Get how the given layer's dataset is registered with the geodatabase:
+	/// non-versioned, versioned, or versioned with the option to move edits to base.
+	/// </summary>
+	public static RegistrationType GetRegistrationType(this FeatureLayer featureLayer)
+	{
+		using var featureClass = featureLayer.GetFeatureClass();
+		if (featureClass is null) return RegistrationType.Nonversioned;
+		return featureClass.GetRegistrationType();
+	}
+
+	public static GeodatabaseType? GetGeodatabaseType(this FeatureLayer featureLayer)
+	{
+		using var featureClass = featureLayer.GetFeatureClass();
+		using var workspace = featureClass?.GetDatastore();
+
+		if (workspace is Geodatabase geodatabase)
+		{
+			return geodatabase.GetGeodatabaseType();
+		}
+
+		return null;
+	}
+
+	public static bool IsVersioned(this FeatureLayer featureLayer)
+	{
+		return featureLayer.GetRegistrationType() != RegistrationType.Nonversioned;
+	}
+
+	public static bool IsBranchVersioned(this FeatureLayer featureLayer)
+	{
+		using var featureClass = featureLayer.GetFeatureClass();
+		if (featureClass is null) return false;
+		using var workspace = featureClass.GetDatastore();
+		return IsBranchVersioned(workspace);
+	}
+
+	private static bool IsBranchVersioned(Datastore workspace)
+	{
+		if (workspace is not Geodatabase geodatabase) return false;
+		if (! geodatabase.IsVersioningSupported()) return false;
+		var props = geodatabase.GetConnector();
+		if (props is DatabaseConnectionProperties dcProps)
+		{
+			// Utility network FC only:
+			return ! string.IsNullOrEmpty(dcProps.Branch);
+		}
+
+		return props is ServiceConnectionProperties;
+	}
+
+	public static bool SupportsUndoRedo(this FeatureLayer featureLayer)
+	{
+		using var featureClass = featureLayer.GetFeatureClass();
+		if (featureClass is null) return false;
+
+		using var workspace = featureClass.GetDatastore();
+		if (workspace is not Geodatabase geodatabase)
+			return false; // TODO how about shapefiles?
+
+		var gdbType = geodatabase.GetGeodatabaseType();
+		if (gdbType == GeodatabaseType.FileSystem)
+			return true; // shapefiles
+		if (gdbType == GeodatabaseType.LocalDatabase)
+			return true; // file gdbs support undo/redo
+
+		var regType = featureClass.GetRegistrationType();
+		var isVersioned = regType != RegistrationType.Nonversioned;
+		if (gdbType == GeodatabaseType.RemoteDatabase && isVersioned)
 			return true;
-		}
 
-		private static bool DataSourcesAreEqual(CIMServiceLayer serviceLayer1,
-		                                        CIMServiceLayer serviceLayer2)
+		if (IsBranchVersioned(workspace))
 		{
-			// Check for same service layer type
-			if (serviceLayer1.GetType() != serviceLayer2.GetType())
-			{
-				return false;
-			}
-
-			// Handle case where service connections might be null
-			if (serviceLayer1.ServiceConnection == null || serviceLayer2.ServiceConnection == null)
-			{
-				// If both null, they're equal; if only one is null, they're not equal
-				return serviceLayer1.ServiceConnection == null &&
-				       serviceLayer2.ServiceConnection == null;
-			}
-
-			// Check for different service connection types
-			if (serviceLayer1.ServiceConnection.GetType() !=
-			    serviceLayer2.ServiceConnection.GetType())
-			{
-				return false;
-			}
-
-			// Compare CIMAGSServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMAGSServiceConnection agsServiceConn1 &&
-			    serviceLayer2.ServiceConnection is CIMAGSServiceConnection agsServiceConn2)
-			{
-				return string.Equals(agsServiceConn1.URL,
-				                     agsServiceConn2.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			// Compare CIMWMSServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMWMSServiceConnection wmsServiceConn1 &&
-			    serviceLayer2.ServiceConnection is CIMWMSServiceConnection wmsServiceConn2)
-			{
-				return string.Equals(wmsServiceConn1.ServerConnection?.URL,
-				                     wmsServiceConn2.ServerConnection?.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			// Compare CIMWMTSServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn1 &&
-			    serviceLayer2.ServiceConnection is CIMWMTSServiceConnection wmtsServiceConn2)
-			{
-				return string.Equals(wmtsServiceConn1.ServerConnection?.URL,
-				                     wmtsServiceConn2.ServerConnection?.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			// Compare CIMWFSServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMWFSServiceConnection wfsServiceConn1 &&
-			    serviceLayer2.ServiceConnection is CIMWFSServiceConnection wfsServiceConn2)
-			{
-				return string.Equals(wfsServiceConn1.ServerConnection?.URL,
-				                     wfsServiceConn2.ServerConnection?.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			// Compare CIMStandardServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMStandardServiceConnection
-				    standardServiceConn1 &&
-			    serviceLayer2.ServiceConnection is CIMStandardServiceConnection
-				    standardServiceConn2)
-			{
-				return string.Equals(standardServiceConn1.URL,
-				                     standardServiceConn2.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			// Compare CIMWCSServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMWCSServiceConnection wcsServiceConn1 &&
-			    serviceLayer2.ServiceConnection is CIMWCSServiceConnection wcsServiceConn2)
-			{
-				return string.Equals(wcsServiceConn1.ServerConnection?.URL,
-				                     wcsServiceConn2.ServerConnection?.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			// Compare CIMOGCAPIMapTilesServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
-				    ogcApiMapTilesConn1 &&
-			    serviceLayer2.ServiceConnection is CIMOGCAPIMapTilesServiceConnection
-				    ogcApiMapTilesConn2)
-			{
-				return string.Equals(ogcApiMapTilesConn1.ServerConnection?.URL,
-				                     ogcApiMapTilesConn2.ServerConnection?.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			// Compare CIMOGCAPIServiceConnection
-			if (serviceLayer1.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn1 &&
-			    serviceLayer2.ServiceConnection is CIMOGCAPIServiceConnection ogcApiConn2)
-			{
-				return string.Equals(ogcApiConn1.ServerConnection?.URL,
-				                     ogcApiConn2.ServerConnection?.URL,
-				                     StringComparison.OrdinalIgnoreCase);
-			}
-
-			_msg.WarnFormat(
-				"Cannot compare unknown or unsupported service layers. Layer 1: {0}. Layer 2: {1}",
-				serviceLayer1.Name, serviceLayer2.Name);
-
-			return false;
+			// Special case branch versioned: all versions except DEFAULT (no parent)
+			var vmgr = geodatabase.GetVersionManager();
+			var currentVersion = vmgr.GetCurrentVersion();
+			return currentVersion.GetParent() != null;
 		}
 
-		public static string GetDefinitionQuery(IDisplayTable displayTable)
+		return false;
+	}
+
+	#endregion
+
+	[NotNull]
+	public static string GetMeaningfulDisplayExpression([NotNull] Feature feature,
+	                                                    [CanBeNull] string expression)
+	{
+		if (string.IsNullOrEmpty(expression) || string.IsNullOrWhiteSpace(expression))
 		{
-			if (displayTable is StandaloneTable standaloneTable)
+			return GdbObjectUtils.GetDisplayValue(feature);
+		}
+
+		long oid = feature.GetObjectID();
+
+		// GetDisplayExpressions() returns
+		// 1) the OIDs if the display field value is null
+		//    e.g. feature["NAME"] == null > layer.GetDisplayExpressions(oid) returns the Object ID
+		// 2) 0 if the display expression string is null
+		bool fieldValueIsNull = long.TryParse(expression, out long oid1) && oid1 == oid;
+		bool displayExpressionIsNull = long.TryParse(expression, out long oid2) && oid2 == 0;
+
+		if (fieldValueIsNull || displayExpressionIsNull)
+		{
+			return GdbObjectUtils.GetDisplayValue(feature);
+		}
+
+		return expression;
+	}
+
+	[NotNull]
+	public static string GetMeaningfulDisplayExpression([NotNull] BasicFeatureLayer layer,
+	                                                    [NotNull] Feature feature)
+	{
+		long oid = feature.GetObjectID();
+
+		// Many display expressions are possible. We take the first one.
+		var expression = layer.GetDisplayExpressions(new List<long> { oid })
+		                      .FirstOrDefault();
+
+		if (string.IsNullOrEmpty(expression) || string.IsNullOrWhiteSpace(expression))
+		{
+			return GdbObjectUtils.GetDisplayValue(feature);
+		}
+
+		// GetDisplayExpressions() returns
+		// 1) the OIDs if the display field value is null
+		//    e.g. feature["NAME"] == null > layer.GetDisplayExpressions(oid) returns the Object ID
+		bool fieldValueIsNull = long.TryParse(expression, out long oid1) && oid1 == oid;
+
+		if (fieldValueIsNull)
+		{
+			return GdbObjectUtils.GetDisplayValue(feature);
+		}
+
+		return expression;
+	}
+
+	public static void Rename(Layer layer, string name)
+	{
+		CIMBaseLayer cimLayer = layer.GetDefinition();
+		cimLayer.Name = name;
+		layer.SetDefinition(cimLayer);
+		// TODO why not simply: layer.SetName(name);
+	}
+
+	public static void Flatten([NotNull] IEnumerable<Layer> layers,
+	                           [NotNull] ref ICollection<Layer> flattenedLayers)
+	{
+		foreach (Layer layer in layers)
+		{
+			if (layer is ILayerContainer container)
 			{
-				return GetDefinitionQuery(standaloneTable);
+				Flatten(container.Layers, ref flattenedLayers);
 			}
-
-			if (displayTable is BasicFeatureLayer featureLayer)
+			else
 			{
-				return GetDefinitionQuery(featureLayer);
-			}
-
-			throw new NotImplementedException("Unsupported type of display table");
-		}
-
-		public static string GetDefinitionQuery(BasicFeatureLayer featureLayer)
-		{
-			return featureLayer.DefinitionQuery;
-		}
-
-		public static string GetDefinitionQuery(StandaloneTable standaloneTable)
-		{
-			return standaloneTable.DefinitionQuery;
-		}
-
-		/// <summary>
-		/// Returns the feature class which is referenced by the specified layer. In case the
-		/// feature class is a joined table and the <see cref="unJoined"/> parameter is true,
-		/// the actual geodatabase feature class is returned.
-		/// </summary>
-		/// <param name="featureLayer"></param>
-		/// <param name="unJoined"></param>
-		/// <returns></returns>
-		public static FeatureClass GetFeatureClass(BasicFeatureLayer featureLayer,
-		                                           bool unJoined)
-		{
-			Assert.ArgumentNotNull(featureLayer, nameof(featureLayer));
-
-			FeatureClass featureClass = GetFeatureClass(featureLayer);
-
-			if (featureClass == null)
-			{
-				return null;
-			}
-
-			return unJoined ? DatasetUtils.GetDatabaseFeatureClass(featureClass) : featureClass;
-		}
-
-		/// <summary>
-		/// Returns the table referenced by the specified map member. In case the table is a joined
-		/// table and the <paramref name="unJoined"/> parameter is true, the actual geodatabase
-		/// table is returned.
-		/// </summary>
-		/// <param name="tableBasedMapMember"></param>
-		/// <param name="unJoined"></param>
-		/// <returns></returns>
-		/// <exception cref="ArgumentException"></exception>
-		[CanBeNull]
-		public static Table GetTable([NotNull] IDisplayTable tableBasedMapMember,
-		                             bool unJoined)
-		{
-			Assert.ArgumentNotNull(tableBasedMapMember, nameof(tableBasedMapMember));
-
-			Table table = tableBasedMapMember.GetTable();
-
-			if (table == null)
-			{
-				return null;
-			}
-
-			return unJoined ? DatasetUtils.GetDatabaseTable(table) : table;
-		}
-
-		[CanBeNull]
-		public static FeatureClass GetFeatureClass(this Layer layer)
-		{
-			// BasicFeatureLayer is the abstract base class for:
-			// FeatureLayer, AnnotationLayer, DimensionLayer;
-			// they all have a feature class as their data source, but,
-			// sadly, BasicFeatureLayer has no GetFeatureClass() method.
-
-			if (layer is FeatureLayer featureLayer)
-			{
-				return featureLayer.GetFeatureClass();
-			}
-
-			if (layer is AnnotationLayer annotationLayer)
-			{
-				return annotationLayer.GetFeatureClass();
-			}
-
-			if (layer is BasicFeatureLayer basicFeatureLayer)
-			{
-				return basicFeatureLayer.GetTable() as FeatureClass;
-			}
-
-			return null;
-		}
-
-		#region Underlying dataset properties
-
-		// Roughly following the "ArcGIS Pro SDK for .NET: Advanced Editing and Edit Operations"
-		// from a DevSummit tech session recording at https://youtu.be/U4vcNDEkj1w?t=2729
-
-		/// <summary>
-		/// Get how the given layer's dataset is registered with the geodatabase:
-		/// non-versioned, versioned, or versioned with the option to move edits to base.
-		/// </summary>
-		public static RegistrationType GetRegistrationType(this FeatureLayer featureLayer)
-		{
-			using var featureClass = featureLayer.GetFeatureClass();
-			if (featureClass is null) return RegistrationType.Nonversioned;
-			return featureClass.GetRegistrationType();
-		}
-
-		public static GeodatabaseType? GetGeodatabaseType(this FeatureLayer featureLayer)
-		{
-			using var featureClass = featureLayer.GetFeatureClass();
-			using var workspace = featureClass?.GetDatastore();
-
-			if (workspace is Geodatabase geodatabase)
-			{
-				return geodatabase.GetGeodatabaseType();
-			}
-
-			return null;
-		}
-
-		public static bool IsVersioned(this FeatureLayer featureLayer)
-		{
-			return featureLayer.GetRegistrationType() != RegistrationType.Nonversioned;
-		}
-
-		public static bool IsBranchVersioned(this FeatureLayer featureLayer)
-		{
-			using var featureClass = featureLayer.GetFeatureClass();
-			if (featureClass is null) return false;
-			using var workspace = featureClass.GetDatastore();
-			return IsBranchVersioned(workspace);
-		}
-
-		private static bool IsBranchVersioned(Datastore workspace)
-		{
-			if (workspace is not Geodatabase geodatabase) return false;
-			if (! geodatabase.IsVersioningSupported()) return false;
-			var props = geodatabase.GetConnector();
-			if (props is DatabaseConnectionProperties dcProps)
-			{
-				// Utility network FC only:
-				return ! string.IsNullOrEmpty(dcProps.Branch);
-			}
-
-			return props is ServiceConnectionProperties;
-		}
-
-		public static bool SupportsUndoRedo(this FeatureLayer featureLayer)
-		{
-			using var featureClass = featureLayer.GetFeatureClass();
-			if (featureClass is null) return false;
-
-			using var workspace = featureClass.GetDatastore();
-			if (workspace is not Geodatabase geodatabase)
-				return false; // TODO how about shapefiles?
-
-			var gdbType = geodatabase.GetGeodatabaseType();
-			if (gdbType == GeodatabaseType.FileSystem)
-				return true; // shapefiles
-			if (gdbType == GeodatabaseType.LocalDatabase)
-				return true; // file gdbs support undo/redo
-
-			var regType = featureClass.GetRegistrationType();
-			var isVersioned = regType != RegistrationType.Nonversioned;
-			if (gdbType == GeodatabaseType.RemoteDatabase && isVersioned)
-				return true;
-
-			if (IsBranchVersioned(workspace))
-			{
-				// Special case branch versioned: all versions except DEFAULT (no parent)
-				var vmgr = geodatabase.GetVersionManager();
-				var currentVersion = vmgr.GetCurrentVersion();
-				return currentVersion.GetParent() != null;
-			}
-
-			return false;
-		}
-
-		#endregion
-
-		[NotNull]
-		public static string GetMeaningfulDisplayExpression([NotNull] Feature feature,
-		                                                    [CanBeNull] string expression)
-		{
-			if (string.IsNullOrEmpty(expression) || string.IsNullOrWhiteSpace(expression))
-			{
-				return GdbObjectUtils.GetDisplayValue(feature);
-			}
-
-			long oid = feature.GetObjectID();
-
-			// GetDisplayExpressions() returns
-			// 1) the OIDs if the display field value is null
-			//    e.g. feature["NAME"] == null > layer.GetDisplayExpressions(oid) returns the Object ID
-			// 2) 0 if the display expression string is null
-			bool fieldValueIsNull = long.TryParse(expression, out long oid1) && oid1 == oid;
-			bool displayExpressionIsNull = long.TryParse(expression, out long oid2) && oid2 == 0;
-
-			if (fieldValueIsNull || displayExpressionIsNull)
-			{
-				return GdbObjectUtils.GetDisplayValue(feature);
-			}
-
-			return expression;
-		}
-
-		[NotNull]
-		public static string GetMeaningfulDisplayExpression([NotNull] BasicFeatureLayer layer,
-		                                                    [NotNull] Feature feature)
-		{
-			long oid = feature.GetObjectID();
-
-			// Many display expressions are possible. We take the first one.
-			var expression = layer.GetDisplayExpressions(new List<long> { oid })
-			                      .FirstOrDefault();
-
-			if (string.IsNullOrEmpty(expression) || string.IsNullOrWhiteSpace(expression))
-			{
-				return GdbObjectUtils.GetDisplayValue(feature);
-			}
-
-			// GetDisplayExpressions() returns
-			// 1) the OIDs if the display field value is null
-			//    e.g. feature["NAME"] == null > layer.GetDisplayExpressions(oid) returns the Object ID
-			bool fieldValueIsNull = long.TryParse(expression, out long oid1) && oid1 == oid;
-
-			if (fieldValueIsNull)
-			{
-				return GdbObjectUtils.GetDisplayValue(feature);
-			}
-
-			return expression;
-		}
-
-		public static void Rename(Layer layer, string name)
-		{
-			CIMBaseLayer cimLayer = layer.GetDefinition();
-			cimLayer.Name = name;
-			layer.SetDefinition(cimLayer);
-			// TODO why not simply: layer.SetName(name);
-		}
-
-		public static void Flatten([NotNull] IEnumerable<Layer> layers,
-		                           [NotNull] ref ICollection<Layer> flattenedLayers)
-		{
-			foreach (Layer layer in layers)
-			{
-				if (layer is ILayerContainer container)
-				{
-					Flatten(container.Layers, ref flattenedLayers);
-				}
-				else
-				{
-					flattenedLayers.Add(layer);
-				}
+				flattenedLayers.Add(layer);
 			}
 		}
+	}
 
-		public static void SetDisplayExpression([NotNull] BasicFeatureLayer layer,
-		                                        [NotNull] string expression)
-		{
-			var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
+	public static void SetDisplayExpression([NotNull] BasicFeatureLayer layer,
+	                                        [NotNull] string expression)
+	{
+		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
 
-			var expressionInfo = new CIMExpressionInfo
-			                     {
-				                     Expression = expression
-			                     };
+		var expressionInfo = new CIMExpressionInfo
+		                     {
+			                     Expression = expression
+		                     };
 
-			definition.FeatureTable.DisplayExpressionInfo = expressionInfo;
+		definition.FeatureTable.DisplayExpressionInfo = expressionInfo;
 
-			layer.SetDefinition(definition);
-		}
+		layer.SetDefinition(definition);
 	}
 }

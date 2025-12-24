@@ -25,23 +25,23 @@
 		VerticalAlignment="Top">
 
 		<!-- Workflow options -->
-		<Label FontWeight="Medium" Content="Workflow options" Margin="0,15,0,0"/>
+		<Label FontWeight="Medium" Content="Workflow options" Margin="0,15,0,0" />
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 		          Content="Directly use merge result as first feature for subsequent merge operation"
 		          DataContext="{Binding UseMergeResultForNextMerge}" />
 
 		<!-- Attribute values and identity to preserve -->
-		<Label FontWeight="Medium" Content="Attribute values and identity to preserve" Margin="0,15,0,0"/>
-		<editing:MergeOperationSurvivorControl DataContext="{Binding MergeOperationSurvivorVM}" HorizontalAlignment="Left"/>
+		<Label FontWeight="Medium" Content="Attribute values and identity to preserve" Margin="0,15,0,0" />
+		<editing:MergeOperationSurvivorControl DataContext="{Binding MergeOperationSurvivorVM}" HorizontalAlignment="Left" />
 
 		<!-- Geometry merge options -->
-		<Label FontWeight="Medium" Content="Merge options" Margin="0,15,0,0"/>
+		<Label FontWeight="Medium" Content="Merge options" Margin="0,15,0,0" />
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 		          Content="Allow multi-part result geometry"
-		          DataContext="{Binding AllowMultipartResult}"/>
+		          DataContext="{Binding AllowMultipartResult}" />
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 		          Content="Keep relationships from deleted feature, if possible"
-		          DataContext="{Binding TransferRelationships}"/>
+		          DataContext="{Binding TransferRelationships}" />
 
 		<!-- Restore Defaults -->
 		<Button Template="{StaticResource RestoreDefaultsButton}" />

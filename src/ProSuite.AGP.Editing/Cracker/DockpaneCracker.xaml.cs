@@ -1,12 +1,11 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing.Cracker
+namespace ProSuite.AGP.Editing.Cracker;
+
+public partial class DockPaneCracker : UserControl
 {
-	public partial class DockPaneCracker : UserControl
+	public DockPaneCracker()
 	{
-		public DockPaneCracker()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
 	}
 }

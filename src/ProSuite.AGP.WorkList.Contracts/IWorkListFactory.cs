@@ -1,15 +1,14 @@
 using System.Threading.Tasks;
 
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Contracts;
+
+public interface IWorkListFactory
 {
-	public interface IWorkListFactory
-	{
-		string Name { get; }
+	string Name { get; }
 
-		IWorkList Get();
+	IWorkList Get();
 
-		Task<IWorkList> GetAsync();
+	Task<IWorkList> GetAsync();
 
-		void UnWire();
-	}
+	void UnWire();
 }

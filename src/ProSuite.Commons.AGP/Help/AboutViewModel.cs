@@ -31,7 +31,7 @@ public class AboutViewModel : INotifyPropertyChanged
 		get => _heading;
 		set
 		{
-			if (!string.Equals(_heading, value))
+			if (! string.Equals(_heading, value))
 			{
 				_heading = value;
 				OnPropertyChanged();
@@ -50,10 +50,12 @@ public class AboutViewModel : INotifyPropertyChanged
 	}
 
 	private ICommand _copyCommand;
+
 	public ICommand CopyCommand =>
 		_copyCommand ??= new RelayCommand(CopyItems, () => true);
 
 	private ICommand _closeCommand;
+
 	public ICommand CloseCommand =>
 		_closeCommand ??= new RelayCommand<ICloseableWindow>(CloseDialog);
 

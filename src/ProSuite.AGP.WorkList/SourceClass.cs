@@ -9,140 +9,139 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList;
+
+public abstract class SourceClass : ISourceClass
 {
-	public abstract class SourceClass : ISourceClass
+	private readonly GdbTableIdentity _tableIdentity;
+	[NotNull] private readonly string _oidField;
+	[CanBeNull] private readonly string _shapeField;
+
+	protected SourceClass(GdbTableIdentity tableIdentity,
+	                      [NotNull] SourceClassSchema schema,
+	                      IAttributeReader attributeReader = null)
 	{
-		private readonly GdbTableIdentity _tableIdentity;
-		[NotNull] private readonly string _oidField;
-		[CanBeNull] private readonly string _shapeField;
+		_oidField = schema.OIDField;
+		_shapeField = schema.ShapeField;
 
-		protected SourceClass(GdbTableIdentity tableIdentity,
-		                      [NotNull] SourceClassSchema schema,
-		                      IAttributeReader attributeReader = null)
+		_tableIdentity = tableIdentity;
+		AttributeReader = attributeReader;
+	}
+
+	public GdbTableIdentity TableIdentity => _tableIdentity;
+
+	public bool HasGeometry => _tableIdentity.HasGeometry;
+
+	public long ArcGISTableId => _tableIdentity.Id;
+
+	public string Name => _tableIdentity.Name;
+
+	public IAttributeReader AttributeReader { get; set; }
+
+	public string DefaultDefinitionQuery { get; protected set; }
+
+	private string GetRelevantSubFields(bool excludeGeometry = false)
+	{
+		string subFields = $"{_oidField}";
+
+		if (HasGeometry && ! excludeGeometry)
 		{
-			_oidField = schema.OIDField;
-			_shapeField = schema.ShapeField;
-
-			_tableIdentity = tableIdentity;
-			AttributeReader = attributeReader;
+			Assert.NotNullOrEmpty(_shapeField);
+			subFields = $"{subFields},{_shapeField}";
 		}
 
-		public GdbTableIdentity TableIdentity => _tableIdentity;
+		return GetRelevantSubFieldsCore(subFields);
+	}
 
-		public bool HasGeometry => _tableIdentity.HasGeometry;
+	protected virtual string GetRelevantSubFieldsCore(string subFields)
+	{
+		return subFields;
+	}
 
-		public long ArcGISTableId => _tableIdentity.Id;
+	/// <summary>
+	/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
+	/// control whether it's called with a SpatialQueryFilter or a QueryFilter. Querying a table with a
+	/// spatial filter throws an exception, so we clone the filter to the correct type.
+	/// </summary>
+	/// <param name="filter"></param>
+	/// <param name="statusFilter"></param>
+	/// <param name="excludeGeometry"></param>
+	public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
+	                              WorkItemStatus? statusFilter,
+	                              bool excludeGeometry)
+	{
+		QueryFilter result;
 
-		public string Name => _tableIdentity.Name;
+		string relevantSubFields = GetRelevantSubFields(excludeGeometry);
 
-		public IAttributeReader AttributeReader { get; set; }
+		List<string> subfields =
+			StringUtils.SplitAndTrim(relevantSubFields, ",");
 
-		public string DefaultDefinitionQuery { get; protected set; }
-
-		private string GetRelevantSubFields(bool excludeGeometry = false)
+		if (HasGeometry && filter is SpatialQueryFilter)
 		{
-			string subFields = $"{_oidField}";
-
-			if (HasGeometry && ! excludeGeometry)
-			{
-				Assert.NotNullOrEmpty(_shapeField);
-				subFields = $"{subFields},{_shapeField}";
-			}
-
-			return GetRelevantSubFieldsCore(subFields);
+			result = GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter);
+		}
+		else
+		{
+			result = GdbQueryUtils.CloneFilter<QueryFilter>(filter);
 		}
 
-		protected virtual string GetRelevantSubFieldsCore(string subFields)
+		if (GdbQueryUtils.EnsureSubFields(subfields, result.SubFields, out string newSubFields))
 		{
-			return subFields;
+			result.SubFields = newSubFields;
+		}
+		else
+		{
+			// filter.Subfields.Equals("*")
+			result.SubFields = relevantSubFields;
 		}
 
-		/// <summary>
-		/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
-		/// control whether it's called with a SpatialQueryFilter or a QueryFilter. Querying a table with a
-		/// spatial filter throws an exception, so we clone the filter to the correct type.
-		/// </summary>
-		/// <param name="filter"></param>
-		/// <param name="statusFilter"></param>
-		/// <param name="excludeGeometry"></param>
-		public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
-		                              WorkItemStatus? statusFilter,
-		                              bool excludeGeometry)
+		EnsureValidFilterCore(ref result, statusFilter);
+		filter = result;
+	}
+
+	public bool Uses(ITableReference tableReference)
+	{
+		return tableReference.ReferencesTable(_tableIdentity.Id, _tableIdentity.Name);
+	}
+
+	public T OpenDataset<T>() where T : Table
+	{
+		Datastore datastore = TableIdentity.Workspace.OpenDatastore();
+
+		if (datastore is Geodatabase geodatabase)
 		{
-			QueryFilter result;
-
-			string relevantSubFields = GetRelevantSubFields(excludeGeometry);
-
-			List<string> subfields =
-				StringUtils.SplitAndTrim(relevantSubFields, ",");
-
-			if (HasGeometry && filter is SpatialQueryFilter)
-			{
-				result = GdbQueryUtils.CloneFilter<SpatialQueryFilter>(filter);
-			}
-			else
-			{
-				result = GdbQueryUtils.CloneFilter<QueryFilter>(filter);
-			}
-
-			if (GdbQueryUtils.EnsureSubFields(subfields, result.SubFields, out string newSubFields))
-			{
-				result.SubFields = newSubFields;
-			}
-			else
-			{
-				// filter.Subfields.Equals("*")
-				result.SubFields = relevantSubFields;
-			}
-
-			EnsureValidFilterCore(ref result, statusFilter);
-			filter = result;
+			return geodatabase.OpenDataset<T>(_tableIdentity.Name);
 		}
 
-		public bool Uses(ITableReference tableReference)
+		if (datastore is FileSystemDatastore fsDatastore)
 		{
-			return tableReference.ReferencesTable(_tableIdentity.Id, _tableIdentity.Name);
+			return fsDatastore.OpenDataset<T>(_tableIdentity.Name);
 		}
 
-		public T OpenDataset<T>() where T : Table
+		if (datastore is PluginDatastore plugin)
 		{
-			Datastore datastore = TableIdentity.Workspace.OpenDatastore();
-
-			if (datastore is Geodatabase geodatabase)
-			{
-				return geodatabase.OpenDataset<T>(_tableIdentity.Name);
-			}
-
-			if (datastore is FileSystemDatastore fsDatastore)
-			{
-				return fsDatastore.OpenDataset<T>(_tableIdentity.Name);
-			}
-
-			if (datastore is PluginDatastore plugin)
-			{
-				return (T) plugin.OpenTable(_tableIdentity.Name);
-			}
-
-			throw new NotSupportedException(
-				$"Datastore {datastore} type is not supported ");
+			return (T) plugin.OpenTable(_tableIdentity.Name);
 		}
 
-		public abstract long GetUniqueTableId();
+		throw new NotSupportedException(
+			$"Datastore {datastore} type is not supported ");
+	}
 
-		public virtual string CreateWhereClause(WorkItemStatus? statusFilter)
-		{
-			return null;
-		}
+	public abstract long GetUniqueTableId();
 
-		protected virtual void EnsureValidFilterCore(ref QueryFilter filter,
-		                                             WorkItemStatus? statusFilter) { }
+	public virtual string CreateWhereClause(WorkItemStatus? statusFilter)
+	{
+		return null;
+	}
 
-		public override string ToString()
-		{
-			return string.IsNullOrEmpty(DefaultDefinitionQuery)
-				       ? Name
-				       : $"{Name}, {DefaultDefinitionQuery}";
-		}
+	protected virtual void EnsureValidFilterCore(ref QueryFilter filter,
+	                                             WorkItemStatus? statusFilter) { }
+
+	public override string ToString()
+	{
+		return string.IsNullOrEmpty(DefaultDefinitionQuery)
+			       ? Name
+			       : $"{Name}, {DefaultDefinitionQuery}";
 	}
 }

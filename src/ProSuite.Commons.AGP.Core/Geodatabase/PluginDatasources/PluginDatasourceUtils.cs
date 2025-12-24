@@ -42,7 +42,8 @@ public static class PluginDatasourceUtils
 	}
 
 	/// <summary>See <see cref="MakeConnectionPath"/></summary>
-	public static bool TryParseConnectionPath(Uri connectionPath, string pseudoHost, out string pseudoPath)
+	public static bool TryParseConnectionPath(Uri connectionPath, string pseudoHost,
+	                                          out string pseudoPath)
 	{
 		if (connectionPath is null)
 			throw new ArgumentNullException(nameof(connectionPath));
@@ -155,7 +156,7 @@ public static class PluginDatasourceUtils
 			    (hi = HexValue(text[i + 1])) >= 0 &&
 			    (lo = HexValue(text[i + 2])) >= 0)
 			{
-				sb.Append((char)(hi * 16 + lo));
+				sb.Append((char) (hi * 16 + lo));
 				i += 2;
 			}
 			else

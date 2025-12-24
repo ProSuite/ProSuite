@@ -2,16 +2,15 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AGP.Picker
+namespace ProSuite.Commons.AGP.Picker;
+
+public interface IPickableFeatureItem : IPickableItem
 {
-	public interface IPickableFeatureItem : IPickableItem
-	{
-		long Oid { get; }
+	long Oid { get; }
 
-		[NotNull]
-		BasicFeatureLayer Layer { get; }
+	[NotNull]
+	BasicFeatureLayer Layer { get; }
 
-		[NotNull]
-		Feature Feature { get; }
-	}
+	[NotNull]
+	Feature Feature { get; }
 }

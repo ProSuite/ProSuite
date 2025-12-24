@@ -1,12 +1,12 @@
 using System;
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping.Events;
-using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.Logging;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
 
