@@ -23,7 +23,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		[CanBeNull] private Row _proRow;
 		private long _oid = -1;
 
-		public static ArcRow Create(Row proRow, ITable parentTable, bool cacheValues = false)
+		public static ArcRow Create([NotNull] Row proRow,
+		                            [NotNull] ITable parentTable,
+		                            bool cacheValues = false)
 		{
 			Assert.NotNull(proRow, "No row provided");
 
@@ -80,6 +82,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				int fieldCount = _parentTable.Fields.FieldCount;
 				var values = new object[fieldCount];
 
+				OID = Assert.NotNull(ProRow).GetObjectID();
+
 				// Populate the cache for all fields
 				for (int i = 0; i < fieldCount; i++)
 				{
@@ -90,12 +94,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					}
 					catch (Exception ex)
 					{
-						// Log the error but continue caching other fields
 						_msg.Debug($"Error caching field at index {i}: {ex.Message}", ex);
 						throw;
 					}
 				}
-
 
 				CacheValues(values);
 			}
@@ -126,10 +128,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					{
 						object value = objects[i];
 						_cachedValues[i] = value;
+
+						if (Fields[i].Name == _parentTable.OIDFieldName)
+						{
+							OID = Convert.ToInt64(value);
+						}
 					}
 					catch (Exception ex)
 					{
-						// Log the error but continue caching other fields
 						_msg.Debug($"Error caching field at index {i}: {ex.Message}", ex);
 						throw;
 					}
@@ -209,25 +215,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public long OID
 		{
-			get
-			{
-				if (HasOID)
-				{
-					return _oid;
-				}
-
-				int OidFieldIndex = Fields.FindField(_parentTable.OIDFieldName);
-
-				object value = get_Value(OidFieldIndex);
-
-				if (value != DBNull.Value)
-				{
-					_oid = Convert.ToInt64(value);
-				}
-
-				return _oid;
-			}
-
+			get => _oid;
 			protected set => _oid = value;
 		}
 
