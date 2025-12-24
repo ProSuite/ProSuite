@@ -64,7 +64,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// navigation features that require knowledge of the current view extent.
 		/// </summary>
 		[CanBeNull]
-		public IMapViewContext ExtentProvider { get; set; } = new MapViewContext();
+		public IExtentProvider ExtentProvider { get; set; } = new ExtentProvider();
 
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 

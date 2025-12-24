@@ -4,7 +4,7 @@ using ProSuite.Commons.AGP.Core.Carto;
 
 namespace ProSuite.Commons.AGP.Carto;
 
-public class MapViewContext : IMapViewContext
+public class ExtentProvider : IExtentProvider
 {
 	public Envelope Extent => MapView.Active?.Extent;
 }
