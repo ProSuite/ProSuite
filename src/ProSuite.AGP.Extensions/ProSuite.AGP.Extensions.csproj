@@ -9,18 +9,22 @@
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
 
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">net8.0</TargetFrameworkVersion>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
-  </PropertyGroup>
+    <ComVisible>false</ComVisible>
 
-  <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-  </ItemGroup>
+    <!-- Assembly Info from SharedAssemblyInfo.cs -->
+    <Product>Dira ProSuite for ArcGIS Pro</Product>
+    <Company>Dira GeoSystems</Company>
+    <Copyright>© 2025 The ProSuite Authors</Copyright>
+
+    <Version>0.2.0.0</Version>
+
+  </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
