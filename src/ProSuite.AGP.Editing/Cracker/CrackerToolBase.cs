@@ -14,7 +14,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Framework;
@@ -23,437 +22,410 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 
-namespace ProSuite.AGP.Editing.Cracker
+namespace ProSuite.AGP.Editing.Cracker;
+
+public abstract class CrackerToolBase : TopologicalCrackingToolBase
 {
-	public abstract class CrackerToolBase : TopologicalCrackingToolBase
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private CrackerToolOptions _crackerToolOptions;
+
+	private OverridableSettingsProvider<PartialCrackerOptions> _settingsProvider;
+
+	private CrackerResult _resultCrackPoints;
+
+	private CrackerFeedback _feedback;
+
+	private Envelope _calculationExtent;
+
+	protected CrackerToolBase()
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		GeomIsSimpleAsFeature = false;
+	}
 
-		private CrackerToolOptions _crackerToolOptions;
+	protected string OptionsFileName => "CrackerToolOptions.xml";
 
-		private OverridableSettingsProvider<PartialCrackerOptions> _settingsProvider;
+	[CanBeNull]
 
-		private CrackerResult _resultCrackPoints;
+	protected virtual string OptionsDockPaneID => null;
 
-		private CrackerFeedback _feedback;
+	[CanBeNull]
 
-		private Envelope _calculationExtent;
+	protected virtual string CentralConfigDir => null;
 
-		protected CrackerToolBase()
+	/// <summary>
+	/// By default, the local configuration directory shall be in
+	/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+	/// </summary>
+
+	protected virtual string LocalConfigDir
+		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+			AppDataFolder.Roaming, "ToolDefaults");
+
+	protected override void OnUpdateCore()
+	{
+		Enabled = MicroserviceClient != null;
+
+		if (MicroserviceClient == null)
+
+			DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+	}
+
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.CrackerOverlay);
+
+	protected override SelectionCursors SecondPhaseCursors { get; } =
+		SelectionCursors.CreateCrossCursors(Resources.CrackerOverlay);
+
+	protected override Task OnToolActivatingCoreAsync()
+	{
+		_crackerToolOptions = InitializeOptions();
+
+		_feedback = new CrackerFeedback();
+
+		return base.OnToolActivatingCoreAsync();
+	}
+
+	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	{
+		_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
+
+		_feedback?.DisposeOverlays();
+
+		_feedback = null;
+
+		HideOptionsPane();
+	}
+
+	protected override void LogPromptForSelection()
+	{
+		_msg.Info(LocalizableStrings.CrackerTool_LogPromptForSelection);
+	}
+
+	protected override bool CanSelectGeometryType(GeometryType geometryType)
+	{
+		return geometryType == GeometryType.Polyline ||
+		       geometryType == GeometryType.Polygon ||
+		       geometryType == GeometryType.Multipatch;
+	}
+
+	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
+	                                                   CancelableProgressor progressor)
+	{
+		// Store current map extent
+		bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
+
+		_calculationExtent = ActiveMapView.Extent;
+
+		IList<Feature> intersectingFeatures =
+			GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
+
+		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 		{
-			GeomIsSimpleAsFeature = false;
+			_msg.Warn("Calculation of crack points was cancelled.");
+
+			return;
 		}
 
-		protected string OptionsFileName => "CrackerToolOptions.xml";
+		_resultCrackPoints =
+			CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions,
+			                     IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+			                     false, progressor);
 
-		[CanBeNull]
-
-		protected virtual string OptionsDockPaneID => null;
-
-		[CanBeNull]
-
-		protected virtual string CentralConfigDir => null;
-
-		/// <summary>
-		/// By default, the local configuration directory shall be in
-		/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
-		/// </summary>
-
-		protected virtual string LocalConfigDir
-			=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
-				AppDataFolder.Roaming, "ToolDefaults");
-
-		protected override void OnUpdateCore()
+		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 		{
-			Enabled = MicroserviceClient != null;
+			_msg.Warn("Calculation of crack points was cancelled.");
 
-			if (MicroserviceClient == null)
-
-				DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+			return;
 		}
 
-		protected override SelectionCursors FirstPhaseCursors { get; } =
-			SelectionCursors.CreateArrowCursors(Resources.CrackerOverlay);
+		_feedback.Update(_resultCrackPoints, selectedFeatures);
 
-		protected override SelectionCursors SecondPhaseCursors { get; } =
-			SelectionCursors.CreateCrossCursors(Resources.CrackerOverlay);
-
-		protected override Task OnToolActivatingCoreAsync()
+		if (! isStereoMap)
 		{
-			_crackerToolOptions = InitializeOptions();
+			_feedback.UpdateExtent(_calculationExtent);
+		}
+	}
 
-			_feedback = new CrackerFeedback();
+	protected override bool CanUseDerivedGeometries()
+	{
+		return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
+	}
 
-			return base.OnToolActivatingCoreAsync();
+	// TODO: Show/hide Vertex labels, maybe impl on TopologicalCrackingToolBase / Shortcut T
+
+	//protected override void ToggleVertices()
+
+	//{
+
+	//	base.ToggleVertices();
+
+	//	try
+
+	//	{
+
+	//		//_vertexLabels.Toggle();
+
+	//		//_vertexLabels.UpdateLabels();
+
+	//	}
+
+	//	catch (Exception ex)
+
+	//	{
+
+	//		_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
+
+	//	}
+
+	//}
+
+	protected override async Task<bool> SelectAndProcessDerivedGeometry(
+		Dictionary<MapMember, List<long>> selection,
+		Geometry sketch,
+		CancelableProgressor progressor)
+	{
+		Assert.NotNull(_resultCrackPoints);
+
+		CrackerResult crackPointsToApply = SelectCrackPointsToApply(_resultCrackPoints, sketch);
+
+		if (! crackPointsToApply.HasCrackPoints)
+		{
+			return false;
 		}
 
-		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+		MapView activeMapView = MapView.Active;
+
+		var distinctSelectionByFeatureClass =
+			MapUtils.GetDistinctSelectionByTable(selection)
+			        .ToDictionary(kvp => (FeatureClass) kvp.Key,
+			                      kvp => kvp.Value);
+
+		var selectedFeatures = MapUtils.GetFeatures(
+			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
+
+		IList<Feature> intersectingFeatures =
+			GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
+
+		var result =
+			MicroserviceClient.ApplyCrackPoints(
+				selectedFeatures, crackPointsToApply, intersectingFeatures,
+				_crackerToolOptions,
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
+				false, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+
+		var updates = new Dictionary<Feature, Geometry>();
+
+		HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
+
+		foreach (ResultFeature resultFeature in result)
 		{
-			_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
-
-			_feedback?.DisposeOverlays();
-
-			_feedback = null;
-
-			HideOptionsPane();
-		}
-
-		protected override void LogPromptForSelection()
-		{
-			_msg.Info(LocalizableStrings.CrackerTool_LogPromptForSelection);
-		}
-
-		protected override bool CanSelectGeometryType(GeometryType geometryType)
-		{
-			return geometryType == GeometryType.Polyline ||
-			       geometryType == GeometryType.Polygon ||
-			       geometryType == GeometryType.Multipatch;
-		}
-
-		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
-		                                                   CancelableProgressor progressor)
-		{
-			// Store current map extent
-			bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
-
-			_calculationExtent = ActiveMapView.Extent;
-
-			IList<Feature> intersectingFeatures =
-				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
-
-			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+			Feature originalFeature = resultFeature.OriginalFeature;
+			Geometry updatedGeometry = resultFeature.NewGeometry;
+			if (! ToolUtils.IsStoreRequired(originalFeature, updatedGeometry,
+			                                editableClassHandles))
 			{
-				_msg.Warn("Calculation of crack points was cancelled.");
-
-				return;
+				continue;
 			}
 
-			_resultCrackPoints =
-				CalculateCrackPoints(selectedFeatures, intersectingFeatures, _crackerToolOptions,
-				                     IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
-				                     false, progressor);
-
-			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
-			{
-				_msg.Warn("Calculation of crack points was cancelled.");
-
-				return;
-			}
-
-			_feedback.Update(_resultCrackPoints, selectedFeatures);
-
-			if (! isStereoMap)
-			{
-				_feedback.UpdateExtent(_calculationExtent);
-			}
+			updates.Add(originalFeature, updatedGeometry);
 		}
 
-		protected override bool CanUseDerivedGeometries()
+		IEnumerable<Dataset> datasets =
+			GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys);
+
+		bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+			             editContext =>
+			             {
+				             _msg.DebugFormat("Saving {0} updates...", updates.Count);
+				             GdbPersistenceUtils.UpdateTx(editContext, updates);
+				             return true;
+			             },
+			             "Crack feature(s)", datasets);
+
+		var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
+
+		CalculateDerivedGeometries(currentSelection, progressor);
+
+		// TODO:
+
+		//_vertexLabels.UpdateLabels();
+
+		return saved;
+	}
+
+	protected override void ResetDerivedGeometries()
+	{
+		_resultCrackPoints = null;
+
+		_calculationExtent = null;
+
+		_feedback.DisposeOverlays();
+	}
+
+	protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
+	{
+		if (_resultCrackPoints == null || ! _resultCrackPoints.HasCrackPoints)
 		{
-			return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
+			_msg.Info(
+				"No intersections with other geometries found. Please select several features to calculate crack points.");
 		}
 
-		// TODO: Show/hide Vertex labels, maybe impl on TopologicalCrackingToolBase / Shortcut T
-
-		//protected override void ToggleVertices()
-
-		//{
-
-		//	base.ToggleVertices();
-
-		//	try
-
-		//	{
-
-		//		//_vertexLabels.Toggle();
-
-		//		//_vertexLabels.UpdateLabels();
-
-		//	}
-
-		//	catch (Exception ex)
-
-		//	{
-
-		//		_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
-
-		//	}
-
-		//}
-
-		protected override async Task<bool> SelectAndProcessDerivedGeometry(
-			Dictionary<MapMember, List<long>> selection,
-			Geometry sketch,
-			CancelableProgressor progressor)
+		if (_resultCrackPoints != null && _resultCrackPoints.HasCrackPoints)
 		{
-			Assert.NotNull(_resultCrackPoints);
+			string msg = _resultCrackPoints.ResultsByFeature.Count == 1
+				             ? "Select the crack points to apply."
+				             : $"Crack points have been found in {_resultCrackPoints.ResultsByFeature.Count} features. Select one or more crack points. Draw a box to select targets completely within the box.";
 
-			CrackerResult crackPointsToApply = SelectCrackPointsToApply(_resultCrackPoints, sketch);
+			_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
+		}
+	}
 
-			if (! crackPointsToApply.HasCrackPoints)
-			{
-				return false;
-			}
+	private CrackerToolOptions InitializeOptions()
+	{
+		Stopwatch watch = _msg.DebugStartTiming();
 
-			MapView activeMapView = MapView.Active;
+		// NOTE: by only reading the file locations we can save a couple of 100ms
 
-			var distinctSelectionByFeatureClass =
-				MapUtils.GetDistinctSelectionByTable(selection)
-				        .ToDictionary(kvp => (FeatureClass) kvp.Key,
-				                      kvp => kvp.Value);
+		string currentCentralConfigDir = CentralConfigDir;
 
-			var selectedFeatures = MapUtils.GetFeatures(
-				distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
+		string currentLocalConfigDir = LocalConfigDir;
 
-			IList<Feature> intersectingFeatures =
-				GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
+		// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
 
-			var result =
-				MicroserviceClient.ApplyCrackPoints(
-					selectedFeatures, crackPointsToApply, intersectingFeatures,
-					_crackerToolOptions,
-					IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
-					false, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+		_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerOptions>(
+			CentralConfigDir, LocalConfigDir, OptionsFileName);
 
-			var updates = new Dictionary<Feature, Geometry>();
+		PartialCrackerOptions localConfiguration, centralConfiguration;
 
-			HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
+		_settingsProvider.GetConfigurations(out localConfiguration,
+		                                    out centralConfiguration);
 
-			foreach (ResultFeature resultFeature in result)
-			{
-				Feature originalFeature = resultFeature.OriginalFeature;
-				Geometry updatedGeometry = resultFeature.NewGeometry;
-				if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
-				{
-					continue;
-				}
+		var result = new CrackerToolOptions(centralConfiguration,
+		                                    localConfiguration);
 
-				updates.Add(originalFeature, updatedGeometry);
-			}
+		result.PropertyChanged -= _crackerToolOptions_PropertyChanged;
 
-			IEnumerable<Dataset> datasets =
-				GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys);
+		result.PropertyChanged += _crackerToolOptions_PropertyChanged;
 
-			bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
-				             editContext =>
-				             {
-					             _msg.DebugFormat("Saving {0} updates...", updates.Count);
-					             GdbPersistenceUtils.UpdateTx(editContext, updates);
-					             return true;
-				             },
-				             "Crack feature(s)", datasets);
+		_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
 
-			var currentSelection = GetApplicableSelectedFeatures(activeMapView).ToList();
+		string optionsMessage = result.GetLocalOverridesMessage();
 
-			CalculateDerivedGeometries(currentSelection, progressor);
-
-			// TODO:
-
-			//_vertexLabels.UpdateLabels();
-
-			return saved;
+		if (! string.IsNullOrEmpty(optionsMessage))
+		{
+			_msg.Info(optionsMessage);
 		}
 
-		protected override void ResetDerivedGeometries()
+		return result;
+	}
+
+	private void _crackerToolOptions_PropertyChanged(object sender,
+	                                                 PropertyChangedEventArgs eventArgs)
+
+	{
+		try
+
 		{
-			_resultCrackPoints = null;
-
-			_calculationExtent = null;
-
-			_feedback.DisposeOverlays();
+			QueuedTaskUtils.Run(() => ProcessSelectionAsync());
 		}
 
-		protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
+		catch (Exception e)
+
 		{
-			if (_resultCrackPoints == null || ! _resultCrackPoints.HasCrackPoints)
-			{
-				_msg.Info(
-					"No intersections with other geometries found. Please select several features to calculate crack points.");
-			}
+			_msg.Error($"Error re-calculating crack points: {e.Message}", e);
+		}
+	}
 
-			if (_resultCrackPoints != null && _resultCrackPoints.HasCrackPoints)
-			{
-				string msg = _resultCrackPoints.ResultsByFeature.Count == 1
-					             ? "Select the crack points to apply."
-					             : $"Crack points have been found in {_resultCrackPoints.ResultsByFeature.Count} features. Select one or more crack points. Draw a box to select targets completely within the box.";
+	#region Tool Options DockPane
 
-				_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
-			}
+	[CanBeNull]
+	private DockPaneCrackerViewModelBase GetCrackerViewModel()
+
+	{
+		if (OptionsDockPaneID == null)
+
+		{
+			return null;
 		}
 
-		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
-		                                    HashSet<long> editableClassHandles)
+		var viewModel =
+			FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+				DockPaneCrackerViewModelBase;
+
+		return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+		                      OptionsDockPaneID);
+	}
+
+	protected override void ShowOptionsPane()
+
+	{
+		var viewModel = GetCrackerViewModel();
+
+		if (viewModel == null)
+
 		{
-			if (! GdbPersistenceUtils.CanChange(originalFeature,
-			                                    editableClassHandles, out string warning))
-			{
-				_msg.DebugFormat("{0}: {1}",
-				                 GdbObjectUtils.ToString(originalFeature),
-				                 warning);
+			return;
+		}
 
-				return false;
-			}
+		viewModel.Options = _crackerToolOptions;
 
-			Geometry originalGeometry = originalFeature.GetShape();
+		viewModel.Activate(true);
+	}
 
-			if (originalGeometry != null &&
-			    originalGeometry.IsEqual(updatedGeometry))
-			{
-				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
-				                 GdbObjectUtils.ToString(originalFeature));
+	protected override void HideOptionsPane()
 
-				return false;
-			}
+	{
+		var viewModel = GetCrackerViewModel();
 
+		viewModel?.Hide();
+	}
+
+	#endregion
+
+	#region Search target features
+
+	private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
+
+	{
+		if (featureLayer?.GetFeatureClass() == null)
+
+		{
+			return false;
+		}
+
+		esriGeometryType shapeType = featureLayer.ShapeType;
+
+		return shapeType == esriGeometryType.esriGeometryPolygon ||
+		       shapeType == esriGeometryType.esriGeometryPolyline ||
+		       shapeType == esriGeometryType.esriGeometryMultiPatch;
+	}
+
+	private static bool IgnoreLayer(Layer layer, IEnumerable<string> ignoredClasses)
+
+	{
+		FeatureClass featureClass = (layer as FeatureLayer)?.GetTable() as FeatureClass;
+
+		if (featureClass == null)
+
+		{
 			return true;
 		}
 
-		private CrackerToolOptions InitializeOptions()
-		{
-			Stopwatch watch = _msg.DebugStartTiming();
+		string className = featureClass.GetName();
 
-			// NOTE: by only reading the file locations we can save a couple of 100ms
-
-			string currentCentralConfigDir = CentralConfigDir;
-
-			string currentLocalConfigDir = LocalConfigDir;
-
-			// Create a new instance only if it doesn't exist yet (New as of 0.1.0, since we don't need to care for a change through ArcMap)
-
-			_settingsProvider ??= new OverridableSettingsProvider<PartialCrackerOptions>(
-				CentralConfigDir, LocalConfigDir, OptionsFileName);
-
-			PartialCrackerOptions localConfiguration, centralConfiguration;
-
-			_settingsProvider.GetConfigurations(out localConfiguration,
-			                                    out centralConfiguration);
-
-			var result = new CrackerToolOptions(centralConfiguration,
-			                                    localConfiguration);
-
-			result.PropertyChanged -= _crackerToolOptions_PropertyChanged;
-
-			result.PropertyChanged += _crackerToolOptions_PropertyChanged;
-
-			_msg.DebugStopTiming(watch, "Cracker Tool Options validated / initialized");
-
-			string optionsMessage = result.GetLocalOverridesMessage();
-
-			if (! string.IsNullOrEmpty(optionsMessage))
-			{
-				_msg.Info(optionsMessage);
-			}
-
-			return result;
-		}
-
-		private void _crackerToolOptions_PropertyChanged(object sender,
-		                                                 PropertyChangedEventArgs eventArgs)
+		foreach (string ignoredClass in ignoredClasses)
 
 		{
-			try
-
-			{
-				QueuedTaskUtils.Run(() => ProcessSelectionAsync());
-			}
-
-			catch (Exception e)
-
-			{
-				_msg.Error($"Error re-calculating crack points: {e.Message}", e);
-			}
-		}
-
-		#region Tool Options DockPane
-
-		[CanBeNull]
-		private DockPaneCrackerViewModelBase GetCrackerViewModel()
-
-		{
-			if (OptionsDockPaneID == null)
-
-			{
-				return null;
-			}
-
-			var viewModel =
-				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
-					DockPaneCrackerViewModelBase;
-
-			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
-			                      OptionsDockPaneID);
-		}
-
-		protected override void ShowOptionsPane()
-
-		{
-			var viewModel = GetCrackerViewModel();
-
-			if (viewModel == null)
-
-			{
-				return;
-			}
-
-			viewModel.Options = _crackerToolOptions;
-
-			viewModel.Activate(true);
-		}
-
-		protected override void HideOptionsPane()
-
-		{
-			var viewModel = GetCrackerViewModel();
-
-			viewModel?.Hide();
-		}
-
-		#endregion
-
-		#region Search target features
-
-		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
-
-		{
-			if (featureLayer?.GetFeatureClass() == null)
-
-			{
-				return false;
-			}
-
-			esriGeometryType shapeType = featureLayer.ShapeType;
-
-			return shapeType == esriGeometryType.esriGeometryPolygon ||
-			       shapeType == esriGeometryType.esriGeometryPolyline ||
-			       shapeType == esriGeometryType.esriGeometryMultiPatch;
-		}
-
-		private static bool IgnoreLayer(Layer layer, IEnumerable<string> ignoredClasses)
-
-		{
-			FeatureClass featureClass = (layer as FeatureLayer)?.GetTable() as FeatureClass;
-
-			if (featureClass == null)
+			if (className.EndsWith(ignoredClass, StringComparison.InvariantCultureIgnoreCase))
 
 			{
 				return true;
 			}
-
-			string className = featureClass.GetName();
-
-			foreach (string ignoredClass in ignoredClasses)
-
-			{
-				if (className.EndsWith(ignoredClass, StringComparison.InvariantCultureIgnoreCase))
-
-				{
-					return true;
-				}
-			}
-
-			return false;
 		}
 
-		#endregion
+		return false;
 	}
+
+	#endregion
 }

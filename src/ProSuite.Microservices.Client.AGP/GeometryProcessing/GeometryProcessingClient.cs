@@ -102,7 +102,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 		#region IRemoveOverlapsService
 
-		[CanBeNull]
 		public Overlaps CalculateOverlaps(
 			IList<Feature> selectedFeatures,
 			IList<Feature> overlappingFeatures,

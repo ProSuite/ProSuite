@@ -501,7 +501,8 @@ namespace ProSuite.Microservices.AO
 							}
 							else
 							{
-								throw new InvalidOperationException($"Unexpected variant type: {variant.GetType()}");
+								throw new InvalidOperationException(
+									$"Unexpected variant type: {variant.GetType()}");
 							}
 						}
 

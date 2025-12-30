@@ -3,58 +3,57 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AGP.Framework
+namespace ProSuite.Commons.AGP.Framework;
+
+public static class DockPaneUtils
 {
-	public static class DockPaneUtils
+	public static DockPaneManager DockPaneManager => FrameworkApplication.DockPaneManager;
+
+	public static void Show<T>([NotNull] string id) where T : DockPane
 	{
-		public static DockPaneManager DockPaneManager => FrameworkApplication.DockPaneManager;
+		EnsureDockPaneExists(id);
 
-		public static void Show<T>([NotNull] string id) where T : DockPane
+		var pane = DockPaneManager.Find(id) as T;
+
+		if (pane is IFrameworkWindow window)
 		{
-			EnsureDockPaneExists(id);
+			window.Activate();
+		}
+	}
 
-			var pane = DockPaneManager.Find(id) as T;
+	public static T Toggle<T>([NotNull] string id) where T : DockPane
+	{
+		EnsureDockPaneExists(id);
 
-			if (pane is IFrameworkWindow window)
+		T dockPane = DockPaneManager.Find(id) as T;
+
+		if (dockPane != null)
+		{
+			if (dockPane.IsVisible)
 			{
-				window.Activate();
+				dockPane.Hide();
+			}
+			else
+			{
+				dockPane.Activate();
 			}
 		}
 
-		public static T Toggle<T>([NotNull] string id) where T : DockPane
+		return dockPane;
+	}
+
+	private static void EnsureDockPaneExists([NotNull] string id)
+	{
+		if (! DockPaneExists(id))
 		{
-			EnsureDockPaneExists(id);
-
-			T dockPane = DockPaneManager.Find(id) as T;
-
-			if (dockPane != null)
-			{
-				if (dockPane.IsVisible)
-				{
-					dockPane.Hide();
-				}
-				else
-				{
-					dockPane.Activate();
-				}
-			}
-
-			return dockPane;
+			DockPaneManager.Find(id);
 		}
 
-		private static void EnsureDockPaneExists([NotNull] string id)
-		{
-			if (! DockPaneExists(id))
-			{
-				DockPaneManager.Find(id);
-			}
+		Assert.True(DockPaneExists(id), $"DockPane {id} has not been created");
+	}
 
-			Assert.True(DockPaneExists(id), $"DockPane {id} has not been created");
-		}
-
-		private static bool DockPaneExists([NotNull] string id)
-		{
-			return DockPaneManager.IsDockPaneCreated(id);
-		}
+	private static bool DockPaneExists([NotNull] string id)
+	{
+		return DockPaneManager.IsDockPaneCreated(id);
 	}
 }

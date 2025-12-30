@@ -9,114 +9,115 @@
              d:DesignHeight="300" d:DesignWidth="300"
              d:DataContext="{d:DesignInstance Type=loggerUi:LogDockPaneViewModelBase}"
              IsVisibleChanged="UserControl_IsVisibleChanged">
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
-            </ResourceDictionary.MergedDictionaries>
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+			</ResourceDictionary.MergedDictionaries>
 			<loggerUi:LogMessageImageConverter x:Key="LogMessageImageConverter" />
 			<loggerUi:LogMessageLinkConverter x:Key="LogMessageLinkConverter" />
-        </ResourceDictionary>
-    </UserControl.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <!--<RowDefinition Height="Auto"/>-->
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <DataGrid Grid.Row="0" Margin="3,0" Name="logMessagesGrid"
-                  ScrollViewer.CanContentScroll="True"
-                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                  Style="{DynamicResource Esri_DataGrid}"
-                  AutoGenerateColumns="False"
-                  HorizontalAlignment="Stretch"
-                  HeadersVisibility="Column"
-                  RowHeaderWidth="0"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  ColumnWidth="*"
-                  VerticalScrollBarVisibility="Visible"
-                  SelectedItem="{Binding SelectedRow}"
-                  ItemsSource="{Binding Path=LogMessageList, Mode=OneWay}" Loaded="logMessagesGrid_Loaded">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Width="SizeToCells" IsReadOnly="True">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Image Margin="1" Width="16" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                   RenderOptions.EdgeMode="Aliased"
-                                   Source="{Binding Type, Converter={StaticResource LogMessageImageConverter}}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <!-- Note: use StringFormat to only show time; add .fff for millis; initial {} is to please the XAML parser -->
-                <DataGridTextColumn Header="Time" Binding="{Binding Path=Time, StringFormat={}{0:HH:mm:ss}}" MinWidth="32" Width="Auto" />
-                <DataGridTemplateColumn Header="Message">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock>
-                                <TextBlock
-                                    Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='first'}" />
-                                <Hyperlink Command="loggerUi:LogDockPaneViewModelBase.OpenLinkMessage"
-                                           CommandParameter="{Binding}">
-                                    <TextBlock
-                                        Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='link'}" />
-                                </Hyperlink>
-                                <TextBlock
-                                    Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='last'}" />
-                            </TextBlock>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-            <DataGrid.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Clear All Messages" Command="{Binding ClearLogEntries}" />
-                    <MenuItem Header="Show Message Details" Command="{Binding OpenMessage}"
-                              CommandParameter="{Binding Path=SelectedRow}" />
-                    <Separator />
-                    <MenuItem Header="Debug Messages"
-                              Command="{Binding FilterLogEntries}" CommandParameter="Debug"
-                              IsCheckable="true" IsChecked="{Binding DebugLogsAreVisible}" />
-                    <MenuItem Header="Verbose Messages" IsEnabled="{Binding DebugLogsAreVisible}"
-                              Command="{Binding FilterLogEntries}" CommandParameter="Verbose"
-                              IsCheckable="true" IsChecked="{Binding VerboseLogsAreVisible}" />
-                </ContextMenu>
-            </DataGrid.ContextMenu>
-            <DataGrid.InputBindings>
-                <MouseBinding Gesture="LeftDoubleClick"
-                              Command="{Binding OpenMessage}"
-                              CommandParameter="{Binding ElementName=logMessagesGrid, Path=SelectedItem}" />
-            </DataGrid.InputBindings>
-            <DataGrid.CellStyle>
-                <Style TargetType="DataGridCell">
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="{x:Type DataGridCell}">
-                                <Grid Background="{TemplateBinding Background}">
-                                    <ContentPresenter VerticalAlignment="Center" />
-                                </Grid>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </DataGrid.CellStyle>
-            <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow">
-                    <EventSetter Event="MouseRightButtonUp" Handler="logMessagesGrid_MouseRightButtonUp" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Type}" Value="Warn">
-                            <Setter Property="Background" Value="LemonChiffon"></Setter>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Type}" Value="Error">
-                            <Setter Property="Background" Value="LightSalmon"></Setter>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Type}" Value="Fatal">
-                            <Setter Property="Background" Value="Coral"></Setter>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.RowStyle>
-        </DataGrid>
-    </Grid>
+		</ResourceDictionary>
+	</UserControl.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<!--<RowDefinition Height="Auto"/>-->
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+		<DataGrid Grid.Row="0" Margin="3,0" Name="logMessagesGrid"
+		          ScrollViewer.CanContentScroll="True"
+		          ScrollViewer.VerticalScrollBarVisibility="Auto"
+		          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+		          Style="{DynamicResource Esri_DataGrid}"
+		          AutoGenerateColumns="False"
+		          HorizontalAlignment="Stretch"
+		          HeadersVisibility="Column"
+		          RowHeaderWidth="0"
+		          IsReadOnly="True"
+		          SelectionMode="Single"
+		          ColumnWidth="*"
+		          VerticalScrollBarVisibility="Visible"
+		          SelectedItem="{Binding SelectedRow}"
+		          ItemsSource="{Binding Path=LogMessageList, Mode=OneWay}" Loaded="logMessagesGrid_Loaded">
+			<DataGrid.Columns>
+				<DataGridTemplateColumn Width="SizeToCells" IsReadOnly="True">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<Image Margin="1" Width="16" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"
+							       RenderOptions.EdgeMode="Aliased"
+							       Source="{Binding Type, Converter={StaticResource LogMessageImageConverter}}" />
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+				<!-- Note: use StringFormat to only show time; add .fff for millis; initial {} is to please the XAML parser -->
+				<DataGridTextColumn Header="Time" Binding="{Binding Path=Time, StringFormat={}{0:HH:mm:ss}}" MinWidth="32"
+				                    Width="Auto" />
+				<DataGridTemplateColumn Header="Message">
+					<DataGridTemplateColumn.CellTemplate>
+						<DataTemplate>
+							<TextBlock>
+								<TextBlock
+									Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='first'}" />
+								<Hyperlink Command="loggerUi:LogDockPaneViewModelBase.OpenLinkMessage"
+								           CommandParameter="{Binding}">
+									<TextBlock
+										Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='link'}" />
+								</Hyperlink>
+								<TextBlock
+									Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='last'}" />
+							</TextBlock>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
+			</DataGrid.Columns>
+			<DataGrid.ContextMenu>
+				<ContextMenu>
+					<MenuItem Header="Clear All Messages" Command="{Binding ClearLogEntries}" />
+					<MenuItem Header="Show Message Details" Command="{Binding OpenMessage}"
+					          CommandParameter="{Binding Path=SelectedRow}" />
+					<Separator />
+					<MenuItem Header="Debug Messages"
+					          Command="{Binding FilterLogEntries}" CommandParameter="Debug"
+					          IsCheckable="true" IsChecked="{Binding DebugLogsAreVisible}" />
+					<MenuItem Header="Verbose Messages" IsEnabled="{Binding DebugLogsAreVisible}"
+					          Command="{Binding FilterLogEntries}" CommandParameter="Verbose"
+					          IsCheckable="true" IsChecked="{Binding VerboseLogsAreVisible}" />
+				</ContextMenu>
+			</DataGrid.ContextMenu>
+			<DataGrid.InputBindings>
+				<MouseBinding Gesture="LeftDoubleClick"
+				              Command="{Binding OpenMessage}"
+				              CommandParameter="{Binding ElementName=logMessagesGrid, Path=SelectedItem}" />
+			</DataGrid.InputBindings>
+			<DataGrid.CellStyle>
+				<Style TargetType="DataGridCell">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="{x:Type DataGridCell}">
+								<Grid Background="{TemplateBinding Background}">
+									<ContentPresenter VerticalAlignment="Center" />
+								</Grid>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+			</DataGrid.CellStyle>
+			<DataGrid.RowStyle>
+				<Style TargetType="DataGridRow">
+					<EventSetter Event="MouseRightButtonUp" Handler="logMessagesGrid_MouseRightButtonUp" />
+					<Style.Triggers>
+						<DataTrigger Binding="{Binding Type}" Value="Warn">
+							<Setter Property="Background" Value="LemonChiffon" />
+						</DataTrigger>
+						<DataTrigger Binding="{Binding Type}" Value="Error">
+							<Setter Property="Background" Value="LightSalmon" />
+						</DataTrigger>
+						<DataTrigger Binding="{Binding Type}" Value="Fatal">
+							<Setter Property="Background" Value="Coral" />
+						</DataTrigger>
+					</Style.Triggers>
+				</Style>
+			</DataGrid.RowStyle>
+		</DataGrid>
+	</Grid>
 </UserControl>

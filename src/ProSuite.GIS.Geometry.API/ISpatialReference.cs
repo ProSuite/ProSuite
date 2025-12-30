@@ -24,7 +24,7 @@ namespace ProSuite.GIS.Geometry.API
 
 		bool HasMPrecision();
 
-		void IsPrecisionEqual(ISpatialReference otherSR, out bool IsPrecisionEqual);
+		bool AreEqual(ISpatialReference otherSpatialReference, bool includeResolution);
 
 		void SetFalseOriginAndUnits(double falseX, double falseY, double xyUnits);
 
@@ -62,6 +62,10 @@ namespace ProSuite.GIS.Geometry.API
 		double XYTolerance { get; }
 		double ZTolerance { get; }
 		double MTolerance { get; }
+
+		bool IsGeographic { get; }
+
+		bool IsUnknown { get; }
 
 		object NativeImplementation { get; }
 	}

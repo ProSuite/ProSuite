@@ -9,7 +9,7 @@ public class TableComparer : IEqualityComparer<Table>
 	{
 		return DatasetUtils.IsSameTable(x, y);
 	}
-		
+
 	public int GetHashCode(Table table)
 	{
 		// NOTE: We cannot use the table handle because it is a 64-bit integer!

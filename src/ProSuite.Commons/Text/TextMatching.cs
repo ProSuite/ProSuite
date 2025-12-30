@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace ProSuite.Commons.Text
@@ -63,6 +64,80 @@ namespace ProSuite.Commons.Text
 			var options = RegexOptions.Singleline; // make '.' match '\n'
 			if (ignoreCase) options |= RegexOptions.IgnoreCase;
 			return new Regex($"^{pattern}$", options);
+		}
+
+		/// <summary>
+		/// Pattern matching similar to git ignore patterns.
+		/// If <paramref name="pattern"/> ends with a separator, then
+		/// <paramref name="pathName"/> must also end with a separator.
+		/// An empty pattern does not match anything. Empty file
+		/// or directory names are not handled.
+		/// </summary>
+		/// <param name="pattern">the git-ignore-like pattern</param>
+		/// <param name="pathName">a path name</param>
+		/// <param name="separator">the separator used in pattern and path</param>
+		/// <param name="ignoreCase">true to ignore case, false otherwise</param>
+		/// <returns>true iff the pattern matches the given path name</returns>
+		public static bool PathMatch(string pattern, string pathName,
+		                             char separator = '/', bool ignoreCase = false)
+		{
+			if (string.IsNullOrEmpty(pattern)) return false;
+			if (string.IsNullOrEmpty(pathName)) return false;
+			var seps = new[] { separator };
+			// Note: string.EndsWith(char) and string.Split(char) are not in netstandard2.0
+			var patterns = pattern.Split(seps, StringSplitOptions.RemoveEmptyEntries);
+			var names = pathName.Split(seps, StringSplitOptions.RemoveEmptyEntries);
+			if (! PathMatch(patterns, names, ignoreCase)) return false;
+			bool wantDirectory = pattern[pattern.Length - 1] == separator;
+			bool isDirectory = pathName[pathName.Length - 1] == separator;
+			return ! wantDirectory || isDirectory;
+		}
+
+		/// <summary>
+		/// Like <see cref="WildMatch"/> but operating on path segments,
+		/// using "**" as the wildcard and each segment being compared with
+		/// <see cref="WildMatch"/>. Mimics the behavior of gitignore patterns.
+		/// </summary>
+		/// <remarks>Mimics the behaviour of gitignore patterns. Caller's
+		/// duty to split the actual paths and patterns on their separator
+		/// characters such as slash or backslash.</remarks>
+		/// <returns>true iff patterns match names</returns>
+		public static bool PathMatch(IList<string> patterns, IList<string> names, bool ignoreCase = false)
+		{
+			if (patterns is null)
+				throw new ArgumentNullException(nameof(patterns));
+			if (names is null)
+				throw new ArgumentNullException(nameof(names));
+
+			int i = 0; // pattern index
+			int ii = -1; // pattern rewind index
+			int j = 0; // name index
+			int jj = -1; // name rewind index
+
+			for (;;)
+			{
+				string pattern = i < patterns.Count ? patterns[i++] : null;
+				if (pattern == "**")
+				{
+					ii = i;
+					jj = j;
+					continue;
+				}
+
+				string name = j < names.Count ? names[j++] : null;
+				if (name is null)
+					return pattern is null;
+
+				bool match = pattern != null &&
+				             WildMatch(pattern, name, ignoreCase);
+				if (! match)
+				{
+					if (ii < 0) // no previous star, cannot rewind
+						return false;
+					i = ii; // rewind in pattern
+					j = ++jj; // retry with shorter text suffix
+				}
+			}
 		}
 
 		/// <summary>

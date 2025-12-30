@@ -40,7 +40,10 @@ public static class MarkerPlacements
 
 	public enum Extremity
 	{
-		Both = 0, JustBegin = 1, JustEnd = 2, None = 3
+		Both = 0,
+		JustBegin = 1,
+		JustEnd = 2,
+		None = 3
 	}
 
 	public class AtExtremitiesOptions : StrokeOptions
@@ -73,7 +76,8 @@ public static class MarkerPlacements
 					{
 						tangent *= -1; // flip tangent at begin of line
 						// Negate begin perpendicular offset to match ArcGIS Pro behaviour
-						yield return Placed(marker, position, tangent, angleToLine, -perpendicularOffset);
+						yield return Placed(marker, position, tangent, angleToLine,
+						                    -perpendicularOffset);
 					}
 				}
 
@@ -83,7 +87,8 @@ public static class MarkerPlacements
 					if (distance >= 0 && // not off other end
 					    GetPointAndTangent(line, distance, out var position, out var tangent))
 					{
-						yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
+						yield return Placed(marker, position, tangent, angleToLine,
+						                    perpendicularOffset);
 					}
 				}
 			}
@@ -97,7 +102,8 @@ public static class MarkerPlacements
 				{
 					tangent *= -1; // flip tangent at begin of line
 					// Negate begin perpendicular offset to match ArcGIS Pro behaviour
-					yield return Placed(marker, position, tangent, angleToLine, -perpendicularOffset);
+					yield return Placed(marker, position, tangent, angleToLine,
+					                    -perpendicularOffset);
 				}
 			}
 
@@ -107,7 +113,8 @@ public static class MarkerPlacements
 				if (distance >= 0 && // not off other end
 				    GetPointAndTangent(polyline, distance, out var position, out var tangent))
 				{
-					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
+					yield return Placed(marker, position, tangent, angleToLine,
+					                    perpendicularOffset);
 				}
 			}
 		}
@@ -167,7 +174,8 @@ public static class MarkerPlacements
 				if (isControlPoint && options.PlaceOnControlPoints ||
 				    isRegularVertex && options.PlaceOnRegularVertices)
 				{
-					yield return Placed(marker, position, tangent, angleToLine, perpendicularOffset);
+					yield return Placed(marker, position, tangent, angleToLine,
+					                    perpendicularOffset);
 				}
 			}
 
@@ -189,7 +197,10 @@ public static class MarkerPlacements
 
 	public enum OnLinePosition
 	{
-		Middle, Start, End, SegmentMidpoints
+		Middle,
+		Start,
+		End,
+		SegmentMidpoints
 	}
 
 	public class OnLineOptions : StrokeOptions
@@ -229,7 +240,8 @@ public static class MarkerPlacements
 			{
 				foreach (var partLine in GetPartLines(GetPolyline(polycurve)))
 				{
-					var distanceAlong = GetOnLineDistance(options.RelativeTo, partLine.Length, offsetAlong);
+					var distanceAlong =
+						GetOnLineDistance(options.RelativeTo, partLine.Length, offsetAlong);
 
 					if (GetPointAndTangent(partLine, distanceAlong,
 					                       out Pair position, out Pair tangent))
@@ -240,7 +252,8 @@ public static class MarkerPlacements
 			}
 			else
 			{
-				var distanceAlong = GetOnLineDistance(options.RelativeTo, polycurve.Length, offsetAlong);
+				var distanceAlong =
+					GetOnLineDistance(options.RelativeTo, polycurve.Length, offsetAlong);
 
 				if (GetPointAndTangent(polycurve, distanceAlong,
 				                       out Pair position, out Pair tangent))
@@ -253,7 +266,11 @@ public static class MarkerPlacements
 
 	public enum EndingsType
 	{
-		Unconstrained, Marker, HalfStep, FullStep, Custom
+		Unconstrained,
+		Marker,
+		HalfStep,
+		FullStep,
+		Custom
 	}
 
 	public class AlongLineOptions : StrokeOptions
@@ -315,12 +332,13 @@ public static class MarkerPlacements
 			if (options.Endings != EndingsType.Unconstrained)
 			{
 				double m = (L - A - E) / P;
-				double k =  Math.Max(Math.Round(m), 0.0); // number of pattern repeats
+				double k = Math.Max(Math.Round(m), 0.0); // number of pattern repeats
 				double stretchedLength = A + k * P + E;
 				if (stretchedLength == 0)
 				{
 					stretchedLength = L;
 				}
+
 				double s = L / stretchedLength; // stretch/squeeze factor
 
 				a = s * A;
@@ -390,7 +408,9 @@ public static class MarkerPlacements
 
 	public enum PolygonCenterType
 	{
-		BoundingBoxCenter, Centroid, LabelPoint
+		BoundingBoxCenter,
+		Centroid,
+		LabelPoint
 	}
 
 	public class PolygonCenterOptions : FillOptions
@@ -466,7 +486,8 @@ public static class MarkerPlacements
 		// and would have no effect anyway because the pattern is space-fixed
 
 		if (options.GridAngle != 0)
-			throw new NotImplementedException($"Non-zero {nameof(options.GridAngle)} is not yet implemented");
+			throw new NotImplementedException(
+				$"Non-zero {nameof(options.GridAngle)} is not yet implemented");
 
 		var dx = options.StepX;
 		if (! (dx > 0)) yield break;
@@ -480,8 +501,8 @@ public static class MarkerPlacements
 
 		var extent = polygon.Extent;
 
-		var nx = (int)Math.Ceiling(extent.Width / options.StepX) + 1;
-		var ny = (int)Math.Ceiling(extent.Height / options.StepY) + 1;
+		var nx = (int) Math.Ceiling(extent.Width / options.StepX) + 1;
+		var ny = (int) Math.Ceiling(extent.Height / options.StepY) + 1;
 
 		var lowerLeft = new Pair(extent.XMin, extent.YMin);
 		var sx = ox + dx * Math.Floor(lowerLeft.X / dx);
@@ -525,7 +546,14 @@ public static class MarkerPlacements
 
 	public enum AroundPolygonPosition
 	{
-		Top, Bottom, Left, Right, TopLeft, TopRight, BottomLeft, BottomRight
+		Top,
+		Bottom,
+		Left,
+		Right,
+		TopLeft,
+		TopRight,
+		BottomLeft,
+		BottomRight
 	}
 
 	public class AroundPolygonOptions : FillOptions
@@ -579,7 +607,7 @@ public static class MarkerPlacements
 	{
 		if (segment is null) throw new ArgumentNullException(nameof(segment));
 		if (distanceAlong > segment.Length) distanceAlong = segment.Length;
-		else if(distanceAlong < 0) distanceAlong = 0; // clamp
+		else if (distanceAlong < 0) distanceAlong = 0; // clamp
 
 		const double tangentLength = 1.0; // unit length!
 		var line = GeometryEngine.Instance.QueryTangent(
@@ -595,7 +623,7 @@ public static class MarkerPlacements
 	{
 		position = tangent = Pair.Null;
 		if (segment is null) return false;
-		if (!(segment.Length > 0)) return false;
+		if (! (segment.Length > 0)) return false;
 
 		const double tangentLength = 1.0; // unit length!
 		var line = GeometryEngine.Instance.QueryTangent(
@@ -659,7 +687,8 @@ public static class MarkerPlacements
 		};
 	}
 
-	private static T Rotated<T>(T shape, double angleRadians, MapPoint pivot = null) where T : Geometry
+	private static T Rotated<T>(T shape, double angleRadians, MapPoint pivot = null)
+		where T : Geometry
 	{
 		if (shape is null) return null;
 		if (pivot is null) pivot = MapPointBuilderEx.CreateMapPoint(0, 0);

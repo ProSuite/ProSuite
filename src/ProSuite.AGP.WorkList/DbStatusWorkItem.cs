@@ -8,9 +8,9 @@ namespace ProSuite.AGP.WorkList;
 
 public class DbStatusWorkItem : WorkItem
 {
-	protected DbStatusWorkItem(long uniqueTableId,
-	                           [NotNull] Row row,
-	                           WorkItemStatus status)
+	public DbStatusWorkItem(long uniqueTableId,
+	                        [NotNull] Row row,
+	                        WorkItemStatus status)
 		: this(uniqueTableId, new GdbRowIdentity(row), status)
 	{
 		Status = status;

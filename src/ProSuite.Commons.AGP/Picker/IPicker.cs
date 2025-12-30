@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ProSuite.Commons.AGP.Picker
-{
-	public interface IPicker
-	{
-		Task<IPickableItem> PickSingle();
+namespace ProSuite.Commons.AGP.Picker;
 
-		Task<IList<IPickableItem>> PickMany();
-	}
+public interface IPicker
+{
+	Task<IPickableItem> PickSingle();
+
+	Task<IList<IPickableItem>> PickMany();
 }

@@ -5,28 +5,30 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-             xmlns:managedOptions="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI" xmlns:cracker="clr-namespace:ProSuite.AGP.Editing.Cracker"
+             xmlns:managedOptions="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI"
+             xmlns:cracker="clr-namespace:ProSuite.AGP.Editing.Cracker"
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=cracker:DockPaneCrackerViewModelBase}" Width="378" Height="453" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=cracker:DockPaneCrackerViewModelBase}" Width="378" Height="453"
+             HorizontalAlignment="Left"
              VerticalAlignment="Top">
 	<UserControl.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 				<ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</UserControl.Resources>
 
 	<StackPanel
-        HorizontalAlignment="Left"
-        VerticalAlignment="Top">
+		HorizontalAlignment="Left"
+		VerticalAlignment="Top">
 
 		<!-- Snapping and minimum segment length -->
-		<Label FontWeight="Medium" Content="Snapping and minimum segment length"/>
+		<Label FontWeight="Medium" Content="Snapping and minimum segment length" />
 		<Grid HorizontalAlignment="Left" Width="Auto">
 
 			<Grid.ColumnDefinitions>
@@ -41,38 +43,36 @@
 			</Grid.RowDefinitions>
 
 			<CheckBox Grid.Row="0" Grid.Column="0"
-                          Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Snap crack points within tolerance of"
-                          DataContext="{Binding SnapToTargetVertices}" />
+			          Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Snap crack points within tolerance of"
+			          DataContext="{Binding SnapToTargetVertices}" />
 
-			<Grid Grid.Row="0"  Grid.Column="1" >
-				<ContentControl 
-                        Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding SnapTolerance}" />
+			<Grid Grid.Row="0" Grid.Column="1">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsSpinner}"
+					DataContext="{Binding SnapTolerance}" />
 			</Grid>
 
 			<Grid Grid.Row="0" Grid.Column="2">
-				<ContentControl 
-                    Template="{StaticResource CentralizableSettingsLabel}"
-                    DataContext="{Binding SnapTolerance}" />
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsLabel}"
+					DataContext="{Binding SnapTolerance}" />
 			</Grid>
 
 
-			<CheckBox Grid.Row="1"  Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Respect a minimum segment length"
-                          DataContext="{Binding RespectMinimumSegmentLength}"  />
+			<CheckBox Grid.Row="1" Grid.Column="0" Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Respect a minimum segment length"
+			          DataContext="{Binding RespectMinimumSegmentLength}" />
 
-			<Grid Grid.Row="1"  Grid.Column="1" >
-				<ContentControl 
-                        Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding MinimumSegmentLength}" 
-                    />
+			<Grid Grid.Row="1" Grid.Column="1">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsSpinner}"
+					DataContext="{Binding MinimumSegmentLength}" />
 			</Grid>
 			<Grid Grid.Row="1" Grid.Column="2">
-				<ContentControl 
-                        Template="{StaticResource CentralizableSettingsLabel}"
-                        DataContext="{Binding MinimumSegmentLength}" 
-                    />
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsLabel}"
+					DataContext="{Binding MinimumSegmentLength}" />
 			</Grid>
 
 		</Grid>
@@ -80,14 +80,14 @@
 
 		<!-- Calculate crack points at intersections with other -->
 
-		<Label FontWeight="Medium" Content="Calculate crack points at intersections with other" Margin="0,15,0,0"/>
+		<Label FontWeight="Medium" Content="Calculate crack points at intersections with other" Margin="0,15,0,0" />
 		<editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
 
 		<!-- Z values -->
-		<Label FontWeight="Medium" Content="Z values" Margin="0,15,0,0"/>
+		<Label FontWeight="Medium" Content="Z values" Margin="0,15,0,0" />
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Use selected feature's Z values instead of target feature's Z values"
-                      DataContext="{Binding UseSourceZs}" />
+		          Content="Use selected feature's Z values instead of target feature's Z values"
+		          DataContext="{Binding UseSourceZs}" />
 
 		<!-- Clean up option -->
 		<!--<Label FontWeight="Medium" Content="Clean up option" Margin="0,15,0,0"/>
@@ -96,8 +96,7 @@
                       DataContext="{Binding Options.CentralizableRemoveUnnecessaryVertices}" />-->
 
 		<!-- Restore Defaults Button -->
-		<Button Template="{StaticResource RestoreDefaultsButton}"
-        />
+		<Button Template="{StaticResource RestoreDefaultsButton}" />
 
 		<!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
                          IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleEditableFeatures}}"

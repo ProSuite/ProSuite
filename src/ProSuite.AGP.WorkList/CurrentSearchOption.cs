@@ -1,8 +1,7 @@
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList;
+
+public enum CurrentSearchOption
 {
-	public enum CurrentSearchOption
-	{
-		ExcludeCurrent,
-		IncludeCurrent
-	}
+	ExcludeCurrent,
+	IncludeCurrent
 }

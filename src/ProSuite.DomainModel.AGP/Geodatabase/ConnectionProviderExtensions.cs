@@ -1,105 +1,117 @@
 using System;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.Geodatabase;
 
-namespace ProSuite.DomainModel.AGP.Geodatabase
+namespace ProSuite.DomainModel.AGP.Geodatabase;
+
+public static class ConnectionProviderExtensions
 {
-	public static class ConnectionProviderExtensions
+	public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(
+		this ConnectionProvider connectionProvider)
 	{
-		public static ArcGIS.Core.Data.Geodatabase OpenGeodatabase(
-			this ConnectionProvider connectionProvider)
+		Connector connector = GetConnector(connectionProvider);
+
+		Datastore datastore = WorkspaceUtils.OpenDatastore(connector);
+
+		return datastore as ArcGIS.Core.Data.Geodatabase ??
+		       throw new InvalidOperationException("Not a Geodatabase instance");
+	}
+
+	[NotNull]
+	private static Connector GetConnector(ConnectionProvider connectionProvider)
+	{
+		if (connectionProvider is null)
+			throw new ArgumentNullException(nameof(connectionProvider));
+
+		if (connectionProvider is FileGdbConnectionProvider fileGdbProvider)
 		{
-			if (connectionProvider is null)
-				throw new ArgumentNullException(nameof(connectionProvider));
-
-			Connector connector;
-
-			switch (connectionProvider)
-			{
-				case FileGdbConnectionProvider fileGdbConnectionProvider:
-					connector =
-						new FileGeodatabaseConnectionPath(new Uri(fileGdbConnectionProvider.Path));
-					break;
-				case MobileGdbConnectionProvider mobileGdbConnectionProvider:
-					connector =
-						new MobileGeodatabaseConnectionPath(
-							new Uri(mobileGdbConnectionProvider.Path));
-					break;
-				case ConnectionFileConnectionProvider connectionFileConnectionProvider:
-					connector =
-						new DatabaseConnectionFile(new Uri(connectionFileConnectionProvider.Path));
-					break;
-				case SdeDirectConnectionProvider sdeDirectConnectionProvider:
-					connector = GetDatabaseConnectionProperties(sdeDirectConnectionProvider);
-					break;
-				default:
-					throw new NotSupportedException(
-						$"Connection provider type not supported: {connectionProvider.GetType().Name}");
-			}
-
-			return (ArcGIS.Core.Data.Geodatabase) WorkspaceUtils.OpenDatastore(
-				Assert.NotNull(connector));
+			var path = new Uri(fileGdbProvider.Path);
+			return new FileGeodatabaseConnectionPath(path);
 		}
 
-		private static DatabaseConnectionProperties GetDatabaseConnectionProperties(
-			[NotNull] SdeDirectConnectionProvider dcConnectionProvider)
+		if (connectionProvider is MobileGdbConnectionProvider mobileGdbProvider)
 		{
-			EnterpriseDatabaseType enterpriseDatabaseType =
-				ToEnterpriseDatabaseType(dcConnectionProvider.DatabaseType);
-
-			var result = new DatabaseConnectionProperties(enterpriseDatabaseType);
-
-			AuthenticationMode authMode;
-			string user = null, plainTextPassword = null;
-
-			if (dcConnectionProvider is SdeDirectDbUserConnectionProvider
-			    sdeDirectDbUserConnectionProvider)
-			{
-				authMode = AuthenticationMode.DBMS;
-				user = sdeDirectDbUserConnectionProvider.UserName;
-				plainTextPassword = sdeDirectDbUserConnectionProvider.PlainTextPassword;
-			}
-			else
-			{
-				authMode = AuthenticationMode.OSA;
-			}
-
-			result.AuthenticationMode = authMode;
-			result.Instance = dcConnectionProvider.DatabaseName;
-			result.Database = dcConnectionProvider.RepositoryName;
-
-			result.Version = dcConnectionProvider.VersionName;
-			result.User = user;
-			result.Password = plainTextPassword;
-
-			return result;
+			var path = new Uri(mobileGdbProvider.Path);
+			return new MobileGeodatabaseConnectionPath(path);
 		}
 
-		private static EnterpriseDatabaseType ToEnterpriseDatabaseType(DatabaseType databaseType)
+		if (connectionProvider is ConnectionFileConnectionProvider connectionFileProvider)
 		{
-			switch (databaseType)
-			{
-				case DatabaseType.SqlServer:
-					return EnterpriseDatabaseType.SQLServer;
+			var path = new Uri(connectionFileProvider.Path);
+			return new DatabaseConnectionFile(path);
+		}
 
-				case DatabaseType.PostgreSQL:
-					return EnterpriseDatabaseType.PostgreSQL;
+		if (connectionProvider is SdeDirectConnectionProvider sdeDirectConnectionProvider)
+		{
+			var properties = GetDatabaseConnectionProperties(sdeDirectConnectionProvider);
+			return properties;
+		}
 
-				case DatabaseType.Oracle:
+		throw new NotSupportedException(
+			$"Connection provider type not supported: {connectionProvider.GetType().Name}");
+	}
 
-				case DatabaseType.Oracle9:
+	[NotNull]
+	private static DatabaseConnectionProperties GetDatabaseConnectionProperties(
+		[NotNull] SdeDirectConnectionProvider dcConnectionProvider)
+	{
+		if (dcConnectionProvider is null)
+			throw new ArgumentNullException(nameof(dcConnectionProvider));
 
-				case DatabaseType.Oracle10:
+		EnterpriseDatabaseType enterpriseDatabaseType =
+			ToEnterpriseDatabaseType(dcConnectionProvider.DatabaseType);
 
-				case DatabaseType.Oracle11:
-					return EnterpriseDatabaseType.Oracle;
+		var result = new DatabaseConnectionProperties(enterpriseDatabaseType);
 
-				default:
-					throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, null);
-			}
+		AuthenticationMode authMode;
+		string userName;
+		string password;
+
+		if (dcConnectionProvider is SdeDirectDbUserConnectionProvider
+		    sdeDirectDbUserConnectionProvider)
+		{
+			authMode = AuthenticationMode.DBMS;
+			userName = sdeDirectDbUserConnectionProvider.UserName;
+			password = sdeDirectDbUserConnectionProvider.PlainTextPassword;
+		}
+		else
+		{
+			authMode = AuthenticationMode.OSA;
+			userName = null;
+			password = null;
+		}
+
+		result.AuthenticationMode = authMode;
+		result.User = userName;
+		result.Password = password;
+
+		result.Instance = dcConnectionProvider.DatabaseName;
+		result.Database = dcConnectionProvider.RepositoryName;
+		result.Version = dcConnectionProvider.VersionName;
+
+		return result;
+	}
+
+	private static EnterpriseDatabaseType ToEnterpriseDatabaseType(DatabaseType databaseType)
+	{
+		switch (databaseType)
+		{
+			case DatabaseType.SqlServer:
+				return EnterpriseDatabaseType.SQLServer;
+
+			case DatabaseType.PostgreSQL:
+				return EnterpriseDatabaseType.PostgreSQL;
+
+			case DatabaseType.Oracle:
+			case DatabaseType.Oracle9:
+			case DatabaseType.Oracle10:
+			case DatabaseType.Oracle11:
+				return EnterpriseDatabaseType.Oracle;
+
+			default:
+				throw new ArgumentOutOfRangeException(nameof(databaseType), databaseType, null);
 		}
 	}
 }

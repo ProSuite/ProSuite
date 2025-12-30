@@ -1,7 +1,6 @@
-namespace ProSuite.Commons.AGP.PickerUI
+namespace ProSuite.Commons.AGP.PickerUI;
+
+public interface ICloseable
 {
-	public interface ICloseable
-	{
-		void Close();
-	}
+	void Close();
 }

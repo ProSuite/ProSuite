@@ -69,7 +69,6 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 			viewModel.WantPerimeter = false;
 			viewModel.PerimeterSettingsVisibility = Visibility.Collapsed;
 		}
-
 	}
 
 	private void UpdatePerimeterSettings(SymbolDisplaySettingsViewModel viewModel)

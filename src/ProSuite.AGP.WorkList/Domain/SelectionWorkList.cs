@@ -10,6 +10,5 @@ public class SelectionWorkList : WorkList
 	                         [CanBeNull] Geometry areaOfInterest,
 	                         [NotNull] string uniqueName,
 	                         [NotNull] string displayName) :
-		base(repository, areaOfInterest, uniqueName, displayName)
-	{ }
+		base(repository, areaOfInterest, uniqueName, displayName) { }
 }

@@ -20,9 +20,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private readonly ITable _parentTable;
 
 		private SimpleValueList _cachedValues;
-		private Row _proRow;
+		[CanBeNull] private Row _proRow;
+		private long _oid = -1;
 
-		public static ArcRow Create(Row proRow, ITable parentTable, bool cacheValues = false)
+		public static ArcRow Create([NotNull] Row proRow,
+		                            [NotNull] ITable parentTable,
+		                            bool cacheValues = false)
 		{
 			Assert.NotNull(proRow, "No row provided");
 
@@ -41,7 +44,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public static Func<ArcGIS.Core.Geometry.Geometry, IGeometry> GeometryFactory { get; set; } =
 			ArcGeometry.Create;
 
-		protected ArcRow([CanBeNull] Row proRow, [NotNull] ITable parentTable)
+		public ArcRow([CanBeNull] Row proRow, [NotNull] ITable parentTable)
 		{
 			_parentTable = parentTable;
 
@@ -77,7 +80,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			try
 			{
 				int fieldCount = _parentTable.Fields.FieldCount;
-				_cachedValues = new SimpleValueList(fieldCount);
+				var values = new object[fieldCount];
+
+				OID = Assert.NotNull(ProRow).GetObjectID();
 
 				// Populate the cache for all fields
 				for (int i = 0; i < fieldCount; i++)
@@ -85,11 +90,52 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					try
 					{
 						object value = ProRow[i];
-						_cachedValues[i] = value;
+						values[i] = value;
 					}
 					catch (Exception ex)
 					{
-						// Log the error but continue caching other fields
+						_msg.Debug($"Error caching field at index {i}: {ex.Message}", ex);
+						throw;
+					}
+				}
+
+				CacheValues(values);
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn($"Failed to cache row values for row {OID}: {ex.Message}", ex);
+			}
+		}
+
+		public void CacheValues(object[] objects)
+		{
+			if (_cachedValues != null)
+			{
+				return; // Values are already cached
+			}
+
+			try
+			{
+				int fieldCount = _parentTable.Fields.FieldCount;
+
+				Assert.AreEqual(fieldCount, objects.Length, "unequal field count");
+
+				_cachedValues = new SimpleValueList(fieldCount);
+
+				for (int i = 0; i < fieldCount; i++)
+				{
+					try
+					{
+						object value = objects[i];
+						_cachedValues[i] = value;
+
+						if (Fields[i].Name == _parentTable.OIDFieldName)
+						{
+							OID = Convert.ToInt64(value);
+						}
+					}
+					catch (Exception ex)
+					{
 						_msg.Debug($"Error caching field at index {i}: {ex.Message}", ex);
 						throw;
 					}
@@ -165,9 +211,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		// TODO: Discuss this
 		//public bool HasOID => _proRow.HasOID;
-		public bool HasOID => OID >= 0;
+		public bool HasOID => _oid >= 0;
 
-		public long OID { get; protected set; }
+		public long OID
+		{
+			get => _oid;
+			protected set => _oid = value;
+		}
 
 		public ITable Table => _parentTable;
 
@@ -207,7 +257,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				try
 				{
-					ProRow.GetObjectID();
+					ProRow?.GetObjectID();
 					return false;
 				}
 				catch (ObjectDisposedException)
@@ -236,6 +286,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			try
 			{
+				if (ProRow == null)
+				{
+					return;
+				}
+
 				action((T) ProRow);
 			}
 			catch (Exception e)

@@ -2,25 +2,24 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 
-namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+
+public class CrackedFeature
 {
-	public class CrackedFeature
+	public CrackedFeature(Feature feature, IList<CrackPoint> crackPoints = null)
 	{
-		public CrackedFeature(Feature feature, IList<CrackPoint> crackPoints = null)
+		Feature = feature;
+
+		if (crackPoints == null)
 		{
-			Feature = feature;
-
-			if (crackPoints == null)
-			{
-				crackPoints = new List<CrackPoint>();
-			}
-
-			CrackPoints = crackPoints;
+			crackPoints = new List<CrackPoint>();
 		}
 
-		public Feature Feature { get; }
-
-		public IList<CrackPoint> CrackPoints { get; }
-		public GdbObjectReference GdbFeatureReference => new GdbObjectReference(Feature);
+		CrackPoints = crackPoints;
 	}
+
+	public Feature Feature { get; }
+
+	public IList<CrackPoint> CrackPoints { get; }
+	public GdbObjectReference GdbFeatureReference => new GdbObjectReference(Feature);
 }

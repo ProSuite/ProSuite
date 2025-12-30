@@ -16,977 +16,996 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 
-namespace ProSuite.Commons.AGP.Core.Geodatabase
+namespace ProSuite.Commons.AGP.Core.Geodatabase;
+
+public static class DatasetUtils
 {
-	public static class DatasetUtils
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	[NotNull]
+	public static string GetTableDisplayName([NotNull] Table table)
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		using var definition = table.GetDefinition();
+		string name = definition.GetName();
+		string alias = GetAliasName(definition);
 
-		[NotNull]
-		public static string GetTableDisplayName([NotNull] Table table)
+		if (string.IsNullOrEmpty(alias))
 		{
-			using var definition = table.GetDefinition();
-			string name = definition.GetName();
-			string alias = GetAliasName(definition);
+			alias = name;
+		}
 
-			if (string.IsNullOrEmpty(alias))
-			{
-				alias = name;
-			}
+		if (string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase))
+		{
+			// Alias name equals table name (but may have different case);
+			// un-qualify the alias name to preserve its case:
+			using var datastore = table.GetDatastore();
+			var sqlSyntax = datastore.GetSQLSyntax();
+			if (sqlSyntax is null) return alias;
+			var parts = sqlSyntax.ParseTableName(alias);
+			return parts.Item3; // table name
+		}
 
-			if (string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase))
-			{
-				// Alias name equals table name (but may have different case);
-				// un-qualify the alias name to preserve its case:
-				using var datastore = table.GetDatastore();
-				var sqlSyntax = datastore.GetSQLSyntax();
-				if (sqlSyntax is null) return alias;
-				var parts = sqlSyntax.ParseTableName(alias);
-				return parts.Item3; // table name
-			}
+		return alias;
+	}
 
+	public static string GetName(Table table)
+	{
+		if (table != null && table.IsJoinedTable())
+		{
+			return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetName), "/");
+		}
+
+		return table?.GetName();
+	}
+
+	[CanBeNull]
+	public static string GetAliasName(Table table)
+	{
+		if (table != null && table.IsJoinedTable())
+		{
+			return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetAliasName), "/");
+		}
+
+		using (var definition = table?.GetDefinition())
+		{
+			return GetAliasName(definition);
+		}
+	}
+
+	[CanBeNull]
+	private static string GetAliasName(TableDefinition definition)
+	{
+		if (definition is null) return null;
+
+		try
+		{
+			// GetAliasName() returns an empty string, if the alias is not set
+			string alias = definition.GetAliasName();
+
+			if (string.IsNullOrEmpty(alias)) alias = definition.GetName();
 			return alias;
 		}
-
-		public static string GetName(Table table)
+		catch (NotSupportedException notSupportedException)
 		{
-			if (table != null && table.IsJoinedTable())
-			{
-				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetName), "/");
-			}
+			// Shapefiles throw a NotSupportedException
+			_msg.Debug("Subtypes not supported", notSupportedException);
 
-			return table?.GetName();
+			return null;
 		}
+	}
 
-		[CanBeNull]
-		public static string GetAliasName(Table table)
+	[CanBeNull]
+	public static int? GetDefaultSubtypeCode(Table table)
+	{
+		if (table is null) return null;
+
+		using (var definition = table.GetDefinition())
 		{
-			if (table != null && table.IsJoinedTable())
-			{
-				return StringUtils.Concatenate(GetDatabaseTables(table).Select(GetAliasName), "/");
-			}
-
-			using (var definition = table?.GetDefinition())
-			{
-				return GetAliasName(definition);
-			}
+			return GetDefaultSubtypeCode(definition);
 		}
+	}
 
-		[CanBeNull]
-		private static string GetAliasName(TableDefinition definition)
+	[CanBeNull]
+	public static int? GetDefaultSubtypeCode(TableDefinition definition)
+	{
+		if (definition is null) return null;
+
+		try
 		{
-			if (definition is null) return null;
+			// GetDefaultSubtypeCode() returns -1 if no subtypes
+			int defaultSubtypeCode = definition.GetDefaultSubtypeCode();
 
-			try
+			if (defaultSubtypeCode < 0)
 			{
-				// GetAliasName() returns an empty string, if the alias is not set
-				string alias = definition.GetAliasName();
-
-				if (string.IsNullOrEmpty(alias)) alias = definition.GetName();
-				return alias;
-			}
-			catch (NotSupportedException notSupportedException)
-			{
-				// Shapefiles throw a NotSupportedException
-				_msg.Debug("Subtypes not supported", notSupportedException);
-
 				return null;
 			}
-		}
 
-		[CanBeNull]
-		public static int? GetDefaultSubtypeCode(Table table)
+			return defaultSubtypeCode;
+		}
+		catch (NotSupportedException)
 		{
-			if (table is null) return null;
-
-			using (var definition = table.GetDefinition())
-			{
-				return GetDefaultSubtypeCode(definition);
-			}
+			// Shapefiles have no subtypes and throw NotSupportedException
+			return null;
 		}
+	}
 
-		[CanBeNull]
-		public static int? GetDefaultSubtypeCode(TableDefinition definition)
+	[CanBeNull]
+	public static Subtype GetDefaultSubtype(Table table)
+	{
+		if (table is null) return null;
+
+		using (var definition = table.GetDefinition())
 		{
-			if (definition is null) return null;
-
-			try
-			{
-				// GetDefaultSubtypeCode() returns -1 if no subtypes
-				int defaultSubtypeCode = definition.GetDefaultSubtypeCode();
-
-				if (defaultSubtypeCode < 0)
-				{
-					return null;
-				}
-
-				return defaultSubtypeCode;
-			}
-			catch (NotSupportedException)
-			{
-				// Shapefiles have no subtypes and throw NotSupportedException
-				return null;
-			}
+			return GetDefaultSubtype(definition);
 		}
+	}
 
-		[CanBeNull]
-		public static Subtype GetDefaultSubtype(Table table)
+	[CanBeNull]
+	public static Subtype GetDefaultSubtype(TableDefinition definition)
+	{
+		var defaultCode = GetDefaultSubtypeCode(definition);
+
+		return GetSubtype(definition, defaultCode);
+	}
+
+	[CanBeNull]
+	public static Subtype GetSubtype(Table table, int subtypeCode)
+	{
+		if (table is null) return null;
+
+		using (TableDefinition definition = table.GetDefinition())
 		{
-			if (table is null) return null;
-
-			using (var definition = table.GetDefinition())
-			{
-				return GetDefaultSubtype(definition);
-			}
+			return GetSubtype(definition, subtypeCode);
 		}
+	}
 
-		[CanBeNull]
-		public static Subtype GetDefaultSubtype(TableDefinition definition)
+	[CanBeNull]
+	public static Subtype GetSubtype(TableDefinition definition, int? subtypeCode)
+	{
+		if (definition is null) return null;
+		if (subtypeCode == null) return null;
+
+		try
 		{
-			var defaultCode = GetDefaultSubtypeCode(definition);
-
-			return GetSubtype(definition, defaultCode);
+			// GetSubtypes() returns an empty list if no subtypes
+			var subtypes = definition.GetSubtypes();
+			return subtypes.FirstOrDefault(st => st.GetCode() == subtypeCode);
 		}
-
-		[CanBeNull]
-		public static Subtype GetSubtype(Table table, int subtypeCode)
+		catch (NotSupportedException)
 		{
-			if (table is null) return null;
-
-			using (TableDefinition definition = table.GetDefinition())
-			{
-				return GetSubtype(definition, subtypeCode);
-			}
+			// Shapefiles have no subtypes and throw NotSupportedException
+			return null;
 		}
+	}
 
-		[CanBeNull]
-		public static Subtype GetSubtype(TableDefinition definition, int? subtypeCode)
+	[NotNull]
+	public static string ToString([NotNull] Subtype subtype)
+	{
+		string name;
+		try
 		{
-			if (definition is null) return null;
-			if (subtypeCode == null) return null;
-
-			try
-			{
-				// GetSubtypes() returns an empty list if no subtypes
-				var subtypes = definition.GetSubtypes();
-				return subtypes.FirstOrDefault(st => st.GetCode() == subtypeCode);
-			}
-			catch (NotSupportedException)
-			{
-				// Shapefiles have no subtypes and throw NotSupportedException
-				return null;
-			}
+			name = subtype.GetName();
 		}
-
-		[NotNull]
-		public static string ToString([NotNull] Subtype subtype)
+		catch (Exception e)
 		{
-			string name;
-			try
-			{
-				name = subtype.GetName();
-			}
-			catch (Exception e)
-			{
-				name = $"[error getting Name: {e.Message}]";
-			}
-
-			string code;
-			try
-			{
-				code = subtype.GetCode().ToString(CultureInfo.InvariantCulture);
-			}
-			catch (Exception e)
-			{
-				code = $"[error getting Code: {e.Message}]";
-			}
-
-			return $"name={name} code={code}";
+			name = $"[error getting Name: {e.Message}]";
 		}
 
-		[CanBeNull]
-		public static SpatialReference GetSpatialReference(Feature feature)
+		string code;
+		try
 		{
-			using var featureClass = feature?.GetTable();
-			return GetSpatialReference(featureClass);
+			code = subtype.GetCode().ToString(CultureInfo.InvariantCulture);
 		}
-
-		[CanBeNull]
-		public static SpatialReference GetSpatialReference(this FeatureClass featureClass)
+		catch (Exception e)
 		{
-			using var definition = featureClass?.GetDefinition();
-			return definition?.GetSpatialReference();
+			code = $"[error getting Code: {e.Message}]";
 		}
 
-		public static GeometryType GetShapeType(this FeatureClass featureClass)
+		return $"name={name} code={code}";
+	}
+
+	[CanBeNull]
+	public static SpatialReference GetSpatialReference(Feature feature)
+	{
+		using var featureClass = feature?.GetTable();
+		return GetSpatialReference(featureClass);
+	}
+
+	[CanBeNull]
+	public static SpatialReference GetSpatialReference(this FeatureClass featureClass)
+	{
+		using var definition = featureClass?.GetDefinition();
+		return definition?.GetSpatialReference();
+	}
+
+	public static GeometryType GetShapeType(this FeatureClass featureClass)
+	{
+		using var definition = featureClass?.GetDefinition();
+		return definition?.GetShapeType() ?? GeometryType.Unknown;
+	}
+
+	/// <summary>See <see cref="IsVersioned(Dataset, out bool)"/></summary>
+	public static bool IsVersioned(this Dataset dataset)
+	{
+		return dataset.IsVersioned(out _);
+	}
+
+	/// <returns>true iff the given dataset is registered as versioned
+	/// (with or without the option to move edits to base table)</returns>
+	public static bool IsVersioned(this Dataset dataset, out bool withMoveToBase)
+	{
+		if (dataset is null)
+			throw new ArgumentNullException(nameof(dataset));
+
+		var registrationType = dataset.GetRegistrationType();
+
+		withMoveToBase = registrationType == RegistrationType.VersionedWithMoveToBase;
+
+		return registrationType != RegistrationType.Nonversioned;
+	}
+
+	public static T GetDatasetDefinition<T>(Datastore datastore, string datasetName)
+		where T : Definition
+	{
+		if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
-			using var definition = featureClass?.GetDefinition();
-			return definition?.GetShapeType() ?? GeometryType.Unknown;
+			return geodatabase.GetDefinition<T>(datasetName);
 		}
 
-		public static T GetDatasetDefinition<T>(Datastore datastore, string datasetName)
-			where T : Definition
+		if (datastore is FileSystemDatastore fsDatastore)
+		{
+			return fsDatastore.GetDefinition<T>(datasetName);
+		}
+
+		throw new ArgumentOutOfRangeException(
+			$"Unsupported datastore type: {datastore.GetConnectionString()}.");
+	}
+
+	/// <exception cref="ArgumentOutOfRangeException">Datastore is not Geodatabase nor
+	/// FileSystemDatastore (Shapefile)</exception>
+	/// <exception cref="GeodatabaseTableException">Table was not found</exception>
+	public static T OpenDataset<T>([NotNull] Datastore datastore, [NotNull] string datasetName)
+		where T : Dataset
+	{
+		Assert.ArgumentNotNull(datastore, nameof(datastore));
+
+		try
 		{
 			if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
 			{
-				return geodatabase.GetDefinition<T>(datasetName);
+				return geodatabase.OpenDataset<T>(datasetName);
 			}
 
 			if (datastore is FileSystemDatastore fsDatastore)
 			{
-				return fsDatastore.GetDefinition<T>(datasetName);
+				return fsDatastore.OpenDataset<T>(datasetName);
 			}
 
-			throw new ArgumentOutOfRangeException(
-				$"Unsupported datastore type: {datastore.GetConnectionString()}.");
-		}
-
-		/// <exception cref="ArgumentOutOfRangeException">Datastore is not Geodatabase nor
-		/// FileSystemDatastore (Shapefile)</exception>
-		/// <exception cref="GeodatabaseTableException">Table was not found</exception>
-		public static T OpenDataset<T>([NotNull] Datastore datastore, [NotNull] string datasetName)
-			where T : Dataset
-		{
-			Assert.ArgumentNotNull(datastore, nameof(datastore));
-
-			try
+			if (datastore is PluginDatastore pluginDatastore)
 			{
-				if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
-				{
-					return geodatabase.OpenDataset<T>(datasetName);
-				}
-
-				if (datastore is FileSystemDatastore fsDatastore)
-				{
-					return fsDatastore.OpenDataset<T>(datasetName);
-				}
-
-				if (datastore is PluginDatastore pluginDatastore)
-				{
-					Table table = pluginDatastore.OpenTable(datasetName);
-					return Assert.NotNull(table as T);
-				}
-			}
-			catch (GeodatabaseTableException ex)
-			{
-				// dataset does not exist
-				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
-				_msg.Debug($"Failed to open {datasetName} from {displayText}: {ex.Message}", ex);
-				throw;
-			}
-			catch (AssertionException ex)
-			{
-				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
-				_msg.Debug(
-					$"Failed to open {datasetName} from {displayText}: Invalid Dataset type for PluginDatastore: {nameof(T)}",
-					ex);
-				throw;
-			}
-			catch (Exception ex)
-			{
-				string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
-				_msg.Debug($"Error opening dataset {datasetName} from {displayText}: {ex.Message}");
-				throw;
-			}
-
-			throw new ArgumentOutOfRangeException(
-				$"Unsupported datastore type: {datastore.GetConnectionString()}");
-		}
-
-		public static bool TryOpenDataset<T>([NotNull] Datastore datastore,
-		                                     [NotNull] string datasetName,
-		                                     [CanBeNull] out T dataset)
-			where T : Dataset
-		{
-			dataset = null;
-
-			try
-			{
-				dataset = OpenDataset<T>(datastore, datasetName);
-				return true;
-			}
-			catch (Exception ex)
-			{
-				_msg.Debug(ex.Message, ex);
-			}
-
-			return false;
-		}
-
-		public static FeatureClass OpenOrCreateFeatureClass(
-			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
-			[NotNull] string datasetName,
-			[NotNull] List<FieldDescription> fieldDescription,
-			[NotNull] GeometryType geometryType,
-			[NotNull] SpatialReference spatialReference)
-		{
-			TryOpenDataset<FeatureClass>(geodatabase, datasetName, out var fc);
-			if (fc != null)
-			{
-				if (! ValidateSchema(fc, geometryType, fieldDescription, spatialReference))
-				{
-					throw new ArgumentException(
-						$"Feature class {datasetName} already exists but has an incompatible schema.");
-				}
-
-				return fc;
-			}
-
-			return CreateFeatureClass(geodatabase, datasetName, fieldDescription, geometryType,
-			                          spatialReference);
-		}
-
-		private static bool ValidateSchema(FeatureClass featureClass,
-		                                   GeometryType expectedGeometryType,
-		                                   List<FieldDescription> expectedFields,
-		                                   SpatialReference spatialReference)
-		{
-			using (FeatureClassDefinition definition = featureClass.GetDefinition())
-			{
-				if (definition.GetShapeType() != expectedGeometryType)
-				{
-					return false;
-				}
-
-				if (! definition.GetSpatialReference().IsEqual(spatialReference))
-				{
-					return false;
-				}
-
-				var existingFields = definition.GetFields();
-
-				foreach (var expectedField in expectedFields)
-				{
-					var existingField = existingFields.FirstOrDefault(f =>
-							f.Name.Equals(expectedField.Name, StringComparison.OrdinalIgnoreCase));
-
-					if (existingField == null || existingField.FieldType != expectedField.FieldType)
-					{
-						return false;
-					}
-				}
-
-				return true;
+				Table table = pluginDatastore.OpenTable(datasetName);
+				return Assert.NotNull(table as T);
 			}
 		}
-
-		public static FeatureClass CreateFeatureClass(
-			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
-			[NotNull] string datasetName,
-			[NotNull] List<FieldDescription> fieldDescription,
-			[NotNull] GeometryType geometryType,
-			[NotNull] SpatialReference spatialReference,
-			[NotNull] bool hasZ = true)
+		catch (GeodatabaseTableException ex)
 		{
-			var shapeFieldDescription = new ShapeDescription(geometryType, spatialReference)
-			                            {
-				                            HasZ = hasZ
-			                            };
-			var featureClassDescription = new FeatureClassDescription(datasetName,
-				fieldDescription,
-				shapeFieldDescription);
-
-			SchemaBuilder schemaBuilder = new SchemaBuilder(geodatabase);
-			schemaBuilder.Create(featureClassDescription);
-			bool success = schemaBuilder.Build();
-
-			if (! success)
-			{
-				throw new Exception($"Failed to create feature class {datasetName}");
-			}
-
-			// Open and return the newly created feature class
-			return geodatabase.OpenDataset<FeatureClass>(datasetName);
+			// dataset does not exist
+			string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+			_msg.Debug($"Failed to open {datasetName} from {displayText}: {ex.Message}", ex);
+			throw;
+		}
+		catch (AssertionException ex)
+		{
+			string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+			_msg.Debug(
+				$"Failed to open {datasetName} from {displayText}: Invalid Dataset type for PluginDatastore: {nameof(T)}",
+				ex);
+			throw;
+		}
+		catch (Exception ex)
+		{
+			string displayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+			_msg.Debug($"Error opening dataset {datasetName} from {displayText}: {ex.Message}");
+			throw;
 		}
 
-		public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,
-		                                            ICollection<string> tableNames)
-		{
-			foreach (string name in geodatabase.GetDefinitions<TableDefinition>()
-			                                   .Select(definition => definition.GetName())
-			                                   .Where(tableNames.Contains))
-			{
-				yield return geodatabase.OpenDataset<Table>(name);
-			}
+		throw new ArgumentOutOfRangeException(
+			$"Unsupported datastore type: {datastore.GetConnectionString()}");
+	}
 
-			foreach (string name in geodatabase.GetDefinitions<FeatureClassDefinition>()
-			                                   .Select(definition => definition.GetName())
-			                                   .Where(tableNames.Contains))
-			{
-				yield return geodatabase.OpenDataset<Table>(name);
-			}
+	public static bool TryOpenDataset<T>([NotNull] Datastore datastore,
+	                                     [NotNull] string datasetName,
+	                                     [CanBeNull] out T dataset)
+		where T : Dataset
+	{
+		dataset = null;
+
+		try
+		{
+			dataset = OpenDataset<T>(datastore, datasetName);
+			return true;
+		}
+		catch (Exception ex)
+		{
+			_msg.Debug(ex.Message, ex);
 		}
 
-		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
-		public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
-			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
-			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		return false;
+	}
+
+	public static FeatureClass OpenOrCreateFeatureClass(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] string datasetName,
+		[NotNull] List<FieldDescription> fieldDescription,
+		[NotNull] GeometryType geometryType,
+		[NotNull] SpatialReference spatialReference)
+	{
+		TryOpenDataset<FeatureClass>(geodatabase, datasetName, out var fc);
+		if (fc != null)
 		{
-			foreach (RelationshipClassDefinition definition in geodatabase
-				         .GetDefinitions<RelationshipClassDefinition>())
+			if (! ValidateSchema(fc, geometryType, fieldDescription, spatialReference))
 			{
-				if (predicate is null || predicate(definition))
-				{
-					yield return definition;
-				}
+				throw new ArgumentException(
+					$"Feature class {datasetName} already exists but has an incompatible schema.");
 			}
 
-			foreach (AttributedRelationshipClassDefinition definition in
-			         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
-			{
-				if (predicate is null || predicate(definition))
-				{
-					yield return definition;
-				}
-			}
+			return fc;
 		}
 
-		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
-		public static IEnumerable<RelationshipClass> GetRelationshipClasses(
-			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
-			[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+		return CreateFeatureClass(geodatabase, datasetName, fieldDescription, geometryType,
+		                          spatialReference);
+	}
+
+	private static bool ValidateSchema(FeatureClass featureClass,
+	                                   GeometryType expectedGeometryType,
+	                                   List<FieldDescription> expectedFields,
+	                                   SpatialReference spatialReference)
+	{
+		using (FeatureClassDefinition definition = featureClass.GetDefinition())
 		{
-			foreach (RelationshipClassDefinition definition in
-			         GetRelationshipClassDefinitions(geodatabase, predicate))
-			{
-				yield return geodatabase.OpenDataset<RelationshipClass>(
-					definition.GetName());
-
-				definition.Dispose();
-			}
-		}
-
-		[Obsolete($"use {nameof(RelationshipClassUtils)}")]
-		public static RelationshipClass OpenRelationshipClass(
-			[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
-			[NotNull] string relClassName)
-		{
-			return OpenDataset<RelationshipClass>(geodatabase, relClassName);
-		}
-
-		public static bool IsSameTable(Table fc1, Table fc2)
-		{
-			if (ReferenceEquals(fc1, fc2)) return true;
-
-			if (fc1 == null || fc2 == null) return false;
-
-			if (Equals(fc1.Handle, fc2.Handle)) return true;
-
-			var id1 = fc1.GetID();
-			var id2 = fc2.GetID();
-			if (id1 != id2) return false;
-			if (id1 >= 0) return true;
-
-			// table id is negative for tables not registered with the Geodatabase
-			// compare table name and workspace -- for now, give up and assume not same
-
-			return false;
-		}
-
-		/// <summary>
-		/// Determine if two object classes are the same in the sense
-		/// that they refer to the same database table, ignoring versions.
-		/// </summary>
-		/// <param name="class1">The first object class.</param>
-		/// <param name="class2">The other object class.</param>
-		/// <returns>
-		/// true if the two object classes are the same; otherwise, false.
-		/// </returns>
-		public static bool IsSameObjectClass([NotNull] FeatureClass class1,
-		                                     [NotNull] FeatureClass class2)
-		{
-			Assert.ArgumentNotNull(class1, nameof(class1));
-			Assert.ArgumentNotNull(class2, nameof(class2));
-
-			// Test for reference-equals in real ArcObjects object class instances but also allow
-			// synthetic and mock feature classes to provide their own equality implementation:
-			if (class1.Equals(class2))
-			{
-				return true;
-			}
-
-			if (class1.GetID() != class2.GetID())
+			if (definition.GetShapeType() != expectedGeometryType)
 			{
 				return false;
 			}
 
-			var dataset1 = class1.GetFeatureDataset();
-			var dataset2 = class2.GetFeatureDataset();
-
-			if (! dataset1.GetName().Equals(dataset2.GetName()))
+			if (! definition.GetSpatialReference().IsEqual(spatialReference))
 			{
 				return false;
 			}
 
-			// class id and names are equal; could still be different db instances
+			var existingFields = definition.GetFields();
 
-			return WorkspaceUtils.IsSameDatastore(dataset1.GetDatastore(), dataset2.GetDatastore());
-		}
-
-		public static IEnumerable<Table> Distinct(
-			[NotNull] IEnumerable<Table> tables)
-		{
-			return tables.Distinct(new TableComparer());
-		}
-
-		/// <summary>
-		/// Returns the actual table as it exists in the geodatabase, given a joined table.
-		/// </summary>
-		/// <param name="tableWithJoin"></param>
-		/// <returns></returns>
-		/// <exception cref="NotImplementedException"></exception>
-		public static Table GetDatabaseTable([NotNull] Table tableWithJoin)
-		{
-			if (! tableWithJoin.IsJoinedTable())
+			foreach (var expectedField in expectedFields)
 			{
-				return tableWithJoin;
-			}
+				var existingField = existingFields.FirstOrDefault(f =>
+						f.Name.Equals(expectedField.Name, StringComparison.OrdinalIgnoreCase));
 
-			if (tableWithJoin is FeatureClass featureClass)
-			{
-				return GetDatabaseFeatureClass(featureClass);
-			}
-
-			// Extract the shape's table name from the (fully qualified) shape field name:
-			TableDefinition definition = tableWithJoin.GetDefinition();
-
-			if (! definition.HasObjectID())
-			{
-				throw new NotImplementedException(
-					"Unable to determine the main table without OBJECTID");
-			}
-
-			string oidField = definition.GetObjectIDField();
-
-			return GetGdbTableContainingField(tableWithJoin, oidField);
-		}
-
-		/// <summary>
-		/// Returns the actual feature class as it exists in the geodatabase, given a joined
-		/// feature class.
-		/// </summary>
-		/// <param name="featureClassWithJoin"></param>
-		/// <returns></returns>
-		/// <exception cref="InvalidOperationException"></exception>
-		public static FeatureClass GetDatabaseFeatureClass(
-			[NotNull] FeatureClass featureClassWithJoin)
-		{
-			if (! featureClassWithJoin.IsJoinedTable())
-			{
-				return featureClassWithJoin;
-			}
-
-			// Extract the shape's table name from the (fully qualified) shape field name:
-			string shapeField = featureClassWithJoin.GetDefinition().GetShapeField();
-
-			return GetGdbTableContainingField(featureClassWithJoin, shapeField);
-		}
-
-		/// <summary>
-		/// Returns the actual database tables from a joined table or, if the table is not a joined
-		/// table, the table itself.
-		/// </summary>
-		/// <param name="table">The potentially joined table</param>
-		/// <returns></returns>
-		public static IEnumerable<Table> GetDatabaseTables([NotNull] Table table)
-		{
-			if (! table.IsJoinedTable())
-			{
-				yield return table;
-				yield break;
-			}
-
-			Join join = table.GetJoin();
-
-			Table originTable = join.GetOriginTable();
-
-			foreach (Table sourceTable in GetDatabaseTables(originTable))
-			{
-				yield return sourceTable;
-			}
-
-			Table destinationTable = join.GetDestinationTable();
-
-			foreach (Table sourceTable in GetDatabaseTables(destinationTable))
-			{
-				yield return sourceTable;
-			}
-		}
-
-		public static bool HasM([NotNull] FeatureClass featureClass)
-		{
-			using var definition = featureClass.GetDefinition();
-			return definition.HasM();
-		}
-
-		public static bool HasZ([NotNull] FeatureClass featureClass)
-		{
-			using var definition = featureClass.GetDefinition();
-			return definition.HasZ();
-		}
-
-		[CanBeNull]
-		public static string GetAreaFieldName([CanBeNull] FeatureClass featureClass)
-		{
-			if (featureClass is null) return null;
-
-			using var definition = featureClass.GetDefinition();
-			return GetAreaFieldName(definition);
-		}
-
-		[CanBeNull]
-		public static string GetAreaFieldName(
-			[NotNull] FeatureClassDefinition featureClassDefinition)
-		{
-			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
-
-			try
-			{
-				string areaFieldName = featureClassDefinition.GetAreaField();
-
-				return areaFieldName;
-			}
-			catch (NotImplementedException)
-			{
-				// TODO: Verify this
-				// property is not implemented for feature classes from non-Gdb workspaces 
-				// ("query layers")
-				return null;
-			}
-		}
-
-		[CanBeNull]
-		public static string GetLengthFieldName([CanBeNull] FeatureClass featureClass)
-		{
-			if (featureClass is null) return null;
-
-			using (var definition = featureClass.GetDefinition())
-			{
-				return GetLengthFieldName(definition);
-			}
-		}
-
-		public static string GetLengthFieldName(
-			[NotNull] FeatureClassDefinition featureClassDefinition)
-		{
-			Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
-
-			try
-			{
-				string lengthFieldName = featureClassDefinition.GetLengthField();
-
-				return lengthFieldName;
-			}
-			catch (NotImplementedException)
-			{
-				// TODO: Verify this, especially the type of exception
-				// property is not implemented for feature classes from non-Gdb workspaces 
-				// ("query layers")
-				return null;
-			}
-		}
-
-		/// <summary>
-		/// Gets the name of the subtype field in a given table.
-		/// </summary>
-		/// <param name="table">The table.</param>
-		/// <returns>The name of the subtype field, or null
-		/// if the table has no subtype field.</returns>
-		[CanBeNull]
-		public static string GetSubtypeFieldName([NotNull] Table table)
-		{
-			using (var definition = table.GetDefinition())
-			{
-				return GetSubtypeFieldName(definition);
-			}
-		}
-
-		[CanBeNull]
-		public static string GetSubtypeFieldName([NotNull] TableDefinition definition)
-		{
-			try
-			{
-				// GetSubtypeField() returns an empty string if no subtypes
-				string fieldName = definition.GetSubtypeField();
-
-				return string.IsNullOrEmpty(fieldName)
-					       ? null
-					       : fieldName;
-			}
-			catch (NotSupportedException notSupportedException)
-			{
-				// Shapefiles throw a NotSupportedException
-				_msg.Debug("Subtypes not supported", notSupportedException);
-
-				return null;
-			}
-		}
-
-		/// <summary>
-		/// Gets the index of the subtype field in a given table.
-		/// </summary>
-		/// <param name="table">The table.</param>
-		/// <returns>The index of the subtype field, or -1 
-		/// if the table has no subtype field.</returns>
-		public static int GetSubtypeFieldIndex([NotNull] Table table)
-		{
-			using var definition = table.GetDefinition();
-			return GetSubtypeFieldIndex(definition);
-		}
-
-		public static int GetSubtypeFieldIndex([NotNull] TableDefinition definition)
-		{
-			string subtypeFieldName = GetSubtypeFieldName(definition);
-
-			return string.IsNullOrEmpty(subtypeFieldName)
-				       ? -1
-				       : definition.FindField(subtypeFieldName);
-		}
-
-		/// <summary>
-		/// Gets the name of the object id field in a given table.
-		/// </summary>
-		/// <param name="table">The table.</param>
-		/// <returns>The name of the objectId field, or null
-		/// if the table has no objectId field.</returns>
-		[CanBeNull]
-		public static string GetObjectIdFieldName([NotNull] Table table)
-		{
-			using var definition = table.GetDefinition();
-			return GetObjectIdFieldName(definition);
-		}
-
-		[CanBeNull]
-		public static string GetObjectIdFieldName([NotNull] TableDefinition definition)
-		{
-			if (! definition.HasObjectID())
-			{
-				return null;
-			}
-
-			return definition.GetObjectIDField();
-		}
-
-		/// <summary>
-		/// Deletes rows in a table based on a collection of object IDs.
-		/// </summary>
-		/// <param name="table">The table.</param>
-		/// <param name="oids">The oids.</param>
-		public static void DeleteRows([NotNull] Table table,
-		                              [NotNull] IEnumerable oids)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-			Assert.ArgumentNotNull(oids, nameof(oids));
-
-			const int maxLength = 1000;
-
-			var sb = new StringBuilder();
-
-			foreach (object oidObj in oids)
-			{
-				// Convert the (potentially boxed int) object:
-				long oid = Convert.ToInt64(oidObj);
-
-				if (sb.Length == 0)
+				if (existingField == null || existingField.FieldType != expectedField.FieldType)
 				{
-					sb.Append(oid);
-				}
-				else if (sb.Length < maxLength)
-				{
-					sb.AppendFormat(",{0}", oid);
-				}
-				else
-				{
-					// maximum exceeded, delete current oid list
-					DeleteRowsByOIDString(table, sb.ToString());
-
-					// clear string builder
-					sb.Remove(0, sb.Length);
+					return false;
 				}
 			}
 
-			if (sb.Length > 0)
+			return true;
+		}
+	}
+
+	public static FeatureClass CreateFeatureClass(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] string datasetName,
+		[NotNull] List<FieldDescription> fieldDescription,
+		[NotNull] GeometryType geometryType,
+		[NotNull] SpatialReference spatialReference,
+		[NotNull] bool hasZ = true)
+	{
+		var shapeFieldDescription = new ShapeDescription(geometryType, spatialReference)
+		                            {
+			                            HasZ = hasZ
+		                            };
+		var featureClassDescription = new FeatureClassDescription(datasetName,
+			fieldDescription,
+			shapeFieldDescription);
+
+		SchemaBuilder schemaBuilder = new SchemaBuilder(geodatabase);
+		schemaBuilder.Create(featureClassDescription);
+		bool success = schemaBuilder.Build();
+
+		if (! success)
+		{
+			throw new Exception($"Failed to create feature class {datasetName}");
+		}
+
+		// Open and return the newly created feature class
+		return geodatabase.OpenDataset<FeatureClass>(datasetName);
+	}
+
+	public static IEnumerable<Table> OpenTables(ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                            ICollection<string> tableNames)
+	{
+		foreach (string name in geodatabase.GetDefinitions<TableDefinition>()
+		                                   .Select(definition => definition.GetName())
+		                                   .Where(tableNames.Contains))
+		{
+			yield return geodatabase.OpenDataset<Table>(name);
+		}
+
+		foreach (string name in geodatabase.GetDefinitions<FeatureClassDefinition>()
+		                                   .Select(definition => definition.GetName())
+		                                   .Where(tableNames.Contains))
+		{
+			yield return geodatabase.OpenDataset<Table>(name);
+		}
+	}
+
+	[Obsolete($"use {nameof(RelationshipClassUtils)}")]
+	public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+	{
+		foreach (RelationshipClassDefinition definition in geodatabase
+			         .GetDefinitions<RelationshipClassDefinition>())
+		{
+			if (predicate is null || predicate(definition))
 			{
-				DeleteRowsByOIDString(table, sb.ToString());
+				yield return definition;
 			}
 		}
 
-		/// <summary>
-		/// Returns the index of the field in <paramref name="fields"/> matching the 
-		/// <paramref name="field"/> or -1 if no match was found.
-		/// </summary>
-		/// <param name="field">The field to match</param>
-		/// <param name="fields">The fields to search</param>
-		/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
-		/// Only the main domain of the field will be compared. Domains varying by subtype are ignored.</param>
-		/// <returns></returns>
-		public static int FindMatchingFieldIndex([NotNull] Field field,
-		                                         [NotNull] IReadOnlyList<Field> fields,
-		                                         bool requireMatchingDomainNames = true)
+		foreach (AttributedRelationshipClassDefinition definition in
+		         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
 		{
-			return FindMatchingFieldIndex(field, fields, string.Empty, requireMatchingDomainNames);
+			if (predicate is null || predicate(definition))
+			{
+				yield return definition;
+			}
+		}
+	}
+
+	[Obsolete($"use {nameof(RelationshipClassUtils)}")]
+	public static IEnumerable<RelationshipClass> GetRelationshipClasses(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+	{
+		foreach (RelationshipClassDefinition definition in
+		         GetRelationshipClassDefinitions(geodatabase, predicate))
+		{
+			yield return geodatabase.OpenDataset<RelationshipClass>(
+				definition.GetName());
+
+			definition.Dispose();
+		}
+	}
+
+	[Obsolete($"use {nameof(RelationshipClassUtils)}")]
+	public static RelationshipClass OpenRelationshipClass(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] string relClassName)
+	{
+		return OpenDataset<RelationshipClass>(geodatabase, relClassName);
+	}
+
+	public static bool IsSameTable(Table fc1, Table fc2)
+	{
+		if (ReferenceEquals(fc1, fc2)) return true;
+
+		if (fc1 == null || fc2 == null) return false;
+
+		if (Equals(fc1.Handle, fc2.Handle)) return true;
+
+		var id1 = fc1.GetID();
+		var id2 = fc2.GetID();
+		if (id1 != id2) return false;
+		if (id1 >= 0) return true;
+
+		// table id is negative for tables not registered with the Geodatabase
+		// compare table name and workspace -- for now, give up and assume not same
+
+		return false;
+	}
+
+	/// <summary>
+	/// Determine if two object classes are the same in the sense
+	/// that they refer to the same database table, ignoring versions.
+	/// </summary>
+	/// <param name="class1">The first object class.</param>
+	/// <param name="class2">The other object class.</param>
+	/// <returns>
+	/// true if the two object classes are the same; otherwise, false.
+	/// </returns>
+	public static bool IsSameObjectClass([NotNull] FeatureClass class1,
+	                                     [NotNull] FeatureClass class2)
+	{
+		Assert.ArgumentNotNull(class1, nameof(class1));
+		Assert.ArgumentNotNull(class2, nameof(class2));
+
+		// Test for reference-equals in real ArcObjects object class instances but also allow
+		// synthetic and mock feature classes to provide their own equality implementation:
+		if (class1.Equals(class2))
+		{
+			return true;
 		}
 
-		/// <summary>
-		/// Returns the index of the field in <paramref name="fields"/> matching the 
-		/// <paramref name="field"/> or -1 if no match was found.
-		/// </summary>
-		/// <param name="field">The field whose properties must match.</param>
-		/// <param name="fields">The fields in which the field is searched.</param>
-		/// <param name="tableName">Only match fields in the fields list, that start with the
-		/// specified table name.</param>
-		/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
-		/// Only the main domain of the field will be compared. Domains varying by subtype are
-		/// ignored.</param>
-		/// <returns></returns>
-		public static int FindMatchingFieldIndex([NotNull] Field field,
-		                                         [NotNull] IReadOnlyList<Field> fields,
-		                                         [CanBeNull] string tableName,
-		                                         bool requireMatchingDomainNames = true)
+		if (class1.GetID() != class2.GetID())
 		{
-			Assert.ArgumentNotNull(field, nameof(field));
-			Assert.ArgumentNotNull(fields, nameof(fields));
+			return false;
+		}
 
-			FieldType fieldType = field.FieldType;
+		var dataset1 = class1.GetFeatureDataset();
+		var dataset2 = class2.GetFeatureDataset();
 
-			string targetFieldName;
-			if (string.IsNullOrEmpty(tableName))
+		if (! dataset1.GetName().Equals(dataset2.GetName()))
+		{
+			return false;
+		}
+
+		// class id and names are equal; could still be different db instances
+
+		return WorkspaceUtils.IsSameDatastore(dataset1.GetDatastore(), dataset2.GetDatastore());
+	}
+
+	public static IEnumerable<Table> Distinct(
+		[NotNull] IEnumerable<Table> tables)
+	{
+		return tables.Distinct(new TableComparer());
+	}
+
+	/// <summary>
+	/// Returns the actual table as it exists in the geodatabase, given a joined table.
+	/// </summary>
+	/// <param name="tableWithJoin"></param>
+	/// <returns></returns>
+	/// <exception cref="NotImplementedException"></exception>
+	public static Table GetDatabaseTable([NotNull] Table tableWithJoin)
+	{
+		if (! tableWithJoin.IsJoinedTable())
+		{
+			return tableWithJoin;
+		}
+
+		if (tableWithJoin is FeatureClass featureClass)
+		{
+			return GetDatabaseFeatureClass(featureClass);
+		}
+
+		// Extract the shape's table name from the (fully qualified) shape field name:
+		TableDefinition definition = tableWithJoin.GetDefinition();
+
+		if (! definition.HasObjectID())
+		{
+			throw new NotImplementedException(
+				"Unable to determine the main table without OBJECTID");
+		}
+
+		string oidField = definition.GetObjectIDField();
+
+		return GetGdbTableContainingField(tableWithJoin, oidField);
+	}
+
+	/// <summary>
+	/// Returns the actual feature class as it exists in the geodatabase, given a joined
+	/// feature class.
+	/// </summary>
+	/// <param name="featureClassWithJoin"></param>
+	/// <returns></returns>
+	/// <exception cref="InvalidOperationException"></exception>
+	public static FeatureClass GetDatabaseFeatureClass(
+		[NotNull] FeatureClass featureClassWithJoin)
+	{
+		if (! featureClassWithJoin.IsJoinedTable())
+		{
+			return featureClassWithJoin;
+		}
+
+		// Extract the shape's table name from the (fully qualified) shape field name:
+		string shapeField = featureClassWithJoin.GetDefinition().GetShapeField();
+
+		return GetGdbTableContainingField(featureClassWithJoin, shapeField);
+	}
+
+	/// <summary>
+	/// Returns the actual database tables from a joined table or, if the table is not a joined
+	/// table, the table itself.
+	/// </summary>
+	/// <param name="table">The potentially joined table</param>
+	/// <returns></returns>
+	public static IEnumerable<Table> GetDatabaseTables([NotNull] Table table)
+	{
+		if (! table.IsJoinedTable())
+		{
+			yield return table;
+			yield break;
+		}
+
+		Join join = table.GetJoin();
+
+		Table originTable = join.GetOriginTable();
+
+		foreach (Table sourceTable in GetDatabaseTables(originTable))
+		{
+			yield return sourceTable;
+		}
+
+		Table destinationTable = join.GetDestinationTable();
+
+		foreach (Table sourceTable in GetDatabaseTables(destinationTable))
+		{
+			yield return sourceTable;
+		}
+	}
+
+	public static bool HasM([NotNull] FeatureClass featureClass)
+	{
+		using var definition = featureClass.GetDefinition();
+		return definition.HasM();
+	}
+
+	public static bool HasZ([NotNull] FeatureClass featureClass)
+	{
+		using var definition = featureClass.GetDefinition();
+		return definition.HasZ();
+	}
+
+	[CanBeNull]
+	public static string GetAreaFieldName([CanBeNull] FeatureClass featureClass)
+	{
+		if (featureClass is null) return null;
+
+		using var definition = featureClass.GetDefinition();
+		return GetAreaFieldName(definition);
+	}
+
+	[CanBeNull]
+	public static string GetAreaFieldName(
+		[NotNull] FeatureClassDefinition featureClassDefinition)
+	{
+		Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+		try
+		{
+			string areaFieldName = featureClassDefinition.GetAreaField();
+
+			return areaFieldName;
+		}
+		catch (NotImplementedException)
+		{
+			// TODO: Verify this
+			// property is not implemented for feature classes from non-Gdb workspaces 
+			// ("query layers")
+			return null;
+		}
+	}
+
+	[CanBeNull]
+	public static string GetLengthFieldName([CanBeNull] FeatureClass featureClass)
+	{
+		if (featureClass is null) return null;
+
+		using (var definition = featureClass.GetDefinition())
+		{
+			return GetLengthFieldName(definition);
+		}
+	}
+
+	public static string GetLengthFieldName(
+		[NotNull] FeatureClassDefinition featureClassDefinition)
+	{
+		Assert.ArgumentNotNull(featureClassDefinition, nameof(featureClassDefinition));
+
+		try
+		{
+			string lengthFieldName = featureClassDefinition.GetLengthField();
+
+			return lengthFieldName;
+		}
+		catch (NotImplementedException)
+		{
+			// TODO: Verify this, especially the type of exception
+			// property is not implemented for feature classes from non-Gdb workspaces 
+			// ("query layers")
+			return null;
+		}
+	}
+
+	/// <summary>
+	/// Gets the name of the subtype field in a given table.
+	/// </summary>
+	/// <param name="table">The table.</param>
+	/// <returns>The name of the subtype field, or null
+	/// if the table has no subtype field.</returns>
+	[CanBeNull]
+	public static string GetSubtypeFieldName([NotNull] Table table)
+	{
+		using (var definition = table.GetDefinition())
+		{
+			return GetSubtypeFieldName(definition);
+		}
+	}
+
+	[CanBeNull]
+	public static string GetSubtypeFieldName([NotNull] TableDefinition definition)
+	{
+		try
+		{
+			// GetSubtypeField() returns an empty string if no subtypes
+			string fieldName = definition.GetSubtypeField();
+
+			return string.IsNullOrEmpty(fieldName)
+				       ? null
+				       : fieldName;
+		}
+		catch (NotSupportedException notSupportedException)
+		{
+			// Shapefiles throw a NotSupportedException
+			_msg.Debug("Subtypes not supported", notSupportedException);
+
+			return null;
+		}
+	}
+
+	/// <summary>
+	/// Gets the index of the subtype field in a given table.
+	/// </summary>
+	/// <param name="table">The table.</param>
+	/// <returns>The index of the subtype field, or -1 
+	/// if the table has no subtype field.</returns>
+	public static int GetSubtypeFieldIndex([NotNull] Table table)
+	{
+		using var definition = table.GetDefinition();
+		return GetSubtypeFieldIndex(definition);
+	}
+
+	public static int GetSubtypeFieldIndex([NotNull] TableDefinition definition)
+	{
+		string subtypeFieldName = GetSubtypeFieldName(definition);
+
+		return string.IsNullOrEmpty(subtypeFieldName)
+			       ? -1
+			       : definition.FindField(subtypeFieldName);
+	}
+
+	/// <summary>
+	/// Gets the name of the object id field in a given table.
+	/// </summary>
+	/// <param name="table">The table.</param>
+	/// <returns>The name of the objectId field, or null
+	/// if the table has no objectId field.</returns>
+	[CanBeNull]
+	public static string GetObjectIdFieldName([NotNull] Table table)
+	{
+		using var definition = table.GetDefinition();
+		return GetObjectIdFieldName(definition);
+	}
+
+	[CanBeNull]
+	public static string GetObjectIdFieldName([NotNull] TableDefinition definition)
+	{
+		if (! definition.HasObjectID())
+		{
+			return null;
+		}
+
+		return definition.GetObjectIDField();
+	}
+
+	/// <summary>
+	/// Deletes rows in a table based on a collection of object IDs.
+	/// </summary>
+	/// <param name="table">The table.</param>
+	/// <param name="oids">The oids.</param>
+	public static void DeleteRows([NotNull] Table table,
+	                              [NotNull] IEnumerable oids)
+	{
+		Assert.ArgumentNotNull(table, nameof(table));
+		Assert.ArgumentNotNull(oids, nameof(oids));
+
+		const int maxLength = 1000;
+
+		var sb = new StringBuilder();
+
+		foreach (object oidObj in oids)
+		{
+			// Convert the (potentially boxed int) object:
+			long oid = Convert.ToInt64(oidObj);
+
+			if (sb.Length == 0)
 			{
-				targetFieldName = field.Name;
+				sb.Append(oid);
+			}
+			else if (sb.Length < maxLength)
+			{
+				sb.AppendFormat(",{0}", oid);
 			}
 			else
 			{
-				targetFieldName = tableName + "." + field.Name;
+				// maximum exceeded, delete current oid list
+				DeleteRowsByOIDString(table, sb.ToString());
+
+				// clear string builder
+				sb.Remove(0, sb.Length);
+			}
+		}
+
+		if (sb.Length > 0)
+		{
+			DeleteRowsByOIDString(table, sb.ToString());
+		}
+	}
+
+	/// <summary>
+	/// Returns the index of the field in <paramref name="fields"/> matching the 
+	/// <paramref name="field"/> or -1 if no match was found.
+	/// </summary>
+	/// <param name="field">The field to match</param>
+	/// <param name="fields">The fields to search</param>
+	/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
+	/// Only the main domain of the field will be compared. Domains varying by subtype are ignored.</param>
+	/// <returns></returns>
+	public static int FindMatchingFieldIndex([NotNull] Field field,
+	                                         [NotNull] IReadOnlyList<Field> fields,
+	                                         bool requireMatchingDomainNames = true)
+	{
+		return FindMatchingFieldIndex(field, fields, string.Empty, requireMatchingDomainNames);
+	}
+
+	/// <summary>
+	/// Returns the index of the field in <paramref name="fields"/> matching the 
+	/// <paramref name="field"/> or -1 if no match was found.
+	/// </summary>
+	/// <param name="field">The field whose properties must match.</param>
+	/// <param name="fields">The fields in which the field is searched.</param>
+	/// <param name="tableName">Only match fields in the fields list, that start with the
+	/// specified table name.</param>
+	/// <param name="requireMatchingDomainNames"> Whether the name of the domain must match too.
+	/// Only the main domain of the field will be compared. Domains varying by subtype are
+	/// ignored.</param>
+	/// <returns></returns>
+	public static int FindMatchingFieldIndex([NotNull] Field field,
+	                                         [NotNull] IReadOnlyList<Field> fields,
+	                                         [CanBeNull] string tableName,
+	                                         bool requireMatchingDomainNames = true)
+	{
+		Assert.ArgumentNotNull(field, nameof(field));
+		Assert.ArgumentNotNull(fields, nameof(fields));
+
+		FieldType fieldType = field.FieldType;
+
+		string targetFieldName;
+		if (string.IsNullOrEmpty(tableName))
+		{
+			targetFieldName = field.Name;
+		}
+		else
+		{
+			targetFieldName = tableName + "." + field.Name;
+		}
+
+		int fieldCount = fields.Count;
+		for (var index = 0; index < fieldCount; index++)
+		{
+			Field sourceField = fields[index];
+
+			if (! targetFieldName.Equals(sourceField.Name,
+			                             StringComparison.OrdinalIgnoreCase))
+			{
+				// names don't match -> no match
+				continue;
 			}
 
-			int fieldCount = fields.Count;
-			for (var index = 0; index < fieldCount; index++)
+			if (fieldType != sourceField.FieldType)
 			{
-				Field sourceField = fields[index];
-
-				if (! targetFieldName.Equals(sourceField.Name,
-				                             StringComparison.OrdinalIgnoreCase))
+				if (string.IsNullOrEmpty(tableName))
 				{
-					// names don't match -> no match
+					// no join, types don't match --> no match
 					continue;
 				}
 
-				if (fieldType != sourceField.FieldType)
+				if (sourceField.FieldType == FieldType.OID &&
+				    fieldType == FieldType.Integer)
 				{
-					if (string.IsNullOrEmpty(tableName))
-					{
-						// no join, types don't match --> no match
-						continue;
-					}
-
-					if (sourceField.FieldType == FieldType.OID &&
-					    fieldType == FieldType.Integer)
-					{
-						// consider as match
-					}
-					else
-					{
-						continue;
-					}
+					// consider as match
 				}
-
-				if (! requireMatchingDomainNames)
+				else
 				{
-					return index;
-				}
-
-				Domain fieldDomain = field.GetDomain();
-				Domain sourceFieldDomain = sourceField.GetDomain();
-
-				if (fieldDomain == null && sourceFieldDomain == null)
-				{
-					return index;
-				}
-
-				if (fieldDomain != null && sourceFieldDomain != null &&
-				    fieldDomain.GetName().Equals(sourceFieldDomain.GetName(),
-				                                 StringComparison.OrdinalIgnoreCase))
-				{
-					return index;
+					continue;
 				}
 			}
 
-			return -1;
+			if (! requireMatchingDomainNames)
+			{
+				return index;
+			}
+
+			Domain fieldDomain = field.GetDomain();
+			Domain sourceFieldDomain = sourceField.GetDomain();
+
+			if (fieldDomain == null && sourceFieldDomain == null)
+			{
+				return index;
+			}
+
+			if (fieldDomain != null && sourceFieldDomain != null &&
+			    fieldDomain.GetName().Equals(sourceFieldDomain.GetName(),
+			                                 StringComparison.OrdinalIgnoreCase))
+			{
+				return index;
+			}
 		}
 
-		private static T GetGdbTableContainingField<T>([NotNull] T joinedTable,
-		                                               [NotNull] string qualifiedField)
-			where T : Table
+		return -1;
+	}
+
+	private static T GetGdbTableContainingField<T>([NotNull] T joinedTable,
+	                                               [NotNull] string qualifiedField)
+		where T : Table
+	{
+		List<string> tokens = qualifiedField.Split('.').ToList();
+
+		if (tokens.Count < 2)
 		{
-			List<string> tokens = qualifiedField.Split('.').ToList();
-
-			if (tokens.Count < 2)
-			{
-				throw new InvalidOperationException(
-					$"The field name {qualifiedField} is not fully qualified for joined table {joinedTable.GetName()}.");
-			}
-
-			tokens.RemoveAt(tokens.Count - 1);
-
-			string tableName = StringUtils.Concatenate(tokens, ".");
-
-			foreach (Table databaseTable in GetDatabaseTables(joinedTable))
-			{
-				if (databaseTable is T dbClassTyped &&
-				    dbClassTyped.GetName()
-				                .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
-				{
-					return dbClassTyped;
-				}
-			}
-
 			throw new InvalidOperationException(
-				$"No database table found for joined table " +
-				$"{joinedTable.GetName()} and field name {qualifiedField}");
+				$"The field name {qualifiedField} is not fully qualified for joined table {joinedTable.GetName()}.");
 		}
 
-		/// <summary>
-		/// Deletes rows in a table based on a string containing a comma-separated
-		/// list of object ids.
-		/// </summary>
-		/// <param name="table">The table.</param>
-		/// <param name="oidString">The oid string.</param>
-		private static void DeleteRowsByOIDString([NotNull] Table table,
-		                                          [NotNull] string oidString)
+		tokens.RemoveAt(tokens.Count - 1);
+
+		string tableName = StringUtils.Concatenate(tokens, ".");
+
+		foreach (Table databaseTable in GetDatabaseTables(joinedTable))
 		{
-			Assert.ArgumentNotNull(table, nameof(table));
-			Assert.ArgumentNotNullOrEmpty(oidString, nameof(oidString));
-
-			string objectIdFieldName = Assert.NotNullOrEmpty(GetObjectIdFieldName(table));
-
-			string whereClause = $"{objectIdFieldName} IN ({oidString})";
-
-			QueryFilter filter = new QueryFilter { WhereClause = whereClause };
-
-			Stopwatch watch = _msg.DebugStartTiming(
-				"Deleting rows from {0} using where clause {1}",
-				GetName(table), whereClause);
-
-			table.DeleteRows(filter);
-
-			_msg.DebugStopTiming(watch, "Rows deleted");
-		}
-
-		public static IEnumerable<Table> GetFromSameDatastore(
-			[NotNull] IEnumerable<Table> tables,
-			[NotNull] Datastore compareDatastore,
-			[NotNull] NotificationCollection notifications)
-		{
-			foreach (var table in tables)
+			if (databaseTable is T dbClassTyped &&
+			    dbClassTyped.GetName()
+			                .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
 			{
-				if (WorkspaceUtils.IsSameDatastore(table.GetDatastore(), compareDatastore))
-				{
-					yield return table;
-					continue;
-				}
-
-				notifications.Add(GetTableDisplayName(table));
+				return dbClassTyped;
 			}
+		}
+
+		throw new InvalidOperationException(
+			$"No database table found for joined table " +
+			$"{joinedTable.GetName()} and field name {qualifiedField}");
+	}
+
+	/// <summary>
+	/// Deletes rows in a table based on a string containing a comma-separated
+	/// list of object ids.
+	/// </summary>
+	/// <param name="table">The table.</param>
+	/// <param name="oidString">The oid string.</param>
+	private static void DeleteRowsByOIDString([NotNull] Table table,
+	                                          [NotNull] string oidString)
+	{
+		Assert.ArgumentNotNull(table, nameof(table));
+		Assert.ArgumentNotNullOrEmpty(oidString, nameof(oidString));
+
+		string objectIdFieldName = Assert.NotNullOrEmpty(GetObjectIdFieldName(table));
+
+		string whereClause = $"{objectIdFieldName} IN ({oidString})";
+
+		QueryFilter filter = new QueryFilter { WhereClause = whereClause };
+
+		Stopwatch watch = _msg.DebugStartTiming(
+			"Deleting rows from {0} using where clause {1}",
+			GetName(table), whereClause);
+
+		table.DeleteRows(filter);
+
+		_msg.DebugStopTiming(watch, "Rows deleted");
+	}
+
+	public static IEnumerable<Table> GetFromSameDatastore(
+		[NotNull] IEnumerable<Table> tables,
+		[NotNull] Datastore compareDatastore,
+		[NotNull] NotificationCollection notifications)
+	{
+		foreach (var table in tables)
+		{
+			if (WorkspaceUtils.IsSameDatastore(table.GetDatastore(), compareDatastore))
+			{
+				yield return table;
+				continue;
+			}
+
+			notifications.Add(GetTableDisplayName(table));
 		}
 	}
 }

@@ -12,38 +12,38 @@
         Height="480" MinHeight="256"
         Width="640" MinWidth="400"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
-  <DockPanel Margin="12">
-    <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="0,12,0,0">
-      <Button DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="60"
-              Content="Close" IsDefault="True" IsCancel="True" TabIndex="2"
-              Command="{Binding CloseCommand}"
-              CommandParameter="{Binding ElementName=AboutWindowName}"/>
-      <Button DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="60"
-              Content="Copy" TabIndex="1"
-              ToolTip="Copy to clipboard as plain text"
-              Command="{Binding CopyCommand}"
-              CommandParameter="{Binding ElementName=AboutWindowName}"/>
-    </DockPanel>
-    <TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" FontWeight="Bold" FontSize="14">
-      <Run Text="{Binding Heading}"/>
-    </TextBlock>
-    <DataGrid ItemsSource="{Binding AboutItems}" AutoGenerateColumns="False" IsReadOnly="True">
-      <DataGrid.GroupStyle>
-        <GroupStyle>
-          <GroupStyle.HeaderTemplate>
-            <DataTemplate>
-              <TextBlock Background="LightGray" Padding="14,2,4,2" FontWeight="Bold">
-                <Run Text="{Binding Path=Name,Mode=OneWay}"/>
-              </TextBlock>
-            </DataTemplate>
-          </GroupStyle.HeaderTemplate>
-        </GroupStyle>
-      </DataGrid.GroupStyle>
-      <DataGrid.Columns>
-        <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="Auto" MinWidth="120" />
-        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto" MinWidth="120" />
-        <DataGridTextColumn Header="Remark" Binding="{Binding Remark}" Width="*" MinWidth="60"/>
-      </DataGrid.Columns>
-    </DataGrid>
-  </DockPanel>
+	<DockPanel Margin="12">
+		<DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="0,12,0,0">
+			<Button DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="60"
+			        Content="Close" IsDefault="True" IsCancel="True" TabIndex="2"
+			        Command="{Binding CloseCommand}"
+			        CommandParameter="{Binding ElementName=AboutWindowName}" />
+			<Button DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="60"
+			        Content="Copy" TabIndex="1"
+			        ToolTip="Copy to clipboard as plain text"
+			        Command="{Binding CopyCommand}"
+			        CommandParameter="{Binding ElementName=AboutWindowName}" />
+		</DockPanel>
+		<TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" FontWeight="Bold" FontSize="14">
+			<Run Text="{Binding Heading}" />
+		</TextBlock>
+		<DataGrid ItemsSource="{Binding AboutItems}" AutoGenerateColumns="False" IsReadOnly="True">
+			<DataGrid.GroupStyle>
+				<GroupStyle>
+					<GroupStyle.HeaderTemplate>
+						<DataTemplate>
+							<TextBlock Background="LightGray" Padding="14,2,4,2" FontWeight="Bold">
+								<Run Text="{Binding Path=Name,Mode=OneWay}" />
+							</TextBlock>
+						</DataTemplate>
+					</GroupStyle.HeaderTemplate>
+				</GroupStyle>
+			</DataGrid.GroupStyle>
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="Auto" MinWidth="120" />
+				<DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto" MinWidth="120" />
+				<DataGridTextColumn Header="Remark" Binding="{Binding Remark}" Width="*" MinWidth="60" />
+			</DataGrid.Columns>
+		</DataGrid>
+	</DockPanel>
 </Window>

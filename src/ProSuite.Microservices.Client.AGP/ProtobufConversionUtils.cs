@@ -679,7 +679,7 @@ public static class ProtobufConversionUtils
 				multipatches.Add(GeomConversionUtils.CreateMultipatch(part, spatialReference));
 			}
 
-			GeometryUtils.Union(multipatches);
+			return GeometryUtils.Union(multipatches);
 		}
 
 		throw new NotImplementedException();

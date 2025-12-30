@@ -25,6 +25,18 @@
     <DefineConstants>$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt;= 11.0 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_11_0_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt; 11.4 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_11_5_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(VSArcGISVersion)' &gt;= 12.0 ">
+    <DefineConstants>$(DefineConstants);ARCGIS_12_0_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
