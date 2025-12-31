@@ -51,8 +51,13 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public void ActivateForCurrentThread(string environmentName)
 		{
-			if (! string.IsNullOrEmpty(environmentName) &&
-			    _environmentActivationAction != null)
+			if (string.IsNullOrEmpty(environmentName))
+			{
+				_msg.Debug("No environment name specified, using default environment.");
+				return;
+			}
+
+			if (_environmentActivationAction != null)
 			{
 				// Initialize the container for the current thread
 				_environmentActivationAction(environmentName);
