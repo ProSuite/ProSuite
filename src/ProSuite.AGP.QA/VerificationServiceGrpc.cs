@@ -34,6 +34,9 @@ namespace ProSuite.AGP.QA
 			_client = client;
 		}
 
+		[CanBeNull]
+		public string DdxEnvironmentName { get; set; }
+
 		public override async Task<ServiceCallStatus> Verify(
 			IQualitySpecificationReference qualitySpecificationRef,
 			Geometry perimeter,
@@ -166,7 +169,7 @@ namespace ProSuite.AGP.QA
 					{
 						var result = QAUtils.CreateRequest(projectWorkspace, _contextTypePerimeter,
 						                                   projectName, specificationRef.Id,
-						                                   perimeter);
+						                                   perimeter, DdxEnvironmentName);
 
 						QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
@@ -197,7 +200,7 @@ namespace ProSuite.AGP.QA
 						VerificationRequest result =
 							QAUtils.CreateRequest(
 								projectWorkspace, _contextTypePerimeter, projectName, specification,
-								perimeter);
+								perimeter, DdxEnvironmentName);
 
 						QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 

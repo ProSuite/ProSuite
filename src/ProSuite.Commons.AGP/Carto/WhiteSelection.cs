@@ -1,10 +1,10 @@
-using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Core.Carto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.AGP.Carto;
@@ -17,10 +17,16 @@ public interface IWhiteSelection
 {
 	FeatureLayer Layer { get; }
 
-	bool Add(long oid, bool selectVertices = false); // add involved feature, optionally select all vertices
+	bool
+		Add(long oid,
+		    bool selectVertices = false); // add involved feature, optionally select all vertices
+
 	bool Remove(long oid); // also removes oid's geom from cache
+
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+
 	bool Combine(long oid, SetCombineMethod method);
+
 	bool Clear(); // true iff changed, even if only an "empty oid" is removed; cache not cleared
 
 	int InvolvedFeatureCount { get; }
@@ -40,7 +46,9 @@ public interface IWhiteSelection
 
 	// Implementation has a cache oid => Geometry
 	Geometry GetGeometry(long oid);
+
 	void CacheGeometries(params long[] oid);
+
 	void ClearGeometryCache();
 
 	/// <summary>
@@ -111,14 +119,14 @@ public class WhiteSelection : IWhiteSelection
 
 		if (method == SetCombineMethod.New)
 		{
-			bool nonEmpty = _shapes.Values.Any(sel => !sel.IsEmpty);
+			bool nonEmpty = _shapes.Values.Any(sel => ! sel.IsEmpty);
 			if (nonEmpty)
 				changed = true;
 			_shapes.Clear();
 			method = SetCombineMethod.Add;
 		}
 
-		if (!_shapes.TryGetValue(oid, out var selection))
+		if (! _shapes.TryGetValue(oid, out var selection))
 		{
 			var shape = GetGeometry(oid);
 			selection = new ShapeSelection(shape);
@@ -265,7 +273,7 @@ public class WhiteSelection : IWhiteSelection
 
 	public void CacheGeometries(params long[] oids)
 	{
-		var missingOids = oids.Where(oid => !HasGeometry(oid)).ToList();
+		var missingOids = oids.Where(oid => ! HasGeometry(oid)).ToList();
 		if (missingOids.Any())
 		{
 			ReloadGeometries(missingOids);
@@ -298,7 +306,7 @@ public class WhiteSelection : IWhiteSelection
 
 		while (cursor.MoveNext())
 		{
-			using var feature = (Feature)cursor.Current;
+			using var feature = (Feature) cursor.Current;
 			var oid = feature.GetObjectID();
 			var shape = feature.GetShape();
 			_geometryCache[oid] = shape;

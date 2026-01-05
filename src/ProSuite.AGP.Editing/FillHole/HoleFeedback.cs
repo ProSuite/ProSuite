@@ -9,91 +9,90 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.FillHole
+namespace ProSuite.AGP.Editing.FillHole;
+
+public class HoleFeedback
 {
-	public class HoleFeedback
+	private static CIMLineSymbol _holeOutlineSymbol;
+	private readonly CIMPolygonSymbol _holeSymbol;
+	private readonly HoleToolOptions _fillHoleToolOptions;
+
+	private IDisposable _extentOverlay;
+
+	private readonly List<IDisposable> _overlays = new List<IDisposable>();
+
+	private IEnumerable<Holes> _currentHoles;
+
+	public HoleFeedback(HoleToolOptions fillHoleToolOptions)
 	{
-		private static CIMLineSymbol _holeOutlineSymbol;
-		private readonly CIMPolygonSymbol _holeSymbol;
-		private readonly HoleToolOptions _fillHoleToolOptions;
+		_fillHoleToolOptions = fillHoleToolOptions;
 
-		private IDisposable _extentOverlay;
+		_holeOutlineSymbol =
+			SymbolUtils.CreateLineSymbol(0, 255, 0, 2);
 
-		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		_holeSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
+	}
 
-		private IEnumerable<Holes> _currentHoles;
+	public void Update([CanBeNull] IEnumerable<Holes> holes)
+	{
+		DisposeOverlays();
 
-		public HoleFeedback(HoleToolOptions fillHoleToolOptions)
+		if (holes != null)
 		{
-			_fillHoleToolOptions = fillHoleToolOptions;
-
-			_holeOutlineSymbol =
-				SymbolUtils.CreateLineSymbol(0, 255, 0, 2);
-
-			_holeSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
+			_currentHoles = holes;
 		}
 
-		public void Update([CanBeNull] IEnumerable<Holes> holes)
+		if (_currentHoles == null || ! _fillHoleToolOptions.ShowPreview)
 		{
-			DisposeOverlays();
-
-			if (holes != null)
-			{
-				_currentHoles = holes;
-			}
-
-			if (_currentHoles == null || ! _fillHoleToolOptions.ShowPreview)
-			{
-				return;
-			}
-
-			foreach (var holeGeometry in _currentHoles.SelectMany(h => h.HoleGeometries))
-			{
-				IDisposable addedOverlay =
-					MapView.Active.AddOverlay(holeGeometry, _holeSymbol.MakeSymbolReference());
-				_overlays.Add(addedOverlay);
-			}
+			return;
 		}
 
-		public void UpdateExtent(Envelope extent)
+		foreach (var holeGeometry in _currentHoles.SelectMany(h => h.HoleGeometries))
 		{
-			_extentOverlay?.Dispose();
+			IDisposable addedOverlay =
+				MapView.Active.AddOverlay(holeGeometry, _holeSymbol.MakeSymbolReference());
+			_overlays.Add(addedOverlay);
+		}
+	}
 
-			if (extent == null)
-			{
-				return;
-			}
+	public void UpdateExtent(Envelope extent)
+	{
+		_extentOverlay?.Dispose();
 
-			if (! _fillHoleToolOptions.ShowPreview || ! _fillHoleToolOptions.LimitPreviewToExtent)
-			{
-				return;
-			}
-
-			var polygon = GeometryFactory.CreatePolygon(extent);
-
-			// Extent symbolization
-
-			var outlineSymbol = SymbolUtils.CreateLineSymbol(255, 255, 255, 5);
-			var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 2);
-
-			var polygonSymbol =
-				SymbolUtils.CreatePolygonSymbol(lineSymbol.SymbolLayers[0],
-				                                outlineSymbol.SymbolLayers[0]);
-
-			_extentOverlay =
-				MapView.Active.AddOverlay(polygon, polygonSymbol.MakeSymbolReference());
-
-			_overlays.Add(_extentOverlay);
+		if (extent == null)
+		{
+			return;
 		}
 
-		public void DisposeOverlays()
+		if (! _fillHoleToolOptions.ShowPreview || ! _fillHoleToolOptions.LimitPreviewToExtent)
 		{
-			foreach (IDisposable overlay in _overlays)
-			{
-				overlay.Dispose();
-			}
-
-			_overlays.Clear();
+			return;
 		}
+
+		var polygon = GeometryFactory.CreatePolygon(extent);
+
+		// Extent symbolization
+
+		var outlineSymbol = SymbolUtils.CreateLineSymbol(255, 255, 255, 5);
+		var lineSymbol = SymbolUtils.CreateLineSymbol(0, 255, 150, 2);
+
+		var polygonSymbol =
+			SymbolUtils.CreatePolygonSymbol(lineSymbol.SymbolLayers[0],
+			                                outlineSymbol.SymbolLayers[0]);
+
+		_extentOverlay =
+			MapView.Active.AddOverlay(polygon, polygonSymbol.MakeSymbolReference());
+
+		_overlays.Add(_extentOverlay);
+	}
+
+	public void DisposeOverlays()
+	{
+		foreach (IDisposable overlay in _overlays)
+		{
+			overlay.Dispose();
+		}
+
+		_overlays.Clear();
 	}
 }

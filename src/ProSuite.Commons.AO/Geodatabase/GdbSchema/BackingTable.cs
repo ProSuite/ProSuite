@@ -28,7 +28,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override VirtualRow GetRow(long id)
 		{
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			var row = _backingTable.GetRow(id);
 #else
 			var row = _backingTable.GetRow((int) id);

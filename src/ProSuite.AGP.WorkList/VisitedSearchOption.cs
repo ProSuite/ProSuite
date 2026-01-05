@@ -1,8 +1,7 @@
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList;
+
+public enum VisitedSearchOption
 {
-	public enum VisitedSearchOption
-	{
-		ExcludeVisited,
-		IncludeVisited
-	}
+	ExcludeVisited,
+	IncludeVisited
 }

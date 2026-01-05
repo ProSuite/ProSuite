@@ -3,43 +3,42 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Contracts;
+
+public interface ISourceClass
 {
-	public interface ISourceClass
-	{
-		[NotNull]
-		string Name { get; }
+	[NotNull]
+	string Name { get; }
 
-		GdbTableIdentity TableIdentity { get; }
+	GdbTableIdentity TableIdentity { get; }
 
-		[CanBeNull]
-		IAttributeReader AttributeReader { get; set; }
+	[CanBeNull]
+	IAttributeReader AttributeReader { get; set; }
 
-		bool HasGeometry { get; }
+	bool HasGeometry { get; }
 
-		[CanBeNull]
-		string DefaultDefinitionQuery { get; }
+	[CanBeNull]
+	string DefaultDefinitionQuery { get; }
 
-		bool Uses([NotNull] ITableReference tableReference);
+	bool Uses([NotNull] ITableReference tableReference);
 
-		/// <summary>
-		/// Opens the table.
-		/// </summary>
-		/// <remarks>
-		/// NOTE: This could be a stale table instance from a stale workspace instance.
-		///       Do only use for read-only and don't if the geodatabase is being edited!
-		/// </remarks>
-		/// <typeparam name="T">ArcGIS.Core.Data.Table</typeparam>
-		/// <returns></returns>
-		T OpenDataset<T>() where T : Table;
-		
-		/// <summary>
-		/// A table Id that is unique within the work list and that remains stable across sessions.
-		/// </summary>
-		/// <returns></returns>
-		long GetUniqueTableId();
+	/// <summary>
+	/// Opens the table.
+	/// </summary>
+	/// <remarks>
+	/// NOTE: This could be a stale table instance from a stale workspace instance.
+	///       Do only use for read-only and don't if the geodatabase is being edited!
+	/// </remarks>
+	/// <typeparam name="T">ArcGIS.Core.Data.Table</typeparam>
+	/// <returns></returns>
+	T OpenDataset<T>() where T : Table;
 
-		void EnsureValidFilter(ref QueryFilter filter, WorkItemStatus? statusFilter,
-		                       bool excludeGeometry);
-	}
+	/// <summary>
+	/// A table Id that is unique within the work list and that remains stable across sessions.
+	/// </summary>
+	/// <returns></returns>
+	long GetUniqueTableId();
+
+	void EnsureValidFilter(ref QueryFilter filter, WorkItemStatus? statusFilter,
+	                       bool excludeGeometry);
 }

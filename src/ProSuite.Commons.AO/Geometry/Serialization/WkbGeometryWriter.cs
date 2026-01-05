@@ -311,11 +311,11 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			return WksPointArrayProvider.GetArray(pointCount);
 		}
 
-		private static Ordinates GetOrdinatesDimension(IGeometry point)
+		private static Ordinates GetOrdinatesDimension(IGeometry geometry)
 		{
-			Ordinates ordinates = GeometryUtils.IsZAware(point) ? Ordinates.Xyz : Ordinates.Xy;
+			Ordinates ordinates = GeometryUtils.IsZAware(geometry) ? Ordinates.Xyz : Ordinates.Xy;
 
-			if (GeometryUtils.IsMAware(point))
+			if (GeometryUtils.IsMAware(geometry))
 			{
 				ordinates = ordinates == Ordinates.Xy ? Ordinates.Xym : Ordinates.Xyzm;
 			}

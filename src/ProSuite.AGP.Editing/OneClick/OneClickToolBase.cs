@@ -27,973 +27,999 @@ using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Input;
 
-namespace ProSuite.AGP.Editing.OneClick
+namespace ProSuite.AGP.Editing.OneClick;
+
+public abstract class OneClickToolBase : MapToolBase
 {
-	public abstract class OneClickToolBase : MapToolBase
+	private const Key _keyPolygonDraw = Key.P;
+	private const Key _keyLassoDraw = Key.L;
+
+	private readonly TimeSpan _sketchBlockingPeriod = TimeSpan.FromSeconds(1);
+
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private Geometry _lastSketch;
+	private DateTime _lastSketchFinishedTime;
+
+	// Implicitly not null because it is set in OnToolActivateCoreAsync
+	private SelectionCursors _selectionCursors;
+
+	// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
+	protected OneClickToolBase()
 	{
-		private const Key _keyPolygonDraw = Key.P;
-		private const Key _keyLassoDraw = Key.L;
+		ContextMenuID = "esri_mapping_selection2DContextMenu";
 
-		private readonly TimeSpan _sketchBlockingPeriod = TimeSpan.FromSeconds(1);
+		HandledKeys.Add(_keyLassoDraw);
+		HandledKeys.Add(_keyPolygonDraw);
+	}
 
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+	/// <summary>
+	/// Whether this tool requires a selection and the base class should handle the selection phase.
+	/// </summary>
+	protected bool RequiresSelection { get; init; } = true;
 
-		private Geometry _lastSketch;
-		private DateTime _lastSketchFinishedTime;
+	/// <summary>
+	/// Whether this tool requires editing to be enabled.
+	/// </summary>
+	protected bool RequiresEditSession { get; init; } = true;
 
-		// Implicitly not null because it is set in OnToolActivateCoreAsync
-		private SelectionCursors _selectionCursors;
+	/// <summary>
+	/// Whether the required selection can only contain editable features.
+	/// </summary>
+	protected bool SelectOnlyEditFeatures { get; init; } = true;
 
-		// ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
-		protected OneClickToolBase()
+	/// <summary>
+	/// Whether the required selection can only contain selectable features.
+	/// TODO: maybe refactor/rename IgnoreSelectability or merge with TargetFeatureSelection?
+	/// </summary>
+	protected bool SelectOnlySelectableFeatures { get; init; } = true;
+
+	protected virtual bool AllowMultiSelection(out string reason)
+	{
+		reason = null;
+		return true;
+	}
+
+	/// <summary>
+	/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
+	/// allowed. Otherwise, the selection phase will continue until all selected features are
+	/// usable by the tool.
+	/// </summary>
+	protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
+
+	/// <summary>
+	/// Flag to indicate that currently the selection is changed by the <see
+	/// cref="OnSelectionSketchCompleteAsync"/> method and selection events should be ignored.
+	/// </summary>
+	protected bool IsCompletingSelectionSketch { get; set; }
+
+	/// <summary>
+	/// The cursor bitmaps to be used in the selection phase of the tool.
+	/// The default is the cross with the selection icon.
+	/// </summary>
+	/// <returns></returns>
+	[NotNull]
+	protected SelectionCursors SelectionCursors
+	{
+		get => Assert.NotNull(_selectionCursors);
+		set
 		{
-			ContextMenuID = "esri_mapping_selection2DContextMenu";
+			Assert.ArgumentNotNull(value);
 
-			HandledKeys.Add(_keyLassoDraw);
-			HandledKeys.Add(_keyPolygonDraw);
-		}
-
-		/// <summary>
-		/// Whether this tool requires a selection and the base class should handle the selection phase.
-		/// </summary>
-		protected bool RequiresSelection { get; init; } = true;
-
-		/// <summary>
-		/// Whether this tool requires editing to be enabled.
-		/// </summary>
-		protected bool RequiresEditSession { get; init; } = true;
-
-		/// <summary>
-		/// Whether the required selection can only contain editable features.
-		/// </summary>
-		protected bool SelectOnlyEditFeatures { get; init; } = true;
-
-		/// <summary>
-		/// Whether the required selection can only contain selectable features.
-		/// TODO: maybe refactor/rename IgnoreSelectability or merge with TargetFeatureSelection?
-		/// </summary>
-		protected bool SelectOnlySelectableFeatures { get; init; } = true;
-
-		protected virtual bool AllowMultiSelection(out string reason)
-		{
-			reason = null;
-			return true;
-		}
-
-		/// <summary>
-		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
-		/// allowed. Otherwise, the selection phase will continue until all selected features are
-		/// usable by the tool.
-		/// </summary>
-		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
-
-		/// <summary>
-		/// Flag to indicate that currently the selection is changed by the <see
-		/// cref="OnSelectionSketchCompleteAsync"/> method and selection events should be ignored.
-		/// </summary>
-		protected bool IsCompletingSelectionSketch { get; set; }
-
-		/// <summary>
-		/// The cursor bitmaps to be used in the selection phase of the tool.
-		/// The default is the cross with the selection icon.
-		/// </summary>
-		/// <returns></returns>
-		[NotNull]
-		protected SelectionCursors SelectionCursors
-		{
-			get => Assert.NotNull(_selectionCursors);
-			set
-			{
-				Assert.ArgumentNotNull(value);
-
-				_selectionCursors = value;
-				_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
-			}
-		}
-
-		protected abstract SketchGeometryType GetSelectionSketchGeometryType();
-
-		protected virtual bool DefaultSketchTypeOnFinishSketch => true;
-
-		#region Overrides of MapToolBase
-
-		protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
-		{
-			MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
-			MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
-			EditCompletedEvent.Subscribe(OnEditCompletedAsync);
-
-			using var source = GetProgressorSource();
-			var progressor = source?.Progressor;
-
-			// Note: We set _selectionCursors here, exactly once on the UI thread. And not in the getter of SelectionCursors.
-			_selectionCursors ??= SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
+			_selectionCursors = value;
 			_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
+		}
+	}
 
-			await QueuedTaskUtils.Run(async () =>
+	protected abstract SketchGeometryType GetSelectionSketchGeometryType();
+
+	protected virtual bool DefaultSketchTypeOnFinishSketch => true;
+
+	#region Overrides of MapToolBase
+
+	protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
+	{
+		MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
+		MapSelectionChangedEvent.Subscribe(OnMapSelectionChangedAsync);
+		EditCompletedEvent.Subscribe(OnEditCompletedAsync);
+
+		using var source = GetProgressorSource();
+		var progressor = source?.Progressor;
+
+		// Note: We set _selectionCursors here, exactly once on the UI thread. And not in the getter of SelectionCursors.
+		_selectionCursors ??= SelectionCursors.CreateCrossCursors(Resources.SelectOverlay);
+		_selectionCursors.DefaultSelectionSketchType = GetSelectionSketchGeometryType();
+
+		await QueuedTaskUtils.Run(async () =>
+		{
+			await OnToolActivatingCoreAsync();
+
+			if (RequiresSelection)
 			{
-				await OnToolActivatingCoreAsync();
-
-				if (RequiresSelection)
-				{
-					await ProcessSelectionAsync(progressor);
-				}
-
-				// TODO MapToolBase: Consider pulling up (and take out of QueuedTask)
-				// ReSharper disable once MethodHasAsyncOverload
-				return OnToolActivatedCore(hasMapViewChanged) &&
-				       await OnToolActivatedCoreAsync(hasMapViewChanged);
-			}, progressor);
-		}
-
-		protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
-		{
-			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
-			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
-			EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
-
-			// TODO: Async but not in QueuedTask (or separate OnToolDeactivateAsyncCoreQueued
-			await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
-		}
-
-		#endregion
-
-		protected virtual async Task ToggleSelectionSketchGeometryTypeAsync(
-			SketchGeometryType toggleSketchType)
-		{
-			SketchGeometryType? newSketchGeometryType =
-				ToolUtils.ToggleSketchGeometryType(toggleSketchType, SketchType,
-				                                   SelectionCursors.DefaultSelectionSketchType);
-
-			await SetSelectionSketchTypeAsync(newSketchGeometryType);
-		}
-
-		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
-		{
-			if (args.Key == _keyPolygonDraw)
-			{
-				await ToggleSelectionSketchGeometryTypeAsync(SketchGeometryType.Polygon);
+				await ProcessSelectionAsync(progressor);
 			}
 
-			if (args.Key == _keyLassoDraw)
+			// TODO MapToolBase: Consider pulling up (and take out of QueuedTask)
+			// ReSharper disable once MethodHasAsyncOverload
+			return OnToolActivatedCore(hasMapViewChanged) &&
+			       await OnToolActivatedCoreAsync(hasMapViewChanged);
+		}, progressor);
+	}
+
+	protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+	{
+		MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
+		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
+		EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
+
+		// TODO: Async but not in QueuedTask (or separate OnToolDeactivateAsyncCoreQueued
+		await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
+	}
+
+	#endregion
+
+	protected virtual async Task ToggleSelectionSketchGeometryTypeAsync(
+		SketchGeometryType toggleSketchType)
+	{
+		SketchGeometryType? newSketchGeometryType =
+			ToolUtils.ToggleSketchGeometryType(toggleSketchType, SketchType,
+			                                   SelectionCursors.DefaultSelectionSketchType);
+
+		await SetSelectionSketchTypeAsync(newSketchGeometryType);
+	}
+
+	protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
+	{
+		if (args.Key == _keyPolygonDraw)
+		{
+			await ToggleSelectionSketchGeometryTypeAsync(SketchGeometryType.Polygon);
+		}
+
+		if (args.Key == _keyLassoDraw)
+		{
+			await ToggleSelectionSketchGeometryTypeAsync(SketchGeometryType.Lasso);
+		}
+
+		if (KeyboardUtils.IsShiftKey(args.Key))
+		{
+			await ShiftReleasedAsync();
+		}
+	}
+
+	protected override async Task OnToolDoubleClickCoreAsync(MapViewMouseButtonEventArgs args)
+	{
+		// Typically, shift is pressed which prevents the standard finish-sketch.
+		// We want to override this in specific situations, such as in intermittent
+		// selection phases with polygon sketches.
+		if (await FinishSketchOnDoubleClick())
+		{
+			_msg.VerboseDebug(() => "Calling finish sketch due to double-click...");
+			await FinishSketchAsync();
+		}
+	}
+
+	/// <summary>
+	/// During the selection phase or some other (target selection) phase FinishSketch is not
+	/// always automatically called when double-clicking (typically Shift prevents this).
+	/// This method allows for defining whether the current double click shall result
+	/// in a call to FinishSketchAsync()
+	/// </summary>
+	/// <returns></returns>
+	protected virtual async Task<bool> FinishSketchOnDoubleClick()
+	{
+		return SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync();
+	}
+
+	protected override async Task<bool> OnSketchFinishedAsync(
+		Geometry sketchGeometry,
+		CancelableProgressor progressor)
+	{
+		_msg.VerboseDebug(() => $"OnSketchCompleteAsync ({Caption})");
+
+		try
+		{
+			sketchGeometry = GetSimplifiedSketch(sketchGeometry);
+
+			if (sketchGeometry == null)
 			{
-				await ToggleSelectionSketchGeometryTypeAsync(SketchGeometryType.Lasso);
-			}
-
-			if (KeyboardUtils.IsShiftKey(args.Key))
-			{
-				await ShiftReleasedAsync();
-			}
-		}
-
-		protected override async Task OnToolDoubleClickCoreAsync(MapViewMouseButtonEventArgs args)
-		{
-			// Typically, shift is pressed which prevents the standard finish-sketch.
-			// We want to override this in specific situations, such as in intermittent
-			// selection phases with polygon sketches.
-			if (await FinishSketchOnDoubleClick())
-			{
-				_msg.VerboseDebug(() => "Calling finish sketch due to double-click...");
-				await FinishSketchAsync();
-			}
-		}
-
-		/// <summary>
-		/// During the selection phase or some other (target selection) phase FinishSketch is not
-		/// always automatically called when double-clicking (typically Shift prevents this).
-		/// This method allows for defining whether the current double click shall result
-		/// in a call to FinishSketchAsync()
-		/// </summary>
-		/// <returns></returns>
-		protected virtual async Task<bool> FinishSketchOnDoubleClick()
-		{
-			return SketchType == SketchGeometryType.Polygon && await IsInSelectionPhaseAsync();
-		}
-
-		protected override async Task<bool> OnSketchFinishedAsync(
-			Geometry sketchGeometry,
-			CancelableProgressor progressor)
-		{
-			_msg.VerboseDebug(() => $"OnSketchCompleteAsync ({Caption})");
-
-			try
-			{
-				sketchGeometry = GetSimplifiedSketch(sketchGeometry);
-
-				if (sketchGeometry == null)
-				{
-					return false;
-				}
-
-				if (IsDuplicateSketchCompleteInvocation(sketchGeometry))
-				{
-					return false;
-				}
-
-				if (RequiresSelection && await IsInSelectionPhaseAsync())
-				{
-					return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
-				}
-
-				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
-			}
-			catch (Exception e)
-			{
-				// Consider Task.FromException? --> no, as it throws once awaited!
-				ErrorHandler.HandleError($"{Caption}: Error completing sketch." +
-				                         $"{Environment.NewLine}{e.Message}", e, _msg);
-
-				return await Task.FromResult(true);
-			}
-		}
-
-		protected virtual Task<bool> OnSketchCompleteCoreAsync(
-			[NotNull] Geometry sketchGeometry,
-			[CanBeNull] CancelableProgressor progressor)
-		{
-			return Task.FromResult(true);
-		}
-
-		protected override async Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
-		{
-			if (await IsInSelectionPhaseAsync())
-			{
-				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: true));
-			}
-
-			await ShiftPressedCoreAsync(keyArgs);
-		}
-
-		private async Task ShiftReleasedAsync()
-		{
-			if (await IsInSelectionPhaseAsync())
-			{
-				SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: false));
-			}
-
-			await ShiftReleasedCoreAsync();
-		}
-
-		/// <summary>
-		/// Allows implementors to start tasks when the shift key is pressed.
-		/// NOTE: ShiftPressedCoreAsync and ShiftReleasedAsync are not necessarily symmetrical!
-		/// </summary>
-		/// <param name="keyArgs"></param>
-		/// <returns></returns>
-		protected virtual Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
-		{
-			return Task.CompletedTask;
-		}
-
-		/// <summary>
-		/// Allows implementors to start tasks when the shift key is released. Do not Assume that
-		/// ShiftPressedCoreAsync has been called before!
-		/// </summary>
-		/// <returns></returns>
-		protected virtual Task ShiftReleasedCoreAsync()
-		{
-			return Task.CompletedTask;
-		}
-
-		protected async Task StartSelectionPhaseAsync()
-		{
-			await SetupSelectionSketchAsync();
-
-			await OnSelectionPhaseStartedAsync();
-		}
-
-		protected async Task<bool> HasSketchAsync()
-		{
-			Geometry currentSketch = await GetCurrentSketchAsync();
-
-			return currentSketch?.IsEmpty == false;
-		}
-
-		private async Task SetupSelectionSketchAsync()
-		{
-			_msg.VerboseDebug(() => nameof(SetupSelectionSketchAsync));
-
-			await ClearSketchAsync();
-
-			SetupSketch();
-
-			await ResetSelectionSketchTypeAsync();
-		}
-
-		/// <summary>
-		/// Resets the sketch type (rectangle, polygon, lasso) to the respective default (i.e. the
-		/// last used type or the default) and updates the mouse cursor based on the current
-		/// value of SelectionCursors.
-		/// </summary>
-		protected async Task ResetSelectionSketchTypeAsync()
-		{
-			SketchGeometryType? previousSketchTypeToUse = null;
-
-			SketchGeometryType? previousSketchType = SelectionCursors.PreviousSelectionSketchType;
-
-			if (! DefaultSketchTypeOnFinishSketch &&
-			    previousSketchType is SketchGeometryType.Polygon or SketchGeometryType.Lasso)
-			{
-				previousSketchTypeToUse = previousSketchType;
-			}
-
-			SketchGeometryType? startSketchType =
-				SelectionCursors.GetStartSelectionSketchGeometryType(previousSketchTypeToUse);
-
-			await SetSelectionSketchTypeAsync(startSketchType);
-		}
-
-		protected async Task SetSelectionSketchTypeAsync(SketchGeometryType? newGeometryType)
-		{
-			if (SketchType != newGeometryType)
-			{
-				SketchType = newGeometryType;
-				_msg.Debug($"{Caption} changed sketch type to {newGeometryType}");
-			}
-
-			var newCursor =
-				SelectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
-
-			SetToolCursor(newCursor);
-
-			if (newGeometryType == SketchGeometryType.Polygon)
-			{
-				// If using a polygon sketch as a selection sketch, the vertices should be invisible:
-				await QueuedTask.Run(() =>
-				{
-					SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
-					SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-				});
-			}
-
-			// Remember the sketch type (consider local field, using last sketch type across tool phases):
-			SelectionCursors.PreviousSelectionSketchType = newGeometryType;
-		}
-
-		public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
-		{
-			var options = new VertexSymbolOptions(vertexSymbolType)
-			              {
-				              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
-				              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
-			              };
-			SetSketchVertexSymbolOptions(vertexSymbolType, options);
-		}
-
-		protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
-		                           bool useSnapping = false,
-		                           bool completeSketchOnMouseUp = true,
-		                           bool enforceSimpleSketch = false)
-		{
-			_msg.VerboseDebug(() =>
-				                  $"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
-				                  $"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
-				                  $"enforceSimplifySketch: {enforceSimpleSketch}");
-
-			// screen coords are currently not supported and only relevant
-			// when selecting with the View being in 3D viewing mode
-			SketchOutputMode = sketchOutputMode;
-
-			// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
-			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
-
-			UseSnapping = useSnapping;
-
-			GeomIsSimpleAsFeature = enforceSimpleSketch;
-		}
-
-		/// <summary>
-		/// Subclasses override this method to execute tool-specific logic after the start of the
-		/// selection phase, such as specific cursors.
-		/// </summary>
-		/// <returns></returns>
-		protected virtual Task OnSelectionPhaseStartedAsync()
-		{
-			return Task.CompletedTask;
-		}
-
-		private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
-		{
-			// NOTE: This method is called repeatedly with different selection sets during the
-			//       OnSelectionSketchCompleteAsync method. Therefore, the flag is set to prevent
-			//       multiple calls to the AfterSelectionMethod with intermediate results!
-			//       The ProcessSelectionAsync method is called at the end of the sketch completion.
-
-			try
-			{
-				_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
-
-				if (IsCompletingSelectionSketch)
-				{
-					return;
-				}
-
-				if (RequiresEditSession && Project.Current?.IsEditingEnabled != true)
-				{
-					return;
-				}
-
-				if (! Enabled)
-				{
-					// It is possible to be the active tool but not enabled
-					return;
-				}
-
-				await OnMapSelectionChangedCoreAsync(args);
-			}
-			catch (Exception e)
-			{
-				_msg.Error($"Error while handling selection change: {e.Message}", e);
-			}
-		}
-
-		private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
-		{
-			await ViewUtils.TryAsync(OnEditCompletedAsyncCore(args), _msg,
-			                         suppressErrorMessageBox: true);
-		}
-
-		/// <summary>
-		/// The task to be run on edit complete.
-		/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
-		/// In that case there seems to be no catch block observing the potential exception thrown
-		/// inside the task execution, which leads to a crash of the application due to the finalizer
-		/// thread throwing:
-		/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
-		/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
-		/// Therefore, any exception must be caught inside the Task execution!
-		/// </summary>
-		/// <param name="args"></param>
-		/// <returns></returns>
-		protected virtual Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
-		{
-			return Task.CompletedTask;
-		}
-
-		/// <remarks>Will be called on MCT</remarks>
-		protected virtual Task OnToolActivatingCoreAsync()
-		{
-			return Task.CompletedTask;
-		}
-
-		/// <summary>
-		/// Synchronous method called on the MCT after the tool has been activated.
-		/// </summary>
-		/// <param name="hasMapViewChanged"></param>
-		/// <returns></returns>
-		protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
-		{
-			return true;
-		}
-
-		/// <summary>
-		/// Async method called on the MCT after the tool has been activated.
-		/// </summary>
-		/// <param name="hasMapViewChanged"></param>
-		/// <returns></returns>
-		/// <remarks>Will be called on MCT</remarks>
-		protected virtual Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
-		{
-			return Task.FromResult(true);
-		}
-
-		protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
-
-		/// <summary>
-		/// Method called on the UI thread to react to changes to map selection that typically do
-		/// not originate from the tool itself. Examples: Clear Selection Button, attribute table
-		/// or clearing the selection of a single layer in the 'List by Selection' tab of the TOC.
-		/// </summary>
-		/// <param name="args"></param>
-		/// <returns></returns>
-		/// <remarks>Will be called on the UI thread</remarks>
-		protected virtual Task<bool> OnMapSelectionChangedCoreAsync(
-			MapSelectionChangedEventArgs args)
-		{
-			return Task.FromResult(true);
-		}
-
-		private async Task<bool> OnSelectionSketchCompleteAsync(
-			[NotNull] Geometry sketchGeometry,
-			[CanBeNull] CancelableProgressor progressor)
-		{
-			try
-			{
-				IsCompletingSelectionSketch = true;
-
-				using var precedence = await CreatePickerPrecedenceAsync(sketchGeometry);
-
-				await QueuedTaskUtils.Run(async () =>
-				{
-					var candidates =
-						FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
-						                        precedence.SpatialRelationship).ToList();
-
-					List<IPickableItem> items =
-						await PickerUtils.GetItemsAsync(candidates, precedence);
-
-					await OnItemsPickedAsync(items, precedence);
-
-					await ProcessSelectionAsync(progressor);
-				}, progressor);
-			}
-			finally
-			{
-				IsCompletingSelectionSketch = false;
-			}
-
-			return true;
-		}
-
-		protected virtual Task OnItemsPickedAsync([NotNull] List<IPickableItem> items,
-		                                          [NotNull] IPickerPrecedence precedence)
-		{
-			OnSelecting();
-
-			PickerUtils.Select(items, precedence.SelectionCombinationMethod);
-
-			return Task.CompletedTask;
-		}
-
-		protected virtual void OnSelecting() { }
-
-		protected virtual async Task<IPickerPrecedence> CreatePickerPrecedenceAsync(
-			[NotNull] Geometry sketchGeometry)
-		{
-			Point screenLocation = await GetPopupScreenLocation(sketchGeometry);
-
-			return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                            screenLocation)
-			       {
-				       NoMultiselection = ! AllowMultiSelection(out _)
-			       };
-		}
-
-		/// <summary>
-		/// Provides the screen location for displaying popups, based on the current mouse
-		/// location.
-		/// </summary>
-		/// <param name="sketchGeometry"></param>
-		/// <returns></returns>
-		protected async Task<Point> GetPopupScreenLocation([NotNull] Geometry sketchGeometry)
-		{
-			MapView activeMapView = ActiveMapView;
-
-			double zValue = sketchGeometry.HasZ ? sketchGeometry.Extent.ZMin : double.NaN;
-
-			Point screenLocation =
-				await MapUtils.ClientToScreenPointAsync(activeMapView, CurrentMousePosition,
-				                                        zValue);
-			return screenLocation;
-		}
-
-		private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
-			[NotNull] Geometry searchGeometry,
-			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
-			[CanBeNull] CancelableProgressor progressor = null)
-		{
-			var mapView = ActiveMapView;
-
-			if (mapView is null)
-			{
-				return Enumerable.Empty<FeatureSelectionBase>();
-			}
-
-			var featureFinder = new FeatureFinder(mapView)
-			                    {
-				                    SpatialRelationship = spatialRelationship,
-				                    DelayFeatureFetching = true
-			                    };
-
-			const Predicate<Feature> featurePredicate = null;
-			return featureFinder.FindFeaturesByLayer(searchGeometry, fl => CanSelectFromLayer(fl),
-			                                         featurePredicate, progressor);
-		}
-
-		protected Task<bool> IsInSelectionPhaseAsync()
-		{
-			bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-			                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
-
-			return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
-		}
-
-		protected virtual Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
-		{
-			return Task.FromResult(false);
-		}
-
-		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
-
-		protected abstract void LogUsingCurrentSelection();
-
-		protected abstract void LogPromptForSelection();
-
-		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
-		{
-			using var featureClass = feature.GetTable();
-			GeometryType shapeType = featureClass.GetShapeType();
-
-			return CanSelectGeometryType(shapeType);
-		}
-
-		/// <remarks>Will be called on MCT</remarks>>
-		protected virtual Task AfterSelectionAsync([NotNull] IList<Feature> selectedFeatures,
-		                                           [CanBeNull] CancelableProgressor progressor)
-		{
-			return Task.CompletedTask;
-		}
-
-		/// <remarks>Must be called on MCT</remarks>
-		protected async Task ProcessSelectionAsync(
-			[CanBeNull] CancelableProgressor progressor = null)
-		{
-			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
-
-			var notifications = new NotificationCollection();
-			var applicableSelection =
-				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
-				                                      notifications).ToList();
-
-			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
-
-			bool allowMultiselection = AllowMultiSelection(out _);
-
-			if (applicableSelection.Count > 0 &&
-			    (AllowNotApplicableFeaturesInSelection ||
-			     applicableSelection.Count == selectionCount) &&
-			    (allowMultiselection || applicableSelection.Count == 1))
-			{
-				LogUsingCurrentSelection();
-
-				await AfterSelectionAsync(applicableSelection, progressor);
-			}
-			else
-			{
-				if (selectionCount > 0)
-				{
-					_msg.DebugFormat(notifications.Concatenate(Environment.NewLine));
-				}
-
-				LogPromptForSelection();
-				await StartSelectionPhaseAsync();
-			}
-		}
-
-		/// <summary>
-		/// Whether the selection shall be retrieved without the join even if the layer is joined.
-		/// This is important for updating features. Features based on a joined table throw an
-		/// exception when setting the shape (GOTOP-190)!
-		/// </summary>
-		protected bool UnJoinedSelection { get; set; } = true;
-
-		protected bool CanSelectFromLayer([CanBeNull] Layer layer,
-		                                  NotificationCollection notifications = null)
-		{
-			if (layer is not BasicFeatureLayer featureLayer)
-			{
-				NotificationUtils.Add(notifications, "Not a feature layer");
 				return false;
 			}
 
-			string layerName = layer.Name;
-
-			if (! LayerUtils.IsVisible(layer, ActiveMapView))
+			if (IsDuplicateSketchCompleteInvocation(sketchGeometry))
 			{
-				NotificationUtils.Add(notifications,
-				                      $"Layer is not visible in active map: {layerName}");
 				return false;
 			}
 
-			if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
+			if (RequiresSelection && await IsInSelectionPhaseAsync())
 			{
-				NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");
-				return false;
+				return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 			}
 
-			if (SelectOnlyEditFeatures && ! featureLayer.IsEditable)
+			return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
+		}
+		catch (Exception e)
+		{
+			// Consider Task.FromException? --> no, as it throws once awaited!
+			ErrorHandler.HandleError($"{Caption}: Error completing sketch." +
+			                         $"{Environment.NewLine}{e.Message}", e, _msg);
+
+			return await Task.FromResult(true);
+		}
+	}
+
+	protected virtual Task<bool> OnSketchCompleteCoreAsync(
+		[NotNull] Geometry sketchGeometry,
+		[CanBeNull] CancelableProgressor progressor)
+	{
+		return Task.FromResult(true);
+	}
+
+	protected override async Task ShiftPressedAsync(MapViewKeyEventArgs keyArgs)
+	{
+		if (await IsInSelectionPhaseAsync())
+		{
+			SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: true));
+		}
+
+		await ShiftPressedCoreAsync(keyArgs);
+	}
+
+	private async Task ShiftReleasedAsync()
+	{
+		if (await IsInSelectionPhaseAsync())
+		{
+			SetToolCursor(SelectionCursors.GetCursor(GetSketchType(), shiftDown: false));
+		}
+
+		await ShiftReleasedCoreAsync();
+	}
+
+	/// <summary>
+	/// Allows implementors to start tasks when the shift key is pressed.
+	/// NOTE: ShiftPressedCoreAsync and ShiftReleasedAsync are not necessarily symmetrical!
+	/// </summary>
+	/// <param name="keyArgs"></param>
+	/// <returns></returns>
+	protected virtual Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
+	{
+		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Allows implementors to start tasks when the shift key is released. Do not Assume that
+	/// ShiftPressedCoreAsync has been called before!
+	/// </summary>
+	/// <returns></returns>
+	protected virtual Task ShiftReleasedCoreAsync()
+	{
+		return Task.CompletedTask;
+	}
+
+	protected async Task StartSelectionPhaseAsync()
+	{
+		await SetupSelectionSketchAsync();
+
+		await OnSelectionPhaseStartedAsync();
+	}
+
+	protected async Task<bool> HasSketchAsync()
+	{
+		Geometry currentSketch = await GetCurrentSketchAsync();
+
+		return currentSketch?.IsEmpty == false;
+	}
+
+	private async Task SetupSelectionSketchAsync()
+	{
+		_msg.VerboseDebug(() => nameof(SetupSelectionSketchAsync));
+
+		await ClearSketchAsync();
+
+		SetupSketch();
+
+		await ResetSelectionSketchTypeAsync();
+	}
+
+	/// <summary>
+	/// Resets the sketch type (rectangle, polygon, lasso) to the respective default (i.e. the
+	/// last used type or the default) and updates the mouse cursor based on the current
+	/// value of SelectionCursors.
+	/// </summary>
+	protected async Task ResetSelectionSketchTypeAsync()
+	{
+		SketchGeometryType? previousSketchTypeToUse = null;
+
+		SketchGeometryType? previousSketchType = SelectionCursors.PreviousSelectionSketchType;
+
+		if (! DefaultSketchTypeOnFinishSketch &&
+		    previousSketchType is SketchGeometryType.Polygon or SketchGeometryType.Lasso)
+		{
+			previousSketchTypeToUse = previousSketchType;
+		}
+
+		SketchGeometryType? startSketchType =
+			SelectionCursors.GetStartSelectionSketchGeometryType(previousSketchTypeToUse);
+
+		await SetSelectionSketchTypeAsync(startSketchType);
+	}
+
+	protected async Task SetSelectionSketchTypeAsync(SketchGeometryType? newGeometryType)
+	{
+		if (SketchType != newGeometryType)
+		{
+			SketchType = newGeometryType;
+			_msg.Debug($"{Caption} changed sketch type to {newGeometryType}");
+		}
+
+		var newCursor =
+			SelectionCursors.GetCursor(newGeometryType, KeyboardUtils.IsShiftDown());
+
+		SetToolCursor(newCursor);
+
+		if (newGeometryType == SketchGeometryType.Polygon)
+		{
+			// If using a polygon sketch as a selection sketch, the vertices should be invisible:
+			await QueuedTask.Run(() =>
 			{
-				NotificationUtils.Add(notifications, $"Layer is not editable: {layerName}");
-				return false;
-			}
-
-			var geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-			if (! CanSelectGeometryType(geometryType))
-			{
-				NotificationUtils.Add(notifications,
-				                      $"Cannot use geometry type {featureLayer.ShapeType} of layer {layerName}");
-				return false;
-			}
-
-			using (FeatureClass featureClass = featureLayer.GetFeatureClass())
-			{
-				if (featureClass is null)
-				{
-					NotificationUtils.Add(notifications,
-					                      $"Layer has no valid data source: {layerName}");
-					return false;
-				}
-			}
-
-			return CanSelectFromLayerCore(featureLayer, notifications);
+				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
+				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
+			});
 		}
 
-		protected bool CanUseSelection([NotNull] MapView mapView)
+		// Remember the sketch type (consider local field, using last sketch type across tool phases):
+		SelectionCursors.PreviousSelectionSketchType = newGeometryType;
+	}
+
+	public void SetTransparentVertexSymbol(VertexSymbolType vertexSymbolType)
+	{
+		var options = new VertexSymbolOptions(vertexSymbolType)
+		              {
+			              Color = ColorUtils.CreateRGB(0, 0, 0, 0),
+			              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
+		              };
+		SetSketchVertexSymbolOptions(vertexSymbolType, options);
+	}
+
+	protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+	                           bool useSnapping = false,
+	                           bool completeSketchOnMouseUp = true,
+	                           bool enforceSimpleSketch = false)
+	{
+		_msg.VerboseDebug(() =>
+			                  $"Setting up sketch with type {SketchType}, output mode {sketchOutputMode}, " +
+			                  $"snapping: {useSnapping}, completeSketchOnMouseUp: {completeSketchOnMouseUp}, " +
+			                  $"enforceSimplifySketch: {enforceSimpleSketch}");
+
+		// screen coords are currently not supported and only relevant
+		// when selecting with the View being in 3D viewing mode
+		SketchOutputMode = sketchOutputMode;
+
+		// Note: set CompleteSketchOnMouseUp before SketchType, or it has no effect
+		CompleteSketchOnMouseUp = completeSketchOnMouseUp;
+
+		UseSnapping = useSnapping;
+
+		GeomIsSimpleAsFeature = enforceSimpleSketch;
+	}
+
+	/// <summary>
+	/// Subclasses override this method to execute tool-specific logic after the start of the
+	/// selection phase, such as specific cursors.
+	/// </summary>
+	/// <returns></returns>
+	protected virtual Task OnSelectionPhaseStartedAsync()
+	{
+		return Task.CompletedTask;
+	}
+
+	private async void OnMapSelectionChangedAsync(MapSelectionChangedEventArgs args)
+	{
+		// NOTE: This method is called repeatedly with different selection sets during the
+		//       OnSelectionSketchCompleteAsync method. Therefore, the flag is set to prevent
+		//       multiple calls to the AfterSelectionMethod with intermediate results!
+		//       The ProcessSelectionAsync method is called at the end of the sketch completion.
+
+		try
 		{
-			if (mapView is null)
-				throw new ArgumentNullException(nameof(mapView));
+			_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
 
-			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection<BasicFeatureLayer>(mapView.Map);
-
-			return CanUseSelection(selectionByLayer);
-		}
-
-		protected virtual bool CanUseSelection(
-			[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
-			[CanBeNull] NotificationCollection notifications = null)
-		{
-			notifications ??= new NotificationCollection();
-
-			int count = SelectionUtils.GetFeatureCount(selectionByLayer);
-
-			if (count > 1 && ! AllowMultiSelection(out string reason))
-			{
-				if (string.IsNullOrEmpty(reason))
-				{
-					reason = "Multiple selection is not supported by this tool";
-				}
-
-				notifications.Add(reason);
-
-				_msg.Debug(
-					$"Cannot use selection: multi selection not allowed, selection count is {count}");
-
-				LogSelectionInfo(notifications);
-				return false;
-			}
-
-			return AllowNotApplicableFeaturesInSelection
-				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key, notifications))
-				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key, notifications));
-		}
-
-		protected IEnumerable<Feature> GetDistinctApplicableSelectedFeatures(
-			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
-			bool unJoinedFeaturesForEditing = false,
-			[CanBeNull] NotificationCollection notifications = null)
-		{
-			HashSet<GdbObjectReference> usedRows = new HashSet<GdbObjectReference>();
-
-			foreach (Feature feature in GetApplicableSelectedFeatures(selectionByLayer,
-				         unJoinedFeaturesForEditing, notifications))
-			{
-				var objectReference = new GdbObjectReference(feature);
-
-				if (usedRows.Add(objectReference))
-				{
-					yield return feature;
-				}
-			}
-		}
-
-		protected IEnumerable<Feature> GetApplicableSelectedFeatures(
-			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
-			bool unJoinedFeaturesForEditing = false,
-			[CanBeNull] NotificationCollection notifications = null)
-		{
-			var filteredCount = 0;
-			var selectionCount = 0;
-
-			SpatialReference mapSpatialReference = ActiveMapView.Map.SpatialReference;
-
-			foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
-			{
-				if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
-				{
-					filteredCount += oidsByLayer.Value.Count;
-					continue;
-				}
-
-				foreach (Feature feature in MapUtils.GetFeatures(
-					         oidsByLayer.Key, oidsByLayer.Value, unJoinedFeaturesForEditing, false,
-					         mapSpatialReference))
-				{
-					yield return feature;
-					selectionCount++;
-				}
-			}
-
-			if (filteredCount == 1)
-			{
-				notifications?.Insert(
-					0, new Notification("The selected feature cannot be used by the tool."));
-			}
-
-			if (filteredCount > 1)
-			{
-				notifications?.Insert(
-					0,
-					new Notification(
-						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
-			}
-		}
-
-		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
-		{
-			Dictionary<MapMember, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection(mapView.Map);
-
-			return GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection);
-		}
-
-		protected virtual bool CanSelectGeometryType(GeometryType geometryType)
-		{
-			return true;
-		}
-
-		protected virtual bool CanSelectFromLayerCore(
-			[NotNull] BasicFeatureLayer basicFeatureLayer,
-			[CanBeNull] NotificationCollection notifications)
-		{
-			return true;
-		}
-
-		/// <summary>Clear the selection on the active map</summary>
-		/// <remarks>Must call on MCT</remarks>
-		protected void ClearSelection()
-		{
-			var map = ActiveMapView?.Map;
-
-			map?.ClearSelection();
-		}
-
-		/// <summary>Clear the selection on the active map</summary>
-		protected async Task ClearSelectionAsync()
-		{
-			var map = ActiveMapView?.Map;
-
-			if (map != null)
-			{
-				await QueuedTask.Run(() => map.ClearSelection());
-			}
-		}
-
-		private static void LogSelectionInfo(NotificationCollection collection)
-		{
-			if (collection == null)
+			if (IsCompletingSelectionSketch)
 			{
 				return;
 			}
 
-			if (collection.Any()) _msg.Debug("Cannot use selection:");
-
-			foreach (INotification notification in collection)
+			if (args.Map != ActiveMapView?.Map)
 			{
-				_msg.Info(notification.Message);
-			}
-		}
-
-		public void SetSketchType(SketchGeometryType? sketchType)
-		{
-			SetSketchTypeCore(sketchType);
-		}
-
-		protected virtual void SetSketchTypeCore(SketchGeometryType? sketchType)
-		{
-			SketchType = sketchType;
-		}
-
-		public SketchGeometryType? GetSketchType()
-		{
-			return SketchType;
-		}
-
-		/// <summary>
-		/// Returns a simplified sketch geometry of the correct geometry type.
-		/// NOTE: This method can return a different geometry type in the single click case.
-		/// </summary>
-		/// <param name="sketchGeometry"></param>
-		/// <returns></returns>
-		/// <exception cref="NotImplementedException"></exception>
-		[CanBeNull]
-		private Geometry GetSimplifiedSketch([CanBeNull] Geometry sketchGeometry)
-		{
-			if (sketchGeometry == null || sketchGeometry.IsEmpty)
-			{
-				_msg.VerboseDebug(() => $"{Caption}: Null or empty sketch");
-				return null;
+				// Selection changed on a different map (e.g. by SyncSelection)
+				return;
 			}
 
-			Geometry simplified = GeometryUtils.Simplify(sketchGeometry);
-
-			if (! simplified.IsEmpty)
+			if (RequiresEditSession && Project.Current?.IsEditingEnabled != true)
 			{
-				return simplified;
+				return;
 			}
 
-			if (sketchGeometry is Polygon sketchPolygon)
+			if (! Enabled)
 			{
-				// Convert polygon sketch to point sketch because the picker does not test for
-				// single click anymore, just for point geometry.
-				if (ToolUtils.IsSingleClickSketch(simplified))
-				{
-					Assert.False(sketchGeometry.PointCount == 0,
-					             "Non empty single click sketch without points");
-
-					return sketchPolygon.Points.First();
-				}
+				// It is possible to be the active tool but not enabled
+				return;
 			}
 
-			throw new AssertionException(
-				"Empty sketch after simplify in non-single-click scenario.");
+			await OnMapSelectionChangedCoreAsync(args);
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Error while handling selection change: {e.Message}", e);
+		}
+	}
+
+	private async Task OnEditCompletedAsync(EditCompletedEventArgs args)
+	{
+		await ViewUtils.TryAsync(OnEditCompletedAsyncCore(args), _msg,
+		                         suppressErrorMessageBox: true);
+	}
+
+	/// <summary>
+	/// The task to be run on edit complete.
+	/// NOTE: This task is run after every edit operation, including undo or delete with DEL key!
+	/// In that case there seems to be no catch block observing the potential exception thrown
+	/// inside the task execution, which leads to a crash of the application due to the finalizer
+	/// thread throwing:
+	/// A Task's exception(s) were not observed either by Waiting on the Task or accessing its
+	/// Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.
+	/// Therefore, any exception must be caught inside the Task execution!
+	/// </summary>
+	/// <param name="args"></param>
+	/// <returns></returns>
+	protected virtual Task OnEditCompletedAsyncCore(EditCompletedEventArgs args)
+	{
+		return Task.CompletedTask;
+	}
+
+	/// <remarks>Will be called on MCT</remarks>
+	protected virtual Task OnToolActivatingCoreAsync()
+	{
+		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Synchronous method called on the MCT after the tool has been activated.
+	/// </summary>
+	/// <param name="hasMapViewChanged"></param>
+	/// <returns></returns>
+	protected virtual bool OnToolActivatedCore(bool hasMapViewChanged)
+	{
+		return true;
+	}
+
+	/// <summary>
+	/// Async method called on the MCT after the tool has been activated.
+	/// </summary>
+	/// <param name="hasMapViewChanged"></param>
+	/// <returns></returns>
+	/// <remarks>Will be called on MCT</remarks>
+	protected virtual Task<bool> OnToolActivatedCoreAsync(bool hasMapViewChanged)
+	{
+		return Task.FromResult(true);
+	}
+
+	protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
+
+	/// <summary>
+	/// Method called on the UI thread to react to changes to map selection that typically do
+	/// not originate from the tool itself. Examples: Clear Selection Button, attribute table
+	/// or clearing the selection of a single layer in the 'List by Selection' tab of the TOC.
+	/// </summary>
+	/// <param name="args"></param>
+	/// <returns></returns>
+	/// <remarks>Will be called on the UI thread</remarks>
+	protected virtual Task<bool> OnMapSelectionChangedCoreAsync(
+		MapSelectionChangedEventArgs args)
+	{
+		return Task.FromResult(true);
+	}
+
+	private async Task<bool> OnSelectionSketchCompleteAsync(
+		[NotNull] Geometry sketchGeometry,
+		[CanBeNull] CancelableProgressor progressor)
+	{
+		try
+		{
+			IsCompletingSelectionSketch = true;
+
+			using var precedence = await CreatePickerPrecedenceAsync(sketchGeometry);
+
+			await QueuedTaskUtils.Run(async () =>
+			{
+				var candidates =
+					FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
+					                        precedence.SpatialRelationship).ToList();
+
+				List<IPickableItem> items =
+					await PickerUtils.GetItemsAsync(candidates, precedence);
+
+				await OnItemsPickedAsync(items, precedence);
+
+				await ProcessSelectionAsync(progressor);
+			}, progressor);
+		}
+		finally
+		{
+			IsCompletingSelectionSketch = false;
 		}
 
-		/// <summary>
-		/// Determines whether the sketch completion is a duplicate call that should be ignored.
-		/// </summary>
-		/// <param name="sketchGeometry"></param>
-		/// <returns></returns>
-		private bool IsDuplicateSketchCompleteInvocation([CanBeNull] Geometry sketchGeometry)
-		{
-			// NOTE: This still happens occasionally. This is not a reentrancy problem. The sketch
-			//       completion is called twice in a row by the framework.
+		return true;
+	}
 
-			if (sketchGeometry == null || sketchGeometry.IsEmpty)
+	protected virtual Task OnItemsPickedAsync([NotNull] List<IPickableItem> items,
+	                                          [NotNull] IPickerPrecedence precedence)
+	{
+		OnSelecting();
+
+		PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+
+		return Task.CompletedTask;
+	}
+
+	protected virtual void OnSelecting() { }
+
+	protected virtual async Task<IPickerPrecedence> CreatePickerPrecedenceAsync(
+		[NotNull] Geometry sketchGeometry)
+	{
+		Point screenLocation = await GetPopupScreenLocation(sketchGeometry);
+
+		var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
+		                                  screenLocation)
+		             {
+			             NoMultiselection = ! AllowMultiSelection(out _)
+		             };
+
+		MapView mapView = MapView.Active;
+
+		bool isInStereoFixedCursorMode =
+			MapUtils.IsStereoMapView(mapView) &&
+			await QueuedTask.Run(async () => await MapUtils.IsInStereoFixedCursorMode(mapView));
+
+		if (isInStereoFixedCursorMode)
+		{
+			result.PositionPreference = PickerPositionPreference.MouseLocation;
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Provides the screen location for displaying popups, based on the current mouse
+	/// location.
+	/// </summary>
+	/// <param name="sketchGeometry"></param>
+	/// <returns></returns>
+	protected async Task<Point> GetPopupScreenLocation([NotNull] Geometry sketchGeometry)
+	{
+		MapView activeMapView = ActiveMapView;
+
+		double zValue = sketchGeometry.HasZ ? sketchGeometry.Extent.ZMin : double.NaN;
+
+		Point screenLocation =
+			await MapUtils.ClientToScreenPointAsync(activeMapView, CurrentMousePosition,
+			                                        zValue);
+		return screenLocation;
+	}
+
+	private IEnumerable<FeatureSelectionBase> FindFeaturesOfAllLayers(
+		[NotNull] Geometry searchGeometry,
+		SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
+		[CanBeNull] CancelableProgressor progressor = null)
+	{
+		var mapView = ActiveMapView;
+
+		if (mapView is null)
+		{
+			return Enumerable.Empty<FeatureSelectionBase>();
+		}
+
+		var featureFinder = new FeatureFinder(mapView)
+		                    {
+			                    SpatialRelationship = spatialRelationship,
+			                    DelayFeatureFetching = true
+		                    };
+
+		const Predicate<Feature> featurePredicate = null;
+		return featureFinder.FindFeaturesByLayer(searchGeometry, fl => CanSelectFromLayer(fl),
+		                                         featurePredicate, progressor);
+	}
+
+	protected Task<bool> IsInSelectionPhaseAsync()
+	{
+		bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+		                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+
+		return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
+	}
+
+	protected virtual Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+	{
+		return Task.FromResult(false);
+	}
+
+	protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs args) { }
+
+	protected abstract void LogUsingCurrentSelection();
+
+	protected abstract void LogPromptForSelection();
+
+	protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
+	{
+		using var featureClass = feature.GetTable();
+		GeometryType shapeType = featureClass.GetShapeType();
+
+		return CanSelectGeometryType(shapeType);
+	}
+
+	/// <remarks>Will be called on MCT</remarks>>
+	protected virtual Task AfterSelectionAsync([NotNull] IList<Feature> selectedFeatures,
+	                                           [CanBeNull] CancelableProgressor progressor)
+	{
+		return Task.CompletedTask;
+	}
+
+	/// <remarks>Must be called on MCT</remarks>
+	protected async Task ProcessSelectionAsync(
+		[CanBeNull] CancelableProgressor progressor = null)
+	{
+		Map map = ActiveMapView?.Map;
+
+		if (map == null)
+		{
+			// This happens sometimes when switching map views in the middle of a picker:
+			return;
+		}
+
+		var selectionByLayer = SelectionUtils.GetSelection(map);
+
+		var notifications = new NotificationCollection();
+		var applicableSelection =
+			GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
+			                                      notifications).ToList();
+
+		int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
+
+		bool allowMultiselection = AllowMultiSelection(out _);
+
+		if (applicableSelection.Count > 0 &&
+		    (AllowNotApplicableFeaturesInSelection ||
+		     applicableSelection.Count == selectionCount) &&
+		    (allowMultiselection || applicableSelection.Count == 1))
+		{
+			LogUsingCurrentSelection();
+
+			await AfterSelectionAsync(applicableSelection, progressor);
+		}
+		else
+		{
+			if (selectionCount > 0)
 			{
+				_msg.DebugFormat(notifications.Concatenate(Environment.NewLine));
+			}
+
+			LogPromptForSelection();
+			await StartSelectionPhaseAsync();
+		}
+	}
+
+	/// <summary>
+	/// Whether the selection shall be retrieved without the join even if the layer is joined.
+	/// This is important for updating features. Features based on a joined table throw an
+	/// exception when setting the shape (GOTOP-190)!
+	/// </summary>
+	protected bool UnJoinedSelection { get; set; } = true;
+
+	protected bool CanSelectFromLayer([CanBeNull] Layer layer,
+	                                  NotificationCollection notifications = null)
+	{
+		if (layer is not BasicFeatureLayer featureLayer)
+		{
+			NotificationUtils.Add(notifications, "Not a feature layer");
+			return false;
+		}
+
+		string layerName = layer.Name;
+
+		if (! LayerUtils.IsVisible(layer, ActiveMapView))
+		{
+			NotificationUtils.Add(notifications,
+			                      $"Layer is not visible in active map: {layerName}");
+			return false;
+		}
+
+		if (SelectOnlySelectableFeatures && ! featureLayer.IsSelectable)
+		{
+			NotificationUtils.Add(notifications, $"Layer is not selectable: {layerName}");
+			return false;
+		}
+
+		if (SelectOnlyEditFeatures && ! featureLayer.IsEditable)
+		{
+			NotificationUtils.Add(notifications, $"Layer is not editable: {layerName}");
+			return false;
+		}
+
+		var geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
+		if (! CanSelectGeometryType(geometryType))
+		{
+			NotificationUtils.Add(notifications,
+			                      $"Cannot use geometry type {featureLayer.ShapeType} of layer {layerName}");
+			return false;
+		}
+
+		using (FeatureClass featureClass = featureLayer.GetFeatureClass())
+		{
+			if (featureClass is null)
+			{
+				NotificationUtils.Add(notifications,
+				                      $"Layer has no valid data source: {layerName}");
 				return false;
 			}
+		}
 
-			if (DateTime.Now - _lastSketchFinishedTime < _sketchBlockingPeriod &&
-			    GeometryUtils.Engine.Equals(_lastSketch, sketchGeometry))
+		return CanSelectFromLayerCore(featureLayer, notifications);
+	}
+
+	protected bool CanUseSelection([NotNull] MapView mapView)
+	{
+		if (mapView is null)
+			throw new ArgumentNullException(nameof(mapView));
+
+		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+			SelectionUtils.GetSelection<BasicFeatureLayer>(mapView.Map);
+
+		return CanUseSelection(selectionByLayer);
+	}
+
+	protected virtual bool CanUseSelection(
+		[NotNull] Dictionary<BasicFeatureLayer, List<long>> selectionByLayer,
+		[CanBeNull] NotificationCollection notifications = null)
+	{
+		notifications ??= new NotificationCollection();
+
+		int count = SelectionUtils.GetFeatureCount(selectionByLayer);
+
+		if (count > 1 && ! AllowMultiSelection(out string reason))
+		{
+			if (string.IsNullOrEmpty(reason))
 			{
-				// In some situations, seemingly randomly, this method is called twice
-				// - On the same instance
-				// - Both times on the UI thread
+				reason = "Multiple selection is not supported by this tool";
+			}
+
+			notifications.Add(reason);
+
+			_msg.Debug(
+				$"Cannot use selection: multi selection not allowed, selection count is {count}");
+
+			LogSelectionInfo(notifications);
+			return false;
+		}
+
+		return AllowNotApplicableFeaturesInSelection
+			       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key, notifications))
+			       : selectionByLayer.All(l => CanSelectFromLayer(l.Key, notifications));
+	}
+
+	protected IEnumerable<Feature> GetDistinctApplicableSelectedFeatures(
+		[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
+		bool unJoinedFeaturesForEditing = false,
+		[CanBeNull] NotificationCollection notifications = null)
+	{
+		HashSet<GdbObjectReference> usedRows = new HashSet<GdbObjectReference>();
+
+		foreach (Feature feature in GetApplicableSelectedFeatures(selectionByLayer,
+			         unJoinedFeaturesForEditing, notifications))
+		{
+			var objectReference = new GdbObjectReference(feature);
+
+			if (usedRows.Add(objectReference))
+			{
+				yield return feature;
+			}
+		}
+	}
+
+	protected IEnumerable<Feature> GetApplicableSelectedFeatures(
+		[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
+		bool unJoinedFeaturesForEditing = false,
+		[CanBeNull] NotificationCollection notifications = null)
+	{
+		var filteredCount = 0;
+		var selectionCount = 0;
+
+		SpatialReference mapSpatialReference = ActiveMapView.Map.SpatialReference;
+
+		foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
+		{
+			if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
+			{
+				filteredCount += oidsByLayer.Value.Count;
+				continue;
+			}
+
+			foreach (Feature feature in MapUtils.GetFeatures(
+				         oidsByLayer.Key, oidsByLayer.Value, unJoinedFeaturesForEditing, false,
+				         mapSpatialReference))
+			{
+				yield return feature;
+				selectionCount++;
+			}
+		}
+
+		if (filteredCount == 1)
+		{
+			notifications?.Insert(
+				0, new Notification("The selected feature cannot be used by the tool."));
+		}
+
+		if (filteredCount > 1)
+		{
+			notifications?.Insert(
+				0,
+				new Notification(
+					$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool."));
+		}
+	}
+
+	protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
+	{
+		Dictionary<MapMember, List<long>> selectionByLayer =
+			SelectionUtils.GetSelection(mapView.Map);
+
+		return GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection);
+	}
+
+	protected virtual bool CanSelectGeometryType(GeometryType geometryType)
+	{
+		return true;
+	}
+
+	protected virtual bool CanSelectFromLayerCore(
+		[NotNull] BasicFeatureLayer basicFeatureLayer,
+		[CanBeNull] NotificationCollection notifications)
+	{
+		return true;
+	}
+
+	/// <summary>Clear the selection on the active map</summary>
+	/// <remarks>Must call on MCT</remarks>
+	protected void ClearSelection()
+	{
+		var map = ActiveMapView?.Map;
+
+		map?.ClearSelection();
+	}
+
+	/// <summary>Clear the selection on the active map</summary>
+	protected async Task ClearSelectionAsync()
+	{
+		var map = ActiveMapView?.Map;
+
+		if (map != null)
+		{
+			await QueuedTask.Run(() => map.ClearSelection());
+		}
+	}
+
+	private static void LogSelectionInfo(NotificationCollection collection)
+	{
+		if (collection == null)
+		{
+			return;
+		}
+
+		if (collection.Any()) _msg.Debug("Cannot use selection:");
+
+		foreach (INotification notification in collection)
+		{
+			_msg.Info(notification.Message);
+		}
+	}
+
+	public void SetSketchType(SketchGeometryType? sketchType)
+	{
+		SetSketchTypeCore(sketchType);
+	}
+
+	protected virtual void SetSketchTypeCore(SketchGeometryType? sketchType)
+	{
+		SketchType = sketchType;
+	}
+
+	public SketchGeometryType? GetSketchType()
+	{
+		return SketchType;
+	}
+
+	/// <summary>
+	/// Returns a simplified sketch geometry of the correct geometry type.
+	/// NOTE: This method can return a different geometry type in the single click case.
+	/// </summary>
+	/// <param name="sketchGeometry"></param>
+	/// <returns></returns>
+	/// <exception cref="NotImplementedException"></exception>
+	[CanBeNull]
+	private Geometry GetSimplifiedSketch([CanBeNull] Geometry sketchGeometry)
+	{
+		if (sketchGeometry == null || sketchGeometry.IsEmpty)
+		{
+			_msg.VerboseDebug(() => $"{Caption}: Null or empty sketch");
+			return null;
+		}
+
+		Geometry simplified = GeometryUtils.Simplify(sketchGeometry);
+
+		if (! simplified.IsEmpty)
+		{
+			return simplified;
+		}
+
+		if (sketchGeometry is Polygon sketchPolygon)
+		{
+			// Convert polygon sketch to point sketch because the picker does not test for
+			// single click anymore, just for point geometry.
+			if (ToolUtils.IsSingleClickSketch(simplified))
+			{
+				Assert.False(sketchGeometry.PointCount == 0,
+				             "Non empty single click sketch without points");
+
+				return sketchPolygon.Points.First();
+			}
+		}
+
+		throw new AssertionException(
+			"Empty sketch after simplify in non-single-click scenario.");
+	}
+
+	/// <summary>
+	/// Determines whether the sketch completion is a duplicate call that should be ignored.
+	/// </summary>
+	/// <param name="sketchGeometry"></param>
+	/// <returns></returns>
+	private bool IsDuplicateSketchCompleteInvocation([CanBeNull] Geometry sketchGeometry)
+	{
+		// NOTE: This still happens occasionally. This is not a reentrancy problem. The sketch
+		//       completion is called twice in a row by the framework.
+
+		if (sketchGeometry == null || sketchGeometry.IsEmpty)
+		{
+			return false;
+		}
+
+		if (DateTime.Now - _lastSketchFinishedTime < _sketchBlockingPeriod &&
+		    GeometryUtils.Engine.Equals(_lastSketch, sketchGeometry))
+		{
+			// In some situations, seemingly randomly, this method is called twice
+			// - On the same instance
+			// - Both times on the UI thread
 #if DEBUG
-				_msg.Warn($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}!");
+			_msg.Warn($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}!");
 #else
 				_msg.Debug($"OnSketchCompleteAsync: Duplicate call is ignored for {Caption}.");
 #endif
 
-				return true;
-			}
-
-			// Remember state for next call:
-			_lastSketch = sketchGeometry;
-			_lastSketchFinishedTime = DateTime.Now;
-
-			return false;
+			return true;
 		}
 
-		protected async Task<bool> NonEmptySketchAsync()
-		{
-			return await GetCurrentSketchAsync() is { IsEmpty: false };
-		}
+		// Remember state for next call:
+		_lastSketch = sketchGeometry;
+		_lastSketchFinishedTime = DateTime.Now;
 
-		protected async Task<bool> NonEmptyPolygonSketchAsync()
-		{
-			return SketchType == SketchGeometryType.Polygon && await NonEmptySketchAsync();
-		}
+		return false;
+	}
+
+	protected async Task<bool> NonEmptySketchAsync()
+	{
+		return await GetCurrentSketchAsync() is { IsEmpty: false };
+	}
+
+	protected async Task<bool> NonEmptyPolygonSketchAsync()
+	{
+		return SketchType == SketchGeometryType.Polygon && await NonEmptySketchAsync();
 	}
 }

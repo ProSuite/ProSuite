@@ -118,7 +118,8 @@ public static class ControlPointUtils
 
 		if (shape is Polyline polyline)
 		{
-			var localIndex = GeometryUtils.GetLocalVertexIndex(polyline, globalVertexIndex, out var partIndex);
+			var localIndex =
+				GeometryUtils.GetLocalVertexIndex(polyline, globalVertexIndex, out var partIndex);
 			var builder = new PolylineBuilderEx(polyline);
 			builder.SetPointID(partIndex, localIndex, value);
 			return builder.ToGeometry();
@@ -126,7 +127,8 @@ public static class ControlPointUtils
 
 		if (shape is Polygon polygon)
 		{
-			var localIndex = GeometryUtils.GetLocalVertexIndex(polygon, globalVertexIndex, out var partIndex);
+			var localIndex =
+				GeometryUtils.GetLocalVertexIndex(polygon, globalVertexIndex, out var partIndex);
 			var builder = new PolygonBuilderEx(polygon);
 			builder.SetPointID(partIndex, localIndex, value);
 			return builder.ToGeometry();
@@ -174,7 +176,7 @@ public static class ControlPointUtils
 			int pointIndex = GeometryUtils.GetMultipointIndex(partIndex, vertexIndex);
 			if (pointIndex < 0 || pointIndex >= multipoint.PointCount)
 				throw new ArgumentOutOfRangeException(
-					"point index out of range for multipoint shape", (Exception)null);
+					"point index out of range for multipoint shape", (Exception) null);
 
 			var builder = new MultipointBuilderEx(multipoint);
 			var hadID = builder.HasID;
@@ -216,12 +218,12 @@ public static class ControlPointUtils
 	{
 		if (builder is null)
 			throw new ArgumentNullException(nameof(builder));
-		if (!(0 <= partIndex && partIndex < builder.PartCount))
+		if (! (0 <= partIndex && partIndex < builder.PartCount))
 			throw new ArgumentOutOfRangeException(nameof(partIndex));
 
 		// assume point i is between segments i-1 and i
 		var segmentCount = builder.GetSegmentCount(partIndex);
-		if (!(0 <= pointIndex && pointIndex <= segmentCount))
+		if (! (0 <= pointIndex && pointIndex <= segmentCount))
 			throw new ArgumentOutOfRangeException(nameof(pointIndex));
 
 		if (value != NoID)
@@ -297,7 +299,7 @@ public static class ControlPointUtils
 	{
 		if (segment is null) return null;
 
-		if (!startPointID.HasValue && !endPointID.HasValue)
+		if (! startPointID.HasValue && ! endPointID.HasValue)
 		{
 			return segment; // nothing to update
 		}
@@ -322,7 +324,7 @@ public static class ControlPointUtils
 	{
 		if (segment is null) return null;
 
-		if (!startPointID.HasValue && !endPointID.HasValue)
+		if (! startPointID.HasValue && ! endPointID.HasValue)
 		{
 			return segment; // nothing to update
 		}
@@ -347,7 +349,7 @@ public static class ControlPointUtils
 	{
 		if (segment is null) return null;
 
-		if (!startPointID.HasValue && !endPointID.HasValue)
+		if (! startPointID.HasValue && ! endPointID.HasValue)
 		{
 			return segment; // nothing to update
 		}
@@ -369,7 +371,6 @@ public static class ControlPointUtils
 
 			if (endPointID.HasValue)
 			{
-
 				//bool check = IsPointOnCircle(builder.StartPoint, segment);
 
 				builder.EndPoint = SetPointID(builder.EndPoint, endPointID.Value);
@@ -500,7 +501,7 @@ public static class ControlPointUtils
 		Polygon shape, int partIndex = -1, int value = -1, Polygon perimeter = null)
 	{
 		if (shape is null) return null;
-		if (!shape.HasID) return shape;
+		if (! shape.HasID) return shape;
 
 		var builder = new PolygonBuilderEx(shape);
 		ResetControlPoints(builder, partIndex, value, perimeter);
@@ -601,7 +602,7 @@ public static class ControlPointUtils
 	{
 		count = 0;
 		if (shape is null) return null;
-		if (!shape.HasID) return shape;
+		if (! shape.HasID) return shape;
 
 		var builder = new PolylineBuilderEx(shape);
 		count = ResetControlPointPairs(builder, value, perimeter);

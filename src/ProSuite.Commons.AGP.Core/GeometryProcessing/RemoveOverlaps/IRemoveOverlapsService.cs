@@ -11,12 +11,14 @@ namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 /// </summary>
 public interface IRemoveOverlapsService
 {
+	[CanBeNull]
 	Overlaps CalculateOverlaps(
 		[NotNull] IList<Feature> selectedFeatures,
 		[NotNull] IList<Feature> overlappingFeatures,
 		[CanBeNull] Envelope inExtent,
 		CancellationToken cancellationToken);
 
+	[CanBeNull]
 	RemoveOverlapsResult RemoveOverlaps([NotNull] IEnumerable<Feature> selectedFeatures,
 	                                    [NotNull] Overlaps overlapsToRemove,
 	                                    [NotNull] IList<Feature> overlappingFeatures,

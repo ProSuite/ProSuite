@@ -17,7 +17,7 @@
                     Width="300"
                     SizeToContent="WidthAndHeight"
                     WindowStartupLocation="Manual"
-					SaveWindowPosition="False"
+                    SaveWindowPosition="False"
                     ShowInTaskbar="False"
                     WindowStyle="None"
                     BorderBrush="{DynamicResource Esri_BorderBrush}"
@@ -90,35 +90,35 @@
 		<KeyBinding Key="Escape"
 		            Command="{Binding PressEscapeCommand}"
 		            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
-		<KeyBinding Key="Space" 
-		            Command="{Binding PressSpaceCommand}"/>
+		<KeyBinding Key="Space"
+		            Command="{Binding PressSpaceCommand}" />
 	</Window.InputBindings>
 
 	<behaviors:Interaction.Triggers>
 		<behaviors:EventTrigger EventName="Deactivated">
-			<behaviors:InvokeCommandAction Command="{Binding Path=DeactivatedCommand}" 
-			                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"/>
+			<behaviors:InvokeCommandAction Command="{Binding Path=DeactivatedCommand}"
+			                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
 		</behaviors:EventTrigger>
 	</behaviors:Interaction.Triggers>
-	
+
 
 	<Grid Background="Transparent">
 		<DockPanel Background="Transparent">
 
 			<!-- Listbox visibility is set in viewmodel 
             and depends on Single/Multiselection mode. -->
-			<ListBox x:Name="ItemListBox"				
-			                                               DockPanel.Dock="Top"
-			                                               ItemsSource="{Binding Path=Items}"
-			                                               ItemTemplate="{StaticResource SinglePickTemplate}"
-			                                               SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
-			                                               Style="{StaticResource ListBox}"
-			                                               Focusable="True"
-			                                               KeyboardNavigation.DirectionalNavigation="Contained"
-			                                               KeyboardNavigation.TabNavigation="Local">
+			<ListBox x:Name="ItemListBox"
+			         DockPanel.Dock="Top"
+			         ItemsSource="{Binding Path=Items}"
+			         ItemTemplate="{StaticResource SinglePickTemplate}"
+			         SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
+			         Style="{StaticResource ListBox}"
+			         Focusable="True"
+			         KeyboardNavigation.DirectionalNavigation="Contained"
+			         KeyboardNavigation.TabNavigation="Local">
 
 				<behaviors:Interaction.Behaviors>
-					<pickerUi:ListBoxKeyUpBehavior 
+					<pickerUi:ListBoxKeyUpBehavior
 						FlashItemCommand="{Binding FlashItemCommand}"
 						CloseWindowAction="{Binding CloseWindowCommand}" />
 				</behaviors:Interaction.Behaviors>

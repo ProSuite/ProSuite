@@ -64,7 +64,7 @@ namespace ProSuite.GIS.Geometry.AGP
 			throw new NotImplementedException();
 		}
 
-		public void IsPrecisionEqual(ISpatialReference otherSr, out bool isPrecisionEqual)
+		public bool AreEqual(ISpatialReference otherSr, bool includeResolution)
 		{
 			// TODO: Compare actual resulution values
 			SpatialReference otherAoSr;
@@ -77,8 +77,8 @@ namespace ProSuite.GIS.Geometry.AGP
 				throw new NotImplementedException();
 			}
 
-			isPrecisionEqual =
-				SpatialReference.AreEqual(_proSpatialReference, otherAoSr, false, true);
+			return SpatialReference.AreEqual(_proSpatialReference, otherAoSr, false,
+			                                 includeResolution);
 		}
 
 		public void SetFalseOriginAndUnits(double falseX, double falseY, double xyUnits)
@@ -188,6 +188,10 @@ namespace ProSuite.GIS.Geometry.AGP
 		public double XYTolerance => ProSpatialReference.XYTolerance;
 		public double ZTolerance => ProSpatialReference.ZTolerance;
 		public double MTolerance => ProSpatialReference.MTolerance;
+
+		public bool IsGeographic => ProSpatialReference.IsGeographic;
+
+		public bool IsUnknown => ProSpatialReference.IsUnknown;
 
 		#endregion
 

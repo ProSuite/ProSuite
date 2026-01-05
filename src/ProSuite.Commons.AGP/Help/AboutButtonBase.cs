@@ -73,7 +73,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		{
 			Add(items, currentSection, "Addin version", AddInVersion);
 			Add(items, currentSection, "Addin file name", AddInFileName);
-			
+
 			Add(items, currentSection, "ArcGIS Pro product version", GetProProductVersion());
 			Add(items, currentSection, "ArcGIS Pro assembly version", GetProAssemblyVersion());
 		}

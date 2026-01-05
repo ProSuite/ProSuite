@@ -14,14 +14,18 @@ public static class DrawingOutline
 	public class Options
 	{
 		public bool IgnoreErrors { get; set; } // and outline may be wrong
+
 		public bool IgnoreDashing { get; set; } // and assume solid lines
+
 		//public bool IgnoreLineMarkers { get; set; } // point markers still honored
 		//public bool FillGlyphCounters { get; set; } // dt. Punzen entfernen
 		//public bool FillHoles { get; set; } // probably want (relative) size limit
 		public ulong LayerMask { get; set; } // 0 = all, otherwise only bits set
 		public double MaxBufferDeviationPoints { get; set; } // see (Graphic)Buffer operation
 		public int MaxVerticesInFullCircle { get; set; } // see (Graphic)Buffer operation
-		public double ScaleFactor { get; set; } // to convert points to map units at reference scale!
+
+		// to convert points to map units at reference scale:
+		public double ScaleFactor { get; set; }
 
 		public Options()
 		{
@@ -137,7 +141,8 @@ public static class DrawingOutline
 				return null;
 
 			default:
-				throw new NotSupportedException($"Symbol type not supported: {symbol.GetType().Name}");
+				throw new NotSupportedException(
+					$"Symbol type not supported: {symbol.GetType().Name}");
 		}
 	}
 
@@ -207,7 +212,7 @@ public static class DrawingOutline
 		if (symbol.Callout != null)
 		{
 			// not exposed in ordinary symbology ui, but may occur in labels/annos
-			if (!options.IgnoreErrors)
+			if (! options.IgnoreErrors)
 				throw new NotImplementedException(
 					"Point symbol has a Callout, which is not yet implemented");
 			_msg.Warn("Ignoring point symbol's callout");
@@ -246,7 +251,7 @@ public static class DrawingOutline
 		for (int i = 0; i < n; i++)
 		{
 			var layer = layers![i];
-			if (!layer.Enable) continue;
+			if (! layer.Enable) continue;
 
 			// ignore wrap in shift: in practice there
 			// are hardly ever more than 5 symbol layers:
@@ -265,7 +270,7 @@ public static class DrawingOutline
 			}
 			catch (Exception ex)
 			{
-				if (!options.IgnoreErrors) throw;
+				if (! options.IgnoreErrors) throw;
 				_msg.Warn($"Cannot {nameof(GetLayerOutline)}: {ex.Message}", ex);
 			}
 		}
@@ -339,7 +344,8 @@ public static class DrawingOutline
 			$"Symbol layer of type {layer.GetType().Name} is not supported");
 	}
 
-	private static Polygon GetCharacterMarkerOutline(Geometry shape, CIMCharacterMarker marker, Options options)
+	private static Polygon GetCharacterMarkerOutline(Geometry shape, CIMCharacterMarker marker,
+	                                                 Options options)
 	{
 		// CIMMarker properties include:
 		// .AnchorPoint: MapPoint
@@ -459,7 +465,8 @@ public static class DrawingOutline
 		return PlaceMarker(outline, marker.MarkerPlacement, shape, options);
 	}
 
-	private static Polygon GetVectorMarkerOutline(Geometry shape, CIMVectorMarker marker, Options options)
+	private static Polygon GetVectorMarkerOutline(Geometry shape, CIMVectorMarker marker,
+	                                              Options options)
 	{
 		// CIMMarker properties: see above (Anchor, Offset, Rotate, Size, Placement)
 		// CIMVectorMarker properties:
@@ -475,7 +482,7 @@ public static class DrawingOutline
 		var frame = marker.Frame;
 		bool respectFrame = marker.RespectFrame; // TODO don't understand
 		//bool scaleStrokes = vectorMarker.ScaleSymbolsProportionally; // relative to Size=10pt ???
-		
+
 		var list = new List<Geometry>();
 		foreach (var graphic in graphics)
 		{
@@ -486,7 +493,8 @@ public static class DrawingOutline
 			var graphicOutline = GetOutline(graphicShape, graphic.Symbol, innerOptions);
 			if (graphicOutline != null)
 			{
-				var withSRef = PolygonBuilderEx.CreatePolygon(graphicOutline, shape.SpatialReference);
+				var withSRef =
+					PolygonBuilderEx.CreatePolygon(graphicOutline, shape.SpatialReference);
 				list.Add(withSRef);
 			}
 		}
@@ -511,7 +519,8 @@ public static class DrawingOutline
 				}
 
 				default:
-					throw new ArgumentOutOfRangeException($"Unknow clipping type {marker.ClippingPath.ClippingType}");
+					throw new ArgumentOutOfRangeException(
+						$"Unknow clipping type {marker.ClippingPath.ClippingType}");
 			}
 		}
 
@@ -621,7 +630,8 @@ public static class DrawingOutline
 				var controlPointType = GetDashEndings(dashes.ControlPointEnding);
 				var offsetAlong = dashes.OffsetAlongLine * scaleFactor;
 				var customEndOffset = dashes.CustomEndingOffset * scaleFactor;
-				return GeometricEffects.Dashes(shape, pattern, offsetAlong, endingsType, controlPointType, customEndOffset);
+				return GeometricEffects.Dashes(shape, pattern, offsetAlong, endingsType,
+				                               controlPointType, customEndOffset);
 
 			case CIMGeometricEffectOffset offset:
 				var distance = offset.Offset * scaleFactor;
@@ -703,7 +713,7 @@ public static class DrawingOutline
 		if (combined is not Polygon polygon) return null;
 
 		// Placed marker's SRef is the reference geometry's SRef:
-		if (reference.SpatialReference != null && !SameSRef(polygon, reference))
+		if (reference.SpatialReference != null && ! SameSRef(polygon, reference))
 		{
 			polygon = PolygonBuilderEx.CreatePolygon(polygon, reference.SpatialReference);
 		}
@@ -789,7 +799,8 @@ public static class DrawingOutline
 				MarkerPlacements.PolygonCenterType.Centroid,
 			PlacementPolygonCenterMethod.OnPolygon =>
 				MarkerPlacements.PolygonCenterType.LabelPoint,
-			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementPolygonCenterMethod)} {cim.Method}")
+			_ => throw new ArgumentOutOfRangeException(
+				     $"Unknown {nameof(PlacementPolygonCenterMethod)} {cim.Method}")
 		};
 
 		return new MarkerPlacements.PolygonCenterOptions
@@ -799,7 +810,7 @@ public static class DrawingOutline
 			       CenterType = centerType,
 			       OffsetX = cim.OffsetX * scaleFactor,
 			       OffsetY = cim.OffsetY * scaleFactor,
-				   ClipAtBoundary = cim.ClipAtBoundary
+			       ClipAtBoundary = cim.ClipAtBoundary
 		       };
 	}
 
@@ -852,7 +863,8 @@ public static class DrawingOutline
 				MarkerPlacements.PolygonMarkerClipping.FullyInsideBoundary,
 			PlacementClip.DoNotClip =>
 				MarkerPlacements.PolygonMarkerClipping.DoNotClip,
-			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementClip)} {cim.Clipping}")
+			_ => throw new ArgumentOutOfRangeException(
+				     $"Unknown {nameof(PlacementClip)} {cim.Clipping}")
 		};
 
 		return new MarkerPlacements.InsidePolygonOptions
@@ -865,7 +877,7 @@ public static class DrawingOutline
 			       ShiftOddRows = cim.ShiftOddRows,
 			       OffsetX = cim.OffsetX * scaleFactor,
 			       OffsetY = cim.OffsetY * scaleFactor,
-				   Clipping = clipping
+			       Clipping = clipping
 		       };
 	}
 
@@ -878,7 +890,8 @@ public static class DrawingOutline
 			ExtremityPlacement.JustBegin => MarkerPlacements.Extremity.JustBegin,
 			ExtremityPlacement.JustEnd => MarkerPlacements.Extremity.JustEnd,
 			ExtremityPlacement.None => MarkerPlacements.Extremity.None,
-			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(ExtremityPlacement)} {cim.ExtremityPlacement}")
+			_ => throw new ArgumentOutOfRangeException(
+				     $"Unknown {nameof(ExtremityPlacement)} {cim.ExtremityPlacement}")
 		};
 
 		return new MarkerPlacements.AtExtremitiesOptions
@@ -919,7 +932,8 @@ public static class DrawingOutline
 			PlacementOnLineRelativeTo.LineEnd => MarkerPlacements.OnLinePosition.End,
 			PlacementOnLineRelativeTo.SegmentMidpoint => MarkerPlacements.OnLinePosition
 				.SegmentMidpoints,
-			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementOnLineRelativeTo)} {cim.RelativeTo}")
+			_ => throw new ArgumentOutOfRangeException(
+				     $"Unknown {nameof(PlacementOnLineRelativeTo)} {cim.RelativeTo}")
 		};
 
 		return new MarkerPlacements.OnLineOptions
@@ -944,7 +958,8 @@ public static class DrawingOutline
 			PlacementEndings.WithHalfGap => MarkerPlacements.EndingsType.HalfStep,
 			PlacementEndings.WithFullGap => MarkerPlacements.EndingsType.FullStep,
 			PlacementEndings.Custom => MarkerPlacements.EndingsType.Custom,
-			_ => throw new ArgumentOutOfRangeException($"Unknown {nameof(PlacementEndings)} {cim.Endings}")
+			_ => throw new ArgumentOutOfRangeException(
+				     $"Unknown {nameof(PlacementEndings)} {cim.Endings}")
 		};
 
 		return new MarkerPlacements.AlongLineOptions
@@ -975,7 +990,7 @@ public static class DrawingOutline
 	{
 		if (pattern is null) return null;
 		if (pattern.Length < 1) return pattern;
-		if (!(scaleFactor > 0)) return pattern;
+		if (! (scaleFactor > 0)) return pattern;
 		return pattern.Select(number => number * scaleFactor).ToArray();
 	}
 

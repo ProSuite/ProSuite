@@ -1,12 +1,11 @@
 using System.Windows.Input;
 
-namespace ProSuite.Commons.AGP.MapOverlay
+namespace ProSuite.Commons.AGP.MapOverlay;
+
+public interface IMapOverlayViewModel
 {
-	public interface IMapOverlayViewModel
-	{
-		ICommand EscapeCommand { get; }
-		ICommand OkCommand { get; }
-		string StatusMessage { get; set; }
-		bool ShowStatusMessage { get; set; }
-	}
+	ICommand EscapeCommand { get; }
+	ICommand OkCommand { get; }
+	string StatusMessage { get; set; }
+	bool ShowStatusMessage { get; set; }
 }

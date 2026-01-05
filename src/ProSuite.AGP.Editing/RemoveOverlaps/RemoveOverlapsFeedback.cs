@@ -7,66 +7,65 @@ using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.RemoveOverlaps
+namespace ProSuite.AGP.Editing.RemoveOverlaps;
+
+public class RemoveOverlapsFeedback
 {
-	public class RemoveOverlapsFeedback
+	private static CIMLineSymbol _overlapLineSymbol;
+	private readonly CIMPolygonSymbol _overlapPolygonSymbol;
+
+	private readonly List<IDisposable> _overlays = new List<IDisposable>();
+
+	public RemoveOverlapsFeedback()
 	{
-		private static CIMLineSymbol _overlapLineSymbol;
-		private readonly CIMPolygonSymbol _overlapPolygonSymbol;
+		_overlapLineSymbol =
+			SymbolUtils.CreateLineSymbol(255, 0, 0, 2);
 
-		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		_overlapPolygonSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
+	}
 
-		public RemoveOverlapsFeedback()
+	public void Update([CanBeNull] Overlaps newOverlaps)
+	{
+		DisposeOverlays();
+
+		if (newOverlaps == null)
 		{
-			_overlapLineSymbol =
-				SymbolUtils.CreateLineSymbol(255, 0, 0, 2);
-
-			_overlapPolygonSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
+			return;
 		}
 
-		public void Update([CanBeNull] Overlaps newOverlaps)
+		foreach (var overlapsBySourceRef in newOverlaps.OverlapGeometries)
 		{
-			DisposeOverlays();
+			IList<Geometry> overlapGeometries = overlapsBySourceRef.Value;
 
-			if (newOverlaps == null)
+			if (overlapGeometries.Count == 0)
 			{
-				return;
+				continue;
 			}
 
-			foreach (var overlapsBySourceRef in newOverlaps.OverlapGeometries)
+			foreach (Geometry overlap in overlapGeometries)
 			{
-				IList<Geometry> overlapGeometries = overlapsBySourceRef.Value;
+				CIMSymbol symbol = overlap is Polygon
+					                   ? _overlapPolygonSymbol
+					                   : (CIMSymbol) _overlapLineSymbol;
 
-				if (overlapGeometries.Count == 0)
-				{
-					continue;
-				}
+				// Fully visible in 3D with show-through factor of 1.0
+				const double showThrough = 1.0;
+				IDisposable addedOverlay =
+					MapView.Active.AddOverlay(overlap, symbol.MakeSymbolReference(), -1,
+					                          showThrough);
 
-				foreach (Geometry overlap in overlapGeometries)
-				{
-					CIMSymbol symbol = overlap is Polygon
-						                   ? _overlapPolygonSymbol
-						                   : (CIMSymbol) _overlapLineSymbol;
-
-					// Fully visible in 3D with show-through factor of 1.0
-					const double showThrough = 1.0;
-					IDisposable addedOverlay =
-						MapView.Active.AddOverlay(overlap, symbol.MakeSymbolReference(), -1,
-						                          showThrough);
-
-					_overlays.Add(addedOverlay);
-				}
+				_overlays.Add(addedOverlay);
 			}
 		}
+	}
 
-		public void DisposeOverlays()
+	public void DisposeOverlays()
+	{
+		foreach (IDisposable overlay in _overlays)
 		{
-			foreach (IDisposable overlay in _overlays)
-			{
-				overlay.Dispose();
-			}
-
-			_overlays.Clear();
+			overlay.Dispose();
 		}
+
+		_overlays.Clear();
 	}
 }

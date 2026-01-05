@@ -3,52 +3,51 @@ using System.Runtime.CompilerServices;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.ManagedOptions;
 
-namespace ProSuite.AGP.Editing.ChangeAlong
+namespace ProSuite.AGP.Editing.ChangeAlong;
+
+public class ZValueSourceSelectionViewModel : INotifyPropertyChanged
 {
-	public class ZValueSourceSelectionViewModel : INotifyPropertyChanged
+	public ZValueSourceSelectionViewModel(
+		CentralizableSetting<ZValueSource> centralizableSetting)
 	{
-		public ZValueSourceSelectionViewModel(
-			CentralizableSetting<ZValueSource> centralizableSetting)
-		{
-			CentralizableSetting = centralizableSetting;
+		CentralizableSetting = centralizableSetting;
 
-			CentralizableSetting.PropertyChanged += (sender, args) =>
+		CentralizableSetting.PropertyChanged += (sender, args) =>
+		{
+			if (args.PropertyName == nameof(CentralizableSetting.CurrentValue))
 			{
-				if (args.PropertyName == nameof(CentralizableSetting.CurrentValue))
-				{
-					OnPropertyChanged(nameof(CurrentValue));
-					OnPropertyChanged(nameof(ToolTip));
-				}
-
-				if (args.PropertyName == nameof(CentralizableSetting.HasLocalOverride))
-				{
-					OnPropertyChanged(nameof(ToolTip));
-				}
-			};
-		}
-
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-		}
-
-		public CentralizableSetting<ZValueSource> CentralizableSetting { get; }
-
-		public ZValueSource CurrentValue
-		{
-			get { return CentralizableSetting.CurrentValue; }
-			set
-			{
-				CentralizableSetting.CurrentValue = value;
-				OnPropertyChanged();
+				OnPropertyChanged(nameof(CurrentValue));
+				OnPropertyChanged(nameof(ToolTip));
 			}
-		}
 
-		public string ToolTip
+			if (args.PropertyName == nameof(CentralizableSetting.HasLocalOverride))
+			{
+				OnPropertyChanged(nameof(ToolTip));
+			}
+		};
+	}
+
+	public event PropertyChangedEventHandler PropertyChanged;
+
+	protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+	{
+		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+	}
+
+	public CentralizableSetting<ZValueSource> CentralizableSetting { get; }
+
+	public ZValueSource CurrentValue
+	{
+		get { return CentralizableSetting.CurrentValue; }
+		set
 		{
-			get => ManagedOptionsUtils.GetMessage(CentralizableSetting);
+			CentralizableSetting.CurrentValue = value;
+			OnPropertyChanged();
 		}
+	}
+
+	public string ToolTip
+	{
+		get => ManagedOptionsUtils.GetMessage(CentralizableSetting);
 	}
 }

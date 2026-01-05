@@ -41,6 +41,7 @@ namespace ProSuite.AGP.Editing.Test.Picker
 		public bool IsSingleClick { get; }
 		public bool AggregateItems { get; }
 		public Point PickerLocation { get; set; }
+		public PickerPositionPreference PositionPreference { get; set; }
 
 		public SpatialRelationship SpatialRelationship { get; }
 		public SelectionCombinationMethod SelectionCombinationMethod { get; }

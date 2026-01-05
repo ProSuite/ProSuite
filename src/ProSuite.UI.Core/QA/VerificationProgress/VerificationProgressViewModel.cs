@@ -62,7 +62,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		private string _flashProgressToolTip;
 		private ICommand _zoomToPerimeterCommand;
 		private string _zoomToVerifiedPerimeterToolTip;
-		private ICommand _openWorkListCommand;
+		private RelayCommand<VerificationProgressViewModel> _openWorkListCommand;
 		private string _openWorkListToolTip;
 
 		private readonly Latch _latch = new Latch();
@@ -342,6 +342,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 		/// <summary>
 		/// Whether the save option to keep previous issues in the work list is disabled or not.
+		/// The default is enabled (false).
 		/// </summary>
 		public bool KeepPreviousIssuesDisabled
 		{
@@ -611,22 +612,21 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
 			{
-				await ViewUtils.RunOnUIThread(
-					async () =>
+				await ViewUtils.RunOnUIThread(async () =>
+				{
+					try
 					{
-						try
-						{
-							IQualityVerificationResult verificationResult =
-								Assert.NotNull(VerificationResult);
+						IQualityVerificationResult verificationResult =
+							Assert.NotNull(VerificationResult);
 
-							await ApplicationController.OpenWorkList(
-								verificationResult, replaceExisting: true);
-						}
-						catch (Exception ex)
-						{
-							ErrorHandler.HandleError(ex, _msg);
-						}
-					});
+						await ApplicationController.OpenWorkList(
+							verificationResult, replaceExisting: true);
+					}
+					catch (Exception ex)
+					{
+						ErrorHandler.HandleError(ex, _msg);
+					}
+				});
 			}
 
 			return result;
@@ -807,6 +807,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					                                            ! UpdateOptions.KeepPreviousIssues);
 
 					_saveErrorsCommand?.RaiseCanExecuteChanged();
+					_openWorkListCommand?.RaiseCanExecuteChanged();
 				}
 				finally
 				{

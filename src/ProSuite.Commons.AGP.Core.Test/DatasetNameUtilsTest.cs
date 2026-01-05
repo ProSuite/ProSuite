@@ -92,6 +92,20 @@ namespace ProSuite.Commons.AGP.Core.Test
 		}
 
 		[Test]
+		public void CanGetQualifier()
+		{
+			Assert.IsNull(DatasetNameUtils.GetQualifier(null));
+			Assert.IsNull(DatasetNameUtils.GetQualifier(""));
+			Assert.IsNull(DatasetNameUtils.GetQualifier("FOO_BAR"));
+			Assert.IsNull(DatasetNameUtils.GetQualifier(" FOO_BAR "));
+			Assert.IsNull(DatasetNameUtils.GetQualifier(".FOO_BAR"));
+			Assert.AreEqual("FOO_BAR", DatasetNameUtils.GetQualifier("FOO_BAR."));
+			Assert.AreEqual("PRE", DatasetNameUtils.GetQualifier("PRE.FOO_BAR"));
+			Assert.AreEqual("PRE.FOO", DatasetNameUtils.GetQualifier("PRE.FOO.BAR"));
+			Assert.AreEqual("PRE", DatasetNameUtils.GetQualifier(" PRE . FOO_BAR "));
+		}
+
+		[Test]
 		public void CanQualifyDatasetName()
 		{
 			Assert.IsNull(DatasetNameUtils.QualifyDatasetName(null));

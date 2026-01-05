@@ -1,16 +1,21 @@
-using ArcGIS.Core.Geometry;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Carto;
 
-public enum ShapeSelectionState { Not, Partially, Entirely }
+public enum ShapeSelectionState
+{
+	Not,
+	Partially,
+	Entirely
+}
 
 /// <summary>
 /// Represents a selection of vertices of a shape (geometry).
@@ -22,17 +27,24 @@ public interface IShapeSelection
 	bool IsFully { get; }
 
 	int SelectedVertexCount { get; }
+
 	ShapeSelectionState IsShapeSelected();
+
 	ShapeSelectionState IsPartSelected(int partIndex);
+
 	bool IsVertexSelected(int partIndex, int vertexIndex);
 
 	/// <remarks>For multipoints, set part = vertex = point's index!</remarks>
 	bool CombineVertex(int part, int vertex, SetCombineMethod method);
+
 	bool CombinePart(int part, SetCombineMethod method);
+
 	bool CombineShape(SetCombineMethod method);
+
 	bool Clear();
 
 	IEnumerable<MapPoint> GetSelectedVertices();
+
 	IEnumerable<MapPoint> GetUnselectedVertices();
 
 	bool SelectedVertex(MapPoint hitPoint, double tolerance, out MapPoint vertex);
@@ -45,7 +57,7 @@ public interface IShapeSelection
 	/// <returns>the vertex found within <paramref name="distance"/>
 	/// of <paramref name="hitPoint"/> or null</returns>
 	MapPoint NearestVertex(MapPoint hitPoint, out double distance,
-	                   out int partIndex, out int vertexIndex, out bool selected);
+	                       out int partIndex, out int vertexIndex, out bool selected);
 
 	/// <summary>
 	/// Notify this shape selection that the <see cref="Shape"/> has
@@ -348,7 +360,7 @@ public class ShapeSelection : IShapeSelection
 			foreach (var block in _blocks)
 			{
 				// whole parts before current block:
-				for (; k < block.Part; k++, i=0)
+				for (; k < block.Part; k++, i = 0)
 				{
 					int vertexCount = GetVertexCount(multipart, k);
 					if (multipart is Polygon) vertexCount -= 1;
@@ -358,6 +370,7 @@ public class ShapeSelection : IShapeSelection
 						yield return (point, k, i, false);
 					}
 				}
+
 				Debug.Assert(k == block.Part);
 				// vertices before current block:
 				for (; i < block.First; i++)
@@ -365,6 +378,7 @@ public class ShapeSelection : IShapeSelection
 					var point = GetPoint(multipart, k, i);
 					yield return (point, k, i, false);
 				}
+
 				Debug.Assert(i == block.First);
 				// vertices in current block:
 				for (; i < block.First + block.Count; i++)
@@ -373,6 +387,7 @@ public class ShapeSelection : IShapeSelection
 					yield return (point, k, i, true);
 				}
 			}
+
 			// vertices after last block:
 			int partCount = GetPartCount(multipart);
 			for (; k < partCount; k++)
@@ -455,7 +470,8 @@ public class ShapeSelection : IShapeSelection
 
 		if (shape.GeometryType != Shape.GeometryType)
 		{
-			message = $"Geometry type differs: {shape.GeometryType} (requested) vs. {Shape.GeometryType} (in selection)";
+			message =
+				$"Geometry type differs: {shape.GeometryType} (requested) vs. {Shape.GeometryType} (in selection)";
 			return false;
 		}
 
@@ -463,7 +479,8 @@ public class ShapeSelection : IShapeSelection
 		int myParts = GetPartCount(Shape);
 		if (yourParts != myParts)
 		{
-			message = $"Number of parts differ: {yourParts} (requested) vs. {myParts} (in selection)";
+			message =
+				$"Number of parts differ: {yourParts} (requested) vs. {myParts} (in selection)";
 			return false;
 		}
 
@@ -472,7 +489,8 @@ public class ShapeSelection : IShapeSelection
 			int m = yourMultipart.PartCount;
 			if (m != myMultipart.PartCount)
 			{
-				message = $"Number of parts differ: {yourParts} (requested) vs. {myParts} (in selection)";
+				message =
+					$"Number of parts differ: {yourParts} (requested) vs. {myParts} (in selection)";
 				return false;
 			}
 
@@ -482,7 +500,8 @@ public class ShapeSelection : IShapeSelection
 				int yourVertexCount = GetVertexCount(yourMultipart, k);
 				if (myVertexCount != yourVertexCount)
 				{
-					message = $"Number of vertices in part {k} differ: {yourVertexCount} (requested) vs. {myVertexCount} (in selection)";
+					message =
+						$"Number of vertices in part {k} differ: {yourVertexCount} (requested) vs. {myVertexCount} (in selection)";
 					return false;
 				}
 			}
@@ -490,7 +509,8 @@ public class ShapeSelection : IShapeSelection
 
 		if (shape.PointCount != Shape.PointCount)
 		{
-			message = $"Number of points differ: {shape.PointCount} (requested) vs. {Shape.PointCount} (in selection)";
+			message =
+				$"Number of points differ: {shape.PointCount} (requested) vs. {Shape.PointCount} (in selection)";
 			return false;
 		}
 
@@ -586,6 +606,7 @@ public class ShapeSelection : IShapeSelection
 				{
 					yield return new BlockList.Block(k, i, vertexCount - i);
 				}
+
 				// go to first vertex in next part:
 				i = 0;
 				k += 1;
@@ -596,6 +617,7 @@ public class ShapeSelection : IShapeSelection
 				// first vertices in current block's part:
 				yield return new BlockList.Block(k, i, block.First - i);
 			}
+
 			i = block.First + block.Count;
 		}
 
@@ -609,13 +631,15 @@ public class ShapeSelection : IShapeSelection
 			{
 				yield return new BlockList.Block(k, i, vertexCount - i);
 			}
+
 			// go to first vertex in next part:
 			i = 0;
 			k += 1;
 		}
 	}
 
-	private static IEnumerable<MapPoint> GetVertices(Geometry shape, IEnumerable<BlockList.Block> blocks)
+	private static IEnumerable<MapPoint> GetVertices(Geometry shape,
+	                                                 IEnumerable<BlockList.Block> blocks)
 	{
 		if (shape is null) yield break;
 		if (shape.IsEmpty) yield break;
@@ -854,6 +878,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 				before.Next = node.Next;
 				FreeNode(node);
 			}
+
 			return true;
 		}
 
@@ -865,6 +890,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 				before.Next = node.Next;
 				FreeNode(node);
 			}
+
 			return true;
 		}
 

@@ -40,7 +40,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			object result = Row.Value[field];
 
-#if !Server11
+#if !ARCGIS_11_0_OR_GREATER
 			// NOTE: IReadOnly has long OIDs, IRow has int OID in 10.x
 			// Ensure correct return type because comparisons as object
 			// are Int32.Equals(Int64) which results in false where

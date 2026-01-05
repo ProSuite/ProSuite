@@ -80,6 +80,32 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return cracker;
 		}
 
+		public static CrackPointCalculator CreateMultipatchCrackPointCalculator(
+			double? snapTolerance, double? minimumSegmentLength)
+		{
+			// Use Extent == null to include all selected features, even the ones outside the extent and those that are
+			// so kaput that they cannot be found by relational operator (such as single vertical walls).
+			var cracker = new CrackPointCalculator(
+				snapTolerance, minimumSegmentLength,
+				addCrackPointsOnExistingVertices: false,
+				useSourceZs: true,
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+				null);
+
+			// Only crack in 2D because roofs can have multiple Z values at the same XY location
+			// Slight Z-differences within Z-tolerance are still corrected (at the cost of coplanarity and horizontal ridges!)
+			// In3D does not work well with UseSourceZ.
+			cracker.In3D = false;
+
+			// only use vertices as intersection targets, do not crack at interior intersections
+			cracker.TargetTransformation = ExtractVertices;
+
+			// Intersect for multipatch rings is very slow with ArcObjects implementation:
+			cracker.UseCustomIntersect = true;
+
+			return cracker;
+		}
+
 		#region Crack point calculation
 
 		[NotNull]
@@ -374,6 +400,15 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <summary>
 		/// Calculates the crack points between the geometry parts of the specified FeatureVertexInfo's feature
 		/// and adds them to its CrackPoints.
+		/// Example for necessary crack points between touching geometry parts (mostly for
+		/// multipatches but also lines):
+		/// 
+		///  \         where part 1: \
+		///   \                       \
+		/// ___\____                   \  and part 2: _______
+		///    ^
+		///    |
+		///  crack point needed here
 		/// </summary>
 		/// <param name="toVertexInfo"></param>
 		/// <param name="crackPointCalculator"></param>

@@ -19,7 +19,7 @@ public static class SpatialReferenceDescriptorExtensions
 	[NotNull]
 	public static SpatialReference GetSpatialReference(this SpatialReferenceDescriptor descriptor)
 	{
-		if (!(descriptor.SpatialReferenceCache is SpatialReference sref))
+		if (! (descriptor.SpatialReferenceCache is SpatialReference sref))
 		{
 			sref = CreateSpatialReference(descriptor.XmlString);
 			descriptor.SpatialReferenceCache = sref;

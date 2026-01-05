@@ -2462,47 +2462,39 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return relationshipClassName.FeatureDatasetName;
 			}
-
+#if ArcGIS || ARCGIS_11_0_OR_GREATER
 			var topologyName = datasetName as ITopologyName;
 			if (topologyName != null)
 			{
 				return topologyName.FeatureDatasetName;
 			}
-
+#endif
+#if !ARCGIS_12_0_OR_GREATER
 			var geometricNetworkName = datasetName as IGeometricNetworkName;
 			if (geometricNetworkName != null)
 			{
 				return geometricNetworkName.FeatureDatasetName;
 			}
-
+#endif
 			var networkDatasetName = datasetName as INetworkDatasetName;
 			if (networkDatasetName != null)
 			{
 				return networkDatasetName.FeatureDatasetName;
 			}
-
-#if ARCGIS_11_5_OR_GREATER
+#if !Server || ARCGIS_11_5_OR_GREATER
 			var terrainName = datasetName as ITerrainName;
 			if (terrainName != null)
 			{
 				return terrainName.FeatureDatasetName;
 			}
 #endif
-
 #if !Server
-			var terrainName = datasetName as ITerrainName;
-			if (terrainName != null)
-			{
-				return terrainName.FeatureDatasetName;
-			}
-
 			var fabricName = datasetName as ICadastralFabricName;
 			if (fabricName != null)
 			{
 				return fabricName.FeatureDatasetName;
 			}
 #endif
-
 			// other dataset name, assume not in a feature dataset
 			return null;
 		}

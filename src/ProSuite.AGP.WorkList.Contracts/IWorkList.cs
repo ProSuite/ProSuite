@@ -77,6 +77,10 @@ public interface IWorkList : IRowCache, IWorkItemData
 	               [CanBeNull] Predicate<IWorkItem> match = null,
 	               params Polygon[] contextPerimeters);
 
+	Task<bool> GoNearestAsync([NotNull] Geometry reference,
+	                          [CanBeNull] Predicate<IWorkItem> match = null,
+	                          params Polygon[] contextPerimeters);
+
 	bool CanGoNext();
 
 	void GoNext();

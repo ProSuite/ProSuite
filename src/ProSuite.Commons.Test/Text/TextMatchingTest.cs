@@ -69,6 +69,53 @@ namespace ProSuite.Commons.Test.Text
 		}
 
 		[Test]
+		public void CanPathMatch()
+		{
+			Assert.IsTrue(PathMatch("", ""));
+			Assert.IsTrue(PathMatch("foo", "foo"));
+			Assert.IsTrue(PathMatch("foo/bar", "foo/bar"));
+			Assert.IsFalse(PathMatch("foo/baz", "foo/bar"));
+			Assert.IsFalse(PathMatch("foo/bar/baz", "foo/bar"));
+			Assert.IsTrue(PathMatch("foo/**/bar", "foo/bar"));
+			Assert.IsTrue(PathMatch("foo/**/bar", "foo/x/bar"));
+			Assert.IsTrue(PathMatch("foo/**/bar", "foo/x/y/z/bar"));
+			Assert.IsFalse(PathMatch("foo/**/bar", "foo/x/bar/y"));
+
+			Assert.IsTrue(PathMatch("**/x/y/**", "x/y"));
+			Assert.IsTrue(PathMatch("**/x/y/**", "foo/x/y"));
+			Assert.IsTrue(PathMatch("**/x/y/**", "x/y/bar"));
+			Assert.IsTrue(PathMatch("**/x/y/**", "foo/x/y/bar"));
+			Assert.IsTrue(PathMatch("**/x/y/**", "foo/bar/x/y/z/z/z"));
+			Assert.IsFalse(PathMatch("**/x/y/**", "foo/bar/x/Y/z/z/z"));
+
+			Assert.IsTrue(PathMatch("foo/**/*", "foo/bar"));
+			Assert.IsTrue(PathMatch("foo/**/*", "foo/x/y/baz"));
+			Assert.IsTrue(PathMatch("foo/**", "foo/bar"));
+			Assert.IsTrue(PathMatch("foo/**", "foo/x/y/baz"));
+
+			Assert.IsTrue(PathMatch("**/ba*", "bar"));
+			Assert.IsTrue(PathMatch("**/ba*", "x/y/z/bazaar"));
+			Assert.IsTrue(PathMatch("**/ba*/", "x/y/z/bazaar/"));
+			Assert.IsFalse(PathMatch("**/ba*", "x/y/z/foo"));
+
+			// And a few assertions for the convenience wrapper:
+
+			Assert.IsTrue(TextMatching.PathMatch("foo/**/bar", "foo/bar"));
+			Assert.IsTrue(TextMatching.PathMatch("foo/**/bar", "foo/x/y/bar"));
+			Assert.IsFalse(TextMatching.PathMatch("foo/**/bar/", "foo/x/y/bar"));
+			Assert.IsTrue(TextMatching.PathMatch("foo/**/bar/", "foo/x/y/bar/"));
+			Assert.IsFalse(TextMatching.PathMatch("", ""));
+
+		}
+
+		private static bool PathMatch(string pattern, string path, char separator = '/')
+		{
+			var patterns = pattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+			var names = path.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+			return TextMatching.PathMatch(patterns, names);
+		}
+
+		[Test]
 		public void CanSimpleMatch()
 		{
 			// Literal matches (no stars):

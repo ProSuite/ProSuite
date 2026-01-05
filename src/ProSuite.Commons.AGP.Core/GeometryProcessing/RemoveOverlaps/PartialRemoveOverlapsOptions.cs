@@ -4,57 +4,56 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 
-namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
+
+public class PartialRemoveOverlapsOptions : PartialOptionsBase
 {
-	public class PartialRemoveOverlapsOptions : PartialOptionsBase
+	[CanBeNull]
+	public OverridableSetting<bool> LimitOverlapCalculationToExtent { get; set; }
+
+	[CanBeNull]
+	public OverridableSetting<TargetFeatureSelection> TargetFeatureSelection { get; set; }
+
+	[CanBeNull]
+	public OverridableSetting<bool> ExplodeMultipartResults { get; set; }
+
+	[CanBeNull]
+	public OverridableSetting<bool> InsertVerticesInTarget { get; set; }
+
+	[CanBeNull]
+	public OverridableSetting<ChangeAlongZSource> ZSource { get; set; }
+
+	[CanBeNull]
+	public List<DatasetSpecificValue<ChangeAlongZSource>> DatasetSpecificZSource { get; set; }
+
+	#region Overrides of PartialOptionsBase
+
+	public override PartialOptionsBase Clone()
 	{
-		[CanBeNull]
-		public OverridableSetting<bool> LimitOverlapCalculationToExtent { get; set; }
+		var result = new PartialRemoveOverlapsOptions();
 
-		[CanBeNull]
-		public OverridableSetting<TargetFeatureSelection> TargetFeatureSelection { get; set; }
+		result.LimitOverlapCalculationToExtent =
+			TryClone(LimitOverlapCalculationToExtent);
 
-		[CanBeNull]
-		public OverridableSetting<bool> ExplodeMultipartResults { get; set; }
+		result.TargetFeatureSelection = TryClone(TargetFeatureSelection);
 
-		[CanBeNull]
-		public OverridableSetting<bool> InsertVerticesInTarget { get; set; }
+		result.ExplodeMultipartResults = TryClone(ExplodeMultipartResults);
 
-		[CanBeNull]
-		public OverridableSetting<ChangeAlongZSource> ZSource { get; set; }
+		result.InsertVerticesInTarget = TryClone(InsertVerticesInTarget);
 
-		[CanBeNull]
-		public List<DatasetSpecificValue<ChangeAlongZSource>> DatasetSpecificZSource { get; set; }
+		result.ZSource = TryClone(ZSource);
 
-		#region Overrides of PartialOptionsBase
-
-		public override PartialOptionsBase Clone()
+		if (DatasetSpecificZSource != null)
 		{
-			var result = new PartialRemoveOverlapsOptions();
+			result.DatasetSpecificZSource =
+				new List<DatasetSpecificValue<ChangeAlongZSource>>();
 
-			result.LimitOverlapCalculationToExtent =
-				TryClone(LimitOverlapCalculationToExtent);
-
-			result.TargetFeatureSelection = TryClone(TargetFeatureSelection);
-
-			result.ExplodeMultipartResults = TryClone(ExplodeMultipartResults);
-
-			result.InsertVerticesInTarget = TryClone(InsertVerticesInTarget);
-
-			result.ZSource = TryClone(ZSource);
-
-			if (DatasetSpecificZSource != null)
-			{
-				result.DatasetSpecificZSource =
-					new List<DatasetSpecificValue<ChangeAlongZSource>>();
-
-				result.DatasetSpecificZSource.AddRange(
-					DatasetSpecificZSource.Select(dsz => dsz.Clone()));
-			}
-
-			return result;
+			result.DatasetSpecificZSource.AddRange(
+				DatasetSpecificZSource.Select(dsz => dsz.Clone()));
 		}
 
-		#endregion
+		return result;
 	}
+
+	#endregion
 }

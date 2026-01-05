@@ -2,11 +2,10 @@ using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList;
+
+public class SelectionItem : WorkItem
 {
-	public class SelectionItem : WorkItem
-	{
-		public SelectionItem(long uniqueTableId, [NotNull] Row row)
-			: base(uniqueTableId, row) { }
-	}
+	public SelectionItem(long uniqueTableId, [NotNull] Row row)
+		: base(uniqueTableId, row) { }
 }

@@ -8,6 +8,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using GeometryUtils = ProSuite.Commons.AGP.Core.Spatial.GeometryUtils;
 using Application = System.Windows.Application;
 using DisplayUtils = ProSuite.Commons.UI.WPF.DisplayUtils;
@@ -16,6 +17,8 @@ namespace ProSuite.Commons.AGP.Framework;
 
 public class WindowPositioner
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	private readonly List<Rect> _preferredAreas = new();
 	private readonly List<Rect> _areasToAvoid = new();
 	private readonly EvaluationMethod _method;
@@ -40,6 +43,14 @@ public class WindowPositioner
 		DistanceToRect
 	}
 
+	/// <summary>
+	/// Must be called in a QueuedTask
+	/// </summary>
+	/// <param name="featureToAvoid"></param>
+	/// <param name="layer"></param>
+	/// <param name="placement"></param>
+	/// <param name="method"></param>
+	/// <param name="minimalLineOffset"></param>
 	public WindowPositioner([NotNull] Feature featureToAvoid, FeatureLayer layer,
 	                        PreferredPlacement placement,
 	                        EvaluationMethod method, int minimalLineOffset = 25)
@@ -64,6 +75,13 @@ public class WindowPositioner
 		}
 	}
 
+	/// <summary>
+	/// Must be called in a QueuedTask.
+	/// </summary>
+	/// <param name="geometriesToAvoid"></param>
+	/// <param name="placement"></param>
+	/// <param name="method"></param>
+	/// <param name="lineOffset"></param>
 	public WindowPositioner([NotNull] List<Geometry> geometriesToAvoid,
 	                        PreferredPlacement placement,
 	                        EvaluationMethod method, int lineOffset = 4)
@@ -83,6 +101,24 @@ public class WindowPositioner
 				}
 			}
 		}
+
+		if (placement == PreferredPlacement.MapView)
+		{
+			_preferredAreas.Add(mapViewArea);
+		}
+	}
+
+	/// <summary>
+	/// This constructor doest not have to be called in a QueuedTask.
+	/// </summary>
+	/// <param name="placement"></param>
+	/// <param name="method"></param>
+	public WindowPositioner(PreferredPlacement placement,
+	                        EvaluationMethod method)
+	{
+		_method = method;
+
+		Rect mapViewArea = GetMapViewScreenRect();
 
 		if (placement == PreferredPlacement.MapView)
 		{
@@ -507,8 +543,9 @@ public class WindowPositioner
 			var lowerLeftScreen = MapView.Active.MapToScreen(lowerLeft);
 			return new Rect(lowerLeftScreen, upperRightScreen);
 		}
-		catch
+		catch (Exception e)
 		{
+			_msg.Warn("Error getting map view rect", e);
 			return Rect.Empty;
 		}
 	}

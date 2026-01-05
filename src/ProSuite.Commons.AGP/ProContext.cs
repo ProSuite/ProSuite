@@ -8,105 +8,104 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.Commons.AGP
+namespace ProSuite.Commons.AGP;
+
+public static class ProContext
 {
-	public static class ProContext
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	/// <summary>
+	/// Whether the current process is running in headless mode, i.e. outside the ArcGIS Pro application.
+	/// </summary>
+	public static bool IsRunningHeadless
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		/// <summary>
-		/// Whether the current process is running in headless mode, i.e. outside the ArcGIS Pro application.
-		/// </summary>
-		public static bool IsRunningHeadless
+		get
 		{
-			get
-			{
-				bool canLoad = false;
-				try
-				{
-					canLoad = CanLoadFrameworkAssembly();
-				}
-				catch (FileNotFoundException)
-				{
-					// Load failure
-				}
-
-				return ! canLoad;
-			}
-		}
-
-		public static bool IsWorkerBusy =>
-			IsRunningHeadless ? BackgroundTask.Busy : QueuedTaskUtils.IsBusy;
-
-		/// <summary>
-		/// Execute the given action either as a QueuedTask (if running in ArcGIS Pro)
-		/// or as a BackgroundTask if running headless and not already on an STA thread.
-		/// </summary>
-		/// <param name="action"></param>
-		/// <param name="options"></param>
-		/// <returns></returns>
-		public static Task Run([NotNull] Action action,
-		                       TaskCreationOptions options = TaskCreationOptions.None)
-		{
-			if (IsRunningHeadless)
-			{
-				if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-				{
-					action();
-					return Task.CompletedTask;
-				}
-
-				return BackgroundTask.Run(action, BackgroundProgressor.None);
-			}
-
-			return QueuedTaskUtils.Run(action, null, options);
-		}
-
-		/// <summary>
-		/// Execute the given function either as a QueuedTask (if running in ArcGIS Pro)
-		/// or as a BackgroundTask if running headless and not already on an STA thread.
-		/// </summary>
-		/// <param name="function"></param>
-		/// <param name="options"></param>
-		/// <returns></returns>
-		public static Task Run([NotNull] Func<Task> function,
-		                       TaskCreationOptions options = TaskCreationOptions.None)
-		{
-			if (IsRunningHeadless)
-			{
-				if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-				{
-					return function();
-				}
-
-				return BackgroundTask.Run(function, BackgroundProgressor.None);
-			}
-
-			_msg.VerboseDebug(
-				() => $"Calling QueuedTask.Run from {Thread.CurrentThread.GetApartmentState()} " +
-				      $"thread {Thread.CurrentThread.ManagedThreadId}. Busy: {QueuedTaskUtils.IsBusy}..");
-
-			return QueuedTaskUtils.Run(function, null, options);
-		}
-
-		/// <summary>
-		/// Test whether ArcGIS.Desktop.Framework can be loaded, i.e. we are running in the
-		/// ArcGIS Pro application. The failure will occur at the call site!
-		/// </summary>
-		/// <returns></returns>
-		private static bool CanLoadFrameworkAssembly()
-		{
+			bool canLoad = false;
 			try
 			{
-				// ReSharper disable once UnusedVariable
-				Type type = typeof(QueuedTask);
+				canLoad = CanLoadFrameworkAssembly();
 			}
-			catch (Exception e)
+			catch (FileNotFoundException)
 			{
-				return false;
+				// Load failure
 			}
 
-			return true;
+			return ! canLoad;
 		}
+	}
+
+	public static bool IsWorkerBusy =>
+		IsRunningHeadless ? BackgroundTask.Busy : QueuedTaskUtils.IsBusy;
+
+	/// <summary>
+	/// Execute the given action either as a QueuedTask (if running in ArcGIS Pro)
+	/// or as a BackgroundTask if running headless and not already on an STA thread.
+	/// </summary>
+	/// <param name="action"></param>
+	/// <param name="options"></param>
+	/// <returns></returns>
+	public static Task Run([NotNull] Action action,
+	                       TaskCreationOptions options = TaskCreationOptions.None)
+	{
+		if (IsRunningHeadless)
+		{
+			if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+			{
+				action();
+				return Task.CompletedTask;
+			}
+
+			return BackgroundTask.Run(action, BackgroundProgressor.None);
+		}
+
+		return QueuedTaskUtils.Run(action, null, options);
+	}
+
+	/// <summary>
+	/// Execute the given function either as a QueuedTask (if running in ArcGIS Pro)
+	/// or as a BackgroundTask if running headless and not already on an STA thread.
+	/// </summary>
+	/// <param name="function"></param>
+	/// <param name="options"></param>
+	/// <returns></returns>
+	public static Task Run([NotNull] Func<Task> function,
+	                       TaskCreationOptions options = TaskCreationOptions.None)
+	{
+		if (IsRunningHeadless)
+		{
+			if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+			{
+				return function();
+			}
+
+			return BackgroundTask.Run(function, BackgroundProgressor.None);
+		}
+
+		_msg.VerboseDebug(
+			() => $"Calling QueuedTask.Run from {Thread.CurrentThread.GetApartmentState()} " +
+			      $"thread {Thread.CurrentThread.ManagedThreadId}. Busy: {QueuedTaskUtils.IsBusy}..");
+
+		return QueuedTaskUtils.Run(function, null, options);
+	}
+
+	/// <summary>
+	/// Test whether ArcGIS.Desktop.Framework can be loaded, i.e. we are running in the
+	/// ArcGIS Pro application. The failure will occur at the call site!
+	/// </summary>
+	/// <returns></returns>
+	private static bool CanLoadFrameworkAssembly()
+	{
+		try
+		{
+			// ReSharper disable once UnusedVariable
+			Type type = typeof(QueuedTask);
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+
+		return true;
 	}
 }
