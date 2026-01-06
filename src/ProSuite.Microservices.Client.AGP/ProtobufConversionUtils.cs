@@ -638,7 +638,11 @@ public static class ProtobufConversionUtils
 	{
 		Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
 
-		WkbGeomWriter wkbWriter = new WkbGeomWriter();
+		WkbGeomWriter wkbWriter = new WkbGeomWriter
+		                          {
+			                          ReversePolygonWindingOrder = false
+		                          };
+
 		byte[] wkb = wkbWriter.WriteMultiSurface(polyhedron);
 
 		// TODO: Consider using FromStream and avoid the extra copying step
