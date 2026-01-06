@@ -423,7 +423,7 @@ public static class MapUtils
 			var originName = GetDatasetName(cim);
 			var targetName = DatasetNameUtils.QualifyDatasetName(originName, qualifier);
 
-			var dataset = datastore.OpenDataset<Table>(targetName);
+			using var dataset = DatasetUtils.OpenDataset<Table>(datastore, targetName);
 
 			layer.ReplaceDataSource(dataset);
 			// Weirdly, this triggers EditCompletedEvent
