@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -397,8 +398,9 @@ public static class MapUtils
 	/// <param name="pattern">Layer pattern, see <see cref="FindLayers{T}"/></param>
 	/// <param name="separator">Separator in pattern, see <see cref="FindLayers{T}"/></param>
 	/// <param name="ignoreCase">Case sensitivity for pattern matching</param>
-	/// <returns>The number of layers that were (re)connected</returns>
-	public static int ReplaceDataSource(
+	/// <returns>The number of layers that were (re)connected and skipped
+	/// (because there was no corresponding table in the new data source)</returns>
+	public static (int, int) ReplaceDataSource(
 		Map map, Geodatabase datastore, string pattern, char separator, bool ignoreCase = false)
 	{
 		if (map is null)
@@ -410,7 +412,8 @@ public static class MapUtils
 		_msg.DebugFormat("For all feature layers matching {0} change layer source to {1}",
 		                 pattern, datastoreDisplayText);
 
-		int count = 0;
+		int connected = 0;
+		int skipped = 0;
 
 		var qualifier = WorkspaceUtils.FindSchemaOwner(datastore);
 
@@ -423,17 +426,27 @@ public static class MapUtils
 			var originName = GetDatasetName(cim);
 			var targetName = DatasetNameUtils.QualifyDatasetName(originName, qualifier);
 
-			using var dataset = DatasetUtils.OpenDataset<Table>(datastore, targetName);
+			try
+			{
+				using var dataset = datastore.OpenDataset<Table>(targetName);
 
-			layer.ReplaceDataSource(dataset);
-			// Weirdly, this triggers EditCompletedEvent
+				layer.ReplaceDataSource(dataset);
+				// Weirdly, this triggers EditCompletedEvent
 
-			//var cimAfter = layer.GetDataConnection(); // TESTING
+				//var cimAfter = layer.GetDataConnection(); // TESTING
 
-			count += 1;
+				connected += 1;
+			}
+			catch (GeodatabaseTableException ex)
+			{
+				_msg.WarnFormat(
+					"Skipping layer {0}: could not open table {1} in {2}: {3}",
+					layer.Name, targetName, datastoreDisplayText, ex.Message);
+				skipped += 1;
+			}
 		}
 
-		return count;
+		return (connected, skipped);
 	}
 
 	private static string GetDatasetName(CIMDataConnection cim)
