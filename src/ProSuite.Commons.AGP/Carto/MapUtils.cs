@@ -13,7 +13,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -383,6 +382,74 @@ public static class MapUtils
 		}
 
 		return count;
+	}
+
+	/// <summary>
+	/// For all feature layers in the given <paramref name="map"/>
+	/// that match the given <paramref name="pattern"/>, replace the
+	/// data source to the given <paramref name="datastore"/>.
+	/// Cope with name qualification and invalid layers, but assume
+	/// that the new data source has data for the matching layers.
+	/// </summary>
+	/// <param name="map">The map</param>
+	/// <param name="datastore">The new data source for matching layers</param>
+	/// <param name="pattern">Layer pattern, see <see cref="FindLayers{T}"/></param>
+	/// <param name="separator">Separator in pattern, see <see cref="FindLayers{T}"/></param>
+	/// <param name="ignoreCase">Case sensitivity for pattern matching</param>
+	/// <returns>The number of layers that were (re)connected</returns>
+	public static int ReplaceDataSource(
+		Map map, Geodatabase datastore, string pattern, char separator, bool ignoreCase = false)
+	{
+		if (map is null)
+			throw new ArgumentNullException(nameof(map));
+		if (datastore is null)
+			throw new ArgumentNullException(nameof(datastore));
+
+		var datastoreDisplayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+		_msg.DebugFormat("For all feature layers matching {0} change layer source to {1}",
+		                 pattern, datastoreDisplayText);
+
+		int count = 0;
+
+		var qualifier = WorkspaceUtils.FindSchemaOwner(datastore);
+
+		var layers = FindLayers<BasicFeatureLayer>(map, pattern, separator, ignoreCase);
+
+		foreach (var layer in layers)
+		{
+			var cim = layer.GetDataConnection();
+
+			var originName = GetDatasetName(cim);
+			var targetName = DatasetNameUtils.QualifyDatasetName(originName, qualifier);
+
+			var dataset = datastore.OpenDataset<Table>(targetName);
+
+			layer.ReplaceDataSource(dataset);
+			// Weirdly, this triggers EditCompletedEvent
+
+			//var cimAfter = layer.GetDataConnection(); // TESTING
+
+			count += 1;
+		}
+
+		return count;
+	}
+
+	private static string GetDatasetName(CIMDataConnection cim)
+	{
+		if (cim is null) return null;
+
+		if (cim is CIMStandardDataConnection std)
+		{
+			return std.Dataset;
+		}
+
+		if (cim is CIMFeatureDatasetDataConnection fdc)
+		{
+			return fdc.Dataset;
+		}
+
+		throw new NotSupportedException($"Data connection not supported: {cim.GetType().Name}");
 	}
 
 	/// <summary>
