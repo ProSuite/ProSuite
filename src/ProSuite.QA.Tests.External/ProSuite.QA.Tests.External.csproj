@@ -81,7 +81,7 @@
 
   <ItemGroup>
     <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.7.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.24.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
     <PackageReference Include="Grpc" Version="2.46.6" />
   </ItemGroup>
   <ItemGroup />

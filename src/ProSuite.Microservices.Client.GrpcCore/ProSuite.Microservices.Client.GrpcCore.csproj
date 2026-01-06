@@ -49,7 +49,7 @@
     <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.7.0" />
     <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA.Test" Version="0.7.0" />
     <PackageReference Include="Grpc" Version="2.46.6" />
-    <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.76.0" />
   </ItemGroup>
 
   <ItemGroup>
