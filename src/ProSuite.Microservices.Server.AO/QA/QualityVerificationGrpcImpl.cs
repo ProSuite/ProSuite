@@ -39,6 +39,7 @@ using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.AO.QA;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.QA.Distributed;
 using ProSuite.QA.Container;
