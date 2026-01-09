@@ -35,6 +35,7 @@ using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.AO.QA;
@@ -698,9 +699,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (useStandaloneService)
 				{
+					XmlVerificationOptions xmlOptions =
+						VerificationOptionUtils.ReadOptionsXml(request.Parameters.XmlOptions);
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
-						specification, request.Parameters,
+						specification, request.Parameters, xmlOptions,
 						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
 				else
@@ -813,9 +817,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 						distributedTestRunner.SendModelsWithRequest = true;
 					}
 
+					XmlVerificationOptions xmlOptions =
+						VerificationOptionUtils.ReadOptionsXml(request.Parameters.XmlOptions);
+
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
-						specification, request.Parameters,
+						specification, request.Parameters, xmlOptions,
 						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
 				else
@@ -897,7 +905,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					default: throw new ArgumentOutOfRangeException();
 				}
 
-				VerifyStandaloneXmlCore(qualitySpecification, parameters,
+				VerifyStandaloneXmlCore(qualitySpecification, parameters, null,
 				                        distributedTestRunner, responseStreamer,
 				                        trackCancel, false);
 				return trackCancel.Continue()
@@ -965,6 +973,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private QualityVerification VerifyStandaloneXmlCore<T>(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] VerificationParametersMsg parameters,
+			[CanBeNull] XmlVerificationOptions xmlVerificationOptions,
 			[CanBeNull] DistributedTestRunner distributedTestrunner,
 			[NotNull] VerificationProgressStreamer<T> responseStreamer,
 			ITrackCancel trackCancel,
@@ -979,8 +988,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
 
-			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
-				HtmlReportTemplatePath, QualitySpecificationTemplatePath);
+			XmlBasedVerificationService xmlService =
+				new XmlBasedVerificationService(HtmlReportTemplatePath,
+				                                QualitySpecificationTemplatePath)
+				{
+					XmlVerificationOptions = xmlVerificationOptions
+				};
 
 			// NOTE: The report paths include the file names.
 			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,
