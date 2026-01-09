@@ -7,6 +7,7 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {

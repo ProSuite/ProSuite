@@ -110,8 +110,8 @@ namespace ProSuite.Commons.Test.Text
 
 		private static bool PathMatch(string pattern, string path, char separator = '/')
 		{
-			var patterns = pattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-			var names = path.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+			var patterns = pattern.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
+			var names = path.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
 			return TextMatching.PathMatch(patterns, names);
 		}
 

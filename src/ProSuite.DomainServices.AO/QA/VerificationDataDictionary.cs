@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -26,6 +27,8 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull] private readonly IDatasetRepository _datasets;
 		[NotNull] private readonly IAssociationRepository _associations;
 
+		[CanBeNull] private Action<string> _environmentActivationAction;
+
 		public VerificationDataDictionary(
 			[NotNull] IDomainTransactionManager domainTransactions,
 			[NotNull] IQualitySpecificationRepository qualitySpecifications,
@@ -39,6 +42,28 @@ namespace ProSuite.DomainServices.AO.QA
 			_projects = projects;
 			_datasets = datasets;
 			_associations = associations;
+		}
+
+		public void EnableMultipleEnvironments([NotNull] Action<string> environmentActivationAction)
+		{
+			_environmentActivationAction = environmentActivationAction;
+		}
+
+		public void ActivateForCurrentThread(string environmentName)
+		{
+			if (string.IsNullOrEmpty(environmentName))
+			{
+				_msg.Debug("No environment name specified, using default environment.");
+				return;
+			}
+
+			if (_environmentActivationAction != null)
+			{
+				// Initialize the container for the current thread
+				_environmentActivationAction(environmentName);
+
+				_msg.DebugFormat("Activated DDX for environment '{0}'", environmentName);
+			}
 		}
 
 		public IList<ProjectWorkspaceBase<Project<TModel>, TModel>> GetProjectWorkspaceCandidates(
