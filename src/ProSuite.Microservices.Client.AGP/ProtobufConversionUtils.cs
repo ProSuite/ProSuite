@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -131,7 +132,8 @@ public static class ProtobufConversionUtils
 				break;
 			case ShapeMsg.FormatOneofCase.Wkb:
 
-				result = FromWkb(shapeMsg.Wkb.ToByteArray(), sr);
+				const bool assumeWkbPolygonsClockwise = true;
+				result = FromWkb(shapeMsg.Wkb.ToByteArray(), sr, assumeWkbPolygonsClockwise);
 
 				break;
 			case ShapeMsg.FormatOneofCase.Envelope:
@@ -651,11 +653,12 @@ public static class ProtobufConversionUtils
 
 	[NotNull]
 	private static Geometry FromWkb([NotNull] byte[] wkb,
-	                                [CanBeNull] SpatialReference spatialReference)
+	                                [CanBeNull] SpatialReference spatialReference,
+	                                bool assumeWkbPolygonsClockwise = false)
 	{
 		// TODO: Use ReadOnlyMemory<byte> to avoid extra copy step
 
-		WkbGeomReader wkbReader = new WkbGeomReader();
+		WkbGeomReader wkbReader = new WkbGeomReader(assumeWkbPolygonsClockwise);
 
 		Stream memoryStream = new MemoryStream(wkb);
 		IBoundedXY geom = wkbReader.ReadGeometry(memoryStream, out WkbGeometryType wkbType);
