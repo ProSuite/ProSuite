@@ -90,7 +90,11 @@ namespace ProSuite.Microservices.AO
 					break;
 				case ShapeMsg.FormatOneofCase.Wkb:
 
-					WkbGeometryReader wkbReader = new WkbGeometryReader();
+					WkbGeometryReader wkbReader = new WkbGeometryReader
+					                              {
+						                              GroupPolyhedraByPointId = true
+					                              };
+
 					result = wkbReader.ReadGeometry(
 						new MemoryStream(shapeBuffer.Wkb.ToByteArray()));
 
