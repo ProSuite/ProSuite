@@ -353,7 +353,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 		}
 
 		[NotNull]
-		public static XmlVerificationOptions ReadOptions([NotNull] string xmlFilePath)
+		public static XmlVerificationOptions ReadOptionsFile([NotNull] string xmlFilePath)
 		{
 			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
 			Assert.ArgumentCondition(File.Exists(xmlFilePath),
@@ -371,23 +371,32 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 			}
 		}
 
-		[NotNull]
-		public static XmlVerificationOptions ReadOptionsXml([NotNull] string xml)
+		[CanBeNull]
+		public static XmlVerificationOptions ReadOptionsXml([CanBeNull] string xml)
 		{
-			Assert.ArgumentNotNullOrEmpty(xml, nameof(xml));
+			if (string.IsNullOrEmpty(xml))
+			{
+				return null;
+			}
+
+			xml = xml.TrimStart('\ufeff', ' ', '\t', '\r', '\n');
 
 			string schema = Schema.ProSuite_QA_XmlBasedVerificationOptions_1_0;
 
 			try
 			{
-				return XmlUtils.DeserializeString<XmlVerificationOptions>(xml, schema);
+				using (TextReader sr = new StringReader(xml))
+				{
+					return XmlUtils.Deserialize<XmlVerificationOptions>(sr, schema);
+				}
 			}
 			catch (Exception e)
 			{
-				throw new XmlDeserializationException($"Error deserializing string: {e.Message}",
-				                                      e);
+				throw new XmlDeserializationException(
+					$"Error deserializing xml string: {e.Message}", e);
 			}
 		}
+
 
 		[NotNull]
 		public static IEnumerable<XmlSpecificationReportOptions>
@@ -595,10 +604,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 			GetHtmlReportDataQualityCategoryOptions(
 				[CanBeNull] IEnumerable<XmlHtmlReportDataQualityCategoryOptions> categoryOptions)
 		{
-			return categoryOptions?.Select(
-				       o => new HtmlDataQualityCategoryOptions(o.CategoryUuid,
-				                                               o.IgnoreCategoryLevel,
-				                                               o.AliasName))
+			return categoryOptions?.Select(o => new HtmlDataQualityCategoryOptions(o.CategoryUuid,
+				                               o.IgnoreCategoryLevel,
+				                               o.AliasName))
 			       ?? new List<HtmlDataQualityCategoryOptions>();
 		}
 	}

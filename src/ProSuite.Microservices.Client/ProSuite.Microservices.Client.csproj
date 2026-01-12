@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</ProjectGuid>
 
@@ -45,9 +45,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.7.0" />
-    <PackageReference Include="Grpc.Core.Api" Version="2.62.0" />
-    <PackageReference Include="Grpc.HealthCheck" Version="2.62.0" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.2" />
+    <PackageReference Include="Grpc.Core.Api" Version="2.76.0" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.76.0" />
   </ItemGroup>
 
   <ItemGroup>

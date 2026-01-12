@@ -17,6 +17,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 		SoftErase = 11,
 		SoftReplace = 12,
 
-		MassPoint = 18
+		MassPoint = 18,
+
+		//
+		// Custom types:
+		/// <summary>
+		/// The point cloud archive is a catalog for LAS files which shall be used as mass points.
+		/// </summary>
+		LasPointCloud = 20
 	}
 }

@@ -14,6 +14,7 @@ using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.Geodatabase;
 using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.QA.Container;

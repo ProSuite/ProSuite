@@ -58,6 +58,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		public ISpatialReference IssueRepositorySpatialReference { get; set; }
 
+		/// <summary>
+		/// Optional XML verification options that provide additional configurations.
+		/// </summary>
+		public XmlVerificationOptions XmlVerificationOptions { get; set; }
+
 		public QualityVerification Verification { get; set; }
 
 		public event EventHandler<IssueFoundEventArgs> IssueFound;
@@ -69,13 +74,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			_issueRepositoryDir = outputDirectory;
 
-			// These options might return somehow in the future.
-			XmlVerificationOptions verificationOptions = null;
 			_issueRepositoryName =
-				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
+				VerificationOptionUtils.GetIssueWorkspaceName(XmlVerificationOptions);
 
 			string verificationReportFileName =
-				VerificationOptionUtils.GetXmlReportFileName(verificationOptions);
+				VerificationOptionUtils.GetXmlReportFileName(XmlVerificationOptions);
 			_xmlVerificationReportPath = Path.Combine(outputDirectory, verificationReportFileName);
 
 			_htmlReportDir = outputDirectory;
@@ -191,7 +194,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				return true;
 			}
 
-			DdxModel primaryModel = StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
+			DdxModel primaryModel =
+				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			Assert.NotNull(primaryModel, "no primary model found for quality specification");
 
 			string issueGdbPath = null;
@@ -208,7 +212,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					WriteDetailedVerificationReport = true,
 					HtmlReportTemplatePath = _htmlReportTemplatePath,
 					HtmlQualitySpecificationTemplatePath = _qualitySpecificationTemplatePath,
-					ProgressStreamer = ProgressStreamer
+					ProgressStreamer = ProgressStreamer,
+					XmlVerificationOptions = XmlVerificationOptions
 				};
 
 			IVerificationReportBuilder reportBuilder = verificationReporter.CreateReportBuilders();

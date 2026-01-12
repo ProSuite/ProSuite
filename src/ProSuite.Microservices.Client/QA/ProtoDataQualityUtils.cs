@@ -12,6 +12,7 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;

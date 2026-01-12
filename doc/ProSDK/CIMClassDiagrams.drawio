@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2024-06-13T08:22:59.799Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.5.3 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="PiaG2bTXLAlasiooibSN" version="24.5.3" type="device" pages="2">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3" pages="3">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Color">
     <mxGraphModel dx="1408" dy="937" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
@@ -235,7 +235,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="14ykhElNtn1VyqSesHZ4" name="Symbol">
-    <mxGraphModel dx="1408" dy="937" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1426" dy="961" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="KMeuFtegbVuyU5qou7N_-0" />
         <mxCell id="KMeuFtegbVuyU5qou7N_-1" parent="KMeuFtegbVuyU5qou7N_-0" />
@@ -918,8 +918,183 @@
         <mxCell id="GqUAJEwssX0TbUAzv0Qh-117" value="&lt;div style=&quot;font-size: 11px&quot;&gt;The MultiLayerSymbol subtype must agree with&lt;br&gt;&lt;span&gt;the geometry type of the underlying feature (or&amp;nbsp;&lt;/span&gt;&lt;span&gt;the output from a geometric effect).&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 11px&quot;&gt;Expect strange effects if there is a mismatch.&lt;/div&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;sketch=1;spacingLeft=4;" parent="KMeuFtegbVuyU5qou7N_-1" vertex="1">
           <mxGeometry x="370" y="760" width="250" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="u6MajXhcb2mNTvJUWEDg-0" value="&lt;div style=&quot;font-size: 11px&quot;&gt;&lt;b&gt;Geometric effects&lt;/b&gt; (global and local) are applied in the order as stored in the Effects array.&lt;/div&gt;&lt;div style=&quot;font-size: 11px&quot;&gt;&lt;br&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 11px&quot;&gt;&lt;b&gt;Symbol layers&lt;/b&gt; are drawn in the &lt;b&gt;reverse&lt;/b&gt; order as stored in the SymbolLayers array.&lt;/div&gt;" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;sketch=1;spacingLeft=4;" vertex="1" parent="KMeuFtegbVuyU5qou7N_-1">
+        <mxCell id="u6MajXhcb2mNTvJUWEDg-0" value="&lt;div style=&quot;font-size: 11px&quot;&gt;&lt;b&gt;Geometric effects&lt;/b&gt; (global and local) are applied in the order as stored in the Effects array.&lt;/div&gt;&lt;div style=&quot;font-size: 11px&quot;&gt;&lt;br&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 11px&quot;&gt;&lt;b&gt;Symbol layers&lt;/b&gt; are drawn in the &lt;b&gt;reverse&lt;/b&gt; order as stored in the SymbolLayers array.&lt;/div&gt;" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;sketch=1;spacingLeft=4;" parent="KMeuFtegbVuyU5qou7N_-1" vertex="1">
           <mxGeometry x="760" y="350" width="190" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="pAofBdEQIFOdzBxyhrxP" name="DataConnection">
+    <mxGraphModel dx="1426" dy="961" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="jfiG1QOxI9_jk5BLe9lc-1" value="&lt;h1&gt;CIM Data Connection Classes&lt;/h1&gt;&lt;p style=&quot;line-height: 0%;&quot;&gt;There are 30 to 40 subclasses; only a few are shown here.&lt;/p&gt;&lt;p style=&quot;line-height: 100%;&quot;&gt;All class names are prefixed with &quot;CIM&quot; (but not the enums).&lt;/p&gt;&lt;p style=&quot;line-height: 0%;&quot;&gt;Abstract classes are shown in italics.&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Not all properties are shown.&lt;/span&gt;&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="80" y="80" width="380" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="D9vMsTDbEL3IqY-GLhJZ-1" value="Object" style="swimlane;fontStyle=2;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="520" y="80" width="120" height="40" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D9vMsTDbEL3IqY-GLhJZ-2" value="DataConnection" style="swimlane;fontStyle=2;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="500" y="150" width="160" height="40" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="D9vMsTDbEL3IqY-GLhJZ-3" value="" style="endArrow=block;endSize=10;endFill=0;shadow=0;strokeWidth=1;rounded=0;edgeStyle=elbowEdgeStyle;elbow=vertical;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="D9vMsTDbEL3IqY-GLhJZ-2" target="D9vMsTDbEL3IqY-GLhJZ-1" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="230" y="450" as="sourcePoint" />
+            <mxPoint x="500" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_ce69NWrwIGhYLIQypTW-1" value="StandardDataConnection" style="swimlane;fontStyle=0;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="80" y="270" width="230" height="140" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_ce69NWrwIGhYLIQypTW-2" value="Dataset: string" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="_ce69NWrwIGhYLIQypTW-1" vertex="1">
+          <mxGeometry y="40" width="230" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="_ce69NWrwIGhYLIQypTW-3" value="DatasetType: esriDatasetType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="_ce69NWrwIGhYLIQypTW-1" vertex="1">
+          <mxGeometry y="62" width="230" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-2" value="WorkspaceConnectionString: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="_ce69NWrwIGhYLIQypTW-1" vertex="1">
+          <mxGeometry y="84" width="230" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-3" value="WorkspaceFactory: enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="_ce69NWrwIGhYLIQypTW-1" vertex="1">
+          <mxGeometry y="106" width="230" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-1" value="&lt;b&gt;esriDatasetType&lt;/b&gt;&amp;nbsp;(enum,&lt;div&gt;&lt;i&gt;all names begin with&lt;/i&gt; esriDT):&lt;br&gt;&lt;div&gt;Any = 0&lt;/div&gt;&lt;div&gt;Container = 1&lt;/div&gt;&lt;div&gt;Geo = 2&lt;/div&gt;&lt;div&gt;&lt;b&gt;FeatureDataset&lt;/b&gt; = 3&lt;/div&gt;&lt;div&gt;&lt;b&gt;FeatureClass&lt;/b&gt; = 4&lt;/div&gt;&lt;div&gt;PlanarGraph = 5&lt;/div&gt;&lt;div&gt;GeometricNetwork = 6&lt;/div&gt;&lt;div&gt;Text = 7&lt;/div&gt;&lt;div&gt;&lt;b&gt;Table&lt;/b&gt; = 8&lt;/div&gt;&lt;div&gt;&lt;b&gt;RelationshipClass&lt;/b&gt; = 9&lt;/div&gt;&lt;div&gt;RasterDataset = 10&lt;/div&gt;&lt;div&gt;RasterBand = 11&lt;/div&gt;&lt;div&gt;Tin = 12&lt;/div&gt;&lt;div&gt;CadDrawing = 13&lt;/div&gt;&lt;div&gt;RasterCatalog = 14&lt;/div&gt;&lt;div&gt;Topology = 15&lt;/div&gt;&lt;div&gt;Toolbox = 16&lt;/div&gt;&lt;div&gt;Tool = 17&lt;/div&gt;&lt;div&gt;NetworkDataset = 18&lt;/div&gt;&lt;div&gt;Terrain = 19&lt;/div&gt;&lt;div&gt;RepresentationClass = 20&lt;/div&gt;&lt;div&gt;CadastralFabric = 21&lt;/div&gt;&lt;div&gt;SchematicDataset = 22&lt;/div&gt;&lt;div&gt;Locator = 23&lt;/div&gt;&lt;div&gt;&lt;b&gt;Map&lt;/b&gt; = 24&lt;/div&gt;&lt;div&gt;Layer = 25&lt;/div&gt;&lt;div&gt;Style = 26&lt;/div&gt;&lt;div&gt;MosaicDataset = 27&lt;/div&gt;&lt;div&gt;LasDataset = 28&lt;/div&gt;&lt;div&gt;Layout = 29&lt;/div&gt;&lt;div&gt;&lt;b&gt;StandaloneTable&lt;/b&gt; = 30&lt;/div&gt;&lt;div&gt;UtilityNetwork = 31&lt;/div&gt;&lt;div&gt;DiagramDataset = 32&lt;/div&gt;&lt;div&gt;DiagramFolder = 33&lt;/div&gt;&lt;div&gt;NetworkDiagram = 34&lt;/div&gt;&lt;div&gt;ParcelDataset = 35&lt;/div&gt;&lt;div&gt;StandaloneVideo = 36&lt;/div&gt;&lt;div&gt;Report = 37&lt;/div&gt;&lt;div&gt;BIMFile = 38&lt;/div&gt;&lt;div&gt;TraceNetwork = 39&lt;/div&gt;&lt;div&gt;KnowledgeGraph = 40&lt;/div&gt;&lt;div&gt;Investigation = 41&lt;/div&gt;&lt;div&gt;LocationReferencingDataset = 42&lt;/div&gt;&lt;div&gt;LinkChart = 44&lt;/div&gt;&lt;div&gt;Timeline = 45&lt;/div&gt;&lt;div&gt;Presentation = 48&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#EBF1FC;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;spacingLeft=4;" parent="1" vertex="1">
+          <mxGeometry x="940" y="110" width="180" height="650" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-6" value="&lt;b&gt;WorkspaceFactory&lt;/b&gt;&amp;nbsp;(enum):&lt;br&gt;SDE,&amp;nbsp;FileGDB,&amp;nbsp;Raster,&amp;nbsp;Shapefile,&amp;nbsp;OLEDB,&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Access,&amp;nbsp;&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;DelimitedTextFile,&amp;nbsp;Custom (plugin datasource),&amp;nbsp;&lt;/span&gt;&lt;div&gt;Sql,&amp;nbsp;Tin,&amp;nbsp;TrackingServer,&amp;nbsp;NetCDF,&amp;nbsp;LASDataset,&amp;nbsp;&lt;br&gt;SQLite,&amp;nbsp;FeatureService,&amp;nbsp;ArcInfo,&amp;nbsp;Cad,&amp;nbsp;Excel,&amp;nbsp;&lt;br&gt;WFS,&amp;nbsp;StreamService,&amp;nbsp;BIMFile,&amp;nbsp;InMemoryDB,&amp;nbsp;&lt;br&gt;NoSQL,&amp;nbsp;BigDataConnection,&amp;nbsp;KnowledgeGraph,&amp;nbsp;&lt;br&gt;NITF,&amp;nbsp;VPF,&amp;nbsp;Parquet&lt;br&gt;&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=#6c8ebf;fillColor=#EBF1FC;align=left;verticalAlign=middle;rounded=0;fontSize=11;spacingLeft=4;html=1;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="660" y="620" width="260" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-7" value="FeatureDatasetDataConn." style="swimlane;fontStyle=0;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="330" y="270" width="250" height="160" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-8" value="Dataset: string" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="uBoHfSx_bbpMvQ0HBOGZ-7" vertex="1">
+          <mxGeometry y="40" width="250" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-9" value="DatasetType: esriDatasetType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="uBoHfSx_bbpMvQ0HBOGZ-7" vertex="1">
+          <mxGeometry y="62" width="250" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-10" value="WorkspaceConnectionString: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-7" vertex="1">
+          <mxGeometry y="84" width="250" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-11" value="WorkspaceFactory: enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-7" vertex="1">
+          <mxGeometry y="106" width="250" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-12" value="FeatureDataset: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-7" vertex="1">
+          <mxGeometry y="128" width="250" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-14" value="" style="endArrow=block;endSize=10;endFill=0;shadow=0;strokeWidth=1;rounded=0;edgeStyle=elbowEdgeStyle;elbow=vertical;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="_ce69NWrwIGhYLIQypTW-1" target="D9vMsTDbEL3IqY-GLhJZ-2" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="610" y="410" as="sourcePoint" />
+            <mxPoint x="610" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-15" value="" style="endArrow=block;endSize=10;endFill=0;shadow=0;strokeWidth=1;rounded=0;edgeStyle=elbowEdgeStyle;elbow=vertical;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="uBoHfSx_bbpMvQ0HBOGZ-7" target="D9vMsTDbEL3IqY-GLhJZ-2" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="640" y="360" as="sourcePoint" />
+            <mxPoint x="640" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-16" value="SqlQueryDataConnection" style="swimlane;fontStyle=0;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="80" y="506" width="230" height="234" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-17" value="Dataset: string" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="40" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-18" value="DatasetType: esriDatasetType" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="64" width="230" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-19" value="WorkspaceConnectionString: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="86" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-20" value="WorkspaceFactory: enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="110" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-21" value="SqlQuery: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="134" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-22" value="SRID or SpatialReference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="158" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-24" value="GeometryType: enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="182" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-23" value="OIDFields, QueryFields, ..." style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-16" vertex="1">
+          <mxGeometry y="206" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-25" value="InMemoryDatasetDataConn." style="swimlane;fontStyle=0;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="335" y="470" width="245" height="70" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-26" value="Dataset: string" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="uBoHfSx_bbpMvQ0HBOGZ-25" vertex="1">
+          <mxGeometry y="40" width="245" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-30" value="InMemoryWorkspaceDataC." style="swimlane;fontStyle=0;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="340" y="547" width="250" height="70" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-31" value="BinaryReferencePath: string" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="uBoHfSx_bbpMvQ0HBOGZ-30" vertex="1">
+          <mxGeometry y="40" width="250" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-35" value="WorkspaceConnection" style="swimlane;fontStyle=0;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="610" y="270" width="230" height="90" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-38" value="WorkspaceConnectionString: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-35" vertex="1">
+          <mxGeometry y="40" width="230" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-39" value="WorkspaceFactory: enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-35" vertex="1">
+          <mxGeometry y="64" width="230" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-41" value="ServiceConnection" style="swimlane;fontStyle=2;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="620" y="370" width="230" height="70" as="geometry">
+            <mxRectangle x="610" y="430" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-42" value="Description: string" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="uBoHfSx_bbpMvQ0HBOGZ-41" vertex="1">
+          <mxGeometry y="40" width="230" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-43" value="" style="endArrow=block;endSize=10;endFill=0;shadow=0;strokeWidth=1;rounded=0;edgeStyle=elbowEdgeStyle;elbow=vertical;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="uBoHfSx_bbpMvQ0HBOGZ-35" target="D9vMsTDbEL3IqY-GLhJZ-2" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="1020" y="350" as="sourcePoint" />
+            <mxPoint x="1160" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-45" value="XYEventDataConnection" style="swimlane;fontStyle=0;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="350" y="630" width="270" height="110" as="geometry">
+            <mxRectangle x="340" y="380" width="170" height="26" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-46" value="XFieldName, YFieldName, ZFieldName: string" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="uBoHfSx_bbpMvQ0HBOGZ-45" vertex="1">
+          <mxGeometry y="40" width="270" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-49" value="SpatialReference: SpatialReference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-45" vertex="1">
+          <mxGeometry y="62" width="270" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="uBoHfSx_bbpMvQ0HBOGZ-50" value="XYEventTableDataConnection: DataConnection" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="uBoHfSx_bbpMvQ0HBOGZ-45" vertex="1">
+          <mxGeometry y="84" width="270" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="IAGKT5lU_gFURYLCmxfl-1" value="&lt;div style=&quot;font-size: 11px&quot;&gt;Surprisingly, FeatureDatasetDataConnection is NOT a subclass of StandardDataConnection, despite having the same properties (plus a FeatureDataset property)&lt;/div&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;sketch=1;spacingLeft=4;" parent="1" vertex="1">
+          <mxGeometry x="80" y="420" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IAGKT5lU_gFURYLCmxfl-2" value="&lt;div style=&quot;font-size: 11px&quot;&gt;...and many more DataConnection subclasses!&lt;/div&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;sketch=1;spacingLeft=4;" parent="1" vertex="1">
+          <mxGeometry x="630" y="450" width="250" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="IAGKT5lU_gFURYLCmxfl-3" value="&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b style=&quot;&quot;&gt;Note&lt;/b&gt; &lt;/font&gt;that there is &lt;b&gt;no 1:1&lt;/b&gt; correspondence between &lt;b&gt;CIMDataConnection&lt;/b&gt; classes and ArcGIS.Core.Data.&lt;b&gt;Connector&lt;/b&gt; classes!&lt;/div&gt;" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;sketch=1;spacingLeft=8;" parent="1" vertex="1">
+          <mxGeometry x="630" y="520" width="290" height="70" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
