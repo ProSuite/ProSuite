@@ -13,6 +13,13 @@ namespace ProSuite.DomainModel.AO.QA
 	/// </summary>
 	public interface IVerificationDataDictionary<TModel> where TModel : ProductionModel
 	{
+		/// <summary>
+		/// Activates the data dictionary for the current thread for the specified environment.
+		/// This is required when multiple environments are used in the same process.
+		/// </summary>
+		/// <param name="environmentName"></param>
+		void ActivateForCurrentThread(string environmentName);
+
 		IList<QualitySpecification> GetQualitySpecifications(
 			[NotNull] IList<int> datasetIds,
 			bool includeHidden);

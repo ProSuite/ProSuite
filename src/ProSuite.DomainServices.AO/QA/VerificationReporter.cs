@@ -119,7 +119,7 @@ namespace ProSuite.DomainServices.AO.QA
 		public IVerificationProgressStreamer ProgressStreamer { get; set; }
 
 		/// <summary>
-		/// These options could return some day.
+		/// XML options for additional configuration settings.
 		/// </summary>
 		public XmlVerificationOptions XmlVerificationOptions { get; set; }
 

@@ -35,10 +35,12 @@ using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Standalone;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.AO.QA;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.QA.Distributed;
 using ProSuite.QA.Container;
@@ -400,59 +402,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
-		public override async Task VerifyStandaloneXml(
-			StandaloneVerificationRequest request,
-			IServerStreamWriter<StandaloneVerificationResponse> responseStream,
-			ServerCallContext context)
-		{
-			try
-			{
-				await StartRequest(context.Peer, request, true);
-
-				_msg.InfoFormat("Starting stand-alone verification request from {0}",
-				                context.Peer);
-				_msg.VerboseDebug(() => $"Request details: {request}");
-
-				var responseStreamer =
-					new VerificationProgressStreamer<StandaloneVerificationResponse>(
-						responseStream);
-
-				responseStreamer.CreateResponseAction = responseStreamer.CreateStandaloneResponse;
-
-				// Attach to logging infrastructure
-				Action<LoggingEvent> action =
-					SendStandaloneProgressAction(responseStreamer, ServiceCallStatus.Running);
-
-				ServiceCallStatus result;
-				using (MessagingUtils.TemporaryRootAppender(new ActionAppender(action)))
-				{
-					Func<ITrackCancel, ServiceCallStatus> func =
-						trackCancel =>
-							VerifyStandaloneXmlCore(request, responseStreamer, trackCancel);
-
-					result = await GrpcServerUtils.ExecuteServiceCall(
-						         func, context, _staThreadScheduler, true);
-
-					// final message:
-					responseStreamer.WriteProgressAndIssues(
-						new VerificationProgressEventArgs($"Verification {result}"), result);
-				}
-
-				_msg.InfoFormat("Verification {0}", result);
-			}
-			catch (Exception e)
-			{
-				_msg.Error($"Error verifying quality for request {request}", e);
-
-				ServiceUtils.SendFatalException(e, responseStream);
-				ServiceUtils.SetUnhealthy(Health, GetType());
-			}
-			finally
-			{
-				EndRequest();
-			}
-		}
-
 		private async Task StartRequest(VerificationRequest request)
 		{
 			await StartRequest(request.UserName, request, true);
@@ -566,29 +515,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private static Action<LoggingEvent> SendStandaloneProgressAction(
-			[NotNull] VerificationProgressStreamer<StandaloneVerificationResponse> progressStreamer,
-			ServiceCallStatus callStatus)
-		{
-			Action<LoggingEvent> action =
-				e =>
-				{
-					if (e.Level.Value < Level.Info.Value)
-					{
-						return;
-					}
-
-					progressStreamer.CurrentLogLevel = e.Level.Value;
-
-					VerificationProgressEventArgs progressEventArgs =
-						new VerificationProgressEventArgs(e.RenderedMessage);
-
-					progressStreamer.WriteProgressAndIssues(progressEventArgs, callStatus);
-				};
-
-			return action;
-		}
-
 		private static async Task<DataVerificationRequest> RequestMoreDataAsync(
 			IAsyncStreamReader<DataVerificationRequest> requestStream,
 			IServerStreamWriter<DataVerificationResponse> responseStream,
@@ -697,9 +623,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (useStandaloneService)
 				{
+					XmlVerificationOptions xmlOptions =
+						VerificationOptionUtils.ReadOptionsXml(request.Parameters.XmlOptions);
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
-						specification, request.Parameters,
+						specification, request.Parameters, xmlOptions,
 						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
 				else
@@ -812,9 +741,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 						distributedTestRunner.SendModelsWithRequest = true;
 					}
 
+					XmlVerificationOptions xmlOptions =
+						VerificationOptionUtils.ReadOptionsXml(request.Parameters.XmlOptions);
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
-						specification, request.Parameters,
+						specification, request.Parameters, xmlOptions,
 						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
 				else
@@ -856,67 +788,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				CancellationTokenSource.CreateLinkedTokenSource(token);
 
 			return RequestAdmin?.RegisterRequest(requestUserName, environment, combinedTokenSource);
-		}
-
-		private ServiceCallStatus VerifyStandaloneXmlCore(
-			StandaloneVerificationRequest request,
-			VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
-			ITrackCancel trackCancel)
-		{
-			SetupUserNameProvider(request.UserName);
-
-			try
-			{
-				VerificationParametersMsg parameters = request.Parameters;
-
-				// Currently no parallel processing for VerifyStandaloneXml() call. Use
-				// VerifyQuality() with XML instead.
-				DistributedTestRunner distributedTestRunner = null;
-
-				QualitySpecification qualitySpecification;
-
-				switch (request.SpecificationCase)
-				{
-					case StandaloneVerificationRequest.SpecificationOneofCase.XmlSpecification:
-					{
-						XmlQualitySpecificationMsg xmlSpecification = request.XmlSpecification;
-
-						qualitySpecification = SetupQualitySpecification(xmlSpecification);
-						break;
-					}
-					case StandaloneVerificationRequest.SpecificationOneofCase
-					                                  .ConditionListSpecification:
-					{
-						ConditionListSpecificationMsg conditionListSpec =
-							request.ConditionListSpecification;
-
-						qualitySpecification = SetupQualitySpecification(conditionListSpec, null);
-						break;
-					}
-					default: throw new ArgumentOutOfRangeException();
-				}
-
-				VerifyStandaloneXmlCore(qualitySpecification, parameters,
-				                        distributedTestRunner, responseStreamer,
-				                        trackCancel, false);
-				return trackCancel.Continue()
-					       ? ServiceCallStatus.Finished
-					       : ServiceCallStatus.Cancelled;
-			}
-			catch (Exception e)
-			{
-				_msg.DebugFormat("Error during processing of request {0}", request);
-				_msg.Error($"Error verifying quality: {ExceptionUtils.FormatMessage(e)}", e);
-
-				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
-				{
-					ServiceUtils.SetUnhealthy(Health, GetType());
-				}
-
-				return ServiceCallStatus.Failed;
-			}
-
-			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
 		}
 
 		private QualityVerification VerifyDdxQualityCore(
@@ -964,6 +835,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private QualityVerification VerifyStandaloneXmlCore<T>(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] VerificationParametersMsg parameters,
+			[CanBeNull] XmlVerificationOptions xmlVerificationOptions,
 			[CanBeNull] DistributedTestRunner distributedTestrunner,
 			[NotNull] VerificationProgressStreamer<T> responseStreamer,
 			ITrackCancel trackCancel,
@@ -978,8 +850,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
 
-			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
-				HtmlReportTemplatePath, QualitySpecificationTemplatePath);
+			XmlBasedVerificationService xmlService =
+				new XmlBasedVerificationService(HtmlReportTemplatePath,
+				                                QualitySpecificationTemplatePath)
+				{
+					XmlVerificationOptions = xmlVerificationOptions
+				};
 
 			// NOTE: The report paths include the file names.
 			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,

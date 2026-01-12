@@ -71,6 +71,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public string HtmlSpecificationTemplatePath { get; set; }
 
+		public string XmlOptions { get; set; }
+
 		public string MxdDocumentPath => null;
 
 		public string MxdTemplatePath => null;

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</ProjectGuid>
 
@@ -38,10 +38,10 @@
 
     <!-- DPS/#217: Allow other components in the same process to use a different log4net version.
 		     Example: X-Tools Add-in. -->
-    <PackageReference Include="log4net" Version="[2.0.12,2.0.17]" Condition="'$(NetFrameworkVersion)' != 'net48'"/>
+    <PackageReference Include="log4net" Version="[2.0.12,]" Condition="'$(NetFrameworkVersion)' != 'net48'"/>
     <!-- But in .NET Framework the resolution of differing package versions is somewhat different, resulting
 		     in build errors. Therefore, keep it fixed in .NET Framework: -->
-    <PackageReference Include="log4net" Version="2.0.15" Condition="'$(NetFrameworkVersion)' == 'net48'"/>
+    <PackageReference Include="log4net" Version="3.2.0" Condition="'$(NetFrameworkVersion)' == 'net48'"/>
 
 		<!-- Enforce Version 6.0.0 after NHibernate requires it to avoid dependency mix-up. -->
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
