@@ -636,14 +636,14 @@ public static class ProtobufConversionUtils
 	[NotNull]
 	private static ByteString GetWkbByteString(Multipatch multipatch)
 	{
-		Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
+		List<Polyhedron> polyhedra = GeomConversionUtils.CreatePolyhedra(multipatch).ToList();
 
 		WkbGeomWriter wkbWriter = new WkbGeomWriter
 		                          {
 			                          ReversePolygonWindingOrder = false
 		                          };
 
-		byte[] wkb = wkbWriter.WriteMultiSurface(polyhedron);
+		byte[] wkb = wkbWriter.WriteMultiSurface(polyhedra);
 
 		// TODO: Consider using FromStream and avoid the extra copying step
 		return ByteString.CopyFrom(wkb);
@@ -678,9 +678,11 @@ public static class ProtobufConversionUtils
 		{
 			List<Multipatch> multipatches = new List<Multipatch>();
 
+			int partId = 0;
 			foreach (Polyhedron part in multiPolyhedron.Polyhedra)
 			{
-				multipatches.Add(GeomConversionUtils.CreateMultipatch(part, spatialReference));
+				multipatches.Add(
+					GeomConversionUtils.CreateMultipatch(part, spatialReference, partId++));
 			}
 
 			return GeometryUtils.Union(multipatches);
