@@ -10,6 +10,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
@@ -235,6 +236,26 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			ISpatialReference spatialReference =
 				primaryModel.SpatialReferenceDescriptor?.GetSpatialReference();
 
+			if (areaOfInterest?.Geometry != null &&
+			    areaOfInterest.Geometry.SpatialReference == null)
+			{
+				areaOfInterest.Geometry.SpatialReference = spatialReference;
+				_msg.Info("Set spatial reference on area of interest geometry");
+			}
+
+			ExceptionObjectRepository exceptionObjectRepository =
+				StandaloneVerificationUtils.PrepareExceptionRepository(
+					qualitySpecification,
+					datasetContext,
+					datasetResolver,
+					areaOfInterest,
+					XmlVerificationOptions);
+
+			if (exceptionObjectRepository != null)
+			{
+				_msg.InfoFormat("Exception repository loaded successfully");
+			}
+
 			ISpatialReference issuesSpatialReference =
 				IssueRepositorySpatialReference ?? spatialReference;
 
@@ -250,6 +271,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			       verificationReporter.CreateIssueRepository(
 				       IssueRepositoryType, issuesSpatialReference, addExceptionFields: true))
 			{
+				service.ExceptionObjectRepository = exceptionObjectRepository;
+
 				fulfilled = service.Verify(qualitySpecification, datasetContext, datasetResolver,
 				                           issueRepository, tileSize, areaOfInterest, trackCancel,
 				                           out int _,
