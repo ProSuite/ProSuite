@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -41,27 +40,29 @@ public class SketchStack
 	public bool IsReplayingSketches => _latch.IsLatched;
 
 	/// <summary>
-	/// Adds a sketch geometry to the state stack if it's not null or empty.
+	/// Adds a sketch geometry to the state stack if it's not null or empty and no identical
+	/// sketch is already on top of the stack.
 	/// </summary>
 	/// <param name="sketch">The sketch geometry to add</param>
-	public void TryPush(Geometry sketch)
+	public bool TryPush(Geometry sketch)
 	{
-		if (sketch is not { IsEmpty: false })
+		if (sketch == null || sketch.IsEmpty)
 		{
-			return;
+			return false;
 		}
 
 		if (_sketches.TryPeek(out Geometry last))
 		{
-			// TODO: 3D equality!
-			if (GeometryUtils.Engine.Equals(last, sketch))
+			if (last.IsEqual(sketch))
 			{
-				return;
+				return false;
 			}
 		}
 
 		_sketches.Push(sketch);
 		_msg.VerboseDebug(() => $"Pushed sketch onto stack. Count: {_sketches.Count} sketches");
+
+		return true;
 	}
 
 	/// <summary>
@@ -210,8 +211,7 @@ public class SketchStack
 		}
 
 		// Record this as a new sketch state
-		TryPush(currentSketch);
-		return true; // Operation was recorded
+		return TryPush(currentSketch);
 	}
 
 	/// <summary>
