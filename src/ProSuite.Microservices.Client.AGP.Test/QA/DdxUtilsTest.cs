@@ -5,7 +5,6 @@ using Google.Protobuf.Collections;
 using NUnit.Framework;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom.EsriShape;
-using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -24,12 +23,6 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 		[Test]
 		public void CanTransformToFromSpecificationMsg()
 		{
-			// TODO: Remove once Definitions are added
-			string serverBinDir = Environment.GetEnvironmentVariable("GOTOP_SERVER_DIR");
-			Assert.IsNotNull(serverBinDir, "GOTOP_SERVER_DIR not set");
-
-			PrivateAssemblyUtils.AddCodeBaseDir(serverBinDir);
-
 			QualitySpecification qualitySpecification = CreateQualitySpecification();
 
 			//
@@ -71,12 +64,6 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 		[Test]
 		public void CanTransformToFromConditionMsg()
 		{
-			// TODO: Remove once Definitions are added
-			string serverBinDir = Environment.GetEnvironmentVariable("GOTOP_SERVER_DIR");
-			Assert.IsNotNull(serverBinDir, "GOTOP_SERVER_DIR not set");
-
-			PrivateAssemblyUtils.AddCodeBaseDir(serverBinDir);
-
 			QualitySpecification qualitySpecification = CreateQualitySpecification();
 
 			//
@@ -232,8 +219,8 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 			var qaMinLength = new TestDescriptor(
 				"name",
 				new ClassDescriptor(
-					"ProSuite.QA.Tests.QaMinLength",
-					"ProSuite.QA.Tests"), 0, false, false);
+					"ProSuite.QA.Tests.QaMinLengthDefinition",
+					"ProSuite.QA.Tests.Definitions"), 0, false, false);
 
 			var transformerDescriptor = new TransformerDescriptor(
 				"transformer",

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.AO.Geometry.ExtractParts;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.Essentials.Assertions;
@@ -46,8 +47,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			// -> Use GeomUtils.Cut implementation which could eventually classify the left/right parts and avoid footprint-cutting
 			//    only to find the correct assignment to result features.
 
-			// TODO: Create footprint as RingGroups directly from multipatch rings
-			IPolygon footprint = GeometryFactory.CreatePolygon(multipatch);
+			// NOTE: At 12.0, creating the multipatches from the boundary is often incorrect (unless all rings are positive)
+			double xyTolerance = GeometryUtils.GetXyTolerance(multipatch);
+			IPolygon footprint = CreateFootprintUtils.GetFootprint(multipatch, xyTolerance);
 
 			IList<IGeometry> cutFootprintParts =
 				TryCutRingGroups(footprint, cutLine, ChangeAlongZSource.Target);
