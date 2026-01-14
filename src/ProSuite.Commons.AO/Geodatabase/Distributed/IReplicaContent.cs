@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AO.Geodatabase.Distributed
 {
@@ -19,6 +20,12 @@ namespace ProSuite.Commons.AO.Geodatabase.Distributed
 		/// </summary>
 		[NotNull]
 		IEnumerable<IDataset> RootDatasets { get; }
+
+		/// <summary>
+		/// Additional non-object datasets that are handled by custom check-out logic.
+		/// </summary>
+		[CanBeNull]
+		IList<IDatasetDef> CustomDatasets { get; }
 
 		/// <summary>
 		/// The master workspace from which the replica is created.
