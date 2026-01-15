@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Grpc.Core;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -40,7 +41,8 @@ namespace ProSuite.Microservices.Client.GrpcCore
 		{
 			// Sometimes the localhost is not configured as exception in the proxy settings:
 			bool disableProxy =
-				string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase);
+				string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase) ||
+				EnvironmentUtils.GetBooleanEnvironmentVariableValue("PROSUITE_GRPC_DISABLE_PROXY");
 
 			_msg.DebugFormat("Creating channel to {0} on port {1}. Disabling proxy: {2}",
 			                 host, port, disableProxy);
