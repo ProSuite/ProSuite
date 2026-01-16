@@ -44,7 +44,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Implementation of IDataStore
 
-		public ITableData OpenDataset(string tableName)
+		public IDatasetDef OpenDataset(string tableName)
 		{
 			IFeatureWorkspace featureWorkspace = (IFeatureWorkspace)BaseWorkspace;
 
