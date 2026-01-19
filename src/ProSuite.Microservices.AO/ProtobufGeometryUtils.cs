@@ -48,7 +48,11 @@ namespace ProSuite.Microservices.AO
 			}
 			else
 			{
-				var wkbWriter = new WkbGeometryWriter();
+				var wkbWriter = new WkbGeometryWriter()
+				                {
+					                GroupPolyhedraByPointId = true
+				                };
+
 				byte[] wkb = wkbWriter.WriteGeometry(highLevelGeometry);
 				result.Wkb = ByteString.CopyFrom(wkb);
 			}
