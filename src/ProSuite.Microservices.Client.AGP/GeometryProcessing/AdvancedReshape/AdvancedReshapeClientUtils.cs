@@ -143,7 +143,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		{
 			request.AllowOpenJawReshape = true;
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * request.Features.Count;
+			int deadline = FeatureProcessingUtils.GetProcessingTimeout(request.Features.Count);
 
 			AdvancedReshapeResponse reshapeResultMsg = GrpcClientUtils.Try(
 				o => rpcClient.AdvancedReshape(request, o),

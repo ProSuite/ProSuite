@@ -74,7 +74,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			CalculateOverlapsRequest request =
 				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures, inExtent);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 			CalculateOverlapsResponse response =
 				GrpcClientUtils.Try(
@@ -144,8 +144,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				selectedFeatures, overlapsToRemove, overlappingFeatures, options,
 				out updateFeatures);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
-			               request.SourceFeatures.Count;
+			int deadline =
+				FeatureProcessingUtils.GetProcessingTimeout(request.SourceFeatures.Count);
 
 			RemoveOverlapsResponse response =
 				GrpcClientUtils.Try(

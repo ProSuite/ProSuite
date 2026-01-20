@@ -104,7 +104,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				selectedFeatures, targetFeatures,
 				targetBufferOptions, curveFilterOptions, customTolerance);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 			return GrpcClientUtils.Try(
 				options => rpcClient.CalculateReshapeLines(request, options),
@@ -125,7 +125,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			                                             targetBufferOptions, clipExtent,
 			                                             customTolerance, zValueSource);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 			return GrpcClientUtils.Try(
 				options => rpcClient.CalculateCutLines(request, options),
