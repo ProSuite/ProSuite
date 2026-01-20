@@ -351,6 +351,11 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 			bool anyPart3dIntersects = intersectingByMultipatchPart.Any(kvp => kvp.Value);
 
+			// TODO: If anyPart3dIntersects is false but several parts intersect in 2d there is one
+			//       case where the user might want to disambiguate: If the cut line is completely
+			//       within both rings -> either 3D-intersect property (area-based) or check if at
+			//       least one intersection point is a 3D intersection (i.e. in the plane of the ring).
+
 			var resultParts = new List<IGeometry>();
 			int partId = 0;
 
@@ -399,7 +404,12 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			// Then select the correct (non-intersecting part)
 			IPolyline interiorIntersection = GetCutLine(sourceMultipatch, overlaps);
 
-			Assert.False(interiorIntersection.IsEmpty, "Cut line is empty.");
+			if (interiorIntersection.IsEmpty)
+			{
+				// No intersection -> return source multipatch
+				overlappingMultiPatches = null;
+				return new List<IGeometry> { sourceMultipatch };
+			}
 
 			IDictionary<IPolygon, IMultiPatch> cutResultByFootprintPart =
 				CutGeometryUtils.TryCut(sourceMultipatch,
