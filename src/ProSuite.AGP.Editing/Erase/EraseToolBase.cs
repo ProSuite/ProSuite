@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
@@ -12,12 +12,16 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Notifications;
+using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.Erase;
 
@@ -33,6 +37,12 @@ public abstract class EraseToolBase : ConstructionToolBase
 		// This is our property:
 		RequiresSelection = true;
 	}
+
+	protected bool SuppressPolylineErasing { get; set; }
+
+	protected bool SuppressMultipointErasing { get; set; }
+
+	protected virtual IRemoveOverlapsService MicroserviceClient { get; } = null;
 
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
@@ -105,27 +115,23 @@ public abstract class EraseToolBase : ConstructionToolBase
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
 	{
-		return geometryType == GeometryType.Polyline ||
-		       geometryType == GeometryType.Polygon ||
-		       geometryType == GeometryType.Multipoint;
-	}
-
-	protected override bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection,
-	                                        NotificationCollection notifications = null)
-	{
-		bool hasPolycurveSelection = false;
-
-		foreach (var layer in selection.Keys.OfType<FeatureLayer>())
+		if (geometryType == GeometryType.Polygon)
 		{
-			if (layer.ShapeType == esriGeometryType.esriGeometryPolygon ||
-			    layer.ShapeType == esriGeometryType.esriGeometryPolyline ||
-			    layer.ShapeType == esriGeometryType.esriGeometryMultipoint)
-			{
-				hasPolycurveSelection = true;
-			}
+			return true;
 		}
 
-		return hasPolycurveSelection;
+		if (! SuppressPolylineErasing && geometryType == GeometryType.Polyline)
+		{
+			return true;
+		}
+
+		if (! SuppressMultipointErasing && geometryType == GeometryType.Multipoint)
+		{
+			return true;
+		}
+
+		return MicroserviceClient != null &&
+		       geometryType == GeometryType.Multipatch;
 	}
 
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
@@ -139,6 +145,12 @@ public abstract class EraseToolBase : ConstructionToolBase
 		var resultFeatures = await QueuedTaskUtils.Run(
 			                     () => CalculateResultFeatures(activeView, polygon),
 			                     cancelableProgressor);
+
+		if (resultFeatures.Count == 0)
+		{
+			_msg.Warn("No feature was changed");
+			return false;
+		}
 
 		var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
 		var taskFlash =
@@ -158,27 +170,122 @@ public abstract class EraseToolBase : ConstructionToolBase
 	private IDictionary<Feature, Geometry> CalculateResultFeatures(
 		MapView activeView, Polygon sketchPolygon)
 	{
-		IEnumerable<Feature> selectedFeatures = GetApplicableSelectedFeatures(activeView);
+		var selectedFeatures = GetApplicableSelectedFeatures(activeView);
 
 		var resultFeatures = CalculateResultFeatures(selectedFeatures, sketchPolygon);
 
 		return resultFeatures;
 	}
 
-	private static IDictionary<Feature, Geometry> CalculateResultFeatures(
-		IEnumerable<Feature> selectedFeatures,
-		Polygon cutPolygon)
+	private IDictionary<Feature, Geometry> CalculateResultFeatures(
+		[NotNull] IEnumerable<Feature> selectedFeatures,
+		[NotNull] Polygon cutPolygon)
+	{
+		var inputs = selectedFeatures.ToDictionary(f => f, f => f.GetShape());
+
+		if (inputs.Count == 0)
+		{
+			return new Dictionary<Feature, Geometry>();
+		}
+
+		cutPolygon = (Polygon) GeometryEngine.Instance.SimplifyAsFeature(cutPolygon, true);
+
+		SpatialReference targetSpatialRef = inputs.Values.First().SpatialReference;
+		cutPolygon = (Polygon) GeometryEngine.Instance.Project(cutPolygon, targetSpatialRef);
+
+		if (inputs.Values.Any(g => g.GeometryType == GeometryType.Multipatch))
+		{
+			return CalculateMultipatchResultFeatures(inputs, cutPolygon);
+		}
+
+		Dictionary<Feature, Geometry> result =
+			CalculateNonMultipatchResultFeatures(inputs, cutPolygon);
+
+		return result;
+	}
+
+	private IDictionary<Feature, Geometry> CalculateMultipatchResultFeatures(
+		[NotNull] Dictionary<Feature, Geometry> inputFeatureGeometries,
+		[NotNull] Polygon cutPolygon)
+	{
+		// TODO Simplified method overload
+		var selectedFeatures = new List<Feature>();
+
+		Overlaps overlaps = new Overlaps();
+
+		foreach (var kvp in inputFeatureGeometries)
+		{
+			Feature feature = kvp.Key;
+			Geometry geometry = kvp.Value;
+
+			// TODO: Extract geometry part that touches?
+			if (GeometryUtils.Intersects(cutPolygon, geometry))
+			{
+				selectedFeatures.Add(feature);
+
+				overlaps.AddGeometries(new GdbObjectReference(feature),
+				                       new List<Geometry> { cutPolygon });
+			}
+		}
+
+		var options = new RemoveOverlapsToolOptions(null, new PartialRemoveOverlapsOptions()
+		                                                  {
+			                                                  ZSource =
+				                                                  new OverridableSetting<
+					                                                  ChangeAlongZSource>(
+					                                                  ChangeAlongZSource
+						                                                  .SourcePlane, true)
+		                                                  });
+
+		CancellationToken cancellationToken = CancellationToken.None;
+
+		RemoveOverlapsResult result =
+			MicroserviceClient.RemoveOverlaps(
+				selectedFeatures, overlaps, new List<Feature>(),
+				options,
+				cancellationToken);
+
+		if (result == null)
+		{
+			_msg.Warn("No overlaps were removed.");
+			return new Dictionary<Feature, Geometry>();
+		}
+
+		var updates = new Dictionary<Feature, Geometry>();
+
+		foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
+		{
+			Feature originalFeature = resultPerFeature.OriginalFeature;
+			Geometry updatedGeometry = resultPerFeature.UpdatedGeometry;
+
+			//if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
+			//{
+			//	continue;
+			//}
+
+			updates.Add(originalFeature, updatedGeometry);
+
+			//if (resultPerFeature.InsertGeometries.Count > 0)
+			//{
+			//	inserts.Add(originalFeature,
+			//	            resultPerFeature.InsertGeometries);
+			//}
+		}
+
+		return updates;
+	}
+
+	private static Dictionary<Feature, Geometry> CalculateNonMultipatchResultFeatures(
+		Dictionary<Feature, Geometry> inputFeatureGeometries, Polygon cutPolygon)
 	{
 		var result = new Dictionary<Feature, Geometry>();
 
-		foreach (var feature in selectedFeatures)
+		foreach (var kvp in inputFeatureGeometries)
 		{
-			Geometry featureGeometry = feature.GetShape();
+			Feature feature = kvp.Key;
+			Geometry featureGeometry = kvp.Value;
+
 			featureGeometry = GeometryEngine.Instance.SimplifyAsFeature(featureGeometry, true);
-			cutPolygon = (Polygon) GeometryEngine.Instance.SimplifyAsFeature(cutPolygon, true);
-			cutPolygon =
-				(Polygon) GeometryEngine.Instance.Project(cutPolygon,
-				                                          featureGeometry.SpatialReference);
 
 			Geometry resultGeometry =
 				GeometryEngine.Instance.Difference(featureGeometry, cutPolygon);
