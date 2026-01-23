@@ -31,9 +31,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			_proFeatureClass = proFeatureClass;
 
-			GeometryDefinition =
-				new ArcGeometryDef(
-					new ShapeDescription((FeatureClassDefinition) ProTableDefinition));
+			var featureClassDefinition = (FeatureClassDefinition) ProTableDefinition;
+
+			try
+			{
+				// Try to create using ShapeDescription (works for most cases)
+				GeometryDefinition = new ArcGeometryDef(
+					new ShapeDescription(featureClassDefinition));
+			}
+			catch (ArgumentException ex)
+				when (ex.Message.Contains("description name") && ex.Message.Contains("invalid character"))
+			{
+				// Fallback for enterprise geodatabases with qualified field names (e.g., OWNER.TABLE.FIELD)
+				// ShapeDescription fails when field names contain dots
+				GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
+			}
 
 			// Only cache properties after the GeometryDefinition is set;
 			if (cachePropertiesEagerly)
