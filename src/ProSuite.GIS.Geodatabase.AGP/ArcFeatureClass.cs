@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,6 +9,9 @@ using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
@@ -31,7 +32,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			_proFeatureClass = proFeatureClass;
 
-			var featureClassDefinition = (FeatureClassDefinition) ProTableDefinition;
+			FeatureClassDefinition featureClassDefinition =
+				(FeatureClassDefinition) (proFeatureClass.IsJoinedTable()
+					                          ? DatasetUtils.GetDatabaseTable(proFeatureClass)
+					                                        .GetDefinition()
+					                          : (FeatureClassDefinition) ProTableDefinition);
 
 			try
 			{
