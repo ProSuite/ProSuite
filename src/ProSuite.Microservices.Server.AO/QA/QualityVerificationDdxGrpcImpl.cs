@@ -34,17 +34,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
-
 		// Technically probably not necessary because no proper AO-objects are used.
 		// But rather be safe than sorry (and experiencing locks and hangs).
 		private readonly StaTaskScheduler _staThreadScheduler = new StaTaskScheduler(5);
 
-		public QualityVerificationDdxGrpcImpl(
-			[NotNull] IDomainTransactionManager domainTransactions)
-		{
-			_domainTransactions = domainTransactions;
-		}
+		public QualityVerificationDdxGrpcImpl()
+		{}
 
 		/// <summary>
 		/// The overall service process health. If it has been set, it will be marked as not serving
@@ -372,7 +367,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces;
 
 			GetProjectWorkspacesResponse response = null;
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				projectWorkspaces =
 					verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
@@ -467,7 +462,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
 			IList<QualitySpecification> foundSpecifications = null;
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				foundSpecifications =
 					verificationDataDictionary.GetQualitySpecifications(
@@ -495,7 +490,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				QualitySpecification qualitySpecification =
 					verificationDataDictionary.GetQualitySpecification(
@@ -537,7 +532,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				QualityCondition qualityCondition =
 					verificationDataDictionary.GetQualityCondition(request.ConditionName);
@@ -584,7 +579,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				IList<Dataset> datasets =
 					verificationDataDictionary.GetDatasets(request.DatasetIds);
