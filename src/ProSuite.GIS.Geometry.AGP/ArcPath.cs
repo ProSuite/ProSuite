@@ -7,6 +7,7 @@ namespace ProSuite.GIS.Geometry.AGP;
 public class ArcPath : ArcGeometry, IPath
 {
 	private readonly ReadOnlySegmentCollection _segmentCollection;
+	private ISpatialReference _spatialReference;
 
 	public ArcPath(ReadOnlySegmentCollection segmentCollection,
 	               bool asRing,
@@ -14,7 +15,7 @@ public class ArcPath : ArcGeometry, IPath
 		GetPartGeometry(segmentCollection, asRing))
 	{
 		_segmentCollection = segmentCollection;
-		SpatialReference = spatialReference;
+		_spatialReference = spatialReference;
 	}
 
 	private static ArcGIS.Core.Geometry.Geometry GetPartGeometry(
@@ -107,6 +108,20 @@ public class ArcPath : ArcGeometry, IPath
 		ReadOnlySegmentCollection clonedSegments = clone.Parts[0];
 
 		return new ArcPath(clonedSegments, clone is Polygon, SpatialReference);
+	}
+
+	public ISpatialReference SpatialReference
+	{
+		get
+		{
+			if (_spatialReference != null)
+			{
+				return _spatialReference;
+			}
+
+			return base.SpatialReference;
+		}
+		set => _spatialReference = value;
 	}
 
 	#endregion

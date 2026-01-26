@@ -6,8 +6,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
-using ProSuite.Commons.AO.Geometry.CreateFootprint;
-using ProSuite.Commons.AO.Geometry.Cut;
 using ProSuite.Commons.AO.Geometry.ExtractParts;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.Essentials.Assertions;
@@ -397,65 +395,78 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			ChangeAlongZSource zSource,
 			out IList<IGeometry> overlappingMultiPatches)
 		{
-			// NOTE:
-			// Difference / Intersect are useless for multipatches, they can only return polygons
+			IList<IGeometry> result = new List<IGeometry>();
 
-			// -> Get the relevant boundary segments of the overlap and use the FeatureCutter to cut the multipatch. 
-			// Then select the correct (non-intersecting part)
-			IPolyline interiorIntersection = GetCutLine(sourceMultipatch, overlaps);
+			// TEST
+			double tolerance = GeometryUtils.GetXyTolerance(sourceMultipatch);
 
-			if (interiorIntersection.IsEmpty)
+			Polyhedron polyhedron =
+				GeometryConversionUtils.CreatePolyhedron(sourceMultipatch, false, true);
+			MultiPolycurve target = GeometryConversionUtils.CreateMultiPolycurve(overlaps);
+
+			// TODO: Remember inverted ring groups and reverse results at the end!
+			//       Currently, the result is always upward oriented.
+
+			var resultHedra = new List<RingGroup>();
+			foreach (RingGroup source in polyhedron.RingGroups)
 			{
-				// No intersection -> return source multipatch
-				overlappingMultiPatches = null;
-				return new List<IGeometry> { sourceMultipatch };
-			}
-
-			IDictionary<IPolygon, IMultiPatch> cutResultByFootprintPart =
-				CutGeometryUtils.TryCut(sourceMultipatch,
-				                        interiorIntersection, zSource);
-
-			IList<IGeometry> result = new List<IGeometry>(cutResultByFootprintPart.Count);
-
-			overlappingMultiPatches = _storeOverlapsAsNewFeatures
-				                          ? new List<IGeometry>(
-					                          cutResultByFootprintPart.Count)
-				                          : null;
-
-			// now select the multipatch of the right side...
-			foreach (KeyValuePair<IPolygon, IMultiPatch> footprintWithMultipatch in
-			         cutResultByFootprintPart)
-			{
-				IMultiPatch resultMultipatch = footprintWithMultipatch.Value;
-
-				if (! GeometryUtils.InteriorIntersects(footprintWithMultipatch.Key,
-				                                       overlaps))
+				if (source.IsVertical(tolerance))
 				{
-					result.Add(resultMultipatch);
+					IEnumerable<RingGroup> verticalResultRings =
+						RemoveOverlapsFromVerticalRings(source, target, tolerance);
+
+					resultHedra.AddRange(verticalResultRings);
 				}
 				else
 				{
-					overlappingMultiPatches?.Add(resultMultipatch);
+					MultiLinestring differenceAreasXY =
+						GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance, zSource);
+
+					resultHedra.AddRange(ToRingGroups(differenceAreasXY));
 				}
 			}
 
-			if (! _explodeMultipartResult)
-			{
-				// merge the different parts into one:
-				if (result.Count > 1)
-				{
-					result = new List<IGeometry> { GeometryUtils.Union(result) };
-				}
+			result.Add(GeometryConversionUtils.CreateMultipatch(resultHedra, sourceMultipatch));
 
-				if (overlappingMultiPatches?.Count > 1)
-				{
-					overlappingMultiPatches =
-						new List<IGeometry>
-						{ GeometryUtils.Union(overlappingMultiPatches) };
-				}
-			}
-
+			overlappingMultiPatches = null;
 			return result;
+		}
+
+		private static IEnumerable<RingGroup> RemoveOverlapsFromVerticalRings(
+			[NotNull] RingGroup source,
+			[NotNull] MultiPolycurve target,
+			double tolerance)
+		{
+			// The cut rings or those that are not cut because they do not intersect the target:
+			var ringsToCheck = new List<RingGroup>();
+
+			IList<RingGroup> cutRingGroups = GeomTopoOpUtils.CutPlanar(source, target, tolerance);
+
+			if (cutRingGroups.Count == 0)
+			{
+				// The ring was not cut -> add if contained
+				ringsToCheck.Add(source);
+			}
+
+			foreach (RingGroup cutRingGroup in cutRingGroups)
+			{
+				ringsToCheck.Add(cutRingGroup);
+			}
+
+			foreach (RingGroup ringToCheck in ringsToCheck)
+			{
+				// Rings should be completely inside or completely outside!
+
+				bool? cutRingIsInTarget =
+					GeomRelationUtils.AreaContainsXY(target, ringToCheck, tolerance);
+
+				// Ignore those rings inside. If it is on the boundary (i.e. cutRingIsInTarget == null),
+				// keep it (?) -> TODO: Test
+				if (cutRingIsInTarget != true)
+				{
+					yield return ringToCheck;
+				}
+			}
 		}
 
 		private static Dictionary<IMultiPatch, bool> Intersects3dPerMultipatchPart(
@@ -539,31 +550,23 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			return multipatchRingGroupsWith3dIntersection.Any();
 		}
 
-		private static IPolyline GetCutLine(IMultiPatch sourceMultipatch,
-		                                    IPolygon overlappingPolygon)
+		private static IList<RingGroup> ToRingGroups(MultiLinestring MultiLinestring)
 		{
-			IPolygon sourceFootprint =
-				CreateFootprintUtils.GetFootprint(sourceMultipatch,
-				                                  GeometryUtils.GetXyTolerance(sourceMultipatch));
+			var result = new List<RingGroup>();
 
-			IPolyline sourceFootprintBoundary =
-				GeometryFactory.CreatePolyline(sourceFootprint);
+			foreach (Linestring linestring in MultiLinestring.GetLinestrings())
+			{
+				if (linestring.ClockwiseOriented == false)
+				{
+					result.Last().AddInteriorRing(linestring);
+				}
+				else
+				{
+					result.Add(new RingGroup(linestring));
+				}
+			}
 
-			IPolyline overlappingPolygonBoundary =
-				GeometryFactory.CreatePolyline(overlappingPolygon);
-
-			const bool assumeIntersecting = true;
-			const bool allowRandomStartPointsForClosedIntersections = true;
-
-			IPolyline intersectionLines = IntersectionUtils.GetIntersectionLines(
-				sourceFootprint, overlappingPolygonBoundary, assumeIntersecting,
-				allowRandomStartPointsForClosedIntersections);
-
-			// the intersectionLines also run along the boundary, but we only want the interior intersections
-			var interiorIntersection = (IPolyline) IntersectionUtils.Difference(
-				intersectionLines, sourceFootprintBoundary);
-
-			return interiorIntersection;
+			return result;
 		}
 
 		#endregion
