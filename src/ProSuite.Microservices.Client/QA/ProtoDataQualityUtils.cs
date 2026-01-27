@@ -603,7 +603,8 @@ namespace ProSuite.Microservices.Client.QA
 					GeometryType = geometryType,
 					DatasetType = (int) dataset.DatasetType,
 					TypeCode = dataset.ImplementationType?.Id ?? 0,
-					ModelId = dataset.Model.Id
+					ModelId = dataset.Model.Id,
+					CategoryName = dataset.DatasetCategory?.Name ?? string.Empty
 				};
 
 			if (includeDetails)
@@ -621,6 +622,8 @@ namespace ProSuite.Microservices.Client.QA
 					{
 						datasetMsg.ObjectCategories.AddRange(ToObjectCategoryMsg(objectType));
 					}
+
+					datasetMsg.DisplayFormat = objectDataset.DisplayFormat ?? string.Empty;
 				}
 			}
 
