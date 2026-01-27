@@ -6,7 +6,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -28,11 +30,11 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		_caption = caption;
 	}
 
-	protected override Task<bool> OnClickAsyncCore()
+	protected override async Task<bool> OnClickAsyncCore()
 	{
 		var items = new List<AboutItem>();
 
-		CollectInformation(items);
+		await CollectInformation(items);
 
 		var message = AboutItem.GetPlainText(items);
 
@@ -41,7 +43,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		var viewModel = new AboutViewModel(_caption, items);
 		Gateway.ShowDialog<AboutWindow>(viewModel);
 
-		return Task.FromResult(true);
+		return true;
 	}
 
 	protected virtual string EnvironmentName => "Production";
@@ -62,7 +64,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		yield break;
 	}
 
-	private void CollectInformation([NotNull] ICollection<AboutItem> items)
+	private async Task CollectInformation([NotNull] ICollection<AboutItem> items)
 	{
 		if (items is null)
 			throw new ArgumentNullException(nameof(items));
@@ -104,21 +106,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		{
 			Add(items, currentSection, "Environment", EnvironmentName);
 
-			var configFileSearcher = GetConfigFileSearcher();
-			var searchPaths = configFileSearcher?.GetSearchPaths().ToList();
-			if (searchPaths is not null)
-			{
-				int count = searchPaths.Count;
-				var remarks = new[] { "searched first", "searched second", "etc." };
-				Add(items, currentSection, "Config Search Path",
-				    $"{count} entr{(count == 1 ? "y" : "ies")}");
-				for (int i = 0; i < count; i++)
-				{
-					string path = searchPaths[i];
-					var remark = i < remarks.Length ? remarks[i] : null;
-					Add(items, currentSection, "-", path, remark);
-				}
-			}
+			AddConfigSearchPaths(items, currentSection);
 		}
 		catch (Exception ex)
 		{
@@ -133,6 +121,8 @@ public abstract class AboutButtonBase : ButtonCommandBase
 			{
 				Add(items, currentSection, pair.Key, pair.Value);
 			}
+
+			await AddProjectDefaultUnits(items, currentSection);
 		}
 		catch (Exception ex)
 		{
@@ -213,6 +203,77 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		{
 			return ex.Message;
 		}
+	}
+
+	private void AddConfigSearchPaths(ICollection<AboutItem> items, string section)
+	{
+		const string key = "Config Search Path";
+
+		var configFileSearcher = GetConfigFileSearcher();
+		var searchPaths = configFileSearcher?.GetSearchPaths().ToList();
+
+		if (searchPaths is null)
+		{
+			Add(items, section, key, "Empty");
+		}
+		else
+		{
+			int count = searchPaths.Count;
+			var remarks = new[] { "searched first", "searched second", "etc." };
+			Add(items, section, key, Humanize.FormatCount(count, "entry"));
+			for (int i = 0; i < count; i++)
+			{
+				string path = searchPaths[i];
+				var remark = i < remarks.Length ? remarks[i] : null;
+				Add(items, section, "-", path, remark);
+			}
+		}
+	}
+
+	private async Task AddProjectDefaultUnits(ICollection<AboutItem> result, string section)
+	{
+		const string key = "Project default units";
+
+		try
+		{
+			var units = await QueuedTask.Run(GetProjectDefaultUnitsCore);
+
+			var defaultUnits = FormatProjectDefaultUnits(units);
+
+			if (!string.IsNullOrWhiteSpace(defaultUnits))
+			{
+				Add(result, section, key, defaultUnits, "to change: Project/Options/Units");
+			}
+		}
+		catch (Exception ex)
+		{
+			Add(result, section, key, $"Error: {ex.Message}", ex.GetType().Name);
+		}
+	}
+
+	/// <remarks>Must call on MCT</remarks>
+	private static DisplayUnitFormat[] GetProjectDefaultUnitsCore()
+	{
+		var types = Enum.GetValues<UnitFormatType>();
+		var formats = DisplayUnitFormats.Instance;
+		return types.Select(type => formats.GetDefaultProjectUnitFormat(type))
+		            .ToArray();
+	}
+
+	protected virtual string FormatProjectDefaultUnits(DisplayUnitFormat[] units)
+	{
+		if (units is null) return null;
+		if (units.Length < 1) return null;
+
+		var sb = new StringBuilder();
+
+		foreach (var unit in units)
+		{
+			if (sb.Length > 0) sb.Append(", ");
+			sb.Append($"{unit.UnitFormatType}: {unit.UnitName}");
+		}
+
+		return sb.ToString();
 	}
 
 	private static void GetAllAddinInfos(ICollection<AboutItem> items)
