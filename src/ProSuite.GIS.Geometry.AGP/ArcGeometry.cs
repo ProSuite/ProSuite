@@ -237,8 +237,15 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public bool IsEqual(IClone other)
 		{
-			var geometry = (ArcGeometry) other;
-			return ProGeometry.IsEqual(geometry.ProGeometry);
+			if (other is not ArcGeometry otherArcGeometry)
+			{
+				return false;
+			}
+
+			var otherProGeometry =
+				otherArcGeometry.NativeImplementation as ArcGIS.Core.Geometry.Geometry;
+
+			return ProGeometry.IsEqual(otherProGeometry);
 		}
 	}
 }
