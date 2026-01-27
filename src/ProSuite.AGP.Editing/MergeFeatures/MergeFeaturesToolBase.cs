@@ -275,13 +275,15 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_mergeToolOptions.LocalOptions);
 
 		_firstFeature = null;
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,

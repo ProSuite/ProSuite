@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -44,13 +45,15 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 	protected override SelectionCursors TargetSelectionCursors { get; } =
 		SelectionCursors.CreateCrossCursors(Resources.ReshapeAlongOverlay, "Cut Along Cross");
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		base.OnToolDeactivateCore(hasMapViewChanged);
 
 		_settingsProvider?.StoreLocalConfiguration(_reshapeAlongToolOptions.LocalOptions);
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)

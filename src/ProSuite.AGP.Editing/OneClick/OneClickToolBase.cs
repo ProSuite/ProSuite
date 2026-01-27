@@ -146,14 +146,15 @@ public abstract class OneClickToolBase : MapToolBase
 		}, progressor);
 	}
 
-	protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
 		MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
 		MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChangedAsync);
 		EditCompletedEvent.Unsubscribe(OnEditCompletedAsync);
 
-		// TODO: Async but not in QueuedTask (or separate OnToolDeactivateAsyncCoreQueued
-		await QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
+		OnToolDeactivateCore(hasMapViewChanged);
+
+		return Task.CompletedTask;
 	}
 
 	#endregion
@@ -503,7 +504,10 @@ public abstract class OneClickToolBase : MapToolBase
 		return Task.FromResult(true);
 	}
 
-	protected virtual void OnToolDeactivateCore(bool hasMapViewChanged) { }
+	protected virtual Task OnToolDeactivateCore(bool hasMapViewChanged)
+	{
+		return Task.CompletedTask;
+	}
 
 	/// <summary>
 	/// Method called on the UI thread to react to changes to map selection that typically do

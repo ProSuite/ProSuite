@@ -175,11 +175,13 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 
 	#endregion
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		DrawCompleteEvent.Unsubscribe(OnDrawCompleted);
 		ResetDerivedGeometries();
 		_feedback = null;
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override Task OnSelectionPhaseStartedAsync()

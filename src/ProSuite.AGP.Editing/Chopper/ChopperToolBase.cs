@@ -81,11 +81,13 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_chopperToolOptions.LocalOptions);
 		_feedback?.DisposeOverlays();
 		_feedback = null;
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override void LogPromptForSelection()

@@ -270,7 +270,7 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		_feedback?.Clear();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_advancedReshapeToolOptions.LocalOptions);
 
@@ -280,6 +280,8 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		base.OnToolDeactivateCore(hasMapViewChanged);
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override SketchGeometryType GetEditSketchGeometryType()

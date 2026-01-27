@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -51,13 +52,15 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		SelectionCursors.CreateCrossCursors(Resources.CutPolygonAlongOverlay,
 		                                    "Cut Along Cross");
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		base.OnToolDeactivateCore(hasMapViewChanged);
 
 		_settingsProvider?.StoreLocalConfiguration(_cutAlongToolOptions.LocalOptions);
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
