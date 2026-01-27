@@ -10,7 +10,6 @@ using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
@@ -38,8 +37,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		// But rather be safe than sorry (and experiencing locks and hangs).
 		private readonly StaTaskScheduler _staThreadScheduler = new StaTaskScheduler(5);
 
-		public QualityVerificationDdxGrpcImpl()
-		{}
+		public QualityVerificationDdxGrpcImpl() { }
 
 		/// <summary>
 		/// The overall service process health. If it has been set, it will be marked as not serving

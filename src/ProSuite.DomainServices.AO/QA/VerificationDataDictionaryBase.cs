@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
@@ -9,9 +12,6 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProSuite.DomainServices.AO.QA
 {
@@ -45,10 +45,10 @@ namespace ProSuite.DomainServices.AO.QA
 
 				// Once GIS.Geodatabase interface is used:
 				//IWorkspace workspace = objectClass.Workspace;
-				IWorkspace workspace = ((IDataset)objectClass).Workspace;
+				IWorkspace workspace = ((IDataset) objectClass).Workspace;
 
 				ICollection<IObjectClass> tables;
-				if (!result.TryGetValue(workspace, out tables))
+				if (! result.TryGetValue(workspace, out tables))
 				{
 					tables = new HashSet<IObjectClass>();
 					result.Add(workspace, tables);
@@ -104,7 +104,7 @@ namespace ProSuite.DomainServices.AO.QA
 			var allProjectWorkspaces = new List<ProjectWorkspace>();
 
 			foreach (var kvp in GetProjectContentByWorkspaceTx(
-						 classesByWorkspace))
+				         classesByWorkspace))
 			{
 				allProjectWorkspaces.AddRange(kvp.Value);
 			}
@@ -140,7 +140,7 @@ namespace ProSuite.DomainServices.AO.QA
 			bool includeHidden)
 		{
 			IList<QualitySpecification> result =
-				QualitySpecifications.Get(datasetIds, !includeHidden);
+				QualitySpecifications.Get(datasetIds, ! includeHidden);
 
 			return result ?? new List<QualitySpecification>(0);
 		}
@@ -160,7 +160,7 @@ namespace ProSuite.DomainServices.AO.QA
 			IList<Project<TModel>> projects = Projects.GetAll(true);
 
 			_msg.DebugFormat("{0} projects exist in the data dictionary with a production model",
-							 projects.Count);
+			                 projects.Count);
 
 			if (projects.Count == 0)
 			{
@@ -179,7 +179,7 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 
 				IList<ProjectWorkspace> projectWorkspaces;
-				if (!result.TryGetValue(workspace, out projectWorkspaces))
+				if (! result.TryGetValue(workspace, out projectWorkspaces))
 				{
 					projectWorkspaces = new List<ProjectWorkspace>();
 					result.Add(workspace, projectWorkspaces);
@@ -231,7 +231,7 @@ namespace ProSuite.DomainServices.AO.QA
 					{
 						if (isReadOnly == null)
 						{
-							isReadOnly = !DatasetUtils.UserHasWriteAccess(objectClass);
+							isReadOnly = ! DatasetUtils.UserHasWriteAccess(objectClass);
 						}
 
 						if (isReadOnly == true)
@@ -241,7 +241,7 @@ namespace ProSuite.DomainServices.AO.QA
 					}
 
 					ProjectWorkspace projectWorkspace;
-					if (!projectWorkspaces.TryGetValue(project, out projectWorkspace))
+					if (! projectWorkspaces.TryGetValue(project, out projectWorkspace))
 					{
 						projectWorkspace = new ProjectWorkspace(project, workspace);
 						projectWorkspaces.Add(project, projectWorkspace);
@@ -257,9 +257,8 @@ namespace ProSuite.DomainServices.AO.QA
 		private class ProjectWorkspace : ProjectWorkspaceBase<Project<TModel>, TModel>
 		{
 			public ProjectWorkspace([NotNull] Project<TModel> project,
-									[NotNull] IWorkspace workspace) :
-				base(project, workspace)
-			{ }
+			                        [NotNull] IWorkspace workspace) :
+				base(project, workspace) { }
 		}
 	}
 }

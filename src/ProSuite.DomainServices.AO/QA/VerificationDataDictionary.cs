@@ -1,23 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DomainServices.AO.QA
 {
 	public class VerificationDataDictionary<TModel>
-		: VerificationDataDictionaryBase<TModel>, IVerificationDataDictionary<TModel> where TModel : ProductionModel
+		: VerificationDataDictionaryBase<TModel>, IVerificationDataDictionary<TModel>
+		where TModel : ProductionModel
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -29,7 +23,8 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public override IDomainTransactionManager DomainTransactions { get; }
 
-		public override IQualitySpecificationRepository QualitySpecifications => _qualitySpecifications;
+		public override IQualitySpecificationRepository QualitySpecifications =>
+			_qualitySpecifications;
 
 		public override IQualityConditionRepository QualityConditions => _qualityConditions;
 
