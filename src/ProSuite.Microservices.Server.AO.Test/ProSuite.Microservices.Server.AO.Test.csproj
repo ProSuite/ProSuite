@@ -62,8 +62,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.2" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.2" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.5" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.5" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.76.0" />
     <PackageReference Include="Grpc.Core.Testing" Version="2.46.6" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
