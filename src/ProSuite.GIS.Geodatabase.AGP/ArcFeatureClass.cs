@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
@@ -6,17 +9,17 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcFeatureClass : ArcTable, ITable, IFeatureClass
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly FeatureClass _proFeatureClass;
 
 		// Property caching for non CIM-thread access:
@@ -40,7 +43,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					                                        .GetDefinition()
 					                          : (FeatureClassDefinition) ProTableDefinition);
 
-			GeometryDefinition = new ArcGeometryDef(new ShapeDescription(featureClassDefinition));
+			if (featureClassDefinition.GetShapeType() != GeometryType.Unknown)
+			{
+				GeometryDefinition =
+					new ArcGeometryDef(new ShapeDescription(featureClassDefinition));
+			}
+			else
+			{
+				GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
+			}
 
 			// Only cache properties after the GeometryDefinition is set to avoid null pointer in field caching!
 			if (cachePropertiesEagerly)
@@ -49,6 +60,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
+		[CanBeNull]
 		public IGeometryDef GeometryDefinition { get; }
 
 		protected internal override void CachePropertiesCore()
