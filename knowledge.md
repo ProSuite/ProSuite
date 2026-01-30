@@ -103,4 +103,4 @@ Shared proto files in `ProSuite/src/protos/` define common messages like `ShapeM
 
 ## Dependencies
 
-⚠️ **This is open-source code.** It cannot depend on `ProSuite.Shared`, `Swisstopo.GoTop`, or `Swisstopo.TopGen`. Those projects depend on *this* code, not the reverse.
+⚠️ **This is open-source code.** It cannot depend on closed source projects.
