@@ -28,31 +28,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public ArcFeatureClass([NotNull] FeatureClass proFeatureClass,
 		                       bool cachePropertiesEagerly = false)
-			: base(proFeatureClass, false)
+			: base(proFeatureClass, cachePropertiesEagerly: false)
 		{
 			_proFeatureClass = proFeatureClass;
 
+			// NOTE: Joined feature classes have a FeatureClassDefinition that fails when used in
+			//       new ShapeDescription(featureClassDefinition). -> Use un-joined geometry definition.
 			FeatureClassDefinition featureClassDefinition =
 				(FeatureClassDefinition) (proFeatureClass.IsJoinedTable()
 					                          ? DatasetUtils.GetDatabaseTable(proFeatureClass)
 					                                        .GetDefinition()
 					                          : (FeatureClassDefinition) ProTableDefinition);
 
-			try
-			{
-				// Try to create using ShapeDescription (works for most cases)
-				GeometryDefinition = new ArcGeometryDef(
-					new ShapeDescription(featureClassDefinition));
-			}
-			catch (ArgumentException ex)
-				when (ex.Message.Contains("description name") && ex.Message.Contains("invalid character"))
-			{
-				// Fallback for enterprise geodatabases with qualified field names (e.g., OWNER.TABLE.FIELD)
-				// ShapeDescription fails when field names contain dots
-				GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
-			}
+			GeometryDefinition = new ArcGeometryDef(new ShapeDescription(featureClassDefinition));
 
-			// Only cache properties after the GeometryDefinition is set;
+			// Only cache properties after the GeometryDefinition is set to avoid null pointer in field caching!
 			if (cachePropertiesEagerly)
 			{
 				CacheProperties();
