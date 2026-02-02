@@ -78,7 +78,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole
 
 			request.UnionFeatures = unionFeatures;
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 			CalculateHolesResponse response =
 				GrpcClientUtils.Try(

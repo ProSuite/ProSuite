@@ -87,13 +87,15 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_feedback?.DisposeOverlays();
 		_feedback = null;
 
 		_settingsProvider?.StoreLocalConfiguration(_removeOverlapsToolOptions.LocalOptions);
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override void LogPromptForSelection()

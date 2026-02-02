@@ -37,8 +37,16 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		AreModifierKeysPressed();
 	}
 
+	/// <summary>
+	/// The preference for the position of the picker window.
+	/// </summary>
 	public PickerPositionPreference PositionPreference { get; set; } =
 		PickerPositionPreference.MouseLocationMapOptimized;
+
+	/// <summary>
+	/// Whether the provided feature items should be aggregated by class.
+	/// </summary>
+	public bool AggregateByClass { get; set; }
 
 	protected List<Key> PressedKeys { get; } = new();
 
@@ -46,7 +54,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	public bool IsPointClick { get; }
 
-	public bool AggregateItems =>
+	private bool IsControlPressed =>
 		PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
 
 	public SelectionCombinationMethod SelectionCombinationMethod { get; }
@@ -80,7 +88,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return CreateItemsFactory<IPickableFeatureItem>();
 		}
 
-		if (AggregateItems)
+		if (AggregateByClass || IsControlPressed)
 		{
 			return CreateItemsFactory<IPickableFeatureClassItem>();
 		}
@@ -130,7 +138,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 		var modes = PickerMode.PickBest;
 
-		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
+		if (IsControlPressed)
 		{
 			// always show picker if CTRL pressed
 			return PickerMode.ShowPicker;

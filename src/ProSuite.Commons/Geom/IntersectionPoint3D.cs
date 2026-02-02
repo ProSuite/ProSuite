@@ -862,6 +862,34 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
+		/// Determines whether this intersection point represents a true 3D intersection, i.e.
+		/// whether the source and target geometries not only intersect in the XY projection
+		/// but the vertical distance is also within the tolerance (cylinder).
+		/// </summary>
+		/// <param name="target">The target geometry</param>
+		/// <param name="zTolerance">The Z tolerance for comparison</param>
+		/// <returns>True if the Z values at the intersection are within tolerance.
+		/// Null if one of the Z values is NaN</returns>
+		public bool? Is3dIntersection(ISegmentList target, double zTolerance)
+		{
+			// Source Z is already in Point.Z
+			double sourceZ = Point.Z;
+
+			// Get target Z at the intersection location
+			Pnt3D targetPoint = GetTargetPoint(target);
+			double targetZ = targetPoint.Z;
+
+			if (double.IsNaN(sourceZ) || double.IsNaN(targetZ))
+			{
+				// Undefined Z, probably not Z-aware data
+				return null;
+			}
+
+			// Check if Z values are within tolerance
+			return Math.Abs(sourceZ - targetZ) <= zTolerance;
+		}
+
+		/// <summary>
 		/// Classifies the source trajectory with respect to this intersection.
 		/// </summary>
 		/// <param name="source"></param>

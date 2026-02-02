@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Knowledge;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
@@ -20,6 +21,38 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase;
 public static class WorkspaceUtils
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	/// <summary>
+	/// Creates a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.
+	/// </summary>
+	/// <param name="directory"></param>
+	/// <param name="name"></param>
+	/// <returns></returns>
+	public static ArcGIS.Core.Data.Geodatabase CreateFileGeodatabase(
+		[NotNull] string directory,
+		[NotNull] string name)
+	{
+		Assert.ArgumentNotNullOrEmpty(directory, nameof(directory));
+		Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
+		if (! Directory.Exists(directory))
+		{
+			Directory.CreateDirectory(directory);
+		}
+
+		if (! name.EndsWith(".gdb", StringComparison.InvariantCultureIgnoreCase))
+		{
+			name += ".gdb";
+		}
+
+		string gdbPath = Path.Combine(directory, name);
+
+		var gdbConnection = new FileGeodatabaseConnectionPath(new Uri(gdbPath));
+
+		SchemaBuilder.CreateGeodatabase(gdbConnection);
+
+		return OpenFileGeodatabase(gdbPath);
+	}
 
 	/// <summary>
 	/// Opens a file geodatabase. This method must be run on the MCT. Use QueuedTask.Run.

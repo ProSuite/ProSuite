@@ -19,6 +19,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }
 
+		public bool GroupPolyhedraByPointId { get; set; }
+
 		public byte[] WriteGeometry([NotNull] IGeometry geometry)
 		{
 			try
@@ -34,7 +36,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 					case esriGeometryType.esriGeometryPolygon:
 						return WritePolygon((IPolygon) geometry);
 					case esriGeometryType.esriGeometryMultiPatch:
-						return WriteMultipatch((IMultiPatch) geometry);
+						return WriteMultipatch((IMultiPatch) geometry, GroupPolyhedraByPointId);
 					default:
 						throw new NotImplementedException(
 							$"Geometry type {geometry.GeometryType} is not implemented.");

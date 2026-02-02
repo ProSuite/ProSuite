@@ -4,10 +4,12 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
 using ProSuite.GIS.Geometry.API;
@@ -16,6 +18,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 {
 	public class ArcFeatureClass : ArcTable, ITable, IFeatureClass
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly FeatureClass _proFeatureClass;
 
 		// Property caching for non CIM-thread access:
@@ -27,21 +31,36 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public ArcFeatureClass([NotNull] FeatureClass proFeatureClass,
 		                       bool cachePropertiesEagerly = false)
-			: base(proFeatureClass, false)
+			: base(proFeatureClass, cachePropertiesEagerly: false)
 		{
 			_proFeatureClass = proFeatureClass;
 
-			GeometryDefinition =
-				new ArcGeometryDef(
-					new ShapeDescription((FeatureClassDefinition) ProTableDefinition));
+			// NOTE: Joined feature classes have a FeatureClassDefinition that fails when used in
+			//       new ShapeDescription(featureClassDefinition). -> Use un-joined geometry definition.
+			FeatureClassDefinition featureClassDefinition =
+				(FeatureClassDefinition) (proFeatureClass.IsJoinedTable()
+					                          ? DatasetUtils.GetDatabaseTable(proFeatureClass)
+					                                        .GetDefinition()
+					                          : (FeatureClassDefinition) ProTableDefinition);
 
-			// Only cache properties after the GeometryDefinition is set;
+			if (featureClassDefinition.GetShapeType() != GeometryType.Unknown)
+			{
+				GeometryDefinition =
+					new ArcGeometryDef(new ShapeDescription(featureClassDefinition));
+			}
+			else
+			{
+				GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
+			}
+
+			// Only cache properties after the GeometryDefinition is set to avoid null pointer in field caching!
 			if (cachePropertiesEagerly)
 			{
 				CacheProperties();
 			}
 		}
 
+		[CanBeNull]
 		public IGeometryDef GeometryDefinition { get; }
 
 		protected internal override void CachePropertiesCore()

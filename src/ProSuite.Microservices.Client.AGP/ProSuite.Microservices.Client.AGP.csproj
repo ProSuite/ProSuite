@@ -62,10 +62,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
 
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.3" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.3" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.5" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.5" />
   </ItemGroup>
 
   <ItemGroup>

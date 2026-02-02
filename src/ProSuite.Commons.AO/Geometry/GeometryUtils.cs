@@ -5231,7 +5231,7 @@ namespace ProSuite.Commons.AO.Geometry
 			return true;
 		}
 
-		private static bool TryPrepareForStoring(
+		public static bool TryPrepareForStoring(
 			[NotNull] ref IGeometry geometry,
 			[NotNull] IFeatureClass targetFeatureClass,
 			[CanBeNull] NotificationCollection notifications)

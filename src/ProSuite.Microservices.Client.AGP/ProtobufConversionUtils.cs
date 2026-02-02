@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -131,7 +132,8 @@ public static class ProtobufConversionUtils
 				break;
 			case ShapeMsg.FormatOneofCase.Wkb:
 
-				result = FromWkb(shapeMsg.Wkb.ToByteArray(), sr);
+				const bool assumeWkbPolygonsClockwise = true;
+				result = FromWkb(shapeMsg.Wkb.ToByteArray(), sr, assumeWkbPolygonsClockwise);
 
 				break;
 			case ShapeMsg.FormatOneofCase.Envelope:
@@ -636,10 +638,14 @@ public static class ProtobufConversionUtils
 	[NotNull]
 	private static ByteString GetWkbByteString(Multipatch multipatch)
 	{
-		Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
+		List<Polyhedron> polyhedra = GeomConversionUtils.CreatePolyhedra(multipatch).ToList();
 
-		WkbGeomWriter wkbWriter = new WkbGeomWriter();
-		byte[] wkb = wkbWriter.WriteMultiSurface(polyhedron);
+		WkbGeomWriter wkbWriter = new WkbGeomWriter
+		                          {
+			                          ReversePolygonWindingOrder = false
+		                          };
+
+		byte[] wkb = wkbWriter.WriteMultiSurface(polyhedra);
 
 		// TODO: Consider using FromStream and avoid the extra copying step
 		return ByteString.CopyFrom(wkb);
@@ -647,11 +653,12 @@ public static class ProtobufConversionUtils
 
 	[NotNull]
 	private static Geometry FromWkb([NotNull] byte[] wkb,
-	                                [CanBeNull] SpatialReference spatialReference)
+	                                [CanBeNull] SpatialReference spatialReference,
+	                                bool assumeWkbPolygonsClockwise = false)
 	{
 		// TODO: Use ReadOnlyMemory<byte> to avoid extra copy step
 
-		WkbGeomReader wkbReader = new WkbGeomReader();
+		WkbGeomReader wkbReader = new WkbGeomReader(assumeWkbPolygonsClockwise);
 
 		Stream memoryStream = new MemoryStream(wkb);
 		IBoundedXY geom = wkbReader.ReadGeometry(memoryStream, out WkbGeometryType wkbType);
@@ -674,9 +681,11 @@ public static class ProtobufConversionUtils
 		{
 			List<Multipatch> multipatches = new List<Multipatch>();
 
+			int partId = 0;
 			foreach (Polyhedron part in multiPolyhedron.Polyhedra)
 			{
-				multipatches.Add(GeomConversionUtils.CreateMultipatch(part, spatialReference));
+				multipatches.Add(
+					GeomConversionUtils.CreateMultipatch(part, spatialReference, partId++));
 			}
 
 			return GeometryUtils.Union(multipatches);

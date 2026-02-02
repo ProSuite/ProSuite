@@ -86,7 +86,7 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_crackerToolOptions.LocalOptions);
 
@@ -95,6 +95,8 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		_feedback = null;
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override void LogPromptForSelection()

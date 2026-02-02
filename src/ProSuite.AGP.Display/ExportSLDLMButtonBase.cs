@@ -287,7 +287,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		var order = GetDrawingOrder(container ?? map, map, includeMasking);
 		var symlyrs = GetSymbolLevels(container ?? map, map, extraMasking);
-		var masking = extraMasking ? null : GetMaskingLayers(order);
+		var masking = extraMasking ? GetMaskingLayers(order) : null;
 
 		var mapAttr = new XAttribute("map", map.Name ?? string.Empty);
 		var groupLayerAttr = container is Layer group
