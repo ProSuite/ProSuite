@@ -133,10 +133,11 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 			return;
 		}
 
-		GeometryType geometryType = GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
-
 		if (ApplicationOptions.EditingOptions.ShowFeatureSketchSymbology)
 		{
+			GeometryType geometryType =
+				GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType);
+
 			if (await _tool.CanSetConstructionSketchSymbol(geometryType))
 			{
 				await SetSketchSymbol(GetSymbolReference(featureLayer, oids));
@@ -235,11 +236,13 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 
 		foreach (long oid in oids)
 		{
-			//CIMSymbol oidLookupSymbol = layer.LookupSymbol(oid, MapView.Active);
-			//cimSymbols.Add(oidLookupSymbol);
-
 			var feature = GetFeature(layer, oid);
-			//var shape = feature.GetShape();
+
+			if (feature == null)
+			{
+				continue;
+			}
+
 			var values = new NamedValues(feature);
 			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out _);
 
@@ -275,6 +278,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		return symbolReference;
 	}
 
+	[CanBeNull]
 	private static Feature GetFeature(FeatureLayer layer, long oid)
 	{
 		using var featureClass = layer.GetFeatureClass();
@@ -305,7 +309,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 	{
 		private readonly Row _row;
 
-		public NamedValues(Row row)
+		public NamedValues([NotNull] Row row)
 		{
 			_row = row ?? throw new ArgumentNullException(nameof(row));
 		}
