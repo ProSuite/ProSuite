@@ -33,7 +33,9 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
+using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone;
+using ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -319,6 +321,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
+		public override async Task<ImportExceptionsResponse> ImportExceptions(
+			ImportExceptionsRequest request,
+			ServerCallContext context)
+		{
+			var response = new ImportExceptionsResponse();
+
+			try
+			{
+				_msg.Info($"Starting ImportExceptions for {request.ParameterImportWorkspace}");
+
+				var trackCancellationToken =
+					new TrackCancellationToken(context.CancellationToken);
+
+				ServiceCallStatus result =
+					await GrpcServerUtils.ExecuteServiceCall(
+						trackCancel => ImportExceptionsCore(request, trackCancellationToken),
+						context, _staThreadScheduler, true);
+
+				response.ServiceCallStatus = (int) result;
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error importing exceptions for request {request}", e);
+				response.ServiceCallStatus = (int) ServiceCallStatus.Failed;
+			}
+
+			return response;
+		}
+
 		public override async Task QueryData(IAsyncStreamReader<QueryDataRequest> requestStream,
 		                                     IServerStreamWriter<QueryDataResponse> responseStream,
 		                                     ServerCallContext context)
@@ -525,24 +556,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				Task responseReaderTask = Task.Run(
-					async () =>
-					{
-						// NOTE: The client should probably ensure that this call back
-						//       does not exceed a certain time span. Ideally this does
-						//       only block for a few seconds:
+				Task responseReaderTask = Task.Run(async () =>
+				{
+					// NOTE: The client should probably ensure that this call back
+					//       does not exceed a certain time span. Ideally this does
+					//       only block for a few seconds:
 
-						// This results in an eternal loop and using a timespan here has no effect
-						//while (resultData == null && elapsedMillis < timeOutMillis)
+					// This results in an eternal loop and using a timespan here has no effect
+					//while (resultData == null && elapsedMillis < timeOutMillis)
+					{
+						while (await requestStream.MoveNext().ConfigureAwait(false))
 						{
-							while (await requestStream.MoveNext().ConfigureAwait(false))
-							{
-								// TODO: only break if result_data.HasMoreDate is false
-								resultData = requestStream.Current;
-								break;
-							}
+							// TODO: only break if result_data.HasMoreDate is false
+							resultData = requestStream.Current;
+							break;
 						}
-					});
+					}
+				});
 
 				await responseStream.WriteAsync(r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
@@ -566,20 +596,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				Task responseReaderTask = Task.Run(
-					async () =>
-					{
-						// NOTE: The client should probably ensure that this call back
-						//       does not exceed a certain time span. Ideally this does
-						//       only block for a few seconds:
+				Task responseReaderTask = Task.Run(async () =>
+				{
+					// NOTE: The client should probably ensure that this call back
+					//       does not exceed a certain time span. Ideally this does
+					//       only block for a few seconds:
 
-						while (await requestStream.MoveNext().ConfigureAwait(false))
-						{
-							// TODO: only break if result_data.HasMoreDate is false
-							resultData = requestStream.Current;
-							break;
-						}
-					});
+					while (await requestStream.MoveNext().ConfigureAwait(false))
+					{
+						// TODO: only break if result_data.HasMoreDate is false
+						resultData = requestStream.Current;
+						break;
+					}
+				});
 
 				await responseStream.WriteAsync(r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
@@ -592,6 +621,121 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			return resultData;
 		}
+
+		private ServiceCallStatus ImportExceptionsCore(
+			[NotNull] ImportExceptionsRequest request,
+			[NotNull] ITrackCancel trackCancel)
+		{
+			Assert.ArgumentNotNull(request, nameof(request));
+
+			try
+			{
+				_msg.InfoFormat("Starting exception import from {0} to {1}",
+								request.ParameterImportWorkspace,
+								request.ParameterTargetWorkspace);
+
+				// Open workspaces
+				IFeatureWorkspace sourceWorkspace =
+					WorkspaceUtils.OpenFeatureWorkspace(request.ParameterImportWorkspace);
+				IFeatureWorkspace targetWorkspace =
+					WorkspaceUtils.OpenFeatureWorkspace(request.ParameterTargetWorkspace);
+
+				// Parse parameters
+				string sourceWhereClause =
+					string.IsNullOrWhiteSpace(request.ParameterImportWhereClause)
+						? null
+						: request.ParameterImportWhereClause;
+
+				string sourceOriginValue = request.ParameterImportOriginValue;
+
+				// Validate workspace types
+				ImportExceptionsUtils.AssertSupportedWorkspaceType(sourceWorkspace);
+				ImportExceptionsUtils.AssertSupportedWorkspaceType(targetWorkspace);
+
+				// Get source and target exception classes
+				List<IObjectClass> sourceExceptionClasses =
+					IssueRepositoryUtils.GetIssueObjectClasses(sourceWorkspace).ToList();
+
+				List<IObjectClass> targetExceptionClasses =
+					ImportExceptionsUtils.GetTargetExceptionClasses(
+						targetWorkspace, sourceExceptionClasses);
+
+				if (targetExceptionClasses.Count == 0)
+				{
+					_msg.Info("No target exception classes found. Nothing to import.");
+					return ServiceCallStatus.Finished;
+				}
+
+				_msg.InfoFormat("Found {0} exception class(es) to import",
+								targetExceptionClasses.Count);
+
+				// Ensure required fields exist BEFORE starting edit session
+				ImportExceptionsUtils.GetTargetFields(
+					targetExceptionClasses, ensureRequiredFields: true);
+
+				// Determine operation mode (import vs update)
+				// Update mode requires BOTH workspaces to have managed exception UUIDs
+				bool sourceHasUuids = ImportExceptionsUtils.IsUpdateWorkspace(sourceWorkspace);
+				bool targetHasUuids = ImportExceptionsUtils.IsUpdateWorkspace(targetWorkspace);
+				bool isUpdate = sourceHasUuids && targetHasUuids;
+
+				string operationName = isUpdate ? "Update Exceptions" : "Import Exceptions";
+
+				_msg.InfoFormat("Operation mode: {0} (source has UUIDs: {1}, target has UUIDs: {2})",
+								operationName, sourceHasUuids, targetHasUuids);
+
+				// Execute import/update in transaction
+				var transaction = new GdbTransaction();
+
+				if (isUpdate)
+				{
+					transaction.Execute(
+						(IWorkspace)targetWorkspace,
+						cancelTracker =>
+						{
+							ImportExceptionsUtils.Update(
+								sourceWhereClause,
+								targetExceptionClasses,
+								sourceExceptionClasses,
+								sourceOriginValue,
+								updateDate: DateTime.Now,
+								requireOriginalVersionExists: false);
+						},
+						operationName,
+						trackCancel);
+
+					_msg.InfoFormat("Successfully updated exceptions from {0}",
+									request.ParameterImportWorkspace);
+				}
+				else
+				{
+					transaction.Execute(
+						(IWorkspace)targetWorkspace,
+						cancelTracker =>
+						{
+							ImportExceptionsUtils.Import(
+								sourceWhereClause,
+								targetExceptionClasses,
+								sourceExceptionClasses,
+								sourceOriginValue,
+								importDate: DateTime.Now);
+						},
+						operationName,
+						trackCancel);
+
+					_msg.InfoFormat("Successfully imported exceptions from {0}",
+									request.ParameterImportWorkspace);
+				}
+
+				return ServiceCallStatus.Finished;
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error importing exceptions from {request.ParameterImportWorkspace}", e);
+				throw;
+			}
+		}
+
 
 		private ServiceCallStatus VerifyDataQualityCore(
 			[NotNull] DataVerificationRequest initialRequest,
@@ -942,8 +1086,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					transformerConfiguration,
 					new SimpleDatasetOpener(datasetContext));
 
-				foreach (IWorkspace workspace in tableTransformer.InvolvedTables.Select(
-					         t => t.Workspace))
+				foreach (IWorkspace workspace in
+				         tableTransformer.InvolvedTables.Select(t => t.Workspace))
 				{
 					WorkspaceUtils.TryRefreshVersion(workspace);
 				}

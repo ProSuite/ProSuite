@@ -83,7 +83,7 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_generalizeToolOptions.LocalOptions);
 
@@ -91,6 +91,8 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 		_feedback = null;
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override void LogPromptForSelection()

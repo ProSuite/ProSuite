@@ -207,7 +207,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		// TODO: Move as much as possible to OnToolDeactivateCoreAsync
 		_intermediateSketchStates?.Deactivate();
@@ -218,6 +218,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		_symbolizedSketch = null;
 
 		_lastLoggedVertex = null;
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)

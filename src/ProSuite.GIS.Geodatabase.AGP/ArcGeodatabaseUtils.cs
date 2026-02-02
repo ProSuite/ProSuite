@@ -22,9 +22,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public static ArcTable ToArcTable(
 			[NotNull] Table proTable,
-			bool eagerPropertyCaching = false)
+			bool eagerPropertyCaching = false,
+			bool keepJoins = false)
 		{
-			Table databaseTable = DatasetUtils.GetDatabaseTable(proTable);
+			Table databaseTable =
+				keepJoins ? proTable : DatasetUtils.GetDatabaseTable(proTable);
 
 			ArcWorkspace existingWorkspace = null;
 
