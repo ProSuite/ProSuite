@@ -5,6 +5,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -634,11 +635,18 @@ public class MapWhiteSelection : IMapWhiteSelection
 		var dict = GetLayerSelections()
 			.ToDictionary(s => s.Layer, s => s.GetInvolvedOIDs().ToList());
 
-		var regular = SelectionSet.FromDictionary(dict);
+		var current = Map.GetSelection().ToDictionary<FeatureLayer>();
 
-		// TODO This triggers an OnSelectionChangedAsync some time later (!) -- how to latch?
-		// DARO reports that using IDisplayTable to set selection does not (or synchronously) raise OnSelectionChanged
-		Map.SetSelection(regular);
+		// Check if the selection changed on the feature level (not only
+		// on the vertex level) to avoid spurious selection changed events:
+		if (! SelectionUtils.SameSelections(dict, current))
+		{
+			var regular = SelectionSet.FromDictionary(dict);
+
+			// This triggers a Selection Changed event some time later (!) -- how to latch?
+			// DARO reports that using IDisplayTable to set selection does not (or synchronously) raise OnSelectionChanged
+			Map.SetSelection(regular);
+		}
 	}
 
 	/// <summary>
