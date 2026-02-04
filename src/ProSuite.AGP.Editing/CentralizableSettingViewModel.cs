@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 
@@ -12,6 +13,7 @@ public class CentralizableSettingViewModel<T> : INotifyPropertyChanged where T :
 	private readonly CentralizableSetting<T> _centralizableSetting;
 	private readonly IReadOnlyList<CentralizableSetting<bool>> _controllingParents;
 	private bool _isChangeAllowedByParent;
+	private double _step = 0.01; // Default step size
 	private int _decimals = 2; // Default to 2 decimal places
 	private string _unitLabel = "meters";
 
@@ -104,6 +106,23 @@ public class CentralizableSettingViewModel<T> : INotifyPropertyChanged where T :
 	}
 
 	public bool IsEnabled => IsChangeAllowedByParent && CanOverrideLocally;
+
+	/// <summary>
+	/// Gets or sets the step to change the value.
+	/// This property is primarily used by NumericSpinner controls.
+	/// </summary>
+	public double Step
+	{
+		get => _step;
+		set
+		{
+			if (! MathUtils.AreEqual(_step, value))
+			{
+				_step = value;
+				OnPropertyChanged(nameof(Step));
+			}
+		}
+	}
 
 	/// <summary>
 	/// Gets or sets the number of decimal places to display for numeric values.
