@@ -246,6 +246,7 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 			                   {
 				                   Decimals = 8 + decimalsCorrection,
 				                   UnitLabel = unitLabel,
+								   //Todo: Adjust step to actual decimals
 				                   Step = step
 			                   };
 
