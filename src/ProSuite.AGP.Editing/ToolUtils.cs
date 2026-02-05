@@ -221,21 +221,29 @@ public static class ToolUtils
 			envelope.SpatialReference);
 	}
 
-	public static async Task<bool> FlashResultPolygonsAsync(
+	public static async Task FlashResultPolygonsAsync(
 		[NotNull] MapView activeView,
-		[NotNull] IDictionary<Feature, Geometry> resultFeatures,
+		[NotNull] IDictionary<Feature, IReadOnlyList<Geometry>> resultFeatures,
 		int maxFeatureCountThreshold = 5)
 	{
 		if (resultFeatures.Count > maxFeatureCountThreshold)
 		{
 			_msg.InfoFormat("{0} have been updated (no feature flashing).",
 			                resultFeatures.Count);
-			return false;
+			return;
 		}
 
+		IEnumerable<Geometry> resultGeometries = resultFeatures.Values.SelectMany(list => list);
+
+		await FlashResultPolygonsAsync(activeView, resultGeometries);
+	}
+
+	public static async Task FlashResultPolygonsAsync([NotNull] MapView activeView,
+	                                                  [NotNull] IEnumerable<Geometry> resultGeometries)
+	{
 		var polySymbol = SymbolFactory.Instance.DefaultPolygonSymbol;
 
-		foreach (Geometry resultGeometry in resultFeatures.Values)
+		foreach (Geometry resultGeometry in resultGeometries)
 		{
 			if (! (resultGeometry is Polygon poly))
 			{
@@ -248,8 +256,6 @@ public static class ToolUtils
 				await Task.Delay(400);
 			}
 		}
-
-		return true;
 	}
 
 	public static HashSet<long> GetEditableClassHandles([NotNull] MapView mapView)
