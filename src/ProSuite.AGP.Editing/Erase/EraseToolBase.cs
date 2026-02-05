@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -8,16 +9,19 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Selection;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
@@ -29,6 +33,10 @@ public abstract class EraseToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected EraseToolOptions _eraseToolOptions;
+
+	[CanBeNull] private OverridableSettingsProvider<PartialEraseOptions> _settingsProvider;
+
 	protected EraseToolBase()
 	{
 		// important for SketchRecorder in base class
@@ -38,11 +46,29 @@ public abstract class EraseToolBase : ConstructionToolBase
 		RequiresSelection = true;
 	}
 
-	protected bool SuppressPolylineErasing { get; set; }
+	protected bool SuppressPolylineErasing => ! (_eraseToolOptions?.AllowPolylineErasing ?? false);
 
-	protected bool SuppressMultipointErasing { get; set; }
+	protected bool SuppressMultipointErasing =>
+		! (_eraseToolOptions?.AllowMultipointErasing ?? false);
 
 	protected virtual IRemoveOverlapsService MicroserviceClient { get; } = null;
+
+	protected string OptionsFileName => "EraseToolOptions.xml";
+
+	[CanBeNull]
+	protected virtual string OptionsDockPaneID => null;
+
+	[CanBeNull]
+	protected virtual string CentralConfigDir => null;
+
+	// ReSharper disable twice InvalidXmlDocComment
+	/// <summary>
+	/// By default, the local configuration directory shall be in
+	/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
+	/// </summary>
+	protected virtual string LocalConfigDir
+		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+			AppDataFolder.Roaming, "ToolDefaults");
 
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.EraseOverlay);
@@ -154,8 +180,8 @@ public abstract class EraseToolBase : ConstructionToolBase
 
 		var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
 		var taskFlash =
-			QueuedTaskUtils.Run(() => ToolUtils.FlashResultPolygonsAsync(
-				                    activeView, resultFeatures));
+			QueuedTaskUtils.Run(async () => await ToolUtils.FlashResultPolygonsAsync(
+				                                activeView, resultFeatures));
 
 		await Task.WhenAll(taskFlash, taskSave);
 
@@ -167,7 +193,105 @@ public abstract class EraseToolBase : ConstructionToolBase
 		return taskSave.Result;
 	}
 
-	private IDictionary<Feature, Geometry> CalculateResultFeatures(
+	protected override Task OnToolActivatingCoreAsync()
+	{
+		InitializeOptions();
+
+		return base.OnToolActivatingCoreAsync();
+	}
+
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
+	{
+		_settingsProvider?.StoreLocalConfiguration(_eraseToolOptions?.LocalOptions);
+
+		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
+	}
+
+	protected void InitializeOptions()
+	{
+		Stopwatch watch = _msg.DebugStartTiming();
+
+		string currentCentralConfigDir = CentralConfigDir;
+		string currentLocalConfigDir = LocalConfigDir;
+
+		_settingsProvider =
+			new OverridableSettingsProvider<PartialEraseOptions>(
+				currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
+
+		PartialEraseOptions localConfiguration, centralConfiguration;
+
+		_settingsProvider.GetConfigurations(out localConfiguration,
+		                                    out centralConfiguration);
+
+		_eraseToolOptions =
+			new EraseToolOptions(centralConfiguration, localConfiguration);
+
+		_eraseToolOptions.PropertyChanged -= OptionsPropertyChanged;
+		_eraseToolOptions.PropertyChanged += OptionsPropertyChanged;
+
+		_msg.DebugStopTiming(watch, "Erase Tool Options validated / initialized");
+
+		string optionsMessage = _eraseToolOptions.GetLocalOverridesMessage();
+
+		if (! string.IsNullOrEmpty(optionsMessage))
+		{
+			_msg.Info(optionsMessage);
+		}
+	}
+
+	private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
+	{
+		// Options changed - could implement refresh logic here if needed
+	}
+
+	protected override void ShowOptionsPane()
+	{
+		// Ensure options are initialized
+		if (_eraseToolOptions == null)
+		{
+			InitializeOptions();
+		}
+
+		var viewModel = GetEraseViewModel();
+		if (viewModel == null)
+		{
+			return;
+		}
+
+		viewModel.Options = _eraseToolOptions;
+		viewModel.Activate(true);
+	}
+
+	protected override void HideOptionsPane()
+	{
+		var viewModel = GetEraseViewModel();
+		viewModel?.Hide();
+	}
+
+	#region Tool Options DockPane
+
+	[CanBeNull]
+	private DockPaneEraseViewModelBase GetEraseViewModel()
+	{
+		if (OptionsDockPaneID == null)
+		{
+			return null;
+		}
+
+		const string optionsDockPaneNotFoundMessage = "Options DockPane with ID '{0}' not found";
+
+		var viewModel =
+			FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+				DockPaneEraseViewModelBase;
+		return Assert.NotNull(viewModel, optionsDockPaneNotFoundMessage,
+		                      OptionsDockPaneID);
+	}
+
+	#endregion
+
+	private IDictionary<Feature, IReadOnlyList<Geometry>> CalculateResultFeatures(
 		MapView activeView, Polygon sketchPolygon)
 	{
 		var selectedFeatures = GetApplicableSelectedFeatures(activeView);
@@ -177,7 +301,7 @@ public abstract class EraseToolBase : ConstructionToolBase
 		return resultFeatures;
 	}
 
-	private IDictionary<Feature, Geometry> CalculateResultFeatures(
+	private IDictionary<Feature, IReadOnlyList<Geometry>> CalculateResultFeatures(
 		[NotNull] IEnumerable<Feature> selectedFeatures,
 		[NotNull] Polygon cutPolygon)
 	{
@@ -185,7 +309,7 @@ public abstract class EraseToolBase : ConstructionToolBase
 
 		if (inputs.Count == 0)
 		{
-			return new Dictionary<Feature, Geometry>();
+			return new Dictionary<Feature, IReadOnlyList<Geometry>>();
 		}
 
 		cutPolygon = (Polygon) GeometryEngine.Instance.SimplifyAsFeature(cutPolygon, true);
@@ -198,13 +322,13 @@ public abstract class EraseToolBase : ConstructionToolBase
 			return CalculateMultipatchResultFeatures(inputs, cutPolygon);
 		}
 
-		Dictionary<Feature, Geometry> result =
+		Dictionary<Feature, IReadOnlyList<Geometry>> result =
 			CalculateNonMultipatchResultFeatures(inputs, cutPolygon);
 
 		return result;
 	}
 
-	private IDictionary<Feature, Geometry> CalculateMultipatchResultFeatures(
+	private IDictionary<Feature, IReadOnlyList<Geometry>> CalculateMultipatchResultFeatures(
 		[NotNull] Dictionary<Feature, Geometry> inputFeatureGeometries,
 		[NotNull] Polygon cutPolygon)
 	{
@@ -248,37 +372,36 @@ public abstract class EraseToolBase : ConstructionToolBase
 		if (result == null)
 		{
 			_msg.Warn("No overlaps were removed.");
-			return new Dictionary<Feature, Geometry>();
+			return new Dictionary<Feature, IReadOnlyList<Geometry>>();
 		}
 
-		var updates = new Dictionary<Feature, Geometry>();
+		var updates = new Dictionary<Feature, IReadOnlyList<Geometry>>();
 
 		foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
 		{
 			Feature originalFeature = resultPerFeature.OriginalFeature;
 			Geometry updatedGeometry = resultPerFeature.UpdatedGeometry;
 
-			//if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
-			//{
-			//	continue;
-			//}
+			var updatedGeometries = new List<Geometry> { updatedGeometry };
 
-			updates.Add(originalFeature, updatedGeometry);
+			if (resultPerFeature.InsertGeometries.Count > 0)
+			{
+				updatedGeometries.AddRange(resultPerFeature.InsertGeometries);
+			}
 
-			//if (resultPerFeature.InsertGeometries.Count > 0)
-			//{
-			//	inserts.Add(originalFeature,
-			//	            resultPerFeature.InsertGeometries);
-			//}
+			updates.Add(originalFeature, updatedGeometries);
 		}
 
 		return updates;
 	}
 
-	private static Dictionary<Feature, Geometry> CalculateNonMultipatchResultFeatures(
-		Dictionary<Feature, Geometry> inputFeatureGeometries, Polygon cutPolygon)
+	private Dictionary<Feature, IReadOnlyList<Geometry>>
+		CalculateNonMultipatchResultFeatures(
+			Dictionary<Feature, Geometry> inputFeatureGeometries, Polygon cutPolygon)
 	{
-		var result = new Dictionary<Feature, Geometry>();
+		var result = new Dictionary<Feature, IReadOnlyList<Geometry>>();
+
+		bool preventMultipartResults = _eraseToolOptions?.PreventMultipartResults ?? false;
 
 		foreach (var kvp in inputFeatureGeometries)
 		{
@@ -295,13 +418,23 @@ public abstract class EraseToolBase : ConstructionToolBase
 				throw new Exception("One or more result geometries have become empty.");
 			}
 
-			result.Add(feature, resultGeometry);
+			IReadOnlyList<Geometry> resultGeometries;
+			if (preventMultipartResults && resultGeometry is Multipart { PartCount: > 1 })
+			{
+				resultGeometries = GeometryEngine.Instance.MultipartToSinglePart(resultGeometry);
+			}
+			else
+			{
+				resultGeometries = new List<Geometry> { resultGeometry };
+			}
+
+			result.Add(feature, resultGeometries);
 		}
 
 		return result;
 	}
 
-	private static async Task<bool> SaveAsync(IDictionary<Feature, Geometry> result)
+	private static async Task<bool> SaveAsync(IDictionary<Feature, IReadOnlyList<Geometry>> result)
 	{
 		// create an edit operation
 		var editOperation = new EditOperation();
@@ -313,39 +446,48 @@ public abstract class EraseToolBase : ConstructionToolBase
 			       "Erase polygon from feature(s)", GetDatasets(result.Keys));
 	}
 
-	private static bool Store(
+	private static void Store(
 		EditOperation.IEditContext editContext,
-		IDictionary<Feature, Geometry> result)
+		IDictionary<Feature, IReadOnlyList<Geometry>> result)
 	{
-		foreach (KeyValuePair<Feature, Geometry> keyValuePair in result)
+		foreach (KeyValuePair<Feature, IReadOnlyList<Geometry>> keyValuePair in result)
 		{
 			Feature feature = keyValuePair.Key;
-			Geometry geometry = keyValuePair.Value;
+			IReadOnlyList<Geometry> geometries = keyValuePair.Value;
 
-			if (geometry.IsEmpty)
+			Geometry update = null;
+			List<Geometry> inserts = new List<Geometry>();
+			foreach (Geometry geometry in geometries.OrderByDescending(
+				         GeometryUtils.GetGeometrySize))
 			{
-				throw new Exception("One or more result geometries have become empty.");
+				if (geometry.IsEmpty)
+				{
+					_msg.Warn("One or more result geometries have become empty.");
+					continue;
+				}
+
+				if (update == null)
+				{
+					update = geometry;
+				}
+				else
+				{
+					inserts.Add(geometry);
+				}
 			}
 
-			FeatureClass featureClass = feature.GetTable();
-			FeatureClassDefinition classDefinition = featureClass.GetDefinition();
+			// Update:
+			GdbPersistenceUtils.StoreShape(feature, update, editContext);
 
-			bool classHasZ = classDefinition.HasZ();
-			bool classHasM = classDefinition.HasM();
-
-			Geometry geometryToStore =
-				GeometryUtils.EnsureGeometrySchema(geometry, classHasZ, classHasM);
-			feature.SetShape(geometryToStore);
-			feature.Store();
-
-			editContext.Invalidate(feature);
+			foreach (Geometry newGeometry in inserts)
+			{
+				GdbPersistenceUtils.InsertTx(editContext, feature, newGeometry);
+			}
 
 			feature.Dispose();
 		}
 
 		_msg.InfoFormat("Successfully stored {0} updated features.", result.Count);
-
-		return true;
 	}
 
 	private static IEnumerable<Dataset> GetDatasets(IEnumerable<Feature> features)
