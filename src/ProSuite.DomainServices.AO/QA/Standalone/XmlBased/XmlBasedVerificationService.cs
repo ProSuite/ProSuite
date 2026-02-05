@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -281,6 +284,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				Verification = service.Verification;
 
+				IList<IExceptionDataset> exportedExceptionDatasets =
+					ExportExceptionObjectClasses(
+						qualitySpecification,
+						_issueRepositoryDir,
+						XmlVerificationOptions,
+						exceptionObjectRepository);
+
 				verificationReporter.CreateIssueRepositoryIndexes(issueRepository, trackCancel);
 
 				verificationReporter.WriteIssueStatistics(issueRepository);
@@ -321,6 +331,45 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			return ! trackCancel.Continue()
 				       ? null
 				       : trackCancel;
+		}
+
+		[CanBeNull]
+		private static IList<IExceptionDataset> ExportExceptionObjectClasses(
+			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] string directory,
+			[CanBeNull] XmlVerificationOptions options,
+			[CanBeNull] ExceptionObjectRepository exceptionObjectRepository)
+		{
+			if (exceptionObjectRepository == null)
+			{
+				return null;
+			}
+
+			if (! VerificationOptionUtils.ExportExceptions(options))
+			{
+				return null;
+			}
+
+			string exceptionWorkspaceName =
+				VerificationOptionUtils.GetExportedExceptionsWorkspaceName(options);
+
+			IssueRepositoryType repositoryType = exceptionObjectRepository.IsShapefileWorkspace
+				                                     ? IssueRepositoryType.Shapefiles
+				                                     : IssueRepositoryType.FileGdb;
+
+			IFeatureWorkspace exportWorkspace =
+				ExternalIssueRepositoryUtils.CreateDatabase(directory,
+				                                            exceptionWorkspaceName,
+				                                            repositoryType);
+
+			if (exportWorkspace == null)
+			{
+				return null;
+			}
+
+			return exceptionObjectRepository.ExportExceptions(
+				exportWorkspace,
+				qualitySpecification.Elements.Select(e => e.QualityCondition));
 		}
 	}
 }
