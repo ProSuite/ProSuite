@@ -253,6 +253,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					{
 						_aliasName = Name;
 					}
+					catch (NotSupportedException)
+					{
+						// FileSystemDatastore tables don't support GetAliasName
+						_aliasName = Name;
+					}
 				}
 
 				return _aliasName;

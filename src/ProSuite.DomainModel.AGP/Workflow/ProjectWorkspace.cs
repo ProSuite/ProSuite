@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
@@ -79,6 +80,43 @@ public class ProjectWorkspace : IProjectWorkspace
 		return Datasets.Select(d => d.Id).ToList();
 	}
 
+	protected bool Equals(ProjectWorkspace other)
+	{
+		return ProjectId == other.ProjectId && ProjectName == other.ProjectName &&
+		       Equals(Datastore.Handle, other.Datastore.Handle) &&
+		       CollectionUtils.HaveSameElements(Datasets, other.Datasets);
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (obj is null)
+		{
+			return false;
+		}
+
+		if (ReferenceEquals(this, obj))
+		{
+			return true;
+		}
+
+		if (obj.GetType() != GetType())
+		{
+			return false;
+		}
+
+		return Equals((ProjectWorkspace) obj);
+	}
+
+	public override int GetHashCode()
+	{
+		return HashCode.Combine(ProjectId, ProjectName, Datasets, Datastore);
+	}
+
+	public override string ToString()
+	{
+		return DisplayName;
+	}
+
 	public IDdxDataset GetDataset(string gdbTableName)
 	{
 		if (Datasets.Count == 0)
@@ -94,23 +132,26 @@ public class ProjectWorkspace : IProjectWorkspace
 
 		if (IsMasterDatabaseWorkspace && ddxModel.ElementNamesAreQualified)
 		{
-			result = Datasets.FirstOrDefault(
-				d => d.Name.Equals(gdbTableName, StringComparison.InvariantCultureIgnoreCase));
+			result = Datasets.FirstOrDefault(d => d.Name.Equals(gdbTableName,
+			                                                    StringComparison
+				                                                    .InvariantCultureIgnoreCase));
 		}
 		else
 		{
 			string unqualifiedName = ModelElementNameUtils.GetUnqualifiedName(gdbTableName);
 
-			result = Datasets.FirstOrDefault(
-				d => d.Name.Equals(gdbTableName, StringComparison.InvariantCultureIgnoreCase) ||
-				     d.Name.Equals(unqualifiedName,
-				                   StringComparison.InvariantCultureIgnoreCase));
+			result = Datasets.FirstOrDefault(d => d.Name.Equals(gdbTableName,
+			                                                    StringComparison
+				                                                    .InvariantCultureIgnoreCase) ||
+			                                      d.Name.Equals(unqualifiedName,
+			                                                    StringComparison
+				                                                    .InvariantCultureIgnoreCase));
 
 			if (result == null)
 			{
-				result = Datasets.FirstOrDefault(
-					d => UnqualifiedDatasetNameEquals(d, gdbTableName) ||
-					     DatasetNameEquals(d, unqualifiedName));
+				result =
+					Datasets.FirstOrDefault(d => UnqualifiedDatasetNameEquals(d, gdbTableName) ||
+					                             DatasetNameEquals(d, unqualifiedName));
 			}
 		}
 
