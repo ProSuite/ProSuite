@@ -39,11 +39,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectUncoveredArea()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanDetectUncoveredArea",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -77,11 +75,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectUncoveredAreaWithManyCovering()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanDetectUncoveredAreaWithManyCovering",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			StoreGeometrySlices(coveringClass);
 
@@ -112,11 +108,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanCheckCoveredAreaWithManyCovering()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanCheckCoveredAreaWithManyCovering",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			StoreGeometrySlices(coveringClass);
 
@@ -176,9 +170,9 @@ namespace ProSuite.QA.Tests.Test
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
 				new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
 				new[] { GeometryComponent.InteriorVertices },
 				null, 0, new List<IReadOnlyFeatureClass>());
 
@@ -221,9 +215,9 @@ namespace ProSuite.QA.Tests.Test
 				GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
 				new[] { GeometryComponent.InteriorVertices },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
 				new[] { GeometryComponent.InteriorVertices },
 				null, 0, new List<IReadOnlyFeatureClass>());
 
@@ -236,13 +230,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanIgnoreUncoveredFeatureOutsideAreaOfInterest()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses("CanIgnoreUncoveredFeatureOutsideAreaOfInterest",
-			                            out coveringClass,
-			                            out coveredClass,
-			                            out areaOfInterestClass,
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass,
+			                            out IFeatureClass areaOfInterestClass,
 			                            createAreaOfInterestClass: true);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
@@ -271,10 +262,12 @@ namespace ProSuite.QA.Tests.Test
 				500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -284,13 +277,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanIgnoreUncoveredPointOutsideAreaOfInterest()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses("CanIgnoreUncoveredPointOutsideAreaOfInterest",
-			                            out coveringClass,
-			                            out coveredClass,
-			                            out areaOfInterestClass,
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass,
+			                            out IFeatureClass areaOfInterestClass,
 			                            createAreaOfInterestClass: true);
 
 			coveredClass =
@@ -326,10 +316,12 @@ namespace ProSuite.QA.Tests.Test
 				500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
@@ -343,13 +335,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanIgnoreUncoveredAreaOutsideAreaOfInterest()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses("CanIgnoreUncoveredAreaOutsideAreaOfInterest",
-			                            out coveringClass,
-			                            out coveredClass,
-			                            out areaOfInterestClass,
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass,
+			                            out IFeatureClass areaOfInterestClass,
 			                            createAreaOfInterestClass: true);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
@@ -378,10 +367,12 @@ namespace ProSuite.QA.Tests.Test
 				500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
 
@@ -391,13 +382,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanReduceUncoveredAreaToPartWithinAreaOfInterest()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses("CanReduceUncoveredAreaToPartWithinAreaOfInterest",
-			                            out coveringClass,
-			                            out coveredClass,
-			                            out areaOfInterestClass,
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass,
+			                            out IFeatureClass areaOfInterestClass,
 			                            createAreaOfInterestClass: true);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
@@ -432,10 +420,12 @@ namespace ProSuite.QA.Tests.Test
 				500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
@@ -448,13 +438,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanReduceUncoveredLineToPartWithinAreaOfInterest()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses("CanReduceUncoveredLineToPartWithinAreaOfInterest",
-			                            out coveringClass,
-			                            out coveredClass,
-			                            out areaOfInterestClass,
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass,
+			                            out IFeatureClass areaOfInterestClass,
 			                            createAreaOfInterestClass: true);
 
 			coveredClass =
@@ -503,10 +490,12 @@ namespace ProSuite.QA.Tests.Test
 				500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
@@ -519,14 +508,11 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanReduceUncoveredLineToPartWithinMultipleAreasOfInterest()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses(
 				"CanReduceUncoveredLineToPartWithinMultipleAreasOfInterest",
-				out coveringClass,
-				out coveredClass,
-				out areaOfInterestClass,
+				out IFeatureClass coveringClass,
+				out IFeatureClass coveredClass,
+				out IFeatureClass areaOfInterestClass,
 				createAreaOfInterestClass: true);
 
 			coveredClass =
@@ -559,10 +545,12 @@ namespace ProSuite.QA.Tests.Test
 				500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
@@ -580,14 +568,11 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanReduceUncoveredMultiPatchToPartWithinAreaOfInterest()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses(
 				"CanReduceUncoveredMultiPatchToPartWithinAreaOfInterest",
-				out coveringClass,
-				out coveredClass,
-				out areaOfInterestClass,
+				out IFeatureClass coveringClass,
+				out IFeatureClass coveredClass,
+				out IFeatureClass areaOfInterestClass,
 				createAreaOfInterestClass: true);
 
 			coveredClass =
@@ -630,10 +615,12 @@ namespace ProSuite.QA.Tests.Test
 				500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) }, new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) }, new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new GeometryComponent[] { },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new GeometryComponent[] { },
 				new string[] { }, 0,
-				new[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(areaOfInterestClass) });
 			var runner = new QaContainerTestRunner(10000, test) { KeepGeometry = true };
 			runner.Execute(verificationEnvelope);
 
@@ -658,11 +645,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectPolygonNotCoveredByAnyFeature()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanDetectPolygonNotCoveredByAnyFeature",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveredRow = coveredClass.CreateFeature();
 			coveredRow.Shape =
@@ -687,12 +672,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectPolygonNotCoveredByAnyFeaturePartlyOutsideExtent()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses(
 				"CanDetectPolygonNotCoveredByAnyFeaturePartlyOutsideExtent",
-				out coveringClass,
-				out coveredClass);
+				out IFeatureClass coveringClass,
+				out IFeatureClass coveredClass);
 
 			IFeature coveredRow = coveredClass.CreateFeature();
 			coveredRow.Shape =
@@ -718,11 +701,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowUncoveredAreaByTolerance()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanAllowUncoveredAreaByTolerance",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -808,11 +789,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanUseCoveringFeatureOutsideExtentButWithinTolerance()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanUseCoveringFeatureOutsideExtentButWithinTolerance",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -850,29 +829,25 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanUsingInvalidNumberOfTolerancesThrowsException()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanThrowExceptionUsingInvalidNumberOfTolerances",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
-			Assert.Throws<ArgumentException>(
-				() => new QaIsCoveredByOther(
-					      ReadOnlyTableFactory.Create(coveringClass),
-					      ReadOnlyTableFactory.Create(coveredClass))
-				      {
-					      CoveringClassTolerances = new[] { 2d, 3d, 1.234 }
-				      });
+			Assert.Throws<ArgumentException>(() => new QaIsCoveredByOther(
+				                                       ReadOnlyTableFactory.Create(coveringClass),
+				                                       ReadOnlyTableFactory.Create(coveredClass))
+			                                       {
+				                                       CoveringClassTolerances =
+					                                       new[] { 2d, 3d, 1.234 }
+			                                       });
 		}
 
 		[Test]
 		public void CanAllowUncoveredAreaByPercentage()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanAllowUncoveredAreaByPercentage",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -896,9 +871,9 @@ namespace ProSuite.QA.Tests.Test
 
 			const double allowedUncoveredPercentage = 1;
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
 				new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
 				new GeometryComponent[] { },
 				(string) null,
 				allowedUncoveredPercentage);
@@ -912,11 +887,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectInsufficientlyCoveredAreaByPercentage()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanDetectInsufficientlyCoveredAreaByPercentage",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -940,9 +913,9 @@ namespace ProSuite.QA.Tests.Test
 
 			const double allowedUncoveredPercentage = 0.1;
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
 				new GeometryComponent[] { },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
 				new GeometryComponent[] { },
 				(string) null,
 				allowedUncoveredPercentage);
@@ -956,11 +929,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowEqualPolygons()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanAllowEqualPolygons",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -989,11 +960,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowTouchingUncoveredAreaByTolerance()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanAllowTouchingUncoveredAreaByTolerance",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -1031,11 +1000,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanProcessEmptyGeometeries()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanProcessEmptyGeometeries",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 
@@ -1060,11 +1027,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowNotTouchingUncoveredAreaWithinTolerance()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanUseCoveringFeatureNotTouchingButWithinTolerance",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -1102,12 +1067,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowNotTouchingUncoveredAreaWithinToleranceInOtherTile()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses(
 				"CanAllowNotTouchingUncoveredAreaWithinToleranceInOtherTile",
-				out coveringClass,
-				out coveredClass);
+				out IFeatureClass coveringClass,
+				out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -1193,9 +1156,9 @@ namespace ProSuite.QA.Tests.Test
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
 				new[] { GeometryComponent.LineEndPoints },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
 				new[] { GeometryComponent.EntireGeometry },
 				(string) null, 0);
 
@@ -1208,12 +1171,10 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowTouchingUncoveredAreaWithinToleranceInOtherTile()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses(
 				"CanAllowTouchingUncoveredAreaWithinToleranceInOtherTile",
-				out coveringClass,
-				out coveredClass);
+				out IFeatureClass coveringClass,
+				out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -1251,11 +1212,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanAllowMultipleCoveringInMultipleTiles()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanAllowMultipleCoveringInMultipleTiles",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow1 = coveringClass.CreateFeature();
 			coveringRow1.Shape =
@@ -1308,11 +1267,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanEvaluateSelfIntersectingPolygon()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses("CanEvaluateSelfIntersectingPolygon",
-			                            out coveringClass,
-			                            out coveredClass);
+			                            out IFeatureClass coveringClass,
+			                            out IFeatureClass coveredClass);
 
 			IFeature coveringRow = coveringClass.CreateFeature();
 			coveringRow.Shape =
@@ -1362,9 +1319,9 @@ namespace ProSuite.QA.Tests.Test
 			lineFeature.Store();
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(lineClass) },
 				new[] { GeometryComponent.LineEndPoints },
-				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(lineClass) },
 				new[] { GeometryComponent.LineEndPoints },
 				null);
 
@@ -1390,9 +1347,9 @@ namespace ProSuite.QA.Tests.Test
 			lineFeature.Store();
 
 			var test = new QaIsCoveredByOther(
-				           new[] { ReadOnlyTableFactory.Create(lineClass) },
+				           new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(lineClass) },
 				           new[] { GeometryComponent.LineEndPoints },
-				           new[] { ReadOnlyTableFactory.Create(lineClass) },
+				           new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(lineClass) },
 				           new[] { GeometryComponent.LineEndPoints },
 				           null)
 			           {
@@ -1445,7 +1402,7 @@ namespace ProSuite.QA.Tests.Test
 			closedLine.Store();
 
 			var test = new QaIsCoveredByOther(
-				           new[]
+				           new IReadOnlyFeatureClass[]
 				           {
 					           ReadOnlyTableFactory.Create(lineClass),
 					           ReadOnlyTableFactory.Create(pointClass)
@@ -1455,7 +1412,7 @@ namespace ProSuite.QA.Tests.Test
 					           GeometryComponent.LineEndPoints,
 					           GeometryComponent.EntireGeometry
 				           },
-				           new[] { ReadOnlyTableFactory.Create(lineClass) },
+				           new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(lineClass) },
 				           new[] { GeometryComponent.LineEndPoints },
 				           null)
 			           {
@@ -1493,9 +1450,9 @@ namespace ProSuite.QA.Tests.Test
 			point.Store();
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(pointClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(pointClass) },
 				new[] { GeometryComponent.EntireGeometry },
-				new[] { ReadOnlyTableFactory.Create(lineClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(lineClass) },
 				new[] { GeometryComponent.LineEndPoints },
 				null);
 
@@ -1513,11 +1470,9 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectUncoveredRing_IgnoringCoveredRingOutsideTestExtent()
 		{
-			IFeatureClass coveringClass;
-			IFeatureClass coveredClass;
 			CreatePolygonFeatureClasses(
 				"CanDetectUncoveredRing_IgnoringCoveredRingOutsideTestExtent",
-				out coveringClass, out coveredClass);
+				out IFeatureClass coveringClass, out IFeatureClass coveredClass);
 
 			IPolygon polyOutsideTestExtent = GeometryFactory.CreatePolygon(0, 0, 10, 10);
 			IPolygon polyInsideTestExtent = GeometryFactory.CreatePolygon(100, 100, 110, 110);
@@ -1536,9 +1491,9 @@ namespace ProSuite.QA.Tests.Test
 			// ring inside the test extent is not covered --> reported as error
 
 			var test = new QaIsCoveredByOther(
-				new[] { ReadOnlyTableFactory.Create(coveringClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveringClass) },
 				new[] { GeometryComponent.EntireGeometry },
-				new[] { ReadOnlyTableFactory.Create(coveredClass) },
+				new IReadOnlyFeatureClass[] { ReadOnlyTableFactory.Create(coveredClass) },
 				new[] { GeometryComponent.EntireGeometry },
 				null);
 
@@ -1563,13 +1518,13 @@ namespace ProSuite.QA.Tests.Test
 				CreateFeatureClass("errors", esriGeometryType.esriGeometryPolygon, zAware: true);
 			QaIsCoveredByOther test =
 				new QaIsCoveredByOther(
-					new[]
+					new IReadOnlyFeatureClass[]
 					{
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_SURFACES")),
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_UNCO_DESPOSIT")),
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_BEDROCK"))
 					},
-					new[]
+					new IReadOnlyFeatureClass[]
 					{
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_MAPSHEET"))
 					});
@@ -1592,13 +1547,13 @@ namespace ProSuite.QA.Tests.Test
 				CreateFeatureClass("errors", esriGeometryType.esriGeometryPolygon, zAware: true);
 			QaIsCoveredByOther test =
 				new QaIsCoveredByOther(
-					new[]
+					new IReadOnlyFeatureClass[]
 					{
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_SURFACES")),
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_UNCO_DESPOSIT")),
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_BEDROCK"))
 					},
-					new[]
+					new IReadOnlyFeatureClass[]
 					{
 						ReadOnlyTableFactory.Create(ws.OpenFeatureClass("GC_MAPSHEET"))
 					});
@@ -1650,12 +1605,12 @@ namespace ProSuite.QA.Tests.Test
 
 			QaIsCoveredByOther test =
 				new QaIsCoveredByOther(
-					new[]
+					new IReadOnlyFeatureClass[]
 					{
 						ReadOnlyTableFactory.Create(
 							ws1.OpenFeatureClass("DKM25_ANNOBLAU_MASK")),
 					},
-					new[]
+					new IReadOnlyFeatureClass[]
 					{
 						ReadOnlyTableFactory.Create(
 							ws2.OpenFeatureClass("DKM25_ANNOBLAU_MASK"))
