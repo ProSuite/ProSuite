@@ -191,7 +191,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void CanDetectInteriorVerticesNotCoveredByInteriorVertices()
 		{
-			var testName = MethodBase.GetCurrentMethod().Name;
+			var testName = MethodBase.GetCurrentMethod()?.Name;
 
 			IFeatureClass coveringClass = CreateFeatureClass(
 				string.Format("{0}_covering", testName),
@@ -750,6 +750,54 @@ namespace ProSuite.QA.Tests.Test
 			           {
 				           CoveringClassTolerances = new[] { 1d }
 			           };
+
+			var runner = new QaContainerTestRunner(10000, test);
+			runner.Execute(verificationEnvelope);
+
+			AssertUtils.NoError(runner);
+		}
+
+		[Test]
+		public void CanAllowVerticalLineOnBoundary()
+		{
+			var testName = MethodBase.GetCurrentMethod()?.Name;
+
+			IFeatureClass coveringClass = CreateFeatureClass(
+				string.Format("{0}_covering", testName),
+				esriGeometryType.esriGeometryPolygon);
+			IFeatureClass coveredClass = CreateFeatureClass(
+				string.Format("{0}_covered", testName),
+				esriGeometryType.esriGeometryPolyline);
+
+			IFeature coveringRow = coveringClass.CreateFeature();
+			coveringRow.Shape =
+				CurveConstruction.StartPoly(100, 100)
+				                 .LineTo(100, 200)
+				                 .LineTo(200, 200)
+				                 .LineTo(200, 100)
+				                 .ClosePolygon();
+			coveringRow.Store();
+			IFeature coveringRow2 = coveringClass.CreateFeature();
+			coveringRow2.Shape =
+				CurveConstruction.StartPoly(200, 100)
+				                 .LineTo(200, 200)
+				                 .LineTo(300, 200)
+				                 .LineTo(300, 100)
+				                 .ClosePolygon();
+			coveringRow2.Store();
+
+			IFeature coveredRow = coveredClass.CreateFeature();
+			coveredRow.Shape =
+				CurveConstruction.StartLine(200, 100)
+				                 .LineTo(200, 200)
+				                 .Curve;
+			coveredRow.Store();
+
+			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
+
+			var test = new QaIsCoveredByOther(
+				ReadOnlyTableFactory.Create(coveringClass),
+				ReadOnlyTableFactory.Create(coveredClass));
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute(verificationEnvelope);
@@ -1535,7 +1583,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		//[Ignore("uses local data")]
+		[Ignore("uses local data")]
 		public void TestTop5955()
 		{
 			IFeatureWorkspace ws = WorkspaceUtils.OpenFileGdbFeatureWorkspace(
