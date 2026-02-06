@@ -1,5 +1,6 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -11,9 +12,7 @@ public static class DockPaneUtils
 
 	public static void Show<T>([NotNull] string id) where T : DockPane
 	{
-		EnsureDockPaneExists(id);
-
-		var pane = DockPaneManager.Find(id) as T;
+		T pane = GetViewModel<T>(id);
 
 		if (pane is IFrameworkWindow window)
 		{
@@ -23,37 +22,29 @@ public static class DockPaneUtils
 
 	public static T Toggle<T>([NotNull] string id) where T : DockPane
 	{
-		EnsureDockPaneExists(id);
+		T dockPane = GetViewModel<T>(id);
 
-		T dockPane = DockPaneManager.Find(id) as T;
-
-		if (dockPane != null)
+		if (dockPane.IsVisible)
 		{
-			if (dockPane.IsVisible)
-			{
-				dockPane.Hide();
-			}
-			else
-			{
-				dockPane.Activate();
-			}
+			dockPane.Hide();
+		}
+		else
+		{
+			dockPane.Activate();
 		}
 
 		return dockPane;
 	}
 
-	private static void EnsureDockPaneExists([NotNull] string id)
+	[NotNull]
+	public static T GetViewModel<T>([NotNull] string id) where T : DockPane
 	{
-		if (! DockPaneExists(id))
-		{
-			DockPaneManager.Find(id);
-		}
+		Assert.True(QueuedTask.OnGUI,
+		            $"Cannot get DockPane with ID: {id} from outside the GUI Thread.");
 
-		Assert.True(DockPaneExists(id), $"DockPane {id} has not been created");
-	}
+		var dockPane = DockPaneManager.Find(id);
+		Assert.NotNull(dockPane, $"DockPane {id} could not be created.");
 
-	private static bool DockPaneExists([NotNull] string id)
-	{
-		return DockPaneManager.IsDockPaneCreated(id);
+		return (T) dockPane;
 	}
 }
