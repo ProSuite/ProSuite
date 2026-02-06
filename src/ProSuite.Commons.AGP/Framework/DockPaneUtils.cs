@@ -24,30 +24,27 @@ public static class DockPaneUtils
 	{
 		T dockPane = GetViewModel<T>(id);
 
-		if (dockPane != null)
+		if (dockPane.IsVisible)
 		{
-			if (dockPane.IsVisible)
-			{
-				dockPane.Hide();
-			}
-			else
-			{
-				dockPane.Activate();
-			}
+			dockPane.Hide();
+		}
+		else
+		{
+			dockPane.Activate();
 		}
 
 		return dockPane;
 	}
 
-	[NotNull] public static T GetViewModel<T>([NotNull] string id) where T : DockPane
+	[NotNull]
+	public static T GetViewModel<T>([NotNull] string id) where T : DockPane
 	{
-		Assert.True(QueuedTask.OnGUI, $"Cannot get DockPane with ID: {id} from outside the GUI Thread.");
-		Assert.True(DockPaneManager.IsDockPaneCreated(id), $"DockPane with ID: {id} has not been created.");
+		Assert.True(QueuedTask.OnGUI,
+		            $"Cannot get DockPane with ID: {id} from outside the GUI Thread.");
 
-		var dockPane = DockPaneManager.Find(id) as T;
+		var dockPane = DockPaneManager.Find(id);
+		Assert.NotNull(dockPane, $"DockPane {id} could not be created.");
 
-		Assert.NotNull(dockPane, $"DockPane {id} has not been created");
-
-		return dockPane;
+		return (T) dockPane;
 	}
 }
