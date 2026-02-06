@@ -39,7 +39,7 @@ public static class DockPaneUtils
 		return dockPane;
 	}
 
-	public static T GetViewModel<T>([NotNull] string id) where T : DockPane
+	[NotNull] public static T GetViewModel<T>([NotNull] string id) where T : DockPane
 	{
 		Assert.True(QueuedTask.OnGUI, $"Cannot get DockPane with ID: {id} from outside the GUI Thread.");
 		Assert.True(DockPaneManager.IsDockPaneCreated(id), $"DockPane with ID: {id} has not been created.");
