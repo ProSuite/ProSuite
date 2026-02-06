@@ -207,6 +207,12 @@ namespace ProSuite.Commons.AO.Geometry
 			IEnvelope envelope = new EnvelopeClass();
 			envelope.PutCoords(minCorner.X, minCorner.Y, maxCorner.X, maxCorner.Y);
 
+			if (GeometryUtils.IsZAware(minCorner) || GeometryUtils.IsZAware(maxCorner))
+			{
+				GeometryUtils.MakeZAware(envelope);
+				envelope.ZMin = Math.Min(minCorner.Z, maxCorner.Z);
+			}
+
 			return CreatePolygon(envelope);
 		}
 
@@ -218,6 +224,11 @@ namespace ProSuite.Commons.AO.Geometry
 			IPolygon polygon = new PolygonClass();
 
 			SetRectangle(polygon, envelope);
+
+			if (GeometryUtils.IsZAware(envelope))
+			{
+				GeometryUtils.MakeZAware(polygon);
+			}
 
 			return polygon;
 		}

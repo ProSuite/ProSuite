@@ -498,12 +498,25 @@ namespace ProSuite.Commons.AO.Geometry
 			return CreateRingGroup(exteriorRings[0], innerRings, ignoreZs);
 		}
 
-		public static RingGroup CreateRingGroup([NotNull] GeometryPart part)
+		public static RingGroup CreateRingGroup([NotNull] GeometryPart part,
+		                                        bool assumePartVertexIds = false,
+		                                        bool orientRingsClockwise = false)
 		{
 			RingGroup result = CreateRingGroup(
 				Assert.NotNull(part.MainOuterRing),
 				part.InnerRings.Cast<IRing>().ToList(),
 				! part.IsZAware);
+
+			if (assumePartVertexIds &&
+			    GeometryUtils.HasUniqueVertexId(part.FirstGeometry, out int vertexId))
+			{
+				result.Id = vertexId;
+			}
+
+			if (orientRingsClockwise)
+			{
+				result.TryOrientProperly();
+			}
 
 			return result;
 		}
@@ -542,18 +555,14 @@ namespace ProSuite.Commons.AO.Geometry
 
 		public static IEnumerable<RingGroup> CreateRingGroups(
 			[NotNull] IMultiPatch multipatch,
+			bool assumePartVertexIds = false,
 			bool enforcePositiveOrientation = true)
 		{
 			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
 			{
-				RingGroup ringGroup = CreateRingGroup(multipatchPart);
-
-				if (enforcePositiveOrientation &&
-				    ringGroup.ClockwiseOriented == false)
-				{
-					// Point intersect rings even if they are facing downward (with negative orientation)
-					ringGroup.ReverseOrientation();
-				}
+				RingGroup ringGroup =
+					CreateRingGroup(multipatchPart, assumePartVertexIds,
+					                enforcePositiveOrientation);
 
 				yield return ringGroup;
 			}
@@ -568,24 +577,15 @@ namespace ProSuite.Commons.AO.Geometry
 			int index = 0;
 			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
 			{
-				RingGroup ringGroup = CreateRingGroup(multipatchPart);
+				RingGroup ringGroup =
+					CreateRingGroup(multipatchPart, assumePartVertexIds, orientRingsClockwise);
 
-				if (assumePartVertexIds &&
-				    GeometryUtils.HasUniqueVertexId(multipatchPart.FirstGeometry, out int vertexId))
-				{
-					ringGroup.Id = vertexId;
-				}
-				else
+				if (ringGroup.Id == null)
 				{
 					ringGroup.Id = index;
 				}
 
 				index += ringGroup.PartCount;
-
-				if (orientRingsClockwise)
-				{
-					ringGroup.TryOrientProperly();
-				}
 
 				ringGroups.Add(ringGroup);
 			}

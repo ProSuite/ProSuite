@@ -1424,6 +1424,41 @@ namespace ProSuite.Commons.Geom
 			return ! contained;
 		}
 
+		/// <summary>
+		/// Check if the rings touch in a line (3D), i.e. the 3D boundary intersection is linear.
+		/// </summary>
+		/// <param name="path1"></param>
+		/// <param name="path2"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static bool AreConnected3D(Linestring path1, Linestring path2, double tolerance)
+		{
+			IEnumerable<SegmentIntersection> segmentIntersections =
+				SegmentIntersectionUtils.GetSegmentIntersectionsXY(path1, path2, tolerance);
+
+			// Check if the rings touch in a line or interior intersect
+			foreach (SegmentIntersection segmentIntersection in segmentIntersections)
+			{
+				if (! segmentIntersection.HasIntersection)
+				{
+					continue;
+				}
+
+				Line3D sourceLine = path1[segmentIntersection.SourceIndex];
+				Line3D targetLine = path2[segmentIntersection.TargetIndex];
+
+				// If there is an actual linear intersection with non-zero length,
+				if (segmentIntersection.HasLinearIntersection &&
+				    sourceLine.Length3D > 0 && targetLine.Length3D > 0)
+				{
+					// ...check if the segments are actually collinear in 3D:
+					return sourceLine.IsCollinear(targetLine, tolerance);
+				}
+			}
+
+			return false;
+		}
+
 		private static bool HasSourceCrossingIntersections(
 			[NotNull] Linestring ring1,
 			[NotNull] Linestring ring2,
