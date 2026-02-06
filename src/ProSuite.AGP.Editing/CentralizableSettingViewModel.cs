@@ -16,6 +16,8 @@ public class CentralizableSettingViewModel<T> : INotifyPropertyChanged where T :
 	private double _step = 0.01; // Default step size
 	private int _decimals = 2; // Default to 2 decimal places
 	private string _unitLabel = "meters";
+	private double _minValue = 0; // Default to 0 to prevent negative values
+	private double _maxValue = double.MaxValue;
 
 	public CentralizableSettingViewModel(
 		CentralizableSetting<T> centralizableSetting,
@@ -154,6 +156,40 @@ public class CentralizableSettingViewModel<T> : INotifyPropertyChanged where T :
 			{
 				_unitLabel = value;
 				OnPropertyChanged(nameof(UnitLabel));
+			}
+		}
+	}
+
+	/// <summary>
+	/// Gets or sets the minimum value allowed.
+	/// This property is primarily used by NumericSpinner controls.
+	/// </summary>
+	public double MinValue
+	{
+		get => _minValue;
+		set
+		{
+			if (! MathUtils.AreEqual(_minValue, value))
+			{
+				_minValue = value;
+				OnPropertyChanged(nameof(MinValue));
+			}
+		}
+	}
+
+	/// <summary>
+	/// Gets or sets the maximum value allowed.
+	/// This property is primarily used by NumericSpinner controls.
+	/// </summary>
+	public double MaxValue
+	{
+		get => _maxValue;
+		set
+		{
+			if (! MathUtils.AreEqual(_maxValue, value))
+			{
+				_maxValue = value;
+				OnPropertyChanged(nameof(MaxValue));
 			}
 		}
 	}
