@@ -1003,6 +1003,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					XmlVerificationOptions = xmlVerificationOptions
 				};
+			foreach (var kv in parameters.ReportProperties)
+			{
+				xmlService.ReportProperties.Add(
+					new KeyValuePair<string, string>(kv.Key, kv.Value));
+			}
 
 			// NOTE: The report paths include the file names.
 			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,

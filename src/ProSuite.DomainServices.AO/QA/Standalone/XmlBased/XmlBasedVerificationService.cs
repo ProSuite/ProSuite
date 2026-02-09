@@ -67,6 +67,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// </summary>
 		public XmlVerificationOptions XmlVerificationOptions { get; set; }
 
+		public IList<KeyValuePair<string, string>> ReportProperties { get; }
+			= new List<KeyValuePair<string, string>>();
+
 		public QualityVerification Verification { get; set; }
 
 		public event EventHandler<IssueFoundEventArgs> IssueFound;
@@ -219,6 +222,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					ProgressStreamer = ProgressStreamer,
 					XmlVerificationOptions = XmlVerificationOptions
 				};
+
+			foreach (var kv in ReportProperties)
+			{
+				verificationReporter.ReportProperties.Add(kv);
+			}
 
 			IVerificationReportBuilder reportBuilder = verificationReporter.CreateReportBuilders();
 
