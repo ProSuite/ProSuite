@@ -836,6 +836,63 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return result;
 		}
 
+		public static double GetDistanceSquaredXY([NotNull] ICoordinates point,
+		                                          [NotNull] MultiPolycurve polygon)
+		{
+			double minDistanceSquared = double.MaxValue;
+
+			foreach (Linestring linestring in polygon.GetLinestrings())
+			{
+				double distanceSquared = GetDistanceSquaredXY(point, linestring);
+				if (distanceSquared < minDistanceSquared)
+				{
+					minDistanceSquared = distanceSquared;
+				}
+			}
+
+			return minDistanceSquared;
+		}
+
+		public static double GetDistanceSquaredXY([NotNull] ICoordinates point,
+		                                          [NotNull] Linestring line)
+		{
+			double minDistanceSquared = double.MaxValue;
+
+			foreach (Line3D segment in line.Segments)
+			{
+				double distanceSquared = GetDistanceSquaredXY(point, segment);
+
+				if (distanceSquared < minDistanceSquared)
+				{
+					minDistanceSquared = distanceSquared;
+				}
+			}
+
+			return minDistanceSquared;
+		}
+
+		public static double GetDistanceSquaredXY([NotNull] ICoordinates point,
+		                                           [NotNull] Line3D segment)
+		{
+			// Get the perpendicular distance and distance along ratio
+			double perpDistance = segment.GetDistanceXYPerpendicularSigned(point, out double distanceAlongRatio);
+
+			if (distanceAlongRatio < 0)
+			{
+				// Closest point is the start point
+				return GetDistanceSquaredXY(point, segment.StartPoint);
+			}
+
+			if (distanceAlongRatio > 1)
+			{
+				// Closest point is the end point
+				return GetDistanceSquaredXY(point, segment.EndPoint);
+			}
+
+			// The closest point is on the segment
+			return perpDistance * perpDistance;
+		}
+
 		public static double GetDistanceXY([NotNull] ICoordinates point1, [NotNull] ICoordinates point2)
 		{
 			double distanceSquared = GetDistanceSquaredXY(point1, point2);
