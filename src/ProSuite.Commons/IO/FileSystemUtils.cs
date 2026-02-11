@@ -66,6 +66,15 @@ namespace ProSuite.Commons.IO
 			                            Path.DirectorySeparatorChar);
 		}
 
+		public static bool ArePathsEqual([NotNull] string path1,
+		                                 [NotNull] string path2)
+		{
+			return string.Equals(
+				Path.GetFullPath(path1),
+				Path.GetFullPath(path2),
+				StringComparison.OrdinalIgnoreCase); // Windows is case-insensitive
+		}
+
 		public static bool HasInvalidPathChars([NotNull] string path)
 		{
 			return path.IndexOfAny(InvalidPathChars) >= 0;
