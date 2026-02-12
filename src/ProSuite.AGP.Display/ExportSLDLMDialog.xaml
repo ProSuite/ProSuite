@@ -25,7 +25,7 @@
 
         <Label Padding="0,10,0,2">Path to config file to create/overwrite (XML or CSV):</Label>
         <DockPanel>
-            <Button DockPanel.Dock="Right" Padding="5,0,5,0" Content="Browse..." Click="BrowseButtonClicked"/>
+            <Button DockPanel.Dock="Right" Padding="5,0,5,0" Content="Browse..." Style="{DynamicResource Esri_Button}" Click="BrowseButtonClicked"/>
 			<TextBox Padding="2" Margin="0,0,2,0" Text="{Binding ConfigFilePath, UpdateSourceTrigger=PropertyChanged}"/>
         </DockPanel>
 
@@ -41,8 +41,8 @@
                   ToolTip="An aid to understanding and debugging the layer masking configuration (ignored in import)" />
 
 		<DockPanel LastChildFill="False" Margin="0,12,0,0">
-	        <Button DockPanel.Dock="Right" Content="Cancel" Margin="6,0,0,0" Padding="10,3" MinWidth="60" IsCancel="True" TabIndex="2" />
-	        <Button DockPanel.Dock="Right" Content="Export" Margin="6,0,0,0" Padding="10,3" MinWidth="60" IsDefault="True" TabIndex="1"
+            <Button DockPanel.Dock="Right" Content="Cancel" Margin="6,0,0,0" Style="{DynamicResource Esri_Button}" Padding="10,3" MinWidth="60" IsCancel="True" TabIndex="2" />
+            <Button DockPanel.Dock="Right" Content="Export" Margin="6,0,0,0" Style="{DynamicResource Esri_Button}" Padding="10,3" MinWidth="60" IsDefault="True" TabIndex="1"
 	                IsEnabled="{Binding ExportButtonEnabled}" Click="ExportButtonClicked" />
         </DockPanel>
 	</StackPanel>
