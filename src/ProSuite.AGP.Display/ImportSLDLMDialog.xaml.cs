@@ -8,7 +8,7 @@ namespace ProSuite.AGP.Display;
 /// <summary>
 /// Interaction logic for ImportSLDLMDialog.xaml
 /// </summary>
-public partial class ImportSLDLMDialog : Window
+public partial class ImportSLDLMDialog
 {
 	private readonly ImportSLDLMOptions _options;
 
@@ -38,7 +38,7 @@ public partial class ImportSLDLMDialog : Window
 		var dialog = new OpenFileDialog();
 
 		dialog.DefaultExt = ".xml";
-		dialog.Filter = "XML|*.xml|CSV|*.csv|All files|*.*";
+		dialog.Filter = "XML|*.xml|All files|*.*";
 		dialog.Title = "Import SLD/LM Configuration";
 
 		bool? result = dialog.ShowDialog(this);

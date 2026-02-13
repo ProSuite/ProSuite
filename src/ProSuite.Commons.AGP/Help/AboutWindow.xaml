@@ -34,7 +34,7 @@
 				<GroupStyle>
 					<GroupStyle.HeaderTemplate>
 						<DataTemplate>
-							<TextBlock Background="LightGray" Padding="14,2,4,2" FontWeight="Bold">
+							<TextBlock Padding="14,2,4,2" FontWeight="Bold">
 								<Run Text="{Binding Path=Name,Mode=OneWay}" />
 							</TextBlock>
 						</DataTemplate>
