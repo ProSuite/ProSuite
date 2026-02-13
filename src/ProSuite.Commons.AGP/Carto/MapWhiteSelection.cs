@@ -361,7 +361,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 	#region Area-select (polygon)
 
 	/// <returns>true iff the selection changed</returns>
-	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
+	/// <remarks>Must call on MCT</remarks>
 	public bool Select(Geometry geometry, SetCombineMethod method,
 	                   Dictionary<FeatureLayer, List<long>> candidates)
 	{

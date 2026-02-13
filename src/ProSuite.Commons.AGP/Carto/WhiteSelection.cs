@@ -113,6 +113,7 @@ public class WhiteSelection : IWhiteSelection
 
 	public int SelectedVertexCount => _shapes.Values.Sum(ss => ss.SelectedVertexCount);
 
+	/// <remarks>Must call on MCT</remarks>
 	public bool Combine(long oid, int part, int vertex, SetCombineMethod method)
 	{
 		var changed = false;
@@ -141,6 +142,7 @@ public class WhiteSelection : IWhiteSelection
 		return changed;
 	}
 
+	/// <remarks>Must call on MCT</remarks>
 	public bool Combine(long oid, SetCombineMethod method)
 	{
 		if (! _shapes.TryGetValue(oid, out var selection))
@@ -159,6 +161,7 @@ public class WhiteSelection : IWhiteSelection
 		return _shapes.Remove(oid);
 	}
 
+	/// <remarks>Must call on MCT</remarks>
 	public bool Add(long oid, bool selectVertices = false)
 	{
 		bool changed = false;
@@ -249,6 +252,7 @@ public class WhiteSelection : IWhiteSelection
 
 	#region Geometry cache (by OID)
 
+	/// <remarks>Must call on MCT</remarks>
 	public Geometry GetGeometry(long oid)
 	{
 		if (_geometryCache.TryGetValue(oid, out var shape))
@@ -271,6 +275,7 @@ public class WhiteSelection : IWhiteSelection
 		return _geometryCache.ContainsKey(oid);
 	}
 
+	/// <remarks>Must call on MCT</remarks>
 	public void CacheGeometries(params long[] oids)
 	{
 		var missingOids = oids.Where(oid => ! HasGeometry(oid)).ToList();
@@ -280,6 +285,7 @@ public class WhiteSelection : IWhiteSelection
 		}
 	}
 
+	/// <remarks>Must call on MCT</remarks>
 	private void ReloadGeometries(IReadOnlyList<long> objectIDs)
 	{
 		if (objectIDs is null || objectIDs.Count < 1) return;
@@ -318,6 +324,7 @@ public class WhiteSelection : IWhiteSelection
 		_geometryCache.Clear();
 	}
 
+	/// <remarks>Must call on MCT</remarks>
 	public List<IWhiteSelection.RefreshInfo> RefreshGeometries(IEnumerable<long> oids = null)
 	{
 		if (oids is null) oids = _shapes.Keys;
