@@ -32,6 +32,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		[UsedImplicitly] private string _attributeEditorConfigDirectory;
 		[UsedImplicitly] private string _workListConfigDirectory;
 		[UsedImplicitly] private string _toolConfigDirectory;
+		[UsedImplicitly] private string _fieldExchangeTemplateDirectory;
 
 		[UsedImplicitly] private bool _excludeReadOnlyDatasetsFromProjectWorkspace = true;
 		[UsedImplicitly] private bool _useOnlyModelDefaultDatabase = true;
@@ -189,6 +190,15 @@ namespace ProSuite.DomainModel.AO.Workflow
 		{
 			get { return _toolConfigDirectory; }
 			set { _toolConfigDirectory = value; }
+		}
+
+		[CanBeNull]
+		[UsedImplicitly]
+		[MaximumStringLength(260)]
+		public string FieldExchangeTemplateDirectory
+		{
+			get { return _fieldExchangeTemplateDirectory; }
+			set { _fieldExchangeTemplateDirectory = value; }
 		}
 
 		[UsedImplicitly]
