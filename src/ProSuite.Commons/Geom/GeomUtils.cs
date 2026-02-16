@@ -19,9 +19,9 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		static GeomUtils()
 		{
-			var dimensionX = new[] {0};
-			var dimensionXy = new[] {0, 1};
-			var dimensionXyz = new[] {0, 1, 2};
+			var dimensionX = new[] { 0 };
+			var dimensionXy = new[] { 0, 1 };
+			var dimensionXyz = new[] { 0, 1, 2 };
 			var dimensionEmpty = new int[] { };
 
 			_dimensionLists =
@@ -129,6 +129,52 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return new Box(min, max);
+		}
+
+		/// <summary>
+		/// Computes the four corners of a rectangle defined by a center point,
+		/// a first corner (click 2) and a second corner (click 3 / direction).
+		/// 
+		/// The line from corner1 to corner2 defines one side of the rectangle.
+		/// The center point's perpendicular distance to that line determines the
+		/// rectangle's depth. The opposite side is obtained by mirroring the line
+		/// across the parallel through the center (i.e. shifting by 2x the
+		/// perpendicular distance).
+		/// 
+		/// The result is a closed, clockwise-oriented Linestring (ring).
+		/// </summary>
+		[CanBeNull]
+		public static Linestring CreateRectangle(
+			Pnt3D center, Pnt3D corner1, Pnt3D corner2, double z)
+		{
+			var side = new Line3D(corner1, corner2);
+
+			if (side.Length2D < 1e-10)
+			{
+				return null;
+			}
+
+			double signedDistance =
+				side.GetDistanceXYPerpendicularSigned(center);
+
+			if (Math.Abs(signedDistance) < 1e-10)
+			{
+				return null;
+			}
+
+			double offsetX = 2.0 * signedDistance * (-side.DeltaY / side.Length2D);
+			double offsetY = 2.0 * signedDistance * (side.DeltaX / side.Length2D);
+
+			var p1 = new Pnt3D(corner1.X, corner1.Y, z);
+			var p2 = new Pnt3D(corner2.X, corner2.Y, z);
+			var p3 = new Pnt3D(corner2.X + offsetX, corner2.Y + offsetY, z);
+			var p4 = new Pnt3D(corner1.X + offsetX, corner1.Y + offsetY, z);
+
+			var ring = new Linestring(new List<Pnt3D> { p1, p2, p3, p4, p1 });
+
+			ring.TryOrientClockwise();
+
+			return ring;
 		}
 
 		public static bool Equals2D([NotNull] Pnt p0,
@@ -264,7 +310,7 @@ return : Point2D : lines cut each other at Point (non parallel)
 			double y = uZ * vX - uX * vZ;
 			double z = uX * vY - uY * vX;
 
-			var result = new Vector(new[] {x, y, z});
+			var result = new Vector(new[] { x, y, z });
 
 			return result;
 		}
@@ -823,7 +869,8 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return result;
 		}
 
-		public static double GetDistanceSquaredXY([NotNull] ICoordinates point1, [NotNull] ICoordinates point2)
+		public static double GetDistanceSquaredXY([NotNull] ICoordinates point1,
+		                                          [NotNull] ICoordinates point2)
 		{
 			double dx = point2.X - point1.X;
 
@@ -872,10 +919,11 @@ return : Point2D : lines cut each other at Point (non parallel)
 		}
 
 		public static double GetDistanceSquaredXY([NotNull] ICoordinates point,
-		                                           [NotNull] Line3D segment)
+		                                          [NotNull] Line3D segment)
 		{
 			// Get the perpendicular distance and distance along ratio
-			double perpDistance = segment.GetDistanceXYPerpendicularSigned(point, out double distanceAlongRatio);
+			double perpDistance =
+				segment.GetDistanceXYPerpendicularSigned(point, out double distanceAlongRatio);
 
 			if (distanceAlongRatio < 0)
 			{
@@ -893,7 +941,8 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return perpDistance * perpDistance;
 		}
 
-		public static double GetDistanceXY([NotNull] ICoordinates point1, [NotNull] ICoordinates point2)
+		public static double GetDistanceXY([NotNull] ICoordinates point1,
+		                                   [NotNull] ICoordinates point2)
 		{
 			double distanceSquared = GetDistanceSquaredXY(point1, point2);
 
