@@ -177,6 +177,115 @@ namespace ProSuite.Commons.Geom
 			return ring;
 		}
 
+		/// <summary>
+		/// Computes the vertices of a regular polygon inscribed in a circle
+		/// with the given center and radius.
+		/// </summary>
+		/// <param name="center">The center of the circumscribed circle.</param>
+		/// <param name="radius">The radius of the circumscribed circle.</param>
+		/// <param name="vertexCount">The number of vertices (must be > 2).</param>
+		/// <param name="startVertex">Optional point defining the angle of the
+		/// first vertex. If null, the first vertex is placed at 0 radians.</param>
+		/// <param name="z">The Z value for all vertices.</param>
+		/// <returns>A closed, clockwise-oriented Linestring ring.</returns>
+		[CanBeNull]
+		public static Linestring CreateRegularPolygon(
+			[NotNull] Pnt3D center, double radius, int vertexCount,
+			[CanBeNull] Pnt3D startVertex, double z)
+		{
+			Assert.ArgumentCondition(radius > 0,
+			                         "Radius must be greater than 0.");
+			Assert.ArgumentCondition(vertexCount > 2,
+			                         "The number of vertices must be > 2.");
+
+			double startRadians = startVertex is null
+				                      ? 0
+				                      : Math.Atan2(startVertex.Y - center.Y,
+				                                   startVertex.X - center.X);
+
+			var points = new List<Pnt3D>(vertexCount + 1);
+
+			for (int i = 0; i < vertexCount; i++)
+			{
+				double radians = 2 * Math.PI * i / vertexCount + startRadians;
+
+				points.Add(new Pnt3D(center.X + radius * Math.Cos(radians),
+				                     center.Y + radius * Math.Sin(radians),
+				                     z));
+			}
+
+			// Close the ring
+			points.Add(new Pnt3D(points[0].X, points[0].Y, z));
+
+			var ring = new Linestring(points);
+
+			ring.TryOrientClockwise();
+
+			return ring;
+		}
+
+		/// <summary>
+		/// Computes a regular polygon from three points on the circumscribed
+		/// circle. The circumscribed circle is calculated from the three
+		/// boundary points and the last point defines the start vertex angle.
+		/// </summary>
+		/// <param name="p1">First point on the circumscribed circle.</param>
+		/// <param name="p2">Second point on the circumscribed circle.</param>
+		/// <param name="p3">Third point on the circumscribed circle (also
+		/// defines the start vertex angle).</param>
+		/// <param name="vertexCount">The number of vertices (must be > 2).</param>
+		/// <param name="z">The Z value for all vertices.</param>
+		/// <returns>A closed, clockwise-oriented Linestring ring, or null if the
+		/// three points are collinear.</returns>
+		[CanBeNull]
+		public static Linestring CreateRegularPolygonFromThreePoints(
+			[NotNull] Pnt3D p1, [NotNull] Pnt3D p2, [NotNull] Pnt3D p3,
+			int vertexCount, double z)
+		{
+			if (! TryGetCircumscribedCircle(p1, p2, p3,
+			                                out Pnt3D center, out double radius))
+			{
+				return null;
+			}
+
+			return CreateRegularPolygon(center, radius, vertexCount, p3, z);
+		}
+
+		/// <summary>
+		/// Computes the center and radius of the circle passing through three
+		/// 2D points. Returns false if the points are collinear.
+		/// </summary>
+		public static bool TryGetCircumscribedCircle(
+			[NotNull] Pnt3D p1, [NotNull] Pnt3D p2, [NotNull] Pnt3D p3,
+			out Pnt3D center, out double radius)
+		{
+			double ax = p1.X, ay = p1.Y;
+			double bx = p2.X, by = p2.Y;
+			double cx = p3.X, cy = p3.Y;
+
+			double d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+
+			if (Math.Abs(d) < 1e-10)
+			{
+				center = null;
+				radius = 0;
+				return false;
+			}
+
+			double ux = ((ax * ax + ay * ay) * (by - cy) +
+			             (bx * bx + by * by) * (cy - ay) +
+			             (cx * cx + cy * cy) * (ay - by)) / d;
+
+			double uy = ((ax * ax + ay * ay) * (cx - bx) +
+			             (bx * bx + by * by) * (ax - cx) +
+			             (cx * cx + cy * cy) * (bx - ax)) / d;
+
+			center = new Pnt3D(ux, uy, 0);
+			radius = Math.Sqrt((ax - ux) * (ax - ux) + (ay - uy) * (ay - uy));
+
+			return true;
+		}
+
 		public static bool Equals2D([NotNull] Pnt p0,
 		                            [NotNull] Pnt p1,
 		                            double tolerance)
