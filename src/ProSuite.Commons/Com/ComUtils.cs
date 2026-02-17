@@ -103,6 +103,42 @@ namespace ProSuite.Commons.Com
 		}
 
 		/// <summary>
+		/// If the supplied object implements IDisposable, the Dispose method is called.
+		/// Otherwise, if it is a COM object, the reference count is decremented by one or, if requested, to zero.
+		/// </summary>
+		/// <param name="o">The COM object to release.</param>
+		/// <param name="fullRelease"></param>
+		public static void ReleaseObject([CanBeNull] object o, bool fullRelease = false)
+		{
+			if (o == null)
+			{
+				return;
+			}
+
+			if (o is IDisposable disposable)
+			{
+				// Implements IDisposable, so it can determine on its own what to release.
+				disposable.Dispose();
+
+				return;
+			}
+
+			if (! Marshal.IsComObject(o))
+			{
+				return;
+			}
+
+			if (fullRelease)
+			{
+				while (Marshal.ReleaseComObject(o) > 0) { }
+			}
+			else
+			{
+				Marshal.ReleaseComObject(o);
+			}
+		}
+
+		/// <summary>
 		/// Query interfaces for System.__ComObject Type e.g. StyleGalleryItem.Item
 		/// interfaceForAssembly try Interfaces e.g. IBasicOverposterLayerProperties 
 		/// </summary>
