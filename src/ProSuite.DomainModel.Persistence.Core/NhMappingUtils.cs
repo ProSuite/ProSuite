@@ -133,7 +133,16 @@ namespace ProSuite.DomainModel.Persistence.Core
 		public static void MapMetadataProperties<T>([NotNull] ClassMapping<T> mapping)
 			where T : EntityWithMetadata
 		{
-			mapping.Property(d => d.CreatedDate, pm => { pm.Column("CREATED_DATE"); });
+			mapping.Property(d => d.CreatedDate, pm =>
+			{
+				pm.Column(c =>
+				{
+					c.Name("CREATED_DATE");
+					c.SqlType("DATE");
+				});
+
+				pm.Access(Accessor.Field);
+			});
 
 			mapping.Property(d => d.CreatedByUser, pm =>
 			{
@@ -141,7 +150,14 @@ namespace ProSuite.DomainModel.Persistence.Core
 				pm.Length(100);
 			});
 
-			mapping.Property(d => d.LastChangedDate, pm => { pm.Column("LAST_CHANGED_DATE"); });
+			mapping.Property(d => d.LastChangedDate, pm =>
+			{
+				pm.Column(c =>
+				{
+					c.Name("LAST_CHANGED_DATE");
+					c.SqlType("DATE");
+				});
+			});
 
 			mapping.Property(d => d.LastChangedByUser, pm =>
 			{
