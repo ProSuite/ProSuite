@@ -9,7 +9,7 @@ namespace ProSuite.Commons.Geom
 	/// A plane that consists of a normal vector and a distance d from the origin.
 	/// The plane equation used is ax + by + cz = d
 	/// </summary>
-	public class Plane3D
+	public class Plane3D : ISurface
 	{
 		// NOTE: MathNet also has a good plane class. However when switching, the sign of D must be considered. 
 		// The plane equation can be stated as ax + bx + cz + d = 0 or ax + bx + cz = d
