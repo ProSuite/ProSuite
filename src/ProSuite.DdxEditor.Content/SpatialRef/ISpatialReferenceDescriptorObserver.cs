@@ -6,7 +6,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 	{
 		void GetFromDatasetClicked();
 
-		void GetFromFeatureClassClicked();
+		void GetFromWorkspaceClicked();
 
 		void CopyClicked();
 	}
