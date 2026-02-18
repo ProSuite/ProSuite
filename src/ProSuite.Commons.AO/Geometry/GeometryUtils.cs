@@ -20,6 +20,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ISurface = ESRI.ArcGIS.Geodatabase.ISurface;
 
 namespace ProSuite.Commons.AO.Geometry
 {
