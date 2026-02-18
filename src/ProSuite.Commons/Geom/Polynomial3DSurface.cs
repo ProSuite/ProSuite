@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Geom
 {
@@ -11,6 +12,9 @@ namespace ProSuite.Commons.Geom
 	/// </summary>
 	public class Polynomial3DSurface : ISurface
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+
 		/// <summary>
 		/// The coefficients of the polynomial, stored in order:
 		/// [a₀, a₁, a₂, a₃, a₄, a₅, ...] corresponding to
@@ -313,8 +317,9 @@ namespace ProSuite.Commons.Geom
 				// Check for singular matrix
 				if (Math.Abs(augmented[k, k]) < 1e-10)
 				{
-					throw new InvalidOperationException(
-						"Matrix is singular or nearly singular. Cannot solve the system.");
+					_msg.Warn("Matrix is singular or nearly singular. Cannot solve the system.");
+					// throw new InvalidOperationException(
+					// 	"Matrix is singular or nearly singular. Cannot solve the system.");
 				}
 
 				// Eliminate column
