@@ -21,6 +21,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using Array = System.Array;
 using IPnt = ProSuite.Commons.Geom.IPnt;
+using ISurface = ESRI.ArcGIS.Geodatabase.ISurface;
 
 namespace ProSuite.Commons.AO.Test.Geometry
 {
