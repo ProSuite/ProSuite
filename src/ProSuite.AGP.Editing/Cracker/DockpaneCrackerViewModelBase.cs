@@ -1,3 +1,4 @@
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -6,7 +7,7 @@ namespace ProSuite.AGP.Editing.Cracker;
 
 public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneCrackerViewModelBase() : base(new DockPaneCracker())
+	protected DockPaneCrackerViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -109,5 +110,10 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 				new TargetFeatureSelectionViewModel(
 					_options.CentralizableTargetFeatureSelection);
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneCracker();
 	}
 }

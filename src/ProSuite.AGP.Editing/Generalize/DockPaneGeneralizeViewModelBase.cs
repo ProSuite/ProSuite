@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -8,7 +9,7 @@ namespace ProSuite.AGP.Editing.Generalize;
 
 public abstract class DockPaneGeneralizeViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneGeneralizeViewModelBase() : base(new DockPaneGeneralize())
+	protected DockPaneGeneralizeViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -156,4 +157,9 @@ public abstract class DockPaneGeneralizeViewModelBase : DockPaneViewModelBase
 		_options.ProtectTopologicalVertices && _options
 		                                       .CentralizableVertexProtectingFeatureSelection
 		                                       .CanOverrideLocally;
+
+	protected override Control CreateView()
+	{
+		return new DockPaneGeneralize();
+	}
 }

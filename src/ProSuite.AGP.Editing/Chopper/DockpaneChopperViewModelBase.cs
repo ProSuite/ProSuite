@@ -1,3 +1,4 @@
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -6,7 +7,7 @@ namespace ProSuite.AGP.Editing.Chopper;
 
 public abstract class DockPaneChopperViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneChopperViewModelBase() : base(new DockPaneChopper())
+	protected DockPaneChopperViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -120,5 +121,10 @@ public abstract class DockPaneChopperViewModelBase : DockPaneViewModelBase
 				new TargetFeatureSelectionViewModel(
 					_options.CentralizableTargetFeatureSelection);
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneChopper();
 	}
 }

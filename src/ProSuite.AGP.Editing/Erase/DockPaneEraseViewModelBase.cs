@@ -1,3 +1,4 @@
+using System.Windows.Controls;
 using System.Windows.Input;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.UI.WPF;
@@ -6,7 +7,7 @@ namespace ProSuite.AGP.Editing.Erase;
 
 public abstract class DockPaneEraseViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneEraseViewModelBase() : base(new DockPaneErase())
+	protected DockPaneEraseViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults, () => true);
 	}
@@ -75,5 +76,10 @@ public abstract class DockPaneEraseViewModelBase : DockPaneViewModelBase
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizablePreventMultipartResults);
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneErase();
 	}
 }

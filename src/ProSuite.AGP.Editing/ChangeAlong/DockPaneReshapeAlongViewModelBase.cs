@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -9,7 +10,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong;
 
 public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneReshapeAlongViewModelBase() : base(new DockPaneReshapeAlong())
+	protected DockPaneReshapeAlongViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -258,5 +259,10 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 					EditableSelectableFeaturesVisibility = Visibility.Collapsed
 				};
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneReshapeAlong();
 	}
 }

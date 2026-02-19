@@ -1,3 +1,4 @@
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -6,7 +7,7 @@ namespace ProSuite.AGP.Editing.MergeFeatures;
 
 public abstract class DockPaneMergeFeaturesViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneMergeFeaturesViewModelBase() : base(new DockPaneMergeFeatures())
+	protected DockPaneMergeFeaturesViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -84,5 +85,10 @@ public abstract class DockPaneMergeFeaturesViewModelBase : DockPaneViewModelBase
 				new MergeOperationSurvivorViewModel(
 					_options.CentralizableMergeOperationSurvivor) { };
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneMergeFeatures();
 	}
 }
