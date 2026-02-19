@@ -383,7 +383,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private static GetProjectWorkspacesResponse PackProjectWorkspaceResponse(
+		private GetProjectWorkspacesResponse PackProjectWorkspaceResponse(
 			[NotNull] IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces)
 		{
 			var response = new GetProjectWorkspacesResponse();
@@ -394,7 +394,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				ProjectWorkspaceMsg projectWorkspaceMsg = new ProjectWorkspaceMsg();
 
-				projectWorkspaceMsg.ProjectId = projectWorkspace.Project.Id;
+				projectWorkspaceMsg.ProjectId = GetProjectId(projectWorkspace.Project);
 
 				var gdbWorkspace = projectWorkspace.Workspace as GdbWorkspace;
 
@@ -416,6 +416,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				TModel productionModel = project.ProductionModel;
 
 				var projectMsg = ProtobufUtils.ToProjectMsg(project);
+				projectMsg.ProjectId = GetProjectId(project);
 
 				CallbackUtils.DoWithNonNull(
 					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
@@ -433,8 +434,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private static ModelMsg ToModelMsg(TModel productionModel,
-		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
+		protected virtual int GetProjectId(Project<TModel> project)
+		{
+			return project.Id;
+		}
+
+		protected static ModelMsg ToModelMsg(TModel productionModel, ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
 				productionModel.SpatialReferenceDescriptor.GetSpatialReference(),
