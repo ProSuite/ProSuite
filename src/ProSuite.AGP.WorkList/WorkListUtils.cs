@@ -358,7 +358,18 @@ public static class WorkListUtils
 			return null;
 		}
 
-		XmlWorkListDefinition definition = Read(worklistDefinitionFile);
+		XmlWorkListDefinition definition;
+		try
+		{
+			definition = Read(worklistDefinitionFile);
+		}
+		catch (Exception e)
+		{
+			throw new IOException(
+				$"Error reading work list definition file {worklistDefinitionFile}: {e.Message}",
+				e);
+		}
+
 		return definition.Name;
 	}
 
