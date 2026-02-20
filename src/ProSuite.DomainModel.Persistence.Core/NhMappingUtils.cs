@@ -171,6 +171,6 @@ namespace ProSuite.DomainModel.Persistence.Core
 		/// The most up-to-date version of the DDX, compatible with the current version of the
 		/// software.
 		/// </summary>
-		public static Version CurrentDdxVersion { get; } = new Version(1, 0, 0, 2);
+		public static Version CurrentDdxVersion { get; } = new Version(1, 0, 0, 3);
 	}
 }

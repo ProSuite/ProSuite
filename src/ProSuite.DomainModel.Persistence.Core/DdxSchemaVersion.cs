@@ -64,5 +64,11 @@ namespace ProSuite.DomainModel.Persistence.Core
 		/// The first version that supports simple terrains.
 		/// </summary>
 		public static Version SimpleTerrains { get; set; } = new Version(1, 0);
+
+		/// <summary>
+		/// The first version fixing an incompatibility issue with PostgreSQL EnterpriseDB
+		/// which causes an error when using the "constructor" column name.
+		/// </summary>
+		public static Version FixSqlKeywordIncompatibility { get; set; } = new Version(1, 0, 0, 3);
 	}
 }
