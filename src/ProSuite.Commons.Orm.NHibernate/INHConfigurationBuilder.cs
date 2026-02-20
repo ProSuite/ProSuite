@@ -2,7 +2,7 @@ using NHibernate.Cfg;
 
 namespace ProSuite.Commons.Orm.NHibernate
 {
-	public interface INHConfigurationBuilder
+	public interface INhConfigurationBuilder
 	{
 		/// <summary>
 		/// Builds the Configuration object from the specified configuration

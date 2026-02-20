@@ -29,7 +29,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// </summary>
 		/// <param name="configurationBuilder"></param>
 		[CLSCompliant(false)]
-		public DbScript(INHConfigurationBuilder configurationBuilder)
+		public DbScript(INhConfigurationBuilder configurationBuilder)
 		{
 			_configuration = configurationBuilder.GetConfiguration();
 			_sessionFactory = _configuration.BuildSessionFactory();
