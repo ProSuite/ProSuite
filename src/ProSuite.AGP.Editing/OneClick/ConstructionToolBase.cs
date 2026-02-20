@@ -775,6 +775,9 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			if (IsInSketchMode)
 			{
 				_lastLoggedVertexIndex = -1;
+
+				// TODO: If the previousSketch was drawn CounterClockWise, the start point when sketching will be wrong. 
+
 				await SetCurrentSketchAsync(_previousSketch);
 			}
 			else
