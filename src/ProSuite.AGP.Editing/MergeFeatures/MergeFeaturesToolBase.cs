@@ -75,6 +75,7 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 	[CanBeNull]
 	protected virtual string CentralConfigDir => null;
 
+	// ReSharper disable twice InvalidXmlDocComment
 	/// <summary>
 	/// By default, the local configuration directory shall be in
 	/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
@@ -552,6 +553,22 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		}
 	}
 
+	protected void ConfigureMergeConditionEvaluator([NotNull] IMergeConditionEvaluator evaluator)
+	{
+		if (evaluator == null)
+		{
+			throw new ArgumentNullException(nameof(evaluator));
+		}
+
+		evaluator.PreventMultipartResult = MergeOptions.PreventMultipartResult;
+		evaluator.PreventInconsistentClasses = MergeOptions.PreventInconsistentClasses;
+		evaluator.PreventInconsistentAttributes = MergeOptions.PreventInconsistentAttributes;
+		evaluator.PreventInconsistentRelationships =
+			MergeOptions.PreventInconsistentRelationships;
+		evaluator.PreventLoops = MergeOptions.PreventLoops;
+		evaluator.PreventLineFlip = MergeOptions.PreventLineFlip;
+	}
+
 	private async Task<bool> PickLastFeatureAndMerge(Geometry sketchGeometry,
 	                                                 CancelableProgressor progressor)
 	{
@@ -573,11 +590,8 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 			featuresToMerge.Add(lastFeature);
 
-			bool canMerge = merger.CanMerge(featuresToMerge, out string reason);
-
-			if (! canMerge)
+			if (! EvaluateCanMerge(merger, featuresToMerge))
 			{
-				_msg.Info(reason);
 				return null;
 			}
 
@@ -828,9 +842,8 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 		MergerBase merger = GetMerger();
 
-		if (! merger.CanMerge(selectedFeatures, out string reason))
+		if (! EvaluateCanMerge(merger, selectedFeatures))
 		{
-			_msg.Info(reason);
 			return null;
 		}
 
@@ -860,9 +873,8 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 				MergerBase merger = GetMerger();
 
-				if (! merger.CanMerge(selectedFeatures, out string reason))
+				if (! EvaluateCanMerge(merger, selectedFeatures))
 				{
-					_msg.Info(reason);
 					return;
 				}
 
@@ -881,5 +893,19 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		{
 			_msg.Warn("Error merging features using clicked feature", e);
 		}
+	}
+
+	private static bool EvaluateCanMerge(MergerBase merger, IList<Feature> selectedFeatures)
+	{
+		if (! merger.CanMerge(selectedFeatures, out string reason))
+		{
+			string message = $"Cannot merge features: {Environment.NewLine}{reason}";
+
+			Dialog.Warning(LocalizableStrings.MergeFeaturesTool_Caption, message);
+
+			return false;
+		}
+
+		return true;
 	}
 }
