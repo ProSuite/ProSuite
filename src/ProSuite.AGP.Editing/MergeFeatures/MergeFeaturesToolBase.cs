@@ -555,18 +555,9 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 	protected void ConfigureMergeConditionEvaluator([NotNull] IMergeConditionEvaluator evaluator)
 	{
-		if (evaluator == null)
-		{
-			throw new ArgumentNullException(nameof(evaluator));
-		}
+		Assert.ArgumentNotNull(evaluator, nameof(evaluator));
 
-		evaluator.PreventMultipartResult = MergeOptions.PreventMultipartResult;
-		evaluator.PreventInconsistentClasses = MergeOptions.PreventInconsistentClasses;
-		evaluator.PreventInconsistentAttributes = MergeOptions.PreventInconsistentAttributes;
-		evaluator.PreventInconsistentRelationships =
-			MergeOptions.PreventInconsistentRelationships;
-		evaluator.PreventLoops = MergeOptions.PreventLoops;
-		evaluator.PreventLineFlip = MergeOptions.PreventLineFlip;
+		evaluator.Options = MergeOptions;
 	}
 
 	private async Task<bool> PickLastFeatureAndMerge(Geometry sketchGeometry,
@@ -836,6 +827,7 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		}
 	}
 
+	[ItemCanBeNull]
 	private async Task<Feature> MergeFeaturesUsingLargestFeatureCoreAsync()
 	{
 		IList<Feature> selectedFeatures =

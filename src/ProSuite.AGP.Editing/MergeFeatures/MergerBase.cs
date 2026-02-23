@@ -35,7 +35,7 @@ public abstract class MergerBase
 			                 : mergeOptions.MergeSurvivor;
 	}
 
-	protected MergeToolOptions MergeOptions { get; }
+	private MergeToolOptions MergeOptions { get; }
 
 	/// <summary>
 	/// An optional merge condition evaluator that currently only results in warnings
@@ -235,6 +235,7 @@ public abstract class MergerBase
 		return IsValidMergeResultCore(mergeResult, notifications);
 	}
 
+	[ItemCanBeNull]
 	public async Task<Feature> MergeFeatures([NotNull] IList<Feature> features,
 	                                         [NotNull] Feature survivor)
 	{
@@ -257,6 +258,7 @@ public abstract class MergerBase
 				return null;
 			}
 
+			// Only warn but continue with the merge if the user allows inconsistent merges
 			_msg.Warn(NotificationUtils.Concatenate(notifications, Environment.NewLine));
 		}
 
@@ -337,7 +339,7 @@ public abstract class MergerBase
 			                updatedFeatureFormat);
 		}
 
-		return updateFeature;
+		return success ? updateFeature : null;
 	}
 
 	private void LogResult(string deletedFeatureFormat,

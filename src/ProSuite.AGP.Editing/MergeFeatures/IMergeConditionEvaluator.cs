@@ -8,12 +8,12 @@ namespace ProSuite.AGP.Editing.MergeFeatures;
 
 public interface IMergeConditionEvaluator
 {
-	bool PreventMultipartResult { get; set; }
-	bool PreventInconsistentClasses { get; set; }
-	bool PreventInconsistentAttributes { get; set; }
-	bool PreventInconsistentRelationships { get; set; }
-	bool PreventLoops { get; set; }
-	bool PreventLineFlip { get; set; }
+	/// <summary>
+	/// The merge tool options that govern which consistency conditions are checked.
+	/// When null, all checks are skipped.
+	/// </summary>
+	[CanBeNull]
+	MergeToolOptions Options { get; set; }
 
 	/// <summary>
 	/// Hard structural check (e.g. network topology). If this returns false the merge must

@@ -42,7 +42,7 @@ public class PartialMergeOptions : PartialOptionsBase
 		var result = new PartialMergeOptions();
 
 		result.UseMergeResultForNextMerge = TryClone(UseMergeResultForNextMerge);
-		result.MergeOperationSurvivor = MergeOperationSurvivor;
+		result.MergeOperationSurvivor = TryClone(MergeOperationSurvivor);
 		result.TransferRelationships = TryClone(TransferRelationships);
 		result.PreventInconsistentMerge = TryClone(PreventInconsistentMerge);
 		result.PreventMultipartResult = TryClone(PreventMultipartResult);
