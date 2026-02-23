@@ -597,7 +597,7 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 			Feature updateFeature;
 
-			if (_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.FirstObject)
+			if (MergeOperationSurvivor == MergeOperationSurvivor.FirstObject)
 			{
 				updateFeature = _firstFeature;
 			}
