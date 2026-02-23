@@ -256,13 +256,10 @@ public abstract class MergerBase
 				Dialog.Warning(LocalizableStrings.MergeFeaturesTool_Caption,
 				               $"The selected features cannot be merged.{Environment.NewLine}{Environment.NewLine}" +
 				               NotificationUtils.Concatenate(notifications, " "));
-			}
-			else
-			{
-				_msg.Warn(NotificationUtils.Concatenate(notifications, Environment.NewLine));
+				return null;
 			}
 
-			return null;
+			_msg.Warn(NotificationUtils.Concatenate(notifications, Environment.NewLine));
 		}
 
 		Feature updateFeature = null;
