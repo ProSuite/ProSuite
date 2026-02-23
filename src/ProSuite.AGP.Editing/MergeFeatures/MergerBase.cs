@@ -32,7 +32,7 @@ public abstract class MergerBase
 	{
 		MergeOptions = mergeOptions;
 
-		_mergeSurvivor = knownSurvivor == MergeOperationSurvivor.Undefined
+		_mergeSurvivor = knownSurvivor != MergeOperationSurvivor.Undefined
 			                 ? knownSurvivor
 			                 : mergeOptions.MergeSurvivor;
 	}
