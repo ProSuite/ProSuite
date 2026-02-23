@@ -770,17 +770,18 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 				IList<Feature> selectedFeatures =
 					GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-				MergerBase merger = GetMerger();
-
-				bool canMerge = merger.CanMerge(selectedFeatures, out _);
+				if (selectedFeatures.Count < 2)
+				{
+					return false;
+				}
 
 				switch (action)
 				{
 					case MergeAction.MergeWithLargestFeature:
-						return canMerge;
+						return true;
 
 					case MergeAction.MergeWithClickedFeature:
-						return canMerge && ContextClickedFeature != null;
+						return ContextClickedFeature != null;
 
 					default:
 						throw new NotSupportedException($"Unsupported merge action: {action}");

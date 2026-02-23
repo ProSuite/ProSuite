@@ -21,7 +21,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures;
 public abstract class MergerBase
 {
 	// TODO: Also delete default junctions in LinearNetwork
-	// TODO: Support merge evaluation for multiple feature merges (not just 2)
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -77,26 +76,44 @@ public abstract class MergerBase
 			return false;
 		}
 
-		if (MergeConditionEvaluator != null && features.Count == 2)
+		if (MergeConditionEvaluator != null && features.Count >= 2)
 		{
-			// Hard check: network topology constraints (always blocks merge)
-			var hardFailInfos = new List<MergeFailInfo>();
-			if (! MergeConditionEvaluator.CanMerge(features[0], features[1], hardFailInfos))
+			Feature referenceFeature = GetReferenceFeature(features);
+
+			var allHardFailInfos = new List<MergeFailInfo>();
+			var allConsistencyFailInfos = new List<MergeFailInfo>();
+
+			foreach (Feature feature in features)
 			{
-				reason = string.Join(Environment.NewLine,
-				                     hardFailInfos.Select(f => f.Reason));
+				if (GdbObjectUtils.IsSameFeature(feature, referenceFeature))
+				{
+					continue;
+				}
+
+				// Hard check: network topology constraints (always blocks merge)
+				var hardFailInfos = new List<MergeFailInfo>();
+				if (! MergeConditionEvaluator.CanMerge(referenceFeature, feature, hardFailInfos))
+				{
+					allHardFailInfos.AddRange(hardFailInfos);
+				}
+
+				// Consistency check: always evaluated; only blocks if the option is set
+				var consistencyFailInfos = new List<MergeFailInfo>();
+				MergeConditionEvaluator.EvaluateInconsistencies(
+					referenceFeature, feature, consistencyFailInfos, true);
+				allConsistencyFailInfos.AddRange(consistencyFailInfos);
+			}
+
+			if (allHardFailInfos.Count > 0)
+			{
+				reason = FormatFailReasons(allHardFailInfos, features.Count > 2);
 				return false;
 			}
 
-			// Consistency check: always evaluated; only blocks if the option is set
-			var consistencyFailInfos = new List<MergeFailInfo>();
-			bool consistent = MergeConditionEvaluator.EvaluateInconsistencies(
-				features[0], features[1], consistencyFailInfos, true);
-
-			if (! consistent)
+			if (allConsistencyFailInfos.Count > 0)
 			{
-				string issues = string.Join(Environment.NewLine,
-				                            consistencyFailInfos.Select(f => f.Reason));
+				string issues =
+					FormatFailReasons(allConsistencyFailInfos, features.Count > 2);
 
 				if (MergeOptions.PreventInconsistentMerge)
 				{
@@ -104,7 +121,7 @@ public abstract class MergerBase
 					return false;
 				}
 
-				_msg.Warn($"Merging features with inconsistencies:{issues}");
+				_msg.Warn($"Merging features with inconsistencies:{Environment.NewLine}{issues}");
 			}
 		}
 
@@ -130,6 +147,46 @@ public abstract class MergerBase
 	{
 		reason = null;
 		return true;
+	}
+
+	/// <summary>
+	/// Determines the reference feature (survivor) for consistency checks in multi-feature merges.
+	/// </summary>
+	private Feature GetReferenceFeature([NotNull] IList<Feature> features)
+	{
+		if (_mergeSurvivor == MergeOperationSurvivor.LargerObject)
+		{
+			return GeometryUtils.GetLargestFeature(features) ?? features[0];
+		}
+
+		// FirstObject or Undefined: the first feature in the list is the reference
+		return features[0];
+	}
+
+	/// <summary>
+	/// Formats a collection of fail reasons for display. When multiple feature pairs are
+	/// involved each reason is prefixed with the pair's feature descriptions.
+	/// </summary>
+	private static string FormatFailReasons(
+		[NotNull] IList<MergeFailInfo> failInfos, bool includePairInfo)
+	{
+		if (! includePairInfo)
+		{
+			return string.Join(Environment.NewLine, failInfos.Select(f => f.Reason));
+		}
+
+		var sb = new StringBuilder();
+		foreach (MergeFailInfo info in failInfos)
+		{
+			if (sb.Length > 0)
+			{
+				sb.AppendLine();
+			}
+
+			sb.Append($"{info.FirstLineDesc} / {info.SecondLineDesc}: {info.Reason}");
+		}
+
+		return sb.ToString();
 	}
 
 	protected virtual bool IsValidMergeResultCore(Geometry mergeResult,
