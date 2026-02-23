@@ -270,11 +270,9 @@ public static class MapUtils
 			featureClass = GetUnJoinedFeatureClass(featureClass);
 		}
 
-		// TODO: Split by 1000 OIDs to avoid too large queries
 		var filter = new QueryFilter
 		             {
-			             WhereClause =
-				             $"{featureClass.GetDefinition().GetObjectIDField()} IN ({StringUtils.Concatenate(oids, ", ")})"
+			             ObjectIDs = oids.ToList()
 		             };
 
 		// NOTE: The spatial reference of the layer is the same as the feature class rather than the map.
@@ -857,15 +855,14 @@ public static class MapUtils
 		MapPoint mapUpperRight = GeometryFactory.CreatePoint(
 			mapExtent.XMax, mapExtent.YMax, mapZValue, mapExtent.SpatialReference);
 
-		return await QueuedTask.Run(
-			       () =>
-			       {
-				       Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
-				       Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+		return await QueuedTask.Run(() =>
+		{
+			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
 
-				       return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
-				                        (screenLowerLeft.Y + screenUpperRight.Y) / 2);
-			       });
+			return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
+			                 (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+		});
 	}
 
 	/// <summary>
