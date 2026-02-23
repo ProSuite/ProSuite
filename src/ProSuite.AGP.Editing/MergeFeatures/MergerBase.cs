@@ -20,8 +20,6 @@ namespace ProSuite.AGP.Editing.MergeFeatures;
 
 public abstract class MergerBase
 {
-	// TODO: Also delete default junctions in LinearNetwork
-
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly MergeOperationSurvivor _mergeSurvivor;
