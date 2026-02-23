@@ -20,10 +20,9 @@ public interface IMergeConditionEvaluator
 	/// be aborted, regardless of user options.
 	/// </summary>
 	bool CanMerge(
-		[NotNull] Feature firstEdge,
-		[NotNull] Feature secondEdge,
-		[NotNull] ICollection<MergeFailInfo> failingReasons,
-		[CanBeNull] MapPoint pointBetweenEdges = null);
+		[NotNull] Feature referenceFeature,
+		[NotNull] IEnumerable<Feature> otherFeatures,
+		[NotNull] ICollection<MergeFailInfo> failingReasons);
 
 	/// <summary>
 	/// Desired consistency conditions (attributes, relationships, direction, loops, classes).

@@ -77,8 +77,18 @@ public abstract class MergerBase
 		if (MergeConditionEvaluator != null && features.Count >= 2)
 		{
 			Feature referenceFeature = GetReferenceFeature(features);
+			IEnumerable<Feature> otherFeatures =
+				features.Where(f => ! GdbObjectUtils.IsSameFeature(f, referenceFeature));
 
 			var allHardFailInfos = new List<MergeFailInfo>();
+
+			if (! MergeConditionEvaluator.CanMerge(referenceFeature, otherFeatures,
+			                                       allHardFailInfos))
+			{
+				reason = FormatFailReasons(allHardFailInfos, features.Count > 2);
+				return false;
+			}
+
 			var allConsistencyFailInfos = new List<MergeFailInfo>();
 
 			foreach (Feature feature in features)
@@ -88,24 +98,11 @@ public abstract class MergerBase
 					continue;
 				}
 
-				// Hard check: network topology constraints (always blocks merge)
-				var hardFailInfos = new List<MergeFailInfo>();
-				if (! MergeConditionEvaluator.CanMerge(referenceFeature, feature, hardFailInfos))
-				{
-					allHardFailInfos.AddRange(hardFailInfos);
-				}
-
 				// Consistency check: always evaluated; only blocks if the option is set
 				var consistencyFailInfos = new List<MergeFailInfo>();
 				MergeConditionEvaluator.EvaluateInconsistencies(
 					referenceFeature, feature, consistencyFailInfos, true);
 				allConsistencyFailInfos.AddRange(consistencyFailInfos);
-			}
-
-			if (allHardFailInfos.Count > 0)
-			{
-				reason = FormatFailReasons(allHardFailInfos, features.Count > 2);
-				return false;
 			}
 
 			if (allConsistencyFailInfos.Count > 0)
