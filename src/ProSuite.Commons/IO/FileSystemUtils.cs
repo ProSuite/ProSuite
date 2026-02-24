@@ -87,7 +87,7 @@ namespace ProSuite.Commons.IO
 
 		[NotNull]
 		public static string ReplaceInvalidFileNameChars([NotNull] string fileName,
-		                                                 char replacementChar)
+		                                                 char replacementChar = '_')
 		{
 			return StringUtils.ReplaceChars(fileName, replacementChar,
 			                                InvalidFileNameChars);
@@ -95,7 +95,7 @@ namespace ProSuite.Commons.IO
 
 		[NotNull]
 		public static string ReplaceInvalidPathChars([NotNull] string path,
-		                                             char replacementChar)
+		                                             char replacementChar = '_')
 		{
 			return StringUtils.ReplaceChars(path, replacementChar, InvalidPathChars);
 		}
