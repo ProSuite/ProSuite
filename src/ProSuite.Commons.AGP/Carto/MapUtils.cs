@@ -924,6 +924,13 @@ public static class MapUtils
 		}
 
 		bool isInFixedCursorMode = false;
+
+#if ARCGISPRO_GREATER_3_6
+
+		return mapView.IsStereoCursorFixed;
+
+#endif
+
 #if ARCGISPRO_GREATER_3_5
 
 		Map stereoMap = Assert.NotNull(mapView.Map);
