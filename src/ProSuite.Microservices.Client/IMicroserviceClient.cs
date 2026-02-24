@@ -81,5 +81,12 @@ namespace ProSuite.Microservices.Client
 		string GetAddress();
 
 		Task<int> GetWorkerServiceCountAsync();
+
+		/// <summary>
+		/// Determines whether the client is configured to connect to a local server that
+		/// runs on the local machine.
+		/// </summary>
+		/// <returns></returns>
+		bool RunsLocally();
 	}
 }

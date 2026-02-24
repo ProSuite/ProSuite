@@ -41,9 +41,7 @@ namespace ProSuite.UI.Core.MicroserverState
 		public ServerState([NotNull] IMicroserviceClient serviceClient)
 		{
 			_serviceClient = serviceClient;
-			_isLocalHost =
-				serviceClient.HostName.Equals("localhost",
-				                              StringComparison.CurrentCultureIgnoreCase);
+			_isLocalHost = serviceClient.RunsLocally();
 
 			ServiceNameLabel = $"{serviceClient.ServiceDisplayName}: ";
 
