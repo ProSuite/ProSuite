@@ -89,7 +89,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				{
 					try
 					{
-						object value = ProRow[i];
+						object value = GetValueCore(i);
 						values[i] = value;
 					}
 					catch (Exception ex)
@@ -173,9 +173,20 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			object result = null;
 
-			TryOrRefreshRow<Row>(r => result = r[index]);
+			TryOrRefreshRow<Row>(r => result = GetValueCore(index));
 
 			return result ?? DBNull.Value;
+		}
+
+		/// <summary>
+		/// Gets the value for the specified field index directly from the Pro row.
+		/// Allows for subclasses for modified behavior (e.g. to access original values).
+		/// </summary>
+		/// <param name="index"></param>
+		/// <returns></returns>
+		protected virtual object GetValueCore(int index)
+		{
+			return ProRow?[index];
 		}
 
 		protected bool TryGetCachedValue(int index, out object value)
