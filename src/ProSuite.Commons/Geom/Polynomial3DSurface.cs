@@ -14,7 +14,6 @@ namespace ProSuite.Commons.Geom
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-
 		/// <summary>
 		/// The coefficients of the polynomial, stored in order:
 		/// [a₀, a₁, a₂, a₃, a₄, a₅, ...] corresponding to
@@ -44,7 +43,7 @@ namespace ProSuite.Commons.Geom
 		public bool IsDefined => Coefficients != null && Coefficients.Length > 0;
 
 		private Polynomial3DSurface([NotNull] double[] coefficients, int degree,
-		                            [NotNull] Pnt3D centroid, double scale)
+									[NotNull] Pnt3D centroid, double scale)
 		{
 			Coefficients = coefficients;
 			Degree = degree;
@@ -64,8 +63,8 @@ namespace ProSuite.Commons.Geom
 		/// <returns>A Polynomial3D object or null if fitting is not possible</returns>
 		[CanBeNull]
 		public static Polynomial3DSurface TryFitPolynomial([NotNull] IList<Pnt3D> points,
-		                                                   int degree = 2,
-		                                                   bool isRing = false)
+														   int degree = 2,
+														   bool isRing = false)
 		{
 			int usablePointCount = isRing ? points.Count - 1 : points.Count;
 			int requiredCoefficients = GetCoefficientCount(degree);
@@ -79,23 +78,27 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Fits a polynomial surface to the given points using least squares regression.
-		/// For improved numerical stability, coordinates are normalized to the centroid.
+		/// Fits a polynomial surface to the given points using least squares regression
+		/// with Tikhonov (ridge) regularization for improved numerical stability.
+		/// Coordinates are normalized to the centroid before fitting.
 		/// </summary>
 		/// <param name="points">The points to fit the polynomial to</param>
 		/// <param name="degree">The degree of the polynomial (1 = linear, 2 = quadratic, etc.)</param>
 		/// <param name="isRing">Whether the points form a closed ring (last point equals first)</param>
-		/// <returns>A Polynomial3D object</returns>
+		/// <param name="regularizationLambda">Ridge regression parameter for smoothness.
+		/// Set to 0 to disable regularization.</param>
+		/// <returns>A Polynomial3DSurface object</returns>
 		[NotNull]
 		public static Polynomial3DSurface FitPolynomial([NotNull] IList<Pnt3D> points,
-		                                                int degree = 2,
-		                                                bool isRing = false)
+														int degree = 2,
+														bool isRing = false,
+														double regularizationLambda = 1e-6)
 		{
 			int n = isRing ? points.Count - 1 : points.Count;
 			int coeffCount = GetCoefficientCount(degree);
 
 			Assert.ArgumentCondition(n >= coeffCount,
-			                         $"At least {coeffCount} points are required to fit a polynomial of degree {degree}.");
+									 $"At least {coeffCount} points are required to fit a polynomial of degree {degree}.");
 			Assert.ArgumentCondition(degree >= 1, "Degree must be at least 1.");
 
 			// Calculate centroid for normalization
@@ -113,7 +116,7 @@ namespace ProSuite.Commons.Geom
 			{
 				Pnt3D point = points[i];
 				double dist = Math.Max(Math.Abs(point.X - centroid.X),
-				                       Math.Abs(point.Y - centroid.Y));
+									   Math.Abs(point.Y - centroid.Y));
 				maxDist = Math.Max(maxDist, dist);
 			}
 
@@ -148,6 +151,17 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			// Apply Tikhonov (ridge) regularization: add λI to AᵀA.
+			// This biases toward smaller coefficients, producing smoother surfaces
+			// and preventing blow-up when AᵀA is ill-conditioned.
+			if (regularizationLambda > 0)
+			{
+				for (int j = 0; j < coeffCount; j++)
+				{
+					AtA[j, j] += regularizationLambda;
+				}
+			}
+
 			// Solve the normal equations using Gaussian elimination
 			double[] coefficients = SolveLinearSystem(AtA, Atb);
 
@@ -164,7 +178,7 @@ namespace ProSuite.Commons.Geom
 		/// <returns>The interpolated Z value</returns>
 		public double GetZ(double x, double y)
 		{
-			if (! IsDefined)
+			if (!IsDefined)
 			{
 				throw new InvalidOperationException("Polynomial is not defined.");
 			}
@@ -248,20 +262,32 @@ namespace ProSuite.Commons.Geom
 		/// <summary>
 		/// Generates all polynomial terms up to the specified degree.
 		/// Terms are ordered: 1, x, y, x², xy, y², x³, x²y, xy², y³, ...
+		/// Uses direct multiplication instead of Math.Pow for better precision.
 		/// </summary>
 		private static double[] GeneratePolynomialTerms(double x, double y, int degree)
 		{
 			int count = GetCoefficientCount(degree);
 			double[] terms = new double[count];
-			int index = 0;
 
-			// Generate terms by total degree
+			// Pre-compute powers via direct multiplication
+			double[] xPow = new double[degree + 1];
+			double[] yPow = new double[degree + 1];
+			xPow[0] = 1.0;
+			yPow[0] = 1.0;
+			for (int p = 1; p <= degree; p++)
+			{
+				xPow[p] = xPow[p - 1] * x;
+				yPow[p] = yPow[p - 1] * y;
+			}
+
+			// Generate terms by total degree: 1, x, y, x², xy, y², ...
+			int index = 0;
 			for (int d = 0; d <= degree; d++)
 			{
-				for (int i = 0; i <= d; i++)
+				for (int xDeg = d; xDeg >= 0; xDeg--)
 				{
-					int j = d - i;
-					terms[index++] = Math.Pow(x, i) * Math.Pow(y, j);
+					int yDeg = d - xDeg;
+					terms[index++] = xPow[xDeg] * yPow[yDeg];
 				}
 			}
 
@@ -318,8 +344,6 @@ namespace ProSuite.Commons.Geom
 				if (Math.Abs(augmented[k, k]) < 1e-10)
 				{
 					_msg.Warn("Matrix is singular or nearly singular. Cannot solve the system.");
-					// throw new InvalidOperationException(
-					// 	"Matrix is singular or nearly singular. Cannot solve the system.");
 				}
 
 				// Eliminate column
