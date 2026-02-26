@@ -163,7 +163,7 @@ namespace ProSuite.DomainModel.Persistence.Core
 
 		/// <summary>
 		/// The actual DDX version. By default, assume it is up-to-date. In case a legacy DDX is
-		/// encountered in the NHConfigurationBuilder it shall be set to the older value.
+		/// encountered in the NhConfigurationBuilder it shall be set to the older value.
 		/// </summary>
 		public static Version ActualDdxVersion { get; set; }
 
@@ -171,6 +171,6 @@ namespace ProSuite.DomainModel.Persistence.Core
 		/// The most up-to-date version of the DDX, compatible with the current version of the
 		/// software.
 		/// </summary>
-		public static Version CurrentDdxVersion { get; } = new Version(1, 0, 0, 2);
+		public static Version CurrentDdxVersion { get; } = new Version(1, 0, 0, 3);
 	}
 }

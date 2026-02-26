@@ -282,11 +282,10 @@ namespace ProSuite.DdxEditor.Content
 
 						return QualitySpecifications.Get(category)
 						                            .OrderBy(q => q, comparer)
-						                            .Select(
-							                            qs => new QualitySpecificationItem(
-								                            this, qs,
-								                            item,
-								                            QualitySpecifications))
+						                            .Select(qs => new QualitySpecificationItem(
+							                                    this, qs,
+							                                    item,
+							                                    QualitySpecifications))
 						                            .Cast<Item>()
 						                            .ToList();
 					}
@@ -344,11 +343,13 @@ namespace ProSuite.DdxEditor.Content
 			return CreateObjectSubtypeItem(objectSubtype, ObjectCategoryRepository);
 		}
 
+		[NotNull]
 		public abstract IList<DependingItem> GetDependingItems(
-			ObjectAttributeType objectAttributeType);
+			[CanBeNull] ObjectAttributeType objectAttributeType);
 
+		[NotNull]
 		public abstract IList<DependingItem> GetDependingItems(
-			ConnectionProvider connectionProvider);
+			[CanBeNull] ConnectionProvider connectionProvider);
 
 		[NotNull]
 		public virtual IList<DependingItem> GetDependingItems(
@@ -369,21 +370,6 @@ namespace ProSuite.DdxEditor.Content
 			return new List<DependingItem>();
 		}
 
-		public abstract ITestParameterDatasetProvider GetTestParameterDatasetProvider();
-
-		public virtual ISqlExpressionBuilder GetSqlExpressionBuilder()
-		{
-			return null;
-		}
-
-		public virtual C Resolve<C>()
-		{
-			// implement in project-specific subclass based on project registry
-			// example: 
-			//    return Registry.Resolve<C>();
-			throw new NotImplementedException();
-		}
-
 		[NotNull]
 		public virtual IList<DependingItem> GetDependingItems(
 			[NotNull] ObjectSubtype objectSubtype)
@@ -397,6 +383,7 @@ namespace ProSuite.DdxEditor.Content
 			       };
 		}
 
+		[NotNull]
 		public abstract IList<DependingItem> GetDependingItems(
 			[CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor);
 
@@ -485,10 +472,26 @@ namespace ProSuite.DdxEditor.Content
 			return new List<DependingItem>();
 		}
 
+		[NotNull]
 		public virtual IEnumerable<DependingItem> GetDependingItems(
 			IEnumerable<InstanceConfiguration> dependentConfigurations)
 		{
 			return new List<DependingItem>();
+		}
+
+		public abstract ITestParameterDatasetProvider GetTestParameterDatasetProvider();
+
+		public virtual ISqlExpressionBuilder GetSqlExpressionBuilder()
+		{
+			return null;
+		}
+
+		public virtual C Resolve<C>()
+		{
+			// implement in project-specific subclass based on project registry
+			// example: 
+			//    return Registry.Resolve<C>();
+			throw new NotImplementedException();
 		}
 
 		[NotNull]

@@ -140,9 +140,9 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			_observer?.CopyClicked();
 		}
 
-		private void _toolStripButtonImportFromFeatureClass_Click(object sender, EventArgs e)
+		private void _toolStripButtonImportFromWorkspace_Click(object sender, EventArgs e)
 		{
-			_observer?.GetFromFeatureClassClicked();
+			_observer?.GetFromWorkspaceClicked();
 		}
 
 		private void _webBrowserXml_Navigating(object sender,

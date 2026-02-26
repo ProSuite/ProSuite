@@ -73,8 +73,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 
 		[CanBeNull]
 		public string GetXmlStringFromDataset([NotNull] IWin32Window owner,
-		                                      [CanBeNull] out ISpatialReference
-			                                      spatialReference)
+		                                      [CanBeNull] out ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(owner, nameof(owner));
 
@@ -92,9 +91,18 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 							continue;
 						}
 
-						tableRows.Add(new DatasetTableRow(dataset) {Selectable = true});
+						tableRows.Add(new DatasetTableRow(dataset) { Selectable = true });
 					}
 				});
+
+			if (tableRows.Count == 0)
+			{
+				Dialog.Info(owner, "Get From Registered Dataset",
+				            "No registered datasets yet. Please define a Connection Provider first and use 'Get From Workspace Dataset'.");
+
+				spatialReference = null;
+				return null;
+			}
 
 			IFinder<DatasetTableRow> finder = new Finder<DatasetTableRow>();
 			DatasetTableRow selectedTableRow = finder.ShowDialog(owner, tableRows);
@@ -115,14 +123,14 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			               "Unable to open feature class from model master database");
 
 			spatialReference = DatasetUtils.GetSpatialReference(featureClass);
-			Assert.NotNull(spatialReference,
-			               "Unable to determine spatial reference for feature class");
 
-			return SpatialReferenceUtils.ToXmlString(spatialReference);
+			return spatialReference == null
+				       ? null
+				       : SpatialReferenceUtils.ToXmlString(spatialReference);
 		}
 
 		[CanBeNull]
-		public string GetXmlStringFromFeatureClass([NotNull] IWin32Window owner,
+		public string GetXmlStringFromWorkspace([NotNull] IWin32Window owner,
 		                                           [CanBeNull]
 		                                           out ISpatialReference spatialReference)
 		{
@@ -132,7 +140,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 
 			if (connectionProviders.Count == 0)
 			{
-				Dialog.Info("Get From Workspace Dataset",
+				Dialog.Info(owner, "Get From Workspace Dataset",
 				            "Please define a Connection Provider first to access the datasets of its workspace.");
 
 				spatialReference = null;
@@ -203,8 +211,9 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 		[NotNull]
 		private IList<ConnectionProvider> GetConnectionProviders()
 		{
-			return _modelBuilder.ReadOnlyTransaction(
-				() => _modelBuilder.ConnectionProviders.GetAll());
+			return _modelBuilder.ReadOnlyTransaction(() =>
+				                                         _modelBuilder.ConnectionProviders
+					                                         .GetAll());
 		}
 
 		private static ConnectionProvider FindConnectionProvider(
