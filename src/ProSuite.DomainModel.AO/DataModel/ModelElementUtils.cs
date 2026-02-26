@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
@@ -242,8 +243,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 					return true;
 
 				case SqlCaseSensitivity.SameAsDatabase:
-					var sqlSyntax = table.Workspace as ISQLSyntax;
+					IWorkspace workspace = table.Workspace;
+
+					var sqlSyntax = workspace as ISQLSyntax;
 					bool result = sqlSyntax != null && sqlSyntax.GetStringComparisonCase();
+
+					if (workspace != null)
+					{
+						Marshal.ReleaseComObject(workspace);
+					}
 
 					if (_msg.IsVerboseDebugEnabled)
 					{
