@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
@@ -250,6 +251,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 				_verificationReportBuilder.AddVerifiedDataset(
 					verificationDataset, workspaceDisplayText, spatialReference);
+
+				// TEST
+				if (spatialReference != null)
+				{
+					Marshal.ReleaseComObject(spatialReference);
+				}
 			}
 			catch (Exception e)
 			{
