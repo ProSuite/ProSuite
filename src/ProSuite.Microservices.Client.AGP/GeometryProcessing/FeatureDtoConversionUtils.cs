@@ -97,7 +97,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				throw new InvalidOperationException("Cannot get new geometry of delete");
 			}
 
-			ShapeMsg resultShapeMsg = gdbObjectMsg.Shape;
+			ShapeMsg resultShapeMsg = gdbObjectMsg?.Shape;
 
 			if (resultShapeMsg != null)
 			{
