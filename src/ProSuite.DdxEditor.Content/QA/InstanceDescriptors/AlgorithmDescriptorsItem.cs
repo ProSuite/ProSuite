@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -131,8 +132,19 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			_modelBuilder.ReadOnlyTransaction(
 				delegate
 				{
-					IList<InstanceDescriptor> descriptors =
-						_modelBuilder.InstanceDescriptors.GetAll();
+					IList<InstanceDescriptor> descriptors;
+					if (! _modelBuilder.SupportsTransformersAndFilters)
+					{
+						// Prevent missing table exception:	
+						descriptors = _modelBuilder
+						              .InstanceDescriptors.GetInstanceDescriptors<TestDescriptor>()
+						              .Cast<InstanceDescriptor>()
+						              .ToList();
+					}
+					else
+					{
+						descriptors = _modelBuilder.InstanceDescriptors.GetAll();
+					}
 
 					TestReportUtils.WriteDescriptorsReport(descriptors, htmlFileName, overwrite,
 					                                       notifications);
