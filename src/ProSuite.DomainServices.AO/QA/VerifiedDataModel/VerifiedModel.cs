@@ -1,3 +1,4 @@
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -9,9 +10,11 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
-	public class VerifiedModel : DdxModel, IModelMasterDatabase
+	public class VerifiedModel : DdxModel, IModelMasterDatabase, IDisposable
 	{
 		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
+
+		private IWorkspaceContext _workspaceContext;
 
 		public VerifiedModel(
 			[NotNull] string name,
@@ -59,6 +62,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		{
 			IWorkspaceContext result = _workspaceContextFactory.Create(this);
 
+			_workspaceContext = result;
+
 			if (AutoEnableSchemaCache && ! DisableAutomaticSchemaCaching)
 			{
 				// The model schema cache can be turned OFF by environment variable.
@@ -78,5 +83,13 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		protected override void CheckAssignSpecialDatasetCore(Dataset dataset) { }
 
 		#endregion
+
+		public void Dispose()
+		{
+			if (_workspaceContext is IDisposable disposable)
+			{
+				disposable.Dispose();
+			}
+		}
 	}
 }

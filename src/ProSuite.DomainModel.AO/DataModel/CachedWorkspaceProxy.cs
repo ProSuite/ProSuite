@@ -1,21 +1,25 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	public class CachedWorkspaceProxy : WorkspaceProxy
+	public class CachedWorkspaceProxy : WorkspaceProxy, IDisposable
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull] private readonly Dictionary<string, ITable> _tablesByName =
 			new Dictionary<string, ITable>(StringComparer.OrdinalIgnoreCase);
 
@@ -125,6 +129,57 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			return dataset;
+		}
+
+		public void Dispose()
+		{
+			foreach (var kvp in _tablesByName)
+			{
+				// ANALYSIS:
+				int remaining;
+				while ((remaining = Marshal.ReleaseComObject(kvp.Value)) > 0)
+				{
+					_msg.DebugFormat("Released table {0}, remaining references: {1}", kvp.Key,
+					                 remaining);
+				}
+
+				//Marshal.FinalReleaseComObject(kvp.Value);
+			}
+
+			_tablesByName.Clear();
+
+			foreach (var kvp in _topologiesByName)
+			{
+				Marshal.FinalReleaseComObject(kvp.Value);
+			}
+
+			_topologiesByName.Clear();
+
+			foreach (var kvp in _relClassesByName)
+			{
+				Marshal.FinalReleaseComObject(kvp.Value);
+			}
+
+			_relClassesByName.Clear();
+
+			foreach (var kvp in _mosaicDatasetsByName)
+			{
+				Marshal.FinalReleaseComObject(kvp.Value);
+			}
+
+			_mosaicDatasetsByName.Clear();
+
+			foreach (var kvp in _rasterDatasetsByName)
+			{
+				Marshal.FinalReleaseComObject(kvp.Value);
+			}
+
+			_rasterDatasetsByName.Clear();
+
+			Marshal.FinalReleaseComObject(FeatureWorkspace);
+
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
 		}
 	}
 }

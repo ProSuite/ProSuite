@@ -842,10 +842,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			DistributedTestRunner distributedTestRunner = null;
 
+			QualitySpecification specification = null;
 			try
 			{
 				bool useStandaloneService =
-					IsStandAloneVerification(request, null, out QualitySpecification specification);
+					IsStandAloneVerification(request, null, out specification);
 
 				if (DistributedProcessingClients != null && request.MaxParallelProcessing > 1)
 				{
@@ -917,12 +918,44 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
+			finally
+			{
+				Release(specification);
+			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
 				qaService?.GetVerifiedPerimeter(), trackCancel);
 
 			return result;
+		}
+
+		private static void Release(QualitySpecification specification)
+		{
+			if (specification == null)
+			{
+				return;
+			}
+
+			HashSet<DdxModel> modelsToRelease = new HashSet<DdxModel>();
+			foreach (QualitySpecificationElement element in specification.Elements)
+			{
+				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(
+					         true, true))
+				{
+					modelsToRelease.Add(dataset.Model);
+				}
+			}
+
+			foreach (DdxModel ddxModel in modelsToRelease)
+			{
+				if (ddxModel is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
+			}
+
+			ReadOnlyTableFactory.ClearCache();
 		}
 
 		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
@@ -1366,6 +1399,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			QualitySpecification result = factory.CreateQualitySpecification(
 				conditionsSpecificationMsg);
+
+			factory.Dispose();
 
 			return result;
 		}
