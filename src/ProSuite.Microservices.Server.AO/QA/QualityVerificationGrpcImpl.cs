@@ -1397,10 +1397,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				CreateSpecificationFactory(dataSources, SupportedInstanceDescriptors,
 				                           knownSchemaMsg);
 
-			QualitySpecification result = factory.CreateQualitySpecification(
-				conditionsSpecificationMsg);
-
-			factory.Dispose();
+			QualitySpecification result =
+				factory.CreateQualitySpecification(conditionsSpecificationMsg);
 
 			return result;
 		}
