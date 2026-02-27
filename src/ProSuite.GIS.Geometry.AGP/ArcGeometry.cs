@@ -41,6 +41,11 @@ namespace ProSuite.GIS.Geometry.AGP
 				return new ArcPoint(point);
 			}
 
+			if (proGeometry is Envelope envelope)
+			{
+				return new ArcEnvelope(envelope);
+			}
+
 			throw new ArgumentException("Unsupported geometry type: " + proGeometry.GeometryType);
 		}
 
