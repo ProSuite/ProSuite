@@ -105,18 +105,26 @@ namespace ProSuite.DomainModel.AO.QA
 							if (datasetParameter != null)
 							{
 								Dataset dataset = datasetParameter.DatasetValue;
-								TestParameterType parameterType =
-									TestParameterTypeUtils.GetParameterType(testParam.Type);
 
-								if (dataset != null &&
-								    TestParameterTypeUtils.IsValidDataset(parameterType, dataset))
+								if (dataset != null)
 								{
-									addValue = new DatasetTestParameterValue(
-										testParam, dataset,
-										datasetParameter.FilterExpression,
-										datasetParameter.UsedAsReferenceData);
-									newParameters = true;
-									invalidValues.Add(value);
+									TestParameterType parameterType =
+										TestParameterTypeUtils.GetParameterType(testParam.Type);
+
+									if (TestParameterTypeUtils.IsValidDataset(
+										    parameterType, dataset))
+									{
+										addValue = new DatasetTestParameterValue(
+											testParam, dataset,
+											datasetParameter.FilterExpression,
+											datasetParameter.UsedAsReferenceData);
+										newParameters = true;
+										invalidValues.Add(value);
+									}
+								}
+								else if (datasetParameter.ValueSource != null)
+								{
+									addValue = value;
 								}
 							}
 						}
