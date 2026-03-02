@@ -75,6 +75,11 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 	[CanBeNull]
 	protected virtual string CentralConfigDir => null;
 
+	/// <summary>
+	/// Whether the "Object-defining attributes must be equal" option should be shown in the dock pane.
+	/// </summary>
+	protected abstract bool ShowPreventInconsistentAttributesOption { get; }
+
 	// ReSharper disable twice InvalidXmlDocComment
 	/// <summary>
 	/// By default, the local configuration directory shall be in
@@ -463,6 +468,7 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		}
 
 		viewModel.Options = _mergeToolOptions;
+		viewModel.ShowPreventInconsistentAttributesOption = ShowPreventInconsistentAttributesOption;
 
 		viewModel.Activate(true);
 	}
