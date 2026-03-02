@@ -1406,7 +1406,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		Envelope extent = ExtentProvider?.Extent;
 
-		if (! HasCurrentItem() && extent != null)
+		if (! HasCurrentItem() && extent != null && CountLoadedItems(out int _) > 0)
 		{
 			GoNearest(extent);
 		}
