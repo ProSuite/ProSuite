@@ -7,9 +7,8 @@
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              xmlns:mergeFeatures="clr-namespace:ProSuite.AGP.Editing.MergeFeatures"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=mergeFeatures:DockPaneMergeFeaturesViewModelBase}" Width="475"
-             Height="480" HorizontalAlignment="Left"
-             VerticalAlignment="Top">
+             d:DataContext="{d:DesignInstance Type=mergeFeatures:DockPaneMergeFeaturesViewModelBase}"
+             HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 	<UserControl.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
@@ -20,32 +19,75 @@
 		</ResourceDictionary>
 	</UserControl.Resources>
 
-	<StackPanel
-		HorizontalAlignment="Left"
-		VerticalAlignment="Top">
+	<ScrollViewer VerticalScrollBarVisibility="Auto"
+	              HorizontalScrollBarVisibility="Disabled"
+	              Padding="0,0,5,0">
+		<StackPanel
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top">
 
-		<!-- Workflow options -->
-		<Label FontWeight="Medium" Content="Workflow options" Margin="0,15,0,0" />
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Directly use merge result as first feature for subsequent merge operation"
-		          DataContext="{Binding UseMergeResultForNextMerge}" />
+			<!-- Workflow options -->
+			<Label FontWeight="Medium" Content="Workflow options" Margin="0,15,0,0" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Directly use merge result as first feature for subsequent merge operation"
+			          DataContext="{Binding UseMergeResultForNextMerge}" />
 
-		<!-- Attribute values and identity to preserve -->
-		<Label FontWeight="Medium" Content="Attribute values and identity to preserve" Margin="0,15,0,0" />
-		<editing:MergeOperationSurvivorControl DataContext="{Binding MergeOperationSurvivorVM}" HorizontalAlignment="Left" />
+			<!-- Attribute values and identity to preserve -->
+			<Label FontWeight="Medium" Content="Attribute values and identity to preserve" Margin="0,15,0,0" />
+			<editing:MergeOperationSurvivorControl DataContext="{Binding MergeOperationSurvivorVM}" HorizontalAlignment="Left" />
 
-		<!-- Geometry merge options -->
-		<Label FontWeight="Medium" Content="Merge options" Margin="0,15,0,0" />
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Allow multi-part result geometry"
-		          DataContext="{Binding AllowMultipartResult}" />
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Keep relationships from deleted feature, if possible"
-		          DataContext="{Binding TransferRelationships}" />
+			<!-- Geometry merge options -->
+			<Label FontWeight="Medium" Content="Relationships" Margin="0,15,0,0" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Keep relationships from deleted feature, if possible"
+			          DataContext="{Binding TransferRelationships}" />
 
-		<!-- Restore Defaults -->
-		<Button Template="{StaticResource RestoreDefaultsButton}" />
+			<!-- Merge consistency options -->
+			<Label FontWeight="Medium" Content="Feature Consistency" Margin="0,15,0,0" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Prevent inconsistent feature merge"
+			          DataContext="{Binding PreventInconsistentMerge}" />
 
-	</StackPanel>
+			<!-- Sub-options of PreventInconsistentMerge -->
+			<StackPanel Margin="20,0,0,0"
+			            IsEnabled="{Binding PreventInconsistentMerge.CurrentValue}">
+
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Prevent multi-part result geometry"
+				          DataContext="{Binding PreventMultipartResult}" />
+
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Features must be from the same feature class"
+				          DataContext="{Binding PreventInconsistentClasses}" />
+
+				<!-- Sub-options of PreventInconsistentClasses -->
+				<StackPanel Margin="20,0,0,0"
+				            IsEnabled="{Binding PreventInconsistentClasses.CurrentValue}">
+
+					<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+					          Content="Object-defining attributes must be equal"
+					          DataContext="{Binding PreventInconsistentAttributes}" />
+
+					<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+					          Content="Relationships must be equal"
+					          DataContext="{Binding PreventInconsistentRelationships}" />
+
+				</StackPanel>
+
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Prevent closed line loops"
+				          DataContext="{Binding PreventLoops}" />
+
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Lines must have the same direction"
+				          DataContext="{Binding PreventLineFlip}" />
+
+			</StackPanel>
+
+			<!-- Restore Defaults -->
+			<Button Template="{StaticResource RestoreDefaultsButton}" />
+
+		</StackPanel>
+	</ScrollViewer>
 
 </UserControl>

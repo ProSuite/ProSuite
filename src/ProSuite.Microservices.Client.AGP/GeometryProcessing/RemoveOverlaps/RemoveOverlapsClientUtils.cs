@@ -260,8 +260,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			var request = new RemoveOverlapsRequest
 			              {
 				              ExplodeMultipartResults = options.ExplodeMultipartResults,
-				              StoreOverlapsAsNewFeatures =
-					              false // options.StoreOverlapsAsNewFeatures
+				              StoreOverlapsAsNewFeatures = false
 			              };
 
 			DatasetSpecificSettingProvider<ChangeAlongZSource> datasetSpecificValues =
@@ -270,12 +269,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 			if (datasetSpecificValues?.DatasetSpecificValues != null)
 			{
-				var datasetZSources = datasetSpecificValues.DatasetSpecificValues.Select(
-					dss => new DatasetZSource
-					       {
-						       DatasetName = dss.Dataset,
-						       ZSource = (int) dss.Value
-					       });
+				var datasetZSources =
+					datasetSpecificValues.DatasetSpecificValues.Select(dss => new DatasetZSource
+						{
+							DatasetName = dss.Dataset,
+							ZSource = (int) dss.Value
+						});
 
 				request.ZSources.AddRange(datasetZSources);
 			}

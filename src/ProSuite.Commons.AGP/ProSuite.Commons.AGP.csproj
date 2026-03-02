@@ -36,6 +36,10 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.6 ">
+    <DefineConstants>$(DefineConstants);ARCGISPRO_GREATER_3_6</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.5 ">
     <DefineConstants>$(DefineConstants);ARCGISPRO_GREATER_3_5</DefineConstants>
   </PropertyGroup>

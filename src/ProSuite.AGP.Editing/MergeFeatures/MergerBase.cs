@@ -30,12 +30,12 @@ public abstract class MergerBase
 	{
 		MergeOptions = mergeOptions;
 
-		_mergeSurvivor = knownSurvivor == MergeOperationSurvivor.Undefined
+		_mergeSurvivor = knownSurvivor != MergeOperationSurvivor.Undefined
 			                 ? knownSurvivor
 			                 : mergeOptions.MergeSurvivor;
 	}
 
-	protected MergeToolOptions MergeOptions { get; }
+	private MergeToolOptions MergeOptions { get; }
 
 	/// <summary>
 	/// An optional merge condition evaluator that currently only results in warnings
@@ -74,6 +74,52 @@ public abstract class MergerBase
 			return false;
 		}
 
+		if (MergeConditionEvaluator != null && features.Count >= 2)
+		{
+			Feature referenceFeature = GetReferenceFeature(features);
+			IEnumerable<Feature> otherFeatures =
+				features.Where(f => ! GdbObjectUtils.IsSameFeature(f, referenceFeature));
+
+			var allHardFailInfos = new List<MergeFailInfo>();
+
+			if (! MergeConditionEvaluator.CanMerge(referenceFeature, otherFeatures,
+			                                       allHardFailInfos))
+			{
+				reason = FormatFailReasons(allHardFailInfos, features.Count > 2);
+				return false;
+			}
+
+			var allConsistencyFailInfos = new List<MergeFailInfo>();
+
+			foreach (Feature feature in features)
+			{
+				if (GdbObjectUtils.IsSameFeature(feature, referenceFeature))
+				{
+					continue;
+				}
+
+				// Consistency check: always evaluated; only blocks if the option is set
+				var consistencyFailInfos = new List<MergeFailInfo>();
+				MergeConditionEvaluator.EvaluateInconsistencies(
+					referenceFeature, feature, consistencyFailInfos, true);
+				allConsistencyFailInfos.AddRange(consistencyFailInfos);
+			}
+
+			if (allConsistencyFailInfos.Count > 0)
+			{
+				string issues =
+					FormatFailReasons(allConsistencyFailInfos, features.Count > 2);
+
+				if (MergeOptions.PreventInconsistentMerge)
+				{
+					reason = issues;
+					return false;
+				}
+
+				_msg.Warn($"Merging features with inconsistencies:{Environment.NewLine}{issues}");
+			}
+		}
+
 		// NOTE: Non-simple input (e.g. from FGDBs) can result in disappearing parts
 		if (! AssumeStoredGeometryIsSimple &&
 		    ! ToolUtils.ReasonablySimple(features))
@@ -98,6 +144,46 @@ public abstract class MergerBase
 		return true;
 	}
 
+	/// <summary>
+	/// Determines the reference feature (survivor) for consistency checks in multi-feature merges.
+	/// </summary>
+	private Feature GetReferenceFeature([NotNull] IList<Feature> features)
+	{
+		if (_mergeSurvivor == MergeOperationSurvivor.LargerObject)
+		{
+			return GeometryUtils.GetLargestFeature(features) ?? features[0];
+		}
+
+		// FirstObject or Undefined: the first feature in the list is the reference
+		return features[0];
+	}
+
+	/// <summary>
+	/// Formats a collection of fail reasons for display. When multiple feature pairs are
+	/// involved each reason is prefixed with the pair's feature descriptions.
+	/// </summary>
+	private static string FormatFailReasons(
+		[NotNull] IList<MergeFailInfo> failInfos, bool includePairInfo)
+	{
+		if (! includePairInfo)
+		{
+			return string.Join(Environment.NewLine, failInfos.Select(f => f.Reason));
+		}
+
+		var sb = new StringBuilder();
+		foreach (MergeFailInfo info in failInfos)
+		{
+			if (sb.Length > 0)
+			{
+				sb.AppendLine();
+			}
+
+			sb.Append($"{info.FirstLineDesc} / {info.SecondLineDesc}: {info.Reason}");
+		}
+
+		return sb.ToString();
+	}
+
 	protected virtual bool IsValidMergeResultCore(Geometry mergeResult,
 	                                              NotificationCollection notifications)
 	{
@@ -115,21 +201,29 @@ public abstract class MergerBase
 
 		if (mergeResult.IsEmpty)
 		{
-			NotificationUtils.Add(notifications, "The merge result is empty");
+			NotificationUtils.Add(notifications, "The merge result geometry is empty.");
 
 			return false;
 		}
 
-		if (! MergeOptions.AllowMultipartResult)
+		if (MergeConditionEvaluator != null)
+		{
+			return MergeConditionEvaluator.IsValidMergeResult(mergeResult, notifications) &&
+			       IsValidMergeResultCore(mergeResult, notifications);
+		}
+
+		// Fallback when no evaluator is configured
+		if (MergeOptions.PreventMultipartResult)
 		{
 			if (mergeResult.GeometryType == GeometryType.Polygon &&
 			    ((Polygon) mergeResult).ExteriorRingCount > 1 ||
 			    mergeResult.GeometryType == GeometryType.Polyline &&
 			    ((Multipart) mergeResult).PartCount > 1)
-
 			{
-				NotificationUtils.Add(notifications,
-				                      "The merge result is a multi-part geometry (not allowed/option disabled)");
+				NotificationUtils.Add(
+					notifications,
+					"The merged geometry consists of multiple disconnected parts. " +
+					"The features may not share an adjacent boundary or endpoint.");
 
 				return false;
 			}
@@ -138,6 +232,7 @@ public abstract class MergerBase
 		return IsValidMergeResultCore(mergeResult, notifications);
 	}
 
+	[ItemCanBeNull]
 	public async Task<Feature> MergeFeatures([NotNull] IList<Feature> features,
 	                                         [NotNull] Feature survivor)
 	{
@@ -152,16 +247,17 @@ public abstract class MergerBase
 
 		if (! IsValidMergeResult(mergeResult, notifications))
 		{
-			Dialog.Warning(null,
-			               LocalizableStrings.MergeFeaturesTool_Caption,
-			               string.Format(
-				               LocalizableStrings.MergeFeaturesTool_DisjointGeometriesList,
-				               NotificationUtils.Concatenate(notifications, " ")));
+			if (MergeOptions.PreventInconsistentMerge)
+			{
+				Dialog.Warning(LocalizableStrings.MergeFeaturesTool_Caption,
+				               $"The selected features cannot be merged.{Environment.NewLine}{Environment.NewLine}" +
+				               NotificationUtils.Concatenate(notifications, " "));
+				return null;
+			}
 
-			return null;
+			// Only warn but continue with the merge if the user allows inconsistent merges
+			_msg.Warn(NotificationUtils.Concatenate(notifications, Environment.NewLine));
 		}
-
-		ICollection<string> warnings = AddWarningsIfNecessary(features, mergeResult);
 
 		Feature updateFeature = null;
 		var deletedFeatures = new List<Feature>();
@@ -181,6 +277,8 @@ public abstract class MergerBase
 		Assert.NotNull(updateFeature, "No update feature");
 		Assert.NotNull(mergeResult, "mergeResult");
 
+		var warnings = notifications.Select(n => n.Message).ToList();
+
 		Feature resultFeature =
 			await UpdateMergedFeatures(updateFeature, deletedFeatures, mergeResult, warnings);
 
@@ -192,46 +290,6 @@ public abstract class MergerBase
 		Geometry mergeResult = GeometryUtils.Union(geometries);
 
 		return mergeResult;
-	}
-
-	private ICollection<string> AddWarningsIfNecessary(IList<Feature> features,
-	                                                   Geometry mergeResult)
-	{
-		List<string> warnings = new List<string>();
-
-		// TODO: Reconsider MergeConditionEvaluator
-		if (MergeConditionEvaluator != null)
-		{
-			//if (! DatasetUtils.AreSameObjectClass(features.Select(f => f.Class)))
-			//{
-			//	List<string> distinctClassNames =
-			//		features.Select(f => f.Class).Distinct().Select(c => c.AliasName).ToList();
-
-			//	_msg.InfoFormat(
-			//		"The merged features belong to different feature classes: {0}",
-			//		StringUtils.Concatenate(distinctClassNames, ", "));
-			//}
-			//else if (((FeatureClass) features[0].Class).ShapeType ==
-			//         esriGeometryType.esriGeometryPolyline &&
-			//         features.Count == 2)
-			{
-				// TODO: Enhance, allow XML configuration, use for all geometry types
-
-				var failInfos = new List<MergeFailInfo>();
-				MergeConditionEvaluator.IsMergeAllowed(
-					features[0], features[1], failInfos, null, true);
-
-				warnings.AddRange(failInfos.Select(f => f.Reason));
-			}
-
-			if (! MergeConditionEvaluator.AllowLoops //&& IsLoop(mergeResult)
-			   )
-			{
-				warnings.Add("The result geometry is a closed loop");
-			}
-		}
-
-		return warnings;
 	}
 
 	/// <summary>
@@ -247,7 +305,7 @@ public abstract class MergerBase
 	private async Task<Feature> UpdateMergedFeatures([NotNull] Feature updateFeature,
 	                                                 [NotNull] IList<Feature> deletedFeatures,
 	                                                 [NotNull] Geometry mergedGeometry,
-	                                                 ICollection<string> warnings)
+	                                                 [NotNull] ICollection<string> warnings)
 	{
 		Assert.ArgumentNotNull(updateFeature, nameof(updateFeature));
 		Assert.ArgumentNotNull(deletedFeatures, nameof(deletedFeatures));
@@ -278,12 +336,12 @@ public abstract class MergerBase
 			                updatedFeatureFormat);
 		}
 
-		return updateFeature;
+		return success ? updateFeature : null;
 	}
 
 	private void LogResult(string deletedFeatureFormat,
 	                       string updatedFeatureFormat,
-	                       ICollection<string> warnings)
+	                       [NotNull] ICollection<string> warnings)
 	{
 		using (_msg.IncrementIndentation("Successfully merged {0} with {1}",
 		                                 deletedFeatureFormat, updatedFeatureFormat))
@@ -314,23 +372,6 @@ public abstract class MergerBase
 		}
 	}
 
-	//private static bool IsLoop(Geometry mergeResult)
-	//{
-	//	Polyline polyline = mergeResult as Polyline;
-
-	//	if (polyline == null)
-	//	{
-	//		return false;
-	//	}
-
-	//	if (GeometryUtils.GetPartCount(polyline) != 1)
-	//	{
-	//		return false;
-	//	}
-
-	//	return polyline.IsClosed;
-	//}
-
 	protected virtual async Task<bool> Commit(Feature updateFeature,
 	                                          [NotNull] IList<Feature> deleteFeatures,
 	                                          [NotNull] Geometry mergedGeometry)
@@ -351,7 +392,8 @@ public abstract class MergerBase
 				             {
 					             foreach (Feature deleteFeature in
 					                      deleteFeatures.OrderBy(f => GeometryUtils
-						                                             .GetGeometrySize(f.GetShape())))
+						                                             .GetGeometrySize(
+							                                             f.GetShape())))
 					             {
 						             TransferRelationships(deleteFeature, updateFeature);
 					             }

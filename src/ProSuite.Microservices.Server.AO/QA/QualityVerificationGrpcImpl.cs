@@ -22,6 +22,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Logging;
@@ -748,6 +749,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			SetupUserNameProvider(request);
 
+			ApplyServerOutputDirectory(request);
+
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<DataVerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<DataVerificationResponse>(responseStream);
@@ -829,6 +832,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ITrackCancel trackCancel)
 		{
 			SetupUserNameProvider(request);
+
+			ApplyServerOutputDirectory(request);
 
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<VerificationResponse> responseStreamer =
@@ -1624,6 +1629,96 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
 			           canceledException);
 			_msg.Warn("Task was cancelled, likely by the client");
+		}
+
+		private static void ApplyServerOutputDirectory(
+			[NotNull] VerificationRequest request)
+		{
+			const string envVar = "PROSUITE_QA_SERVER_OUTPUT_DIR";
+
+			string serverOutputDir = Environment.GetEnvironmentVariable(envVar);
+
+			if (string.IsNullOrEmpty(serverOutputDir))
+			{
+				return;
+			}
+
+			VerificationParametersMsg parameters = request.Parameters;
+
+			if (parameters is null)
+			{
+				return;
+			}
+
+			string specName = TryGetSpecificationName(request);
+
+			string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+			string subDirName = string.IsNullOrEmpty(specName)
+				                    ? $"Verification_{timestamp}"
+				                    : $"Verification{FileSystemUtils.ReplaceInvalidFileNameChars(specName)}_{timestamp}";
+
+			string outputDir = System.IO.Path.Combine(serverOutputDir, subDirName);
+
+			if (! string.IsNullOrEmpty(parameters.VerificationReportPath))
+			{
+				string fileName = System.IO.Path.GetFileName(
+					parameters.VerificationReportPath);
+				parameters.VerificationReportPath =
+					System.IO.Path.Combine(outputDir, fileName);
+			}
+
+			if (! string.IsNullOrEmpty(parameters.HtmlReportPath))
+			{
+				string fileName = System.IO.Path.GetFileName(parameters.HtmlReportPath);
+				parameters.HtmlReportPath =
+					System.IO.Path.Combine(outputDir, fileName);
+			}
+
+			if (! string.IsNullOrEmpty(parameters.IssueFileGdbPath))
+			{
+				string fileName = System.IO.Path.GetFileName(
+					parameters.IssueFileGdbPath);
+				parameters.IssueFileGdbPath =
+					System.IO.Path.Combine(outputDir, fileName);
+			}
+
+			_msg.InfoFormat(
+				"Server output directory override ({0}={1}): output paths redirected to {2}",
+				envVar, serverOutputDir, outputDir);
+		}
+
+		[CanBeNull]
+		private static string TryGetSpecificationName(
+			[NotNull] VerificationRequest request)
+		{
+			QualitySpecificationMsg specMsg = request.Specification;
+
+			if (specMsg is null)
+			{
+				return null;
+			}
+
+			switch (specMsg.SpecificationCase)
+			{
+				case QualitySpecificationMsg.SpecificationOneofCase.XmlSpecification:
+				{
+					string name = specMsg.XmlSpecification?.SelectedSpecificationName;
+
+					if (string.IsNullOrEmpty(name))
+					{
+						return null;
+					}
+
+					// The name might contain a ";configPath" suffix
+					int iSep = name.IndexOf(';');
+					return iSep >= 0 ? name.Substring(0, iSep) : name;
+				}
+				case QualitySpecificationMsg.SpecificationOneofCase.ConditionListSpecification:
+					return specMsg.ConditionListSpecification?.Name;
+				default:
+					return null;
+			}
 		}
 
 		private static double GetUnhealthyMemoryLimit()

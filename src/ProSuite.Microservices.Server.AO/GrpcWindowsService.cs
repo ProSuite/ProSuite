@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Versioning;
 using System.ServiceProcess;
 using System.Timers;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,6 +11,7 @@ namespace ProSuite.Microservices.Server.AO
 	/// Windows service that wraps a Grpc service implementation T.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
+	[SupportedOSPlatform("windows")]
 	public class GrpcWindowsService<T> : ServiceBase where T : class
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
