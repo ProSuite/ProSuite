@@ -22,6 +22,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Globalization;
 using ProSuite.Commons.Logging;
@@ -33,8 +34,11 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
+using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone;
+using ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.AO.QA;
@@ -318,6 +322,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 		}
 
+		public override async Task<ImportExceptionsResponse> ImportExceptions(
+			ImportExceptionsRequest request,
+			ServerCallContext context)
+		{
+			var response = new ImportExceptionsResponse();
+
+			try
+			{
+				_msg.Info($"Starting ImportExceptions for {request.ParameterImportWorkspace}");
+
+				var trackCancellationToken =
+					new TrackCancellationToken(context.CancellationToken);
+
+				ServiceCallStatus result =
+					await GrpcServerUtils.ExecuteServiceCall(
+						trackCancel => ImportExceptionsCore(request, trackCancellationToken),
+						context, _staThreadScheduler, true);
+
+				response.ServiceCallStatus = (int) result;
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error importing exceptions for request {request}", e);
+				response.ServiceCallStatus = (int) ServiceCallStatus.Failed;
+			}
+
+			return response;
+		}
+
 		public override async Task QueryData(IAsyncStreamReader<QueryDataRequest> requestStream,
 		                                     IServerStreamWriter<QueryDataResponse> responseStream,
 		                                     ServerCallContext context)
@@ -391,59 +424,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.Error($"Error querying data for request {request}", e);
-
-				ServiceUtils.SendFatalException(e, responseStream);
-				ServiceUtils.SetUnhealthy(Health, GetType());
-			}
-			finally
-			{
-				EndRequest();
-			}
-		}
-
-		public override async Task VerifyStandaloneXml(
-			StandaloneVerificationRequest request,
-			IServerStreamWriter<StandaloneVerificationResponse> responseStream,
-			ServerCallContext context)
-		{
-			try
-			{
-				await StartRequest(context.Peer, request, true);
-
-				_msg.InfoFormat("Starting stand-alone verification request from {0}",
-				                context.Peer);
-				_msg.VerboseDebug(() => $"Request details: {request}");
-
-				var responseStreamer =
-					new VerificationProgressStreamer<StandaloneVerificationResponse>(
-						responseStream);
-
-				responseStreamer.CreateResponseAction = responseStreamer.CreateStandaloneResponse;
-
-				// Attach to logging infrastructure
-				Action<LoggingEvent> action =
-					SendStandaloneProgressAction(responseStreamer, ServiceCallStatus.Running);
-
-				ServiceCallStatus result;
-				using (MessagingUtils.TemporaryRootAppender(new ActionAppender(action)))
-				{
-					Func<ITrackCancel, ServiceCallStatus> func =
-						trackCancel =>
-							VerifyStandaloneXmlCore(request, responseStreamer, trackCancel);
-
-					result = await GrpcServerUtils.ExecuteServiceCall(
-						         func, context, _staThreadScheduler, true);
-
-					// final message:
-					responseStreamer.WriteProgressAndIssues(
-						new VerificationProgressEventArgs($"Verification {result}"), result);
-				}
-
-				_msg.InfoFormat("Verification {0}", result);
-			}
-			catch (Exception e)
-			{
-				_msg.Error($"Error verifying quality for request {request}", e);
 
 				ServiceUtils.SendFatalException(e, responseStream);
 				ServiceUtils.SetUnhealthy(Health, GetType());
@@ -567,29 +547,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private static Action<LoggingEvent> SendStandaloneProgressAction(
-			[NotNull] VerificationProgressStreamer<StandaloneVerificationResponse> progressStreamer,
-			ServiceCallStatus callStatus)
-		{
-			Action<LoggingEvent> action =
-				e =>
-				{
-					if (e.Level.Value < Level.Info.Value)
-					{
-						return;
-					}
-
-					progressStreamer.CurrentLogLevel = e.Level.Value;
-
-					VerificationProgressEventArgs progressEventArgs =
-						new VerificationProgressEventArgs(e.RenderedMessage);
-
-					progressStreamer.WriteProgressAndIssues(progressEventArgs, callStatus);
-				};
-
-			return action;
-		}
-
 		private static async Task<DataVerificationRequest> RequestMoreDataAsync(
 			IAsyncStreamReader<DataVerificationRequest> requestStream,
 			IServerStreamWriter<DataVerificationResponse> responseStream,
@@ -600,24 +557,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				Task responseReaderTask = Task.Run(
-					async () =>
-					{
-						// NOTE: The client should probably ensure that this call back
-						//       does not exceed a certain time span. Ideally this does
-						//       only block for a few seconds:
+				Task responseReaderTask = Task.Run(async () =>
+				{
+					// NOTE: The client should probably ensure that this call back
+					//       does not exceed a certain time span. Ideally this does
+					//       only block for a few seconds:
 
-						// This results in an eternal loop and using a timespan here has no effect
-						//while (resultData == null && elapsedMillis < timeOutMillis)
+					// This results in an eternal loop and using a timespan here has no effect
+					//while (resultData == null && elapsedMillis < timeOutMillis)
+					{
+						while (await requestStream.MoveNext().ConfigureAwait(false))
 						{
-							while (await requestStream.MoveNext().ConfigureAwait(false))
-							{
-								// TODO: only break if result_data.HasMoreDate is false
-								resultData = requestStream.Current;
-								break;
-							}
+							// TODO: only break if result_data.HasMoreDate is false
+							resultData = requestStream.Current;
+							break;
 						}
-					});
+					}
+				});
 
 				await responseStream.WriteAsync(r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
@@ -641,20 +597,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				Task responseReaderTask = Task.Run(
-					async () =>
-					{
-						// NOTE: The client should probably ensure that this call back
-						//       does not exceed a certain time span. Ideally this does
-						//       only block for a few seconds:
+				Task responseReaderTask = Task.Run(async () =>
+				{
+					// NOTE: The client should probably ensure that this call back
+					//       does not exceed a certain time span. Ideally this does
+					//       only block for a few seconds:
 
-						while (await requestStream.MoveNext().ConfigureAwait(false))
-						{
-							// TODO: only break if result_data.HasMoreDate is false
-							resultData = requestStream.Current;
-							break;
-						}
-					});
+					while (await requestStream.MoveNext().ConfigureAwait(false))
+					{
+						// TODO: only break if result_data.HasMoreDate is false
+						resultData = requestStream.Current;
+						break;
+					}
+				});
 
 				await responseStream.WriteAsync(r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
@@ -668,6 +623,122 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return resultData;
 		}
 
+		private ServiceCallStatus ImportExceptionsCore(
+			[NotNull] ImportExceptionsRequest request,
+			[NotNull] ITrackCancel trackCancel)
+		{
+			Assert.ArgumentNotNull(request, nameof(request));
+
+			try
+			{
+				_msg.InfoFormat("Starting exception import from {0} to {1}",
+				                request.ParameterImportWorkspace,
+				                request.ParameterTargetWorkspace);
+
+				// Open workspaces
+				IFeatureWorkspace sourceWorkspace =
+					WorkspaceUtils.OpenFeatureWorkspace(request.ParameterImportWorkspace);
+				IFeatureWorkspace targetWorkspace =
+					WorkspaceUtils.OpenFeatureWorkspace(request.ParameterTargetWorkspace);
+
+				// Parse parameters
+				string sourceWhereClause =
+					string.IsNullOrWhiteSpace(request.ParameterImportWhereClause)
+						? null
+						: request.ParameterImportWhereClause;
+
+				string sourceOriginValue = request.ParameterImportOriginValue;
+
+				// Validate workspace types
+				ImportExceptionsUtils.AssertSupportedWorkspaceType(sourceWorkspace);
+				ImportExceptionsUtils.AssertSupportedWorkspaceType(targetWorkspace);
+
+				// Get source and target exception classes
+				List<IObjectClass> sourceExceptionClasses =
+					IssueRepositoryUtils.GetIssueObjectClasses(sourceWorkspace).ToList();
+
+				List<IObjectClass> targetExceptionClasses =
+					ImportExceptionsUtils.GetTargetExceptionClasses(
+						targetWorkspace, sourceExceptionClasses);
+
+				if (targetExceptionClasses.Count == 0)
+				{
+					_msg.Info("No target exception classes found. Nothing to import.");
+					return ServiceCallStatus.Finished;
+				}
+
+				_msg.InfoFormat("Found {0} exception class(es) to import",
+				                targetExceptionClasses.Count);
+
+				// Ensure required fields exist BEFORE starting edit session
+				ImportExceptionsUtils.GetTargetFields(
+					targetExceptionClasses, ensureRequiredFields: true);
+
+				// Determine operation mode (import vs update)
+				// Update mode requires BOTH workspaces to have managed exception UUIDs
+				bool sourceHasUuids = ImportExceptionsUtils.IsUpdateWorkspace(sourceWorkspace);
+				bool targetHasUuids = ImportExceptionsUtils.IsUpdateWorkspace(targetWorkspace);
+				bool isUpdate = sourceHasUuids && targetHasUuids;
+
+				string operationName = isUpdate ? "Update Exceptions" : "Import Exceptions";
+
+				_msg.InfoFormat(
+					"Operation mode: {0} (source has UUIDs: {1}, target has UUIDs: {2})",
+					operationName, sourceHasUuids, targetHasUuids);
+
+				// Execute import/update in transaction
+				var transaction = new GdbTransaction();
+
+				if (isUpdate)
+				{
+					transaction.Execute(
+						(IWorkspace) targetWorkspace,
+						cancelTracker =>
+						{
+							ImportExceptionsUtils.Update(
+								sourceWhereClause,
+								targetExceptionClasses,
+								sourceExceptionClasses,
+								sourceOriginValue,
+								updateDate: DateTime.Now,
+								requireOriginalVersionExists: false);
+						},
+						operationName,
+						trackCancel);
+
+					_msg.InfoFormat("Successfully updated exceptions from {0}",
+					                request.ParameterImportWorkspace);
+				}
+				else
+				{
+					transaction.Execute(
+						(IWorkspace) targetWorkspace,
+						cancelTracker =>
+						{
+							ImportExceptionsUtils.Import(
+								sourceWhereClause,
+								targetExceptionClasses,
+								sourceExceptionClasses,
+								sourceOriginValue,
+								importDate: DateTime.Now);
+						},
+						operationName,
+						trackCancel);
+
+					_msg.InfoFormat("Successfully imported exceptions from {0}",
+					                request.ParameterImportWorkspace);
+				}
+
+				return ServiceCallStatus.Finished;
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error importing exceptions from {request.ParameterImportWorkspace}",
+				           e);
+				throw;
+			}
+		}
+
 		private ServiceCallStatus VerifyDataQualityCore(
 			[NotNull] DataVerificationRequest initialRequest,
 			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest,
@@ -677,6 +748,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			var request = initialRequest.Request;
 
 			SetupUserNameProvider(request);
+
+			ApplyServerOutputDirectory(request);
 
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<DataVerificationResponse> responseStreamer =
@@ -698,9 +771,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (useStandaloneService)
 				{
+					XmlVerificationOptions xmlOptions =
+						VerificationOptionUtils.ReadOptionsXml(request.Parameters.XmlOptions);
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
-						specification, request.Parameters,
+						specification, request.Parameters, xmlOptions,
 						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
 				else
@@ -757,6 +833,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			SetupUserNameProvider(request);
 
+			ApplyServerOutputDirectory(request);
+
 			BackgroundVerificationService qaService = null;
 			VerificationProgressStreamer<VerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<VerificationResponse>(responseStream);
@@ -769,10 +847,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			DistributedTestRunner distributedTestRunner = null;
 
+			QualitySpecification specification = null;
 			try
 			{
 				bool useStandaloneService =
-					IsStandAloneVerification(request, null, out QualitySpecification specification);
+					IsStandAloneVerification(request, null, out specification);
 
 				if (DistributedProcessingClients != null && request.MaxParallelProcessing > 1)
 				{
@@ -813,9 +892,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 						distributedTestRunner.SendModelsWithRequest = true;
 					}
 
+					XmlVerificationOptions xmlOptions =
+						VerificationOptionUtils.ReadOptionsXml(request.Parameters.XmlOptions);
+
 					// Stand-alone: Xml or specification list (WorkContextMsg is null!)
 					verification = VerifyStandaloneXmlCore(
-						specification, request.Parameters,
+						specification, request.Parameters, xmlOptions,
 						distributedTestRunner, responseStreamer, trackCancel, true);
 				}
 				else
@@ -841,12 +923,44 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
+			finally
+			{
+				Release(specification);
+			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
 				qaService?.GetVerifiedPerimeter(), trackCancel);
 
 			return result;
+		}
+
+		private static void Release(QualitySpecification specification)
+		{
+			if (specification == null)
+			{
+				return;
+			}
+
+			HashSet<DdxModel> modelsToRelease = new HashSet<DdxModel>();
+			foreach (QualitySpecificationElement element in specification.Elements)
+			{
+				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(
+					         true, true))
+				{
+					modelsToRelease.Add(dataset.Model);
+				}
+			}
+
+			foreach (DdxModel ddxModel in modelsToRelease)
+			{
+				if (ddxModel is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
+			}
+
+			ReadOnlyTableFactory.ClearCache();
 		}
 
 		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
@@ -857,67 +971,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				CancellationTokenSource.CreateLinkedTokenSource(token);
 
 			return RequestAdmin?.RegisterRequest(requestUserName, environment, combinedTokenSource);
-		}
-
-		private ServiceCallStatus VerifyStandaloneXmlCore(
-			StandaloneVerificationRequest request,
-			VerificationProgressStreamer<StandaloneVerificationResponse> responseStreamer,
-			ITrackCancel trackCancel)
-		{
-			SetupUserNameProvider(request.UserName);
-
-			try
-			{
-				VerificationParametersMsg parameters = request.Parameters;
-
-				// Currently no parallel processing for VerifyStandaloneXml() call. Use
-				// VerifyQuality() with XML instead.
-				DistributedTestRunner distributedTestRunner = null;
-
-				QualitySpecification qualitySpecification;
-
-				switch (request.SpecificationCase)
-				{
-					case StandaloneVerificationRequest.SpecificationOneofCase.XmlSpecification:
-					{
-						XmlQualitySpecificationMsg xmlSpecification = request.XmlSpecification;
-
-						qualitySpecification = SetupQualitySpecification(xmlSpecification);
-						break;
-					}
-					case StandaloneVerificationRequest.SpecificationOneofCase
-					                                  .ConditionListSpecification:
-					{
-						ConditionListSpecificationMsg conditionListSpec =
-							request.ConditionListSpecification;
-
-						qualitySpecification = SetupQualitySpecification(conditionListSpec, null);
-						break;
-					}
-					default: throw new ArgumentOutOfRangeException();
-				}
-
-				VerifyStandaloneXmlCore(qualitySpecification, parameters,
-				                        distributedTestRunner, responseStreamer,
-				                        trackCancel, false);
-				return trackCancel.Continue()
-					       ? ServiceCallStatus.Finished
-					       : ServiceCallStatus.Cancelled;
-			}
-			catch (Exception e)
-			{
-				_msg.DebugFormat("Error during processing of request {0}", request);
-				_msg.Error($"Error verifying quality: {ExceptionUtils.FormatMessage(e)}", e);
-
-				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
-				{
-					ServiceUtils.SetUnhealthy(Health, GetType());
-				}
-
-				return ServiceCallStatus.Failed;
-			}
-
-			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
 		}
 
 		private QualityVerification VerifyDdxQualityCore(
@@ -965,6 +1018,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private QualityVerification VerifyStandaloneXmlCore<T>(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] VerificationParametersMsg parameters,
+			[CanBeNull] XmlVerificationOptions xmlVerificationOptions,
 			[CanBeNull] DistributedTestRunner distributedTestrunner,
 			[NotNull] VerificationProgressStreamer<T> responseStreamer,
 			ITrackCancel trackCancel,
@@ -975,12 +1029,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IGeometry perimeter =
 				ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
-			var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
+			var aoi = perimeter == null
+				          ? null
+				          : new AreaOfInterest(perimeter, parameters.PerimeterDescription);
 
 			_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
 
-			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
-				HtmlReportTemplatePath, QualitySpecificationTemplatePath);
+			XmlBasedVerificationService xmlService =
+				new XmlBasedVerificationService(HtmlReportTemplatePath,
+				                                QualitySpecificationTemplatePath)
+				{
+					XmlVerificationOptions = xmlVerificationOptions
+				};
+			foreach (var kv in parameters.ReportProperties)
+			{
+				xmlService.ReportProperties.Add(
+					new KeyValuePair<string, string>(kv.Key, kv.Value));
+			}
 
 			// NOTE: The report paths include the file names.
 			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,
@@ -1067,8 +1132,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					transformerConfiguration,
 					new SimpleDatasetOpener(datasetContext));
 
-				foreach (IWorkspace workspace in tableTransformer.InvolvedTables.Select(
-					         t => t.Workspace))
+				foreach (IWorkspace workspace in
+				         tableTransformer.InvolvedTables.Select(t => t.Workspace))
 				{
 					WorkspaceUtils.TryRefreshVersion(workspace);
 				}
@@ -1337,8 +1402,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				CreateSpecificationFactory(dataSources, SupportedInstanceDescriptors,
 				                           knownSchemaMsg);
 
-			QualitySpecification result = factory.CreateQualitySpecification(
-				conditionsSpecificationMsg);
+			QualitySpecification result =
+				factory.CreateQualitySpecification(conditionsSpecificationMsg);
 
 			return result;
 		}
@@ -1564,6 +1629,96 @@ namespace ProSuite.Microservices.Server.AO.QA
 			_msg.Debug($"Task cancelled: {context.CancellationToken.IsCancellationRequested}",
 			           canceledException);
 			_msg.Warn("Task was cancelled, likely by the client");
+		}
+
+		private static void ApplyServerOutputDirectory(
+			[NotNull] VerificationRequest request)
+		{
+			const string envVar = "PROSUITE_QA_SERVER_OUTPUT_DIR";
+
+			string serverOutputDir = Environment.GetEnvironmentVariable(envVar);
+
+			if (string.IsNullOrEmpty(serverOutputDir))
+			{
+				return;
+			}
+
+			VerificationParametersMsg parameters = request.Parameters;
+
+			if (parameters is null)
+			{
+				return;
+			}
+
+			string specName = TryGetSpecificationName(request);
+
+			string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+			string subDirName = string.IsNullOrEmpty(specName)
+				                    ? $"Verification_{timestamp}"
+				                    : $"Verification{FileSystemUtils.ReplaceInvalidFileNameChars(specName)}_{timestamp}";
+
+			string outputDir = System.IO.Path.Combine(serverOutputDir, subDirName);
+
+			if (! string.IsNullOrEmpty(parameters.VerificationReportPath))
+			{
+				string fileName = System.IO.Path.GetFileName(
+					parameters.VerificationReportPath);
+				parameters.VerificationReportPath =
+					System.IO.Path.Combine(outputDir, fileName);
+			}
+
+			if (! string.IsNullOrEmpty(parameters.HtmlReportPath))
+			{
+				string fileName = System.IO.Path.GetFileName(parameters.HtmlReportPath);
+				parameters.HtmlReportPath =
+					System.IO.Path.Combine(outputDir, fileName);
+			}
+
+			if (! string.IsNullOrEmpty(parameters.IssueFileGdbPath))
+			{
+				string fileName = System.IO.Path.GetFileName(
+					parameters.IssueFileGdbPath);
+				parameters.IssueFileGdbPath =
+					System.IO.Path.Combine(outputDir, fileName);
+			}
+
+			_msg.InfoFormat(
+				"Server output directory override ({0}={1}): output paths redirected to {2}",
+				envVar, serverOutputDir, outputDir);
+		}
+
+		[CanBeNull]
+		private static string TryGetSpecificationName(
+			[NotNull] VerificationRequest request)
+		{
+			QualitySpecificationMsg specMsg = request.Specification;
+
+			if (specMsg is null)
+			{
+				return null;
+			}
+
+			switch (specMsg.SpecificationCase)
+			{
+				case QualitySpecificationMsg.SpecificationOneofCase.XmlSpecification:
+				{
+					string name = specMsg.XmlSpecification?.SelectedSpecificationName;
+
+					if (string.IsNullOrEmpty(name))
+					{
+						return null;
+					}
+
+					// The name might contain a ";configPath" suffix
+					int iSep = name.IndexOf(';');
+					return iSep >= 0 ? name.Substring(0, iSep) : name;
+				}
+				case QualitySpecificationMsg.SpecificationOneofCase.ConditionListSpecification:
+					return specMsg.ConditionListSpecification?.Name;
+				default:
+					return null;
+			}
 		}
 
 		private static double GetUnhealthyMemoryLimit()

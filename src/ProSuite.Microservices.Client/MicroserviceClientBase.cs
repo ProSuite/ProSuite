@@ -117,7 +117,7 @@ namespace ProSuite.Microservices.Client
 			_executableArguments = extraArguments;
 			_executableCommandName = commandName;
 
-			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
+			if (! RunsLocally())
 			{
 				return false;
 			}
@@ -134,6 +134,16 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
+		/// <summary>
+		/// Determines whether the client is configured to connect to a local server that
+		/// runs on the local machine.
+		/// </summary>
+		/// <returns></returns>
+		public bool RunsLocally()
+		{
+			return HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
+		}
+
 		public bool AllowStartingLocalServer(string executable,
 		                                     string extraArguments = null,
 		                                     string commandName = null)
@@ -143,7 +153,7 @@ namespace ProSuite.Microservices.Client
 			_executableArguments = extraArguments;
 			_executableCommandName = commandName;
 
-			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
+			if (! RunsLocally())
 			{
 				return false;
 			}
@@ -267,8 +277,7 @@ namespace ProSuite.Microservices.Client
 			ChannelBase channel =
 				OpenChannelCore(HostName, Port, credentials, enoughForLargeGeometries);
 
-			bool assumeLoadBalancer =
-				! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
+			bool assumeLoadBalancer = ! RunsLocally();
 
 			if (assumeLoadBalancer)
 			{

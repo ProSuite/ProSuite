@@ -167,7 +167,7 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		return table;
 	}
 
-	private static string GetOperationDescription(IWorkItem item)
+	protected virtual string GetOperationDescription(IWorkItem item)
 	{
 		WorkItemStatus oldState = item.Status;
 

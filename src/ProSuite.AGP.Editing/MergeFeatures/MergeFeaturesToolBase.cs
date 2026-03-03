@@ -76,6 +76,12 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 	protected virtual string CentralConfigDir => null;
 
 	/// <summary>
+	/// Whether the "Object-defining attributes must be equal" option should be shown in the dock pane.
+	/// </summary>
+	protected abstract bool ShowPreventInconsistentAttributesOption { get; }
+
+	// ReSharper disable twice InvalidXmlDocComment
+	/// <summary>
 	/// By default, the local configuration directory shall be in
 	/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
 	/// </summary>
@@ -275,13 +281,15 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_mergeToolOptions.LocalOptions);
 
 		_firstFeature = null;
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
@@ -460,6 +468,7 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		}
 
 		viewModel.Options = _mergeToolOptions;
+		viewModel.ShowPreventInconsistentAttributesOption = ShowPreventInconsistentAttributesOption;
 
 		viewModel.Activate(true);
 	}
@@ -550,6 +559,13 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		}
 	}
 
+	protected void ConfigureMergeConditionEvaluator([NotNull] IMergeConditionEvaluator evaluator)
+	{
+		Assert.ArgumentNotNull(evaluator, nameof(evaluator));
+
+		evaluator.Options = MergeOptions;
+	}
+
 	private async Task<bool> PickLastFeatureAndMerge(Geometry sketchGeometry,
 	                                                 CancelableProgressor progressor)
 	{
@@ -571,17 +587,14 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 			featuresToMerge.Add(lastFeature);
 
-			bool canMerge = merger.CanMerge(featuresToMerge, out string reason);
-
-			if (! canMerge)
+			if (! EvaluateCanMerge(merger, featuresToMerge))
 			{
-				_msg.Info(reason);
 				return null;
 			}
 
 			Feature updateFeature;
 
-			if (_mergeToolOptions.MergeSurvivor == MergeOperationSurvivor.FirstObject)
+			if (MergeOperationSurvivor == MergeOperationSurvivor.FirstObject)
 			{
 				updateFeature = _firstFeature;
 			}
@@ -754,17 +767,18 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 				IList<Feature> selectedFeatures =
 					GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-				MergerBase merger = GetMerger();
-
-				bool canMerge = merger.CanMerge(selectedFeatures, out _);
+				if (selectedFeatures.Count < 2)
+				{
+					return false;
+				}
 
 				switch (action)
 				{
 					case MergeAction.MergeWithLargestFeature:
-						return canMerge;
+						return true;
 
 					case MergeAction.MergeWithClickedFeature:
-						return canMerge && ContextClickedFeature != null;
+						return ContextClickedFeature != null;
 
 					default:
 						throw new NotSupportedException($"Unsupported merge action: {action}");
@@ -819,6 +833,7 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		}
 	}
 
+	[ItemCanBeNull]
 	private async Task<Feature> MergeFeaturesUsingLargestFeatureCoreAsync()
 	{
 		IList<Feature> selectedFeatures =
@@ -826,9 +841,8 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 		MergerBase merger = GetMerger();
 
-		if (! merger.CanMerge(selectedFeatures, out string reason))
+		if (! EvaluateCanMerge(merger, selectedFeatures))
 		{
-			_msg.Info(reason);
 			return null;
 		}
 
@@ -858,9 +872,8 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 
 				MergerBase merger = GetMerger();
 
-				if (! merger.CanMerge(selectedFeatures, out string reason))
+				if (! EvaluateCanMerge(merger, selectedFeatures))
 				{
-					_msg.Info(reason);
 					return;
 				}
 
@@ -879,5 +892,19 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		{
 			_msg.Warn("Error merging features using clicked feature", e);
 		}
+	}
+
+	private static bool EvaluateCanMerge(MergerBase merger, IList<Feature> selectedFeatures)
+	{
+		if (! merger.CanMerge(selectedFeatures, out string reason))
+		{
+			string message = $"Cannot merge features: {Environment.NewLine}{reason}";
+
+			Dialog.Warning(LocalizableStrings.MergeFeaturesTool_Caption, message);
+
+			return false;
+		}
+
+		return true;
 	}
 }

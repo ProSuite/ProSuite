@@ -3,6 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
+	// TODO: Derive from IDisposable
 	public interface IWorkspace
 	{
 		//IPropertySet ConnectionProperties { get; }

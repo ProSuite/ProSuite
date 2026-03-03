@@ -106,13 +106,15 @@ public abstract class FillHoleToolBase : TwoPhaseEditToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_fillHoleToolOptions.LocalOptions);
 		_feedback?.DisposeOverlays();
 		_feedback = null;
 
 		HideOptionsPane();
+
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override void LogPromptForSelection()

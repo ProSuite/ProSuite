@@ -7,9 +7,9 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "Quaestor.ServiceDiscovery/1.0.1": {
+      "Quaestor.ServiceDiscovery/1.0.2": {
         "dependencies": {
-          "Google.Protobuf": "3.31.1",
+          "Google.Protobuf": "3.29.3",
           "Grpc.Core": "2.46.6",
           "Grpc.Tools": "2.76.0",
           "NETStandard.Library": "2.0.3"
@@ -18,15 +18,15 @@
           "Quaestor.ServiceDiscovery.dll": {}
         }
       },
-      "Google.Protobuf/3.31.1": {
+      "Google.Protobuf/3.29.3": {
         "dependencies": {
           "System.Memory": "4.5.3",
           "System.Runtime.CompilerServices.Unsafe": "4.5.2"
         },
         "runtime": {
           "lib/netstandard2.0/Google.Protobuf.dll": {
-            "assemblyVersion": "3.31.1.0",
-            "fileVersion": "3.31.1.0"
+            "assemblyVersion": "3.29.3.0",
+            "fileVersion": "3.29.3.0"
           }
         }
       },
@@ -100,17 +100,17 @@
     }
   },
   "libraries": {
-    "Quaestor.ServiceDiscovery/1.0.1": {
+    "Quaestor.ServiceDiscovery/1.0.2": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Google.Protobuf/3.31.1": {
+    "Google.Protobuf/3.29.3": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-gSnJbUmGiOTdWddPhqzrEscHq9Ls6sqRDPB9WptckyjTUyx70JOOAaDLkFff8gManZNN3hllQ4aQInnQyq/Z/A==",
-      "path": "google.protobuf/3.31.1",
-      "hashPath": "google.protobuf.3.31.1.nupkg.sha512"
+      "sha512": "sha512-t7nZFFUFwigCwZ+nIXHDLweXvwIpsOXi+P7J7smPT/QjI3EKxnCzTQOhBqyEh6XEzc/pNH+bCFOOSjatrPt6Tw==",
+      "path": "google.protobuf/3.29.3",
+      "hashPath": "google.protobuf.3.29.3.nupkg.sha512"
     },
     "Grpc.Core/2.46.6": {
       "type": "package",

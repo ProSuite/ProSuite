@@ -839,8 +839,12 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				WkbGeometryWriter writer = new WkbGeometryWriter();
 				byte[] wkb = writer.WriteMultipatch(multipatch, groupPartsByPointId);
 
-				WkbGeometryReader reader = new WkbGeometryReader();
-				rehydrated = reader.ReadMultipatch(new MemoryStream(wkb), groupPartsByPointId);
+				WkbGeometryReader reader = new WkbGeometryReader()
+				                           {
+					                           GroupPolyhedraByPointId = groupPartsByPointId
+				                           };
+
+				rehydrated = reader.ReadMultipatch(new MemoryStream(wkb));
 
 				rehydrated.SpatialReference = multipatch.SpatialReference;
 

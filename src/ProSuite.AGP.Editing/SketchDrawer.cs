@@ -96,11 +96,11 @@ public class SketchDrawer
 				? CurrentUnselectedSymbolStereo.MakeSymbolReference()
 				: CurrentUnselectedSymbol.MakeSymbolReference();
 
-		if (sketchGeometry is Multipart multipart)
+		if (sketchGeometry is Multipoint multipointSketch)
 		{
 			var builder = new MultipointBuilderEx(inMapView.Map.SpatialReference);
 
-			foreach (MapPoint point in multipart.Points)
+			foreach (MapPoint point in multipointSketch.Points)
 			{
 				builder.AddPoint(point);
 			}
@@ -113,12 +113,12 @@ public class SketchDrawer
 
 		if (sketchGeometry is Polyline polyline)
 		{
-			CIMSymbolReference lineSymbRef =
+			CIMSymbolReference lineSymbolRef =
 				isStereo
 					? LineSymbolStereo.MakeSymbolReference()
 					: LineSymbol.MakeSymbolReference();
 
-			_overlays.Add(await inMapView.AddOverlayAsync(polyline, lineSymbRef));
+			_overlays.Add(await inMapView.AddOverlayAsync(polyline, lineSymbolRef));
 
 			var endPoint = GeometryUtils.GetEndPoint(polyline);
 			if (endPoint != null)
@@ -129,8 +129,12 @@ public class SketchDrawer
 		}
 		else if (sketchGeometry is Polygon polygon)
 		{
-			CIMSymbolReference polySymbRef = PolygonSymbol.MakeSymbolReference();
-			_overlays.Add(await inMapView.AddOverlayAsync(polygon, polySymbRef));
+			CIMSymbolReference polySymbolRef =
+				isStereo
+					? PolygonSymbolStereo.MakeSymbolReference()
+					: PolygonSymbol.MakeSymbolReference();
+
+			_overlays.Add(await inMapView.AddOverlayAsync(polygon, polySymbolRef));
 
 			// start and end point of a polygon are geometrically equal
 			var points = polygon.Points;
@@ -205,7 +209,7 @@ public class SketchDrawer
 		var result = SymbolFactory.Instance.ConstructPointSymbol(
 			ColorUtils.GreenRGB, 4, SimpleMarkerStyle.Square);
 
-		result.HaloSize = 1;
+		//result.HaloSize = 1;
 
 		return result;
 	}

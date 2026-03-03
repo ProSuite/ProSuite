@@ -13,7 +13,7 @@ namespace ProSuite.Commons.GeoDb
 
 	public interface IDataStore : IDatasetContainer
 	{
-		ITableData OpenDataset(string tableName);
+		IDatasetDef OpenDataset(string tableName);
 
 		WorkspaceDbType DbType { get; }
 

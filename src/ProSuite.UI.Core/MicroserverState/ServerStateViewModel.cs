@@ -183,6 +183,11 @@ namespace ProSuite.UI.Core.MicroserverState
 				return Task.FromResult(12);
 			}
 
+			public bool RunsLocally()
+			{
+				return true;
+			}
+
 			#endregion
 		}
 	}

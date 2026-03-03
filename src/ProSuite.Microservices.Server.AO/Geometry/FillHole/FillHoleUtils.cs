@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -49,8 +49,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 
 			// subtract the islands from the holes. This must be done hole-by-hole to avoid missing holes on islands.
 			var result = new List<IPolygon>(
-				holePolygons.Select(
-					holePolygon => RemoveHoleIslands(highLevelExteriorRings, holePolygon)));
+				holePolygons.Select(holePolygon =>
+					                    RemoveHoleIslands(highLevelExteriorRings, holePolygon)));
 
 			// ReSharper disable once RedundantEnumerableCastCall
 			ReleaseGeometries(exteriorRings.Cast<IGeometry>());
@@ -106,7 +106,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 
 				if (GeometryUtils.Disjoint(selectedPoly, clipEnvelope))
 				{
-					Marshal.ReleaseComObject(selectedPoly);
+					ComUtils.ReleaseObject(selectedPoly);
 					continue;
 				}
 
@@ -128,7 +128,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 			{
 				selectedShapes.Add(GeometryUtils.GetClippedPolygon(polygonToClip,
 					                   Assert.NotNull(clipEnvelope)));
-				Marshal.ReleaseComObject(polygonToClip);
+				ComUtils.ReleaseObject(polygonToClip);
 			}
 
 			return selectedShapes;
@@ -138,7 +138,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 		{
 			foreach (IGeometry geometry in geometries)
 			{
-				Marshal.ReleaseComObject(geometry);
+				ComUtils.ReleaseObject(geometry);
 			}
 		}
 
@@ -184,7 +184,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 						}
 						else
 						{
-							Marshal.ReleaseComObject(partPolygon);
+							ComUtils.ReleaseObject(partPolygon);
 						}
 					}
 				}
@@ -205,7 +205,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.FillHole
 					}
 					else
 					{
-						Marshal.ReleaseComObject(partPolygon);
+						ComUtils.ReleaseObject(partPolygon);
 					}
 				}
 			}

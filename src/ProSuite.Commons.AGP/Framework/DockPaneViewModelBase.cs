@@ -15,6 +15,12 @@ public abstract class DockPaneViewModelBase : DockPane
 
 	private readonly Control _contentControl;
 
+	protected DockPaneViewModelBase()
+	{
+		_contentControl = TryCreateView();
+	}
+
+	[Obsolete("Use parameterless constructor instead and override CreateView() to provide the content control.")]
 	protected DockPaneViewModelBase([NotNull] Control contentControl)
 	{
 		_contentControl =
@@ -44,6 +50,13 @@ public abstract class DockPaneViewModelBase : DockPane
 		{
 			_msg.Error($"Error showing dock pane {Caption}: {ex.Message}", ex);
 		}
+	}
+
+	//This method will become abstract when the all to subclasses implement it
+	protected virtual Control CreateView()
+	{
+		_msg.Warn($"No view created for dock pane {Caption} because CreateView() was not overridden.");
+		return null;
 	}
 
 	protected virtual void OnShowCore(bool isVisible) { }
@@ -76,4 +89,18 @@ public abstract class DockPaneViewModelBase : DockPane
 	/// dock-panes when it is initialized.
 	/// </summary>
 	public virtual void OnContextInitialized() { }
+
+	private Control TryCreateView()
+	{
+		try
+		{
+			return CreateView();
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Error creating view for dock pane {Caption}: {e.Message}", e);
+		}
+
+		return null;
+	}
 }

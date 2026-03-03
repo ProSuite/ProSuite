@@ -119,7 +119,7 @@ namespace ProSuite.DomainServices.AO.QA
 		public IVerificationProgressStreamer ProgressStreamer { get; set; }
 
 		/// <summary>
-		/// These options could return some day.
+		/// XML options for additional configuration settings.
 		/// </summary>
 		public XmlVerificationOptions XmlVerificationOptions { get; set; }
 
@@ -288,13 +288,21 @@ namespace ProSuite.DomainServices.AO.QA
 							$"Xml report name is not a valid file name: {name}");
 					}
 
-					// TODO: Move to separate method SetOutputPaths()
-					_xmlVerificationReportPath = Path.Combine(XmlReportDirectory, name);
+					if (! FileSystemUtils.EnsureDirectoryExists(XmlReportDirectory))
+					{
+						_msg.Warn(
+							$"Cannot create XML report directory '{XmlReportDirectory}'. The XML verification report will not be written.");
+					}
+					else
+					{
+						// TODO: Move to separate method SetOutputPaths()
+						_xmlVerificationReportPath = Path.Combine(XmlReportDirectory, name);
 
-					XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
+						XmlUtils.Serialize(verificationReport, _xmlVerificationReportPath);
 
-					InfoFormat("Verification report written to {0}", sb,
-					           _xmlVerificationReportPath);
+						InfoFormat("Verification report written to {0}", sb,
+						           _xmlVerificationReportPath);
+					}
 				}
 
 				List<string> htmlReportFilePaths = null;
@@ -304,18 +312,28 @@ namespace ProSuite.DomainServices.AO.QA
 				    ! string.IsNullOrWhiteSpace(HtmlReportDir) &&
 				    ! string.IsNullOrWhiteSpace(_xmlVerificationReportPath))
 				{
-					specificationReportFilePaths =
-						StandaloneVerificationUtils.WriteQualitySpecificationReport(
-							qualitySpecification, HtmlReportDir,
-							HtmlQualitySpecificationTemplatePath, XmlVerificationOptions);
+					if (! FileSystemUtils.EnsureDirectoryExists(HtmlReportDir))
+					{
+						_msg.Warn(
+							$"Cannot create HTML report directory '{HtmlReportDir}'. The HTML reports will not be written.");
+					}
+					else
+					{
+						specificationReportFilePaths =
+							StandaloneVerificationUtils.WriteQualitySpecificationReport(
+								qualitySpecification, HtmlReportDir,
+								HtmlQualitySpecificationTemplatePath, XmlVerificationOptions);
 
-					string xmlVerificationReportFileName =
-						Path.GetFileName(_xmlVerificationReportPath);
+						string xmlVerificationReportFileName =
+							Path.GetFileName(_xmlVerificationReportPath);
 
-					htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
-						qualitySpecification, HtmlReportDir, _statisticsBuilder.IssueStatistics,
-						verificationReport, xmlVerificationReportFileName, HtmlReportTemplatePath,
-						XmlVerificationOptions, _issueGdbPath, null, specificationReportFilePaths);
+						htmlReportFilePaths = StandaloneVerificationUtils.WriteHtmlReports(
+							qualitySpecification, HtmlReportDir, _statisticsBuilder.IssueStatistics,
+							verificationReport, xmlVerificationReportFileName,
+							HtmlReportTemplatePath,
+							XmlVerificationOptions, _issueGdbPath, null,
+							specificationReportFilePaths);
+					}
 				}
 
 				if (htmlReportFilePaths?.Count > 0)

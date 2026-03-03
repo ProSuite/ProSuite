@@ -152,6 +152,16 @@ public static class GdbObjectUtils
 		}
 	}
 
+	public static IEnumerable<object> GetValues(Row row)
+	{
+		IReadOnlyList<Field> fields = row.GetFields();
+
+		for (int i = 0; i < fields.Count; i++)
+		{
+			yield return row[i];
+		}
+	}
+
 	/// <summary>
 	/// Sets the values of the <see cref="RowBuffer"/> which are not yet initialized to the
 	/// default values defined in the Geodatabase.

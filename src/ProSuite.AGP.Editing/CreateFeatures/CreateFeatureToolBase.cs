@@ -122,10 +122,10 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 		return base.OnToolActivatingCoreAsync();
 	}
 
-	protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)
 	{
 		ActiveTemplateChangedEvent.Unsubscribe(OnActiveTemplateChanged);
-		base.OnToolDeactivateCore(hasMapViewChanged);
+		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
 	protected override EditingTemplate GetSketchTemplate()

@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Analyst3D;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -354,6 +356,26 @@ public static class DatasetUtils
 
 		return CreateFeatureClass(geodatabase, datasetName, fieldDescription, geometryType,
 		                          spatialReference);
+	}
+
+	/// <summary>
+	/// Opens a LAS dataset from a .lasd file path.
+	/// NOTE: Must be called on the MCT. Use QueuedTask.Run.
+	/// </summary>
+	/// <param name="filePath"></param>
+	/// <returns></returns>
+	public static LasDataset OpenLasDataset(string filePath)
+	{
+		string path = Assert.NotNullOrEmpty(Path.GetDirectoryName(filePath));
+		string file = Path.GetFileName(filePath);
+
+		var fileSystemConnection =
+			new FileSystemConnectionPath(new Uri(path), FileSystemDatastoreType.LasDataset);
+
+		using (FileSystemDatastore dataStore = new FileSystemDatastore(fileSystemConnection))
+		{
+			return dataStore.OpenDataset<LasDataset>(file);
+		}
 	}
 
 	private static bool ValidateSchema(FeatureClass featureClass,

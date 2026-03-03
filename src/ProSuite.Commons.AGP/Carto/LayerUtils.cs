@@ -455,6 +455,17 @@ public static class LayerUtils
 			                           requireSameVersion, requireSameDefinition);
 		}
 
+		if (layer1 is LasDatasetLayer lasDatasetLayer1 &&
+		    layer2 is LasDatasetLayer lasDatasetLayer2)
+		{
+			var lasDataset1 = lasDatasetLayer1.GetDataConnection() as CIMStandardDataConnection;
+			var lasDataset2 = lasDatasetLayer2.GetDataConnection() as CIMStandardDataConnection;
+
+			return lasDataset1?.WorkspaceConnectionString ==
+			       lasDataset2?.WorkspaceConnectionString &&
+			       lasDataset1?.Dataset == lasDataset2?.Dataset;
+		}
+
 		if (layer1.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn1 &&
 		    layer2.GetDataConnection() is CIMVectorTileDataConnection vectorTileConn2)
 		{

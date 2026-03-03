@@ -244,6 +244,12 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			ClearDelegates();
+
+			_currentSimpleSurface?.Dispose();
+			_currentSimpleSurface = null;
+
+			_tileCache?.Clear();
+
 			_disposed = true;
 		}
 

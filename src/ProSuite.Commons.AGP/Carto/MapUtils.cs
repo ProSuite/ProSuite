@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -269,11 +270,9 @@ public static class MapUtils
 			featureClass = GetUnJoinedFeatureClass(featureClass);
 		}
 
-		// TODO: Split by 1000 OIDs to avoid too large queries
 		var filter = new QueryFilter
 		             {
-			             WhereClause =
-				             $"{featureClass.GetDefinition().GetObjectIDField()} IN ({StringUtils.Concatenate(oids, ", ")})"
+			             ObjectIDs = oids.ToList()
 		             };
 
 		// NOTE: The spatial reference of the layer is the same as the feature class rather than the map.
@@ -383,6 +382,86 @@ public static class MapUtils
 		}
 
 		return count;
+	}
+
+	/// <summary>
+	/// For all feature layers in the given <paramref name="map"/>
+	/// that match the given <paramref name="pattern"/>, replace the
+	/// data source to the given <paramref name="datastore"/>.
+	/// Cope with name qualification and invalid layers, but assume
+	/// that the new data source has data for the matching layers.
+	/// </summary>
+	/// <param name="map">The map</param>
+	/// <param name="datastore">The new data source for matching layers</param>
+	/// <param name="pattern">Layer pattern, see <see cref="FindLayers{T}"/></param>
+	/// <param name="separator">Separator in pattern, see <see cref="FindLayers{T}"/></param>
+	/// <param name="ignoreCase">Case sensitivity for pattern matching</param>
+	/// <returns>The number of layers that were (re)connected and skipped
+	/// (because there was no corresponding table in the new data source)</returns>
+	public static (int, int) ReplaceDataSource(
+		Map map, Geodatabase datastore, string pattern, char separator, bool ignoreCase = false)
+	{
+		if (map is null)
+			throw new ArgumentNullException(nameof(map));
+		if (datastore is null)
+			throw new ArgumentNullException(nameof(datastore));
+
+		var datastoreDisplayText = WorkspaceUtils.GetDatastoreDisplayText(datastore);
+		_msg.DebugFormat("For all feature layers matching {0} change layer source to {1}",
+		                 pattern, datastoreDisplayText);
+
+		int connected = 0;
+		int skipped = 0;
+
+		var qualifier = WorkspaceUtils.FindSchemaOwner(datastore);
+
+		var layers = FindLayers<BasicFeatureLayer>(map, pattern, separator, ignoreCase);
+
+		foreach (var layer in layers)
+		{
+			var cim = layer.GetDataConnection();
+
+			var originName = GetDatasetName(cim);
+			var targetName = DatasetNameUtils.QualifyDatasetName(originName, qualifier);
+
+			try
+			{
+				using var dataset = datastore.OpenDataset<Table>(targetName);
+
+				layer.ReplaceDataSource(dataset);
+				// Weirdly, this triggers EditCompletedEvent
+
+				//var cimAfter = layer.GetDataConnection(); // TESTING
+
+				connected += 1;
+			}
+			catch (GeodatabaseTableException ex)
+			{
+				_msg.WarnFormat(
+					"Skipping layer {0}: could not open table {1} in {2}: {3}",
+					layer.Name, targetName, datastoreDisplayText, ex.Message);
+				skipped += 1;
+			}
+		}
+
+		return (connected, skipped);
+	}
+
+	private static string GetDatasetName(CIMDataConnection cim)
+	{
+		if (cim is null) return null;
+
+		if (cim is CIMStandardDataConnection std)
+		{
+			return std.Dataset;
+		}
+
+		if (cim is CIMFeatureDatasetDataConnection fdc)
+		{
+			return fdc.Dataset;
+		}
+
+		throw new NotSupportedException($"Data connection not supported: {cim.GetType().Name}");
 	}
 
 	/// <summary>
@@ -776,15 +855,14 @@ public static class MapUtils
 		MapPoint mapUpperRight = GeometryFactory.CreatePoint(
 			mapExtent.XMax, mapExtent.YMax, mapZValue, mapExtent.SpatialReference);
 
-		return await QueuedTask.Run(
-			       () =>
-			       {
-				       Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
-				       Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+		return await QueuedTask.Run(() =>
+		{
+			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
 
-				       return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
-				                        (screenLowerLeft.Y + screenUpperRight.Y) / 2);
-			       });
+			return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
+			                 (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+		});
 	}
 
 	/// <summary>
@@ -846,6 +924,13 @@ public static class MapUtils
 		}
 
 		bool isInFixedCursorMode = false;
+
+#if ARCGISPRO_GREATER_3_6
+
+		return mapView.IsStereoCursorFixed;
+
+#endif
+
 #if ARCGISPRO_GREATER_3_5
 
 		Map stereoMap = Assert.NotNull(mapView.Map);
@@ -1063,36 +1148,56 @@ public static class MapUtils
 		return map?.SelectionCount > 0;
 	}
 
-	public static async Task<bool> FlashGeometryAsync(
-		[NotNull] MapView mapView,
-		[NotNull] Geometry geometry,
-		CIMSymbolReference symbolReference,
-		int milliseconds = 400,
-		bool useReferenceScale = false)
+	/// <summary>
+	/// Flashes the provided geometry. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="geometry"></param>
+	/// <param name="symbolReference"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task FlashGeometryAsync([NotNull] MapView mapView,
+	                                            [NotNull] Geometry geometry,
+	                                            CIMSymbolReference symbolReference,
+	                                            int milliseconds = 400,
+	                                            bool useReferenceScale = false)
 	{
-		return await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
-		                                milliseconds, useReferenceScale);
+		await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
+		                         milliseconds, useReferenceScale);
 	}
 
-	public static async Task<bool> FlashGeometryAsync(
-		[NotNull] MapView mapView,
-		[NotNull] Overlay overlay,
-		int milliseconds = 400,
-		bool useReferenceScale = false)
+	/// <summary>
+	/// Flashes using the provided overlay. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlay"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task FlashGeometryAsync([NotNull] MapView mapView,
+	                                            [NotNull] Overlay overlay,
+	                                            int milliseconds = 400,
+	                                            bool useReferenceScale = false)
 	{
 		using (await overlay.AddToMapAsync(mapView, useReferenceScale))
 		{
 			await Task.Delay(milliseconds);
 		}
-
-		return true;
 	}
 
-	public static async Task<bool> FlashGeometriesAsync(
-		[NotNull] MapView mapView,
-		IEnumerable<Overlay> overlays,
-		int milliseconds = 400,
-		bool useReferenceScale = false)
+	/// <summary>
+	/// Flashes using the provided overlays. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlays"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task FlashGeometriesAsync([NotNull] MapView mapView,
+	                                              IEnumerable<Overlay> overlays,
+	                                              int milliseconds = 400,
+	                                              bool useReferenceScale = false)
 	{
 		List<IDisposable> disposables = new List<IDisposable>();
 
@@ -1112,10 +1217,16 @@ public static class MapUtils
 				disposable.Dispose();
 			}
 		}
-
-		return true;
 	}
 
+	/// <summary>
+	/// Flashes the provided geometries. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="geometries"></param>
+	/// <param name="milliseconds">The duration of the flashing.</param>
+	/// <param name="color">The color of the flash. Default: dark green</param>
+	/// <param name="useReferenceScale"></param>
 	public static void FlashGeometries(
 		[NotNull] MapView mapView,
 		IEnumerable<Geometry> geometries,
@@ -1167,7 +1278,14 @@ public static class MapUtils
 		}
 	}
 
-	public static bool FlashGeometries(
+	/// <summary>
+	/// Flashes by showing the provided overlays. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlays"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	public static void FlashGeometries(
 		[NotNull] MapView mapView,
 		IEnumerable<Overlay> overlays,
 		int milliseconds = 400,
@@ -1192,8 +1310,6 @@ public static class MapUtils
 				disposable?.Dispose();
 			}
 		}
-
-		return true;
 	}
 
 	#endregion

@@ -45,9 +45,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.2" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.6" />
     <PackageReference Include="Grpc.Core.Api" Version="2.76.0" />
-    <PackageReference Include="Grpc.HealthCheck" Version="2.76.0" />
+
+    <PackageReference Include="Google.Protobuf" Version="3.29.3" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.70.0" />
   </ItemGroup>
 
   <ItemGroup>

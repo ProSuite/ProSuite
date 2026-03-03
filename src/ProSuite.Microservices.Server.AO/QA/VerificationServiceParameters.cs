@@ -71,6 +71,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public string HtmlSpecificationTemplatePath { get; set; }
 
+		public string XmlOptions { get; set; }
+
 		public string MxdDocumentPath => null;
 
 		public string MxdTemplatePath => null;
@@ -125,6 +127,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			new List<KeyValuePair<string, string>>();
 
 		public bool SaveVerificationStatistics { get; set; }
+
+		public string PerimeterDescription { get; set; }
 
 		#endregion
 

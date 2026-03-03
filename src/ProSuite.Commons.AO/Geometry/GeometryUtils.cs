@@ -20,6 +20,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ISurface = ESRI.ArcGIS.Geodatabase.ISurface;
 
 namespace ProSuite.Commons.AO.Geometry
 {
@@ -1637,9 +1638,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (_msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebug(
-						() =>
-							$"Geometry that needed 2 SimplifyNetwork calls: {ToString(polyline)}");
+					_msg.VerboseDebug(() =>
+						                  $"Geometry that needed 2 SimplifyNetwork calls: {ToString(polyline)}");
 				}
 			}
 		}
@@ -5231,7 +5231,7 @@ namespace ProSuite.Commons.AO.Geometry
 			return true;
 		}
 
-		private static bool TryPrepareForStoring(
+		public static bool TryPrepareForStoring(
 			[NotNull] ref IGeometry geometry,
 			[NotNull] IFeatureClass targetFeatureClass,
 			[CanBeNull] NotificationCollection notifications)
@@ -5971,17 +5971,16 @@ namespace ProSuite.Commons.AO.Geometry
 
 					if (pointCount > 2)
 					{
-						_msg.VerboseDebug(
-							() => $"Interpolating path {partIndex} with {pointCount} points");
+						_msg.VerboseDebug(() =>
+							                  $"Interpolating path {partIndex} with {pointCount} points");
 
 						polyLineZ.InterpolateZsBetween(partIndex, 0, partIndex,
 						                               pointCount - 1);
 					}
 					else
 					{
-						_msg.VerboseDebug(
-							() =>
-								$"Path {partIndex} has insufficient point count for interpolation: {pointCount}");
+						_msg.VerboseDebug(() =>
+							                  $"Path {partIndex} has insufficient point count for interpolation: {pointCount}");
 					}
 				}
 				else
@@ -6458,8 +6457,8 @@ namespace ProSuite.Commons.AO.Geometry
 						eVertex.put_M(newMValue);
 					}
 
-					_msg.VerboseDebug(
-						() => $"Querying next vertex. Current: <part> {part} <vertex> {vertex}");
+					_msg.VerboseDebug(() =>
+						                  $"Querying next vertex. Current: <part> {part} <vertex> {vertex}");
 
 					eVertex.QueryNext(point, out part, out vertex);
 				}
@@ -9150,9 +9149,8 @@ namespace ProSuite.Commons.AO.Geometry
 				//    exists at the desired split point' rather than 'a split was needed at the desired split point'
 				result.Add(usablePoint.Key);
 
-				_msg.VerboseDebug(
-					() =>
-						$"Split happened at {usablePoint.Key.X}|{usablePoint.Key.Y}: {splitHappened}");
+				_msg.VerboseDebug(() =>
+					                  $"Split happened at {usablePoint.Key.X}|{usablePoint.Key.Y}: {splitHappened}");
 			}
 
 			if (result.Count > 0)
@@ -9210,8 +9208,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (! enumSplitPoints.SplitHappened && _msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebug(
-						() => $"Path not split at point {splitPoint.X}/{splitPoint.Y}");
+					_msg.VerboseDebug(() =>
+						                  $"Path not split at point {splitPoint.X}/{splitPoint.Y}");
 				}
 
 				enumSplitPoints.Next(out splitPoint, out int _, out int _);
