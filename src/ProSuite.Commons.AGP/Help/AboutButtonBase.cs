@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Workflow;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
@@ -236,7 +237,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 
 		try
 		{
-			var units = await QueuedTask.Run(GetProjectDefaultUnitsCore);
+			var units = await QueuedTask.Run(ProjectUtils.GetDefaultProjectUnits);
 
 			var defaultUnits = FormatProjectDefaultUnits(units);
 
@@ -249,15 +250,6 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		{
 			Add(result, section, key, $"Error: {ex.Message}", ex.GetType().Name);
 		}
-	}
-
-	/// <remarks>Must call on MCT</remarks>
-	private static DisplayUnitFormat[] GetProjectDefaultUnitsCore()
-	{
-		var types = Enum.GetValues<UnitFormatType>();
-		var formats = DisplayUnitFormats.Instance;
-		return types.Select(type => formats.GetDefaultProjectUnitFormat(type))
-		            .ToArray();
 	}
 
 	protected virtual string FormatProjectDefaultUnits(DisplayUnitFormat[] units)
