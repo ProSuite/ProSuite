@@ -1548,6 +1548,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			enumDatasetName.Reset();
+
+			ComUtils.ReleaseComObject(enumDatasetName);
 		}
 
 		[NotNull]

@@ -128,6 +128,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public bool SaveVerificationStatistics { get; set; }
 
+		public string PerimeterDescription { get; set; }
+
 		#endregion
 
 		//

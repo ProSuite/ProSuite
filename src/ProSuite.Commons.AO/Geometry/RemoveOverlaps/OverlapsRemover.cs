@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
@@ -337,11 +336,16 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			ChangeAlongZSource zSource,
 			out IList<IGeometry> overlappingMultiPatches)
 		{
-			// Only remove overlaps from multipatch rings that
+			overlappingMultiPatches = null;
+			Assert.False(_storeOverlapsAsNewFeatures,
+			             "Unsupported option:  store overlaps as new features");
+
+			// Only remove overlaps from multipatch rings that touch the boundary
 			if (! _onlyBoundaryTouchingMultipatches)
 			{
-				return RemoveOverlaps(sourceMultipatch, overlaps, zSource,
-				                      out overlappingMultiPatches);
+				IList<RingGroup> allResultRingGroups =
+					RemoveOverlaps(sourceMultipatch, overlaps, zSource);
+				return CreateMultipatchResults(allResultRingGroups, sourceMultipatch);
 			}
 
 			Dictionary<IMultiPatch, bool> intersectingByMultipatchPart =
@@ -354,8 +358,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			//       within both rings -> either 3D-intersect property (area-based) or check if at
 			//       least one intersection point is a 3D intersection (i.e. in the plane of the ring).
 
-			var resultParts = new List<IGeometry>();
-			int partId = 0;
+			var resultRingGroups = new List<RingGroup>();
 
 			foreach (var kvp in intersectingByMultipatchPart)
 			{
@@ -364,44 +367,33 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 				if (part3dIntersects || ! anyPart3dIntersects)
 				{
-					IList<IGeometry> partResults = RemoveOverlaps(
-						partPatch, overlaps, zSource, out _);
-
-					foreach (IGeometry partResult in partResults)
-					{
-						AssignConstantPointID(partResult, partId++);
-					}
-
-					resultParts.AddRange(partResults);
+					IList<RingGroup> partResults = RemoveOverlaps(partPatch, overlaps, zSource);
+					resultRingGroups.AddRange(partResults);
 				}
 				else
 				{
-					// Add unmodified part (with potentially different PointID):
-					AssignConstantPointID(partPatch, partId++);
-					resultParts.Add(partPatch);
+					// Add unmodified part(s) - a GeometryPart can contain multiple RingGroups
+					IList<RingGroup> unmodifiedRingGroups =
+						GeometryConversionUtils.CreateRingGroups(partPatch, true, true).ToList();
+
+					resultRingGroups.AddRange(unmodifiedRingGroups);
 				}
 			}
 
-			Assert.False(_storeOverlapsAsNewFeatures,
-			             "Unsupported option:  store overlaps as new features");
 			overlappingMultiPatches = null;
 
-			return new List<IGeometry> { GeometryUtils.Union(resultParts) };
+			return CreateMultipatchResults(resultRingGroups, sourceMultipatch);
 		}
 
-		private IList<IGeometry> RemoveOverlaps(
+		private static IList<RingGroup> RemoveOverlaps(
 			[NotNull] IMultiPatch sourceMultipatch,
 			[NotNull] IPolygon overlaps,
-			ChangeAlongZSource zSource,
-			out IList<IGeometry> overlappingMultiPatches)
+			ChangeAlongZSource zSource)
 		{
-			IList<IGeometry> result = new List<IGeometry>();
-
-			// TEST
 			double tolerance = GeometryUtils.GetXyTolerance(sourceMultipatch);
 
 			Polyhedron polyhedron =
-				GeometryConversionUtils.CreatePolyhedron(sourceMultipatch, false, true);
+				GeometryConversionUtils.CreatePolyhedron(sourceMultipatch, true, true);
 			MultiPolycurve target = GeometryConversionUtils.CreateMultiPolycurve(overlaps);
 
 			// TODO: Remember inverted ring groups and reverse results at the end!
@@ -426,9 +418,45 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 				}
 			}
 
-			result.Add(GeometryConversionUtils.CreateMultipatch(resultHedra, sourceMultipatch));
+			return resultHedra;
+		}
 
-			overlappingMultiPatches = null;
+		private IList<IGeometry> CreateMultipatchResults(
+			[NotNull] IList<RingGroup> resultHedra,
+			[NotNull] IMultiPatch sourceMultipatch)
+		{
+			var result = new List<IGeometry>();
+			double tolerance = GeometryUtils.GetXyTolerance(sourceMultipatch);
+
+			// Group by spatial connectivity and assign PointIDs
+			IList<ICollection<RingGroup>> connectedGroups =
+				GeomTopoOpUtils.GroupConnectedRingGroups(resultHedra, tolerance, true);
+
+			int partId = 0;
+			foreach (ICollection<RingGroup> connectedGroup in connectedGroups)
+			{
+				// Assign same PointID to all rings in this connected group
+				foreach (RingGroup ringGroup in connectedGroup)
+				{
+					ringGroup.Id = partId;
+				}
+
+				if (_explodeMultipartResult)
+				{
+					// Create separate multipatch for each connected group
+					result.Add(
+						GeometryConversionUtils.CreateMultipatch(connectedGroup, sourceMultipatch));
+				}
+
+				partId++;
+			}
+
+			// If explosion is disabled, combine all groups into one multipatch
+			if (! _explodeMultipartResult)
+			{
+				result.Add(GeometryConversionUtils.CreateMultipatch(resultHedra, sourceMultipatch));
+			}
+
 			return result;
 		}
 
@@ -489,21 +517,6 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			}
 
 			return intersectingByMultipatchPart;
-		}
-
-		private static void AssignConstantPointID(IGeometry geometry, int pointId)
-		{
-			var geometryCollection = geometry as IGeometryCollection;
-
-			if (geometryCollection == null)
-			{
-				throw new ArgumentException("Geometry is not a high-level geometry collection");
-			}
-
-			for (int partIdx = 0; partIdx < geometryCollection.GeometryCount; partIdx++)
-			{
-				GeometryUtils.AssignConstantPointID(geometryCollection, partIdx, pointId);
-			}
 		}
 
 		/// <summary>

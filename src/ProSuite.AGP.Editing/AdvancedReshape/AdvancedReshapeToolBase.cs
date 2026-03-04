@@ -559,7 +559,7 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		LogReshapeResults(result, selection.Count);
 
 		// At some point, hopefully, read-only operations on the CIM model can run in parallel
-		await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures);
+		await ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures.Values);
 
 		return success;
 	}

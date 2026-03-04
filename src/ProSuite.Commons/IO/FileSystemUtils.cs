@@ -66,6 +66,15 @@ namespace ProSuite.Commons.IO
 			                            Path.DirectorySeparatorChar);
 		}
 
+		public static bool ArePathsEqual([NotNull] string path1,
+		                                 [NotNull] string path2)
+		{
+			return string.Equals(
+				Path.GetFullPath(path1),
+				Path.GetFullPath(path2),
+				StringComparison.OrdinalIgnoreCase); // Windows is case-insensitive
+		}
+
 		public static bool HasInvalidPathChars([NotNull] string path)
 		{
 			return path.IndexOfAny(InvalidPathChars) >= 0;
@@ -78,7 +87,7 @@ namespace ProSuite.Commons.IO
 
 		[NotNull]
 		public static string ReplaceInvalidFileNameChars([NotNull] string fileName,
-		                                                 char replacementChar)
+		                                                 char replacementChar = '_')
 		{
 			return StringUtils.ReplaceChars(fileName, replacementChar,
 			                                InvalidFileNameChars);
@@ -86,7 +95,7 @@ namespace ProSuite.Commons.IO
 
 		[NotNull]
 		public static string ReplaceInvalidPathChars([NotNull] string path,
-		                                             char replacementChar)
+		                                             char replacementChar = '_')
 		{
 			return StringUtils.ReplaceChars(path, replacementChar, InvalidPathChars);
 		}

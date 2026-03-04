@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
@@ -8,7 +9,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps;
 
 public abstract class DockPaneRemoveOverlapsViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneRemoveOverlapsViewModelBase() : base(new DockPaneRemoveOverlaps())
+	protected DockPaneRemoveOverlapsViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -90,5 +91,10 @@ public abstract class DockPaneRemoveOverlapsViewModelBase : DockPaneViewModelBas
 					SelectedFeaturesVisibility = Visibility.Collapsed
 				};
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneRemoveOverlaps();
 	}
 }

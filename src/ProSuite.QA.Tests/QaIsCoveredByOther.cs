@@ -447,16 +447,21 @@ namespace ProSuite.QA.Tests
 
 				if (geometriesToSubtract.Count > 0)
 				{
-					// Use the union of all covering geometries to subtract.
-					// TODO: Clip before union? Only union if they are many?
+					// Use a clipped union of all covering geometries to subtract.
+					// TODO: Is clipping ok? Only union if they are many?
 					// TODO: Protect against worst case (large geometries covering many features)
 					//       Or better, keep the union to improve the probability that the test
 					//       features are contained? Clipping features before union is probably the best trade-off.
 
+					IEnvelope clipEnvelope = uncoveredGeometry.Envelope;
+					double xyTolerance = _coveringClassSpatialReferenceXyTolerances[coveringClassIndex];
+					double extraTolerance =  2 * Math.Sqrt(2) * xyTolerance;
+					clipEnvelope.Expand(extraTolerance, extraTolerance, asRatio : false);
+
 					IGeometry geometryToSubtract =
 						geometriesToSubtract.Count == 1
 							? geometriesToSubtract[0]
-							: UnionPolygons(geometriesToSubtract, uncoveredGeometry.Envelope);
+							: UnionPolygons(geometriesToSubtract, clipEnvelope);
 
 					uncoveredGeometry = GetRemainingUnCoveredGeometry(
 						uncoveredGeometry, geometryToSubtract, null);
@@ -904,7 +909,7 @@ namespace ProSuite.QA.Tests
 				// the covering shape type is (at least) 2-dimensional
 				// -> try cheaper methods to determine if the covered feature is contained
 				geometry.QueryEnvelope(_envelopeTemplate);
-
+				
 				var coveringRelOp = (IRelationalOperator) coveringGeometry;
 
 				// uses xy tolerance of COVERING

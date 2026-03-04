@@ -4,6 +4,7 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -46,11 +47,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		public DdxModel CreateModel(IWorkspace workspace,
-		                         string modelName,
-		                         int modelId,
-		                         string databaseName,
-		                         string schemaOwner,
-		                         IList<string> usedDatasetNames = null)
+		                            string modelName,
+		                            int modelId,
+		                            string databaseName,
+		                            string schemaOwner,
+		                            IList<string> usedDatasetNames = null)
 		{
 			// TODO: This could be un-commented once 10.9.1 support has been dropped (and TopologyNameClass exists)
 			//       Additionally, the line containing new TopologyNameClass() should be un-commented and the
@@ -76,6 +77,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			{
 				model.SpatialReferenceDescriptor =
 					SpatialReferenceDescriptorExtensions.CreateFrom(spatialReference);
+
+				ComUtils.ReleaseComObject(spatialReference);
 			}
 		}
 
@@ -117,11 +120,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 		}
 
 		private DdxModel CreateNeededModel(IWorkspace workspace,
-		                                string name,
-		                                int modelId,
-		                                string databaseName,
-		                                string schemaOwner,
-		                                [NotNull] IList<string> usedDatasetNames)
+		                                   string name,
+		                                   int modelId,
+		                                   string databaseName,
+		                                   string schemaOwner,
+		                                   [NotNull] IList<string> usedDatasetNames)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
@@ -252,7 +255,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 			IGeoDataset geoDataset = datasetOpener.OpenDataset(dataset) as IGeoDataset;
 
-			return geoDataset?.SpatialReference;
+			ISpatialReference result = geoDataset?.SpatialReference;
+
+			// NOTE: Do not release the geoDataset here, it is cached in the datasetOpener
+
+			return result;
 		}
 
 		private void HarvestDataset([NotNull] IDatasetName datasetName,

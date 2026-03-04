@@ -7,6 +7,7 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
@@ -23,6 +24,8 @@ namespace ProSuite.AGP.QA
 	/// </summary>
 	public abstract class VerificationServiceGrpc : VerificationServiceBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull] private readonly IQualityVerificationClient _client;
 		private const string _contextTypeWorkUnit = "Work Unit";
 		private const string _contextTypePerimeter = "Perimeter";
@@ -164,17 +167,16 @@ namespace ProSuite.AGP.QA
 			string projectName = Project.Current.Name;
 
 			VerificationRequest request =
-				await QueuedTask.Run(
-					() =>
-					{
-						var result = QAUtils.CreateRequest(projectWorkspace, _contextTypePerimeter,
-						                                   projectName, specificationRef.Id,
-						                                   perimeter, DdxEnvironmentName);
+				await QueuedTask.Run(() =>
+				{
+					var result = QAUtils.CreateRequest(projectWorkspace, _contextTypePerimeter,
+					                                   projectName, specificationRef.Id,
+					                                   perimeter, DdxEnvironmentName);
 
-						QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
+					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
-						return result;
-					});
+					return result;
+				});
 
 			SetPathParameters(resultsPath, request);
 
@@ -194,18 +196,17 @@ namespace ProSuite.AGP.QA
 			string projectName = Project.Current.Name;
 
 			VerificationRequest request =
-				await QueuedTask.Run(
-					() =>
-					{
-						VerificationRequest result =
-							QAUtils.CreateRequest(
-								projectWorkspace, _contextTypePerimeter, projectName, specification,
-								perimeter, DdxEnvironmentName);
+				await QueuedTask.Run(() =>
+				{
+					VerificationRequest result =
+						QAUtils.CreateRequest(
+							projectWorkspace, _contextTypePerimeter, projectName, specification,
+							perimeter, DdxEnvironmentName);
 
-						QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
+					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
-						return result;
-					});
+					return result;
+				});
 
 			SetPathParameters(resultsPath, request);
 
@@ -219,6 +220,19 @@ namespace ProSuite.AGP.QA
 		{
 			if (! string.IsNullOrEmpty(resultsPath))
 			{
+				// GOTOP-796: Guard against inexistent path on server
+				// TODO: Make paths configurable and remove
+				if (! _client.RunsLocally())
+				{
+					// If not a local machine path, set the results path to null to avoid errors:
+					if (! resultsPath.StartsWith(@"\\"))
+					{
+						_msg.Debug(
+							"Paths will not be provided to server (no localhost and not UNC path)");
+						return;
+					}
+				}
+
 				string htmlReport = Path.Combine(resultsPath, HtmlReportName);
 				string xmlReport = Path.Combine(resultsPath, VerificationReportName);
 				string gdbDir = Path.Combine(resultsPath, "issues.gdb");

@@ -1,3 +1,4 @@
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -6,7 +7,7 @@ namespace ProSuite.AGP.Editing.FillHole;
 
 public abstract class DockPaneFillHoleViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneFillHoleViewModelBase() : base(new DockPaneFillHole())
+	protected DockPaneFillHoleViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -63,5 +64,10 @@ public abstract class DockPaneFillHoleViewModelBase : DockPaneViewModelBase
 				Options.CentralizableLimitPreviewToExtent,
 				new[] { Options.CentralizableShowPreview });
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneFillHole();
 	}
 }

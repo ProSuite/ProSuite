@@ -24,6 +24,9 @@
                 Margin="0, 2" 
                 Value="{Binding CurrentValue, Mode=TwoWay}" 
                 Decimals="{Binding Decimals}"
+                Step="{Binding Step}"
+                MinValue="{Binding MinValue}"
+                MaxValue="{Binding MaxValue}"
                 ToolTipService.ShowOnDisabled="True"
                 ToolTip="{Binding ToolTip}" 
                 TextFontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />

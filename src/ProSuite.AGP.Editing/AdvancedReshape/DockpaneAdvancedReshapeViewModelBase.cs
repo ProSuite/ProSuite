@@ -1,3 +1,4 @@
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -6,7 +7,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape;
 
 public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBase
 {
-	protected DockPaneAdvancedReshapeViewModelBase() : base(new DockPaneAdvancedReshape())
+	protected DockPaneAdvancedReshapeViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -72,5 +73,10 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableMoveOpenJawEndJunction);
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneAdvancedReshape();
 	}
 }

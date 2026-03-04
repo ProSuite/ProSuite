@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
@@ -7,7 +8,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong;
 
 public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase
 {
-	public DockPaneCutAlongViewModelBase() : base(new DockPaneCutAlong())
+	public DockPaneCutAlongViewModelBase()
 	{
 		RevertToDefaultsCommand = new RelayCommand(RevertToDefaults);
 	}
@@ -170,5 +171,10 @@ public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase
 			ZValueSourceSelectionVM =
 				new ZValueSourceSelectionViewModel(_options.CentralizableZValueSource);
 		}
+	}
+
+	protected override Control CreateView()
+	{
+		return new DockPaneCutAlong();
 	}
 }

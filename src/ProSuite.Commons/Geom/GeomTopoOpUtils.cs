@@ -3913,6 +3913,40 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
+		/// Groups rings that are connected in 3D, i.e. their boundaries have linear 3D intersections.
+		/// </summary>
+		/// <param name="ringGroups"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="preserveExistingIds">If true, rings with existing (non-null) IDs will only
+		/// be grouped with rings that have the same ID. Rings without IDs will be grouped normally
+		/// by spatial connectivity.</param>
+		/// <returns></returns>
+		public static IList<ICollection<RingGroup>> GroupConnectedRingGroups(
+			IList<RingGroup> ringGroups, double tolerance, bool preserveExistingIds = false)
+		{
+			Func<RingGroup, RingGroup, bool> groupingCriterion;
+
+			if (preserveExistingIds)
+			{
+				// First check if both have the same existing ID, then check spatial connectivity
+				groupingCriterion = (r1, r2) =>
+					(r1.Id != null && r1.Id == r2.Id) ||
+					(GeomRelationUtils.AreConnected3D(r1.ExteriorRing, r2.ExteriorRing, tolerance));
+			}
+			else
+			{
+				// Just check spatial connectivity
+				groupingCriterion = (r1, r2) =>
+					GeomRelationUtils.AreConnected3D(r1.ExteriorRing, r2.ExteriorRing, tolerance);
+			}
+
+			IList<ICollection<RingGroup>> connectedGroups =
+				GroupPolygons(ringGroups, groupingCriterion, tolerance);
+
+			return connectedGroups;
+		}
+
+		/// <summary>
 		/// Performs basic clustering on the specified points using the provided tolerances as
 		/// minimum distance. The clustering is performed separately and independently in xy and
 		/// in z.

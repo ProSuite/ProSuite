@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Windows.Controls;
 using System.Windows.Data;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
@@ -27,7 +28,7 @@ public abstract class LogDockPaneViewModelBase :
 	private readonly UserStateManager<LogPaneFormState> _formStateManager;
 	private LoggingEventItem _selectedRow;
 
-	protected LogDockPaneViewModelBase() : base(new LogDockPane())
+	protected LogDockPaneViewModelBase()
 	{
 		LogMessageList = new ObservableCollection<LoggingEventItem>();
 		BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
@@ -169,6 +170,11 @@ public abstract class LogDockPaneViewModelBase :
 	protected override void OnShow(bool isVisible)
 	{
 		UpdateLogBtn(isVisible);
+	}
+
+	protected override Control CreateView()
+	{
+		return new LogDockPane();
 	}
 
 	private void UpdateLogBtn(bool visible)

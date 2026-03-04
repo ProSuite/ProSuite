@@ -270,11 +270,9 @@ public static class MapUtils
 			featureClass = GetUnJoinedFeatureClass(featureClass);
 		}
 
-		// TODO: Split by 1000 OIDs to avoid too large queries
 		var filter = new QueryFilter
 		             {
-			             WhereClause =
-				             $"{featureClass.GetDefinition().GetObjectIDField()} IN ({StringUtils.Concatenate(oids, ", ")})"
+			             ObjectIDs = oids.ToList()
 		             };
 
 		// NOTE: The spatial reference of the layer is the same as the feature class rather than the map.
@@ -857,15 +855,14 @@ public static class MapUtils
 		MapPoint mapUpperRight = GeometryFactory.CreatePoint(
 			mapExtent.XMax, mapExtent.YMax, mapZValue, mapExtent.SpatialReference);
 
-		return await QueuedTask.Run(
-			       () =>
-			       {
-				       Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
-				       Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+		return await QueuedTask.Run(() =>
+		{
+			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
+			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
 
-				       return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
-				                        (screenLowerLeft.Y + screenUpperRight.Y) / 2);
-			       });
+			return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
+			                 (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+		});
 	}
 
 	/// <summary>
@@ -927,6 +924,13 @@ public static class MapUtils
 		}
 
 		bool isInFixedCursorMode = false;
+
+#if ARCGISPRO_GREATER_3_6
+
+		return mapView.IsStereoCursorFixed;
+
+#endif
+
 #if ARCGISPRO_GREATER_3_5
 
 		Map stereoMap = Assert.NotNull(mapView.Map);
@@ -1144,36 +1148,56 @@ public static class MapUtils
 		return map?.SelectionCount > 0;
 	}
 
-	public static async Task<bool> FlashGeometryAsync(
-		[NotNull] MapView mapView,
-		[NotNull] Geometry geometry,
-		CIMSymbolReference symbolReference,
-		int milliseconds = 400,
-		bool useReferenceScale = false)
+	/// <summary>
+	/// Flashes the provided geometry. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="geometry"></param>
+	/// <param name="symbolReference"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task FlashGeometryAsync([NotNull] MapView mapView,
+	                                            [NotNull] Geometry geometry,
+	                                            CIMSymbolReference symbolReference,
+	                                            int milliseconds = 400,
+	                                            bool useReferenceScale = false)
 	{
-		return await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
-		                                milliseconds, useReferenceScale);
+		await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
+		                         milliseconds, useReferenceScale);
 	}
 
-	public static async Task<bool> FlashGeometryAsync(
-		[NotNull] MapView mapView,
-		[NotNull] Overlay overlay,
-		int milliseconds = 400,
-		bool useReferenceScale = false)
+	/// <summary>
+	/// Flashes using the provided overlay. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlay"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task FlashGeometryAsync([NotNull] MapView mapView,
+	                                            [NotNull] Overlay overlay,
+	                                            int milliseconds = 400,
+	                                            bool useReferenceScale = false)
 	{
 		using (await overlay.AddToMapAsync(mapView, useReferenceScale))
 		{
 			await Task.Delay(milliseconds);
 		}
-
-		return true;
 	}
 
-	public static async Task<bool> FlashGeometriesAsync(
-		[NotNull] MapView mapView,
-		IEnumerable<Overlay> overlays,
-		int milliseconds = 400,
-		bool useReferenceScale = false)
+	/// <summary>
+	/// Flashes using the provided overlays. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlays"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task FlashGeometriesAsync([NotNull] MapView mapView,
+	                                              IEnumerable<Overlay> overlays,
+	                                              int milliseconds = 400,
+	                                              bool useReferenceScale = false)
 	{
 		List<IDisposable> disposables = new List<IDisposable>();
 
@@ -1193,10 +1217,16 @@ public static class MapUtils
 				disposable.Dispose();
 			}
 		}
-
-		return true;
 	}
 
+	/// <summary>
+	/// Flashes the provided geometries. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="geometries"></param>
+	/// <param name="milliseconds">The duration of the flashing.</param>
+	/// <param name="color">The color of the flash. Default: dark green</param>
+	/// <param name="useReferenceScale"></param>
 	public static void FlashGeometries(
 		[NotNull] MapView mapView,
 		IEnumerable<Geometry> geometries,
@@ -1248,7 +1278,14 @@ public static class MapUtils
 		}
 	}
 
-	public static bool FlashGeometries(
+	/// <summary>
+	/// Flashes by showing the provided overlays. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlays"></param>
+	/// <param name="milliseconds"></param>
+	/// <param name="useReferenceScale"></param>
+	public static void FlashGeometries(
 		[NotNull] MapView mapView,
 		IEnumerable<Overlay> overlays,
 		int milliseconds = 400,
@@ -1273,8 +1310,6 @@ public static class MapUtils
 				disposable?.Dispose();
 			}
 		}
-
-		return true;
 	}
 
 	#endregion
