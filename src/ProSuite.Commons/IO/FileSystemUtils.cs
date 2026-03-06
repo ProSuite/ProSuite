@@ -474,5 +474,78 @@ namespace ProSuite.Commons.IO
 
 			return path;
 		}
+
+		/// <summary>
+		/// Resolves a source pattern to a list of matching file paths. The pattern may be a
+		/// wildcard glob, a direct file path, or a directory. When a directory is given, all
+		/// files are returned recursively. An optional <paramref name="fileFilter"/> predicate
+		/// can be supplied to restrict the results to specific file types.
+		/// </summary>
+		/// <param name="sourcePattern">
+		/// A wildcard glob (e.g. <c>C:\data\*.las</c>), an absolute file path, or a directory path.
+		/// </param>
+		/// <param name="fileFilter">
+		/// Optional predicate to filter the resolved paths. Only files for which the predicate
+		/// returns <see langword="true"/> are included in the result.
+		/// </param>
+		/// <returns>
+		/// A list of resolved file paths matching the pattern and filter.
+		/// Returns an empty list if no files match.
+		/// </returns>
+		/// <exception cref="DirectoryNotFoundException">
+		/// Thrown when a wildcard pattern is used but the directory portion does not exist.
+		/// </exception>
+		/// <exception cref="FileNotFoundException">
+		/// Thrown when the pattern is a plain path that does not resolve to an existing file
+		/// or directory.
+		/// </exception>
+		/// <example>
+		/// Resolve all files in a directory:
+		/// <code>
+		/// List&lt;string&gt; all = LasPathUtils.ResolveFilePaths(@"C:\data\pointclouds");
+		/// </code>
+		/// Resolve using a wildcard glob:
+		/// <code>
+		/// List&lt;string&gt; las = LasPathUtils.ResolveFilePaths(@"C:\data\**\*.las");
+		/// </code>
+		/// Resolve with a custom extension filter:
+		/// <code>
+		/// List&lt;string&gt; txt = LasPathUtils.ResolveFilePaths(@"C:\data", f => f.EndsWith(".txt"));
+		/// </code>
+		/// </example>
+		public static List<string> ResolveFilePathsWithWildcards(string sourcePattern,
+		                                                         Predicate<string> fileFilter =
+			                                                         null)
+		{
+			IEnumerable<string> files;
+
+			if (sourcePattern.Contains('*'))
+			{
+				string directory = Path.GetDirectoryName(sourcePattern);
+				string pattern = Path.GetFileName(sourcePattern);
+
+				if (string.IsNullOrEmpty(directory) || ! Directory.Exists(directory))
+				{
+					throw new DirectoryNotFoundException(
+						$"Directory not found: {directory ?? sourcePattern}");
+				}
+
+				files = Directory.EnumerateFiles(directory, pattern, SearchOption.AllDirectories);
+			}
+			else if (File.Exists(sourcePattern))
+			{
+				files = new List<string> { sourcePattern };
+			}
+			else if (Directory.Exists(sourcePattern))
+			{
+				files = Directory.EnumerateFiles(sourcePattern, "*", SearchOption.AllDirectories);
+			}
+			else
+			{
+				throw new FileNotFoundException($"Path not found: {sourcePattern}", sourcePattern);
+			}
+
+			return fileFilter != null ? files.Where(f => fileFilter(f)).ToList() : files.ToList();
+		}
 	}
 }
