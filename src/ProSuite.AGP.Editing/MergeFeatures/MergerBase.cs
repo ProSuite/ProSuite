@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -192,7 +194,8 @@ public abstract class MergerBase
 
 	protected virtual void OnCommitting(Feature updateFeature,
 	                                    IList<Feature> deleteFeatures,
-	                                    Geometry mergedGeometry) { }
+	                                    Geometry mergedGeometry,
+	                                    EditOperation editOperation) { }
 
 	private bool IsValidMergeResult([NotNull] Geometry mergeResult,
 	                                NotificationCollection notifications)
@@ -382,50 +385,34 @@ public abstract class MergerBase
 		                         "At least one feature must be deleted.");
 		Assert.ArgumentNotNull(mergedGeometry, nameof(mergedGeometry));
 
-		var datasets = GdbPersistenceUtils
-		               .GetDatasetsNonEmpty(deleteFeatures.Append(updateFeature)).ToList();
+		var editOperation = new EditOperation();
+		editOperation.Name = "Merge features";
 
-		bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
-			             editContext =>
-			             {
-				             if (MergeOptions.TransferRelationships)
-				             {
-					             foreach (Feature deleteFeature in
-					                      deleteFeatures.OrderBy(f => GeometryUtils
+		if (MergeOptions.TransferRelationships)
+		{
+			foreach (Feature deleteFeature in
+			         deleteFeatures.OrderBy(f => GeometryUtils
 						                                             .GetGeometrySize(
 							                                             f.GetShape())))
-					             {
-						             TransferRelationships(deleteFeature, updateFeature);
-					             }
-				             }
+			{
+				TransferRelationships(deleteFeature, updateFeature);
+			}
+		}
 
-				             OnCommitting(updateFeature, deleteFeatures, mergedGeometry);
+		OnCommitting(updateFeature, deleteFeatures, mergedGeometry, editOperation);
 
-				             _msg.DebugFormat("Saving one updates and {0} deletes...",
-				                              deleteFeatures.Count);
+		_msg.DebugFormat("Saving one updates and {0} deletes...",
+		                 deleteFeatures.Count);
 
-				             try
-				             {
-					             GdbPersistenceUtils.StoreShape(
-						             updateFeature, mergedGeometry, editContext);
+		var inspector = new Inspector();
+		inspector.Load(updateFeature);
+		inspector.Shape = mergedGeometry;
+		editOperation.Modify(inspector);
 
-					             foreach (Feature deleteFeature in deleteFeatures)
-					             {
-						             editContext.Invalidate(deleteFeature);
-						             deleteFeature.Delete();
-					             }
-				             }
-				             catch (Exception ex)
-				             {
-					             _msg.Error("Error during merge operation", ex);
-					             editContext.Abort($"Merge failed: {ex.Message}");
-					             return false;
-				             }
+		editOperation.Delete(deleteFeatures);
 
-				             return true;
-			             },
-			             "Merge features", datasets);
-		return saved;
+		bool success = await editOperation.ExecuteAsync();
+		return success;
 	}
 
 	/// <summary>
@@ -534,6 +521,8 @@ public abstract class MergerBase
 				originObject = relatedToSourceRow;
 			}
 
+			// TODO: This internally uses RelationshipClass.CreateRelationship which does not trigger an undo/redo entry.
+			//		 Consider using EditOperation.Create(RelationshipDescription) instead.
 			Relationship newRelationship = RelationshipClassUtils.TryCreateRelationship(
 				originObject, destinationObject, relationshipClass, false,
 				overwriteExistingForeignKeys, notifications);

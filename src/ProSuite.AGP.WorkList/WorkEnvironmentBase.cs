@@ -153,7 +153,11 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 		}
 		else
 		{
-			await QueuedTask.Run(() => { result.LoadItems(); });
+			await QueuedTask.Run(() =>
+			{
+				result.LoadItems();
+				result.Count();
+			});
 		}
 
 		return result;

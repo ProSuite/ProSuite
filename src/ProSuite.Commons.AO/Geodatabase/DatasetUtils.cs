@@ -4406,6 +4406,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return true;
 			}
 
+			if (catalogPath.EndsWith(".geodatabase",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
 			return Directory.Exists(catalogPath);
 		}
 
