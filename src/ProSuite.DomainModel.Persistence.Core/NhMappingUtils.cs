@@ -32,6 +32,13 @@ namespace ProSuite.DomainModel.Persistence.Core
 			}
 		}
 
+		/// <summary>
+		/// When set to true, all ID mappings will use Generators.Assigned instead of
+		/// Native/Identity. This preserves original IDs when copying entities between
+		/// databases (e.g., Oracle to SQLite for Field DDX).
+		/// </summary>
+		public static bool UseAssignedIds { get; set; }
+
 		public static void CreateIdMapping([NotNull] IIdMapper map,
 		                                   [NotNull] string columnName,
 		                                   [CanBeNull] string nativeSequenceName)
@@ -41,7 +48,11 @@ namespace ProSuite.DomainModel.Persistence.Core
 			map.UnsavedValue(-1);
 			map.Access(Accessor.Field);
 
-			if (! string.IsNullOrEmpty(nativeSequenceName))
+			if (UseAssignedIds)
+			{
+				map.Generator(Generators.Assigned);
+			}
+			else if (! string.IsNullOrEmpty(nativeSequenceName))
 			{
 				map.Generator(Generators.Native,
 				              gmap => gmap.Params(new { sequence = nativeSequenceName }));
