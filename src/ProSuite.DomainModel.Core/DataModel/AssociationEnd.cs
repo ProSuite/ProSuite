@@ -300,7 +300,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public override string ToString()
 		{
 			return string.Format("{0} -> {1}",
-			                     _association.Name ?? "null",
+								 Association.Name ?? "null",
 			                     _objectDataset.Name ?? "null");
 		}
 
