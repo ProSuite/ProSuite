@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
@@ -19,6 +20,8 @@ namespace ProSuite.DomainModel.AO.QA
 		/// </summary>
 		/// <param name="environmentName"></param>
 		void ActivateForCurrentThread(string environmentName);
+
+		IDomainTransactionManager DomainTransactions { get; }
 
 		IList<QualitySpecification> GetQualitySpecifications(
 			[NotNull] IList<int> datasetIds,

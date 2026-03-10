@@ -133,6 +133,26 @@ namespace ProSuite.DomainModel.AO.QA
 			return TestParameterType.CustomScalar;
 		}
 
+		/// <summary>
+		/// Returns true if the two types are compatible for test parameter assignment,
+		/// i.e. they represent the same logical parameter type category. This handles the case
+		/// where a stored parameter value uses a legacy AO type (e.g. <see cref="IReadOnlyTable"/>)
+		/// but the current instance info uses an equivalent definition type (e.g.
+		/// <see cref="ITableSchemaDef"/>), which can occur when a test is instantiated via an
+		/// AlgorithmDefinition instead of the original ClassDescriptor.
+		/// </summary>
+		public static bool AreCompatibleParameterTypes([NotNull] Type type1, [NotNull] Type type2)
+		{
+			// Scalar parameters must match exactly:
+			if (type1 == type2)
+				return true;
+
+			if (! IsDatasetType(type1) || ! IsDatasetType(type2))
+				return false;
+
+			return GetParameterType(type1) == GetParameterType(type2);
+		}
+
 		public static bool IsDatasetType([NotNull] Type type)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));

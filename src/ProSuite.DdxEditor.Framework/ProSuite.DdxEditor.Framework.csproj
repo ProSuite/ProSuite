@@ -77,57 +77,29 @@
     <Content Include="Properties\Images\Save.png" />
     <Content Include="Properties\Images\ShowAboutBoxCmd.png" />
     <Content Include="Properties\Images\ShowOnlineHelpCmd.png" />
-    <Compile Update="AboutForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="ApplicationShell.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="ContentPanel\ContentControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DeleteItemsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="EntityProperties\EntityPropertiesForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Help\HtmlHelpForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Update="AboutForm.cs" />
+    <Compile Update="ApplicationShell.cs" />
+    <Compile Update="ContentPanel\ContentControl.cs" />
+    <Compile Update="DeleteItemsForm.cs" />
+    <Compile Update="EntityProperties\EntityPropertiesForm.cs" />
+    <Compile Update="Help\HtmlHelpForm.cs" />
     <Compile Update="History\ItemHistory.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="ItemViews\EntityControlWrapper.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Update="ItemViews\EntityControlWrapper.cs" />
     <Compile Update="ItemViews\ICompositeEntityPanel.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="ItemViews\IEntityPanel.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="ItemViews\ItemTableControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="ItemViews\SegmentedEntityControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="ItemViews\TabbedEntityControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Menus\CommandMenuItem.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Menus\CommandToolStripButton.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Menus\CommandToolStripMenuItem.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="NavigationPanel\NavigationControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Update="ItemViews\ItemTableControl.cs" />
+    <Compile Update="ItemViews\SegmentedEntityControl.cs" />
+    <Compile Update="ItemViews\TabbedEntityControl.cs" />
+    <Compile Update="Menus\CommandMenuItem.cs" />
+    <Compile Update="Menus\CommandToolStripButton.cs" />
+    <Compile Update="Menus\CommandToolStripMenuItem.cs" />
+    <Compile Update="NavigationPanel\NavigationControl.cs" />
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

@@ -94,7 +94,8 @@ namespace ProSuite.DomainModel.AO.QA
 							value.DataType = testParam.Type;
 							addValue = value;
 						}
-						else if (value.DataType == testParam.Type)
+						else if (TestParameterTypeUtils.AreCompatibleParameterTypes(
+							         value.DataType, testParam.Type))
 						{
 							addValue = value;
 						}

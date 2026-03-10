@@ -184,7 +184,7 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 				                                StringComparison.InvariantCultureIgnoreCase));
 
 		Assert.NotNull(tableParameterValue,
-		               $"No parameter found in {instanceType.Name} with name {tableParameterValue}");
+		               $"No parameter found in {instanceType.Name} with name {tableParameterName}");
 
 		datasetParameter = tableParameterValue as DatasetTestParameterValue;
 

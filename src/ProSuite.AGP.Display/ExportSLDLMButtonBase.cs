@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
@@ -814,19 +815,36 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		
 		if (cim is CIMGeoFeatureLayerBase { MaskedSymbolLayers: { } msl })
 		{
-			if (maskingLayers.Length != msl.Length)
+			if (maskingLayers.Length > msl.Length)
+			{
 				throw new InvalidOperationException(
-					"LayerMasks and MaskedSymbolLayers both exist but do not have " +
-					$"the same length (expect parallel arrays) for layer {layer.Name}");
+					$"Arrays LayerMasks (length  {maskingLayers.Length}) and " +
+					$"MaskedSymbolLayers (length {msl.Length}) both exist in CIM " +
+					$"but do not have the same length (layer {layer.Name}). Please " +
+					"fix manually using the Advanced Masking dialog in ArcGIS Pro");
+			}
+
+			if (maskingLayers.Length < msl.Length)
+			{
+				_msg.WarnFormat(
+					"Array LayerMasks (length {0}) is shorter than array " +
+					"MaskedSymbolLayers (length {1}) in CIM (layer {2})." +
+					"Will ignore excess MaskedSymbolLayers entries on export " +
+					"(as does Pro on rendering), but consider checking your CIM",
+					maskingLayers.Length, msl.Length, layer.Name);
+			}
 
 			var list = new List<MaskLayer>();
 			for (int i = 0; i < maskingLayers.Length; i++)
 			{
 				var uri = maskingLayers[i];
 				var maskLayer = new MaskLayer(uri);
-				maskLayer.AddSymbolLayers(msl[i].SymbolLayers.Select(sl => sl.SymbolLayerName));
+				// CIMSymbolLayerMasking.SymbolLayers could be null, meaning no symbol layer names
+				var zGroups = msl[i].SymbolLayers?.Select(sl => sl.SymbolLayerName);
+				maskLayer.AddSymbolLayers(zGroups);
 				list.Add(maskLayer);
 			}
+
 			return new MaskLayers(list, allLayers);
 		}
 
@@ -850,16 +868,32 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 			if (cim is CIMGeoFeatureLayerBase { MaskedSymbolLayers: { } msl })
 			{
-				if (maskingLayers.Length != msl.Length)
+				if (maskingLayers.Length > msl.Length)
+				{
 					throw new InvalidOperationException(
-						"LayerMasks and MaskedSymbolLayers both exist but do not have " +
-						$"the same length (expect parallel arrays) for layer {nestedLayer.Name} " +
-						$"(in group layer {groupLayer.Name})");
+						$"Arrays LayerMasks (length  {maskingLayers.Length}) and " +
+						$"MaskedSymbolLayers (length {msl.Length}) both exist in CIM " +
+						$"but do not have the same length (layer {nestedLayer.Name} " +
+						$"in controlling group layer {groupLayer.Name}). Please fix " +
+						"manually using the Advanced Masking dialog in ArcGIS Pro");
+				}
+
+				if (maskingLayers.Length < msl.Length)
+				{
+					_msg.WarnFormat(
+						"Array LayerMasks (length {0}) is shorter than array " +
+						"MaskedSymbolLayers (length {1}) in CIM (layer {2} in " +
+						"controlling group layer {3}). Will ignore excess MaskedSymbolLayers " +
+						"entries on export (as does Pro on rendering), but consider " +
+						"checking your CIM",
+						maskingLayers.Length, msl.Length, nestedLayer.Name, groupLayer.Name);
+				}
 
 				for (int i = 0; i < maskingLayers.Length; i++)
 				{
 					var uri = maskingLayers[i];
-					var zGroups = msl[i].SymbolLayers.Select(sl => sl.SymbolLayerName);
+					// CIMSymbolLayerMasking.SymbolLayers could be null, meaning no symbol layer names
+					var zGroups = msl[i].SymbolLayers?.Select(sl => sl.SymbolLayerName);
 					if (result.TryGetValue(uri, out var maskLayer))
 					{
 						maskLayer.AddSymbolLayers(zGroups);
@@ -955,11 +989,9 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 			return this;
 		}
 
-		public void AddSymbolLayers(IEnumerable<string> names)
+		public void AddSymbolLayers([CanBeNull] IEnumerable<string> names)
 		{
-			if (names is null)
-				throw new ArgumentNullException(nameof(names));
-			_symbolLayers.UnionWith(names);
+			_symbolLayers.UnionWith(names ?? Enumerable.Empty<string>());
 		}
 
 		public override string ToString()

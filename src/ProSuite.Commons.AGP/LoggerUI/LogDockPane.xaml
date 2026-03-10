@@ -107,12 +107,15 @@
 					<EventSetter Event="MouseRightButtonUp" Handler="logMessagesGrid_MouseRightButtonUp" />
 					<Style.Triggers>
 						<DataTrigger Binding="{Binding Type}" Value="Warn">
+                            <Setter Property="Foreground" Value="#FF3A3A3A" />
 							<Setter Property="Background" Value="LemonChiffon" />
 						</DataTrigger>
 						<DataTrigger Binding="{Binding Type}" Value="Error">
+                            <Setter Property="Foreground" Value="#FF3A3A3A" />
 							<Setter Property="Background" Value="LightSalmon" />
 						</DataTrigger>
 						<DataTrigger Binding="{Binding Type}" Value="Fatal">
+                            <Setter Property="Foreground" Value="#FF3A3A3A" />
 							<Setter Property="Background" Value="Coral" />
 						</DataTrigger>
 					</Style.Triggers>

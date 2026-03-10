@@ -29,6 +29,9 @@ namespace ProSuite.UI.Core.QA.Customize
 
 			_testDescriptorControl.TestDescriptor = qualityCondition.TestDescriptor;
 
+			// Propagate TestConfigurationCreator to the embedded control
+			_qualityConditionParams.TestConfigurationCreator = TestConfigurationCreator;
+
 			_qualityConditionParams.TestParameterDatasetProvider =
 				testParameterDatasetProvider;
 			_qualityConditionParams.QualityCondition = qualityCondition;
