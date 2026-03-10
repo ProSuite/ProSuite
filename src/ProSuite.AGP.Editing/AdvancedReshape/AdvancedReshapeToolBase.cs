@@ -137,7 +137,15 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		string logText = LocalizableStrings.AdvancedReshapeTool_LogEnteringSketchMode;
 		//	"Sketch the reshape line to change the selection.<br>- Press R to restore the sketch from the previous reshape operation.<br>- Press S to change the reshape side of the geometry.<br>- Press ESC to select different features.";
 
-		int selectionCount = ActiveMapView.Map.SelectionCount;
+		Map activeMap = ActiveMapView?.Map;
+
+		if (activeMap == null)
+		{
+			_msg.Warn("No map is active");
+			return;
+		}
+
+		int selectionCount = activeMap.SelectionCount;
 
 		if (selectionCount > 1)
 		{
