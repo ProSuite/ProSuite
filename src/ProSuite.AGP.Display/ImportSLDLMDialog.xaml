@@ -44,6 +44,7 @@
                     Style="{DynamicResource Esri_Button}"
 			        IsEnabled="{Binding ValidateButtonEnabled}"
                     Command="{Binding ValidateConfigCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
 			        ToolTip="Validate config file (do not import)" />
 		</DockPanel>
 	</StackPanel>
