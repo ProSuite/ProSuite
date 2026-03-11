@@ -126,14 +126,25 @@ public static class DisplayUtils
 	}
 
 	/// <summary>
-	/// Return true iff the given map uses SLD on any layer
-	/// (therefore this method traverses the layer stack).
+	/// Return true iff the given map or group layer uses SLD,
+	/// configured on itself or any nested layer (therefore,
+	/// this method may traverse the layer stack).
 	/// </summary>
-	public static bool UsesSLD([CanBeNull] Map map)
+	/// <remarks>Must call on MCT</remarks>
+	public static bool UsesSLD([CanBeNull] ILayerContainer mapOrGroupLayer)
 	{
-		if (map is null) return false;
+		if (mapOrGroupLayer is null) return false;
 
-		var layers = map.GetLayersAsFlattenedList();
+		if (mapOrGroupLayer is GroupLayer rootGroupLayer)
+		{
+			var cim = rootGroupLayer.GetDefinition();
+			if (cim is CIMGroupLayer { SymbolLayerDrawing.UseSymbolLayerDrawing: true })
+			{
+				return true;
+			}
+		}
+
+		var layers = mapOrGroupLayer.GetLayersAsFlattenedList();
 
 		foreach (var layer in layers)
 		{
