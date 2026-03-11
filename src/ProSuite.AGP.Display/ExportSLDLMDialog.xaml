@@ -46,7 +46,7 @@
                   Content="Include extra masking info"
                   ToolTip="An aid to understanding and debugging the layer masking configuration (ignored in import)" />
 
-		<DockPanel LastChildFill="False" Margin="0,2,0,0">
+		<DockPanel Margin="0,4,0,0">
             <Button DockPanel.Dock="Right" Content="Cancel" TabIndex="2"
                     Style="{DynamicResource Esri_Button}"
                     IsCancel="True" />
@@ -54,6 +54,14 @@
                     Style="{DynamicResource Esri_Button}"
                     IsEnabled="{Binding ExportButtonEnabled}"
                     IsDefault="True" Click="ExportButtonClicked" />
+            <StackPanel Orientation="Horizontal" MaxWidth="600" d:Visibility="Visible"
+                        Visibility="{Binding WarningVisibility}">
+                <Image Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"
+                       Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericWarning16.png"/>
+                <TextBlock VerticalAlignment="Center" TextWrapping="WrapWithOverflow">
+                    <Run Text="{Binding WarningText}"/>
+                </TextBlock>
+            </StackPanel>
         </DockPanel>
 	</StackPanel>
 </controls:ProWindow>

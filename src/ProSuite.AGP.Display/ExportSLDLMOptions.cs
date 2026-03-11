@@ -4,25 +4,33 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Display;
 
 public class ExportSLDLMOptions : INotifyPropertyChanged
 {
+	private Map _map;
 	private GroupLayerComboItem _groupLayer;
 	private string _configFilePath;
 	private string _remark;
 	private bool _includeMaskingInfo;
 	private bool _extraMaskingInfo;
+	private string _warningText;
 	private readonly List<GroupLayerComboItem> _groupLayers;
 
-	private string _rememberedLayerURI;
+	private string _rememberedLayerUri;
 	private string _rememberedConfigPath;
 	private string _rememberedRemark;
 	private bool? _rememberedIncludeMaskingInfo;
 	private bool? _rememberedExtraMaskingInfo;
+
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	public ExportSLDLMOptions()
 	{
@@ -30,38 +38,32 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 		GroupLayerItems = new ReadOnlyCollection<GroupLayerComboItem>(_groupLayers);
 	}
 
-	public ExportSLDLMOptions(Map map) : this()
-	{
-		SetMap(map);
-	}
-
 	public void SetMap(Map map)
 	{
+		_map = map;
+
 		if (map is null)
 		{
-			MapName = string.Empty;
 			_groupLayers.Clear();
 		}
 		else
 		{
-			MapName = map.Name ?? string.Empty;
-
 			var entireMapItem = new GroupLayerComboItem("Entire Map");
-			var selectedURI = GroupLayerItem?.GroupLayer?.URI;
+			var selectedUri = GroupLayerItem?.GroupLayer?.URI;
 
 			_groupLayers.Clear();
 			_groupLayers.Add(entireMapItem);
 			_groupLayers.AddRange(map.GetLayersAsFlattenedList().OfType<GroupLayer>().Select(gl => new GroupLayerComboItem(gl)));
 
 			var restore = _groupLayers.FirstOrDefault(
-				item => string.Equals(item?.GroupLayer?.URI, selectedURI));
+				item => string.Equals(item?.GroupLayer?.URI, selectedUri));
 			GroupLayerItem = restore ?? entireMapItem;
 		}
 	}
 
 	public void RememberOptions()
 	{
-		_rememberedLayerURI = GroupLayerItem?.GroupLayer?.URI;
+		_rememberedLayerUri = GroupLayerItem?.GroupLayer?.URI;
 		_rememberedConfigPath = ConfigFilePath;
 		_rememberedRemark = Remark;
 		_rememberedIncludeMaskingInfo = IncludeMaskingInfo;
@@ -72,7 +74,7 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 	{
 		// find group layer by URI (can be null)
 		var restore = _groupLayers.FirstOrDefault(
-			item => string.Equals(item?.GroupLayer?.URI, _rememberedLayerURI));
+			item => string.Equals(item?.GroupLayer?.URI, _rememberedLayerUri));
 
 		GroupLayerItem = restore;
 		ConfigFilePath = _rememberedConfigPath;
@@ -81,7 +83,7 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 		ExtraMaskingInfo = _rememberedExtraMaskingInfo ?? false;
 	}
 
-	public string MapName { get; private set; }
+	public string MapName => _map?.Name ?? string.Empty;
 
 	public IReadOnlyList<GroupLayerComboItem> GroupLayerItems { get; }
 
@@ -94,6 +96,7 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 			{
 				_groupLayer = value;
 				OnPropertyChanged();
+				ValidateSelectedGroupLayer();
 			}
 		}
 	}
@@ -163,11 +166,62 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 
 	public bool ExportButtonEnabled => ! string.IsNullOrWhiteSpace(ConfigFilePath);
 
+	public Visibility WarningVisibility => string.IsNullOrEmpty(WarningText)
+		                                       ? Visibility.Hidden
+		                                       : Visibility.Visible;
+
+	public string WarningText
+	{
+		get => _warningText;
+		set
+		{
+			if (_warningText != value)
+			{
+				_warningText = value;
+				OnPropertyChanged();
+				OnPropertyChanged(nameof(WarningVisibility));
+			}
+		}
+	}
+
 	public event PropertyChangedEventHandler PropertyChanged;
 
 	private void OnPropertyChanged([CallerMemberName] string name = null)
 	{
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+	}
+
+	private async void ValidateSelectedGroupLayer()
+	{
+		try
+		{
+			var selectedGroupLayer = GroupLayerItem?.GroupLayer; // null means entire map
+
+			var container = (ILayerContainer)selectedGroupLayer ?? _map;
+
+			if (container is null)
+			{
+				WarningText = string.Empty;
+			}
+			else
+			{
+				var usesSLD = await QueuedTask.Run(() => DisplayUtils.UsesSLD(container));
+
+				if (usesSLD)
+				{
+					WarningText = string.Empty;
+				}
+				else
+				{
+					WarningText = "No SLD configured (or disabled)";
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			WarningText = ex.Message;
+			_msg.Error(ex.Message, ex);
+		}
 	}
 
 	#region Nested type
