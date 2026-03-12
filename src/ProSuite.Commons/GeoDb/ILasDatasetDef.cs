@@ -15,6 +15,11 @@ namespace ProSuite.Commons.GeoDb
 		string LasFileDir { get; }
 
 		/// <summary>
+		/// The directory where the modified LAS files are stored.
+		/// </summary>
+		string ModifiedLasFileDir { get; }
+
+		/// <summary>
 		/// Whether the Dataset is editable.
 		/// </summary>
 		bool IsEditable { get; }
