@@ -29,7 +29,7 @@ namespace ProSuite.Microservices.Client.QA
 
 		// TODO: Remove DDX-specific stuff and
 		// - either provide the necessary repositories etc. as method parameters where needed
-		// - or handle the the DDX-related stuff in the caller, which should probably always be
+		// - or handle the DDX-related stuff in the caller, which should probably always be
 		//   the IApplicationBackgroundVerificationController implementation.
 		// Alternatively create a separate implementation for the interface.
 		public BackgroundVerificationResult(
