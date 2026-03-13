@@ -35,7 +35,7 @@ namespace ProSuite.Commons.Com
 
 		public static string FormatGuid(Guid guid)
 		{
-			return guid.ToString("B").ToUpper();
+			return guid.ToString("B").ToUpperInvariant();
 		}
 
 		[NotNull]
