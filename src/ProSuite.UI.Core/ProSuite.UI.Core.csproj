@@ -10,7 +10,8 @@
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-    <NoWarn>1591</NoWarn>
+    <!-- Suppressing WFO1000 for .NET 10 temporarily until it is fixed for each control property. -->
+    <NoWarn>1591;WFO1000</NoWarn>
 
     <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
 		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
