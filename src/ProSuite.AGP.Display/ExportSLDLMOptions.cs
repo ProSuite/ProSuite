@@ -21,6 +21,7 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 	private string _remark;
 	private bool _includeMaskingInfo;
 	private bool _extraMaskingInfo;
+	private bool _includeHiddenDefaultSymbol;
 	private string _warningText;
 	private readonly List<GroupLayerComboItem> _groupLayers;
 
@@ -29,6 +30,7 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 	private string _rememberedRemark;
 	private bool? _rememberedIncludeMaskingInfo;
 	private bool? _rememberedExtraMaskingInfo;
+	private bool? _rememberedIncludeHiddenDefaultSymbol;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -68,6 +70,7 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 		_rememberedRemark = Remark;
 		_rememberedIncludeMaskingInfo = IncludeMaskingInfo;
 		_rememberedExtraMaskingInfo = ExtraMaskingInfo;
+		_rememberedIncludeHiddenDefaultSymbol = IncludeHiddenDefaultSymbol;
 	}
 
 	public void RestoreOptions()
@@ -81,6 +84,7 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 		Remark = _rememberedRemark ?? string.Empty;
 		IncludeMaskingInfo = _rememberedIncludeMaskingInfo ?? true;
 		ExtraMaskingInfo = _rememberedExtraMaskingInfo ?? false;
+		IncludeHiddenDefaultSymbol = _rememberedIncludeHiddenDefaultSymbol ?? false;
 	}
 
 	public string MapName => _map?.Name ?? string.Empty;
@@ -163,6 +167,19 @@ public class ExportSLDLMOptions : INotifyPropertyChanged
 	}
 
 	public bool ExtraMaskingInfoEnabled => IncludeMaskingInfo;
+
+	public bool IncludeHiddenDefaultSymbol
+	{
+		get => _includeHiddenDefaultSymbol;
+		set
+		{
+			if (_includeHiddenDefaultSymbol != value)
+			{
+				_includeHiddenDefaultSymbol = value;
+				OnPropertyChanged();
+			}
+		}
+	}
 
 	public bool ExportButtonEnabled => ! string.IsNullOrWhiteSpace(ConfigFilePath);
 

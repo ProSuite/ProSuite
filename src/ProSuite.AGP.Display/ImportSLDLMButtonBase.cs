@@ -885,6 +885,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		public string GroupName => (string) Xml.Attribute("groupLayer");
 		public bool IncludeMasking => (bool?) Xml.Attribute("includeMasking") ?? false;
 		//public bool ExtraMasking => (bool?) Xml.Attribute("extraMasking") ?? false;
+		//public bool IncludeHiddenDefaultSymbol => (bool?) Xml.Attribute("includeHiddenDefaultSymbol") ?? false;
 		public string Remark => (string) Xml.Element("Remark");
 
 		public bool HasMaskedBy => GetHasMaskedBy();

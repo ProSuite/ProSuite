@@ -46,6 +46,11 @@
                   Content="Include extra masking info"
                   ToolTip="An aid to understanding and debugging the layer masking configuration (ignored in import)" />
 
+        <CheckBox Margin="0,4,0,2"
+                  IsChecked="{Binding IncludeHiddenDefaultSymbol}"
+                  Content="Include hidden default symbols"
+                  ToolTip="Unique Values Renderer: whether to export default symbol if hidden from Contents"/>
+
 		<DockPanel Margin="0,4,0,0">
             <Button DockPanel.Dock="Right" Content="Cancel" TabIndex="2"
                     Style="{DynamicResource Esri_Button}"
