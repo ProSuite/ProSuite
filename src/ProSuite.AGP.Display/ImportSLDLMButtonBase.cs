@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using ArcGIS.Core.CIM;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
@@ -29,6 +30,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected virtual ISymbolDisplayManager Manager => null;
+
 	// Remembered options (in session only):
 	private readonly ImportSLDLMOptions _options = new(ValidateConfig);
 
@@ -37,7 +40,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var map = MapView.Active?.Map;
 		if (map is null) return false;
 
-		var owner = Application.Current.MainWindow;
+		var owner = Application.Current.MainWindow; // must be on GUI thread! (which in OnClick we hopefully are)
 
 		_options.SetMap(map);
 		_options.RestoreOptions();
@@ -60,18 +63,42 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 		ILayerContainer container = _options.GroupLayerItem?.GroupLayer ?? (ILayerContainer) map;
 
-		await QueuedTask.Run(() => ApplyConfig(map, container, config, feedback));
+		await QueuedTask.Run(() =>
+		{
+			ApplyConfig(map, container, config, feedback);
+
+			Manager?.ToggleSLD(map, enable: true);
+
+			if (config.IncludeMasking || config.HasMaskedBy)
+			{
+				Manager?.ToggleLM(map, enable: true);
+			}
+		});
+
+		// The Symbology dock pane may not reflect the changes just imported!
+		// Sometimes it helps to close and re-open it. It has always helped
+		// to close and re-open the Map, but that's too heavy here. Instead,
+		// - clear TOC selection (so Symbology pane shows nothing)
+		// - close (i.e., hide) the Symbology pane
+		// - alert the user of the problem (message box)
+		// - open (i.e., activate) the Symbology pane (if it was visible before)
 
 		// Force a Symbology pane "reload" by clearing the TOC selection (cannot
 		// restore the selection here, as then the Symbology pane won't notice anything):
 		MapView.Active?.ClearTOCSelection();
+
+		const string symbologyDockPaneDamlID = "esri_mapping_symbologyDockPane";
+		var dockPane = FrameworkApplication.DockPaneManager.Find(symbologyDockPaneDamlID);
+
+		var visible = dockPane?.IsVisible ?? false;
+		dockPane?.Hide();
 
 		if (owner is not null)
 		{
 			const string caption = "Import SLD/LM Configuration";
 
 			var message = new StringBuilder();
-			message.Append($"SLD/LM configuration applied to {map.Name}");
+			message.Append($"SLD/LM configuration applied to map “{map.Name}”");
 			if (container is GroupLayer groupLayer)
 			{
 				message.Append($" (group layer {groupLayer.Name})");
@@ -81,13 +108,12 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			message.Append("The Symbology pane may not reflect the latest changes but ");
 			message.Append("show the old state. Refresh by closing and re-opening the map.");
 
-			//The Symbology pane may not reflect the latest changes but show the old state.
-			// Refresh by closing and re-opening the map.
-
-			// Just for reference: the Symbology dockpane has DAML ID "esri_mapping_symbologyDockPane"
-			// To get it: FrameworkApplication.DockPaneManager.Find("esri_mapping_symbologyDockPane");
-
 			MessageBox.Show(owner, message.ToString(), caption);
+		}
+
+		if (dockPane != null && visible)
+		{
+			dockPane.Activate(focus: false);
 		}
 
 		return true;
@@ -705,12 +731,15 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 	private static CIMSymbolLayerDrawing MakeSymbolLayerDrawing(IReadOnlyList<Config.LayerLevel> levels, CIMSymbolLayerDrawing previous)
 	{
-		// preserve the UseSLD flag, if it existed before; otherwise, turn it on
-		var useSLD = previous?.SymbolLayers is null ||
-		             previous.SymbolLayers.Length < 1 ||
-		             previous.UseSymbolLayerDrawing;
+		// In the early days, we preserved the UseSLD flag, if it existed before,
+		// and turned it on if not. But in real life it's probably more useful to
+		// just turn SLD on when importing SLD config
+		//var useSLD = previous?.SymbolLayers is null ||
+		//             previous.SymbolLayers.Length < 1 ||
+		//             previous.UseSymbolLayerDrawing;
+		const bool useSLD = true;
 
-		return levels.Any()
+		return levels != null && levels.Any()
 			       ? MakeSymbolLayerDrawing(levels, useSLD)
 			       : MakeSymbolLayerDrawing(null, false);
 	}
@@ -854,9 +883,11 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 		public string MapName => (string) Xml.Attribute("map");
 		public string GroupName => (string) Xml.Attribute("groupLayer");
-		//public bool IncludeMasking => (bool?) Xml.Attribute("includeMasking") ?? false;
+		public bool IncludeMasking => (bool?) Xml.Attribute("includeMasking") ?? false;
 		//public bool ExtraMasking => (bool?) Xml.Attribute("extraMasking") ?? false;
 		public string Remark => (string) Xml.Element("Remark");
+
+		public bool HasMaskedBy => GetHasMaskedBy();
 
 		public IEnumerable<OrderItem> DrawingOrder => GetDrawingOrder();
 		public IEnumerable<LevelItem> SymbolLevels => GetSymbolLevels();
@@ -885,6 +916,19 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			{
 				throw FormatError("Expect exactly one SymbolLevel element");
 			}
+		}
+
+		private bool GetHasMaskedBy()
+		{
+			// MaskedBy elements can occur on the layer level and on the symbol layer level:
+			return DrawingOrder.Any(item => Any(item.MaskedBy) ||
+			                                Any(item.Levels, lvl => Any(lvl.MaskedBy)));
+		}
+
+		private static bool Any<T>([CanBeNull] IEnumerable<T> enumerable, Func<T, bool> predicate = null)
+		{
+			if (enumerable is null) return false;
+			return predicate is null ? enumerable.Any() : enumerable.Any(predicate);
 		}
 
 		#region Nested types
