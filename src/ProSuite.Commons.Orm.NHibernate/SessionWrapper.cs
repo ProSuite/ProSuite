@@ -75,7 +75,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 						{
 							_msg.Warn("Error committing transaction", e);
 							_inner.Clear();
-							// Note: We don't throw the exception to avoid masking the original exception.
+							throw;
 						}
 					}
 					else
