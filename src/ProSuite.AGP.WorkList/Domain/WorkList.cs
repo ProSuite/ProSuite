@@ -210,12 +210,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	}
 
 	#region item geometry
-
-	public void SetItemsGeometryDraftMode(bool enable)
-	{
-		AlwaysUseDraftMode = enable;
-	}
-
+	
 	public Geometry GetItemDisplayGeometry(IWorkItem item)
 	{
 		try
