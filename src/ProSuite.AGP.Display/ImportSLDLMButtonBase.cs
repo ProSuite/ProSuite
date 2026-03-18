@@ -243,7 +243,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		if (undefinedLevels.Count > 0)
 		{
 			var text = string.Join(", ", undefinedLevels.OrderBy(name => name));
-			feedback.Error($"{nameof(config.DrawingOrder)} refers to undefined level names: {text}");
+			feedback.Warning($"{nameof(config.DrawingOrder)} refers to undefined level names: {text}");
 		}
 
 		// Check that all level names in SymbolLevels are referenced from DrawingOrder:
