@@ -387,7 +387,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				ProjectWorkspaceMsg projectWorkspaceMsg = new ProjectWorkspaceMsg();
 
-				projectWorkspaceMsg.ProjectId = GetProjectId(projectWorkspace.Project);
+				projectWorkspaceMsg.ProjectId = projectWorkspace.Project.Id;
 
 				var gdbWorkspace = projectWorkspace.Workspace as GdbWorkspace;
 
@@ -409,7 +409,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				TModel productionModel = project.ProductionModel;
 
 				var projectMsg = ProtobufUtils.ToProjectMsg(project);
-				projectMsg.ProjectId = GetProjectId(project);
+				projectMsg.ProjectId = project.Id;
 
 				CallbackUtils.DoWithNonNull(
 					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
@@ -425,11 +425,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return response;
-		}
-
-		protected virtual int GetProjectId(Project<TModel> project)
-		{
-			return project.Id;
 		}
 
 		protected static ModelMsg ToModelMsg(TModel productionModel, ICollection<DatasetMsg> referencedDatasetMsgs)
