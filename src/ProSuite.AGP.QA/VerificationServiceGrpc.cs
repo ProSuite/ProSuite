@@ -1,5 +1,7 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -14,9 +16,6 @@ using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.AGP.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace ProSuite.AGP.QA
 {
@@ -184,8 +183,6 @@ namespace ProSuite.AGP.QA
 			QAUtils.SetVerificationParameters(
 				request, GetTileSize(projectWorkspace), false, true, false);
 
-			AdjustRequest(request);
-
 			return request;
 		}
 
@@ -216,13 +213,7 @@ namespace ProSuite.AGP.QA
 			QAUtils.SetVerificationParameters(
 				request, GetTileSize(projectWorkspace), false, true, false);
 
-			AdjustRequest(request);
-
 			return request;
-		}
-
-		protected virtual void AdjustRequest(VerificationRequest request)
-		{
 		}
 
 		private void SetPathParameters(string resultsPath, VerificationRequest request)
