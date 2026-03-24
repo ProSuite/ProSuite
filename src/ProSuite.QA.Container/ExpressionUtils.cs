@@ -38,22 +38,11 @@ namespace ProSuite.QA.Container
 
 		[CanBeNull] private static Regex _tableNameMatchRegex;
 
-		private static readonly Regex _shapeLenRegex =
-			new Regex(@"SHAPE\.LEN\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-		private static readonly Regex _shapeAreaRegex =
-			new Regex(@"SHAPE\.AREA\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
 		[NotNull]
 		public static string CaseSensitivityHint => _caseSensitiveHint;
 
 		[NotNull]
 		public static string IgnoreCaseHint => _ignoreCaseHint;
-
-		[NotNull]
-		private static Regex TableNameMatchRegex => _tableNameMatchRegex ??
-		                                            (_tableNameMatchRegex =
-			                                             CompileTableNameMatchRegex());
 
 		[NotNull]
 		public static string ParseCaseSensitivityHint([NotNull] string expression,
@@ -192,7 +181,7 @@ namespace ProSuite.QA.Container
 		                                            [NotNull] string datasetName,
 		                                            [CanBeNull] out string fieldName)
 		{
-			var fieldPrefix = $"{datasetName}.";
+			string fieldPrefix = $"{datasetName}.";
 
 			if (! token.StartsWith(fieldPrefix, StringComparison.OrdinalIgnoreCase))
 			{
@@ -242,7 +231,7 @@ namespace ProSuite.QA.Container
 		public static Dictionary<string, string> GetFieldDict(
 			[CanBeNull] IList<string> expressions)
 		{
-			var expressionDict =
+			Dictionary<string, string> expressionDict =
 				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
 			if (expressions == null)
@@ -289,18 +278,18 @@ namespace ProSuite.QA.Container
 		public static Dictionary<string, string> CreateAliases(
 			[CanBeNull] Dictionary<string, string> expressionDict)
 		{
-			var aliasFieldDict =
+			Dictionary<string, string> aliasFieldDict =
 				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 			if (expressionDict == null)
 			{
 				return aliasFieldDict;
 			}
 
-			var fieldAliasDict = new Dictionary<string, string>();
+			Dictionary<string, string> fieldAliasDict = new Dictionary<string, string>();
 
-			var changedDict = new Dictionary<string, string>();
+			Dictionary<string, string> changedDict = new Dictionary<string, string>();
 
-			foreach (KeyValuePair<string, string> pair in expressionDict)
+			foreach (var pair in expressionDict)
 			{
 				string expression = pair.Value;
 				if (! expression.Contains("."))
@@ -309,12 +298,12 @@ namespace ProSuite.QA.Container
 				}
 
 				string aliasedExpression = expression;
-				var completed = false;
+				bool completed = false;
 				while (! completed)
 				{
 					completed = true;
 					foreach (string expressionToken in
-					         GetExpressionTokens(aliasedExpression, true))
+					         GetExpressionTokens(aliasedExpression, toUpper: true))
 					{
 						if (! expressionToken.Contains("."))
 						{
@@ -339,7 +328,7 @@ namespace ProSuite.QA.Container
 				changedDict[pair.Key] = aliasedExpression;
 			}
 
-			foreach (KeyValuePair<string, string> pair in changedDict)
+			foreach (var pair in changedDict)
 			{
 				expressionDict[pair.Key] = pair.Value;
 			}
@@ -351,8 +340,8 @@ namespace ProSuite.QA.Container
 		                               [NotNull] ICollection<string> expressions,
 		                               [NotNull] ICollection<string> aliasedExpressions)
 		{
-			var candidate = $"_{token.Substring(token.LastIndexOf('.') + 1)}";
-			var success = false;
+			string candidate = $"_{token.Substring(token.LastIndexOf('.') + 1)}";
+			bool success = false;
 			while (! success)
 			{
 				const StringComparison ic = StringComparison.InvariantCultureIgnoreCase;
@@ -378,7 +367,7 @@ namespace ProSuite.QA.Container
 				return expression;
 			}
 
-			var iStart = 0;
+			int iStart = 0;
 			string replaced = expression;
 			while (true)
 			{
@@ -394,7 +383,7 @@ namespace ProSuite.QA.Container
 				string extended = replaced.Substring(Math.Max(0, iFound - 1));
 				extended = extended.Substring(0, Math.Min(extended.Length, search.Length + 2));
 
-				foreach (string expressionToken in GetExpressionTokens(extended, true))
+				foreach (string expressionToken in GetExpressionTokens(extended, toUpper: true))
 				{
 					if (expressionToken == search)
 					{
@@ -415,43 +404,19 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
+		private static Regex TableNameMatchRegex => _tableNameMatchRegex ??
+		                                            (_tableNameMatchRegex =
+			                                             CompileTableNameMatchRegex());
+
+		[NotNull]
 		private static Regex CompileTableNameMatchRegex()
 		{
 			string escapedSeparators = StringUtils.Concatenate(_expressionTokenSeparators,
 			                                                   c => $@"\{c}", string.Empty);
 
-			var pattern = $@"(?<=[{escapedSeparators}]|\b)[\w\.]+";
+			string pattern = $@"(?<=[{escapedSeparators}]|\b)[\w\.]+";
 
 			return new Regex(pattern, RegexOptions.Compiled);
-		}
-
-		/// <summary>
-		/// Rewrites Oracle SDE pseudo-column names (SHAPE.LEN, SHAPE.AREA) to their
-		/// File GDB equivalents (Shape_Length, Shape_Area) when the table's workspace
-		/// is a File Geodatabase. Returns the expression unchanged for other workspaces.
-		/// </summary>
-		[CanBeNull]
-		public static string AdaptSdeFieldExpression(
-			[NotNull] IReadOnlyTable table,
-			[CanBeNull] string expression)
-		{
-			if (string.IsNullOrWhiteSpace(expression))
-			{
-				return expression;
-			}
-
-			IWorkspace workspace = table.Workspace;
-
-			if (workspace == null ||
-			    ! WorkspaceUtils.IsFileGeodatabase(workspace))
-			{
-				return expression;
-			}
-
-			string result = _shapeLenRegex.Replace(expression, "Shape_Length");
-			result = _shapeAreaRegex.Replace(result, "Shape_Area");
-
-			return result;
 		}
 	}
 }

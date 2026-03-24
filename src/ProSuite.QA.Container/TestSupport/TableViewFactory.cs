@@ -40,13 +40,6 @@ namespace ProSuite.QA.Container.TestSupport
 			expression = ExpressionUtils.ParseCaseSensitivityHint(expression,
 				out caseSensitivityOverride);
 
-			// Adapt Oracle SDE pseudo-columns for File GDB workspaces
-			if (tables.Count > 0)
-			{
-				expression = ExpressionUtils.AdaptSdeFieldExpression(
-					tables[0], expression);
-			}
-
 			if (caseSensitivityOverride != null)
 			{
 				caseSensitive = caseSensitivityOverride.Value;
@@ -57,7 +50,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			var tableAliasIndexes = new List<int>();
 
-			var dataTable = new DataTable { CaseSensitive = caseSensitive };
+			var dataTable = new DataTable {CaseSensitive = caseSensitive};
 
 			List<ColumnInfoFactory> factories =
 				tables.Select(table => new ColumnInfoFactory(table)).ToList();
@@ -166,7 +159,7 @@ namespace ProSuite.QA.Container.TestSupport
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			return Create(table, constraint, true);
+			return Create(table, constraint, useAsConstraint: true);
 		}
 
 		[NotNull]
@@ -188,14 +181,14 @@ namespace ProSuite.QA.Container.TestSupport
 				joined += string.Concat(calcExpressionDict.Values.Select(x => $"{x} "));
 			}
 
-			var fieldAliasDict =
+			Dictionary<string, string> fieldAliasDict =
 				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 			foreach (KeyValuePair<string, string> pair in aliasFieldDict)
 			{
 				fieldAliasDict.Add(pair.Value, pair.Key);
 			}
 
-			TableView tv = Create(table, joined, fieldAliasDict, false);
+			TableView tv = Create(table, joined, aliasDict: fieldAliasDict, useAsConstraint: false);
 
 			if (expressionDict.Count > 0)
 			{
@@ -205,7 +198,7 @@ namespace ProSuite.QA.Container.TestSupport
 				{
 					foreach (KeyValuePair<string, string> pair in calcExpressionDict)
 					{
-						tv.AddExpressionColumn(pair.Key, pair.Value, false);
+						tv.AddExpressionColumn(pair.Key, pair.Value, isGroupExpression: false);
 					}
 				}
 
@@ -225,9 +218,7 @@ namespace ProSuite.QA.Container.TestSupport
 		                               [CanBeNull] string expression,
 		                               bool useAsConstraint,
 		                               bool caseSensitive = false)
-		{
-			return Create(table, expression, null, useAsConstraint, caseSensitive);
-		}
+			=> Create(table, expression, null, useAsConstraint, caseSensitive);
 
 		private static TableView Create([NotNull] IReadOnlyTable table,
 		                                [CanBeNull] string expression,

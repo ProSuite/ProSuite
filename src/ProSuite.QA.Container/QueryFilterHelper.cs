@@ -6,21 +6,21 @@ namespace ProSuite.QA.Container
 {
 	public class QueryFilterHelper
 	{
+		private readonly TableView _tableView;
+
 		public QueryFilterHelper([NotNull] IReadOnlyTable table,
 		                         [CanBeNull] string constraint,
 		                         bool caseSensitive)
 		{
-			constraint = ExpressionUtils.AdaptSdeFieldExpression(table, constraint);
-
 			const bool useAsConstraint = true;
-			TableView = TableViewFactory.Create(table, constraint, useAsConstraint,
-			                                    caseSensitive);
+			_tableView = TableViewFactory.Create(table, constraint, useAsConstraint,
+			                                     caseSensitive);
 
-			SubFields = TableView.SubFields;
+			SubFields = _tableView.SubFields;
 		}
 
 		public ContainerTest ContainerTest { get; set; }
-		public TableView TableView { get; }
+		public TableView TableView => _tableView;
 
 		public bool ForNetwork { get; set; }
 
@@ -34,7 +34,7 @@ namespace ProSuite.QA.Container
 
 		public bool MatchesConstraint([NotNull] IReadOnlyRow row)
 		{
-			bool match = TableView.MatchesConstraint(row);
+			bool match = _tableView.MatchesConstraint(row);
 			return match;
 		}
 	}
