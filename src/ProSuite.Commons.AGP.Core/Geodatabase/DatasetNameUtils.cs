@@ -41,6 +41,12 @@ public static class DatasetNameUtils
 		return QualifyDatasetName(tableName, qualifier);
 	}
 
+	/// <summary>
+	/// Parse the given <paramref name="fullName"/> into the unqualified
+	/// <paramref name="tableName"/> and the <paramref name="qualifier"/>.
+	/// The returned <paramref name="qualifier"/> may be null and may
+	/// contain multiple parts (like "DATABASE.SCHEMA").
+	/// </summary>
 	public static void ParseDatasetName(
 		string fullName, out string tableName, out string qualifier)
 	{
@@ -76,10 +82,13 @@ public static class DatasetNameUtils
 		}
 	}
 
+	/// <summary>
+	/// Return the given <paramref name="datasetName"/> but (re-)qualified with
+	/// the given <paramref name="qualifier"/>; if <paramref name="qualifier"/>
+	/// is null, the unqualified name will be returned.
+	/// </summary>
 	public static string QualifyDatasetName(string datasetName, string qualifier = null)
 	{
-		// Note: only if need be: Parse(fullName, out tableName, out ownerName, out dbName)
-
 		ParseDatasetName(datasetName, out var tableName, out _);
 
 		if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(qualifier))
@@ -94,11 +103,13 @@ public static class DatasetNameUtils
 			qualifier = qualifier.Substring(0, qualifier.Length - 1).Trim();
 		}
 
-		return qualifier.EndsWith(QualifierSeparator)
-			       ? string.Concat(qualifier, tableName)
-			       : string.Concat(qualifier, QualifierSeparator, tableName);
+		return string.Concat(qualifier, QualifierSeparator, tableName);
 	}
 
+	/// <summary>
+	/// Return the unqualified table name of
+	/// the given <paramref name="datasetName"/>.
+	/// </summary>
 	public static string UnqualifyDatasetName(string datasetName)
 	{
 		return QualifyDatasetName(datasetName);
