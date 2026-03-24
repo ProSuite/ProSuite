@@ -122,9 +122,12 @@ namespace ProSuite.DomainModel.Core.QA
 				{
 					_constructorId = -1;
 				}
-				else if (_constructorId < 0)
+				else if (_constructorId < 0 && !IsPersistent)
 				{
-					// Only set the constructor if it has not already been assigned (e.g. by persistence)
+					// Only set the constructor if it has not already been assigned (e.g. by persistence).
+					// During NHibernate hydration the entity ID is set before properties, so IsPersistent
+					// is true and this branch is skipped — avoiding assembly loading for the implementation
+					// type which may not be available in all contexts.
 					try
 					{
 						_constructorId = GetDefaultConstructorId(_class);
