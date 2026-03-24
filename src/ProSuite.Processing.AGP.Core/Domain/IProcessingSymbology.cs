@@ -39,4 +39,11 @@ public interface IProcessingSymbology
 	[CanBeNull]
 	Envelope GetDrawingBounds(PseudoFeature feature, IMapContext mapContext,
 	                          DrawingOutline.Options options = null);
+
+	/// <summary>
+	/// Get the symbolized stroke width of a line or outline
+	/// </summary>
+	bool GetStrokeWidth(
+		PseudoFeature feature, IMapContext mapContext,
+		out double leftPoints, out double rightPoints);
 }
