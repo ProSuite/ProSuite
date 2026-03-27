@@ -434,6 +434,11 @@ namespace ProSuite.QA.Tests
 						continue;
 					}
 
+					// make sure covering geometry is in the same spatial reference and tolerance
+					// as the uncovered geometry, Clip/Union sometimes fail to return correct results
+					GeometryUtils.EnsureSpatialReference(coveringGeometry,
+					                                     uncoveredGeometry.SpatialReference);
+
 					uncoveredGeometry = GetRemainingUnCoveredGeometry(
 						uncoveredGeometry, coveringGeometry, geometriesToSubtract);
 
