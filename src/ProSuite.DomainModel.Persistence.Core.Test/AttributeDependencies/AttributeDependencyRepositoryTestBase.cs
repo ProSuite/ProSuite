@@ -24,11 +24,13 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.AttributeDependencies
 			dataset.AddAttribute(new ObjectAttribute("targetField", FieldType.Text));
 
 			var ad = new AttributeDependency(dataset);
-			ad.SourceAttributes.Add(dataset.GetAttribute("sourceField"));
-			ad.TargetAttributes.Add(dataset.GetAttribute("targetField"));
+			ad.AddSourceAttribute(dataset.GetAttribute("sourceField"));
+			ad.AddTargetAttribute(dataset.GetAttribute("targetField"));
 
-			var mapping = new AttributeValueMapping("SourceText", "TargetText", "Description");
-			ad.AttributeValueMappings.Add(mapping);
+			var mapping1 = new AttributeValueMapping("SourceText1", "TargetText1", "Description1");
+			var mapping2 = new AttributeValueMapping("SourceText2", "TargetText2", "Description2");
+			ad.AttributeValueMappings.Add(mapping1);
+			ad.AttributeValueMappings.Add(mapping2);
 
 			CreateSchema(model, ad);
 
@@ -49,7 +51,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.AttributeDependencies
 					Assert.AreEqual(1, ad.SourceAttributes.Count);
 					Assert.AreEqual(1, ad.TargetAttributes.Count);
 
-					Assert.AreEqual(1, ad.AttributeValueMappings.Count);
+					Assert.AreEqual(2, ad.AttributeValueMappings.Count);
 				});
 		}
 
