@@ -75,7 +75,7 @@ public static class DatasetUtils
 	}
 
 	[CanBeNull]
-	private static string GetAliasName(TableDefinition definition)
+	public static string GetAliasName(TableDefinition definition)
 	{
 		if (definition is null) return null;
 
