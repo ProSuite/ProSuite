@@ -100,7 +100,7 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			// TODO: Load the conditions-dictionary up front and provide as parameter or use
 			// separate implementations if no direct DDX access is available.
-			if (_domainTransactions == null)
+			if (_domainTransactions == null || VerificationMsg == null)
 			{
 				return null;
 			}
