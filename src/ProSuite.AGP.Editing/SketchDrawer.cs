@@ -1,19 +1,22 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing;
 
 public class SketchDrawer
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	[NotNull] private readonly List<IDisposable> _overlays = new List<IDisposable>(3);
 
 	private static readonly CIMRGBColor _sketchGreen = ColorUtils.CreateRGB(0, 125, 0);
@@ -82,15 +85,28 @@ public class SketchDrawer
 			return;
 		}
 
-		// Consider updating existing geometries instead clearing
-		ClearSketch();
-
 		bool isStereo = MapUtils.IsStereoMapView(inMapView);
 
 		if (! SymbolReferencesInitialized())
 		{
+			// Typically this is called from SketchModified (which is called from a CIM thread anyway)
+			// But just to be sure, use QueuedTask:
 			await QueuedTask.Run(() => EnsureSymbolReferences(isStereo));
 		}
+
+		// NOTE: When the sketch is NOT drawn if there are NaNs, the memory-crash () does not happen.
+		// TODO: Test thoroughly
+		//// the latch and only draw non-NaN points. Or compare with previous sketch?
+		//// Also, consider comparing with previously drawn sketch -> only draw if non-equal
+		//// Also, update the existing sketch instead of replacing it.
+
+		if (sketchGeometry is Multipart multiPart && multiPart.Points.Any(p => double.IsNaN(p.Z)))
+		{
+			return;
+		}
+
+		// Consider updating existing geometries instead clearing
+		ClearSketch();
 
 		if (sketchGeometry is Multipoint multipointSketch)
 		{
@@ -120,7 +136,7 @@ public class SketchDrawer
 		}
 		else if (sketchGeometry is Polygon polygon)
 		{
-			_overlays.Add(await inMapView.AddOverlayAsync(polygon, _polygonSymbolRef));
+			_overlays.Add(inMapView.AddOverlay(polygon, _polygonSymbolRef));
 
 			// start and end point of a polygon are geometrically equal
 			var points = polygon.Points;
