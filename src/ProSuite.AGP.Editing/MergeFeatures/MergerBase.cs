@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -192,10 +191,16 @@ public abstract class MergerBase
 		return true;
 	}
 
+	protected virtual List<Dataset> GetAdditionalRelevantDatasets(
+		List<Dataset> relevantFeatureClasses)
+	{
+		return new List<Dataset>();
+	}
+
 	protected virtual void OnCommitting(Feature updateFeature,
 	                                    IList<Feature> deleteFeatures,
 	                                    Geometry mergedGeometry,
-	                                    EditOperation editOperation) { }
+	                                    EditOperation.IEditContext editContext) { }
 
 	private bool IsValidMergeResult([NotNull] Geometry mergeResult,
 	                                NotificationCollection notifications)
@@ -385,34 +390,51 @@ public abstract class MergerBase
 		                         "At least one feature must be deleted.");
 		Assert.ArgumentNotNull(mergedGeometry, nameof(mergedGeometry));
 
-		var editOperation = new EditOperation();
-		editOperation.Name = "Merge features";
+		var datasets = GdbPersistenceUtils
+		               .GetDatasetsNonEmpty(deleteFeatures.Append(updateFeature)).ToList();
+		var additionalDatasets = GetAdditionalRelevantDatasets(datasets);
 
-		if (MergeOptions.TransferRelationships)
-		{
-			foreach (Feature deleteFeature in
-			         deleteFeatures.OrderBy(f => GeometryUtils
-						                                             .GetGeometrySize(
-							                                             f.GetShape())))
-			{
-				TransferRelationships(deleteFeature, updateFeature);
-			}
-		}
+		bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+			             editContext =>
+			             {
+				             if (MergeOptions.TransferRelationships)
+				             {
+					             foreach (Feature deleteFeature in
+					                      deleteFeatures.OrderBy(f => GeometryUtils
+						                                             .GetGeometrySize(f.GetShape())))
+					             {
+						             TransferRelationships(deleteFeature, updateFeature);
+					             }
+				             }
 
-		OnCommitting(updateFeature, deleteFeatures, mergedGeometry, editOperation);
+				             OnCommitting(updateFeature, deleteFeatures, mergedGeometry, editContext);
 
-		_msg.DebugFormat("Saving one updates and {0} deletes...",
-		                 deleteFeatures.Count);
+				             _msg.DebugFormat("Saving one updates and {0} deletes...",
+				                              deleteFeatures.Count);
 
-		var inspector = new Inspector();
-		inspector.Load(updateFeature);
-		inspector.Shape = mergedGeometry;
-		editOperation.Modify(inspector);
+				             try
+				             {
+					             GdbPersistenceUtils.StoreShape(
+						             updateFeature, mergedGeometry, editContext);
 
-		editOperation.Delete(deleteFeatures);
+					             foreach (Feature deleteFeature in deleteFeatures)
+					             {
+						             editContext.Invalidate(deleteFeature);
+						             deleteFeature.Delete();
+					             }
+				             }
+				             catch (Exception ex)
+				             {
+					             _msg.Error("Error during merge operation", ex);
+					             editContext.Abort($"Merge failed: {ex.Message}");
+					             return false;
+				             }
 
-		bool success = await editOperation.ExecuteAsync();
-		return success;
+				             return true;
+			             },
+			             "Merge features", datasets.Union(additionalDatasets));
+
+		return saved;
 	}
 
 	/// <summary>
@@ -522,7 +544,7 @@ public abstract class MergerBase
 			}
 
 			// TODO: This internally uses RelationshipClass.CreateRelationship which does not trigger an undo/redo entry.
-			//		 Consider using EditOperation.Create(RelationshipDescription) instead.
+			//		 Consider using EditOperation.EditContext.Invalidate as well.
 			Relationship newRelationship = RelationshipClassUtils.TryCreateRelationship(
 				originObject, destinationObject, relationshipClass, false,
 				overwriteExistingForeignKeys, notifications);
