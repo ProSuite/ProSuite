@@ -15,25 +15,35 @@ namespace ProSuite.Commons.AGP.Help;
 
 public class AboutViewModel : INotifyPropertyChanged
 {
-	private string _heading;
+	private const string DefaultTitle = "About";
+
+	private string _title;
 	private IList<AboutItem> _itemList;
 	private ICollectionView _itemView;
+	private ICommand _copyCommand;
+	private ICommand _closeCommand;
+
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	public AboutViewModel(string heading, IEnumerable<AboutItem> items)
+	public AboutViewModel(string title, IEnumerable<AboutItem> items)
 	{
-		_heading = heading ?? string.Empty;
+		_title = title ?? DefaultTitle;
 		SetItems(items); // items may be empty
 	}
 
-	public string Heading
+	public string Title
 	{
-		get => _heading;
+		get => _title;
 		set
 		{
-			if (! string.Equals(_heading, value))
+			if (string.IsNullOrEmpty(value))
 			{
-				_heading = value;
+				value = DefaultTitle;
+			}
+
+			if (! string.Equals(_title, value))
+			{
+				_title = value;
 				OnPropertyChanged();
 			}
 		}
@@ -42,22 +52,12 @@ public class AboutViewModel : INotifyPropertyChanged
 	public ICollectionView AboutItems
 	{
 		get => _itemView;
-		set
+		private set
 		{
 			_itemView = value;
 			OnPropertyChanged();
 		}
 	}
-
-	private ICommand _copyCommand;
-
-	public ICommand CopyCommand =>
-		_copyCommand ??= new RelayCommand(CopyItems, () => true);
-
-	private ICommand _closeCommand;
-
-	public ICommand CloseCommand =>
-		_closeCommand ??= new RelayCommand<ICloseableWindow>(CloseDialog);
 
 	public void SetItems(IEnumerable<AboutItem> items)
 	{
@@ -73,13 +73,21 @@ public class AboutViewModel : INotifyPropertyChanged
 		AboutItems = view;
 	}
 
-	private void CopyItems()
+	public ICommand CopyCommand =>
+		_copyCommand ??= new RelayCommand(CopyToClipboard, () => true);
+
+	public ICommand CloseCommand =>
+		_closeCommand ??= new RelayCommand<ICloseableWindow>(CloseDialog);
+
+	#region Command actions
+
+	private void CopyToClipboard()
 	{
 		try
 		{
 			if (_itemList is null) return; // no-op
 
-			var text = AboutItem.GetPlainText(_itemList);
+			var text = AboutUtils.GetPlainText(_itemList);
 
 			Clipboard.SetText(text);
 
@@ -91,7 +99,7 @@ public class AboutViewModel : INotifyPropertyChanged
 		}
 	}
 
-	private void CloseDialog(ICloseableWindow window)
+	private static void CloseDialog(ICloseableWindow window)
 	{
 		try
 		{
@@ -103,10 +111,16 @@ public class AboutViewModel : INotifyPropertyChanged
 		}
 	}
 
+	#endregion
+
+	#region INotifyPropertyChanged
+
 	public event PropertyChangedEventHandler PropertyChanged;
 
 	private void OnPropertyChanged([CallerMemberName] string name = null)
 	{
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 	}
+
+	#endregion
 }

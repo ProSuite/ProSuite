@@ -8,58 +8,60 @@
         xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
         d:DataContext="{d:DesignInstance {x:Type local:AboutViewModel}, IsDesignTimeCreatable=False}"
         mc:Ignorable="d"
-        Title="About"
+        Title="{Binding Title}"
+        d:Title="About"
         Height="480" MinHeight="256"
         Width="640" MinWidth="400"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
-	<DockPanel Margin="12">
-		<DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="0,12,0,0">
-			<Button DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="60"
-			        Content="Close" IsDefault="True" IsCancel="True" TabIndex="2" ClickMode="Release"
-			        Command="{Binding CloseCommand}"
-			        CommandParameter="{Binding ElementName=AboutWindowName}" />
-			<Button DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="60"
-			        Content="Copy" TabIndex="1" ClickMode="Release"
-			        ToolTip="Copy to clipboard as plain text"
-			        Command="{Binding CopyCommand}"
-			        CommandParameter="{Binding ElementName=AboutWindowName}" />
-		</DockPanel>
-		<TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" FontWeight="Bold" FontSize="14">
-			<Run Text="{Binding Heading}" />
-		</TextBlock>
-		<DataGrid ItemsSource="{Binding AboutItems}" AutoGenerateColumns="False"
+    <DockPanel Margin="12">
+        <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="0,12,0,0">
+            <Button DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="60"
+                    Content="Close" IsDefault="True" IsCancel="True" TabIndex="3"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="{Binding ElementName=AboutWindowName}"
+                    ClickMode="Release" Style="{DynamicResource Esri_Button}" />
+            <Button DockPanel.Dock="Left" Margin="8,0,0,0" MinWidth="60"
+                    Content="Copy" TabIndex="1"
+                    ToolTip="Copy to clipboard as plain text"
+                    Command="{Binding CopyCommand}"
+                    ClickMode="Release" Style="{DynamicResource Esri_Button}" />
+        </DockPanel>
+        <!--<TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" FontWeight="Bold" FontSize="14">
+            <Run Text="{Binding Heading}" />
+        </TextBlock>-->
+        <DataGrid ItemsSource="{Binding AboutItems}" AutoGenerateColumns="False"
                   IsReadOnly="True" Style="{DynamicResource Esri_DataGrid}"
-                  x:Name="AboutItemDataGrid">
-			<DataGrid.GroupStyle>
-				<GroupStyle>
-					<GroupStyle.HeaderTemplate>
-						<DataTemplate>
-							<TextBlock Padding="14,2,4,2" FontWeight="Bold">
-								<Run Text="{Binding Path=Name,Mode=OneWay}" />
-							</TextBlock>
-						</DataTemplate>
-					</GroupStyle.HeaderTemplate>
-				</GroupStyle>
-			</DataGrid.GroupStyle>
-			<DataGrid.Columns>
-				<DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="Auto" MinWidth="150" />
-				<DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="3*" MinWidth="150">
-					<DataGridTextColumn.ElementStyle>
+                  HeadersVisibility="None" x:Name="AboutItemDataGrid">
+            <DataGrid.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Padding="14,2,4,2" FontWeight="Bold">
+                                <Run Text="{Binding Path=Name,Mode=OneWay}" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </DataGrid.GroupStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Property" Binding="{Binding Key}" Width="Auto" MinWidth="150" />
+                <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="3*" MinWidth="150">
+                    <DataGridTextColumn.ElementStyle>
 						<Style TargetType="TextBlock">
 							<Setter Property="TextWrapping" Value="WrapWithOverflow"/>
 							<Setter Property="VerticalAlignment" Value="Top"/>
 						</Style>
 					</DataGridTextColumn.ElementStyle>
-				</DataGridTextColumn>
-				<DataGridTextColumn Header="Remark" Binding="{Binding Remark}" Width="*" MinWidth="64">
-					<DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Remark" Binding="{Binding Remark}" Width="*" MinWidth="64">
+                    <DataGridTextColumn.ElementStyle>
 						<Style TargetType="TextBlock">
 							<Setter Property="TextWrapping" Value="WrapWithOverflow"/>
 							<Setter Property="VerticalAlignment" Value="Top"/>
 						</Style>
 					</DataGridTextColumn.ElementStyle>
-				</DataGridTextColumn>
-			</DataGrid.Columns>
-		</DataGrid>
-	</DockPanel>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
 </controls:ProWindow>

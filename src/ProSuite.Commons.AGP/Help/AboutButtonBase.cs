@@ -21,14 +21,14 @@ public abstract class AboutButtonBase : ButtonCommandBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly string _caption;
+	private readonly string _product;
 
-	protected AboutButtonBase([NotNull] string caption)
+	protected AboutButtonBase([NotNull] string product)
 	{
-		if (string.IsNullOrWhiteSpace(caption))
-			throw new ArgumentNullException(nameof(caption));
+		if (string.IsNullOrWhiteSpace(product))
+			throw new ArgumentNullException(nameof(product));
 
-		_caption = caption;
+		_product = product;
 	}
 
 	protected override async Task<bool> OnClickAsyncCore()
@@ -37,11 +37,15 @@ public abstract class AboutButtonBase : ButtonCommandBase
 
 		await CollectInformation(items);
 
-		var message = AboutItem.GetPlainText(items);
+		var message = AboutUtils.GetPlainText(items);
 
-		_msg.Info(message);
+		_msg.Info(message); // TODO Really? Or only in debug mode? A button on the dialog?
 
-		var viewModel = new AboutViewModel(_caption, items);
+		string title = string.IsNullOrEmpty(_product)
+			               ? "About"
+			               : $"About {_product}";
+
+		var viewModel = new AboutViewModel(title, items);
 		Gateway.ShowDialog<AboutWindow>(viewModel);
 
 		return true;
@@ -70,7 +74,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		if (items is null)
 			throw new ArgumentNullException(nameof(items));
 
-		string currentSection = AboutItem.AddinSection;
+		string currentSection = "Addin";
 
 		try
 		{
@@ -85,13 +89,13 @@ public abstract class AboutButtonBase : ButtonCommandBase
 			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.EnvVarSection;
+		currentSection = "Environment Variables";
 
 		try
 		{
 			foreach (var pair in GetEnvironmentVariables())
 			{
-				string remark = pair.Value is null ? "(undefined)" : null;
+				string remark = pair.Value is null ? "undefined" : null;
 				Add(items, currentSection, pair.Key, pair.Value, remark);
 			}
 		}
@@ -101,7 +105,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.ConfigSection;
+		currentSection = "Configuration";
 
 		try
 		{
@@ -114,7 +118,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.SessionSection;
+		currentSection = "Session";
 
 		try
 		{
@@ -130,7 +134,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.ProcessSection;
+		currentSection = "Process";
 
 		try
 		{
@@ -146,7 +150,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.RuntimeSection;
+		currentSection = "Runtime";
 
 		try
 		{
@@ -308,83 +312,5 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		if (s is null) return null;
 		s = s.Trim();
 		return s.Length > 0 ? s : null;
-	}
-}
-
-public class AboutItem
-{
-	public string Section { get; }
-	public string Key { get; }
-	public string Value { get; }
-	public string Remark { get; }
-
-	public static readonly string AddinSection = "Addin";
-	public static readonly string EnvVarSection = "Environment Variables";
-	public static readonly string ConfigSection = "Configuration";
-	public static readonly string SessionSection = "Session";
-	public static readonly string ProcessSection = "Process";
-	public static readonly string RuntimeSection = "Runtime";
-
-	public AboutItem(string section, string key, string value, string remark = null)
-	{
-		Section = section; // can be null
-		Key = key ?? throw new ArgumentNullException(nameof(key));
-		Value = value ?? string.Empty;
-		Remark = remark;
-	}
-
-	public static int GetSectionOrder(string section)
-	{
-		if (string.IsNullOrEmpty(section))
-			return 0;
-		if (string.Equals(section, AddinSection, StringComparison.OrdinalIgnoreCase))
-			return 1;
-		if (string.Equals(section, EnvVarSection, StringComparison.OrdinalIgnoreCase))
-			return 2;
-		if (string.Equals(section, ConfigSection, StringComparison.OrdinalIgnoreCase))
-			return 3;
-		if (string.Equals(section, SessionSection, StringComparison.OrdinalIgnoreCase))
-			return 4;
-		if (string.Equals(section, ProcessSection, StringComparison.OrdinalIgnoreCase))
-			return 5;
-		if (string.Equals(section, RuntimeSection, StringComparison.OrdinalIgnoreCase))
-			return 6;
-
-		return 999;
-	}
-
-	public static string GetPlainText(IEnumerable<AboutItem> items)
-	{
-		if (items is null)
-		{
-			return string.Empty;
-		}
-
-		string lastSection = null;
-		var buffer = new StringBuilder();
-
-		foreach (var group in items.GroupBy(item => item.Section)
-		                           .OrderBy(g => GetSectionOrder(g.Key)))
-		{
-			if (group.Key != lastSection)
-			{
-				buffer.AppendLine().AppendLine(group.Key);
-				lastSection = group.Key;
-			}
-
-			foreach (var item in group)
-			{
-				buffer.Append($"{item.Key}: {item.Value}");
-
-				if (! string.IsNullOrEmpty(item.Remark))
-				{
-					buffer.Append($" ({item.Remark})");
-				}
-
-				buffer.AppendLine();
-			}
-		}
-
-		return buffer.Trim().ToString();
 	}
 }
