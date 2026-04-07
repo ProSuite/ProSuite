@@ -39,7 +39,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 
 	[CanBeNull]
-	protected virtual ICollection<string> GetExclusionFieldNames()
+	protected virtual ICollection<string> GetExclusionFieldNames(string featureLayerName)
 	{
 		return null;
 	}
@@ -148,7 +148,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 				// TODO exclude fields: pass table/featureClass
 				await StoreNewFeature(featureLayer, originalFeature, sketchGeometry,
-				                      GetExclusionFieldNames(), cancelableProgressor);
+				                      GetExclusionFieldNames(featureLayer.Name), cancelableProgressor);
 
 				return false;
 			}
