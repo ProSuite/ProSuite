@@ -7,7 +7,11 @@ namespace ProSuite.Commons.AGP.Help;
 
 public static class AboutUtils
 {
-	public static string GetPlainText(IList<AboutItem> items)
+	/// <remarks>The resulting text string is valid Markdown (it probably
+	/// violates some of your linter settings, but it is valid).</remarks>
+	/// <remarks>For writing to the log, set <paramref name="omitTrailingNewline"/>
+	/// to <c>true</c> to avoid an extra newline at the end.</remarks>
+	public static string GetPlainText(IList<AboutItem> items, bool omitTrailingNewline = false)
 	{
 		if (items is null)
 		{
@@ -62,6 +66,11 @@ public static class AboutUtils
 			}
 		}
 
-		return buffer.Trim().ToString();
+		if (omitTrailingNewline)
+		{
+			buffer.TrimEnd();
+		}
+
+		return buffer.ToString();
 	}
 }

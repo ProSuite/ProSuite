@@ -25,6 +25,11 @@
                     ToolTip="Copy to clipboard as plain text"
                     Command="{Binding CopyCommand}"
                     ClickMode="Release" Style="{DynamicResource Esri_Button}" />
+            <Button DockPanel.Dock="Left" Margin="8,0,0,0" MinWidth="60"
+                    Content="Log" TabIndex="2"
+                    ToolTip="Write to log"
+                    Command="{Binding LogCommand}"
+                    ClickMode="Release" Style="{DynamicResource Esri_Button}" />
         </DockPanel>
         <!--<TextBlock DockPanel.Dock="Top" Margin="0,0,0,12" FontWeight="Bold" FontSize="14">
             <Run Text="{Binding Heading}" />

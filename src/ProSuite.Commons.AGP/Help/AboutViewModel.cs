@@ -21,6 +21,7 @@ public class AboutViewModel : INotifyPropertyChanged
 	private IList<AboutItem> _itemList;
 	private ICollectionView _itemView;
 	private ICommand _copyCommand;
+	private ICommand _logCommand;
 	private ICommand _closeCommand;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -76,6 +77,9 @@ public class AboutViewModel : INotifyPropertyChanged
 	public ICommand CopyCommand =>
 		_copyCommand ??= new RelayCommand(CopyToClipboard, () => true);
 
+	public ICommand LogCommand =>
+		_logCommand ??= new RelayCommand(WriteToLog, () => true);
+
 	public ICommand CloseCommand =>
 		_closeCommand ??= new RelayCommand<ICloseableWindow>(CloseDialog);
 
@@ -96,6 +100,20 @@ public class AboutViewModel : INotifyPropertyChanged
 		catch (Exception ex)
 		{
 			Gateway.ShowError(ex.Message, _msg, "Copy About Box Text");
+		}
+	}
+
+	private void WriteToLog()
+	{
+		try
+		{
+			if (_itemList is null) return; // no-op
+			var text = AboutUtils.GetPlainText(_itemList, omitTrailingNewline: true);
+			_msg.Info(text);
+		}
+		catch (Exception ex)
+		{
+			Gateway.ShowError(ex.Message, _msg, "Log About Box Text");
 		}
 	}
 

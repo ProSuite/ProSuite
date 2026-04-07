@@ -37,9 +37,8 @@ public abstract class AboutButtonBase : ButtonCommandBase
 
 		await CollectInformation(items);
 
-		var message = AboutUtils.GetPlainText(items);
-
-		_msg.Info(message); // TODO Really? Or only in debug mode? A button on the dialog?
+		//var message = AboutUtils.GetPlainText(items);
+		//_msg.Info(message); // Really? Or only in debug mode?
 
 		string title = string.IsNullOrEmpty(_product)
 			               ? "About"
