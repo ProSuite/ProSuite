@@ -49,14 +49,19 @@ public static class ProjectUtils
 	/// </summary>
 	/// <returns>The added project item</returns>
 	/// <remarks>Must run on MCT</remarks>
-	public static IProjectItem AddDatabaseConnection(Project project, string folderPath)
+	public static IProjectItem AddDatabaseConnection(Project project, string databasePath)
 	{
-		if (string.IsNullOrEmpty(folderPath))
-			throw new ArgumentNullException(nameof(folderPath));
+		if (string.IsNullOrEmpty(databasePath))
+			throw new ArgumentNullException(nameof(databasePath));
 
-		// TODO check path is *.gdb or *.sde (or *.geodatabase) and exists (as dir or file)
+		Item item = ItemFactory.Instance.Create(databasePath);
 
-		Item item = ItemFactory.Instance.Create(folderPath);
+		if (item is null)
+		{
+			// empirical: if databasePath does not exist, ItemFactory returns null
+			throw new InvalidOperationException(
+				$"ItemFactory.Instance.Create() returned null for path: {databasePath}");
+		}
 
 		return AddProjectItem(project, item);
 	}
@@ -71,7 +76,6 @@ public static class ProjectUtils
 
 		// About item.Name/Title/Alias:
 		// Prefer item.Name for messages (item.Title tends to be empty and item.Alias is under the user's control)
-		// TODO what if adding multiple times? Guard here? Caller? System?
 
 		var projectItem = item as IProjectItem ??
 		                  throw new InvalidOperationException(
@@ -79,7 +83,6 @@ public static class ProjectUtils
 
 		// Beware: Project.FindItem(path) searches some ItemFactory.Instance.Cache
 		// and NOT items actually added to the project! Use Project.GetItems instead
-		//var existing = project.FindItem(item.Path);
 
 		bool ok = project.AddItem(projectItem); // must run on MCT
 
