@@ -713,19 +713,18 @@ public static class LayerUtils
 	}
 
 	/// <summary>
-	/// Returns the feature class which is referenced by the specified layer. In case the
-	/// feature class is a joined table and the <see cref="unJoined"/> parameter is true,
-	/// the actual geodatabase feature class is returned.
+	/// Returns the feature class that is referenced by the given
+	/// layer. If the feature class is a joined table and the
+	/// <paramref name="unJoined"/> parameter is true, the actual
+	/// geodatabase feature class is returned.
 	/// </summary>
-	/// <param name="featureLayer"></param>
-	/// <param name="unJoined"></param>
-	/// <returns></returns>
+	/// <remarks>Must call on MCT</remarks>
 	public static FeatureClass GetFeatureClass(BasicFeatureLayer featureLayer,
 	                                           bool unJoined)
 	{
 		Assert.ArgumentNotNull(featureLayer, nameof(featureLayer));
 
-		FeatureClass featureClass = GetFeatureClass(featureLayer);
+		FeatureClass featureClass = featureLayer.GetFeatureClass();
 
 		if (featureClass == null)
 		{
@@ -736,14 +735,12 @@ public static class LayerUtils
 	}
 
 	/// <summary>
-	/// Returns the table referenced by the specified map member. In case the table is a joined
-	/// table and the <paramref name="unJoined"/> parameter is true, the actual geodatabase
-	/// table is returned.
+	/// Returns the table referenced by the given map member.
+	/// In case the table is a joined table and the
+	/// <paramref name="unJoined"/> parameter is true, the actual
+	/// geodatabase table is returned.
 	/// </summary>
-	/// <param name="tableBasedMapMember"></param>
-	/// <param name="unJoined"></param>
-	/// <returns></returns>
-	/// <exception cref="ArgumentException"></exception>
+	/// <remarks>Must call on MCT</remarks>
 	[CanBeNull]
 	public static Table GetTable([NotNull] IDisplayTable tableBasedMapMember,
 	                             bool unJoined)
@@ -760,6 +757,7 @@ public static class LayerUtils
 		return unJoined ? DatasetUtils.GetDatabaseTable(table) : table;
 	}
 
+	/// <remarks>Must call on MCT</remarks>
 	[CanBeNull]
 	public static FeatureClass GetFeatureClass(this Layer layer)
 	{
