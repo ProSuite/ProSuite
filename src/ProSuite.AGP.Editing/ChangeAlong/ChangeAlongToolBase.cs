@@ -36,20 +36,14 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private static readonly Key _keyToggleNonDefaultReshapeSide = Key.S;
-
 	private ChangeAlongFeedback _feedback;
 	private Geometry _lastDrawnExtent;
-
-	private bool _nonDefaultReshapeSideMode;
 
 	protected ChangeAlongToolBase()
 	{
 		IsSketchTool = true;
 
 		GeomIsSimpleAsFeature = false;
-
-		HandledKeys.Add(_keyToggleNonDefaultReshapeSide);
 	}
 
 	protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
@@ -70,6 +64,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 			AppDataFolder.Roaming, "ToolDefaults");
 
 	protected bool DisplayTargetLines { get; set; }
+
+	protected virtual bool UseNonDefaultReshapeSide => false;
 
 	protected abstract bool RefreshSubcurvesOnRedraw { get; }
 
@@ -124,35 +120,12 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		if (IsInSubcurveSelectionPhase())
 		{
 			ResetDerivedGeometries();
-			_nonDefaultReshapeSideMode = false;
 		}
 		else
 		{
 			await ClearSelectionAsync();
 			await StartSelectionPhaseAsync();
 		}
-	}
-
-	protected override Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
-	{
-		if (args.Key == _keyToggleNonDefaultReshapeSide &&
-		    IsInSubcurveSelectionPhase())
-		{
-			_nonDefaultReshapeSideMode = ! _nonDefaultReshapeSideMode;
-
-			if (_nonDefaultReshapeSideMode)
-			{
-				_msg.Info(
-					"Enabled non-default reshape mode. The next reshape " +
-					"to the inside of a polygon will remove the larger area.");
-			}
-			else
-			{
-				_msg.Info("Disabled non-default reshape mode.");
-			}
-		}
-
-		return Task.CompletedTask;
 	}
 
 	protected override void OnToolActivatingCore()
@@ -211,7 +184,6 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		DrawCompleteEvent.Unsubscribe(OnDrawCompleted);
 		ResetDerivedGeometries();
 		_feedback = null;
-		_nonDefaultReshapeSideMode = false;
 
 		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
@@ -780,7 +752,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		IList<Feature> targetFeatures = Assert.NotNull(ChangeAlongCurves.TargetFeatures);
 
 		List<ResultFeature> updatedFeatures = ChangeFeaturesAlong(
-			selectedFeatures, targetFeatures, cutSubcurves, _nonDefaultReshapeSideMode,
+			selectedFeatures, targetFeatures, cutSubcurves, UseNonDefaultReshapeSide,
 			cancellationToken, out ChangeAlongCurves newChangeAlongCurves);
 
 		if (updatedFeatures.Count > 0)
