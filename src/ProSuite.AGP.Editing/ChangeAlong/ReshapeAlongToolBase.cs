@@ -22,8 +22,7 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 
 	protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
 
-	[CanBeNull]
-	private OverridableSettingsProvider<PartialReshapeAlongOptions> _settingsProvider;
+	[CanBeNull] private OverridableSettingsProvider<PartialReshapeAlongOptions> _settingsProvider;
 
 	protected override bool RefreshSubcurvesOnRedraw =>
 		_reshapeAlongToolOptions.ClipLinesOnVisibleExtent &&
@@ -76,14 +75,16 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 		List<Feature> selectedFeatures,
 		IList<Feature> targetFeatures,
 		List<CutSubcurve> cutSubcurves,
+		bool useNonDefaultReshapeSide,
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves)
 	{
-		var targetBufferOptions = _reshapeAlongToolOptions.GetTargetBufferOptions();
+		TargetBufferOptions targetBufferOptions = _reshapeAlongToolOptions.GetTargetBufferOptions();
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
-		var filterOptions = _reshapeAlongToolOptions.GetReshapeLineFilterOptions(ActiveMapView);
+		ReshapeCurveFilterOptions filterOptions =
+			_reshapeAlongToolOptions.GetReshapeLineFilterOptions(ActiveMapView);
 
 		double? customTolerance = _reshapeAlongToolOptions.UseCustomTolerance
 			                          ? _reshapeAlongToolOptions.CustomTolerance
@@ -91,10 +92,10 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 
 		bool insertVerticesInTarget = _reshapeAlongToolOptions.InsertVerticesInTarget;
 
-		var updatedFeatures = MicroserviceClient.ApplyReshapeLines(
+		List<ResultFeature> updatedFeatures = MicroserviceClient.ApplyReshapeLines(
 			selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, filterOptions,
-			customTolerance, insertVerticesInTarget, cancellationToken,
-			out newChangeAlongCurves);
+			customTolerance, insertVerticesInTarget, useNonDefaultReshapeSide,
+			cancellationToken, out newChangeAlongCurves);
 
 		return updatedFeatures;
 	}
@@ -110,14 +111,10 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 					"draw a box to select lines completely within the box or press P " +
 					"and draw a polygon to select lines completely within" +
 					Environment.NewLine +
-					"Select additional target features while holding SHIFT");
-			// TODO:
-			//+
-			//	Environment.NewLine +
-			//	"For reshapes to the inside of a polygon press [{1}] + [{2}] " +
-			//	"to reshape in favor of the smaller area.",
-			//	PolygonScopeKey, ModifierNonDefaultSide1,
-			//	ModifierNonDefaultSide2);
+					"Select additional target features while holding SHIFT" +
+					Environment.NewLine +
+					"Press S to toggle non-default reshape side " +
+					"(reshape in favor of the smaller area)");
 
 			//if (ReshapeAlongCurves.ReshapeAlongOptions.DontShowDialog)
 			//{
@@ -163,11 +160,12 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 		IList<Feature> targetFeatures,
 		CancellationToken cancellationToken)
 	{
-		var targetBufferOptions = _reshapeAlongToolOptions.GetTargetBufferOptions();
+		TargetBufferOptions targetBufferOptions = _reshapeAlongToolOptions.GetTargetBufferOptions();
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
-		var filterOptions = _reshapeAlongToolOptions.GetReshapeLineFilterOptions(ActiveMapView);
+		ReshapeCurveFilterOptions filterOptions =
+			_reshapeAlongToolOptions.GetReshapeLineFilterOptions(ActiveMapView);
 
 		double? customTolerance = _reshapeAlongToolOptions.UseCustomTolerance
 			                          ? _reshapeAlongToolOptions.CustomTolerance
@@ -222,7 +220,7 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 			InitializeOptions();
 		}
 
-		var viewModel = GetReshapeAlongViewModel();
+		DockPaneReshapeAlongViewModelBase viewModel = GetReshapeAlongViewModel();
 		if (viewModel == null)
 		{
 			return;
@@ -234,7 +232,7 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 
 	protected override void HideOptionsPane()
 	{
-		var viewModel = GetReshapeAlongViewModel();
+		DockPaneReshapeAlongViewModelBase viewModel = GetReshapeAlongViewModel();
 		viewModel?.Hide();
 	}
 
