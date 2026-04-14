@@ -139,31 +139,8 @@ public static class GdbPersistenceUtils
 	                               [CanBeNull] ICollection<string> excludeFields = null,
 	                               [CanBeNull] Subtype subtype = null)
 	{
-		FeatureClass targetTable = DatasetUtils.GetDatabaseFeatureClass(targetFeatureClass);
-
-		using var classDefinition = targetFeatureClass.GetDefinition();
-
-		Subtype defaultSubtype = subtype ?? DatasetUtils.GetDefaultSubtype(classDefinition);
-
-		RowBuffer rowBuffer =
-			CopyRow(originalFeature, targetTable, excludeFields, false, defaultSubtype);
-
-		bool classHasZ = classDefinition.HasZ();
-		bool classHasM = classDefinition.HasM();
-
-		Geometry geometryToStore =
-			GeometryUtils.EnsureGeometrySchema(newGeometry, classHasZ, classHasM);
-
-		Geometry projected = GeometryUtils.EnsureSpatialReference(
-			geometryToStore, targetFeatureClass.GetSpatialReference());
-
-		SetShape(rowBuffer, projected, targetFeatureClass);
-
-		Feature newFeature = targetTable.CreateRow(rowBuffer);
-
-		StoreShape(newFeature, projected, editContext);
-
-		return newFeature;
+		return InsertTx(new EditOperationContext(editContext), targetFeatureClass, originalFeature,
+		                newGeometry, excludeFields, subtype);
 	}
 
 	public static Feature InsertTx([NotNull] IEditOperationContext editOperationContext,
@@ -304,7 +281,7 @@ public static class GdbPersistenceUtils
 		}
 		finally
 		{
-			rowBuffer?.Dispose();
+			rowBuffer.Dispose();
 		}
 
 		return newFeatures;
