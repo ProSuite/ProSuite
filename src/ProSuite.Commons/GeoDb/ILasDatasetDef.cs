@@ -28,9 +28,5 @@ namespace ProSuite.Commons.GeoDb
 		/// Whether the Dataset is editable.
 		/// </summary>
 		bool IsEditable { get; }
-
-		string WorkingGdbPath { get; }
-
-		string MassPointFeatureClassName { get; }
 	}
 }
