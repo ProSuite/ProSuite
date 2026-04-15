@@ -59,8 +59,7 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 
 	protected override Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
 	{
-		if (args.Key == _keyToggleNonDefaultReshapeSide &&
-		    IsInSubcurveSelectionPhase())
+		if (args.Key == _keyToggleNonDefaultReshapeSide)
 		{
 			_nonDefaultReshapeSideMode = ! _nonDefaultReshapeSideMode;
 
