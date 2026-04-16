@@ -766,6 +766,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		if (updatedFeatures.Count == 0)
 		{
 			// Probably an additional yellow line needs to be selected
+			_msg.Info(
+				"The feature was not reshaped. Please select green or yellow lines to reshape along");
 			return false;
 		}
 

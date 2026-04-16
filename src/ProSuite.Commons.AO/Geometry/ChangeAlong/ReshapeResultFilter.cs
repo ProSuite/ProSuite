@@ -42,11 +42,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		/// <summary>
 		/// Determines whether the proposed reshape side and result is allowed regarding other
-		/// criteria than the geometric situation. These could be determined by the current reshape 
+		/// criteria than the geometric situation. These could be determined by the current reshape
 		/// options, such as allowed target overlaps or updates to the geometry outside the visible
 		/// extent.
 		/// This method is called after the default reshape side has been determined
-		/// and the ReshapeSide property of the reshape info is set. It takes precedence over the 
+		/// and the ReshapeSide property of the reshape info is set. It takes precedence over the
 		/// boolean parameter useNonDefaultReshapeSide available in the reshape methods.
 		/// </summary>
 		/// <param name="reshapeInfo"></param>
@@ -96,6 +96,15 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		public bool IsResultAllowed(ReshapeInfo reshapeInfo,
 		                            NotificationCollection notifications)
 		{
+			if (UseNonDefaultReshapeSide)
+			{
+				// The user explicitly requested the non-default reshape side.
+				// Skip the extent check because the replaced segments (the larger
+				// portion of the polygon boundary) will typically extend outside
+				// the visible extent.
+				return true;
+			}
+
 			if (_allowedExtents != null &&
 			    ! ChangesVisibleInAnyExtent(
 				    _allowedExtents, GetChangedSegments(
@@ -157,7 +166,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			finally
 			{
 				if (highLevelChanges != null)
+				{
 					Marshal.ReleaseComObject(highLevelChanges);
+				}
 			}
 
 			return false;
