@@ -184,6 +184,11 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns></returns>
 		public abstract string GetCanonicalName();
 
+		public override string ToString()
+		{
+			return $"{TypeDisplayName} '{Name}'";
+		}
+
 		#region Equality members
 
 		public virtual bool Equals(InstanceDescriptor other)
