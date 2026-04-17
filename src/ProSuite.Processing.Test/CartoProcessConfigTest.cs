@@ -133,7 +133,7 @@ namespace ProSuite.Processing.Test
 			Assert.IsNull(config.GetString("ReferenceDataset1", null));
 			Assert.Throws<CartoConfigException>(() => config.GetString("ReferenceDataset2"));
 			// MarkerAttributes is multivalued; quotes preserved:
-		Assert.AreEqual("ANGLE = NormalAngle; OPERATOR = 'Jones'", string.Join("; ", config.GetValues("MarkerAttributes")));
+			Assert.AreEqual("ANGLE = NormalAngle; OPERATOR = 'Jones'", string.Join("; ", config.GetValues("MarkerAttributes")));
 		}
 
 		[Test]

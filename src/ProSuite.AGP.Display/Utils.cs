@@ -4,12 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using ArcGIS.Core.CIM;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.Display;
 
 public static class Utils
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	/// <returns>Enumeration of all unique value classes (across all groups);
 	/// aware that there may be no groups or no classes; never null</returns>
 	public static IEnumerable<CIMUniqueValueClass> GetUniqueValueClasses(CIMUniqueValueRenderer renderer)
@@ -87,50 +90,56 @@ public static class Utils
 		                   list.Select(n => n.Substring(pre, n.Length - pre - post)));
 	}
 
-	public static void ShowFeedback(ImportSLDLMButtonBase.IFeedback feedback, Window owner = null)
+	public static void ShowFeedback(ImportSLDLMButtonBase.IFeedback feedback, Window owner = null, IMsg msg = null)
 	{
-		const string caption = "SLD/LM Config Validation";
+		const string caption = "SLD/SLM Configuration";
 		const int maxMessages = 8;
 
-		ShowFeedback(feedback, maxMessages, caption, owner);
+		ShowFeedback(feedback, maxMessages, caption, owner, msg);
 	}
 
-	public static void ShowFeedback(ImportSLDLMButtonBase.IFeedback feedback, int maxMessages, string caption, Window owner = null)
+	public static void ShowFeedback(ImportSLDLMButtonBase.IFeedback feedback, int maxMessages, string caption, Window owner = null, IMsg msg = null)
 	{
 		if (feedback is null)
 			throw new ArgumentNullException(nameof(feedback));
 
 		caption ??= "Feedback Messages";
+		msg ??= _msg;
 		var sb = new StringBuilder();
+		string message;
 		MessageBoxImage icon;
 
 		if (feedback.Errors > 0)
 		{
 			sb.AppendLine("Validation failed:");
 			AppendMessages(sb, feedback, maxMessages);
+			message = sb.TrimEnd().ToString();
 			icon = MessageBoxImage.Error;
+			msg.Error($"{caption}: {message}");
 		}
 		else if (feedback.Warnings > 0)
 		{
 			sb.AppendLine("Validated with warnings:");
 			AppendMessages(sb, feedback, maxMessages);
+			message = sb.TrimEnd().ToString();
 			icon = MessageBoxImage.Warning;
+			msg.Warn($"{caption}: {message}");
 		}
 		else
 		{
 			sb.AppendLine("Validation successful");
+			message = sb.TrimEnd().ToString();
 			icon = MessageBoxImage.Information;
+			msg.Info($"{caption}: {message}");
 		}
-
-		sb.TrimEnd();
 
 		if (owner is null)
 		{
-			MessageBox.Show(sb.ToString(), caption, MessageBoxButton.OK, icon);
+			MessageBox.Show(message, caption, MessageBoxButton.OK, icon);
 		}
 		else
 		{
-			MessageBox.Show(owner, sb.ToString(), caption, MessageBoxButton.OK, icon);
+			MessageBox.Show(owner, message, caption, MessageBoxButton.OK, icon);
 		}
 	}
 

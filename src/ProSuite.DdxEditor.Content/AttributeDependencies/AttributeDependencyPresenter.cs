@@ -305,11 +305,24 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 			Assert.NotNull(dataset, "Dataset not defined for attribute dependency");
 			Assert.NotNull(dataset.Model, "Model not defined for attribute dependency");
 
-			IWorkspaceContext workspaceContext =
-				ModelElementUtils.GetAccessibleMasterDatabaseWorkspaceContext(dataset);
+			//TODO: Previous impl required the IModelMasterDatabase interface
+			// IWorkspaceContext workspaceContext =
+			// ModelElementUtils.GetAccessibleMasterDatabaseWorkspaceContext(dataset);
+			// ...but: is impl below sufficient/generic enough for all cases?
+			DdxModel model = dataset.Model;
 
-			return Assert.NotNull(Assert.NotNull(workspaceContext).OpenTable(dataset),
-			                      "Dataset not found in model");
+			if (! (model.CachedMasterDatabaseWorkspaceContext is IWorkspaceContext
+				       workspaceContext))
+			{
+				workspaceContext =
+					ModelUtils.CreateDefaultMasterDatabaseWorkspaceContext(dataset.Model);
+				model.CachedMasterDatabaseWorkspaceContext = workspaceContext;
+			}
+
+			Assert.NotNull(workspaceContext, "WorkspaceContext could not be opened");
+
+			return Assert.NotNull(workspaceContext.OpenTable(dataset),
+			                      "Could not open table for dataset {0}", dataset);
 		}
 
 		private static bool AttributesMissing(IFields fields,

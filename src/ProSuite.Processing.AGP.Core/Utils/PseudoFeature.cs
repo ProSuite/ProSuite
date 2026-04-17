@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.Gdb;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {

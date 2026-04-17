@@ -102,8 +102,6 @@ public interface IWorkList : IRowCache, IWorkItemData
 
 	IAttributeReader GetAttributeReader(long forSourceClassId);
 
-	void SetItemsGeometryDraftMode(bool enable);
-
 	void Rename(string name);
 
 	void Invalidate(Envelope geometry);

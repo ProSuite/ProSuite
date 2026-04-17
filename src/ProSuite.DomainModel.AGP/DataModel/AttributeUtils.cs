@@ -110,7 +110,7 @@ public static class AttributeUtils
 			return attribute;
 		}
 
-		_msg.Debug($"Attribute role {role} does not exist in {dataset.Name}");
+		_msg.VerboseDebug(() => "Attribute role {role} does not exist in {dataset.Name}");
 		return null;
 	}
 }

@@ -12,6 +12,7 @@ namespace ProSuite.Processing.Domain
 		public bool Multivalued { get; set; }
 		public int Order { get; set; }
 		public string Group { get; set; }
+		//public string Unit { get; set; } // just an idea: null or "mm" or "map units" ... to be shown in help
 
 		public int LineNumber { get; }
 		public string FileName { get; }

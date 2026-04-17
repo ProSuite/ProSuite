@@ -43,7 +43,7 @@ namespace ProSuite.Processing.Test
 			Console.WriteLine(@"Engine: {0}", GetDump(matcher));
 			Assert.IsTrue(matcher.Match(values));
 
-		matcher = new WhereClauseMatcher("A = 'x' AND NOT B IN ('a','b','c') OR A = 'a' AND B IS NOT NULL");
+			matcher = new WhereClauseMatcher("A = 'x' AND NOT B IN ('a','b','c') OR A = 'a' AND B IS NOT NULL");
 			Console.WriteLine(@"Clause: ""{0}""", matcher.Clause);
 			Console.WriteLine(@"Engine: {0}", GetDump(matcher));
 			Assert.IsTrue(matcher.Match(values));

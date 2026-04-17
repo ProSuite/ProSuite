@@ -41,6 +41,24 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			WorkContextMsg workContextMsg =
 				CreateWorkContextMsg(projectWorkspace, contextType, contextName);
 
+			return CreateRequest(workContextMsg, qualitySpecificationId, perimeter,
+			                     ddxEnvironmentName);
+		}
+
+		/// <summary>
+		/// Creates the verification request for an extent verification.
+		/// </summary>
+		/// <param name="workContextMsg"></param>
+		/// <param name="qualitySpecificationId">The desired quality specification's ID.</param>
+		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
+		/// <param name="ddxEnvironmentName">The name of the DDX environment (for multi-DDX setups)</param>
+		/// <returns></returns>
+		public static VerificationRequest CreateRequest(
+			WorkContextMsg workContextMsg,
+			int qualitySpecificationId,
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
+		{
 			var specificationMsg = new QualitySpecificationMsg
 			                       {
 				                       QualitySpecificationId = qualitySpecificationId
@@ -70,6 +88,24 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			WorkContextMsg workContextMsg =
 				CreateWorkContextMsg(projectWorkspace, contextType, contextName);
 
+			return CreateRequest(workContextMsg, qualitySpecification, perimeter,
+			                     ddxEnvironmentName);
+		}
+
+		/// <summary>
+		/// Creates the verification request for an extent verification.
+		/// </summary>
+		/// <param name="workContextMsg"></param>
+		/// <param name="qualitySpecification">The desired quality specification.</param>
+		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
+		/// <param name="ddxEnvironmentName">The name of the DDX environment (for multi-DDX setups)</param>
+		/// <returns></returns>
+		public static VerificationRequest CreateRequest(
+			WorkContextMsg workContextMsg,
+			[NotNull] QualitySpecification qualitySpecification,
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
+		{
 			CustomQualitySpecification customSpecification =
 				(CustomQualitySpecification) qualitySpecification;
 

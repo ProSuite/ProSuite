@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ProSuite.Commons.Gdb;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
 

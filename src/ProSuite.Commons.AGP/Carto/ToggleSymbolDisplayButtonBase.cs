@@ -54,10 +54,10 @@ public abstract class ToggleSymbolDisplayButtonBase : Button
 
 	protected override async void OnClick()
 	{
-		Gateway.LogEntry(_msg);
-
 		try
 		{
+			Gateway.LogEntry(_msg);
+
 			var map = MapView.Active?.Map;
 			if (map is null) return;
 

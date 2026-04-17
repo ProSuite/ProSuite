@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Collections;
 
-namespace ProSuite.Commons.Gdb
+namespace ProSuite.Commons.GeoDb
 {
 	/// <summary>
 	/// An abstraction of Rows and RowBuffers. Adapters exist for Row and

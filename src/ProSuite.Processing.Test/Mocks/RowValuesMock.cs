@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using ProSuite.Commons.Gdb;
+using ProSuite.Commons.GeoDb;
 
 namespace ProSuite.Processing.Test.Mocks
 {

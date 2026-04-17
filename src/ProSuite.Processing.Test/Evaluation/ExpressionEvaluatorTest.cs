@@ -143,13 +143,13 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			var envIgnoreCase = new StandardEnvironment();
 			envIgnoreCase.DefineValue("TheEnv", name);
-		Assert.AreEqual(false, Dump(ExpressionEvaluator.Create("fAlSe")).Evaluate(envIgnoreCase));
+			Assert.AreEqual(false, Dump(ExpressionEvaluator.Create("fAlSe")).Evaluate(envIgnoreCase));
 
 			// When respecting case, "fAlSe" is just a name to be looked up in the environment:
 
 			var envRespectCase = new StandardEnvironment(false);
 			envRespectCase.DefineValue("TheEnv", name);
-		Assert.AreEqual("TheEnv", Dump(ExpressionEvaluator.Create("fAlSe", false)).Evaluate(envRespectCase));
+			Assert.AreEqual("TheEnv", Dump(ExpressionEvaluator.Create("fAlSe", false)).Evaluate(envRespectCase));
 		}
 
 		[Test]
@@ -275,10 +275,10 @@ namespace ProSuite.Processing.Test.Evaluation
 
 		#region Static methods for the test environment
 
-	private static string Foo() { return "foo"; }
-	private static object Identity(object x) { return x; }
-	private static double Pythagoras(double x, double y) { return Math.Sqrt(x * x + y * y); }
-	private static object Bomb() { throw new Exception("TESTING"); }
+		private static string Foo() { return "foo"; }
+		private static object Identity(object x) { return x; }
+		private static double Pythagoras(double x, double y) { return Math.Sqrt(x * x + y * y); }
+		private static object Bomb() { throw new Exception("TESTING"); }
 
 		#endregion
 
@@ -410,7 +410,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			env.DefineValue(5, "d");
 
 			Assert.AreEqual(5, Evaluate("xyzzy ? length(xyzzy) : -1", env));
-		Assert.AreEqual("Fri", Evaluate("d=0 ? 'Sun' : d=1 ? 'Mon' : d=2 ? 'Tue' : d=3 ? 'Wed' : d=4 ? 'Thu' : d=5 ? 'Fri' : d=6 ? 'Sat' : null", env));
+			Assert.AreEqual("Fri", Evaluate("d=0 ? 'Sun' : d=1 ? 'Mon' : d=2 ? 'Tue' : d=3 ? 'Wed' : d=4 ? 'Thu' : d=5 ? 'Fri' : d=6 ? 'Sat' : null", env));
 		}
 
 		[Test]
@@ -426,7 +426,7 @@ namespace ProSuite.Processing.Test.Evaluation
 			// ?? binds tighter than ?:
 			var env = new StandardEnvironment();
 			env.DefineValue(null, "nothing");
-		Assert.AreEqual("alt", Evaluate("nothing ?? false ? null ?? 'consequent' : 'alt' ?? 'alternative'", env));
+			Assert.AreEqual("alt", Evaluate("nothing ?? false ? null ?? 'consequent' : 'alt' ?? 'alternative'", env));
 		}
 
 		[Test]
@@ -656,9 +656,9 @@ namespace ProSuite.Processing.Test.Evaluation
 
 		private class NamedValues : Dictionary<string, object>, INamedValues
 		{
-		public NamedValues() : base(StringComparer.OrdinalIgnoreCase)
-		{
-		}
+			public NamedValues() : base(StringComparer.OrdinalIgnoreCase)
+			{
+			}
 
 			public bool Exists(string name)
 			{

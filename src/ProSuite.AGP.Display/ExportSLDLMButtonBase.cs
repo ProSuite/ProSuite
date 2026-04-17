@@ -50,8 +50,9 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		bool includeMasking = _options.IncludeMaskingInfo;
 		bool extraMasking = _options.ExtraMaskingInfo;
+		bool includeHiddenDefaultSymbol = _options.IncludeHiddenDefaultSymbol;
 
-		var config = await QueuedTask.Run(() => CollectConfig(map, container, includeMasking, extraMasking));
+		var config = await QueuedTask.Run(() => CollectConfig(map, container, includeMasking, extraMasking, includeHiddenDefaultSymbol));
 
 		if (! string.IsNullOrWhiteSpace(_options.Remark))
 		{
@@ -282,12 +283,12 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 	//   </MaskingLayers>
 	// </SLDLM>
 
-	public static XElement CollectConfig(Map map, ILayerContainer container = null, bool includeMasking = true, bool extraMasking = false)
+	public static XElement CollectConfig(Map map, ILayerContainer container = null, bool includeMasking = true, bool extraMasking = false, bool includeHiddenDefaultSymbol = false)
 	{
 		extraMasking &= includeMasking;
 
 		var order = GetDrawingOrder(container ?? map, map, includeMasking);
-		var symlyrs = GetSymbolLevels(container ?? map, map, extraMasking);
+		var symlyrs = GetSymbolLevels(container ?? map, map, extraMasking, includeHiddenDefaultSymbol);
 		var masking = extraMasking ? GetMaskingLayers(order) : null;
 
 		var mapAttr = new XAttribute("map", map.Name ?? string.Empty);
@@ -297,10 +298,11 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		var includeMaskingAttr = new XAttribute("includeMasking", includeMasking);
 		var extraMaskingAttr = new XAttribute("extraMasking", extraMasking);
+		var includeHiddenDefSymAttr = new XAttribute("includeHiddenDefaultSymbol", includeHiddenDefaultSymbol);
 
 		return new XElement("SLDLM",
 		                    mapAttr, groupLayerAttr, includeMaskingAttr, extraMaskingAttr,
-		                    order, symlyrs, masking);
+		                    includeHiddenDefSymAttr, order, symlyrs, masking);
 	}
 
 	private static IDictionary<string, Layer> GetLayersByURI(ILayerContainer container)
@@ -509,7 +511,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static XElement GetSymbolLevels(ILayerContainer container, Map map, bool includeMasking = true)
+	private static XElement GetSymbolLevels(ILayerContainer container, Map map, bool includeMasking = true, bool includeHiddenDefaultSymbol = false)
 	{
 		var allLayers = GetLayersByURI(map);
 		var result = new XElement("SymbolLevels");
@@ -538,7 +540,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 					layerXml.Add(MakeRendererInfo(gfl.Renderer));
 
 					var lm = includeMasking ? GetLM(featureLayer, allLayers) : null;
-					var symbols = GetRendererSymbols(gfl.Renderer, lm);
+					var symbols = GetRendererSymbols(gfl.Renderer, lm, includeHiddenDefaultSymbol);
 					layerXml.Add(symbols);
 
 					result.Add(layerXml);
@@ -549,7 +551,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static IEnumerable<XElement> GetRendererSymbols(CIMRenderer renderer, MaskLayers maskLayers = null)
+	private static IEnumerable<XElement> GetRendererSymbols(CIMRenderer renderer, MaskLayers maskLayers = null, bool includeHiddenDefaultSymbol = false)
 	{
 		if (renderer is null)
 		{
@@ -560,27 +562,29 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		if (renderer is CIMUniqueValueRenderer unique)
 		{
-			// the default symbol
-			var symbol = unique.DefaultSymbol?.Symbol;
-			var xml = MakeSymbol("*", unique.DefaultLabel, symbol);
-			var levels = GetSymbolLayerNames(symbol);
-			foreach (var level in levels)
+			if (unique.UseDefaultSymbol || includeHiddenDefaultSymbol)
 			{
-				var levelElement = MakeLevel(level.Name, level.Type);
-				var maskedBy = maskLayers?.GetForLevel(level.Name);
-				MaskedBy(levelElement, maskedBy, ignoredOnImport);
-				xml.Add(levelElement);
+				// the default symbol
+				var symbol = unique.DefaultSymbol?.Symbol;
+				var xml = MakeSymbol("*", unique.DefaultLabel, symbol);
+				var levels = GetSymbolLayerNames(symbol);
+				foreach (var level in levels)
+				{
+					var levelElement = MakeLevel(level.Name, level.Type);
+					var maskedBy = maskLayers?.GetForLevel(level.Name);
+					MaskedBy(levelElement, maskedBy, ignoredOnImport);
+					xml.Add(levelElement);
+				}
+				yield return xml;
 			}
-
-			yield return xml;
 
 			// per class symbols
 			foreach (var clazz in Utils.GetUniqueValueClasses(unique))
 			{
-				symbol = clazz.Symbol?.Symbol;
+				var symbol = clazz.Symbol?.Symbol;
 				var discriminator = Utils.FormatDiscriminatorValue(clazz.Values);
-				xml = MakeSymbol(discriminator, clazz.Label, symbol);
-				levels = GetSymbolLayerNames(symbol);
+				var xml = MakeSymbol(discriminator, clazz.Label, symbol);
+				var levels = GetSymbolLayerNames(symbol);
 				foreach (var level in levels)
 				{
 					var levelElement = MakeLevel(level.Name, level.Type);
