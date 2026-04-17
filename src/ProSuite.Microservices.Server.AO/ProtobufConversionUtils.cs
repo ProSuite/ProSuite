@@ -520,7 +520,7 @@ namespace ProSuite.Microservices.Server.AO
 					                 field.Name);
 				}
 
-				if (fieldMsg.DomainName == ProtobufGdbUtils.SubtypeDomainName)
+				if (fieldMsg.DomainName == ProtobufGeoDbUtils.SubtypeDomainName)
 				{
 					toResultTable.SubtypeFieldName = field.Name;
 				}
