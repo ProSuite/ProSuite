@@ -1,5 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Workflow;
 
@@ -11,15 +18,18 @@ namespace ProSuite.Commons.AGP.Workflow;
 /// </remarks>
 public static class NotebookInterop
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	public static bool TryOpen(string notebookPath, out string error)
 	{
 		const string methodName = "OnOpenNotebook";
 		return TryInvoke(methodName, notebookPath, out error);
+		// TODO Avoid opening more than one pane per notebook?!
 	}
 
-	public static bool TryClose(string notebookPath, out string error)
+	public static bool TryClose1(string notebookPath, out string error)
 	{
-		// Method existed in Pro 3.6.2 but is gone in Pro 3.6.3
+		// Method must have existed once but is gone at least since Pro 3.6.2
 		const string methodName = "OnCloseNotebook";
 		return TryInvoke(methodName, notebookPath, out error);
 	}
@@ -63,5 +73,81 @@ public static class NotebookInterop
 			error = ex.Message;
 			return false;
 		}
+	}
+
+	/// <param name="notebookPath">The notebook pane to close;
+	/// if null, close all notebook panes</param>
+	/// <returns>Number of panes that were closed</returns>
+	public static int TryClose2(string notebookPath)
+	{
+		var panes = FindNotebookPanes(notebookPath, true);
+
+		var instanceIds = panes.Select(pane => pane.InstanceID).ToList();
+
+		foreach (var instanceId in instanceIds)
+		{
+			FrameworkApplication.Panes.ClosePane(instanceId);
+		}
+
+		return instanceIds.Count; // number of panes closed
+	}
+
+	private static IEnumerable<Pane> FindNotebookPanes([CanBeNull] string notebookPath, bool matchUnknown)
+	{
+		const string proNotebookPaneDamlID = "esri_geoprocessing_proNotebookPane";
+
+		var panes = FrameworkApplication.Panes.Find(proNotebookPaneDamlID);
+
+		return panes.Where(pane => IsNotebookPane(pane, notebookPath) ?? matchUnknown);
+	}
+
+	public static bool? IsNotebookPane(Pane pane, string notebookPath = null)
+	{
+		// Notebook panes are of type ProNotebookPaneViewModel, which is
+		// an internal class, so resort to Reflection and hope that the
+		// class and its relevant property will be there in future Pro versions...
+
+		const string typeFullName = "ArcGIS.Desktop.GeoProcessing.ProNotebookPaneViewModel";
+		const string propertyName = "NotebookPath";
+
+		if (pane is null)
+		{
+			return false;
+		}
+
+		var type = pane.GetType();
+
+		if (! string.Equals(type.FullName, typeFullName, StringComparison.Ordinal))
+		{
+			return false;
+		}
+
+		if (! string.IsNullOrEmpty(notebookPath))
+		{
+			const BindingFlags flags =
+				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+			var property = type.GetProperty(propertyName, flags);
+			if (property is null)
+			{
+				_msg.WarnFormat("Property {0} not found on type {1}",
+				                propertyName, typeFullName);
+				return null;
+			}
+
+			var value = property.GetValue(pane);
+			if (value is not string text)
+			{
+				_msg.WarnFormat("Value of property {0} on type {1} is not string",
+				                propertyName, typeFullName);
+				return null;
+			}
+
+			if (! FileSystemUtils.EqualPaths(notebookPath, text))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 }
