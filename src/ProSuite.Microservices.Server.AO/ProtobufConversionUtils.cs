@@ -219,8 +219,8 @@ namespace ProSuite.Microservices.Server.AO
 				}
 
 				foreach (ObjectClassMsg relTableMsg
-				         in relClassMessages.Where(
-					         r => GetContainerHandle(r) == gdbWorkspace.WorkspaceHandle))
+				         in relClassMessages.Where(r => GetContainerHandle(r) ==
+				                                        gdbWorkspace.WorkspaceHandle))
 				{
 					GdbTable relClassTable = FromObjectClassMsg(relTableMsg, gdbWorkspace);
 
@@ -245,8 +245,8 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			var result = new List<GdbWorkspace>();
 
-			foreach (IGrouping<long, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
-				         c => c.WorkspaceHandle))
+			foreach (IGrouping<long, ObjectClassMsg> classGroup in
+			         objectClassMessages.GroupBy(c => c.WorkspaceHandle))
 			{
 				long workspaceHandle = classGroup.Key;
 
@@ -353,9 +353,15 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] Func<GdbFeatureClass> getClass)
 		{
 			GdbFeatureClass featureClass = getClass();
-			//(IFeatureClass) tableContainer.GetByClassId((int) gdbObjectMsg.ClassHandle);
 
 			GdbFeature result = CreateGdbFeature(gdbObjectMsg, featureClass);
+
+			// If the sender provided field values, use them (some tools use them)
+			for (var index = 0; index < gdbObjectMsg.Values.Count; index++)
+			{
+				AttributeValue attributeValue = gdbObjectMsg.Values[index];
+				SetFieldValue(result, index, attributeValue);
+			}
 
 			return result;
 		}
@@ -553,18 +559,24 @@ namespace ProSuite.Microservices.Server.AO
 
 				AttributeValue attributeValue = gdbObjectMsg.Values[valueIndex];
 
-				object valueObj = ProtoDataQualityUtils.FromAttributeValue(attributeValue);
+				SetFieldValue(intoResult, fieldIndex, attributeValue);
+			}
+		}
 
-				// Special case:
-				if (valueObj is Guid guid)
-				{
-					valueObj = UIDUtils.CreateUID(guid);
-				}
+		private static void SetFieldValue(GdbRow resultRow, int fieldIndex,
+		                                  AttributeValue attributeValue)
+		{
+			object valueObj = ProtoDataQualityUtils.FromAttributeValue(attributeValue);
 
-				if (valueObj != null)
-				{
-					intoResult.set_Value(fieldIndex, valueObj);
-				}
+			// Special case:
+			if (valueObj is Guid guid)
+			{
+				valueObj = UIDUtils.CreateUID(guid);
+			}
+
+			if (valueObj != null)
+			{
+				resultRow.set_Value(fieldIndex, valueObj);
 			}
 		}
 
