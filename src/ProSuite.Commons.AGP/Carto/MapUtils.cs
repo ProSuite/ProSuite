@@ -774,6 +774,27 @@ public static class MapUtils
 		return false;
 	}
 
+	public static bool MapHasSurface([NotNull] Map map)
+	{
+		if (map.DefaultViewingMode == MapViewingMode.MapStereo)
+		{
+			return false;
+		}
+
+		ElevationSurfaceLayer elevationLayer = GetElevationSurfaceGroupLayer(map);
+
+		IReadOnlyList<ElevationSurfaceLayer> elevationSurfaceLayers =
+			map.GetElevationSurfaceLayers();
+
+		if (elevationLayer == null || elevationSurfaceLayers.Count == 0)
+		{
+			_msg.DebugFormat("The map {0} has no elevation surface.", map.Name);
+			return false;
+		}
+
+		return true;
+	}
+
 	/// <summary>
 	/// Gets the first elevation surface layer in the map with the specified name.
 	/// This layer contains the layers that provide the actual elevation.
