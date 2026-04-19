@@ -99,7 +99,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._textBoxDescription.Multiline = true;
 			this._textBoxDescription.Name = "_textBoxDescription";
 			this._textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescription.Size = new System.Drawing.Size(620, 48);
+			this._textBoxDescription.Size = new System.Drawing.Size(608, 48);
 			this._textBoxDescription.TabIndex = 1;
 			// 
 			// _labelName
@@ -120,7 +120,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._textBoxName.Location = new System.Drawing.Point(127, 14);
 			this._textBoxName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._textBoxName.Name = "_textBoxName";
-			this._textBoxName.Size = new System.Drawing.Size(620, 23);
+			this._textBoxName.Size = new System.Drawing.Size(608, 23);
 			this._textBoxName.TabIndex = 0;
 			// 
 			// _errorProvider
