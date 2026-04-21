@@ -57,8 +57,11 @@ public static class SelectionUtils
 
 		FeatureClass featureClass = feature.GetTable();
 
+		bool isJoined = featureClass.IsJoinedTable();
+
 		Predicate<IDisplayTable> usesSameClass =
-			layer => SameFeatureClass(layer.GetTable() as FeatureClass, featureClass);
+			layer => SameFeatureClass(
+				LayerUtils.GetTable(layer, unJoined: ! isJoined) as FeatureClass, featureClass);
 
 		long selectionCount = SelectFeatures(mapView, filter, method, usesSameClass);
 
