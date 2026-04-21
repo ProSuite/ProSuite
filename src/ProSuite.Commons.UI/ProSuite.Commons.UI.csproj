@@ -265,7 +265,7 @@
 		<PackageReference Include="log4net" Version="[2.0.12,]" Condition="'$(TargetFramework)' != 'net48'" />
     <!-- But in .NET Framework the resolution of differing package versions is somewhat different, resulting
 		     in build errors. Therefore, keep it fixed in .NET Framework: -->
-    <PackageReference Include="log4net" Version="3.2.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="log4net" Version="3.3.1" Condition="'$(TargetFramework)' == 'net48'" />
 
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
