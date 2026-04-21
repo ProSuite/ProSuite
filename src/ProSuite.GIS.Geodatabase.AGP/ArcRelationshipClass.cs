@@ -120,8 +120,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				if (_destinationPrimaryKey == null)
 				{
-					if (_proRelationshipClassDefinition is AttributedRelationshipClassDefinition
-					    attributedRelClass)
+					if (_proRelationshipClassDefinition is
+					    AttributedRelationshipClassDefinition attributedRelClass)
 					{
 						_destinationPrimaryKey = attributedRelClass.GetDestinationKeyField();
 					}
@@ -212,9 +212,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public string ForwardPathLabel =>
 			_forwardPathLabel ??= _proRelationshipClassDefinition.GetForwardPathLabel();
 
-		public string BackwardPathLabel => _backwardPathLabel ??=
-			                                   _proRelationshipClassDefinition
-				                                   .GetBackwardPathLabel();
+		public string BackwardPathLabel =>
+			_backwardPathLabel ??= _proRelationshipClassDefinition.GetBackwardPathLabel();
 
 		public esriRelCardinality Cardinality =>
 			_cardinality ??= (esriRelCardinality) _proRelationshipClassDefinition.GetCardinality();
@@ -283,7 +282,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			DeleteRelationshipsFor(sourceRowProRow);
 
 			var arcRow = (ArcRow) anObject;
-			arcRow?.InvalidateCache();
+
+			arcRow.InvalidateCache();
 		}
 
 		private void DeleteRelationshipsFor(Row sourceRow)
@@ -490,20 +490,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				DeleteRelationshipsFor(proRow);
 			}
-
-			//List<long> objectIds = proRows.Select(row => row.GetObjectID())
-			//                              .ToList();
-
-			//string sourceClassName = proRows.Select(r => r.GetTable().GetName()).First();
-
-			//IEnumerable<Row> relatedObjects = GetRelatedObjects(objectIds, sourceClassName);
-
-			//foreach (Row relatedObject in relatedObjects)
-			//{
-			//	DeleteRelationshipsForObject();
-			//}
-
-			//_proRelationshipClass.DeleteRelationship(aoInputSet);
 		}
 
 		#endregion
@@ -530,16 +516,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			if (sourceClassName == OriginClass.Name)
 			{
-				relatedObjects =
-					ProRelationshipClass.GetRowsRelatedToOriginRows(sourceOids);
+				relatedObjects = ProRelationshipClass.GetRowsRelatedToOriginRows(sourceOids);
 			}
 			else
 			{
 				Assert.True(sourceClassName == DestinationClass.Name,
 				            "Object is neither origin nor destination of relationship class");
 
-				relatedObjects =
-					ProRelationshipClass.GetRowsRelatedToDestinationRows(sourceOids);
+				relatedObjects = ProRelationshipClass.GetRowsRelatedToDestinationRows(sourceOids);
 			}
 
 			return relatedObjects;
