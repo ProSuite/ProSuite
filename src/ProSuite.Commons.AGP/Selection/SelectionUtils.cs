@@ -228,8 +228,8 @@ public static class SelectionUtils
 	{
 		long result = 0;
 
-		foreach (IGrouping<IntPtr, Feature> featuresByClassHandle in features.GroupBy(
-			         f => f.GetTable().Handle))
+		foreach (IGrouping<IntPtr, Feature> featuresByClassHandle in
+		         features.GroupBy(f => f.GetTable().Handle))
 		{
 			if (progressor is { CancellationToken.IsCancellationRequested: true })
 			{
@@ -242,15 +242,14 @@ public static class SelectionUtils
 			List<long> objectIds = featuresByClassHandle.Select(f => f.GetObjectID()).ToList();
 
 			// Get the layer's DB table and compare to the class handle of the features to be selected:
-			foreach (var layer in inLayers.Where(
-				         fl =>
-				         {
-					         FeatureClass layerFeatureClass =
-						         LayerUtils.GetFeatureClass(fl, true);
+			foreach (var layer in inLayers.Where(fl =>
+			         {
+				         FeatureClass layerFeatureClass =
+					         LayerUtils.GetFeatureClass(fl, true);
 
-					         return layerFeatureClass != null &&
-					                layerFeatureClass.Handle.ToInt64() == classHandle;
-				         }))
+				         return layerFeatureClass != null &&
+				                layerFeatureClass.Handle.ToInt64() == classHandle;
+			         }))
 			{
 				if (progressor is { CancellationToken.IsCancellationRequested: true })
 				{
