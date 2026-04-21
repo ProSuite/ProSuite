@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -18,75 +19,13 @@ namespace ProSuite.DomainModel.Core.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private int _cloneId = -1;
+		[UsedImplicitly] private ClassDescriptor _class;
 
-		[UsedImplicitly] private string _name;
+		private int _cloneId = -1;
+		[UsedImplicitly] private int _constructorId = -1;
 		[UsedImplicitly] private string _description;
 
-		[UsedImplicitly] private ClassDescriptor _class;
-		[UsedImplicitly] private int _constructorId = -1;
-
-		#region Constructors
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="InstanceDescriptor"/> class.
-		/// </summary>
-		/// <remarks>Required for NHibernate</remarks>
-		protected InstanceDescriptor() { }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="InstanceDescriptor"/> class.
-		/// </summary>
-		protected InstanceDescriptor([NotNull] string name,
-		                             [CanBeNull] string description = null)
-		{
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
-
-			_name = name;
-			_description = description;
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="InstanceDescriptor"/> class.
-		/// </summary>
-		protected InstanceDescriptor([NotNull] string name,
-		                             [NotNull] ClassDescriptor classDescriptor,
-		                             int constructorId,
-		                             [CanBeNull] string description = null)
-			: this(name, description)
-		{
-			Assert.ArgumentNotNull(classDescriptor, nameof(classDescriptor));
-
-			_class = classDescriptor;
-			_constructorId = constructorId;
-		}
-
-		#endregion
-
-		#region INamed Members
-
-		[Required]
-		[MaximumStringLength(200)]
-		[ValidName]
-		public string Name
-		{
-			get => _name;
-			set => _name = value;
-		}
-
-		public abstract string TypeDisplayName { get; }
-
-		#endregion
-
-		#region IAnnotated Members
-
-		public string Description
-		{
-			get => _description;
-			set => _description = value;
-		}
-
-		#endregion
+		[UsedImplicitly] private string _name;
 
 		public int ConstructorId
 		{
@@ -129,9 +68,15 @@ namespace ProSuite.DomainModel.Core.QA
 					{
 						_constructorId = GetDefaultConstructorId(_class);
 					}
+					catch (Exception e) when (e is FileNotFoundException || e is FileLoadException)
+					{
+						_msg.DebugFormat(
+							"Assembly not available for determining default constructor id: {0}",
+							e.Message);
+					}
 					catch (Exception e)
 					{
-						_msg.WarnFormat("Error determining default constructor id: {0}", e.Message);
+						_msg.Warn("Error determining default constructor id", e);
 					}
 
 					OnSetClass();
@@ -165,6 +110,16 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		public IInstanceInfo InstanceInfo { get; set; }
 
+		#region IAnnotated Members
+
+		public string Description
+		{
+			get => _description;
+			set => _description = value;
+		}
+
+		#endregion
+
 		/// <summary>
 		/// The clone Id can be set if this instance is a (remote) clone of a persistent instance descriptor.
 		/// </summary>
@@ -179,10 +134,62 @@ namespace ProSuite.DomainModel.Core.QA
 
 		/// <summary>
 		/// Gets the canonical name of the instance descriptor, i.e. className(constructorIndex)
-		/// or factoryClassName for test factories. 
+		/// or factoryClassName for test factories.
 		/// </summary>
 		/// <returns></returns>
 		public abstract string GetCanonicalName();
+
+		#region Constructors
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="InstanceDescriptor" /> class.
+		/// </summary>
+		/// <remarks>Required for NHibernate</remarks>
+		protected InstanceDescriptor() { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="InstanceDescriptor" /> class.
+		/// </summary>
+		protected InstanceDescriptor([NotNull] string name,
+		                             [CanBeNull] string description = null)
+		{
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
+			_name = name;
+			_description = description;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="InstanceDescriptor" /> class.
+		/// </summary>
+		protected InstanceDescriptor([NotNull] string name,
+		                             [NotNull] ClassDescriptor classDescriptor,
+		                             int constructorId,
+		                             [CanBeNull] string description = null)
+			: this(name, description)
+		{
+			Assert.ArgumentNotNull(classDescriptor, nameof(classDescriptor));
+
+			_class = classDescriptor;
+			_constructorId = constructorId;
+		}
+
+		#endregion
+
+		#region INamed Members
+
+		[Required]
+		[MaximumStringLength(200)]
+		[ValidName]
+		public string Name
+		{
+			get => _name;
+			set => _name = value;
+		}
+
+		public abstract string TypeDisplayName { get; }
+
+		#endregion
 
 		#region Equality members
 
@@ -215,7 +222,7 @@ namespace ProSuite.DomainModel.Core.QA
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}
@@ -227,9 +234,9 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			unchecked
 			{
-				int result = (_name != null
-					              ? _name.GetHashCode()
-					              : 0);
+				int result = _name != null
+					             ? _name.GetHashCode()
+					             : 0;
 				result = (result * 397) ^ (_class != null
 					                           ? _class.GetHashCode()
 					                           : 0);
@@ -271,7 +278,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		protected static bool AreEqual(ClassDescriptor x, ClassDescriptor y)
 		{
-			if ((x == null) != (y == null))
+			if (x == null != (y == null))
 			{
 				return false;
 			}
