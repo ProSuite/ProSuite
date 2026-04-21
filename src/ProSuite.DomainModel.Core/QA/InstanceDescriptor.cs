@@ -68,7 +68,7 @@ namespace ProSuite.DomainModel.Core.QA
 					{
 						_constructorId = GetDefaultConstructorId(_class);
 					}
-					catch (Exception e) when (e is FileNotFoundException or FileLoadException)
+					catch (Exception e) when (e is FileNotFoundException || e is FileLoadException)
 					{
 						_msg.DebugFormat(
 							"Assembly not available for determining default constructor id: {0}",
