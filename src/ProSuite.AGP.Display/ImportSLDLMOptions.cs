@@ -143,7 +143,8 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 
 			var feedback = await _validate(ConfigFilePath, container);
 
-			Utils.ShowFeedback(feedback, owner, _msg);
+			const string operation = "SLD/LM config validation";
+			Utils.ShowFeedback(operation, feedback, owner, _msg);
 		}
 		catch (Exception ex)
 		{

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Framework;
@@ -59,7 +60,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var valid = await QueuedTask.Run(() => ValidateConfig(config, feedback, container));
 		if (! valid)
 		{
-			Utils.ShowFeedback(feedback, owner);
+			Utils.ShowFeedback(Caption, feedback, owner, _msg);
 			return false;
 		}
 
@@ -75,6 +76,15 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			}
 		});
 
+		Utils.ShowFeedback(Caption, feedback, owner: null, _msg);
+
+		RefreshUI(owner, map, container);
+
+		return true;
+	}
+
+	private static void RefreshUI(Window owner, Map map, ILayerContainer container)
+	{
 		// The Symbology dock pane may not reflect the changes just imported!
 		// Sometimes it helps to close and re-open it. It has always helped
 		// to close and re-open the Map, but that's too heavy here. Instead,
@@ -115,8 +125,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		{
 			dockPane.Activate(focus: false);
 		}
-
-		return true;
 	}
 
 	private static Config LoadConfig(string filePath)
@@ -360,7 +368,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 					feedback.Warning(LayerNameMismatch("Mask layer", maskLayer, mapLayer));
 				}
 			}
-				                          
+
 			foreach (var maskLayer in NonNull(configLayer.Levels).SelectMany(level => NonNull(level.MaskedBy)))
 			{
 				if (! allLayers.TryGetValue(maskLayer.Uri, out mapLayer))
@@ -419,8 +427,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		{
 			if (config.SymbolLevels.All(item => item.Uri != mapLayer.URI))
 			{
-				var text = $"Layer “{mapLayer.Name}” is missing in config's " +
-				           $"{nameof(config.SymbolLevels)} (layer URI: {mapLayer.URI})";
+				var text = $"Layer “{mapLayer.Name}” with URI {mapLayer.URI} " +
+				           $"is missing in config's {nameof(config.SymbolLevels)}";
 				feedback.Warning(text);
 			}
 		}
@@ -672,8 +680,15 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 	{
 		prefix ??= "Layer";
 
+		string target = container switch
+		{
+			Map map => $"map “{map.Name}”",
+			GroupLayer gl => $"group layer “{gl.Name}”",
+			_ => "CIM"
+		};
+
 		var text = $"{prefix} “{configLayer.Name}” with URI {configLayer.Uri} " +
-		           $"not found in CIM";
+		           $"not found in {target}";
 
 		return configLayer.AppendLineInfo(text);
 	}
@@ -686,25 +701,9 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		return configLayer.AppendLineInfo(text);
 	}
 
-	private static Map GetMap(ILayerContainer container)
-	{
-		while (container is Layer layer)
-		{
-			if (ReferenceEquals(container, layer.Parent))
-				return null; // paranoia (should not occur)
-
-			container = layer.Parent;
-		}
-
-		return container as Map;
-	}
-
-	private static IEnumerable<T> NonNull<T>(IEnumerable<T> source)
-	{
-		return source ?? Enumerable.Empty<T>();
-	}
-
 	#endregion
+
+	#region Apply config
 
 	/// <remarks>Must run on MCT</remarks>
 	private static void ApplyConfig(Map map, ILayerContainer container, Config config, IFeedback feedback)
@@ -743,9 +742,9 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		ApplyLayerMasking(container, config.DrawingOrder, feedback);
 	}
 
-	private static void ApplySymbolLevelDrawing(ILayerContainer container, IEnumerable<Config.OrderItem> order, IFeedback feedback)
+	private static void ApplySymbolLevelDrawing(ILayerContainer container, IEnumerable<Config.OrderItem> order, IFeedback _)
 	{
-		var itemsByUri = order.ToDictionary(item => item.Uri);
+		var itemsByUri = NonNull(order).ToDictionary(item => item.Uri);
 		var layersInPreOrder = GetLayersPreOrder(container);
 
 		foreach (var layer in layersInPreOrder)
@@ -783,7 +782,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 	private static void ApplySymbolLevelNames(ILayerContainer container, IEnumerable<Config.LevelItem> levels, IFeedback feedback)
 	{
-		foreach (var entry in levels)
+		foreach (var entry in NonNull(levels))
 		{
 			var layer = container.FindLayer(entry.Uri);
 			if (layer is null)
@@ -838,11 +837,11 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			return false;
 		}
 
-		if (!SameFields(entry.Renderer.Fields, uniqueRenderer.Fields))
+		if (! SameFields(entry.Renderer.Fields, uniqueRenderer.Fields))
 		{
 			feedback.Error(
-				$"Fields in config ({FormatFields(entry.Renderer.Fields)}) differ from " +
-				$"fields on UV renderer in CIM ({FormatFields(uniqueRenderer.Fields)}); " +
+				$"UV renderer fields in config ({FormatFields(entry.Renderer.Fields)}) " +
+				$"differ from those in CIM ({FormatFields(uniqueRenderer.Fields)}); " +
 				$"skipping layer {FormatLayer(entry)}");
 			return false;
 		}
@@ -935,7 +934,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		// Set cim.LayerMasks (string[]) on group and feature layers, and
 		// cim.MaskedSymbolLayers (CIMSymbolLayerMasking[]) on feature layers.
 
-		var itemsByUri = order.ToDictionary(item => item.Uri);
+		var itemsByUri = NonNull(order).ToDictionary(item => item.Uri);
 		var layersInPreOrder = GetLayersPreOrder(container);
 
 		GroupLayer controllingLayer = null;
@@ -1024,26 +1023,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		}
 	}
 
-	/// <remarks>If the given <paramref name="container"/> is a group layer,
-	/// it is included as the first (root) item in the result list</remarks>
-	private static IReadOnlyList<Layer> GetLayersPreOrder(ILayerContainer container)
-	{
-		if (container is null)
-		{
-			return Enumerable.Empty<Layer>().ToList();
-		}
-
-		var layersInPreOrder = container.GetLayersAsFlattenedList();
-
-		if (container is GroupLayer gl)
-		{
-			// Special case: insert container at front if it's a group layer!
-			layersInPreOrder = Enumerable.Repeat<Layer>(gl, 1).Concat(layersInPreOrder).ToList();
-		}
-
-		return layersInPreOrder;
-	}
-
 	private static IEnumerable<IGrouping<string, string>> RegroupMaskingConfig(IEnumerable<Config.LayerLevel> levels)
 	{
 		// Config has: masks per level
@@ -1053,13 +1032,14 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		             .GroupBy(tuple => tuple.Uri, i => i.Name);
 	}
 
-	private static ISet<string> GetPrimitiveNames(CIMGeoFeatureLayerBase cim, IFeedback feedback)
+	private static HashSet<string> GetPrimitiveNames(CIMGeoFeatureLayerBase cim, IFeedback feedback)
 	{
 		var names = new HashSet<string>();
 
 		if (cim.Renderer is CIMUniqueValueRenderer uniqueRenderer)
 		{
 			GetPrimitiveNames(uniqueRenderer.DefaultSymbol?.Symbol, names);
+
 			foreach (var clazz in Utils.GetUniqueValueClasses(uniqueRenderer))
 			{
 				GetPrimitiveNames(clazz.Symbol?.Symbol, names);
@@ -1094,6 +1074,84 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		}
 		//else: must be a CIMTextSymbol, which has no Name property
 	}
+
+	private static bool SameFields(string[] configFields, string[] cimFields)
+	{
+		if (configFields is null || cimFields is null) return false;
+		if (configFields.Length != cimFields.Length) return false;
+
+		for (int i = 0; i < configFields.Length; i++)
+		{
+			if (!string.Equals(configFields[i], cimFields[i], StringComparison.Ordinal))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static string FormatFields(string[] fields)
+	{
+		if (fields is null) return null;
+		const char sep = ',';
+		return string.Join(sep, fields);
+	}
+
+	private static bool UpdateSymbol(CIMSymbol cimSymbol, Config.Symbol configSymbol, IFeedback feedback)
+	{
+		if (cimSymbol is not CIMMultiLayerSymbol multiLayerSymbol)
+		{
+			feedback.Error(
+				$"Current symbol is not a {nameof(CIMMultiLayerSymbol)} " +
+				$"(it's {cimSymbol?.GetType().Name ?? "null"}); skipping symbol");
+			return false;
+		}
+
+		var cimLevels = multiLayerSymbol.SymbolLayers;
+		if (cimLevels is null) return false;
+
+		// TODO also compare labels?
+		var cimSymbolType = Utils.GetPrettyTypeName(multiLayerSymbol);
+		if (configSymbol.Type != null && !string.Equals(configSymbol.Type, cimSymbolType, StringComparison.Ordinal))
+		{
+			feedback.Warning($"Symbol types don't agree: config expects {configSymbol.Type} but CIM has {cimSymbolType}");
+		}
+
+		int n = cimLevels.Length;
+		if (configSymbol.Levels.Count != n)
+		{
+			feedback.Error(
+				$"Current symbol has {n} level(s), but the config expected " +
+				$"{configSymbol.Levels.Count} level(s); skipping symbol");
+			return false;
+		}
+
+		bool modified = false;
+
+		for (int i = 0; i < n; i++)
+		{
+			var level = configSymbol.Levels[i];
+
+			var cimLevelType = Utils.GetPrettyTypeName(cimLevels[i]);
+			if (level.Type != null && !string.Equals(level.Type, cimLevelType, StringComparison.Ordinal))
+			{
+				feedback.Warning($"Symbol layer types don't agree: config expects {level.Type} but CIM has {cimLevelType}");
+			}
+
+			var levelName = string.IsNullOrEmpty(level.Name) ? null : level.Name;
+
+			if (!string.Equals(cimLevels[i].Name, levelName, StringComparison.Ordinal))
+			{
+				multiLayerSymbol.SymbolLayers[i].Name = levelName;
+				modified = true;
+			}
+		}
+
+		return modified;
+	}
+
+	#endregion
 
 	#region Creating CIM objects
 
@@ -1150,59 +1208,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 	#endregion
 
-	private static bool UpdateSymbol(CIMSymbol cimSymbol, Config.Symbol configSymbol, IFeedback feedback)
-	{
-		if (cimSymbol is not CIMMultiLayerSymbol multiLayerSymbol)
-		{
-			feedback.Error(
-				$"Current symbol is not a {nameof(CIMMultiLayerSymbol)} " +
-				$"(it's {cimSymbol?.GetType().Name ?? "null"}); skipping symbol");
-			return false;
-		}
-
-		var cimLevels = multiLayerSymbol.SymbolLayers;
-		if (cimLevels is null) return false;
-
-		// TODO also compare labels?
-		var cimSymbolType = Utils.GetPrettyTypeName(multiLayerSymbol);
-		if (configSymbol.Type != null && !string.Equals(configSymbol.Type, cimSymbolType, StringComparison.Ordinal))
-		{
-			feedback.Warning($"Symbol types don't agree: config expects {configSymbol.Type} but CIM has {cimSymbolType}");
-		}
-
-		int n = cimLevels.Length;
-		if (configSymbol.Levels.Count != n)
-		{
-			feedback.Error(
-				$"Current symbol has {n} level(s), but the config expected " +
-				$"{configSymbol.Levels.Count} level(s); skipping symbol");
-			return false;
-		}
-
-		bool modified = false;
-
-		for (int i = 0; i < n; i++)
-		{
-			var level = configSymbol.Levels[i];
-
-			var cimLevelType = Utils.GetPrettyTypeName(cimLevels[i]);
-			if (level.Type != null && !string.Equals(level.Type, cimLevelType, StringComparison.Ordinal))
-			{
-				feedback.Warning($"Symbol layer types don't agree: config expects {level.Type} but CIM has {cimLevelType}");
-			}
-
-			var levelName = string.IsNullOrEmpty(level.Name) ? null : level.Name;
-
-			if (!string.Equals(cimLevels[i].Name, levelName, StringComparison.Ordinal))
-			{
-				multiLayerSymbol.SymbolLayers[i].Name = levelName;
-				modified = true;
-			}
-		}
-
-		return modified;
-	}
-
 	private static Config.Symbol FindSymbol(IEnumerable<Config.Symbol> symbols, CIMUniqueValue[] values)
 	{
 		var text = Utils.FormatDiscriminatorValue(values);
@@ -1214,33 +1219,52 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		return symbols.FirstOrDefault(sym => sym.Match != null && string.Equals(sym.Match, formattedValues));
 	}
 
-	private static bool SameFields(string[] configFields, string[] cimFields)
-	{
-		if (configFields is null || cimFields is null) return false;
-		if (configFields.Length != cimFields.Length) return false;
-
-		for (int i = 0; i < configFields.Length; i++)
-		{
-			if (! string.Equals(configFields[i], cimFields[i], StringComparison.Ordinal))
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	private static string FormatFields(string[] fields)
-	{
-		if (fields is null) return null;
-		const char sep = ',';
-		return string.Join(sep, fields);
-	}
-
 	private static string FormatLayer(Config.LayerBase layer)
 	{
 		return $"{layer.Name} in {layer.Parent ?? "Map"}";
 	}
+
+	/// <returns>The <see cref="Map"/> that is or contains
+	/// the given <paramref name="layerContainer"/></returns>
+	private static Map GetMap(ILayerContainer layerContainer)
+	{
+		while (layerContainer is Layer layer)
+		{
+			if (ReferenceEquals(layerContainer, layer.Parent))
+				return null; // paranoia (should not occur)
+
+			layerContainer = layer.Parent;
+		}
+
+		return layerContainer as Map;
+	}
+
+	/// <remarks>If the given <paramref name="container"/> is a group layer,
+	/// it is included as the first (root) item in the result list</remarks>
+	private static IReadOnlyList<Layer> GetLayersPreOrder(ILayerContainer container)
+	{
+		if (container is null)
+		{
+			return Enumerable.Empty<Layer>().ToList();
+		}
+
+		var layersInPreOrder = container.GetLayersAsFlattenedList();
+
+		if (container is GroupLayer gl)
+		{
+			// Special case: insert container at front if it's a group layer!
+			layersInPreOrder = Enumerable.Repeat<Layer>(gl, 1).Concat(layersInPreOrder).ToList();
+		}
+
+		return layersInPreOrder;
+	}
+
+	private static IEnumerable<T> NonNull<T>(IEnumerable<T> source)
+	{
+		return source ?? Enumerable.Empty<T>();
+	}
+
+	#region Nested type: Config wrapper class
 
 	/// <summary>
 	/// Just a convenience: typed access to the config XElement
@@ -1249,12 +1273,12 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 	{
 		public Config(XElement xml) : base(xml) { }
 
-		public string MapName => (string) Xml.Attribute("map");
-		public string GroupName => (string) Xml.Attribute("groupLayer");
+		//public string MapName => (string) Xml.Attribute("map");
+		//public string GroupName => (string) Xml.Attribute("groupLayer");
 		public bool IncludeMasking => (bool?) Xml.Attribute("includeMasking") ?? false;
 		//public bool ExtraMasking => (bool?) Xml.Attribute("extraMasking") ?? false;
 		//public bool IncludeHiddenDefaultSymbol => (bool?) Xml.Attribute("includeHiddenDefaultSymbol") ?? false;
-		public string Remark => (string) Xml.Element("Remark");
+		//public string Remark => (string) Xml.Element("Remark");
 
 		public bool HasMaskedBy => GetHasMaskedBy();
 
@@ -1445,6 +1469,10 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		#endregion
 	}
 
+	#endregion
+
+	#region Nested types: IFeedback
+
 	public interface IFeedback
 	{
 		int Warnings { get; }
@@ -1456,9 +1484,13 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		void Error(string message);
 	}
 
-	public class Feedback : IFeedback
+	#endregion
+
+	#region Nested type: Feedback
+
+	private class Feedback : IFeedback
 	{
-		private readonly IList<string> _messages = new List<string>();
+		private readonly List<string> _messages = new();
 
 		public int Warnings { get; private set; }
 		public int Errors { get; private set; }
@@ -1485,4 +1517,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			}
 		}
 	}
+
+	#endregion
 }
