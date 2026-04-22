@@ -14,10 +14,9 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Input;
 using ProSuite.Commons.Xml;
 using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.Display;
 
@@ -55,14 +54,14 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var config = LoadConfig(filePath);
 		var feedback = new Feedback();
 
-		var valid = await QueuedTask.Run(() => ValidateConfig(config, feedback, map));
+		ILayerContainer container = _options.GroupLayerItem?.GroupLayer ?? (ILayerContainer) map;
+
+		var valid = await QueuedTask.Run(() => ValidateConfig(config, feedback, container));
 		if (! valid)
 		{
 			Utils.ShowFeedback(feedback, owner);
 			return false;
 		}
-
-		ILayerContainer container = _options.GroupLayerItem?.GroupLayer ?? (ILayerContainer) map;
 
 		await QueuedTask.Run(() =>
 		{
@@ -156,25 +155,23 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		throw new NotImplementedException("Import from CSV is not yet implemented");
 	}
 
-	private static async Task<IFeedback> ValidateConfig(string configFilePath)
+	#region Config validation
+
+	private static async Task<IFeedback> ValidateConfig(string configFilePath, [CanBeNull] ILayerContainer layerContainer)
 	{
 		var feedback = new Feedback();
 
-		bool skipMap = KeyboardUtils.IsAltDown();
-		var map = MapView.Active?.Map;
-
-		await ValidateConfig(configFilePath, feedback, skipMap ? null : map);
+		await ValidateConfig(configFilePath, feedback, layerContainer);
 
 		return feedback;
 	}
 
-	#region Config validation
-
-	private static async Task ValidateConfig(string configFilePath, IFeedback feedback, Map map)
+	private static async Task ValidateConfig(string configFilePath, IFeedback feedback,
+	                                         ILayerContainer layerContainer = null)
 	{
 		if (feedback is null)
 			throw new ArgumentNullException(nameof(feedback));
-		// configFilePath and map can be null
+		// configFilePath and layerContainer can be null
 
 		if (string.IsNullOrEmpty(configFilePath))
 		{
@@ -186,13 +183,13 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		{
 			Config config = LoadConfig(configFilePath);
 
-			if (map is null)
+			if (layerContainer is null)
 			{
 				ValidateConfig(config, feedback);
 			}
 			else
 			{
-				await QueuedTask.Run(() => ValidateConfig(config, feedback, map));
+				await QueuedTask.Run(() => ValidateConfig(config, feedback, layerContainer));
 			}
 		}
 		catch (Exception ex)
@@ -203,12 +200,12 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 	/// <summary>
 	/// Validate the given <paramref name="config"/>, optionally also
-	/// against the given <paramref name="map"/> and report findings
-	/// to the given <paramref name="feedback"/>.
+	/// against the given <paramref name="layerContainer"/> (the map or a
+	/// group layer), and report to the given <paramref name="feedback"/>.
 	/// </summary>
 	/// <returns>true iff no errors have been reported (warnings may occured)</returns>
-	/// <remarks>Must run on MCT if <paramref name="map"/> non-null</remarks>
-	private static bool ValidateConfig(Config config, IFeedback feedback, Map map = null)
+	/// <remarks>Must run on MCT if <paramref name="layerContainer"/> is non-null</remarks>
+	private static bool ValidateConfig(Config config, IFeedback feedback, ILayerContainer layerContainer = null)
 	{
 		if (config is null)
 			throw new ArgumentNullException(nameof(config));
@@ -304,9 +301,9 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			feedback.Error($"Duplicate (by URI) layers in {nameof(config.DrawingOrder)}: {text}");
 		}
 
-		if (map is not null)
+		if (layerContainer is not null)
 		{
-			ValidateAgainstMap(config, map, feedback);
+			ValidateAgainstMap(config, layerContainer, feedback);
 		}
 
 		return feedback.Errors <= 0;
@@ -316,6 +313,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 	/// Validate given config against given map:
 	/// - check for missing layers (Layer in DrawingOrder and SymbolLevels)
 	/// - check for missing mask layers (MaskedBy in DrawingOrder)
+	/// - check for extra layers (those in map but not in config's SymbolLevels)
 	/// - check for layer name mismatches (same URI but different names)
 	/// - check renderer type config/layer (both simple or both unique)
 	/// - check for missing symbols (in config / in renderer)
@@ -323,22 +321,28 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 	/// - check symbol levels (SymbolLevels/Layer/Symbol/Level) against symbol layers in CIM: count must agree
 	/// - check symbol layer type config/renderer (both SolidStroke or both ...)
 	/// </summary>
-	private static void ValidateAgainstMap(Config config, Map map, IFeedback feedback)
+	private static void ValidateAgainstMap(Config config, ILayerContainer container, IFeedback feedback)
 	{
 		if (config is null)
 			throw new ArgumentNullException(nameof(config));
-		if (map is null)
-			throw new ArgumentNullException(nameof(map));
+		if (container is null)
+			throw new ArgumentNullException(nameof(container));
 		if (feedback is null)
 			throw new ArgumentNullException(nameof(feedback));
 
-		var mapLayers = map.GetLayersAsFlattenedList().ToDictionary(l => l.URI);
+		// When looking up layers, use the relevant set:
+		// - layers from the user-chosen container for items in <DrawingOrder> and <SymbolLevels>
+		// - all layers in the entire map for mask layers (they may live outside the chosen container)
+
+		var map = GetMap(container);
+		var allLayers = GetLayersPreOrder(map).ToDictionary(l => l.URI);
+		var setLayers = GetLayersPreOrder(container).ToDictionary(l => l.URI);
 
 		foreach (var configLayer in config.DrawingOrder)
 		{
-			if (! mapLayers.TryGetValue(configLayer.Uri, out Layer mapLayer))
+			if (! setLayers.TryGetValue(configLayer.Uri, out Layer mapLayer))
 			{
-				feedback.Error(LayerNotFound("Layer", configLayer, map));
+				feedback.Error(LayerNotFound("Layer", configLayer, container));
 			}
 			else if (! SameLayerName(configLayer, mapLayer))
 			{
@@ -347,9 +351,9 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 			foreach (var maskLayer in NonNull(configLayer.MaskedBy))
 			{
-				if (! mapLayers.TryGetValue(maskLayer.Uri, out mapLayer))
+				if (! allLayers.TryGetValue(maskLayer.Uri, out mapLayer))
 				{
-					feedback.Error(LayerNotFound("Mask layer", maskLayer, map));
+					feedback.Error(LayerNotFound("Mask layer", maskLayer, container));
 				}
 				else if (! SameLayerName(maskLayer, mapLayer))
 				{
@@ -359,9 +363,9 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 				                          
 			foreach (var maskLayer in NonNull(configLayer.Levels).SelectMany(level => NonNull(level.MaskedBy)))
 			{
-				if (! mapLayers.TryGetValue(maskLayer.Uri, out mapLayer))
+				if (! allLayers.TryGetValue(maskLayer.Uri, out mapLayer))
 				{
-					feedback.Error(LayerNotFound("Mask layer", maskLayer, map));
+					feedback.Error(LayerNotFound("Mask layer", maskLayer, container));
 				}
 				else if (! SameLayerName(maskLayer, mapLayer))
 				{
@@ -370,23 +374,23 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			}
 		}
 
-		foreach (var item in config.SymbolLevels)
+		foreach (var configLayer in config.SymbolLevels)
 		{
-			if (! mapLayers.TryGetValue(item.Uri, out Layer mapLayer))
+			if (! setLayers.TryGetValue(configLayer.Uri, out Layer mapLayer))
 			{
-				var text = LayerNotFound("Layer", item, map);
+				var text = LayerNotFound("Layer", configLayer, container);
 				feedback.Error(text);
 				continue;
 			}
 
-			if (! SameLayerName(item, mapLayer))
+			if (! SameLayerName(configLayer, mapLayer))
 			{
-				feedback.Warning(LayerNameMismatch("Layer", item, mapLayer));
+				feedback.Warning(LayerNameMismatch("Layer", configLayer, mapLayer));
 			}
 
 			if (mapLayer is not FeatureLayer featureLayer)
 			{
-				feedback.Error($"Layer {FormatLayer(item)} is not a {nameof(FeatureLayer)}");
+				feedback.Error($"Layer {FormatLayer(configLayer)} is not a {nameof(FeatureLayer)}");
 				continue;
 			}
 
@@ -394,17 +398,30 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 			if (renderer is CIMUniqueValueRenderer uniqueRenderer)
 			{
-				ValidateAgainstUniqueValueRenderer(item, uniqueRenderer, mapLayer, feedback);
+				ValidateAgainstUniqueValueRenderer(configLayer, uniqueRenderer, mapLayer, feedback);
 			}
 			else if (renderer is CIMSimpleRenderer simpleRenderer)
 			{
-				ValidateAgainstSimpleRenderer(item, simpleRenderer, mapLayer, feedback);
+				ValidateAgainstSimpleRenderer(configLayer, simpleRenderer, mapLayer, feedback);
 			}
 			else
 			{
 				var text = $"Layer “{mapLayer.Name}” in CIM has a renderer of " +
 				           $"type {renderer.GetType().Name}, which is not supported";
-				feedback.Error(item.AppendLineInfo(text));
+				feedback.Error(configLayer.AppendLineInfo(text));
+			}
+		}
+
+		// Check that all feature layers in the map (or the chosen set)
+		// also appear in the config's SymbolLevels section:
+
+		foreach (var mapLayer in setLayers.Values.OfType<FeatureLayer>())
+		{
+			if (config.SymbolLevels.All(item => item.Uri != mapLayer.URI))
+			{
+				var text = $"Layer “{mapLayer.Name}” is missing in config's " +
+				           $"{nameof(config.SymbolLevels)} (layer URI: {mapLayer.URI})";
+				feedback.Warning(text);
 			}
 		}
 	}
@@ -651,11 +668,13 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		return string.Equals(configLayer.Name, mapLayer.Name);
 	}
 
-	private static string LayerNotFound(string prefix, Config.LayerBase configLayer, Map map)
+	private static string LayerNotFound(string prefix, Config.LayerBase configLayer, ILayerContainer container)
 	{
 		prefix ??= "Layer";
+
 		var text = $"{prefix} “{configLayer.Name}” with URI {configLayer.Uri} " +
 		           $"not found in CIM";
+
 		return configLayer.AppendLineInfo(text);
 	}
 
@@ -665,6 +684,19 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var text = $"{prefix} names disagree for URI {configLayer.Uri}: " +
 		           $"“{mapLayer.Name}” in CIM, “{configLayer.Name}” in config";
 		return configLayer.AppendLineInfo(text);
+	}
+
+	private static Map GetMap(ILayerContainer container)
+	{
+		while (container is Layer layer)
+		{
+			if (ReferenceEquals(container, layer.Parent))
+				return null; // paranoia (should not occur)
+
+			container = layer.Parent;
+		}
+
+		return container as Map;
 	}
 
 	private static IEnumerable<T> NonNull<T>(IEnumerable<T> source)
@@ -992,8 +1024,15 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		}
 	}
 
+	/// <remarks>If the given <paramref name="container"/> is a group layer,
+	/// it is included as the first (root) item in the result list</remarks>
 	private static IReadOnlyList<Layer> GetLayersPreOrder(ILayerContainer container)
 	{
+		if (container is null)
+		{
+			return Enumerable.Empty<Layer>().ToList();
+		}
+
 		var layersInPreOrder = container.GetLayersAsFlattenedList();
 
 		if (container is GroupLayer gl)

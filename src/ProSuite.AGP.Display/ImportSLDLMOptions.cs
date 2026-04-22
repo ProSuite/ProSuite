@@ -10,6 +10,7 @@ using System.Windows.Input;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Input;
 using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Display;
@@ -19,17 +20,18 @@ namespace ProSuite.AGP.Display;
 /// </summary>
 public class ImportSLDLMOptions : INotifyPropertyChanged
 {
+	private Map _map;
 	private string _configFilePath;
 	private GroupLayerComboItem _groupLayer;
 	private readonly List<GroupLayerComboItem> _groupLayers;
-	private readonly Func<string, Task<ImportSLDLMButtonBase.IFeedback>> _validate;
+	private readonly Func<string, ILayerContainer, Task<ImportSLDLMButtonBase.IFeedback>> _validate;
 
 	private string _rememberedLayerUri;
 	private string _rememberedConfigPath;
 
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	public ImportSLDLMOptions(Func<string, Task<ImportSLDLMButtonBase.IFeedback>> validate)
+	public ImportSLDLMOptions(Func<string, ILayerContainer, Task<ImportSLDLMButtonBase.IFeedback>> validate)
 	{
 		_validate = validate ?? throw new ArgumentNullException(nameof(validate));
 		_groupLayers = new List<GroupLayerComboItem>();
@@ -38,25 +40,28 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 
 	public void SetMap(Map map)
 	{
+		_map = map;
+
 		if (map is null)
 		{
-			MapName = string.Empty;
 			_groupLayers.Clear();
+
 			GroupLayerItem = null;
 		}
 		else
 		{
-			MapName = map.Name ?? string.Empty;
-
+			var selectedUri = GroupLayerItem?.GroupLayer?.URI;
 			var entireMapItem = new GroupLayerComboItem("Entire Map");
-			var selectedURI = GroupLayerItem?.GroupLayer?.URI;
+			var groupItems = map.GetLayersAsFlattenedList()
+			                    .OfType<GroupLayer>()
+			                    .Select(gl => new GroupLayerComboItem(gl));
 
 			_groupLayers.Clear();
 			_groupLayers.Add(entireMapItem);
-			_groupLayers.AddRange(map.GetLayersAsFlattenedList().OfType<GroupLayer>().Select(gl => new GroupLayerComboItem(gl)));
+			_groupLayers.AddRange(groupItems);
 
 			var restore = _groupLayers.FirstOrDefault(
-				item => string.Equals(item?.GroupLayer?.URI, selectedURI));
+				item => string.Equals(item?.GroupLayer?.URI, selectedUri));
 			GroupLayerItem = restore ?? entireMapItem;
 		}
 	}
@@ -77,7 +82,7 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 		ConfigFilePath = _rememberedConfigPath;
 	}
 
-	public string MapName { get; private set; }
+	public string MapName => _map?.Name ?? string.Empty;
 
 	public IReadOnlyList<GroupLayerComboItem> GroupLayerItems { get; }
 
@@ -128,7 +133,15 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 	{
 		try
 		{
-			var feedback = await _validate(ConfigFilePath);
+			bool skipMap = KeyboardUtils.IsAltDown();
+
+			ILayerContainer container = null;
+			if (! skipMap)
+			{
+				container = GroupLayerItem?.GroupLayer ?? (ILayerContainer) _map;
+			}
+
+			var feedback = await _validate(ConfigFilePath, container);
 
 			Utils.ShowFeedback(feedback, owner, _msg);
 		}
