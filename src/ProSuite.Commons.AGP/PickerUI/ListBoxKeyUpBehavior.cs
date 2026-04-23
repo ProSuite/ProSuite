@@ -73,12 +73,18 @@ public class ListBoxKeyUpBehavior : Behavior<ListBox>
 
 		if (e.Key == Key.Up && count > 0)
 		{
+			// Wrap-around: Up at the first item jumps to last; otherwise move up one.
+			listBox.SelectedIndex = index <= 0 ? count - 1 : index - 1;
+
 			listBox.SelectedIndex = index <= 0 ? 0 : index - 1;
 			listBox.ScrollIntoView(listBox.SelectedItem);
 			e.Handled = true;
 		}
 		else if (e.Key == Key.Down && count > 0)
 		{
+			// Wrap-around: Down at the last item jumps to first; otherwise move down one.
+			listBox.SelectedIndex = index >= count - 1 ? 0 : index + 1;
+
 			listBox.SelectedIndex = index >= count - 1 ? count - 1 : index + 1;
 			listBox.ScrollIntoView(listBox.SelectedItem);
 			e.Handled = true;
