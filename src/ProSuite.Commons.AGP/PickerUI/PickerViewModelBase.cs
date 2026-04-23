@@ -31,6 +31,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 
 	[CanBeNull] private IDisposable _selectionGeometryOverlay;
 	[CanBeNull] private IPickableItem _selectedItem;
+	[CanBeNull] private IPickableItem _highlightedItem;
 	[CanBeNull] private ObservableCollection<IPickableItem> _items;
 
 	protected PickerViewModelBase()
@@ -43,6 +44,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 		PressEscapeCommand = new RelayCommand<ICloseable>(OnPressEscape);
 		PressSpaceCommand = new ActionCommand(OnPressSpace);
 		CloseWindowCommand = new RelayCommand<ICloseable>(CloseWindow);
+		ConfirmSelectionCommand = new ActionCommand(OnConfirmSelection);
 	}
 
 	protected PickerViewModelBase([NotNull] Geometry selectionGeometry) : this()
@@ -60,6 +62,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 	public ICommand PressSpaceCommand { get; }
 	public ICommand PressEscapeCommand { get; }
 	public ICommand CloseWindowCommand { get; }
+	public ICommand ConfirmSelectionCommand { get; }
 
 	/// <summary>
 	/// The awaitable task that provides the result when the dialog is closed.
@@ -76,6 +79,17 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 			_items = value;
 			SetProperty(ref _items, value);
 		}
+	}
+
+	/// <summary>
+	/// The item currently highlighted by keyboard navigation or hover.
+	/// Two-way bound to ListBox.SelectedItem. Does NOT complete the picker task.
+	/// </summary>
+	[CanBeNull]
+	public IPickableItem HighlightedItem
+	{
+		get => _highlightedItem;
+		set => SetProperty(ref _highlightedItem, value);
 	}
 
 	[CanBeNull]
@@ -100,6 +114,15 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 				_msg.Debug("Error setting selected item", e);
 			}
 		}
+	}
+	private void OnConfirmSelection()
+	{
+		if (_highlightedItem == null)
+		{
+			return;
+		}
+
+		SelectedItem = _highlightedItem;
 	}
 
 	private void FlashItem(T candidate)
