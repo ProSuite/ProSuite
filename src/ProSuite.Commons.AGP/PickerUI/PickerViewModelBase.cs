@@ -37,7 +37,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 	{
 		_taskCompletionSource = new TaskCompletionSource<IPickableItem>();
 
-		FlashItemCommand = new RelayCommand<T>(FlashItem);
+		FlashItemCommand = new RelayCommand<T>(FlashItem, item => item != null);
 		SelectionChangedCommand = new RelayCommand<ICloseable>(OnSelectionChanged);
 		DeactivatedCommand = new RelayCommand<ICloseable>(OnWindowDeactivated);
 		PressEscapeCommand = new RelayCommand<ICloseable>(OnPressEscape);
@@ -109,6 +109,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 
 	protected virtual void FlashItemCore(T item)
 	{
+		if (item == null) return;
 		ViewUtils.Try(() => FlashService.Flash(item.Geometry), _msg, true);
 	}
 
