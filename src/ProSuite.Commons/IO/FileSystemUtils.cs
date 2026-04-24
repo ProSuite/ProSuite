@@ -66,13 +66,50 @@ namespace ProSuite.Commons.IO
 			                            Path.DirectorySeparatorChar);
 		}
 
-		public static bool ArePathsEqual([NotNull] string path1,
-		                                 [NotNull] string path2)
+		/// <summary>
+		/// Compare two file system paths for equality.
+		/// Aware of relative paths and casing differences,
+		/// but unaware of links and UNC paths.
+		/// </summary>
+		/// <returns>true iff the two paths are considered equal</returns>
+		public static bool ArePathsEqual(string path1, string path2)
 		{
-			return string.Equals(
-				Path.GetFullPath(path1),
-				Path.GetFullPath(path2),
-				StringComparison.OrdinalIgnoreCase); // Windows is case-insensitive
+			if (path1 is null && path2 is null) return true;
+			if (path1 is null || path2 is null) return false;
+			path1 = TrimEndingDirectorySeparator(Path.GetFullPath(path1));
+			path2 = TrimEndingDirectorySeparator(Path.GetFullPath(path2));
+			bool isWin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+			var comparison = isWin ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			return string.Equals(path1, path2, comparison);
+		}
+
+		private static string TrimEndingDirectorySeparator(string path)
+		{
+			// TODO Once we are on .NET Standard 2.1 or later,
+			//      use Path.TrimEndingDirectorySeparator instead
+			//      (handles root paths correctly, which we don't)
+
+			// Note This method trims at most one trailing separator, which is fine because
+			//      Path.GetFullPath() already normalized multiple separators and we're private
+
+			if (string.IsNullOrEmpty(path))
+			{
+				return path;
+			}
+
+			char last = path[path.Length - 1];
+			if (last == Path.DirectorySeparatorChar || last == Path.AltDirectorySeparatorChar)
+			{
+				return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			}
+
+			return path;
+		}
+
+		[Obsolete("Use ArePathsEqual() instead")]
+		public static bool EqualPaths(string path1, string path2)
+		{
+			return ArePathsEqual(path1, path2);
 		}
 
 		public static bool HasInvalidPathChars([NotNull] string path)
@@ -98,43 +135,6 @@ namespace ProSuite.Commons.IO
 		                                             char replacementChar = '_')
 		{
 			return StringUtils.ReplaceChars(path, replacementChar, InvalidPathChars);
-		}
-
-		/// <summary>
-		/// Compare two file system paths for equality.
-		/// Aware of relative paths and casing differences,
-		/// but unaware of links and UNC paths.
-		/// </summary>
-		/// <returns>true iff the two paths are considered equal</returns>
-		public static bool EqualPaths(string path1, string path2)
-		{
-			if (path1 is null && path2 is null) return true;
-			if (path1 is null || path2 is null) return false;
-			path1 = TrimEndingDirectorySeparator(Path.GetFullPath(path1));
-			path2 = TrimEndingDirectorySeparator(Path.GetFullPath(path2));
-			bool isWin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-			var comparison = isWin ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-			return string.Equals(path1, path2, comparison);
-		}
-
-		private static string TrimEndingDirectorySeparator(string path)
-		{
-			// TODO Once we advance to .NET Standard 2.1 or later,
-			//      use Path.TrimEndingDirectorySeparator instead
-			//      (handles root paths correctly, which we don't)
-
-			if (string.IsNullOrEmpty(path))
-			{
-				return path;
-			}
-
-			char last = path[path.Length - 1];
-			if (last == Path.DirectorySeparatorChar || last == Path.AltDirectorySeparatorChar)
-			{
-				return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-			}
-
-			return path;
 		}
 
 		public static string FindFile([NotNull] IEnumerable<string> directories,
