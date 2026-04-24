@@ -52,15 +52,11 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="DataModel\DatasetCatalogControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="DataModel\DatasetCatalogControl.cs" />
 		<Compile Update="DataModel\DatasetCatalogControl.Designer.cs">
 		  <DependentUpon>DatasetCatalogControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="DataModel\IssueDatasetParametersForm.cs">
-		  <SubType>Form</SubType>
-		</Compile>
+		<Compile Update="DataModel\IssueDatasetParametersForm.cs" />
 		<Compile Update="Properties\AssociationEndImages.Designer.cs">
 		  <DependentUpon>AssociationEndImages.resx</DependentUpon>
 		  <DesignTime>True</DesignTime>
@@ -111,81 +107,51 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		</Compile>
-		<Compile Update="QA\Controls\QualityConditionControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="QA\Controls\QualityConditionControl.cs" />
 		<Compile Update="QA\Controls\QualityConditionControl.Designer.cs">
 		  <DependentUpon>QualityConditionControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\Controls\QualityConditionParametersControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Controls\QualityConditionTableViewControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="QA\Controls\QualityConditionParametersControl.cs" />
+		<Compile Update="QA\Controls\QualityConditionTableViewControl.cs" />
 		<Compile Update="QA\Controls\QualityConditionTableViewControl.Designer.cs">
 		  <DependentUpon>QualityConditionTableViewControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\Controls\TestDescriptorControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="QA\Controls\TestDescriptorControl.cs" />
 		<Compile Update="QA\Controls\TestDescriptorControl.Designer.cs">
 		  <DependentUpon>TestDescriptorControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\Controls\TestTreeViewControl.cs">
-		  <SubType>Component</SubType>
-		</Compile>
+		<Compile Update="QA\Controls\TestTreeViewControl.cs" />
 		<Compile Update="QA\Controls\TestTreeViewControl.Designer.cs">
 		  <DependentUpon>TestTreeViewControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\Customize\ConditionDatasetsControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\ConditionListControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\ConditionsLayerViewControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\CustomizeQASpecForm.cs">
-		  <SubType>Form</SubType>
-		</Compile>
-		<Compile Update="QA\Customize\TestParameterValuesEditorForm.cs">
-		  <SubType>Form</SubType>
-		</Compile>
+		<Compile Update="QA\Customize\ConditionDatasetsControl.cs" />
+		<Compile Update="QA\Customize\ConditionListControl.cs" />
+		<Compile Update="QA\Customize\ConditionsLayerViewControl.cs" />
+		<Compile Update="QA\Customize\CustomizeQASpecForm.cs" />
+		<Compile Update="QA\Customize\TestParameterValuesEditorForm.cs" />
 		<Compile Update="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
 		  <DependentUpon>UpdateIssuesOptionsControl.xaml</DependentUpon>
 		</Compile>
 		<Compile Update="QA\VerificationProgress\VerificationProgressWpfControl.xaml.cs">
 		  <DependentUpon>VerificationProgressWpfControl.xaml</DependentUpon>
 		</Compile>
-		<Compile Update="QA\VerificationResult\QAVerificationForm.cs">
-		  <SubType>Form</SubType>
-		</Compile>
+		<Compile Update="QA\VerificationResult\QAVerificationForm.cs" />
 		<Compile Update="QA\VerificationResult\QAVerificationForm.Designer.cs">
 		  <DependentUpon>QAVerificationForm.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\VerificationResult\QualityConditionVerificationControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="QA\VerificationResult\QualityConditionVerificationControl.cs" />
 		<Compile Update="QA\VerificationResult\QualityConditionVerificationControl.Designer.cs">
 		  <DependentUpon>QualityConditionVerificationControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedConditionsControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="QA\VerificationResult\VerifiedConditionsControl.cs" />
 		<Compile Update="QA\VerificationResult\VerifiedConditionsControl.Designer.cs">
 		  <DependentUpon>VerifiedConditionsControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.cs" />
 		<Compile Update="QA\VerificationResult\VerifiedConditionsHierarchyControl.Designer.cs">
 		  <DependentUpon>VerifiedConditionsHierarchyControl.cs</DependentUpon>
 		</Compile>
-		<Compile Update="QA\VerificationResult\VerifiedDatasetsControl.cs">
-		  <SubType>UserControl</SubType>
-		</Compile>
+		<Compile Update="QA\VerificationResult\VerifiedDatasetsControl.cs" />
 		<Compile Update="QA\VerificationResult\VerifiedDatasetsControl.Designer.cs">
 		  <DependentUpon>VerifiedDatasetsControl.cs</DependentUpon>
 		</Compile>

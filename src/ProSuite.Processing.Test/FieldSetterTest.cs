@@ -15,7 +15,7 @@ namespace ProSuite.Processing.Test
 		[Test]
 		public void CanEmptyAndNull()
 		{
-			// An empty (or null) assignments string must not choke the parser
+			// An empty (or null) assignments string must not choke the parser,
 			// and it must not change any fields on Execute. This is important
 			// because null/empty is probably the default value for the field
 			// assignments parameter in all Carto Processes that use it.
@@ -78,8 +78,8 @@ namespace ProSuite.Processing.Test
 			var fs3 = new FieldSetter(";; ;a='b' ; ; c = 'd' ;; ;");
 			Assert.AreEqual("a='b';c='d'", Format(fs3.Assignments));
 
-		var fs4 = new FieldSetter(" \t size=RAND(5,9);angle=RAND()*360.0   ;   foo = marker.size/2  ");
-		Assert.AreEqual("size=RAND(5,9);angle=RAND()*360.0;foo=marker.size/2", Format(fs4.Assignments));
+			var fs4 = new FieldSetter(" \t size=RAND(5,9);angle=RAND()*360.0   ;   foo = marker.size/2  ");
+			Assert.AreEqual("size=RAND(5,9);angle=RAND()*360.0;foo=marker.size/2", Format(fs4.Assignments));
 		}
 
 		[Test]
@@ -97,7 +97,7 @@ namespace ProSuite.Processing.Test
 			Assert.IsEmpty(new FieldSetter(null).Text);
 			Assert.IsEmpty(new FieldSetter(string.Empty).Text);
 			Assert.AreEqual("foo = 'Bar'", new FieldSetter("foo = 'Bar'").Text);
-		Assert.AreEqual("A = 1; B = 4/2; C = 'c'", new FieldSetter("A=1;;B=4/2 ; C=\t'c'").Text);
+			Assert.AreEqual("A = 1; B = 4/2; C = 'c'", new FieldSetter("A=1;;B=4/2 ; C=\t'c'").Text);
 		}
 
 		[Test]
@@ -139,7 +139,7 @@ namespace ProSuite.Processing.Test
 			// A more realistic example:
 			row.SetValues(DBNull.Value, 11, 3.5, "hi");
 			env.ForgetAll().DefineFields(row, "marker").SetRandom(new Random(1234));
-		var fs3 = new FieldSetter("a=CONCAT(b+marker.c); b=10+10*RAND(4); c=TRUNC(1.5+b/2); d=null");
+			var fs3 = new FieldSetter("a=CONCAT(b+marker.c); b=10+10*RAND(4); c=TRUNC(1.5+b/2); d=null");
 			fs3.Execute(row, env);
 			row.AssertValues("14.5", 20, 7, DBNull.Value);
 
@@ -153,16 +153,16 @@ namespace ProSuite.Processing.Test
 		}
 
 		[Test]
-	public void CanCatchNoSuchField()
-	{
-		var env = new StandardEnvironment();
-		var row = new RowValuesMock("fieldA", "fieldB");
+		public void CanCatchNoSuchField()
+		{
+			var env = new StandardEnvironment();
+			var row = new RowValuesMock("fieldA", "fieldB");
 
-		var fs = new FieldSetter("fieldA = 1; fieldB = 2; oops = 42");
-		Assert.Catch<EvaluationException>(() => fs.Execute(row, env));
-	}
+			var fs = new FieldSetter("fieldA = 1; fieldB = 2; oops = 42");
+			Assert.Catch<EvaluationException>(() => fs.Execute(row, env));
+		}
 
-	[Test]
+		[Test]
 		public void CanReferenceManualBindings()
 		{
 			var env = new StandardEnvironment();

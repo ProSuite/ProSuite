@@ -1,5 +1,7 @@
 using System;
+#if ! NET48
 using System.Runtime.Versioning;
+#endif
 using System.ServiceProcess;
 using System.Timers;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,7 +13,9 @@ namespace ProSuite.Microservices.Server.AO
 	/// Windows service that wraps a Grpc service implementation T.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
+#if ! NET48
 	[SupportedOSPlatform("windows")]
+#endif
 	public class GrpcWindowsService<T> : ServiceBase where T : class
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

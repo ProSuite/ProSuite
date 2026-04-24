@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -190,9 +191,16 @@ public abstract class MergerBase
 		return true;
 	}
 
+	protected virtual List<Dataset> GetAdditionalRelevantDatasets(
+		List<Dataset> relevantFeatureClasses)
+	{
+		return new List<Dataset>();
+	}
+
 	protected virtual void OnCommitting(Feature updateFeature,
 	                                    IList<Feature> deleteFeatures,
-	                                    Geometry mergedGeometry) { }
+	                                    Geometry mergedGeometry,
+	                                    EditOperation.IEditContext editContext) { }
 
 	private bool IsValidMergeResult([NotNull] Geometry mergeResult,
 	                                NotificationCollection notifications)
@@ -384,6 +392,7 @@ public abstract class MergerBase
 
 		var datasets = GdbPersistenceUtils
 		               .GetDatasetsNonEmpty(deleteFeatures.Append(updateFeature)).ToList();
+		var additionalDatasets = GetAdditionalRelevantDatasets(datasets);
 
 		bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
 			             editContext =>
@@ -392,14 +401,13 @@ public abstract class MergerBase
 				             {
 					             foreach (Feature deleteFeature in
 					                      deleteFeatures.OrderBy(f => GeometryUtils
-						                                             .GetGeometrySize(
-							                                             f.GetShape())))
+						                                             .GetGeometrySize(f.GetShape())))
 					             {
 						             TransferRelationships(deleteFeature, updateFeature);
 					             }
 				             }
 
-				             OnCommitting(updateFeature, deleteFeatures, mergedGeometry);
+				             OnCommitting(updateFeature, deleteFeatures, mergedGeometry, editContext);
 
 				             _msg.DebugFormat("Saving one updates and {0} deletes...",
 				                              deleteFeatures.Count);
@@ -424,7 +432,8 @@ public abstract class MergerBase
 
 				             return true;
 			             },
-			             "Merge features", datasets);
+			             "Merge features", datasets.Union(additionalDatasets));
+
 		return saved;
 	}
 
@@ -534,6 +543,8 @@ public abstract class MergerBase
 				originObject = relatedToSourceRow;
 			}
 
+			// TODO: This internally uses RelationshipClass.CreateRelationship which does not trigger an undo/redo entry.
+			//		 Consider using EditOperation.EditContext.Invalidate as well.
 			Relationship newRelationship = RelationshipClassUtils.TryCreateRelationship(
 				originObject, destinationObject, relationshipClass, false,
 				overwriteExistingForeignKeys, notifications);

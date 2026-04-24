@@ -210,12 +210,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	}
 
 	#region item geometry
-
-	public void SetItemsGeometryDraftMode(bool enable)
-	{
-		AlwaysUseDraftMode = enable;
-	}
-
+	
 	public Geometry GetItemDisplayGeometry(IWorkItem item)
 	{
 		try
@@ -444,8 +439,6 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
 		                DisplayName);
-
-		TotalCount = _items.Count;
 	}
 
 	protected virtual string GetFilterDisplayText()
@@ -1408,7 +1401,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		Envelope extent = ExtentProvider?.Extent;
 
-		if (! HasCurrentItem() && extent != null)
+		if (! HasCurrentItem() && extent != null && CountLoadedItems(out int _) > 0)
 		{
 			GoNearest(extent);
 		}

@@ -10,7 +10,6 @@ using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
@@ -34,17 +33,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
-
 		// Technically probably not necessary because no proper AO-objects are used.
 		// But rather be safe than sorry (and experiencing locks and hangs).
 		private readonly StaTaskScheduler _staThreadScheduler = new StaTaskScheduler(5);
 
-		public QualityVerificationDdxGrpcImpl(
-			[NotNull] IDomainTransactionManager domainTransactions)
-		{
-			_domainTransactions = domainTransactions;
-		}
+		public QualityVerificationDdxGrpcImpl() { }
 
 		/// <summary>
 		/// The overall service process health. If it has been set, it will be marked as not serving
@@ -372,7 +365,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces;
 
 			GetProjectWorkspacesResponse response = null;
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				projectWorkspaces =
 					verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
@@ -383,7 +376,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private static GetProjectWorkspacesResponse PackProjectWorkspaceResponse(
+		private GetProjectWorkspacesResponse PackProjectWorkspaceResponse(
 			[NotNull] IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces)
 		{
 			var response = new GetProjectWorkspacesResponse();
@@ -416,6 +409,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				TModel productionModel = project.ProductionModel;
 
 				var projectMsg = ProtobufUtils.ToProjectMsg(project);
+				projectMsg.ProjectId = project.Id;
 
 				CallbackUtils.DoWithNonNull(
 					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
@@ -433,8 +427,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private static ModelMsg ToModelMsg(TModel productionModel,
-		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
+		protected static ModelMsg ToModelMsg(TModel productionModel, ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
 				productionModel.SpatialReferenceDescriptor.GetSpatialReference(),
@@ -467,7 +460,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
 			IList<QualitySpecification> foundSpecifications = null;
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				foundSpecifications =
 					verificationDataDictionary.GetQualitySpecifications(
@@ -495,7 +488,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				QualitySpecification qualitySpecification =
 					verificationDataDictionary.GetQualitySpecification(
@@ -537,7 +530,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				QualityCondition qualityCondition =
 					verificationDataDictionary.GetQualityCondition(request.ConditionName);
@@ -584,7 +577,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
 
-			_domainTransactions.UseTransaction(() =>
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
 			{
 				IList<Dataset> datasets =
 					verificationDataDictionary.GetDatasets(request.DatasetIds);

@@ -632,8 +632,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			try
 			{
 				_msg.InfoFormat("Starting exception import from {0} to {1}",
-								request.ParameterImportWorkspace,
-								request.ParameterTargetWorkspace);
+				                request.ParameterImportWorkspace,
+				                request.ParameterTargetWorkspace);
 
 				// Open workspaces
 				IFeatureWorkspace sourceWorkspace =
@@ -668,7 +668,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 
 				_msg.InfoFormat("Found {0} exception class(es) to import",
-								targetExceptionClasses.Count);
+				                targetExceptionClasses.Count);
 
 				// Ensure required fields exist BEFORE starting edit session
 				ImportExceptionsUtils.GetTargetFields(
@@ -682,8 +682,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				string operationName = isUpdate ? "Update Exceptions" : "Import Exceptions";
 
-				_msg.InfoFormat("Operation mode: {0} (source has UUIDs: {1}, target has UUIDs: {2})",
-								operationName, sourceHasUuids, targetHasUuids);
+				_msg.InfoFormat(
+					"Operation mode: {0} (source has UUIDs: {1}, target has UUIDs: {2})",
+					operationName, sourceHasUuids, targetHasUuids);
 
 				// Execute import/update in transaction
 				var transaction = new GdbTransaction();
@@ -691,7 +692,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				if (isUpdate)
 				{
 					transaction.Execute(
-						(IWorkspace)targetWorkspace,
+						(IWorkspace) targetWorkspace,
 						cancelTracker =>
 						{
 							ImportExceptionsUtils.Update(
@@ -706,12 +707,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 						trackCancel);
 
 					_msg.InfoFormat("Successfully updated exceptions from {0}",
-									request.ParameterImportWorkspace);
+					                request.ParameterImportWorkspace);
 				}
 				else
 				{
 					transaction.Execute(
-						(IWorkspace)targetWorkspace,
+						(IWorkspace) targetWorkspace,
 						cancelTracker =>
 						{
 							ImportExceptionsUtils.Import(
@@ -725,18 +726,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 						trackCancel);
 
 					_msg.InfoFormat("Successfully imported exceptions from {0}",
-									request.ParameterImportWorkspace);
+					                request.ParameterImportWorkspace);
 				}
 
 				return ServiceCallStatus.Finished;
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error importing exceptions from {request.ParameterImportWorkspace}", e);
+				_msg.Error($"Error importing exceptions from {request.ParameterImportWorkspace}",
+				           e);
 				throw;
 			}
 		}
-
 
 		private ServiceCallStatus VerifyDataQualityCore(
 			[NotNull] DataVerificationRequest initialRequest,
@@ -846,10 +847,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			DistributedTestRunner distributedTestRunner = null;
 
+			QualitySpecification specification = null;
 			try
 			{
 				bool useStandaloneService =
-					IsStandAloneVerification(request, null, out QualitySpecification specification);
+					IsStandAloneVerification(request, null, out specification);
 
 				if (DistributedProcessingClients != null && request.MaxParallelProcessing > 1)
 				{
@@ -921,12 +923,44 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
+			finally
+			{
+				Release(specification);
+			}
 
 			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
 				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
 				qaService?.GetVerifiedPerimeter(), trackCancel);
 
 			return result;
+		}
+
+		private static void Release(QualitySpecification specification)
+		{
+			if (specification == null)
+			{
+				return;
+			}
+
+			HashSet<DdxModel> modelsToRelease = new HashSet<DdxModel>();
+			foreach (QualitySpecificationElement element in specification.Elements)
+			{
+				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(
+					         true, true))
+				{
+					modelsToRelease.Add(dataset.Model);
+				}
+			}
+
+			foreach (DdxModel ddxModel in modelsToRelease)
+			{
+				if (ddxModel is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
+			}
+
+			ReadOnlyTableFactory.ClearCache();
 		}
 
 		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
@@ -995,7 +1029,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IGeometry perimeter =
 				ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
-			var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
+			var aoi = perimeter == null
+				          ? null
+				          : new AreaOfInterest(perimeter, parameters.PerimeterDescription);
 
 			_msg.DebugFormat("Provided perimeter: {0}", GeometryUtils.ToString(perimeter));
 
@@ -1005,6 +1041,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 				{
 					XmlVerificationOptions = xmlVerificationOptions
 				};
+			foreach (var kv in parameters.ReportProperties)
+			{
+				xmlService.ReportProperties.Add(
+					new KeyValuePair<string, string>(kv.Key, kv.Value));
+			}
 
 			// NOTE: The report paths include the file names.
 			xmlService.SetupOutputPaths(parameters.IssueFileGdbPath,
@@ -1361,8 +1402,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				CreateSpecificationFactory(dataSources, SupportedInstanceDescriptors,
 				                           knownSchemaMsg);
 
-			QualitySpecification result = factory.CreateQualitySpecification(
-				conditionsSpecificationMsg);
+			QualitySpecification result =
+				factory.CreateQualitySpecification(conditionsSpecificationMsg);
 
 			return result;
 		}

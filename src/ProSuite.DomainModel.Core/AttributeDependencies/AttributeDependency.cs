@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using ProSuite.Commons.AttributeDependencies;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.Core.DataModel;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
@@ -19,12 +19,9 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 	{
 		[UsedImplicitly] private ObjectDataset _dataset;
 
-		// TODO Consider lists of attribute names, ie, strings
-		[UsedImplicitly] private readonly IList<Attribute> _sourceAttributes =
-			new List<Attribute>();
+		[UsedImplicitly] private IList<Attribute> _sourceAttributes = new List<Attribute>();
 
-		[UsedImplicitly] private readonly IList<Attribute> _targetAttributes =
-			new List<Attribute>();
+		[UsedImplicitly] private IList<Attribute> _targetAttributes = new List<Attribute>();
 
 		[UsedImplicitly] private readonly IList<AttributeValueMapping>
 			_attributeValueMappings = new List<AttributeValueMapping>();
@@ -53,13 +50,15 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 		[NotNull]
 		public IList<Attribute> SourceAttributes
 		{
-			get { return _sourceAttributes; }
+			get => new ReadOnlyList<Attribute>(_sourceAttributes);
+			[UsedImplicitly] set => _sourceAttributes = value;
 		}
 
 		[NotNull]
 		public IList<Attribute> TargetAttributes
 		{
-			get { return _targetAttributes; }
+			get => new ReadOnlyList<Attribute>(_targetAttributes);
+			[UsedImplicitly] set => _targetAttributes = value;
 		}
 
 		[NotNull]
@@ -75,6 +74,44 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 		{
 			get { return true; }
 			// Once we've source queries (instead of discrete values), this will be false
+		}
+
+		public Attribute AddSourceAttribute([NotNull] Attribute attribute)
+		{
+			Assert.ArgumentNotNull(attribute, nameof(attribute));
+
+			_sourceAttributes.Add(attribute);
+
+			return attribute;
+		}
+
+		public void RemoveSourceAttribute([NotNull] Attribute a)
+		{
+			_sourceAttributes.Remove(a);
+		}
+
+		public void ClearSourceAttributes()
+		{
+			_sourceAttributes.Clear();
+		}
+
+		public Attribute AddTargetAttribute([NotNull] Attribute attribute)
+		{
+			Assert.ArgumentNotNull(attribute, nameof(attribute));
+
+			_targetAttributes.Add(attribute);
+
+			return attribute;
+		}
+
+		public void RemoveTargetAttribute([NotNull] Attribute a)
+		{
+			_targetAttributes.Remove(a);
+		}
+
+		public void ClearTargetAttributes()
+		{
+			_sourceAttributes.Clear();
 		}
 
 		public override string ToString()

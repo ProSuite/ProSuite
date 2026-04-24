@@ -552,4 +552,66 @@ public static class SelectionUtils
 				throw new ArgumentOutOfRangeException();
 		}
 	}
+
+	/// <returns>true iff the two selection sets have the same
+	/// map members and the same OIDs per map member</returns>
+	public static bool SameSelections(SelectionSet a, SelectionSet b)
+	{
+		if (a is null && b is null) return true;
+		if (a is null || b is null) return false;
+		if (a.IsEmpty && b.IsEmpty) return true;
+		if (a.Count != b.Count) return false;
+		return SameSelections(a.ToDictionary(), b.ToDictionary());
+	}
+
+	/// <returns>true iff the two selection sets have the same
+	/// map members and the same OIDs per map member</returns>
+	public static bool SameSelections<T>(
+		Dictionary<T, List<long>> a, Dictionary<T, List<long>> b)
+		where T : MapMember
+	{
+		if (a is null && b is null) return true;
+		if (a is null || b is null) return false;
+
+		if (a.Count == 0 && b.Count == 0) return true; // both empty
+		if (a.Count != b.Count) return false;
+
+		HashSet<long> oids = null; // lazily instantiated and reused
+
+		foreach (var pair in a)
+		{
+			if (!b.TryGetValue(pair.Key, out var lb))
+			{
+				return false;
+			}
+
+			var la = pair.Value;
+
+			if (la is null && lb is null) continue; // paranoia
+			if (la is null || lb is null) return false; // paranoia
+
+			if (la.Count != lb.Count)
+			{
+				return false;
+			}
+
+			if (oids is null)
+			{
+				oids = new HashSet<long>();
+			}
+			else
+			{
+				oids.Clear();
+			}
+
+			oids.UnionWith(la);
+
+			if (!oids.SetEquals(lb))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

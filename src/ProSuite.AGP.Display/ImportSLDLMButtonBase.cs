@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using ArcGIS.Core.CIM;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
@@ -13,6 +14,7 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Input;
 using ProSuite.Commons.Xml;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -23,11 +25,12 @@ namespace ProSuite.AGP.Display;
 /// Import SLD/LM config into the active map (or a group layer).
 /// The imported config must be compatible with the active map!
 /// </summary>
-// TODO Check if some layer.SetDefinition(cim) can be omitted: because nothing changed or if there's a specific API call, e.g. SetUseSLD(true/false)
 [UsedImplicitly]
 public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	protected virtual ISymbolDisplayManager Manager => null;
 
 	// Remembered options (in session only):
 	private readonly ImportSLDLMOptions _options = new(ValidateConfig);
@@ -37,7 +40,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var map = MapView.Active?.Map;
 		if (map is null) return false;
 
-		var owner = Application.Current.MainWindow;
+		var owner = Application.Current.MainWindow; // must be on GUI thread! (which in OnClick we hopefully are)
 
 		_options.SetMap(map);
 		_options.RestoreOptions();
@@ -52,7 +55,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var config = LoadConfig(filePath);
 		var feedback = new Feedback();
 
-		if (! ValidateConfig(config, feedback))
+		var valid = await QueuedTask.Run(() => ValidateConfig(config, feedback, map));
+		if (! valid)
 		{
 			Utils.ShowFeedback(feedback, owner);
 			return false;
@@ -60,18 +64,42 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 		ILayerContainer container = _options.GroupLayerItem?.GroupLayer ?? (ILayerContainer) map;
 
-		await QueuedTask.Run(() => ApplyConfig(map, container, config, feedback));
+		await QueuedTask.Run(() =>
+		{
+			ApplyConfig(map, container, config, feedback);
+
+			Manager?.ToggleSLD(map, enable: true);
+
+			if (config.IncludeMasking || config.HasMaskedBy)
+			{
+				Manager?.ToggleLM(map, enable: true);
+			}
+		});
+
+		// The Symbology dock pane may not reflect the changes just imported!
+		// Sometimes it helps to close and re-open it. It has always helped
+		// to close and re-open the Map, but that's too heavy here. Instead,
+		// - clear TOC selection (so Symbology pane shows nothing)
+		// - close (i.e., hide) the Symbology pane
+		// - alert the user of the problem (message box)
+		// - open (i.e., activate) the Symbology pane (if it was visible before)
 
 		// Force a Symbology pane "reload" by clearing the TOC selection (cannot
 		// restore the selection here, as then the Symbology pane won't notice anything):
 		MapView.Active?.ClearTOCSelection();
+
+		const string symbologyDockPaneDamlID = "esri_mapping_symbologyDockPane";
+		var dockPane = FrameworkApplication.DockPaneManager.Find(symbologyDockPaneDamlID);
+
+		var visible = dockPane?.IsVisible ?? false;
+		dockPane?.Hide();
 
 		if (owner is not null)
 		{
 			const string caption = "Import SLD/LM Configuration";
 
 			var message = new StringBuilder();
-			message.Append($"SLD/LM configuration applied to {map.Name}");
+			message.Append($"SLD/LM configuration applied to map “{map.Name}”");
 			if (container is GroupLayer groupLayer)
 			{
 				message.Append($" (group layer {groupLayer.Name})");
@@ -81,13 +109,12 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			message.Append("The Symbology pane may not reflect the latest changes but ");
 			message.Append("show the old state. Refresh by closing and re-opening the map.");
 
-			//The Symbology pane may not reflect the latest changes but show the old state.
-			// Refresh by closing and re-opening the map.
-
-			// Just for reference: the Symbology dockpane has DAML ID "esri_mapping_symbologyDockPane"
-			// To get it: FrameworkApplication.DockPaneManager.Find("esri_mapping_symbologyDockPane");
-
 			MessageBox.Show(owner, message.ToString(), caption);
+		}
+
+		if (dockPane != null && visible)
+		{
+			dockPane.Activate(focus: false);
 		}
 
 		return true;
@@ -129,10 +156,25 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		throw new NotImplementedException("Import from CSV is not yet implemented");
 	}
 
-	private static void ValidateConfig(string configFilePath, IFeedback feedback)
+	private static async Task<IFeedback> ValidateConfig(string configFilePath)
+	{
+		var feedback = new Feedback();
+
+		bool skipMap = KeyboardUtils.IsAltDown();
+		var map = MapView.Active?.Map;
+
+		await ValidateConfig(configFilePath, feedback, skipMap ? null : map);
+
+		return feedback;
+	}
+
+	#region Config validation
+
+	private static async Task ValidateConfig(string configFilePath, IFeedback feedback, Map map)
 	{
 		if (feedback is null)
 			throw new ArgumentNullException(nameof(feedback));
+		// configFilePath and map can be null
 
 		if (string.IsNullOrEmpty(configFilePath))
 		{
@@ -144,7 +186,14 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		{
 			Config config = LoadConfig(configFilePath);
 
-			ValidateConfig(config, feedback);
+			if (map is null)
+			{
+				ValidateConfig(config, feedback);
+			}
+			else
+			{
+				await QueuedTask.Run(() => ValidateConfig(config, feedback, map));
+			}
 		}
 		catch (Exception ex)
 		{
@@ -152,11 +201,19 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		}
 	}
 
-	/// <returns>true iff there are no errors in the given <paramref name="config"/>;
-	/// warnings may occur</returns>
-	private static bool ValidateConfig(Config config, IFeedback feedback)
+	/// <summary>
+	/// Validate the given <paramref name="config"/>, optionally also
+	/// against the given <paramref name="map"/> and report findings
+	/// to the given <paramref name="feedback"/>.
+	/// </summary>
+	/// <returns>true iff no errors have been reported (warnings may occured)</returns>
+	/// <remarks>Must run on MCT if <paramref name="map"/> non-null</remarks>
+	private static bool ValidateConfig(Config config, IFeedback feedback, Map map = null)
 	{
-		bool valid = true; // optimistic
+		if (config is null)
+			throw new ArgumentNullException(nameof(config));
+		if (feedback is null)
+			throw new ArgumentNullException(nameof(feedback));
 
 		var emptyLevelNameReference = config.DrawingOrder.SelectMany(item => item.Levels)
 		                                     .FirstOrDefault(level => string.IsNullOrEmpty(level.Name));
@@ -185,9 +242,8 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		var undefinedLevels = usedLevelNames.Except(definedLevelNames).ToList();
 		if (undefinedLevels.Count > 0)
 		{
-			valid = false;
 			var text = string.Join(", ", undefinedLevels.OrderBy(name => name));
-			feedback.Error($"{nameof(config.DrawingOrder)} refers to undefined level names: {text}");
+			feedback.Warning($"{nameof(config.DrawingOrder)} refers to undefined level names: {text}");
 		}
 
 		// Check that all level names in SymbolLevels are referenced from DrawingOrder:
@@ -199,10 +255,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			feedback.Warning($"Assigned symbol levels not used by {nameof(config.DrawingOrder)}: {text}");
 		}
 
-		// TODO Check that layer masking is consistent with SLD ordering:
-		//   - LM info on DrawingOrder entries is authoritative
-		//   - LM info SymbolLevels entries shall be consistent (but may not be if CIM is manipulated outside the Pro UI)
-		//   - this means: masks(z,l) are the same for all levels z and child layers l in the group layer
 		ValidateMaskingConsistency(config, feedback);
 
 		// TODO Check there is only one SLD controlling layer (not required by Pro, but needed by our import tool(?))
@@ -214,7 +266,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		                            .ToList();
 		if (missingRenderer.Count > 0)
 		{
-			valid = false;
 			var lyrs = missingRenderer.Select(item => item.AppendLineInfo(FormatLayer(item)));
 			var text = string.Concat(", ", lyrs);
 			feedback.Error($"Layers in {nameof(config.SymbolLevels)} having invalid renderer: {text} " +
@@ -227,7 +278,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		                                    .Where(item => item.Symbols.Count() != 1).ToList();
 		if (badSimpleRenderers.Count > 0)
 		{
-			valid = false;
 			var lyrs = badSimpleRenderers.Select(item => item.AppendLineInfo(FormatLayer(item)));
 			var text = string.Concat(", ", lyrs);
 			feedback.Error($"Simple renderer needs exactly one symbol: {text}");
@@ -239,7 +289,6 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		                               .Where(item => !item.Symbols.Any()).ToList();
 		if (badUniqueRenderers.Count > 0)
 		{
-			valid = false;
 			var lyrs = badUniqueRenderers.Select(item => item.AppendLineInfo(FormatLayer(item)));
 			var text = string.Concat(", ", lyrs);
 			feedback.Error($"Unique value renderer needs at least one symbol: {text}");
@@ -250,13 +299,288 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		                               .Where(g => g.Count() > 1).ToList();
 		if (duplicateLayerUris.Count > 0)
 		{
-			valid = false;
 			var lyrs = duplicateLayerUris.Select(g => g.First().AppendLineInfo(g.Key));
 			var text = string.Join(", ", lyrs);
 			feedback.Error($"Duplicate (by URI) layers in {nameof(config.DrawingOrder)}: {text}");
 		}
 
-		return valid;
+		if (map is not null)
+		{
+			ValidateAgainstMap(config, map, feedback);
+		}
+
+		return feedback.Errors <= 0;
+	}
+
+	/// <summary>
+	/// Validate given config against given map:
+	/// - check for missing layers (Layer in DrawingOrder and SymbolLevels)
+	/// - check for missing mask layers (MaskedBy in DrawingOrder)
+	/// - check for layer name mismatches (same URI but different names)
+	/// - check renderer type config/layer (both simple or both unique)
+	/// - check for missing symbols (in config / in renderer)
+	/// - check symbol type config/renderer (both Point- or both Line- or both PolygonSymbol)
+	/// - check symbol levels (SymbolLevels/Layer/Symbol/Level) against symbol layers in CIM: count must agree
+	/// - check symbol layer type config/renderer (both SolidStroke or both ...)
+	/// </summary>
+	private static void ValidateAgainstMap(Config config, Map map, IFeedback feedback)
+	{
+		if (config is null)
+			throw new ArgumentNullException(nameof(config));
+		if (map is null)
+			throw new ArgumentNullException(nameof(map));
+		if (feedback is null)
+			throw new ArgumentNullException(nameof(feedback));
+
+		var mapLayers = map.GetLayersAsFlattenedList().ToDictionary(l => l.URI);
+
+		foreach (var configLayer in config.DrawingOrder)
+		{
+			if (! mapLayers.TryGetValue(configLayer.Uri, out Layer mapLayer))
+			{
+				feedback.Error(LayerNotFound("Layer", configLayer, map));
+			}
+			else if (! SameLayerName(configLayer, mapLayer))
+			{
+				feedback.Warning(LayerNameMismatch("Layer", configLayer, mapLayer));
+			}
+
+			foreach (var maskLayer in NonNull(configLayer.MaskedBy))
+			{
+				if (! mapLayers.TryGetValue(maskLayer.Uri, out mapLayer))
+				{
+					feedback.Error(LayerNotFound("Mask layer", maskLayer, map));
+				}
+				else if (! SameLayerName(maskLayer, mapLayer))
+				{
+					feedback.Warning(LayerNameMismatch("Mask layer", maskLayer, mapLayer));
+				}
+			}
+				                          
+			foreach (var maskLayer in NonNull(configLayer.Levels).SelectMany(level => NonNull(level.MaskedBy)))
+			{
+				if (! mapLayers.TryGetValue(maskLayer.Uri, out mapLayer))
+				{
+					feedback.Error(LayerNotFound("Mask layer", maskLayer, map));
+				}
+				else if (! SameLayerName(maskLayer, mapLayer))
+				{
+					feedback.Warning(LayerNameMismatch("Mask layer", maskLayer, mapLayer));
+				}
+			}
+		}
+
+		foreach (var item in config.SymbolLevels)
+		{
+			if (! mapLayers.TryGetValue(item.Uri, out Layer mapLayer))
+			{
+				var text = LayerNotFound("Layer", item, map);
+				feedback.Error(text);
+				continue;
+			}
+
+			if (! SameLayerName(item, mapLayer))
+			{
+				feedback.Warning(LayerNameMismatch("Layer", item, mapLayer));
+			}
+
+			if (mapLayer is not FeatureLayer featureLayer)
+			{
+				feedback.Error($"Layer {FormatLayer(item)} is not a {nameof(FeatureLayer)}");
+				continue;
+			}
+
+			var renderer = featureLayer.GetRenderer();
+
+			if (renderer is CIMUniqueValueRenderer uniqueRenderer)
+			{
+				ValidateAgainstUniqueValueRenderer(item, uniqueRenderer, mapLayer, feedback);
+			}
+			else if (renderer is CIMSimpleRenderer simpleRenderer)
+			{
+				ValidateAgainstSimpleRenderer(item, simpleRenderer, mapLayer, feedback);
+			}
+			else
+			{
+				var text = $"Layer “{mapLayer.Name}” in CIM has a renderer of " +
+				           $"type {renderer.GetType().Name}, which is not supported";
+				feedback.Error(item.AppendLineInfo(text));
+			}
+		}
+	}
+
+	private static void ValidateAgainstUniqueValueRenderer(
+		Config.LevelItem item, CIMUniqueValueRenderer uniqueRenderer, Layer layer, IFeedback feedback)
+	{
+		if (item.Renderer.Type != Config.Renderer.UniqueValueType)
+		{
+			var text = $"Renderer type mismatch: unique in CIM, {item.Renderer.Type} in config";
+			feedback.Error(item.AppendLineInfo(text));
+			return;
+		}
+
+		var usedSyms = new List<Config.Symbol>();
+
+		// Check default symbol
+
+		if (uniqueRenderer.UseDefaultSymbol)
+		{
+			var sym = FindSymbol(item.Symbols, Config.Symbol.MatchAny);
+			if (sym is not null)
+			{
+				usedSyms.Add(sym);
+
+				var cimSym = uniqueRenderer.DefaultSymbol?.Symbol;
+				if (cimSym is null)
+				{
+					feedback.Error($"The renderer of layer “{layer.Name}” has no default symbol");
+				}
+				else
+				{
+					ValidateSymbol(cimSym, sym, feedback);
+				}
+			}
+			else
+			{
+				var text = "No symbol found in config for renderer's default symbol (match=\"*\")";
+				feedback.Warning(item.AppendLineInfo(text));
+			}
+		}
+
+		// Check each class symbol:
+
+		foreach (var clazz in Utils.GetUniqueValueClasses(uniqueRenderer))
+		{
+			var sym = FindSymbol(item.Symbols, clazz.Values);
+			if (sym is null)
+			{
+				var text = Utils.FormatDiscriminatorValue(clazz.Values);
+				feedback.Error(
+					$"No symbol found in config for UV class values {text}" +
+					$"skipping symbol in this UV class on layer {FormatLayer(item)}");
+				continue;
+			}
+
+			usedSyms.Add(sym);
+
+			if (!string.Equals(sym.Label, clazz.Label))
+			{
+				var text = sym.AppendLineInfo(
+					$"Label in config ({sym.Label}) differs from label on UV class ({clazz.Label})");
+				feedback.Warning(text);
+			}
+
+			var cimSym = clazz.Symbol?.Symbol;
+			if (cimSym is null)
+			{
+				var text = $"The renderer's UV class “{clazz.Label}” has no symbol";
+				feedback.Error(sym.AppendLineInfo(text));
+			}
+			else
+			{
+				ValidateSymbol(cimSym, sym, feedback);
+			}
+		}
+
+		var unusedSyms = item.Symbols.Except(usedSyms).ToList();
+		if (unusedSyms.Any())
+		{
+			var keys = string.Join("; ", unusedSyms.Select(s => s.Match));
+			var text = item.AppendLineInfo(
+				$"Symbols in the config for layer {FormatLayer(item)} that are not used in the CIM: {keys}");
+			feedback.Warning(text);
+		}
+	}
+
+	private static void ValidateAgainstSimpleRenderer(
+		Config.LevelItem item, CIMSimpleRenderer simpleRenderer, Layer layer, IFeedback feedback)
+	{
+		if (item.Renderer.Type != Config.Renderer.SimpleType)
+		{
+			var text = $"Renderer type mismatch: simple in CIM, {item.Renderer.Type} in config";
+			feedback.Error(item.AppendLineInfo(text));
+			return;
+		}
+
+		int symCount = item.Symbols.Count();
+		if (symCount != 1)
+		{
+			var text = $"Layer “{item.Name}” with a simple renderer should have exactly one symbol";
+			feedback.Error(item.AppendLineInfo(text));
+			return;
+		}
+
+		var symbol = item.Symbols.Single();
+		var cimSym = simpleRenderer.Symbol?.Symbol;
+		if (cimSym is null)
+		{
+			feedback.Error($"The renderer of layer “{layer.Name}” has no symbol");
+			return;
+		}
+
+		ValidateSymbol(cimSym, symbol, feedback);
+	}
+
+	private static void ValidateSymbol(
+		CIMSymbol cimSym, Config.Symbol symbol, IFeedback feedback)
+	{
+		if (cimSym is null)
+			throw new ArgumentNullException(nameof(cimSym));
+		if (symbol is null)
+			throw new ArgumentNullException(nameof(symbol));
+		if (feedback is null)
+			throw new ArgumentNullException(nameof(feedback));
+
+		if (! string.IsNullOrEmpty(symbol.Type))
+		{
+			string typeName = cimSym.GetType().Name;
+			if (typeName.StartsWith("CIM", StringComparison.OrdinalIgnoreCase))
+			{
+				typeName = typeName.Substring(3); // strip leading "CIM"
+			}
+
+			if (! string.Equals(typeName, symbol.Type, StringComparison.OrdinalIgnoreCase))
+			{
+				var text = $"Symbol type mismatch: {cimSym.GetType().Name} in CIM, {symbol.Type} in config";
+				feedback.Error(symbol.AppendLineInfo(text));
+			}
+		}
+		// else: no symbol type in config, skip the check
+
+		if (cimSym is CIMMultiLayerSymbol multiLayerSymbol)
+		{
+			var symbolLayers = multiLayerSymbol.SymbolLayers;
+			var actual = symbolLayers?.Length ?? 0;
+			var expected = symbol.Levels.Count;
+			if (symbolLayers is null || actual != expected)
+			{
+				var text = $"Symbol layer count mismatch: {actual} in CIM, {expected} in config";
+				feedback.Error(symbol.AppendLineInfo(text));
+			}
+			else
+			{
+				for (int i = 0; i < symbol.Levels.Count; i++)
+				{
+					string typeName = multiLayerSymbol.SymbolLayers[i].GetType().Name;
+					if (typeName.StartsWith("CIM", StringComparison.OrdinalIgnoreCase))
+					{
+						typeName = typeName.Substring(3); // strip leading "CIM"
+					}
+
+					string configSymbolType = symbol.Levels[i].Type;
+					if (! string.IsNullOrEmpty(configSymbolType) &&
+					    ! string.Equals(typeName, configSymbolType))
+					{
+						var text = $"Symbol layer type mismatch: {typeName} in CIM, {configSymbolType} in config";
+						feedback.Error(symbol.Levels[i].AppendLineInfo(text));
+					}
+				}
+			}
+		}
+		else
+		{
+			feedback.Warning("Symbol in CIM is not a multi layer symbol and will be ignored");
+		}
 	}
 
 	private static void ValidateMaskingConsistency(Config config, IFeedback feedback)
@@ -297,12 +621,14 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 					{
 						if (! SameMaskedBy(maskedBy, level.MaskedBy))
 						{
-							feedback.Warning($"Inconsistent MaskedBy's on level {level.Name} in symbol {symbol.Match} (label {symbol.Label}) of layer {layer.Name} (parent {layer.Parent})");
+							var text = $"Inconsistent MaskedBy's on level {level.Name} in symbol match={symbol.Match} of layer “{layer.Name}”";
+							feedback.Warning(level.AppendLineInfo(text));
 						}
 					}
 					else if (level.MaskedBy.Any())
 					{
-						feedback.Warning($"Inconsistent MaskedBy's on level {level.Name} in symbol {symbol.Match} (label {symbol.Label}) of layer {layer.Name} (parent {layer.Parent})");
+						var text = $"Inconsistent MaskedBy's on level {level.Name} in symbol match={symbol.Match} of layer “{layer.Name}”";
+						feedback.Warning(level.AppendLineInfo(text));
 					}
 				}
 			}
@@ -318,6 +644,35 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		return a.OrderBy(m => m.Uri)
 		        .SequenceEqual(b.OrderBy(m => m.Uri), Config.MaskLayerComparer.Instance);
 	}
+
+	private static bool SameLayerName(Config.LayerBase configLayer, Layer mapLayer)
+	{
+		if (configLayer is null || mapLayer is null) return false;
+		return string.Equals(configLayer.Name, mapLayer.Name);
+	}
+
+	private static string LayerNotFound(string prefix, Config.LayerBase configLayer, Map map)
+	{
+		prefix ??= "Layer";
+		var text = $"{prefix} “{configLayer.Name}” with URI {configLayer.Uri} " +
+		           $"not found in CIM";
+		return configLayer.AppendLineInfo(text);
+	}
+
+	private static string LayerNameMismatch(string prefix, Config.LayerBase configLayer, Layer mapLayer)
+	{
+		prefix ??= "Layer";
+		var text = $"{prefix} names disagree for URI {configLayer.Uri}: " +
+		           $"“{mapLayer.Name}” in CIM, “{configLayer.Name}” in config";
+		return configLayer.AppendLineInfo(text);
+	}
+
+	private static IEnumerable<T> NonNull<T>(IEnumerable<T> source)
+	{
+		return source ?? Enumerable.Empty<T>();
+	}
+
+	#endregion
 
 	/// <remarks>Must run on MCT</remarks>
 	private static void ApplyConfig(Map map, ILayerContainer container, Config config, IFeedback feedback)
@@ -447,7 +802,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		{
 			feedback.Error(
 				$"Expect a {entry.Renderer.Type} renderer, but layer {FormatLayer(entry)} " +
-				$"has a renderer of {uniqueRenderer.GetType().Name}; skipping layer");
+				$"has a renderer of type {uniqueRenderer.GetType().Name}; skipping layer");
 			return false;
 		}
 
@@ -644,7 +999,7 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 		if (container is GroupLayer gl)
 		{
 			// Special case: insert container at front if it's a group layer!
-			layersInPreOrder = Enumerable.Repeat((Layer) gl, 1).Concat(layersInPreOrder).ToList();
+			layersInPreOrder = Enumerable.Repeat<Layer>(gl, 1).Concat(layersInPreOrder).ToList();
 		}
 
 		return layersInPreOrder;
@@ -705,12 +1060,15 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 	private static CIMSymbolLayerDrawing MakeSymbolLayerDrawing(IReadOnlyList<Config.LayerLevel> levels, CIMSymbolLayerDrawing previous)
 	{
-		// preserve the UseSLD flag, if it existed before; otherwise, turn it on
-		var useSLD = previous?.SymbolLayers is null ||
-		             previous.SymbolLayers.Length < 1 ||
-		             previous.UseSymbolLayerDrawing;
+		// In the early days, we preserved the UseSLD flag, if it existed before,
+		// and turned it on if not. But in real life it's probably more useful to
+		// just turn SLD on when importing SLD config
+		//var useSLD = previous?.SymbolLayers is null ||
+		//             previous.SymbolLayers.Length < 1 ||
+		//             previous.UseSymbolLayerDrawing;
+		const bool useSLD = true;
 
-		return levels.Any()
+		return levels != null && levels.Any()
 			       ? MakeSymbolLayerDrawing(levels, useSLD)
 			       : MakeSymbolLayerDrawing(null, false);
 	}
@@ -854,9 +1212,12 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 
 		public string MapName => (string) Xml.Attribute("map");
 		public string GroupName => (string) Xml.Attribute("groupLayer");
-		//public bool IncludeMasking => (bool?) Xml.Attribute("includeMasking") ?? false;
+		public bool IncludeMasking => (bool?) Xml.Attribute("includeMasking") ?? false;
 		//public bool ExtraMasking => (bool?) Xml.Attribute("extraMasking") ?? false;
+		//public bool IncludeHiddenDefaultSymbol => (bool?) Xml.Attribute("includeHiddenDefaultSymbol") ?? false;
 		public string Remark => (string) Xml.Element("Remark");
+
+		public bool HasMaskedBy => GetHasMaskedBy();
 
 		public IEnumerable<OrderItem> DrawingOrder => GetDrawingOrder();
 		public IEnumerable<LevelItem> SymbolLevels => GetSymbolLevels();
@@ -885,6 +1246,19 @@ public abstract class ImportSLDLMButtonBase : ButtonCommandBase
 			{
 				throw FormatError("Expect exactly one SymbolLevel element");
 			}
+		}
+
+		private bool GetHasMaskedBy()
+		{
+			// MaskedBy elements can occur on the layer level and on the symbol layer level:
+			return DrawingOrder.Any(item => Any(item.MaskedBy) ||
+			                                Any(item.Levels, lvl => Any(lvl.MaskedBy)));
+		}
+
+		private static bool Any<T>([CanBeNull] IEnumerable<T> enumerable, Func<T, bool> predicate = null)
+		{
+			if (enumerable is null) return false;
+			return predicate is null ? enumerable.Any() : enumerable.Any(predicate);
 		}
 
 		#region Nested types

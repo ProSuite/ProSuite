@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
@@ -49,8 +50,9 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		bool includeMasking = _options.IncludeMaskingInfo;
 		bool extraMasking = _options.ExtraMaskingInfo;
+		bool includeHiddenDefaultSymbol = _options.IncludeHiddenDefaultSymbol;
 
-		var config = await QueuedTask.Run(() => CollectConfig(map, container, includeMasking, extraMasking));
+		var config = await QueuedTask.Run(() => CollectConfig(map, container, includeMasking, extraMasking, includeHiddenDefaultSymbol));
 
 		if (! string.IsNullOrWhiteSpace(_options.Remark))
 		{
@@ -281,12 +283,12 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 	//   </MaskingLayers>
 	// </SLDLM>
 
-	public static XElement CollectConfig(Map map, ILayerContainer container = null, bool includeMasking = true, bool extraMasking = false)
+	public static XElement CollectConfig(Map map, ILayerContainer container = null, bool includeMasking = true, bool extraMasking = false, bool includeHiddenDefaultSymbol = false)
 	{
 		extraMasking &= includeMasking;
 
 		var order = GetDrawingOrder(container ?? map, map, includeMasking);
-		var symlyrs = GetSymbolLevels(container ?? map, map, extraMasking);
+		var symlyrs = GetSymbolLevels(container ?? map, map, extraMasking, includeHiddenDefaultSymbol);
 		var masking = extraMasking ? GetMaskingLayers(order) : null;
 
 		var mapAttr = new XAttribute("map", map.Name ?? string.Empty);
@@ -296,10 +298,11 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		var includeMaskingAttr = new XAttribute("includeMasking", includeMasking);
 		var extraMaskingAttr = new XAttribute("extraMasking", extraMasking);
+		var includeHiddenDefSymAttr = new XAttribute("includeHiddenDefaultSymbol", includeHiddenDefaultSymbol);
 
 		return new XElement("SLDLM",
 		                    mapAttr, groupLayerAttr, includeMaskingAttr, extraMaskingAttr,
-		                    order, symlyrs, masking);
+		                    includeHiddenDefSymAttr, order, symlyrs, masking);
 	}
 
 	private static IDictionary<string, Layer> GetLayersByURI(ILayerContainer container)
@@ -508,7 +511,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static XElement GetSymbolLevels(ILayerContainer container, Map map, bool includeMasking = true)
+	private static XElement GetSymbolLevels(ILayerContainer container, Map map, bool includeMasking = true, bool includeHiddenDefaultSymbol = false)
 	{
 		var allLayers = GetLayersByURI(map);
 		var result = new XElement("SymbolLevels");
@@ -537,7 +540,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 					layerXml.Add(MakeRendererInfo(gfl.Renderer));
 
 					var lm = includeMasking ? GetLM(featureLayer, allLayers) : null;
-					var symbols = GetRendererSymbols(gfl.Renderer, lm);
+					var symbols = GetRendererSymbols(gfl.Renderer, lm, includeHiddenDefaultSymbol);
 					layerXml.Add(symbols);
 
 					result.Add(layerXml);
@@ -548,7 +551,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static IEnumerable<XElement> GetRendererSymbols(CIMRenderer renderer, MaskLayers maskLayers = null)
+	private static IEnumerable<XElement> GetRendererSymbols(CIMRenderer renderer, MaskLayers maskLayers = null, bool includeHiddenDefaultSymbol = false)
 	{
 		if (renderer is null)
 		{
@@ -559,27 +562,29 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		if (renderer is CIMUniqueValueRenderer unique)
 		{
-			// the default symbol
-			var symbol = unique.DefaultSymbol?.Symbol;
-			var xml = MakeSymbol("*", unique.DefaultLabel, symbol);
-			var levels = GetSymbolLayerNames(symbol);
-			foreach (var level in levels)
+			if (unique.UseDefaultSymbol || includeHiddenDefaultSymbol)
 			{
-				var levelElement = MakeLevel(level.Name, level.Type);
-				var maskedBy = maskLayers?.GetForLevel(level.Name);
-				MaskedBy(levelElement, maskedBy, ignoredOnImport);
-				xml.Add(levelElement);
+				// the default symbol
+				var symbol = unique.DefaultSymbol?.Symbol;
+				var xml = MakeSymbol("*", unique.DefaultLabel, symbol);
+				var levels = GetSymbolLayerNames(symbol);
+				foreach (var level in levels)
+				{
+					var levelElement = MakeLevel(level.Name, level.Type);
+					var maskedBy = maskLayers?.GetForLevel(level.Name);
+					MaskedBy(levelElement, maskedBy, ignoredOnImport);
+					xml.Add(levelElement);
+				}
+				yield return xml;
 			}
-
-			yield return xml;
 
 			// per class symbols
 			foreach (var clazz in Utils.GetUniqueValueClasses(unique))
 			{
-				symbol = clazz.Symbol?.Symbol;
+				var symbol = clazz.Symbol?.Symbol;
 				var discriminator = Utils.FormatDiscriminatorValue(clazz.Values);
-				xml = MakeSymbol(discriminator, clazz.Label, symbol);
-				levels = GetSymbolLayerNames(symbol);
+				var xml = MakeSymbol(discriminator, clazz.Label, symbol);
+				var levels = GetSymbolLayerNames(symbol);
 				foreach (var level in levels)
 				{
 					var levelElement = MakeLevel(level.Name, level.Type);
@@ -814,19 +819,36 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		
 		if (cim is CIMGeoFeatureLayerBase { MaskedSymbolLayers: { } msl })
 		{
-			if (maskingLayers.Length != msl.Length)
+			if (maskingLayers.Length > msl.Length)
+			{
 				throw new InvalidOperationException(
-					"LayerMasks and MaskedSymbolLayers both exist but do not have " +
-					$"the same length (expect parallel arrays) for layer {layer.Name}");
+					$"Arrays LayerMasks (length  {maskingLayers.Length}) and " +
+					$"MaskedSymbolLayers (length {msl.Length}) both exist in CIM " +
+					$"but do not have the same length (layer {layer.Name}). Please " +
+					"fix manually using the Advanced Masking dialog in ArcGIS Pro");
+			}
+
+			if (maskingLayers.Length < msl.Length)
+			{
+				_msg.WarnFormat(
+					"Array LayerMasks (length {0}) is shorter than array " +
+					"MaskedSymbolLayers (length {1}) in CIM (layer {2})." +
+					"Will ignore excess MaskedSymbolLayers entries on export " +
+					"(as does Pro on rendering), but consider checking your CIM",
+					maskingLayers.Length, msl.Length, layer.Name);
+			}
 
 			var list = new List<MaskLayer>();
 			for (int i = 0; i < maskingLayers.Length; i++)
 			{
 				var uri = maskingLayers[i];
 				var maskLayer = new MaskLayer(uri);
-				maskLayer.AddSymbolLayers(msl[i].SymbolLayers.Select(sl => sl.SymbolLayerName));
+				// CIMSymbolLayerMasking.SymbolLayers could be null, meaning no symbol layer names
+				var zGroups = msl[i].SymbolLayers?.Select(sl => sl.SymbolLayerName);
+				maskLayer.AddSymbolLayers(zGroups);
 				list.Add(maskLayer);
 			}
+
 			return new MaskLayers(list, allLayers);
 		}
 
@@ -850,16 +872,32 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 			if (cim is CIMGeoFeatureLayerBase { MaskedSymbolLayers: { } msl })
 			{
-				if (maskingLayers.Length != msl.Length)
+				if (maskingLayers.Length > msl.Length)
+				{
 					throw new InvalidOperationException(
-						"LayerMasks and MaskedSymbolLayers both exist but do not have " +
-						$"the same length (expect parallel arrays) for layer {nestedLayer.Name} " +
-						$"(in group layer {groupLayer.Name})");
+						$"Arrays LayerMasks (length  {maskingLayers.Length}) and " +
+						$"MaskedSymbolLayers (length {msl.Length}) both exist in CIM " +
+						$"but do not have the same length (layer {nestedLayer.Name} " +
+						$"in controlling group layer {groupLayer.Name}). Please fix " +
+						"manually using the Advanced Masking dialog in ArcGIS Pro");
+				}
+
+				if (maskingLayers.Length < msl.Length)
+				{
+					_msg.WarnFormat(
+						"Array LayerMasks (length {0}) is shorter than array " +
+						"MaskedSymbolLayers (length {1}) in CIM (layer {2} in " +
+						"controlling group layer {3}). Will ignore excess MaskedSymbolLayers " +
+						"entries on export (as does Pro on rendering), but consider " +
+						"checking your CIM",
+						maskingLayers.Length, msl.Length, nestedLayer.Name, groupLayer.Name);
+				}
 
 				for (int i = 0; i < maskingLayers.Length; i++)
 				{
 					var uri = maskingLayers[i];
-					var zGroups = msl[i].SymbolLayers.Select(sl => sl.SymbolLayerName);
+					// CIMSymbolLayerMasking.SymbolLayers could be null, meaning no symbol layer names
+					var zGroups = msl[i].SymbolLayers?.Select(sl => sl.SymbolLayerName);
 					if (result.TryGetValue(uri, out var maskLayer))
 					{
 						maskLayer.AddSymbolLayers(zGroups);
@@ -955,11 +993,9 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 			return this;
 		}
 
-		public void AddSymbolLayers(IEnumerable<string> names)
+		public void AddSymbolLayers([CanBeNull] IEnumerable<string> names)
 		{
-			if (names is null)
-				throw new ArgumentNullException(nameof(names));
-			_symbolLayers.UnionWith(names);
+			_symbolLayers.UnionWith(names ?? Enumerable.Empty<string>());
 		}
 
 		public override string ToString()

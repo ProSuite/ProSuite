@@ -4,10 +4,13 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Display;
 
@@ -19,12 +22,14 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 	private string _configFilePath;
 	private GroupLayerComboItem _groupLayer;
 	private readonly List<GroupLayerComboItem> _groupLayers;
-	private readonly Action<string, ImportSLDLMButtonBase.IFeedback> _validate;
+	private readonly Func<string, Task<ImportSLDLMButtonBase.IFeedback>> _validate;
 
-	private string _rememberedLayerURI;
+	private string _rememberedLayerUri;
 	private string _rememberedConfigPath;
 
-	public ImportSLDLMOptions(Action<string, ImportSLDLMButtonBase.IFeedback> validate)
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	public ImportSLDLMOptions(Func<string, Task<ImportSLDLMButtonBase.IFeedback>> validate)
 	{
 		_validate = validate ?? throw new ArgumentNullException(nameof(validate));
 		_groupLayers = new List<GroupLayerComboItem>();
@@ -58,7 +63,7 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 
 	public void RememberOptions()
 	{
-		_rememberedLayerURI = GroupLayerItem?.GroupLayer?.URI;
+		_rememberedLayerUri = GroupLayerItem?.GroupLayer?.URI;
 		_rememberedConfigPath = ConfigFilePath;
 	}
 
@@ -66,7 +71,7 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 	{
 		// find group layer by URI (can be null)
 		var restored = _groupLayers.FirstOrDefault(
-			item => string.Equals(item?.GroupLayer?.URI, _rememberedLayerURI));
+			item => string.Equals(item?.GroupLayer?.URI, _rememberedLayerUri));
 
 		GroupLayerItem = restored;
 		ConfigFilePath = _rememberedConfigPath;
@@ -105,7 +110,7 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 	}
 
 	public ICommand ValidateConfigCommand =>
-		_validateConfigCommand ??= new RelayCommand(ValidateConfig);
+		_validateConfigCommand ??= new RelayCommand<Window>(ValidateConfig);
 	private ICommand _validateConfigCommand;
 
 	public bool ValidateButtonEnabled => ! string.IsNullOrWhiteSpace(ConfigFilePath);
@@ -119,13 +124,18 @@ public class ImportSLDLMOptions : INotifyPropertyChanged
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 	}
 
-	private void ValidateConfig()
+	private async void ValidateConfig(Window owner)
 	{
-		var feedback = new ImportSLDLMButtonBase.Feedback();
+		try
+		{
+			var feedback = await _validate(ConfigFilePath);
 
-		_validate(ConfigFilePath, feedback);
-
-		Utils.ShowFeedback(feedback);
+			Utils.ShowFeedback(feedback, owner, _msg);
+		}
+		catch (Exception ex)
+		{
+			_msg.Error(ex.Message, ex);
+		}
 	}
 
 	#region Nested type

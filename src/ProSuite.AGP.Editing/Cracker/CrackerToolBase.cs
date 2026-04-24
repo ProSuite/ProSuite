@@ -107,8 +107,7 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
 	{
 		return geometryType == GeometryType.Polyline ||
-		       geometryType == GeometryType.Polygon ||
-		       geometryType == GeometryType.Multipatch;
+		       geometryType == GeometryType.Polygon;
 	}
 
 	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,

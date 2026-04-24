@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.TablesBased;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,6 +20,7 @@ using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestRunners;
+using InvolvedRow = ProSuite.Commons.AO.Geodatabase.TablesBased.InvolvedRow;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test

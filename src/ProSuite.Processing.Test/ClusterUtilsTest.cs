@@ -88,16 +88,16 @@ namespace ProSuite.Processing.Test
 
 		private static IEnumerable<Point> Cluster(IEnumerable<Point> points, double maxdist)
 		{
-			var clusters = ClusterUtils.Cluster(points, maxdist, DistanceFunc, MergeFunc);
+			var clusters = ClusterUtils.Cluster(points, maxdist, DistanceFunc, MergeFunc).ToList();
 
 			int n = points.Count();
 			int m = clusters.Count();
 
-			Console.WriteLine(@"maxdist={0}, n={1}, m={2}", maxdist, n, m);
+			Console.WriteLine("maxdist={0}, n={1}, m={2}", maxdist, n, m);
 
 			foreach (var point in clusters)
 			{
-				Console.WriteLine(@" {0}", point);
+				Console.WriteLine(" {0}", point);
 			}
 
 			return clusters;

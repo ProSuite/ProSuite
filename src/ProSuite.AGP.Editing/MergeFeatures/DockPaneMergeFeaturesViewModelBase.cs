@@ -36,6 +36,7 @@ public abstract class DockPaneMergeFeaturesViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<bool> _preventInconsistentClasses;
 	private CentralizableSettingViewModel<bool> _preventInconsistentAttributes;
 	private CentralizableSettingViewModel<bool> _preventInconsistentRelationships;
+	private bool _showPreventInconsistentAttributesOption = true;
 	private CentralizableSettingViewModel<bool> _preventLoops;
 	private CentralizableSettingViewModel<bool> _preventLineFlip;
 
@@ -81,6 +82,12 @@ public abstract class DockPaneMergeFeaturesViewModelBase : DockPaneViewModelBase
 	{
 		get => _preventInconsistentAttributes;
 		set { SetProperty(ref _preventInconsistentAttributes, value); }
+	}
+
+	public bool ShowPreventInconsistentAttributesOption
+	{
+		get => _showPreventInconsistentAttributesOption;
+		set { SetProperty(ref _showPreventInconsistentAttributesOption, value); }
 	}
 
 	public CentralizableSettingViewModel<bool> PreventInconsistentRelationships

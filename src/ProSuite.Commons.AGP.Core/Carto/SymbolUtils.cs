@@ -21,7 +21,8 @@ public static class SymbolUtils
 		Circle,
 		Square,
 		Diamond,
-		Cross
+		Cross,
+		ArrowHead
 	}
 
 	public enum FillStyle
@@ -142,6 +143,8 @@ public static class SymbolUtils
 		return lineSymbol;
 	}
 
+	/// <remarks>Symbol layers earlier in the array draw above symbol layers
+	/// later in the array (unless overridden by symbol layer drawing)</remarks>
 	public static CIMLineSymbol CreateLineSymbol(params CIMSymbolLayer[] layers)
 	{
 		return new CIMLineSymbol { SymbolLayers = layers, Effects = null };
@@ -268,8 +271,8 @@ public static class SymbolUtils
 	}
 
 	/// <summary>
-	/// Same as <see cref="SetAlpha(CIMSymbol,float)"/>
-	/// but for an individual symbol layer.
+	/// Same as <see cref="SetAlpha(CIMSymbol,float)"/> but for an
+	/// individual symbol layer. Zero is transparent, 100 is opaque.
 	/// </summary>
 	public static CIMSymbolLayer SetAlpha(this CIMSymbolLayer symbolLayer, float alpha)
 	{
@@ -491,6 +494,14 @@ public static class SymbolUtils
 			return line;
 		}
 
+		if (style == MarkerStyle.ArrowHead)
+		{
+			// Roughly an acute right-pointing triangle, with origin inside.
+			// Will indicate digitization direction if placed with AngleToLine.
+			var polygon = GeometryFactory.CreatePolygonXY(-3,0,  -4,4,  8,0,  -4,-4, -3,0);
+			return polygon;
+		}
+
 		throw new NotImplementedException(
 			"Sorry, this MarkerStyle is not yet implemented");
 	}
@@ -509,6 +520,31 @@ public static class SymbolUtils
 		marker.MarkerPlacement = placement;
 
 		return marker;
+	}
+
+	public static T SetMarkerPlacementAtRatioPositions<T>(this T marker,
+	                                                      params double[] ratioPositions)
+		where T : CIMMarker // TODO overload that allows setting BeginPosition and EndPosition
+	{
+		var placement = new CIMMarkerPlacementAtRatioPositions();
+		placement.PositionArray = ratioPositions ?? new[] { 0.25, 0.5, 0.75 };
+		placement.FlipFirst = false; // default seems to be true
+		placement.PlacePerPart = true; // more useful for this placement
+
+		return marker.SetMarkerPlacement(placement);
+	}
+
+	public static T SetMarkerPlacementOnLine<T>(
+		this T marker, PlacementOnLineRelativeTo relativeTo = default,
+		double offset = 0.0) where T : CIMMarker
+	{
+		var placement = new CIMMarkerPlacementOnLine();
+
+		placement.RelativeTo = relativeTo;
+		placement.StartPointOffset = offset;
+		placement.PlacePerPart = true; // more useful for this placement
+
+		return marker.SetMarkerPlacement(placement);
 	}
 
 	public static T SetMarkerPlacementAlongLine<T>(this T marker, params double[] template)
@@ -548,23 +584,6 @@ public static class SymbolUtils
 		return marker;
 	}
 
-	public static T SetMarkerControlPointEndings<T>(this T marker, PlacementEndings endings)
-		where T : CIMMarker
-	{
-		if (marker.MarkerPlacement is CIMMarkerPlacementAlongLine placement)
-		{
-			// TODO: How is this done in 3.0?
-			throw new NotImplementedException();
-			//placement.ControlPointPlacement = endings;
-		}
-		else
-		{
-			throw IncompatibleMarkerPlacement();
-		}
-
-		return marker;
-	}
-
 	public static T SetMarkerOffsetAlongLine<T>(this T marker, double offsetAlongLine)
 		where T : CIMMarker
 	{
@@ -578,6 +597,16 @@ public static class SymbolUtils
 				break;
 			default:
 				throw IncompatibleMarkerPlacement();
+		}
+
+		return marker;
+	}
+
+	public static T SetMarkerPlacePerPart<T>(this T marker, bool placePerPart) where T : CIMMarker
+	{
+		if (marker.MarkerPlacement is { } placement)
+		{
+			placement.PlacePerPart = placePerPart;
 		}
 
 		return marker;
@@ -1004,8 +1033,6 @@ public static class SymbolUtils
 
 				// TODO MarkerGraphic has a PrimitiveName, but no suitable properties for mapping; instead, recurse on graphic.Symbol
 			}
-
-			throw InvalidPrimitiveSpec(spec);
 		}
 
 		throw InvalidPrimitiveSpec(spec);

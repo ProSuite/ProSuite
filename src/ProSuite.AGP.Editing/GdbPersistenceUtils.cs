@@ -614,7 +614,7 @@ public static class GdbPersistenceUtils
 		}
 		finally
 		{
-			editContext.Invalidate(feature);
+			editContext?.Invalidate(feature);
 		}
 	}
 

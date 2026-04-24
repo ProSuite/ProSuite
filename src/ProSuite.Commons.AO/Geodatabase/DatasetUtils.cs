@@ -1548,6 +1548,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			enumDatasetName.Reset();
+
+			ComUtils.ReleaseComObject(enumDatasetName);
 		}
 
 		[NotNull]
@@ -4399,6 +4401,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			if (catalogPath.EndsWith(".mdb",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			if (catalogPath.EndsWith(".geodatabase",
 			                         StringComparison.InvariantCultureIgnoreCase))
 			{
 				return true;

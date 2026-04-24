@@ -7,9 +7,9 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 {
 	public class AttributeValueMapping : EntityWithMetadata
 	{
-		[UsedImplicitly] private readonly string _sourceText;
-		[UsedImplicitly] private readonly string _targetText;
-		[UsedImplicitly] private readonly string _description;
+		[UsedImplicitly] private string _sourceText;
+		[UsedImplicitly] private string _targetText;
+		[UsedImplicitly] private string _description;
 
 		private IList<object> _sourceValues;
 		private IList<object> _targetValues;
@@ -33,16 +33,19 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 		public string SourceText
 		{
 			get { return _sourceText; }
+			[UsedImplicitly] set { _sourceText = value; }
 		}
 
 		public string TargetText
 		{
 			get { return _targetText; }
+			[UsedImplicitly] set { _targetText = value; }
 		}
 
 		public string Description
 		{
 			get { return _description; }
+			[UsedImplicitly] set { _description = value; }
 		}
 
 		/// <remarks>Derived from <see cref="SourceText"/></remarks>

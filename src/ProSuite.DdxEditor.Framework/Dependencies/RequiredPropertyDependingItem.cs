@@ -8,8 +8,8 @@ namespace ProSuite.DdxEditor.Framework.Dependencies
 	{
 		public RequiredPropertyDependingItem([NotNull] Entity entity,
 		                                     [CanBeNull] string entityName,
-		                                     [NotNull] string propertyName)
-			: base(entity, entityName, propertyName) { }
+		                                     [NotNull] string affectedProperty)
+			: base(entity, entityName, affectedProperty) { }
 
 		public override bool CanRemove => false;
 

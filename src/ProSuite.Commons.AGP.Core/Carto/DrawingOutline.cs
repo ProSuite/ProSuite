@@ -17,6 +17,9 @@ public static class DrawingOutline
 
 		public bool IgnoreDashing { get; set; } // and assume solid lines
 
+		// TODO public bool IgnoreMarkerFills { get; set; }
+		// TODO public bool AssumePolygonsFilled { get; set; }
+
 		//public bool IgnoreLineMarkers { get; set; } // point markers still honored
 		//public bool FillGlyphCounters { get; set; } // dt. Punzen entfernen
 		//public bool FillHoles { get; set; } // probably want (relative) size limit

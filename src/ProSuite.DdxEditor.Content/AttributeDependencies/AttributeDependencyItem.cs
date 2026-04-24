@@ -213,8 +213,8 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 
 			// Old attributes and mappings no longer apply:
 			entity.AttributeValueMappings.Clear();
-			entity.SourceAttributes.Clear();
-			entity.TargetAttributes.Clear();
+			entity.ClearSourceAttributes();
+			entity.ClearTargetAttributes();
 
 			InvalidateMappingsTable();
 		}
@@ -226,7 +226,7 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 
 			if (! entity.SourceAttributes.Contains(attribute))
 			{
-				entity.SourceAttributes.Add(attribute);
+				entity.AddSourceAttribute(attribute);
 			}
 
 			InvalidateMappingsTable();
@@ -239,7 +239,7 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 
 			if (entity.SourceAttributes.Contains(attribute))
 			{
-				entity.SourceAttributes.Remove(attribute);
+				entity.RemoveSourceAttribute(attribute);
 			}
 
 			InvalidateMappingsTable();
@@ -252,7 +252,7 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 
 			if (! entity.TargetAttributes.Contains(attribute))
 			{
-				entity.TargetAttributes.Add(attribute);
+				entity.AddTargetAttribute(attribute);
 			}
 
 			InvalidateMappingsTable();
@@ -265,7 +265,7 @@ namespace ProSuite.DdxEditor.Content.AttributeDependencies
 
 			if (entity.TargetAttributes.Contains(attribute))
 			{
-				entity.TargetAttributes.Remove(attribute);
+				entity.RemoveTargetAttribute((attribute));
 			}
 
 			InvalidateMappingsTable();
