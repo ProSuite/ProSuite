@@ -142,7 +142,7 @@ public static class NotebookInterop
 				return null;
 			}
 
-			if (! FileSystemUtils.EqualPaths(notebookPath, text))
+			if (! FileSystemUtils.ArePathsEqual(notebookPath, text))
 			{
 				return false;
 			}

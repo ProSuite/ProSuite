@@ -106,12 +106,6 @@ namespace ProSuite.Commons.IO
 			return path;
 		}
 
-		[Obsolete("Use ArePathsEqual() instead")]
-		public static bool EqualPaths(string path1, string path2)
-		{
-			return ArePathsEqual(path1, path2);
-		}
-
 		public static bool HasInvalidPathChars([NotNull] string path)
 		{
 			return path.IndexOfAny(InvalidPathChars) >= 0;
