@@ -26,8 +26,7 @@ public class SelectionSourceClass : SourceClass
 		return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(TableIdentity);
 	}
 
-	protected override void EnsureValidFilterCore(ref QueryFilter filter,
-	                                              WorkItemStatus? statusFilter)
+	protected override void EnsureValidFilterCore(ref QueryFilter filter)
 	{
 		filter.ObjectIDs = Oids;
 

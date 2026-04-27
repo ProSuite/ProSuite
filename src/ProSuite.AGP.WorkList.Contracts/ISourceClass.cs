@@ -40,7 +40,4 @@ public interface ISourceClass
 	long GetUniqueTableId();
 
 	void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry);
-
-	void EnsureValidFilter(ref QueryFilter filter, WorkItemStatus? statusFilter,
-	                       bool excludeGeometry);
 }

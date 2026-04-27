@@ -55,9 +55,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 		}
 	}
 
-	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		Table table, QueryFilter filter,
-		WorkItemStatus? statusFilter)
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table, QueryFilter filter)
 	{
 		throw new NotImplementedException();
 	}

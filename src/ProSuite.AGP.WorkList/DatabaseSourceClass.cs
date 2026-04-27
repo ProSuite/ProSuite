@@ -147,20 +147,8 @@ public class DatabaseSourceClass : SourceClass
 		return ArcGISTableId;
 	}
 
-	protected override void EnsureValidFilterCore(ref QueryFilter filter,
-	                                              WorkItemStatus? statusFilter)
+	protected override void EnsureValidFilterCore(ref QueryFilter filter)
 	{
-		if (statusFilter != null)
-		{
-			object value = GetValue(statusFilter.Value);
-
-			string statusQuery = value.Equals(TodoValue)
-				                     ? $"({StatusField} = {value} OR {StatusField} IS NULL)"
-				                     : $"{StatusField} = {value}";
-
-			GdbQueryUtils.AppendWhereClause(ref filter, statusQuery);
-		}
-
 		GdbQueryUtils.AppendWhereClause(ref filter, DefaultDefinitionQuery);
 	}
 

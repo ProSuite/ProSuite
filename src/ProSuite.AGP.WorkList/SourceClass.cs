@@ -58,22 +58,14 @@ public abstract class SourceClass : ISourceClass
 		return subFields;
 	}
 
-	public void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry)
-	{
-		EnsureValidFilter(ref filter, null, excludeGeometry);
-	}
-
 	/// <summary>
 	/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
 	/// control whether it's called with a SpatialQueryFilter or a QueryFilter. Querying a table with a
 	/// spatial filter throws an exception, so we clone the filter to the correct type.
 	/// </summary>
 	/// <param name="filter"></param>
-	/// <param name="statusFilter"></param>
 	/// <param name="excludeGeometry"></param>
-	public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
-	                              WorkItemStatus? statusFilter,
-	                              bool excludeGeometry)
+	public void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry)
 	{
 		QueryFilter result;
 
@@ -101,7 +93,8 @@ public abstract class SourceClass : ISourceClass
 			result.SubFields = relevantSubFields;
 		}
 
-		EnsureValidFilterCore(ref result, statusFilter);
+		EnsureValidFilterCore(ref result);
+
 		filter = result;
 	}
 
@@ -135,8 +128,7 @@ public abstract class SourceClass : ISourceClass
 
 	public abstract long GetUniqueTableId();
 
-	protected virtual void EnsureValidFilterCore(ref QueryFilter filter,
-	                                             WorkItemStatus? statusFilter) { }
+	protected virtual void EnsureValidFilterCore(ref QueryFilter filter) { }
 
 	public override string ToString()
 	{
