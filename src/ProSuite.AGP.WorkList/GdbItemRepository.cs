@@ -75,14 +75,11 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter));
 	}
 
-	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		Table table,
-		QueryFilter filter,
-		WorkItemStatus? statusFilter)
+	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
+		QueryFilter filter)
 	{
 		return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
-		                    .SelectMany(sourceClass =>
-			                                GetItems(sourceClass, table, filter, statusFilter));
+		                    .SelectMany(sourceClass => GetItems(sourceClass, table, filter));
 	}
 
 	public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
@@ -182,14 +179,13 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		ISourceClass sourceClass,
 		Table table,
-		QueryFilter filter,
-		WorkItemStatus? statusFilter = null)
+		QueryFilter filter)
 	{
 		var count = 0;
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, statusFilter, false);
+		sourceClass.EnsureValidFilter(ref filter, false);
 
 		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
 		{

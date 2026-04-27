@@ -39,10 +39,8 @@ public interface IWorkItemRepository
 
 	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems([CanBeNull] QueryFilter filter);
 
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		[NotNull] Table table,
-		[NotNull] QueryFilter filter,
-		WorkItemStatus? statusFilter = null);
+	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems([NotNull] Table table,
+	                                                        [NotNull] QueryFilter filter);
 
 	void Commit();
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Logging;
 
@@ -15,14 +14,6 @@ public class SelectionItemRepository : GdbItemRepository
 	public SelectionItemRepository(IList<ISourceClass> sourceClasses,
 	                               IWorkItemStateRepository stateRepository) : base(
 		sourceClasses, stateRepository) { }
-
-	public override IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
-		QueryFilter filter,
-		WorkItemStatus? statusFilter)
-	{
-		return base.GetItems(table, filter, statusFilter)
-		           .Where(kvp => FilterByStatus(kvp, statusFilter));
-	}
 
 	protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
 	{
@@ -58,20 +49,5 @@ public class SelectionItemRepository : GdbItemRepository
 	public override void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo)
 	{
 		// No specific schema info is necessary/available
-	}
-
-	private bool FilterByStatus(KeyValuePair<IWorkItem, Geometry> kvp, WorkItemStatus? status)
-	{
-		if (status == null)
-		{
-			// return all items
-			return true;
-		}
-
-		IWorkItem item = kvp.Key;
-
-		WorkItemStateRepository.Refresh(item);
-
-		return Equals(status, item.Status);
 	}
 }

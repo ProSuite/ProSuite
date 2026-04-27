@@ -1492,8 +1492,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-				         table, filter, null))
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
 			{
 				Assert.True(TryAddItem(item), $"Could not add {item}");
 
@@ -1580,8 +1579,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-				         table, filter, null))
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
 			{
 				Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
 				            $"Could not get {cachedItem}");
