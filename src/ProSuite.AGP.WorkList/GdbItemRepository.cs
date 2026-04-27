@@ -254,8 +254,6 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, excludeGeometry: true);
-
 		using Table table = OpenTable(sourceClass);
 
 		if (table == null)

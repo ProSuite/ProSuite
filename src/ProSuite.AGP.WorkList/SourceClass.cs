@@ -40,11 +40,11 @@ public abstract class SourceClass : ISourceClass
 
 	public string DefaultDefinitionQuery { get; protected set; }
 
-	private string GetRelevantSubFields(bool excludeGeometry = false)
+	private string GetRelevantSubFields()
 	{
 		string subFields = $"{_oidField}";
 
-		if (HasGeometry && ! excludeGeometry)
+		if (HasGeometry)
 		{
 			Assert.NotNullOrEmpty(_shapeField);
 			subFields = $"{subFields},{_shapeField}";
@@ -64,12 +64,11 @@ public abstract class SourceClass : ISourceClass
 	/// spatial filter throws an exception, so we clone the filter to the correct type.
 	/// </summary>
 	/// <param name="filter"></param>
-	/// <param name="excludeGeometry"></param>
-	public void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry = false)
+	public void EnsureValidFilter(ref QueryFilter filter)
 	{
 		QueryFilter result;
 
-		string relevantSubFields = GetRelevantSubFields(excludeGeometry);
+		string relevantSubFields = GetRelevantSubFields();
 
 		List<string> subfields =
 			StringUtils.SplitAndTrim(relevantSubFields, ",");
