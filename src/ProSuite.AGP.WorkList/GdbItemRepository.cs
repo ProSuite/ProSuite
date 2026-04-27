@@ -68,14 +68,11 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	[NotNull]
 	public IList<ISourceClass> SourceClasses { get; }
 
-	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		QueryFilter filter,
-		WorkItemStatus? statusFilter)
+	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
 	{
 		// - Consider re-naming to ReadItems (implying DB-Access)
 		// - Try get rid of QueryFilter (use filterGeometry, whereClause or more dedicated filter object.)
-		return SourceClasses.SelectMany(sourceClass =>
-			                                GetItems(sourceClass, filter, statusFilter));
+		return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter));
 	}
 
 	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
@@ -160,15 +157,13 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		ISourceClass sourceClass,
-		QueryFilter filter,
-		WorkItemStatus? statusFilter = null)
+		ISourceClass sourceClass, QueryFilter filter)
 	{
 		var count = 0;
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, statusFilter, false);
+		sourceClass.EnsureValidFilter(ref filter, false);
 
 		foreach (Row row in GetRows(sourceClass, filter))
 		{

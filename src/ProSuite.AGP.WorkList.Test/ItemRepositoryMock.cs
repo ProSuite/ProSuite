@@ -31,13 +31,9 @@ public class ItemRepositoryMock : IWorkItemRepository
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		QueryFilter filter, WorkItemStatus? statusFilter)
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
 	{
-		IEnumerable<IWorkItem> query =
-			statusFilter == null
-				? _items
-				: _items.Where(item => item.Status == statusFilter);
+		IEnumerable<IWorkItem> query = _items;
 
 		IEnumerable<IWorkItem> result;
 		if (filter.ObjectIDs.Count == 0)
@@ -64,11 +60,6 @@ public class ItemRepositoryMock : IWorkItemRepository
 		WorkItemStatus? statusFilter)
 	{
 		throw new NotImplementedException();
-	}
-
-	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
-	{
-		return GetItems(filter, null);
 	}
 
 	public void Refresh(IWorkItem item)

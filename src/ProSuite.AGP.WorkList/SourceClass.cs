@@ -58,6 +58,11 @@ public abstract class SourceClass : ISourceClass
 		return subFields;
 	}
 
+	public void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry)
+	{
+		EnsureValidFilter(ref filter, null, excludeGeometry);
+	}
+
 	/// <summary>
 	/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
 	/// control whether it's called with a SpatialQueryFilter or a QueryFilter. Querying a table with a
@@ -129,11 +134,6 @@ public abstract class SourceClass : ISourceClass
 	}
 
 	public abstract long GetUniqueTableId();
-
-	public virtual string CreateWhereClause(WorkItemStatus? statusFilter)
-	{
-		return null;
-	}
 
 	protected virtual void EnsureValidFilterCore(ref QueryFilter filter,
 	                                             WorkItemStatus? statusFilter) { }

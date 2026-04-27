@@ -16,14 +16,6 @@ public class SelectionItemRepository : GdbItemRepository
 	                               IWorkItemStateRepository stateRepository) : base(
 		sourceClasses, stateRepository) { }
 
-	public override IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		QueryFilter filter,
-		WorkItemStatus? statusFilter)
-	{
-		return base.GetItems(filter, statusFilter)
-		           .Where(kvp => FilterByStatus(kvp, statusFilter));
-	}
-
 	public override IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
 		QueryFilter filter,
 		WorkItemStatus? statusFilter)
