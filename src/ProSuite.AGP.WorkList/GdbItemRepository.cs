@@ -68,15 +68,16 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	[NotNull]
 	public IList<ISourceClass> SourceClasses { get; }
 
-	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems([CanBeNull] QueryFilter filter)
 	{
 		// - Consider re-naming to ReadItems (implying DB-Access)
 		// - Try get rid of QueryFilter (use filterGeometry, whereClause or more dedicated filter object.)
 		return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter));
 	}
 
-	public virtual IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
-		QueryFilter filter)
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+		[NotNull] Table table,
+		[CanBeNull] QueryFilter filter)
 	{
 		return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
 		                    .SelectMany(sourceClass => GetItems(sourceClass, table, filter));
@@ -154,32 +155,34 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		ISourceClass sourceClass, QueryFilter filter)
+		[NotNull] ISourceClass sourceClass,
+		[CanBeNull] QueryFilter filter)
 	{
-		var count = 0;
+		Table table = OpenTable(sourceClass);
 
-		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
-
-		sourceClass.EnsureValidFilter(ref filter);
-
-		foreach (Row row in GetRows(sourceClass, filter))
+		if (table == null)
 		{
-			IWorkItem item = CreateWorkItemCore(row, sourceClass);
-
-			Geometry geometry = row is Feature feature ? feature.GetShape() : null;
-
-			count += 1;
-			yield return KeyValuePair.Create(item, geometry);
+			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
+			yield break;
 		}
 
-		_msg.DebugStopTiming(
-			watch, $"GetItems() {sourceClass.Name}: {count} items");
+		try
+		{
+			foreach (var pair in GetItems(sourceClass, table, filter))
+			{
+				yield return pair;
+			}
+		}
+		finally
+		{
+			table.Dispose();
+		}
 	}
 
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		ISourceClass sourceClass,
-		Table table,
-		QueryFilter filter)
+		[NotNull] ISourceClass sourceClass,
+		[NotNull] Table table,
+		[CanBeNull] QueryFilter filter)
 	{
 		var count = 0;
 
@@ -187,7 +190,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		sourceClass.EnsureValidFilter(ref filter);
 
-		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
+		foreach (Row row in GetRows(sourceClass, table, filter))
 		{
 			IWorkItem item = CreateWorkItemCore(row, sourceClass);
 
@@ -206,12 +209,30 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		Table table = OpenTable(sourceClass);
 
-		if (table == null)
+		try
 		{
-			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
-			yield break;
-		}
+			if (table == null)
+			{
+				_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
+				yield break;
+			}
 
+			foreach (Row row in GetRows(sourceClass, table, filter, recycle))
+			{
+				yield return row;
+			}
+		}
+		finally
+		{
+			table?.Dispose();
+		}
+	}
+
+	private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
+	                                 [NotNull] Table table,
+	                                 [CanBeNull] QueryFilter filter,
+	                                 bool recycle = true)
+	{
 		if (CurrentFilterDefinition != null &&
 		    sourceClass is DatabaseSourceClass dbSourceClass)
 		{
@@ -221,17 +242,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			AppendWhereClause(ref filter, workListDefinitionExpression);
 		}
 
-		try
-		{
-			foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter, recycle))
-			{
-				yield return row;
-			}
-		}
-		finally
-		{
-			table.Dispose();
-		}
+		return GdbQueryUtils.GetRows<Row>(table, filter, recycle);
 	}
 
 	private static void AppendWhereClause(
