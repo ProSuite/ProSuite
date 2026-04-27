@@ -65,7 +65,7 @@ public abstract class SourceClass : ISourceClass
 	/// </summary>
 	/// <param name="filter"></param>
 	/// <param name="excludeGeometry"></param>
-	public void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry)
+	public void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry = false)
 	{
 		QueryFilter result;
 

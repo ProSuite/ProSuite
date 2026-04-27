@@ -160,7 +160,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, false);
+		sourceClass.EnsureValidFilter(ref filter);
 
 		foreach (Row row in GetRows(sourceClass, filter))
 		{
@@ -185,7 +185,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, false);
+		sourceClass.EnsureValidFilter(ref filter);
 
 		foreach (Row row in GdbQueryUtils.GetRows<Row>(table, filter))
 		{
@@ -254,7 +254,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter, true);
+		sourceClass.EnsureValidFilter(ref filter, excludeGeometry: true);
 
 		using Table table = OpenTable(sourceClass);
 

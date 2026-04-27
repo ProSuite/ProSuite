@@ -39,5 +39,5 @@ public interface ISourceClass
 	/// <returns></returns>
 	long GetUniqueTableId();
 
-	void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry);
+	void EnsureValidFilter(ref QueryFilter filter, bool excludeGeometry = false);
 }
