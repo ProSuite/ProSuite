@@ -64,7 +64,8 @@ public abstract class SourceClass : ISourceClass
 	/// spatial filter throws an exception, so we clone the filter to the correct type.
 	/// </summary>
 	/// <param name="filter"></param>
-	public void EnsureValidFilter(ref QueryFilter filter)
+	/// <param name="ignoreDefinitionQuery"></param>
+	public void EnsureValidFilter(ref QueryFilter filter, bool ignoreDefinitionQuery = false)
 	{
 		QueryFilter result;
 
@@ -92,7 +93,7 @@ public abstract class SourceClass : ISourceClass
 			result.SubFields = relevantSubFields;
 		}
 
-		EnsureValidFilterCore(ref result);
+		EnsureValidFilterCore(ref result, ignoreDefinitionQuery);
 
 		filter = result;
 	}
@@ -127,7 +128,7 @@ public abstract class SourceClass : ISourceClass
 
 	public abstract long GetUniqueTableId();
 
-	protected virtual void EnsureValidFilterCore(ref QueryFilter filter) { }
+	protected virtual void EnsureValidFilterCore(ref QueryFilter filter, bool ignoreDefinitionQuery) { }
 
 	public override string ToString()
 	{

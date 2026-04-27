@@ -75,12 +75,13 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter));
 	}
 
-	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		[NotNull] Table table,
-		[CanBeNull] QueryFilter filter)
+	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems([NotNull] Table table,
+		[CanBeNull] QueryFilter filter, bool ignoreDefinitionQuery = false)
 	{
 		return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
-		                    .SelectMany(sourceClass => GetItems(sourceClass, table, filter));
+		                    .SelectMany(sourceClass =>
+			                                GetItems(sourceClass, table, filter,
+			                                         ignoreDefinitionQuery));
 	}
 
 	public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
@@ -182,13 +183,13 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		[NotNull] ISourceClass sourceClass,
 		[NotNull] Table table,
-		[CanBeNull] QueryFilter filter)
+		[CanBeNull] QueryFilter filter, bool ignoreDefinitionQuery = false)
 	{
 		var count = 0;
 
 		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
 
-		sourceClass.EnsureValidFilter(ref filter);
+		sourceClass.EnsureValidFilter(ref filter, ignoreDefinitionQuery);
 
 		foreach (Row row in GetRows(sourceClass, table, filter))
 		{

@@ -1579,7 +1579,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
+				         table, filter, ignoreDefinitionQuery: true))
 			{
 				Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
 				            $"Could not get {cachedItem}");

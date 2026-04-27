@@ -39,5 +39,5 @@ public interface ISourceClass
 	/// <returns></returns>
 	long GetUniqueTableId();
 
-	void EnsureValidFilter(ref QueryFilter filter);
+	void EnsureValidFilter(ref QueryFilter filter, bool ignoreDefinitionQuery);
 }
