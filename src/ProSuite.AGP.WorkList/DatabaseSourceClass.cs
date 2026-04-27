@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -149,30 +150,18 @@ public class DatabaseSourceClass : SourceClass
 	protected override void EnsureValidFilterCore(ref QueryFilter filter,
 	                                              WorkItemStatus? statusFilter)
 	{
-		string result = string.Empty;
-
 		if (statusFilter != null)
 		{
 			object value = GetValue(statusFilter.Value);
 
-			result = value.Equals(TodoValue)
-				         ? $"({StatusField} = {value} OR {StatusField} IS NULL)"
-				         : $"{StatusField} = {value}";
+			string statusQuery = value.Equals(TodoValue)
+				                     ? $"({StatusField} = {value} OR {StatusField} IS NULL)"
+				                     : $"{StatusField} = {value}";
+
+			GdbQueryUtils.AppendWhereClause(ref filter, statusQuery);
 		}
 
-		if (DefaultDefinitionQuery == null)
-		{
-			return;
-		}
-
-		if (! string.IsNullOrEmpty(result))
-		{
-			result += " AND ";
-		}
-
-		result += DefaultDefinitionQuery;
-
-		filter.WhereClause = result;
+		GdbQueryUtils.AppendWhereClause(ref filter, DefaultDefinitionQuery);
 	}
 
 	protected override string GetRelevantSubFieldsCore(string subFields)

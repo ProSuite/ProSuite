@@ -227,7 +227,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			WorkListFilterDefinitionExpression workListDefinitionExpression =
 				dbSourceClass.GetExpression(CurrentFilterDefinition);
 
-			filter = AdaptQueryFilter(filter, workListDefinitionExpression);
+			AppendWhereClause(ref filter, workListDefinitionExpression);
 		}
 
 		try
@@ -243,30 +243,20 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		}
 	}
 
-	[CanBeNull]
-	private static QueryFilter AdaptQueryFilter(
-		[CanBeNull] QueryFilter filter,
+	private static void AppendWhereClause(
+		[CanBeNull] ref QueryFilter filter,
 		[CanBeNull] WorkListFilterDefinitionExpression forDefinitionExpression)
 	{
 		string expression = forDefinitionExpression?.Expression;
 
 		if (string.IsNullOrEmpty(expression))
 		{
-			return filter;
+			return;
 		}
 
 		filter = GdbQueryUtils.CloneFilter(filter);
 
-		if (string.IsNullOrEmpty(filter.WhereClause))
-		{
-			filter.WhereClause = expression;
-		}
-		else
-		{
-			filter.WhereClause += $" AND ({expression})";
-		}
-
-		return filter;
+		GdbQueryUtils.AppendWhereClause(ref filter, expression);
 	}
 
 	private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)

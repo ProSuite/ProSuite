@@ -470,4 +470,23 @@ public static class GdbQueryUtils
 
 		return filter;
 	}
+
+	public static void AppendWhereClause([NotNull] ref QueryFilter filter,
+	                                     [CanBeNull] string expressionToAppend)
+	{
+		ArgumentNullException.ThrowIfNull(filter);
+
+		string result = filter.WhereClause;
+
+		if (! string.IsNullOrEmpty(result) && ! string.IsNullOrEmpty(expressionToAppend))
+		{
+			result += $" AND {expressionToAppend}";
+		}
+		else if (string.IsNullOrEmpty(result) && ! string.IsNullOrEmpty(expressionToAppend))
+		{
+			result = expressionToAppend;
+		}
+
+		filter.WhereClause = result;
+	}
 }
