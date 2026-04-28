@@ -198,7 +198,7 @@ public class WorkItemTable : PluginTableTemplate
 		try
 		{
 			values[0] = item.OID;
-			values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
+			values[1] = (int) item.Status;
 			values[2] = item.Visited ? 1 : 0;
 			values[3] = isCurrent ? 1 : 0;
 			values[4] = workListItems.GetItemDisplayGeometry(item);
