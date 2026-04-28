@@ -38,25 +38,7 @@ public abstract class SourceClass : ISourceClass
 
 	public IAttributeReader AttributeReader { get; set; }
 
-	public string DefaultDefinitionQuery { get; protected set; }
-
-	private string GetRelevantSubFields()
-	{
-		string subFields = $"{_oidField}";
-
-		if (HasGeometry)
-		{
-			Assert.NotNullOrEmpty(_shapeField);
-			subFields = $"{subFields},{_shapeField}";
-		}
-
-		return GetRelevantSubFieldsCore(subFields);
-	}
-
-	protected virtual string GetRelevantSubFieldsCore(string subFields)
-	{
-		return subFields;
-	}
+	public string DefaultDefinitionQuery { get; protected init; }
 
 	/// <summary>
 	/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
@@ -128,12 +110,38 @@ public abstract class SourceClass : ISourceClass
 
 	public abstract long GetUniqueTableId();
 
-	protected virtual void EnsureValidFilterCore(ref QueryFilter filter, bool ignoreDefinitionQuery) { }
-
 	public override string ToString()
 	{
 		return string.IsNullOrEmpty(DefaultDefinitionQuery)
 			       ? Name
 			       : $"{Name}, {DefaultDefinitionQuery}";
+	}
+
+	private string GetRelevantSubFields()
+	{
+		string subFields = $"{_oidField}";
+
+		if (HasGeometry)
+		{
+			Assert.NotNullOrEmpty(_shapeField);
+			subFields = $"{subFields},{_shapeField}";
+		}
+
+		return GetRelevantSubFieldsCore(subFields);
+	}
+
+	protected virtual string GetRelevantSubFieldsCore(string subFields)
+	{
+		return subFields;
+	}
+
+	protected virtual void EnsureValidFilterCore(ref QueryFilter filter, bool ignoreDefinitionQuery)
+	{
+		if (ignoreDefinitionQuery)
+		{
+			return;
+		}
+
+		GdbQueryUtils.AppendWhereClause(ref filter, DefaultDefinitionQuery);
 	}
 }

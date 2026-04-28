@@ -153,17 +153,6 @@ public class DatabaseSourceClass : SourceClass
 		return ArcGISTableId;
 	}
 
-	protected override void EnsureValidFilterCore(ref QueryFilter filter,
-	                                              bool ignoreDefinitionQuery)
-	{
-		if (ignoreDefinitionQuery)
-		{
-			return;
-		}
-
-		GdbQueryUtils.AppendWhereClause(ref filter, DefaultDefinitionQuery);
-	}
-
 	protected override string GetRelevantSubFieldsCore(string subFields)
 	{
 		return string.IsNullOrEmpty(StatusField)
