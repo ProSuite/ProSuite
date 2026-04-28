@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -80,18 +81,12 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 	}
 
-	protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
+	protected override IWorkItem CreateWorkItemCore(IWorkItem workItem,
+	                                                ISourceClass sourceClass, Row row)
 	{
-		var dbSourceClass = (DatabaseSourceClass) sourceClass;
+		workItem.Status = ((DatabaseSourceClass) sourceClass).GetStatus(row);
 
-		WorkItemStatus status = dbSourceClass.GetStatus(row);
-
-		// Create table identity only once for better performance:
-		GdbTableIdentity tableIdentity = dbSourceClass.TableIdentity;
-
-		var rowIdentity = new GdbRowIdentity(row.GetObjectID(), tableIdentity);
-
-		return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), rowIdentity, status);
+		return workItem;
 	}
 
 	protected override async Task SetStatusCoreAsync(IWorkItem item,

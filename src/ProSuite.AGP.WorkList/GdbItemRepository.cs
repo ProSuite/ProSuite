@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -148,10 +149,6 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		return Task.CompletedTask;
 	}
 
-	[NotNull]
-	protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row,
-	                                                [NotNull] ISourceClass sourceClass);
-
 	[CanBeNull]
 	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 
@@ -193,7 +190,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		foreach (Row row in GetRows(sourceClass, table, filter))
 		{
-			IWorkItem item = CreateWorkItemCore(row, sourceClass);
+			IWorkItem item = CreateWorkItem(sourceClass, row);
 
 			Geometry geometry = row is Feature feature ? feature.GetShape() : null;
 
@@ -283,5 +280,25 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			watch, $"Count() {sourceClass.Name}: {count} items");
 
 		return count;
+	}
+
+	private IWorkItem CreateWorkItem([NotNull] ISourceClass sourceClass, [NotNull] Row row)
+	{
+		long uniqueTableId = sourceClass.GetUniqueTableId();
+
+		// Create table identity only once for better performance:
+		GdbTableIdentity tableIdentity = sourceClass.TableIdentity;
+
+		var workItem = new WorkItem(uniqueTableId,
+		                            new GdbRowIdentity(row.GetObjectID(), tableIdentity));
+
+		return CreateWorkItemCore(workItem, sourceClass, row);
+	}
+
+	protected virtual IWorkItem CreateWorkItemCore([NotNull] IWorkItem workItem,
+	                                               [NotNull] ISourceClass sourceClass,
+	                                               [NotNull] Row row)
+	{
+		return workItem;
 	}
 }
