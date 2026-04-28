@@ -5,6 +5,7 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -84,7 +85,9 @@ namespace ProSuite.AGP.WorkList.Test
 
 			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(_issuePoints))
 			{
-				var item = new IssueItem(0, 42, feature);
+				FeatureClass featureClass = feature.GetTable();
+				var tableIdentity = new GdbTableIdentity(featureClass);
+				var item = new IssueItem(tableIdentity.Id, new GdbRowIdentity(feature.GetObjectID(), tableIdentity));
 				break;
 			}
 		}

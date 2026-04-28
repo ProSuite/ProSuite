@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Logging;
@@ -14,13 +13,6 @@ public class SelectionItemRepository : GdbItemRepository
 	public SelectionItemRepository(IList<ISourceClass> sourceClasses,
 	                               IWorkItemStateRepository stateRepository) : base(
 		sourceClasses, stateRepository) { }
-
-	protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
-	{
-		long tableId = sourceClass.GetUniqueTableId();
-
-		return new SelectionItem(tableId, row);
-	}
 
 	protected override Table OpenTable(ISourceClass sourceClass)
 	{
