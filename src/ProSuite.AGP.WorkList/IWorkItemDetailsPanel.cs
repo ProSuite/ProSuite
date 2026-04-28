@@ -7,8 +7,10 @@ namespace ProSuite.AGP.WorkList;
 public interface IWorkItemDetailsPanel
 {
 	Task SetCurrentItemAsync(IWorkItem workItem);
+	Task RefreshViewAsync(IWorkItem workItem);
 
 	UserControl CreateDetailsPanelView();
 
 	void Unload();
+
 }
