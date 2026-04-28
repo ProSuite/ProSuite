@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList;
 
@@ -16,7 +17,10 @@ public class DatabaseSourceClass : SourceClass
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private readonly FilterHelper _filterHelper;
+
 	private readonly int _statusFieldIndex;
+	private readonly string _additionalSubFields;
 
 	[NotNull] private readonly List<WorkListFilterDefinitionExpression> _expressions = new();
 
@@ -31,6 +35,8 @@ public class DatabaseSourceClass : SourceClass
 		Assert.ArgumentNotNull(schema, nameof(schema));
 
 		_statusFieldIndex = schema.StatusFieldIndex;
+		_additionalSubFields = StringUtils.Concatenate(schema.AdditionalSubFields, ",");
+
 		StatusField = schema.StatusField;
 		TodoValue = schema.TodoValue;
 		DoneValue = schema.DoneValue;
@@ -161,7 +167,7 @@ public class DatabaseSourceClass : SourceClass
 	protected override string GetRelevantSubFieldsCore(string subFields)
 	{
 		return string.IsNullOrEmpty(StatusField)
-			       ? subFields
-			       : $"{subFields},{StatusField}";
+			       ? $"{subFields},{_additionalSubFields}"
+				   : $"{subFields},{_additionalSubFields},{StatusField}";
 	}
 }
