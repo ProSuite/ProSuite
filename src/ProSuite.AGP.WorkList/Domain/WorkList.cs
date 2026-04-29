@@ -464,7 +464,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			item.OID = Repository.GetNextOid();
 			Assert.True(item.OID > 0, "item is not initialized");
 
-			Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Could not add {item}");
+			Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Cannot not add {item}");
 
 			if (item.GdbRowProxy.Equals(oldCurrentItem?.GdbRowProxy))
 			{
@@ -1494,7 +1494,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
 			{
-				Assert.True(TryAddItem(item), $"Could not add {item}");
+				Assert.True(TryAddItem(item), $"Cannot not add {item}");
 
 				// it's a unkown item > refresh it's state (status, visited) either
 				// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
@@ -1583,7 +1583,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 				         table, filter, ignoreDefinitionQuery: true))
 			{
 				Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
-				            $"Could not get {cachedItem}");
+				            $"Cannot not get {cachedItem}");
 
 				invalidateOids.Add(cachedItem.OID);
 
