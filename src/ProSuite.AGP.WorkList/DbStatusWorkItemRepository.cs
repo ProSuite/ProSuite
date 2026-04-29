@@ -6,7 +6,6 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -169,11 +168,11 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		switch (oldState)
 		{
 			case WorkItemStatus.Todo:
-				return $"Set status of work item OID={item.OID} to 'Corrected'";
 			case WorkItemStatus.Excluded:
+				return $"Set status of work item ID={item.OID} to 'Corrected'";
 
 			case WorkItemStatus.Done:
-				return $"Set status of work item OID={item.OID} to 'Not Corrected'";
+				return $"Set status of work item ID={item.OID} to 'Not Corrected'";
 
 			default:
 				throw new ArgumentException($"Invalid status for operation: {item}");
