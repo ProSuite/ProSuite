@@ -170,6 +170,7 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		{
 			case WorkItemStatus.Todo:
 				return $"Set status of work item OID={item.OID} to 'Corrected'";
+			case WorkItemStatus.Excluded:
 
 			case WorkItemStatus.Done:
 				return $"Set status of work item OID={item.OID} to 'Not Corrected'";
