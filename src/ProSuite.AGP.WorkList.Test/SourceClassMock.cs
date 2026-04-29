@@ -52,6 +52,11 @@ public class SourceClassMock : ISourceClass
 		throw new NotImplementedException();
 	}
 
+	public bool Contains(Row row)
+	{
+		throw new NotImplementedException();
+	}
+
 	public void EnsureValidFilter(ref QueryFilter filter, WorkItemStatus? statusFilter,
 	                              bool excludeGeometry)
 	{

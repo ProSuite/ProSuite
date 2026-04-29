@@ -29,11 +29,13 @@ public class DatabaseSourceClass : SourceClass
 		[NotNull] DbSourceClassSchema schema,
 		[CanBeNull] IAttributeReader attributeReader,
 		[CanBeNull] string definitionQuery,
+		[NotNull] FilterHelper filterHelper,
 		WorkspaceDbType dbType = WorkspaceDbType.Unknown)
 		: base(tableIdentity, schema, attributeReader)
 	{
 		Assert.ArgumentNotNull(schema, nameof(schema));
 
+		_filterHelper = filterHelper;
 		_statusFieldIndex = schema.StatusFieldIndex;
 		_additionalSubFields = StringUtils.Concatenate(schema.AdditionalSubFields, ",");
 
@@ -44,6 +46,11 @@ public class DatabaseSourceClass : SourceClass
 		DefaultDefinitionQuery = definitionQuery;
 
 		WorkspaceDbType = dbType;
+	}
+
+	public override bool Contains(Row row)
+	{
+		return _filterHelper.Check(row);
 	}
 
 	public WorkItemStatus GetStatus([NotNull] Row row)

@@ -40,4 +40,6 @@ public interface ISourceClass
 	long GetUniqueTableId();
 
 	void EnsureValidFilter(ref QueryFilter filter, bool ignoreDefinitionQuery);
+
+	bool Contains(Row row);
 }

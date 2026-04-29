@@ -141,12 +141,11 @@ namespace ProSuite.AGP.QA.WorkList
 
 					datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
-					WorkspaceDbType dbType = WorkspaceUtils.GetWorkspaceDbType(datastore);
-
-					var databaseSourceClass = new DatabaseSourceClass(new GdbTableIdentity(table),
-						schema, attributeReader, defaultDefinitionQuery, dbType);
-
-					sourceClasses.Add(databaseSourceClass);
+					sourceClasses.Add(
+						new DatabaseSourceClass(new GdbTableIdentity(table), schema,
+						                        attributeReader, defaultDefinitionQuery,
+						                        FilterHelper.Create(table, defaultDefinitionQuery),
+						                        WorkspaceUtils.GetWorkspaceDbType(datastore)));
 				}
 
 				if (datastoresByHandle.Count == 0)

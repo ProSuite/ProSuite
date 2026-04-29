@@ -85,6 +85,8 @@ public abstract class SourceClass : ISourceClass
 		return tableReference.ReferencesTable(_tableIdentity.Id, _tableIdentity.Name);
 	}
 
+	public abstract bool Contains(Row row);
+
 	public T OpenDataset<T>() where T : Table
 	{
 		Datastore datastore = TableIdentity.Workspace.OpenDatastore();

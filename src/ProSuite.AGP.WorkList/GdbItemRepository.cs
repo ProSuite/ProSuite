@@ -8,6 +8,7 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -190,7 +191,17 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		foreach (Row row in GetRows(sourceClass, table, filter))
 		{
-			IWorkItem item = CreateWorkItem(sourceClass, row);
+			IWorkItem item;
+
+			if (ignoreDefinitionQuery && ! sourceClass.Contains(row))
+			{
+				item = CreateWorkItemBase(sourceClass, row);
+				item.Status = WorkItemStatus.Excluded;
+			}
+			else
+			{
+				item = CreateWorkItem(sourceClass, row);
+			}
 
 			Geometry geometry = row is Feature feature ? feature.GetShape() : null;
 
@@ -284,15 +295,20 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	private IWorkItem CreateWorkItem([NotNull] ISourceClass sourceClass, [NotNull] Row row)
 	{
+		WorkItem workItem = CreateWorkItemBase(sourceClass, row);
+
+		return CreateWorkItemCore(workItem, sourceClass, row);
+	}
+
+	private static WorkItem CreateWorkItemBase([NotNull] ISourceClass sourceClass, [NotNull] Row row)
+	{
 		long uniqueTableId = sourceClass.GetUniqueTableId();
 
 		// Create table identity only once for better performance:
 		GdbTableIdentity tableIdentity = sourceClass.TableIdentity;
 
-		var workItem = new WorkItem(uniqueTableId,
-		                            new GdbRowIdentity(row.GetObjectID(), tableIdentity));
-
-		return CreateWorkItemCore(workItem, sourceClass, row);
+		return new WorkItem(uniqueTableId,
+		                    new GdbRowIdentity(row.GetObjectID(), tableIdentity));
 	}
 
 	protected virtual IWorkItem CreateWorkItemCore([NotNull] IWorkItem workItem,
