@@ -1,9 +1,11 @@
-using ProSuite.Commons.Logging;
 using System;
 using System.Windows;
 using System.Windows.Input;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Input;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.Commons.UI
 {
@@ -16,13 +18,16 @@ namespace ProSuite.Commons.UI
 		public WindowConfigurator([NotNull] Window window)
 		{
 			_window = window;
-			_window.SizeToContent = SizeToContent.WidthAndHeight;
 		}
 
-		public void Apply([NotNull] T viewModel)
+		public async void Apply([NotNull] T viewModel)
 		{
 			try
 			{
+				Window windowOwner = Assert.NotNull(Application.Current.MainWindow);
+
+				_window.Owner = windowOwner;
+
 				_window.Unloaded += OnUnloaded;
 				_window.KeyDown += OnKeyDown;
 				_window.DataContext = viewModel;
@@ -41,6 +46,14 @@ namespace ProSuite.Commons.UI
 
 				_window.InputBindings.Add(escapeBinding);
 				_window.InputBindings.Add(enterBinding);
+
+				Point screenPosition = MouseUtils.GetMouseScreenPosition();
+
+				// NOTE: The window's Top/Left coordinates must be set in logical units or DIP (1/96 inch)
+				Point dipLocation = DisplayUtils.ToDeviceIndependentPixels(screenPosition, windowOwner);
+
+				_window.Left = dipLocation.X;
+				_window.Top = dipLocation.Y;
 
 				if (_window is IWindowBase<T> view)
 				{
@@ -91,6 +104,7 @@ namespace ProSuite.Commons.UI
 			{
 				if (_window is IWindowBase<T> view)
 				{
+					//_window.SizeChanged -= OnWindowSizeChanged;
 					view.Unload();
 				}
 
