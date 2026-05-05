@@ -645,7 +645,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		todo = 0;
 		todo += _items.Count(item => item.Status == WorkItemStatus.Todo);
 
-		return _items.Count(item => item.Status != WorkItemStatus.Excluded);
+		return _items.Count;
 	}
 
 	public void Count()
