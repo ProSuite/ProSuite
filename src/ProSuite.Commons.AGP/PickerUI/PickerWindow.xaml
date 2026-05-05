@@ -92,6 +92,8 @@
 		            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
 		<KeyBinding Key="Space"
 		            Command="{Binding PressSpaceCommand}" />
+		<KeyBinding Key="Enter"
+                    Command="{Binding ConfirmSelectionCommand}" />
 	</Window.InputBindings>
 
 	<behaviors:Interaction.Triggers>
@@ -111,7 +113,7 @@
 			         DockPanel.Dock="Top"
 			         ItemsSource="{Binding Path=Items}"
 			         ItemTemplate="{StaticResource SinglePickTemplate}"
-			         SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
+			         SelectedItem="{Binding Path=HighlightedItem, Mode=TwoWay}"
 			         Style="{StaticResource ListBox}"
 			         Focusable="True"
 			         KeyboardNavigation.DirectionalNavigation="Contained"
@@ -120,7 +122,7 @@
 				<behaviors:Interaction.Behaviors>
 					<pickerUi:ListBoxKeyUpBehavior
 						FlashItemCommand="{Binding FlashItemCommand}"
-						CloseWindowAction="{Binding CloseWindowCommand}" />
+						CloseWindowAction="{Binding ConfirmSelectionCommand}" />
 				</behaviors:Interaction.Behaviors>
 
 				<ListBox.ItemContainerStyle>
@@ -134,6 +136,13 @@
 
 						<!-- close on mouse-up on the item -->
 						<EventSetter Event="MouseLeftButtonUp" Handler="ListBoxItem_MouseLeftButtonUp" />
+
+						<!-- Hovering over an item selects it, so keyboard navigation starts from the hovered item -->
+						<Style.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter Property="IsSelected" Value="True" />
+							</Trigger>
+						</Style.Triggers>
 					</Style>
 				</ListBox.ItemContainerStyle>
 

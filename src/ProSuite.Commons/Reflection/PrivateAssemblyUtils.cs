@@ -71,14 +71,14 @@ namespace ProSuite.Commons.Reflection
 				if (string.IsNullOrEmpty(name.CodeBase))
 				{
 					_msg.VerboseDebug(() => $"Loading assembly from {name}");
+					assembly = Assembly.Load(name);
 				}
 				else
 				{
-					_msg.VerboseDebug(
-						() => $"Loading assembly from {name} (codebase: {name.CodeBase})");
+					_msg.VerboseDebug(() =>
+						                  $"Loading assembly from {name} (codebase: {name.CodeBase})");
+					assembly = LoadFromPath(name);
 				}
-
-				assembly = Assembly.Load(name);
 			}
 			catch (Exception)
 			{
@@ -87,14 +87,51 @@ namespace ProSuite.Commons.Reflection
 					throw;
 				}
 
-				_msg.VerboseDebug(
-					() => $"Loading {assemblyName} from {BinDirectory} failed. " +
-					      $"Trying assembly substitute {substituteAssembly}...");
+				_msg.VerboseDebug(() => $"Loading {assemblyName} from {BinDirectory} failed. " +
+				                        $"Trying assembly substitute {substituteAssembly}...");
 
 				assembly = Assembly.Load(substituteAssembly);
 			}
 
 			return assembly;
+		}
+
+		/// <summary>
+		/// Loads an assembly from the file path stored in <see cref="AssemblyName.CodeBase"/> while
+		/// keeping it in the same load context as <see cref="Assembly.Load(AssemblyName)"/>.
+		/// On .NET Core / .NET 5+, <c>Assembly.Load</c> ignores <c>CodeBase</c>, so we register a
+		/// one-shot <see cref="AppDomain.AssemblyResolve"/> handler that redirects the runtime to the
+		/// known file path when it cannot locate the assembly through its normal probing.
+		/// </summary>
+		private static Assembly LoadFromPath([NotNull] AssemblyName name)
+		{
+			string filePath = name.CodeBase;
+
+			ResolveEventHandler resolver = null;
+			resolver = (sender, args) =>
+			{
+				var requestedName = new AssemblyName(args.Name);
+
+				if (! string.Equals(requestedName.Name, name.Name,
+				                    StringComparison.OrdinalIgnoreCase))
+				{
+					return null;
+				}
+
+				AppDomain.CurrentDomain.AssemblyResolve -= resolver;
+				return Assembly.LoadFrom(filePath);
+			};
+
+			AppDomain.CurrentDomain.AssemblyResolve += resolver;
+			try
+			{
+				return Assembly.Load(name);
+			}
+			catch
+			{
+				AppDomain.CurrentDomain.AssemblyResolve -= resolver;
+				throw;
+			}
 		}
 
 		[NotNull]

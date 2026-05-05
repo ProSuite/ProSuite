@@ -1,75 +1,80 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing;
 
 public class SketchDrawer
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	[NotNull] private readonly List<IDisposable> _overlays = new List<IDisposable>(3);
 
 	private static readonly CIMRGBColor _sketchGreen = ColorUtils.CreateRGB(0, 125, 0);
 
-	private CIMLineSymbol _lineSymbol;
-	private CIMPolygonSymbol _polygonSymbol;
-	private CIMPointSymbol _regularUnselectedSymbol;
-	private CIMPointSymbol _currentUnselectedSymbol;
+	private CIMSymbolReference _lineSymbolRef;
+	private CIMSymbolReference _polygonSymbolRef;
+	private CIMSymbolReference _regularUnselectedSymbolRef;
+	private CIMSymbolReference _currentUnselectedSymbolRef;
 
-	public CIMLineSymbol LineSymbol
+	public CIMSymbolReference LineSymbol
 	{
 		// NOTE: This line symbol crashes the application by grabbing all the memory
 		//       -> use other symbol in stereo!
-		get => _lineSymbol ??= CreateLineSymbol();
-		set => _lineSymbol = value;
+		get => _lineSymbolRef;
+		set => _lineSymbolRef = value;
 	}
 
-	public CIMLineSymbol LineSymbolStereo
+	public CIMSymbolReference LineSymbolStereo
 	{
-		get => _lineSymbol ??= CreateStereoLineSymbol();
-		set => _lineSymbol = value;
+		get => _lineSymbolRef;
+		set => _lineSymbolRef = value;
 	}
 
-	public CIMPolygonSymbol PolygonSymbol
+	public CIMSymbolReference PolygonSymbol
 	{
-		get => _polygonSymbol ??= CreatePolygonSymbol();
-		set => _polygonSymbol = value;
+		get => _polygonSymbolRef;
+		set => _polygonSymbolRef = value;
 	}
 
-	public CIMPolygonSymbol PolygonSymbolStereo
+	public CIMSymbolReference PolygonSymbolStereo
 	{
-		get => _polygonSymbol ??= CreateStereoPolygonSymbol();
-		set => _polygonSymbol = value;
+		get => _polygonSymbolRef;
+		set => _polygonSymbolRef = value;
 	}
 
-	public CIMPointSymbol RegularUnselectedSymbol
+	public CIMSymbolReference RegularUnselectedSymbol
 	{
-		get => _regularUnselectedSymbol ??= CreateRegularUnselectedSymbol();
-		set => _regularUnselectedSymbol = value;
+		get => _regularUnselectedSymbolRef;
+		set => _regularUnselectedSymbolRef = value;
 	}
 
-	public CIMPointSymbol RegularUnselectedSymbolStereo
+	public CIMSymbolReference RegularUnselectedSymbolStereo
 	{
-		get => _regularUnselectedSymbol ??= CreateStereoRegularUnselectedSymbol();
-		set => _regularUnselectedSymbol = value;
+		get => _regularUnselectedSymbolRef;
+		set => _regularUnselectedSymbolRef = value;
 	}
 
-	public CIMPointSymbol CurrentUnselectedSymbol
+	public CIMSymbolReference CurrentUnselectedSymbol
 	{
-		get => _currentUnselectedSymbol ??= CreateCurrentUnselectedSymbol();
-		set => _currentUnselectedSymbol = value;
+		get => _currentUnselectedSymbolRef;
+		set => _currentUnselectedSymbolRef = value;
 	}
 
-	public CIMPointSymbol CurrentUnselectedSymbolStereo
+	public CIMSymbolReference CurrentUnselectedSymbolStereo
 	{
-		get => _currentUnselectedSymbol ??= CreateStereoCurrentUnselectedSymbol();
-		set => _currentUnselectedSymbol = value;
+		get => _currentUnselectedSymbolRef;
+		set => _currentUnselectedSymbolRef = value;
 	}
 
 	public async Task ShowSketch([CanBeNull] Geometry sketchGeometry,
@@ -81,20 +86,28 @@ public class SketchDrawer
 			return;
 		}
 
-		// Consider updating existing geometries instead clearing
-		ClearSketch();
-
 		bool isStereo = MapUtils.IsStereoMapView(inMapView);
 
-		CIMSymbolReference regularUnselectedSymbRef =
-			isStereo
-				? RegularUnselectedSymbolStereo.MakeSymbolReference()
-				: RegularUnselectedSymbol.MakeSymbolReference();
+		if (! SymbolReferencesInitialized())
+		{
+			// Typically this is called from SketchModified (which is called from a CIM thread anyway)
+			// But just to be sure, use QueuedTask:
+			await QueuedTask.Run(() => EnsureSymbolReferences(isStereo));
+		}
 
-		CIMSymbolReference currentUnselectedSymbRef =
-			isStereo
-				? CurrentUnselectedSymbolStereo.MakeSymbolReference()
-				: CurrentUnselectedSymbol.MakeSymbolReference();
+		// NOTE: When the sketch is NOT drawn if there are NaNs, the memory-crash () does not happen.
+		// TODO: Test thoroughly
+		//// the latch and only draw non-NaN points. Or compare with previous sketch?
+		//// Also, consider comparing with previously drawn sketch -> only draw if non-equal
+		//// Also, update the existing sketch instead of replacing it.
+
+		if (sketchGeometry is Multipart multiPart && multiPart.Points.Any(p => double.IsNaN(p.Z)))
+		{
+			return;
+		}
+
+		// Consider updating existing geometries instead clearing
+		ClearSketch();
 
 		if (sketchGeometry is Multipoint multipointSketch)
 		{
@@ -108,33 +121,23 @@ public class SketchDrawer
 			// NOTE: The multipoints are not shown in stereo! TODO: repro & report
 			var multipoint = builder.ToGeometry();
 			_overlays.Add(
-				await inMapView.AddOverlayAsync(multipoint, regularUnselectedSymbRef));
+				await inMapView.AddOverlayAsync(multipoint, _regularUnselectedSymbolRef));
 		}
 
 		if (sketchGeometry is Polyline polyline)
 		{
-			CIMSymbolReference lineSymbolRef =
-				isStereo
-					? LineSymbolStereo.MakeSymbolReference()
-					: LineSymbol.MakeSymbolReference();
-
-			_overlays.Add(await inMapView.AddOverlayAsync(polyline, lineSymbolRef));
+			_overlays.Add(await inMapView.AddOverlayAsync(polyline, _lineSymbolRef));
 
 			var endPoint = GeometryUtils.GetEndPoint(polyline);
 			if (endPoint != null)
 			{
 				_overlays.Add(
-					await inMapView.AddOverlayAsync(endPoint, currentUnselectedSymbRef));
+					await inMapView.AddOverlayAsync(endPoint, _currentUnselectedSymbolRef));
 			}
 		}
 		else if (sketchGeometry is Polygon polygon)
 		{
-			CIMSymbolReference polySymbolRef =
-				isStereo
-					? PolygonSymbolStereo.MakeSymbolReference()
-					: PolygonSymbol.MakeSymbolReference();
-
-			_overlays.Add(await inMapView.AddOverlayAsync(polygon, polySymbolRef));
+			_overlays.Add(inMapView.AddOverlay(polygon, _polygonSymbolRef));
 
 			// start and end point of a polygon are geometrically equal
 			var points = polygon.Points;
@@ -146,7 +149,7 @@ public class SketchDrawer
 			if (endPoint != null)
 			{
 				_overlays.Add(
-					await inMapView.AddOverlayAsync(endPoint, currentUnselectedSymbRef));
+					await inMapView.AddOverlayAsync(endPoint, _currentUnselectedSymbolRef));
 			}
 		}
 	}
@@ -159,6 +162,35 @@ public class SketchDrawer
 		}
 
 		_overlays.Clear();
+	}
+
+	private bool SymbolReferencesInitialized()
+	{
+		return _lineSymbolRef != null &&
+		       _polygonSymbolRef != null &&
+		       _regularUnselectedSymbolRef != null &&
+		       _currentUnselectedSymbolRef != null;
+	}
+
+	private void EnsureSymbolReferences(bool isStereo)
+	{
+		_lineSymbolRef ??= isStereo
+			                   ? CreateStereoLineSymbol().MakeSymbolReference()
+			                   : CreateLineSymbol().MakeSymbolReference();
+
+		_polygonSymbolRef ??= isStereo
+			                      ? CreateStereoPolygonSymbol().MakeSymbolReference()
+			                      : CreatePolygonSymbol().MakeSymbolReference();
+
+		_regularUnselectedSymbolRef ??= isStereo
+			                                ? CreateStereoRegularUnselectedSymbol()
+				                                .MakeSymbolReference()
+			                                : CreateRegularUnselectedSymbol().MakeSymbolReference();
+
+		_currentUnselectedSymbolRef ??= isStereo
+			                                ? CreateStereoCurrentUnselectedSymbol()
+				                                .MakeSymbolReference()
+			                                : CreateCurrentUnselectedSymbol().MakeSymbolReference();
 	}
 
 	private static CIMLineSymbol CreateLineSymbol()

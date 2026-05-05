@@ -33,6 +33,32 @@ namespace ProSuite.Commons.Cryptography
 			}
 		}
 
+		// For File consistency checks, relatively easy to produce collisions, therefore not for security.
+		public static string ComputeMd5HashForFile(string filePath)
+		{
+			using (var md5 = MD5.Create())
+			{
+				using (var stream = File.OpenRead(filePath))
+				{
+					byte[] hashBytes = md5.ComputeHash(stream);
+					return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+				}
+			}
+		}
+
+		// For security
+		public static string ComputeSha256HashForFile(string filePath)
+		{
+			using (var sha256 = SHA256.Create())
+			{
+				using (var stream = File.OpenRead(filePath))
+				{
+					byte[] hashBytes = sha256.ComputeHash(stream);
+					return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+				}
+			}
+		}
+
 		/// <summary>
 		/// Symmetric encryption.
 		/// </summary>

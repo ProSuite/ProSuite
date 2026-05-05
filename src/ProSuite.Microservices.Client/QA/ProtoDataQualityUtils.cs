@@ -842,6 +842,15 @@ namespace ProSuite.Microservices.Client.QA
 
 			foreach (ObjectSubtype objectSubtype in objectType.ObjectSubtypes)
 			{
+				var criteriaMessages = ToSubtypeCriteriaMessages(objectSubtype).ToList();
+
+				// Skip subtypes without criteria — they are indistinguishable
+				// from ObjectTypes during deserialization.
+				if (criteriaMessages.Count == 0)
+				{
+					continue;
+				}
+
 				var subTypeMsg = new ObjectCategoryMsg
 				                 {
 					                 ObjectCategoryId = objectSubtype.Id,
@@ -849,8 +858,7 @@ namespace ProSuite.Microservices.Client.QA
 					                 SubtypeCode = subTypeCode
 				                 };
 
-				subTypeMsg.ObjectSubtypeCriterion.AddRange(
-					ToSubtypeCriteriaMessages(objectSubtype));
+				subTypeMsg.ObjectSubtypeCriterion.AddRange(criteriaMessages);
 
 				yield return subTypeMsg;
 			}

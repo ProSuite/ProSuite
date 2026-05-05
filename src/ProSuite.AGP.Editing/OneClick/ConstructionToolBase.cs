@@ -597,6 +597,11 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected abstract void LogEnteringSketchMode();
 
+	protected virtual bool SupressLoggingVertexZ()
+	{
+		return false;
+	}
+
 	protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
 		Geometry sketchGeometry,
 		EditingTemplate editTemplate,
@@ -800,6 +805,11 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		}
 
 		if (_intermediateSketchStates?.IsReplayingSketches == true)
+		{
+			return;
+		}
+
+		if (SupressLoggingVertexZ())
 		{
 			return;
 		}

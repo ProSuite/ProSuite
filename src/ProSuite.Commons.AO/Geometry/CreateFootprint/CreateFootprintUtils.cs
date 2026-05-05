@@ -514,20 +514,29 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 				return null;
 			}
 
-			if (valueObj is double)
+			if (valueObj == null)
 			{
-				return (double) valueObj;
+				return null;
 			}
 
-			int? intValue = GdbObjectUtils.ReadRowValue<int>(feature, fieldIndex);
+			if (valueObj is double doubleValue)
+			{
+				return doubleValue;
+			}
 
 			IField field = feature.Fields.get_Field(fieldIndex);
 
 			var domain = field.Domain as ICodedValueDomain;
 
-			return domain != null && useCodedDomainName
-				       ? GetCodedValue(domain, feature, fieldIndex)
-				       : intValue;
+			if (domain != null && useCodedDomainName)
+			{
+				return GetCodedValue(domain, feature, fieldIndex);
+			}
+
+			throw new InvalidOperationException(
+				$"Unsupported numeric field value type " +
+				$"{valueObj.GetType().FullName} " +
+				$"for field {field.Name} on {feature.Class.AliasName ?? feature.Class.ObjectClassID.ToString()}.");
 		}
 
 		public static void UpdateFootprintFeature(

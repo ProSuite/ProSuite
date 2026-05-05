@@ -108,11 +108,14 @@ public static class LayerUtils
 	/// <param name="layer"></param>
 	/// <param name="filter"></param>
 	/// <param name="predicate"></param>
+	/// <param name="recycling">Whether the rows should be recycled.
+	/// NOTE: Do not use false on ArcGIS Pro 3.5 or lower!</param>
 	/// <param name="cancellationToken"></param>
 	/// <returns></returns>
 	public static IEnumerable<T> SearchRows<T>([NotNull] IDisplayTable layer,
 	                                           [CanBeNull] QueryFilter filter = null,
 	                                           [CanBeNull] Predicate<T> predicate = null,
+	                                           bool recycling = true,
 	                                           CancellationToken cancellationToken = default)
 		where T : Row
 	{
@@ -133,7 +136,12 @@ public static class LayerUtils
 		{
 			try
 			{
+#if ARCGISPRO_GREATER_3_5
+				cursor = layer.SearchEx(filter, useRecyclingCursor: recycling);
+#else
+				Assert.True(recycling, "Unsupported value for recycling on this ArcGIS version.");
 				cursor = layer.Search(filter);
+#endif
 			}
 			catch (Exception e)
 			{
