@@ -198,7 +198,7 @@ public class WorkItemTable : PluginTableTemplate
 		try
 		{
 			values[0] = item.OID;
-			values[1] = (int) item.Status;
+			values[1] = values[1] = GetStatus(item);
 			values[2] = item.Visited ? 1 : 0;
 			values[3] = isCurrent ? 1 : 0;
 			values[4] = workListItems.GetItemDisplayGeometry(item);
@@ -209,6 +209,30 @@ public class WorkItemTable : PluginTableTemplate
 		}
 
 		return values;
+	}
+
+	/// <summary>
+	/// Since there is the newly added <see cref="WorkItemStatus"/>.Excluded
+	/// this method is necessary to ensure backward compatibility to older
+	/// work lists. We cannot just return the new integer values 1, 2, 3
+	/// from WorkItemStatus instead we have to return the old integers.
+	/// </summary>
+	private static int GetStatus(IWorkItem item)
+	{
+		WorkItemStatus itemStatus = item.Status;
+
+		switch (itemStatus)
+		{
+			case WorkItemStatus.Todo:
+				return 0;
+			case WorkItemStatus.Done:
+				return 1;
+			case WorkItemStatus.Unknown:
+			case WorkItemStatus.Excluded:
+				return -1;
+			default:
+				throw new ArgumentOutOfRangeException();
+		}
 	}
 
 	private static PluginField[] GetSchema()
