@@ -456,14 +456,22 @@ public class FeatureFinder
 		IList<Geometry> intersectingGeometries =
 			GetSearchGeometries(intersectingFeatures, clipExtent);
 
-		Geometry result = null;
+		Geometry result;
 
-		if (intersectingGeometries.Count != 0)
+		if (intersectingGeometries.Count == 0)
+		{
+			return null;
+		}
+
+		if (intersectingGeometries.Count == 1)
+		{
+			result = intersectingGeometries[0];
+		}
+		else
 		{
 			SpatialReference sr = intersectingGeometries[0].SpatialReference;
 
 			result = GeometryBagBuilderEx.CreateGeometryBag(intersectingGeometries, sr);
-			//result = GeometryEngine.Instance.Union(intersectingGeometries);
 		}
 
 		result = ExpandWithExtraTolerance(result);
