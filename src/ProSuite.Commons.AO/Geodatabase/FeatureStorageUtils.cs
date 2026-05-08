@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -200,7 +200,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				if (originalGeoInDataSpatialRef != originalGeometry)
 				{
-					Marshal.ReleaseComObject(originalGeoInDataSpatialRef);
+					ComUtils.ReleaseObject(originalGeoInDataSpatialRef);
 				}
 
 				_msg.InfoFormat(
