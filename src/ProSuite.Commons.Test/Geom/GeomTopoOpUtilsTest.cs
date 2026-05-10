@@ -308,14 +308,14 @@ namespace ProSuite.Commons.Test.Geom
 							IList<RingGroup> result = CutPlanarBothWays(poly1, o, 2, 0);
 
 							var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
-									{
-										new Pnt3D(0, 0, 9),
-										new Pnt3D(0, 100, 9),
-										new Pnt3D(100, 100, 9),
-										new Pnt3D(100, 30, 9),
-										new Pnt3D(40, 30, 9),
-										new Pnt3D(40, 0, 9)
-									});
+								{
+									new Pnt3D(0, 0, 9),
+									new Pnt3D(0, 100, 9),
+									new Pnt3D(100, 100, 9),
+									new Pnt3D(100, 30, 9),
+									new Pnt3D(40, 30, 9),
+									new Pnt3D(40, 0, 9)
+								});
 
 							Assert.True(
 								GeomTopoOpUtils.AreEqualXY(expected, result[0].ExteriorRing,
@@ -5349,8 +5349,9 @@ namespace ProSuite.Commons.Test.Geom
 			// At 0.0005 there is no short segment in the original (it is 0.0007)
 			double tolerance = 0.001;
 
-			var exception = Assert.Throws<GeomException>(
-				() => GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance));
+			var exception =
+				Assert.Throws<GeomException>(() => GeomTopoOpUtils.GetUnionAreasXY(
+					                             source, target, tolerance));
 
 			Assert.NotNull(exception);
 			Assert.IsTrue(exception.InnerException is InvalidOperationException);
@@ -5999,8 +6000,7 @@ namespace ProSuite.Commons.Test.Geom
 			// Moved by a few km
 			MultiPolycurve multiTarget =
 				new MultiPolycurve(
-					target.GetLinestrings().Select(
-						l => GeomTopoOpUtils.Move(l, 4567, 1234, 0)));
+					target.GetLinestrings().Select(l => GeomTopoOpUtils.Move(l, 4567, 1234, 0)));
 
 			watch.Restart();
 
@@ -7974,10 +7974,10 @@ namespace ProSuite.Commons.Test.Geom
 			containedSource.ReverseOrientation();
 			Assert.IsTrue(intersectionLinesXY[0].Equals(containedSource));
 			Assert.IsTrue(intersectionLinesXY[1].Equals(new Linestring(new[]
-					                                            {
-						                                            new Pnt3D(100, 40, 2),
-						                                            new Pnt3D(100, 20, 2)
-					                                            })));
+				                                            {
+					                                            new Pnt3D(100, 40, 2),
+					                                            new Pnt3D(100, 20, 2)
+				                                            })));
 
 			// Excluded target boundary line:
 			intersectionLinesXY =
@@ -8998,6 +8998,180 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanTryCrackLinearSelfIntersections()
+		{
+			// Spike polygon: (0,0),(0,100),(100,100),(100,98),(20,98),(20,0) with spike along Y-axis
+			var ringPoints = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 0),
+				                 new Pnt3D(0, 100, 0),
+				                 new Pnt3D(100, 100, 0),
+				                 new Pnt3D(100, 98, 0),
+				                 new Pnt3D(20, 98, 0),
+				                 new Pnt3D(20, 0, 0)
+			                 };
+
+			Linestring ring = GeomTestUtils.CreateRing(ringPoints);
+
+			const double tolerance = 2.1;
+
+			bool cracked = GeomTopoOpUtils.TryCrackLinearSelfIntersections(
+				ring, tolerance, null, out Linestring result);
+
+			Assert.IsTrue(cracked, "Expected self-intersection to be cracked");
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsClosed, "Result ring should be closed");
+		}
+
+		[Test]
+		public void CanTryCrackSelfIntersectionsForVertexToVertex()
+		{
+			// This test shows that cracking also happens for adjacent vertices if the segment is
+			// shorter than the snap tolerance -> Review if this is always desired!
+
+			// Ring where vertex 4 is very close to (non-adjacent) vertex 0
+			// (0,0),(0,10),(10,10),(10,0),(0.05,0) — vertex 4 is 0.05 from vertex 0
+			var ringPoints = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 0),
+				                 new Pnt3D(0, 10, 0),
+				                 new Pnt3D(10, 10, 0),
+				                 new Pnt3D(10, 0, 0),
+				                 new Pnt3D(0.05, 0, 0)
+			                 };
+
+			Linestring ring = GeomTestUtils.CreateRing(ringPoints);
+			int originalPointCount = ring.PointCount;
+
+			const double tolerance = 0.1;
+
+			bool cracked = GeomTopoOpUtils.TryCrackAtSelfIntersections(
+				ring, tolerance, null, out Linestring result);
+
+			Assert.IsTrue(cracked, "Expected vertex-to-vertex self-intersection to be cracked");
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsClosed, "Result ring should be closed");
+			Assert.AreEqual(originalPointCount, result.PointCount,
+			                "Point count should be unchanged (snap, not split)");
+
+			// Both snapped vertices should be at the same location (clustered centroid)
+			Pnt3D vertex0 = result.GetPoint3D(0, true);
+			Pnt3D vertex4 = result.GetPoint3D(4, true);
+			Assert.IsTrue(vertex0.Equals(vertex4),
+			              "Vertex 0 and vertex 4 should be snapped to the same point");
+		}
+
+		[Test]
+		public void CanTryCrackSelfIntersectionsForVertexToVertexNonAdjacent()
+		{
+			// This test shows cracking (point snapping) happening for non-adjacent vertices
+
+			var ringPoints = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 0),
+				                 new Pnt3D(0, 5, 0),
+				                 new Pnt3D(0, 10, 0),
+				                 new Pnt3D(10, 10, 0),
+				                 new Pnt3D(0.05, 5, 0),
+				                 new Pnt3D(10, 0, 0)
+			                 };
+
+			Linestring ring = GeomTestUtils.CreateRing(ringPoints);
+			int originalPointCount = ring.PointCount;
+
+			const double tolerance = 0.1;
+
+			bool cracked = GeomTopoOpUtils.TryCrackAtSelfIntersections(
+				ring, tolerance, null, out Linestring result);
+
+			Assert.IsTrue(cracked, "Expected vertex-to-vertex self-intersection to be cracked");
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsClosed, "Result ring should be closed");
+			Assert.AreEqual(originalPointCount, result.PointCount,
+			                "Point count should be unchanged (snap, not split)");
+
+			// Both snapped vertices should be at the same location (clustered centroid)
+			Pnt3D vertex0 = result.GetPoint3D(1, true);
+			Pnt3D vertex4 = result.GetPoint3D(4, true);
+			Assert.IsTrue(vertex0.Equals(vertex4),
+			              "Vertex 0 and vertex 4 should be snapped to the same point");
+		}
+
+		[Test]
+		public void CanTryCrackSelfIntersectionsForVertexToSegment()
+		{
+			// This test shows how segment cracking can make a pan-handle type geometry into a
+			// geometry where the close linear segments get coincident (so they will be removed
+			// by a subsequent duplicate segmant removal / simplification process.
+
+			// Ring where vertex 4 is very close to non-adjacent segment 0 ((0,0)→(0,10))
+			// (0,0),(0,10),(3,10),(3,5),(0.05,5),(0.05,0.05)
+			var ringPoints = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 0),
+				                 new Pnt3D(0, 10, 0),
+				                 new Pnt3D(3, 10, 0),
+				                 new Pnt3D(3, 5, 0),
+				                 new Pnt3D(0.05, 5, 0),
+				                 new Pnt3D(0.05, 0.05, 0)
+			                 };
+
+			Linestring ring = GeomTestUtils.CreateRing(ringPoints);
+			int originalPointCount = ring.PointCount;
+
+			const double tolerance = 0.1;
+
+			bool cracked = GeomTopoOpUtils.TryCrackAtSelfIntersections(
+				ring, tolerance, null, out Linestring result);
+
+			Assert.IsTrue(cracked, "Expected vertex-to-segment self-intersection to be cracked");
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsClosed, "Result ring should be closed");
+			Assert.Greater(result.PointCount, originalPointCount,
+			               "Point count should increase (segment split inserts new vertex)");
+
+			Assert.IsTrue(result.GetPoint3D(1).EqualsXY(result.GetPoint3D(5), tolerance),
+			              "Split point and snapped V3 should be at the same location");
+		}
+
+		[Test]
+		public void CanTryCrackSelfIntersectionsForVertexToSegmentSpike()
+		{
+			// This test shows how segment cracking happens if a vertex that is not part of an
+			// adjacent segment is coming close to the respective segment.
+
+			// The first segment should be split due to the proximity of point index 3
+
+			var ringPoints = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 0),
+				                 new Pnt3D(0, 10, 0),
+				                 new Pnt3D(10, 10, 0),
+				                 new Pnt3D(0.05, 5, 0),
+				                 new Pnt3D(10, 0, 0)
+			                 };
+
+			Linestring ring = GeomTestUtils.CreateRing(ringPoints);
+			int originalPointCount = ring.PointCount;
+
+			const double tolerance = 0.1;
+
+			bool cracked = GeomTopoOpUtils.TryCrackAtSelfIntersections(
+				ring, tolerance, null, out Linestring result);
+
+			Assert.IsTrue(cracked, "Expected vertex-to-segment self-intersection to be cracked");
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsClosed, "Result ring should be closed");
+			Assert.Greater(result.PointCount, originalPointCount,
+			               "Point count should increase (segment split inserts new vertex)");
+
+			// One split on Seg0 and the snapped V3 should coincide at P1 and P4.
+			Assert.AreEqual(7, result.PointCount, "One split should add 1 new vertex");
+			Assert.IsTrue(result.GetPoint3D(1).EqualsXY(result.GetPoint3D(4), tolerance),
+			              "Split point and snapped V3 should be at the same location");
+		}
+
+		[Test]
 		public void CanClusterPoints()
 		{
 			List<Pnt2D> points = new List<Pnt2D>
@@ -9123,8 +9297,8 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(expectedResultCount, result.Count);
 			Assert.AreEqual(expectedInnerRingCount,
-			                result.Sum(
-				                p => p.GetLinestrings().Count(l => l.ClockwiseOriented == false)));
+			                result.Sum(p => p.GetLinestrings()
+			                                 .Count(l => l.ClockwiseOriented == false)));
 
 			double resultArea = result.Sum(p => p.GetLinestrings().Sum(l => l.GetArea2D()));
 

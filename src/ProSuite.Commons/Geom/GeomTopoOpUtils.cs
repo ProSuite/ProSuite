@@ -233,8 +233,8 @@ namespace ProSuite.Commons.Geom
 
 			List<List<Pnt3D>> xyClusters;
 			bool hasVerticalPoints = HasVerticalPoints(
-				ringNavigator.IntersectionPointNavigator.IntersectionsAlongTarget.Select(
-					i => i.Point),
+				ringNavigator.IntersectionPointNavigator.IntersectionsAlongTarget
+				             .Select(i => i.Point),
 				tolerance, out xyClusters);
 
 			if (hasVerticalPoints)
@@ -390,8 +390,8 @@ namespace ProSuite.Commons.Geom
 				IList<IntersectionArea3D> perRingResult =
 					GetIntersectionAreasXY(sourceRingGroup, targetPolyhedron, tolerance, zSource);
 
-				foreach (MultiLinestring intersectionArea in perRingResult.Select(
-					         i => i.IntersectionArea))
+				foreach (MultiLinestring intersectionArea in
+				         perRingResult.Select(i => i.IntersectionArea))
 				{
 					if (! intersectionArea.IsEmpty)
 					{
@@ -1873,10 +1873,9 @@ namespace ProSuite.Commons.Geom
 						tolerance);
 
 					result.AddRange(
-						intersections.Select(
-							linestring =>
-								new IntersectionPath3D(
-									linestring, path1.RingPlaneTopology)));
+						intersections.Select(linestring =>
+							                     new IntersectionPath3D(
+								                     linestring, path1.RingPlaneTopology)));
 				}
 			}
 
@@ -3028,12 +3027,12 @@ namespace ProSuite.Commons.Geom
 			int segmentCount = linestring.SegmentCount;
 			for (int i = 0; i < segmentCount; i++)
 			{
-				var linearSelfIntersections = new List<SegmentIntersection>(
-					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(i, linestring[i],
-						                        linestring, tolerance)
+				var relevantIntersections = new List<SegmentIntersection>(
+					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(
+						                        i, linestring[i], linestring, tolerance)
 					                        .Where(predicate));
 
-				filteredSelfIntersections.AddRange(linearSelfIntersections);
+				filteredSelfIntersections.AddRange(relevantIntersections);
 			}
 
 			IList<IntersectionPoint3D> intersectionPoints = GetIntersectionPoints(
@@ -3272,8 +3271,8 @@ namespace ProSuite.Commons.Geom
 
 					// emit the collected intersections
 					foreach (SegmentIntersection collectedIntersection in
-					         intersectionItemsForCurrentSourceSegment.OrderBy(
-						         i => i.GetFirstIntersectionAlongSource()))
+					         intersectionItemsForCurrentSourceSegment
+						         .OrderBy(i => i.GetFirstIntersectionAlongSource()))
 					{
 						yield return collectedIntersection;
 					}
@@ -3285,8 +3284,8 @@ namespace ProSuite.Commons.Geom
 			}
 
 			foreach (SegmentIntersection collectedIntersection in
-			         intersectionItemsForCurrentSourceSegment.OrderBy(
-				         i => i.GetFirstIntersectionAlongSource()))
+			         intersectionItemsForCurrentSourceSegment
+				         .OrderBy(i => i.GetFirstIntersectionAlongSource()))
 			{
 				yield return collectedIntersection;
 			}
@@ -3540,8 +3539,9 @@ namespace ProSuite.Commons.Geom
 					                        segmentIndex, currentSegment, linestring, tolerance)
 				                        .Where(si => si.HasLinearIntersection));
 
-			var candidates = linearSelfIntersections.Where(
-				linearSelfIntersection => segmentIndex == linearSelfIntersection.SourceIndex);
+			var candidates = linearSelfIntersections.Where(linearSelfIntersection =>
+				                                               segmentIndex ==
+				                                               linearSelfIntersection.SourceIndex);
 
 			bool result = false;
 			foreach (SegmentIntersection candidate in candidates)
@@ -3589,10 +3589,9 @@ namespace ProSuite.Commons.Geom
 			var allIntersectionRanges =
 				intersectionsForSegment
 					.Where(i => i.HasLinearIntersection)
-					.Select(
-						i => new Tuple<double, double>(
-							i.GetLinearIntersectionStartFactor(true),
-							i.GetLinearIntersectionEndFactor(true)));
+					.Select(i => new Tuple<double, double>(
+						        i.GetLinearIntersectionStartFactor(true),
+						        i.GetLinearIntersectionEndFactor(true)));
 
 			var unionizedCoveredRange = UnionRanges(allIntersectionRanges);
 
@@ -4102,8 +4101,8 @@ namespace ProSuite.Commons.Geom
 						.Where(i => i.Type == IntersectionPointType.TouchingInPoint).ToList();
 
 				Assert.True(
-					selfIntersectionPoints.All(
-						i => i.Type == IntersectionPointType.TouchingInPoint),
+					selfIntersectionPoints.All(i => i.Type == IntersectionPointType
+						                                .TouchingInPoint),
 					"Unexpected, probably linear self intersection in result.");
 
 				if (selfIntersectionPoints.Count == 2)
@@ -4137,8 +4136,8 @@ namespace ProSuite.Commons.Geom
 
 			int fromIndex = 0;
 			double fromDistanceAlongAsRatio = 0;
-			foreach (IntersectionPoint3D crackPoint in intersectionPoints.OrderBy(
-				         ip => ip.VirtualSourceVertex))
+			foreach (IntersectionPoint3D crackPoint in
+			         intersectionPoints.OrderBy(ip => ip.VirtualSourceVertex))
 			{
 				int toIndex = crackPoint.GetLocalSourceIntersectionSegmentIdx(
 					linestring, out double toDistanceAlongAsRatio);
@@ -4218,12 +4217,12 @@ namespace ProSuite.Commons.Geom
 				Line3D previousLine = previous.GetSegment(previous.SegmentCount - 1);
 
 				// Get the next fitting linestring that turns more right
-				var matchingStrings = linestrings.Where(
-					l => l.StartPoint.EqualsXY(previous.EndPoint, tolerance));
+				var matchingStrings =
+					linestrings.Where(l => l.StartPoint.EqualsXY(previous.EndPoint, tolerance));
 
-				Linestring nextString = matchingStrings.MaxElement(
-					s => Assert.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
-					           .Value);
+				Linestring nextString = matchingStrings.MaxElement(s => Assert
+					.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
+					.Value);
 
 				linestrings.Remove(nextString);
 
@@ -4371,7 +4370,7 @@ namespace ProSuite.Commons.Geom
 
 		#region Self intersections
 
-		private static bool TryCrackLinearSelfIntersections(
+		public static bool TryCrackLinearSelfIntersections(
 			[NotNull] Linestring ring,
 			double tolerance,
 			double? minimumSegmentLength,
@@ -4383,8 +4382,8 @@ namespace ProSuite.Commons.Geom
 				GetSelfIntersectionPoints(ring, tolerance, true);
 
 			var allCrackPoints = new List<CrackPoint>();
-			foreach (var intersectionPoint in intersectionPoints.OrderBy(
-				         ip => ip.VirtualSourceVertex))
+			foreach (var intersectionPoint in
+			         intersectionPoints.OrderBy(ip => ip.VirtualSourceVertex))
 			{
 				AddLinearIntersectionCrackPoints(intersectionPoint, ring, allCrackPoints,
 				                                 tolerance);
@@ -4400,6 +4399,141 @@ namespace ProSuite.Commons.Geom
 			result = CrackLinestring(ring, allCrackPoints, minSegmentLengthSquared);
 
 			return true;
+		}
+
+		/// <summary>
+		/// Cracks all self-intersections (both linear and point) in the given ring by adding
+		/// crack points at intersection locations. Nearby crack point targets are clustered to
+		/// their centroid before cracking.
+		/// </summary>
+		public static bool TryCrackAtSelfIntersections(
+			[NotNull] Linestring ring,
+			double tolerance,
+			double? minimumSegmentLength,
+			out Linestring result)
+		{
+			result = null;
+
+			IList<IntersectionPoint3D> intersectionPoints =
+				GetSelfIntersectionPoints(ring, tolerance, false);
+
+			var allCrackPoints = new List<CrackPoint>();
+			foreach (IntersectionPoint3D intersectionPoint in
+			         intersectionPoints.OrderBy(ip => ip.VirtualSourceVertex))
+			{
+				if (intersectionPoint.SegmentIntersection.HasLinearIntersection)
+				{
+					AddLinearIntersectionCrackPoints(intersectionPoint, ring, allCrackPoints,
+					                                 tolerance);
+				}
+				else
+				{
+					AddPointIntersectionCrackPoints(intersectionPoint, ring, allCrackPoints,
+					                                tolerance);
+				}
+			}
+
+			if (allCrackPoints.Count == 0)
+			{
+				return false;
+			}
+
+			ClusterCrackPoints(allCrackPoints, tolerance);
+
+			double? minSegmentLengthSquared = minimumSegmentLength * minimumSegmentLength;
+
+			result = CrackLinestring(ring, allCrackPoints, minSegmentLengthSquared);
+
+			return true;
+		}
+
+		private static void AddPointIntersectionCrackPoints(
+			IntersectionPoint3D intersectionPoint,
+			Linestring linestring,
+			List<CrackPoint> allCrackPoints,
+			double tolerance)
+		{
+			Pnt3D sourcePoint = intersectionPoint.Point;
+
+			// Source side: Snap source vertex or split source segment
+			double virtualSource = intersectionPoint.VirtualSourceVertex;
+
+			CrackPoint sourceCrackPoint;
+			if (intersectionPoint.IsSourceVertex())
+			{
+				// Snap
+				sourceCrackPoint = new CrackPoint(intersectionPoint, sourcePoint)
+				                   {
+					                   SnapVertexIndex = (int) Math.Round(virtualSource)
+				                   };
+			}
+			else
+			{
+				// Split
+				sourceCrackPoint = new CrackPoint(intersectionPoint, sourcePoint)
+				                   {
+					                   SegmentSplitFactor = virtualSource
+				                   };
+			}
+
+			TryAddCrackPoint(sourceCrackPoint, allCrackPoints, tolerance);
+
+			// Target side: Snap target vertex or split target segment
+			double virtualTarget = intersectionPoint.VirtualTargetVertex;
+			if (double.IsNaN(virtualTarget))
+			{
+				return;
+			}
+
+			double targetFraction = virtualTarget % 1.0;
+
+			CrackPoint targetCrackPoint;
+			if (intersectionPoint.IsTargetVertex(out int targetVertexIdx))
+			{
+				// Snap
+				Pnt3D targetVertexPoint = linestring.GetPoint3D(targetVertexIdx, true);
+				targetCrackPoint = new CrackPoint(intersectionPoint, targetVertexPoint)
+				                   {
+					                   SnapVertexIndex = targetVertexIdx
+				                   };
+			}
+			else
+			{
+				// Split
+				Pnt3D pointOnTarget = intersectionPoint.GetTargetPoint((ISegmentList) linestring);
+				targetCrackPoint = new CrackPoint(intersectionPoint, pointOnTarget)
+				                   {
+					                   SegmentSplitFactor = virtualTarget
+				                   };
+			}
+
+			TryAddCrackPoint(targetCrackPoint, allCrackPoints, tolerance);
+		}
+
+		private static void ClusterCrackPoints(List<CrackPoint> crackPoints, double tolerance)
+		{
+			if (crackPoints.Count < 2)
+			{
+				return;
+			}
+
+			IList<KeyValuePair<IPnt, List<CrackPoint>>> clusters =
+				Cluster(crackPoints, cp => cp.TargetPoint, tolerance);
+
+			foreach (KeyValuePair<IPnt, List<CrackPoint>> cluster in clusters)
+			{
+				if (cluster.Value.Count < 2)
+				{
+					continue;
+				}
+
+				var centroid = (Pnt3D) cluster.Key;
+
+				foreach (CrackPoint cp in cluster.Value)
+				{
+					cp.TargetPoint = centroid;
+				}
+			}
 		}
 
 		private static void AddLinearIntersectionCrackPoints(IntersectionPoint3D intersectionPoint,
@@ -4517,8 +4651,9 @@ namespace ProSuite.Commons.Geom
 
 			if (existing == null)
 			{
-				existing = toCrackPointsList.Find(
-					cp => cp.TargetPoint.EqualsXY(crackPoint.IntersectionPoint.Point, tolerance));
+				existing =
+					toCrackPointsList.Find(cp => cp.TargetPoint.EqualsXY(
+						                       crackPoint.IntersectionPoint.Point, tolerance));
 			}
 
 			if (existing != null)
@@ -4550,14 +4685,15 @@ namespace ProSuite.Commons.Geom
 				return null;
 			}
 
-			return toCrackPointsList.Find(
-				cp => cp.SegmentSplitFactor != null &&
-				      MathUtils.AreEqual(cp.SegmentSplitFactor.Value, splitFactor.Value));
+			return toCrackPointsList.Find(cp => cp.SegmentSplitFactor != null &&
+			                                    MathUtils.AreEqual(
+				                                    cp.SegmentSplitFactor.Value,
+				                                    splitFactor.Value));
 		}
 
-		private static Linestring CrackLinestring(Linestring linestring,
-		                                          List<CrackPoint> crackPoints,
-		                                          double? minSegmentLengthSquared)
+		public static Linestring CrackLinestring(Linestring linestring,
+		                                         List<CrackPoint> crackPoints,
+		                                         double? minSegmentLengthSquared)
 		{
 			List<Pnt3D> newPoints = new List<Pnt3D>();
 
@@ -4797,8 +4933,8 @@ namespace ProSuite.Commons.Geom
 				CutVerticalRingGroup(source, matchingCutLines, tolerance, verticalCutRotation)
 					.ToList();
 
-			foreach (RingGroup ringGroup in cutResult.SelectMany(
-				         r => GetConnectedComponents(r, tolerance)))
+			foreach (RingGroup ringGroup in
+			         cutResult.SelectMany(r => GetConnectedComponents(r, tolerance)))
 			{
 				yield return ringGroup;
 			}
