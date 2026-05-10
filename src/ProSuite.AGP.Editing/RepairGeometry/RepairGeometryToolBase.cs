@@ -296,7 +296,7 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 			{
 				sketchIntersectsFeature =
 					repairableFeature.CrackPointsToAdd.Points.Any(p => ToolUtils.IsSelected(
-						sketch, p, singlePick));
+							sketch, p, singlePick));
 			}
 
 			if (! sketchIntersectsFeature)
