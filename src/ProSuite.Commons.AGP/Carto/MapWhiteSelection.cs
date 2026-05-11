@@ -177,6 +177,13 @@ public class MapWhiteSelection : IMapWhiteSelection
 			}
 		}
 
+		if (minPoint is null)
+		{
+			// TODO If neither vertex nor segment found, see if we're inside a polygon,
+			//      so we can at least get layer/oid/partIndex; careful: what if inside
+			//      several polygons, which one to choose?
+		}
+
 		layer = minLayer;
 		oid = minOid;
 		partIndex = minPartIndex;

@@ -623,6 +623,66 @@ public static class GeometryUtils
 	}
 
 	/// <summary>
+	/// Remove the specified part from the given geometry.
+	/// The resulting geometry may be empty (but not null).
+	/// </summary>
+	/// <returns>A new geometry instance, which may be an empty
+	/// geometry (if the last or only part was removed)</returns>
+	public static Geometry RemovePart(Geometry shape, int partIndex)
+	{
+		if (shape is null)
+			throw new ArgumentNullException(nameof(shape));
+
+		if (shape.IsEmpty)
+			throw new InvalidOperationException("Cannot remove part on an empty geometry");
+
+		if (shape is MapPoint mapPoint)
+		{
+			if (partIndex != 0)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new MapPointBuilderEx(mapPoint);
+			builder.SetEmpty();
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipoint multipoint)
+		{
+			// take the given partIndex as the pointIndex
+			if (partIndex < 0 || partIndex >= multipoint.PointCount)
+				throw new ArgumentOutOfRangeException(
+					"partIndex index out of range for multipoint shape", (Exception) null);
+			var builder = new MultipointBuilderEx(multipoint);
+			builder.RemovePoint(partIndex);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipart multipart)
+		{
+			var builder = multipart.ToBuilder();
+			if (builder.PartCount <= 0)
+				throw new InvalidOperationException("no parts at all (empty builder)");
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			builder.RemovePart(partIndex);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipatch)
+		{
+			throw new NotImplementedException();
+		}
+
+		if (shape is Envelope)
+		{
+			// Could return an empty envelope, but an error is probably more useful:
+			throw new NotSupportedException("Cannot remove part on an Envelope");
+		}
+
+		throw new NotSupportedException(
+			$"Geometry type {shape.GetType().Name} is not supported");
+	}
+
+	/// <summary>
 	/// Get the connected components, that is, the collection
 	/// of single polygons that make up the given (multi) polygon.
 	/// </summary>

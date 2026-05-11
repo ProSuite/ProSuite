@@ -81,6 +81,13 @@ public interface IShapeSelection
 	void PathReversed(int partIndex);
 
 	/// <summary>
+	/// Notify this shape selection that a part was removed from
+	/// the <see cref="Shape"/>. The internal representation will
+	/// be adjusted accordingly.
+	/// </summary>
+	void PartRemoved(int partIndex);
+
+	/// <summary>
 	/// Replace <see cref="Shape"/> with the given <paramref name="newShape"/>,
 	/// even if it is not compatible (see <see cref="IsCompatible"/>) with the
 	/// current shape/selection.
@@ -561,6 +568,11 @@ public class ShapeSelection : IShapeSelection
 	{
 		int numVerticesInPart = GeometryUtils.GetPointCount(Shape, partIndex);
 		_blocks.PartReversed(partIndex, numVerticesInPart);
+	}
+
+	public void PartRemoved(int partIndex)
+	{
+		_blocks.PartRemoved(partIndex);
 	}
 
 	#region Private methods
@@ -1101,6 +1113,50 @@ public class BlockList : IEnumerable<BlockList.Block>
 		before.Next = list[0];
 	}
 
+	/// <summary>
+	/// Adjust the selection after a part has been removed from the shape
+	/// </summary>
+	public void PartRemoved(int part)
+	{
+		// Unlink all blocks that belong to the given part,
+		// adjust part index of blocks for remaining parts:
+
+		var before = _head;
+		var node = _head.Next;
+
+		// Find first node covering given part:
+
+		while (node != null && node.Part < part)
+		{
+			before = node;
+			node = node.Next;
+		}
+
+		// Scan blocks in given part:
+
+		while (node != null && node.Part == part)
+		{
+			node = node.Next;
+		}
+
+		// Here:
+		// - before is last block before given part (or head if no such block)
+		// - node is first block after given part (or null if no such block)
+
+		// Unlink block(s) for given part:
+
+		before.Next = node;
+
+		// Adjust part index of remaining blocks:
+
+		while (node != null)
+		{
+			// assert node.Part > part
+			node.Part -= 1;
+			node = node.Next;
+		}
+	}
+
 	[MustDisposeResource]
 	IEnumerator IEnumerable.GetEnumerator()
 	{
@@ -1210,7 +1266,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 	/// </summary>
 	private class Node
 	{
-		public int Part { get; private set; }
+		public int Part { get; set; }
 		public int First { get; set; }
 		public int Count { get; set; }
 		public Node Next { get; set; }
