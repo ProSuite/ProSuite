@@ -195,6 +195,12 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 			updates.Add(originalFeature, newGeometry);
 		}
 
+		if (updates.Count == 0)
+		{
+			_msg.Info("No feature was updated");
+			return false;
+		}
+
 		IEnumerable<Dataset> datasets = GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys);
 
 		bool saved = await GdbPersistenceUtils.ExecuteInTransactionAsync(
@@ -221,7 +227,17 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 
 	protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
 	{
-		if (_repairGeometryResult == null || ! _repairGeometryResult.HasRepairableFeatures)
+		if (_repairGeometryResult == null)
+		{
+			return;
+		}
+
+		foreach (string message in _repairGeometryResult.NonStorableMessages)
+		{
+			_msg.Warn(message);
+		}
+
+		if (! _repairGeometryResult.HasRepairableFeatures)
 		{
 			_msg.Info("No geometry issues found. Select other features to check.");
 			return;

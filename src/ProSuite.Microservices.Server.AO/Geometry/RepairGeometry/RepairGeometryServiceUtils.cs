@@ -101,7 +101,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 
 				if (featureNotifications.Count > 0)
 				{
-					string featureLabel = GdbObjectUtils.ToString(vertexInfo.Feature);
+					string featureLabel = GeometryProcessingUtils.GetGdbObjectLabel(vertexInfo.Feature);
 					notificationMessages.Add(
 						$"{featureLabel}: {NotificationUtils.Concatenate(featureNotifications, " ")}");
 				}
@@ -148,12 +148,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 
 			// Unpack options — these were set from the original CalculateRepairInfo options.
 			RepairOptionsMsg optionsMsg = request.RepairOptions;
-			double minimumSegmentLength = optionsMsg != null ? optionsMsg.MinimumSegmentLength : -1;
-			bool allowLoops = optionsMsg != null && optionsMsg.AllowLoops;
-			bool allowLinearSelfIntersections =
-				optionsMsg != null && optionsMsg.AllowLinearSelfIntersections;
-			double crackPointTolerance = optionsMsg != null ? optionsMsg.CrackPointTolerance : 0;
-			bool use2D = optionsMsg != null && optionsMsg.Use2D;
+			double minimumSegmentLength = optionsMsg?.MinimumSegmentLength ?? -1;
+			bool allowLoops = optionsMsg?.AllowLoops ?? false;
+			bool allowLinearSelfIntersections = optionsMsg?.AllowLinearSelfIntersections ?? false;
+			double crackPointTolerance = optionsMsg?.CrackPointTolerance ?? 0;
+			bool use2D = optionsMsg?.Use2D ?? false;
 
 			bool allowPathSplitAtIntersections = ! (allowLoops || allowLinearSelfIntersections);
 
@@ -194,7 +193,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 					else if (updateGeometry != null && updateGeometry.IsEmpty)
 					{
 						string message =
-							$"Feature {GdbObjectUtils.ToString(feature)} would become empty after repair. " +
+							$"Feature {GeometryProcessingUtils.GetGdbObjectLabel(feature)} would become empty after repair. " +
 							"The feature was not changed.";
 						_msg.Warn(message);
 						nonStorableMessages.Add(message);
@@ -203,13 +202,14 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 				catch (Exception e)
 				{
 					string message =
-						$"Error repairing {GdbObjectUtils.ToString(feature)}: {e.Message}. " +
+						$"Error repairing {GeometryProcessingUtils.GetGdbObjectLabel(feature)}: {e.Message}. " +
 						"The feature was not changed.";
 					_msg.Warn(message, e);
 					nonStorableMessages.Add(message);
+
+					throw;
 				}
 			}
-			//}
 
 			// When cracking is requested, also process source features not covered by RepairInfos.
 			// CalculateRepairInfo only flags features with short segments or inter-part issues,
@@ -243,20 +243,22 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 						}
 						else if (updateGeometry != null && updateGeometry.IsEmpty)
 						{
-							//`t`t`t`t`t`t`tstring message =
-							//`t`t`t`t`t`t`t`t$"Feature {GdbObjectUtils.ToString(feature)} would become empty after repair. " +
-							//`t`t`t`t`t`t`t`t"The feature was not changed.";
-							//							_msg.Warn(message);
-							//							nonStorableMessages.Add(message);
+							string message =
+								$"Feature {GeometryProcessingUtils.GetGdbObjectLabel(feature)} would become empty after repair. " +
+								"The feature was not changed.";
+							_msg.Warn(message);
+							nonStorableMessages.Add(message);
 						}
 					}
 					catch (Exception e)
 					{
 						string message =
-							$"Error cracking {GdbObjectUtils.ToString(feature)}: {e.Message}. " +
+							$"Error cracking {GeometryProcessingUtils.GetGdbObjectLabel(feature)}: {e.Message}. " +
 							"The feature was not changed.";
 						_msg.Warn(message, e);
 						nonStorableMessages.Add(message);
+
+						throw;
 					}
 				}
 			}
@@ -338,8 +340,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 
 				if (anyRingCracked)
 				{
-					updateGeometry =
-						GeometryConversionUtils.CreatePolygon(updateGeometry, crackedLinestrings);
+					updateGeometry = ReCreateGeometry(crackedLinestrings, updateGeometry);
 				}
 			}
 
@@ -352,6 +353,19 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 			}
 
 			return updateGeometry;
+		}
+
+		private static IGeometry ReCreateGeometry([NotNull] List<Linestring> fromCrackedLinestrings,
+		                                          [NotNull] IGeometry updateGeometry)
+		{
+			if (updateGeometry.GeometryType == esriGeometryType.esriGeometryPolygon)
+			{
+				return GeometryConversionUtils.CreatePolygon(
+					updateGeometry, fromCrackedLinestrings);
+			}
+
+			return GeometryConversionUtils.CreatePolyline(fromCrackedLinestrings,
+			                                              updateGeometry.SpatialReference);
 		}
 
 		private static IEnumerable<Commons.Geom.CrackPoint> GetCrackPoints3d(
