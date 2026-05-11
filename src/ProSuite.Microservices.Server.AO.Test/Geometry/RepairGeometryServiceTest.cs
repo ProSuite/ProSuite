@@ -334,6 +334,111 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			                "Segment should be split, adding a new vertex");
 		}
 
+		[Test]
+		public void CanCalculateRepairInfoForPolylineWithSelfIntersections()
+		{
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LN02);
+
+			WorkspaceMock workspace = new WorkspaceMock();
+			GdbFeatureClass fClass = CreateGdbFeatureClass(126, "TestFCPolyline", sr, workspace,
+			                                               esriGeometryType.esriGeometryPolyline);
+
+			// Polyline with 1-dimensional and 2-dimensional (linear) self-intersections
+			WKSPointZ[] points =
+			{
+				WKSPointZUtils.CreatePoint(2600000, 1200000, 400),
+				WKSPointZUtils.CreatePoint(2600000, 1201000, 400),
+				WKSPointZUtils.CreatePoint(2601000, 1201000, 400),
+				// 2D self-intersection: returns back to a previous point
+				WKSPointZUtils.CreatePoint(2600000, 1201000, 400),
+				// 1D linear self-intersection: crosses a previous segment
+				WKSPointZUtils.CreatePoint(2600500, 1200500, 400),
+				WKSPointZUtils.CreatePoint(2999500, 1200500, 400)
+			};
+
+			IPolyline polyline = GeometryFactory.CreatePolyline(points, sr);
+
+			GdbFeature feature = GdbFeature.Create(45, fClass);
+			feature.Shape = polyline;
+
+			var options = new RepairOptionsMsg
+			              {
+				              MinimumSegmentLength = 0,
+				              Use2D = true,
+				              AllowLoops = false,
+				              AllowLinearSelfIntersections = false
+			              };
+
+			CalculateRepairInfoRequest calcRequest = CreateRequest(feature);
+			calcRequest.RepairOptions = options;
+
+			CalculateRepairInfoResponse calcResponse =
+				RepairGeometryServiceUtils.CalculateRepairInfo(calcRequest, null);
+
+			Assert.IsNotNull(calcResponse);
+			Assert.AreEqual(1, calcResponse.RepairInfos.Count,
+			                "Expected 1 feature with issues");
+
+			RepairInfoMsg repairInfo = calcResponse.RepairInfos[0];
+
+			IPointCollection crackPointsCollection =
+				(IPointCollection) ProtobufGeometryUtils.FromShapeMsg(repairInfo.CrackPointsToAdd);
+
+			// TODO: Linear self-intersections are not found anymore using simplify!
+			Assert.NotNull(crackPointsCollection);
+			Assert.Greater(crackPointsCollection.PointCount, 0,
+			               "Expected at least one invalid segment due to self-intersection");
+		}
+
+		[Test]
+		public void CanCalculateRepairInfoForPolylineWithSelfIntersectionsAllowed()
+		{
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LN02);
+
+			WorkspaceMock workspace = new WorkspaceMock();
+			GdbFeatureClass fClass = CreateGdbFeatureClass(127, "TestFCPolyline2", sr, workspace,
+			                                               esriGeometryType.esriGeometryPolyline);
+
+			// Polyline with 1-dimensional and 2-dimensional (linear) self-intersections
+			WKSPointZ[] points =
+			{
+				WKSPointZUtils.CreatePoint(2600000, 1200000, 400),
+				WKSPointZUtils.CreatePoint(2600000, 1201000, 400),
+				WKSPointZUtils.CreatePoint(2601000, 1201000, 400),
+				// 1D self-intersection: loops back to a previous point
+				WKSPointZUtils.CreatePoint(2600000, 1201000, 400),
+				// 2D linear self-intersection: goes back along the previous segment
+				WKSPointZUtils.CreatePoint(2600000, 1200500, 400),
+				WKSPointZUtils.CreatePoint(2601000, 1200500, 400)
+			};
+
+			IPolyline polyline = GeometryFactory.CreatePolyline(points, sr);
+
+			GdbFeature feature = GdbFeature.Create(46, fClass);
+			feature.Shape = polyline;
+
+			var options = new RepairOptionsMsg
+			              {
+				              MinimumSegmentLength = 0,
+				              Use2D = true,
+				              AllowLoops = true, // Allow 1D self-intersections
+				              AllowLinearSelfIntersections =
+					              true // Allow 2D linear self-intersections
+			              };
+
+			CalculateRepairInfoRequest calcRequest = CreateRequest(feature);
+			calcRequest.RepairOptions = options;
+
+			CalculateRepairInfoResponse calcResponse =
+				RepairGeometryServiceUtils.CalculateRepairInfo(calcRequest, null);
+
+			Assert.IsNotNull(calcResponse);
+			Assert.AreEqual(0, calcResponse.RepairInfos.Count,
+			                "Expected 0 issues as loops and linear self-intersections are allowed");
+		}
+
 		private static GdbFeatureClass CreateGdbFeatureClass(
 			int objectClassId, [NotNull] string name,
 			[NotNull] ISpatialReference spatialReference,
