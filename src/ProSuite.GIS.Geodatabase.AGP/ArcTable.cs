@@ -510,18 +510,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				if (_subtypeFieldName == null)
+				try
 				{
-					try
-					{
-						_subtypeFieldName = ProTableDefinition.GetSubtypeField();
-					}
-					catch (Exception)
-					{
-						// TODO: Handle specific exception (shapefiles?)
-						throw;
-						//_subtypeFieldName = string.Empty;
-					}
+					// GetSubtypeField() returns an empty string if no subtypes
+					_subtypeFieldName = ProTableDefinition.GetSubtypeField();
+				}
+				catch (NotSupportedException)
+				{
+					// Shapefiles throw a NotSupportedException
+					_subtypeFieldName = string.Empty;
 				}
 
 				return _subtypeFieldName;
