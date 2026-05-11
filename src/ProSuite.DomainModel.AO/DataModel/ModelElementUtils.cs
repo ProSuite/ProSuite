@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -250,7 +251,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 					if (workspace != null)
 					{
-						Marshal.ReleaseComObject(workspace);
+						ComUtils.ReleaseObject(workspace);
 					}
 
 					if (_msg.IsVerboseDebugEnabled)

@@ -77,7 +77,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_subtypeFieldName = SubtypeFieldName;
 			_defaultSubtypeCode = DefaultSubtypeCode;
 
-			IWorkspace workspace = Workspace;
+			_ = Workspace;
 
 			_fields = Fields;
 
@@ -424,6 +424,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
+				if (_workspaceHandle == 0)
+				{
+					// Known null (e.g. plugin-datasource)
+					return null;
+				}
+
 				if (_workspaceHandle != null)
 				{
 					// This works in any thread:
@@ -436,16 +442,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				}
 
 				// CIM thread is needed:
-				var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
-
-				if (geodatabase == null)
-				{
-					return null;
-				}
-
-				_workspaceHandle = geodatabase.Handle.ToInt64();
-
-				return ArcWorkspace.Create(geodatabase);
+				return CreateArcWorkspace();
 			}
 		}
 
@@ -457,7 +454,22 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public int DefaultSubtypeCode
 		{
-			get { return _defaultSubtypeCode ??= ProTableDefinition.GetDefaultSubtypeCode(); }
+			get
+			{
+				if (_defaultSubtypeCode == null)
+				{
+					try
+					{
+						_defaultSubtypeCode = ProTableDefinition.GetDefaultSubtypeCode();
+					}
+					catch (NotSupportedException)
+					{
+						// Shapefile or other non-subtype-supporting table: treat as no subtypes
+					}
+				}
+
+				return _defaultSubtypeCode ?? -1;
+			}
 			set => _defaultSubtypeCode = value;
 		}
 
@@ -510,9 +522,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
+				if (_subtypeFieldName != null)
+				{
+					return _subtypeFieldName;
+				}
+
 				try
 				{
 					// GetSubtypeField() returns an empty string if no subtypes
+					// -> string.Empty is used to cache the 'no subtypes' case
 					_subtypeFieldName = ProTableDefinition.GetSubtypeField();
 				}
 				catch (NotSupportedException)
@@ -571,6 +589,23 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		#endregion
+
+		private IWorkspace CreateArcWorkspace()
+		{
+			var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
+
+			if (geodatabase == null)
+			{
+				// The 'not supported' value
+				// TODO: BasicWorkspace implementation for non-geodatabase data stores (plugin-datasources, shapefiles, etc.)?
+				_workspaceHandle = 0;
+				return null;
+			}
+
+			_workspaceHandle = geodatabase.Handle.ToInt64();
+
+			return ArcWorkspace.Create(geodatabase);
+		}
 
 		private void InitializeSubtypes()
 		{
