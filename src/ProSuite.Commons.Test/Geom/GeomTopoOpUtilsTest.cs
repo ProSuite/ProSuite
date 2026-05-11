@@ -308,14 +308,14 @@ namespace ProSuite.Commons.Test.Geom
 							IList<RingGroup> result = CutPlanarBothWays(poly1, o, 2, 0);
 
 							var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
-								{
-									new Pnt3D(0, 0, 9),
-									new Pnt3D(0, 100, 9),
-									new Pnt3D(100, 100, 9),
-									new Pnt3D(100, 30, 9),
-									new Pnt3D(40, 30, 9),
-									new Pnt3D(40, 0, 9)
-								});
+									{
+										new Pnt3D(0, 0, 9),
+										new Pnt3D(0, 100, 9),
+										new Pnt3D(100, 100, 9),
+										new Pnt3D(100, 30, 9),
+										new Pnt3D(40, 30, 9),
+										new Pnt3D(40, 0, 9)
+									});
 
 							Assert.True(
 								GeomTopoOpUtils.AreEqualXY(expected, result[0].ExteriorRing,
@@ -7974,10 +7974,10 @@ namespace ProSuite.Commons.Test.Geom
 			containedSource.ReverseOrientation();
 			Assert.IsTrue(intersectionLinesXY[0].Equals(containedSource));
 			Assert.IsTrue(intersectionLinesXY[1].Equals(new Linestring(new[]
-				                                            {
-					                                            new Pnt3D(100, 40, 2),
-					                                            new Pnt3D(100, 20, 2)
-				                                            })));
+					                                            {
+						                                            new Pnt3D(100, 40, 2),
+						                                            new Pnt3D(100, 20, 2)
+					                                            })));
 
 			// Excluded target boundary line:
 			intersectionLinesXY =
@@ -9169,6 +9169,51 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(7, result.PointCount, "One split should add 1 new vertex");
 			Assert.IsTrue(result.GetPoint3D(1).EqualsXY(result.GetPoint3D(4), tolerance),
 			              "Split point and snapped V3 should be at the same location");
+		}
+
+		[Test]
+		public void CanTryCrackSelfIntersectionsForCrossing()
+		{
+			// A ring whose two non-adjacent segments cross each other at their interiors
+			// (a true segment-to-segment crossing, not a vertex-to-segment proximity).
+			//
+			// Ring: (0,0)→(10,10)→(10,0)→(0,10)→closed
+			//   Seg0: (0,0)→(10,10)
+			//   Seg1: (10,10)→(10,0)
+			//   Seg2: (10,0)→(0,10)
+			//   Seg3: (0,10)→(0,0)
+			// Seg0 and Seg2 cross at (5,5).
+			//
+			// Both crossing segments must receive a new split vertex at the crossing point.
+			var ringPoints = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 0),
+				                 new Pnt3D(10, 10, 0),
+				                 new Pnt3D(10, 0, 0),
+				                 new Pnt3D(0, 10, 0)
+			                 };
+
+			Linestring ring = GeomTestUtils.CreateRing(ringPoints);
+			int originalPointCount = ring.PointCount;
+
+			const double tolerance = 0.1;
+
+			bool cracked = GeomTopoOpUtils.TryCrackAtSelfIntersections(
+				ring, tolerance, null, out Linestring result);
+
+			Assert.IsTrue(cracked, "Expected crossing self-intersection to be cracked");
+			Assert.IsNotNull(result);
+			Assert.IsTrue(result.IsClosed, "Result ring should be closed");
+
+			// Both seg0 and seg2 get a split point inserted at (5,5)
+			Assert.AreEqual(originalPointCount + 2, result.PointCount,
+			                "Two split points should be inserted (one per crossed segment)");
+
+			// The two inserted crossing points should be at the same location
+			Pnt3D crossOnSeg0 = result.GetPoint3D(1, true);
+			Pnt3D crossOnSeg2 = result.GetPoint3D(4, true);
+			Assert.IsTrue(crossOnSeg0.EqualsXY(crossOnSeg2, tolerance),
+			              "Both split points should be at the crossing location (5,5)");
 		}
 
 		[Test]

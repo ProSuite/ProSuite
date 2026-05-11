@@ -4221,8 +4221,8 @@ namespace ProSuite.Commons.Geom
 					linestrings.Where(l => l.StartPoint.EqualsXY(previous.EndPoint, tolerance));
 
 				Linestring nextString = matchingStrings.MaxElement(s => Assert
-					.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
-					.Value);
+						.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
+						.Value);
 
 				linestrings.Remove(nextString);
 
@@ -4428,6 +4428,17 @@ namespace ProSuite.Commons.Geom
 				}
 				else
 				{
+					// For Crossing intersections the same crossing is reported twice (once per
+					// segment direction). Skip the reverse entry to avoid comparing crack-point
+					// target locations computed from different segments, which can fail the
+					// strict equality check in TryAddCrackPoint for non-trivial coordinates.
+					if (intersectionPoint.Type == IntersectionPointType.Crossing &&
+					    intersectionPoint.VirtualSourceVertex >
+					    intersectionPoint.VirtualTargetVertex)
+					{
+						continue;
+					}
+
 					AddPointIntersectionCrackPoints(intersectionPoint, ring, allCrackPoints,
 					                                tolerance);
 				}
