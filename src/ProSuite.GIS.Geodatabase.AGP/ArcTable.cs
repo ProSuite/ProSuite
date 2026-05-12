@@ -62,14 +62,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			_cachePropertiesEagerly = true;
 
-			var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
-
-			if (geodatabase != null)
-			{
-				_workspaceHandle = geodatabase.Handle.ToInt64();
-				ArcWorkspace.Create(geodatabase, true);
-			}
-
 			_hasOID = HasOID;
 			_oidFieldName = OIDFieldName;
 			_objectClassID = ObjectClassID;
@@ -77,7 +69,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_subtypeFieldName = SubtypeFieldName;
 			_defaultSubtypeCode = DefaultSubtypeCode;
 
-			_ = Workspace;
+			CreateArcWorkspace(true);
 
 			_fields = Fields;
 
@@ -266,7 +258,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role)
 		{
-			if (Workspace == null)
+			if (Workspace is not IFeatureWorkspace)
 			{
 				yield break;
 			}
@@ -424,16 +416,10 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				if (_workspaceHandle == 0)
-				{
-					// Known null (e.g. plugin-datasource)
-					return null;
-				}
-
 				if (_workspaceHandle != null)
 				{
 					// This works in any thread:
-					ArcWorkspace cachedWorkspace = ArcWorkspace.GetByHandle(_workspaceHandle.Value);
+					IWorkspace cachedWorkspace = ArcWorkspace.GetByHandle(_workspaceHandle.Value);
 
 					if (cachedWorkspace != null)
 					{
@@ -442,7 +428,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				}
 
 				// CIM thread is needed:
-				return CreateArcWorkspace();
+				return CreateArcWorkspace(false);
 			}
 		}
 
@@ -590,21 +576,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#endregion
 
-		private IWorkspace CreateArcWorkspace()
+		private IWorkspace CreateArcWorkspace(bool cacheProperties)
 		{
-			var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
+			Datastore datastore = ProTable.GetDatastore();
 
-			if (geodatabase == null)
-			{
-				// The 'not supported' value
-				// TODO: BasicWorkspace implementation for non-geodatabase data stores (plugin-datasources, shapefiles, etc.)?
-				_workspaceHandle = 0;
-				return null;
-			}
+			_workspaceHandle = datastore.Handle.ToInt64();
 
-			_workspaceHandle = geodatabase.Handle.ToInt64();
-
-			return ArcWorkspace.Create(geodatabase);
+			return ArcWorkspace.Create(datastore, cacheProperties);
 		}
 
 		private void InitializeSubtypes()
