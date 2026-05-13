@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -59,6 +60,41 @@ public class SketchStack
 				return false;
 			}
 		}
+
+		// NOTE: While the OnSketchModifiedAsync call back on the tools are called on the UI
+		// thread and also get called again once the Z value comes in,
+		// this event handler is called on the background and typically only once per vertex
+		// -> If we want to avoid NaN Zs in the sketch stack (which we want) there is no good
+		//    solution relying on just the SketchModifiedEvent. We could just leave out the
+		//    trailing vertices with Nan Z...
+		//    Long term plan:
+		//    A. Make it fast (by providing a local raster surface)
+		//    B. Provide an event fired by the tool (if our tool is active)
+		//    that provides extra meta-information whether the sketch is 'stack-ready' or if there
+		//    are still nan Zs.
+		// TEST
+		Multipart polycurve = sketch as Multipart;
+
+		if (polycurve?.PointCount > 0)
+		{
+			MapPoint lastPoint = polycurve.Points[polycurve.PointCount - 1];
+
+			_msg.VerboseDebug(() =>
+				                  $"Pushing polycurve with {polycurve.PointCount} points onto stack. " +
+				                  $"Last point: {lastPoint.X}|{lastPoint.Y}|{lastPoint.Z}");
+
+			bool noNanOnStack =
+				! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					"PROSUITE_ALLOW_NANZ_ON_STACK");
+
+			if (double.IsNaN(lastPoint.Z) && noNanOnStack)
+			{
+				_msg.Warn("Sketch is not moved onto sketch stack because last point has NaN Z");
+				return false;
+			}
+		}
+
+		// END TEST
 
 		_sketches.Push(sketch);
 		_msg.VerboseDebug(() => $"Pushed sketch onto stack. Count: {_sketches.Count} sketches");

@@ -103,6 +103,7 @@ public class SketchDrawer
 
 		if (sketchGeometry is Multipart multiPart && multiPart.Points.Any(p => double.IsNaN(p.Z)))
 		{
+			_msg.VerboseDebug(() => "Sketch is not drawn because it contains one or more NaN Zs");
 			return;
 		}
 
