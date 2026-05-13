@@ -216,9 +216,15 @@ public class ShapeSelection : IShapeSelection
 		if (method == SetCombineMethod.Xor)
 		{
 			var contained = _blocks.IsSelected(partIndex, vertexIndex);
+
 			if (contained)
+			{
 				_blocks.Unselect(partIndex, vertexIndex);
-			else _blocks.Select(partIndex, vertexIndex);
+			}
+			else
+			{
+				_blocks.Select(partIndex, vertexIndex);
+			}
 			return true;
 		}
 
@@ -227,7 +233,44 @@ public class ShapeSelection : IShapeSelection
 
 	public bool CombinePart(int partIndex, SetCombineMethod method)
 	{
-		throw new NotImplementedException();
+		if (Shape is Multipoint)
+		{
+			// Special case, see comments in CombineVertex():
+			return CombineVertex(partIndex, partIndex, method);
+		}
+
+		bool changed = false;
+
+		if (method == SetCombineMethod.New)
+		{
+			changed = Clear();
+			method = SetCombineMethod.Add;
+		}
+
+		if (method == SetCombineMethod.Add)
+		{
+			int count = GetVertexCount(Shape, partIndex);
+			var added = _blocks.Select(partIndex, 0, count);
+			return changed || added;
+		}
+
+		if (method == SetCombineMethod.Remove)
+		{
+			var removed = _blocks.Unselect(partIndex);
+			return changed || removed;
+		}
+
+		if (method == SetCombineMethod.And)
+		{
+			throw new NotImplementedException("Needs to be specified and implemented");
+		}
+
+		if (method == SetCombineMethod.Xor)
+		{
+			throw new NotImplementedException("Needs to be specified and implemented");
+		}
+
+		throw new ArgumentOutOfRangeException(nameof(method), method, null);
 	}
 
 	public bool CombineShape(SetCombineMethod method)
@@ -834,6 +877,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	public bool IsEmpty => _head.Next is null;
 
+	/// <summary>
+	/// Mark the given vertex or vertex range as selected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
 	public bool Select(int part, int vertex, int count = 1)
 	{
 		// if vertex is in existing block: nothing to do
@@ -868,6 +915,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return true;
 	}
 
+	/// <summary>
+	/// Mark the given vertex as unselected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
 	public bool Unselect(int part, int vertex)
 	{
 		var node = Find(part, vertex, out Node before);
@@ -916,6 +967,42 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return true;
 	}
 
+	/// <summary>
+	/// Mark all vertices in the given part as unselected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
+	public bool Unselect(int part)
+	{
+		bool changed = false;
+
+		var before = _head;
+		var node = _head.Next;
+
+		// Find first node covering given part:
+
+		while (node != null && node.Part < part)
+		{
+			before = node;
+			node = node.Next;
+		}
+
+		// Unlink and free blocks in given part:
+
+		while (node != null && node.Part == part)
+		{
+			var old = node;
+			node = before.Next = node.Next;
+			FreeNode(old);
+			changed = true;
+		}
+
+		return changed;
+	}
+
+	/// <summary>
+	/// Mark all vertices as unselected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
 	public bool Clear()
 	{
 		var wasEmpty = IsEmpty;
@@ -1065,6 +1152,9 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 	}
 
+	/// <summary>
+	/// Adjust the selection after the orientation of a part was reversed
+	/// </summary>
 	public void PartReversed(int part, int numVerticesInPart)
 	{
 		var node = Find(part, 0, out var before);
@@ -1132,22 +1222,16 @@ public class BlockList : IEnumerable<BlockList.Block>
 			node = node.Next;
 		}
 
-		// Scan blocks in given part:
+		// Unlink and free blocks in given part:
 
 		while (node != null && node.Part == part)
 		{
-			node = node.Next;
+			var old = node;
+			node = before.Next = node.Next;
+			FreeNode(old);
 		}
-
-		// Here:
-		// - before is last block before given part (or head if no such block)
-		// - node is first block after given part (or null if no such block)
-
-		// Unlink block(s) for given part:
-
-		before.Next = node;
-
-		// Adjust part index of remaining blocks:
+		
+		// Adjust part index of blocks down the road:
 
 		while (node != null)
 		{

@@ -17,13 +17,13 @@ public interface IWhiteSelection
 {
 	FeatureLayer Layer { get; }
 
-	bool
-		Add(long oid,
-		    bool selectVertices = false); // add involved feature, optionally select all vertices
+	bool Add(long oid, bool selectVertices = false); // add involved feature
 
 	bool Remove(long oid); // also removes oid's geom from cache
 
 	bool Combine(long oid, int part, int vertex, SetCombineMethod method);
+
+	bool Combine(long oid, int part, SetCombineMethod method);
 
 	bool Combine(long oid, SetCombineMethod method);
 
@@ -140,6 +140,19 @@ public class WhiteSelection : IWhiteSelection
 		}
 
 		return changed;
+	}
+
+	/// <remarks>Must call on MCT</remarks>
+	public bool Combine(long oid, int part, SetCombineMethod method)
+	{
+		if (!_shapes.TryGetValue(oid, out var selection))
+		{
+			var shape = GetGeometry(oid);
+			selection = new ShapeSelection(shape);
+			_shapes.Add(oid, selection);
+		}
+
+		return selection.CombinePart(part, method);
 	}
 
 	/// <remarks>Must call on MCT</remarks>
