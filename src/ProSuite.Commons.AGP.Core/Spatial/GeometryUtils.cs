@@ -2231,4 +2231,49 @@ public static class GeometryUtils
 		return new EnvelopeXY(combinedExtent.XMin, combinedExtent.YMin, combinedExtent.XMax,
 		                      combinedExtent.YMax);
 	}
+
+	private class MapPointComparer : IEqualityComparer<MapPoint>
+	{
+		public bool Equals(MapPoint x, MapPoint y) => GeometryEngine.Instance.Equals(x, y);
+
+		public int GetHashCode(MapPoint obj) => 0; // forces linear compare
+	}
+
+	public static List<MapPoint> GetUniqueEndPoints(Polyline unionLine)
+	{
+		if (unionLine.PartCount == 1)
+		{
+			return new List<MapPoint>
+			       {
+				       GetStartPoint(unionLine),
+				       GetEndPoint(unionLine)
+			       };
+		}
+
+		// Keep only unique points because duplicate points indicate that this is not
+		// a true end point, but just a split point between parts.
+
+		HashSet<MapPoint> endPoints = new HashSet<MapPoint>(new MapPointComparer());
+		HashSet<MapPoint> duplicatePoints = new HashSet<MapPoint>(new MapPointComparer());
+		foreach (var part in unionLine.Parts)
+		{
+			MapPoint startPoint = GeometryUtils.GetStartPoint(part);
+			if (!endPoints.Add(startPoint))
+			{
+				duplicatePoints.Add(startPoint);
+			}
+
+			MapPoint endPoint = GeometryUtils.GetEndPoint(part);
+			if (!endPoints.Add(endPoint))
+			{
+				duplicatePoints.Add(endPoint);
+			}
+		}
+
+		// Also remove the original point of a duplicate that has already been added to endPoints.
+		endPoints.RemoveWhere(p => duplicatePoints.Contains(p));
+
+		return endPoints.ToList();
+	}
+
 }
