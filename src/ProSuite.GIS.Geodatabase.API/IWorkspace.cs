@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using System.Collections.Generic;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
@@ -119,6 +119,8 @@ namespace ProSuite.GIS.Geodatabase.API
 
 		string Description { get; }
 
+		esriVersionAccess Access { get; set; }
+
 		bool HasParent();
 
 		void Delete();
@@ -126,7 +128,20 @@ namespace ProSuite.GIS.Geodatabase.API
 		void RefreshVersion();
 
 		IVersion CreateVersion(string newName);
+
+		IVersion CreateVersion(string newName, esriVersionAccess access);
 	}
+
+	public interface IVersionEdit
+	{
+		IReadOnlyList<IConflictClass> Reconcile4(string versionName);
+
+		void Post(string versionName);
+
+		bool CanPost();
+	}
+
+	public interface IConflictClass { }
 
 	public interface IVersionInfo
 	{
@@ -149,6 +164,20 @@ namespace ProSuite.GIS.Geodatabase.API
 	{
 		esriFileSystemWorkspace,
 		esriLocalDatabaseWorkspace,
-		esriRemoteDatabaseWorkspace,
+		esriRemoteDatabaseWorkspace
+	}
+
+
+	public enum esriVersionAccess
+	{
+		esriVersionAccessPrivate,
+		esriVersionAccessPublic,
+		esriVersionAccessProtected
+	}
+	public interface IDatabaseConnectionInfo
+	{
+		string ConnectedDatabase { get; }
+
+		string ConnectedUser { get; }
 	}
 }

@@ -1,19 +1,19 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.GIS.Geodatabase.AGP;
 
-public class ArcWorkspace : IFeatureWorkspace
+public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposable
 {
 	private static readonly Dictionary<long, ArcWorkspace> _workspacesByHandle = new();
 
@@ -39,7 +39,7 @@ public class ArcWorkspace : IFeatureWorkspace
 	}
 
 	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
-	                                  bool cacheProperties = false)
+	                                           bool cacheProperties = false)
 	{
 		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(),
 		                                    out ArcWorkspace existing))
@@ -53,7 +53,7 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 
 		return geodatabase.IsVersioningSupported()
-			       ? new ArcVersionedWorkspace(geodatabase, cacheProperties)
+			       ? ArcVersionedWorkspace.Create(geodatabase, cacheProperties)
 			       : new ArcWorkspace(geodatabase, cacheProperties);
 	}
 
@@ -66,6 +66,7 @@ public class ArcWorkspace : IFeatureWorkspace
 	{
 		Geodatabase = geodatabase;
 
+		// todo assert?
 		_workspacesByHandle.TryAdd(Geodatabase.Handle.ToInt64(), this);
 
 		if (cacheProperties)
@@ -286,7 +287,7 @@ public class ArcWorkspace : IFeatureWorkspace
 				foreach (FeatureClassDefinition definition in Geodatabase
 					         .GetDefinitions<FeatureClassDefinition>())
 				{
-					yield return new ArcTableDefinitionName(definition, this);
+					yield return new ArcFeatureClassDefinitionName(definition, this);
 				}
 
 				break;
@@ -640,6 +641,30 @@ public class ArcWorkspace : IFeatureWorkspace
 
 	#endregion
 
+
+	#region Implementation of IDatabaseConnectionInfo
+
+	public string ConnectedDatabase
+	{
+		get
+		{
+			DatabaseConnectionProperties props = WorkspaceUtils.GetConnectionProperties(Geodatabase.GetConnectionString());
+			return props.Database;
+		}
+	}
+
+	public string ConnectedUser
+	{
+		get
+		{
+			DatabaseConnectionProperties props =
+				WorkspaceUtils.GetConnectionProperties(Geodatabase.GetConnectionString());
+			return props.User;
+		}
+	}
+
+	#endregion
+
 	protected static bool IsSameDatabase([CanBeNull] IVersionedWorkspace versionedWorkspace1,
 	                                     [CanBeNull] IVersionedWorkspace versionedWorkspace2)
 	{
@@ -744,30 +769,128 @@ public class ArcWorkspace : IFeatureWorkspace
 	{
 		_domains.TryAdd(domain.Name, domain);
 	}
+
+	public virtual void Dispose()
+	{
+		//_workspacesByHandle.Remove(Geodatabase.Handle.ToInt64(), out _);
+		Geodatabase.Dispose();
+	}
 }
 
-public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
+public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace, IVersionEdit
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	// todo (daro): workspace by handle?
+	private static readonly Dictionary<string, ArcVersionedWorkspace> _workspacesByVersionName =
+		new(StringComparer.InvariantCultureIgnoreCase);
 
 	private VersionManager VersionManager { get; set; }
 	private Version Version { get; }
 
-	public ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase,
-	                             bool cacheProperties,
-	                             string versionName)
-		: this(geodatabase, cacheProperties,
-		       geodatabase.GetVersionManager().GetVersion(versionName)) { }
+	public static ArcWorkspace Create(Version version,
+	                                  bool cacheProperties = false)
+	{
+		ArcGIS.Core.Data.Geodatabase geodatabase = version.Connect();
 
-	public ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase,
-	                             bool cacheProperties = false,
-	                             Version version = null) : base(geodatabase, cacheProperties)
+		Assert.True(geodatabase.IsVersioningSupported(),
+		            "This geodatabase cannot be used as versioned workspace.");
+
+		
+		DatabaseConnectionProperties props =
+			WorkspaceUtils.GetConnectionProperties(geodatabase.GetConnectionString());
+
+		//var qualifiedVersionName = $"{props.User}.{currentVersion.GetName()}";
+		var qualifiedVersionName = $"{version.GetName()}";
+
+		if (_workspacesByVersionName.TryGetValue(qualifiedVersionName, out ArcVersionedWorkspace existing))
+		{
+			return existing;
+		}
+
+		return new ArcVersionedWorkspace(geodatabase, cacheProperties, version);
+	}
+
+	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                  bool cacheProperties = false,
+	                                  Version version = null)
 	{
 		Assert.True(geodatabase.IsVersioningSupported(),
 		            "This geodatabase cannot be used as versioned workspace.");
+
+		VersionManager versionManager = Assert.NotNull(geodatabase.GetVersionManager());
+
+		var currentVersion = version ?? versionManager.GetCurrentVersion();
+
+		DatabaseConnectionProperties props =
+			WorkspaceUtils.GetConnectionProperties(geodatabase.GetConnectionString());
+
+		//var qualifiedVersionName = $"{props.User}.{currentVersion.GetName()}";
+		var qualifiedVersionName = $"{currentVersion.GetName()}";
+
+		if (_workspacesByVersionName.TryGetValue(qualifiedVersionName, out ArcVersionedWorkspace existing))
+		{
+			return existing;
+		}
+
+		return new ArcVersionedWorkspace(geodatabase, cacheProperties, version);
+	}
+
+	private ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase,
+	                              bool cacheProperties,
+	                              string versionName)
+		: this(geodatabase, cacheProperties,
+		       geodatabase.GetVersionManager().GetVersion(versionName)) { }
+
+	private ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase,
+	                              bool cacheProperties = false,
+	                              Version version = null) : base(geodatabase, cacheProperties)
+	{
+		Assert.True(geodatabase.IsVersioningSupported(),
+		            "This geodatabase cannot be used as versioned workspace.");
+
 		VersionManager = Assert.NotNull(geodatabase.GetVersionManager());
 
 		Version = version ?? VersionManager.GetCurrentVersion();
+
+		DatabaseConnectionProperties props =
+			WorkspaceUtils.GetConnectionProperties(geodatabase.GetConnectionString());
+
+		//var qualifiedVersionName = $"{props.User}.{Version.GetName()}";
+		var qualifiedVersionName = $"{Version.GetName()}";
+
+		_workspacesByVersionName.TryAdd(qualifiedVersionName, this);
+	}
+
+	// todo: move?
+	public static VersionAccessType ToProVersionAccessType(esriVersionAccess access)
+	{
+		switch (access)
+		{
+			case esriVersionAccess.esriVersionAccessPrivate:
+				return VersionAccessType.Private;
+			case esriVersionAccess.esriVersionAccessPublic:
+				return VersionAccessType.Public;
+			case esriVersionAccess.esriVersionAccessProtected:
+				return VersionAccessType.Protected;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(access), access, null);
+		}
+	}
+
+	public static esriVersionAccess ToEsriVersionAccess(VersionAccessType accessType)
+	{
+		switch (accessType)
+		{
+			case VersionAccessType.Private:
+				return esriVersionAccess.esriVersionAccessPrivate;
+			case VersionAccessType.Public:
+				return esriVersionAccess.esriVersionAccessPublic;
+			case VersionAccessType.Protected:
+				return esriVersionAccess.esriVersionAccessProtected;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(accessType), accessType, null);
+		}
 	}
 
 	#region Equality members
@@ -817,6 +940,17 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 
 	public string Description => Version.GetDescription();
 
+	public esriVersionAccess Access
+	{
+		get => ToEsriVersionAccess(Version.GetAccessType());
+		set => Version.Alter(new VersionDescription
+		                     {
+								 // Name mustn't be null!
+								 Name = VersionName,
+			                     AccessType = ToProVersionAccessType(value)
+		                     });
+	}
+
 	public bool HasParent()
 	{
 		return Version.GetParent() != null;
@@ -824,7 +958,17 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 
 	public void Delete()
 	{
-		throw new NotImplementedException();
+		Assert.True(_workspacesByVersionName.Remove(VersionName),
+		            $"Cannot delete version {VersionName} because it is unknown");
+
+		Version.Delete();
+	}
+
+	public override void Dispose()
+	{
+		//_workspacesByVersionName.Remove(VersionName);
+		//Version.Dispose();
+		base.Dispose();
 	}
 
 	public void RefreshVersion()
@@ -834,7 +978,23 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 
 	public IVersion CreateVersion(string newName)
 	{
-		throw new NotImplementedException();
+		return CreateVersion(newName, esriVersionAccess.esriVersionAccessPrivate);
+	}
+
+	public IVersion CreateVersion(string newName, esriVersionAccess access)
+	{
+		var versionDescription = new VersionDescription
+		                         {
+			                         Name = newName,
+			                         AccessType = ToProVersionAccessType(access)
+		                         };
+
+		Version version = VersionManager.CreateVersion(versionDescription);
+
+		Assert.False(_workspacesByVersionName.ContainsKey(version.GetName()),
+		             $"A versioned workspace with name {version.GetName()} does already exists. Try IVersionedWorkspace.FindVersion()");
+
+		return (IVersion) Create(version);
 	}
 
 	#endregion
@@ -847,14 +1007,92 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 	public IVersion DefaultVersion =>
 		new ArcVersionedWorkspace(Geodatabase, false, VersionManager.GetDefaultVersion());
 
-	public IVersion FindVersion(string Name)
+	[CanBeNull]
+	public IVersion FindVersion(string name)
 	{
-		Version proVersion = VersionManager.GetVersion(Name);
+		try
+		{
+			// owner is case-insensitive: daro.GN_Local_RevModel_DKM10
+			Version version = VersionManager.GetVersion(name);
 
-		return new ArcVersionedWorkspace(Geodatabase, false, proVersion);
+			if (_workspacesByVersionName.TryGetValue(version.GetName(),
+			                                         out ArcVersionedWorkspace workspace))
+			{
+				return workspace;
+			}
+
+			return (IVersion) Create(version);
+		}
+		catch (Exception ex)
+		{
+			_msg.Debug($"Cannot find version {name}: {ex.Message}", ex);
+		}
+
+		return null;
 	}
 
 	#endregion
+
+	#region Implementation of IVersionEdit
+
+	public IReadOnlyList<IConflictClass> Reconcile4(string versionName)
+	{
+		Version targetVersion = VersionManager.GetVersion(versionName);
+
+		ReconcileResult result = Version.Reconcile(GetDefaultReconcileOptions(targetVersion));
+
+		bool hasConflicts = result.HasConflicts;
+
+		return hasConflicts
+			       ? Version.GetConflicts()
+			                .Select(conflict => new ArcConflictClass(conflict))
+			                .Cast<IConflictClass>().ToList()
+			       : null;
+	}
+
+	private static ReconcileOptions GetDefaultReconcileOptions(Version targetVersion)
+	{
+		var options = new ReconcileOptions(targetVersion)
+		              {
+			              ConflictResolutionType = ConflictResolutionType.FavorTargetVersion,
+			              ConflictResolutionMethod = ConflictResolutionMethod.Continue,
+			              ConflictDetectionType = ConflictDetectionType.ByRow
+		              };
+		return options;
+	}
+
+	public void Post(string versionName)
+	{
+		Version targetVersion = VersionManager.GetVersion(versionName);
+
+		ReconcileOptions reconcileOptions = GetDefaultReconcileOptions(targetVersion);
+		PostOptions postOptions = new(targetVersion);
+
+		// Post - Deprecated since Pro SDK 3.6 / Enterprise 12.0 . Use Reconcile(reconcileOptions, postOptions) instead.
+		// currentVersion.Post(postOptions);
+		Version.Reconcile(reconcileOptions, postOptions);
+	}
+
+	public bool CanPost()
+	{
+		//ReconcileResult reconcileResult = Version.Reconcile();
+		//reconcileResult.HasConflicts
+
+		// todo (daro): is this right? To rigid?
+		return ! Version.HasConflicts();
+	}
+
+	#endregion
+}
+
+public class ArcConflictClass : IConflictClass
+{
+	private readonly Conflict _conflict;
+
+	public ArcConflictClass(Conflict conflict)
+	{
+		_conflict = conflict;
+	}
 }
 
 public class VersionInfo : IVersionInfo
