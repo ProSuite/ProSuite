@@ -138,7 +138,7 @@ public class SketchDrawer
 		}
 		else if (sketchGeometry is Polygon polygon)
 		{
-			_overlays.Add(inMapView.AddOverlay(polygon, _polygonSymbolRef));
+			_overlays.Add(await inMapView.AddOverlayAsync(polygon, _polygonSymbolRef));
 
 			// start and end point of a polygon are geometrically equal
 			var points = polygon.Points;
