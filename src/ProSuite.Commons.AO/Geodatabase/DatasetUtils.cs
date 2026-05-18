@@ -596,6 +596,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return OpenTin(directory, tinName);
 		}
 
+		public static ILasDataset OpenLasDataset([NotNull] string lasdPath)
+		{
+			Assert.ArgumentNotNullOrEmpty(lasdPath, nameof(lasdPath));
+
+			string folder = Path.GetDirectoryName(lasdPath) ?? string.Empty;
+			string fileName = Path.GetFileName(lasdPath);
+
+			IWorkspaceFactory wsf = new LasDatasetWorkspaceFactoryClass();
+			IWorkspace workspace = wsf.OpenFromFile(folder, 0);
+
+			var lasWs = workspace as ILasDatasetWorkspace;
+			if (lasWs == null)
+			{
+				throw new InvalidConfigurationException(
+					$"Cannot open LAS Dataset workspace for: {lasdPath}");
+			}
+
+			ILasDataset lasDataset = lasWs.OpenLasDataset(fileName);
+			return lasDataset;
+		}
+
 		[CanBeNull]
 		public static IDatasetName FindRootDatasetName([NotNull] IWorkspace workspace,
 		                                               esriDatasetType datasetType,
