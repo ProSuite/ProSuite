@@ -427,26 +427,14 @@ namespace ProSuite.Microservices.Client
 			}
 			else
 			{
-				// Kill unhealthy server processes:
-				string exeName = Path.GetFileNameWithoutExtension(executable);
-				Process[] runningProcesses = Process.GetProcessesByName(exeName);
-
-				if (runningProcesses.Length > 0)
+				if (_startedProcess != null && ! _startedProcess.HasExited)
 				{
+					string exeName = Path.GetFileNameWithoutExtension(executable);
 					_msg.DebugFormat(
-						"Background microservice {0} is already running (but not serving). " +
-						"It will be killed.", exeName);
-
-					foreach (Process process in runningProcesses)
-					{
-						if (process == Process.GetCurrentProcess())
-						{
-							// No suicide!
-							continue;
-						}
-
-						process.Kill();
-					}
+						"Background microservice {0} was started by this client and is " +
+						"not serving. It will be restarted.", exeName);
+					_startedProcess.Kill();
+					_startedProcess = null;
 				}
 			}
 
