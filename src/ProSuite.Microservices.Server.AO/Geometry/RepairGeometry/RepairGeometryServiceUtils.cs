@@ -89,6 +89,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 					GeneralizeUtils.CalculateShortSegments(vertexInfo, use2D, null);
 				}
 
+				if (! allowLinearSelfIntersections)
+				{
+					AddLinearSelfIntersectionSegments(vertexInfo, use2D);
+				}
+
 				// Snapshot the min-length segments BEFORE CalculateSimplifyDeltaPoints can add
 				// bracket segments via AddSegmentsToRemoveBetweenPointsToRemove.
 				minLengthSegments[vertexInfo] = vertexInfo.ShortSegments != null
@@ -101,7 +106,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 
 				if (featureNotifications.Count > 0)
 				{
-					string featureLabel = GeometryProcessingUtils.GetGdbObjectLabel(vertexInfo.Feature);
+					string featureLabel =
+						GeometryProcessingUtils.GetGdbObjectLabel(vertexInfo.Feature);
 					notificationMessages.Add(
 						$"{featureLabel}: {NotificationUtils.Concatenate(featureNotifications, " ")}");
 				}
@@ -116,24 +122,6 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 			                     sourceFeatures.Count, response.RepairInfos.Count);
 
 			return response;
-		}
-
-		private static CrackPointCalculator CreateCrackPointCalculator(double crackPointTolerance,
-			bool use2D)
-		{
-			var crackOptions = new RepairGeometryCrackingOptions(crackPointTolerance);
-
-			var crackPointCalculator =
-				new CrackPointCalculator(
-					crackOptions,
-					IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
-					null)
-				{
-					In3D = ! use2D,
-					TargetTransformation = ExtractVertices
-				};
-
-			return crackPointCalculator;
 		}
 
 		public static ApplyRepairGeometryResponse ApplyRepairGeometry(
@@ -183,8 +171,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 				try
 				{
 					IGeometry updateGeometry = ApplyRepairToFeature(
-						feature, repairInfoMsg, minimumSegmentLength, crackPointTolerance, use2D,
-						allowPathSplitAtIntersections);
+						feature, minimumSegmentLength, crackPointTolerance, use2D,
+						allowPathSplitAtIntersections, allowLinearSelfIntersections);
 
 					if (updateGeometry != null && ! updateGeometry.IsEmpty)
 					{
@@ -234,8 +222,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 					try
 					{
 						IGeometry updateGeometry = ApplyRepairToFeature(
-							feature, new RepairInfoMsg(), minimumSegmentLength,
-							crackPointTolerance, use2D, allowPathSplitAtIntersections);
+							feature, minimumSegmentLength,
+							crackPointTolerance, use2D, allowPathSplitAtIntersections,
+							allowLinearSelfIntersections);
 
 						if (updateGeometry != null && ! updateGeometry.IsEmpty)
 						{
@@ -272,37 +261,76 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 			return response;
 		}
 
+		private static CrackPointCalculator CreateCrackPointCalculator(double crackPointTolerance,
+			bool use2D)
+		{
+			var crackOptions = new RepairGeometryCrackingOptions(crackPointTolerance);
+
+			var crackPointCalculator =
+				new CrackPointCalculator(
+					crackOptions,
+					IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
+					null)
+				{
+					In3D = ! use2D,
+					TargetTransformation = ExtractVertices
+				};
+
+			return crackPointCalculator;
+		}
+
 		[CanBeNull]
 		private static IGeometry ApplyRepairToFeature(
 			[NotNull] IFeature feature,
-			[NotNull] RepairInfoMsg repairInfoMsg,
 			double minimumSegmentLength,
 			double crackPointTolerance,
 			bool use2D,
-			bool allowPathSplitAtIntersections)
+			bool allowPathSplitAtIntersections,
+			bool allowLinearSelfIntersections)
 		{
 			IGeometry updateGeometry = feature.ShapeCopy;
 
-			// Step 1: Remove short (invalid) segments
-			if (repairInfoMsg.InvalidSegments.Count > 0)
+			// Step 0: Remove linear self-intersection segments (duplicate / back-tracking segments).
+			// The strategy differs between geometry types:
+			// - Polygons: TryDeleteLinearSelfIntersectionsXY per ring, which is designed for
+			//   closed rings and correctly removes BOTH sides of a spike (the right behaviour
+			//   since one side of the spike is redundant in a closed ring).
+			// - Polylines: PlanarizeLines, which preserves the first traversal of each overlapping
+			//   segment rather than removing both (TryDeleteLinearSelfIntersectionsXY would create
+			//   a gap / empty geometry for dead-end back-tracking polylines).
+			// This also handles allowPathSplitAtIntersections=false (loops allowed) where
+			// simplify (Step 3) would not remove linear overlaps on its own.
+			if (! allowLinearSelfIntersections && updateGeometry is IPolycurve polycurve)
 			{
-				IList<esriSegmentInfo> shortSegments =
-					repairInfoMsg.InvalidSegments.Select(FromInvalidSegmentMsg).ToList();
+				double tolerance = GeometryUtils.GetXyTolerance(feature);
 
-				// Use the actual minimum from the options (defaulting to a small positive
-				// value if options were not supplied by an older client).
-				double effectiveMinLength = minimumSegmentLength > 0
-					                            ? minimumSegmentLength
-					                            : GeometryUtils.GetXyTolerance(feature);
+				updateGeometry =
+					RemoveSelfIntersectingSegments(polycurve, tolerance, minimumSegmentLength);
+			}
 
-				var featureVertexInfo = new FeatureVertexInfo(feature, null)
-				                        {
-					                        MinimumSegmentLength = effectiveMinLength,
-					                        ShortSegments = shortSegments
-				                        };
+			// Step 1: Remove short segments.
+			// Re-scan the current (post-Step-0) geometry rather than consuming the stale segment
+			// indices from the proto message: after Step 0 restructures the geometry those indices
+			// no longer point to the right segments. Linear self-intersections are already gone;
+			// only truly short segments (length < minimumSegmentLength) remain to be removed here.
+			if (minimumSegmentLength > 0)
+			{
+				IList<esriSegmentInfo> shortSegments = GeneralizeUtils.GetShortSegments(
+					(IPolycurve) updateGeometry, null, minimumSegmentLength, use2D);
 
-				GeneralizeUtils.DeleteShortSegments(
-					(IPolycurve) updateGeometry, featureVertexInfo, use2D, null);
+				if (shortSegments.Count > 0)
+				{
+					var featureVertexInfo = new FeatureVertexInfo(feature, null)
+					                        {
+						                        MinimumSegmentLength = minimumSegmentLength,
+						                        ShortSegments = shortSegments
+					                        };
+
+					int removedShortSegments = GeneralizeUtils.DeleteShortSegments(
+						(IPolycurve) updateGeometry, featureVertexInfo, use2D, null);
+
+					_msg.VerboseDebug(() => $"Removed {removedShortSegments} short segments");
+				}
 			}
 
 			if (updateGeometry.IsEmpty)
@@ -313,35 +341,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 			// Step 2: Crack self-intersections using the crack point tolerance.
 			if (crackPointTolerance > 0)
 			{
-				var multiPolycurve =
-					GeometryConversionUtils.CreateMultiPolycurve((IPolycurve) updateGeometry);
-
-				double? minSegLen = minimumSegmentLength > 0
-					                    ? minimumSegmentLength
-					                    : (double?) null;
-
-				bool anyRingCracked = false;
-				var crackedLinestrings = new List<Linestring>();
-
-				foreach (Linestring linestring in multiPolycurve.GetLinestrings())
-				{
-					if (GeomTopoOpUtils.TryCrackAtSelfIntersections(
-						    linestring, crackPointTolerance, minSegLen,
-						    out Linestring cracked))
-					{
-						crackedLinestrings.Add(cracked);
-						anyRingCracked = true;
-					}
-					else
-					{
-						crackedLinestrings.Add(linestring);
-					}
-				}
-
-				if (anyRingCracked)
-				{
-					updateGeometry = ReCreateGeometry(crackedLinestrings, updateGeometry);
-				}
+				updateGeometry =
+					CrackAtSelfIntersections(crackPointTolerance, minimumSegmentLength,
+					                         updateGeometry);
 			}
 
 			// Step 3: Simplify — use the same allowPathSplitAtIntersections value as during
@@ -353,6 +355,97 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 			}
 
 			return updateGeometry;
+		}
+
+		private static IGeometry CrackAtSelfIntersections(double crackPointTolerance,
+		                                                  double minimumSegmentLength,
+		                                                  IGeometry updateGeometry)
+		{
+			var multiPolycurve =
+				GeometryConversionUtils.CreateMultiPolycurve((IPolycurve) updateGeometry);
+
+			double? minSegLen = minimumSegmentLength > 0
+				                    ? minimumSegmentLength
+				                    : (double?) null;
+
+			bool anyRingCracked = false;
+			var crackedLinestrings = new List<Linestring>();
+
+			foreach (Linestring linestring in multiPolycurve.GetLinestrings())
+			{
+				if (GeomTopoOpUtils.TryCrackAtSelfIntersections(
+					    linestring, crackPointTolerance, minSegLen,
+					    out Linestring cracked))
+				{
+					crackedLinestrings.Add(cracked);
+					anyRingCracked = true;
+				}
+				else
+				{
+					crackedLinestrings.Add(linestring);
+				}
+			}
+
+			if (anyRingCracked)
+			{
+				updateGeometry = ReCreateGeometry(crackedLinestrings, updateGeometry);
+			}
+
+			return updateGeometry;
+		}
+
+		private static IPolycurve RemoveSelfIntersectingSegments([NotNull] IPolycurve polycurve,
+		                                                         double tolerance,
+		                                                         double minimumSegmentLength)
+		{
+			MultiPolycurve multiPolycurve =
+				GeometryConversionUtils.CreateMultiPolycurve(polycurve);
+
+			double? minSegLen =
+				minimumSegmentLength > 0 ? (double?) minimumSegmentLength : null;
+
+			IPolycurve resultGeometry = polycurve;
+
+			if (polycurve.GeometryType == esriGeometryType.esriGeometryPolygon)
+			{
+				bool anyChanged = false;
+				var resultRings = new List<Linestring>();
+
+				foreach (Linestring ring in multiPolycurve.GetLinestrings())
+				{
+					var results = new List<Linestring>();
+					if (GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
+						    ring, tolerance, results, minSegLen))
+					{
+						resultRings.AddRange(results);
+						anyChanged = true;
+					}
+					else
+					{
+						resultRings.Add(ring);
+					}
+				}
+
+				if (anyChanged)
+				{
+					resultGeometry = (IPolycurve) ReCreateGeometry(resultRings, polycurve);
+				}
+			}
+			else
+			{
+				MultiLinestring planarized =
+					GeomTopoOpUtils.PlanarizeLines(multiPolycurve, tolerance);
+
+				if (planarized.SegmentCount < multiPolycurve.SegmentCount)
+				{
+					List<Linestring> planarizedLinestrings = planarized.GetLinestrings().ToList();
+
+					resultGeometry =
+						(IPolycurve) ReCreateGeometry(planarizedLinestrings, polycurve);
+				}
+			}
+
+			return resultGeometry;
 		}
 
 		private static IGeometry ReCreateGeometry([NotNull] List<Linestring> fromCrackedLinestrings,
@@ -421,10 +514,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 				return;
 			}
 
+			bool allowNonPlanarLines = ! allowPathSplitAtIntersections;
 			string description;
 			GeometryNonSimpleReason? nonSimpleReason;
 			GeometryUtils.IsGeometrySimple(geometry, geometry.SpatialReference,
-			                               allowPathSplitAtIntersections,
+			                               allowNonPlanarLines,
 			                               out description, out nonSimpleReason);
 
 			NotificationUtils.Add(notifications, description);
@@ -585,30 +679,6 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 			return msg;
 		}
 
-		private static esriSegmentInfo FromInvalidSegmentMsg(InvalidSegmentMsg msg)
-		{
-			IPoint fromPoint = (IPoint) ProtobufGeometryUtils.FromShapeMsg(msg.FromPoint);
-			IPoint toPoint = (IPoint) ProtobufGeometryUtils.FromShapeMsg(msg.ToPoint);
-
-			ISegment segment = null;
-			if (fromPoint != null && toPoint != null)
-			{
-				segment = new LineClass
-				          {
-					          FromPoint = fromPoint,
-					          ToPoint = toPoint
-				          };
-			}
-
-			return new esriSegmentInfo
-			       {
-				       pSegment = segment,
-				       iAbsSegment = msg.AbsoluteIndex,
-				       iPart = msg.PartIndex,
-				       iRelSegment = msg.RelativeIndex
-			       };
-		}
-
 		private static IGeometry ExtractVertices(IGeometry originalGeometry)
 		{
 			IPointCollection pointCollection = originalGeometry as IPointCollection;
@@ -705,6 +775,76 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 
 					vertexInfo.ShortSegments.Add(segInfo);
 				}
+			}
+		}
+
+		private static void AddLinearSelfIntersectionSegments(
+			[NotNull] FeatureVertexInfo vertexInfo, bool use2D)
+		{
+			IGeometry geometry = vertexInfo.Feature.Shape;
+
+			if (geometry == null || geometry.IsEmpty)
+			{
+				return;
+			}
+
+			var polycurve = geometry as IPolycurve;
+			if (polycurve == null)
+			{
+				return;
+			}
+
+			double tolerance = GeometryUtils.GetXyTolerance(vertexInfo.Feature);
+			bool in3D = ! use2D;
+
+			MultiPolycurve multiPolycurve = GeometryConversionUtils.CreateMultiPolycurve(polycurve);
+			var segmentCollection = (ISegmentCollection) geometry;
+
+			int absSegOffset = 0;
+			for (int partIdx = 0; partIdx < multiPolycurve.PartCount; partIdx++)
+			{
+				Linestring linestring = multiPolycurve.GetPart(partIdx);
+
+				for (int localSegIdx = 0; localSegIdx < linestring.SegmentCount; localSegIdx++)
+				{
+					IList<Linestring> selfIntersections =
+						GeomTopoOpUtils.GetLinearSelfIntersectionsXY(
+							linestring, localSegIdx, tolerance, in3D);
+
+					if (selfIntersections.Count == 0)
+					{
+						continue;
+					}
+
+					int absSegIdx = absSegOffset + localSegIdx;
+
+					bool alreadyAdded = vertexInfo.ShortSegments != null &&
+					                    vertexInfo.ShortSegments
+					                              .Any(s => s.iAbsSegment == absSegIdx);
+					if (alreadyAdded)
+					{
+						continue;
+					}
+
+					ISegment segment = segmentCollection.Segment[absSegIdx];
+
+					var segInfo = new esriSegmentInfo
+					              {
+						              pSegment = segment,
+						              iAbsSegment = absSegIdx,
+						              iPart = partIdx,
+						              iRelSegment = localSegIdx
+					              };
+
+					if (vertexInfo.ShortSegments == null)
+					{
+						vertexInfo.ShortSegments = new List<esriSegmentInfo>();
+					}
+
+					vertexInfo.ShortSegments.Add(segInfo);
+				}
+
+				absSegOffset += linestring.SegmentCount;
 			}
 		}
 
