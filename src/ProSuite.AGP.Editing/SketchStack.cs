@@ -89,7 +89,9 @@ public class SketchStack
 
 			if (double.IsNaN(lastPoint.Z) && noNanOnStack)
 			{
-				_msg.Warn("Sketch is not moved onto sketch stack because last point has NaN Z");
+				_msg.Warn(
+					"Sketch point could be missing in sketch (Repressed from stack due to NaN-Z). " +
+					"MAKE SURE TO CHECK sketch when finishing sketch after switching to stereo");
 				return false;
 			}
 		}
