@@ -146,7 +146,10 @@ public static class RepairGeometryClientUtils
 			sourceFeatures, repairInfos, minimumSegmentLength,
 			allowLoops, allowLinearSelfIntersections, crackPointTolerance, use2D);
 
-		int deadline = FeatureProcessingUtils.GetProcessingTimeout(sourceFeatures.Count);
+		double extraFactor = 2.5;
+
+		int deadline =
+			FeatureProcessingUtils.GetProcessingTimeout(sourceFeatures.Count, extraFactor);
 
 		ApplyRepairGeometryResponse response = GrpcClientUtils.Try(
 			o => rpcClient.ApplyRepairGeometry(request, o), cancellationToken, deadline);
