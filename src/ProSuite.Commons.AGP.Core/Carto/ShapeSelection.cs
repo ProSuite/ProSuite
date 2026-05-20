@@ -26,7 +26,10 @@ public interface IShapeSelection
 	bool IsEmpty { get; }
 	bool IsFully { get; }
 
-	int SelectedVertexCount { get; }
+	[Obsolete("Use CountSelectedVertices instead")]
+	int SelectedVertexCount { get; } // TODO drop
+
+	int CountSelectedVertices(int partIndex = -1);
 
 	ShapeSelectionState IsShapeSelected();
 
@@ -116,6 +119,18 @@ public class ShapeSelection : IShapeSelection
 	public bool IsFully => IsShapeSelected() == ShapeSelectionState.Entirely;
 
 	public int SelectedVertexCount => _blocks.Sum(b => b.Count);
+
+	public int CountSelectedVertices(int partIndex = -1)
+	{
+		IEnumerable<BlockList.Block> query = _blocks;
+
+		if (partIndex >= 0)
+		{
+			query = query.Where(b => b.Part == partIndex);
+		}
+
+		return query.Sum(b => b.Count);
+	}
 
 	public bool IsVertexSelected(int partIndex, int vertexIndex)
 	{
