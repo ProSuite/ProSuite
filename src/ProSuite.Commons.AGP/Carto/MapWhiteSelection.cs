@@ -179,9 +179,41 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 		if (minPoint is null)
 		{
-			// TODO If neither vertex nor segment found, see if we're inside a polygon,
-			//      so we can at least get layer/oid/partIndex; careful: what if inside
-			//      several polygons, which one to choose?
+			// No *vertex* and no *segment were within tolerance of click point:
+			// make a 3rd round looking for the containing polygon (part) instead
+			// (this is undefined if several polygons overlap at the click point!)
+
+			foreach (var ws in all)
+			{
+				double minArea = double.MaxValue;
+				Polygon minPolygon = null;
+
+				foreach (var involvedOid in ws.GetInvolvedOIDs())
+				{
+					var ss = ws.GetShapeSelection(involvedOid) ?? throw new AssertionException();
+
+					if (ss.Shape is not Polygon polygon) continue;
+
+					if (GeometryUtils.Contains(polygon, clickPoint))
+					{
+						if (polygon.Area < minArea)
+						{
+							minLayer = ws.Layer;
+							minOid = involvedOid;
+							minPolygon = polygon;
+							minArea = polygon.Area;
+						}
+					}
+				}
+
+				if (minPolygon is not null)
+				{
+					minPartIndex = minPolygon.PartCount == 1
+						               ? 0
+						               : GetContainingPartIndex(minPolygon, clickPoint);
+					break; // pick "first" layer (assuming layers are top down...)
+				}
+			}
 		}
 
 		layer = minLayer;
@@ -190,6 +222,35 @@ public class MapWhiteSelection : IMapWhiteSelection
 		segmentIndex = minSegIndex;
 		vertexIndex = minVertIndex;
 		return minPoint;
+	}
+
+	private static int GetContainingPartIndex(
+		Polygon polygon, MapPoint point/*, double tolerance = 0*/)
+	{
+		if (polygon is null)
+			throw new ArgumentNullException(nameof(polygon));
+		if (point is null)
+			throw new ArgumentNullException(nameof(point));
+
+		MapPoint testPoint = GeometryUtils.EnsureSpatialReference(point, polygon.SpatialReference);
+
+		for (int j = 0; j < polygon.PartCount; j++)
+		{
+			var partGeometry = GeometryUtils.GetPart(polygon, j);
+			if (partGeometry is not Polygon partPolygon) continue;
+
+			bool contains = GeometryEngine.Instance.Contains(partPolygon, testPoint);
+			if (contains) return j;
+
+			//if (tolerance > 0)
+			//{
+			//	var boundary = GeometryUtils.Boundary(partPolygon);
+			//	double distance = GeometryEngine.Instance.Distance(boundary, testPoint);
+			//	if (distance <= tolerance) return j; // treat boundary as hit
+			//}
+		}
+
+		return -1;
 	}
 
 	public ICollection<IWhiteSelection> GetLayerSelections()
