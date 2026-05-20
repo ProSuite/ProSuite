@@ -116,6 +116,11 @@ public class WhiteSelection : IWhiteSelection
 	/// <remarks>Must call on MCT</remarks>
 	public bool Combine(long oid, int part, int vertex, SetCombineMethod method)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		var changed = false;
 
 		if (method == SetCombineMethod.New)

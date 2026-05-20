@@ -175,6 +175,11 @@ public class ShapeSelection : IShapeSelection
 
 	public bool CombineVertex(int partIndex, int vertexIndex, SetCombineMethod method)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		if (Shape is Multipoint)
 		{
 			// outside world: a multipoint's points are its parts
@@ -233,6 +238,11 @@ public class ShapeSelection : IShapeSelection
 
 	public bool CombinePart(int partIndex, SetCombineMethod method)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		if (Shape is Multipoint)
 		{
 			// Special case, see comments in CombineVertex():
@@ -287,6 +297,7 @@ public class ShapeSelection : IShapeSelection
 				changed = _blocks.Clear();
 				break;
 			case SetCombineMethod.And:
+			case SetCombineMethod.Nop:
 				changed = false;
 				// nothing to do
 				break;
