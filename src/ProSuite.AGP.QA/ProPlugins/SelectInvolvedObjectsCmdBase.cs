@@ -69,6 +69,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 				IAttributeReader attributeReader =
 					GetInvolvedObjectsAttributeReader(issueTable, fromProductionModel);
 
+				if (attributeReader == null)
+				{
+					_msg.Warn(
+						$"Could not create attribute reader for issue table {issueTable.GetName()}");
+					continue;
+				}
+
 				_msg.DebugFormat("{0} issue objects selected from {1}", issueObjects.Count,
 				                 issueTable.GetName());
 
