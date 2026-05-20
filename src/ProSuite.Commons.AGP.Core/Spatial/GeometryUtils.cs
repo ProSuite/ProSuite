@@ -1092,6 +1092,42 @@ public static class GeometryUtils
 	}
 
 	/// <summary>
+	/// Returns a new <see cref="LineSegment"/> that has the same direction as
+	/// <paramref name="segment"/>, but with the start point moved backwards along
+	/// the line by <paramref name="extendAtStart"/> and the end point moved forward
+	/// along the line by <paramref name="extendAtEnd"/>. Negative values shorten
+	/// the segment at the respective end.
+	/// </summary>
+	/// <param name="segment">The segment to extend. Must have a non-zero length.</param>
+	/// <param name="extendAtStart">Distance (in the segment's map units) by which
+	/// to move the start point away from the end point.</param>
+	/// <param name="extendAtEnd">Distance (in the segment's map units) by which
+	/// to move the end point away from the start point.</param>
+	[NotNull]
+	public static LineSegment GetExtendedLineSegment(
+		[NotNull] Segment segment, double extendAtStart, double extendAtEnd)
+	{
+		Assert.ArgumentNotNull(segment, nameof(segment));
+
+		double dx = segment.EndCoordinate.X - segment.StartCoordinate.X;
+		double dy = segment.EndCoordinate.Y - segment.StartCoordinate.Y;
+		double length = Math.Sqrt(dx * dx + dy * dy);
+
+		Assert.ArgumentCondition(length > 0.0, "Cannot extend a zero-length segment.");
+
+		double ux = dx / length;
+		double uy = dy / length;
+
+		var newStart = new Coordinate2D(segment.StartCoordinate.X - ux * extendAtStart,
+		                                segment.StartCoordinate.Y - uy * extendAtStart);
+
+		var newEnd = new Coordinate2D(segment.EndCoordinate.X + ux * extendAtEnd,
+		                              segment.EndCoordinate.Y + uy * extendAtEnd);
+
+		return LineBuilderEx.CreateLineSegment(newStart, newEnd, segment.SpatialReference);
+	}
+
+	/// <summary>
 	/// Returns a value that indicates the size of the specified geometry:
 	/// - Multipatch, Polygon, Ring: 2D area
 	/// - Polyline, Path, Segment: 2D length
@@ -2258,13 +2294,13 @@ public static class GeometryUtils
 		foreach (var part in unionLine.Parts)
 		{
 			MapPoint startPoint = GeometryUtils.GetStartPoint(part);
-			if (!endPoints.Add(startPoint))
+			if (! endPoints.Add(startPoint))
 			{
 				duplicatePoints.Add(startPoint);
 			}
 
 			MapPoint endPoint = GeometryUtils.GetEndPoint(part);
-			if (!endPoints.Add(endPoint))
+			if (! endPoints.Add(endPoint))
 			{
 				duplicatePoints.Add(endPoint);
 			}
@@ -2275,5 +2311,4 @@ public static class GeometryUtils
 
 		return endPoints.ToList();
 	}
-
 }
