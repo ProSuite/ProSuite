@@ -111,11 +111,16 @@ public class WhiteSelection : IWhiteSelection
 
 	public int InvolvedFeatureCount => _shapes.Count;
 
-	public int SelectedVertexCount => _shapes.Values.Sum(ss => ss.SelectedVertexCount);
+	public int SelectedVertexCount => _shapes.Values.Sum(ss => ss.CountSelectedVertices());
 
 	/// <remarks>Must call on MCT</remarks>
 	public bool Combine(long oid, int part, int vertex, SetCombineMethod method)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		var changed = false;
 
 		if (method == SetCombineMethod.New)

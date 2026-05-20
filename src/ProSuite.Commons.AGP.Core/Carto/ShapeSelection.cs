@@ -26,7 +26,7 @@ public interface IShapeSelection
 	bool IsEmpty { get; }
 	bool IsFully { get; }
 
-	int SelectedVertexCount { get; }
+	int CountSelectedVertices(int partIndex = -1);
 
 	ShapeSelectionState IsShapeSelected();
 
@@ -115,7 +115,17 @@ public class ShapeSelection : IShapeSelection
 
 	public bool IsFully => IsShapeSelected() == ShapeSelectionState.Entirely;
 
-	public int SelectedVertexCount => _blocks.Sum(b => b.Count);
+	public int CountSelectedVertices(int partIndex = -1)
+	{
+		IEnumerable<BlockList.Block> query = _blocks;
+
+		if (partIndex >= 0)
+		{
+			query = query.Where(b => b.Part == partIndex);
+		}
+
+		return query.Sum(b => b.Count);
+	}
 
 	public bool IsVertexSelected(int partIndex, int vertexIndex)
 	{
@@ -175,6 +185,11 @@ public class ShapeSelection : IShapeSelection
 
 	public bool CombineVertex(int partIndex, int vertexIndex, SetCombineMethod method)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		if (Shape is Multipoint)
 		{
 			// outside world: a multipoint's points are its parts
@@ -233,6 +248,11 @@ public class ShapeSelection : IShapeSelection
 
 	public bool CombinePart(int partIndex, SetCombineMethod method)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		if (Shape is Multipoint)
 		{
 			// Special case, see comments in CombineVertex():
@@ -287,6 +307,7 @@ public class ShapeSelection : IShapeSelection
 				changed = _blocks.Clear();
 				break;
 			case SetCombineMethod.And:
+			case SetCombineMethod.Nop:
 				changed = false;
 				// nothing to do
 				break;

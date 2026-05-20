@@ -246,10 +246,15 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method,
-	                   Dictionary<FeatureLayer, List<long>> candidates)
+	                   Dictionary<FeatureLayer, List<long>> candidates = null)
 	{
 		if (clickPoint is null)
 			throw new ArgumentNullException(nameof(clickPoint));
+
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
 
 		var dict = candidates ?? GetInvolvedFeatures();
 
@@ -370,8 +375,13 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(Geometry geometry, SetCombineMethod method,
-	                   Dictionary<FeatureLayer, List<long>> candidates)
+	                   Dictionary<FeatureLayer, List<long>> candidates = null)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		var dict = candidates ?? GetInvolvedFeatures();
 
 		var changed = false;
