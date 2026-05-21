@@ -11,7 +11,6 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.QA.WorkList
