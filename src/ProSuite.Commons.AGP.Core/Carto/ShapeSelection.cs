@@ -26,7 +26,7 @@ public interface IShapeSelection
 	bool IsEmpty { get; }
 	bool IsFully { get; }
 
-	int SelectedVertexCount { get; }
+	int CountSelectedVertices(int partIndex = -1);
 
 	ShapeSelectionState IsShapeSelected();
 
@@ -81,6 +81,13 @@ public interface IShapeSelection
 	void PathReversed(int partIndex);
 
 	/// <summary>
+	/// Notify this shape selection that a part was removed from
+	/// the <see cref="Shape"/>. The internal representation will
+	/// be adjusted accordingly.
+	/// </summary>
+	void PartRemoved(int partIndex);
+
+	/// <summary>
 	/// Replace <see cref="Shape"/> with the given <paramref name="newShape"/>,
 	/// even if it is not compatible (see <see cref="IsCompatible"/>) with the
 	/// current shape/selection.
@@ -108,7 +115,17 @@ public class ShapeSelection : IShapeSelection
 
 	public bool IsFully => IsShapeSelected() == ShapeSelectionState.Entirely;
 
-	public int SelectedVertexCount => _blocks.Sum(b => b.Count);
+	public int CountSelectedVertices(int partIndex = -1)
+	{
+		IEnumerable<BlockList.Block> query = _blocks;
+
+		if (partIndex >= 0)
+		{
+			query = query.Where(b => b.Part == partIndex);
+		}
+
+		return query.Sum(b => b.Count);
+	}
 
 	public bool IsVertexSelected(int partIndex, int vertexIndex)
 	{
@@ -168,6 +185,11 @@ public class ShapeSelection : IShapeSelection
 
 	public bool CombineVertex(int partIndex, int vertexIndex, SetCombineMethod method)
 	{
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
 		if (Shape is Multipoint)
 		{
 			// outside world: a multipoint's points are its parts
@@ -209,9 +231,15 @@ public class ShapeSelection : IShapeSelection
 		if (method == SetCombineMethod.Xor)
 		{
 			var contained = _blocks.IsSelected(partIndex, vertexIndex);
+
 			if (contained)
+			{
 				_blocks.Unselect(partIndex, vertexIndex);
-			else _blocks.Select(partIndex, vertexIndex);
+			}
+			else
+			{
+				_blocks.Select(partIndex, vertexIndex);
+			}
 			return true;
 		}
 
@@ -220,7 +248,49 @@ public class ShapeSelection : IShapeSelection
 
 	public bool CombinePart(int partIndex, SetCombineMethod method)
 	{
-		throw new NotImplementedException();
+		if (method == SetCombineMethod.Nop)
+		{
+			return false;
+		}
+
+		if (Shape is Multipoint)
+		{
+			// Special case, see comments in CombineVertex():
+			return CombineVertex(partIndex, partIndex, method);
+		}
+
+		bool changed = false;
+
+		if (method == SetCombineMethod.New)
+		{
+			changed = Clear();
+			method = SetCombineMethod.Add;
+		}
+
+		if (method == SetCombineMethod.Add)
+		{
+			int count = GetVertexCount(Shape, partIndex);
+			var added = _blocks.Select(partIndex, 0, count);
+			return changed || added;
+		}
+
+		if (method == SetCombineMethod.Remove)
+		{
+			var removed = _blocks.Unselect(partIndex);
+			return changed || removed;
+		}
+
+		if (method == SetCombineMethod.And)
+		{
+			throw new NotImplementedException("Needs to be specified and implemented");
+		}
+
+		if (method == SetCombineMethod.Xor)
+		{
+			throw new NotImplementedException("Needs to be specified and implemented");
+		}
+
+		throw new ArgumentOutOfRangeException(nameof(method), method, null);
 	}
 
 	public bool CombineShape(SetCombineMethod method)
@@ -237,6 +307,7 @@ public class ShapeSelection : IShapeSelection
 				changed = _blocks.Clear();
 				break;
 			case SetCombineMethod.And:
+			case SetCombineMethod.Nop:
 				changed = false;
 				// nothing to do
 				break;
@@ -563,6 +634,11 @@ public class ShapeSelection : IShapeSelection
 		_blocks.PartReversed(partIndex, numVerticesInPart);
 	}
 
+	public void PartRemoved(int partIndex)
+	{
+		_blocks.PartRemoved(partIndex);
+	}
+
 	#region Private methods
 
 	private static IEnumerable<BlockList.Block> Invert(
@@ -822,6 +898,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 
 	public bool IsEmpty => _head.Next is null;
 
+	/// <summary>
+	/// Mark the given vertex or vertex range as selected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
 	public bool Select(int part, int vertex, int count = 1)
 	{
 		// if vertex is in existing block: nothing to do
@@ -856,6 +936,10 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return true;
 	}
 
+	/// <summary>
+	/// Mark the given vertex as unselected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
 	public bool Unselect(int part, int vertex)
 	{
 		var node = Find(part, vertex, out Node before);
@@ -904,6 +988,42 @@ public class BlockList : IEnumerable<BlockList.Block>
 		return true;
 	}
 
+	/// <summary>
+	/// Mark all vertices in the given part as unselected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
+	public bool Unselect(int part)
+	{
+		bool changed = false;
+
+		var before = _head;
+		var node = _head.Next;
+
+		// Find first node covering given part:
+
+		while (node != null && node.Part < part)
+		{
+			before = node;
+			node = node.Next;
+		}
+
+		// Unlink and free blocks in given part:
+
+		while (node != null && node.Part == part)
+		{
+			var old = node;
+			node = before.Next = node.Next;
+			FreeNode(old);
+			changed = true;
+		}
+
+		return changed;
+	}
+
+	/// <summary>
+	/// Mark all vertices as unselected
+	/// </summary>
+	/// <returns>true iff the selection changed</returns>
 	public bool Clear()
 	{
 		var wasEmpty = IsEmpty;
@@ -1053,6 +1173,9 @@ public class BlockList : IEnumerable<BlockList.Block>
 		}
 	}
 
+	/// <summary>
+	/// Adjust the selection after the orientation of a part was reversed
+	/// </summary>
 	public void PartReversed(int part, int numVerticesInPart)
 	{
 		var node = Find(part, 0, out var before);
@@ -1099,6 +1222,44 @@ public class BlockList : IEnumerable<BlockList.Block>
 		list[last].Next = tail;
 
 		before.Next = list[0];
+	}
+
+	/// <summary>
+	/// Adjust the selection after a part has been removed from the shape
+	/// </summary>
+	public void PartRemoved(int part)
+	{
+		// Unlink all blocks that belong to the given part,
+		// adjust part index of blocks for remaining parts:
+
+		var before = _head;
+		var node = _head.Next;
+
+		// Find first node covering given part:
+
+		while (node != null && node.Part < part)
+		{
+			before = node;
+			node = node.Next;
+		}
+
+		// Unlink and free blocks in given part:
+
+		while (node != null && node.Part == part)
+		{
+			var old = node;
+			node = before.Next = node.Next;
+			FreeNode(old);
+		}
+		
+		// Adjust part index of blocks down the road:
+
+		while (node != null)
+		{
+			// assert node.Part > part
+			node.Part -= 1;
+			node = node.Next;
+		}
 	}
 
 	[MustDisposeResource]
@@ -1210,7 +1371,7 @@ public class BlockList : IEnumerable<BlockList.Block>
 	/// </summary>
 	private class Node
 	{
-		public int Part { get; private set; }
+		public int Part { get; set; }
 		public int First { get; set; }
 		public int Count { get; set; }
 		public Node Next { get; set; }

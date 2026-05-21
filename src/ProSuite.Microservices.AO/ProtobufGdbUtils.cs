@@ -13,6 +13,7 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.Geodatabase;
+using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
@@ -23,13 +24,6 @@ namespace ProSuite.Microservices.AO
 {
 	public static class ProtobufGdbUtils
 	{
-		/// <summary>
-		/// The name of the domain property of the FieldMsg that notifies the client that the
-		/// respective field is the subtype field. This could be removed if the proto model is
-		/// extended.
-		/// </summary>
-		public const string SubtypeDomainName = "__SubType__";
-
 		public static GdbObjRefMsg ToGdbObjRefMsg(IFeature feature)
 		{
 			return new GdbObjRefMsg
@@ -242,7 +236,7 @@ namespace ProSuite.Microservices.AO
 			// The subtype field name is needed in QaObjectAttributeConstraint
 			if (subtypeFieldIdx >= 0)
 			{
-				result.Fields[subtypeFieldIdx].DomainName = SubtypeDomainName;
+				result.Fields[subtypeFieldIdx].DomainName = ProtobufGeoDbUtils.SubtypeDomainName;
 			}
 
 			return result;

@@ -306,6 +306,12 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 					yield return new ArcRelationshipClassDefinitionName(definition, this);
 				}
 
+				foreach (AttributedRelationshipClassDefinition definition in Geodatabase
+					         .GetDefinitions<AttributedRelationshipClassDefinition>())
+				{
+					yield return new ArcRelationshipClassDefinitionName(definition, this);
+				}
+
 				break;
 
 			case esriDatasetType.esriDTAny:

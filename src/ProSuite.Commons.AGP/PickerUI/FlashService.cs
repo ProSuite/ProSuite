@@ -79,8 +79,15 @@ public class FlashService : IDisposable
 				flashGeometry = GetPolygonGeometry(geometry);
 				symbol = _polygonSymbol;
 				break;
-			case GeometryType.Unknown:
 			case GeometryType.Multipatch:
+				// TODO: Fix this for stereo:
+				// Use CleanMultipatchClientUtils.GetTriangleConversionRings to get polygons,
+				// create a bag and flash that bag. This will work for stereo and 3D maps.
+				// Alternative: Wait for Menno to fix multipatch overlays in stereo.
+				flashGeometry = geometry;
+				symbol = _polygonSymbol;
+				break;
+			case GeometryType.Unknown:
 			case GeometryType.GeometryBag:
 				break;
 			default:
@@ -114,9 +121,11 @@ public class FlashService : IDisposable
 			case GeometryType.Polygon:
 				flashGeometry = GetPolygonGeometry(geometry);
 				break;
+			case GeometryType.Multipatch:
+				flashGeometry = geometry;
+				break;
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
-			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 				break;
 			default:
@@ -253,6 +262,7 @@ public class ColoredSymbol : IFlashSymbol
 				return symbol;
 			}
 			case GeometryType.Polygon:
+			case GeometryType.Multipatch:
 			{
 				CIMStroke outline =
 					SymbolFactory.Instance.ConstructStroke(_color, _width, LineStyle);
@@ -264,7 +274,6 @@ public class ColoredSymbol : IFlashSymbol
 			}
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
-			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 			default:
 				return null;

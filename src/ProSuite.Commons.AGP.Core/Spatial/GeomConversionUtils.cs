@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Geometry;
@@ -143,9 +144,12 @@ public static class GeomConversionUtils
 				newGroup = AddToRingGroup(pointCollection, null, patchStartPointIndex,
 				                          patchPointCount, maintainRingIds);
 			}
+			else if (patchType != PatchType.Ring)
+			{
+				throw new NotSupportedException($"Unsupported ring type: {patchType}");
+			}
 			else
 			{
-				Assert.True(patchType == PatchType.Ring, $"Unsupported ring type: {patchType}");
 				Assert.NotNull(newGroup);
 
 				newGroup = AddToRingGroup(pointCollection, newGroup, patchStartPointIndex,
@@ -263,8 +267,8 @@ public static class GeomConversionUtils
 	{
 		Patch result = patchBuilder.MakePatch(patchType);
 
-		result.Coords = linestring.GetPoints().Select(
-			pnt => new Coordinate3D(pnt.X, pnt.Y, pnt.Z)).ToList();
+		result.Coords = linestring.GetPoints().Select(pnt => new Coordinate3D(pnt.X, pnt.Y, pnt.Z))
+		                          .ToList();
 
 		if (partId != null)
 		{

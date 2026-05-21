@@ -656,6 +656,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		private static QueryFilter GetProQueryFilter(ITableFilter queryFilter)
 		{
+			if (queryFilter == null)
+			{
+				return null;
+			}
+
 			QueryFilter proQueryFilter;
 
 			if (queryFilter is ArcQueryFilter arcQueryFilter)

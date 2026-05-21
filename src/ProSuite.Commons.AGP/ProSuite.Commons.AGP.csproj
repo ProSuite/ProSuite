@@ -10,6 +10,9 @@
 
     <ArcGISProVersion Condition=" '$(ArcGISProVersion)' == '' ">3.0</ArcGISProVersion>
 
+		<!-- Suppressing WFO1000 for .NET 10 temporarily until it is fixed for each control property. -->
+    <NoWarn>1591;WFO1000</NoWarn>
+
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

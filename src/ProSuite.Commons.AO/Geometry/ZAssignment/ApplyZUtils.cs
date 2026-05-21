@@ -24,7 +24,7 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 		[NotNull]
 		public static T Dtm<T>([NotNull] T source,
 		                       [NotNull] ISimpleSurface surface,
-		                       [CanBeNull] IGeometry areaOfInterest,
+		                       [CanBeNull] IGeometry areaOfInterest = null,
 		                       double drapeTolerance = double.NaN,
 		                       double zOffset = double.NaN)
 			where T : IGeometry
