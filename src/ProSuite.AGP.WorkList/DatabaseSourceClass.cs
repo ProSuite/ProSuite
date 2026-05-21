@@ -162,8 +162,15 @@ public class DatabaseSourceClass : SourceClass
 
 	protected override string GetRelevantSubFieldsCore(string subFields)
 	{
+		if (string.IsNullOrEmpty(_additionalSubFields))
+		{
+			return string.IsNullOrEmpty(StatusField)
+				       ? $"{subFields}"
+				       : $"{subFields},{StatusField}";
+		}
+
 		return string.IsNullOrEmpty(StatusField)
 			       ? $"{subFields},{_additionalSubFields}"
-				   : $"{subFields},{_additionalSubFields},{StatusField}";
+			       : $"{subFields},{_additionalSubFields},{StatusField}";
 	}
 }
