@@ -12,11 +12,18 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		internal static IEnumerable<ArcRow> GetArcRows(
 			RowCursor cursor, ITable sourceTable = null)
 		{
-			while (cursor.MoveNext())
+			try
 			{
-				Row row = cursor.Current;
+				while (cursor.MoveNext())
+				{
+					Row row = cursor.Current;
 
-				yield return ToArcRow(row, sourceTable);
+					yield return ToArcRow(row, sourceTable);
+				}
+			}
+			finally
+			{
+				cursor?.Dispose();
 			}
 		}
 
