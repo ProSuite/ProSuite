@@ -778,7 +778,6 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 	public virtual void Dispose()
 	{
-		//_workspacesByHandle.Remove(Geodatabase.Handle.ToInt64(), out _);
 		Geodatabase.Dispose();
 	}
 }
@@ -1020,6 +1019,7 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 			if (_workspacesByVersionName.TryGetValue(version.GetName(),
 			                                         out ArcVersionedWorkspace workspace))
 			{
+				version.Dispose();
 				return workspace;
 			}
 
