@@ -967,14 +967,10 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 		Assert.True(_workspacesByVersionName.Remove(VersionName),
 		            $"Cannot delete version {VersionName} because it is unknown");
 
+		VersionManager.Dispose();
+		Geodatabase.Dispose();
 		Version.Delete();
-	}
-
-	public override void Dispose()
-	{
-		//_workspacesByVersionName.Remove(VersionName);
-		//Version.Dispose();
-		base.Dispose();
+		Version.Dispose();
 	}
 
 	public void RefreshVersion()
