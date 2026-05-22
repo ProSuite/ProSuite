@@ -19,7 +19,7 @@ using Subtype = ProSuite.GIS.Geodatabase.API.Subtype;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcTable : ITable, IObjectClass, ISubtypes
+	public class ArcTable : ITable, IObjectClass, ISubtypes, IDisposable
 	{
 		private bool _cachePropertiesEagerly;
 
@@ -708,6 +708,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			if (field == null)
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");
 			return field;
+		}
+
+		public void Dispose()
+		{
+			ProTable?.Dispose();
+			ProTableDefinition?.Dispose();
 		}
 	}
 
