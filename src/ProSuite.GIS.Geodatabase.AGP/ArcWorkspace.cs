@@ -1103,29 +1103,34 @@ public class ArcConflictClass : IConflictClass
 
 public class VersionInfo : IVersionInfo
 {
-	private readonly Version _version;
+	private readonly bool _isOwner;
 
 	public VersionInfo(Version version)
 	{
-		_version = version;
+		VersionName = version.GetName();
+		Description = version.GetDescription();
+		Created = version.GetCreatedDate();
+		Modified = version.GetModifiedDate();
+		Parent = version.GetParent() != null ? new VersionInfo(version.GetParent()) : null;
+		Children = version.GetChildren().Select(c => new VersionInfo(c));
+
+		_isOwner = version.IsOwner();
 	}
 
 	#region Implementation of IVersionInfo
 
-	public string VersionName => _version.GetName();
-	public string Description => _version.GetDescription();
-	public object Created => _version.GetCreatedDate();
-	public object Modified => _version.GetModifiedDate();
+	public string VersionName { get; }
+	public string Description { get; }
+	public object Created { get; }
+	public object Modified { get; }
 
-	public IVersionInfo Parent =>
-		_version.GetParent() != null ? new VersionInfo(_version.GetParent()) : null;
+	public IVersionInfo Parent { get; }
 
-	public IEnumerable<IVersionInfo> Children =>
-		_version.GetChildren().Select(c => new VersionInfo(c));
+	public IEnumerable<IVersionInfo> Children { get; }
 
 	public bool IsOwner()
 	{
-		return _version.IsOwner();
+		return _isOwner;
 	}
 
 	#endregion
