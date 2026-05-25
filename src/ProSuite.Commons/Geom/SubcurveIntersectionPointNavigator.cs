@@ -619,18 +619,20 @@ namespace ProSuite.Commons.Geom
 
 				Assert.NotNull(nextIntersection, "No next intersection");
 
+				if (nextIntersection.Equals(andEnd))
+				{
+					// Back at the end of the loop without finding usage inside it. A used
+					// subcurve that starts at andEnd goes BEYOND the loop (it leaves through
+					// the same pinch point), so it does not count as the loop having been used.
+					return false;
+				}
+
 				bool usedBySubcurveStart = usedSubcurves.Any(
 					s => IsIntersectionUsed(nextIntersection, s, alongSource));
 
 				if (usedBySubcurveStart)
 				{
 					return true;
-				}
-
-				if (nextIntersection.Equals(andEnd))
-				{
-					// Back at the start
-					return false;
 				}
 
 				// TODO: Check this:
