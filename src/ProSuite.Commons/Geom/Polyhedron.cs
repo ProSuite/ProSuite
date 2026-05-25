@@ -105,46 +105,27 @@ namespace ProSuite.Commons.Geom
 
 			foreach (RingGroup ringGroup in RingGroups)
 			{
-				MultiLinestring orientedGroup = AsProperlyOriented(ringGroup);
+				// Split all the rings at linear self-intersections and remove spikes, i.e.
+				// duplicate segments sticking out. This makes ClockwiseOriented correct
+				// for each cleaned ring before AsProperlyOriented runs. This operation
+				// can change the ring's orientation!
+				IEnumerable<RingGroup> cleanedGroups = CleanupDuplicateSegments(
+					ringGroup, verticalRingDetectionTolerance,
+					out List<Linestring> cleanupVerticals);
 
-				if (orientedGroup.IsEmpty)
+				verticalRings.AddRange(cleanupVerticals);
+
+				foreach (RingGroup cleanedGroup in cleanedGroups)
 				{
-					verticalRings.AddRange(ringGroup.GetLinestrings());
-					continue;
-				}
+					RingGroup orientedGroup = AsProperlyOriented(cleanedGroup);
 
-				// Remove vertical rings and parts of rings
-				Linestring exteriorRing = ((RingGroup) orientedGroup).ExteriorRing;
-
-				List<Linestring> spaghetti = new List<Linestring>();
-				if (GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-					    exteriorRing, verticalRingDetectionTolerance, spaghetti))
-				{
-					// TODO: Deal with interior rings in case the outer ring is not simple
-
-					if (spaghetti.Count == 0)
+					if (orientedGroup.IsEmpty)
 					{
-						verticalRings.Add(exteriorRing);
+						verticalRings.AddRange(cleanedGroup.GetLinestrings());
+						continue;
 					}
-					else
-					{
-						foreach (Linestring spaghetto in spaghetti)
-						{
-							if (spaghetto.IsClosed && spaghetto.ClockwiseOriented == true &&
-							    ! spaghetto.IsVerticalRing(tolerance))
-							{
-								ringGroupsToUnionize.Add(new RingGroup(spaghetto));
-							}
-							else
-							{
-								verticalRings.Add(spaghetto);
-							}
-						}
-					}
-				}
-				else
-				{
-					ringGroupsToUnionize.Add(ringGroup);
+
+					ringGroupsToUnionize.Add(orientedGroup);
 				}
 			}
 
@@ -154,7 +135,99 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
-		private static MultiLinestring AsProperlyOriented(RingGroup ringGroup)
+		/// <summary>
+		/// Splits each ring of the input group at linear self-intersections (which
+		/// includes self-tangencies, i.e. rings that visit the same XY point at two
+		/// non-adjacent vertices). The resulting rings are simple in XY and therefore
+		/// have a deterministic <see cref="Linestring.ClockwiseOriented"/> value, so
+		/// that orientation-dependent downstream logic works correctly.
+		/// </summary>
+		/// <param name="input">The ring group to clean.</param>
+		/// <param name="verticalRingDetectionTolerance">Tolerance that determines
+		/// whether segments are duplicates and thus rings are vertical.</param>
+		/// <param name="verticalRings">Receives fragments that are non-closed or
+		/// classified as vertical rings.</param>
+		/// <returns>Zero or more cleaned ring groups. Empty if the input was
+		/// entirely vertical or degenerate. May contain more than one group if the
+		/// exterior ring split into multiple simple rings.</returns>
+		private static IEnumerable<RingGroup> CleanupDuplicateSegments(
+			[NotNull] RingGroup input,
+			double verticalRingDetectionTolerance,
+			[NotNull] out List<Linestring> verticalRings)
+		{
+			verticalRings = new List<Linestring>();
+
+			List<Linestring> cleanedExteriors = CleanRing(
+				input.ExteriorRing, verticalRingDetectionTolerance, verticalRings);
+
+			if (cleanedExteriors.Count == 0)
+			{
+				return Enumerable.Empty<RingGroup>();
+			}
+
+			var cleanedInteriors = new List<Linestring>();
+			foreach (Linestring interior in input.InteriorRings)
+			{
+				cleanedInteriors.AddRange(
+					CleanRing(interior, verticalRingDetectionTolerance, verticalRings));
+			}
+
+			// Reassemble. Interior rings are attached to the first exterior fragment
+			// only.
+			// TODO: When the exterior ring splits, distribute interior rings across
+			// the exterior fragments by geometric containment.
+			var result = new List<RingGroup>(cleanedExteriors.Count);
+			for (int i = 0; i < cleanedExteriors.Count; i++)
+			{
+				RingGroup group = i == 0 && cleanedInteriors.Count > 0
+					                  ? new RingGroup(cleanedExteriors[i], cleanedInteriors)
+					                  : new RingGroup(cleanedExteriors[i]);
+				result.Add(group);
+			}
+
+			return result;
+		}
+
+		private static List<Linestring> CleanRing(
+			[NotNull] Linestring ring,
+			double verticalRingDetectionTolerance,
+			[NotNull] List<Linestring> verticalRings)
+		{
+			var candidates = new List<Linestring>();
+			var spaghetti = new List<Linestring>();
+
+			if (! GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
+				    ring, verticalRingDetectionTolerance, spaghetti))
+			{
+				// No self-intersection was removed: pass the original ring through.
+				candidates.Add(ring);
+				return candidates;
+			}
+
+			if (spaghetti.Count == 0)
+			{
+				// All segments cancelled out: the original ring was entirely vertical.
+				verticalRings.Add(ring);
+				return candidates;
+			}
+
+			foreach (Linestring fragment in spaghetti)
+			{
+				if (fragment.IsClosed &&
+				    ! fragment.IsVerticalRing(verticalRingDetectionTolerance))
+				{
+					candidates.Add(fragment);
+				}
+				else
+				{
+					verticalRings.Add(fragment);
+				}
+			}
+
+			return candidates;
+		}
+
+		private static RingGroup AsProperlyOriented([NotNull] RingGroup ringGroup)
 		{
 			RingGroup resultRingGroup = (RingGroup) ringGroup.Clone();
 
@@ -162,7 +235,7 @@ namespace ProSuite.Commons.Geom
 
 			if (clockwiseOriented == null)
 			{
-				return MultiPolycurve.CreateEmpty();
+				return RingGroup.CreateEmpty();
 			}
 
 			if (clockwiseOriented == false)

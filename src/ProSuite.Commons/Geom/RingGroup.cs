@@ -32,12 +32,17 @@ namespace ProSuite.Commons.Geom
 			return new RingGroup(exteriorRing, interiorRings);
 		}
 
+		public static RingGroup CreateEmpty()
+		{
+			return new RingGroup(Linestring.CreateEmpty());
+		}
+
 		public RingGroup([NotNull] Linestring exteriorRing)
-			: base(new[] {exteriorRing}) { }
+			: base(new[] { exteriorRing }) { }
 
 		public RingGroup([NotNull] Linestring exteriorRing,
 		                 IEnumerable<Linestring> interiorRings)
-			: base(new[] {exteriorRing}.Concat(interiorRings)) { }
+			: base(new[] { exteriorRing }.Concat(interiorRings)) { }
 
 		public Linestring ExteriorRing => Count > 0 ? Linestrings[0] : null;
 
