@@ -4718,6 +4718,37 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionTargetRingTouchingOutsideBoundaryLoop()
+		{
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"boundary_loop_union_touching_from_outside_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"boundary_loop_union_touching_from_outside_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			double tolerance = 0.01;
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// The target does not interior-intersect the source, so the result union
+			// should have the area == the sum of the inputs.
+			double expectedArea = source.GetArea2D() + target.GetArea2D();
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+
+			// Vice versa:
+			result = GeomTopoOpUtils.GetUnionAreasXY(target, source, tolerance);
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
 		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
 		{
 			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
