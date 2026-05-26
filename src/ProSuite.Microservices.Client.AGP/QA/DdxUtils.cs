@@ -839,7 +839,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				return;
 			}
 
-			if (originalDataset.Attributes.Count > 0)
+			if (originalDataset.Attributes.Count > 0 ||
+			    originalDataset.ObjectTypes.Count > 0)
 			{
 				_msg.DebugFormat("Dataset details already loaded for {0}",
 				                 originalDataset.Name);

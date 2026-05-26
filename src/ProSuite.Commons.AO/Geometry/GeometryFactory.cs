@@ -2063,11 +2063,13 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="x">The x coordinate.</param>
 		/// <param name="y">The y coordinate.</param>
 		/// <param name="z">The z coordinate.</param>
+		/// <param name="sref"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static IPoint CreatePoint(double x, double y, double z)
+		public static IPoint CreatePoint(double x, double y, double z,
+		                                 ISpatialReference sref = null)
 		{
-			IPoint point = CreatePoint(x, y);
+			IPoint point = CreatePoint(x, y, sref);
 
 			MakeZAware(point);
 

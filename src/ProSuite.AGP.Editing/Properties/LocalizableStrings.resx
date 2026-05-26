@@ -160,7 +160,7 @@
     <value> (the larger feature will remain after the merge)</value>
   </data>
   <data name="ReshapeAlongTool_LogPromptForSelection" xml:space="preserve">
-    <value>Select one or more line or polygon features to align with other feature(s). &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
+    <value>Select one or more line or polygon features to align with other feature(s). &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.&lt;br&gt;- Press [S] to toggle the reshape side.</value>
   </data>
   <data name="ReshapeAlongTool_LogUsingCurrentSelection" xml:space="preserve">
     <value>Select the target line or polygon features to align with. &lt;br&gt;- Press [ESC] to select a different feature.</value>

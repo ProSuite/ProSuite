@@ -145,6 +145,11 @@ namespace ProSuite.UI.Core.MicroserverState
 				throw new NotImplementedException();
 			}
 
+			public bool StopLocalServer()
+			{
+				throw new NotImplementedException();
+			}
+
 			public bool CanAcceptCalls(bool allowFailOver = false, bool logOnlyIfUnhealthy = false)
 			{
 				return true;
@@ -161,7 +166,8 @@ namespace ProSuite.UI.Core.MicroserverState
 				return Task.FromResult(false);
 			}
 
-			public bool AllowStartingLocalServer(string executable, string extraArguments = null, string command = null)
+			public bool AllowStartingLocalServer(string executable, string extraArguments = null,
+			                                     string command = null)
 			{
 				return false;
 			}

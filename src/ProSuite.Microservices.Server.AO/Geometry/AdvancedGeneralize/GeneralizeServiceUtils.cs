@@ -146,7 +146,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedGeneralize
 					if (updateGeometry.IsEmpty)
 					{
 						string message =
-							$"Feature {GdbObjectUtils.ToString(feature)} would become " +
+							$"Feature {GeometryProcessingUtils.GetGdbObjectLabel(feature)} would become " +
 							$"empty after removing points. The feature was not changed.";
 						_msg.Warn(message);
 						nonStorableMessagess.Add(message);
@@ -167,10 +167,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedGeneralize
 				}
 				catch (Exception e)
 				{
-					_msg.Debug($"Error storing feature {feature.OID}", e);
+					_msg.Debug($"Error storing feature {GeometryProcessingUtils.GetGdbObjectLabel(feature)}", e);
 
 					string message =
-						$"Error while generalizing {GdbObjectUtils.ToString(feature)}: " +
+						$"Error while generalizing {GeometryProcessingUtils.GetGdbObjectLabel(feature)}: " +
 						$"{e.Message}. The feature was not changed.";
 
 					_msg.InfoFormat(message);

@@ -43,7 +43,8 @@ public partial class PickerWindow : ProWindow, IDisposable, ICloseable
 			return;
 		}
 
-		// sender should be the ListBoxItem; selection binding already updates SelectedItem
+		// Confirm the highlighted item as the selection, then close
+		_viewModel.ConfirmSelectionCommand.Execute(null);
 		Close();
 		e.Handled = true;
 	}

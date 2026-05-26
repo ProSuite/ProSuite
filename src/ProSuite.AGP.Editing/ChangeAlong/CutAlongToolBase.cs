@@ -21,14 +21,14 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	protected CutAlongToolOptions _cutAlongToolOptions;
+
+	[CanBeNull] private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
+
 	protected CutAlongToolBase()
 	{
 		DisplayTargetLines = true;
 	}
-
-	protected CutAlongToolOptions _cutAlongToolOptions;
-
-	[CanBeNull] private OverridableSettingsProvider<PartialCutAlongOptions> _settingsProvider;
 
 	protected override bool RefreshSubcurvesOnRedraw =>
 		_cutAlongToolOptions.ClipLinesOnVisibleExtent &&
@@ -81,10 +81,11 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 	protected override List<ResultFeature> ChangeFeaturesAlong(
 		List<Feature> selectedFeatures, IList<Feature> targetFeatures,
 		List<CutSubcurve> cutSubcurves,
+		bool useNonDefaultReshapeSide,
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves)
 	{
-		var targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
+		TargetBufferOptions targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
@@ -167,7 +168,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		IList<Feature> selectedFeatures, IList<Feature> targetFeatures,
 		CancellationToken cancellationToken)
 	{
-		var targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
+		TargetBufferOptions targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
@@ -230,7 +231,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 			InitializeOptions();
 		}
 
-		var viewModel = GetCutAlongViewModel();
+		DockPaneCutAlongViewModelBase viewModel = GetCutAlongViewModel();
 		if (viewModel == null)
 		{
 			return;
@@ -242,7 +243,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 	protected override void HideOptionsPane()
 	{
-		var viewModel = GetCutAlongViewModel();
+		DockPaneCutAlongViewModelBase viewModel = GetCutAlongViewModel();
 		viewModel?.Hide();
 	}
 
