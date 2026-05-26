@@ -5,10 +5,12 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
@@ -143,11 +145,32 @@ public static class LayerUtils
 				cursor = layer.Search(filter);
 #endif
 			}
+			catch (GeodatabaseFieldException fieldException)
+			{
+				// This has been observed in Pro 3.7
+				_msg.Warn(
+					$"Error querying layer {((MapMember) layer).Name}: {fieldException.Message}. The layer is ignored",
+					fieldException);
+
+				yield break;
+			}
+			catch (GeodatabaseTableException tableException)
+			{
+				// This seems to happen in older ArcGIS versions
+				_msg.Warn(
+					$"Error querying layer {((MapMember) layer).Name}: {tableException.Message}. The layer is ignored",
+					tableException);
+
+				yield break;
+			}
 			catch (Exception e)
 			{
 				_msg.Debug($"Error querying layer {((MapMember) layer).Name} using filter: " +
 				           $"{GdbQueryUtils.FilterPropertiesToString(filter)} ", e);
-				throw;
+
+				throw new DataAccessException(
+					$"Error querying layer {((MapMember) layer).Name}: {e.Message}",
+					e);
 			}
 
 			if (cursor is null) yield break; // no valid data source
