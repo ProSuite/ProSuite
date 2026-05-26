@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geom
 {
@@ -430,6 +431,30 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(145.05, footprint.GetArea2D(), 1.0,
 			                "Footprint should match AO reference area (≈145.05 sq m)");
+		}
+
+		[Test]
+		public void CanGetFootprintForLabyrinthAventure()
+		{
+			// TLM_GEBAEUDE labyrinth_aventure multipatch (Spacecraft footprint repro).
+			// The XY footprint of this polyhedron is built incrementally by sorting its
+			// ring groups by area descending and unioning them one by one (see
+			// Polyhedron.GetXYFootprint). Multiple of the union steps (around step 180,
+			// 190, 195, 204, 214) trigger boundary-loop / pinch-point edge cases that
+			// caused the result to lose holes or self-intersect. Expected area:
+			// 655.276735 (AO reference).
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("labyrinth_aventure.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.0005;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(655.276735, footprint.GetArea2D(), 0.001);
 		}
 
 		private static Polyhedron CreatePolyhedron(Linestring linestring,

@@ -4822,6 +4822,150 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionSpacecraftFootprintAtStep195_UnionMustNotDecreaseArea()
+		{
+			// Repro for the failing union at step 195 of the labyrinth_aventure
+			// (TLM_GEBAEUDE) incremental footprint. The cumulative dump shows
+			// area before union = 1279.024, area after = 1277.249, ring = 1.749 (disjoint).
+			// After WKB round-trip the source still contains duplicate outer rings
+			// (PartCount=38, two near-identical exteriors at 645.666 / 645.505) that
+			// reveal a deeper corruption produced in an earlier step.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre195_source.wkb"),
+				out _);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre195_ring.wkb"),
+				out _);
+
+			const double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea);
+		}
+
+
+		[Test]
+		public void CanUnionSpacecraftFootprintAtStep181_UnionMustNotDuplicateOuterRing()
+		{
+			// Repro for the FIRST area-doubling corruption in the labyrinth_aventure
+			// (TLM_GEBAEUDE) footprint pipeline. At step 181 the source area 612.952 sq m
+			// almost DOUBLES to 1210.931 sq m after unioning a 1.915 sq m ring. This is
+			// the same class of bug as steps 180/190: a pinch-point / boundary-loop
+			// interaction causes a near-identical outer ring to appear in the result
+			// instead of merging into the existing outer.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre181_source.wkb"),
+				out _);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre181_ring.wkb"),
+				out _);
+
+			const double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+			double targetArea = target.GetArea2D();
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.LessOrEqual(result.GetArea2D(), sourceArea + targetArea + 0.001,
+			                   "Union result area must not exceed source + target.");
+		}
+
+		[Test]
+		public void CanUnionSpacecraftFootprintAtStep198_OuterRingsMustNotDuplicate()
+		{
+			// Repro for the union step that doubles the number of outer rings in the
+			// labyrinth_aventure footprint pipeline. At step 198 the source has 3
+			// outer rings and the union with a tiny 1.683 sq m ring produces 6 outer
+			// rings (each existing outer ring is essentially duplicated). The expected
+			// area is source+target ~3879 (single ring touches all 3 components and
+			// merges them into one connected area), but the result is 3871 with 6
+			// outers — the geometry is non-simple.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre198_source.wkb"),
+				out _);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre198_ring.wkb"),
+				out _);
+
+			const double tolerance = 0.0005;
+
+			int outerCountBefore = source.GetLinestrings()
+			                             .Count(l => l.ClockwiseOriented == true);
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			int outerCountAfter = result.GetLinestrings()
+			                            .Count(l => l.ClockwiseOriented == true);
+
+			Assert.LessOrEqual(outerCountAfter, outerCountBefore,
+			                   "Adding a single ring may merge outers but must not multiply them.");
+		}
+
+		[Test]
+		public void CanUnionSpacecraftFootprintAtStep204_UnionMustNotDecreaseArea()
+		{
+			// Repro for the failing union at step 204 of the labyrinth_aventure
+			// (TLM_GEBAEUDE) incremental footprint. The result area drops dramatically
+			// (5845.321 -> 1935.594) when a tiny ring (1.568 sq m) is unioned with the
+			// source. This is the largest single-step area regression in the pipeline.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre204_source.wkb"),
+				out _);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre204_ring.wkb"),
+				out _);
+
+			const double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea);
+		}
+
+		[Test]
+		public void CanUnionSpacecraftFootprintAtStep214_UnionMustNotDecreaseArea()
+		{
+			// Repro for the failing union at step 214 of the labyrinth_aventure
+			// (TLM_GEBAEUDE) incremental footprint. Adding a 1.292 sq m ring to a
+			// source of 1948.762 sq m crashes the area to 642.084 sq m.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre214_source.wkb"),
+				out _);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre214_ring.wkb"),
+				out _);
+
+			const double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea);
+		}
+
+		[Test]
 		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
 		{
 			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
