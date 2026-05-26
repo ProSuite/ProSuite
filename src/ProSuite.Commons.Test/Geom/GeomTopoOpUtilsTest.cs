@@ -4749,6 +4749,79 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionSpacecraftFootprintAtStep180_UnionMustNotDecreaseArea()
+		{
+			// Repro for the first failing union step when building the footprint of
+			// the Spacecraft multipatch (TLM_GEBAEUDE {96912D18-62E7-4790-8625-B7D4B18C6B22}).
+			// At step 180 of the incremental union (sorted by ring area desc) the result area
+			// incorrectly DECREASES and the output becomes non-simple (self-intersecting).
+			// The union result must always have an area >= the source area.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre180_source.wkb"),
+				out _);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre180_ring.wkb"),
+				out _);
+
+			const double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// The union must never decrease the total area.
+			Assert.Greater(result.GetArea2D(), sourceArea);
+
+			double expectedArea = source.GetArea2D() + target.GetArea2D();
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
+		public void CanUnionSpacecraftFootprintAtStep190_BoundaryLoopHoleMustBeFilled()
+		{
+			// Repro for the failing union at step 190 when building the footprint of
+			// the Spacecraft multipatch (TLM_GEBAEUDE {96912D18-62E7-4790-8625-B7D4B18C6B22}).
+			// At step 190 a ring covering holePoint (2568351.60, 1112716.45) is added.
+			// That ring lies inside the hole created by a boundary loop in the source.
+			// The union should fill that hole (area must not decrease), but instead the area
+			// decreases and the result becomes non-simple.
+			// Note: the source here is the accumulated result from step 189, which itself is
+			// affected by the boundary-loop error introduced at step 180. The root cause may
+			// therefore be the problematic input produced by the step-180 union.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre190_source.wkb"),
+				out _);
+
+			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"labyrinth_aventure_footprint_pre190_ring.wkb"),
+				out _);
+
+			const double tolerance = 0.0005;
+
+			// The ring to be unioned covers the holePoint, which is currently not interior to source.
+			Pnt3D holePoint = new Pnt3D(2568351.60, 1112716.45, 0);
+			Assert.IsTrue(GeomRelationUtils.AreaContainsXY(target, holePoint, tolerance) == true,
+			              "The ring to be unioned should cover holePoint.");
+			Assert.IsTrue(GeomRelationUtils.AreaContainsXY(source, holePoint, tolerance) != true,
+			              "holePoint should not yet be interior to the source (boundary loop hole).");
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// The union must increase the total area.
+			Assert.Greater(result.GetArea2D(), sourceArea);
+
+			double expectedArea = source.GetArea2D() + target.GetArea2D();
+			Assert.AreEqual(expectedArea, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
 		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
 		{
 			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
@@ -5380,8 +5453,9 @@ namespace ProSuite.Commons.Test.Geom
 			// At 0.0005 there is no short segment in the original (it is 0.0007)
 			double tolerance = 0.001;
 
-			var exception = Assert.Throws<GeomException>(
-				() => GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance));
+			var exception =
+				Assert.Throws<GeomException>(() => GeomTopoOpUtils.GetUnionAreasXY(
+					                             source, target, tolerance));
 
 			Assert.NotNull(exception);
 			Assert.IsTrue(exception.InnerException is InvalidOperationException);
@@ -6030,8 +6104,7 @@ namespace ProSuite.Commons.Test.Geom
 			// Moved by a few km
 			MultiPolycurve multiTarget =
 				new MultiPolycurve(
-					target.GetLinestrings().Select(
-						l => GeomTopoOpUtils.Move(l, 4567, 1234, 0)));
+					target.GetLinestrings().Select(l => GeomTopoOpUtils.Move(l, 4567, 1234, 0)));
 
 			watch.Restart();
 
@@ -9154,8 +9227,8 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(expectedResultCount, result.Count);
 			Assert.AreEqual(expectedInnerRingCount,
-			                result.Sum(
-				                p => p.GetLinestrings().Count(l => l.ClockwiseOriented == false)));
+			                result.Sum(p => p.GetLinestrings()
+			                                 .Count(l => l.ClockwiseOriented == false)));
 
 			double resultArea = result.Sum(p => p.GetLinestrings().Sum(l => l.GetArea2D()));
 
