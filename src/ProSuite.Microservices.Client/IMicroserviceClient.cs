@@ -36,6 +36,13 @@ namespace ProSuite.Microservices.Client
 		void Disconnect();
 
 		/// <summary>
+		/// Kills the locally started server process without closing the gRPC channel.
+		/// The channel can be reused for subsequent calls after re-starting the server.
+		/// </summary>
+		/// <returns>True if a running process was found and killed.</returns>
+		bool StopLocalServer();
+
+		/// <summary>
 		/// Checks the health of the peer to determine whether calls can be accepted.
 		/// </summary>
 		/// <param name="allowFailOver"></param>

@@ -64,14 +64,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			_cachePropertiesEagerly = true;
 
-			var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
-
-			if (geodatabase != null)
-			{
-				_workspaceHandle = geodatabase.Handle.ToInt64();
-				ArcWorkspace.Create(geodatabase, true);
-			}
-
 			_hasOID = HasOID;
 			_oidFieldName = OIDFieldName;
 			_objectClassID = ObjectClassID;
@@ -79,7 +71,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_subtypeFieldName = SubtypeFieldName;
 			_defaultSubtypeCode = DefaultSubtypeCode;
 
-			IWorkspace workspace = Workspace;
+			CreateArcWorkspace(true);
 
 			_fields = Fields;
 
@@ -268,7 +260,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role)
 		{
-			if (Workspace == null)
+			if (Workspace is not IFeatureWorkspace)
 			{
 				yield break;
 			}
@@ -429,7 +421,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				if (_workspaceHandle != null)
 				{
 					// This works in any thread:
-					ArcWorkspace cachedWorkspace = ArcWorkspace.GetByHandle(_workspaceHandle.Value);
+					IWorkspace cachedWorkspace = ArcWorkspace.GetByHandle(_workspaceHandle.Value);
 
 					if (cachedWorkspace != null)
 					{
@@ -438,16 +430,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				}
 
 				// CIM thread is needed:
-				var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
-
-				if (geodatabase == null)
-				{
-					return null;
-				}
-
-				_workspaceHandle = geodatabase.Handle.ToInt64();
-
-				return ArcWorkspace.Create(geodatabase);
+				return CreateArcWorkspace(false);
 			}
 		}
 
@@ -459,7 +442,22 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public int DefaultSubtypeCode
 		{
-			get { return _defaultSubtypeCode ??= ProTableDefinition.GetDefaultSubtypeCode(); }
+			get
+			{
+				if (_defaultSubtypeCode == null)
+				{
+					try
+					{
+						_defaultSubtypeCode = ProTableDefinition.GetDefaultSubtypeCode();
+					}
+					catch (NotSupportedException)
+					{
+						// Shapefile or other non-subtype-supporting table: treat as no subtypes
+					}
+				}
+
+				return _defaultSubtypeCode ?? -1;
+			}
 			set => _defaultSubtypeCode = value;
 		}
 
@@ -512,18 +510,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				if (_subtypeFieldName == null)
+				if (_subtypeFieldName != null)
 				{
-					try
-					{
-						_subtypeFieldName = ProTableDefinition.GetSubtypeField();
-					}
-					catch (Exception)
-					{
-						// TODO: Handle specific exception (shapefiles?)
-						throw;
-						//_subtypeFieldName = string.Empty;
-					}
+					return _subtypeFieldName;
+				}
+
+				try
+				{
+					// GetSubtypeField() returns an empty string if no subtypes
+					// -> string.Empty is used to cache the 'no subtypes' case
+					_subtypeFieldName = ProTableDefinition.GetSubtypeField();
+				}
+				catch (NotSupportedException)
+				{
+					// Shapefiles throw a NotSupportedException
+					_subtypeFieldName = string.Empty;
 				}
 
 				return _subtypeFieldName;
@@ -576,6 +577,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		#endregion
+
+		private IWorkspace CreateArcWorkspace(bool cacheProperties)
+		{
+			Datastore datastore = ProTable.GetDatastore();
+
+			_workspaceHandle = datastore.Handle.ToInt64();
+
+			return ArcWorkspace.Create(datastore, cacheProperties);
+		}
 
 		private void InitializeSubtypes()
 		{

@@ -1,21 +1,21 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.GIS.Geodatabase.AGP;
 
 public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposable
 {
-	private static readonly Dictionary<long, ArcWorkspace> _workspacesByHandle = new();
+	private static readonly Dictionary<long, IWorkspace> _workspacesByHandle = new();
 
 	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName =
 		new();
@@ -33,16 +33,21 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 	private readonly Dictionary<string, ArcDomain> _domains = new();
 
 	[CanBeNull]
-	internal static ArcWorkspace GetByHandle(long handle)
+	internal static IWorkspace GetByHandle(long handle)
 	{
 		return _workspacesByHandle.GetValueOrDefault(handle);
 	}
 
-	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
-	                                           bool cacheProperties = false)
+	public static IWorkspace Create(Datastore datastore, bool cacheProperties = false)
 	{
-		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(),
-		                                    out ArcWorkspace existing))
+		if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			return Create(geodatabase, cacheProperties);
+		}
+
+		long handle = datastore.Handle.ToInt64();
+
+		if (_workspacesByHandle.TryGetValue(handle, out IWorkspace existing))
 		{
 			if (cacheProperties)
 			{
@@ -50,6 +55,28 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 			}
 
 			return existing;
+		}
+
+		var basicWorkspace = new BasicWorkspace(datastore, cacheProperties);
+		_workspacesByHandle.TryAdd(handle, basicWorkspace);
+
+		return basicWorkspace;
+	}
+
+	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                           bool cacheProperties = false)
+	{
+		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(),
+		                                    out IWorkspace existing))
+		{
+			var existingArcWorkspace = (ArcWorkspace) existing;
+
+			if (cacheProperties)
+			{
+				existingArcWorkspace.CacheProperties();
+			}
+
+			return existingArcWorkspace;
 		}
 
 		return geodatabase.IsVersioningSupported()
@@ -75,7 +102,7 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		}
 	}
 
-	private void CacheProperties()
+	public void CacheProperties()
 	{
 		_pathName = PathName;
 		_workspaceType = Type;
@@ -1163,8 +1190,7 @@ public class ArcWorkspaceName : IWorkspaceName
 
 	public esriWorkspaceType Type => _arcWorkspace.Type;
 
-	public string Category =>
-		throw new NotImplementedException("Implement in derived class");
+	public string Category => throw new NotImplementedException();
 
 	public string ConnectionString => _datastoreName.ConnectionString;
 

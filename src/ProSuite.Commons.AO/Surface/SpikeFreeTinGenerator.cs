@@ -9,7 +9,6 @@ using ProSuite.Commons.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ProSuite.Commons.AO.Surface
@@ -24,7 +23,6 @@ namespace ProSuite.Commons.AO.Surface
 		[CanBeNull] private readonly IFeatureClass _areasWithSpikes;
 		private const int TagValue = 0;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private const int FrozenTag = 42;
 
 
 		public SpikeFreeTinGenerator([NotNull] SimpleTerrain simpleTerrain, double freezeDistance, double insertionBuffer, double? tinBufferDistance, [CanBeNull] IFeatureClass areasWithSpikes)
@@ -149,65 +147,7 @@ namespace ProSuite.Commons.AO.Surface
 		public void AddPointsToTinUsingSpikeFree(ITinEdit tin,
 		                                         IEnumerable<(double x, double y, double z)> points)
 		{
-			// Unfortunately some of the methods we required for the spike free tin are in the ITinEdit and some are in the ITinAdvancade interface.
-			// However, to avoid having to use the actual class we use two variables both pointing at the same object here.
-			var advancedTin = tin as ITinAdvanced;
-
-			Assert.ArgumentNotNull(advancedTin);
-
-			var coordinates = points
-			             .OrderByDescending(p => p.z);
-			
-			int addedPoints = 0;
-			int ignoredPoints = 0;
-
-			var point = new PointClass();
-			var adjacentTriangle1 = new TinTriangleClass();
-			var adjacentTriangle2 = new TinTriangleClass();
-			var adjacentTriangle3 = new TinTriangleClass();
-
-			foreach ((double x, double y, double z) in coordinates)
-			{
-				point.PutCoords(x, y);
-				point.Z = z;
-
-
-
-				ITinTriangle triangle = advancedTin.FindTriangle(point);
-				if(IsFrozen(triangle))
-				{
-					ignoredPoints++;
-					continue;
-				}
-
-				if (IsPointSpike(triangle, point))
-				{
-					Freeze(tin, triangle);
-					ignoredPoints++;
-					continue;
-				}
-
-				triangle.QueryAdjacentTriangles(adjacentTriangle1, adjacentTriangle2, adjacentTriangle3);
-				if (! IsFrozen(adjacentTriangle1) && IsPointSpike(adjacentTriangle1, point))
-				{
-					Freeze(tin, adjacentTriangle1);
-				}
-
-				if (!IsFrozen(adjacentTriangle2) && IsPointSpike(adjacentTriangle2, point))
-				{
-					Freeze(tin, adjacentTriangle2);
-				}
-
-				if (!IsFrozen(adjacentTriangle3) && IsPointSpike(adjacentTriangle3, point))
-				{
-					Freeze(tin, adjacentTriangle3);
-				}
-
-				addedPoints++;
-				tin.AddPointZ(point, TagValue);
-			}
-
-			_msg.InfoFormat("Added {0} points to the TIN. {1} points where identified as spike and ignored.", addedPoints, ignoredPoints);
+			SpikeFreePointInserter.AddPointsToTin(tin, points, _freezeDistance, _insertionBuffer);
 		}
 
 		private IEnumerable<(double x, double y, double z)> ExpandPointCollectionToCoodinates(
@@ -261,65 +201,6 @@ namespace ProSuite.Commons.AO.Surface
 			}
 
 			return false;
-		}
-
-		private bool IsPointSpike(ITinTriangle triangle, IPoint point)
-		{
-			if (triangle.IsEmpty)
-			{
-				return false;
-			}
-
-
-			double freezeSq = _freezeDistance * _freezeDistance;
-			double thresholdZ = point.Z + _insertionBuffer;
-
-			WKSPointZ v0, v1, v2;
-			triangle.QueryVertices(out v0, out v1, out v2);
-
-			if (SquaredDist2D(v0, v1) >= freezeSq) return false;
-			if (SquaredDist2D(v1, v2) >= freezeSq) return false;
-			if (SquaredDist2D(v2, v0) >= freezeSq) return false;
-
-			if (v0.Z < thresholdZ)
-			{
-				return false;
-			}
-
-			if (v1.Z < thresholdZ)
-			{
-				return false;
-			}
-
-			if (v2.Z < thresholdZ)
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static double SquaredDist2D(WKSPointZ a, WKSPointZ b)
-		{
-			double dx = a.X - b.X;
-			double dy = a.Y - b.Y;
-			return dx * dx + dy * dy;
-		}
-
-		private static bool IsFrozen(ITinTriangle triangle)
-		{
-			return ! triangle.IsEmpty && triangle.TagValue == FrozenTag;
-		}
-
-		private static void Freeze(ITinEdit tin, ITinTriangle triangle)
-		{
-			tin.SetTriangleTagValue(triangle.Index, FrozenTag);
-			for (int i = 0; i < 3; i++)
-			{
-				tin.SetEdgeType(triangle.Edge[i].Index, esriTinEdgeType.esriTinHardEdge);
-			}
 		}
 	}
 }

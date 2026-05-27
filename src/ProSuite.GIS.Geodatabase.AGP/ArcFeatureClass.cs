@@ -68,8 +68,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_shapeType = ShapeType;
 			_shapeFieldName = ShapeFieldName;
 
-			_lengthFieldName = ProFeatureClassDefinition.GetLengthField();
-			_areaFieldName = ProFeatureClassDefinition.GetAreaField();
+			try
+			{
+				_lengthFieldName = ProFeatureClassDefinition.GetLengthField();
+				_areaFieldName = ProFeatureClassDefinition.GetAreaField();
+			}
+			catch (NotSupportedException)
+			{
+				_lengthFieldName = string.Empty;
+				_areaFieldName = string.Empty;
+			}
 		}
 
 		#region Implementation of IClass
