@@ -562,7 +562,7 @@ namespace ProSuite.Commons.Geom
 				}
 
 				isBoundaryLoop = IntersectionClusters.GetSourceBoundaryLoops().Any(
-					bl => bl.Start.ReferencesSameTargetVertex(
+					bl => bl.ReferencesPinchVertex(
 						fromOtherSourceIntersection, Target, Tolerance));
 
 				if (! isBoundaryLoop)

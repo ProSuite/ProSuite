@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -70,6 +69,23 @@ namespace ProSuite.Commons.Geom
 		public bool HasMultipleAtomicLoops => Pinches.Count > 2;
 
 		public double Tolerance { get; }
+
+		/// <summary>
+		/// Whether <paramref name="otherIntersection"/> sits at this loop's pinch location, i.e. it
+		/// references the opposite-side vertex shared by every pinch of this group (the
+		/// target vertex for a source loop, the source vertex for a target loop). All
+		/// pinches share that one vertex by construction (the group is built by
+		/// <see cref="IntersectionClusters"/> from intersections referencing the same
+		/// opposite vertex), so testing <see cref="Start"/> alone is sufficient.
+		/// </summary>
+		public bool ReferencesPinchVertex([NotNull] IntersectionPoint3D otherIntersection,
+		                                  [NotNull] ISegmentList opposite,
+		                                  double tolerance)
+		{
+			return _isSourceRing
+				       ? Start.ReferencesSameTargetVertex(otherIntersection, opposite, tolerance)
+				       : Start.ReferencesSameSourceVertex(otherIntersection, opposite, tolerance);
+		}
 
 		/// <summary>
 		/// Cross-XY pinch pairs from OTHER pinch groups on the same source ring.
@@ -223,8 +239,7 @@ namespace ProSuite.Commons.Geom
 		private IEnumerable<IList<IntersectionRun>> GetLoopSubcurves(
 			[NotNull] IntersectionPoint3D start,
 			[NotNull] IntersectionPoint3D end,
-			[CanBeNull]
-			IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> availableExtras)
+			[CanBeNull] IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> availableExtras)
 		{
 			List<InsideExtra> topLevelExtras =
 				CollectTopLevelInsideExtras(start, end, availableExtras);
@@ -267,8 +282,7 @@ namespace ProSuite.Commons.Geom
 		private List<InsideExtra> CollectTopLevelInsideExtras(
 			[NotNull] IntersectionPoint3D start,
 			[NotNull] IntersectionPoint3D end,
-			[CanBeNull]
-			IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> availableExtras)
+			[CanBeNull] IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> availableExtras)
 		{
 			var inside = new List<InsideExtra>();
 			if (availableExtras == null || availableExtras.Count == 0)
