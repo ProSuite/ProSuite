@@ -349,6 +349,10 @@ namespace ProSuite.Commons.Geom
 				Source.PartCount, IntersectedSourcePartIndexes).ToList();
 
 			// Completely uncut boundary loops to the inside can be handled like normal rings (below)
+			// TODO (N>=3 boundary loops): IsLoopingToOutside only inspects the Loop1/Loop2
+			// split between the first two pinches (legacy N==2 semantic). For a ring with
+			// 3+ pinches at one XY the predicate may classify the group based on an
+			// incomplete view; revisit once a test exposes a wrong filter decision.
 			Predicate<BoundaryLoop> outsideAndIntersectedLoops =
 				bl => bl.IsLoopingToOutside ||
 				      ! unCutSourceIndexes.Contains(bl.Start.SourcePartIndex);
@@ -518,6 +522,12 @@ namespace ProSuite.Commons.Geom
 			bool withSameOrientation, bool includeContained,
 			bool includeNotContained)
 		{
+			// TODO (N>=3 boundary loops): this method (and QualifyContainmentRelations
+			// below) only compares Loop1 vs Loop2 — the atomic sub-ring between the
+			// first two pinches versus its complement. For target boundary loops with
+			// 3+ pinches at one XY, the complement spans multiple atomic sub-rings and
+			// the priority-relation logic is no longer well-defined. Existing tests
+			// do not exercise this case; revisit when one surfaces.
 			Linestring sourceRing = Source.GetPart(sourceRingIndex);
 
 			Linestring loop1 = boundaryLoop.Loop1;

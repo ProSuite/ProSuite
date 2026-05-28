@@ -489,86 +489,235 @@ namespace ProSuite.Commons.Geom
 
 		private IEnumerable<BoundaryLoop> CalculateSourceBoundaryLoops()
 		{
-			foreach (var sourceLoopIntersections in GetSourceBoundaryLoopIntersections()
-				         .GroupBy(t => t.Item1.SourcePartIndex))
+			if (_multipleSourceIntersections == null)
 			{
-				// Process intersections grouped by source part - there could be multiple adjoining loops in one ring!
-				foreach (BoundaryLoop boundaryLoop in BoundaryLoop.CreateSourceBoundaryLoops(
-					         sourceLoopIntersections, _source, _tolerance))
-				{
-					yield return boundaryLoop;
-				}
+				yield break;
 			}
-		}
 
-		private IEnumerable<Tuple<IntersectionPoint3D, IntersectionPoint3D>>
-			GetSourceBoundaryLoopIntersections()
-		{
-			foreach (var intersectionPairs
-			         in CollectionUtils.GetAllTuples(_multipleSourceIntersections))
+			// One N-ary BoundaryLoop per same-XY pinch group on each source ring (a
+			// ring that visits one pinch XY location N times yields ONE BoundaryLoop emitting
+			// N atomic sub-rings. Multiple pinch groups on the same source
+			// ring are consolidated via legacy chain-merge:
+			//  - Groups whose start references the same source vertex as the start or
+			//    end of an already-kept BL are kept as a SEPARATE BL (legacy: pinch
+			//    pairs at the same source pinch location for different target rings).
+			//  - Other groups (cross-source-XY) are recorded as ExtraLoopIntersections
+			//    on ALL already-kept BLs so their GetLoopSubcurves can recurse through
+			//    them.
+			foreach (var perPart in _multipleSourceIntersections
+				         .GroupBy(i => i.SourcePartIndex))
 			{
-				IntersectionPoint3D intersection1 = intersectionPairs.Key;
-				IntersectionPoint3D intersection2 = intersectionPairs.Value;
+				Linestring sourceRing = _source.GetPart(perPart.Key);
 
-				if (intersection1.SourcePartIndex != intersection2.SourcePartIndex)
+				List<List<IntersectionPoint3D>> pinchGroups =
+					GroupBySameTargetVertex(perPart, _target, _tolerance)
+						.Where(g => g.Count >= 2 &&
+						            g.All(p => p.TargetPartIndex == g[0].TargetPartIndex))
+						.Select(g => g.OrderBy(p => p.VirtualSourceVertex).ToList())
+						.Where(g => IsRealLoopAlongSource(g, sourceRing))
+						.OrderBy(g => g[0].Point.X)
+						.ThenBy(g => g[0].Point.Y)
+						.ToList();
+
+				if (pinchGroups.Count == 0)
 				{
 					continue;
 				}
 
-				if (intersection1.TargetPartIndex != intersection2.TargetPartIndex)
+				var keptBoundaryLoops = new List<BoundaryLoop>();
+
+				foreach (List<IntersectionPoint3D> pinchGroup in pinchGroups)
 				{
-					continue;
+					var candidate = new BoundaryLoop(pinchGroup, sourceRing,
+					                                 isSourceRing: true,
+					                                 tolerance: _tolerance);
+
+					if (keptBoundaryLoops.Count == 0)
+					{
+						keptBoundaryLoops.Add(candidate);
+						continue;
+					}
+
+					bool sharesSourcePinch =
+						keptBoundaryLoops.Any(bl =>
+							                      bl.Pinches.Any(p => p.ReferencesSameSourceVertex(
+								                                     candidate.Start, _source,
+								                                     _tolerance)));
+
+					if (sharesSourcePinch)
+					{
+						// Same source pinch location for a different target vertex →
+						// keep as a separate BL (legacy backward-compat).
+						keptBoundaryLoops.Add(candidate);
+					}
+					else
+					{
+						// Cross-source-XY pinch group → record as extras on all kept BLs.
+						foreach (BoundaryLoop kept in keptBoundaryLoops)
+						{
+							kept.AddExtraLoopIntersections(candidate.Start, candidate.End);
+						}
+					}
 				}
 
-				if (! intersection1.ReferencesSameTargetVertex(intersection2, _target, _tolerance))
+				foreach (BoundaryLoop bl in keptBoundaryLoops)
 				{
-					continue;
-				}
-
-				if (SegmentIntersectionUtils.SourceSegmentCountBetween(
-					    _source, intersection1, intersection2) > 1 &&
-				    SegmentIntersectionUtils.SourceSegmentCountBetween(
-					    _source, intersection2, intersection1) > 1)
-				{
-					yield return new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
-						intersection1, intersection2);
+					yield return bl;
 				}
 			}
 		}
 
 		private IEnumerable<BoundaryLoop> CalculateTargetBoundaryLoops()
 		{
-			foreach (var intersectionPairs
-			         in CollectionUtils.GetAllTuples(_multipleTargetIntersections))
+			if (_multipleTargetIntersections == null)
 			{
-				var intersection1 = intersectionPairs.Key;
-				var intersection2 = intersectionPairs.Value;
+				yield break;
+			}
 
-				if (intersection1.SourcePartIndex != intersection2.SourcePartIndex)
+			foreach (var perPart in _multipleTargetIntersections
+				         .GroupBy(i => i.TargetPartIndex))
+			{
+				Linestring targetRing = _target.GetPart(perPart.Key);
+
+				List<List<IntersectionPoint3D>> pinchGroups =
+					GroupBySameSourceVertex(perPart, _source, _tolerance)
+						.Where(g => g.Count >= 2 &&
+						            g.All(p => p.SourcePartIndex == g[0].SourcePartIndex))
+						.Select(g => g.OrderBy(p => p.VirtualTargetVertex).ToList())
+						.Where(g => IsRealLoopAlongTarget(g, targetRing))
+						.OrderBy(g => g[0].Point.X)
+						.ThenBy(g => g[0].Point.Y)
+						.ToList();
+
+				foreach (List<IntersectionPoint3D> pinchGroup in pinchGroups)
 				{
-					continue;
-				}
-
-				if (intersection1.TargetPartIndex != intersection2.TargetPartIndex)
-				{
-					continue;
-				}
-
-				if (! intersection1.ReferencesSameSourceVertex(intersection2, _source, _tolerance))
-				{
-					continue;
-				}
-
-				if (SegmentIntersectionUtils.TargetSegmentCountBetween(
-					    _target, intersection1, intersection2) > 1 &&
-				    SegmentIntersectionUtils.TargetSegmentCountBetween(
-					    _target, intersection2, intersection1) > 1)
-				{
-					Linestring fullRing = _target.GetPart(intersection1.TargetPartIndex);
-
-					yield return new BoundaryLoop(intersection1, intersection2, fullRing, false);
+					yield return new BoundaryLoop(pinchGroup, targetRing,
+					                              isSourceRing: false,
+					                              tolerance: _tolerance);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Every consecutive pinch point (in source-vertex order, with wrap-around) must
+		/// be separated by more than one source segment. Filters out colocated source
+		/// intersections that share a target vertex but do not actually loop along the
+		/// source (e.g., a single source position crossed twice by a target pinch).
+		/// </summary>
+		private static bool IsRealLoopAlongSource(
+			[NotNull] IList<IntersectionPoint3D> pinchPoints,
+			[NotNull] Linestring sourceRing)
+		{
+			int n = pinchPoints.Count;
+			for (int i = 0; i < n; i++)
+			{
+				IntersectionPoint3D p1 = pinchPoints[i];
+				IntersectionPoint3D p2 = pinchPoints[(i + 1) % n];
+
+				double dist = p2.VirtualSourceVertex - p1.VirtualSourceVertex;
+				if (dist < 0)
+				{
+					dist += sourceRing.SegmentCount;
+				}
+
+				if (Math.Floor(dist) <= 1)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Target-side counterpart of <see cref="IsRealLoopAlongSource"/>: every
+		/// consecutive pinch in the group (in target-vertex order, with wrap-around)
+		/// must be separated by more than one target segment.
+		/// </summary>
+		private static bool IsRealLoopAlongTarget(
+			[NotNull] IList<IntersectionPoint3D> pinches,
+			[NotNull] Linestring targetRing)
+		{
+			int n = pinches.Count;
+			for (int i = 0; i < n; i++)
+			{
+				IntersectionPoint3D p1 = pinches[i];
+				IntersectionPoint3D p2 = pinches[(i + 1) % n];
+
+				double dist = p2.VirtualTargetVertex - p1.VirtualTargetVertex;
+				if (dist < 0)
+				{
+					dist += targetRing.SegmentCount;
+				}
+
+				if (Math.Floor(dist) <= 1)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Partitions the supplied intersections into clusters that reference the same
+		/// target vertex (within tolerance). Used to group coinciding source pinch points
+		/// that share an opposite target point.
+		/// </summary>
+		private static IEnumerable<List<IntersectionPoint3D>> GroupBySameTargetVertex(
+			[NotNull] IEnumerable<IntersectionPoint3D> intersections,
+			[NotNull] ISegmentList target,
+			double tolerance)
+		{
+			var clusters = new List<List<IntersectionPoint3D>>();
+
+			foreach (IntersectionPoint3D ip in intersections)
+			{
+				List<IntersectionPoint3D> match =
+					clusters.FirstOrDefault(c => c[0].ReferencesSameTargetVertex(
+						                        ip, target, tolerance));
+
+				if (match != null)
+				{
+					match.Add(ip);
+				}
+				else
+				{
+					clusters.Add(new List<IntersectionPoint3D> { ip });
+				}
+			}
+
+			return clusters;
+		}
+
+		/// <summary>
+		/// Symmetric counterpart of <see cref="GroupBySameTargetVertex"/> for target
+		/// pinch points: partition by source-vertex equivalence.
+		/// </summary>
+		private static IEnumerable<List<IntersectionPoint3D>> GroupBySameSourceVertex(
+			[NotNull] IEnumerable<IntersectionPoint3D> intersections,
+			[NotNull] ISegmentList source,
+			double tolerance)
+		{
+			var clusters = new List<List<IntersectionPoint3D>>();
+
+			foreach (IntersectionPoint3D ip in intersections)
+			{
+				List<IntersectionPoint3D> match =
+					clusters.FirstOrDefault(c => c[0].ReferencesSameSourceVertex(
+						                        ip, source, tolerance));
+
+				if (match != null)
+				{
+					match.Add(ip);
+				}
+				else
+				{
+					clusters.Add(new List<IntersectionPoint3D> { ip });
+				}
+			}
+
+			return clusters;
 		}
 	}
 }
