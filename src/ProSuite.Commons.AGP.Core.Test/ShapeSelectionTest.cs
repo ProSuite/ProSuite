@@ -294,6 +294,45 @@ public class ShapeSelectionTest
 		Assert.Throws<ArgumentOutOfRangeException>(() => blocks.PartReversed(0, 5));
 	}
 
+	[Test]
+	public void CanBlockListPartRemoved()
+	{
+		var blocks = new BlockList();
+		blocks.Select(0, 0); // vertex 0 in part 0
+		blocks.Select(1, 1); // vertex 1 in part 1
+		blocks.Select(2, 2); // vertex 2 in part 2
+		blocks.Select(3, 3); // vertex 3 in part 3
+		blocks.Select(4, 4); // vertex 4 in part 4
+		blocks.Select(4, 44); // and also vertex 44
+
+		blocks.PartRemoved(0);
+		var list = blocks.ToList();
+		Assert.AreEqual(5, list.Count);
+		AssertBlock(list[0], 0, 1, 1);
+		AssertBlock(list[1], 1, 2, 1);
+		AssertBlock(list[2], 2, 3, 1);
+		AssertBlock(list[3], 3, 4, 1);
+		AssertBlock(list[4], 3, 44, 1);
+
+		blocks.PartRemoved(2); // original part 3
+		list = blocks.ToList();
+		Assert.AreEqual(4, list.Count);
+		AssertBlock(list[0], 0, 1, 1);
+		AssertBlock(list[1], 1, 2, 1);
+		AssertBlock(list[2], 2, 4, 1);
+		AssertBlock(list[3], 2, 44, 1);
+
+		blocks.PartRemoved(3); // original part 5, which never existed
+		list = blocks.ToList();
+		Assert.AreEqual(4, list.Count);
+
+		blocks.PartRemoved(2); // original part 4
+		list = blocks.ToList();
+		Assert.AreEqual(2, list.Count);
+		AssertBlock(list[0], 0, 1, 1);
+		AssertBlock(list[1], 1, 2, 1);
+	}
+
 	private static void AssertBlock(BlockList.Block block, int part, int first, int count)
 	{
 		if (block.Part != part || block.First != first || block.Count != count)

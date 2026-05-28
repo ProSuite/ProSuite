@@ -25,7 +25,7 @@ public abstract class DockPaneEraseViewModelBase : DockPaneViewModelBase
 
 	#endregion
 
-	private string _heading = "Erase Tool Options";
+	private string _heading = "Erase Options";
 
 	private EraseToolOptions _options;
 

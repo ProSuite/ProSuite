@@ -13,6 +13,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
@@ -220,8 +221,8 @@ public class FeatureFinder
 			FeatureClass featureClass = null;
 			BasicFeatureLayer basicFeatureLayer = null;
 			var features = new List<Feature>();
-			foreach (IGrouping<string, BasicFeatureLayer> layers in layersInClass.GroupBy(
-				         fl => fl.DefinitionQuery))
+			foreach (IGrouping<string, BasicFeatureLayer> layers in
+			         layersInClass.GroupBy(fl => fl.DefinitionQuery))
 			{
 				if (cancellationToken.IsCancellationRequested)
 				{
@@ -234,46 +235,26 @@ public class FeatureFinder
 				Assert.NotNull(featureClass,
 				               $"Layer {basicFeatureLayer.Name} has null feature class");
 
-				searchGeometry = ExpandWithExtraTolerance(searchGeometry);
+				searchGeometry = Assert.NotNull(ExpandWithExtraTolerance(searchGeometry));
+				string filterWhereClause = layers.Key;
 
-				QueryFilter filter =
-					GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
-				filter.WhereClause = layers.Key;
-
-				filter.OutputSpatialReference = outputSpatialReference;
-
-				if (ReturnUnJoinedFeatures && featureClass.IsJoinedTable())
+				try
 				{
-					filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
-
-					IEnumerable<Feature> foundJoined =
-						GdbQueryUtils
-							.GetFeatures(featureClass, filter, false, cancellationToken)
-							.Where(f => featurePredicate == null || featurePredicate(f));
-
-					List<long> oids = foundJoined.Select(f => f.GetObjectID()).ToList();
-
-					if (oids.Count > 0)
-					{
-						filter.SubFields = string.Empty;
-
-						// NOTE: Apply the predicate again to the unjoined features to allow
-						//       comparing with other un-joined features (such as selected features).
-						IEnumerable<Feature> unJoinedFeatures = MapUtils.GetFeatures(
-								featureClass, oids, true, false, outputSpatialReference)
-							.Where(f => featurePredicate == null || featurePredicate(f));
-
-						features.AddRange(unJoinedFeatures);
-					}
-				}
-				else
-				{
-					IEnumerable<Feature> foundFeatures =
-						GdbQueryUtils
-							.GetFeatures(featureClass, filter, false, cancellationToken)
-							.Where(f => featurePredicate == null || featurePredicate(f));
+					IEnumerable<Feature> foundFeatures = FindFeaturesInFeatureClass(
+						featureClass, searchGeometry, filterWhereClause, outputSpatialReference,
+						featurePredicate, cancellationToken);
 
 					features.AddRange(foundFeatures);
+				}
+				catch (Exception e)
+				{
+					string className = featureClass.GetName();
+
+					string message = $"Error reading features from {className}: {e.Message}";
+
+					_msg.Debug(message, e);
+
+					throw new DataAccessException(message, e);
 				}
 			}
 
@@ -337,6 +318,59 @@ public class FeatureFinder
 		}
 	}
 
+	private IEnumerable<Feature> FindFeaturesInFeatureClass(
+		[NotNull] FeatureClass featureClass,
+		[NotNull] Geometry searchGeometry,
+		[CanBeNull] string filterWhereClause,
+		[CanBeNull] SpatialReference outputSpatialReference,
+		[CanBeNull] Predicate<Feature> featurePredicate,
+		CancellationToken cancellationToken)
+	{
+		QueryFilter filter =
+			GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
+
+		filter.WhereClause = filterWhereClause;
+
+		filter.OutputSpatialReference = outputSpatialReference;
+
+		if (ReturnUnJoinedFeatures && featureClass.IsJoinedTable())
+		{
+			filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
+
+			IEnumerable<Feature> foundJoined =
+				GdbQueryUtils
+					.GetFeatures(featureClass, filter, false, cancellationToken)
+					.Where(f => featurePredicate == null || featurePredicate(f));
+
+			List<long> oids = foundJoined.Select(f => f.GetObjectID()).ToList();
+
+			if (oids.Count > 0)
+			{
+				filter.SubFields = string.Empty;
+
+				// NOTE: Apply the predicate again to the unjoined features to allow
+				//       comparing with other un-joined features (such as selected features).
+				foreach (Feature feature in
+				         MapUtils.GetFeatures(featureClass, oids, true, false,
+				                              outputSpatialReference)
+				                 .Where(f => featurePredicate == null || featurePredicate(f)))
+				{
+					yield return feature;
+				}
+			}
+		}
+		else
+		{
+			foreach (Feature feature in GdbQueryUtils
+			                            .GetFeatures(featureClass, filter, false, cancellationToken)
+			                            .Where(f => featurePredicate == null ||
+			                                        featurePredicate(f)))
+			{
+				yield return feature;
+			}
+		}
+	}
+
 	private bool IsLayerApplicable(
 		[CanBeNull] BasicFeatureLayer layer,
 		[CanBeNull] Predicate<BasicFeatureLayer> layerPredicate)
@@ -387,8 +421,8 @@ public class FeatureFinder
 		}
 
 		if (targetSelectionType == TargetFeatureSelection.SameClass &&
-		    ! Assert.NotNull(selectedFeatures).Any(
-			    f => LayerUsesFeatureClass(basicFeatureLayer, f.GetTable())))
+		    ! Assert.NotNull(selectedFeatures)
+		            .Any(f => LayerUsesFeatureClass(basicFeatureLayer, f.GetTable())))
 		{
 			return false;
 		}
@@ -456,14 +490,22 @@ public class FeatureFinder
 		IList<Geometry> intersectingGeometries =
 			GetSearchGeometries(intersectingFeatures, clipExtent);
 
-		Geometry result = null;
+		Geometry result;
 
-		if (intersectingGeometries.Count != 0)
+		if (intersectingGeometries.Count == 0)
+		{
+			return null;
+		}
+
+		if (intersectingGeometries.Count == 1)
+		{
+			result = intersectingGeometries[0];
+		}
+		else
 		{
 			SpatialReference sr = intersectingGeometries[0].SpatialReference;
 
 			result = GeometryBagBuilderEx.CreateGeometryBag(intersectingGeometries, sr);
-			//result = GeometryEngine.Instance.Union(intersectingGeometries);
 		}
 
 		result = ExpandWithExtraTolerance(result);

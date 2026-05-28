@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
@@ -10,14 +6,20 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Text;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
+using ProSuite.GIS.Geometry.API;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using Subtype = ProSuite.GIS.Geodatabase.API.Subtype;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcTable : ITable, IObjectClass, ISubtypes
+	public class ArcTable : ITable, IObjectClass, ISubtypes, IDisposable
 	{
 		private bool _cachePropertiesEagerly;
 
@@ -62,14 +64,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			_cachePropertiesEagerly = true;
 
-			var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
-
-			if (geodatabase != null)
-			{
-				_workspaceHandle = geodatabase.Handle.ToInt64();
-				ArcWorkspace.Create(geodatabase, true);
-			}
-
 			_hasOID = HasOID;
 			_oidFieldName = OIDFieldName;
 			_objectClassID = ObjectClassID;
@@ -77,7 +71,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_subtypeFieldName = SubtypeFieldName;
 			_defaultSubtypeCode = DefaultSubtypeCode;
 
-			IWorkspace workspace = Workspace;
+			CreateArcWorkspace(true);
 
 			_fields = Fields;
 
@@ -266,7 +260,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public IEnumerable<IRelationshipClass> get_RelationshipClasses(esriRelRole role)
 		{
-			if (Workspace == null)
+			if (Workspace is not IFeatureWorkspace)
 			{
 				yield break;
 			}
@@ -427,7 +421,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				if (_workspaceHandle != null)
 				{
 					// This works in any thread:
-					ArcWorkspace cachedWorkspace = ArcWorkspace.GetByHandle(_workspaceHandle.Value);
+					IWorkspace cachedWorkspace = ArcWorkspace.GetByHandle(_workspaceHandle.Value);
 
 					if (cachedWorkspace != null)
 					{
@@ -436,16 +430,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				}
 
 				// CIM thread is needed:
-				var geodatabase = ProTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
-
-				if (geodatabase == null)
-				{
-					return null;
-				}
-
-				_workspaceHandle = geodatabase.Handle.ToInt64();
-
-				return ArcWorkspace.Create(geodatabase);
+				return CreateArcWorkspace(false);
 			}
 		}
 
@@ -457,7 +442,22 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public int DefaultSubtypeCode
 		{
-			get { return _defaultSubtypeCode ??= ProTableDefinition.GetDefaultSubtypeCode(); }
+			get
+			{
+				if (_defaultSubtypeCode == null)
+				{
+					try
+					{
+						_defaultSubtypeCode = ProTableDefinition.GetDefaultSubtypeCode();
+					}
+					catch (NotSupportedException)
+					{
+						// Shapefile or other non-subtype-supporting table: treat as no subtypes
+					}
+				}
+
+				return _defaultSubtypeCode ?? -1;
+			}
 			set => _defaultSubtypeCode = value;
 		}
 
@@ -510,18 +510,21 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				if (_subtypeFieldName == null)
+				if (_subtypeFieldName != null)
 				{
-					try
-					{
-						_subtypeFieldName = ProTableDefinition.GetSubtypeField();
-					}
-					catch (Exception)
-					{
-						// TODO: Handle specific exception (shapefiles?)
-						throw;
-						//_subtypeFieldName = string.Empty;
-					}
+					return _subtypeFieldName;
+				}
+
+				try
+				{
+					// GetSubtypeField() returns an empty string if no subtypes
+					// -> string.Empty is used to cache the 'no subtypes' case
+					_subtypeFieldName = ProTableDefinition.GetSubtypeField();
+				}
+				catch (NotSupportedException)
+				{
+					// Shapefiles throw a NotSupportedException
+					_subtypeFieldName = string.Empty;
 				}
 
 				return _subtypeFieldName;
@@ -574,6 +577,15 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		#endregion
+
+		private IWorkspace CreateArcWorkspace(bool cacheProperties)
+		{
+			Datastore datastore = ProTable.GetDatastore();
+
+			_workspaceHandle = datastore.Handle.ToInt64();
+
+			return ArcWorkspace.Create(datastore, cacheProperties);
+		}
 
 		private void InitializeSubtypes()
 		{
@@ -654,6 +666,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		private static QueryFilter GetProQueryFilter(ITableFilter queryFilter)
 		{
+			if (queryFilter == null)
+			{
+				return null;
+			}
+
 			QueryFilter proQueryFilter;
 
 			if (queryFilter is ArcQueryFilter arcQueryFilter)
@@ -702,6 +719,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");
 			return field;
 		}
+
+		public void Dispose()
+		{
+			ProTable?.Dispose();
+			ProTableDefinition?.Dispose();
+		}
 	}
 
 	public class ArcDatasetName : IDatasetName
@@ -740,7 +763,28 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		#endregion
 	}
 
-	public class ArcTableDefinitionName : IDatasetName
+	public class ArcTableName : ArcDatasetName, ITableName
+	{
+		public ArcTableName(IDataset dataset) : base(dataset) { }
+	}
+
+	public class ArcFeatureClassName : ArcDatasetName, IFeatureClassName
+	{
+		private readonly IFeatureClass _featureClass;
+
+		public ArcFeatureClassName(IFeatureClass featureClass) : base(featureClass)
+		{
+			_featureClass = featureClass;
+		}
+
+		public esriGeometryType ShapeType => _featureClass.ShapeType;
+
+		public IDatasetName FeatureDatasetName => throw new NotImplementedException();
+
+		public string ShapeFieldName => _featureClass.ShapeFieldName;
+	}
+
+	public class ArcTableDefinitionName : ITableName
 	{
 		private readonly TableDefinition _tableDefinition;
 		private readonly IFeatureWorkspace _workspace;
@@ -778,6 +822,61 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public IWorkspaceName WorkspaceName => _workspace.GetWorkspaceName();
 
 		#endregion
+	}
+
+	public class ArcFeatureClassDefinitionName : ArcTableDefinitionName, IFeatureClassName
+	{
+		private readonly FeatureClassDefinition _featureClassDefinition;
+		private esriGeometryType? _shapeType;
+		private string _shapeFieldName;
+
+		public ArcFeatureClassDefinitionName(TableDefinition tableDefinition,
+		                                     IFeatureWorkspace workspace) : base(
+			tableDefinition, workspace)
+		{
+			_featureClassDefinition = (FeatureClassDefinition) tableDefinition;
+		}
+
+		public esriGeometryType ShapeType
+		{
+			get
+			{
+				if (_shapeType == null)
+				{
+					GeometryType coreGeometryType = _featureClassDefinition.GetShapeType();
+
+					ProSuiteGeometryType geometryType =
+						GeometryUtils.TranslateToProSuiteGeometryType(coreGeometryType);
+
+					_shapeType = (esriGeometryType) geometryType;
+				}
+
+				return _shapeType.Value;
+			}
+		}
+
+		public IDatasetName FeatureDatasetName => throw new NotImplementedException();
+
+		public string ShapeFieldName
+		{
+			get
+			{
+				if (_shapeFieldName == null)
+				{
+					_shapeFieldName = _featureClassDefinition.GetShapeField();
+
+					// TODO
+					// GOTOP-469: In some data models the GetShapeField() does not return the actual
+					//            field name, but the model name or even the alias.
+					//int shapeFieldIndex = FindField(_shapeFieldName);
+					//Assert.False(shapeFieldIndex < 0, $"{_shapeFieldName} not found in {Name}");
+
+					//_shapeFieldName = Fields[shapeFieldIndex].Name;
+				}
+
+				return _shapeFieldName;
+			}
+		}
 	}
 
 	public class ArcRelationshipClassDefinitionName : IDatasetName

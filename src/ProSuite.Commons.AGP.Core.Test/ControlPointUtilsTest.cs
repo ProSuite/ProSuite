@@ -160,6 +160,45 @@ public class ControlPointUtilsTest
 	}
 
 	[Test]
+	public void CanCountControlPoints()
+	{
+		Assert.AreEqual(0, ControlPointUtils.CountControlPoints(null));
+
+		var point1 = MapPointBuilderEx.CreateMapPoint(42, 53, 0.0, double.NaN, 1);
+		Assert.AreEqual(1, ControlPointUtils.CountControlPoints(point1));
+
+		var point2 = MapPointBuilderEx.CreateMapPoint(42, 53, 0.0, double.NaN, 0);
+		Assert.AreEqual(0, ControlPointUtils.CountControlPoints(point2));
+
+		var point3 = MapPointBuilderEx.CreateMapPoint(42, 53);
+		Assert.AreEqual(0, ControlPointUtils.CountControlPoints(point3));
+
+		var multipoint =
+			MultipointBuilderEx.CreateMultipoint(
+				new[] { Pt(1, 1), Pt(2, 2), Pt(3, 3, 1), Pt(4, 4), Pt(5, 5, 1) });
+		Assert.AreEqual(2, ControlPointUtils.CountControlPoints(multipoint));
+
+		var emptyMultipoint = new MultipointBuilderEx().ToGeometry();
+		Assert.IsTrue(emptyMultipoint.IsEmpty);
+		Assert.AreEqual(0, ControlPointUtils.CountControlPoints(emptyMultipoint));
+
+		var polygon = PolygonBuilderEx.CreatePolygon(
+			new[] { Pt(0, 0, 1), Pt(0, 3, 2), Pt(5, 5), Pt(5, 0, 1), Pt(0, 0, 1) });
+		Assert.AreEqual(4, ControlPointUtils.CountControlPoints(polygon));
+
+		var emptyPolygon = new PolygonBuilderEx().ToGeometry();
+		Assert.IsTrue(emptyPolygon.IsEmpty);
+		Assert.AreEqual(0, ControlPointUtils.CountControlPoints(emptyPolygon));
+
+		var emptyEnvelope = new EnvelopeBuilderEx().ToGeometry();
+		Assert.IsTrue(emptyEnvelope.IsEmpty);
+		Assert.AreEqual(0, ControlPointUtils.CountControlPoints(emptyEnvelope));
+
+		var envelope = EnvelopeBuilderEx.CreateEnvelope(1, 2, 3, 4);
+		Assert.AreEqual(0, ControlPointUtils.CountControlPoints(envelope));
+	}
+
+	[Test]
 	public void CanResetControlPoints()
 	{
 		var polygon = PolygonBuilderEx.CreatePolygon(

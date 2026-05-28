@@ -46,16 +46,16 @@ public class ListBoxKeyUpBehavior : Behavior<ListBox>
 	protected override void OnAttached()
 	{
 		base.OnAttached();
-		AssociatedObject.KeyUp += OnListBoxKeyUp;
+		AssociatedObject.PreviewKeyDown += OnListBoxPreviewKeyDown;
 	}
 
 	protected override void OnDetaching()
 	{
 		base.OnDetaching();
-		AssociatedObject.KeyUp -= OnListBoxKeyUp;
+		AssociatedObject.PreviewKeyDown -= OnListBoxPreviewKeyDown;
 	}
 
-	private void OnListBoxKeyUp(object sender, KeyEventArgs e)
+	private void OnListBoxPreviewKeyDown(object sender, KeyEventArgs e)
 	{
 		if (e.Key != Key.Up && e.Key != Key.Down && e.Key != Key.Enter)
 		{
@@ -68,23 +68,30 @@ public class ListBoxKeyUpBehavior : Behavior<ListBox>
 			return;
 		}
 
-		var selected = listBox.SelectedItem as IPickableItem;
-		if (selected == null)
+		int index = listBox.SelectedIndex;
+		int count = listBox.Items.Count;
+
+		if (e.Key == Key.Up && count > 0)
 		{
-			// If no item is selected but the focused element is a ListBoxItem,
-			// set it as the selected item
-			if (System.Windows.Input.Keyboard.FocusedElement is ListBoxItem focusedContainer)
-			{
-				var item = listBox.ItemContainerGenerator.ItemFromContainer(focusedContainer);
-				if (item != null)
-				{
-					listBox.SelectedItem = item;
-					selected = item as IPickableItem;
-				}
-			}
+			// Wrap-around: Up at the first item jumps to last; otherwise move up one.
+			listBox.SelectedIndex = index <= 0 ? count - 1 : index - 1;
+
+			listBox.SelectedIndex = index <= 0 ? 0 : index - 1;
+			listBox.ScrollIntoView(listBox.SelectedItem);
+			e.Handled = true;
+		}
+		else if (e.Key == Key.Down && count > 0)
+		{
+			// Wrap-around: Down at the last item jumps to first; otherwise move down one.
+			listBox.SelectedIndex = index >= count - 1 ? 0 : index + 1;
+
+			listBox.SelectedIndex = index >= count - 1 ? count - 1 : index + 1;
+			listBox.ScrollIntoView(listBox.SelectedItem);
+			e.Handled = true;
 		}
 
 		// Flash the item if FlashItemCommand is available
+		var selected = listBox.SelectedItem as IPickableItem;
 		var cmd = FlashItemCommand;
 		if (cmd != null && cmd.CanExecute(selected))
 		{

@@ -11,5 +11,6 @@ public enum SetCombineMethod
 	Add, // add to the current selection (OR)
 	Remove, // remove from the current selection
 	Xor, // unselect if selected, select if not (XOR)
-	And // select from the current selection (AND)
+	And, // select from the current selection (AND)
+	Nop // do not change the current selection (for technical use)
 }

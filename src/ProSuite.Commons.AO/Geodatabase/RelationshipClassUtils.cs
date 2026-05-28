@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -653,7 +652,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(set);
+				ComUtils.ReleaseObject(set);
 			}
 		}
 

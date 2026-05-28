@@ -17,6 +17,7 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Version = ArcGIS.Core.Data.Version;
 
@@ -227,6 +228,84 @@ public static class ProtobufConversionUtils
 		return result;
 	}
 
+	/// <summary>
+	/// Converts an object value to an AttributeValue protobuf message.
+	/// </summary>
+	/// <param name="valueObject">The value object to convert.</param>
+	/// <param name="field">The field definition.</param>
+	/// <returns>The converted AttributeValue.</returns>
+	[NotNull]
+	public static AttributeValue ToAttributeValueMsg([CanBeNull] object valueObject,
+	                                                 [NotNull] Field field)
+	{
+		var attributeValue = new AttributeValue();
+
+		if (valueObject == DBNull.Value || valueObject == null)
+		{
+			attributeValue.DbNull = true;
+		}
+		else
+		{
+			FieldType fieldType = field.FieldType;
+
+			switch (fieldType)
+			{
+				case FieldType.SmallInteger:
+					attributeValue.ShortIntValue = (short) valueObject;
+					break;
+				case FieldType.Integer:
+					attributeValue.IntValue = (int) valueObject;
+					break;
+				case FieldType.Single:
+					attributeValue.FloatValue = (float) valueObject;
+					break;
+				case FieldType.Double:
+					attributeValue.DoubleValue = (double) valueObject;
+					break;
+				case FieldType.String:
+					attributeValue.StringValue = (string) valueObject;
+					break;
+				case FieldType.Date:
+					attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
+					break;
+				case FieldType.OID:
+					attributeValue.ShortIntValue = (int) valueObject;
+					break;
+				case FieldType.Geometry:
+					// Leave empty, it is sent through Shape property
+					break;
+				case FieldType.Blob:
+					// TODO: Test and make this work or skip blobs altogether?
+					attributeValue.BlobValue =
+						ByteString.CopyFrom((byte[]) valueObject);
+					break;
+				case FieldType.Raster:
+					// Not supported, ignore
+					break;
+				case FieldType.GUID:
+					byte[] asBytes = new Guid((string) valueObject).ToByteArray();
+					attributeValue.UuidValue =
+						new UUID { Value = ByteString.CopyFrom(asBytes) };
+					break;
+				case FieldType.GlobalID:
+					asBytes = new Guid((string) valueObject).ToByteArray();
+					attributeValue.UuidValue =
+						new UUID { Value = ByteString.CopyFrom(asBytes) };
+					break;
+				case FieldType.XML:
+					// Not supported, ignore
+					break;
+				case FieldType.BigInteger:
+					attributeValue.BigIntValue = (long) valueObject;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		return attributeValue;
+	}
+
 	[NotNull]
 	public static GdbObjRefMsg ToGdbObjRefMsg([NotNull] Row row)
 	{
@@ -279,12 +358,15 @@ public static class ProtobufConversionUtils
 	/// will be used also on the feature class.</param>
 	/// <param name="getFeatureGeometry">Custom geometry for feature function. This allows for
 	/// extra transformations, such as clipping of the shape.</param>
+	/// <param name="includeClassFields">Whether the feature class' schema should be included
+	/// in the request.</param>
 	public static void ToGdbObjectMsgList(
 		[NotNull] IEnumerable<Feature> features,
 		[NotNull] ICollection<GdbObjectMsg> resultGdbObjects,
 		[NotNull] ICollection<ObjectClassMsg> resultGdbClasses,
 		bool keepFeatureClassSpatialRef = false,
-		[CanBeNull] Func<Feature, Geometry> getFeatureGeometry = null)
+		[CanBeNull] Func<Feature, Geometry> getFeatureGeometry = null,
+		bool includeClassFields = false)
 	{
 		Stopwatch watch = null;
 
@@ -323,7 +405,7 @@ public static class ProtobufConversionUtils
 				// to-and-from transformations!
 				SpatialReference spatialRef = shape.SpatialReference;
 				resultGdbClasses.Add(
-					ToObjectClassMsg(featureClass, uniqueClassId, false, spatialRef));
+					ToObjectClassMsg(featureClass, uniqueClassId, includeClassFields, spatialRef));
 
 				classesByClassId.Add(uniqueClassId, featureClass);
 
@@ -344,10 +426,9 @@ public static class ProtobufConversionUtils
 
 				if (shape == null)
 				{
-					_msg.VerboseDebug(
-						() =>
-							$"Null geometry provided for {GdbObjectUtils.ToString(feature)}. " +
-							$"It is skipped.");
+					_msg.VerboseDebug(() =>
+						                  $"Null geometry provided for {GdbObjectUtils.ToString(feature)}. " +
+						                  $"It is skipped.");
 					continue;
 				}
 			}
@@ -406,13 +487,20 @@ public static class ProtobufConversionUtils
 
 		if (includeFields)
 		{
-			List<FieldMsg> fieldMessages = new List<FieldMsg>();
-
 			TableDefinition tableDefinition = objectClass.GetDefinition();
+
+			int subtypeFieldIdx = DatasetUtils.GetSubtypeFieldIndex(tableDefinition);
+
+			List<FieldMsg> fieldMessages = new List<FieldMsg>();
 
 			foreach (Field field in tableDefinition.GetFields())
 			{
 				fieldMessages.Add(ToFieldMsg(field));
+			}
+
+			if (subtypeFieldIdx >= 0)
+			{
+				fieldMessages[subtypeFieldIdx].DomainName = ProtobufGeoDbUtils.SubtypeDomainName;
 			}
 
 			result.Fields.AddRange(fieldMessages);

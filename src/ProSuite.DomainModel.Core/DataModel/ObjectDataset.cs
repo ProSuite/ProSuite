@@ -274,10 +274,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 				if (attribute.Role != null && existingAttribute.Role == attribute.Role)
 				{
 					throw new ArgumentException(
-						string.Format(
-							"Attribute with same role already exists: {0} role: {1}",
-							existingAttribute.Name,
-							Enum.GetName(typeof(AttributeRole), attribute.Role)),
+						$"Attribute with same role already exists: {existingAttribute.Name} role: {attribute.Role.Name}",
 						nameof(attribute));
 				}
 			}

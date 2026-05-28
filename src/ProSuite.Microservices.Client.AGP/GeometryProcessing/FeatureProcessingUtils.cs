@@ -8,7 +8,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 {
 	public static class FeatureProcessingUtils
 	{
-		public static int GetProcessingTimeout(int featureCount)
+		public static int GetProcessingTimeout(int featureCount,
+		                                       double extraFactor = 1.0)
 		{
 			string envVarValue =
 				Environment.GetEnvironmentVariable("PROSUITE_TOOLS_RPC_DEADLINE_MS");
@@ -23,7 +24,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 			int deadline = GetPerFeatureTimeOut() * count;
 
-			return deadline;
+			return (int) (deadline * extraFactor);
 		}
 
 		public static int GetPerFeatureTimeOut()

@@ -596,6 +596,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return OpenTin(directory, tinName);
 		}
 
+		public static ILasDataset OpenLasDataset([NotNull] string lasdPath)
+		{
+			Assert.ArgumentNotNullOrEmpty(lasdPath, nameof(lasdPath));
+
+			string folder = Path.GetDirectoryName(lasdPath) ?? string.Empty;
+			string fileName = Path.GetFileName(lasdPath);
+
+			IWorkspaceFactory wsf = new LasDatasetWorkspaceFactoryClass();
+			IWorkspace workspace = wsf.OpenFromFile(folder, 0);
+
+			var lasWs = workspace as ILasDatasetWorkspace;
+			if (lasWs == null)
+			{
+				throw new InvalidConfigurationException(
+					$"Cannot open LAS Dataset workspace for: {lasdPath}");
+			}
+
+			ILasDataset lasDataset = lasWs.OpenLasDataset(fileName);
+			return lasDataset;
+		}
+
 		[CanBeNull]
 		public static IDatasetName FindRootDatasetName([NotNull] IWorkspace workspace,
 		                                               esriDatasetType datasetType,
@@ -1087,7 +1108,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (workspace != null && Marshal.IsComObject(workspace))
 				{
 					// Avoid locking the workspace
-					Marshal.ReleaseComObject(workspace);
+					ComUtils.ReleaseObject(workspace);
 				}
 			}
 		}
@@ -1111,7 +1132,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			finally
 			{
 				// Avoid locking the workspace
-				Marshal.ReleaseComObject(workspace);
+				ComUtils.ReleaseObject(workspace);
 			}
 		}
 
@@ -1717,9 +1738,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebug(
-						() => $"Getting dataset names of type {datasetType} in " +
-						      $"{WorkspaceUtils.GetWorkspaceDisplayText(workspace)}");
+					_msg.VerboseDebug(() => $"Getting dataset names of type {datasetType} in " +
+					                        $"{WorkspaceUtils.GetWorkspaceDisplayText(workspace)}");
 				}
 
 				return workspace.DatasetNames[datasetType];
@@ -3845,8 +3865,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				// Try again without the not-null constraint, because fields in views are always nullable
 				candidates = fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
 				                               (uniqueIndexes == null ||
-				                                uniqueIndexes.Any(
-					                                ix => ix.Fields.Field[0].Name == f.Name)))
+				                                uniqueIndexes.Any(ix => ix.Fields.Field[0].Name ==
+					                                f.Name)))
 				                   .ToList();
 
 				_msg.DebugFormat("{0}: Candidates with Nullable fields have been included.",
@@ -4165,8 +4185,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 				else
 				{
-					_msg.VerboseDebug(
-						() => $"Dataset name returned more than once: {datasetName.Name}");
+					_msg.VerboseDebug(() =>
+						                  $"Dataset name returned more than once: {datasetName.Name}");
 				}
 
 				datasetName = enumDatasetNames.Next();

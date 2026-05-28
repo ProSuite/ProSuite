@@ -38,25 +38,7 @@ public abstract class SourceClass : ISourceClass
 
 	public IAttributeReader AttributeReader { get; set; }
 
-	public string DefaultDefinitionQuery { get; protected set; }
-
-	private string GetRelevantSubFields(bool excludeGeometry = false)
-	{
-		string subFields = $"{_oidField}";
-
-		if (HasGeometry && ! excludeGeometry)
-		{
-			Assert.NotNullOrEmpty(_shapeField);
-			subFields = $"{subFields},{_shapeField}";
-		}
-
-		return GetRelevantSubFieldsCore(subFields);
-	}
-
-	protected virtual string GetRelevantSubFieldsCore(string subFields)
-	{
-		return subFields;
-	}
+	public string DefaultDefinitionQuery { get; protected init; }
 
 	/// <summary>
 	/// Ensures the filter is valid with the correct subfields. This method is called by Pro and we cannot
@@ -64,15 +46,12 @@ public abstract class SourceClass : ISourceClass
 	/// spatial filter throws an exception, so we clone the filter to the correct type.
 	/// </summary>
 	/// <param name="filter"></param>
-	/// <param name="statusFilter"></param>
-	/// <param name="excludeGeometry"></param>
-	public void EnsureValidFilter([CanBeNull] ref QueryFilter filter,
-	                              WorkItemStatus? statusFilter,
-	                              bool excludeGeometry)
+	/// <param name="ignoreDefinitionQuery"></param>
+	public void EnsureValidFilter(ref QueryFilter filter, bool ignoreDefinitionQuery = false)
 	{
 		QueryFilter result;
 
-		string relevantSubFields = GetRelevantSubFields(excludeGeometry);
+		string relevantSubFields = GetRelevantSubFields();
 
 		List<string> subfields =
 			StringUtils.SplitAndTrim(relevantSubFields, ",");
@@ -96,7 +75,8 @@ public abstract class SourceClass : ISourceClass
 			result.SubFields = relevantSubFields;
 		}
 
-		EnsureValidFilterCore(ref result, statusFilter);
+		EnsureValidFilterCore(ref result, ignoreDefinitionQuery);
+
 		filter = result;
 	}
 
@@ -104,6 +84,8 @@ public abstract class SourceClass : ISourceClass
 	{
 		return tableReference.ReferencesTable(_tableIdentity.Id, _tableIdentity.Name);
 	}
+
+	public abstract bool Contains(Row row);
 
 	public T OpenDataset<T>() where T : Table
 	{
@@ -130,18 +112,38 @@ public abstract class SourceClass : ISourceClass
 
 	public abstract long GetUniqueTableId();
 
-	public virtual string CreateWhereClause(WorkItemStatus? statusFilter)
-	{
-		return null;
-	}
-
-	protected virtual void EnsureValidFilterCore(ref QueryFilter filter,
-	                                             WorkItemStatus? statusFilter) { }
-
 	public override string ToString()
 	{
 		return string.IsNullOrEmpty(DefaultDefinitionQuery)
 			       ? Name
 			       : $"{Name}, {DefaultDefinitionQuery}";
+	}
+
+	private string GetRelevantSubFields()
+	{
+		string subFields = $"{_oidField}";
+
+		if (HasGeometry)
+		{
+			Assert.NotNullOrEmpty(_shapeField);
+			subFields = $"{subFields},{_shapeField}";
+		}
+
+		return GetRelevantSubFieldsCore(subFields);
+	}
+
+	protected virtual string GetRelevantSubFieldsCore(string subFields)
+	{
+		return subFields;
+	}
+
+	protected virtual void EnsureValidFilterCore(ref QueryFilter filter, bool ignoreDefinitionQuery)
+	{
+		if (ignoreDefinitionQuery)
+		{
+			return;
+		}
+
+		GdbQueryUtils.AppendWhereClause(ref filter, DefaultDefinitionQuery);
 	}
 }

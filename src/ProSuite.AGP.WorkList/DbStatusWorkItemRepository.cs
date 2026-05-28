@@ -80,18 +80,12 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 	}
 
-	protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass sourceClass)
+	protected override IWorkItem CreateWorkItemCore(IWorkItem workItem,
+	                                                ISourceClass sourceClass, Row row)
 	{
-		var dbSourceClass = (DatabaseSourceClass) sourceClass;
+		workItem.Status = ((DatabaseSourceClass) sourceClass).GetStatus(row);
 
-		WorkItemStatus status = dbSourceClass.GetStatus(row);
-
-		// Create table identity only once for better performance:
-		GdbTableIdentity tableIdentity = dbSourceClass.TableIdentity;
-
-		var rowIdentity = new GdbRowIdentity(row.GetObjectID(), tableIdentity);
-
-		return new DbStatusWorkItem(sourceClass.GetUniqueTableId(), rowIdentity, status);
+		return workItem;
 	}
 
 	protected override async Task SetStatusCoreAsync(IWorkItem item,
@@ -174,10 +168,11 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		switch (oldState)
 		{
 			case WorkItemStatus.Todo:
-				return $"Set status of work item OID={item.OID} to 'Corrected'";
+			case WorkItemStatus.Excluded:
+				return $"Set status of work item ID={item.OID} to 'Corrected'";
 
 			case WorkItemStatus.Done:
-				return $"Set status of work item OID={item.OID} to 'Not Corrected'";
+				return $"Set status of work item ID={item.OID} to 'Not Corrected'";
 
 			default:
 				throw new ArgumentException($"Invalid status for operation: {item}");

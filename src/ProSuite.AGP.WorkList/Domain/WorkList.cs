@@ -421,9 +421,6 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			                     ? GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
 			                     : new QueryFilter();
 
-		// Must load all items, even those not visible due to status filter (otherwise the count is wrong in the navigator)
-		WorkItemStatus? status = null;
-
 		string aoiText = AreaOfInterest != null ? " within area of interest" : string.Empty;
 		string filterText = GetFilterDisplayText();
 
@@ -435,7 +432,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		_msg.InfoFormat("Loading work list items for {0}{1}{2}...", DisplayName, aoiText,
 		                filterText);
 
-		LoadItems(filter, status);
+		LoadItems(filter);
 
 		_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
 		                DisplayName);
@@ -446,7 +443,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return string.Empty;
 	}
 
-	public void LoadItems([NotNull] QueryFilter filter, WorkItemStatus? statusFilter = null)
+	public void LoadItems([NotNull] QueryFilter filter)
 	{
 		double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 		double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
@@ -462,13 +459,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		// TODO: Consider keeping the updated items if they already exist in the _rowMap. Also consider
 		//       not re-reading everything if only the filter has changed?
 
-		foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-			         filter, statusFilter))
+		foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
 		{
 			item.OID = Repository.GetNextOid();
 			Assert.True(item.OID > 0, "item is not initialized");
 
-			Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Could not add {item}");
+			Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Cannot not add {item}");
 
 			if (item.GdbRowProxy.Equals(oldCurrentItem?.GdbRowProxy))
 			{
@@ -1496,10 +1492,9 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-				         table, filter, null))
+			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
 			{
-				Assert.True(TryAddItem(item), $"Could not add {item}");
+				Assert.True(TryAddItem(item), $"Cannot not add {item}");
 
 				// it's a unkown item > refresh it's state (status, visited) either
 				// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
@@ -1585,10 +1580,10 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			Stopwatch watch = Stopwatch.StartNew();
 
 			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-				         table, filter, null))
+				         table, filter, ignoreDefinitionQuery: true))
 			{
 				Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
-				            $"Could not get {cachedItem}");
+				            $"Cannot not get {cachedItem}");
 
 				invalidateOids.Add(cachedItem.OID);
 

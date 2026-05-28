@@ -16,7 +16,7 @@ using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcFeatureClass : ArcTable, ITable, IFeatureClass
+	public class ArcFeatureClass : ArcTable, ITable, IFeatureClass, IDisposable
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -68,8 +68,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_shapeType = ShapeType;
 			_shapeFieldName = ShapeFieldName;
 
-			_lengthFieldName = ProFeatureClassDefinition.GetLengthField();
-			_areaFieldName = ProFeatureClassDefinition.GetAreaField();
+			try
+			{
+				_lengthFieldName = ProFeatureClassDefinition.GetLengthField();
+				_areaFieldName = ProFeatureClassDefinition.GetAreaField();
+			}
+			catch (NotSupportedException)
+			{
+				_lengthFieldName = string.Empty;
+				_areaFieldName = string.Empty;
+			}
 		}
 
 		#region Implementation of IClass
@@ -400,6 +408,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			return Fields.FirstOrDefault(f => f.Name.Equals(fieldName));
+		}
+
+		public void Dispose()
+		{
+			_proFeatureClass?.Dispose();
+			ProFeatureClassDefinition.Dispose();
+			ProTable.Dispose();
 		}
 	}
 }

@@ -424,8 +424,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				EnsureInputGeometryProjection(toVertexInfo, processingSpatialReference);
 
 			if (IntersectionUtils.UseCustomIntersect &&
-			    ! GeometryUtils.HasNonLinearSegments(inputGeometry) &&
-			    ! GeometryUtils.IsMAware(inputGeometry))
+			    ! GeometryUtils.HasNonLinearSegments(inputGeometry))
 			{
 				AddSelfIntersectionCrackPoints3d(toVertexInfo, crackPointCalculator,
 				                                 processingSpatialReference, trackCancel);

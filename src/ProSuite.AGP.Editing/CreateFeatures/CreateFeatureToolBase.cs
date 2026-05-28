@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -84,6 +86,7 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 			case esriGeometryType.esriGeometryPolyline:
 				return SketchGeometryType.Line;
 			case esriGeometryType.esriGeometryPolygon:
+			case esriGeometryType.esriGeometryMultiPatch:
 				return SketchGeometryType.Polygon;
 
 			default:
@@ -354,6 +357,41 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 
 		Geometry projected = GeometryUtils.EnsureSpatialReference(
 			geometryToStore, featureClassDef.GetSpatialReference());
+
+		if (AdaptGeometryType(featureClassDef, projected, out Geometry adaptedGeometry))
+		{
+			return adaptedGeometry;
+		}
+
 		return projected;
+	}
+
+	private static bool AdaptGeometryType([NotNull] FeatureClassDefinition featureClassDef,
+	                                      [NotNull] Geometry inputGeometry,
+	                                      out Geometry adaptedGeometry)
+	{
+		if (featureClassDef.GetShapeType() == GeometryType.Multipatch &&
+		    inputGeometry is Polygon polygon)
+		{
+			MultipatchBuilderEx mpBuilder =
+				new MultipatchBuilderEx(SpatialReferenceBuilder.CreateSpatialReference(2056));
+
+			var patches = new List<Patch>();
+
+			// Ring with inconsistent point IDs (alternating 1 and 2)
+			Patch patch1 = mpBuilder.MakePatch(PatchType.FirstRing);
+			patch1.Coords = polygon.Copy3DCoordinatesToList().ToList();
+
+			patches.Add(patch1);
+
+			mpBuilder.Patches = patches;
+
+			Multipatch multipatch = mpBuilder.ToGeometry();
+			adaptedGeometry = multipatch;
+			return true;
+		}
+
+		adaptedGeometry = inputGeometry;
+		return false;
 	}
 }

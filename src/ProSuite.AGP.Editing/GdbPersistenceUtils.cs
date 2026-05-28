@@ -505,8 +505,10 @@ public static class GdbPersistenceUtils
 			return false;
 		}
 
-		Attribute attribute = template.Inspector.FirstOrDefault(
-			a => a.FieldName.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase));
+		Attribute attribute =
+			template.Inspector.FirstOrDefault(a => a.FieldName.Equals(
+				                                  fieldName,
+				                                  StringComparison.InvariantCultureIgnoreCase));
 
 		if (attribute == null)
 		{
@@ -550,9 +552,9 @@ public static class GdbPersistenceUtils
 		}
 	}
 
-	private static RowBuffer CopyRow([NotNull] Row sourceRow,
-	                                 [NotNull] Table targetTable,
-	                                 [CanBeNull] ICollection<string> excludeFields = null,
+	public static RowBuffer CopyRow([NotNull] Row sourceRow,
+	                                [NotNull] Table targetTable,
+	                                [CanBeNull] ICollection<string> excludeFields = null,
 	                                 bool includeShape = false,
 	                                 Subtype subtype = null)
 	{

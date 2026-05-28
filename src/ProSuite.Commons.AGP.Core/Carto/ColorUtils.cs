@@ -103,13 +103,17 @@ public static class ColorUtils
 	}
 
 	/// <summary>Create a lighter color by blending with white</summary>
-	/// <remarks>Input color must be RGB (including HLS and HSV) or CMYK
-	/// (will be converted to RGB) or gray level colors. Other color spaces
-	/// are not supported. The result is always an RGB color.</remarks>
-	/// <returns>a new RGB color instance</returns>
+	/// <seealso cref="Blend"/>
 	public static CIMRGBColor Lighter(this CIMColor color, float f = 0.5f)
 	{
 		return Blend(color, WhiteRGB, f);
+	}
+
+	/// <summary>Create a darker color by blending with black</summary>
+	/// <seealso cref="Blend"/>
+	public static CIMRGBColor Darker(this CIMColor color, float f = 0.5f)
+	{
+		return Blend(color, BlackRGB, f);
 	}
 
 	public static CIMRGBColor ToRGB(this CIMHSLColor color)

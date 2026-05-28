@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -448,6 +449,55 @@ public static class ControlPointUtils
 		builder.HasID = value != NoID;
 
 		return builder.ToGeometry();
+	}
+
+	public static int CountControlPoints(Geometry shape) // TODO Move to ControlPointUtils
+	{
+		if (shape is null)
+		{
+			return 0;
+		}
+
+		if (shape is MapPoint mapPoint)
+		{
+			return mapPoint.HasID && mapPoint.ID != 0 ? 1 : 0;
+		}
+
+		if (shape is Multipoint multipoint)
+		{
+			if (!multipoint.HasID) return 0; // performance
+			var points = multipoint.Points;
+			if (points is null) return 0; // paranoia
+			int count = points.Count(mp => mp.ID != 0);
+			return count;
+		}
+
+		if (shape is Multipart multipart)
+		{
+			if (!multipart.HasID) return 0; // performance
+			var points = multipart.Points;
+			if (points is null) return 0; // paranoia
+			int count = points.Count(mp => mp.ID != 0);
+			return count;
+		}
+
+		if (shape is Multipatch)
+		{
+			throw new NotImplementedException("Not yet implemented for Multipatch geometries");
+		}
+
+		if (shape is GeometryBag)
+		{
+			// Recurse on each geometry in the bag and sum up the counts
+			throw new NotImplementedException("Not yet implemented for GeometryBag geometries");
+		}
+
+		if (shape is Envelope)
+		{
+			return 0; // an envelope has no vertices and therefore no control points
+		}
+
+		throw new NotSupportedException($"Unknown geometry type: {shape.GetType().Name}");
 	}
 
 	/// <summary>

@@ -90,7 +90,7 @@ public static class DatasetUtils
 		catch (NotSupportedException notSupportedException)
 		{
 			// Shapefiles throw a NotSupportedException
-			_msg.Debug("Subtypes not supported", notSupportedException);
+			_msg.Debug("Alias is not supported", notSupportedException);
 
 			return null;
 		}

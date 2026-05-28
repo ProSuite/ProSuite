@@ -36,14 +36,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
-
 	private ChangeAlongFeedback _feedback;
 	private Geometry _lastDrawnExtent;
-
-	protected abstract SelectionCursors InitialSelectionCursors { get; }
-
-	protected abstract SelectionCursors TargetSelectionCursors { get; }
 
 	protected ChangeAlongToolBase()
 	{
@@ -51,6 +45,12 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 
 		GeomIsSimpleAsFeature = false;
 	}
+
+	protected ChangeAlongCurves ChangeAlongCurves { get; private set; }
+
+	protected abstract SelectionCursors InitialSelectionCursors { get; }
+
+	protected abstract SelectionCursors TargetSelectionCursors { get; }
 
 	[CanBeNull]
 	protected virtual string CentralConfigDir => null;
@@ -64,6 +64,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 			AppDataFolder.Roaming, "ToolDefaults");
 
 	protected bool DisplayTargetLines { get; set; }
+
+	protected virtual bool UseNonDefaultReshapeSide => false;
 
 	protected abstract bool RefreshSubcurvesOnRedraw { get; }
 
@@ -100,7 +102,9 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		Enabled = MicroserviceClient != null;
 
 		if (MicroserviceClient == null)
+		{
 			DisabledTooltip = ToolUtils.GetDisabledReasonNoGeometryMicroservice();
+		}
 	}
 
 	protected override async Task HandleEscapeAsync()
@@ -133,7 +137,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 
 	protected override Task OnToolActivatingCoreAsync()
 	{
-		_feedback = new ChangeAlongFeedback()
+		_feedback = new ChangeAlongFeedback
 		            {
 			            ShowTargetLines = DisplayTargetLines
 		            };
@@ -149,11 +153,11 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		{
 			QueuedTaskUtils.Run(() =>
 			{
-				var selectedFeatures =
+				List<Feature> selectedFeatures =
 					GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-				using var source = GetProgressorSource();
-				var progressor = source?.Progressor;
+				using CancelableProgressorSource source = GetProgressorSource();
+				CancelableProgressor progressor = source?.Progressor;
 
 				RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 			});
@@ -209,8 +213,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 				IList<Feature> applicableSelection =
 					GetApplicableSelectedFeatures(selectionByLayer, true).ToList();
 
-				using var source = GetProgressorSource();
-				var progressor = source?.Progressor;
+				using CancelableProgressorSource source = GetProgressorSource();
+				CancelableProgressor progressor = source?.Progressor;
 				RefreshExistingChangeAlongCurves(applicableSelection, progressor);
 			});
 		}
@@ -231,11 +235,11 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 			{
 				try
 				{
-					var selectedFeatures =
+					List<Feature> selectedFeatures =
 						GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-					using var source = GetProgressorSource();
-					var progressor = source?.Progressor;
+					using CancelableProgressorSource source = GetProgressorSource();
+					CancelableProgressor progressor = source?.Progressor;
 
 					RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 
@@ -316,7 +320,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		if (! IsInSubcurveSelectionPhase())
 		{
 			// 2. Phase: target selection:
-			Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), shiftDown: true);
+			Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), true);
 			SetToolCursor(cursor);
 		}
 
@@ -331,7 +335,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		}
 		else
 		{
-			Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), shiftDown: false);
+			Cursor cursor = SelectionCursors.GetCursor(GetSketchType(), false);
 			SetToolCursor(cursor);
 		}
 	}
@@ -383,8 +387,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 
 	protected bool IsInSubcurveSelectionPhase()
 	{
-		bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-		                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+		bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, true) ||
+		                 KeyboardUtils.IsModifierDown(Key.RightShift, true);
 
 		return HasReshapeCurves() && ! shiftDown;
 	}
@@ -432,6 +436,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 	protected abstract List<ResultFeature> ChangeFeaturesAlong(
 		List<Feature> selectedFeatures, [NotNull] IList<Feature> targetFeatures,
 		[NotNull] List<CutSubcurve> cutSubcurves,
+		bool useNonDefaultReshapeSide,
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves);
 
@@ -447,9 +452,9 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 	{
 		Map map = ActiveMapView.Map;
 
-		var elevationSurface = GetElevationSurface(map);
+		ElevationSurfaceLayer elevationSurface = GetElevationSurface(map);
 
-		ZMode zMode = ZMode.Interpolate;
+		var zMode = ZMode.Interpolate;
 		if (elevationSurface != null)
 		{
 			_msg.DebugFormat("Using DTM from elevation surface for Z-values");
@@ -549,16 +554,16 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 				? SpatialRelationship.Contains
 				: SpatialRelationship.Intersects;
 
-		FeatureFinder featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
-		                              {
-			                              SelectedFeatures = selectedFeatures,
-			                              SpatialRelationship = spatialRel,
-			                              ReturnUnJoinedFeatures = true,
-			                              FeatureClassPredicate =
-				                              GetTargetFeatureClassPredicate()
-		                              };
+		var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+		                    {
+			                    SelectedFeatures = selectedFeatures,
+			                    SpatialRelationship = spatialRel,
+			                    ReturnUnJoinedFeatures = true,
+			                    FeatureClassPredicate =
+				                    GetTargetFeatureClassPredicate()
+		                    };
 
-		var selectionByClass =
+		List<FeatureSelectionBase> selectionByClass =
 			featureFinder.FindFeaturesByFeatureClass(sketch, CanUseAsTargetLayer,
 			                                         canUseAsTargetFeature, progressor)
 			             .ToList();
@@ -662,7 +667,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 
 		ChangeAlongCurves.PreSelectCurves(canReshapePredicate);
 
-		var cutSubcurves =
+		List<CutSubcurve> cutSubcurves =
 			ChangeAlongCurves.GetSelectedReshapeCurves(canReshapePredicate, true);
 
 		return cutSubcurves;
@@ -747,8 +752,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		IList<Feature> targetFeatures = Assert.NotNull(ChangeAlongCurves.TargetFeatures);
 
 		List<ResultFeature> updatedFeatures = ChangeFeaturesAlong(
-			selectedFeatures, targetFeatures, cutSubcurves, cancellationToken,
-			out ChangeAlongCurves newChangeAlongCurves);
+			selectedFeatures, targetFeatures, cutSubcurves, UseNonDefaultReshapeSide,
+			cancellationToken, out ChangeAlongCurves newChangeAlongCurves);
 
 		if (updatedFeatures.Count > 0)
 		{
@@ -761,6 +766,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		if (updatedFeatures.Count == 0)
 		{
 			// Probably an additional yellow line needs to be selected
+			_msg.Info(
+				"The feature was not reshaped. Please select green or yellow lines to reshape along");
 			return false;
 		}
 
@@ -774,10 +781,10 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 				.ToDictionary(r => r.OriginalFeature, r => r.NewGeometry);
 
 		// Inserts (in case of cut), grouped by original feature:
-		var inserts = updatedFeatures
-		              .Where(f => IsStoreRequired(f, editableClassHandles,
-		                                          RowChangeType.Insert))
-		              .ToList();
+		List<ResultFeature> inserts = updatedFeatures
+		                              .Where(f => IsStoreRequired(f, editableClassHandles,
+			                                     RowChangeType.Insert))
+		                              .ToList();
 
 		if (resultFeatures.Count == 0 && inserts.Count == 0)
 		{
@@ -785,7 +792,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 			return false;
 		}
 
-		List<Feature> newFeatures = new List<Feature>();
+		var newFeatures = new List<Feature>();
 
 		bool success = await GdbPersistenceUtils.ExecuteInTransactionAsync(
 			               delegate(EditOperation.IEditContext editContext)
@@ -818,7 +825,8 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 	private static IEnumerable<Feature> ReRead([NotNull] IList<Feature> features,
 	                                           [CanBeNull] SpatialReference outputSpatialReference)
 	{
-		var groupedByClass = features.GroupBy(f => f.GetTable().GetID());
+		IEnumerable<IGrouping<long, Feature>> groupedByClass =
+			features.GroupBy(f => f.GetTable().GetID());
 
 		foreach (IGrouping<long, Feature> grouping in groupedByClass)
 		{
@@ -858,11 +866,11 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 
 		QueuedTask.Run(() =>
 		{
-			var selectedFeatures =
+			List<Feature> selectedFeatures =
 				GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-			using var source = GetProgressorSource();
-			var progressor = source?.Progressor;
+			using CancelableProgressorSource source = GetProgressorSource();
+			CancelableProgressor progressor = source?.Progressor;
 
 			RefreshExistingChangeAlongCurves(selectedFeatures, progressor);
 		});

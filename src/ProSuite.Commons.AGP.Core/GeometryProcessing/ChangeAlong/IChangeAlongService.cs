@@ -35,6 +35,7 @@ public interface IChangeAlongService
 		[NotNull] ReshapeCurveFilterOptions curveFilterOptions,
 		double? customTolerance,
 		bool insertVerticesInTarget,
+		bool useNonDefaultReshapeSide,
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves);
 

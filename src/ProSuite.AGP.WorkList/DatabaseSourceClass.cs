@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList;
 
@@ -15,7 +17,10 @@ public class DatabaseSourceClass : SourceClass
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private readonly FilterHelper _filterHelper;
+
 	private readonly int _statusFieldIndex;
+	private readonly string _additionalSubFields;
 
 	[NotNull] private readonly List<WorkListFilterDefinitionExpression> _expressions = new();
 
@@ -24,12 +29,16 @@ public class DatabaseSourceClass : SourceClass
 		[NotNull] DbSourceClassSchema schema,
 		[CanBeNull] IAttributeReader attributeReader,
 		[CanBeNull] string definitionQuery,
+		[NotNull] FilterHelper filterHelper,
 		WorkspaceDbType dbType = WorkspaceDbType.Unknown)
 		: base(tableIdentity, schema, attributeReader)
 	{
 		Assert.ArgumentNotNull(schema, nameof(schema));
 
+		_filterHelper = filterHelper;
 		_statusFieldIndex = schema.StatusFieldIndex;
+		_additionalSubFields = StringUtils.Concatenate(schema.AdditionalSubFields, ",");
+
 		StatusField = schema.StatusField;
 		TodoValue = schema.TodoValue;
 		DoneValue = schema.DoneValue;
@@ -37,6 +46,11 @@ public class DatabaseSourceClass : SourceClass
 		DefaultDefinitionQuery = definitionQuery;
 
 		WorkspaceDbType = dbType;
+	}
+
+	public override bool Contains(Row row)
+	{
+		return _filterHelper.Check(row);
 	}
 
 	public WorkItemStatus GetStatus([NotNull] Row row)
@@ -146,39 +160,17 @@ public class DatabaseSourceClass : SourceClass
 		return ArcGISTableId;
 	}
 
-	protected override void EnsureValidFilterCore(ref QueryFilter filter,
-	                                              WorkItemStatus? statusFilter)
-	{
-		string result = string.Empty;
-
-		if (statusFilter != null)
-		{
-			object value = GetValue(statusFilter.Value);
-
-			result = value.Equals(TodoValue)
-				         ? $"({StatusField} = {value} OR {StatusField} IS NULL)"
-				         : $"{StatusField} = {value}";
-		}
-
-		if (DefaultDefinitionQuery == null)
-		{
-			return;
-		}
-
-		if (! string.IsNullOrEmpty(result))
-		{
-			result += " AND ";
-		}
-
-		result += DefaultDefinitionQuery;
-
-		filter.WhereClause = result;
-	}
-
 	protected override string GetRelevantSubFieldsCore(string subFields)
 	{
+		if (string.IsNullOrEmpty(_additionalSubFields))
+		{
+			return string.IsNullOrEmpty(StatusField)
+				       ? $"{subFields}"
+				       : $"{subFields},{StatusField}";
+		}
+
 		return string.IsNullOrEmpty(StatusField)
-			       ? subFields
-			       : $"{subFields},{StatusField}";
+			       ? $"{subFields},{_additionalSubFields}"
+			       : $"{subFields},{_additionalSubFields},{StatusField}";
 	}
 }

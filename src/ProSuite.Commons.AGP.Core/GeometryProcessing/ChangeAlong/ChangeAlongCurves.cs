@@ -30,6 +30,16 @@ public class ChangeAlongCurves
 
 	public Polyline FilterBuffer { get; set; }
 
+	public IReadOnlyCollection<CutSubcurve> ReshapeCutSubcurves =>
+		_reshapeSubcurves.AsReadOnly();
+
+	public bool HasSelectableCurves =>
+		CurveUsability == ReshapeAlongCurveUsability.CanReshape ||
+		(_reshapeSubcurves?.Any() ?? false);
+
+	[CanBeNull]
+	public IList<Feature> TargetFeatures { get; set; }
+
 	public void Update([NotNull] ChangeAlongCurves newState)
 	{
 		CurveUsability = newState.CurveUsability;
@@ -40,16 +50,6 @@ public class ChangeAlongCurves
 		TargetFeatures = newState.TargetFeatures;
 		FilterBuffer = newState.FilterBuffer;
 	}
-
-	public IReadOnlyCollection<CutSubcurve> ReshapeCutSubcurves =>
-		_reshapeSubcurves.AsReadOnly();
-
-	public bool HasSelectableCurves =>
-		CurveUsability == ReshapeAlongCurveUsability.CanReshape ||
-		(_reshapeSubcurves?.Any() ?? false);
-
-	[CanBeNull]
-	public IList<Feature> TargetFeatures { get; set; }
 
 	/// <summary>
 	/// Pre-selects the (yellow) subcurves matched by the predicate so that they can be used
@@ -66,7 +66,7 @@ public class ChangeAlongCurves
 
 	/// <summary>
 	/// Returns all subcurves that either fulfil the specified predicate or, if
-	/// <see cref="includeAllPreSelectedCandidates"/> is true, are contained in the list of
+	/// <see cref="includeAllPreSelectedCandidates" /> is true, are contained in the list of
 	/// pre-selected subcurves.
 	/// </summary>
 	/// <param name="subCurvePredicate"></param>
@@ -90,8 +90,6 @@ public class ChangeAlongCurves
 			else if (subCurvePredicate == null || subCurvePredicate(cutSubcurve))
 			{
 				result.Add(cutSubcurve);
-				_msg.Info(
-					"The feature was not reshaped. Please select green or yellow lines to reshape along");
 			}
 		}
 
@@ -196,7 +194,7 @@ public class ChangeAlongCurves
 				Feature feature =
 					sourceFeatures.FirstOrDefault(f => sourceRef.Value.References(f));
 
-				if (feature != null && feature.GetTable().GetDefinition().HasZ() == false)
+				if (feature != null && ! feature.GetTable().GetDefinition().HasZ())
 				{
 					continue;
 				}
@@ -206,7 +204,7 @@ public class ChangeAlongCurves
 
 			if (! reshapePath.HasZ)
 			{
-				PolylineBuilder builder = new PolylineBuilder(reshapePath);
+				var builder = new PolylineBuilder(reshapePath);
 				builder.HasZ = true;
 				reshapePath = builder.ToGeometry();
 			}
