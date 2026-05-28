@@ -241,9 +241,11 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 	{
 		EditingTemplate template = EditingTemplate.Current;
 
-		if (template != null && template.Inspector.HasAttributes)
+		// NOTE: Inspector can be null if create feature pane is closed (possibly starting at 3.7)
+		var inspector = template?.Inspector;
+		if (inspector?.HasAttributes == true)
 		{
-			GdbPersistenceUtils.CopyAttributeValues(template.Inspector, rowBuffer);
+			GdbPersistenceUtils.CopyAttributeValues(inspector, rowBuffer);
 		}
 	}
 
