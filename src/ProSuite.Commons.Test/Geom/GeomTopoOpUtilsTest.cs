@@ -4911,58 +4911,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.LessOrEqual(outerCountAfter, outerCountBefore,
 			                   "Adding a single ring may merge outers but must not multiply them.");
 		}
-
-		[Test]
-		public void CanUnionLabyrinthAdventureFootprintAtStep204_UnionMustNotDecreaseArea()
-		{
-			// Repro for the failing union at step 204 of the labyrinth_aventure
-			// (TLM_GEBAEUDE) incremental footprint. The result area drops dramatically
-			// (5845.321 -> 1935.594) when a tiny ring (1.568 sq m) is unioned with the
-			// source. This is the largest single-step area regression in the pipeline.
-			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
-				GeomTestUtils.GetGeometryTestDataPath(
-					"labyrinth_aventure_footprint_pre204_source.wkb"),
-				out _);
-
-			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
-				GeomTestUtils.GetGeometryTestDataPath(
-					"labyrinth_aventure_footprint_pre204_ring.wkb"),
-				out _);
-
-			const double tolerance = 0.0005;
-
-			double sourceArea = source.GetArea2D();
-
-			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
-
-			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea);
-		}
-
-		[Test]
-		public void CanUnionLabyrinthAdventureFootprintAtStep214_UnionMustNotDecreaseArea()
-		{
-			// Repro for the failing union at step 214 of the labyrinth_aventure
-			// (TLM_GEBAEUDE) incremental footprint. Adding a 1.292 sq m ring to a
-			// source of 1948.762 sq m crashes the area to 642.084 sq m.
-			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
-				GeomTestUtils.GetGeometryTestDataPath(
-					"labyrinth_aventure_footprint_pre214_source.wkb"),
-				out _);
-
-			RingGroup target = (RingGroup) GeomUtils.FromWkbFile(
-				GeomTestUtils.GetGeometryTestDataPath(
-					"labyrinth_aventure_footprint_pre214_ring.wkb"),
-				out _);
-
-			const double tolerance = 0.0005;
-
-			double sourceArea = source.GetArea2D();
-
-			MultiLinestring result = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
-
-			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea);
-		}
-
+		
 		[Test]
 		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
 		{

@@ -436,7 +436,7 @@ namespace ProSuite.Commons.Test.Geom
 		[Test]
 		public void CanGetFootprintForLabyrinthAventure()
 		{
-			// TLM_GEBAEUDE labyrinth_aventure multipatch (Spacecraft footprint repro).
+			// TLM_GEBAEUDE labyrinth_aventure multipatch.
 			// The XY footprint of this polyhedron is built incrementally by sorting its
 			// ring groups by area descending and unioning them one by one (see
 			// Polyhedron.GetXYFootprint). Multiple of the union steps (around step 180,
