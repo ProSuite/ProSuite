@@ -380,7 +380,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private IGeometry _mutableGeometry;
 
 		public ArcFeature(Feature proFeature, IFeatureClass parentClass)
-			: base(proFeature, parentClass as ITable)
+			: base(proFeature, (ITable) parentClass)
 		{
 			_proFeature = proFeature;
 			_parentFeatureClass = parentClass;
