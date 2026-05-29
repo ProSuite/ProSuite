@@ -206,7 +206,8 @@ namespace ProSuite.Commons.Collections
 
 				if (node.Key == _minHash)
 				{
-					_firstNode = new KeyValuePair<int, IDictionary<TKey, TValue>>(_firstNode.Key, newDictionary);
+					_firstNode = new KeyValuePair<int, IDictionary<TKey, TValue>>(
+						_firstNode.Key, newDictionary);
 				}
 
 				dictionary = newDictionary;
@@ -268,7 +269,8 @@ namespace ProSuite.Commons.Collections
 
 			if (circleKey == _minHash)
 			{
-				_firstNode = new KeyValuePair<int, IDictionary<TKey, TValue>>(_firstNode.Key, newDictionary);
+				_firstNode = new KeyValuePair<int, IDictionary<TKey, TValue>>(
+					_firstNode.Key, newDictionary);
 			}
 		}
 
