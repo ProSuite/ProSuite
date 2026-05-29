@@ -541,7 +541,9 @@ Example: 25 meters</value>
     <value>scratch workspace where a temporary feature class can be created</value>
   </data>
   <data name="QaGroupConnected_0" xml:space="preserve">
-    <value>Find errors in checking if polylines of 'polylineClass' with same attributes are connected. Reports disjoint line groups with ErrorReporting.ReferToFirstPart.</value>
+    <value>Find errors in checking if polylines of 'polylineClass' with same attributes are connected. Reports disjoint line groups with ErrorReporting.ReferToFirstPart. Note: ReferToFirstPart is provided for backward compatibility. 
+    For improved spatial error localization and reporting behavior, 
+    use constructor 1 with ErrorReporting = ShortestGaps or CombineParts.</value>
   </data>
   <data name="QaGroupConnected_allowedShape" xml:space="preserve">
     <value>Indicates the allowed overall shape types for line groups:

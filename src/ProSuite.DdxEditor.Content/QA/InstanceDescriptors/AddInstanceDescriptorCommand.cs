@@ -5,12 +5,12 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
-	public class AddInstanceDescriptorsFromAssemblyCommand<T> :
-		AddItemCommandBase<InstanceDescriptorsItem<T>> where T : InstanceDescriptor
+	public class AddInstanceDescriptorCommand<T> : AddItemCommandBase<InstanceDescriptorsItem<T>>
+		where T : InstanceDescriptor
 	{
 		[NotNull] private readonly string _instanceTypeDisplayName;
 
-		public AddInstanceDescriptorsFromAssemblyCommand(
+		public AddInstanceDescriptorCommand(
 			[NotNull] InstanceDescriptorsItem<T> descriptorsItem,
 			[NotNull] IApplicationController applicationController,
 			[NotNull] string instanceTypeDisplayName)
@@ -19,18 +19,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			_instanceTypeDisplayName = instanceTypeDisplayName;
 		}
 
-		public override string Text => $"Add {_instanceTypeDisplayName}s from .Net Assembly";
+		public override string Text => $"Add {_instanceTypeDisplayName}";
 
 		protected override void ExecuteCore()
 		{
-			string dllFilePath = TestAssemblyUtils.ChooseAssemblyFileName();
-
-			if (dllFilePath == null)
-			{
-				return;
-			}
-
-			Item.AddInstanceDescriptors(dllFilePath, ApplicationController);
+			Item.AddInstanceDescriptorItem();
 		}
 	}
 }
