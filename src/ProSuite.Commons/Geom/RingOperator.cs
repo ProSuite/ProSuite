@@ -448,15 +448,33 @@ namespace ProSuite.Commons.Geom
 			// By now we know that the rings are not cutting each other, but extra checks are
 			// necessary because the unprocessed parts could be inside a processed part or within
 			// another unprocessed part.
+
+			// Interior rings that have not yet been assigned to a result ring group. An
+			// unprocessed outer ring that sits inside one of these (e.g. an island in a
+			// courtyard whose surrounding building is itself still unprocessed) is NOT a
+			// duplicate of the building and must be kept - the containing ring group does
+			// not have its hole assigned yet, so a plain AreaContainsXY against it would
+			// wrongly report containment (TOP: garden_center_giubiasco).
+			List<Linestring> unassignedInteriorRings =
+				unprocessed.GetLinestrings().Where(l => l.ClockwiseOriented == false).ToList();
+
 			foreach (var unprocessedRing in unprocessed.GetLinestrings()
 			                                           .Where(l => l.ClockwiseOriented != false)
 			                                           .OrderByDescending(l => l.GetArea2D()))
 			{
-				if (resultRingGroups.All(r => GeomRelationUtils.AreaContainsXY(
-					                              r, unprocessedRing,
-					                              _subcurveNavigator.Tolerance) == false))
+				bool containedByResultRing =
+					resultRingGroups.Any(r => GeomRelationUtils.AreaContainsXY(
+						                          r, unprocessedRing,
+						                          _subcurveNavigator.Tolerance) == true);
+
+				bool insideUnassignedInteriorRing =
+					unassignedInteriorRings.Any(island => RingContains(island, unprocessedRing,
+						                            _subcurveNavigator.Tolerance));
+
+				if (! containedByResultRing || insideUnassignedInteriorRing)
 				{
-					// Not contained by any result ring: keep it
+					// Not contained by any result ring, or contained only because the
+					// relevant interior ring (hole) has not been assigned yet: keep it.
 					resultRingGroups.Add(new RingGroup(unprocessedRing));
 				}
 			}
@@ -575,10 +593,20 @@ namespace ProSuite.Commons.Geom
 				{
 					// Intersected (processed) inner rings:
 					// Find the containing un-cut outer ring, assign and remove from un-processed list
-					Linestring containing = unprocessedOuterRings.FirstOrDefault(
-						o => o.ClockwiseOriented == true &&
-						     GeomRelationUtils.PolycurveContainsXY(
-							     o, processedResultRing.StartPoint, _subcurveNavigator.Tolerance));
+					// Use a full-ring containment test (not just the start point): the
+					// processed inner ring's start point can land exactly on the boundary
+					// of a small island that does NOT actually contain the hole (e.g. a
+					// pinch vertex shared by an island and the reshaped courtyard). A
+					// single-point test then wrongly nests a large courtyard hole inside a
+					// tiny island; RingContains skips boundary-ambiguous vertices and
+					// decides on the first conclusive (interior/exterior) one
+					// (TOP: vallee_de_la_jeunesse). Holes left unassigned here are picked up
+					// by the AssignInteriorRings call (smallest containing ring group).
+					Linestring containing =
+						unprocessedOuterRings.FirstOrDefault(
+							o => o.ClockwiseOriented == true &&
+							     RingContains(o, processedResultRing,
+							                  _subcurveNavigator.Tolerance));
 
 					if (containing != null)
 					{

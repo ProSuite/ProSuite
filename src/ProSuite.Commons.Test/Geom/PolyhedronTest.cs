@@ -433,6 +433,69 @@ namespace ProSuite.Commons.Test.Geom
 			                "Footprint should match AO reference area (≈145.05 sq m)");
 		}
 
+
+		[Test]
+		public void CanUnionIslandInCourtyardWithBoundaryLoop()
+		{
+			// TLM_GEBAEUDE {AEEB32D7-A07E-4D64-B8A4-994DC51FCF66} (garden_center_giubiasco),
+			// isolated union step 246. The accumulated footprint (source) has a pinch /
+			// boundary loop on its main outer ring AND, far away, a building (~58 sq m)
+			// with a courtyard hole (~-2.29 sq m) that contains a small island (~1.097 sq m).
+			// A tiny target triangle is unioned at the pinch. Because the union has a
+			// boundary loop, RingOperator.AddUnprocessedRings took its de-duplication path
+			// and dropped the island - at the time it tested containment, the courtyard hole
+			// had not yet been assigned to the building, so the island looked like a
+			// duplicate of the (solid) building. The union area must never decrease when
+			// adding a (mostly) disjoint ring.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"island_in_courtyard_boundary_loop_source.wkb"), out _);
+			MultiLinestring target = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"island_in_courtyard_boundary_loop_target.wkb"), out _);
+
+			double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			// The target (~0.39) sits outside the existing footprint, so the union must
+			// grow, not shrink. Before the fix this returned ~455.825 (the 1.097 island
+			// was lost), now it is ~456.922 (= source + target).
+			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea,
+			                      "Union with a (mostly) disjoint ring must not lose area.");
+			Assert.AreEqual(sourceArea + target.GetArea2D(), result.GetArea2D(), 0.001);
+
+			// The ~1.097 island in the courtyard must still be present in the result.
+			Assert.IsTrue(
+				result.GetLinestrings().Any(l => l.ClockwiseOriented == true &&
+				                                 Math.Abs(l.GetArea2D() - 1.0971) < 0.01),
+				"The island inside the courtyard was dropped from the union result.");
+		}
+
+		[Test]
+		public void CanGetFootprintForGardenCenterGiubiasco()
+		{
+			// TLM_GEBAEUDE {AEEB32D7-A07E-4D64-B8A4-994DC51FCF66}.
+			// The incremental ring-group union previously dropped islands nested inside
+			// courtyards at the union steps that involve a boundary loop, losing ~1.25 sq m
+			// and leaving two spurious holes. AO reference area: 479.1256.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("garden_center_giubiasco.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.0005;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(479.1256, footprint.GetArea2D(), 0.05);
+		}
+
 		[Test]
 		public void CanGetFootprintForLabyrinthAventure()
 		{
