@@ -433,7 +433,6 @@ namespace ProSuite.Commons.Test.Geom
 			                "Footprint should match AO reference area (≈145.05 sq m)");
 		}
 
-
 		[Test]
 		public void CanUnionIslandInCourtyardWithBoundaryLoop()
 		{
@@ -473,6 +472,62 @@ namespace ProSuite.Commons.Test.Geom
 				result.GetLinestrings().Any(l => l.ClockwiseOriented == true &&
 				                                 Math.Abs(l.GetArea2D() - 1.0971) < 0.01),
 				"The island inside the courtyard was dropped from the union result.");
+		}
+
+		[Test]
+		public void CanUnionValleeDeLaJeunesseAtStep93()
+		{
+			// TLM_GEBAEUDE {EEBB4D4C-756D-4EF2-B85D-2DA1991E2A65} (vallee_de_la_jeunesse),
+			// isolated union step 93. The accumulated footprint (source, area ~913.352,
+			// 15 parts) is unioned with a small ring (~3.371). This tests the case where the
+			// source ring touches multiple interior rings.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vallee_jeunesse_union_step93_source.wkb"), out _);
+			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vallee_jeunesse_union_step93_ring.wkb"), out _);
+
+			double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+			double ringArea = ring.GetArea2D();
+
+			Console.WriteLine($"source area={sourceArea:F6} parts={source.PartCount}");
+			Console.WriteLine($"ring   area={ringArea:F6} parts={ring.PartCount}");
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			Console.WriteLine($"result area={result.GetArea2D():F6} parts={result.PartCount}");
+
+			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea - 1e-6,
+			                      "Union must not lose area when adding a ring.");
+		}
+
+		[Test]
+		public void CanUnionValleeDeLaJeunesseAtStep24()
+		{
+			// TLM_GEBAEUDE {EEBB4D4C-756D-4EF2-B85D-2DA1991E2A65} (vallee_de_la_jeunesse),
+			// isolated union step 24. A ring (~6.349) that lies completely OUTSIDE the
+			// current accumulated footprint must not be dropped by the union (area stays
+			// 603.673 instead of growing by 6.349).
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vallee_jeunesse_union_step24_source.wkb"), out _);
+			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vallee_jeunesse_union_step24_ring.wkb"), out _);
+
+			double tolerance = 0.0005;
+			double sourceArea = source.GetArea2D();
+			double ringArea = ring.GetArea2D();
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			Assert.AreEqual(sourceArea + ringArea, result.GetArea2D(), 0.001,
+			                "A fully disjoint ring must be added to the union result.");
 		}
 
 		[Test]
@@ -518,6 +573,27 @@ namespace ProSuite.Commons.Test.Geom
 				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
 
 			Assert.AreEqual(655.276735, footprint.GetArea2D(), 0.001);
+		}
+
+		[Test]
+		public void CanGetFootprintForValleeDeLaJeunesse()
+		{
+			// TLM_GEBAEUDE {EEBB4D4C-756D-4EF2-B85D-2DA1991E2A65}.
+			// The incremental ring-group union loses area at step 93 (913.3520 ->
+			// 899.9141) and leaves spurious holes; it ends ~1028 instead of the AO
+			// reference area 1051.300615 (length 118.319908).
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("vallee_de_la_jeunesse.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.0005;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(1051.300615, footprint.GetArea2D(), 0.05);
 		}
 
 		private static Polyhedron CreatePolyhedron(Linestring linestring,

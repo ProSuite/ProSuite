@@ -387,6 +387,80 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanDetermineTargetInCourtyardVoidTouchingPinchOfTwoInteriorRings()
+		{
+			// Minimal repro for the vallee_de_la_jeunesse touch-point bug (step 24).
+			// The source area is a square with two triangular holes (interior rings)
+			// that meet at a single pinch point P = (10, 10). The target ring sits
+			// inside the LEFT void (hole A) and touches the pinch with one corner.
+			// Because the target lies in a hole, it is OUTSIDE the source area.
+			//
+			//      _________________
+			//     |   \         /   |   exterior ring (CW)
+			//     |    \   A   /    |   hole A = left void (CCW)
+			//     | [tgt]\   /B     |   hole B = right void (CCW)
+			//     |       \P/       |   both holes meet at the pinch P
+			//     |       / \       |   target sits in void A, corner at P
+			//     |      /   \      |
+			//     |_____/_____\_____|
+
+			// Exterior ring (clockwise -> positive area):
+			var exteriorPoints = new List<Pnt3D>
+			                     {
+				                     new Pnt3D(0, 0, 0),
+				                     new Pnt3D(0, 20, 0),
+				                     new Pnt3D(20, 20, 0),
+				                     new Pnt3D(20, 0, 0),
+				                     new Pnt3D(0, 0, 0)
+			                     };
+
+			// Hole A - left void (counter-clockwise -> negative area):
+			var holeAPoints = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(10, 10, 0),
+				                  new Pnt3D(4, 14, 0),
+				                  new Pnt3D(4, 6, 0),
+				                  new Pnt3D(10, 10, 0)
+			                  };
+
+			// Hole B - right void (counter-clockwise -> negative area):
+			var holeBPoints = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(10, 10, 0),
+				                  new Pnt3D(16, 6, 0),
+				                  new Pnt3D(16, 14, 0),
+				                  new Pnt3D(10, 10, 0)
+			                  };
+
+			var exterior = new Linestring(exteriorPoints);
+			var holeA = new Linestring(holeAPoints);
+			var holeB = new Linestring(holeBPoints);
+
+			Assert.IsTrue(exterior.ClockwiseOriented);
+			Assert.IsFalse(holeA.ClockwiseOriented);
+			Assert.IsFalse(holeB.ClockwiseOriented);
+
+			MultiPolycurve source = new MultiPolycurve(new[] { exterior, holeA, holeB });
+
+			// Target ring sitting inside void A, one corner touching the pinch (10, 10):
+			var targetPoints = new List<Pnt3D>
+			                   {
+				                   new Pnt3D(10, 10, 0),
+				                   new Pnt3D(6, 9, 0),
+				                   new Pnt3D(6, 11, 0),
+				                   new Pnt3D(10, 10, 0)
+			                   };
+
+			Linestring target = new Linestring(targetPoints);
+
+			const double tolerance = 0.0001;
+
+			// The target lies in a hole (void) of the source -> NOT contained.
+			Assert.IsFalse(GeomRelationUtils.AreaContainsXY(source, target, tolerance));
+			Assert.IsFalse(GeomRelationUtils.IsContainedXY(target, source, tolerance));
+		}
+
+		[Test]
 		public void CanDetermineTouchesXY()
 		{
 			var pnts1 = new List<Pnt3D>();

@@ -771,11 +771,21 @@ namespace ProSuite.Commons.Geom
 		{
 			// This must be done per source ring to avoid getting a left side deviation from a different
 			// touching source ring despite the target being fully within the adjacent source ring.
+			// NOTE: touch points that span source rings of DIFFERENT orientation (an exterior ring
+			// touching one of its interior rings at the same point) are handled by the caller's
+			// point-in-polygon special case, so here all touch points are either on a single ring
+			// or on several rings of the SAME orientation.
 			bool hasAnyLeftSideDeviation = false;
 
 			foreach (IGrouping<int, IntersectionPoint3D> intersectionPointsPerPart in
 			         touchPoints.GroupBy(i => i.SourcePartIndex))
 			{
+				// A negatively-oriented (interior/hole) source ring needs the inverse
+				// interpretation: the filled area is on its right side and the void is on its left.
+				bool ringIsInterior =
+					closedPolycurve.GetPart(intersectionPointsPerPart.Key).ClockwiseOriented ==
+					false;
+
 				bool hasAnyRightSideDeviation = false;
 				foreach (IntersectionPoint3D intersectionPoint in intersectionPointsPerPart)
 				{
@@ -792,15 +802,23 @@ namespace ProSuite.Commons.Geom
 					hasAnyRightSideDeviation |= hasRightSideDeviation;
 				}
 
-				if (hasAnyRightSideDeviation)
+				if (hasAnyRightSideDeviation && ! ringIsInterior)
 				{
-					// Completely within this source ring: contained
+					// The target dips into the filled interior of this exterior source ring
+					// -> contained, even if a different touching ring suggests a left-side
+					// deviation.
 					return true;
 				}
+
+				// For an interior (hole) ring a right-side deviation is NOT conclusive: it only
+				// means "not inside THIS hole". The target may still sit in a neighbouring hole's
+				// void at the pinch where two holes meet. Only a left-side deviation (into the
+				// void) is conclusive there, so we defer to the hasAnyLeftSideDeviation check.
 			}
 
-			// No source ring had right-side-only touch points. It must be outside if there was
-			// any touch point with left-side deviation.
+			// No exterior source ring contained the target due to a right-side deviation. It is
+			// outside if any touch point has a left-side deviation (the target leaves an exterior
+			// ring or enters an interior ring's void); otherwise it is contained.
 			return ! hasAnyLeftSideDeviation;
 		}
 
@@ -1688,8 +1706,8 @@ namespace ProSuite.Commons.Geom
 				segments.FindSegments(segments.XMin, testPoint.Y, testPoint.X, testPoint.Y,
 				                      tolerance);
 
-			foreach (KeyValuePair<int, Line3D> path2Segment in intersectingSegments.OrderBy(
-				         kvp => kvp.Key))
+			foreach (KeyValuePair<int, Line3D> path2Segment in
+			         intersectingSegments.OrderBy(kvp => kvp.Key))
 			{
 				Line3D segment = path2Segment.Value;
 
