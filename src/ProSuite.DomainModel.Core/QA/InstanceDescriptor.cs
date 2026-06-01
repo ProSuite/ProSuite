@@ -194,6 +194,11 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#endregion
 
+		public override string ToString()
+		{
+			return $"{TypeDisplayName} '{Name}'";
+		}
+
 		#region Equality members
 
 		public virtual bool Equals(InstanceDescriptor other)
