@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -22,21 +21,12 @@ namespace ProSuite.Commons.Collections
 			HashHelpers.GetPrime(HalfMaxDictionarySize);
 
 		private static readonly string _largeDictionaryType =
-			Environment.GetEnvironmentVariable(
-				"PROSUITE_ROWCACHE_DICTIONARY");
+			Environment.GetEnvironmentVariable("PROSUITE_ROWCACHE_DICTIONARY");
 
 		private static bool UseStandardDictionary =>
 			_largeDictionaryType != null &&
 			_largeDictionaryType.Equals("STANDARD",
 			                            StringComparison.InvariantCultureIgnoreCase);
-
-		private static bool UseRecyclingDictionaries =>
-			_largeDictionaryType != null &&
-			_largeDictionaryType.Equals("RECYCLING",
-			                            StringComparison.InvariantCultureIgnoreCase);
-
-		private static readonly ConcurrentBag<IDictionary> _recycleBin =
-			new ConcurrentBag<IDictionary>();
 
 		[NotNull]
 		[PublicAPI]
@@ -68,25 +58,8 @@ namespace ProSuite.Commons.Collections
 				return CreateStandardDictionary<TKey, TValue>(expectedCount, equalityComparer);
 			}
 
-			if (UseRecyclingDictionaries)
-			{
-				if (_recycleBin.Count > 0 && _recycleBin.TryTake(out IDictionary result))
-				{
-					return (IDictionary<TKey, TValue>) result;
-				}
-
-				return CreateStandardDictionary<TKey, TValue>(expectedCount, equalityComparer);
-			}
-
 			return new ConsistentHashLargeDictionary<TKey, TValue>(expectedCount,
 				equalityComparer);
-		}
-
-		public static void Recycle<TKey, TValue>(IDictionary<TKey, TValue> dictionary)
-		{
-			dictionary.Clear();
-
-			_recycleBin.Add((IDictionary) dictionary);
 		}
 
 		private static IDictionary<TKey, TValue> CreateStandardDictionary<TKey, TValue>(

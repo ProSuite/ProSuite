@@ -500,15 +500,18 @@ public static class GdbPersistenceUtils
 			return false;
 		}
 
-		if (! template.Inspector.HasAttributes)
+		// NOTE: Inspector can be null if create feature pane is closed (possibly starting at 3.7)
+		var inspector = template.Inspector;
+
+		if (inspector == null || ! inspector.HasAttributes)
 		{
 			return false;
 		}
 
 		Attribute attribute =
-			template.Inspector.FirstOrDefault(a => a.FieldName.Equals(
-				                                  fieldName,
-				                                  StringComparison.InvariantCultureIgnoreCase));
+			inspector.FirstOrDefault(a => a.FieldName.Equals(
+				                              fieldName,
+				                              StringComparison.InvariantCultureIgnoreCase));
 
 		if (attribute == null)
 		{

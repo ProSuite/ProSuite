@@ -66,7 +66,12 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public bool AreEqual(ISpatialReference otherSr, bool includeResolution)
 		{
-			// TODO: Compare actual resulution values
+			if (otherSr == null)
+			{
+				return false;
+			}
+
+			// TODO: Compare actual resolution values
 			SpatialReference otherAoSr;
 			if (otherSr is ArcSpatialReference otherArcSpatialReference)
 			{
