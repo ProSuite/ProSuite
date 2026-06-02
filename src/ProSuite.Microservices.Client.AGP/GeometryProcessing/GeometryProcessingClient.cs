@@ -13,6 +13,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Generalize;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Holes;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
+using ProSuite.Commons.AGP.Core.GeometryProcessing.RepairGeometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneralize;
@@ -21,6 +22,7 @@ using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.FillHole;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.RepairGeometry;
 using ProSuite.Microservices.Client.GrpcNet;
 using ProSuite.Microservices.Definitions.Geometry;
 
@@ -32,7 +34,8 @@ public class GeometryProcessingClient : MicroserviceClientBase,
                                         ICrackerService,
                                         ICalculateHolesService,
                                         IChangeAlongService,
-                                        IAdvancedGeneralizeService
+                                        IAdvancedGeneralizeService,
+                                        IRepairGeometryService
 
 {
 	public GeometryProcessingClient([NotNull] IClientChannelConfig channelConfig)
@@ -47,6 +50,7 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 	private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 	private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 	private FillHolesGrpc.FillHolesGrpcClient RemoveHolesClient { get; set; }
+	private RepairGeometryGrpc.RepairGeometryGrpcClient RepairGeometryClient { get; set; }
 
 	public override string ServiceName =>
 		RemoveOverlapsClient?.GetType().DeclaringType?.Name ?? "<no service name>";
@@ -96,6 +100,7 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 		ChangeAlongClient = new ChangeAlongGrpc.ChangeAlongGrpcClient(channel);
 		ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
 		RemoveHolesClient = new FillHolesGrpc.FillHolesGrpcClient(channel);
+		RepairGeometryClient = new RepairGeometryGrpc.RepairGeometryGrpcClient(channel);
 	}
 
 	#region Overrides of MicroserviceClientBase
@@ -374,6 +379,52 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 		return CrackerClientUtils.ChopLines(
 			CrackClient, selectedFeatures, splitPoints, intersectingFeatures, chopperOptions,
 			intersectionPointOptions, addCrackPointsOnExistingVertices, cancellationToken);
+	}
+
+	#endregion
+
+	#region IRepairGeometryService
+
+	public RepairGeometryResult CalculateRepairInfo(
+		IList<Feature> sourceFeatures,
+		double minimumSegmentLength,
+		bool allowLoops,
+		bool allowLinearSelfIntersections,
+		bool addCrackPointsBetweenParts,
+		double crackPointTolerance,
+		bool use2D,
+		CancellationToken cancellationToken)
+	{
+		if (RepairGeometryClient == null)
+		{
+			throw new InvalidOperationException("No microservice available.");
+		}
+
+		return RepairGeometryClientUtils.CalculateRepairInfo(
+			RepairGeometryClient, sourceFeatures, minimumSegmentLength,
+			allowLoops, allowLinearSelfIntersections, addCrackPointsBetweenParts,
+			crackPointTolerance, use2D, cancellationToken);
+	}
+
+	public IList<ResultFeature> ApplyRepairGeometry(
+		IList<Feature> sourceFeatures,
+		IList<RepairableFeature> repairInfos,
+		double minimumSegmentLength,
+		bool allowLoops,
+		bool allowLinearSelfIntersections,
+		double crackPointTolerance,
+		bool use2D,
+		CancellationToken cancellationToken)
+	{
+		if (RepairGeometryClient == null)
+		{
+			throw new InvalidOperationException("No microservice available.");
+		}
+
+		return RepairGeometryClientUtils.ApplyRepairGeometry(
+			RepairGeometryClient, sourceFeatures, repairInfos,
+			minimumSegmentLength, allowLoops, allowLinearSelfIntersections,
+			crackPointTolerance, use2D, cancellationToken);
 	}
 
 	#endregion

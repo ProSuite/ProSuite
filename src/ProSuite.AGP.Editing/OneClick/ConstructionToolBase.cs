@@ -348,9 +348,10 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			return;
 		}
 
-		if (_intermediateSketchStates?.IsInIntermittentSelectionPhase != true)
+		// For symmetry with ShiftPressed. Additionally, in tools without intermediate selection
+		// ESC would stop working after SHIFT during sketch phase without this:
+		if (! AllowMultiSelection(out _))
 		{
-			// No intermediate sketch phase has been started
 			return;
 		}
 

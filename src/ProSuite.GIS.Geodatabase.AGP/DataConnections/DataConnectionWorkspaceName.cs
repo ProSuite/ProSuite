@@ -117,15 +117,7 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	{
 		Datastore datastore = OpenDatastore();
 
-		if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
-		{
-			return ArcWorkspace.Create(geodatabase);
-		}
-
-		// TODO: Shapefile, Database, etc.
-
-		throw new NotImplementedException(
-			$"Unsupported workspace type: {datastore.GetType().Name}");
+		return ArcWorkspace.Create(datastore);
 	}
 
 	#endregion

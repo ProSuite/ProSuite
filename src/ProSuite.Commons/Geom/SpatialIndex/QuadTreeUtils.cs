@@ -26,9 +26,11 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				quadSize *= 2;
 			}
 
-			// Center the quadtree on the actual extent
-			int centerEast = (minEast + maxEast) / 2;
-			int centerNorth = (minNorth + maxNorth) / 2;
+			// Center the quadtree on the actual extent so that tiles equidistant from the center
+			// are grouped at the same quadtree level, giving better spatial locality in traversal order.
+			// Round up (+ 1) to avoid losing the max boundary when the range is exactly a power-of-2 wide/tall.
+			int centerEast = (minEast + maxEast + 1) / 2;
+			int centerNorth = (minNorth + maxNorth + 1) / 2;
 			int startEast = centerEast - quadSize / 2;
 			int startNorth = centerNorth - quadSize / 2;
 

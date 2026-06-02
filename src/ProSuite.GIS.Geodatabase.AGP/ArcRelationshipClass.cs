@@ -36,7 +36,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			var gdb = (ArcGIS.Core.Data.Geodatabase) proRelationshipClass.GetDatastore();
 
-			ArcWorkspace existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle.ToInt64());
+			ArcWorkspace existingWorkspace =
+				ArcWorkspace.GetByHandle(gdb.Handle.ToInt64()) as ArcWorkspace;
 
 			ArcRelationshipClass found =
 				existingWorkspace?.GetRelClassByName(proRelationshipClass.GetName());

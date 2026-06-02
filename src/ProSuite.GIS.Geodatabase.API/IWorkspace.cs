@@ -36,6 +36,8 @@ namespace ProSuite.GIS.Geodatabase.API
 		string Description { get; }
 
 		object NativeImplementation { get; }
+
+		void CacheProperties();
 	}
 
 	public interface IFeatureWorkspace : IWorkspace

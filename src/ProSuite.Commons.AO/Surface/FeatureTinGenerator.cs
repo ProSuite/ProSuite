@@ -31,6 +31,16 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		/// <summary>
+		/// Constructor for subclasses that do not use a <see cref="SimpleTerrain"/> (e.g., LAS-based
+		/// generators). Subclasses must override <see cref="GenerateTin"/> and
+		/// <see cref="SuggestSubdivisions"/>.
+		/// </summary>
+		protected FeatureTinGenerator(double? tinBufferDistance)
+		{
+			_tinBufferDistance = tinBufferDistance;
+		}
+
+		/// <summary>
 		/// Whether the TIN should be generated using the constrained delaunay triangulation, i.e. the
 		/// breaklines should not be densified with Steiner points.
 		/// </summary>
@@ -70,7 +80,7 @@ namespace ProSuite.Commons.AO.Surface
 		/// <param name="areaOfInterest">The AOI in the target spatial reference.</param>
 		/// <param name="maxTinPointCount">The maximum expected number of points per subdivision.</param>
 		/// <returns></returns>
-		public IList<IEnvelope> SuggestSubdivisions(IEnvelope areaOfInterest,
+		public virtual IList<IEnvelope> SuggestSubdivisions(IEnvelope areaOfInterest,
 		                                            int maxTinPointCount)
 		{
 			// In the fall-back implementation the AOI is quadrupled, the more subtle approach enlarges it by max 8 * buffer width
@@ -100,7 +110,7 @@ namespace ProSuite.Commons.AO.Surface
 		/// <param name="areaOfInterest">The AOI in the target spatial reference.</param>
 		/// <param name="trackCancel"></param>
 		/// <returns></returns>
-		public ITin GenerateTin(IEnvelope areaOfInterest,
+		public virtual ITin GenerateTin(IEnvelope areaOfInterest,
 		                        ITrackCancel trackCancel = null)
 		{
 			// Read relevant features + some margin
@@ -473,7 +483,7 @@ namespace ProSuite.Commons.AO.Surface
 			return result;
 		}
 
-		private void AddFeaturesToTin(
+		protected void AddFeaturesToTin(
 			[NotNull] ITinEdit tin,
 			[NotNull] IEnumerable<SimpleTerrainDataSource> terrainDataSources,
 			[NotNull] IGeometry inExtent)

@@ -16,7 +16,8 @@
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
 
-    <NoWarn>1591</NoWarn>
+    <!-- Suppressing WFO1000 for .NET 10 temporarily until it is fixed for each control property. -->
+    <NoWarn>1591;WFO1000</NoWarn>
 
     <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
 		Supported target frameworks: net48 (v4.8) or net6.0-windows -->

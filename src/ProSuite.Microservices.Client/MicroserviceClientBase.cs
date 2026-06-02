@@ -16,18 +16,17 @@ namespace ProSuite.Microservices.Client
 {
 	public abstract class MicroserviceClientBase : IMicroserviceClient
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		private const string _localhost = "localhost";
-
-		private Health.HealthClient _healthClient;
-		private Process _startedProcess;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[CanBeNull] private readonly IList<IClientChannelConfig> _allChannelConfigs;
 
 		private string _executable;
 		private string _executableArguments;
 		private string _executableCommandName;
+
+		private Health.HealthClient _healthClient;
+		private Process _startedProcess;
 
 		protected MicroserviceClientBase([NotNull] string host = _localhost,
 		                                 int port = 5151,
@@ -63,16 +62,20 @@ namespace ProSuite.Microservices.Client
 			}
 		}
 
+		protected string ClientCertificate { get; private set; }
+
+		[CanBeNull]
+		protected ChannelBase Channel { get; private set; }
+
+		[NotNull]
+		protected string ChannelServiceName =>
+			ChannelIsLoadBalancer ? nameof(ServiceDiscoveryGrpc) : ServiceName;
+
 		public string HostName { get; private set; }
 
 		public int Port { get; private set; }
 
 		public bool UseTls { get; private set; }
-
-		protected string ClientCertificate { get; private set; }
-
-		[CanBeNull]
-		protected ChannelBase Channel { get; private set; }
 
 		public bool ChannelIsLoadBalancer { get; private set; }
 
@@ -81,10 +84,6 @@ namespace ProSuite.Microservices.Client
 
 		[NotNull]
 		public abstract string ServiceDisplayName { get; }
-
-		[NotNull]
-		protected string ChannelServiceName =>
-			ChannelIsLoadBalancer ? nameof(ServiceDiscoveryGrpc) : ServiceName;
 
 		public bool CanFailOver => _allChannelConfigs?.Count > 1;
 
@@ -104,6 +103,31 @@ namespace ProSuite.Microservices.Client
 			catch (Exception e)
 			{
 				_msg.Debug($"Error killing the started service process {_startedProcess}", e);
+			}
+		}
+
+		/// <summary>
+		/// Kills the locally started server process without closing the gRPC channel.
+		/// The channel can be reused for subsequent calls after re-starting the server.
+		/// </summary>
+		/// <returns>True if a running process was found and killed.</returns>
+		public bool StopLocalServer()
+		{
+			if (_startedProcess == null || _startedProcess.HasExited)
+			{
+				return false;
+			}
+
+			try
+			{
+				_startedProcess.Kill();
+				_startedProcess = null;
+				return true;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error killing the started service process {_startedProcess}", e);
+				return false;
 			}
 		}
 
@@ -158,7 +182,7 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			if (CanAcceptCalls(false))
+			if (CanAcceptCalls())
 			{
 				return false;
 			}
@@ -190,7 +214,7 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
-			Stopwatch stopwatch = Stopwatch.StartNew();
+			var stopwatch = Stopwatch.StartNew();
 
 			bool result =
 				GrpcClientUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
@@ -217,7 +241,7 @@ namespace ProSuite.Microservices.Client
 
 			string serviceName = ChannelServiceName;
 
-			Stopwatch stopwatch = Stopwatch.StartNew();
+			var stopwatch = Stopwatch.StartNew();
 
 			StatusCode statusCode = await GrpcClientUtils.IsServingAsync(healthClient, serviceName)
 			                                             .ConfigureAwait(false);
@@ -239,7 +263,7 @@ namespace ProSuite.Microservices.Client
 				return 1;
 			}
 
-			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
+			var lbClient =
 				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(Channel);
 
 			string serviceName = ServiceName;
@@ -347,7 +371,7 @@ namespace ProSuite.Microservices.Client
 					return true;
 				}
 
-				if (CanAcceptCalls(allowFailOver: false))
+				if (CanAcceptCalls())
 				{
 					return true;
 				}
@@ -363,7 +387,7 @@ namespace ProSuite.Microservices.Client
 		                                                    string serviceName,
 		                                                    int maxMessageLength)
 		{
-			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
+			var lbClient =
 				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(lbChannel);
 
 			DiscoverServicesResponse lbResponse = lbClient.DiscoverTopServices(
@@ -507,7 +531,7 @@ namespace ProSuite.Microservices.Client
 		{
 			// TEST for TOP-5412 (re-use same channel or always create new channel?)
 
-			if (CanAcceptCalls(allowFailOver: false))
+			if (CanAcceptCalls())
 			{
 				// TODO: Consider changing the time-out
 				_msg.DebugFormat("Second try worked!");
@@ -520,7 +544,7 @@ namespace ProSuite.Microservices.Client
 
 			OpenChannel(UseTls, ClientCertificate);
 
-			if (CanAcceptCalls(allowFailOver: false))
+			if (CanAcceptCalls())
 			{
 				_msg.DebugFormat("Third try worked!");
 
@@ -563,7 +587,7 @@ namespace ProSuite.Microservices.Client
 
 		private int GetFreeTcpPort()
 		{
-			TcpListener tcpListener = new TcpListener(IPAddress.Loopback, 0);
+			var tcpListener = new TcpListener(IPAddress.Loopback, 0);
 
 			tcpListener.Start();
 

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -164,6 +165,42 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		/// <summary>
+		/// Creates a <see cref="MosaicRasterReference"/> for a raster-catalog dataset, i.e. a polygon
+		/// feature class whose features reference one raster file each via a file-path field. This is
+		/// the shared seam used by all <c>OpenSimpleRasterMosaic</c> implementations to support
+		/// catalog-based raster sources (basic raster catalogs) in addition to Esri mosaic datasets.
+		/// </summary>
+		/// <param name="dataset">The raster-catalog dataset to open.</param>
+		/// <param name="openFeatureClass">A delegate that opens the feature class for a vector
+		/// dataset (typically the dataset context's <c>OpenFeatureClass</c>).</param>
+		[NotNull]
+		public static MosaicRasterReference CreateRasterCatalogMosaic(
+			[NotNull] IRasterCatalogDataset dataset,
+			[NotNull] Func<IVectorDataset, IFeatureClass> openFeatureClass)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+			Assert.ArgumentNotNull(openFeatureClass, nameof(openFeatureClass));
+
+			IVectorDataset catalogDataset = Assert.NotNull(
+				dataset.CatalogDataset, "Catalog dataset not defined for {0}", dataset.Name);
+
+			IFeatureClass catalogClass = Assert.NotNull(
+				openFeatureClass(catalogDataset),
+				"Catalog feature class cannot be opened for {0}", dataset.Name);
+
+			IFeatureClass boundaryClass = dataset.BoundaryDataset != null
+				                              ? openFeatureClass(dataset.BoundaryDataset)
+				                              : null;
+
+			var simpleRasterMosaic = new SimpleRasterMosaic(
+				dataset.Name, catalogClass, boundaryClass,
+				dataset.ZOrderFieldName, dataset.ZOrderDescending,
+				dataset.FilePathFieldName, dataset.CellSizeFieldName);
+
+			return new MosaicRasterReference(simpleRasterMosaic);
+		}
+
+		/// <summary>
 		/// Gets the master database's workspace context of the specified model element, or null,
 		/// if it is not accessible.
 		/// </summary>
@@ -250,7 +287,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 					if (workspace != null)
 					{
-						Marshal.ReleaseComObject(workspace);
+						ComUtils.ReleaseObject(workspace);
 					}
 
 					if (_msg.IsVerboseDebugEnabled)

@@ -116,7 +116,7 @@ public static class GdbQueryUtils
 
 		long rowCount = 0;
 
-		while (cursor.MoveNext())
+		while (MoveNext(cursor, filter))
 		{
 			if (cancellationToken.IsCancellationRequested)
 			{
@@ -131,33 +131,10 @@ public static class GdbQueryUtils
 
 		if (watch != null)
 		{
-			_msg.DebugStopTiming(watch, "GetRows() SELECT {0} FROM {1} {2}",
-			                     filter == null ? "*" : filter.SubFields,
-			                     featureClass.GetName(),
-			                     filter == null ? string.Empty : "WHERE " + filter.WhereClause);
+			_msg.DebugFormat("Successfully executed query using filter: {0}",
+			                 FilterPropertiesToString(filter));
 
-			var spatialFilter = filter as SpatialQueryFilter;
-
-			if (spatialFilter?.FilterGeometry != null)
-			{
-				using (_msg.IncrementIndentation())
-				{
-					_msg.DebugFormat("Geometry: {0}",
-					                 spatialFilter.FilterGeometry.GeometryType);
-					_msg.DebugFormat("SpatialRel: {0}", spatialFilter.SpatialRelationship);
-
-					// TODO: Remove once 3.0 is de-supported
-					// TODO: Define compilation symbol / variable in project for Pro versions
-#if DEBUG
-					_msg.DebugFormat("SpatialRelDescription: {0}",
-					                 spatialFilter.SpatialRelationshipDescription);
-#endif
-
-					_msg.DebugFormat("SearchOrder: {0}", spatialFilter.SearchOrder);
-				}
-			}
-
-			_msg.DebugFormat("Result row count: {0}", rowCount);
+			_msg.DebugStopTiming(watch, "Result row count: {0}", rowCount);
 		}
 	}
 
@@ -203,7 +180,7 @@ public static class GdbQueryUtils
 
 		using (RowCursor cursor = OpenCursor(table, filter, recycle))
 		{
-			while (cursor.MoveNext())
+			while (MoveNext(cursor, filter))
 			{
 				if (cancellationToken.IsCancellationRequested)
 				{
@@ -469,5 +446,20 @@ public static class GdbQueryUtils
 		filter.OutputSpatialReference = outputSpatialReference;
 
 		return filter;
+	}
+
+	private static bool MoveNext([NotNull] RowCursor cursor,
+	                             [CanBeNull] QueryFilter filter)
+	{
+		try
+		{
+			return cursor.MoveNext();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug($"Error reading next row using filter " +
+			           $"{FilterPropertiesToString(filter)}", e);
+			throw;
+		}
 	}
 }

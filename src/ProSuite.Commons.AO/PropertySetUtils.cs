@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -29,7 +29,7 @@ namespace ProSuite.Commons.AO
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(xmlSerializer);
+				ComUtils.ReleaseObject(xmlSerializer);
 			}
 		}
 
@@ -48,7 +48,7 @@ namespace ProSuite.Commons.AO
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(xmlSerializer);
+				ComUtils.ReleaseObject(xmlSerializer);
 			}
 		}
 

@@ -590,7 +590,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				// release workspace to avoid a workspace with incomplete connection properties remaining
 				// in the workspace factory cache
-				Marshal.ReleaseComObject(workspace);
+				ComUtils.ReleaseObject(workspace);
 			}
 		}
 
@@ -1522,7 +1522,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 						deleted = true;
 					}
 
-					Marshal.ReleaseComObject(version);
+					ComUtils.ReleaseObject(version);
 				}
 			}
 			catch (COMException e)
@@ -1556,7 +1556,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				{
 					version.Delete();
 
-					Marshal.ReleaseComObject(version);
+					ComUtils.ReleaseObject(version);
 
 					deleted = true;
 				}
@@ -2623,7 +2623,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(versionInfos);
+				ComUtils.ReleaseObject(versionInfos);
 			}
 		}
 
@@ -3410,7 +3410,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(childrenEnum);
+				ComUtils.ReleaseObject(childrenEnum);
 			}
 		}
 
@@ -3577,8 +3577,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				version.Delete();
 
-				Marshal.ReleaseComObject(version);
-				Marshal.ReleaseComObject(defaultWorkspace);
+				ComUtils.ReleaseObject(version);
+				ComUtils.ReleaseObject(defaultWorkspace);
 			}
 		}
 

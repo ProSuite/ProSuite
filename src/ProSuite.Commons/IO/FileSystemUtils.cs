@@ -274,6 +274,44 @@ namespace ProSuite.Commons.IO
 			Directory.Delete(directory, recursive);
 		}
 
+		public static bool TryDeleteFile([CanBeNull] string filePath)
+		{
+			if (string.IsNullOrEmpty(filePath) || ! File.Exists(filePath))
+			{
+				return true;
+			}
+
+			try
+			{
+				File.Delete(filePath);
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
+		public static bool TryDeleteDirectory([CanBeNull] string dirPath,
+		                                      bool recursive = false,
+		                                      bool force = false)
+		{
+			if (string.IsNullOrEmpty(dirPath) || ! Directory.Exists(dirPath))
+			{
+				return true;
+			}
+
+			try
+			{
+				DeleteDirectory(dirPath, recursive, force);
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
 		public static void SetAttributes([NotNull] string directory,
 		                                 bool recursive,
 		                                 FileAttributes attribute)
