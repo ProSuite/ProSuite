@@ -669,6 +669,30 @@ namespace ProSuite.Commons.Test.Geom
 			                "source outline.");
 		}
 
+		[Test]
+		public void CanGetUnionAreasXYWithoutException()
+		{
+			// Repro for a GetUnionAreasXY crash logged to
+			// %TEMP%\GetUnionAreasXY_20260602_230931_515 during production.
+			// The union threw a GeomException; the test asserts it completes without
+			// error and that the result area is at least as large as the source area.
+			// Feature-class tolerance: 1 cm (resolution 1 mm).
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("union_crash_repro_source.wkb"), out _);
+			MultiLinestring target = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("union_crash_repro_target.wkb"), out _);
+
+			const double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea - 1e-6,
+			                      "Union must not lose area.");
+		}
+
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
 		                                           params Linestring[] islands)
 		{

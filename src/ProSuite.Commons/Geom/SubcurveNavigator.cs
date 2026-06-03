@@ -14,6 +14,12 @@ namespace ProSuite.Commons.Geom
 		private IList<IntersectionPoint3D> _targetTargetIntersectionPoints;
 		private readonly IList<IntersectionRun> _congruentRings = new List<IntersectionRun>(0);
 
+		// When walking the union outer boundary (turning left), reject degenerate U-turns
+		// that retrace a just-traversed near-collinear overlap. Only the union walk forms a
+		// single outer boundary; cut/intersect walks legitimately retrace coincident shared
+		// edges, so the rejection must stay scoped to the union.
+		private bool _rejectDegenerateUTurns;
+
 		public SubcurveNavigator([NotNull] ISegmentList sourceRings,
 		                         [NotNull] ISegmentList targets,
 		                         double tolerance,
@@ -208,6 +214,7 @@ namespace ProSuite.Commons.Geom
 			try
 			{
 				PreferredTurnDirection = TurnDirection.Left;
+				_rejectDegenerateUTurns = true;
 
 				IntersectionPointNavigator.AllowBoundaryLoops = false;
 
@@ -219,6 +226,7 @@ namespace ProSuite.Commons.Geom
 			finally
 			{
 				PreferredTurnDirection = originalTurnDirection;
+				_rejectDegenerateUTurns = false;
 				IntersectionPointNavigator.AllowBoundaryLoops = true;
 			}
 		}
@@ -406,12 +414,11 @@ namespace ProSuite.Commons.Geom
 				{
 					int targetIndex =
 						IntersectionPointNavigator.IntersectionsAlongSource
-						                          .Where(
-							                          i =>
-								                          i.SourcePartIndex == unCutSourceIdx &&
-								                          i.Type == IntersectionPointType
-									                          .LinearIntersectionStart &&
-								                          i.VirtualSourceVertex == 0)
+						                          .Where(i =>
+							                                 i.SourcePartIndex == unCutSourceIdx &&
+							                                 i.Type == IntersectionPointType
+								                                 .LinearIntersectionStart &&
+							                                 i.VirtualSourceVertex == 0)
 						                          .GroupBy(i => i.TargetPartIndex)
 						                          .Single().Key;
 
@@ -1105,12 +1112,11 @@ namespace ProSuite.Commons.Geom
 				{
 					targetIndex =
 						IntersectionPointNavigator.IntersectionsAlongSource
-						                          .Where(
-							                          i => i.SourcePartIndex ==
-							                               unCutSourcePartIdx &&
-							                               i.Type == IntersectionPointType
-								                               .LinearIntersectionStart &&
-							                               i.VirtualSourceVertex == 0)
+						                          .Where(i => i.SourcePartIndex ==
+						                                      unCutSourcePartIdx &&
+						                                      i.Type == IntersectionPointType
+							                                      .LinearIntersectionStart &&
+						                                      i.VirtualSourceVertex == 0)
 						                          .GroupBy(i => i.TargetPartIndex)
 						                          .Single().Key;
 
@@ -1134,20 +1140,20 @@ namespace ProSuite.Commons.Geom
 					    IntersectionPointNavigator.IntersectionClusters))
 				{
 					// Except if it is contained by a previously removed island:
-					bool insideRemovedIslands = removedInteriorBoundaryLoops.All(
-						removedIsland =>
-							GeomRelationUtils.AreaContainsXY(
-								removedIsland, targetRing, Tolerance) == true);
+					bool insideRemovedIslands = removedInteriorBoundaryLoops.All(removedIsland =>
+						GeomRelationUtils.AreaContainsXY(
+							removedIsland, targetRing, Tolerance) == true);
 
 					if (insideRemovedIslands)
 					{
 						outsideOtherPolygonRings.Add(targetRing);
 
 						// But it needs extra checking in case it interior intersects a removed island:
-						if (removedInteriorBoundaryLoops.Any(
-							    removedIsland =>
-								    GeomRelationUtils.InteriorIntersectXY(
-									    removedIsland, targetRing, Tolerance)))
+						if (removedInteriorBoundaryLoops.Any(removedIsland =>
+							                                     GeomRelationUtils
+								                                     .InteriorIntersectXY(
+									                                     removedIsland, targetRing,
+									                                     Tolerance)))
 						{
 							RingsCouldContainEachOther = true;
 						}
@@ -1331,6 +1337,8 @@ namespace ProSuite.Commons.Geom
 			// Always start by following the source:
 			bool continueOnSource = true;
 			bool forward = true;
+			IntersectionPoint3D previousIntersection = null;
+			Linestring previousSubcurve = null;
 			IntersectionContinuedOnSource(currentIntersection, startIntersections);
 			while (nextIntersection == null ||
 			       ! IntersectionPointNavigator.EqualsStartIntersection(nextIntersection))
@@ -1341,12 +1349,39 @@ namespace ProSuite.Commons.Geom
 				// Determine if at the next intersection we must
 				// - continue along the source
 				// - continue along the target (forward or backward)
+				IntersectionPoint3D fromIntersection = currentIntersection;
 				SetTurnDirection(startIntersection, PreferredTurnDirection,
 				                 ref currentIntersection, ref continueOnSource, ref forward);
 
 				nextIntersection = FollowUntilNextIntersection(
 					currentIntersection, continueOnSource, forward, startIntersections,
 					out Linestring subcurve);
+
+				// U-turn guard: if the chosen continuation runs along the target and
+				// immediately returns to the intersection we just came from by reversing
+				// the subcurve just traversed, it is a degenerate spike (a near-collinear
+				// near-tolerance overlap that was classified as a point rather than a
+				// linear intersection). Re-picking the turn with that target option forbidden.
+				// EXCEPTION: if the retrace returns to the start intersection it simply
+				// closes the (degenerate, later-discarded) ring - the walk terminates
+				// naturally, so it must NOT be intercepted (else a valid close is turned
+				// into an unrelated, non-closing cycle).
+				if (_rejectDegenerateUTurns && ! continueOnSource &&
+				    previousIntersection != null &&
+				    ReferenceEquals(nextIntersection, previousIntersection) &&
+				    ! IntersectionPointNavigator.EqualsStartIntersection(nextIntersection) &&
+				    IsReverseSubcurve(subcurve, previousSubcurve, Tolerance))
+				{
+					currentIntersection = fromIntersection;
+					SetTurnDirection(startIntersection, PreferredTurnDirection,
+					                 ref currentIntersection, ref continueOnSource, ref forward,
+					                 forbidTargetForward: forward,
+					                 forbidTargetBackward: ! forward);
+
+					nextIntersection = FollowUntilNextIntersection(
+						currentIntersection, continueOnSource, forward, startIntersections,
+						out subcurve);
+				}
 
 				Pnt3D containedSourceStart =
 					GetSourceStartBetween(currentIntersection, nextIntersection, continueOnSource,
@@ -1375,8 +1410,66 @@ namespace ProSuite.Commons.Geom
 
 				yield return next;
 
+				previousIntersection = currentIntersection;
+				previousSubcurve = subcurve;
 				currentIntersection = nextIntersection;
 			}
+		}
+
+		/// <summary>
+		/// Whether <paramref name="subcurve"/> retraces the same geometry as
+		/// <paramref name="other"/> in the opposite direction (within tolerance): the two run
+		/// along (almost) coincident locations with swapped endpoints. Used to detect
+		/// degenerate U-turns in the navigation walk. The full-coincidence check (not just
+		/// matching endpoints) is essential so that two distinct paths sharing the same two
+		/// intersection points - which legitimately bound an area in a union/cut - are NOT
+		/// mistaken for a retrace.
+		/// </summary>
+		private static bool IsReverseSubcurve([CanBeNull] Linestring subcurve,
+		                                      [CanBeNull] Linestring other,
+		                                      double tolerance)
+		{
+			if (subcurve == null || other == null)
+			{
+				return false;
+			}
+
+			if (subcurve.StartPoint == null || subcurve.EndPoint == null ||
+			    other.StartPoint == null || other.EndPoint == null)
+			{
+				return false;
+			}
+
+			// A retrace requires a meaningful (> tolerance) length and comparable extent...
+			double length = subcurve.GetLength2D();
+			if (length <= tolerance ||
+			    ! MathUtils.AreEqual(length, other.GetLength2D(), tolerance))
+			{
+				return false;
+			}
+
+			// ... swapped endpoints ...
+			if (! subcurve.StartPoint.EqualsXY(other.EndPoint, tolerance) ||
+			    ! subcurve.EndPoint.EqualsXY(other.StartPoint, tolerance))
+			{
+				return false;
+			}
+
+			// ... and actual coincidence along the length (every sampled point of one lies
+			// on the other). This distinguishes a true retrace of a near-collinear overlap
+			// from two distinct paths that merely share their endpoints (which legitimately
+			// bound an area).
+			foreach (double ratio in new[] { 0.25, 0.5, 0.75 })
+			{
+				IPnt pointAlong = subcurve.GetPointAlong(ratio, asRatio: true);
+
+				if (! GeomRelationUtils.LinesContainXY(other, pointAlong, tolerance))
+				{
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		private void IntersectionContinuedOnSource(
@@ -1448,9 +1541,13 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D startIntersection,
 			TurnDirection preferredDirection,
 			ref IntersectionPoint3D intersection,
-			ref bool alongSource, ref bool forward)
+			ref bool alongSource, ref bool forward,
+			bool forbidSourceForward = false,
+			bool forbidTargetForward = false,
+			bool forbidTargetBackward = false)
 		{
-			if (intersection == startIntersection)
+			if (intersection == startIntersection && ! forbidSourceForward &&
+			    ! forbidTargetForward && ! forbidTargetBackward)
 			{
 				// First intersection: Always forward along the source
 				alongSource = true;
@@ -1487,6 +1584,24 @@ namespace ProSuite.Commons.Geom
 			                               ref actualTargetIntersection, entryLine,
 			                               out double? targetForwardDirection,
 			                               out double? targetBackwardDirection);
+
+			// Exclude continuation(s) that the caller identified as a degenerate reversal
+			// (a U-turn that would retrace the subcurve just traversed). Nulling the
+			// direction change makes the IsMore ordering below skip it.
+			if (forbidSourceForward)
+			{
+				sourceForwardDirection = null;
+			}
+
+			if (forbidTargetForward)
+			{
+				targetForwardDirection = null;
+			}
+
+			if (forbidTargetBackward)
+			{
+				targetBackwardDirection = null;
+			}
 
 			// Order the direction change
 			if (true == IsMore(preferredDirection, sourceForwardDirection, targetForwardDirection))
@@ -2323,8 +2438,8 @@ namespace ProSuite.Commons.Geom
 			if (targetSubcurveUsed)
 			{
 				// At some point the result must deviate from source otherwise the target does not cut it
-				foreach (int targetIdx in subcurveInfos.Select(
-					         i => i.NextIntersection.TargetPartIndex))
+				foreach (int targetIdx in subcurveInfos.Select(i => i.NextIntersection
+					                                               .TargetPartIndex))
 				{
 					IntersectedTargetPartIndexes.Add(targetIdx);
 				}
