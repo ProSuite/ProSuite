@@ -596,6 +596,79 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1051.300615, footprint.GetArea2D(), 0.05);
 		}
 
+
+		[Test]
+		public void CanGetFootprintForSebastianskapelle()
+		{
+			// TLM_GEBAEUDE {0F578F49-4C2D-4CF3-AE2B-898CFED68F83} ("St. Sebastian's
+			// chapel"). The multipatch roof is a fan of 10 triangles that ALL meet at one
+			// apex A=(2642302.5125,1129570.9625) - a 10-ring pinch point. The XY footprint
+			// is built by the area-descending incremental ring-group union. At the
+			// production tolerance (resolution/2 = 0.00625) the union at the step that adds
+			// the southern triangle (whose two base corners are the building's two
+			// southernmost points) mis-handles a sub-tolerance sliver at the apex: the
+			// target edge runs linearly along a source edge but overshoots the source's SE
+			// corner by ~0.0072 m (just above tolerance). The turning-left walk then drops
+			// the triangle and emits a duplicate outer ring, so the footprint becomes two
+			// overlapping ~39.13 rings (area 78.26, 2 parts) that ArcGIS Simplify collapses
+			// to a single 39.13 ring - the triangle is lost. AO reference area: 42.3496.
+			// NB: the bug is razor-thin in tolerance (0.005 -> 42.366, 0.008 -> 42.362 are
+			// both fine); only 0.00625 triggers it - which is exactly the production value.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("sebastianskapelle.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(1, footprint.PartCount,
+			                "Footprint must be a single ring (no overlapping duplicate).");
+			Assert.AreEqual(42.3496, footprint.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		public void CanUnionSebastianskapelleAtStep6()
+		{
+			// Isolated step 6 of the Sebastianskapelle incremental footprint union
+			// (tolerance 0.00625). The accumulated footprint (source) has two CW parts that
+			// only touch at the apex pinch A: the big part (~32.57) and one southern
+			// triangle (~3.40). The target ring (~3.23) is the next southern triangle; its
+			// edge A->P2 coincides with the small part's edge and near its other corner P1
+			// it overshoots the big part's SE corner by a sub-tolerance sliver. The union
+			// must (a) stay a single, simple set of non-overlapping outer rings and (b) grow
+			// by the target's disjoint area. The bug instead duplicates the big part's
+			// outline (two overlapping CW rings, area jumps 35.96 -> 68.51) and loses the
+			// triangle.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"sebastianskapelle_step6_source.wkb"), out _);
+			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"sebastianskapelle_step6_ring.wkb"), out _);
+
+			double tolerance = 0.00625;
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring outside =
+				GeomTopoOpUtils.GetDifferenceAreasXY(ring, source, tolerance);
+			double disjoint = outside.GetArea2D();
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			// The union must grow by ~the target's disjoint area and must not produce
+			// overlapping duplicate outer rings. The buggy result is ~68.51; the tolerance
+			// allows for a sub-cm sliver residual at the near-coincident apex corner (the
+			// resolution at this tolerance is 0.0125).
+			Assert.AreEqual(sourceArea + disjoint, result.GetArea2D(), 0.05,
+			                "Union must add the target's disjoint area, not duplicate the " +
+			                "source outline.");
+		}
+
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
 		                                           params Linestring[] islands)
 		{
