@@ -96,7 +96,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 			Assert.ArgumentNotNullOrEmpty(statement, nameof(statement));
 			Assert.ArgumentNotNull(cmd, nameof(cmd));
 
-			_msg.Info(statement);
+			_msg.Debug(statement);
 
 			try
 			{
