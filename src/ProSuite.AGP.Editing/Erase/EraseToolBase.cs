@@ -476,8 +476,13 @@ public abstract class EraseToolBase : ConstructionToolBase
 				}
 			}
 
+			FeatureClassDefinition featureClassDef = feature.GetTable().GetDefinition();
+
 			// Update:
-			GdbPersistenceUtils.StoreShape(feature, update, editContext);
+			Geometry geometryToStore =
+				MakeGeometryStorable(update, featureClassDef);
+
+			GdbPersistenceUtils.StoreShape(feature, geometryToStore, editContext);
 
 			foreach (Geometry newGeometry in inserts)
 			{
@@ -489,6 +494,23 @@ public abstract class EraseToolBase : ConstructionToolBase
 
 		_msg.InfoFormat("Successfully stored {0} updated features.", result.Count);
 	}
+
+	private static Geometry MakeGeometryStorable(Geometry simplifiedSketch,
+												 FeatureClassDefinition featureClassDef)
+	{
+		bool classHasZ = featureClassDef.HasZ();
+		bool classHasM = featureClassDef.HasM();
+
+		Geometry geometryToStore =
+			GeometryUtils.EnsureGeometrySchema(
+				simplifiedSketch, classHasZ, classHasM);
+
+		Geometry projected = GeometryUtils.EnsureSpatialReference(
+			geometryToStore, featureClassDef.GetSpatialReference());
+
+		return projected;
+	}
+
 
 	private static IEnumerable<Dataset> GetDatasets(IEnumerable<Feature> features)
 	{
