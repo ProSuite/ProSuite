@@ -163,7 +163,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		});
 
 		SelectionCursors = FirstPhaseCursors;
-		SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
+
+		SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), ShiftPressedToSelect));
 
 		IsInSketchPhase = false;
 	}
