@@ -576,6 +576,80 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetFootprintForDennlerstrasse()
+		{
+			// TLM_GEBAEUDE {14B28567-ABDD-44D2-AA75-5428C7FFC58D} (Dennlerstrasse).
+			// One ring group (group 8) carries two interior rings. One of them is a
+			// real, coplanar hole in the face; the other is 2.69 m off the face's
+			// best-fit plane, i.e. a different face mis-stored as an inner ring. This
+			// violates the OGC simple-polyhedron definition (an interior ring must be
+			// coplanar with its exterior ring). Subtracting that non-coplanar inner
+			// ring punched a spurious 6.61 sq m hole into the footprint (area dropped
+			// to 172.264). The non-coplanar interior ring must be ignored, leaving a
+			// single, solid footprint of 178.8757.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("dennlerstrasse.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.0005;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(1, footprint.PartCount, "footprint must not have a hole");
+			Assert.AreEqual(178.875676, footprint.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		public void CanGetFootprintIgnoringNonCoplanarInteriorRing()
+		{
+			// A flat 100x100 exterior face (z=0) with two interior rings:
+			//  - a real, coplanar 20x20 hole at z=0 (must be subtracted), and
+			//  - a 10x10 ring lifted to z=50, i.e. 50 m off the exterior plane, which
+			//    is a different face mis-stored as an inner ring and must be ignored
+			//    instead of punching a spurious hole into the footprint.
+			var exterior = new Linestring(new[]
+			                              {
+				                              new Pnt3D(0, 0, 0),
+				                              new Pnt3D(0, 100, 0),
+				                              new Pnt3D(100, 100, 0),
+				                              new Pnt3D(100, 0, 0),
+				                              new Pnt3D(0, 0, 0)
+			                              });
+
+			var coplanarHole = new Linestring(new[]
+			                                  {
+				                                  new Pnt3D(20, 20, 0),
+				                                  new Pnt3D(40, 20, 0),
+				                                  new Pnt3D(40, 40, 0),
+				                                  new Pnt3D(20, 40, 0),
+				                                  new Pnt3D(20, 20, 0)
+			                                  });
+
+			var nonCoplanarHole = new Linestring(new[]
+			                                     {
+				                                     new Pnt3D(60, 60, 50),
+				                                     new Pnt3D(70, 60, 50),
+				                                     new Pnt3D(70, 70, 50),
+				                                     new Pnt3D(60, 70, 50),
+				                                     new Pnt3D(60, 60, 50)
+			                                     });
+
+			var ringGroup = new RingGroup(
+				exterior, new[] { coplanarHole, nonCoplanarHole });
+			var polyhedron = new Polyhedron(new List<RingGroup> { ringGroup });
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			// Exterior minus the coplanar hole only; the non-coplanar ring is ignored.
+			Assert.AreEqual(2, footprint.PartCount);
+			Assert.AreEqual(100 * 100 - 20 * 20, footprint.GetArea2D(), 0.001);
+		}
+
+		[Test]
 		public void CanGetFootprintForValleeDeLaJeunesse()
 		{
 			// TLM_GEBAEUDE {EEBB4D4C-756D-4EF2-B85D-2DA1991E2A65}.
