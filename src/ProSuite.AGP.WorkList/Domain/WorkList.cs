@@ -542,11 +542,11 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		if (filter.ObjectIDs.Count == 0)
 		{
-			return _items.AsEnumerable();
+			return SearchCore(_items);
 		}
 
 		List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
-		return _items.Where(item => oids.BinarySearch(item.OID) >= 0);
+		return SearchCore(_items, item => oids.BinarySearch(item.OID) >= 0);
 	}
 
 	public IEnumerable<IWorkItem> Search([CanBeNull] SpatialQueryFilter filter)
@@ -563,15 +563,22 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		if (_searcher == null || filter == null)
 		{
 			// all non-spatial items or non-spatial search:
-			return _items.Where(i => predicate == null || predicate(i)).ToList();
+			return SearchCore(_items, predicate).ToList();
 		}
 
 		Envelope extent = filter.FilterGeometry.Extent;
 
 		double tolerance = GeometryUtils.GetXyTolerance(filter.FilterGeometry);
 
-		return _searcher.Search(extent.XMin, extent.YMin,
-		                        extent.XMax, extent.YMax, tolerance, predicate);
+		return SearchCore(_searcher.Search(extent.XMin, extent.YMin,
+		                                   extent.XMax, extent.YMax, tolerance, predicate));
+	}
+
+	protected virtual IEnumerable<IWorkItem> SearchCore(
+		[NotNull] IEnumerable<IWorkItem> items,
+		[CanBeNull] Predicate<IWorkItem> predicate = null)
+	{
+		return predicate == null ? items : items.Where(i => predicate(i));
 	}
 
 	protected virtual void LoadItemsCore(QueryFilter filter)

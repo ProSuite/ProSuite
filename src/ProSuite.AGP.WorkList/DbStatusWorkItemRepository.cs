@@ -80,14 +80,6 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 	}
 
-	protected override IWorkItem CreateWorkItemCore(IWorkItem workItem,
-	                                                ISourceClass sourceClass, Row row)
-	{
-		workItem.Status = ((DatabaseSourceClass) sourceClass).GetStatus(row);
-
-		return workItem;
-	}
-
 	protected override async Task SetStatusCoreAsync(IWorkItem item,
 	                                                 WorkItemStatus status)
 	{

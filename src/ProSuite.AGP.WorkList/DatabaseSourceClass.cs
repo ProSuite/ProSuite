@@ -160,6 +160,13 @@ public class DatabaseSourceClass : SourceClass
 		return ArcGISTableId;
 	}
 
+	public override IWorkItem CreateWorkItem(Row row)
+	{
+		IWorkItem item = base.CreateWorkItem(row);
+		item.Status = GetStatus(row);
+		return item;
+	}
+
 	protected override string GetRelevantSubFieldsCore(string subFields)
 	{
 		if (string.IsNullOrEmpty(_additionalSubFields))

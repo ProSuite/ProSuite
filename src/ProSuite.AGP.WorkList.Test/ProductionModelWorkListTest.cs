@@ -93,7 +93,7 @@ public class ProductionModelWorkListTest
 		List<ISourceClass> sourceClasses =
 			new List<ISourceClass>
 			{
-				new DatabaseSourceClass(
+				new ProductionModelIssueItemClass(
 					new GdbTableIdentity(errorsFeatureClass), schema,
 					null, defaultDefinitionQuery,
 					FilterHelper.Create(errorsFeatureClass, defaultDefinitionQuery),

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -11,6 +12,7 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList;
 
+// todo daro: rename to WorkItemClass?
 public abstract class SourceClass : ISourceClass
 {
 	private readonly GdbTableIdentity _tableIdentity;
@@ -86,6 +88,12 @@ public abstract class SourceClass : ISourceClass
 	}
 
 	public abstract bool Contains(Row row);
+
+	public virtual IWorkItem CreateWorkItem(Row row)
+	{
+		return new WorkItem(GetUniqueTableId(),
+		                    new GdbRowIdentity(row.GetObjectID(), TableIdentity));
+	}
 
 	public T OpenDataset<T>() where T : Table
 	{
