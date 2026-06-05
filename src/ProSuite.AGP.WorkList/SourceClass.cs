@@ -6,8 +6,6 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList;
@@ -16,16 +14,10 @@ namespace ProSuite.AGP.WorkList;
 public abstract class SourceClass : ISourceClass
 {
 	private readonly GdbTableIdentity _tableIdentity;
-	[NotNull] private readonly string _oidField;
-	[CanBeNull] private readonly string _shapeField;
 
 	protected SourceClass(GdbTableIdentity tableIdentity,
-	                      [NotNull] SourceClassSchema schema,
 	                      IAttributeReader attributeReader = null)
 	{
-		_oidField = schema.OIDField;
-		_shapeField = schema.ShapeField;
-
 		_tableIdentity = tableIdentity;
 		AttributeReader = attributeReader;
 	}
@@ -129,20 +121,12 @@ public abstract class SourceClass : ISourceClass
 
 	private string GetRelevantSubFields()
 	{
-		string subFields = $"{_oidField}";
-
-		if (HasGeometry)
-		{
-			Assert.NotNullOrEmpty(_shapeField);
-			subFields = $"{subFields},{_shapeField}";
-		}
-
-		return GetRelevantSubFieldsCore(subFields);
+		return GetRelevantSubFieldsCore();
 	}
 
-	protected virtual string GetRelevantSubFieldsCore(string subFields)
+	protected virtual string GetRelevantSubFieldsCore()
 	{
-		return subFields;
+		return string.Empty;
 	}
 
 	protected virtual void EnsureValidFilterCore(ref QueryFilter filter, bool ignoreDefinitionQuery)

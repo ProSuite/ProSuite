@@ -314,7 +314,7 @@ public class WorkListDbTest
 		{
 			TableDefinition tableDefinition = table.GetDefinition();
 
-			SourceClassSchema schema = CreateSchema(tableDefinition);
+			SourceClassSchema schema = WorkListUtils.CreateSchema(tableDefinition);
 
 			ISourceClass sourceClass =
 				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
@@ -454,7 +454,7 @@ public class WorkListDbTest
 		{
 			TableDefinition tableDefinition = table.GetDefinition();
 
-			SourceClassSchema schema = CreateSchema(tableDefinition);
+			SourceClassSchema schema = WorkListUtils.CreateSchema(tableDefinition);
 
 			List<long> oids = new() { 0, 1, 2, 3 };
 			var sourceClass =
@@ -537,34 +537,36 @@ public class WorkListDbTest
 		return filter;
 	}
 
-	private static SourceClassSchema CreateSchema(TableDefinition tableDefinition)
-	{
-		string objectIDField = tableDefinition.GetObjectIDField();
-
-		string shapeField = null;
-
-		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
-		{
-			shapeField = featureClassDefinition.GetShapeField();
-		}
-
-		return new SourceClassSchema(objectIDField, shapeField);
-	}
-
 	private static DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
-		string objectIDField = tableDefinition.GetObjectIDField();
+		var statusField = "STATUS";
+		string oidField = tableDefinition.GetObjectIDField();
 
-		string shapeField = null;
+		Dictionary<string, int> subFields;
 
 		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
 		{
-			shapeField = featureClassDefinition.GetShapeField();
+			string shapeField = featureClassDefinition.GetShapeField();
+
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, featureClassDefinition.FindField(oidField) },
+				            { shapeField, featureClassDefinition.FindField(shapeField) },
+				            { statusField, featureClassDefinition.FindField(statusField) }
+			            };
+		}
+		else
+		{
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { statusField, tableDefinition.FindField(statusField) }
+			            };
 		}
 
-		return new DbSourceClassSchema(objectIDField, shapeField, "STATUS",
-		                               tableDefinition.FindField("STATUS"),
-		                               (int) IssueCorrectionStatus.NotCorrected,
-		                               (int) IssueCorrectionStatus.Corrected);
+		return new DbSourceClassSchema(statusField,
+		                               IssueCorrectionStatus.NotCorrected,
+		                               IssueCorrectionStatus.Corrected,
+		                               subFields);
 	}
 }

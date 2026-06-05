@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,6 +11,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Shared.AGP.WorkLists;
 
@@ -48,6 +50,108 @@ public class ProductionModelWorkListTest
 		Assert.AreEqual(1453, items.Count);
 	}
 
+	[Test]
+	public void Can_filter_ProductionModelWorkList_by_ErrorType()
+	{
+		string filePath = TestDataPreparer.FromDirectory().GetPath("Error Work List.iwl");
+		XmlWorkItemStateRepository stateRepository = CreateXmlStateRepository(filePath);
+
+		// todo
+		string gdbPath = @"C:\K2\WorkUnitData\DKM25\WU1184_Payerne\WU1184_Payerne.gdb";
+		using Geodatabase geodatabase = WorkspaceUtils.OpenFileGeodatabase(gdbPath);
+
+		DbStatusWorkItemRepository itemRepository =
+			CreateWorkItemRepository(geodatabase, stateRepository, gdbPath);
+
+		Geometry areaOfInterest = GetAreaOfInterest(geodatabase);
+
+		ProductionModelIssueWorkList workList = CreateWorkList(itemRepository, areaOfInterest);
+
+		List<IWorkItem> items = workList.Search(new QueryFilter()).ToList();
+		Assert.AreEqual(1453, items.Count);
+
+		Geodatabase gdb = geodatabase;
+		Assert.Throws<ArgumentException>(() => geodatabase.ApplyEdits(() =>
+		{
+			var random = new Random();
+			long oid = random.NextInt64(maxValue: 1468);
+
+			using var errorsFeatureClass =
+				DatasetUtils.OpenDataset<FeatureClass>(gdb, "DKM25_ERRORS_POLYGON");
+			using var definition = errorsFeatureClass.GetDefinition();
+			int index = definition.FindField("FEHLERART");
+
+			Feature randomFeature =
+				GdbQueryUtils.GetFeatures(errorsFeatureClass, new List<long> { oid }, null, false)
+				             .FirstOrDefault();
+			Assert.NotNull(randomFeature);
+
+			randomFeature[index] = ErrorType.Allowed;
+			randomFeature.Store();
+
+			workList.LoadItems();
+			items = workList.Search(new QueryFilter()).ToList();
+
+			Assert.AreEqual(1452, items.Count);
+
+			throw new ArgumentException("roll back edits");
+		}));
+	}
+
+	// NOTE: If FEHLERART returns Null or DBNull there is no work item created because of the
+	//		 default definition query "FEHLERART < 300".
+	[Test]
+	public void LearningTest_ErrorType_is_null()
+	{
+		string filePath = TestDataPreparer.FromDirectory().GetPath("errors.iwl");
+		XmlWorkItemStateRepository stateRepository = CreateXmlStateRepository(filePath);
+
+		// todo
+		string path = TestDataPreparer.ExtractZip("errors.gdb.zip").Overwrite().GetPath();
+		using Geodatabase geodatabase = WorkspaceUtils.OpenFileGeodatabase(path);
+
+		DbStatusWorkItemRepository itemRepository =
+			CreateWorkItemRepository(geodatabase, stateRepository, path);
+
+		Geometry areaOfInterest = GetAreaOfInterest(geodatabase);
+
+		ProductionModelIssueWorkList workList = CreateWorkList(itemRepository, areaOfInterest);
+
+		List<IWorkItem> items = workList.Search(new QueryFilter()).ToList();
+		Assert.AreEqual(9, items.Count);
+
+		using var errorsFeatureClass =
+			DatasetUtils.OpenDataset<FeatureClass>(geodatabase, "DKM25_ERRORS_POLYGON");
+		using var definition = errorsFeatureClass.GetDefinition();
+		int index = definition.FindField("FEHLERART");
+
+		var random = new Random();
+		long oid = random.NextInt64(maxValue: 10);
+
+		Feature randomFeature =
+			GdbQueryUtils.GetFeatures(errorsFeatureClass, new List<long> { oid }, null, false)
+			             .FirstOrDefault();
+		Assert.NotNull(randomFeature);
+
+		Assert.Throws<ArgumentException>(() => geodatabase.ApplyEdits(() =>
+		{
+			object value = randomFeature[index];
+			Assert.NotNull(value);
+			Assert.AreEqual(ErrorType.Hard, (ErrorType) value);
+
+			randomFeature[index] = null;
+			randomFeature.Store();
+
+			Assert.Null(randomFeature[index]);
+
+			workList.LoadItems();
+			items = workList.Search(new QueryFilter()).ToList();
+			Assert.AreEqual(8, items.Count);
+
+			throw new ArgumentException("roll back edits");
+		}));
+	}
+
 	private static ProductionModelIssueWorkList CreateWorkList(
 		DbStatusWorkItemRepository itemRepository,
 		Geometry areaOfInterest)
@@ -76,17 +180,25 @@ public class ProductionModelWorkListTest
 			DatasetUtils.OpenDataset<FeatureClass>(geodatabase, "DKM25_ERRORS_POLYGON");
 
 		FeatureClassDefinition tableDefinition = errorsFeatureClass.GetDefinition();
+
+		string statusField = "STATUS";
+		string errorTypeFieldName = "FEHLERART";
 		string shapeField = tableDefinition.GetShapeField();
+		string oidField = tableDefinition.GetObjectIDField();
 
-		string statusFieldName = "STATUS";
+		var subFields = new Dictionary<string, int>
+		                {
+			                { oidField, tableDefinition.FindField(oidField) },
+			                { statusField, tableDefinition.FindField(statusField) },
+			                { shapeField, tableDefinition.FindField(shapeField) },
+			                { errorTypeFieldName, tableDefinition.FindField(errorTypeFieldName) }
+		                };
 
-		int fieldIndex = tableDefinition.FindField(statusFieldName);
-		var errorTypeFieldName = "FEHLERART";
-		var schema = new DbSourceClassSchema(tableDefinition.GetObjectIDField(), shapeField,
-		                                     statusFieldName, fieldIndex,
-		                                     (int) IssueCorrectionStatus.NotCorrected,
-		                                     (int) IssueCorrectionStatus.Corrected,
-		                                     errorTypeFieldName);
+		DbSourceClassSchema schema =
+			new DbSourceClassSchema(statusField,
+			                        IssueCorrectionStatus.NotCorrected,
+			                        IssueCorrectionStatus.Corrected,
+			                        subFields);
 
 		string defaultDefinitionQuery = $"{errorTypeFieldName} < 300";
 
@@ -95,9 +207,9 @@ public class ProductionModelWorkListTest
 			{
 				new ProductionModelIssueItemClass(
 					new GdbTableIdentity(errorsFeatureClass), schema,
-					null, defaultDefinitionQuery,
+					null, defaultDefinitionQuery, errorTypeFieldName,
 					FilterHelper.Create(errorsFeatureClass, defaultDefinitionQuery),
-					WorkspaceUtils.GetWorkspaceDbType(geodatabase))
+					dbType: WorkspaceUtils.GetWorkspaceDbType(geodatabase))
 			};
 
 		return new DbStatusWorkItemRepository(sourceClasses, stateRepository, gdbPath);

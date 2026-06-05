@@ -12,7 +12,7 @@ public class SelectionSourceClass : SourceClass
 	public SelectionSourceClass(GdbTableIdentity tableIdentity,
 	                            SourceClassSchema schema,
 	                            List<long> oids)
-		: base(tableIdentity, schema)
+		: base(tableIdentity)
 	{
 		Oids = oids;
 	}

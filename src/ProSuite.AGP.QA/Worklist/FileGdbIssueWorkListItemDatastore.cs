@@ -13,6 +13,7 @@ using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -150,38 +151,43 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
+	[NotNull]
 	public DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
-		int fieldIndex;
+		IObjectDataset errorDataset = GetObjectDataset(tableDefinition);
 
-		try
-		{
-			fieldIndex = tableDefinition.FindField(_statusFieldName);
+		KeyValuePair<string, int> status =
+			AttributeUtils.GetField(tableDefinition, errorDataset,
+			                        AttributeRole.ErrorCorrectionStatus);
 
-			if (fieldIndex < 0)
-			{
-				throw new ArgumentException($"No field {_statusFieldName}");
-			}
-		}
-		catch (Exception e)
-		{
-			_msg.Error($"Error find field {_statusFieldName} in {tableDefinition.GetName()}", e);
-			throw;
-		}
+		string oidField = tableDefinition.GetObjectIDField();
 
-		string shapeField = null;
-		string objectIDField = tableDefinition.GetObjectIDField();
+		Dictionary<string, int> subFields;
 
 		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
 		{
-			shapeField = featureClassDefinition.GetShapeField();
+			string shapeField = featureClassDefinition.GetShapeField();
+
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { shapeField, featureClassDefinition.FindField(shapeField) },
+				            { status.Key, status.Value }
+			            };
+		}
+		else
+		{
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { status.Key, status.Value }
+			            };
 		}
 
-		// The status schema is the same for production model datasets and Issue Geodatabase tables.
-		return new DbSourceClassSchema(objectIDField, shapeField,
-		                               _statusFieldName, fieldIndex,
-		                               (int) IssueCorrectionStatus.NotCorrected,
-		                               (int) IssueCorrectionStatus.Corrected);
+		return new DbSourceClassSchema(status.Key,
+		                               IssueCorrectionStatus.NotCorrected,
+		                               IssueCorrectionStatus.Corrected,
+		                               subFields);
 	}
 
 	public string SuggestWorkListName()
