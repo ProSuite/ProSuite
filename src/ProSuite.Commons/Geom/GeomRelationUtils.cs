@@ -714,15 +714,25 @@ namespace ProSuite.Commons.Geom
 				int targetPartIndex = touchPoints.First().TargetPartIndex;
 				Linestring targetRing = targetSegments.GetPart(targetPartIndex);
 
-				Pnt3D nonIntersectingTargetPnt =
-					GetNonIntersectingTargetPoint(
+				// The test point must lie clearly OFF the source boundary, otherwise the even-odd
+				// PolycurveContainsXY reports it as "on boundary -> contained". A target ring that
+				// only touches the source at isolated points lies entirely inside or entirely
+				// outside, so any vertex more than tolerance away from the source boundary is a
+				// reliable representative. GetNonIntersectingTargetPoint picks a point at mid-segment
+				// from the touch point. When the target shares a near-coincident edge with the source
+				// just beyond tolerance, that mid-point lands within tolerance of the source boundary
+				// and the disjoint target will wrongly be dropped (TOP: champ_pittet).
+				// -> Use it only as fallback if every target vertex is on the boundary.
+				Pnt3D testPoint =
+					GetOffBoundaryTargetPoint(closedPolycurve, targetRing, tolerance)
+					?? GetNonIntersectingTargetPoint(
 						targetRing,
 						intersectionPoints.Where(ip => ip.TargetPartIndex == targetPartIndex));
 
-				Assert.NotNull(nonIntersectingTargetPnt,
+				Assert.NotNull(testPoint,
 				               $"No point to check in target ring {targetPartIndex}.");
 
-				return PolycurveContainsXY(closedPolycurve, nonIntersectingTargetPnt, tolerance);
+				return PolycurveContainsXY(closedPolycurve, testPoint, tolerance);
 			}
 
 			// No decisive deviation so far -> use the touch points
@@ -1611,6 +1621,31 @@ namespace ProSuite.Commons.Geom
 					intersectionPoint.GetNonIntersectingSourcePoint(sourceRing, 0.5);
 
 				return nonIntersectingSourcePnt;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Returns the first vertex of the target ring that lies clearly off the
+		/// <paramref name="sourceRings"/> boundary (more than <paramref name="tolerance"/> away
+		/// from every source segment). Such a point yields a reliable even-odd point-in-polygon
+		/// result, whereas a point on (or within tolerance of) the boundary is reported as
+		/// contained regardless of which side it is really on. Returns null if every target
+		/// vertex lies within tolerance of the source boundary (degenerate / near-congruent case).
+		/// </summary>
+		[CanBeNull]
+		private static Pnt3D GetOffBoundaryTargetPoint(
+			[NotNull] ISegmentList sourceRings,
+			[NotNull] Linestring targetRing,
+			double tolerance)
+		{
+			foreach (Pnt3D point in targetRing.GetPoints())
+			{
+				if (! LinesContainXY(sourceRings, point, tolerance))
+				{
+					return point;
+				}
 			}
 
 			return null;

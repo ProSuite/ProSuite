@@ -767,6 +767,69 @@ namespace ProSuite.Commons.Test.Geom
 			                      "Union must not lose area.");
 		}
 
+
+		[Test]
+		public void CanUnionChampPittetAtStep32()
+		{
+			// TLM_GEBAEUDE {BE9C9B3B-B966-4719-94F3-EEC3093F2ACC} (Champ Pittet),
+			// isolated incremental-union step 32 (tolerance 0.00625). The accumulated
+			// footprint (source) is an outer ring with two interior holes; one hole
+			// pinches the exterior boundary at point P. The target triangle sits in the
+			// exterior pocket and touches the source ONLY at P, so it is fully disjoint
+			// (its whole 2.254 sq m lies outside the source). One target edge runs
+			// near-coincident with a source exterior edge, diverging from 0 at P to
+			// 0.0123 m at the far corner - i.e. it crosses the 0.00625 tolerance around
+			// mid-segment. The union must add the disjoint target (area grows by ~2.254);
+			// the bug dropped it (area unchanged at 86.967) because the containment test
+			// picked a mid-segment target point that landed within tolerance of the
+			// source boundary and was read as "contained".
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"champ_pittet_step32_source.wkb"), out _);
+			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"champ_pittet_step32_ring.wkb"), out _);
+
+			double tolerance = 0.00625;
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring disjoint =
+				GeomTopoOpUtils.GetDifferenceAreasXY(ring, source, tolerance);
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			Assert.AreEqual(sourceArea + disjoint.GetArea2D(), result.GetArea2D(), 0.001,
+			                "Union must add the fully disjoint target ring's area.");
+		}
+
+		[Test]
+		public void CanGetFootprintForChampPittet()
+		{
+			// TLM_GEBAEUDE {BE9C9B3B-B966-4719-94F3-EEC3093F2ACC} (Champ Pittet).
+			// At the production tolerance (0.00625) the incremental ring-group union lost
+			// ~2.27 sq m at step 32: a fully disjoint triangle that touches the
+			// accumulated footprint at a single pinch point (where an interior hole meets
+			// the exterior boundary) was dropped. The triangle shares a near-coincident
+			// edge with a source exterior edge (gap crosses tolerance mid-segment), and the
+			// touch-point containment test (AreTouchingExteriorAndInteriorRings ->
+			// PolycurveContainsXY) picked a mid-segment target point that landed within
+			// tolerance of the source boundary, reading it as "contained" -> the disjoint
+			// ring was discarded. See CanUnionChampPittetAtStep32 for the isolated step.
+			// AO reference area: 95.9063.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("champ_pittet.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(95.9063, footprint.GetArea2D(), 0.05);
+		}
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
 		                                           params Linestring[] islands)
 		{
