@@ -132,7 +132,7 @@ namespace ProSuite.Commons.Geom
 				// duplicate segments sticking out. This makes ClockwiseOriented correct
 				// for each cleaned ring before AsProperlyOriented runs. This operation
 				// can change the ring's orientation!
-				IEnumerable<RingGroup> cleanedGroups = CleanupDuplicateSegments(
+				IEnumerable<RingGroup> cleanedGroups = SimplifyRings(
 					coplanarGroup, verticalRingDetectionTolerance,
 					out List<Linestring> cleanupVerticals);
 
@@ -173,14 +173,14 @@ namespace ProSuite.Commons.Geom
 		/// <returns>Zero or more cleaned ring groups. Empty if the input was
 		/// entirely vertical or degenerate. May contain more than one group if the
 		/// exterior ring split into multiple simple rings.</returns>
-		private static IEnumerable<RingGroup> CleanupDuplicateSegments(
+		private static IEnumerable<RingGroup> SimplifyRings(
 			[NotNull] RingGroup input,
 			double verticalRingDetectionTolerance,
 			[NotNull] out List<Linestring> verticalRings)
 		{
 			verticalRings = new List<Linestring>();
 
-			List<Linestring> cleanedExteriors = CleanRing(
+			List<Linestring> cleanedExteriors = SimplifyRing(
 				input.ExteriorRing, verticalRingDetectionTolerance, verticalRings);
 
 			if (cleanedExteriors.Count == 0)
@@ -192,7 +192,7 @@ namespace ProSuite.Commons.Geom
 			foreach (Linestring interior in input.InteriorRings)
 			{
 				cleanedInteriors.AddRange(
-					CleanRing(interior, verticalRingDetectionTolerance, verticalRings));
+					SimplifyRing(interior, verticalRingDetectionTolerance, verticalRings));
 			}
 
 			// Reassemble. Interior rings are attached to the first exterior fragment
@@ -212,39 +212,58 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
-		private static List<Linestring> CleanRing(
+		private static List<Linestring> SimplifyRing(
 			[NotNull] Linestring ring,
 			double verticalRingDetectionTolerance,
 			[NotNull] List<Linestring> verticalRings)
 		{
 			var candidates = new List<Linestring>();
-			var spaghetti = new List<Linestring>();
+			var withoutLinearSelfIntersections = new List<Linestring>();
 
+			// TODO: Move both to GeomTopoOpUtils, calculate intersection points only once
+			//       and consolidate with polyline simplification.
 			if (! GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-				    ring, verticalRingDetectionTolerance, spaghetti))
+				    ring, verticalRingDetectionTolerance, withoutLinearSelfIntersections))
 			{
-				// No self-intersection was removed: pass the original ring through.
-				candidates.Add(ring);
-				return candidates;
+				// No linear self-intersection was removed: keep the original ring, but
+				// still explode any 0-dimensional (crossing) self-intersections below.
+				withoutLinearSelfIntersections.Add(ring);
 			}
-
-			if (spaghetti.Count == 0)
+			else if (withoutLinearSelfIntersections.Count == 0)
 			{
 				// All segments cancelled out: the original ring was entirely vertical.
 				verticalRings.Add(ring);
 				return candidates;
 			}
 
-			foreach (Linestring fragment in spaghetti)
+			foreach (Linestring fragment in withoutLinearSelfIntersections)
 			{
-				if (fragment.IsClosed &&
-				    ! fragment.IsVerticalRing(verticalRingDetectionTolerance))
-				{
-					candidates.Add(fragment);
-				}
-				else
+				if (! fragment.IsClosed)
 				{
 					verticalRings.Add(fragment);
+					continue;
+				}
+
+				// Explode figure-8 / self-crossing rings into separate simple rings before any
+				// area-based verticality or orientation check!
+				var simpleRings = new List<Linestring>();
+				if (! GeomTopoOpUtils.TryCrackSelfCrossingRing(
+					    fragment, verticalRingDetectionTolerance, simpleRings))
+				{
+					simpleRings.Add(fragment);
+				}
+
+				foreach (Linestring simpleRing in simpleRings)
+				{
+					if (simpleRing.IsClosed &&
+					    ! simpleRing.IsVerticalRing(verticalRingDetectionTolerance))
+					{
+						candidates.Add(simpleRing);
+					}
+					else
+					{
+						verticalRings.Add(simpleRing);
+					}
 				}
 			}
 

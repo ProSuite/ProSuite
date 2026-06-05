@@ -830,6 +830,76 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(95.9063, footprint.GetArea2D(), 0.05);
 		}
+
+		[Test]
+		public void CanGetFootprintForChateauDeDardagny()
+		{
+			// TLM_GEBAEUDE {75206440-317A-4132-8EA2-62FAF8DB7E90} (Chateau de Dardagny).
+			// Two of the eight ring groups are figure-8 (bowtie) rings: a single ring with
+			// a 0-dimensional (crossing) self-intersection that splits it into two lobes of
+			// opposite orientation. The initial cleanup only removed LINEAR self-intersections
+			// (spikes), so the bowtie passed through as one ring whose signed area is the
+			// difference of the two lobes. One such ring (net signed area -8.76) was reversed
+			// by AsProperlyOriented and then unioned in as a spurious hole, so the footprint
+			// came out 44.134 (2 parts: outer 52.897 + hole -8.762) instead of the solid
+			// AO reference 52.8966. Fix: the cleanup now also explodes self-crossing rings
+			// into separate simple rings (Polyhedron.CleanRing -> TryCrackSelfCrossingRing).
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("chateau_de_dardagny.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(52.8966, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintExplodingSelfCrossingRing()
+		{
+			// A single figure-8 (bowtie) exterior ring: vertices ordered so that the edge
+			// 1->2 crosses the edge 3->0, producing a 0-dimensional self-intersection at the
+			// shared crossing point. The signed area of such a ring is the DIFFERENCE of the
+			// two lobes (here ~0), but the footprint (the area covered when seen from above)
+			// is the UNION of both lobes. The cleanup must explode the bowtie into two simple
+			// rings so the footprint covers both lobes.
+			//
+			//   1-------------0
+			//    \           /
+			//     \         /          two 5x5 lobes meeting at the crossing point (5,5)
+			//      \       /
+			//       \     /
+			//        \   /
+			//         \ /
+			//          X   (5,5)
+			//         / \
+			//        /   \
+			//       2-----3
+			var ring = new List<Pnt3D>
+			           {
+				           new Pnt3D(10, 10, 0), // 0
+				           new Pnt3D(0, 10, 0),  // 1
+				           new Pnt3D(10, 0, 0),  // 2  -> edge 1->2 crosses edge 3->0
+				           new Pnt3D(0, 0, 0),   // 3
+			           };
+
+			Polyhedron polyhedron = CreatePolyhedron(GeomTestUtils.CreateRing(ring));
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(0.001, 0.001, out _);
+
+			// Two triangular lobes of area 25 each (base 10, height 5) -> 50 covered.
+			// (The two lobes touch only at the crossing point, so the union may keep them
+			// as one or two rings; the invariant is the covered area and CW orientation.)
+			Assert.AreEqual(50, footprint.GetArea2D(), 0.001);
+			Assert.True(footprint.GetLinestrings().All(l => l.ClockwiseOriented == true));
+		}
+
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
 		                                           params Linestring[] islands)
 		{
