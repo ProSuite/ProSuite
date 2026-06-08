@@ -1499,7 +1499,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(table, filter))
+			foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(table, filter))
 			{
 				Assert.True(TryAddItem(item), $"Cannot not add {item}");
 

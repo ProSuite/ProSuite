@@ -54,7 +54,7 @@ public class DatabaseSourceClass : SourceClass
 	}
 
 	[CanBeNull]
-	public object GetValue([NotNull] Row row, [NotNull] string fieldName)
+	protected object GetValue([NotNull] Row row, [NotNull] string fieldName)
 	{
 		bool exists = _subFields.TryGetValue(fieldName, out int index);
 		Assert.True(exists, $"{fieldName} is not a subfield");
@@ -169,9 +169,9 @@ public class DatabaseSourceClass : SourceClass
 		return ArcGISTableId;
 	}
 
-	public override IWorkItem CreateWorkItem(Row row)
+	public override T CreateWorkItem<T>(Row row)
 	{
-		IWorkItem item = base.CreateWorkItem(row);
+		var item = base.CreateWorkItem<T>(row);
 		item.Status = GetStatus(row);
 		return item;
 	}
