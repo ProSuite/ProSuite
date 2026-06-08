@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
@@ -126,7 +127,9 @@ public class ProductionModelWorkListTest
 		int index = definition.FindField("FEHLERART");
 
 		var random = new Random();
-		long oid = random.NextInt64(maxValue: 10);
+		long oid = random.NextInt64(minValue: 1, maxValue: 10);
+
+		Debug.WriteLine($"random OID {oid}");
 
 		Feature randomFeature =
 			GdbQueryUtils.GetFeatures(errorsFeatureClass, new List<long> { oid }, null, false)

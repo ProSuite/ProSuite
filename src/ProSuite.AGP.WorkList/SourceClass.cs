@@ -26,7 +26,7 @@ public abstract class SourceClass : ISourceClass
 
 	public bool HasGeometry => _tableIdentity.HasGeometry;
 
-	public long ArcGISTableId => _tableIdentity.Id;
+	protected long ArcGISTableId => _tableIdentity.Id;
 
 	public string Name => _tableIdentity.Name;
 
