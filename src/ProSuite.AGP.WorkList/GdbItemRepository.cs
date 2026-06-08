@@ -90,11 +90,6 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	public abstract bool CanUseTableSchema(
 		[CanBeNull] IWorkListItemDatastore workListItemSchema);
 
-	public long Count()
-	{
-		return SourceClasses.Sum(sourceClass => Count(sourceClass, new QueryFilter()));
-	}
-
 	[CanBeNull]
 	public Row GetSourceRow(ISourceClass sourceClass, long oid, bool recycle = true)
 	{
@@ -257,28 +252,5 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		filter = GdbQueryUtils.CloneFilter(filter);
 
 		GdbQueryUtils.AppendWhereClause(ref filter, expression);
-	}
-
-	private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
-	{
-		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
-
-		using Table table = OpenTable(sourceClass);
-
-		if (table == null)
-		{
-			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
-			return 0;
-		}
-
-		using TableDefinition definition = table.GetDefinition();
-		filter.SubFields = definition.GetObjectIDField();
-
-		long count = table.GetCount(filter);
-
-		_msg.DebugStopTiming(
-			watch, $"Count() {sourceClass.Name}: {count} items");
-
-		return count;
 	}
 }

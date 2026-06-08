@@ -650,16 +650,26 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	public long CountLoadedItems(out int todo)
 	{
 		todo = 0;
-		todo += _items.Count(item => item.Status == WorkItemStatus.Todo);
+		todo += CountLoadedItemsCore(_items);
 
-		return _items.Count;
+		return CountItems(_items);
+	}
+
+	protected virtual int CountItems(List<IWorkItem> items)
+	{
+		return items.Count;
+	}
+
+	protected virtual int CountLoadedItemsCore(IEnumerable<IWorkItem> items)
+	{
+		return items.Count(item => item.Status == WorkItemStatus.Todo);
 	}
 
 	public void Count()
 	{
 		var watch = _msg.DebugStartTiming($"{this} start counting items.");
-
-		TotalCount ??= Repository.Count();
+		
+		TotalCount = CountItems(_items);
 
 		_msg.DebugStopTiming(watch, $"{this} counted {TotalCount} items.");
 	}

@@ -35,8 +35,6 @@ public interface IWorkItemRepository
 	/// </summary>
 	Envelope Extent { get; set; }
 
-	long Count();
-
 	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter);
 
 	IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(Table table,
