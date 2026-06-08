@@ -13,7 +13,6 @@ using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -154,12 +153,6 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	[NotNull]
 	public DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
-		IObjectDataset errorDataset = GetObjectDataset(tableDefinition);
-
-		KeyValuePair<string, int> status =
-			AttributeUtils.GetField(tableDefinition, errorDataset,
-			                        AttributeRole.ErrorCorrectionStatus);
-
 		string oidField = tableDefinition.GetObjectIDField();
 
 		Dictionary<string, int> subFields;
@@ -172,7 +165,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 			            {
 				            { oidField, tableDefinition.FindField(oidField) },
 				            { shapeField, featureClassDefinition.FindField(shapeField) },
-				            { status.Key, status.Value }
+				            { _statusFieldName, tableDefinition.FindField(_statusFieldName) }
 			            };
 		}
 		else
@@ -180,11 +173,11 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 			subFields = new Dictionary<string, int>
 			            {
 				            { oidField, tableDefinition.FindField(oidField) },
-				            { status.Key, status.Value }
-			            };
+				            { _statusFieldName, tableDefinition.FindField(_statusFieldName) }
+						};
 		}
 
-		return new DbSourceClassSchema(status.Key,
+		return new DbSourceClassSchema(_statusFieldName,
 		                               IssueCorrectionStatus.NotCorrected,
 		                               IssueCorrectionStatus.Corrected,
 		                               subFields);
