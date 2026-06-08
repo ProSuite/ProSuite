@@ -43,5 +43,5 @@ public interface ISourceClass
 
 	bool Contains(Row row);
 
-	IWorkItem CreateWorkItem(Row row);
+	T CreateWorkItem<T>(Row row) where T : IWorkItem;
 }

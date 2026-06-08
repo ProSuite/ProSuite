@@ -39,9 +39,10 @@ public interface IWorkItemRepository
 
 	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter);
 
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
-	                                                        QueryFilter filter,
-	                                                        bool ignoreDefinitionQuery = false);
+	IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(Table table,
+	                                                   QueryFilter filter,
+	                                                   bool ignoreDefinitionQuery = false)
+		where T : IWorkItem;
 
 	void Commit();
 

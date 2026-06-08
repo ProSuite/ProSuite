@@ -81,10 +81,11 @@ public abstract class SourceClass : ISourceClass
 
 	public abstract bool Contains(Row row);
 
-	public virtual IWorkItem CreateWorkItem(Row row)
+	public virtual T CreateWorkItem<T>(Row row) where T : IWorkItem
 	{
-		return new WorkItem(GetUniqueTableId(),
-		                    new GdbRowIdentity(row.GetObjectID(), TableIdentity));
+		IWorkItem item = new WorkItem(GetUniqueTableId(),
+		                              new GdbRowIdentity(row.GetObjectID(), TableIdentity));
+		return (T) item;
 	}
 
 	public T OpenDataset<T>() where T : Table

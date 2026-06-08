@@ -637,7 +637,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	}
 
 	[NotNull]
-	private static EnvelopeXY CreateEnvelope(IWorkItem item)
+	protected static EnvelopeXY CreateEnvelope(IWorkItem item)
 	{
 		if (item.Extent is null) throw new ArgumentNullException(nameof(item.Extent));
 
@@ -1583,41 +1583,9 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		try
 		{
-			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-				         table, filter, ignoreDefinitionQuery: true))
-			{
-				Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
-				            $"Cannot not get {cachedItem}");
-
-				invalidateOids.Add(cachedItem.OID);
-
-				if (Equals(cachedItem.Status, item.Status))
-				{
-					// Status hasn't changed but maybe the geometry => update SpatialHashSearcher.
-					if (cachedItem.HasExtent)
-					{
-						Envelope extent = Assert.NotNull(cachedItem.Extent);
-
-						Assert.NotNull(_searcher).Remove(cachedItem,
-						                                 extent.XMin, extent.YMin,
-						                                 extent.XMax, extent.YMax);
-
-						if (CacheBufferedItemGeometries)
-						{
-							UpdateItemDisplayGeometry(cachedItem, geometry);
-						}
-
-						_searcher.Add(cachedItem, CreateEnvelope(cachedItem));
-					}
-				}
-
-				// Update cached item's state from database item. IWorkItem.Status
-				// also is updated in GdbItemRepository.SetStatusCoreAsync().
-				cachedItem.Status = item.Status;
-			}
+			invalidateOids.AddRange(ProcessUpdatesCore(table, oids, _searcher));
 
 			// TODO: Move to repository!
 			Repository.Extent = CreateExtent(_items, Repository.SpatialReference);
@@ -1630,6 +1598,46 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		}
 
 		return invalidateOids;
+	}
+
+	protected virtual IEnumerable<long> ProcessUpdatesCore(
+		[NotNull] Table table, [NotNull] List<long> oids,
+		[CanBeNull] SpatialHashSearcher<IWorkItem> searcher)
+	{
+		QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
+
+		foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(
+			         table, filter, ignoreDefinitionQuery: true))
+		{
+			Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
+			            $"Cannot not get {cachedItem}");
+
+			if (Equals(cachedItem.Status, item.Status))
+			{
+				// Status hasn't changed but maybe the geometry => update SpatialHashSearcher.
+				if (cachedItem.HasExtent)
+				{
+					Envelope extent = Assert.NotNull(cachedItem.Extent);
+
+					Assert.NotNull(searcher).Remove(cachedItem,
+					                                 extent.XMin, extent.YMin,
+					                                 extent.XMax, extent.YMax);
+
+					if (CacheBufferedItemGeometries)
+					{
+						UpdateItemDisplayGeometry(cachedItem, geometry);
+					}
+
+					searcher.Add(cachedItem, CreateEnvelope(cachedItem));
+				}
+			}
+
+			// Update cached item's state from database item. IWorkItem.Status
+			// also is updated in GdbItemRepository.SetStatusCoreAsync().
+			cachedItem.Status = item.Status;
+
+			yield return cachedItem.OID;
+		}
 	}
 
 	#endregion
@@ -1655,9 +1663,9 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return UpdateItemDisplayGeometry(cachedItem, geometry, exclusion);
 	}
 
-	private int UpdateItemDisplayGeometry([NotNull] IWorkItem item,
-	                                      [CanBeNull] Geometry shapeGeometry,
-	                                      Predicate<IWorkItem> exclusion = null)
+	public int UpdateItemDisplayGeometry([NotNull] IWorkItem item,
+	                                     [CanBeNull] Geometry shapeGeometry,
+	                                     Predicate<IWorkItem> exclusion = null)
 	{
 		if (shapeGeometry == null)
 		{
@@ -1750,9 +1758,10 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return true;
 	}
 
-	private bool TryGetItem(GdbRowIdentity rowProxy, out IWorkItem cachedItem)
+	protected bool TryGetItem<T>(GdbRowIdentity rowProxy, out T item) where T : IWorkItem 
 	{
-		bool exists = _rowMap.TryGetValue(rowProxy, out cachedItem);
+		bool exists = _rowMap.TryGetValue(rowProxy, out IWorkItem cachedItem);
+		item = (T) cachedItem;
 
 		return exists;
 	}
