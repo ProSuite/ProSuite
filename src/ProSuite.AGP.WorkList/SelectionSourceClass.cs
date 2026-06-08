@@ -26,12 +26,6 @@ public class SelectionSourceClass : SourceClass
 		return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(TableIdentity);
 	}
 
-	public override bool Contains(Row row)
-	{
-		//return Oids.Contains(row.GetObjectID());
-		return true;
-	}
-
 	protected override void EnsureValidFilterCore(ref QueryFilter filter,
 	                                              bool ignoreDefinitionQuery)
 	{

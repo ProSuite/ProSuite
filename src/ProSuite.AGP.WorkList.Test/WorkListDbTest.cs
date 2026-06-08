@@ -63,7 +63,7 @@ public class WorkListDbTest
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
 			var sourceClass =
-				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null, null);
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -132,7 +132,7 @@ public class WorkListDbTest
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
 			var sourceClass =
-				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null, null);
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -202,7 +202,7 @@ public class WorkListDbTest
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
 			var sourceClass =
-				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null, null);
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -265,7 +265,7 @@ public class WorkListDbTest
 			datastoresByHandle.TryAdd(datastore.Handle, datastore);
 
 			var sourceClass =
-				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null, null);
+				new DatabaseSourceClass(new GdbTableIdentity(table), schema, null, null);
 
 			sourceClasses.Add(sourceClass);
 		}

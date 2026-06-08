@@ -79,8 +79,6 @@ public abstract class SourceClass : ISourceClass
 		return tableReference.ReferencesTable(_tableIdentity.Id, _tableIdentity.Name);
 	}
 
-	public abstract bool Contains(Row row);
-
 	public virtual T CreateWorkItem<T>(Row row) where T : IWorkItem
 	{
 		IWorkItem item = new WorkItem(GetUniqueTableId(),

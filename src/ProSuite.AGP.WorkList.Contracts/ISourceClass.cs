@@ -41,7 +41,5 @@ public interface ISourceClass
 
 	void EnsureValidFilter(ref QueryFilter filter, bool ignoreDefinitionQuery);
 
-	bool Contains(Row row);
-
 	T CreateWorkItem<T>(Row row) where T : IWorkItem;
 }

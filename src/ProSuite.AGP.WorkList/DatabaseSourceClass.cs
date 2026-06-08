@@ -17,8 +17,6 @@ public class DatabaseSourceClass : SourceClass
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly FilterHelper _filterHelper;
-
 	[NotNull] private readonly List<WorkListFilterDefinitionExpression> _expressions = new();
 	[NotNull] private readonly Dictionary<string, int> _subFields;
 	[NotNull] private readonly string _subFieldNames;
@@ -28,13 +26,11 @@ public class DatabaseSourceClass : SourceClass
 		[NotNull] DbSourceClassSchema schema,
 		[CanBeNull] IAttributeReader attributeReader,
 		[CanBeNull] string definitionQuery,
-		[NotNull] FilterHelper filterHelper,
 		WorkspaceDbType dbType = WorkspaceDbType.Unknown)
 		: base(tableIdentity, attributeReader)
 	{
 		Assert.ArgumentNotNull(schema, nameof(schema));
 
-		_filterHelper = filterHelper;
 		_subFields = schema.SubFields;
 		_subFieldNames = StringUtils.Concatenate(schema.SubFields.Keys, ",");
 		Assert.NotNullOrEmpty(_subFieldNames);
@@ -46,11 +42,6 @@ public class DatabaseSourceClass : SourceClass
 		DefaultDefinitionQuery = definitionQuery;
 
 		WorkspaceDbType = dbType;
-	}
-
-	public override bool Contains(Row row)
-	{
-		return _filterHelper.Check(row);
 	}
 
 	[CanBeNull]

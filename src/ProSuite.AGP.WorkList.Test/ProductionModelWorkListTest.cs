@@ -211,7 +211,6 @@ public class ProductionModelWorkListTest
 				new ProductionModelIssueItemClass(
 					new GdbTableIdentity(errorsFeatureClass), schema,
 					null, defaultDefinitionQuery, errorTypeFieldName,
-					FilterHelper.Create(errorsFeatureClass, defaultDefinitionQuery),
 					dbType: WorkspaceUtils.GetWorkspaceDbType(geodatabase))
 			};
 
