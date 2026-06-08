@@ -626,6 +626,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		}
 	}
 
+	[CanBeNull]
 	private static SpatialHashSearcher<IWorkItem> CreateSpatialSearcher(List<IWorkItem> items)
 	{
 		if (items.Count == 0)
@@ -1369,10 +1370,15 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 	private bool IsVisible([NotNull] IWorkItem item)
 	{
+		return IsVisibleCore(item);
+	}
+
+	protected virtual bool IsVisibleCore([NotNull] IWorkItem item)
+	{
 		return IsVisible(item, Visibility);
 	}
 
-	private bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility? visibility)
+	private static bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility? visibility)
 	{
 		WorkItemStatus status = item.Status;
 
