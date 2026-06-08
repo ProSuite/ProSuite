@@ -71,6 +71,11 @@ public class ItemRepositoryMock : IWorkItemRepository
 		WorkItemStateRepository?.Refresh(item);
 	}
 
+	public Table OpenTable(ISourceClass sourceClass)
+	{
+		throw new NotImplementedException();
+	}
+
 	public void UpdateState(IWorkItem item)
 	{
 		WorkItemStateRepository?.UpdateState(item);

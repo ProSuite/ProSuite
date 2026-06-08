@@ -75,4 +75,6 @@ public interface IWorkItemRepository
 	long GetNextOid();
 
 	void Refresh(IWorkItem item);
+
+	Table OpenTable([NotNull] ISourceClass sourceClass);
 }

@@ -150,7 +150,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	}
 
 	[CanBeNull]
-	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
+	public abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		[NotNull] ISourceClass sourceClass,

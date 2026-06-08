@@ -137,7 +137,7 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 	}
 
-	protected override Table OpenTable(ISourceClass sourceClass)
+	public override Table OpenTable(ISourceClass sourceClass)
 	{
 		Table table = null;
 		try
