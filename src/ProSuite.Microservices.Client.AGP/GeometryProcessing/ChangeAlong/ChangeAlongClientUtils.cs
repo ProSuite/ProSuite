@@ -544,6 +544,11 @@ public static class ChangeAlongClientUtils
 	private static TargetBufferOptionsMsg ToTargetBufferOptionsMsg(
 		TargetBufferOptions targetBufferOptions)
 	{
+		if (targetBufferOptions == null)
+		{
+			return null;
+		}
+
 		var targetBufferOptionsMsg = new TargetBufferOptionsMsg();
 
 		targetBufferOptionsMsg.BufferDistance =
