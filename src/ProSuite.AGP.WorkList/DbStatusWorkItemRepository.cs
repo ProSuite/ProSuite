@@ -160,7 +160,6 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		switch (oldState)
 		{
 			case WorkItemStatus.Todo:
-			case WorkItemStatus.Excluded:
 				return $"Set status of work item ID={item.OID} to 'Corrected'";
 
 			case WorkItemStatus.Done:

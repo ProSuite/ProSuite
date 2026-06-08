@@ -7,6 +7,5 @@ public enum WorkItemStatus
 {
 	Unknown,
 	Todo,
-	Done,
-	Excluded
+	Done
 }
