@@ -151,7 +151,7 @@ namespace ProSuite.QA.Tests.Test
 			var modelAlti = new SimpleModel("alti", dtmWs);
 			Dataset vectorDs = modelAlti.AddDataset(new ModelVectorDataset(_vectorDsName));
 			Dataset mosaicDs =
-				modelAlti.AddDataset(new ModelMosaicRasterDataset(_mosaicDatasetName));
+				modelAlti.AddDataset(new ModelRasterMosaicDataset(_mosaicDatasetName));
 
 			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
 			const int testConstructorId = 4;
@@ -187,7 +187,7 @@ namespace ProSuite.QA.Tests.Test
 			Dataset mds0 = modelAlti.AddDataset(new ModelVectorDataset(_vectorDsName));
 
 			Dataset mds1 =
-				modelAlti.AddDataset(new ModelMosaicRasterDataset(_mosaicDatasetName));
+				modelAlti.AddDataset(new ModelRasterMosaicDataset(_mosaicDatasetName));
 
 			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
 			const int testConstructorId = 4;
