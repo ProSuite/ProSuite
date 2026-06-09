@@ -31,16 +31,16 @@ namespace ProSuite.DomainServices.AO.Test.QA
 
 			DdxModel model = new TestModel("testModel");
 			model.UserConnectionProvider = new FileGdbConnectionProvider(gdbPath);
-			TestDataset lineDataset = model.AddDataset(new TestDataset(featureClassName));
+			TestVectorDataset lineVectorDataset = model.AddDataset(new TestVectorDataset(featureClassName));
 
 			var condition1 =
 				new QualityCondition("condition1", simpleGeometryDescriptor);
-			InstanceConfigurationUtils.AddParameterValue(condition1, "featureClass", lineDataset);
+			InstanceConfigurationUtils.AddParameterValue(condition1, "featureClass", lineVectorDataset);
 
 			var condition2 =
 				new QualityCondition("condition2", gdbConstraintsDescriptor);
 
-			InstanceConfigurationUtils.AddParameterValue(condition2, "table", lineDataset,
+			InstanceConfigurationUtils.AddParameterValue(condition2, "table", lineVectorDataset,
 			                                             "[OBJEKTART] IS NOT NULL");
 			InstanceConfigurationUtils.AddScalarParameterValue(
 				condition2, "AllowNullValuesForCodedValueDomains", true);
@@ -72,9 +72,9 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			}
 		}
 
-		private class TestDataset : VectorDataset
+		private class TestVectorDataset : VectorDataset
 		{
-			public TestDataset([NotNull] string name) : base(name) { }
+			public TestVectorDataset([NotNull] string name) : base(name) { }
 		}
 	}
 }

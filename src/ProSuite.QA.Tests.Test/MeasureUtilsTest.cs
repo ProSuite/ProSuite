@@ -7,6 +7,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
 
 namespace ProSuite.QA.Tests.Test

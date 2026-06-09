@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.ParameterTypes;
 using ProSuite.QA.Tests.Test.Construction;
@@ -784,6 +785,35 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(verificationEnvelope);
 
 			AssertUtils.NoError(runner);
+		}
+
+		[Test]
+		public void CanCheckLineIsCoveredByOtherLinesWithDifferentXYTolerances()
+		{
+			string path = TestDataPreparer.ExtractZip("QaIsCoveredByOther_Lines.gdb.zip").GetPath();
+			IFeatureWorkspace featureWorkspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
+
+			//FC contains 3 Lines, XYTolerance 0.001m
+			IFeatureClass coveringClass = featureWorkspace.OpenFeatureClass("covering");
+			//FC contains 1 Line, XYTolerance 1.0m
+			IFeatureClass coveredClass = featureWorkspace.OpenFeatureClass("covered");
+
+			var test = new QaIsCoveredByOther(ReadOnlyTableFactory.Create(coveringClass),
+			                                  ReadOnlyTableFactory.Create(coveredClass));
+			test.CoveringClassTolerances = new[] { 300.0 };
+
+			var runner = new QaContainerTestRunner(50000, test);
+			runner.Execute();
+			AssertUtils.NoError(runner);
+
+			var test2 = new QaIsCoveredByOther(ReadOnlyTableFactory.Create(coveringClass),
+			                                   ReadOnlyTableFactory.Create(coveredClass));
+			test2.CoveringClassTolerances = new[] { 25.0 };
+
+			var runner2 = new QaContainerTestRunner(50000, test2);
+			runner2.Execute();
+
+			AssertUtils.ExpectedErrors(3, runner2.Errors);
 		}
 
 		[Test]

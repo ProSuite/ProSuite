@@ -6,6 +6,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Internal.Mapping;
@@ -22,6 +23,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Input;
 using Point = System.Windows.Point;
+using Subtype = ArcGIS.Core.Data.Subtype;
 
 namespace ProSuite.AGP.Editing;
 
@@ -239,7 +241,8 @@ public static class ToolUtils
 	}
 
 	public static async Task FlashResultPolygonsAsync([NotNull] MapView activeView,
-	                                                  [NotNull] IEnumerable<Geometry> resultGeometries)
+	                                                  [NotNull]
+	                                                  IEnumerable<Geometry> resultGeometries)
 	{
 		var polySymbol = SymbolFactory.Instance.DefaultPolygonSymbol;
 
@@ -327,7 +330,10 @@ public static class ToolUtils
 
 		if (! string.IsNullOrEmpty(subtypeField))
 		{
-			object subtypeValue = editingTemplate.Inspector[subtypeField];
+			// NOTE: Inspector can be null if create feature pane is closed (possibly starting at 3.7)
+			Inspector inspector = editingTemplate.Inspector;
+
+			object subtypeValue = inspector?[subtypeField];
 
 			if (subtypeValue != null && subtypeValue != DBNull.Value)
 			{

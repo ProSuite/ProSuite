@@ -84,9 +84,8 @@ namespace ProSuite.Processing.Test
 		[Test]
 		public void CanParseLenient()
 		{
-			const bool lenient = true;
 			var config = CartoProcessConfig.Parse(
-				"foo=1\noops\nbar=2\nspam='unclosed\nbaz=3\n", lenient);
+				"foo=1\noops\nbar=2\nspam='unclosed\nbaz=3\n", lenient: true);
 
 			Assert.NotNull(config);
 			Assert.AreEqual(2, config.Count);

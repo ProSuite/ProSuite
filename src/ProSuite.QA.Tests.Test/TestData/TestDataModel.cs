@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -63,20 +62,18 @@ namespace ProSuite.QA.Tests.Test.TestData
 
 		public new MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
-			// Use polygon feature class as 'catalog'
+			// Mimic a catalog-based raster source (e.g. an elevation raster dataset): use the
+			// polygon 'footprints' feature class as the raster catalog and build the mosaic through
+			// the shared seam. See ModelElementUtils.CreateRasterCatalogMosaic.
 			VectorDataset footprints =
 				_model.GetDatasetByModelName(_featureClassFootprints) as VectorDataset;
 
 			Assert.NotNull(footprints);
 
-			IFeatureClass footprintClass = OpenFeatureClass(footprints);
+			var catalog = new TestRasterCatalogDataset(
+				dataset.Name, footprints, filePathFieldName: "RASTER", zOrderFieldName: "ZORDER");
 
-			Assert.NotNull(footprintClass);
-
-			SimpleRasterMosaic simpleMosaic = new SimpleRasterMosaic(
-				dataset.Name, footprintClass, null, "ZORDER", false, "RASTER", null);
-
-			return new MosaicRasterReference(simpleMosaic);
+			return ModelElementUtils.CreateRasterCatalogMosaic(catalog, OpenFeatureClass);
 		}
 
 		#endregion

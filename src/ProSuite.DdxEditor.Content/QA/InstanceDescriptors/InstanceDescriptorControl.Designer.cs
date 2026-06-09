@@ -99,7 +99,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._textBoxDescription.Multiline = true;
 			this._textBoxDescription.Name = "_textBoxDescription";
 			this._textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._textBoxDescription.Size = new System.Drawing.Size(620, 48);
+			this._textBoxDescription.Size = new System.Drawing.Size(608, 48);
 			this._textBoxDescription.TabIndex = 1;
 			// 
 			// _labelName
@@ -120,7 +120,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			this._textBoxName.Location = new System.Drawing.Point(127, 14);
 			this._textBoxName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._textBoxName.Name = "_textBoxName";
-			this._textBoxName.Size = new System.Drawing.Size(620, 23);
+			this._textBoxName.Size = new System.Drawing.Size(608, 23);
 			this._textBoxName.TabIndex = 0;
 			// 
 			// _errorProvider
@@ -142,7 +142,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelConstructorId
 			// 
 			this._labelConstructorId.AutoSize = true;
-			this._labelConstructorId.Location = new System.Drawing.Point(24, 54);
+			this._labelConstructorId.Location = new System.Drawing.Point(24, 59);
 			this._labelConstructorId.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelConstructorId.Name = "_labelConstructorId";
 			this._labelConstructorId.Size = new System.Drawing.Size(73, 15);
@@ -153,12 +153,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelTestDescription
 			// 
 			this._labelTestDescription.AutoSize = true;
-			this._labelTestDescription.Location = new System.Drawing.Point(7, 36);
+			this._labelTestDescription.Location = new System.Drawing.Point(27, 36);
 			this._labelTestDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelTestDescription.Name = "_labelTestDescription";
-			this._labelTestDescription.Size = new System.Drawing.Size(92, 15);
+			this._labelTestDescription.Size = new System.Drawing.Size(70, 15);
 			this._labelTestDescription.TabIndex = 10;
-			this._labelTestDescription.Text = "Test description:";
+			this._labelTestDescription.Text = "Description:";
 			this._labelTestDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _textBoxTestDescription
@@ -207,12 +207,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			// _labelParameter
 			// 
 			this._labelParameter.AutoSize = true;
-			this._labelParameter.Location = new System.Drawing.Point(7, 10);
+			this._labelParameter.Location = new System.Drawing.Point(30, 10);
 			this._labelParameter.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this._labelParameter.Name = "_labelParameter";
-			this._labelParameter.Size = new System.Drawing.Size(92, 15);
+			this._labelParameter.Size = new System.Drawing.Size(69, 15);
 			this._labelParameter.TabIndex = 12;
-			this._labelParameter.Text = "Test parameters:";
+			this._labelParameter.Text = "Parameters:";
 			this._labelParameter.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _dataGridViewParameter

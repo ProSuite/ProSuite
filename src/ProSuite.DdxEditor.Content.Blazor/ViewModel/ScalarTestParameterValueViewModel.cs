@@ -48,8 +48,9 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 			case TestParameterType.Double:
 				ComponentType = typeof(DoubleValueBlazor);
 				break;
-			// todo daro Blazor DateTime picker 
 			case TestParameterType.DateTime:
+				ComponentType = typeof(DateTimeValueBlazor);
+				break;
 			case TestParameterType.CustomScalar:
 				throw new NotImplementedException($"{testParameterType} is not yet supported");
 			case TestParameterType.Boolean:

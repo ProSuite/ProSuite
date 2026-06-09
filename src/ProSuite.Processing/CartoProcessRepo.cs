@@ -189,9 +189,7 @@ namespace ProSuite.Processing
 			            .OrderBy(g => g.Key)
 			            .Select(g => new XElement("ProcessType",
 			                                      MakeAttribute("name", g.Key), // i.e., TypeAlias
-			                                      new XElement("ClassDescriptor",
-															   MakeAttribute("type", g.First().ResolvedType?.FullName),
-				                                      MakeAttribute("assembly", g.First().ResolvedType?.Assembly.GetName().Name))))
+			                                      MakeClassDescriptor(g)))
 			            .ToList();
 
 			var procs = definitions
@@ -200,7 +198,7 @@ namespace ProSuite.Processing
 			            .Select(d => new XElement(
 				                    "Process",
 				                    new XAttribute("name", d.Name ?? string.Empty),
-									MakeAttribute("description", d.Description),
+				                    MakeAttribute("description", d.Description),
 				                    new XElement("TypeReference",
 				                                 MakeAttribute("name", d.TypeAlias)),
 				                    GetParameters(d.Config)))
@@ -212,6 +210,17 @@ namespace ProSuite.Processing
 				             new XElement("Groups", groups),
 				             new XElement("Processes", procs),
 				             new XElement("Types", types)));
+		}
+
+		private static XElement MakeClassDescriptor(IEnumerable<CartoProcessDefinition> g)
+		{
+			var definition = g.First(); // TODO could validate all are the same!
+			var typeName = definition.ResolvedType?.FullName;
+			var assembly = definition.ResolvedType?.Assembly.GetName().Name;
+
+			return new XElement("ClassDescriptor",
+			                    MakeAttribute("type", typeName),
+			                    MakeAttribute("assembly", assembly));
 		}
 
 		private static XAttribute MakeAttribute(string name, string value = null)
@@ -349,7 +358,7 @@ namespace ProSuite.Processing
 		[CanBeNull] public Type ResolvedType { get; }
 
 		private ICollection<string> _tags; // cache
-		public ICollection<string> Tags => _tags ?? (_tags = GetTags());
+		public ICollection<string> Tags => _tags ??= GetTags();
 
 		public CartoProcessDefinition(CartoProcessConfig config, Type resolvedType = null)
 		{

@@ -17,7 +17,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			[NotNull] IApplicationController applicationController)
 			: base(testDescriptorsItem, applicationController) { }
 
-		public override string Text => "Add Test Descriptors from Assembly";
+		public override string Text => "Add Test Descriptors from .Net Assembly";
 
 		protected override void ExecuteCore()
 		{

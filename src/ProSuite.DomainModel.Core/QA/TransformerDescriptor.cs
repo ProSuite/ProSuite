@@ -38,10 +38,5 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		#endregion
-
-		public override string ToString()
-		{
-			return $"Transformer Descriptor '{Name}'";
-		}
 	}
 }

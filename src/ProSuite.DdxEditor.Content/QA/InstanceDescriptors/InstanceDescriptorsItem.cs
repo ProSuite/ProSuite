@@ -37,6 +37,20 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		protected override bool SortChildren => true;
 
+		[NotNull]
+		public InstanceDescriptorItem AddInstanceDescriptorItem()
+		{
+			var instanceDescriptor = CreateDescriptor();
+			var item = new InstanceDescriptorItem(ModelBuilder, instanceDescriptor,
+			                                      ModelBuilder.InstanceDescriptors);
+
+			AddChild(item);
+
+			item.NotifyChanged();
+
+			return item;
+		}
+
 		public void AddInstanceDescriptors(string dllFilePath, IItemNavigation itemNavigation)
 		{
 			// NOTE: This method could profit from a re-unification with TestDescriptorsItem
@@ -100,30 +114,20 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		{
 			base.CollectCommands(commands, applicationController);
 
-			// TODO: Consider automatically detecting the relevant assemblies and load ALL transformers etc.
-			//commands.Add(new ImportTestDescriptorsCommand(
-			//				 this, applicationController,
-			//				 _modelBuilder.DefaultTestDescriptorsXmlFile));
-			//commands.Add(new AddTestDescriptorCommand(this, applicationController));
-			commands.Add(CreateAddFromAssemblyCommand(applicationController));
-			//commands.Add(new CreateReportForAssemblyTestsCommand(this, applicationController));
-			//commands.Add(
-			//	new CreateReportForRegisteredTestsCommand(this, applicationController));
+			commands.Add(new AddInstanceDescriptorCommand<T>(
+				             this, applicationController, DescriptorTypeDisplayName));
+			commands.Add(new AddInstanceDescriptorsFromAssemblyCommand<T>(
+				             this, applicationController, DescriptorTypeDisplayName));
 			commands.Add(new DeleteAllChildItemsCommand(this, applicationController));
 		}
+
+		protected abstract InstanceDescriptor CreateDescriptor();
 
 		protected abstract InstanceDescriptor CreateDescriptor(Type type, int constructor);
 
 		protected override Control CreateControlCore(IItemNavigation itemNavigation)
 		{
 			return CreateTableControl(GetTableRows, itemNavigation);
-		}
-
-		private AddInstanceDescriptorsFromAssemblyCommand<T> CreateAddFromAssemblyCommand(
-			IApplicationController applicationController)
-		{
-			return new AddInstanceDescriptorsFromAssemblyCommand<T>(
-				this, applicationController, DescriptorTypeDisplayName);
 		}
 
 		[NotNull]

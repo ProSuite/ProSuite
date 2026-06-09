@@ -16,6 +16,7 @@ using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {

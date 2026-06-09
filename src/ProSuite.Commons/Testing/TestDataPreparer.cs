@@ -141,13 +141,7 @@ namespace ProSuite.Commons.Testing
 
 			protected static bool TryDeleteDirectory(string path)
 			{
-				if (! Directory.Exists(path))
-				{
-					return false;
-				}
-
-				FileSystemUtils.DeleteDirectory(path, true, true);
-				return true;
+				return FileSystemUtils.TryDeleteDirectory(path, true, true);
 			}
 
 			protected static string GetTargetDirectory([NotNull] string projectName,

@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Persistence.WinForms;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
@@ -207,19 +208,8 @@ namespace ProSuite.DdxEditor.Content.Models
 		[NotNull]
 		private static string Format(double value)
 		{
-			CultureInfo culture = CultureInfo.CurrentCulture;
-			string result = string.Format(culture, "{0:F99}", value).TrimEnd('0');
-
-			if (result.Length == 0)
-			{
-				return result;
-			}
-
-			char lastCharacter = result[result.Length - 1];
-
-			return char.IsPunctuation(lastCharacter)
-				       ? result + "0"
-				       : result;
+			return StringUtils.FormatPreservingDecimalPlaces(
+				value, CultureInfo.CurrentCulture);
 		}
 
 		private void _buttonClose_Click(object sender, EventArgs e)

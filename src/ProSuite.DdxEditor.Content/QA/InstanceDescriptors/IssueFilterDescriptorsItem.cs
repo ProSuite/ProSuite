@@ -42,6 +42,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 			return typeof(IIssueFilter);
 		}
 
+		protected override InstanceDescriptor CreateDescriptor()
+		{
+			return new IssueFilterDescriptor();
+		}
+
 		protected override InstanceDescriptor CreateDescriptor(Type type, int constructor)
 		{
 			InstanceDescriptor result = new IssueFilterDescriptor(

@@ -1,0 +1,6 @@
+@using Radzen.Blazor
+@inherits TestParameterValueBlazorBase<DateTime?>
+
+<Validation ErrorMessage="@ErrorMessage">
+	<RadzenDatePicker TValue="DateTime?" @bind-Value="DateTimeValue" ShowTime="true"/>
+</Validation>

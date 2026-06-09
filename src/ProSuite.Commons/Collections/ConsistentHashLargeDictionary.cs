@@ -39,7 +39,7 @@ namespace ProSuite.Commons.Collections
 			_circle =
 				new C5Lib.TreeDictionary<int, IDictionary<TKey, TValue>>();
 
-		private C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> _firstNode;
+		private KeyValuePair<int, IDictionary<TKey, TValue>> _firstNode;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ConsistentHashLargeDictionary{TKey, TValue}"/> class.
@@ -110,7 +110,7 @@ namespace ProSuite.Commons.Collections
 			return collection?.Count ?? 0;
 		}
 
-		private C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> GetNode(TKey key)
+		private KeyValuePair<int, IDictionary<TKey, TValue>> GetNode(TKey key)
 		{
 			// optimisation for small dictionaries
 
@@ -130,7 +130,7 @@ namespace ProSuite.Commons.Collections
 		/// <param name="hash">key to locate node for</param>
 		/// <returns>node that might hold the key</returns>
 		/// <remarks>This will not create any nodes on the circle.</remarks>
-		private C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> GetNode(int hash)
+		private KeyValuePair<int, IDictionary<TKey, TValue>> GetNode(int hash)
 		{
 			// optimisation for small dictionaries
 			//
@@ -139,7 +139,7 @@ namespace ProSuite.Commons.Collections
 				return _firstNode;
 			}
 
-			C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> node;
+			KeyValuePair<int, IDictionary<TKey, TValue>> node;
 			if (! _circle.TryWeakPredecessor(hash, out node))
 			{
 				// this means something very bad has happened as there should always be a node at the 
@@ -206,7 +206,8 @@ namespace ProSuite.Commons.Collections
 
 				if (node.Key == _minHash)
 				{
-					_firstNode.Value = newDictionary;
+					_firstNode = new KeyValuePair<int, IDictionary<TKey, TValue>>(
+						_firstNode.Key, newDictionary);
 				}
 
 				dictionary = newDictionary;
@@ -268,7 +269,8 @@ namespace ProSuite.Commons.Collections
 
 			if (circleKey == _minHash)
 			{
-				_firstNode.Value = newDictionary;
+				_firstNode = new KeyValuePair<int, IDictionary<TKey, TValue>>(
+					_firstNode.Key, newDictionary);
 			}
 		}
 
@@ -276,10 +278,10 @@ namespace ProSuite.Commons.Collections
 		/// Splits the dictionary at the given node.
 		/// </summary>
 		/// <returns>Dictionary at the new node</returns>
-		private C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> SplitNode(
-			C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> node)
+		private KeyValuePair<int, IDictionary<TKey, TValue>> SplitNode(
+			KeyValuePair<int, IDictionary<TKey, TValue>> node)
 		{
-			C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> nextNode;
+			KeyValuePair<int, IDictionary<TKey, TValue>> nextNode;
 			var nextHash = _circle.TrySuccessor(node.Key, out nextNode)
 				               ? nextNode.Key
 				               : _maxHash;
@@ -329,7 +331,7 @@ namespace ProSuite.Commons.Collections
 				dictionaryForMidNode = emptyDictionary;
 			}
 
-			return new C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>>(midHash,
+			return new KeyValuePair<int, IDictionary<TKey, TValue>>(midHash,
 				dictionaryForMidNode);
 		}
 

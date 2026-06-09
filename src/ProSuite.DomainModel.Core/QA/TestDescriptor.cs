@@ -191,11 +191,6 @@ namespace ProSuite.DomainModel.Core.QA
 			return null;
 		}
 
-		public override string ToString()
-		{
-			return $"Test Descriptor '{Name}'";
-		}
-
 		#region Equality members
 
 		public override bool Equals(InstanceDescriptor other)

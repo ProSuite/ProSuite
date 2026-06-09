@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Tests
+namespace ProSuite.QA.Tests.ParameterTypes
 {
 	public class OffsetSpecification
 	{

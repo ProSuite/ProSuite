@@ -434,6 +434,11 @@ namespace ProSuite.QA.Tests
 						continue;
 					}
 
+					// make sure covering geometry is in the same spatial reference and tolerance
+					// as the uncovered geometry, Clip/Union sometimes fail to return correct results
+					GeometryUtils.EnsureSpatialReference(coveringGeometry,
+					                                     uncoveredGeometry.SpatialReference);
+
 					uncoveredGeometry = GetRemainingUnCoveredGeometry(
 						uncoveredGeometry, coveringGeometry, geometriesToSubtract);
 
@@ -453,15 +458,17 @@ namespace ProSuite.QA.Tests
 					//       Or better, keep the union to improve the probability that the test
 					//       features are contained? Clipping features before union is probably the best trade-off.
 
-					IEnvelope clipEnvelope = uncoveredGeometry.Envelope;
-					double xyTolerance = _coveringClassSpatialReferenceXyTolerances[coveringClassIndex];
-					double extraTolerance =  2 * Math.Sqrt(2) * xyTolerance;
-					clipEnvelope.Expand(extraTolerance, extraTolerance, asRatio : false);
-
-					IGeometry geometryToSubtract =
-						geometriesToSubtract.Count == 1
-							? geometriesToSubtract[0]
-							: UnionPolygons(geometriesToSubtract, clipEnvelope);
+					IGeometry geometryToSubtract;
+					if (geometriesToSubtract.Count == 1)
+					{
+						geometryToSubtract = geometriesToSubtract[0];
+					}
+					else
+					{
+						geometryToSubtract = UnionPolygons(
+							geometriesToSubtract, uncoveredGeometry.Envelope,
+							_coveringClassSpatialReferenceXyTolerances[coveringClassIndex]);
+					}
 
 					uncoveredGeometry = GetRemainingUnCoveredGeometry(
 						uncoveredGeometry, geometryToSubtract, null);
@@ -484,13 +491,17 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static IGeometry UnionPolygons(List<IGeometry> geometriesToSubtract,
-		                                       IEnvelope inEnvelope)
+		                                       IEnvelope inEnvelope, double xyTolerance)
 		{
-			List<IPolygon> clippedPolygons =
-				geometriesToSubtract.Select(
-					g => GeometryUtils.GetClippedPolygon((IPolygon) g, inEnvelope)).ToList();
+			double extraTolerance = 2 * Math.Sqrt(2) * xyTolerance;
+			inEnvelope.Expand(extraTolerance, extraTolerance, asRatio: false);
 
-			return GeometryUtils.Union(clippedPolygons);
+			List<IPolygon> clippedPolygons =
+				geometriesToSubtract
+					.Select(g => GeometryUtils.GetClippedPolygon((IPolygon) g, inEnvelope))
+					.ToList();
+
+			return GeometryUtils.UnionGeometries(clippedPolygons);
 		}
 
 		private bool IsCoveredClassIndex(int tableIndex)
@@ -909,7 +920,7 @@ namespace ProSuite.QA.Tests
 				// the covering shape type is (at least) 2-dimensional
 				// -> try cheaper methods to determine if the covered feature is contained
 				geometry.QueryEnvelope(_envelopeTemplate);
-				
+
 				var coveringRelOp = (IRelationalOperator) coveringGeometry;
 
 				// uses xy tolerance of COVERING
@@ -1053,9 +1064,8 @@ namespace ProSuite.QA.Tests
 				double evictableXMax = xMax + tolerance;
 				double evictableYMax = yMax + tolerance;
 
-				_msg.VerboseDebug(
-					() =>
-						$"Removing cache entries for (xMax <= {evictableXMax} && yMax <= {evictableYMax}) for covering class index {coveringClassIndex}");
+				_msg.VerboseDebug(() =>
+					                  $"Removing cache entries for (xMax <= {evictableXMax} && yMax <= {evictableYMax}) for covering class index {coveringClassIndex}");
 
 				// remove all entries that are fully to the left/bottom of the tile upper/right boundary 
 				// (plus the tolerance, since the tolerance is guaranteed to be applied for searching 
@@ -1967,9 +1977,8 @@ namespace ProSuite.QA.Tests
 
 				if (_pointCount > _maximumPointCount)
 				{
-					_msg.VerboseDebug(
-						() =>
-							$"Maximum point count exceeded: {_pointCount} > {_maximumPointCount}");
+					_msg.VerboseDebug(() =>
+						                  $"Maximum point count exceeded: {_pointCount} > {_maximumPointCount}");
 
 					foreach (int oid in GetSmallestEntries(_pointCount - _maximumPointCount))
 					{

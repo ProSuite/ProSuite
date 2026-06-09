@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.ParameterTypes;
 
 namespace ProSuite.QA.Tests
 {
