@@ -710,6 +710,13 @@ namespace ProSuite.Commons.Geom
 						// Do not continue, most likely the next result will be even more time-consuming.
 						throw new AssertionException("Unexpectedly long processing time");
 					}
+
+					// Split any exterior boundary loop (a ring that self-touches at a point) in
+					// the accumulated result into two simple rings before the next union step.
+					// A self-touching source is non-simple and derails the turning-left walk
+					// ("Intersections seen twice", e.g. OID_3925818) when the next ring grazes
+					// the touch point. Mirrors the same call in the difference path.
+					ExplodeExteriorBoundaryLoops(result, tolerance);
 				}
 			}
 
