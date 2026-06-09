@@ -65,7 +65,8 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
 	{
-		return geometryType == GeometryType.Polygon;
+		return geometryType == GeometryType.Polygon ||
+		       geometryType == GeometryType.Multipatch;
 	}
 
 	protected override void LogUsingCurrentSelection()
@@ -181,6 +182,13 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
 			                          ? _cutAlongToolOptions.MinimalTolerance
 			                          : null;
+
+		// Log geometry types of selected features
+		foreach (Feature feature in selectedFeatures)
+		{
+			GeometryType geometryType = feature.GetShape().GeometryType;
+			_msg.Debug($"Selected source feature geometry type: {geometryType}");
+		}
 
 		ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
 			selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, customTolerance,
