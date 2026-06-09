@@ -25,12 +25,11 @@ namespace ProSuite.Processing
 
 		public IReadOnlyList<CartoProcessDefinition> ProcessDefinitions => _list;
 
+		public Uri Uri { get; private set; }
+
 		public void Clear()
 		{
-			lock (_syncLock)
-			{
-				_definitions.Clear();
-			}
+			Replace(null);
 		}
 
 		// TODO Consider overloads to load repo from DDX, from .aprx, from ...
@@ -40,6 +39,7 @@ namespace ProSuite.Processing
 			using (var reader = File.OpenText(xmlFilePath))
 			{
 				Load(reader, knownTypes);
+				Uri = new Uri(xmlFilePath);
 			}
 		}
 
@@ -50,7 +50,8 @@ namespace ProSuite.Processing
 
 			try
 			{
-				Reload(root, knownTypes);
+				Replace(Load(root, knownTypes));
+				Uri = null;
 			}
 			catch (FormatException ex)
 			{
@@ -59,8 +60,18 @@ namespace ProSuite.Processing
 			}
 		}
 
-		public void Save(string xmlFilePath)
+		public void Save(string xmlFilePath = null)
 		{
+			if (xmlFilePath is null && Uri is { IsFile: true })
+			{
+				xmlFilePath = Uri.LocalPath;
+			}
+
+			if (xmlFilePath is null)
+			{
+				throw new InvalidOperationException("No previous file path found and no file path given as argument");
+			}
+
 			using (var stream = File.Create(xmlFilePath))
 			using (var writer = new StreamWriter(stream))
 			{
@@ -70,6 +81,7 @@ namespace ProSuite.Processing
 
 		public void Save(TextWriter writer)
 		{
+
 			var doc = ToXml();
 
 			doc.Save(writer);
@@ -114,6 +126,21 @@ namespace ProSuite.Processing
 			}
 		}
 
+		#region Private utils
+
+		private void Replace([CanBeNull] IEnumerable<CartoProcessDefinition> definitions)
+		{
+			lock (_syncLock)
+			{
+				_definitions.Clear();
+
+				if (definitions is not null)
+				{
+					_definitions.AddRange(definitions);
+				}
+			}
+		}
+
 		private static int FindIndex(IList<CartoProcessDefinition> list, string name)
 		{
 			for (int i = 0; i < list.Count; i++)
@@ -137,10 +164,12 @@ namespace ProSuite.Processing
 			return -1;
 		}
 
-		private void Reload(XElement root, IReadOnlyList<Type> knownTypes)
+		private static IEnumerable<CartoProcessDefinition> Load(XElement root, IReadOnlyList<Type> knownTypes)
 		{
-			root = root ?? throw new ArgumentNullException(nameof(root));
-			knownTypes = knownTypes ?? Array.Empty<Type>();
+			if (root is null)
+				throw new ArgumentNullException(nameof(root));
+
+			knownTypes ??= Array.Empty<Type>();
 
 			var declaredTypes = root.Element("Types")?.Elements("ProcessType").ToList();
 
@@ -152,11 +181,9 @@ namespace ProSuite.Processing
 			                    .Select(e => CreateProcessItem(e, declaredTypes, knownTypes))
 			                    .ToArray() ?? Array.Empty<CartoProcessDefinition>();
 
-			lock (_syncLock)
-			{
-				_definitions.Clear();
-				_definitions.AddRange(groups.Concat(processes));
-			}
+			var definitions = groups.Concat(processes);
+
+			return definitions;
 		}
 
 		private XDocument ToXml()
@@ -346,6 +373,8 @@ namespace ProSuite.Processing
 			var name = (string) declaredType.Attribute("name");
 			return string.Equals(name, aliasName, StringComparison.OrdinalIgnoreCase);
 		}
+
+		#endregion
 	}
 
 	public class CartoProcessDefinition : ITagged
