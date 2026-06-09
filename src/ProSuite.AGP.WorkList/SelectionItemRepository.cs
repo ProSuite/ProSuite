@@ -14,7 +14,7 @@ public class SelectionItemRepository : GdbItemRepository
 	                               IWorkItemStateRepository stateRepository) : base(
 		sourceClasses, stateRepository) { }
 
-	protected override Table OpenTable(ISourceClass sourceClass)
+	public override Table OpenTable(ISourceClass sourceClass)
 	{
 		Table table = null;
 		try

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts;
@@ -5,20 +6,14 @@ namespace ProSuite.AGP.WorkList.Contracts;
 // todo (daro): rename to DatabaseSourceClassSchema
 public class DbSourceClassSchema : SourceClassSchema
 {
-	public DbSourceClassSchema(string oidField, string shapeField,
-	                           [NotNull] string statusField, int statusFieldIndex,
+	public DbSourceClassSchema([NotNull] string statusField,
 	                           [NotNull] object todoValue, [NotNull] object doneValue,
-	                           params string[] additionalSubFields) : base(
-		oidField, shapeField)
+	                           [NotNull] Dictionary<string, int> subFields) : base(subFields)
 	{
-		StatusFieldIndex = statusFieldIndex;
 		StatusField = statusField;
 		TodoValue = todoValue;
 		DoneValue = doneValue;
-		AdditionalSubFields = additionalSubFields;
 	}
-
-	public int StatusFieldIndex { get; }
 
 	[NotNull]
 	public string StatusField { get; }
@@ -28,6 +23,4 @@ public class DbSourceClassSchema : SourceClassSchema
 
 	[NotNull]
 	public object DoneValue { get; }
-
-	public string[] AdditionalSubFields { get; }
 }

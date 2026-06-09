@@ -12,7 +12,7 @@ public class SelectionSourceClass : SourceClass
 	public SelectionSourceClass(GdbTableIdentity tableIdentity,
 	                            SourceClassSchema schema,
 	                            List<long> oids)
-		: base(tableIdentity, schema)
+		: base(tableIdentity)
 	{
 		Oids = oids;
 	}
@@ -24,12 +24,6 @@ public class SelectionSourceClass : SourceClass
 		// - tables from different geodatabases
 
 		return WorkListUtils.GetUniqueTableIdAcrossWorkspaces(TableIdentity);
-	}
-
-	public override bool Contains(Row row)
-	{
-		//return Oids.Contains(row.GetObjectID());
-		return true;
 	}
 
 	protected override void EnsureValidFilterCore(ref QueryFilter filter,

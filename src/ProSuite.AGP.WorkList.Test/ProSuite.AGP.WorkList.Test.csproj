@@ -49,6 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\ProSuite.Shared\src\ProSuite.Shared.AGP.WorkLists\ProSuite.Shared.AGP.WorkLists.csproj" />
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj" />
     <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core.Test\ProSuite.Commons.AGP.Core.Test.csproj" />
@@ -66,5 +67,11 @@
 
   <ItemGroup>
     <Compile Remove="IssuePolygonsGdbRepository.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="k2.logging.test.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

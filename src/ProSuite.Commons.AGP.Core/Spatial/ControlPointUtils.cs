@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Spatial;
 
@@ -451,6 +452,92 @@ public static class ControlPointUtils
 		return builder.ToGeometry();
 	}
 
+	/// <summary>
+	/// Get the ID of the vertex at <paramref name="vertexIndex"/>
+	/// of <paramref name="curve"/>.
+	/// </summary>
+	/// <remarks>
+	/// The <paramref name="vertexIndex"/> is global, that is,
+	/// counting across part boundaries in case of a multipart curve.
+	/// </remarks>
+	public static int GetControlPoint([NotNull] Multipart curve, int vertexIndex)
+	{
+		Assert.ArgumentNotNull(curve, nameof(curve));
+
+		var vertices = curve.Points;
+		return vertices[vertexIndex].ID;
+	}
+
+	/// <summary>
+	/// Get the ID of the vertex at <paramref name="vertexIndex"/>
+	/// and <paramref name="partIndex"/> of <paramref name="curve"/>.
+	/// </summary>
+	/// <remarks>
+	/// The <paramref name="vertexIndex"/> is local to the part
+	/// at <paramref name="partIndex"/>.
+	/// </remarks>
+	public static int GetControlPoint([NotNull] Multipart curve, int partIndex,
+	                                  int vertexIndex)
+	{
+		Assert.ArgumentNotNull(curve, nameof(curve));
+
+		var part = curve.Parts[partIndex];
+		if (vertexIndex == part.Count)
+		{
+			return part[vertexIndex - 1].EndPoint.ID;
+		}
+
+		return part[vertexIndex].StartPoint.ID;
+	}
+
+	/// <summary>
+	/// Make the vertex at <paramref name="vertexIndex"/> of the part
+	/// at <paramref name="partIndex"/> of <paramref name="multipart"/>
+	/// a control point by setting its ID to <paramref name="value"/>.
+	/// </summary>
+	/// <remarks>
+	/// The <paramref name="vertexIndex"/> is local to the part
+	/// at <paramref name="partIndex"/>.
+	/// <para/>
+	/// Preserves non-linear segments.
+	/// </remarks>
+	public static Geometry SetControlPoint(Multipart multipart, int partIndex, int vertexIndex,
+	                                       int value)
+	{
+		MultipartBuilderEx builder;
+		if (multipart is Polyline polyline)
+		{
+			builder = new PolylineBuilderEx(polyline);
+		}
+		else if (multipart is Polygon polygon)
+		{
+			builder = new PolygonBuilderEx(polygon);
+		}
+		else
+		{
+			throw new NotImplementedException(
+				$"Not implemented for geometry type {multipart.GeometryType.ToString()}");
+		}
+
+		SetControlPoint(builder, partIndex, vertexIndex, value);
+		return builder.ToGeometry();
+	}
+
+	public static void SetControlPoint(MultipartBuilderEx builder, int partIndex, int vertexIndex,
+	                                   int value)
+	{
+		Assert.ArgumentNotNull(builder, nameof(builder));
+
+		var point = builder.GetPoint(partIndex, vertexIndex);
+		point = SetPointID(point, value);
+		builder.SetPoint(partIndex, vertexIndex, point);
+
+		if (value != NoID)
+		{
+			builder.HasID = true;
+		}
+	}
+
 	public static int CountControlPoints(Geometry shape) // TODO Move to ControlPointUtils
 	{
 		if (shape is null)
@@ -465,7 +552,7 @@ public static class ControlPointUtils
 
 		if (shape is Multipoint multipoint)
 		{
-			if (!multipoint.HasID) return 0; // performance
+			if (! multipoint.HasID) return 0; // performance
 			var points = multipoint.Points;
 			if (points is null) return 0; // paranoia
 			int count = points.Count(mp => mp.ID != 0);
@@ -474,7 +561,7 @@ public static class ControlPointUtils
 
 		if (shape is Multipart multipart)
 		{
-			if (!multipart.HasID) return 0; // performance
+			if (! multipart.HasID) return 0; // performance
 			var points = multipart.Points;
 			if (points is null) return 0; // paranoia
 			int count = points.Count(mp => mp.ID != 0);
@@ -548,13 +635,16 @@ public static class ControlPointUtils
 	/// See <see cref="ResetControlPoints(Geometry,int,int,Polygon)"/>
 	/// </summary>
 	public static Polygon ResetControlPoints(
-		Polygon shape, int partIndex = -1, int value = -1, Polygon perimeter = null)
+		Polygon shape, out int pointsResetCount, int partIndex = -1, int value = -1,
+		Polygon perimeter = null)
 	{
+		pointsResetCount = 0;
+
 		if (shape is null) return null;
 		if (! shape.HasID) return shape;
 
 		var builder = new PolygonBuilderEx(shape);
-		ResetControlPoints(builder, partIndex, value, perimeter);
+		pointsResetCount = ResetControlPoints(builder, partIndex, value, perimeter);
 		return builder.ToGeometry();
 	}
 
@@ -562,13 +652,16 @@ public static class ControlPointUtils
 	/// See <see cref="ResetControlPoints(Geometry,int,int,Polygon)"/>
 	/// </summary>
 	public static Polyline ResetControlPoints(
-		Polyline shape, int partIndex = -1, int value = -1, Polygon perimeter = null)
+		Polyline shape, out int pointsResetCount, int partIndex = -1, int value = -1,
+		Polygon perimeter = null)
 	{
+		pointsResetCount = 0;
+
 		if (shape is null) return null;
 		if (! shape.HasID) return shape;
 
 		var builder = new PolylineBuilderEx(shape);
-		ResetControlPoints(builder, partIndex, value, perimeter);
+		pointsResetCount = ResetControlPoints(builder, partIndex, value, perimeter);
 		return builder.ToGeometry();
 	}
 
