@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
@@ -165,6 +166,35 @@ public static class GeometryFactory
 		return builder.ToGeometry();
 	}
 
+	/// <summary>
+	/// Creates a (simple!) polygon from the specified multipatch geometry
+	/// </summary>
+	/// <param name="multipatch"></param>
+	/// <param name="spatialReference"></param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polygon CreatePolygon([NotNull] Multipatch multipatch,
+	                                    [CanBeNull] SpatialReference spatialReference)
+
+	{
+		Assert.ArgumentNotNull(multipatch, nameof(multipatch));
+
+		var boundary = (Polyline) GeometryEngine.Instance.Boundary(multipatch);
+
+		if (spatialReference == null)
+		{
+			spatialReference = multipatch.SpatialReference;
+		}
+
+		Polygon footprint =
+			PolygonBuilderEx.CreatePolygon(boundary, spatialReference);
+
+		const bool allowReorder = true;
+		footprint = GeometryUtils.Simplify(footprint, allowReorder);
+
+		return footprint;
+	}
+
 	public static Polygon CreatePolygon(Envelope envelope, SpatialReference sref = null)
 	{
 		if (envelope == null) return null;
@@ -201,6 +231,25 @@ public static class GeometryFactory
 		yield return new Coordinate2D(envelope.XMax, envelope.YMax);
 		yield return new Coordinate2D(envelope.XMax, envelope.YMin);
 		yield return new Coordinate2D(envelope.XMin, envelope.YMin);
+	}
+
+	public static Multipoint CreateMultipoint(IEnumerable<MapPoint> points)
+	{
+		return MultipointBuilderEx.CreateMultipoint(points);
+	}
+
+	public static Multipoint CreateEmptyMultipoint(Geometry geometry)
+	{
+		return new MultipointBuilderEx().Configure(geometry).ToGeometry();
+	}
+
+	public static Polyline CreatePath(MapPoint sourcePoint, MapPoint toTargetPoint)
+	{
+		PolylineBuilderEx result = new PolylineBuilderEx();
+		SegmentBuilderEx segmentBuilder =
+			new LineBuilderEx(sourcePoint, toTargetPoint, sourcePoint.SpatialReference);
+		result.AddSegment(segmentBuilder, false);
+		return result.ToGeometry();
 	}
 
 	/// <summary>
@@ -261,6 +310,273 @@ public static class GeometryFactory
 		}
 
 		return builder.ToGeometry();
+	}
+
+	/// <summary>
+	/// Creates a polyline.
+	/// </summary>
+	/// <param name="baseGeometry">The base geometry.</param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline([CanBeNull] Geometry baseGeometry)
+	{
+		SpatialReference spatialReference = baseGeometry?.SpatialReference;
+
+		return CreatePolyline(baseGeometry, spatialReference);
+	}
+
+	/// <summary>
+	/// Creates a polyline.
+	/// </summary>
+	/// <param name="spatialReference">The spatial reference.</param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline(
+		[CanBeNull] SpatialReference spatialReference)
+	{
+		return CreatePolyline((Geometry) null, spatialReference);
+	}
+
+	/// <summary>
+	/// Creates a polyline from a polygon.
+	/// </summary>
+	/// <param name="fromPolygon"></param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline([NotNull] Polygon fromPolygon)
+	{
+		return CreatePolyline(fromPolygon, fromPolygon.SpatialReference,
+		                      null, null);
+	}
+
+	/// <summary>
+	/// Creates a polyline from a polygon. Make sure the input polygon is simple.
+	/// </summary>
+	/// <param name="fromPolygon"></param>
+	/// <param name="spatialReference"></param>
+	/// <param name="makeZAware"></param>
+	/// <param name="makeMAware"></param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline(
+		[NotNull] Polygon fromPolygon,
+		[CanBeNull] SpatialReference spatialReference,
+		[CanBeNull] bool? makeZAware,
+		[CanBeNull] bool? makeMAware)
+	{
+		Assert.ArgumentNotNull(fromPolygon, nameof(fromPolygon));
+
+		// TODO: test with non-simple geometries! Catch block with simple test?
+		Polyline boundary = (Polyline) GeometryEngine.Instance.Boundary(fromPolygon);
+
+		GeometryUtils.Simplify(boundary);
+
+		boundary = GeometryUtils.EnsureSpatialReference(boundary, spatialReference);
+
+		boundary = (Polyline) EnsureZM(boundary, fromPolygon, makeZAware, makeMAware);
+
+		return boundary;
+	}
+
+	/// <summary>
+	/// Creates a polyline from a polyline applying the specified spatial reference
+	/// and Z/M attributes.
+	/// </summary>
+	/// <param name="fromPolyline"></param>
+	/// <param name="spatialReference"></param>
+	/// <param name="makeZAware"></param>
+	/// <param name="makeMAware"></param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline(
+		[NotNull] Polyline fromPolyline,
+		[CanBeNull] SpatialReference spatialReference,
+		[CanBeNull] bool? makeZAware,
+		[CanBeNull] bool? makeMAware)
+	{
+		Polyline clonedPolyline = Clone(fromPolyline);
+
+		clonedPolyline = GeometryUtils.EnsureSpatialReference(clonedPolyline, spatialReference);
+
+		clonedPolyline = (Polyline) EnsureZM(clonedPolyline, fromPolyline, makeZAware, makeMAware);
+
+		return clonedPolyline;
+	}
+
+	/// <summary>
+	/// Creates an empty polyline geometry.
+	/// </summary>
+	/// <param name="spatialReference"></param>
+	/// <param name="makeZAware"></param>
+	/// <param name="makeMAware"></param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline(
+		[CanBeNull] SpatialReference spatialReference,
+		[CanBeNull] bool? makeZAware,
+		[CanBeNull] bool? makeMAware)
+	{
+		PolylineBuilderEx polylineBuilder = new PolylineBuilderEx(spatialReference);
+		polylineBuilder.HasZ = makeZAware ?? false;
+		polylineBuilder.HasM = makeMAware ?? false;
+
+		return polylineBuilder.ToGeometry();
+	}
+
+	/// <summary>
+	/// Creates a polyline.
+	/// </summary>
+	/// <param name="baseGeometry">The base geometry.</param>
+	/// <param name="spatialReference">The spatial ref.</param>
+	/// <param name="makeZAware">The make Z aware.</param>
+	/// <param name="makeMAware">The make M aware.</param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline([CanBeNull] Geometry baseGeometry,
+	                                      [CanBeNull] SpatialReference spatialReference,
+	                                      [CanBeNull] bool? makeZAware = null,
+	                                      [CanBeNull] bool? makeMAware = null)
+	{
+		if (baseGeometry is Polygon polygon)
+		{
+			// TODO: respect spatial ref and ZM-awareness
+			return CreatePolyline(polygon);
+		}
+
+		if (baseGeometry is Polyline polyline)
+		{
+			return CreatePolyline(polyline,
+			                      spatialReference, makeZAware, makeMAware);
+		}
+
+		if (baseGeometry is Multipart segment)
+		{
+			ICollection<Segment> allSegments = new List<Segment>();
+			segment.GetAllSegments(ref allSegments);
+
+			if (allSegments.Count > 0)
+			{
+				return CreatePolyline(allSegments, spatialReference, makeZAware, makeMAware, false);
+			}
+
+			throw new ArgumentException(
+				@"Geometry is not valid to create polyline.", nameof(baseGeometry));
+		}
+
+		if (baseGeometry != null)
+		{
+			throw new NotImplementedException(
+				@"not all geometry types to create polyline implemented: " + nameof(baseGeometry));
+		}
+
+		return CreatePolyline(spatialReference, makeZAware, makeMAware);
+	}
+
+	/// <summary>
+	/// Creates a polyline.
+	/// </summary>
+	/// <param name="segmentCollection"></param>
+	/// <param name="spatialReference"></param>
+	/// <param name="makeZAware"></param>
+	/// <param name="makeMAware"></param>
+	/// <param name="doNotCloneInput"></param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline(
+		[NotNull] ICollection<Segment> segmentCollection,
+		[CanBeNull] SpatialReference spatialReference,
+		bool? makeZAware, bool? makeMAware,
+		bool doNotCloneInput)
+	{
+		Polyline polyline =
+			PolylineBuilderEx.CreatePolyline(segmentCollection, spatialReference);
+
+		polyline = (Polyline) EnsureZM(polyline, polyline, makeZAware, makeMAware);
+
+		return polyline;
+	}
+
+	/// <summary>
+	/// Creates a polyline from a collection of paths or rings.
+	/// </summary>
+	/// <param name="pathCollection"></param>
+	/// <param name="spatialReference"></param>
+	/// <param name="makeZAware"></param>
+	/// <param name="makeMAware"></param>
+	/// <returns></returns>
+	[NotNull]
+	public static Polyline CreatePolyline(
+		[NotNull] ICollection<Polyline> pathCollection,
+		[CanBeNull] SpatialReference spatialReference = null,
+		[CanBeNull] bool? makeZAware = null,
+		[CanBeNull] bool? makeMAware = null)
+	{
+		Assert.ArgumentNotNull(pathCollection, nameof(pathCollection));
+		Assert.ArgumentCondition(pathCollection.Count > 0,
+		                         "pathCollection must contain at least 1 element");
+
+		Polyline result = null;
+		PolylineBuilderEx polylineBuilder = null;
+
+		object missing = Type.Missing;
+
+		foreach (Polyline path in pathCollection)
+		{
+			if (spatialReference == null)
+			{
+				spatialReference = path.SpatialReference;
+			}
+
+			if (makeZAware == null)
+			{
+				makeZAware = path.HasZ;
+			}
+
+			if (makeMAware == null)
+			{
+				makeMAware = path.HasM;
+			}
+
+			Assert.True(path.GeometryType == GeometryType.Polygon, "path is Polygon");
+			Polyline pathToAdd = path;
+
+			if (polylineBuilder == null)
+			{
+				result = CreatePolyline(pathToAdd, spatialReference, makeZAware, makeMAware);
+				polylineBuilder = result.ToBuilder();
+			}
+			else
+			{
+				polylineBuilder.AddSegments(pathToAdd.Parts[0]);
+			}
+		}
+
+		result = polylineBuilder.ToGeometry();
+
+		return Assert.NotNull(result);
+	}
+
+	[NotNull]
+	public static Polyline CreatePolyline(double x1, double y1,
+	                                      double x2, double y2)
+	{
+		var coord1 = new Coordinate2D(x1, y1);
+		var coord2 = new Coordinate2D(x2, y2);
+
+		var polyline = PolylineBuilderEx.CreatePolyline(new List<Coordinate2D> { coord1, coord2 });
+		return GeometryUtils.Simplify(polyline);
+	}
+
+	private static Geometry EnsureZM([NotNull] Geometry newGeometry,
+	                                 [NotNull] Geometry baseGeometry,
+	                                 bool? makeZAware,
+	                                 bool? makeMAware)
+	{
+		GeometryBuilderEx geometryBuilder = newGeometry.ToBuilder();
+		geometryBuilder.HasZ = makeZAware ?? baseGeometry.HasZ;
+		geometryBuilder.HasM = makeMAware ?? baseGeometry.HasM;
+
+		return geometryBuilder.ToGeometry();
 	}
 
 	/// <summary>

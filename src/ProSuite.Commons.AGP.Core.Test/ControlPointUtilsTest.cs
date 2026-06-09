@@ -1,10 +1,11 @@
-using System;
+using ArcGIS.Core.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Hosting;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AGP.Core.Spatial;
 
 namespace ProSuite.Commons.AGP.Core.Test;
 
@@ -199,22 +200,51 @@ public class ControlPointUtilsTest
 	}
 
 	[Test]
+	public void CanGetAndSetControlPoint()
+	{
+		Polygon polygon = CreateMultipartPolygon();
+
+		// CP at vertex#1 on part#0: initially zero
+		Assert.AreEqual(0, ControlPointUtils.GetControlPoint(polygon, 0, 1));
+		polygon = (Polygon)ControlPointUtils.SetControlPoint(polygon, 0, 1, 1);
+		Assert.AreEqual(1, ControlPointUtils.GetControlPoint(polygon, 0, 1));
+
+		// Set CP at FromPoint of part#0:
+		polygon = (Polygon)ControlPointUtils.SetControlPoint(polygon, 0, 0, 2);
+		Assert.AreEqual(2, ControlPointUtils.GetControlPoint(polygon, 0, 0));
+		// Setting FromPoint also sets ToPoint on a closed geometry:
+		Assert.AreEqual(2, ControlPointUtils.GetControlPoint(polygon, 0, 4));
+
+		// Set CP at ToPoint of part#1:
+		polygon = (Polygon)ControlPointUtils.SetControlPoint(polygon, 1, 4, 3);
+		Assert.AreEqual(3, ControlPointUtils.GetControlPoint(polygon, 1, 4));
+		// Setting ToPoint also sets FromPoint on a closed geometry:
+		Assert.AreEqual(3, ControlPointUtils.GetControlPoint(polygon, 1, 0));
+
+		// We have now 3 CPs, two on part#0 and one on part#1:
+		polygon = ControlPointUtils.ResetControlPoints(polygon, out int reset, 1);
+		Assert.AreEqual(1, reset);
+		ControlPointUtils.ResetControlPoints(polygon, out reset); // all values
+		Assert.AreEqual(2, reset);
+	}
+
+	[Test]
 	public void CanResetControlPoints()
 	{
 		var polygon = PolygonBuilderEx.CreatePolygon(
 			new[] { Pt(0, 0, 1), Pt(0, 3, 2), Pt(5, 5), Pt(5, 0, 1), Pt(0, 0, 1) });
 
-		var p1 = ControlPointUtils.ResetControlPoints(polygon);
+		var p1 = ControlPointUtils.ResetControlPoints(polygon, out _);
 		Assert.NotNull(p1);
 		//Assert.AreEqual(3, c1); // first/last point count as one for this change
 		Assert.IsTrue(p1.Points.All(p => p.ID == 0));
 
-		var p2 = ControlPointUtils.ResetControlPoints(polygon, -1, 2);
+		var p2 = ControlPointUtils.ResetControlPoints(polygon, out _, -1, 2);
 		Assert.NotNull(p2);
 		Assert.AreEqual(2, p2.Points.Count(p => p.ID == 0));
 		Assert.AreEqual(3, p2.Points.Count(p => p.ID == 1));
 
-		var p3 = ControlPointUtils.ResetControlPoints(polygon, -1, 1);
+		var p3 = ControlPointUtils.ResetControlPoints(polygon, out _, -1, 1);
 		Assert.NotNull(p3);
 		//Assert.AreEqual(2, c3); // first/last point count as one for this change
 		Assert.AreEqual(4, p3.Points.Count(p => p.ID == 0));
@@ -222,7 +252,7 @@ public class ControlPointUtilsTest
 
 		var polyline = PolylineBuilderEx.CreatePolyline(polygon);
 
-		var p4 = ControlPointUtils.ResetControlPoints(polyline, -1, 1);
+		var p4 = ControlPointUtils.ResetControlPoints(polyline, out _, -1, 1);
 		Assert.NotNull(p4);
 		//Assert.AreEqual(3, c4); // now first/last count as two because path (not ring)
 		Assert.AreEqual(4, p4.Points.Count(p => p.ID == 0));
@@ -306,6 +336,64 @@ public class ControlPointUtilsTest
 	}
 
 	#region Test utils
+
+	/// <summary>
+	/// Create a two-part polygon according to the sketch below.
+	/// Each ring consists of four segments; segment AB is linear,
+	/// segment BC is a clockwise half-circle around center M,
+	/// segment CD is a bezier curve with control points P and Q,
+	/// and segment DA is the result of ring.Close().
+	/// <code>
+	/// 20 B----M----C
+	/// 15 |  b-m-c  |
+	/// 10 |  |   |  |P
+	///  5 |  a---d Q|
+	///  0 A---------D
+	///    0   10   20
+	/// </code>
+	/// </summary>
+	/// <remarks>
+	/// Exterior rings are clockwise; interior rings are counterclockwise.
+	/// </remarks>
+	private static Polygon CreateMultipartPolygon()
+	{
+		var A = Pt(0, 0);
+		var B = Pt(0, 20);
+		var C = Pt(20, 20);
+		var D = Pt(20, 0);
+		var M = Pt(10, 20);
+		var P = Pt(25, 10);
+		var Q = Pt(15, 5);
+
+		// Build segments for part 0 (exterior ring):
+		var AB = LineBuilderEx.CreateLineSegment(A, B);
+		var BC = EllipticArcBuilderEx.CreateCircularArc(
+			B, C, M.Coordinate2D, ArcOrientation.ArcClockwise);
+		var CD = CubicBezierBuilderEx.CreateCubicBezierSegment(C, P, Q, D);
+		var DA = LineBuilderEx.CreateLineSegment(D, A); // explicit "Close()"
+
+		var part0 = new List<Segment> { AB, BC, CD, DA };
+
+		// Derive part 1 as a scaled/moved/orientation-reversed clone of part 0.
+		// Geometries are immutable in AGP, so we transform via GeometryUtils:
+		var polygon0 = PolygonBuilderEx.CreatePolygon(part0);
+		var polygon1 = GeometryUtils.Scale(polygon0, A, 0.5, 0.5);
+		polygon1 = GeometryUtils.Move(polygon1, 5, 5);
+		polygon1 = GeometryUtils.ReverseOrientation(polygon1);
+
+		Assert.AreEqual(5, polygon1.Points[0].X);
+		Assert.AreEqual(5, polygon1.Points[0].Y);
+
+		// Compose the multipart polygon from both rings:
+		var builder = new PolygonBuilderEx();
+		builder.AddPart(part0);
+		builder.AddPart(polygon1.Parts[0]);
+		var polygon = builder.ToGeometry();
+
+		Assert.AreEqual(2, polygon.PartCount);
+
+		return polygon;
+	}
 
 	private static MapPoint Pt(double x, double y)
 	{
