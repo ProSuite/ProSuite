@@ -392,6 +392,41 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 			}
 		}
 
+		[Test]
+		public void CanCutMultiPatchWithClosedCutLine()
+		{
+			ISpatialReference lv95 = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95);
+
+			// Create a MultiPatch (ring-based)
+			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(
+				GeometryFactory.CreatePolygon(2600000, 1200000, 500, 100, lv95));
+
+			// Create a closed cut line (e.g., "bites its tail")
+			IPolyline closedCutLine = GeometryFactory.CreateLine(
+				GeometryFactory.CreatePoint(2600000 - 30, 1200000 - 30),
+				GeometryFactory.CreatePoint(2600000 - 30, 1200000 + 30),
+				GeometryFactory.CreatePoint(2600000 + 30, 1200000 + 30),
+				GeometryFactory.CreatePoint(2600000 + 30, 1200000 - 30),
+				GeometryFactory.CreatePoint(2600000 - 30, 1200000 - 30));
+			closedCutLine.SpatialReference = lv95;
+
+			// Ensure the cut line is closed
+			Assert.True(((ICurve) closedCutLine).IsClosed,
+			            "Cut line must be closed for this test.");
+
+			// Cut the MultiPatch using the closed cut line
+			var result = CutGeometryUtils.TryCut(
+				multipatch,
+				closedCutLine,
+				ChangeAlongZSource.Target);
+
+			// Verify the result
+			Assert.NotNull(result, "Cutting should produce a result.");
+			Assert.AreEqual(2, result.Count,
+			                "Cutting with a closed cut line should produce 2 features: outer ring and inner ring.");
+		}
+
 		private static void EnsureCutResult(IList<IGeometry> results,
 		                                    IPolygon originalPoly,
 		                                    Plane3D plane,
