@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -76,24 +75,20 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		return SourceClasses.SelectMany(sourceClass => GetItems(sourceClass, filter));
 	}
 
-	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems([NotNull] Table table,
-		[CanBeNull] QueryFilter filter, bool ignoreDefinitionQuery = false)
+	public IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(
+		[NotNull] Table table, [CanBeNull] QueryFilter filter, bool ignoreDefinitionQuery = false)
+		where T : IWorkItem
 	{
 		return SourceClasses.Where(sc => sc.Uses(new GdbTableIdentity(table)))
 		                    .SelectMany(sourceClass =>
-			                                GetItems(sourceClass, table, filter,
-			                                         ignoreDefinitionQuery));
+			                                GetItems<T>(sourceClass, table, filter,
+			                                            ignoreDefinitionQuery));
 	}
 
 	public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
 	public abstract bool CanUseTableSchema(
 		[CanBeNull] IWorkListItemDatastore workListItemSchema);
-
-	public long Count()
-	{
-		return SourceClasses.Sum(sourceClass => Count(sourceClass, new QueryFilter()));
-	}
 
 	[CanBeNull]
 	public Row GetSourceRow(ISourceClass sourceClass, long oid, bool recycle = true)
@@ -150,7 +145,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 	}
 
 	[CanBeNull]
-	protected abstract Table OpenTable([NotNull] ISourceClass sourceClass);
+	public abstract Table OpenTable([NotNull] ISourceClass sourceClass);
 
 	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
 		[NotNull] ISourceClass sourceClass,
@@ -166,7 +161,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		try
 		{
-			foreach (var pair in GetItems(sourceClass, table, filter))
+			foreach (var pair in GetItems<IWorkItem>(sourceClass, table, filter))
 			{
 				yield return pair;
 			}
@@ -177,10 +172,10 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		}
 	}
 
-	private IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+	private IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(
 		[NotNull] ISourceClass sourceClass,
 		[NotNull] Table table,
-		[CanBeNull] QueryFilter filter, bool ignoreDefinitionQuery = false)
+		[CanBeNull] QueryFilter filter, bool ignoreDefinitionQuery = false) where T : IWorkItem
 	{
 		var count = 0;
 
@@ -190,17 +185,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		foreach (Row row in GetRows(sourceClass, table, filter))
 		{
-			IWorkItem item;
-
-			if (ignoreDefinitionQuery && ! sourceClass.Contains(row))
-			{
-				item = CreateWorkItemBase(sourceClass, row);
-				item.Status = WorkItemStatus.Excluded;
-			}
-			else
-			{
-				item = CreateWorkItem(sourceClass, row);
-			}
+			T item = sourceClass.CreateWorkItem<T>(row);
 
 			Geometry geometry = row is Feature feature ? feature.GetShape() : null;
 
@@ -267,53 +252,5 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		filter = GdbQueryUtils.CloneFilter(filter);
 
 		GdbQueryUtils.AppendWhereClause(ref filter, expression);
-	}
-
-	private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
-	{
-		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
-
-		using Table table = OpenTable(sourceClass);
-
-		if (table == null)
-		{
-			_msg.Warn($"No items for {sourceClass.Name} can be loaded.");
-			return 0;
-		}
-
-		using TableDefinition definition = table.GetDefinition();
-		filter.SubFields = definition.GetObjectIDField();
-
-		long count = table.GetCount(filter);
-
-		_msg.DebugStopTiming(
-			watch, $"Count() {sourceClass.Name}: {count} items");
-
-		return count;
-	}
-
-	private IWorkItem CreateWorkItem([NotNull] ISourceClass sourceClass, [NotNull] Row row)
-	{
-		WorkItem workItem = CreateWorkItemBase(sourceClass, row);
-
-		return CreateWorkItemCore(workItem, sourceClass, row);
-	}
-
-	private static WorkItem CreateWorkItemBase([NotNull] ISourceClass sourceClass, [NotNull] Row row)
-	{
-		long uniqueTableId = sourceClass.GetUniqueTableId();
-
-		// Create table identity only once for better performance:
-		GdbTableIdentity tableIdentity = sourceClass.TableIdentity;
-
-		return new WorkItem(uniqueTableId,
-		                    new GdbRowIdentity(row.GetObjectID(), tableIdentity));
-	}
-
-	protected virtual IWorkItem CreateWorkItemCore([NotNull] IWorkItem workItem,
-	                                               [NotNull] ISourceClass sourceClass,
-	                                               [NotNull] Row row)
-	{
-		return workItem;
 	}
 }

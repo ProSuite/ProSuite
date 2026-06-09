@@ -17,27 +17,23 @@ public class DatabaseSourceClass : SourceClass
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly FilterHelper _filterHelper;
-
-	private readonly int _statusFieldIndex;
-	private readonly string _additionalSubFields;
-
 	[NotNull] private readonly List<WorkListFilterDefinitionExpression> _expressions = new();
+	[NotNull] private readonly Dictionary<string, int> _subFields;
+	[NotNull] private readonly string _subFieldNames;
 
 	public DatabaseSourceClass(
 		GdbTableIdentity tableIdentity,
 		[NotNull] DbSourceClassSchema schema,
 		[CanBeNull] IAttributeReader attributeReader,
 		[CanBeNull] string definitionQuery,
-		[NotNull] FilterHelper filterHelper,
 		WorkspaceDbType dbType = WorkspaceDbType.Unknown)
-		: base(tableIdentity, schema, attributeReader)
+		: base(tableIdentity, attributeReader)
 	{
 		Assert.ArgumentNotNull(schema, nameof(schema));
 
-		_filterHelper = filterHelper;
-		_statusFieldIndex = schema.StatusFieldIndex;
-		_additionalSubFields = StringUtils.Concatenate(schema.AdditionalSubFields, ",");
+		_subFields = schema.SubFields;
+		_subFieldNames = StringUtils.Concatenate(schema.SubFields.Keys, ",");
+		Assert.NotNullOrEmpty(_subFieldNames);
 
 		StatusField = schema.StatusField;
 		TodoValue = schema.TodoValue;
@@ -48,9 +44,13 @@ public class DatabaseSourceClass : SourceClass
 		WorkspaceDbType = dbType;
 	}
 
-	public override bool Contains(Row row)
+	[CanBeNull]
+	protected object GetValue([NotNull] Row row, [NotNull] string fieldName)
 	{
-		return _filterHelper.Check(row);
+		bool exists = _subFields.TryGetValue(fieldName, out int index);
+		Assert.True(exists, $"{fieldName} is not a subfield");
+
+		return row[index];
 	}
 
 	public WorkItemStatus GetStatus([NotNull] Row row)
@@ -59,20 +59,20 @@ public class DatabaseSourceClass : SourceClass
 
 		try
 		{
-			object value = row[_statusFieldIndex];
+			object value = GetValue(row, StatusField);
 
 			return GetStatus(value);
 		}
-		catch (Exception e)
+		catch (Exception ex)
 		{
-			_msg.Error($"Error get value from row {row} with index {_statusFieldIndex}",
-			           e);
+			_msg.ErrorFormat("{0} error getting value from field {1}. {2}", StatusField,
+			                 GdbObjectUtils.GetDisplayValue(row), ex.Message);
 
 			return WorkItemStatus.Todo;
 		}
 	}
 
-	public WorkItemStatus GetStatus([CanBeNull] object value)
+	private WorkItemStatus GetStatus([CanBeNull] object value)
 	{
 		if (TodoValue.Equals(value))
 		{
@@ -160,17 +160,15 @@ public class DatabaseSourceClass : SourceClass
 		return ArcGISTableId;
 	}
 
-	protected override string GetRelevantSubFieldsCore(string subFields)
+	public override T CreateWorkItem<T>(Row row)
 	{
-		if (string.IsNullOrEmpty(_additionalSubFields))
-		{
-			return string.IsNullOrEmpty(StatusField)
-				       ? $"{subFields}"
-				       : $"{subFields},{StatusField}";
-		}
+		var item = base.CreateWorkItem<T>(row);
+		item.Status = GetStatus(row);
+		return item;
+	}
 
-		return string.IsNullOrEmpty(StatusField)
-			       ? $"{subFields},{_additionalSubFields}"
-			       : $"{subFields},{_additionalSubFields},{StatusField}";
+	protected override string GetRelevantSubFieldsCore()
+	{
+		return _subFieldNames;
 	}
 }
