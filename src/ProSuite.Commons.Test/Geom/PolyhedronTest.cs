@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
@@ -860,6 +863,227 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetFootprintForGrancy()
+		{
+			// TLM_GEBAEUDE {71DAC71B-9971-4612-B40F-5AC8DB201DCB} (Grancy).
+			// The footprint had a missing part. AO reference area: 445.7855.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("grancy.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(445.7855, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForThanhalten()
+		{
+			// TLM_GEBAEUDE {823CB5A8-2104-46C9-9851-3BBD1F88CA41} (Thanhalten).
+			// The footprint had a missing part. AO reference area: 269.4976.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("thanhalten.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(269.4976, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForOid3925818()
+		{
+			// TLM_GEBAEUDE OID 3925818. Previously threw GeomException
+			// ("Error calculating XY-union areas") at step 6 because
+			// CalculateSourceBoundaryLoops created a BoundaryLoop with a
+			// LinearIntersectionStart and a TouchingInPoint pinch at the same target
+			// vertex, causing conflicting navigation in FollowSubcurvesTurningLeft.
+			// AO reference area: 503.7757.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("oid_3925818.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(503.7757, footprint.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		[Ignore("Diagnostic: per-step incremental union area / inflate-loss dump for " +
+		        "thanhalten (TLM_GEBAEUDE {823CB5A8-2104-46C9-9851-3BBD1F88CA41}). " +
+		        "Writes source/ring WKBs for loss/inflate steps to C:\\temp\\th_*.wkb.")]
+		public void DumpThanhaltenUnionSteps()
+		{
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("thanhalten.wkb"), out _);
+
+			double tolerance = 0.00625;
+			var ci = CultureInfo.InvariantCulture;
+			var groups = polyhedron.RingGroups.OrderByDescending(r => r.GetArea2D()).ToList();
+			Console.WriteLine($"Total ring groups: {groups.Count}");
+
+			MultiLinestring result = null;
+			int count = 0;
+			foreach (RingGroup rg in groups)
+			{
+				if (result == null)
+				{
+					result = rg.Clone();
+					Console.WriteLine(string.Format(ci, "start area={0:F6} parts={1}",
+					                                result.GetArea2D(), result.PartCount));
+					continue;
+				}
+
+				count++;
+				double before = result.GetArea2D();
+
+				MultiLinestring disjointPart =
+					GeomTopoOpUtils.GetDifferenceAreasXY(rg, result, tolerance);
+				double disjoint = disjointPart.GetArea2D();
+
+				MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(result, rg, tolerance);
+				double after = union.GetArea2D();
+				double grew = after - before;
+
+				string flag = grew < disjoint - 1e-3 ? "  <<< LOSS"
+				              : grew > disjoint + 1e-3 ? "  <<< INFLATE"
+				              : "";
+
+				Console.WriteLine(string.Format(ci,
+				                                "step {0,3}: {1:F6} -> {2:F6} grew={3:F6} " +
+				                                "ringArea={4:F6} disjoint={5:F6} parts {6}->{7}{8}",
+				                                count, before, after, grew,
+				                                rg.GetArea2D(), disjoint,
+				                                result.PartCount, union.PartCount, flag));
+
+				if (flag.Length > 0)
+				{
+					GeomUtils.ToWkbFile(result, $@"C:\temp\th_source_{count}.wkb");
+					GeomUtils.ToWkbFile(rg, $@"C:\temp\th_ring_{count}.wkb");
+					Console.WriteLine($"  -> wrote C:\\temp\\th_source/ring_{count}.wkb");
+
+					var nav = new SubcurveNavigator(result, rg, tolerance);
+					Console.WriteLine($"  HasBoundaryLoops={nav.HasBoundaryLoops()} " +
+					                  $"IPs={nav.IntersectionPoints.Count}");
+					foreach (IntersectionPoint3D ip in nav.IntersectionPoints)
+					{
+						Console.WriteLine(string.Format(ci,
+						                                "    ip type={0} srcV={1:F4} tgtV={2:F4} " +
+						                                "pt=({3:F4},{4:F4})",
+						                                ip.Type, ip.VirtualSourceVertex,
+						                                ip.VirtualTargetVertex,
+						                                ip.Point.X, ip.Point.Y));
+					}
+
+					foreach (Linestring r in union.GetLinestrings())
+					{
+						Console.WriteLine(string.Format(ci,
+						                                "  result ring area={0:F6} cw={1} " +
+						                                "env=({2:F4},{3:F4})-({4:F4},{5:F4})",
+						                                r.GetArea2D(), r.ClockwiseOriented,
+						                                r.XMin, r.YMin, r.XMax, r.YMax));
+					}
+				}
+
+				result = union;
+			}
+
+			Console.WriteLine(string.Format(ci, "FINAL area={0:F6} parts={1}",
+			                                result.GetArea2D(), result.PartCount));
+		}
+
+		[Test]
+		public void CanUnionThanhaltenAtStep6()
+		{
+			// TLM_GEBAEUDE {823CB5A8-2104-46C9-9851-3BBD1F88CA41} (Thanhalten), isolated
+			// incremental-union step 6 (tolerance 0.00625). The accumulated footprint
+			// (source) carries a sub-resolution needle (vertices 5,6,7 are an out-and-back
+			// spike whose flanks are 0.0078 m apart - below the 0.0125 resolution but above
+			// the tolerance). The target triangle (9.685) shares an edge with the source and
+			// grazes the needle with its diagonal, so the navigator saw only spurious
+			// sub-tolerance linear intersections (no clean crossing): the turning-left walk
+			// produced no rings and the target's disjoint part (4.867) was dropped, leaving a
+			// missing part. RingOperator now clusters the needle's flanks (cluster distance
+			// Sqrt(2)*tolerance) and removes the resulting duplicate segment, so the union
+			// adds the disjoint part correctly - directly on the raw source, no pre-cleaning.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("thanhalten_step6_source.wkb"), out _);
+			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("thanhalten_step6_ring.wkb"), out _);
+
+			double tolerance = 0.00625;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring disjoint =
+				GeomTopoOpUtils.GetDifferenceAreasXY(ring, source, tolerance);
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			Assert.AreEqual(sourceArea + disjoint.GetArea2D(), result.GetArea2D(), 0.001,
+			                "Union must add the disjoint part of the target ring.");
+			Assert.AreEqual(1, result.PartCount);
+		}
+
+		[Test]
+		public void CanUnionGrancyAtStep5()
+		{
+			// TLM_GEBAEUDE {71DAC71B-9971-4612-B40F-5AC8DB201DCB} (Grancy), isolated
+			// incremental-union step 5 (tolerance 0.00625). The accumulated footprint
+			// (source, 373.204) has a thin spike whose apex vertex lies 0.0092 m - just
+			// ABOVE tolerance - from a vertex of the target ring (44.746). The source edge
+			// leaving the apex is coincident with a target edge (a genuine linear
+			// intersection), but the other spike segment only grazes the same target point
+			// and is mis-classified as a Crossing at the very same XY. That contradictory
+			// Crossing + LinearIntersectionStart derailed the turning-left walk into
+			// emitting the whole target ring a second time, so the union came out 429.365
+			// with two overlapping outer rings (correct 384.620 + a spurious 44.745
+			// duplicate). The union must be a single ring of source + disjoint target.
+			// Fixed at the root: RingOperator.ClusterGeometries clusters the near-coincident
+			// vertices (within Sqrt(2)*tolerance) and CRACKS the spike's grazing segment,
+			// inserting a vertex at the cluster point. The welded spike collapses to a
+			// duplicate segment (removed by RemoveLinearSelfIntersections) and the
+			// recalculated intersections no longer contain the spurious crossing - so this
+			// no longer relies on a navigator special-case.
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("grancy_step5_source.wkb"), out _);
+			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("grancy_step5_ring.wkb"), out _);
+
+			double tolerance = 0.00625;
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring disjoint =
+				GeomTopoOpUtils.GetDifferenceAreasXY(ring, source, tolerance);
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			Assert.AreEqual(sourceArea + disjoint.GetArea2D(), result.GetArea2D(), 0.001,
+			                "Union must merge into a single ring (no duplicated target).");
+			Assert.AreEqual(1, result.PartCount);
+		}
+
+
+		[Test]
 		public void CanGetFootprintExplodingSelfCrossingRing()
 		{
 			// A single figure-8 (bowtie) exterior ring: vertices ordered so that the edge
@@ -899,6 +1123,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(50, footprint.GetArea2D(), 0.001);
 			Assert.True(footprint.GetLinestrings().All(l => l.ClockwiseOriented == true));
 		}
+
 
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
 		                                           params Linestring[] islands)
@@ -949,6 +1174,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expectedPointCount, footprint.PointCount);
 			Assert.AreEqual(expectedArea, footprint.GetArea2D(), 0.001);
 		}
+
 
 		private static void WithRotatedRing(IList<Pnt3D> ring,
 		                                    Action<Linestring> proc)
