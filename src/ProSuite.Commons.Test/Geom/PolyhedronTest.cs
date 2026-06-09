@@ -673,7 +673,6 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1051.300615, footprint.GetArea2D(), 0.05);
 		}
 
-
 		[Test]
 		public void CanGetFootprintForSebastianskapelle()
 		{
@@ -768,6 +767,81 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea - 1e-6,
 			                      "Union must not lose area.");
+		}
+
+		[Test]
+		public void CanGetUnionAreasXYForClusterCrashRepro()
+		{
+			// Minimal license-free repro of the failing_polyhedron footprint crash
+			// (AO CreateFootprintUtilsTest.AnalyzeMultipatchGeometry). Extracted as the
+			// single failing pairwise GetUnionAreasXY step of that multipatch's footprint.
+			// The source has a near-degenerate spike (vertices 11,12,13) whose two flanking
+			// linear-intersection points reference the same target vertex but sit 0.00065 m
+			// apart - just beyond the 0.0005 tolerance, so the along-target vertex check did
+			// not group them and the turning-left walk entered a 3-node cycle, throwing
+			// "Intersections seen twice". Now FIXED: the cluster gate also fires on XY
+			// proximity (within Sqrt(2)*tolerance), so RingOperator clustering snaps the
+			// flanks and removes the collapsed spike before navigation. (Same mechanism as
+			// the Thanhalten needle, but here a pairwise union below the footprint level -
+			// which is why the cluster+clean lives in RingOperator, not in Polyhedron.)
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("cluster_crash_repro_source.wkb"), out _);
+			MultiLinestring target = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("cluster_crash_repro_target.wkb"), out _);
+
+			const double tolerance = 0.0005;
+
+			double sourceArea = source.GetArea2D();
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.GreaterOrEqual(result.GetArea2D(), sourceArea - 1e-6,
+			                      "Union must not lose area.");
+		}
+
+		[Test]
+		[Ignore("diagnostic")]
+		public void DumpClusterCrashReproIntersections()
+		{
+			MultiLinestring source = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("cluster_crash_repro_source.wkb"), out _);
+			MultiLinestring target = (MultiLinestring) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("cluster_crash_repro_target.wkb"), out _);
+
+			var ci = CultureInfo.InvariantCulture;
+			const double tolerance = 0.0005;
+
+			Console.WriteLine($"source segs={source.GetLinestring(0).SegmentCount} " +
+			                  $"area={source.GetArea2D():F4}; target segs={target.GetLinestring(0).SegmentCount} " +
+			                  $"area={target.GetArea2D():F4}");
+
+			IList<IntersectionPoint3D> ips = GeomTopoOpUtils.GetIntersectionPoints(
+				(ISegmentList) source, target, tolerance);
+
+			Console.WriteLine($"=== {ips.Count} intersection points ===");
+			int i = 0;
+			foreach (IntersectionPoint3D ip in ips)
+			{
+				Console.WriteLine(string.Format(
+					                  ci,
+					                  "[{0,2}] {1,-26} srcV={2,8:F4} tgtV={3,8:F4} pt=({4:F4},{5:F4})",
+					                  i++, ip.Type, ip.VirtualSourceVertex, ip.VirtualTargetVertex,
+					                  ip.Point.X, ip.Point.Y));
+			}
+
+			Console.WriteLine("--- source segments near the spike ---");
+			Linestring s = source.GetLinestring(0);
+			for (int sx = 9; sx < Math.Min(16, s.SegmentCount); sx++)
+			{
+				Line3D seg = s.GetSegment(sx);
+				Console.WriteLine(string.Format(
+					                  ci,
+					                  "  seg[{0,2}] ({1:F4},{2:F4})->({3:F4},{4:F4}) len={5:F5}",
+					                  sx, seg.StartPoint.X, seg.StartPoint.Y, seg.EndPoint.X,
+					                  seg.EndPoint.Y,
+					                  seg.Length2D));
+			}
 		}
 
 
@@ -1125,6 +1199,51 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 
+		private static void DumpNavigatorInfo(MultiLinestring source, MultiLinestring ring,
+		                                      double tolerance, double sqrtTwiceTol,
+		                                      CultureInfo ci)
+		{
+			SubcurveNavigator nav;
+			try
+			{
+				nav = new SubcurveNavigator(source, ring, tolerance);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"    SubcurveNavigator THREW: {ex.Message}");
+				return;
+			}
+
+			var ips = nav.IntersectionPoints;
+			Console.WriteLine($"    HasBoundaryLoops={nav.HasBoundaryLoops()} IPs={ips.Count}");
+
+			foreach (IntersectionPoint3D ip in ips)
+				Console.WriteLine(string.Format(ci,
+				                                "      ip type={0} srcV={1:F6} tgtV={2:F6} pt=({3:F6},{4:F6})",
+				                                ip.Type, ip.VirtualSourceVertex,
+				                                ip.VirtualTargetVertex,
+				                                ip.Point.X, ip.Point.Y));
+
+			// Report consecutive IP pairs within sqrt(2)*tolerance (clustering candidates)
+			int closeCount = 0;
+			for (int i = 0; i < ips.Count - 1; i++)
+			{
+				double dx = ips[i].Point.X - ips[i + 1].Point.X;
+				double dy = ips[i].Point.Y - ips[i + 1].Point.Y;
+				double dist = Math.Sqrt(dx * dx + dy * dy);
+				if (dist < sqrtTwiceTol && dist > tolerance)
+				{
+					closeCount++;
+					Console.WriteLine(string.Format(ci,
+					                                "      near-cluster: ip[{0}]<->ip[{1}] dist={2:F6} (tol={3:F6} sqrt2tol={4:F6})",
+					                                i, i + 1, dist, tolerance, sqrtTwiceTol));
+				}
+			}
+
+			if (closeCount == 0)
+				Console.WriteLine($"      no near-cluster IP pairs in ({tolerance:F6},{sqrtTwiceTol:F6}]");
+		}
+
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
 		                                           params Linestring[] islands)
 		{
@@ -1176,6 +1295,22 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 
+		private static void DumpSegments(MultiLinestring mls)
+		{
+			var ci = CultureInfo.InvariantCulture;
+			Linestring ls = mls.GetLinestring(0);
+			for (int s = 0; s < ls.SegmentCount; s++)
+			{
+				Line3D seg = ls.GetSegment(s);
+				Console.WriteLine(string.Format(
+					                  ci,
+					                  "  seg[{0,2}] ({1:F4},{2:F4})->({3:F4},{4:F4}) len={5:F4}",
+					                  s, seg.StartPoint.X, seg.StartPoint.Y, seg.EndPoint.X,
+					                  seg.EndPoint.Y,
+					                  seg.Length2D));
+			}
+		}
+
 		private static void WithRotatedRing(IList<Pnt3D> ring,
 		                                    Action<Linestring> proc)
 		{
@@ -1187,6 +1322,74 @@ namespace ProSuite.Commons.Test.Geom
 				Linestring linestring = GeomTestUtils.CreateRing(array1.ToList());
 
 				proc(linestring);
+			}
+		}
+
+		[Test]
+		[Ignore("Diagnostic: sweeps each TLM_FootprintTest case across several tolerances " +
+		        "and reports footprint area / part count / THROW, to verify the union is " +
+		        "robust regardless of tolerance.")]
+		public void DumpTLMFootprintToleranceSweep()
+		{
+			const string folder = @"C:\Temp\UnitTestData\TLM_FootprintTest";
+			double[] tolerances = { 0.0005, 0.001, 0.00625, 0.0125 };
+			const double verticalRingDetectionTolerance = 0.0125;
+			var ci = CultureInfo.InvariantCulture;
+
+			foreach (string subfolder in new[] { "Failing", "Incorrect" })
+			{
+				string dir = Path.Combine(folder, subfolder);
+				string[] polyhedronFiles = Directory.GetFiles(dir, "*_Polyhedron.wkb")
+				                                    .OrderBy(f => f).ToArray();
+
+				Console.WriteLine($"\n===== {subfolder} ({polyhedronFiles.Length} cases) =====");
+				Console.WriteLine(string.Format(ci, "{0,-16}{1,10}  {2}", "case", "AO",
+				                                string.Join("  ",
+				                                            tolerances.Select(t => $"tol={t}"))));
+
+				foreach (string polyhedronFile in polyhedronFiles)
+				{
+					string stem = Path.GetFileNameWithoutExtension(polyhedronFile)
+					                  .Replace("_Polyhedron", "");
+					string aoFile = Path.Combine(dir, $"{stem}_AO.wkb");
+
+					double aoArea = 0;
+					try
+					{
+						var ao = GeomUtils.FromWkbFile(aoFile, out _) as MultiLinestring;
+						aoArea = ao?.GetArea2D() ?? 0;
+					}
+					catch
+					{
+						// ignore
+					}
+
+					var cells = new List<string>();
+					foreach (double tol in tolerances)
+					{
+						try
+						{
+							var poly = (Polyhedron) GeomUtils.FromWkbFile(polyhedronFile, out _);
+							MultiLinestring fp = poly.GetXYFootprint(
+								tol, verticalRingDetectionTolerance, out _);
+							cells.Add(string.Format(ci, "{0:F2}({1}p)", fp.GetArea2D(),
+							                        fp.PartCount));
+						}
+						catch (Exception ex)
+						{
+							string msg = (ex.InnerException ?? ex).Message;
+							string tag = msg.Contains("seen twice") ? "THROW:seenTwice"
+							             : msg.Contains("non-simple") || msg.Contains("non simple") ||
+							               msg.Contains("simple") ? "THROW:nonSimple"
+							             : msg.Contains("exterior ring") ? "THROW:nestedExt"
+							             : "THROW:" + ex.GetType().Name;
+							cells.Add(tag);
+						}
+					}
+
+					Console.WriteLine(string.Format(ci, "{0,-16}{1,10:F2}  {2}", stem, aoArea,
+					                                string.Join("  ", cells)));
+				}
 			}
 		}
 	}

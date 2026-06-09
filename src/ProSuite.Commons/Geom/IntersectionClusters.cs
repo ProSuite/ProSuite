@@ -13,6 +13,8 @@ namespace ProSuite.Commons.Geom
 	/// </summary>
 	public class IntersectionClusters
 	{
+		private static double ToleranceFactor => Math.Sqrt(2);
+
 		private HashSet<IntersectionPoint3D> _multipleSourceIntersections;
 		private HashSet<IntersectionPoint3D> _multipleTargetIntersections;
 
@@ -142,10 +144,34 @@ namespace ProSuite.Commons.Geom
 								}
 							}
 						}
+						else if (PointsClusterButVertexCheckMissed(p1, p2))
+						{
+							// The two consecutive intersections are within the cluster distance
+							// in XY but their along-target distance is (just) above tolerance, so
+							// ReferencesSameTargetVertex missed them (e.g. a sub-resolution spike
+							// whose flanks reference the same target vertex yet sit ~a resolution
+							// apart in XY, cluster_crash_repro). Flag only so RingOperator
+							// clustering snaps them and the collapsed spike is cleaned up; do NOT
+							// add them to the duplicate set, leaving boundary-loop detection
+							// unaffected.
+							HasUnClusteredIntersections = true;
+						}
 					});
 			}
 
 			return result.Count == 0 ? null : result;
+		}
+
+		/// <summary>
+		/// Two consecutive intersections that the vertex-reference check did not group, but
+		/// which lie within the RingOperator cluster distance (Sqrt(2)*tolerance) of each other
+		/// in XY and are not already coincident - i.e. clustering would snap them together.
+		/// </summary>
+		private bool PointsClusterButVertexCheckMissed(
+			[NotNull] IntersectionPoint3D p1, [NotNull] IntersectionPoint3D p2)
+		{
+			return ! p1.Point.EqualsXY(p2.Point, double.Epsilon) &&
+			       p1.Point.GetDistance(p2.Point, inXY: true) <= ToleranceFactor * _tolerance;
 		}
 
 		/// <summary>
@@ -227,6 +253,13 @@ namespace ProSuite.Commons.Geom
 									}
 								}
 							}
+						}
+						else if (PointsClusterButVertexCheckMissed(p1, p2))
+						{
+							// Symmetric to the source side: flag near-coincident consecutive
+							// intersections (within the cluster distance in XY) that the
+							// vertex-reference check missed, so RingOperator clustering runs.
+							HasUnClusteredIntersections = true;
 						}
 					});
 			}
