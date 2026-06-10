@@ -14,16 +14,15 @@ namespace ProSuite.Processing
 	public class CartoProcessRepo
 	{
 		private readonly List<CartoProcessDefinition> _definitions;
-		private readonly IReadOnlyList<CartoProcessDefinition> _list;
-		private readonly object _syncLock = new object();
+		private readonly object _syncLock = new();
 
 		public CartoProcessRepo(/*known types*/)
 		{
 			_definitions = new List<CartoProcessDefinition>();
-			_list = new ReadOnlyList<CartoProcessDefinition>(_definitions);
+			ProcessDefinitions = new ReadOnlyList<CartoProcessDefinition>(_definitions);
 		}
 
-		public IReadOnlyList<CartoProcessDefinition> ProcessDefinitions => _list;
+		public IReadOnlyList<CartoProcessDefinition> ProcessDefinitions { get; }
 
 		public Uri Uri { get; private set; }
 
@@ -36,11 +35,10 @@ namespace ProSuite.Processing
 
 		public void Load(string xmlFilePath, IReadOnlyList<Type> knownTypes)
 		{
-			using (var reader = File.OpenText(xmlFilePath))
-			{
-				Load(reader, knownTypes);
-				Uri = new Uri(xmlFilePath);
-			}
+			using var reader = File.OpenText(xmlFilePath);
+
+			Load(reader, knownTypes);
+			Uri = new Uri(xmlFilePath);
 		}
 
 		public void Load(TextReader reader, IReadOnlyList<Type> knownTypes)
@@ -72,11 +70,10 @@ namespace ProSuite.Processing
 				throw new InvalidOperationException("No previous file path found and no file path given as argument");
 			}
 
-			using (var stream = File.Create(xmlFilePath))
-			using (var writer = new StreamWriter(stream))
-			{
-				Save(writer);
-			}
+			using var stream = File.Create(xmlFilePath);
+			using var writer = new StreamWriter(stream);
+
+			Save(writer);
 		}
 
 		public void Save(TextWriter writer)
@@ -199,44 +196,42 @@ namespace ProSuite.Processing
 			var groupType = typeof(IGroupCartoProcess);
 
 			var groups = definitions
-			             .Where(d => d.ResolvedType != null)
-			             .Where(d => groupType.IsAssignableFrom(d.ResolvedType))
-			             .Select(d => new XElement("ProcessGroup",
-			                                       new XAttribute("name", d.Name ?? string.Empty),
-			                                       MakeAttribute("description", d.Description),
-			                                       new XElement(
-				                                       "GroupProcessTypeReference",
-				                                       new XAttribute("name", d.TypeAlias)),
-			                                       GetProcesses(d.Config)))
-			             .ToList();
+				.Where(d => d.ResolvedType != null)
+				.Where(d => groupType.IsAssignableFrom(d.ResolvedType))
+				.Select(d => new XElement("ProcessGroup",
+					new XAttribute("name", d.Name ?? string.Empty),
+					MakeAttribute("description", d.Description),
+					new XElement(
+						"GroupProcessTypeReference",
+						new XAttribute("name", d.TypeAlias)),
+					GetProcesses(d.Config)))
+				.ToList();
 
 			var types = definitions
-			            .Where(d => d.ResolvedType != null)
-			            .GroupBy(d => d.TypeAlias)
-			            .OrderBy(g => g.Key)
-			            .Select(g => new XElement("ProcessType",
-			                                      MakeAttribute("name", g.Key), // i.e., TypeAlias
-			                                      MakeClassDescriptor(g)))
-			            .ToList();
+				.Where(d => d.ResolvedType != null)
+				.GroupBy(d => d.TypeAlias)
+				.OrderBy(g => g.Key)
+				.Select(g => new XElement("ProcessType",
+					MakeAttribute("name", g.Key), // i.e., TypeAlias
+					MakeClassDescriptor(g)))
+				.ToList();
 
-			var procs = definitions
-			            .Where(d => d.TypeAlias != null)
-			            .Where(d => ! groupType.IsAssignableFrom(d.ResolvedType))
-			            .Select(d => new XElement(
-				                    "Process",
-				                    new XAttribute("name", d.Name ?? string.Empty),
-				                    MakeAttribute("description", d.Description),
-				                    new XElement("TypeReference",
-				                                 MakeAttribute("name", d.TypeAlias)),
-				                    GetParameters(d.Config)))
-			            .ToList();
+			var processes = definitions
+				.Where(d => d.TypeAlias != null)
+				.Where(d => !groupType.IsAssignableFrom(d.ResolvedType))
+				.Select(d => new XElement("Process",
+					new XAttribute("name", d.Name ?? string.Empty),
+					MakeAttribute("description", d.Description),
+					MakeTypeReference(d.TypeAlias),
+					GetParameters(d.Config)))
+				.ToList();
 
 			return new XDocument(
 				new XDeclaration("1.0", "utf-8", "yes"),
 				new XElement("CartoProcesses",
-				             new XElement("Groups", groups),
-				             new XElement("Processes", procs),
-				             new XElement("Types", types)));
+					new XElement("Groups", groups),
+					new XElement("Processes", processes),
+					new XElement("Types", types)));
 		}
 
 		private static XElement MakeClassDescriptor(IEnumerable<CartoProcessDefinition> g)
@@ -248,6 +243,11 @@ namespace ProSuite.Processing
 			return new XElement("ClassDescriptor",
 			                    MakeAttribute("type", typeName),
 			                    MakeAttribute("assembly", assembly));
+		}
+
+		private static XElement MakeTypeReference(string typeAlias)
+		{
+			return new XElement("TypeReference", MakeAttribute("name", typeAlias));
 		}
 
 		private static XAttribute MakeAttribute(string name, string value = null)
