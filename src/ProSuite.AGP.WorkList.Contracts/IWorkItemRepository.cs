@@ -35,16 +35,12 @@ public interface IWorkItemRepository
 	/// </summary>
 	Envelope Extent { get; set; }
 
-	long Count();
+	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter);
 
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		[CanBeNull] QueryFilter filter,
-		[CanBeNull] WorkItemStatus? statusFilter = null);
-
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-		[NotNull] Table table,
-		[NotNull] QueryFilter filter,
-		WorkItemStatus? statusFilter = null);
+	IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(Table table,
+	                                                   QueryFilter filter,
+	                                                   bool ignoreDefinitionQuery = false)
+		where T : IWorkItem;
 
 	void Commit();
 
@@ -77,4 +73,6 @@ public interface IWorkItemRepository
 	long GetNextOid();
 
 	void Refresh(IWorkItem item);
+
+	Table OpenTable([NotNull] ISourceClass sourceClass);
 }

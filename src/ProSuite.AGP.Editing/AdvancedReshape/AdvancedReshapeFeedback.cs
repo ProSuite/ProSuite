@@ -70,6 +70,7 @@ public class AdvancedReshapeFeedback
 		var cyan = ColorFactory.Instance.CreateRGBColor(0, 255, 255);
 		var green = ColorFactory.Instance.CreateRGBColor(0, 128, 0);
 		var magenta = ColorUtils.CreateRGB(240, 0, 248);
+		var yellow = ColorUtils.CreateRGB(255, 224, 0);
 
 		_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
 		_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
@@ -98,7 +99,7 @@ public class AdvancedReshapeFeedback
 
 			_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
 
-			_controlPointMarkerSymbol = CreateControlPointSymbol(5, cyan, ColorUtils.BlackRGB);
+			_controlPointMarkerSymbol = CreateControlPointSymbol(5, yellow, ColorUtils.BlackRGB, 1.5);
 		}
 		else
 		{
@@ -117,7 +118,7 @@ public class AdvancedReshapeFeedback
 			_polygonSymbol = SymbolUtils.CreatePolygonSymbol(null, noFill, stroke);
 
 			_controlPointMarkerSymbol =
-				CreateControlPointSymbol(6.5, cyan, ColorUtils.BlackRGB);
+				CreateControlPointSymbol(6.5, yellow, ColorUtils.BlackRGB, 1.5);
 		}
 	}
 
@@ -256,11 +257,11 @@ public class AdvancedReshapeFeedback
 	}
 
 	private CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
-	                                                CIMColor outlineColor)
+	                                                CIMColor outlineColor, double outlineWidth)
 	{
 		double factor = Math.Sqrt(2.0);
 		var symbolSize = size * factor; // to compensate diamond vs square (rot 45°)
-		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, symbolSize / 5);
+		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, outlineWidth); //symbolSize / 5);
 		//var polySym = SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid, stroke);
 		var polySym =
 			SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);

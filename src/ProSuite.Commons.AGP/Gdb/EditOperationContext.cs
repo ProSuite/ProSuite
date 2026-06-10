@@ -18,11 +18,11 @@ public class EditOperationContext : IEditOperationContext
 
 	public void Invalidate(Row row)
 	{
-		_context.Invalidate(row);
+		_context?.Invalidate(row);
 	}
 
 	public void Invalidate(Dataset dataset)
 	{
-		_context.Invalidate(dataset);
+		_context?.Invalidate(dataset);
 	}
 }

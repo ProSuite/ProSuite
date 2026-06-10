@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
@@ -10,14 +6,20 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Text;
 using ProSuite.GIS.Geodatabase.API;
 using ProSuite.GIS.Geometry.AGP;
+using ProSuite.GIS.Geometry.API;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using Subtype = ProSuite.GIS.Geodatabase.API.Subtype;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcTable : ITable, IObjectClass, ISubtypes
+	public class ArcTable : ITable, IObjectClass, ISubtypes, IDisposable
 	{
 		private bool _cachePropertiesEagerly;
 
@@ -717,6 +719,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				throw new ArgumentException($"Field {fieldName} does not exist in {Name}");
 			return field;
 		}
+
+		public void Dispose()
+		{
+			ProTable?.Dispose();
+			ProTableDefinition?.Dispose();
+		}
 	}
 
 	public class ArcDatasetName : IDatasetName
@@ -755,7 +763,28 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		#endregion
 	}
 
-	public class ArcTableDefinitionName : IDatasetName
+	public class ArcTableName : ArcDatasetName, ITableName
+	{
+		public ArcTableName(IDataset dataset) : base(dataset) { }
+	}
+
+	public class ArcFeatureClassName : ArcDatasetName, IFeatureClassName
+	{
+		private readonly IFeatureClass _featureClass;
+
+		public ArcFeatureClassName(IFeatureClass featureClass) : base(featureClass)
+		{
+			_featureClass = featureClass;
+		}
+
+		public esriGeometryType ShapeType => _featureClass.ShapeType;
+
+		public IDatasetName FeatureDatasetName => throw new NotImplementedException();
+
+		public string ShapeFieldName => _featureClass.ShapeFieldName;
+	}
+
+	public class ArcTableDefinitionName : ITableName
 	{
 		private readonly TableDefinition _tableDefinition;
 		private readonly IFeatureWorkspace _workspace;
@@ -793,6 +822,61 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		public IWorkspaceName WorkspaceName => _workspace.GetWorkspaceName();
 
 		#endregion
+	}
+
+	public class ArcFeatureClassDefinitionName : ArcTableDefinitionName, IFeatureClassName
+	{
+		private readonly FeatureClassDefinition _featureClassDefinition;
+		private esriGeometryType? _shapeType;
+		private string _shapeFieldName;
+
+		public ArcFeatureClassDefinitionName(TableDefinition tableDefinition,
+		                                     IFeatureWorkspace workspace) : base(
+			tableDefinition, workspace)
+		{
+			_featureClassDefinition = (FeatureClassDefinition) tableDefinition;
+		}
+
+		public esriGeometryType ShapeType
+		{
+			get
+			{
+				if (_shapeType == null)
+				{
+					GeometryType coreGeometryType = _featureClassDefinition.GetShapeType();
+
+					ProSuiteGeometryType geometryType =
+						GeometryUtils.TranslateToProSuiteGeometryType(coreGeometryType);
+
+					_shapeType = (esriGeometryType) geometryType;
+				}
+
+				return _shapeType.Value;
+			}
+		}
+
+		public IDatasetName FeatureDatasetName => throw new NotImplementedException();
+
+		public string ShapeFieldName
+		{
+			get
+			{
+				if (_shapeFieldName == null)
+				{
+					_shapeFieldName = _featureClassDefinition.GetShapeField();
+
+					// TODO
+					// GOTOP-469: In some data models the GetShapeField() does not return the actual
+					//            field name, but the model name or even the alias.
+					//int shapeFieldIndex = FindField(_shapeFieldName);
+					//Assert.False(shapeFieldIndex < 0, $"{_shapeFieldName} not found in {Name}");
+
+					//_shapeFieldName = Fields[shapeFieldIndex].Name;
+				}
+
+				return _shapeFieldName;
+			}
+		}
 	}
 
 	public class ArcRelationshipClassDefinitionName : IDatasetName

@@ -501,13 +501,13 @@ public class GeometryUtilsTest
 		// Can catch invalid arguments:
 		builder = polyline.ToBuilder();
 		// part index out of range:
-		Assert.Throws<ArgumentOutOfRangeException>(
-			() => GeometryUtils.RemoveVertices(builder, 2, 0, 0));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(
+			                                           builder, 2, 0, 0));
 		// first/last vertex index out of range
-		Assert.Throws<ArgumentOutOfRangeException>(
-			() => GeometryUtils.RemoveVertices(builder, 1, 2, 2));
-		Assert.Throws<ArgumentOutOfRangeException>(
-			() => GeometryUtils.RemoveVertices(builder, 1, 0, 2));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(
+			                                           builder, 1, 2, 2));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.RemoveVertices(
+			                                           builder, 1, 0, 2));
 	}
 
 	[Test]
@@ -609,8 +609,8 @@ public class GeometryUtilsTest
 		// Can catch invalid arguments:
 		builder = polygon.ToBuilder();
 		// part index out of range
-		Assert.Throws<ArgumentOutOfRangeException>(
-			() => GeometryUtils.RemoveVertices(builder, 9, 0));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils
+			                                           .RemoveVertices(builder, 9, 0));
 		// with polygons, we treat vertex indices cyclically (mod N), so no exception here:
 		GeometryUtils.RemoveVertices(builder, 0, 99);
 	}
@@ -645,8 +645,8 @@ public class GeometryUtilsTest
 		Assert.AreEqual(6, part);
 
 		// Can catch global index out of range:
-		Assert.Throws<ArgumentOutOfRangeException>(
-			() => GeometryUtils.GetLocalVertexIndex(polygon, 35, out part));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.GetLocalVertexIndex(
+			                                           polygon, 35, out part));
 	}
 
 	[Test]
@@ -665,12 +665,12 @@ public class GeometryUtilsTest
 		Assert.AreEqual(31, GeometryUtils.GetGlobalVertexIndex(polygon, 6, 1));
 
 		// Can catch part index out of range:
-		Assert.Throws<ArgumentOutOfRangeException>(
-			() => GeometryUtils.GetGlobalVertexIndex(polygon, 7, 1));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.GetGlobalVertexIndex(
+			                                           polygon, 7, 1));
 
 		// Can catch local index out of range:
-		Assert.Throws<ArgumentOutOfRangeException>(
-			() => GeometryUtils.GetGlobalVertexIndex(polygon, 1, 6));
+		Assert.Throws<ArgumentOutOfRangeException>(() => GeometryUtils.GetGlobalVertexIndex(
+			                                           polygon, 1, 6));
 	}
 
 	[Test]
@@ -1017,6 +1017,33 @@ public class GeometryUtilsTest
 
 		// Verify it still has curves
 		Assert.True(resultBezierPolyline.HasCurves);
+	}
+
+	[Test]
+	public void CanCrackAtFromToPoint()
+	{
+		Polyline polylineOriginal =
+			GeometryFactory.CreatePolyline(1000, 1000, 1001, 1001);
+		Polyline polyline = GeometryFactory.Clone(polylineOriginal);
+
+		var splitPoint = GeometryFactory.CreateMultipoint(new List<MapPoint>
+		                                                  {
+			                                                  GeometryFactory.CreatePoint(
+				                                                  1000, 1000, 40),
+			                                                  GeometryFactory.CreatePoint(
+				                                                  1001, 1001)
+		                                                  });
+
+		IList<MapPoint> ensuredVertices =
+			GeometryUtils.CrackPolycurve(polyline, splitPoint, true, false, null, out _);
+		Assert.AreEqual(2, ensuredVertices.Count);
+
+		polyline = GeometryFactory.Clone(polylineOriginal);
+
+		const bool createParts = true;
+		ensuredVertices =
+			GeometryUtils.CrackPolycurve(polyline, splitPoint, true, createParts, null, out _);
+		Assert.AreEqual(2, ensuredVertices.Count);
 	}
 
 	// Helper method to create a polyline with a Bézier segment for testing

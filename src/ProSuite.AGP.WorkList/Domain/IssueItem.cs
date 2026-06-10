@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using ArcGIS.Core.Data;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Domain;
 
@@ -10,8 +9,8 @@ public class IssueItem : WorkItem, IIssueItem
 
 	// todo daro: use Factory Method on abstract ISourceClass base to create item
 	//			  instead of passing in reader
-	public IssueItem(long objectId, long uniqueTableId, [NotNull] Row row)
-		: base(uniqueTableId, row) { }
+	public IssueItem(long uniqueTableId, GdbRowIdentity identity) :
+		base(uniqueTableId, identity) { }
 
 	public string ExceptionRetirementDate { get; set; }
 

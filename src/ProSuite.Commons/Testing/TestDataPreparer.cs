@@ -231,7 +231,7 @@ namespace ProSuite.Commons.Testing
 				{
 					if (string.IsNullOrEmpty(fileName))
 					{
-						Extract(sourcePath, targetDir, overwrite);
+						ExtractToDirectory(sourcePath, targetDir, overwrite);
 
 						string[] files = Directory.GetFiles(targetDir, "*");
 						string file = files.FirstOrDefault();
@@ -263,14 +263,7 @@ namespace ProSuite.Commons.Testing
 					{
 						string filePath = Path.Combine(targetDir, fileName);
 
-						if (File.Exists(filePath) && overwrite)
-						{
-							Extract(sourcePath, targetDir, true);
-						}
-						else
-						{
-							Extract(sourcePath, targetDir, false);
-						}
+						ExtractToPath(sourcePath, filePath, overwrite);
 
 						result = filePath;
 					}
@@ -284,7 +277,7 @@ namespace ProSuite.Commons.Testing
 				return result;
 			}
 
-			private static void Extract(string sourcePath, string targetDir, bool overwrite)
+			private static void ExtractToDirectory(string sourcePath, string targetDir, bool overwrite)
 			{
 				if (Directory.Exists(targetDir))
 				{
@@ -306,6 +299,49 @@ namespace ProSuite.Commons.Testing
 					// does not overwrite existing
 					ZipFile.ExtractToDirectory(sourcePath, targetDir);
 				}
+			}
+
+			private static void ExtractToPath(string sourcePath, string targetPath, bool overwrite)
+			{
+				string targetDir = Path.GetDirectoryName(targetPath);
+
+				if (Directory.Exists(targetPath))
+				{
+					if (overwrite)
+					{
+						Assert.True(TryDeleteDirectory(targetPath), $"{targetPath} does not exist");
+
+						// does not overwrite existing
+						ZipFile.ExtractToDirectory(sourcePath, targetDir);
+					}
+					else if (IsEmpty(targetDir))
+					{
+						// does not overwrite existing
+						ZipFile.ExtractToDirectory(sourcePath, targetDir);
+					}
+
+					return;
+				}
+
+				if (File.Exists(targetPath))
+				{
+					if (overwrite)
+					{
+						File.Delete(targetPath);
+
+						ZipFile.ExtractToDirectory(sourcePath, targetDir);
+					}
+					else if (IsEmpty(targetDir))
+					{
+						// does not overwrite existing
+						ZipFile.ExtractToDirectory(sourcePath, targetDir);
+					}
+
+					return;
+				}
+				
+				// does not overwrite existing
+				ZipFile.ExtractToDirectory(sourcePath, targetDir);
 			}
 		}
 

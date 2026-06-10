@@ -111,7 +111,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies
 
 		public void ClearTargetAttributes()
 		{
-			_sourceAttributes.Clear();
+			_targetAttributes.Clear();
 		}
 
 		public override string ToString()
