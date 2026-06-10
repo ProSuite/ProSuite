@@ -686,7 +686,8 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
-		                                              double tolerance)
+		                                              double tolerance,
+		                                              double mergeTolerance = 0)
 		{
 			MultiLinestring result = null;
 
@@ -700,7 +701,7 @@ namespace ProSuite.Commons.Geom
 				else
 				{
 					var watch = Stopwatch.StartNew();
-					result = GetUnionAreasXY(result, ringGroup, tolerance);
+					result = GetUnionAreasXY(result, ringGroup, tolerance, mergeTolerance);
 					watch.Stop();
 
 					const long timeout300s = 300000;
@@ -873,7 +874,8 @@ namespace ProSuite.Commons.Geom
 
 		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
 		                                              [NotNull] MultiLinestring targetRings,
-		                                              double tolerance)
+		                                              double tolerance,
+		                                              double mergeTolerance = 0)
 		{
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
@@ -882,7 +884,8 @@ namespace ProSuite.Commons.Geom
 
 			var ringOperator = new RingOperator(subcurveNavigator)
 			                   {
-				                   AllowPointClustering = true
+				                   AllowPointClustering = true,
+				                   MergeTolerance = mergeTolerance
 			                   };
 
 			if (_msg.IsVerboseDebugEnabled)

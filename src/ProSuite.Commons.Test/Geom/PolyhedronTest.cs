@@ -1000,6 +1000,56 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetFootprintAtFineToleranceWithParallelRun()
+		{
+			// TLM_GEBAEUDE OID 3939229. At a fine tolerance (0.0005, finer than the data
+			// resolution 0.0125) a ~2.88 m shared wall between two building faces is classified
+			// as two point-touches bounding a sub-resolution sliver (perpendicular offset
+			// ~0.001 m, between the tolerance and the resolution) instead of one linear
+			// intersection - the turning-left walk then cycled ("Intersections seen twice").
+			// GetXYFootprint now passes the resolution as a merge tolerance so the union snaps
+			// such near-coincident parallel edge runs into a clean linear intersection.
+			// AO reference area: 334.49.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("fine_tolerance_parallel_run.wkb"), out _);
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.0125, out _);
+
+			Assert.AreEqual(334.49, footprint.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		public void CanGetFootprintAtFineToleranceWithDegenerateLinearRun()
+		{
+			// TLM_GEBAEUDE OID 3928757. At a fine tolerance a spurious sub-resolution
+			// (~0.0003 m) linear intersection run appears next to a real one (a near-coincident
+			// vertex artefact that survives the Sqrt(2)*tolerance point clustering). The union
+			// now collapses such a degenerate micro-run to a single point. AO reference: 207.93.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("fine_tolerance_micro_linear.wkb"), out _);
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.0125, out _);
+
+			Assert.AreEqual(207.93, footprint.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		public void CanGetFootprintAtFineToleranceWithCoincidentCrossings()
+		{
+			// TLM_GEBAEUDE OID 3935928. At a fine tolerance a single crossing is duplicated into
+			// two near-coincident crossings (~0.0009 m apart, just beyond the Sqrt(2)*tolerance
+			// point-cluster distance), throwing a GeomException. The union now collapses such a
+			// near-coincident crossing pair to a single point. AO reference: 180.83.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("fine_tolerance_coincident_crossing.wkb"),
+				out _);
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.0125, out _);
+
+			Assert.AreEqual(180.83, footprint.GetArea2D(), 0.05);
+		}
+
+		[Test]
 		[Ignore("Diagnostic: per-step incremental union area / inflate-loss dump for " +
 		        "thanhalten (TLM_GEBAEUDE {823CB5A8-2104-46C9-9851-3BBD1F88CA41}). " +
 		        "Writes source/ring WKBs for loss/inflate steps to C:\\temp\\th_*.wkb.")]

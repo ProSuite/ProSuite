@@ -152,8 +152,12 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			// Pass the resolution as the merge tolerance so the union snaps near-coincident
+			// parallel edge runs (shared walls separated only by a sub-resolution offset) into
+			// clean linear intersections, making the footprint robust at fine tolerances.
 			MultiLinestring result =
-				GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance);
+				GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
+				                                verticalRingDetectionTolerance);
 
 			return result;
 		}
