@@ -888,7 +888,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 		/// <param name="nonSimpleFootprintAction">The action to be performed if one of the result multipatches
 		/// has a degenerate footprint.</param>
 		/// <returns>A dictionary mapping the footprint of each resulting MultiPatch to the MultiPatch itself.</returns>
-		private static IDictionary<IPolygon, IMultiPatch> TryCutWithClosedCutLine(
+		public static IDictionary<IPolygon, IMultiPatch> TryCutWithClosedCutLine(
 			[NotNull] IMultiPatch multipatch,
 			[NotNull] IPolyline cutLine,
 			ChangeAlongZSource zSource,
