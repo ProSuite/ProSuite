@@ -781,9 +781,13 @@ namespace ProSuite.Commons.Geom
 
 			// The parallel-run snap (MergeTolerance) targets near-coincident parallel edge runs
 			// bounded by two point-touches that are too far apart to cluster, so it must run even
-			// when the point-clustering gate is not tripped (footprint path).
+			// when the point-clustering gate is not tripped (footprint path). Gate it on a cheap
+			// scan for an actual candidate so the - per incremental footprint step - work of
+			// ClusterGeometries (point clustering + subcurve coincidence tests + clone/recompute)
+			// is skipped on the many steps that have nothing to snap.
 			bool wantParallelRunSnap =
-				MergeTolerance > _subcurveNavigator.Tolerance;
+				MergeTolerance > _subcurveNavigator.Tolerance &&
+				HasParallelRunSnapCandidate(_subcurveNavigator.IntersectionPoints, MergeTolerance);
 
 			if (AllowPointClustering && (hasUnClusteredIntersectionPoints || wantParallelRunSnap))
 			{
@@ -864,11 +868,6 @@ namespace ProSuite.Commons.Geom
 			List<IntersectionPoint3D> intersectionList =
 				(List<IntersectionPoint3D>) _subcurveNavigator.IntersectionPoints;
 
-			// TODO: IGeom interface with Clone() and other generic methods?
-
-			ISegmentList source = Clone(_subcurveNavigator.Source);
-			ISegmentList target = Clone(_subcurveNavigator.Target);
-
 			// Crack points to be applied per source / target part. We do not just snap the
 			// existing intersection vertices to the cluster point: we also crack (split) a
 			// segment that runs past the cluster without a vertex there, inserting a vertex
@@ -877,6 +876,13 @@ namespace ProSuite.Commons.Geom
 			// subsequent RemoveLinearSelfIntersections can collapse the resulting duplicate
 			// out-and-back segment and the recalculated intersections no longer contain the
 			// spurious crossing that derailed the navigator.
+			//
+			// Collected against the ORIGINAL geometry (the crack points reference virtual vertex
+			// positions that index into it); the - potentially large - source/target are only
+			// cloned below if there is actually something to apply, so a union step that needs no
+			// snapping pays no clone/recompute cost (this matters: the footprint runs this on every
+			// incremental step).
+			ISegmentList originalTarget = _subcurveNavigator.Target;
 			var sourceCrackPointsByPart = new Dictionary<int, List<CrackPoint>>();
 			var targetCrackPointsByPart = new Dictionary<int, List<CrackPoint>>();
 
@@ -906,7 +912,7 @@ namespace ProSuite.Commons.Geom
 					{
 						CollectSourceCrackPoint(intersection, clusterPoint,
 						                        sourceCrackPointsByPart);
-						CollectTargetCrackPoint(intersection, clusterPoint, target,
+						CollectTargetCrackPoint(intersection, clusterPoint, originalTarget,
 						                        targetCrackPointsByPart);
 					}
 				}
@@ -919,14 +925,24 @@ namespace ProSuite.Commons.Geom
 			if (parallelRunSnap)
 			{
 				CollectParallelRunCrackPoints(intersectionList, sourceCrackPointsByPart,
-				                              targetCrackPointsByPart, target);
+				                              targetCrackPointsByPart, originalTarget);
 
 				CollectDegenerateLinearRunCrackPoints(intersectionList, sourceCrackPointsByPart,
-				                                      targetCrackPointsByPart, target);
+				                                      targetCrackPointsByPart, originalTarget);
 
 				CollectNearCoincidentCrossingCrackPoints(
-					intersectionList, sourceCrackPointsByPart, targetCrackPointsByPart, target);
+					intersectionList, sourceCrackPointsByPart, targetCrackPointsByPart,
+					originalTarget);
 			}
+
+			if (sourceCrackPointsByPart.Count == 0 && targetCrackPointsByPart.Count == 0)
+			{
+				// Nothing to snap - avoid cloning the (possibly large) accumulated geometry.
+				return false;
+			}
+
+			ISegmentList source = Clone(_subcurveNavigator.Source);
+			ISegmentList target = Clone(originalTarget);
 
 			bool sourceUpdated = ApplyCrackPoints(ref source, sourceCrackPointsByPart);
 			bool targetUpdated = ApplyCrackPoints(ref target, targetCrackPointsByPart);
@@ -942,6 +958,57 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return sourceUpdated || targetUpdated;
+		}
+
+		/// <summary>
+		/// Cheap pre-check (no subcurve construction) for whether any of the parallel-run /
+		/// degenerate-linear / near-coincident-crossing snaps could possibly apply: an adjacent
+		/// same-part point-touch pair, a sub-merge-tolerance linear run, or a sub-merge-tolerance
+		/// crossing pair. Used to skip the (per incremental footprint step) ClusterGeometries work
+		/// on the many steps that have nothing to snap.
+		/// </summary>
+		private static bool HasParallelRunSnapCandidate(
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints, double mergeTolerance)
+		{
+			List<IntersectionPoint3D> ordered =
+				intersectionPoints
+					.OrderBy(ip => ip.SourcePartIndex)
+					.ThenBy(ip => ip.VirtualSourceVertex)
+					.ToList();
+
+			for (var i = 0; i < ordered.Count - 1; i++)
+			{
+				IntersectionPoint3D a = ordered[i];
+				IntersectionPoint3D b = ordered[i + 1];
+
+				if (a.SourcePartIndex != b.SourcePartIndex ||
+				    a.TargetPartIndex != b.TargetPartIndex)
+				{
+					continue;
+				}
+
+				// Adjacent point-touch pair: a potential near-coincident parallel run.
+				if (a.Type == IntersectionPointType.TouchingInPoint &&
+				    b.Type == IntersectionPointType.TouchingInPoint)
+				{
+					return true;
+				}
+
+				bool withinMerge =
+					a.Point.GetDistance(b.Point, inXY: true) <= mergeTolerance;
+
+				// Degenerate (sub-merge-tolerance) linear run, or near-coincident crossing pair.
+				if (withinMerge &&
+				    ((a.Type == IntersectionPointType.LinearIntersectionStart &&
+				      b.Type == IntersectionPointType.LinearIntersectionEnd) ||
+				     (a.Type == IntersectionPointType.Crossing &&
+				      b.Type == IntersectionPointType.Crossing)))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		/// <summary>

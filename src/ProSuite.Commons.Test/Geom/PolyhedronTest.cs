@@ -1442,5 +1442,50 @@ namespace ProSuite.Commons.Test.Geom
 				}
 			}
 		}
+
+		[Test]
+		[Ignore("Diagnostic: times GetXYFootprint on large fixtures to assess the per-step " +
+		        "clustering performance.")]
+		public void TimeFootprintPerformance()
+		{
+			var ci = CultureInfo.InvariantCulture;
+			string[] fixtures =
+			{
+				"huge_lockergestein.wkb", "garden_center_giubiasco.wkb", "barrel_roof.wkb",
+				"labyrinth_aventure.wkb", "vallee_de_la_jeunesse.wkb"
+			};
+
+			const double tolerance = 0.00625;
+			const double verticalRingDetectionTolerance = 0.0125;
+
+			foreach (string fixture in fixtures)
+			{
+				if (! (GeomUtils.FromWkbFile(
+					       GeomTestUtils.GetGeometryTestDataPath(fixture), out _) is Polyhedron
+					       poly))
+				{
+					Console.WriteLine($"{fixture,-32} (not a Polyhedron - skipped)");
+					continue;
+				}
+
+				// Warm up (JIT + any caches).
+				poly.GetXYFootprint(tolerance, verticalRingDetectionTolerance, out _);
+
+				var sw = System.Diagnostics.Stopwatch.StartNew();
+				MultiLinestring fp = null;
+				const int runs = 3;
+				for (var i = 0; i < runs; i++)
+				{
+					fp = poly.GetXYFootprint(tolerance, verticalRingDetectionTolerance, out _);
+				}
+
+				sw.Stop();
+
+				Console.WriteLine(string.Format(ci,
+					"{0,-32} groups={1,4} area={2,12:F2} parts={3,3}  {4,8:F1} ms/run",
+					fixture, poly.RingGroups.Count, fp.GetArea2D(), fp.PartCount,
+					sw.Elapsed.TotalMilliseconds / runs));
+			}
+		}
 	}
 }
