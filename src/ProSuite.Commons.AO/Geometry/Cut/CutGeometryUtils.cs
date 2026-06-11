@@ -935,13 +935,12 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			// Prepare the result dictionary
 			var result = new Dictionary<IPolygon, IMultiPatch>();
 
-			// Create a footprint for the outer ring (largest footprint part)
+			// Identify the largest footprint part (outer ring)
 			IGeometry largestFootprintPart = GeometryUtils.GetLargestGeometry(cutFootprintParts);
 			RingGroup outerFootprintRingGroup =
 				GeometryConversionUtils.CreateRingGroup((IPolygon) largestFootprintPart);
 
-			// Create the outer MultiPatch by filtering the original MultiPatch's rings
-			// TODO: Attribute handling is not implemented yet. Ensure attributes are preserved or updated as needed.
+			// Create the outer MultiPatch (preserves original attributes)
 			List<RingGroup> outerRingGroups = new List<RingGroup>
 			                                  {
 				                                  GeometryConversionUtils.CreateRingGroup(
@@ -949,14 +948,13 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			                                  };
 			IMultiPatch outerMultipatch =
 				GeometryConversionUtils.CreateMultipatch(outerRingGroups, multipatch);
-			// Extract the IRing from the RingGroup
 			IRing emptyRingTemplate = GeometryFactory.CreateEmptyRing(footprint);
 			IPolygon outerFootprint =
 				GeometryConversionUtils.CreatePolygon(footprint, emptyRingTemplate,
 				                                      outerFootprintRingGroup);
 			result.Add(outerFootprint, outerMultipatch);
 
-			// Create a footprint for the inner ring (hole)
+			// Create the inner MultiPatch (hole) for each smaller footprint part
 			foreach (IGeometry cutFootprintPart in cutFootprintParts)
 			{
 				if (cutFootprintPart == largestFootprintPart)
@@ -964,11 +962,32 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					continue;
 				}
 
+				// Create a new MultiPatch for the hole (inner ring)
 				RingGroup innerFootprintRingGroup =
 					GeometryConversionUtils.CreateRingGroup((IPolygon) cutFootprintPart);
 				List<RingGroup> innerRingGroups = new List<RingGroup> { innerFootprintRingGroup };
 				IMultiPatch innerMultipatch =
 					GeometryConversionUtils.CreateMultipatch(innerRingGroups, multipatch);
+
+				// Assign Z-values from the cut line to the inner MultiPatch
+				if (zSource == ChangeAlongZSource.Target && GeometryUtils.IsZAware(cutLine))
+				{
+					IPointCollection innerPoints = (IPointCollection) innerMultipatch;
+					IProximityOperator proximity = (IProximityOperator) cutLine;
+
+					for (int i = 0; i < innerPoints.PointCount; i++)
+					{
+						IPoint innerPoint = innerPoints.get_Point(i);
+						IPoint nearestCutLinePoint = new PointClass();
+						proximity.QueryNearestPoint(innerPoint,
+						                            esriSegmentExtension.esriNoExtension,
+						                            nearestCutLinePoint);
+						innerPoint.Z = nearestCutLinePoint.Z;
+						innerPoints.UpdatePoint(i, innerPoint);
+					}
+				}
+
+				// Create footprint for the inner MultiPatch
 				IPolygon innerFootprint =
 					GeometryConversionUtils.CreatePolygon(footprint, emptyRingTemplate,
 					                                      innerFootprintRingGroup);
