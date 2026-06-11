@@ -69,6 +69,12 @@ namespace ProSuite.Microservices.Client.QA
 			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
 		}
 
+		public Task ShowReportAsync(IQualityVerificationResult verificationResult)
+		{
+			ShowReport(verificationResult);
+			return Task.CompletedTask;
+		}
+
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,
 		                          IQualityVerificationResult verificationResult,
 		                          out string reason)

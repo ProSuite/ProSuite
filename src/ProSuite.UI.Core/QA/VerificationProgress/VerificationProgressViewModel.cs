@@ -426,7 +426,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				{
 					_showReportCommand =
 						new RelayCommand<VerificationProgressViewModel>(
-							vm => ShowReport(),
+							async vm => await ShowReportAsync(),
 							vm => CanShowReport());
 				}
 
@@ -825,6 +825,23 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		{
 			Try(nameof(ShowReport),
 			    () => { ApplicationController?.ShowReport(Assert.NotNull(VerificationResult)); });
+		}
+
+		private async Task ShowReportAsync()
+		{
+			_msg.VerboseDebug(() => $"VerificationProgressViewModel.{nameof(ShowReportAsync)}");
+
+			try
+			{
+				if (ApplicationController != null)
+				{
+					await ApplicationController.ShowReportAsync(Assert.NotNull(VerificationResult));
+				}
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
 		}
 
 		private bool CanShowReport()

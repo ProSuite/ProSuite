@@ -86,7 +86,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			var appController =
 				new AgpBackgroundVerificationController(WorkListOpener, mapView, fullExtent,
-				                                        spatialRef, SaveAction);
+				                                        spatialRef,
+				                                        SessionContext.VerificationEnvironment,
+				                                        SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

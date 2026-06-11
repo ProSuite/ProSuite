@@ -131,7 +131,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				WorkListOpener, mapView, sketchGeometry, spatialRef, SaveAction);
+				WorkListOpener, mapView, sketchGeometry, spatialRef,
+				SessionContext.VerificationEnvironment, SaveAction);
 
 			string perimeterName = "Perimeter";
 

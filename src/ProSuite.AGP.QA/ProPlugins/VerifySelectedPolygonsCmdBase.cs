@@ -112,7 +112,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				mapView, selectedPolygonGeometry, spatialRef, SaveAction);
+				mapView, selectedPolygonGeometry, spatialRef,
+				SessionContext.VerificationEnvironment, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

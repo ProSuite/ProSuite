@@ -74,6 +74,12 @@ namespace ProSuite.Microservices.Client.QA
 		void ShowReport([NotNull] IQualityVerificationResult verificationResult);
 
 		/// <summary>
+		/// Shows a report for this verification asynchronously.
+		/// </summary>
+		/// <param name="verificationResult"></param>
+		Task ShowReportAsync([NotNull] IQualityVerificationResult verificationResult);
+
+		/// <summary>
 		/// Whether showing the report is possible or not.
 		/// </summary>
 		/// <param name="currentProgressStep"></param>
