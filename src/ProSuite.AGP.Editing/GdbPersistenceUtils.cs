@@ -471,28 +471,15 @@ public static class GdbPersistenceUtils
 			return false;
 		}
 
-		// NOTE: Inspector can be null if create feature pane is closed (possibly starting at 3.7)
-		var inspector = template.Inspector;
-
-		if (inspector == null || ! inspector.HasAttributes)
+		// NOTE: Read the default value from the template's CIM definition rather than
+		// its Inspector (which is null until the Create Features pane has been opened).
+		if (! EditorUtils.TryGetDefaultValue(template, fieldName, out value))
 		{
 			return false;
 		}
 
-		Attribute attribute =
-			inspector.FirstOrDefault(a => a.FieldName.Equals(
-				                              fieldName,
-				                              StringComparison.InvariantCultureIgnoreCase));
-
-		if (attribute == null)
-		{
-			return false;
-		}
-
-		value = attribute.CurrentValue;
-
-		//wenn guid leer ist (alles 0) dann ist Attribute.CurrentValue eine Guid und kein String
-		//wenn guid nicht leer ist dann ist Attribute.CurrentValue ein String
+		//wenn guid leer ist (alles 0) dann ist der Default-Wert eine Guid und kein String
+		//wenn guid nicht leer ist dann ist der Default-Wert ein String
 		if (value is Guid guid)
 		{
 			value = guid.ToString("B").ToUpper();

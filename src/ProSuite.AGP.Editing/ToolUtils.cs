@@ -6,7 +6,6 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Internal.Mapping;
@@ -330,15 +329,12 @@ public static class ToolUtils
 
 		if (! string.IsNullOrEmpty(subtypeField))
 		{
-			// NOTE: Inspector can be null if create feature pane is closed (possibly starting at 3.7)
-			Inspector inspector = editingTemplate.Inspector;
+			// NOTE: Read the subtype code from the template's CIM definition rather than
+			// its Inspector (which is null until the Create Features pane has been opened).
+			int? subtypeCode = EditorUtils.GetSubtypeCode(editingTemplate, subtypeField);
 
-			object subtypeValue = inspector?[subtypeField];
-
-			if (subtypeValue != null && subtypeValue != DBNull.Value)
+			if (subtypeCode != null)
 			{
-				//NOTE: Subtypes can be based on short integers
-				int subtypeCode = Convert.ToInt32(subtypeValue);
 				subtype = classDefinition.GetSubtypes()
 				                         .FirstOrDefault(s => s.GetCode() == subtypeCode);
 			}
