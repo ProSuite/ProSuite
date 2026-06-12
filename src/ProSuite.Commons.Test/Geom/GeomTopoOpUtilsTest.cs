@@ -4911,7 +4911,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.LessOrEqual(outerCountAfter, outerCountBefore,
 			                   "Adding a single ring may merge outers but must not multiply them.");
 		}
-		
+
 		[Test]
 		public void CanUnionWithSubToleranceVertexToIntersection_Top5660()
 		{
@@ -9582,22 +9582,24 @@ namespace ProSuite.Commons.Test.Geom
 			// tolerance. The rings are a valid OGC multipolygon (disjoint interiors,
 			// single touch point).
 			Linestring ring1 = GeomTestUtils.CreateRing(new List<Pnt3D>
-			{
-				new Pnt3D(0, 0, 0), new Pnt3D(0, 8, 0),
-				new Pnt3D(4, 8, 0), new Pnt3D(4, 0, 0)
-			});
+			                                            {
+				                                            new Pnt3D(0, 0, 0), new Pnt3D(0, 8, 0),
+				                                            new Pnt3D(4, 8, 0), new Pnt3D(4, 0, 0)
+			                                            });
 			Linestring ring2 = GeomTestUtils.CreateRing(new List<Pnt3D>
-			{
-				new Pnt3D(4, 8, 0), new Pnt3D(8, 8, 0),
-				new Pnt3D(8, 0, 0), new Pnt3D(4.001, 0, 0)
-			});
+			                                            {
+				                                            new Pnt3D(4, 8, 0), new Pnt3D(8, 8, 0),
+				                                            new Pnt3D(8, 0, 0),
+				                                            new Pnt3D(4.001, 0, 0)
+			                                            });
 
 			// Target rectangle overlapping the bottom of BOTH rings (bridging the wedge).
 			Linestring target = GeomTestUtils.CreateRing(new List<Pnt3D>
-			{
-				new Pnt3D(2, 3, 0), new Pnt3D(7, 3, 0),
-				new Pnt3D(7, -2, 0), new Pnt3D(2, -2, 0)
-			});
+			                                             {
+				                                             new Pnt3D(2, 3, 0), new Pnt3D(7, 3, 0),
+				                                             new Pnt3D(7, -2, 0),
+				                                             new Pnt3D(2, -2, 0)
+			                                             });
 
 			Assert.AreEqual(true, ring1.ClockwiseOriented);
 			Assert.AreEqual(true, ring2.ClockwiseOriented);
@@ -9616,6 +9618,63 @@ namespace ProSuite.Commons.Test.Geom
 			// zero-area spike (a linear self-intersection): it would add no area but real
 			// length. The clean outline has perimeter 36; the spike would add ~10.
 			Assert.AreEqual(36.0, union.GetLength2D(), 0.05);
+		}
+
+		[Test]
+		// Variation of CanUnionTwoExteriorRingsTouchingInPoint with a target island that
+		// must SURVIVE the union: the island lies below y=0, i.e. it is covered by neither
+		// source ring. The pinch makes the union walk emit one outline per source ring,
+		// both covering the entire target; the island must end up as a hole of the final
+		// single outline and must NOT be swallowed when the overlapping intermediate
+		// outlines are unioned with each other (ring-ring relationship handling on
+		// non-simple, overlapping intermediate rings).
+		public void CanUnionTwoExteriorRingsTouchingInPointWithSurvivingTargetIsland()
+		{
+			Linestring ring1 = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                                            {
+				                                            new Pnt3D(0, 0, 0), new Pnt3D(0, 8, 0),
+				                                            new Pnt3D(4, 8, 0), new Pnt3D(4, 0, 0)
+			                                            });
+			Linestring ring2 = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                                            {
+				                                            new Pnt3D(4, 8, 0), new Pnt3D(8, 8, 0),
+				                                            new Pnt3D(8, 0, 0),
+				                                            new Pnt3D(4.001, 0, 0)
+			                                            });
+
+			Linestring targetOuter = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                                                  {
+				                                                  new Pnt3D(2, 3, 0),
+				                                                  new Pnt3D(7, 3, 0),
+				                                                  new Pnt3D(7, -2, 0),
+				                                                  new Pnt3D(2, -2, 0)
+			                                                  });
+
+			// 1x1 island in the part of the target that sticks out below both rings:
+			Linestring targetIsland = GeomTestUtils.CreateRing(new List<Pnt3D>
+			                                                   {
+				                                                   new Pnt3D(5, -1.5, 0),
+				                                                   new Pnt3D(6, -1.5, 0),
+				                                                   new Pnt3D(6, -0.5, 0),
+				                                                   new Pnt3D(5, -0.5, 0)
+			                                                   });
+
+			Assert.AreEqual(true, ring1.ClockwiseOriented);
+			Assert.AreEqual(true, ring2.ClockwiseOriented);
+			Assert.AreEqual(false, targetIsland.ClockwiseOriented);
+
+			var source = new MultiPolycurve(new[] { ring1, ring2 });
+			var target = new RingGroup(targetOuter, new[] { targetIsland });
+
+			const double tolerance = 0.01;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+				source, target, tolerance);
+
+			// Outline (74) plus the surviving 1x1 island:
+			Assert.AreEqual(2, union.PartCount);
+			Assert.AreEqual(73.0, union.GetArea2D(), 0.01);
+			Assert.AreEqual(40.0, union.GetLength2D(), 0.05);
 		}
 	}
 }

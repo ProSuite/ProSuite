@@ -11,7 +11,6 @@ namespace ProSuite.Commons.Geom
 	{
 		private static double ToleranceFactor => Math.Sqrt(2);
 
-
 		private readonly SubcurveNavigator _subcurveNavigator;
 
 		public RingOperator(SubcurveNavigator subcurveNavigator)
@@ -36,6 +35,16 @@ namespace ProSuite.Commons.Geom
 		/// preserves the legacy behavior. See <see cref="SnapNearCoincidentParallelRuns"/>.
 		/// </summary>
 		public double MergeTolerance { get; set; }
+
+		/// <summary>
+		/// Whether a degenerate union walk result (see
+		/// <see cref="SubcurveNavigator.HasDisallowedSourceEntries"/>) may be repaired by
+		/// re-unioning the emitted rings with each other (see
+		/// <see cref="ReUnionProcessedRings"/>). Disabled on the re-union calls themselves
+		/// to guarantee termination; if such a nested union is degenerate again, the
+		/// nested-exterior-ring guard remains as the safety net.
+		/// </summary>
+		public bool AllowReUnionRepair { get; set; } = true;
 
 		/// <summary>
 		/// Returns the difference between source and target.
@@ -127,6 +136,19 @@ namespace ProSuite.Commons.Geom
 
 			IList<Linestring> processedRingsResult =
 				_subcurveNavigator.FollowSubcurvesTurningLeft();
+
+			if (AllowReUnionRepair && _subcurveNavigator.HasDisallowedSourceEntries)
+			{
+				// Degenerate situation (source rings touching/pinching within the tolerance):
+				// the union walk was prevented from re-entering an already departed source
+				// ring and hence emitted separate exterior rings that can overlap or even
+				// contain each other (each walk traced its own loop around the shared
+				// target). Repair this immediately, BEFORE the nested-exterior-ring guard and
+				// the ring-relationship handling below - both require simple, non-overlapping
+				// rings. Unlike the original operands, the emitted rings no longer pinch, so
+				// unioning them with each other yields the proper outline(s).
+				processedRingsResult = ReUnionProcessedRings(processedRingsResult);
+			}
 
 			// A correct union never produces an exterior (CW) ring fully contained within
 			// another exterior ring - that would double-count the inner ring's area. If it
@@ -535,6 +557,54 @@ namespace ProSuite.Commons.Geom
 			return allContaining.MinElementOrDefault(r => r.ExteriorRing.GetArea2D());
 		}
 
+		/// <summary>
+		/// Re-unions the rings emitted by a degenerate union walk (see
+		/// <see cref="SubcurveNavigator.HasDisallowedSourceEntries"/>) with each other: the
+		/// suppressed source re-entries make each walk trace its own loop around the shared
+		/// target, so the emitted exterior rings can overlap or even contain each other.
+		/// Unlike the original operands they no longer pinch, so unioning them yields the
+		/// proper outline(s). Interior rings contained in an emitted exterior ring take part
+		/// in the union (and are correctly filled where another emitted ring covers them);
+		/// interior rings whose containing outer ring was NOT processed are kept as-is for
+		/// the regular downstream assignment.
+		/// </summary>
+		private IList<Linestring> ReUnionProcessedRings(
+			[NotNull] IList<Linestring> processedRings)
+		{
+			double tolerance = _subcurveNavigator.Tolerance;
+
+			List<RingGroup> components =
+				GeomTopoOpUtils.GetConnectedComponents(
+					               new MultiPolycurve(processedRings), tolerance)
+				               .OrderByDescending(c => c.GetArea2D())
+				               .ToList();
+
+			if (components.Count < 2)
+			{
+				return processedRings;
+			}
+
+			var inComponents = new HashSet<Linestring>(
+				components.SelectMany(c => c.GetLinestrings()));
+
+			List<Linestring> unassignedInteriorRings =
+				processedRings.Where(r => ! inComponents.Contains(r)).ToList();
+
+			MultiLinestring reUnion = components[0];
+
+			foreach (RingGroup component in components.Skip(1))
+			{
+				reUnion = GeomTopoOpUtils.GetUnionAreasXY(
+					reUnion, component, tolerance, MergeTolerance,
+					allowReUnionRepair: false);
+			}
+
+			List<Linestring> result = reUnion.GetLinestrings().ToList();
+			result.AddRange(unassignedInteriorRings);
+
+			return result;
+		}
+
 		private void AssertNoNestedExteriorRings(
 			[NotNull] IList<Linestring> processedRings)
 		{
@@ -652,10 +722,10 @@ namespace ProSuite.Commons.Geom
 					// (TOP: vallee_de_la_jeunesse). Holes left unassigned here are picked up
 					// by the AssignInteriorRings call (smallest containing ring group).
 					Linestring containing =
-						unprocessedOuterRings.FirstOrDefault(
-							o => o.ClockwiseOriented == true &&
-							     RingContains(o, processedResultRing,
-							                  _subcurveNavigator.Tolerance));
+						unprocessedOuterRings.FirstOrDefault(o => o.ClockwiseOriented == true &&
+							                                     RingContains(
+								                                     o, processedResultRing,
+								                                     _subcurveNavigator.Tolerance));
 
 					if (containing != null)
 					{

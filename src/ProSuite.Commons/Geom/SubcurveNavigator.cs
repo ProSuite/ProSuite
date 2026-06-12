@@ -32,9 +32,9 @@ namespace ProSuite.Commons.Geom
 		/// Whether during the union walk (<see cref="FollowSubcurvesTurningLeft"/>) a turn
 		/// from the target onto the source was suppressed by <see cref="MustAvoidSourceEntry"/>.
 		/// This happens only in degenerate situations (source rings touching/pinching within
-		/// the tolerance) in which the emitted result rings can overlap each other. Callers
-		/// can use this flag to limit a (potentially expensive) result clean-up to exactly
-		/// these cases.
+		/// the tolerance) in which the emitted result rings can overlap or contain each
+		/// other. RingOperator.UnionXY uses this flag to limit the (potentially expensive)
+		/// re-union of the emitted rings to exactly these cases.
 		/// </summary>
 		public bool HasDisallowedSourceEntries { get; private set; }
 

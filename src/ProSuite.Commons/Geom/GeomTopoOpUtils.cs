@@ -881,11 +881,11 @@ namespace ProSuite.Commons.Geom
 			                       allowReUnionRepair: true);
 		}
 
-		private static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
-		                                               [NotNull] MultiLinestring targetRings,
-		                                               double tolerance,
-		                                               double mergeTolerance,
-		                                               bool allowReUnionRepair)
+		internal static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
+		                                                [NotNull] MultiLinestring targetRings,
+		                                                double tolerance,
+		                                                double mergeTolerance,
+		                                                bool allowReUnionRepair)
 		{
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
@@ -895,7 +895,8 @@ namespace ProSuite.Commons.Geom
 			var ringOperator = new RingOperator(subcurveNavigator)
 			                   {
 				                   AllowPointClustering = true,
-				                   MergeTolerance = mergeTolerance
+				                   MergeTolerance = mergeTolerance,
+				                   AllowReUnionRepair = allowReUnionRepair
 			                   };
 
 			if (_msg.IsVerboseDebugEnabled)
@@ -905,23 +906,7 @@ namespace ProSuite.Commons.Geom
 
 			try
 			{
-				MultiLinestring result = ringOperator.UnionXY();
-
-				if (allowReUnionRepair &&
-				    subcurveNavigator.HasDisallowedSourceEntries &&
-				    result.PartCount > 1)
-				{
-					// Degenerate situation (source rings touching/pinching within the
-					// tolerance): the union walk was prevented from re-entering an already
-					// departed source ring and hence emitted separate result rings that can
-					// overlap each other (each walk traced its own loop around the shared
-					// target). Unlike the original operands, these result rings no longer
-					// pinch, so unioning them with each other yields the proper single
-					// outline. Limited to the flagged cases to avoid the extra cost.
-					result = ReUnionResultRings(result, tolerance, mergeTolerance);
-				}
-
-				return result;
+				return ringOperator.UnionXY();
 			}
 			catch (Exception e)
 			{
@@ -936,32 +921,6 @@ namespace ProSuite.Commons.Geom
 					      ErrorGeometries = loggedGeometries
 				      };
 			}
-		}
-
-		/// <summary>
-		/// Unions the connected components of an intermediate union result with each other.
-		/// Used to repair the result of a degenerate union (see
-		/// <see cref="SubcurveNavigator.HasDisallowedSourceEntries"/>) whose result rings can
-		/// overlap each other. The repair itself must not recurse
-		/// (allowReUnionRepair: false) to guarantee termination.
-		/// </summary>
-		private static MultiLinestring ReUnionResultRings([NotNull] MultiLinestring result,
-		                                                  double tolerance,
-		                                                  double mergeTolerance)
-		{
-			MultiLinestring reUnion = null;
-
-			foreach (RingGroup component in
-			         GetConnectedComponents(result, tolerance)
-				         .OrderByDescending(c => c.GetArea2D()))
-			{
-				reUnion = reUnion == null
-					          ? component
-					          : GetUnionAreasXY(reUnion, component, tolerance, mergeTolerance,
-					                            allowReUnionRepair: false);
-			}
-
-			return reUnion ?? result;
 		}
 
 		[NotNull]
