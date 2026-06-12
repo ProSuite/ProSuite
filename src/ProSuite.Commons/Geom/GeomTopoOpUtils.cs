@@ -4998,14 +4998,33 @@ namespace ProSuite.Commons.Geom
 			foreach (Linestring ring in rings.GetLinestrings()
 			                                 .Where(r => r.ClockwiseOriented == false))
 			{
+				// Assign the hole to exactly one exterior ring: the smallest one that
+				// contains it. Containment is probed with an off-boundary point of the
+				// hole (the Linestring overload) rather than the hole's start vertex,
+				// which may lie on the boundary of an unrelated ring (e.g. an island
+				// inside the hole that shares the hole's start corner) and would
+				// otherwise be reported as containing the hole.
+				RingGroup smallestContaining = null;
+				double smallestArea = double.MaxValue;
+
 				foreach (RingGroup ringGroup in result)
 				{
-					if (GeomRelationUtils.PolycurveContainsXY(
-						    ringGroup, ring.StartPoint, tolerance))
+					if (! GeomRelationUtils.PolycurveContainsXY(
+						    ringGroup.ExteriorRing, ring, tolerance))
 					{
-						ringGroup.AddInteriorRing(ring);
+						continue;
+					}
+
+					double area = Math.Abs(ringGroup.ExteriorRing.GetArea2D());
+
+					if (area < smallestArea)
+					{
+						smallestArea = area;
+						smallestContaining = ringGroup;
 					}
 				}
+
+				smallestContaining?.AddInteriorRing(ring);
 			}
 
 			return result;
