@@ -830,6 +830,11 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			currentLastIndex = sketch.PointCount - 1;
 		}
 
+		if (_msg.IsVerboseDebugEnabled)
+		{
+			_msg.DebugFormat("Tool sketch: {0}", sketch.ToXml());
+		}
+
 		_msg.DebugFormat(
 			"Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]",
 			sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
