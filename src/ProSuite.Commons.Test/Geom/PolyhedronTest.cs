@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
@@ -844,7 +846,6 @@ namespace ProSuite.Commons.Test.Geom
 			}
 		}
 
-
 		[Test]
 		public void CanUnionChampPittetAtStep32()
 		{
@@ -974,6 +975,598 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(269.4976, footprint.GetArea2D(), 0.05);
 			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		[Ignore("Repro Test, to be fixed")]
+		public void CanGetFootprintForBrutalismusInDuedingen()
+		{
+			// TLM_GEBAEUDE {41C4C3B5-9706-40DF-9D31-2ED609986C69} (Brutalismus in Duedingen).
+			// The footprint is incorrect (missing part): the incremental ring-group union
+			// over the 201 ring groups returns 779.1132 sq m in 2 parts instead of the solid
+			// AO reference 783.9297 (1 part). The inflated boundary length (150.89 vs AO
+			// 139.39) indicates a spurious hole / extra boundary loop, and the union logs
+			// "Multiple boundary loops or otherwise unexpected self-intersections".
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("brutalismus_in_duedingen.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(783.9297, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		[Ignore("Repro Test, to be fixed")]
+		public void CanGetFootprintForHotelWaldhorn()
+		{
+			// TLM_GEBAEUDE {C95A3876-F4BC-4B09-AFAF-D3A224AE0171} (Hotel Waldhorn).
+			// The footprint is incorrect (missing part): the incremental ring-group union
+			// over the 20 ring groups returns 313.5880 sq m in 2 parts instead of the solid
+			// AO reference 438.4846 (1 part) - ~125 sq m short, the largest loss of the four.
+			// The inflated boundary length (180.81 vs AO 138.25) indicates a large dropped
+			// part / spurious hole.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("hotel_waldhorn.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(438.4846, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		[Ignore("Repro Test, to be fixed")]
+		public void CanGetFootprintForKirchwegTurgi()
+		{
+			// TLM_GEBAEUDE {D5FBCA73-C731-4895-AF38-7A42F383CEF4} (Kirchweg Turgi).
+			// The footprint is incorrect (missing part): the incremental ring-group union
+			// over the 9 ring groups returns 200.8778 sq m in 2 parts instead of the solid
+			// AO reference 199.7703 (1 part). The inflated boundary length (64.35 vs AO
+			// 57.96) reveals a spurious hole even though the net area is close.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("kirchweg_turgi.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(199.7703, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		[Ignore("Repro Test, to be fixed")]
+		public void CanGetFootprintForFriedhofsmauerRoggwil()
+		{
+			// TLM_GEBAEUDE {5AB47BFF-2612-4B11-8FE0-4FCB123519C4} (Friedhofsmauer Roggwil).
+			// The footprint is incorrect (missing part): the incremental ring-group union
+			// over the 4 ring groups returns 34.5647 sq m in 2 parts instead of the solid
+			// AO reference 58.8638 (1 part, confirmed by the user) - the footprint loses
+			// ~24 sq m (~41%). This thin, elongated wall structure is the smallest fixture
+			// (4 ring groups) and a good minimal repro.
+			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("friedhofsmauer_roggwil.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			double tolerance = 0.00625;
+
+			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(58.8638, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		[Ignore("Diagnostic: writes current footprint area/parts to C:\\Temp")]
+		public void DumpNewFootprintCases()
+		{
+			var sb = new StringBuilder();
+			foreach (string name in new[]
+			                        {
+				                        "brutalismus_in_duedingen", "hotel_waldhorn",
+				                        "kirchweg_turgi", "friedhofsmauer_roggwil"
+			                        })
+			{
+				var polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+					GeomTestUtils.GetGeometryTestDataPath(name + ".wkb"),
+					out WkbGeometryType wkbType);
+
+				double tolerance = 0.00625;
+				MultiLinestring footprint =
+					polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+				sb.AppendLine(string.Format(
+					              CultureInfo.InvariantCulture,
+					              "{0}: wkbType={1} ringGroups={2} footprintArea={3} parts={4}",
+					              name, wkbType, polyhedron.RingGroups.Count,
+					              footprint.GetArea2D()
+					                       .ToString("F4", CultureInfo.InvariantCulture),
+					              footprint.PartCount));
+
+				for (int i = 0; i < footprint.PartCount; i++)
+				{
+					Linestring part = footprint.GetPart(i);
+					sb.AppendLine(string.Format(
+						              CultureInfo.InvariantCulture,
+						              "   part {0}: area2D={1} pointCount={2} closed={3}",
+						              i,
+						              part.GetArea2D().ToString("F4", CultureInfo.InvariantCulture),
+						              part.PointCount, part.IsClosed));
+				}
+			}
+
+			File.WriteAllText(@"C:\Temp\new_footprint_diag.txt", sb.ToString());
+		}
+
+		[Test]
+		[Ignore("Diagnostic: per-step incremental union dump (replicates GetXYFootprint " +
+		        "pipeline incl. pre-clean, merge tolerance and boundary-loop explode) for " +
+		        "the four new failing cases. Writes C:\\Temp\\nf_<name>.txt and WKBs for " +
+		        "loss/inflate steps.")]
+		public void DumpNewFootprintCaseUnionSteps()
+		{
+			foreach (string name in new[]
+			                        {
+				                        "brutalismus_in_duedingen", "hotel_waldhorn",
+				                        "kirchweg_turgi", "friedhofsmauer_roggwil"
+			                        })
+			{
+				DumpFootprintUnionSteps(name, 0.00625);
+			}
+		}
+
+		private static void DumpFootprintUnionSteps(string name, double tolerance)
+		{
+			var ci = CultureInfo.InvariantCulture;
+			var sb = new StringBuilder();
+
+			var polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(name + ".wkb"), out _);
+
+			List<RingGroup> cleanedGroups =
+				GetCleanedRingGroupsToUnionize(polyhedron, tolerance, out int verticalCount);
+
+			sb.AppendLine(string.Format(
+				              ci, "{0}: rawGroups={1} cleanedGroups={2} verticalRings={3}",
+				              name, polyhedron.RingGroups.Count, cleanedGroups.Count,
+				              verticalCount));
+
+			var explodeMethod = typeof(GeomTopoOpUtils).GetMethod(
+				"ExplodeExteriorBoundaryLoops",
+				BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.NotNull(explodeMethod);
+
+			MultiLinestring result = null;
+			int count = 0;
+			foreach (RingGroup rg in cleanedGroups.OrderByDescending(r => r.GetArea2D()))
+			{
+				if (result == null)
+				{
+					result = rg.Clone();
+					sb.AppendLine(string.Format(ci, "start area={0:F6} parts={1}",
+					                            result.GetArea2D(), result.PartCount));
+					continue;
+				}
+
+				count++;
+				double before = result.GetArea2D();
+
+				MultiLinestring disjointPart =
+					GeomTopoOpUtils.GetDifferenceAreasXY(rg, result, tolerance);
+				double disjoint = disjointPart.GetArea2D();
+
+				MultiLinestring union;
+				try
+				{
+					union = GeomTopoOpUtils.GetUnionAreasXY(result, rg, tolerance, tolerance);
+					explodeMethod.Invoke(null, new object[] { union, tolerance });
+				}
+				catch (Exception e)
+				{
+					sb.AppendLine(string.Format(ci, "step {0,3}: EXCEPTION {1}", count,
+					                            e.InnerException?.Message ?? e.Message));
+					GeomUtils.ToWkbFile(result, $@"C:\Temp\nf_{name}_source_{count}.wkb");
+					GeomUtils.ToWkbFile(rg, $@"C:\Temp\nf_{name}_ring_{count}.wkb");
+					continue;
+				}
+
+				double after = union.GetArea2D();
+				double grew = after - before;
+
+				string flag = grew < disjoint - 1e-3 ? "  <<< LOSS"
+				              : grew > disjoint + 1e-3 ? "  <<< INFLATE"
+				              : "";
+
+				sb.AppendLine(string.Format(ci,
+				                            "step {0,3}: {1:F6} -> {2:F6} grew={3:F6} " +
+				                            "ringArea={4:F6} disjoint={5:F6} parts {6}->{7}{8}",
+				                            count, before, after, grew,
+				                            rg.GetArea2D(), disjoint,
+				                            result.PartCount, union.PartCount, flag));
+
+				if (flag.Length > 0)
+				{
+					GeomUtils.ToWkbFile(result, $@"C:\Temp\nf_{name}_source_{count}.wkb");
+					GeomUtils.ToWkbFile(rg, $@"C:\Temp\nf_{name}_ring_{count}.wkb");
+					sb.AppendLine($"  -> wrote C:\\Temp\\nf_{name}_source/ring_{count}.wkb");
+
+					var nav = new SubcurveNavigator(result, rg, tolerance);
+					sb.AppendLine($"  HasBoundaryLoops={nav.HasBoundaryLoops()} " +
+					              $"IPs={nav.IntersectionPoints.Count}");
+					foreach (IntersectionPoint3D ip in nav.IntersectionPoints)
+					{
+						sb.AppendLine(string.Format(ci,
+						                            "    ip type={0} srcP={1} srcV={2:F4} " +
+						                            "tgtV={3:F4} pt=({4:F4},{5:F4})",
+						                            ip.Type, ip.SourcePartIndex,
+						                            ip.VirtualSourceVertex,
+						                            ip.VirtualTargetVertex,
+						                            ip.Point.X, ip.Point.Y));
+					}
+
+					foreach (Linestring r in union.GetLinestrings())
+					{
+						sb.AppendLine(string.Format(ci,
+						                            "  result ring area={0:F6} cw={1} " +
+						                            "env=({2:F4},{3:F4})-({4:F4},{5:F4})",
+						                            r.GetArea2D(), r.ClockwiseOriented,
+						                            r.XMin, r.YMin, r.XMax, r.YMax));
+					}
+				}
+
+				result = union;
+			}
+
+			sb.AppendLine(string.Format(ci, "FINAL area={0:F6} parts={1}",
+			                            result?.GetArea2D() ?? 0, result?.PartCount ?? 0));
+
+			File.WriteAllText($@"C:\Temp\nf_{name}.txt", sb.ToString());
+		}
+
+		[Test]
+		[Ignore("Diagnostic: per-failing-step navigator/walk dump for the four new cases. " +
+		        "Requires the WKBs written by DumpNewFootprintCaseUnionSteps in C:\\Temp.")]
+		public void DumpNewFootprintFailingStepDetails()
+		{
+			var cases = new (string name, int step)[]
+			            {
+				            ("friedhofsmauer_roggwil", 1),
+				            ("kirchweg_turgi", 4),
+				            ("hotel_waldhorn", 6),
+				            ("brutalismus_in_duedingen", 65)
+			            };
+
+			var ci = CultureInfo.InvariantCulture;
+
+			foreach ((string name, int step) in cases)
+			{
+				var sb = new StringBuilder();
+
+				var source = (MultiLinestring) GeomUtils.FromWkbFile(
+					$@"C:\Temp\nf_{name}_source_{step}.wkb", out _);
+				var target = (MultiLinestring) GeomUtils.FromWkbFile(
+					$@"C:\Temp\nf_{name}_ring_{step}.wkb", out _);
+
+				double tolerance = 0.00625;
+
+				sb.AppendLine($"=== {name} step {step} ===");
+				sb.AppendLine(string.Format(ci, "source: parts={0} area={1:F6}",
+				                            source.PartCount, source.GetArea2D()));
+				for (int i = 0; i < source.PartCount; i++)
+				{
+					Linestring p = source.GetPart(i);
+					sb.AppendLine(string.Format(
+						              ci, "  srcPart {0}: area={1:F6} cw={2} points={3}",
+						              i, p.GetArea2D(), p.ClockwiseOriented, p.PointCount));
+				}
+
+				sb.AppendLine(string.Format(ci, "target: parts={0} area={1:F6}",
+				                            target.PartCount, target.GetArea2D()));
+				foreach (Pnt3D pt in target.GetPoints())
+				{
+					sb.AppendLine(string.Format(ci, "  tgt ({0:F4},{1:F4},{2:F4})",
+					                            pt.X, pt.Y, pt.Z));
+				}
+
+				// Vertices of source parts involved in intersections (keep it short):
+				var nav = new SubcurveNavigator(source, target, tolerance);
+				var involvedParts = new SortedSet<int>(
+					nav.IntersectionPoints.Select(ip => ip.SourcePartIndex));
+
+				foreach (int partIdx in involvedParts)
+				{
+					Linestring p = source.GetPart(partIdx);
+					sb.AppendLine($"  srcPart {partIdx} vertices:");
+					foreach (Pnt3D pt in p.GetPoints())
+					{
+						sb.AppendLine(string.Format(ci, "    ({0:F4},{1:F4},{2:F4})",
+						                            pt.X, pt.Y, pt.Z));
+					}
+				}
+
+				sb.AppendLine($"HasBoundaryLoops={nav.HasBoundaryLoops()}");
+				foreach (IntersectionPoint3D ip in nav.IntersectionPoints)
+				{
+					sb.AppendLine(string.Format(
+						              ci,
+						              "  ip type={0} srcP={1} srcV={2:F4} tgtP={3} tgtV={4:F4} pt=({5:F4},{6:F4})",
+						              ip.Type, ip.SourcePartIndex, ip.VirtualSourceVertex,
+						              ip.TargetPartIndex, ip.VirtualTargetVertex,
+						              ip.Point.X, ip.Point.Y));
+				}
+
+				try
+				{
+					IList<Linestring> walked = nav.FollowSubcurvesTurningLeft().ToList();
+					sb.AppendLine($"turning-left walk: {walked.Count} rings");
+					foreach (Linestring r in walked)
+					{
+						sb.AppendLine(string.Format(
+							              ci, "  walked ring area={0:F6} cw={1} points={2}",
+							              r.GetArea2D(), r.ClockwiseOriented, r.PointCount));
+					}
+				}
+				catch (Exception e)
+				{
+					sb.AppendLine($"turning-left walk EXCEPTION: {e.Message}");
+				}
+
+				// And the real union result:
+				try
+				{
+					MultiLinestring union =
+						GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance, tolerance);
+					sb.AppendLine(string.Format(ci, "union: area={0:F6} parts={1}",
+					                            union.GetArea2D(), union.PartCount));
+					foreach (Linestring r in union.GetLinestrings())
+					{
+						sb.AppendLine(string.Format(
+							              ci, "  union ring area={0:F6} cw={1}",
+							              r.GetArea2D(), r.ClockwiseOriented));
+					}
+				}
+				catch (Exception e)
+				{
+					sb.AppendLine($"union EXCEPTION: {e.Message}");
+				}
+
+				File.WriteAllText($@"C:\Temp\nf_{name}_step{step}_detail.txt", sb.ToString());
+			}
+		}
+
+		[Test]
+		[Ignore("Diagnostic: locates the source ring dropped at brutalismus step 65. " +
+		        "Requires the WKBs written by DumpNewFootprintCaseUnionSteps in C:\\Temp.")]
+		public void DumpBrutalismusDroppedRing()
+		{
+			// Why is the unprocessed 4.8166 source ring dropped at step 65?
+			var ci = CultureInfo.InvariantCulture;
+			var sb = new StringBuilder();
+
+			var source = (MultiLinestring) GeomUtils.FromWkbFile(
+				@"C:\Temp\nf_brutalismus_in_duedingen_source_65.wkb", out _);
+			var target = (MultiLinestring) GeomUtils.FromWkbFile(
+				@"C:\Temp\nf_brutalismus_in_duedingen_ring_65.wkb", out _);
+
+			double tolerance = 0.00625;
+
+			Linestring dropped = source.GetLinestrings()
+			                           .First(l => Math.Abs(l.GetArea2D() - 4.816588) < 1e-4);
+
+			sb.AppendLine("dropped ring vertices:");
+			foreach (Pnt3D pt in dropped.GetPoints())
+			{
+				sb.AppendLine(string.Format(ci, "  ({0:F4},{1:F4},{2:F4})", pt.X, pt.Y, pt.Z));
+			}
+
+			// The walked ring = union of srcPart3, srcPart10 and the target:
+			Linestring part3 = source.GetLinestrings()
+			                         .First(l => Math.Abs(l.GetArea2D() - 58.096884) < 1e-4);
+			Linestring part10 = source.GetLinestrings()
+			                          .First(l => Math.Abs(l.GetArea2D() - 4.887042) < 1e-4);
+
+			var walkInput = new MultiPolycurve(new[] { part3.Clone(), part10.Clone() });
+			MultiLinestring walked =
+				GeomTopoOpUtils.GetUnionAreasXY(walkInput, target, tolerance, tolerance);
+
+			sb.AppendLine(string.Format(ci, "walked: area={0:F6} parts={1}",
+			                            walked.GetArea2D(), walked.PartCount));
+
+			var droppedPoly = new MultiPolycurve(new[] { dropped.Clone() });
+
+			MultiLinestring notCovered =
+				GeomTopoOpUtils.GetDifferenceAreasXY(droppedPoly, walked, tolerance);
+			sb.AppendLine(string.Format(ci, "dropped not covered by walked: {0:F6}",
+			                            notCovered.GetArea2D()));
+
+			foreach (Linestring walkedRing in walked.GetLinestrings())
+			{
+				var rg = new RingGroup(walkedRing.Clone());
+				bool? contains =
+					GeomRelationUtils.AreaContainsXY(rg, dropped, tolerance);
+				sb.AppendLine(string.Format(
+					              ci, "AreaContainsXY(walkedRing {0:F6}, dropped) = {1}",
+					              walkedRing.GetArea2D(), contains));
+			}
+
+			File.WriteAllText(@"C:\Temp\nf_brutalismus_dropped_ring.txt", sb.ToString());
+		}
+
+		[Test]
+		[Ignore("Diagnostic: probes the AddUnprocessedRings predicates for the island " +
+		        "dropped at brutalismus step 65 (island-in-courtyard with all vertices " +
+		        "on the hole boundary).")]
+		public void DumpBrutalismusStep65Predicates()
+		{
+			// Rebuild the clean accumulated union up to step 64 (no WKB round-trip) and
+			// probe the AddUnprocessedRings predicates for the island that gets dropped.
+			var ci = CultureInfo.InvariantCulture;
+			var sb = new StringBuilder();
+
+			var polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("brutalismus_in_duedingen.wkb"), out _);
+
+			double tolerance = 0.00625;
+
+			List<RingGroup> cleanedGroups =
+				GetCleanedRingGroupsToUnionize(polyhedron, tolerance, out _);
+
+			var explodeMethod = typeof(GeomTopoOpUtils).GetMethod(
+				"ExplodeExteriorBoundaryLoops",
+				BindingFlags.NonPublic | BindingFlags.Static);
+
+			MultiLinestring result = null;
+			RingGroup step65Target = null;
+			int count = 0;
+			foreach (RingGroup rg in cleanedGroups.OrderByDescending(r => r.GetArea2D()))
+			{
+				if (result == null)
+				{
+					result = rg.Clone();
+					continue;
+				}
+
+				count++;
+
+				if (count == 65)
+				{
+					step65Target = rg;
+					break;
+				}
+
+				result = GeomTopoOpUtils.GetUnionAreasXY(result, rg, tolerance, tolerance);
+				explodeMethod.Invoke(null, new object[] { result, tolerance });
+			}
+
+			Assert.NotNull(step65Target);
+
+			sb.AppendLine(string.Format(ci, "source at step 65: parts={0} area={1:F6}",
+			                            result.PartCount, result.GetArea2D()));
+			foreach (Linestring p in result.GetLinestrings())
+			{
+				sb.AppendLine(string.Format(
+					              ci,
+					              "  part area={0:F6} cw={1} env=({2:F4},{3:F4})-({4:F4},{5:F4})",
+					              p.GetArea2D(), p.ClockwiseOriented,
+					              p.XMin, p.YMin, p.XMax, p.YMax));
+			}
+
+			Linestring island = result.GetLinestrings()
+			                          .First(l => Math.Abs(l.GetArea2D() - 4.816588) < 1e-3);
+			Linestring hole = result.GetLinestrings()
+			                        .First(l => l.ClockwiseOriented == false);
+			Linestring bigRing = result.GetLinestrings()
+			                           .First(l => Math.Abs(l.GetArea2D() - 306.195279) < 1e-3);
+
+			var ringContains = typeof(RingOperator).GetMethod(
+				"RingContains",
+				BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.NotNull(ringContains);
+
+			var holeContainsIsland = (bool) ringContains.Invoke(
+				null, new object[] { hole, island, tolerance });
+			sb.AppendLine($"RingContains(hole, island) = {holeContainsIsland}");
+
+			var bigGroup = new RingGroup(bigRing.Clone());
+			bool? bigContainsIsland =
+				GeomRelationUtils.AreaContainsXY(bigGroup, island, tolerance);
+			sb.AppendLine($"AreaContainsXY(bigRing alone, island) = {bigContainsIsland}");
+
+			// per-point conclusive test against the hole:
+			foreach (Pnt3D pt in island.GetPoints())
+			{
+				bool? c = GeomRelationUtils.AreaContainsXY(hole, pt, tolerance, true);
+				sb.AppendLine(string.Format(ci, "  AreaContainsXY(hole, ({0:F4},{1:F4})) = {2}",
+				                            pt.X, pt.Y, c == null ? "null" : c.ToString()));
+			}
+
+			// Now the union and whether the island survives:
+			MultiLinestring union =
+				GeomTopoOpUtils.GetUnionAreasXY(result, step65Target, tolerance, tolerance);
+			sb.AppendLine(string.Format(ci, "union: area={0:F6} parts={1}",
+			                            union.GetArea2D(), union.PartCount));
+			bool islandSurvives = union.GetLinestrings()
+			                           .Any(l => Math.Abs(l.GetArea2D() - 4.816588) < 1e-3);
+			sb.AppendLine($"island survives union: {islandSurvives}");
+
+			File.WriteAllText(@"C:\Temp\nf_brutalismus_step65_predicates.txt", sb.ToString());
+		}
+
+		/// <summary>
+		/// Replicates the private pre-clean part of <see cref="Polyhedron.GetXYFootprint"/>
+		/// (RemoveNonCoplanarInteriorRings + SimplifyRings + AsProperlyOriented) via
+		/// reflection, so the per-step dump operates on the same ring groups as production.
+		/// </summary>
+		private static List<RingGroup> GetCleanedRingGroupsToUnionize(
+			Polyhedron polyhedron, double tolerance, out int verticalRingCount)
+		{
+			const BindingFlags flags =
+				BindingFlags.NonPublic | BindingFlags.Static;
+
+			var removeNonCoplanar =
+				typeof(Polyhedron).GetMethod("RemoveNonCoplanarInteriorRings", flags);
+			var simplifyRings = typeof(Polyhedron).GetMethod("SimplifyRings", flags);
+			var asOriented = typeof(Polyhedron).GetMethod("AsProperlyOriented", flags);
+			Assert.NotNull(removeNonCoplanar);
+			Assert.NotNull(simplifyRings);
+			Assert.NotNull(asOriented);
+
+			verticalRingCount = 0;
+			var ringGroupsToClean = new List<RingGroup>();
+			foreach (RingGroup ringGroup in polyhedron.RingGroups)
+			{
+				var args = new object[] { ringGroup, tolerance, null };
+				ringGroupsToClean.Add((RingGroup) removeNonCoplanar.Invoke(null, args));
+
+				foreach (Linestring nonCoplanarRing in (List<Linestring>) args[2])
+				{
+					ringGroupsToClean.Add(new RingGroup(nonCoplanarRing));
+				}
+			}
+
+			var result = new List<RingGroup>();
+			foreach (RingGroup group in ringGroupsToClean)
+			{
+				var args = new object[] { group, tolerance, null };
+				var cleaned = (IEnumerable<RingGroup>) simplifyRings.Invoke(null, args);
+				verticalRingCount += ((List<Linestring>) args[2]).Count;
+
+				foreach (RingGroup cleanedGroup in cleaned)
+				{
+					var oriented =
+						(RingGroup) asOriented.Invoke(null, new object[] { cleanedGroup });
+
+					if (oriented.IsEmpty)
+					{
+						verticalRingCount += cleanedGroup.GetLinestrings().Count();
+						continue;
+					}
+
+					result.Add(oriented);
+				}
+			}
+
+			return result;
 		}
 
 		[Test]
@@ -1206,7 +1799,6 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1, result.PartCount);
 		}
 
-
 		[Test]
 		public void CanGetFootprintExplodingSelfCrossingRing()
 		{
@@ -1231,9 +1823,9 @@ namespace ProSuite.Commons.Test.Geom
 			var ring = new List<Pnt3D>
 			           {
 				           new Pnt3D(10, 10, 0), // 0
-				           new Pnt3D(0, 10, 0),  // 1
-				           new Pnt3D(10, 0, 0),  // 2  -> edge 1->2 crosses edge 3->0
-				           new Pnt3D(0, 0, 0),   // 3
+				           new Pnt3D(0, 10, 0), // 1
+				           new Pnt3D(10, 0, 0), // 2  -> edge 1->2 crosses edge 3->0
+				           new Pnt3D(0, 0, 0), // 3
 			           };
 
 			Polyhedron polyhedron = CreatePolyhedron(GeomTestUtils.CreateRing(ring));
@@ -1247,7 +1839,6 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(50, footprint.GetArea2D(), 0.001);
 			Assert.True(footprint.GetLinestrings().All(l => l.ClockwiseOriented == true));
 		}
-
 
 		private static void DumpNavigatorInfo(MultiLinestring source, MultiLinestring ring,
 		                                      double tolerance, double sqrtTwiceTol,
@@ -1291,7 +1882,8 @@ namespace ProSuite.Commons.Test.Geom
 			}
 
 			if (closeCount == 0)
-				Console.WriteLine($"      no near-cluster IP pairs in ({tolerance:F6},{sqrtTwiceTol:F6}]");
+				Console.WriteLine(
+					$"      no near-cluster IP pairs in ({tolerance:F6},{sqrtTwiceTol:F6}]");
 		}
 
 		private static Polyhedron CreatePolyhedron(Linestring linestring,
@@ -1343,7 +1935,6 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expectedPointCount, footprint.PointCount);
 			Assert.AreEqual(expectedArea, footprint.GetArea2D(), 0.001);
 		}
-
 
 		private static void DumpSegments(MultiLinestring mls)
 		{
@@ -1429,7 +2020,8 @@ namespace ProSuite.Commons.Test.Geom
 						{
 							string msg = (ex.InnerException ?? ex).Message;
 							string tag = msg.Contains("seen twice") ? "THROW:seenTwice"
-							             : msg.Contains("non-simple") || msg.Contains("non simple") ||
+							             : msg.Contains("non-simple") ||
+							               msg.Contains("non simple") ||
 							               msg.Contains("simple") ? "THROW:nonSimple"
 							             : msg.Contains("exterior ring") ? "THROW:nestedExt"
 							             : "THROW:" + ex.GetType().Name;
@@ -1461,7 +2053,7 @@ namespace ProSuite.Commons.Test.Geom
 			foreach (string fixture in fixtures)
 			{
 				if (! (GeomUtils.FromWkbFile(
-					       GeomTestUtils.GetGeometryTestDataPath(fixture), out _) is Polyhedron
+						       GeomTestUtils.GetGeometryTestDataPath(fixture), out _) is Polyhedron
 					       poly))
 				{
 					Console.WriteLine($"{fixture,-32} (not a Polyhedron - skipped)");
@@ -1471,7 +2063,7 @@ namespace ProSuite.Commons.Test.Geom
 				// Warm up (JIT + any caches).
 				poly.GetXYFootprint(tolerance, verticalRingDetectionTolerance, out _);
 
-				var sw = System.Diagnostics.Stopwatch.StartNew();
+				var sw = Stopwatch.StartNew();
 				MultiLinestring fp = null;
 				const int runs = 3;
 				for (var i = 0; i < runs; i++)
@@ -1482,9 +2074,10 @@ namespace ProSuite.Commons.Test.Geom
 				sw.Stop();
 
 				Console.WriteLine(string.Format(ci,
-					"{0,-32} groups={1,4} area={2,12:F2} parts={3,3}  {4,8:F1} ms/run",
-					fixture, poly.RingGroups.Count, fp.GetArea2D(), fp.PartCount,
-					sw.Elapsed.TotalMilliseconds / runs));
+				                                "{0,-32} groups={1,4} area={2,12:F2} parts={3,3}  {4,8:F1} ms/run",
+				                                fixture, poly.RingGroups.Count, fp.GetArea2D(),
+				                                fp.PartCount,
+				                                sw.Elapsed.TotalMilliseconds / runs));
 			}
 		}
 	}
