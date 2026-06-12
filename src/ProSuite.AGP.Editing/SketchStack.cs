@@ -53,10 +53,16 @@ public class SketchStack
 			return false;
 		}
 
+		if (_msg.IsVerboseDebugEnabled)
+		{
+			_msg.Debug("Sketch to be pushed: " + sketch.ToXml());
+		}
+
 		if (_sketches.TryPeek(out Geometry last))
 		{
 			if (last.IsEqual(sketch))
 			{
+				_msg.VerboseDebug(() => "Sketch is equal to last in stack. Not recorded.");
 				return false;
 			}
 		}
