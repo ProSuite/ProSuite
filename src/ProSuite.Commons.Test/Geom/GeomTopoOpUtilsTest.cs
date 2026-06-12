@@ -9559,5 +9559,63 @@ namespace ProSuite.Commons.Test.Geom
 
 			return result;
 		}
+
+		[Test]
+		// Repro for the multi-ring-pinch failures seen in the TLM footprint union:
+		// (e.g.
+		// UUID {541257DD-200B-46CD-BD71-2E413629120F}
+		// UUID {D10D1C81-9F1A-4416-8C13-22D825BDB7FF}
+		// UUID {3264D91E-9DFA-4775-BEF9-C93110FCF0AB})
+		// a source made of two exterior rings that touch in a single point AND run within the
+		// tolerance of each other along the adjacent edges (a sub-tolerance wedge), unioned with
+		// a target that overlaps both rings. This used to throw the 'exterior ring contained within
+		// another exterior ring' guard. Note that a clean point-touch (wedge wider than the
+		// tolerance) always unioned correctly; the within-tolerance parallel run between the two
+		// SOURCE rings is the essential trigger. The correct result is a single ring of area 74.0 
+		// (verified via both pinch-free orders, e.g. (ring1 u target) u ring2).
+		public void CanUnionTwoExteriorRingsTouchingInPoint()
+		{
+			// Two 4x8 rectangles standing side by side, touching ONLY at the single
+			// top point (4, 8): ring2's bottom-left vertex is nudged 1mm to the right,
+			// so a wedge-shaped gap opens between ring1's right edge and ring2's left
+			// edge - 0 at the top, 1mm at the bottom, i.e. everywhere below the 1cm
+			// tolerance. The rings are a valid OGC multipolygon (disjoint interiors,
+			// single touch point).
+			Linestring ring1 = GeomTestUtils.CreateRing(new List<Pnt3D>
+			{
+				new Pnt3D(0, 0, 0), new Pnt3D(0, 8, 0),
+				new Pnt3D(4, 8, 0), new Pnt3D(4, 0, 0)
+			});
+			Linestring ring2 = GeomTestUtils.CreateRing(new List<Pnt3D>
+			{
+				new Pnt3D(4, 8, 0), new Pnt3D(8, 8, 0),
+				new Pnt3D(8, 0, 0), new Pnt3D(4.001, 0, 0)
+			});
+
+			// Target rectangle overlapping the bottom of BOTH rings (bridging the wedge).
+			Linestring target = GeomTestUtils.CreateRing(new List<Pnt3D>
+			{
+				new Pnt3D(2, 3, 0), new Pnt3D(7, 3, 0),
+				new Pnt3D(7, -2, 0), new Pnt3D(2, -2, 0)
+			});
+
+			Assert.AreEqual(true, ring1.ClockwiseOriented);
+			Assert.AreEqual(true, ring2.ClockwiseOriented);
+
+			var source = new MultiPolycurve(new[] { ring1, ring2 });
+
+			const double tolerance = 0.01;
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+				source, new MultiPolycurve(new[] { target }), tolerance);
+
+			Assert.AreEqual(1, union.PartCount);
+			Assert.AreEqual(74.0, union.GetArea2D(), 0.01);
+
+			// The collapsed remainder of the sub-tolerance wedge must not survive as a
+			// zero-area spike (a linear self-intersection): it would add no area but real
+			// length. The clean outline has perimeter 36; the spike would add ~10.
+			Assert.AreEqual(36.0, union.GetLength2D(), 0.05);
+		}
 	}
 }

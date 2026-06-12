@@ -20,6 +20,24 @@ namespace ProSuite.Commons.Geom
 		// edges, so the rejection must stay scoped to the union.
 		private bool _rejectDegenerateUTurns;
 
+		// Union walk (turning left) only: the original start intersections (outbound source)
+		// and the pending (not yet consumed) ones. Used to prevent ENTERING the source from
+		// the target at an outbound-source intersection whose source departure has already
+		// been traversed - doing so would re-traverse that source path and emit a duplicate
+		// (typically nested) ring. See MustAvoidSourceEntry.
+		private HashSet<IntersectionPoint3D> _unionStartIntersections;
+		private ICollection<IntersectionPoint3D> _pendingUnionStartIntersections;
+
+		/// <summary>
+		/// Whether during the union walk (<see cref="FollowSubcurvesTurningLeft"/>) a turn
+		/// from the target onto the source was suppressed by <see cref="MustAvoidSourceEntry"/>.
+		/// This happens only in degenerate situations (source rings touching/pinching within
+		/// the tolerance) in which the emitted result rings can overlap each other. Callers
+		/// can use this flag to limit a (potentially expensive) result clean-up to exactly
+		/// these cases.
+		/// </summary>
+		public bool HasDisallowedSourceEntries { get; private set; }
+
 		public SubcurveNavigator([NotNull] ISegmentList sourceRings,
 		                         [NotNull] ISegmentList targets,
 		                         double tolerance,
@@ -218,16 +236,22 @@ namespace ProSuite.Commons.Geom
 
 				IntersectionPointNavigator.AllowBoundaryLoops = false;
 
-				IEnumerable<IntersectionPoint3D> startPoints =
-					IntersectionPointNavigator.IntersectionsOutboundSource;
+				List<IntersectionPoint3D> startPoints =
+					IntersectionPointNavigator.IntersectionsOutboundSource.ToList();
 
-				return FollowSubcurvesClockwise(startPoints.ToList());
+				_unionStartIntersections = new HashSet<IntersectionPoint3D>(startPoints);
+				_pendingUnionStartIntersections = startPoints;
+				HasDisallowedSourceEntries = false;
+
+				return FollowSubcurvesClockwise(startPoints);
 			}
 			finally
 			{
 				PreferredTurnDirection = originalTurnDirection;
 				_rejectDegenerateUTurns = false;
 				IntersectionPointNavigator.AllowBoundaryLoops = true;
+				_unionStartIntersections = null;
+				_pendingUnionStartIntersections = null;
 			}
 		}
 
@@ -1141,8 +1165,8 @@ namespace ProSuite.Commons.Geom
 				{
 					// Except if it is contained by a previously removed island:
 					bool insideRemovedIslands = removedInteriorBoundaryLoops.All(removedIsland =>
-						GeomRelationUtils.AreaContainsXY(
-							removedIsland, targetRing, Tolerance) == true);
+							GeomRelationUtils.AreaContainsXY(
+								removedIsland, targetRing, Tolerance) == true);
 
 					if (insideRemovedIslands)
 					{
@@ -1577,7 +1601,7 @@ namespace ProSuite.Commons.Geom
 
 			IntersectionPoint3D actualSourceIntersection = intersection;
 			double? sourceForwardDirection = GetAlongSourceDirectionChange(preferredDirection,
-				ref actualSourceIntersection, entryLine);
+				ref actualSourceIntersection, entryLine, arrivedAlongSource: alongSource);
 
 			IntersectionPoint3D actualTargetIntersection = intersection;
 			GetAlongTargetDirectionChanges(preferredDirection, startIntersection.SourcePartIndex,
@@ -1702,10 +1726,12 @@ namespace ProSuite.Commons.Geom
 
 		private double? GetAlongSourceDirectionChange(TurnDirection preferredDirection,
 		                                              ref IntersectionPoint3D intersection,
-		                                              Line3D entryLine)
+		                                              Line3D entryLine,
+		                                              bool arrivedAlongSource)
 		{
 			double? directionChange;
-			if (! CanFollowSource(intersection, intersection.SourcePartIndex))
+			if (! CanFollowSource(intersection, intersection.SourcePartIndex) ||
+			    MustAvoidSourceEntry(arrivedAlongSource, intersection))
 			{
 				// Previously, we continued along the source to the next intersection (being the as the current)
 				// which resulted in a 0-length segment that was ignored  by the caller.
@@ -1729,6 +1755,11 @@ namespace ProSuite.Commons.Geom
 			foreach (IntersectionPoint3D otherSourceIntersection in
 			         IntersectionPointNavigator.GetOtherSourceIntersections(intersection))
 			{
+				if (MustAvoidSourceEntry(arrivedAlongSource, otherSourceIntersection))
+				{
+					continue;
+				}
+
 				if (CanFollowSource(otherSourceIntersection, intersection.SourcePartIndex))
 				{
 					double? otherIntersectionDirectionChange =
@@ -1774,6 +1805,48 @@ namespace ProSuite.Commons.Geom
 				GeomUtils.GetDirectionChange(entryLine, alongSourceLine);
 
 			return sourceForwardDirection;
+		}
+
+		/// <summary>
+		/// Whether, in the union walk (see <see cref="FollowSubcurvesTurningLeft"/>), entering
+		/// the source from the target at the specified intersection must be prevented: the
+		/// intersection is an outbound-source intersection (a union start point) whose source
+		/// departure has already been traversed - either as the start of a previously emitted
+		/// ring or by running along the source in the current walk. Entering the source there
+		/// again would re-traverse the same source path and emit a duplicate ring that is
+		/// nested in (or overlaps) the other ring. The source must only be DEPARTED at such a
+		/// point (out-bound), which has already happened.
+		/// </summary>
+		private bool MustAvoidSourceEntry(bool arrivedAlongSource,
+		                                  [NotNull] IntersectionPoint3D candidateIntersection)
+		{
+			if (_unionStartIntersections == null)
+			{
+				// Not in the union walk
+				return false;
+			}
+
+			if (arrivedAlongSource)
+			{
+				// Continuing along the source is not an 'entry' from the target
+				return false;
+			}
+
+			if (IntersectionPointNavigator.EqualsStartIntersection(candidateIntersection))
+			{
+				// Returning to the current walk's own start closes the ring
+				return false;
+			}
+
+			bool mustAvoid = _unionStartIntersections.Contains(candidateIntersection) &&
+			                 ! _pendingUnionStartIntersections.Contains(candidateIntersection);
+
+			if (mustAvoid)
+			{
+				HasDisallowedSourceEntries = true;
+			}
+
+			return mustAvoid;
 		}
 
 		private void GetAlongTargetDirectionChanges(
