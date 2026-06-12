@@ -81,7 +81,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 		catch (Exception ex)
 		{
-			_msg.Error(ex.Message, ex);
+			_msg.Debug($"Error in SetSketchAppearanceAsync: {ex.Message}", ex);
 		}
 	}
 
@@ -90,10 +90,10 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
 
 		await QueuedTask.Run(async () =>
-		{
-			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
+			{
+				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-			await TrySetSketchAppearanceAsync(featureLayer, oids);
+				await TrySetSketchAppearanceAsync(featureLayer, oids);
 		});
 	}
 
@@ -122,7 +122,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 		catch (Exception ex)
 		{
-			_msg.Error(ex.Message, ex);
+			_msg.Debug($"Error in OnSketchModified: {ex.Message}", ex);
 		}
 	}
 
@@ -398,7 +398,14 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 
 					CIMGeometricEffect[] cimEffectsFrom = cimStrokeFrom.Effects;
 					CIMGeometricEffect[] cimEffectsTo = cimStrokeTo.Effects;
-					if (cimEffectsFrom.Length != cimEffectsTo.Length)
+
+					if (cimEffectsFrom == null && cimEffectsTo == null)
+					{
+						// Both null - considered equal
+						continue;
+					}
+
+					if (cimEffectsFrom?.Length != cimEffectsTo?.Length)
 					{
 						return false;
 					}
