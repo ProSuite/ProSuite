@@ -18,8 +18,8 @@ public class MemoryRelQueryTableName : CIMBasedDataConnectionName, IMemoryRelQue
 
 	public MemoryRelQueryTableName(CIMRelQueryTableDataConnection relQueryConnection)
 		: this(relQueryConnection.Name,
-		       FromCIMDataConnection(relQueryConnection.SourceTable),
-		       FromCIMDataConnection(relQueryConnection.DestinationTable),
+		       CreateFromCIMDataConnection(relQueryConnection.SourceTable),
+		       CreateFromCIMDataConnection(relQueryConnection.DestinationTable),
 		       relQueryConnection.PrimaryKey,
 		       relQueryConnection.ForeignKey,
 		       (esriRelCardinality) relQueryConnection.Cardinality,
