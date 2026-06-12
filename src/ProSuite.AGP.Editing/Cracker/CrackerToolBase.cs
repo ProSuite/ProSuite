@@ -232,6 +232,11 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 			updates.Add(originalFeature, updatedGeometry);
 		}
 
+		if (updates.Count == 0)
+		{
+			return false;
+		}
+
 		IEnumerable<Dataset> datasets =
 			GdbPersistenceUtils.GetDatasetsNonEmpty(updates.Keys);
 
