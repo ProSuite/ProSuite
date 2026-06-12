@@ -181,6 +181,11 @@ public class CutSubcurve
 
 	public bool IsFiltered { get; set; }
 
+	/// <summary>
+	/// Whether the subcurve is closed (e.g., for hole creation).
+	/// </summary>
+	public bool IsClosed { get; set; }
+
 	public MapPoint FromPoint => Path.Points[0];
 	public MapPoint ToPoint => Path.Points[Path.PointCount - 1];
 

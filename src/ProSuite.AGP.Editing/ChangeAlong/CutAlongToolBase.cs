@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -86,6 +87,8 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves)
 	{
+		_msg.Debug(
+			$"{nameof(CutAlongToolBase)}.{nameof(ChangeFeaturesAlong)}: Processing cut along operation for {Caption}.");
 		TargetBufferOptions targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
@@ -104,6 +107,9 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 			selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
 			customTolerance, zValueSource, insertVerticesInTarget, cancellationToken,
 			out newChangeAlongCurves);
+
+		// Clear the sketch to prevent duplicate calls to OnSketchCompleteAsync
+		ActiveMapView.ClearSketchAsync();
 
 		return updatedFeatures;
 	}
