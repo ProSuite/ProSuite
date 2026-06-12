@@ -53,7 +53,7 @@ public abstract class CIMBasedDataConnectionName : IDatasetName
 
 	public IWorkspaceName WorkspaceName => DataConnectionWorkspaceName;
 
-	public string Name => NameString;
+	public virtual string Name => NameString;
 
 	public object Open()
 	{
