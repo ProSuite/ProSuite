@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing;
@@ -40,23 +42,28 @@ public static class EditorUtils
 			return false;
 		}
 
-		IDictionary<string, object> defaultValues = rowTemplate.DefaultValues;
-		if (defaultValues == null)
+		return TryGetTemplateDefaultValue(rowTemplate, fieldName, out value) &&
+		       value != null && value != DBNull.Value;
+	}
+
+	/// <summary>
+	/// Gets the subtype code configured as the template's default value, or null if
+	/// the template's layer has no subtype field or the template carries no default.
+	/// Must be called on the MCT (QueuedTask).
+	/// </summary>
+	public static int? GetTemplateSubtypeCode(EditingTemplate editTemplate)
+	{
+		if (editTemplate?.Layer is not FeatureLayer featureLayer)
 		{
-			return false;
+			return null;
 		}
 
-		foreach (KeyValuePair<string, object> pair in defaultValues)
-		{
-			// NOTE: Field names are matched case-insensitively
-			if (string.Equals(pair.Key, fieldName, StringComparison.OrdinalIgnoreCase))
-			{
-				value = pair.Value;
-				return value != null && value != DBNull.Value;
-			}
-		}
+		using FeatureClass featureClass = featureLayer.GetFeatureClass();
+		using FeatureClassDefinition classDefinition = featureClass?.GetDefinition();
 
-		return false;
+		string subtypeField = classDefinition?.GetSubtypeField();
+
+		return GetSubtypeCode(editTemplate, subtypeField);
 	}
 
 	/// <summary>
@@ -79,5 +86,34 @@ public static class EditorUtils
 
 		// NOTE: Subtypes can be based on short integers
 		return Convert.ToInt32(value);
+	}
+
+	/// <summary>
+	/// Looks up a field's configured default value in the template's CIM definition.
+	/// Returns true if the field is present (the value may be null), false otherwise.
+	/// Field names are matched case-insensitively.
+	/// </summary>
+	public static bool TryGetTemplateDefaultValue([NotNull] CIMRowTemplate rowTemplate,
+	                                              [NotNull] string fieldName,
+	                                              out object value)
+	{
+		value = null;
+
+		IDictionary<string, object> defaultValues = rowTemplate.DefaultValues;
+		if (defaultValues == null)
+		{
+			return false;
+		}
+
+		foreach (KeyValuePair<string, object> pair in defaultValues)
+		{
+			if (string.Equals(pair.Key, fieldName, StringComparison.OrdinalIgnoreCase))
+			{
+				value = pair.Value;
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
