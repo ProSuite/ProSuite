@@ -511,7 +511,8 @@ namespace ProSuite.Commons.Geom
 						                          _subcurveNavigator.Tolerance) == true);
 
 				bool insideUnassignedInteriorRing =
-					unassignedInteriorRings.Any(island => RingContains(island, unprocessedRing,
+					unassignedInteriorRings.Any(island => RingContainsRobust(
+						                            island, unprocessedRing,
 						                            _subcurveNavigator.Tolerance));
 
 				if (! containedByResultRing || insideUnassignedInteriorRing)
@@ -650,6 +651,50 @@ namespace ProSuite.Commons.Geom
 				bool? contained =
 					GeomRelationUtils.AreaContainsXY(exteriorRing, interiorRingPoint, tolerance,
 					                                 true);
+
+				if (contained != null)
+				{
+					return contained.Value;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Like <see cref="RingContains"/>, but when every vertex of
+		/// <paramref name="unCutInteriorRing"/> lies on the boundary of
+		/// <paramref name="exteriorRing"/> (all vertices boundary-ambiguous), it falls back to
+		/// probing the inner ring's segment midpoints, which lie off the boundary wherever the
+		/// inner ring dips into the interior. This resolves the case of an island whose corners
+		/// ALL touch the surrounding courtyard hole boundary, where the plain vertex test is
+		/// inconclusive and falls through to "not contained"
+		/// (TOP: brutalismus_in_duedingen / garden_center_giubiasco).
+		/// </summary>
+		private static bool RingContainsRobust([NotNull] Linestring exteriorRing,
+		                                        [NotNull] Linestring unCutInteriorRing,
+		                                        double tolerance)
+		{
+			foreach (Pnt3D interiorRingPoint in unCutInteriorRing.GetPoints())
+			{
+				bool? contained =
+					GeomRelationUtils.AreaContainsXY(exteriorRing, interiorRingPoint, tolerance,
+					                                 true);
+
+				if (contained != null)
+				{
+					return contained.Value;
+				}
+			}
+
+			// Every vertex is on the exterior ring's boundary: probe segment midpoints, which
+			// lie clearly inside (or outside) wherever the inner ring deviates from the boundary.
+			foreach (Line3D segment in unCutInteriorRing.Segments)
+			{
+				Pnt3D midPoint = segment.GetPointAlong(0.5, asRatio: true);
+
+				bool? contained =
+					GeomRelationUtils.AreaContainsXY(exteriorRing, midPoint, tolerance, true);
 
 				if (contained != null)
 				{

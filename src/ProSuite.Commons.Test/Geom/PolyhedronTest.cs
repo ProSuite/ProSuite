@@ -978,7 +978,6 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		[Ignore("Repro Test, to be fixed")]
 		public void CanGetFootprintForBrutalismusInDuedingen()
 		{
 			// TLM_GEBAEUDE {41C4C3B5-9706-40DF-9D31-2ED609986C69} (Brutalismus in Duedingen).
