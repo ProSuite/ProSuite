@@ -93,10 +93,21 @@ namespace ProSuite.Commons.Geom
 			return found;
 		}
 
+		/// <param name="tolerance">The calculation tolerance, which can be small (e.g. close to
+		/// the resolution in order to be able to properly calculate almost-vertical walls that are
+		/// considerably thinner than the XY tolerance)</param>
+		/// <param name="verticalRingDetectionTolerance">The tolerance for detecting vertical rings
+		/// and vertices very close to other vertices (also between the source and the target) that
+		/// ensures that the operation can succeed thanks to clustering. Should be larger than the
+		/// XY resolution, ideally similar to the tolerance.</param>
+		/// <param name="verticalRings">Output parameter for rings that are too small in XY.</param>
 		public MultiLinestring GetXYFootprint(double tolerance,
 		                                      double verticalRingDetectionTolerance,
 		                                      out List<Linestring> verticalRings)
 		{
+			// TODO: Explain the rationale for the vertical ring detection tolerance and how it
+			// differs from the XY tolerance, if at all. 
+
 			verticalRings = new List<Linestring>();
 
 			if (RingGroups.Count == 0)

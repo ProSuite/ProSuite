@@ -4972,9 +4972,12 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public static IEnumerable<RingGroup> GetConnectedComponents(MultiLinestring rings,
+		public static IEnumerable<RingGroup> GetConnectedComponents(
+			[NotNull] MultiLinestring rings,
 			double tolerance)
 		{
+			Assert.NotNull(rings, nameof(rings));
+
 			RingGroup singleResult = rings as RingGroup;
 
 			if (singleResult != null)
