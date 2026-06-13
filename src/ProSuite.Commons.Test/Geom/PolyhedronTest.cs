@@ -1003,11 +1003,11 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		[Ignore("Repro Test, partially fixed: the ~125 sq m drop at step 6 is fixed " +
-				"(corner-aware IsSourceTouchingFromInside); area is now correct (438.4848), " +
-				"but a residual sub-resolution sliver hole (-0.0161) remains at the same " +
-				"T2/S1 corner (vertices 0.009 m apart, just above the Sqrt(2)*tol cluster " +
-				"threshold) -> 2 parts. That sliver is the near-coincident-linear-intersection " +
-				"family shared with kirchweg_turgi/friedhofsmauer.")]
+		        "(corner-aware IsSourceTouchingFromInside); area is now correct (438.4848), " +
+		        "but a residual sub-resolution sliver hole (-0.0161) remains at the same " +
+		        "T2/S1 corner (vertices 0.009 m apart, just above the Sqrt(2)*tol cluster " +
+		        "threshold) -> 2 parts. That sliver is the near-coincident-linear-intersection " +
+		        "family shared with kirchweg_turgi/friedhofsmauer.")]
 		public void CanGetFootprintForHotelWaldhorn()
 		{
 			// TLM_GEBAEUDE {C95A3876-F4BC-4B09-AFAF-D3A224AE0171} (Hotel Waldhorn).
