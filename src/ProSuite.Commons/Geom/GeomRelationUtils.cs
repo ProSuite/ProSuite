@@ -846,19 +846,56 @@ namespace ProSuite.Commons.Geom
 			         touchPoints.GroupBy(i => i.TargetPartIndex))
 			{
 				bool hasAnyRightSideDeviation = false;
-				foreach (IntersectionPoint3D intersectionPoint in intersectionPointsPerPart)
-				{
-					DetermineSourceDeviationAtIntersection(intersectionPoint, sourceArea,
-					                                       targetArea, tolerance,
-					                                       out bool hasRightSideDeviation,
-					                                       out bool hasLeftSideDeviation);
 
-					if (hasLeftSideDeviation)
+				// Touch points that coincide in XY represent a single touch at a target
+				// corner (or pinch): both target segments adjacent to the corner graze the
+				// same source vertex, producing two TouchingInPoint intersections that
+				// straddle the target vertex. The source lies inside the target there only
+				// if it is within the corner wedge, i.e. on the right side of EVERY adjacent
+				// target segment. Evaluating a single segment's half-plane in isolation is
+				// unreliable for a test point far from the corner (hotel_waldhorn: a 124.9
+				// source ring grazing a 7.8 triangle's sharp corner was wrongly declared
+				// contained because one segment's infinite line reported "right side").
+				foreach (List<IntersectionPoint3D> coincidentTouchPoints in
+				         GroupByCoincidentXY(intersectionPointsPerPart, tolerance))
+				{
+					bool clusterHasRightSideDeviation = false;
+					bool clusterHasLeftSideDeviation = false;
+
+					foreach (IntersectionPoint3D intersectionPoint in coincidentTouchPoints)
 					{
-						hasAnyLeftSideDeviation = true;
+						DetermineSourceDeviationAtIntersection(intersectionPoint, sourceArea,
+							targetArea, tolerance,
+							out bool hasRightSideDeviation,
+							out bool hasLeftSideDeviation);
+
+						clusterHasRightSideDeviation |= hasRightSideDeviation;
+						clusterHasLeftSideDeviation |= hasLeftSideDeviation;
 					}
 
-					hasAnyRightSideDeviation |= hasRightSideDeviation;
+					if (coincidentTouchPoints.Count > 1)
+					{
+						// Corner/pinch touch: only a right-side deviation w.r.t. ALL adjacent
+						// target segments (no left-side deviation on any of them) means the
+						// source is inside the wedge.
+						if (clusterHasLeftSideDeviation)
+						{
+							hasAnyLeftSideDeviation = true;
+						}
+						else if (clusterHasRightSideDeviation)
+						{
+							hasAnyRightSideDeviation = true;
+						}
+					}
+					else
+					{
+						if (clusterHasLeftSideDeviation)
+						{
+							hasAnyLeftSideDeviation = true;
+						}
+
+						hasAnyRightSideDeviation |= clusterHasRightSideDeviation;
+					}
 				}
 
 				if (hasAnyRightSideDeviation)
@@ -871,6 +908,35 @@ namespace ProSuite.Commons.Geom
 			// No target ring had right-side-only touch points. It must be outside if there was
 			// any touch point with left-side deviation.
 			return ! hasAnyLeftSideDeviation;
+		}
+
+		/// <summary>
+		/// Groups intersection points that coincide in XY (within the tolerance). Each group
+		/// represents a single physical touch location (e.g. a corner or pinch where several
+		/// intersections are reported on the adjacent segments).
+		/// </summary>
+		private static IEnumerable<List<IntersectionPoint3D>> GroupByCoincidentXY(
+			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
+			double tolerance)
+		{
+			var clusters = new List<List<IntersectionPoint3D>>();
+
+			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+			{
+				List<IntersectionPoint3D> cluster =
+					clusters.FirstOrDefault(
+						c => c[0].Point.EqualsXY(intersectionPoint.Point, tolerance));
+
+				if (cluster == null)
+				{
+					cluster = new List<IntersectionPoint3D>();
+					clusters.Add(cluster);
+				}
+
+				cluster.Add(intersectionPoint);
+			}
+
+			return clusters;
 		}
 
 		/// <summary>
