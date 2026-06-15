@@ -15,7 +15,7 @@ namespace ProSuite.GIS.Geodatabase.AGP;
 
 public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposable
 {
-	private static readonly Dictionary<long, IWorkspace> _workspacesByHandle = new();
+	private static readonly ConcurrentDictionary<long, IWorkspace> _workspacesByHandle = new();
 
 	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName =
 		new();
