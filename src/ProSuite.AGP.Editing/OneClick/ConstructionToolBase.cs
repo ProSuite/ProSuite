@@ -43,6 +43,9 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		IsSketchTool = true;
 
+		// It is not clear why, but this does not seem to be necessary:
+		//FireSketchEvents = true;
+
 		// NOTE: If UseSelection is true, ins some cases the standard selection phase is
 		// activated instead of our 'intermittent selection phase', which can result in a
 		// mix-up of the selection phase and the edit sketch phase. Symptoms are
@@ -552,6 +555,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			}
 		}
 
+		// NOTE: No sketch complete event is fired when returning false
 		return false;
 	}
 
@@ -603,6 +607,15 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		return false;
 	}
 
+	/// <summary>
+	/// Implementations for the completion of the edit sketch.
+	/// NOTE: When returning false, no SketchComplete event is fired.
+	/// </summary>
+	/// <param name="sketchGeometry"></param>
+	/// <param name="editTemplate"></param>
+	/// <param name="activeView"></param>
+	/// <param name="cancelableProgressor"></param>
+	/// <returns>True if the operation was successful, false otherwise.</returns>
 	protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
 		Geometry sketchGeometry,
 		EditingTemplate editTemplate,

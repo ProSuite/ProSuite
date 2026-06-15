@@ -173,7 +173,7 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 		MapView activeView,
 		CancelableProgressor cancelableProgressor = null)
 	{
-		await QueuedTaskUtils.Run(async () =>
+		bool result = await QueuedTaskUtils.Run(async () =>
 		{
 			try
 			{
@@ -190,7 +190,7 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 			}
 		});
 
-		return false;
+		return result;
 	}
 
 	#endregion
