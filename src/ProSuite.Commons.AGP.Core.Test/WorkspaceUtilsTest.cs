@@ -1,10 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using ArcGIS.Core.Data;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using ProSuite.Commons.Testing;
+using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Test
 {
@@ -161,5 +163,61 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.AreEqual("sde.DEFAULT", properties.Version);
 			Assert.AreEqual(string.Empty, properties.ProjectInstance);
 		}
-	}
+
+		[Test, Ignore("Requires oracle connection")]
+		public void Can_create_version_tree_as_osa()
+        {
+            string catalogPath = TestDataPreparer.FromDirectory().GetPath("dkm25k2_as_osa.sde");
+            ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
+
+            Version currentVersion = WorkspaceUtils.GetCurrentVersion(geodatabase);
+            DatabaseConnectionProperties props = WorkspaceUtils.GetConnectionProperties(currentVersion);
+            Assert.NotNull(props);
+
+			Version first = WorkspaceUtils.CreateVersion(geodatabase, "first");
+            Version second = WorkspaceUtils.CreateVersion(first, "second");
+            Version third = WorkspaceUtils.CreateVersion(second, "third");
+
+            string firstName = first.GetName();
+            string secondName = second.GetName();
+            string thirdName = third.GetName();
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+
+            WorkspaceUtils.DeleteVersion(geodatabase, first.GetName(), true);
+
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+		}
+
+		[Test, Ignore("Requires oracle connection")]
+		public void Can_create_version_tree_as_user()
+        {
+            string catalogPath = TestDataPreparer.FromDirectory().GetPath("dkm25k2_as_daro.sde");
+            ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
+
+            Version currentVersion = WorkspaceUtils.GetCurrentVersion(geodatabase);
+            DatabaseConnectionProperties props = WorkspaceUtils.GetConnectionProperties(currentVersion);
+			Assert.NotNull(props);
+
+            Version first = WorkspaceUtils.CreateVersion(geodatabase, "first");
+			Version second = WorkspaceUtils.CreateVersion(first, "second");
+			Version third = WorkspaceUtils.CreateVersion(second, "third");
+
+            string firstName = first.GetName();
+            string secondName = second.GetName();
+            string thirdName = third.GetName();
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+
+			WorkspaceUtils.DeleteVersion(geodatabase, first.GetName(), true);
+
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+		}
+    }
 }

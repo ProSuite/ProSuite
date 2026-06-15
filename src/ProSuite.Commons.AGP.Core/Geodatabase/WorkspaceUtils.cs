@@ -14,6 +14,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
+
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
@@ -249,7 +250,59 @@ public static class WorkspaceUtils
 		return uri.LocalPath;
 	}
 
-	[CanBeNull]
+    public static bool DeleteVersion(
+        [NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+        [NotNull] string versionName, bool deleteChildVersions = false)
+    {
+        var deleted = false;
+        using VersionManager manager = geodatabase.GetVersionManager();
+
+        Version version = manager.GetVersion(versionName);
+
+        if (deleteChildVersions)
+        {
+            DeleteVersionTree(version);
+        }
+        else
+        {
+            version.Delete();
+            version.Dispose();
+			deleted = true;
+        }
+
+        return deleted;
+    }
+
+    private static bool DeleteVersionTree(Version version)
+    {
+        var allDeleted = true;
+
+        foreach (Version child in version.GetChildren())
+        {
+            bool deleted = DeleteVersionTree(child);
+            if (! deleted)
+            {
+                allDeleted = false;
+            }
+        }
+
+        if (allDeleted)
+        {
+            if (version.GetParent() != null)
+			{
+				version.Delete();
+				version.Dispose();
+			}
+            else
+            {
+                allDeleted = false;
+            }
+        }
+
+        return allDeleted;
+    }
+
+    [CanBeNull]
 	public static Version GetDefaultVersion([NotNull] Datastore datastore)
 	{
 		Assert.ArgumentNotNull(datastore, nameof(datastore));
@@ -281,7 +334,7 @@ public static class WorkspaceUtils
 		if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase &&
 		    geodatabase.IsVersioningSupported())
 		{
-			VersionManager versionManager = geodatabase.GetVersionManager();
+			using VersionManager versionManager = geodatabase.GetVersionManager();
 
 			Version version = versionManager.GetCurrentVersion();
 
@@ -289,6 +342,71 @@ public static class WorkspaceUtils
 		}
 
 		return null;
+	}
+
+	public static bool ExistsVersion([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                 [NotNull] string versionName)
+	{
+		using VersionManager manager = geodatabase.GetVersionManager();
+
+		DatabaseConnectionProperties props = GetConnectionProperties(geodatabase.GetConnectionString());
+		string name = $"{props.User}.{versionName}";
+
+		return manager.GetVersionNames()
+		              .Any(vn => string.Equals(vn, name,
+		                                       StringComparison.InvariantCultureIgnoreCase));
+	}
+
+	[NotNull]
+	public static Version GetVersion([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                 [NotNull] string versionName)
+	{
+		using VersionManager manager = geodatabase.GetVersionManager();
+
+		DatabaseConnectionProperties props = GetConnectionProperties(geodatabase.GetConnectionString());
+		string name = $"{props.User}.{versionName}";
+
+		return manager.GetVersion(name);
+	}
+
+	public static Version CreateVersion([NotNull] Version parent,
+	                                    [NotNull] string versionName,
+	                                    VersionAccessType accessType = VersionAccessType.Private)
+	{
+		parent.Refresh();
+
+		using ArcGIS.Core.Data.Geodatabase geodatabase = parent.Connect();
+
+		return CreateVersion(geodatabase, versionName, accessType);
+	}
+
+	public static Version CreateVersion([NotNull] ArcGIS.Core.Data.Geodatabase parent,
+	                                    [NotNull] string versionName,
+	                                    VersionAccessType accessType = VersionAccessType.Private)
+	{
+		using VersionManager manager = parent.GetVersionManager();
+
+		var desc = new VersionDescription
+		           {
+			           Name = versionName,
+			           AccessType = accessType
+		           };
+
+		return manager.CreateVersion(desc);
+	}
+
+	public static DatabaseConnectionProperties GetConnectionProperties(
+		[NotNull] Version version)
+	{
+		ArcGIS.Core.Data.Geodatabase geodatabase = version.Connect();
+
+		return GetConnectionProperties(geodatabase);
+	}
+
+	public static DatabaseConnectionProperties GetConnectionProperties(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase)
+	{
+		return GetConnectionProperties(geodatabase.GetConnectionString());
 	}
 
 	public static DatabaseConnectionProperties GetConnectionProperties(
@@ -377,6 +495,22 @@ public static class WorkspaceUtils
 			};
 
 		return connectionProperties;
+	}
+
+	[NotNull]
+	public static string GetDatastoreDisplayText(Table table)
+	{
+		using Datastore datastore = table.GetDatastore();
+
+		Connector connector = datastore?.GetConnector();
+
+		return GetDatastoreDisplayText(connector);
+	}
+
+	public static string GetDatastoreDisplayText(Version version)
+	{
+		ArcGIS.Core.Data.Geodatabase geodatabase = version.Connect();
+		return GetDatastoreDisplayText(geodatabase.GetConnector());
 	}
 
 	/// <summary>
@@ -632,5 +766,39 @@ public static class WorkspaceUtils
 				throw new NotSupportedException(
 					$"More than one qualifier in geodatabase: {joined}");
 		}
+	}
+
+	public static IEnumerable<Conflict> ReconcileAndPost([NotNull] Version editVersion,
+	                                                     [NotNull] Version parentVersion)
+	{
+		editVersion.Refresh();
+		parentVersion.Refresh();
+
+		PostOptions postOptions = new(parentVersion);
+		ReconcileOptions reconcileOptions = GetDefaultReconcileOptions(parentVersion);
+
+		ReconcileResult result = editVersion.Reconcile(reconcileOptions, postOptions);
+
+		bool hasConflicts = result.HasConflicts;
+
+		if (! hasConflicts)
+		{
+			yield break;
+		}
+
+		foreach (Conflict conflict in editVersion.GetConflicts())
+		{
+			yield return conflict;
+		}
+	}
+
+	private static ReconcileOptions GetDefaultReconcileOptions(Version targetVersion)
+	{
+		return new ReconcileOptions(targetVersion)
+		       {
+			       ConflictResolutionType = ConflictResolutionType.FavorTargetVersion,
+			       ConflictResolutionMethod = ConflictResolutionMethod.Continue,
+			       ConflictDetectionType = ConflictDetectionType.ByRow
+		       };
 	}
 }
