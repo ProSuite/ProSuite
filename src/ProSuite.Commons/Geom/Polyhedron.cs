@@ -168,7 +168,8 @@ namespace ProSuite.Commons.Geom
 			// clean linear intersections, making the footprint robust at fine tolerances.
 			MultiLinestring result =
 				GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
-				                                verticalRingDetectionTolerance);
+				                                verticalRingDetectionTolerance,
+				                                inputRingsMayBeNonSimple: true);
 
 			return result;
 		}

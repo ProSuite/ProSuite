@@ -188,25 +188,30 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 		[Ignore("For analysis of the union operations to get the footprint.")]
 		public void AnalyzeMultipatchGeometry()
 		{
-			// TLM_GEBAEUDE {96912D18-62E7-4790-8625-B7D4B18C6B22}
+
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			// NOTE: With the standard Tolerance/Resolution (0.001/0.0001) this cannot be reproduced
-			((ISpatialReferenceTolerance) sr).XYTolerance = 0.01;
-			((ISpatialReferenceResolution) sr).XYResolution[true] = 0.001;
+			string xmlOrWkbGeometryFilePath = @"C:\Temp\kirchweg_turgi.xml";
 
 			IFeature mockFeature =
-				TestUtils.CreateMockFeature(@"C:\Temp\multipatchTriangulated.xml", sr);
+				TestUtils.CreateMockFeature(xmlOrWkbGeometryFilePath, sr);
 
 			IMultiPatch multiPatch = (IMultiPatch) mockFeature.Shape;
 
-			Pnt3D holePoint = new Pnt3D(2684181.196, 1247569.610, 0);
+			Pnt3D holePoint = new Pnt3D(2568351.55, 1112716.47, 0);
 
 			Polyhedron polyhedron =
 				GeometryConversionUtils.CreatePolyhedron(multiPatch, false, true);
 
-			double tolerance = 0.0005;
+			string wkbFileName = System.IO.Path.GetFileNameWithoutExtension(xmlOrWkbGeometryFilePath) + ".wkb";
+			string directory = System.IO.Path.GetDirectoryName(xmlOrWkbGeometryFilePath);
+
+			Assert.NotNull(directory);
+
+			GeomUtils.ToWkbFile(polyhedron, System.IO.Path.Combine(directory, wkbFileName));
+
+			double tolerance = 0.00625;
 			MultiLinestring result = null;
 			int count = 0;
 			foreach (RingGroup ringGroup in polyhedron.RingGroups.OrderByDescending(
@@ -221,6 +226,14 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 					count++;
 					double area = result.GetArea2D();
 					var watch = Stopwatch.StartNew();
+
+					// Save source (pre-union result) and target ring at problematic steps for repro tests
+					//if (count >= 30 && count <= 34)
+					//{
+					//	GeomUtils.ToWkbFile(result, $@"C:\temp\cp_source_{count}.wkb");
+					//	GeomUtils.ToWkbFile(ringGroup, $@"C:\temp\cp_ring_{count}.wkb");
+					//}
+
 					result = GeomTopoOpUtils.GetUnionAreasXY(result, ringGroup, tolerance);
 					watch.Stop();
 
@@ -229,9 +242,16 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 						Console.WriteLine($"Covered point at {count}");
 					}
 
-					if (area > result.GetArea2D())
+					if (GeomRelationUtils.AreaContainsXY(ringGroup, holePoint, tolerance) == true)
 					{
-						//throw new InvalidOperationException();
+						Console.WriteLine($"Ring at hole has been added at {count}");
+					}
+
+					Console.WriteLine($"{count}. Area {ringGroup.GetArea2D()}. Total: {result.GetArea2D()}");
+
+					if (result.GetArea2D() < area)
+					{
+						Console.WriteLine($"Area decreased at {count}!!!");
 					}
 
 					IPolygon polygon =
@@ -259,17 +279,17 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 			}
 
 			IPolygon footprintGeom =
-				CreateFootprintUtils.TryGetGeomFootprint(multiPatch, null, out _);
+				CreateFootprintUtils.TryGetGeomFootprint(multiPatch, tolerance, out _);
 
 			Assert.IsNotNull(footprintGeom);
-
-			Assert.AreEqual(135.58423, footprintGeom.Length, 0.0001);
-			Assert.AreEqual(740.23728, ((IArea) footprintGeom).Area, 0.01);
 
 			IPolygon footprintAo =
 				CreateFootprintUtils.GetFootprintAO(multiPatch);
 
 			GeometryUtils.Simplify(footprintAo);
+
+			Console.WriteLine($"Geom footprint: {GeometryUtils.GetGeometrySize(footprintGeom)}");
+			Console.WriteLine($"AO footprint: {GeometryUtils.GetGeometrySize(footprintAo)}");
 
 			Assert.IsTrue(GeometryUtils.AreEqualInXY(footprintAo, footprintGeom));
 		}

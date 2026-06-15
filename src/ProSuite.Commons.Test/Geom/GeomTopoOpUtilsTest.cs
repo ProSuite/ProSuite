@@ -9676,5 +9676,179 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(73.0, union.GetArea2D(), 0.01);
 			Assert.AreEqual(40.0, union.GetLength2D(), 0.05);
 		}
+
+		[Test]
+		public void CanUnionRingsWithCornerZigzagCorruptingRunStartDirection()
+		{
+			// Faithful minimal repro of the kirchweg_turgi union failure.
+			//
+			// The target is a thin triangle; the source rides one of its edges (the SHARED
+			// edge T0->T1) in the opposite direction and the union should merge the two into
+			// a single ring. T1=(0,0) is a target VERTEX in the middle of the shared boundary:
+			// the target turns there onto its non-shared FAR side T1->T2, and the source
+			// arrives at T1 from its own region (shallow) before riding the shared edge down
+			// to T0.
+			//
+			// Right at the corner T1 the source carries a sub-resolution micro zig-zag
+			//   T1(0,0) -> (-0.011,-0.005) -> (-0.016,0.005) -> ... -> T0
+			// Each micro segment is ~0.012 m: ABOVE the Sqrt(2)*tol cluster distance (0.00884)
+			// so clustering never merges it, BELOW the resolution (0.0125), and not an
+			// out-and-back so RemoveLinearSelfIntersections misses it too.
+			//
+			// THE BREAKING POINT: the first micro segment T1->(-0.011,-0.005) sits, near the
+			// corner, within tolerance of BOTH adjacent target edges - the shared edge T0-T1
+			// AND the far side T1-T2 - and points the SAME way as the far side. So the
+			// run-start intersection point at T1 (srcV=2, tgtV=1.0) is seeded against the
+			// far-side segment with LinearIntersectionInOppositeDirection = FALSE, whereas the
+			// genuine shared run is opposite-direction = TRUE (the run-END IP at T0 correctly
+			// shows oppDir=TRUE). That FALSE nulls the target-forward direction at the corner,
+			// so the turning-left union walk cannot turn off the shared edge onto the far side;
+			// it retraces the source ring, emits 0 rings, and GetUnionAreasXY falls back to
+			// adding source + target as two overlapping disjoint parts (overlap double-counted).
+			//
+			// Removing the two zig-zag vertices makes both run IPs oppDir=TRUE and the walk
+			// closes a single ring (area ~157.50). The SHALLOW arrival is essential (a
+			// perpendicular arrival makes the turn robust); the zig-zag size is a
+			// tolerance-boundary effect.
+
+			const double tolerance = 0.00625;
+
+			// Triangle: shared edge T0->T1, far side T1->T2.
+			Linestring target = GeomTestUtils.CreateRing(
+				new List<Pnt3D>
+				{
+					new Pnt3D(-14.12, 4.636, 0),  // T0 (= shared edge end, run end tgtV 0.0)
+					new Pnt3D(0, 0, 0),           // T1 (= corner, run start tgtV 1.0)
+					//new Pnt3D(-0.011, -0.005, 0), // TEST: sub-resolution micro zig-zag vertices inserted into target
+					//new Pnt3D(-0.016, 0.005, 0),  // TEST: sub-resolution micro zig-zag vertices inserted into target
+					new Pnt3D(-13.58, -0.491, 0)  // T2 (far side end)
+				});
+
+			Linestring source = GeomTestUtils.CreateRing(
+				new List<Pnt3D>
+				{
+					new Pnt3D(-4, 12, 0),         // body apex
+					new Pnt3D(6.873, 2.934, 0),   // shallow approach to the corner
+					new Pnt3D(0, 0, 0),           // arrive at corner T1
+					new Pnt3D(-0.011, -0.005, 0), // sub-resolution zig-zag (toward the far side)
+					new Pnt3D(-0.016, 0.005, 0),  // sub-resolution zig-zag (back onto the edge)
+					new Pnt3D(-14.12, 4.636, 0)   // ride the shared edge down to T0
+				});
+
+			Assert.AreEqual(true, source.ClockwiseOriented);
+			Assert.AreEqual(true, target.ClockwiseOriented);
+
+
+			Polyhedron polyhedron = new Polyhedron(new List<RingGroup>()
+			                                       {
+				                                       new RingGroup(source), new RingGroup(target)
+			                                       });
+
+			var linearSelfIntersections =
+				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(source, tolerance);
+
+
+			var zig = source.GetPoint(3) as Pnt3D;
+			var zag = source.GetPoint(4) as Pnt3D;
+
+			Line3D sourceSegment = source.Segments[4];
+
+			double perpDistanceZig =
+				sourceSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioZig, out _);
+			double perpDistanceZag =
+				sourceSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioZag, out _);
+
+			Line3D targetSegment = target.Segments[0];
+
+			double targetDistanceZig =
+				targetSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioTargetZig, out _);
+			double targetDistanceZag =
+				targetSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioTargetZag, out _);
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+				new MultiPolycurve(new[] { source }),
+				new MultiPolycurve(new[] { target }),
+				tolerance, tolerance);
+
+			// Correct result: a single ring (the sub-resolution tent is absorbed).
+			Assert.AreEqual(1, union.PartCount);
+			Assert.AreEqual(157.50, union.GetArea2D(), 0.2);
+		}
+
+		[Test]
+		[Ignore("Repro (to be fixed): minimal, even-numbered reproduction of the " +
+				"sub-resolution corner zig-zag union failure. Currently returns 2 overlapping " +
+				"parts instead of 1 (correct area 7260). NOTE: this synthetic exercises the " +
+				"SUBSUMPTION sub-mechanism (a within-tolerance roof run subsumed by the wall " +
+				"run); real kirchweg_turgi is a DIFFERENT sub-mechanism (oppDir corruption, no " +
+				"subsumption) - faithfully reproduced by " +
+				"CanUnionRingsWithCornerZigzagCorruptingRunStartDirection. A " +
+				"snap-the-subsumed-run-onto-the-surviving-target prototype fixed " +
+				"THIS case + full Geom suite green, but regressed friedhofsmauer_roggwil " +
+				"(its subsumption keeps the spurious larger run, so snapping followed the wrong " +
+				"run) and did not touch kirchweg - reverted. Un-ignore when a general fix lands.")]
+		public void CanUnionRingsWithSubResolutionCornerZigzag()
+		{
+			// Minimal repro of the "sub-resolution corner zig-zag" union bug.
+			//
+			// A source polygon and a target triangle share a wall along the x-axis,
+			// A(0,0)-B(100,0); the target is above (apex G(50,0.2), so its far side leaving
+			// A rises at slope 0.004), the source is below. The source approaches the acute
+			// corner A SHALLOW (from below-left via (-50,-10)) and runs along the wall to B.
+			// Right at A it carries a sub-resolution micro-zig-zag tent
+			// A(0,0)->(2,0.008)->(4,0): the apex (2,0.008) sits exactly on the target's
+			// far-side line and within tolerance (0.01) of the wall.
+			//
+			// That artefact makes source segment 1 linear with BOTH the far side (genuine) and
+			// the wall (within-tolerance); the wall run subsumes the far-side run, but the
+			// source still rides up to (2,0.008), so at A the source-forward (on the far side)
+			// and the target-forward (the far side) are exactly collinear -> the turning-left
+			// walk cannot decide the turn and retraces the source ring, emitting 0 rings ->
+			// 2 overlapping parts. The fix snaps the subsumed run's source vertex (2,0.008)
+			// onto the surviving wall run's target segment, so the source is exactly on the
+			// wall and the walk turns onto the far side correctly.
+			//
+			// Correct single ring area = source pentagon (7250) + target triangle
+			// (0.5*100*0.2 = 10) = 7260 (the sub-resolution tent is absorbed by the target).
+			//
+			// The SHALLOW arrival is essential: a perpendicular wall makes the turn robust
+			// and does not reproduce. The apex height is a tolerance-boundary effect: a hair
+			// higher (outside tolerance of the far side) and there is no bug.
+
+			const double tolerance = 0.01;
+
+			Linestring source = GeomTestUtils.CreateRing(
+				new List<Pnt3D>
+				{
+					new Pnt3D(-50, -10, 0), // shallow arrival from below-left
+					new Pnt3D(0, 0, 0),     // acute corner A
+					new Pnt3D(2, 0.008, 0),   // sub-resolution zig-zag apex (on the far-side line)
+					new Pnt3D(4, 0, 0),     // back onto the wall
+					new Pnt3D(100, 0, 0),   // B
+					new Pnt3D(100, -50, 0),
+					new Pnt3D(-50, -50, 0)
+				});
+
+			Linestring target = GeomTestUtils.CreateRing(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(50, 0.2, 0),
+					new Pnt3D(100, 0, 0)
+				});
+
+			Assert.AreEqual(true, source.ClockwiseOriented);
+			Assert.AreEqual(true, target.ClockwiseOriented);
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
+				new MultiPolycurve(new[] { source }),
+				new MultiPolycurve(new[] { target }),
+				tolerance, tolerance);
+
+			// Correct result: a single ring (the tent is absorbed by the target).
+			Assert.AreEqual(1, union.PartCount);
+			Assert.AreEqual(7260.0, union.GetArea2D(), 0.5);
+		}
+
 	}
 }
