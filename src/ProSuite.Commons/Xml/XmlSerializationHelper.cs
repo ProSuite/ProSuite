@@ -41,6 +41,29 @@ namespace ProSuite.Commons.Xml
 			}
 		}
 
+		[NotNull]
+		public string SaveToString([NotNull] T obj)
+		{
+			Assert.ArgumentNotNull(obj, nameof(obj));
+
+			var writerSettings =
+				new XmlWriterSettings
+				{
+					NewLineHandling = NewLineHandling.Entitize,
+					Indent = true
+				};
+
+			XmlSerializer serializer = GetSerializer();
+
+			var sb = new StringBuilder();
+			using (XmlWriter xmlWriter = XmlWriter.Create(sb, writerSettings))
+			{
+				serializer.Serialize(xmlWriter, obj);
+			}
+
+			return sb.ToString();
+		}
+
 		/// <summary>
 		/// Reads T from the provided xml file. Potential issues are logged as warning.
 		/// </summary>
