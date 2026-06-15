@@ -836,6 +836,11 @@ public abstract class OneClickToolBase : MapToolBase
 		var filteredCount = 0;
 		var selectionCount = 0;
 
+		if (ActiveMapView?.Map == null)
+		{
+			yield break;
+		}
+
 		SpatialReference mapSpatialReference = ActiveMapView.Map.SpatialReference;
 
 		foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
