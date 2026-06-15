@@ -16,6 +16,7 @@ namespace ProSuite.Commons.AGP.PickerUI;
 
 public class FlashService : IDisposable
 {
+	private readonly bool _flashInAllMaps;
 	private readonly Dictionary<string, IFlashSymbol> _symbols;
 	private readonly List<IDisposable> _overlays = new();
 	private readonly CIMLineSymbol _lineSymbol;
@@ -28,8 +29,10 @@ public class FlashService : IDisposable
 
 	public CIMPolygonSymbol PolygonSymbol => _polygonSymbol;
 
-	public FlashService()
+	public FlashService(bool flashInAllMaps = true)
 	{
+		_flashInAllMaps = flashInAllMaps;
+
 		CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
 
 		_lineSymbol = SymbolFactory.Instance.ConstructLineSymbol(magenta, 4);
@@ -76,8 +79,15 @@ public class FlashService : IDisposable
 				flashGeometry = GetPolygonGeometry(geometry);
 				symbol = _polygonSymbol;
 				break;
-			case GeometryType.Unknown:
 			case GeometryType.Multipatch:
+				// TODO: Fix this for stereo:
+				// Use CleanMultipatchClientUtils.GetTriangleConversionRings to get polygons,
+				// create a bag and flash that bag. This will work for stereo and 3D maps.
+				// Alternative: Wait for Menno to fix multipatch overlays in stereo.
+				flashGeometry = geometry;
+				symbol = _polygonSymbol;
+				break;
+			case GeometryType.Unknown:
 			case GeometryType.GeometryBag:
 				break;
 			default:
@@ -111,9 +121,11 @@ public class FlashService : IDisposable
 			case GeometryType.Polygon:
 				flashGeometry = GetPolygonGeometry(geometry);
 				break;
+			case GeometryType.Multipatch:
+				flashGeometry = geometry;
+				break;
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
-			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 				break;
 			default:
@@ -130,8 +142,13 @@ public class FlashService : IDisposable
 		DisposeOverlays();
 	}
 
-	private static Geometry GetPolygonGeometry(Geometry geometry)
+	private Geometry GetPolygonGeometry(Geometry geometry)
 	{
+		if (_flashInAllMaps)
+		{
+			return geometry;
+		}
+
 		Envelope clipExtent = MapView.Active?.Extent;
 
 		if (clipExtent == null)
@@ -146,14 +163,30 @@ public class FlashService : IDisposable
 
 	private void AddOverlay(Geometry geometry, CIMSymbol symbol, bool useRealWorldUnits = false)
 	{
-		MapView.Active.NotNullCallback(mv =>
+		if (_flashInAllMaps)
 		{
-			double referenceScale = useRealWorldUnits ? 1000 : -1;
-			IDisposable overlay =
-				mv.AddOverlay(geometry, symbol.MakeSymbolReference(), referenceScale);
+			foreach (MapView mapView in MapViewUtils.GetAllMapViews())
+			{
+				AddOverlay(mapView, geometry, symbol, useRealWorldUnits);
+			}
+		}
+		else
+		{
+			MapView.Active.NotNullCallback(mv =>
+			{
+				AddOverlay(mv, geometry, symbol, useRealWorldUnits);
+			});
+		}
+	}
 
-			_overlays.Add(Assert.NotNull(overlay));
-		});
+	private void AddOverlay(MapView mapView, Geometry geometry, CIMSymbol symbol,
+	                        bool useRealWorldUnits)
+	{
+		double referenceScale = useRealWorldUnits ? 1000 : -1;
+		IDisposable overlay =
+			mapView.AddOverlay(geometry, symbol.MakeSymbolReference(), referenceScale);
+
+		_overlays.Add(Assert.NotNull(overlay));
 	}
 
 	public FlashService DisposeOverlays()
@@ -229,6 +262,7 @@ public class ColoredSymbol : IFlashSymbol
 				return symbol;
 			}
 			case GeometryType.Polygon:
+			case GeometryType.Multipatch:
 			{
 				CIMStroke outline =
 					SymbolFactory.Instance.ConstructStroke(_color, _width, LineStyle);
@@ -240,7 +274,6 @@ public class ColoredSymbol : IFlashSymbol
 			}
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
-			case GeometryType.Multipatch:
 			case GeometryType.GeometryBag:
 			default:
 				return null;

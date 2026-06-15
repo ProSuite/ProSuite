@@ -459,12 +459,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return featureWorkspace.OpenRelationshipClass(name);
 			}
-			catch (Exception e)
+			catch (COMException comException)
 			{
-				var ws = WorkspaceUtils.WorkspaceToString(featureWorkspace);
-				throw new InvalidOperationException(
-					$"Error opening relationship class '{name}' from workspace {ws}: {e.Message}",
-					e);
+				string ws = WorkspaceUtils.WorkspaceToString(featureWorkspace);
+
+				// The standard message is useless.
+				// Re-throw COMException because that is what callers expect:
+				if (comException.ErrorCode == (int) fdoError.FDO_E_ITEM_NOT_FOUND)
+				{
+					throw new COMException(
+						$"Relationship class '{name}' does not exist in workspace {ws}");
+				}
+
+				throw new COMException(
+					$"Error opening relationship class '{name}' from workspace {ws}: {comException.Message}",
+					comException);
 			}
 		}
 
@@ -585,6 +594,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string tinName = dirInfo.Name;
 
 			return OpenTin(directory, tinName);
+		}
+
+		public static ILasDataset OpenLasDataset([NotNull] string lasdPath)
+		{
+			Assert.ArgumentNotNullOrEmpty(lasdPath, nameof(lasdPath));
+
+			string folder = Path.GetDirectoryName(lasdPath) ?? string.Empty;
+			string fileName = Path.GetFileName(lasdPath);
+
+			IWorkspaceFactory wsf = new LasDatasetWorkspaceFactoryClass();
+			IWorkspace workspace = wsf.OpenFromFile(folder, 0);
+
+			var lasWs = workspace as ILasDatasetWorkspace;
+			if (lasWs == null)
+			{
+				throw new InvalidConfigurationException(
+					$"Cannot open LAS Dataset workspace for: {lasdPath}");
+			}
+
+			ILasDataset lasDataset = lasWs.OpenLasDataset(fileName);
+			return lasDataset;
 		}
 
 		[CanBeNull]
@@ -1078,7 +1108,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (workspace != null && Marshal.IsComObject(workspace))
 				{
 					// Avoid locking the workspace
-					Marshal.ReleaseComObject(workspace);
+					ComUtils.ReleaseObject(workspace);
 				}
 			}
 		}
@@ -1102,7 +1132,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			finally
 			{
 				// Avoid locking the workspace
-				Marshal.ReleaseComObject(workspace);
+				ComUtils.ReleaseObject(workspace);
 			}
 		}
 
@@ -1539,6 +1569,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			enumDatasetName.Reset();
+
+			ComUtils.ReleaseComObject(enumDatasetName);
 		}
 
 		[NotNull]
@@ -1706,9 +1738,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebug(
-						() => $"Getting dataset names of type {datasetType} in " +
-						      $"{WorkspaceUtils.GetWorkspaceDisplayText(workspace)}");
+					_msg.VerboseDebug(() => $"Getting dataset names of type {datasetType} in " +
+					                        $"{WorkspaceUtils.GetWorkspaceDisplayText(workspace)}");
 				}
 
 				return workspace.DatasetNames[datasetType];
@@ -2453,47 +2484,39 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return relationshipClassName.FeatureDatasetName;
 			}
-
+#if ArcGIS || ARCGIS_11_0_OR_GREATER
 			var topologyName = datasetName as ITopologyName;
 			if (topologyName != null)
 			{
 				return topologyName.FeatureDatasetName;
 			}
-
+#endif
+#if !ARCGIS_12_0_OR_GREATER
 			var geometricNetworkName = datasetName as IGeometricNetworkName;
 			if (geometricNetworkName != null)
 			{
 				return geometricNetworkName.FeatureDatasetName;
 			}
-
+#endif
 			var networkDatasetName = datasetName as INetworkDatasetName;
 			if (networkDatasetName != null)
 			{
 				return networkDatasetName.FeatureDatasetName;
 			}
-
-#if ARCGIS_11_5_OR_GREATER
+#if !Server || ARCGIS_11_5_OR_GREATER
 			var terrainName = datasetName as ITerrainName;
 			if (terrainName != null)
 			{
 				return terrainName.FeatureDatasetName;
 			}
 #endif
-
 #if !Server
-			var terrainName = datasetName as ITerrainName;
-			if (terrainName != null)
-			{
-				return terrainName.FeatureDatasetName;
-			}
-
 			var fabricName = datasetName as ICadastralFabricName;
 			if (fabricName != null)
 			{
 				return fabricName.FeatureDatasetName;
 			}
 #endif
-
 			// other dataset name, assume not in a feature dataset
 			return null;
 		}
@@ -3842,8 +3865,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				// Try again without the not-null constraint, because fields in views are always nullable
 				candidates = fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
 				                               (uniqueIndexes == null ||
-				                                uniqueIndexes.Any(
-					                                ix => ix.Fields.Field[0].Name == f.Name)))
+				                                uniqueIndexes.Any(ix => ix.Fields.Field[0].Name ==
+					                                f.Name)))
 				                   .ToList();
 
 				_msg.DebugFormat("{0}: Candidates with Nullable fields have been included.",
@@ -4162,8 +4185,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 				else
 				{
-					_msg.VerboseDebug(
-						() => $"Dataset name returned more than once: {datasetName.Name}");
+					_msg.VerboseDebug(() =>
+						                  $"Dataset name returned more than once: {datasetName.Name}");
 				}
 
 				datasetName = enumDatasetNames.Next();
@@ -4398,6 +4421,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			if (catalogPath.EndsWith(".mdb",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			if (catalogPath.EndsWith(".geodatabase",
 			                         StringComparison.InvariantCultureIgnoreCase))
 			{
 				return true;

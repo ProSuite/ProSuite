@@ -8,7 +8,10 @@
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
 
-		<ArcGISProVersion Condition=" '$(ArcGISProVersion)' == '' ">3.0</ArcGISProVersion>
+    <ArcGISProVersion Condition=" '$(ArcGISProVersion)' == '' ">3.0</ArcGISProVersion>
+
+		<!-- Suppressing WFO1000 for .NET 10 temporarily until it is fixed for each control property. -->
+    <NoWarn>1591;WFO1000</NoWarn>
 
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
@@ -29,11 +32,15 @@
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
-    <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DefineConstants>DEBUG;TRACE;$(ArcGISProVersion)</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.6 ">
+    <DefineConstants>$(DefineConstants);ARCGISPRO_GREATER_3_6</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(ArcGISProVersion)' &gt; 3.5 ">

@@ -1,9 +1,8 @@
-namespace ProSuite.AGP.Editing.MergeFeatures
+namespace ProSuite.AGP.Editing.MergeFeatures;
+
+public enum MergeOperationSurvivor
 {
-	public enum MergeOperationSurvivor
-	{
-		Undefined = 0,
-		LargerObject = 1,
-		FirstObject = 2
-	}
+	Undefined = 0,
+	LargerObject = 1,
+	FirstObject = 2
 }

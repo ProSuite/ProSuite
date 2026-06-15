@@ -42,8 +42,7 @@ namespace ProSuite.Commons.Geom.Wkb
 						return polyhedra[0];
 					}
 
-					throw new NotImplementedException(
-						"Multi-Polyhedra not yet implemented as container type");
+					return new MultiPolyhedron(polyhedra);
 				}
 
 				if (geometryType == WkbGeometryType.PolyhedralSurface)
@@ -117,7 +116,7 @@ namespace ProSuite.Commons.Geom.Wkb
 				{
 					RingGroup result = ReadPolygonCore(reader, ordinates);
 
-					return new List<RingGroup> {result};
+					return new List<RingGroup> { result };
 				}
 
 				if (geometryType == WkbGeometryType.MultiPolygon)

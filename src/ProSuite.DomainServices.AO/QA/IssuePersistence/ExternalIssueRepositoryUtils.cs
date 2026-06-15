@@ -128,7 +128,15 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			if (issueRepositoryType != IssueRepositoryType.None &&
 			    ! Directory.Exists(directoryFullPath))
 			{
-				Directory.CreateDirectory(directoryFullPath);
+				try
+				{
+					Directory.CreateDirectory(directoryFullPath);
+				}
+				catch (Exception e)
+				{
+					_msg.Warn($"Error creating directory for Issue.gdb: {e.Message}", e);
+					return null;
+				}
 			}
 
 			IWorkspaceName workspaceName;

@@ -2,22 +2,21 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using ESRI.ArcGIS.ItemIndex;
 
-namespace ProSuite.AGP.WorkList.ProjectItem
+namespace ProSuite.AGP.WorkList.ProjectItem;
+
+public class SelectionWorkListProjectItemBase : WorkListProjectItem
 {
-	public class SelectionWorkListProjectItemBase : WorkListProjectItem
-	{
-		public SelectionWorkListProjectItemBase() { }
+	public SelectionWorkListProjectItemBase() { }
 
-		public SelectionWorkListProjectItemBase(ItemInfoValue itemInfoValue) :
-			base(itemInfoValue) { }
+	public SelectionWorkListProjectItemBase(ItemInfoValue itemInfoValue) :
+		base(itemInfoValue) { }
 
-		public SelectionWorkListProjectItemBase(string name, string catalogPath, string typeID,
-		                                        string containerType) : base(
-			name, catalogPath, typeID, containerType) { }
+	public SelectionWorkListProjectItemBase(string name, string catalogPath, string typeID,
+	                                        string containerType) : base(
+		name, catalogPath, typeID, containerType) { }
 
-		public override ImageSource LargeImage => null;
+	public override ImageSource LargeImage => null;
 
-		public override Task<ImageSource> SmallImage =>
-			Task.FromResult(GetImageSource("Properties/Images", @"NavigateSelectionCmd16.png"));
-	}
+	public override Task<ImageSource> SmallImage =>
+		Task.FromResult(GetImageSource("Properties/Images", @"NavigateSelectionCmd16.png"));
 }

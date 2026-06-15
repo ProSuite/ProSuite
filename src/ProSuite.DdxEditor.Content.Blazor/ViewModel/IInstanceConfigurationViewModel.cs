@@ -4,8 +4,8 @@ using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.UI.QA;
-using ProSuite.UI.QA.BoundTableRows;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 

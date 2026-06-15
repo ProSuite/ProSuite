@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{1745D9A7-BF58-414E-A840-6A3EE1847FE0}</ProjectGuid>
 
@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.9" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.7" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -104,7 +104,7 @@
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
-    <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj" />
+    <ProjectReference Include="..\ProSuite.UI.Core\ProSuite.UI.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

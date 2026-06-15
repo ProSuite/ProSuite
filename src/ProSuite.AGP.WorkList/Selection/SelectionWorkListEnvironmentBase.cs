@@ -11,79 +11,81 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.WorkList.Selection
+namespace ProSuite.AGP.WorkList.Selection;
+
+public abstract class SelectionWorkListEnvironmentBase : WorkEnvironmentBase
 {
-	public abstract class SelectionWorkListEnvironmentBase : WorkEnvironmentBase
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	protected override string FileSuffix => ".swl";
+
+	public override string GetDisplayName()
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		string currentName = Path.GetFileNameWithoutExtension(Project.Current.Name);
+		var now = DateTime.Now.ToString("yyyy_MM_dd_HHmmss");
 
-		protected override string FileSuffix => ".swl";
+		return $"{currentName}_{now}";
+	}
 
-		public override string GetDisplayName()
+	protected override T GetLayerContainerCore<T>(MapView mapView)
+	{
+		return mapView.Map as T;
+	}
+
+	protected override IWorkItemStateRepository CreateStateRepositoryCore(
+		string path, string workListName, string displayName)
+	{
+		Type type = GetWorkListTypeCore<SelectionWorkList>();
+
+		return new XmlSelectionItemStateRepository(path, workListName, displayName, type);
+	}
+
+	protected override Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
+		IWorkItemStateRepository stateRepository)
+	{
+		// todo: (daro) inject map as parameter. If layer is in toc
+		// WorkItemTable is called before MapView.Active is initialized.
+		Map map = MapView.Active.Map;
+
+		var watch = Stopwatch.StartNew();
+
+		Task<IWorkItemRepository> result;
+
+		try
 		{
-			string currentName = Path.GetFileNameWithoutExtension(Project.Current.Name);
-			var now = DateTime.Now.ToString("yyyy_MM_dd_HHmmss");
+			string path = stateRepository.WorkListDefinitionFilePath;
 
-			return $"{currentName}_{now}";
-		}
+			IList<ISourceClass> sourceClasses;
 
-		protected override T GetLayerContainerCore<T>(MapView mapView)
-		{
-			return mapView.Map as T;
-		}
-
-		protected override IWorkItemStateRepository CreateStateRepositoryCore(
-			string path, string workListName, string displayName)
-		{
-			Type type = GetWorkListTypeCore<SelectionWorkList>();
-
-			return new XmlSelectionItemStateRepository(path, workListName, displayName, type);
-		}
-
-		protected override Task<IWorkItemRepository> CreateItemRepositoryCoreAsync(
-			IWorkItemStateRepository stateRepository)
-		{
-			// todo: (daro) inject map as parameter. If layer is in toc
-			// WorkItemTable is called before MapView.Active is initialized.
-			Map map = MapView.Active.Map;
-
-			var watch = Stopwatch.StartNew();
-
-			Task<IWorkItemRepository> result;
-
-			try
+			if (File.Exists(path))
 			{
-				string path = stateRepository.WorkListDefinitionFilePath;
+				XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
 
-				IList<ISourceClass> sourceClasses;
-
-				if (File.Exists(path))
-				{
-					XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
-
-					sourceClasses = WorkListUtils.CreateSourceClasses(map, definition).ToList();
-				}
-				else
-				{
-					sourceClasses = WorkListUtils.CreateSourceClasses(map).ToList();
-				}
-
-				result = Task.FromResult<IWorkItemRepository>(
-					new SelectionItemRepository(sourceClasses, stateRepository));
+				sourceClasses = WorkListUtils.CreateSourceClasses(map, definition).ToList();
 			}
-			finally
+			else
 			{
-				_msg.DebugStopTiming(watch, "Created selection work item repository");
+				sourceClasses = WorkListUtils.CreateSourceClasses(map).ToList();
 			}
 
-			return result;
+			result = Task.FromResult<IWorkItemRepository>(
+				new SelectionItemRepository(sourceClasses, stateRepository));
+		}
+		finally
+		{
+			_msg.DebugStopTiming(watch, "Created selection work item repository");
 		}
 
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
-		                                                string uniqueName,
-		                                                string displayName)
-		{
-			return new SelectionWorkList(repository, GetAreaOfInterest(), uniqueName, displayName);
-		}
+		return result;
+	}
+
+	protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
+	                                                string uniqueName,
+	                                                string displayName)
+	{
+		var workList = new SelectionWorkList(repository, GetAreaOfInterest(),
+		                                     uniqueName, displayName);
+
+		return workList;
 	}
 }

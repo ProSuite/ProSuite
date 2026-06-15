@@ -1,12 +1,11 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing.Generalize
+namespace ProSuite.AGP.Editing.Generalize;
+
+public partial class DockPaneGeneralize : UserControl
 {
-	public partial class DockPaneGeneralize : UserControl
+	public DockPaneGeneralize()
 	{
-		public DockPaneGeneralize()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
 	}
 }

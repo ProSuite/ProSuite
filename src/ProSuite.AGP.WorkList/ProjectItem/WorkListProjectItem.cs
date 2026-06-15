@@ -1,4 +1,10 @@
-
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -11,190 +17,181 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
-namespace ProSuite.AGP.WorkList.ProjectItem
+namespace ProSuite.AGP.WorkList.ProjectItem;
+
+[UsedImplicitly]
+public abstract class WorkListProjectItem : CustomProjectItemBase
 {
-	[UsedImplicitly]
-	public abstract class WorkListProjectItem : CustomProjectItemBase
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private bool _canDelete = true;
+	private bool _canRename = true;
+
+	protected WorkListProjectItem() { }
+
+	protected WorkListProjectItem(ItemInfoValue itemInfoValue) : base(itemInfoValue) { }
+
+	protected WorkListProjectItem(string name, string catalogPath, string typeID,
+	                              string containerType) : base(
+		name, catalogPath, typeID, containerType) { }
+
+	public override bool IsContainer => false;
+
+	protected override bool CanRename => _canRename;
+
+	[CanBeNull]
+	public string WorkListName { get; set; }
+
+	public void DisableRename(bool disable)
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		_canRename = ! disable;
+	}
 
-		private bool _canDelete = true;
-		private bool _canRename = true;
+	public void DisableDelete(bool disable)
+	{
+		_canDelete = ! disable;
+	}
 
-		protected WorkListProjectItem() { }
-
-		protected WorkListProjectItem(ItemInfoValue itemInfoValue) : base(itemInfoValue) { }
-
-		protected WorkListProjectItem(string name, string catalogPath, string typeID,
-		                              string containerType) : base(
-			name, catalogPath, typeID, containerType)
-		{ }
-
-		public override bool IsContainer => false;
-
-		protected override bool CanRename => _canRename;
-
-		[CanBeNull]
-		public string WorkListName { get; set; }
-
-		public void DisableRename(bool disable)
+	public override async void Delete()
+	{
+		await ViewUtils.TryAsync(QueuedTask.Run(() =>
 		{
-			_canRename = ! disable;
-		}
-
-		public void DisableDelete(bool disable)
-		{
-			_canDelete = ! disable;
-		}
-
-		public override async void Delete()
-		{
-			await ViewUtils.TryAsync(QueuedTask.Run(() =>
+			if (Project.Current.RemoveItem(this))
 			{
-				if (Project.Current.RemoveItem(this))
+				if (File.Exists(Path))
 				{
-					if (File.Exists(Path))
-					{
-						File.Delete(Path);
-					}
-
-					// necessary?
-					NotifyPropertyChanged();
+					File.Delete(Path);
 				}
-				else
-				{
-					Gateway.ShowError($"Cannot delete {Name}", _msg);
-				}
-			}), _msg);
-		}
 
-		protected override bool OnRename(string newName)
-		{
-			Assert.ArgumentNotNullOrEmpty(newName, nameof(newName));
-
-			try
+				// necessary?
+				NotifyPropertyChanged();
+			}
+			else
 			{
-				Assert.NotNull(Path);
+				Gateway.ShowError($"Cannot delete {Name}", _msg);
+			}
+		}), _msg);
+	}
 
-				string fileName = System.IO.Path.GetFileNameWithoutExtension(newName);
+	protected override bool OnRename(string newName)
+	{
+		Assert.ArgumentNotNullOrEmpty(newName, nameof(newName));
 
-				if (string.IsNullOrWhiteSpace(fileName))
-				{
-					return false;
-				}
+		try
+		{
+			Assert.NotNull(Path);
 
-				if (string.IsNullOrEmpty(System.IO.Path.GetExtension(newName)))
-				{
-					string extension = System.IO.Path.GetExtension(Path);
-					newName = System.IO.Path.ChangeExtension(newName, extension);
-					Assert.NotNullOrEmpty(newName);
-				}
+			string fileName = System.IO.Path.GetFileNameWithoutExtension(newName);
 
-				string directoryName = System.IO.Path.GetDirectoryName(Path);
-				Assert.NotNullOrEmpty(directoryName);
+			if (string.IsNullOrWhiteSpace(fileName))
+			{
+				return false;
+			}
 
-				string newPath = System.IO.Path.Combine(directoryName, newName);
-				File.Move(Path, newPath);
-				//Project.Current.RepairProjectItems(Path, newPath);
+			if (string.IsNullOrEmpty(System.IO.Path.GetExtension(newName)))
+			{
+				string extension = System.IO.Path.GetExtension(Path);
+				newName = System.IO.Path.ChangeExtension(newName, extension);
+				Assert.NotNullOrEmpty(newName);
+			}
 
-				// It's necessary to update Path.
-				// https://github.com/Esri/arcgis-pro-sdk/wiki/ProConcepts-Custom-Items#renaming
-				Path = newPath;
-				Name = System.IO.Path.GetFileName(newPath);
+			string directoryName = System.IO.Path.GetDirectoryName(Path);
+			Assert.NotNullOrEmpty(directoryName);
 
-				WorkListName ??= WorkListUtils.GetWorklistName(Path);
+			string newPath = System.IO.Path.Combine(directoryName, newName);
+			File.Move(Path, newPath);
+			//Project.Current.RepairProjectItems(Path, newPath);
 
-				if (WorkListName == null)
-				{
-					return true;
-				}
+			// It's necessary to update Path.
+			// https://github.com/Esri/arcgis-pro-sdk/wiki/ProConcepts-Custom-Items#renaming
+			Path = newPath;
+			Name = System.IO.Path.GetFileName(newPath);
 
-				IWorkList workList = WorkListRegistry.Instance.Get(WorkListName);
+			WorkListName ??= WorkListUtils.GetWorklistName(Path);
 
-				if (workList == null)
-				{
-					return true;
-				}
-
-				workList.Rename(fileName);
-
-				IReadOnlyList<Layer> layers = MapUtils.GetActiveMap().GetLayersAsFlattenedList();
-
-				foreach (Layer worklistLayer in
-				         WorkListUtils.GetWorklistLayers(layers, WorkListName))
-				{
-					LayerUtils.Rename(worklistLayer, fileName);
-				}
-
+			if (WorkListName == null)
+			{
 				return true;
 			}
-			catch (IOException ex)
-			{
-				// NOTE: a failed rename creates an operation on the undo stack
-				_msg.Debug(ex.Message, ex);
 
-				Gateway.ShowMessage(
-					$"There is already a file with the name {newName} in this location.", "Rename",
-					MessageBoxButton.OK, MessageBoxImage.Information);
-			}
-			catch (Exception ex)
+			IWorkList workList = WorkListRegistry.Instance.Get(WorkListName);
+
+			if (workList == null)
 			{
-				Gateway.ShowError(ex, _msg);
+				return true;
 			}
 
-			return false;
-		}
+			workList.Rename(fileName);
 
-		public override bool CanDelete()
-		{
-			return _canDelete;
-		}
+			IReadOnlyList<Layer> layers = MapUtils.GetActiveMap().GetLayersAsFlattenedList();
 
-		public override ProjectItemInfo OnGetInfo()
-		{
-			return new ProjectItemInfo
-			       {
-				       Name = Name,
-				       Path = Path,
-				       Type = ContainerType
-			       };
-		}
-
-		public override string ToString()
-		{
-			return $"{WorkListName} {Path}";
-		}
-
-		protected static ImageSource GetImageSource(string relativePath, string imageName)
-		{
-			try
+			foreach (Layer worklistLayer in
+			         WorkListUtils.GetWorklistLayers(layers, WorkListName))
 			{
-				string resourcePath = $"{relativePath}/{imageName}";
-
-				string uri = string.Format(
-					"pack://application:,,,/{0};component/{1}",
-					Assembly.GetCallingAssembly().GetName().Name,
-					resourcePath
-				);
-
-				Uri uriSource = new Uri(uri);
-
-				return new BitmapImage(uriSource);
-			}
-			catch (Exception ex)
-			{
-				_msg.Debug(ex.Message, ex);
+				worklistLayer.SetName(fileName);
 			}
 
-			return null;
+			return true;
 		}
+		catch (IOException ex)
+		{
+			// NOTE: a failed rename creates an operation on the undo stack
+			_msg.Debug(ex.Message, ex);
+
+			Gateway.ShowMessage(
+				$"There is already a file with the name {newName} in this location.", "Rename",
+				MessageBoxButton.OK, MessageBoxImage.Information);
+		}
+		catch (Exception ex)
+		{
+			Gateway.ShowError(ex, _msg);
+		}
+
+		return false;
+	}
+
+	public override bool CanDelete()
+	{
+		return _canDelete;
+	}
+
+	public override ProjectItemInfo OnGetInfo()
+	{
+		return new ProjectItemInfo
+		       {
+			       Name = Name,
+			       Path = Path,
+			       Type = ContainerType
+		       };
+	}
+
+	public override string ToString()
+	{
+		return $"{WorkListName} {Path}";
+	}
+
+	protected static ImageSource GetImageSource(string relativePath, string imageName)
+	{
+		try
+		{
+			string resourcePath = $"{relativePath}/{imageName}";
+
+			string uri = string.Format(
+				"pack://application:,,,/{0};component/{1}",
+				Assembly.GetCallingAssembly().GetName().Name,
+				resourcePath
+			);
+
+			Uri uriSource = new Uri(uri);
+
+			return new BitmapImage(uriSource);
+		}
+		catch (Exception ex)
+		{
+			_msg.Debug(ex.Message, ex);
+		}
+
+		return null;
 	}
 }

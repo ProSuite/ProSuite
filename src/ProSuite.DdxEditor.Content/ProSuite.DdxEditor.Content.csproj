@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <ProjectGuid>{4B1FE874-5C47-4850-AF42-F1100780C029}</ProjectGuid>
 
@@ -7,16 +6,18 @@
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
 
-    <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
-    <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
-    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
-
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-    <NoWarn>1591</NoWarn>
+    <!-- Environment variables: -->
+    <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
+    <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
+    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
+
+    <!-- Suppressing WFO1000 for .NET 10 temporarily until it is fixed for each control property. -->
+    <NoWarn>1591;WFO1000</NoWarn>
 
     <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
 		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
@@ -46,7 +47,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite.Shared\src\ProSuite.Shared.IoCRoot\ProSuite.Shared.IoCRoot.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
@@ -77,152 +77,65 @@
 
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
-    <Compile Update="AssociationEnds\AssociationEndControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Associations\AssociationControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="AttributeDependencies\AttributeDependencyControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Attributes\AssociationAttributeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Attributes\AttributeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Attributes\ObjectAttributeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="AttributeTypes\AttributeTypeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="AttributeTypes\ObjectAttributeTypeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Connections\ConnectionProviderControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Connections\FilePathConnectionProviderControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Connections\SdeConnProviderCtrl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Connections\SdeDirectConnProviderCtrl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Connections\SdeDirectDbUserConnProviderCtrl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Controls\MoveListItemsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DatasetCategories\DatasetCategoryControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Datasets\DatasetControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Datasets\ObjectDatasetControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Datasets\TableDatasetControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Datasets\TopologyDatasetControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Datasets\VectorDatasetControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="LinearNetworks\LinearNetworkControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Models\AssignLayerFilesForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Models\ModelControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Models\ProductionModelControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Models\SpatialReferenceComparisonForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="ObjectCategories\ObjectCategoryControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="ObjectCategories\ObjectSubtypeControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="ObjectCategoryAttributeConstraints\ObjectCategoryAttributeConstraintsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="ObjectCategoryAttributeConstraints\RotatedHeadersDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Options\OptionsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Projects\DeleteVerificationsBeforeDateForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Projects\TestDatasetNameTransformationForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="AssociationEnds\AssociationEndControl.cs" />
+    <Compile Update="Associations\AssociationControl.cs" />
+    <Compile Update="AttributeDependencies\AttributeDependencyControl.cs" />
+    <Compile Update="Attributes\AssociationAttributeControl.cs" />
+    <Compile Update="Attributes\AttributeControl.cs" />
+    <Compile Update="Attributes\ObjectAttributeControl.cs" />
+    <Compile Update="AttributeTypes\AttributeTypeControl.cs" />
+    <Compile Update="AttributeTypes\ObjectAttributeTypeControl.cs" />
+    <Compile Update="Connections\ConnectionProviderControl.cs" />
+    <Compile Update="Connections\FilePathConnectionProviderControl.cs" />
+    <Compile Update="Connections\SdeConnProviderCtrl.cs" />
+    <Compile Update="Connections\SdeDirectConnProviderCtrl.cs" />
+    <Compile Update="Connections\SdeDirectDbUserConnProviderCtrl.cs" />
+    <Compile Update="Controls\MoveListItemsControl.cs" />
+    <Compile Update="DatasetCategories\DatasetCategoryControl.cs" />
+    <Compile Update="Datasets\DatasetControl.cs" />
+    <Compile Update="Datasets\ObjectDatasetControl.cs" />
+    <Compile Update="Datasets\TableDatasetControl.cs" />
+    <Compile Update="Datasets\TopologyDatasetControl.cs" />
+    <Compile Update="Datasets\VectorDatasetControl.cs" />
+    <Compile Update="LinearNetworks\LinearNetworkControl.cs" />
+    <Compile Update="Models\AssignLayerFilesForm.cs" />
+    <Compile Update="Models\ModelControl.cs" />
+    <Compile Update="Models\ProductionModelControl.cs" />
+    <Compile Update="Models\SpatialReferenceComparisonForm.cs" />
+    <Compile Update="ObjectCategories\ObjectCategoryControl.cs" />
+    <Compile Update="ObjectCategories\ObjectSubtypeControl.cs" />
+    <Compile Update="ObjectCategoryAttributeConstraints\ObjectCategoryAttributeConstraintsControl.cs" />
+    <Compile Update="ObjectCategoryAttributeConstraints\RotatedHeadersDataGridView.cs" />
+    <Compile Update="Options\OptionsForm.cs" />
+    <Compile Update="Projects\DeleteVerificationsBeforeDateForm.cs" />
+    <Compile Update="Projects\TestDatasetNameTransformationForm.cs" />
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="QA\Categories\DataQualityCategoryControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="QA\InstanceConfig\InstanceConfigurationControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="QA\QCon\FindQualityConditionByNameForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="QA\QCon\QualityConditionControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="QA\QSpec\ExportDatasetDependenciesForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Update="QA\Categories\DataQualityCategoryControl.cs" />
+    <Compile Update="QA\InstanceConfig\InstanceConfigurationControl.cs" />
+    <Compile Update="QA\QCon\FindQualityConditionByNameForm.cs" />
+    <Compile Update="QA\QCon\QualityConditionControl.cs" />
+    <Compile Update="QA\QSpec\ExportDatasetDependenciesForm.cs" />
     <Compile Update="QA\QSpec\ExportQualitySpecificationsCommand.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="QA\QSpec\ExportQualitySpecificationsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="QA\QSpec\ImportQualitySpecificationsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="QA\QSpec\QualitySpecificationControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="QA\TestDescriptors\CreateQualityConditions\CreateQualityConditionsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Update="QA\QSpec\ExportQualitySpecificationsForm.cs" />
+    <Compile Update="QA\QSpec\ImportQualitySpecificationsForm.cs" />
+    <Compile Update="QA\QSpec\QualitySpecificationControl.cs" />
+    <Compile Update="QA\TestDescriptors\CreateQualityConditions\CreateQualityConditionsForm.cs" />
     <Compile Update="QA\TestDescriptors\CreateQualityConditions\QualityConditionParameters.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="QA\InstanceDescriptors\InstanceDescriptorControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="QA\TestDescriptors\TestDescriptorControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="SimpleTerrains\SimpleTerrainDatasetControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="SpatialRef\SpatialReferenceDescriptorControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Update="QA\InstanceDescriptors\InstanceDescriptorControl.cs" />
+    <Compile Update="QA\TestDescriptors\TestDescriptorControl.cs" />
+    <Compile Update="SimpleTerrains\SimpleTerrainDatasetControl.cs" />
+    <Compile Update="SpatialRef\SpatialReferenceDescriptorControl.cs" />
     <Compile Update="SpatialRef\XmlPrettyPrint.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

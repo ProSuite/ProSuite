@@ -344,7 +344,16 @@ public abstract class ArcSegment : ISegment
 
 	public bool IsEqual(IClone other)
 	{
-		var geometry = (ArcSegment) other;
-		return ProSegment.IsEqual(geometry.ProSegment);
+		if (other is ArcSegment arcSegment)
+		{
+			return ProSegment.IsEqual(arcSegment.ProSegment);
+		}
+
+		if (other is ISegment otherSegment)
+		{
+			return otherSegment.IsEqual(this);
+		}
+
+		return false;
 	}
 }

@@ -23,7 +23,6 @@ namespace ProSuite.QA.TestFactories
 		[UsedImplicitly]
 		public static ITestIssueCodes Codes => QaRegularExpression.Codes;
 
-
 		protected override object[] Args(IOpenDataset datasetContext,
 		                                 IList<TestParameter> testParameters,
 		                                 out List<TableConstraint> tableParameters)
@@ -35,10 +34,11 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] as IList<IReadOnlyTable> == null)
+			if (! (objParams[0] is IList<ITableSchemaDef>))
 			{
-				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
-				                                          objParams[0].GetType()));
+				throw new ArgumentException(string.Format(
+					                            "expected IList<ITableSchemaDef>, got {0}",
+					                            objParams[0].GetType()));
 			}
 
 			if (objParams[1] is string == false)
@@ -66,7 +66,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams[4].GetType()));
 			}
 
-			var tables = (IList<IReadOnlyTable>) objParams[0];
+			var tables = ToReadOnlyTableList<IReadOnlyTable>(objParams[0]);
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 			var pattern = (string) objParams[3];
@@ -87,7 +87,8 @@ namespace ProSuite.QA.TestFactories
 				{
 					continue;
 				}
-				var factoryDef = (QaRelRegularExpressionDefinition)FactoryDefinition;
+
+				var factoryDef = (QaRelRegularExpressionDefinition) FactoryDefinition;
 				if (parameter.Name.Equals(factoryDef.MatchIsErrorName,
 				                          StringComparison.CurrentCultureIgnoreCase))
 				{
@@ -133,7 +134,7 @@ namespace ProSuite.QA.TestFactories
 		protected override void SetPropertyValue(object test, TestParameter parameter,
 		                                         object value)
 		{
-			var factoryDef = (QaRelRegularExpressionDefinition)FactoryDefinition;
+			var factoryDef = (QaRelRegularExpressionDefinition) FactoryDefinition;
 			if (parameter.Name.Equals(factoryDef.MatchIsErrorName,
 			                          StringComparison.CurrentCultureIgnoreCase) ||
 			    parameter.Name.Equals(factoryDef.PatternDescriptionName,

@@ -17,8 +17,8 @@ using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.UI.QA;
-using ProSuite.UI.QA.Controls;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.Controls;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
 {

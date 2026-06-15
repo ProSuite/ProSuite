@@ -40,4 +40,43 @@ public class WorkListFilterDefinitionExpression
 
 	[CanBeNull]
 	public string Expression { get; set; }
+
+	#region Object overrides
+
+	public override string ToString()
+	{
+		return string.Format("{0}: {1}", _filterDefinition.Name, Expression ?? "<null>");
+	}
+
+	public bool Equals(WorkListFilterDefinitionExpression other)
+	{
+		if (other == null)
+		{
+			return false;
+		}
+
+		return Equals(_filterDefinition, other._filterDefinition) &&
+		       Equals(Expression, other.Expression);
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (ReferenceEquals(this, obj))
+		{
+			return true;
+		}
+
+		return Equals(obj as WorkListFilterDefinitionExpression);
+	}
+
+	public override int GetHashCode()
+	{
+		return
+			_filterDefinition.GetHashCode() +
+			29 * (Expression != null
+				      ? Expression.GetHashCode()
+				      : 0);
+	}
+
+	#endregion
 }

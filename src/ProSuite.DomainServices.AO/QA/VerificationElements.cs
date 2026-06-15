@@ -13,7 +13,7 @@ namespace ProSuite.DomainServices.AO.QA
 	/// Encapsulates the dictionaries used to navigate the conditions, tests, specification
 	/// elements, the ConditionVerifications and TestVerifications.
 	/// </summary>
-	public class VerificationElements
+	public class VerificationElements : IQualityConditionLookup
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -78,12 +78,18 @@ namespace ProSuite.DomainServices.AO.QA
 			return TestsByCondition[condition];
 		}
 
-		[NotNull]
-		public QualityCondition GetQualityCondition([NotNull] ITest test)
+		public QualityCondition GetQualityCondition(ITest test)
 		{
 			return Assert.NotNull(
 				GetQualityConditionVerification(test).QualityCondition,
 				"no quality condition for test");
+		}
+
+		public QualityConditionVerification GetQualityConditionVerification(ITest test)
+		{
+			TestVerification testVerification = GetTestVerification(test);
+
+			return testVerification.QualityConditionVerification;
 		}
 
 		[NotNull]
@@ -102,14 +108,6 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return result;
-		}
-
-		[NotNull]
-		public QualityConditionVerification GetQualityConditionVerification([NotNull] ITest test)
-		{
-			TestVerification testVerification = GetTestVerification(test);
-
-			return testVerification.QualityConditionVerification;
 		}
 
 		public QualitySpecificationElement GetSpecificationElement(

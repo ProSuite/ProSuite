@@ -30,12 +30,12 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
         {
 			this._labelName = new System.Windows.Forms.Label();
 			this._textBoxName = new System.Windows.Forms.TextBox();
-			this._textBoxDescription = new System.Windows.Forms.TextBox();
 			this._labelDescription = new System.Windows.Forms.Label();
+			this._textBoxDescription = new System.Windows.Forms.TextBox();
 			this.toolStrip1 = new global::ProSuite.Commons.UI.WinForms.Controls.ToolStripEx();
 			this._toolStripButtonCopy = new System.Windows.Forms.ToolStripButton();
-			this._toolStripButtonImportFromFeatureClass = new System.Windows.Forms.ToolStripButton();
 			this._toolStripButtonImportFromDataset = new System.Windows.Forms.ToolStripButton();
+			this._toolStripButtonImportFromWorkspace = new System.Windows.Forms.ToolStripButton();
 			this._tabControlProperties = new System.Windows.Forms.TabControl();
 			this._tabPageProperties = new System.Windows.Forms.TabPage();
 			this._propertyGridGeneral = new System.Windows.Forms.PropertyGrid();
@@ -66,6 +66,16 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			this._textBoxName.Size = new System.Drawing.Size(537, 20);
 			this._textBoxName.TabIndex = 0;
 			// 
+			// _labelDescription
+			// 
+			this._labelDescription.AutoSize = true;
+			this._labelDescription.Location = new System.Drawing.Point(4, 33);
+			this._labelDescription.Name = "_labelDescription";
+			this._labelDescription.Size = new System.Drawing.Size(63, 13);
+			this._labelDescription.TabIndex = 2;
+			this._labelDescription.Text = "Description:";
+			this._labelDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			// 
 			// _textBoxDescription
 			// 
 			this._textBoxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -77,16 +87,6 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			this._textBoxDescription.Size = new System.Drawing.Size(537, 76);
 			this._textBoxDescription.TabIndex = 1;
 			// 
-			// _labelDescription
-			// 
-			this._labelDescription.AutoSize = true;
-			this._labelDescription.Location = new System.Drawing.Point(4, 33);
-			this._labelDescription.Name = "_labelDescription";
-			this._labelDescription.Size = new System.Drawing.Size(63, 13);
-			this._labelDescription.TabIndex = 2;
-			this._labelDescription.Text = "Description:";
-			this._labelDescription.TextAlign = System.Drawing.ContentAlignment.TopRight;
-			// 
 			// toolStrip1
 			// 
 			this.toolStrip1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -97,8 +97,8 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
 			this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this._toolStripButtonCopy,
-            this._toolStripButtonImportFromFeatureClass,
-            this._toolStripButtonImportFromDataset});
+            this._toolStripButtonImportFromDataset,
+            this._toolStripButtonImportFromWorkspace});
 			this.toolStrip1.Location = new System.Drawing.Point(210, 118);
 			this.toolStrip1.Name = "toolStrip1";
 			this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
@@ -117,16 +117,6 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			this._toolStripButtonCopy.ToolTipText = "Copy To Clipboard";
 			this._toolStripButtonCopy.Click += new System.EventHandler(this._toolStripButtonCopy_Click);
 			// 
-			// _toolStripButtonImportFromFeatureClass
-			// 
-			this._toolStripButtonImportFromFeatureClass.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-			this._toolStripButtonImportFromFeatureClass.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.ArcCatalog;
-			this._toolStripButtonImportFromFeatureClass.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
-			this._toolStripButtonImportFromFeatureClass.Name = "_toolStripButtonImportFromFeatureClass";
-			this._toolStripButtonImportFromFeatureClass.Size = new System.Drawing.Size(179, 22);
-			this._toolStripButtonImportFromFeatureClass.Text = "Get From Workspace Dataset";
-			this._toolStripButtonImportFromFeatureClass.Click += new System.EventHandler(this._toolStripButtonImportFromFeatureClass_Click);
-			// 
 			// _toolStripButtonImportFromDataset
 			// 
 			this._toolStripButtonImportFromDataset.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
@@ -135,6 +125,16 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			this._toolStripButtonImportFromDataset.Size = new System.Drawing.Size(176, 22);
 			this._toolStripButtonImportFromDataset.Text = "Get From Registered Dataset";
 			this._toolStripButtonImportFromDataset.Click += new System.EventHandler(this._buttonGetFromDataset_Click);
+			// 
+			// _toolStripButtonImportFromWorkspace
+			// 
+			this._toolStripButtonImportFromWorkspace.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+			this._toolStripButtonImportFromWorkspace.Image = global::ProSuite.DdxEditor.Content.Properties.Resources.ArcCatalog;
+			this._toolStripButtonImportFromWorkspace.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+			this._toolStripButtonImportFromWorkspace.Name = "_toolStripButtonImportFromWorkspace";
+			this._toolStripButtonImportFromWorkspace.Size = new System.Drawing.Size(179, 22);
+			this._toolStripButtonImportFromWorkspace.Text = "Get From Workspace Dataset";
+			this._toolStripButtonImportFromWorkspace.Click += new System.EventHandler(this._toolStripButtonImportFromWorkspace_Click);
 			// 
 			// _tabControlProperties
 			// 
@@ -220,11 +220,11 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 
         private System.Windows.Forms.Label _labelName;
         private System.Windows.Forms.TextBox _textBoxName;
+        private System.Windows.Forms.Label _labelDescription;
         private System.Windows.Forms.TextBox _textBoxDescription;
-		private System.Windows.Forms.Label _labelDescription;
-        private System.Windows.Forms.ToolStripButton _toolStripButtonImportFromDataset;
         private System.Windows.Forms.ToolStripButton _toolStripButtonCopy;
-        private System.Windows.Forms.ToolStripButton _toolStripButtonImportFromFeatureClass;
+        private System.Windows.Forms.ToolStripButton _toolStripButtonImportFromDataset;
+        private System.Windows.Forms.ToolStripButton _toolStripButtonImportFromWorkspace;
         private global::ProSuite.Commons.UI.WinForms.Controls.ToolStripEx toolStrip1;
 		private System.Windows.Forms.TabControl _tabControlProperties;
 		private System.Windows.Forms.TabPage _tabPageProperties;

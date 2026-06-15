@@ -73,6 +73,12 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			                            .AddValueChanged(
 				                            this,
 				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+
+			DependencyPropertyDescriptor.FromProperty(StepProperty, typeof(NumericSpinner))
+			                            .AddValueChanged(
+				                            this,
+				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+
 			DependencyPropertyDescriptor.FromProperty(MinValueProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,

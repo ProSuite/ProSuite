@@ -1,6 +1,7 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.CreateFootprint
@@ -55,10 +56,26 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		public bool References(IObjectClass objectClass)
 		{
 			// use unqualified name to support checkouts
-			string tableName = DatasetUtils.GetTableName(objectClass);
+			string unqualifiedName = DatasetUtils.GetUnqualifiedName(objectClass);
 
-			return FeatureClassName.Equals(
-				tableName, StringComparison.InvariantCultureIgnoreCase);
+			Assert.NotNullOrEmpty(FeatureClassName, "FeatureClassName is null or empty");
+
+			if (ReferencesName(unqualifiedName))
+			{
+				return true;
+			}
+
+			string qualifiedName = DatasetUtils.GetName(objectClass);
+
+			return ReferencesName(qualifiedName);
+		}
+
+		private bool ReferencesName([NotNull] string candidateName)
+		{
+			Assert.ArgumentNotNullOrEmpty(candidateName, nameof(candidateName));
+
+			return FeatureClassName.Equals(candidateName,
+			                               StringComparison.InvariantCultureIgnoreCase);
 		}
 
 		public override string ToString()

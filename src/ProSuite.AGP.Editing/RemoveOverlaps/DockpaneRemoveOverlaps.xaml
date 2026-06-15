@@ -9,49 +9,49 @@
              xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              xmlns:removeOverlaps="clr-namespace:ProSuite.AGP.Editing.RemoveOverlaps"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=removeOverlaps:DockPaneRemoveOverlapsViewModelBase}" Width="378" Height="421" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=removeOverlaps:DockPaneRemoveOverlapsViewModelBase}" Width="378"
+             Height="421" HorizontalAlignment="Left"
              VerticalAlignment="Top">
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
-                <ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+				<ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</UserControl.Resources>
 
-    <StackPanel
-        HorizontalAlignment="Left"
-        VerticalAlignment="Top">
+	<StackPanel
+		HorizontalAlignment="Left"
+		VerticalAlignment="Top">
 
-	    <!-- Overlaps calculation -->
+		<!-- Overlaps calculation -->
 		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 		          Content="Limit overlap calculation to current extent"
 		          DataContext="{Binding LimitOverlapCalculationToExtent}" />
 
-        <!-- Calculate overlap areas with other -->
-		<Label FontWeight="Medium" Content="Calculate overlap areas with other" Margin="0,15,0,0"/>
-        <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
+		<!-- Calculate overlap areas with other -->
+		<Label FontWeight="Medium" Content="Calculate overlap areas with other" Margin="0,15,0,0" />
+		<editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
 
-        <!-- Result geometry options -->
-		<Label FontWeight="Medium" Content="Result geometry options" Margin="0,15,0,0"/>
-        
-	    <!-- TODO: Dropdown -->
+		<!-- Result geometry options -->
+		<Label FontWeight="Medium" Content="Result geometry options" Margin="0,15,0,0" />
+
+		<!-- TODO: Dropdown -->
 
 		<!--<ComboBox DataContext="{Binding Options.CentralizableZSource}"></ComboBox>-->
-	    
-	    <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-	              Content="Explode multi-part result geometry into new features"
-	              DataContext="{Binding ExplodeMultipartResults}" />
-        
-	    <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-	              Content="Insert vertices in target features for topological correctness"
-	              DataContext="{Binding InsertVerticesInTarget}" />
+
+		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+		          Content="Explode multi-part result geometry into new features"
+		          DataContext="{Binding ExplodeMultipartResults}" />
+
+		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+		          Content="Insert vertices in target features for topological correctness"
+		          DataContext="{Binding InsertVerticesInTarget}" />
 
 		<!-- Restore Defaults -->
-	    <Button Template="{StaticResource RestoreDefaultsButton}"
-	    />
+		<Button Template="{StaticResource RestoreDefaultsButton}" />
 
 	</StackPanel>
 

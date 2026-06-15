@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
@@ -12,7 +13,9 @@ using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.Geodatabase;
+using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.QA;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.QA.Container;
@@ -21,13 +24,6 @@ namespace ProSuite.Microservices.AO
 {
 	public static class ProtobufGdbUtils
 	{
-		/// <summary>
-		/// The name of the domain property of the FieldMsg that notifies the client that the
-		/// respective field is the subtype field. This could be removed if the proto model is
-		/// extended.
-		/// </summary>
-		public const string SubtypeDomainName = "__SubType__";
-
 		public static GdbObjRefMsg ToGdbObjRefMsg(IFeature feature)
 		{
 			return new GdbObjRefMsg
@@ -240,7 +236,7 @@ namespace ProSuite.Microservices.AO
 			// The subtype field name is needed in QaObjectAttributeConstraint
 			if (subtypeFieldIdx >= 0)
 			{
-				result.Fields[subtypeFieldIdx].DomainName = SubtypeDomainName;
+				result.Fields[subtypeFieldIdx].DomainName = ProtobufGeoDbUtils.SubtypeDomainName;
 			}
 
 			return result;
@@ -488,11 +484,21 @@ namespace ProSuite.Microservices.AO
 					case esriFieldType.esriFieldTypeBlob:
 
 						// The base row field is not officially part of the schema
-						if (field.Name != InvolvedRowUtils.BaseRowField)
+						if (field.Name != InvolvedRowUtils.BaseRowField &&
+						    valueObject is IMemoryBlobStreamVariant blobStream)
 						{
-							// TODO: Test and make this work or skip blobs altogether?
-							attributeValue.BlobValue =
-								ByteString.CopyFrom((byte[]) valueObject);
+							blobStream.ExportToVariant(out var variant);
+
+							if (variant is byte[] bytes)
+							{
+								attributeValue.BlobValue =
+									ByteString.CopyFrom(bytes);
+							}
+							else
+							{
+								throw new InvalidOperationException(
+									$"Unexpected variant type: {variant.GetType()}");
+							}
 						}
 
 						break;

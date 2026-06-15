@@ -12,6 +12,7 @@ using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
@@ -602,7 +603,8 @@ namespace ProSuite.Microservices.Client.QA
 					GeometryType = geometryType,
 					DatasetType = (int) dataset.DatasetType,
 					TypeCode = dataset.ImplementationType?.Id ?? 0,
-					ModelId = dataset.Model.Id
+					ModelId = dataset.Model.Id,
+					CategoryName = dataset.DatasetCategory?.Name ?? string.Empty
 				};
 
 			if (includeDetails)
@@ -620,6 +622,8 @@ namespace ProSuite.Microservices.Client.QA
 					{
 						datasetMsg.ObjectCategories.AddRange(ToObjectCategoryMsg(objectType));
 					}
+
+					datasetMsg.DisplayFormat = objectDataset.DisplayFormat ?? string.Empty;
 				}
 			}
 
@@ -838,6 +842,15 @@ namespace ProSuite.Microservices.Client.QA
 
 			foreach (ObjectSubtype objectSubtype in objectType.ObjectSubtypes)
 			{
+				var criteriaMessages = ToSubtypeCriteriaMessages(objectSubtype).ToList();
+
+				// Skip subtypes without criteria — they are indistinguishable
+				// from ObjectTypes during deserialization.
+				if (criteriaMessages.Count == 0)
+				{
+					continue;
+				}
+
 				var subTypeMsg = new ObjectCategoryMsg
 				                 {
 					                 ObjectCategoryId = objectSubtype.Id,
@@ -845,8 +858,7 @@ namespace ProSuite.Microservices.Client.QA
 					                 SubtypeCode = subTypeCode
 				                 };
 
-				subTypeMsg.ObjectSubtypeCriterion.AddRange(
-					ToSubtypeCriteriaMessages(objectSubtype));
+				subTypeMsg.ObjectSubtypeCriterion.AddRange(criteriaMessages);
 
 				yield return subTypeMsg;
 			}

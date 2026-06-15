@@ -1,9 +1,8 @@
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList;
+
+public enum SpatialSearchOption
 {
-	public enum SpatialSearchOption
-	{
-		Within,
-		Intersect,
-		None
-	}
+	Within,
+	Intersect,
+	None
 }

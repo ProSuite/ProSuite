@@ -94,6 +94,7 @@ namespace ProSuite.Processing
 			                .GetEnumerator();
 		}
 
+		[NotNull]
 		public IEnumerable<string> GetValues(string parameterName)
 		{
 			foreach (var setting in _settings)
@@ -105,6 +106,7 @@ namespace ProSuite.Processing
 			}
 		}
 
+		[NotNull]
 		public IEnumerable<T> GetValues<T>(string parameterName)
 		{
 			var converter = TypeDescriptor.GetConverter(typeof(T));

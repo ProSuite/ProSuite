@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.UI.DataModel.ResourceLookup;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.AssociationEnds
 {

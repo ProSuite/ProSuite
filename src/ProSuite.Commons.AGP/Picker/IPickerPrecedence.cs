@@ -11,6 +11,13 @@ namespace ProSuite.Commons.AGP.Picker;
 public interface IPickerPrecedence : IDisposable
 {
 	Point PickerLocation { get; set; }
+
+	/// <summary>
+	/// The preferred position of the picker window in terms of optimization of the
+	/// <see cref="PickerLocation"/> with respect to the map view or main application window.
+	/// </summary>
+	PickerPositionPreference PositionPreference { get; set; }
+
 	SpatialRelationship SpatialRelationship { get; }
 	SelectionCombinationMethod SelectionCombinationMethod { get; }
 	bool NoMultiselection { get; set; }
@@ -20,6 +27,7 @@ public interface IPickerPrecedence : IDisposable
 	IPickableItem PickBest(IEnumerable<IPickableItem> items);
 
 	PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates);
+
 	/// <summary>
 	/// Returns the geometry which can be used for spatial queries.
 	/// For single-click picks, it returns the geometry expanded by the PickerPrecedenceBase.Tolerance.

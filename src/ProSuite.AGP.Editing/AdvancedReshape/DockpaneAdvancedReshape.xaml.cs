@@ -1,12 +1,11 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing.AdvancedReshape
+namespace ProSuite.AGP.Editing.AdvancedReshape;
+
+public partial class DockPaneAdvancedReshape : UserControl
 {
-	public partial class DockPaneAdvancedReshape : UserControl
+	public DockPaneAdvancedReshape()
 	{
-		public DockPaneAdvancedReshape()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
 	}
 }

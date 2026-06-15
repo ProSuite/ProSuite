@@ -1,92 +1,91 @@
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Contracts;
+
+public enum Attributes
 {
-	public enum Attributes
-	{
-		ObjectID,
+	ObjectID,
 
-		IssueDescription,
+	IssueDescription,
 
-		IssueCode,
+	IssueCode,
 
-		IssueCodeDescription,
+	IssueCodeDescription,
 
-		InvolvedObjects,
+	InvolvedObjects,
 
-		QualityConditionName,
+	QualityConditionName,
 
-		TestName,
+	TestName,
 
-		TestDescription,
+	TestDescription,
 
-		TestType,
+	TestType,
 
-		IssueSeverity,
+	IssueSeverity,
 
-		IsStopCondition,
+	IsStopCondition,
 
-		Category,
+	Category,
 
-		AffectedComponent,
+	AffectedComponent,
 
-		Url,
+	Url,
 
-		DoubleValue1,
+	DoubleValue1,
 
-		DoubleValue2,
+	DoubleValue2,
 
-		TextValue,
+	TextValue,
 
-		QualityConditionUuid,
+	QualityConditionUuid,
 
-		QualityConditionVersionUuid,
+	QualityConditionVersionUuid,
 
-		IssueAssignment,
+	IssueAssignment,
 
-		ExceptionStatus,
+	ExceptionStatus,
 
-		/// <summary>
-		/// Identification of the origin of an exception (entity that defined the exception). 
-		/// Can be freely used by the organisation that defines the exception.
-		/// </summary>
-		ExceptionOrigin,
+	/// <summary>
+	/// Identification of the origin of an exception (entity that defined the exception). 
+	/// Can be freely used by the organisation that defines the exception.
+	/// </summary>
+	ExceptionOrigin,
 
-		ExceptionNotes,
+	ExceptionNotes,
 
-		ExceptionCategory,
+	ExceptionCategory,
 
-		ExceptionDefinedDate,
+	ExceptionDefinedDate,
 
-		ExceptionLastRevisionDate,
+	ExceptionLastRevisionDate,
 
-		/// <summary>
-		/// Retirement date for exception
-		/// </summary>
-		ExceptionRetirementDate,
+	/// <summary>
+	/// Retirement date for exception
+	/// </summary>
+	ExceptionRetirementDate,
 
-		/// <summary>
-		/// Exception match criterion for geometries
-		/// </summary>
-		ExceptionShapeMatchCriterion,
+	/// <summary>
+	/// Exception match criterion for geometries
+	/// </summary>
+	ExceptionShapeMatchCriterion,
 
-		ManagedExceptionOrigin,
+	ManagedExceptionOrigin,
 
-		ManagedExceptionLineageUuid,
+	ManagedExceptionLineageUuid,
 
-		ManagedExceptionVersionBeginDate,
+	ManagedExceptionVersionBeginDate,
 
-		ManagedExceptionVersionEndDate,
+	ManagedExceptionVersionEndDate,
 
-		ManagedExceptionVersionUuid,
+	ManagedExceptionVersionUuid,
 
-		ManagedExceptionVersionOrigin,
+	ManagedExceptionVersionOrigin,
 
-		ManagedExceptionVersionImportStatus,
+	ManagedExceptionVersionImportStatus,
 
-		ExportedExceptionUsageCount,
+	ExportedExceptionUsageCount,
 
-		ExportedExceptionObjectId,
+	ExportedExceptionObjectId,
 
-		IssueType,
-		Remark
-	}
+	IssueType,
+	Remark
 }

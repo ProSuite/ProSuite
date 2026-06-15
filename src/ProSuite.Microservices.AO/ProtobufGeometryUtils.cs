@@ -48,7 +48,11 @@ namespace ProSuite.Microservices.AO
 			}
 			else
 			{
-				var wkbWriter = new WkbGeometryWriter();
+				var wkbWriter = new WkbGeometryWriter()
+				                {
+					                GroupPolyhedraByPointId = true
+				                };
+
 				byte[] wkb = wkbWriter.WriteGeometry(highLevelGeometry);
 				result.Wkb = ByteString.CopyFrom(wkb);
 			}
@@ -90,7 +94,11 @@ namespace ProSuite.Microservices.AO
 					break;
 				case ShapeMsg.FormatOneofCase.Wkb:
 
-					WkbGeometryReader wkbReader = new WkbGeometryReader();
+					WkbGeometryReader wkbReader = new WkbGeometryReader
+					                              {
+						                              GroupPolyhedraByPointId = true
+					                              };
+
 					result = wkbReader.ReadGeometry(
 						new MemoryStream(shapeBuffer.Wkb.ToByteArray()));
 

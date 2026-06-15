@@ -576,11 +576,11 @@ namespace ProSuite.QA.Container
 
 			public bool IsPointIdAware => _isPointIdAware;
 
-			public int? PointIdMin => IsPointIdAware ? PointIdMinCore : (int?) null;
+			public int? PointIdMin => PointIdMinCore;
 
-			public int? PointIdMax => IsPointIdAware ? PointIdMaxCore : (int?) null;
+			public int? PointIdMax => PointIdMaxCore;
 
-			public int? PointIdCount => IsPointIdAware ? PointIdCountCore : (int?)null;
+			public int? PointIdCount => PointIdCountCore;
 
 			public int SegmentCount => _segments?.SegmentCount ?? 0;
 

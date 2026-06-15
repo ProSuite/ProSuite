@@ -1,13 +1,25 @@
 using System;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.UI.WinForms;
 
 namespace ProSuite.Commons.UI.Env
 {
 	public static class UIEnvironment
 	{
+		/// <summary>
+		/// Sets the <see cref="MainWindow"/> property for the currently running WPF application.
+		/// </summary>
+		public static void SetMainWindowForWpfApplication()
+		{
+			Window mainWindow = System.Windows.Application.Current.MainWindow;
+			IWin32Window win32Window = WinFormUtils.GetWin32Window(mainWindow);
+			MainWindow = win32Window;
+		}
+
 		#region Fields
 
 		private static readonly MainWindowProvider _mainWindowProvider =

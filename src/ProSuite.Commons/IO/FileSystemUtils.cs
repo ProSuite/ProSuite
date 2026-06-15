@@ -66,6 +66,15 @@ namespace ProSuite.Commons.IO
 			                            Path.DirectorySeparatorChar);
 		}
 
+		public static bool ArePathsEqual([NotNull] string path1,
+		                                 [NotNull] string path2)
+		{
+			return string.Equals(
+				Path.GetFullPath(path1),
+				Path.GetFullPath(path2),
+				StringComparison.OrdinalIgnoreCase); // Windows is case-insensitive
+		}
+
 		public static bool HasInvalidPathChars([NotNull] string path)
 		{
 			return path.IndexOfAny(InvalidPathChars) >= 0;
@@ -78,7 +87,7 @@ namespace ProSuite.Commons.IO
 
 		[NotNull]
 		public static string ReplaceInvalidFileNameChars([NotNull] string fileName,
-		                                                 char replacementChar)
+		                                                 char replacementChar = '_')
 		{
 			return StringUtils.ReplaceChars(fileName, replacementChar,
 			                                InvalidFileNameChars);
@@ -86,9 +95,46 @@ namespace ProSuite.Commons.IO
 
 		[NotNull]
 		public static string ReplaceInvalidPathChars([NotNull] string path,
-		                                             char replacementChar)
+		                                             char replacementChar = '_')
 		{
 			return StringUtils.ReplaceChars(path, replacementChar, InvalidPathChars);
+		}
+
+		/// <summary>
+		/// Compare two file system paths for equality.
+		/// Aware of relative paths and casing differences,
+		/// but unaware of links and UNC paths.
+		/// </summary>
+		/// <returns>true iff the two paths are considered equal</returns>
+		public static bool EqualPaths(string path1, string path2)
+		{
+			if (path1 is null && path2 is null) return true;
+			if (path1 is null || path2 is null) return false;
+			path1 = TrimEndingDirectorySeparator(Path.GetFullPath(path1));
+			path2 = TrimEndingDirectorySeparator(Path.GetFullPath(path2));
+			bool isWin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+			var comparison = isWin ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			return string.Equals(path1, path2, comparison);
+		}
+
+		private static string TrimEndingDirectorySeparator(string path)
+		{
+			// TODO Once we advance to .NET Standard 2.1 or later,
+			//      use Path.TrimEndingDirectorySeparator instead
+			//      (handles root paths correctly, which we don't)
+
+			if (string.IsNullOrEmpty(path))
+			{
+				return path;
+			}
+
+			char last = path[path.Length - 1];
+			if (last == Path.DirectorySeparatorChar || last == Path.AltDirectorySeparatorChar)
+			{
+				return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			}
+
+			return path;
 		}
 
 		public static string FindFile([NotNull] IEnumerable<string> directories,
@@ -226,6 +272,44 @@ namespace ProSuite.Commons.IO
 			}
 
 			Directory.Delete(directory, recursive);
+		}
+
+		public static bool TryDeleteFile([CanBeNull] string filePath)
+		{
+			if (string.IsNullOrEmpty(filePath) || ! File.Exists(filePath))
+			{
+				return true;
+			}
+
+			try
+			{
+				File.Delete(filePath);
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
+		public static bool TryDeleteDirectory([CanBeNull] string dirPath,
+		                                      bool recursive = false,
+		                                      bool force = false)
+		{
+			if (string.IsNullOrEmpty(dirPath) || ! Directory.Exists(dirPath))
+			{
+				return true;
+			}
+
+			try
+			{
+				DeleteDirectory(dirPath, recursive, force);
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
 		}
 
 		public static void SetAttributes([NotNull] string directory,
@@ -464,6 +548,79 @@ namespace ProSuite.Commons.IO
 			string path = uri.LocalPath;
 
 			return path;
+		}
+
+		/// <summary>
+		/// Resolves a source pattern to a list of matching file paths. The pattern may be a
+		/// wildcard glob, a direct file path, or a directory. When a directory is given, all
+		/// files are returned recursively. An optional <paramref name="fileFilter"/> predicate
+		/// can be supplied to restrict the results to specific file types.
+		/// </summary>
+		/// <param name="sourcePattern">
+		/// A wildcard glob (e.g. <c>C:\data\*.las</c>), an absolute file path, or a directory path.
+		/// </param>
+		/// <param name="fileFilter">
+		/// Optional predicate to filter the resolved paths. Only files for which the predicate
+		/// returns <see langword="true"/> are included in the result.
+		/// </param>
+		/// <returns>
+		/// A list of resolved file paths matching the pattern and filter.
+		/// Returns an empty list if no files match.
+		/// </returns>
+		/// <exception cref="DirectoryNotFoundException">
+		/// Thrown when a wildcard pattern is used but the directory portion does not exist.
+		/// </exception>
+		/// <exception cref="FileNotFoundException">
+		/// Thrown when the pattern is a plain path that does not resolve to an existing file
+		/// or directory.
+		/// </exception>
+		/// <example>
+		/// Resolve all files in a directory:
+		/// <code>
+		/// List&lt;string&gt; all = LasPathUtils.ResolveFilePaths(@"C:\data\pointclouds");
+		/// </code>
+		/// Resolve using a wildcard glob:
+		/// <code>
+		/// List&lt;string&gt; las = LasPathUtils.ResolveFilePaths(@"C:\data\**\*.las");
+		/// </code>
+		/// Resolve with a custom extension filter:
+		/// <code>
+		/// List&lt;string&gt; txt = LasPathUtils.ResolveFilePaths(@"C:\data", f => f.EndsWith(".txt"));
+		/// </code>
+		/// </example>
+		public static List<string> ResolveFilePathsWithWildcards(string sourcePattern,
+		                                                         Predicate<string> fileFilter =
+			                                                         null)
+		{
+			IEnumerable<string> files;
+
+			if (sourcePattern.Contains('*'))
+			{
+				string directory = Path.GetDirectoryName(sourcePattern);
+				string pattern = Path.GetFileName(sourcePattern);
+
+				if (string.IsNullOrEmpty(directory) || ! Directory.Exists(directory))
+				{
+					throw new DirectoryNotFoundException(
+						$"Directory not found: {directory ?? sourcePattern}");
+				}
+
+				files = Directory.EnumerateFiles(directory, pattern, SearchOption.AllDirectories);
+			}
+			else if (File.Exists(sourcePattern))
+			{
+				files = new List<string> { sourcePattern };
+			}
+			else if (Directory.Exists(sourcePattern))
+			{
+				files = Directory.EnumerateFiles(sourcePattern, "*", SearchOption.AllDirectories);
+			}
+			else
+			{
+				throw new FileNotFoundException($"Path not found: {sourcePattern}", sourcePattern);
+			}
+
+			return fileFilter != null ? files.Where(f => fileFilter(f)).ToList() : files.ToList();
 		}
 	}
 }

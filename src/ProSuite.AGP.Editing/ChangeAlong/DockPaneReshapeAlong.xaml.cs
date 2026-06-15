@@ -1,12 +1,11 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing.ChangeAlong
+namespace ProSuite.AGP.Editing.ChangeAlong;
+
+public partial class DockPaneReshapeAlong : UserControl
 {
-	public partial class DockPaneReshapeAlong : UserControl
+	public DockPaneReshapeAlong()
 	{
-		public DockPaneReshapeAlong()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
 	}
 }

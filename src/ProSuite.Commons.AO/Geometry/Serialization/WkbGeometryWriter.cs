@@ -19,6 +19,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }
 
+		public bool GroupPolyhedraByPointId { get; set; }
+
 		public byte[] WriteGeometry([NotNull] IGeometry geometry)
 		{
 			try
@@ -34,7 +36,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 					case esriGeometryType.esriGeometryPolygon:
 						return WritePolygon((IPolygon) geometry);
 					case esriGeometryType.esriGeometryMultiPatch:
-						return WriteMultipatch((IMultiPatch) geometry);
+						return WriteMultipatch((IMultiPatch) geometry, GroupPolyhedraByPointId);
 					default:
 						throw new NotImplementedException(
 							$"Geometry type {geometry.GeometryType} is not implemented.");
@@ -311,11 +313,11 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			return WksPointArrayProvider.GetArray(pointCount);
 		}
 
-		private static Ordinates GetOrdinatesDimension(IGeometry point)
+		private static Ordinates GetOrdinatesDimension(IGeometry geometry)
 		{
-			Ordinates ordinates = GeometryUtils.IsZAware(point) ? Ordinates.Xyz : Ordinates.Xy;
+			Ordinates ordinates = GeometryUtils.IsZAware(geometry) ? Ordinates.Xyz : Ordinates.Xy;
 
-			if (GeometryUtils.IsMAware(point))
+			if (GeometryUtils.IsMAware(geometry))
 			{
 				ordinates = ordinates == Ordinates.Xy ? Ordinates.Xym : Ordinates.Xyzm;
 			}

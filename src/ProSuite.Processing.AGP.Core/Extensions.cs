@@ -5,6 +5,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Processing.AGP.Core.Domain;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
 
@@ -49,6 +50,14 @@ namespace ProSuite.Processing.AGP.Core
 			return env.DefineFields(row.RowValues(), qualifier);
 		}
 
+		public static StandardEnvironment DefineFields(
+			this StandardEnvironment env, IEnumerable<Feature> features, string qualifier = null)
+		{
+			if (env is null)
+				throw new ArgumentNullException(nameof(env));
+			return env.DefineFields(features.Select(f => f.RowValues()), qualifier);
+		}
+
 		public static void Execute(
 			this FieldSetter instance, Row row, IEvaluationEnvironment env, Stack<object> stack = null)
 		{
@@ -66,6 +75,27 @@ namespace ProSuite.Processing.AGP.Core
 		}
 
 		#endregion
+
+		public static bool ContainsFeature(this ProcessingDataset dataset, Feature feature)
+		{
+			if (feature is null)
+			{
+				return false;
+			}
+
+			using var featureClass = feature.GetTable();
+
+			if (! DatasetUtils.IsSameObjectClass(featureClass, dataset.FeatureClass))
+			{
+				return false;
+			}
+
+			long oid = feature.GetObjectID();
+			var filter = new QueryFilter { ObjectIDs = new[] { oid } };
+			var count = featureClass.GetCount(filter);
+
+			return count > 0; // should be at most one!
+		}
 
 		/// <summary>
 		/// Get an array of the point ID values of the given curve.

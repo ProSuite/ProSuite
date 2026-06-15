@@ -44,6 +44,9 @@ namespace ProSuite.Commons.Xml
 			return new FormatException(AppendLineInfo(message ?? "error"));
 		}
 
+		/// <returns>The given <paramref name="message"/> with line info
+		/// appended (format: "message (line N, position M)") or just
+		/// <paramref name="message"/> (if line info is unavailable)</returns>
 		public string AppendLineInfo(string message)
 		{
 			if (message is null) return null;

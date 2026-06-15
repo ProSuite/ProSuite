@@ -1,15 +1,11 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing.RemoveOverlaps
+namespace ProSuite.AGP.Editing.RemoveOverlaps;
+
+public partial class DockPaneRemoveOverlaps : UserControl
 {
-
-	public partial class DockPaneRemoveOverlaps : UserControl
+	public DockPaneRemoveOverlaps()
 	{
-		public DockPaneRemoveOverlaps()
-		{
-			InitializeComponent();
-		}
-
-        }
-    }
-
+		InitializeComponent();
+	}
+}

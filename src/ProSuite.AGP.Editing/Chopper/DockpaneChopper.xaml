@@ -7,97 +7,94 @@
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              xmlns:chopper="clr-namespace:ProSuite.AGP.Editing.Chopper"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=chopper:DockPaneChopperViewModelBase}" Width="400" Height="471" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=chopper:DockPaneChopperViewModelBase}" Width="400" Height="471"
+             HorizontalAlignment="Left"
              VerticalAlignment="Top">
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
-                <ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+				<ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</UserControl.Resources>
 
-    <StackPanel
-        HorizontalAlignment="Left"
-        VerticalAlignment="Top">
+	<StackPanel
+		HorizontalAlignment="Left"
+		VerticalAlignment="Top">
 
-        <!-- Snapping and minimum segment length -->
-        <Label FontWeight="Medium" Content="Snapping and minimum segment length"/>
-        <Grid HorizontalAlignment="Left" Width="Auto">
+		<!-- Snapping and minimum segment length -->
+		<Label FontWeight="Medium" Content="Snapping and minimum segment length" />
+		<Grid HorizontalAlignment="Left" Width="Auto">
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
 
-            <CheckBox Grid.Row="0" Grid.Column="0"
-                          Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Snap chopping points within tolerance of"
-                          DataContext="{Binding SnapToTargetVertices}" />
+			<CheckBox Grid.Row="0" Grid.Column="0"
+			          Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Snap chopping points within tolerance of"
+			          DataContext="{Binding SnapToTargetVertices}" />
 
-            <Grid Grid.Row="0"  Grid.Column="1" >
-                <ContentControl 
-                        Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding SnapTolerance}" />
-            </Grid>
+			<Grid Grid.Row="0" Grid.Column="1">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsSpinner}"
+					DataContext="{Binding SnapTolerance}" />
+			</Grid>
 
-            <Grid Grid.Row="0" Grid.Column="2">
-                <ContentControl 
-                    Template="{StaticResource CentralizableSettingsLabel}"
-                    DataContext="{Binding SnapTolerance}" />
-            </Grid>
-
-
-            <CheckBox Grid.Row="1"  Grid.Column="0"  Template="{StaticResource CentralizableSettingCheckbox}"
-                          Content="Respect a minimum segment length"
-                          DataContext="{Binding RespectMinimumSegmentLength}"  />
-
-            <Grid Grid.Row="1"  Grid.Column="1" >
-                <ContentControl 
-                        Template="{StaticResource CentralizableSettingsSpinner}"
-                        DataContext="{Binding MinimumSegmentLength}" 
-                    />
-            </Grid>
-            <Grid Grid.Row="1" Grid.Column="2">
-                <ContentControl 
-                        Template="{StaticResource CentralizableSettingsLabel}"
-                        DataContext="{Binding MinimumSegmentLength}" 
-                    />
-            </Grid>
-
-        </Grid>
+			<Grid Grid.Row="0" Grid.Column="2">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsLabel}"
+					DataContext="{Binding SnapTolerance}" />
+			</Grid>
 
 
-        <!-- Calculate chopping points at intersections with other -->
+			<CheckBox Grid.Row="1" Grid.Column="0" Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Respect a minimum segment length"
+			          DataContext="{Binding RespectMinimumSegmentLength}" />
 
-        <Label FontWeight="Medium" Content="Calculate chopping points at intersections with other" Margin="0,15,0,0"/>
-        <editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
+			<Grid Grid.Row="1" Grid.Column="1">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsSpinner}"
+					DataContext="{Binding MinimumSegmentLength}" />
+			</Grid>
+			<Grid Grid.Row="1" Grid.Column="2">
+				<ContentControl
+					Template="{StaticResource CentralizableSettingsLabel}"
+					DataContext="{Binding MinimumSegmentLength}" />
+			</Grid>
+
+		</Grid>
 
 
+		<!-- Calculate chopping points at intersections with other -->
 
-        <!-- Z values -->
-        <Label FontWeight="Medium" Content="Z values" Margin="0,15,0,0"/>
-        <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Use selected feature's Z values instead of target feature's Z values"
-                      DataContext="{Binding UseSourceZs}" />
+		<Label FontWeight="Medium" Content="Calculate chopping points at intersections with other" Margin="0,15,0,0" />
+		<editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
 
-        <!-- T Shapes -->
-        <Label FontWeight="Medium" Content="Allowed intersection type" Margin="0,15,0,0"/>
-        <CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-                      Content="Only chop at endpoints intersecting selected line's interior (T shapes)"
-                      DataContext="{Binding ExcludeInteriorInteriorIntersections}" />
 
-        <!-- Restore Defaults -->
-        <Button Template="{StaticResource RestoreDefaultsButton}"
-        />
+		<!-- Z values -->
+		<Label FontWeight="Medium" Content="Z values" Margin="0,15,0,0" />
+		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+		          Content="Use selected feature's Z values instead of target feature's Z values"
+		          DataContext="{Binding UseSourceZs}" />
+
+		<!-- T Shapes -->
+		<Label FontWeight="Medium" Content="Allowed intersection type" Margin="0,15,0,0" />
+		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+		          Content="Only chop at endpoints intersecting selected line's interior (T shapes)"
+		          DataContext="{Binding ExcludeInteriorInteriorIntersections}" />
+
+		<!-- Restore Defaults -->
+		<Button Template="{StaticResource RestoreDefaultsButton}" />
 
 		<!--<RadioButton Template="{StaticResource CentralizableSettingRadioButton}"
                          IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static geometryProcessing:TargetFeatureSelection.VisibleEditableFeatures}}"
@@ -109,6 +106,6 @@
                          Content="Visible "
                          DataContext="{Binding Options.CentralizableTargetFeatureSelection}" />-->
 
-    </StackPanel>
+	</StackPanel>
 
 </UserControl>

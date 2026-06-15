@@ -1,11 +1,10 @@
 using ProSuite.AGP.WorkList.Contracts;
 
-namespace ProSuite.AGP.WorkList.Domain.Persistence
+namespace ProSuite.AGP.WorkList.Domain.Persistence;
+
+public interface IWorkItemState
 {
-	public interface IWorkItemState
-	{
-		long OID { get; set; }
-		bool Visited { get; set; }
-		WorkItemStatus Status { get; set; }
-	}
+	long OID { get; set; }
+	bool Visited { get; set; }
+	WorkItemStatus Status { get; set; }
 }

@@ -533,7 +533,6 @@ public class AddRemovePointsTool : MapTool
 			// a QueuedTask since ArcGis Pro 3.4
 			_ignoreNextSketchCancel = true;
 			ActiveMapView.ClearSketchAsync();
-
 		});
 	}
 

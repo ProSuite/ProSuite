@@ -4,45 +4,44 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources
+namespace ProSuite.Commons.AGP.Core.Geodatabase.PluginDatasources;
+
+/// <summary>
+/// Generic cursor for plugin data sources.
+/// </summary>
+public class PluginCursor : PluginCursorTemplate
 {
-	/// <summary>
-	/// Generic cursor for plugin data sources.
-	/// </summary>
-	public class PluginCursor : PluginCursorTemplate
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private readonly IEnumerator<object[]> _enumerator;
+
+	public PluginCursor(IEnumerable<object[]> rows)
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		Assert.ArgumentNotNull(rows, nameof(rows));
 
-		private readonly IEnumerator<object[]> _enumerator;
+		_enumerator = rows.GetEnumerator();
+	}
 
-		public PluginCursor(IEnumerable<object[]> rows)
+	public override PluginRow GetCurrentRow()
+	{
+		if (_enumerator.Current == null)
 		{
-			Assert.ArgumentNotNull(rows, nameof(rows));
-
-			_enumerator = rows.GetEnumerator();
+			return null;
 		}
 
-		public override PluginRow GetCurrentRow()
-		{
-			if (_enumerator.Current == null)
-			{
-				return null;
-			}
+		return new PluginRow(_enumerator.Current);
+	}
 
-			return new PluginRow(_enumerator.Current);
+	public override bool MoveNext()
+	{
+		try
+		{
+			return _enumerator.MoveNext();
 		}
-
-		public override bool MoveNext()
+		catch (Exception ex)
 		{
-			try
-			{
-				return _enumerator.MoveNext();
-			}
-			catch (Exception ex)
-			{
-				_msg.Debug($"Error getting next feature ({ex.GetType().Name}): {ex.Message}", ex);
-				throw;
-			}
+			_msg.Debug($"Error getting next feature ({ex.GetType().Name}): {ex.Message}", ex);
+			throw;
 		}
 	}
 }

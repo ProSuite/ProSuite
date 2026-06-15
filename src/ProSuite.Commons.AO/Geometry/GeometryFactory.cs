@@ -207,6 +207,12 @@ namespace ProSuite.Commons.AO.Geometry
 			IEnvelope envelope = new EnvelopeClass();
 			envelope.PutCoords(minCorner.X, minCorner.Y, maxCorner.X, maxCorner.Y);
 
+			if (GeometryUtils.IsZAware(minCorner) || GeometryUtils.IsZAware(maxCorner))
+			{
+				GeometryUtils.MakeZAware(envelope);
+				envelope.ZMin = Math.Min(minCorner.Z, maxCorner.Z);
+			}
+
 			return CreatePolygon(envelope);
 		}
 
@@ -218,6 +224,11 @@ namespace ProSuite.Commons.AO.Geometry
 			IPolygon polygon = new PolygonClass();
 
 			SetRectangle(polygon, envelope);
+
+			if (GeometryUtils.IsZAware(envelope))
+			{
+				GeometryUtils.MakeZAware(polygon);
+			}
 
 			return polygon;
 		}
@@ -2052,11 +2063,13 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="x">The x coordinate.</param>
 		/// <param name="y">The y coordinate.</param>
 		/// <param name="z">The z coordinate.</param>
+		/// <param name="sref"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static IPoint CreatePoint(double x, double y, double z)
+		public static IPoint CreatePoint(double x, double y, double z,
+		                                 ISpatialReference sref = null)
 		{
-			IPoint point = CreatePoint(x, y);
+			IPoint point = CreatePoint(x, y, sref);
 
 			MakeZAware(point);
 

@@ -260,7 +260,7 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 				return GetVectorDataset(featureClassName);
 			}
 
-#if ArcGIS || Server11
+#if ArcGIS || ARCGIS_11_0_OR_GREATER
 			if (datasetName is ITopologyName)
 			{
 				return GetTopologyDataset(datasetName);

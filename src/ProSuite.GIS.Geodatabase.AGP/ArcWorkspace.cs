@@ -15,7 +15,7 @@ namespace ProSuite.GIS.Geodatabase.AGP;
 
 public class ArcWorkspace : IFeatureWorkspace
 {
-	private static readonly Dictionary<long, ArcWorkspace> _workspacesByHandle = new();
+	private static readonly Dictionary<long, IWorkspace> _workspacesByHandle = new();
 
 	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName =
 		new();
@@ -33,16 +33,21 @@ public class ArcWorkspace : IFeatureWorkspace
 	private readonly Dictionary<string, ArcDomain> _domains = new();
 
 	[CanBeNull]
-	internal static ArcWorkspace GetByHandle(long handle)
+	internal static IWorkspace GetByHandle(long handle)
 	{
 		return _workspacesByHandle.GetValueOrDefault(handle);
 	}
 
-	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
-	                                  bool cacheProperties = false)
+	public static IWorkspace Create(Datastore datastore, bool cacheProperties = false)
 	{
-		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(),
-		                                    out ArcWorkspace existing))
+		if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			return Create(geodatabase, cacheProperties);
+		}
+
+		long handle = datastore.Handle.ToInt64();
+
+		if (_workspacesByHandle.TryGetValue(handle, out IWorkspace existing))
 		{
 			if (cacheProperties)
 			{
@@ -50,6 +55,28 @@ public class ArcWorkspace : IFeatureWorkspace
 			}
 
 			return existing;
+		}
+
+		var basicWorkspace = new BasicWorkspace(datastore, cacheProperties);
+		_workspacesByHandle.TryAdd(handle, basicWorkspace);
+
+		return basicWorkspace;
+	}
+
+	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                  bool cacheProperties = false)
+	{
+		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(),
+		                                    out IWorkspace existing))
+		{
+			var existingArcWorkspace = (ArcWorkspace) existing;
+
+			if (cacheProperties)
+			{
+				existingArcWorkspace.CacheProperties();
+			}
+
+			return existingArcWorkspace;
 		}
 
 		return geodatabase.IsVersioningSupported()
@@ -74,7 +101,7 @@ public class ArcWorkspace : IFeatureWorkspace
 		}
 	}
 
-	private void CacheProperties()
+	public void CacheProperties()
 	{
 		_pathName = PathName;
 		_workspaceType = Type;
@@ -301,6 +328,12 @@ public class ArcWorkspace : IFeatureWorkspace
 			case esriDatasetType.esriDTRelationshipClass:
 				foreach (RelationshipClassDefinition definition in Geodatabase
 					         .GetDefinitions<RelationshipClassDefinition>())
+				{
+					yield return new ArcRelationshipClassDefinitionName(definition, this);
+				}
+
+				foreach (AttributedRelationshipClassDefinition definition in Geodatabase
+					         .GetDefinitions<AttributedRelationshipClassDefinition>())
 				{
 					yield return new ArcRelationshipClassDefinitionName(definition, this);
 				}
@@ -573,10 +606,10 @@ public class ArcWorkspace : IFeatureWorkspace
 
 		if (otherWorkspace is ArcWorkspace otherArcWorkspace)
 		{
-			// Comparing connection properties is less prone to disconnection issues
-			DatastoreName thisGdbName = new DatastoreName(Geodatabase.GetConnector());
-			DatastoreName otherGdbName =
-				new DatastoreName(otherArcWorkspace.Geodatabase.GetConnector());
+			// Use workspace name, which compares connection properties. This is less prone to
+			// disconnection issues and works for any thread if it has been cached.
+			IWorkspaceName thisGdbName = GetWorkspaceName();
+			IWorkspaceName otherGdbName = otherArcWorkspace.GetWorkspaceName();
 
 			if (thisGdbName.Equals(otherGdbName))
 			{
@@ -584,8 +617,6 @@ public class ArcWorkspace : IFeatureWorkspace
 				return true;
 			}
 		}
-
-		// Both are un-versioned workspaces, compare the path:
 
 		var versionedWorkspace1 = this as IVersionedWorkspace;
 		var versionedWorkspace2 = otherWorkspace as IVersionedWorkspace;
@@ -606,6 +637,7 @@ public class ArcWorkspace : IFeatureWorkspace
 			return Equals(new Uri(PathName), new Uri(otherWorkspace.PathName));
 		}
 
+		// The other workspace is a different implementation of IWorkspace!
 		return IsSameDatabase(versionedWorkspace1, versionedWorkspace2);
 	}
 
@@ -890,10 +922,10 @@ public class VersionInfo : IVersionInfo
 
 public class ArcWorkspaceName : IWorkspaceName
 {
-	private readonly ArcWorkspace _arcWorkspace;
-	private readonly DatastoreName _datastoreName;
+	[NotNull] private readonly ArcWorkspace _arcWorkspace;
+	[NotNull] private readonly DatastoreName _datastoreName;
 
-	public ArcWorkspaceName(ArcWorkspace arcWorkspace)
+	public ArcWorkspaceName([NotNull] ArcWorkspace arcWorkspace)
 	{
 		_arcWorkspace = arcWorkspace;
 		_datastoreName = new DatastoreName(arcWorkspace.Geodatabase);
@@ -919,8 +951,7 @@ public class ArcWorkspaceName : IWorkspaceName
 
 	public esriWorkspaceType Type => _arcWorkspace.Type;
 
-	public string Category =>
-		throw new NotImplementedException("Implement in derived class");
+	public string Category => throw new NotImplementedException();
 
 	public string ConnectionString => _datastoreName.ConnectionString;
 
@@ -930,6 +961,47 @@ public class ArcWorkspaceName : IWorkspaceName
 
 	public IEnumerable<KeyValuePair<string, string>> ConnectionProperties =>
 		_datastoreName.ConnectionProperties;
+
+	#endregion
+
+	#region Equality members
+
+	protected bool Equals(ArcWorkspaceName other)
+	{
+		// ArcWorkspace equals is comparing handles (thread-safe)
+		if (_arcWorkspace.Equals(other._arcWorkspace))
+		{
+			return true;
+		}
+
+		// Use thread-safe comparison of connection properties:
+		return Equals(_datastoreName, other._datastoreName);
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (obj is null)
+		{
+			return false;
+		}
+
+		if (ReferenceEquals(this, obj))
+		{
+			return true;
+		}
+
+		if (obj.GetType() != GetType())
+		{
+			return false;
+		}
+
+		return Equals((ArcWorkspaceName) obj);
+	}
+
+	public override int GetHashCode()
+	{
+		return _datastoreName.GetHashCode();
+	}
 
 	#endregion
 }

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
@@ -30,7 +29,7 @@ namespace ProSuite.Microservices.Client.QA
 
 		// TODO: Remove DDX-specific stuff and
 		// - either provide the necessary repositories etc. as method parameters where needed
-		// - or handle the the DDX-related stuff in the caller, which should probably always be
+		// - or handle the DDX-related stuff in the caller, which should probably always be
 		//   the IApplicationBackgroundVerificationController implementation.
 		// Alternatively create a separate implementation for the interface.
 		public BackgroundVerificationResult(
@@ -64,8 +63,7 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
 
-			Stopwatch watch = _msg.DebugStartTiming(
-				"Replacing existing errors with new issues, deleting obsolete allowed errors...");
+			Stopwatch watch = _msg.DebugStartTiming("Replacing existing errors with new issues...");
 
 			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
 			int issueCount = _resultIssueCollector.SaveIssues(verifiedConditions);
@@ -81,8 +79,7 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			Assert.NotNull(_resultIssueCollector).ErrorDeletionInPerimeter = errorDeletion;
 
-			Stopwatch watch = _msg.DebugStartTiming(
-				"Replacing existing errors with new issues, deleting obsolete allowed errors...");
+			Stopwatch watch = _msg.DebugStartTiming("Replacing existing errors with new issues...");
 
 			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
 			int issueCount = await _resultIssueCollector.SaveIssuesAsync(verifiedConditions);
@@ -103,7 +100,7 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			// TODO: Load the conditions-dictionary up front and provide as parameter or use
 			// separate implementations if no direct DDX access is available.
-			if (_domainTransactions == null)
+			if (_domainTransactions == null || VerificationMsg == null)
 			{
 				return null;
 			}

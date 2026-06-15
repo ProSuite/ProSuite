@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Mapping;
+using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
@@ -51,11 +53,12 @@ public static class RelationshipClassUtils
 		}
 	}
 
-	public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitionsForAnnotation([NotNull] Dataset originClass)
+	public static IEnumerable<RelationshipClassDefinition>
+		GetRelationshipClassDefinitionsForAnnotation([NotNull] Dataset originClass)
 	{
 		string originClassName = originClass.GetName();
 		using Datastore datastore = originClass.GetDatastore();
-		if (datastore is not ArcGIS.Core.Data.PluginDatastore.PluginDatastore)
+		if (datastore is not PluginDatastore)
 		{
 			using var geodatabase = datastore as ArcGIS.Core.Data.Geodatabase;
 			if (geodatabase != null)
@@ -66,14 +69,15 @@ public static class RelationshipClassUtils
 					                          StringComparison.OrdinalIgnoreCase);
 
 				foreach (RelationshipClassDefinition definition in
-				         RelationshipClassUtils.GetRelationshipClassDefinitions(geodatabase, predicate))
+				         GetRelationshipClassDefinitions(geodatabase, predicate))
 				{
 					string destinationClassName = definition.GetDestinationClass();
-					if (!string.IsNullOrEmpty(destinationClassName))
+					if (! string.IsNullOrEmpty(destinationClassName))
 					{
-						using Table destinationClass = DatasetUtils.OpenDataset<Table>(geodatabase, destinationClassName);
+						using Table destinationClass =
+							DatasetUtils.OpenDataset<Table>(geodatabase, destinationClassName);
 
-						if (destinationClass is ArcGIS.Core.Data.Mapping.AnnotationFeatureClass)
+						if (destinationClass is AnnotationFeatureClass)
 						{
 							yield return definition;
 						}
@@ -82,7 +86,6 @@ public static class RelationshipClassUtils
 			}
 		}
 	}
-
 
 	public static RelationshipClass OpenRelationshipClass(
 		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,

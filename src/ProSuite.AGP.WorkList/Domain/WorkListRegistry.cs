@@ -5,205 +5,204 @@ using System.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.Domain
+namespace ProSuite.AGP.WorkList.Domain;
+
+public class WorkListRegistry : IWorkListRegistry
 {
-	public class WorkListRegistry : IWorkListRegistry
+	private static volatile WorkListRegistry _instance;
+	private static readonly object _singletonLock = new object();
+
+	private readonly IDictionary<string, IWorkListFactory> _map =
+		new ConcurrentDictionary<string, IWorkListFactory>();
+
+	public static IWorkListRegistry Instance
 	{
-		private static volatile WorkListRegistry _instance;
-		private static readonly object _singletonLock = new object();
-
-		private readonly IDictionary<string, IWorkListFactory> _map =
-			new ConcurrentDictionary<string, IWorkListFactory>();
-
-		public static IWorkListRegistry Instance
+		get
 		{
-			get
-			{
-				// Notice: the "double-check" approach solves thread concurrency problems
-				// while avoiding the locking overhead in each access to this property.
-				// See: https://msdn.microsoft.com/en-us/library/ff650316.aspx
+			// Notice: the "double-check" approach solves thread concurrency problems
+			// while avoiding the locking overhead in each access to this property.
+			// See: https://msdn.microsoft.com/en-us/library/ff650316.aspx
 
-				if (_instance == null)
+			if (_instance == null)
+			{
+				lock (_singletonLock)
 				{
-					lock (_singletonLock)
+					// ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+					if (_instance == null)
 					{
-						// ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-						if (_instance == null)
-						{
-							_instance = new WorkListRegistry();
-						}
+						_instance = new WorkListRegistry();
 					}
 				}
-
-				return _instance;
 			}
+
+			return _instance;
+		}
+	}
+
+	public IWorkList Get(string name)
+	{
+		return _map.TryGetValue(name, out IWorkListFactory factory) ? factory.Get() : null;
+	}
+
+	[ItemCanBeNull]
+	public async Task<IWorkList> GetAsync(string name)
+	{
+		bool exists = _map.TryGetValue(name, out IWorkListFactory factory);
+
+		if (exists)
+		{
+			return await factory.GetAsync();
 		}
 
-		public IWorkList Get(string name)
-		{
-			return _map.TryGetValue(name, out IWorkListFactory factory) ? factory.Get() : null;
-		}
+		return null;
+	}
 
-		[ItemCanBeNull]
-		public async Task<IWorkList> GetAsync(string name)
+	public bool TryGet<T>(string name, out T workList) where T : class, IWorkList
+	{
+		foreach (var kvp in _map)
 		{
-			bool exists = _map.TryGetValue(name, out IWorkListFactory factory);
-
-			if (exists)
+			if (kvp.Value is not WorkListFactoryBase workListFactory)
 			{
-				return await factory.GetAsync();
+				// Not registered with an actual factory
+				continue;
 			}
 
-			return null;
+			if (! workListFactory.IsWorkListCreated)
+			{
+				// Not instantiated
+				continue;
+			}
+
+			T workListWithDesiredType = GetWorkList<T>(workListFactory);
+
+			if (! string.IsNullOrEmpty(name) && ! string.Equals(kvp.Key, name))
+			{
+				// Name does not match
+				continue;
+			}
+
+			if (workListWithDesiredType == null)
+			{
+				continue;
+			}
+
+			workList = workListWithDesiredType;
+			return true;
 		}
 
-		public bool TryGet<T>(string name, out T workList) where T : class, IWorkList
+		workList = null;
+
+		return false;
+	}
+
+	public bool WorklistExists(string name)
+	{
+		// NOTE: This has been observed to deadlock between CIM-threads (without background loading)!
+		//       Never lock on something you cannot control who has access to
+		//lock (_registryLock)
+		if (_map.TryGetValue(name, out IWorkListFactory factory))
 		{
-			foreach (var kvp in _map)
-			{
-				if (kvp.Value is not WorkListFactoryBase workListFactory)
-				{
-					// Not registered with an actual factory
-					continue;
-				}
+			// In this case the work list has been created.
+			// XmlBasedWorkListFactory would create it in a non-canonical way (no schema info etc.)
+			// which might be fine for layer display purposes, but not for the NavigatorView. 
+			return factory is WorkListFactoryBase workListFactory &&
+			       workListFactory.IsWorkListCreated;
+		}
 
-				if (! workListFactory.IsWorkListCreated)
-				{
-					// Not instantiated
-					continue;
-				}
+		return false;
+	}
 
-				T workListWithDesiredType = GetWorkList<T>(workListFactory);
+	public bool TryAdd(IWorkListFactory factory)
+	{
+		if (factory == null)
+			throw new ArgumentNullException(nameof(factory));
 
-				if (! string.IsNullOrEmpty(name) && ! string.Equals(kvp.Key, name))
-				{
-					// Name does not match
-					continue;
-				}
-
-				if (workListWithDesiredType == null)
-				{
-					continue;
-				}
-
-				workList = workListWithDesiredType;
-				return true;
-			}
-
-			workList = null;
-
+		if (_map.ContainsKey(factory.Name))
+		{
 			return false;
 		}
 
-		public bool WorklistExists(string name)
+		Add(factory);
+		return true;
+	}
+
+	public bool AddOrReplace(IWorkList worklist)
+	{
+		if (_map.TryGetValue(worklist.Name, out IWorkListFactory factory))
 		{
-			// NOTE: This has been observed to deadlock between CIM-threads (without background loading)!
-			//       Never lock on something you cannot control who has access to
-			//lock (_registryLock)
-			if (_map.TryGetValue(name, out IWorkListFactory factory))
-			{
-				// In this case the work list has been created.
-				// XmlBasedWorkListFactory would create it in a non-canonical way (no schema info etc.)
-				// which might be fine for layer display purposes, but not for the NavigatorView. 
-				return factory is WorkListFactoryBase workListFactory &&
-				       workListFactory.IsWorkListCreated;
-			}
+			// NOTE: The saving in UnWire can result in 'The process cannot access the file
+			// because it is being used by another process'!
 
-			return false;
-		}
-
-		public bool TryAdd(IWorkListFactory factory)
-		{
-			if (factory == null)
-				throw new ArgumentNullException(nameof(factory));
-
-			if (_map.ContainsKey(factory.Name))
+			if (ReferenceEquals(factory.Get(), worklist))
 			{
 				return false;
 			}
 
-			Add(factory);
-			return true;
-		}
+			factory.UnWire();
 
-		public bool AddOrReplace(IWorkList worklist)
+			_map[worklist.Name] = new WorkListFactory(worklist);
+		}
+		else
 		{
-			if (_map.TryGetValue(worklist.Name, out IWorkListFactory factory))
-			{
-				// NOTE: The saving in UnWire can result in 'The process cannot access the file
-				// because it is being used by another process'!
-
-				if (ReferenceEquals(factory.Get(), worklist))
-				{
-					return false;
-				}
-
-				factory.UnWire();
-
-				_map[worklist.Name] = new WorkListFactory(worklist);
-			}
-			else
-			{
-				_map.Add(worklist.Name, new WorkListFactory(worklist));
-			}
-
-			return true;
+			_map.Add(worklist.Name, new WorkListFactory(worklist));
 		}
 
-		public bool Remove(IWorkList workList)
+		return true;
+	}
+
+	public bool Remove(IWorkList workList)
+	{
+		if (workList == null)
+			throw new ArgumentNullException(nameof(workList));
+
+		return Remove(workList.Name);
+	}
+
+	private void Add(IWorkListFactory factory)
+	{
+		if (factory == null)
+			throw new ArgumentNullException(nameof(factory));
+
+		string name = factory.Name;
+
+		if (! _map.TryAdd(name, factory))
 		{
-			if (workList == null)
-				throw new ArgumentNullException(nameof(workList));
-
-			return Remove(workList.Name);
+			throw new InvalidOperationException(
+				$"WorkList by that name already registered: '{name}'");
 		}
+	}
 
-		private void Add(IWorkListFactory factory)
-		{
-			if (factory == null)
-				throw new ArgumentNullException(nameof(factory));
+	[CanBeNull]
+	private static T GetWorkList<T>([NotNull] WorkListFactoryBase workListFactory)
+		where T : class, IWorkList
+	{
+		IWorkList candidate = workListFactory.Get();
 
-			string name = factory.Name;
+		return candidate as T;
+	}
 
-			if (! _map.TryAdd(name, factory))
-			{
-				throw new InvalidOperationException(
-					$"WorkList by that name already registered: '{name}'");
-			}
-		}
+	private bool Remove(string name)
+	{
+		if (string.IsNullOrEmpty(name))
+			throw new ArgumentNullException(nameof(name));
 
-		[CanBeNull]
-		private static T GetWorkList<T>([NotNull] WorkListFactoryBase workListFactory)
-			where T : class, IWorkList
-		{
-			IWorkList candidate = workListFactory.Get();
+		UnWire(name);
 
-			return candidate as T;
-		}
+		return _map.Remove(name);
+	}
 
-		private bool Remove(string name)
-		{
-			if (string.IsNullOrEmpty(name))
-				throw new ArgumentNullException(nameof(name));
+	private void UnWire(string name)
+	{
+		if (string.IsNullOrEmpty(name))
+			throw new ArgumentNullException(nameof(name));
 
-			UnWire(name);
+		_map.TryGetValue(name, out IWorkListFactory factory);
 
-			return _map.Remove(name);
-		}
+		factory?.UnWire();
+	}
 
-		private void UnWire(string name)
-		{
-			if (string.IsNullOrEmpty(name))
-				throw new ArgumentNullException(nameof(name));
-
-			_map.TryGetValue(name, out IWorkListFactory factory);
-
-			factory?.UnWire();
-		}
-
-		public override string ToString()
-		{
-			return $"Work List Registry ({_map.Count}) registered work lists";
-		}
+	public override string ToString()
+	{
+		return $"Work List Registry ({_map.Count}) registered work lists";
 	}
 }

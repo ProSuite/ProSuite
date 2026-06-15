@@ -30,4 +30,11 @@ public class NoProcessingSymbology : IProcessingSymbology
 	{
 		throw new NotImplementedException();
 	}
+
+	public bool GetStrokeWidth(
+		PseudoFeature feature, IMapContext mapContext,
+		out double leftPoints, out double rightPoints)
+	{
+		throw new NotImplementedException();
+	}
 }

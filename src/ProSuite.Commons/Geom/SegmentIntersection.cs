@@ -110,6 +110,23 @@ namespace ProSuite.Commons.Geom
 		                               TargetStartIntersects || TargetEndIntersects;
 
 		/// <summary>
+		/// Whether the source and target segments are collinear in XY, i.e. both end
+		/// points of one of the two segments lie (within tolerance) on the infinite line
+		/// of the other. Only collinear segments can share a genuine linear overlap.
+		/// <para>This distinguishes a real linear intersection from a "pseudo-linear"
+		/// intersection at a near-coincident acute corner: there the source's end point and
+		/// one of the target's end points are each within tolerance of the respective other
+		/// segment, but the corner gap between them is just above the vertex-snap tolerance
+		/// (so neither factor snaps to a vertex). Endpoint incidence alone then looks like a
+		/// tiny linear overlap even though the two segments actually diverge (are not
+		/// parallel).
+		/// </para>
+		/// </summary>
+		private bool SegmentsAreCollinearXY =>
+			(TargetStartFactor != null && TargetEndFactor != null) ||
+			(! double.IsNaN(_source1Factor) && ! double.IsNaN(_source2Factor));
+
+		/// <summary>
 		/// Whether or not the intersection between the source and the target segment
 		/// is a line. In case of a 0-length source segment the intersection is also
 		/// considered a (0-length) line.
@@ -146,12 +163,18 @@ namespace ProSuite.Commons.Geom
 
 				if (SourceStartIntersects)
 				{
-					return ! MathUtils.AreEqual(0, nonNullTarget);
+					// SegmentsAreCollinear condition:
+					// A single shared endpoint (source start) plus one target endpoint on
+					// the source interior is only a linear overlap if the segments are
+					// actually collinear; otherwise it is a near-coincident corner touch
+					// (a pseudo-linear intersection) and must be treated as a point.
+					// See IsPotentialPseudoLinearIntersection (sebastianskapelle)
+					return ! MathUtils.AreEqual(0, nonNullTarget) && SegmentsAreCollinearXY;
 				}
 
 				if (SourceEndIntersects)
 				{
-					return ! MathUtils.AreEqual(1.0, nonNullTarget);
+					return ! MathUtils.AreEqual(1.0, nonNullTarget) && SegmentsAreCollinearXY;
 				}
 
 				return false;

@@ -1,9 +1,8 @@
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Contracts;
+
+public enum WorkItemStatus
 {
-	public enum WorkItemStatus
-	{
-		Unknown = 0,
-		Todo,
-		Done
-	}
+	Unknown = 0,
+	Todo,
+	Done
 }

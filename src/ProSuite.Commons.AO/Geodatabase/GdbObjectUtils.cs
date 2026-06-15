@@ -9,6 +9,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -415,7 +416,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return null;
 			}
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			// long is expected:
 			if (value is long longValue)
 			{
@@ -446,7 +447,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				return null;
 			}
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			// long is expected:
 			if (value is long longValue)
 			{
@@ -513,9 +514,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(origBlobStream);
-				Marshal.ReleaseComObject(copyBlobStream);
-				Marshal.ReleaseComObject(objectStream);
+				ComUtils.ReleaseObject(origBlobStream);
+				ComUtils.ReleaseObject(copyBlobStream);
+				ComUtils.ReleaseObject(objectStream);
 			}
 
 			return true;
@@ -538,8 +539,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			// very important! The streams must be released otherwise
 			// the object won't re-hydrate any more!
-			Marshal.ReleaseComObject(memoryBlobStream);
-			Marshal.ReleaseComObject(objectStream);
+			ComUtils.ReleaseObject(memoryBlobStream);
+			ComUtils.ReleaseObject(objectStream);
 		}
 
 		[CanBeNull]
@@ -753,7 +754,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 								"SetFeatureShape: Spatial reference of feature class and existing feature's shape are not equal. The feature's shape will be left with a different SR.");
 					}
 
-					Marshal.ReleaseComObject(oldShape);
+					ComUtils.ReleaseObject(oldShape);
 				}
 			}
 
@@ -839,7 +840,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (useGeometry != newGeometry)
 			{
-				Marshal.ReleaseComObject(useGeometry);
+				ComUtils.ReleaseObject(useGeometry);
 			}
 		}
 
@@ -1944,7 +1945,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				                      ToString(feature), spatialReference.Name);
 			}
 
-			Marshal.ReleaseComObject(shape);
+			ComUtils.ReleaseObject(shape);
 
 			return projected;
 		}

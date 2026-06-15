@@ -264,6 +264,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				yield break;
 			}
 
+			if (OverrideAllowedErrors)
+			{
+				// Allowed errors must not be deleted if they have not been collected because of
+				// this OverrideAllowedErrors.
+				yield break;
+			}
+
 			foreach (AllowedError allowedError in _issueRepository.GetAllowedErrors(
 				         ae => ae.Invalidated))
 			{
@@ -275,6 +282,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			if (_issueRepository == null)
 			{
+				yield break;
+			}
+
+			if (OverrideAllowedErrors)
+			{
+				// Allowed errors must not be deleted if they have not been collected because of
+				// this OverrideAllowedErrors.
 				yield break;
 			}
 

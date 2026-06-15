@@ -14,6 +14,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 	{
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }
 
+		public bool GroupPolyhedraByPointId { get; set; }
+
 		public IGeometry ReadGeometry([NotNull] Stream stream)
 		{
 			using (BinaryReader reader = InitializeReader(stream))
@@ -118,8 +120,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			}
 		}
 
-		public IMultiPatch ReadMultipatch([NotNull] Stream stream,
-		                                  bool groupPartsByPointIDs = false)
+		public IMultiPatch ReadMultipatch([NotNull] Stream stream)
 		{
 			using (BinaryReader reader = InitializeReader(stream))
 			{
@@ -129,7 +130,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				Assert.AreEqual(WkbGeometryType.MultiSurface, geometryType,
 				                "Unexpected geometry type: {0}", geometryType);
 
-				return ReadMultipatch(reader, ordinates, groupPartsByPointIDs);
+				return ReadMultipatch(reader, ordinates);
 			}
 		}
 
@@ -165,12 +166,11 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 		}
 
 		private IMultiPatch ReadMultipatch(BinaryReader reader,
-		                                   Ordinates expectedOrdinates,
-		                                   bool groupPartsByPointIDs = false)
+		                                   Ordinates expectedOrdinates)
 		{
 			IMultiPatch result = new MultiPatchClass();
 
-			if (groupPartsByPointIDs)
+			if (GroupPolyhedraByPointId)
 			{
 				GeometryUtils.MakePointIDAware(result);
 			}
@@ -204,14 +204,14 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 
 					if (rings.Count == 0) continue;
 
-					if (groupPartsByPointIDs)
+					if (GroupPolyhedraByPointId)
 					{
 						AssignPointIds(rings, i);
 					}
 
 					var outerRingType = rings.Count > 1
 						                    ? esriMultiPatchRingType.esriMultiPatchOuterRing
-						                    : p == 0 || groupPartsByPointIDs
+						                    : p == 0 || GroupPolyhedraByPointId
 							                    ? esriMultiPatchRingType.esriMultiPatchFirstRing
 							                    : esriMultiPatchRingType.esriMultiPatchRing;
 

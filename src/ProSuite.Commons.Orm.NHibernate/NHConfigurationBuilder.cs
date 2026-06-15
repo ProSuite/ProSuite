@@ -9,16 +9,16 @@ using Environment = System.Environment;
 namespace ProSuite.Commons.Orm.NHibernate
 {
 	/// <summary>
-	/// Default implementation of <see cref="INHConfigurationBuilder"/>
+	/// Default implementation of <see cref="INhConfigurationBuilder"/>
 	/// </summary>
 	[UsedImplicitly]
-	public abstract class NHConfigurationBuilder : INHConfigurationBuilder
+	public abstract class NhConfigurationBuilder : INhConfigurationBuilder
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IMappingConfigurator _mappingConfigurator;
 
-		protected NHConfigurationBuilder(
+		protected NhConfigurationBuilder(
 			string defaultSchema,
 			string connectionString,
 			string dialect,

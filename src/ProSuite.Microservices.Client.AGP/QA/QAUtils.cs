@@ -26,25 +26,45 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// <param name="projectWorkspace"></param>
 		/// <param name="contextType"></param>
 		/// <param name="contextName"></param>
-		/// <param name="qualitySpecificationId">The desired quality specification's Id.</param>
+		/// <param name="qualitySpecificationId">The desired quality specification's ID.</param>
 		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
+		/// <param name="ddxEnvironmentName">The name of the DDX environment (for multi-DDX setups)</param>
 		/// <returns></returns>
 		public static VerificationRequest CreateRequest(
 			[NotNull] ProjectWorkspace projectWorkspace,
 			[NotNull] string contextType,
 			[NotNull] string contextName,
 			int qualitySpecificationId,
-			[CanBeNull] Geometry perimeter)
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
 		{
 			WorkContextMsg workContextMsg =
 				CreateWorkContextMsg(projectWorkspace, contextType, contextName);
 
+			return CreateRequest(workContextMsg, qualitySpecificationId, perimeter,
+			                     ddxEnvironmentName);
+		}
+
+		/// <summary>
+		/// Creates the verification request for an extent verification.
+		/// </summary>
+		/// <param name="workContextMsg"></param>
+		/// <param name="qualitySpecificationId">The desired quality specification's ID.</param>
+		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
+		/// <param name="ddxEnvironmentName">The name of the DDX environment (for multi-DDX setups)</param>
+		/// <returns></returns>
+		public static VerificationRequest CreateRequest(
+			WorkContextMsg workContextMsg,
+			int qualitySpecificationId,
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
+		{
 			var specificationMsg = new QualitySpecificationMsg
 			                       {
 				                       QualitySpecificationId = qualitySpecificationId
 			                       };
 
-			return CreateRequest(workContextMsg, specificationMsg, perimeter);
+			return CreateRequest(workContextMsg, specificationMsg, perimeter, ddxEnvironmentName);
 		}
 
 		/// <summary>
@@ -55,17 +75,37 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// <param name="contextName"></param>
 		/// <param name="qualitySpecification">The desired quality specification.</param>
 		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
+		/// <param name="ddxEnvironmentName">The name of the DDX environment (for multi-DDX setups)</param>
 		/// <returns></returns>
 		public static VerificationRequest CreateRequest(
 			[NotNull] ProjectWorkspace projectWorkspace,
 			[NotNull] string contextType,
 			[NotNull] string contextName,
 			[NotNull] QualitySpecification qualitySpecification,
-			[CanBeNull] Geometry perimeter)
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
 		{
 			WorkContextMsg workContextMsg =
 				CreateWorkContextMsg(projectWorkspace, contextType, contextName);
 
+			return CreateRequest(workContextMsg, qualitySpecification, perimeter,
+			                     ddxEnvironmentName);
+		}
+
+		/// <summary>
+		/// Creates the verification request for an extent verification.
+		/// </summary>
+		/// <param name="workContextMsg"></param>
+		/// <param name="qualitySpecification">The desired quality specification.</param>
+		/// <param name="perimeter">The verification perimeter or null for a work unit verification.</param>
+		/// <param name="ddxEnvironmentName">The name of the DDX environment (for multi-DDX setups)</param>
+		/// <returns></returns>
+		public static VerificationRequest CreateRequest(
+			WorkContextMsg workContextMsg,
+			[NotNull] QualitySpecification qualitySpecification,
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
+		{
 			CustomQualitySpecification customSpecification =
 				(CustomQualitySpecification) qualitySpecification;
 
@@ -79,7 +119,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			specificationMsg.ExcludedConditionIds.AddRange(
 				customSpecification.GetDisabledConditions().Select(c => c.Id));
 
-			return CreateRequest(workContextMsg, specificationMsg, perimeter);
+			return CreateRequest(workContextMsg, specificationMsg, perimeter, ddxEnvironmentName);
 		}
 
 		// TODO: Full specification, once the actual parameter changes are supported:
@@ -91,11 +131,13 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		/// <param name="qualitySpecificationMsg">The pre-assembled quality specification message.</param>
 		/// <param name="perimeter">The verification perimeter or null to verify the entire work
 		/// context.</param>
+		/// <param name="ddxEnvironmentName"></param>
 		/// <returns></returns>
 		public static VerificationRequest CreateRequest(
 			[NotNull] WorkContextMsg workContextMsg,
 			[NotNull] QualitySpecificationMsg qualitySpecificationMsg,
-			[CanBeNull] Geometry perimeter)
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
 		{
 			var request = new VerificationRequest();
 
@@ -137,6 +179,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			//}
 
 			request.UserName = EnvironmentUtils.UserDisplayName;
+
+			request.Environment = ProtobufGeomUtils.NullToEmpty(ddxEnvironmentName);
 
 			return request;
 		}

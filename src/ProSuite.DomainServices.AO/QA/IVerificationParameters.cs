@@ -42,7 +42,17 @@ namespace ProSuite.DomainServices.AO.QA
 		[Obsolete("FGDB compression must be performed by the client, if needed.")]
 		bool CompressIssueFgdb { get; }
 
+		/// <summary>
+		/// Whether issues found during verification should be updated in the error datasets of the
+		/// verified model's context.
+		/// </summary>
 		bool UpdateIssuesInVerifiedModelContext { get; }
+
+		/// <summary>
+		/// The deletion behavior to be applied if <see cref="UpdateIssuesInVerifiedModelContext"/>
+		/// is true.
+		/// </summary>
+		ErrorDeletionInPerimeter IssueDeletionInPerimeter { get; }
 
 		bool StoreIssuesOutsidePerimeter { get; }
 
@@ -59,8 +69,6 @@ namespace ProSuite.DomainServices.AO.QA
 		bool InvalidateAllowedErrorsIfAnyInvolvedObjectChanged { get; }
 
 		bool DeleteObsoleteAllowedErrors { get; }
-
-		ErrorDeletionInPerimeter IssueDeletionInPerimeter { get; }
 
 		bool ForceFullScanForNonContainerTests { get; }
 

@@ -21,7 +21,7 @@ public class ArcLineSegment : ArcSegment
 		return _proLine.Get2DEnvelope();
 	}
 
-	public override esriGeometryType GeometryType => esriGeometryType.esriGeometryEllipticArc;
+	public override esriGeometryType GeometryType => esriGeometryType.esriGeometryLine;
 
 	public override IGeometry Clone()
 	{

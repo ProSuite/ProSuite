@@ -13,6 +13,7 @@ public class SourceClassSchema
 
 	[CanBeNull]
 	public string ShapeField { get; }
+
 	[NotNull]
 	public string OIDField { get; }
 }

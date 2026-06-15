@@ -61,7 +61,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 
 		public void Started(int id, string workerAddress)
 		{
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			if (_subverIdOid.TryGetValue(id, out long oid))
 			{
 				IFeature f = _fc.GetFeature(oid);
@@ -77,7 +77,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 
 		public void Finished(int id, ServiceCallStatus status)
 		{
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			if (_subverIdOid.TryGetValue(id, out long oid))
 			{
 				IFeature f = _fc.GetFeature(oid);

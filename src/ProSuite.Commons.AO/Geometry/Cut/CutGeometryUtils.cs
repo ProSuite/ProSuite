@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.AO.Geometry.ExtractParts;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.Essentials.Assertions;
@@ -46,8 +47,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			// -> Use GeomUtils.Cut implementation which could eventually classify the left/right parts and avoid footprint-cutting
 			//    only to find the correct assignment to result features.
 
-			// TODO: Create footprint as RingGroups directly from multipatch rings
-			IPolygon footprint = GeometryFactory.CreatePolygon(multipatch);
+			// NOTE: At 12.0, creating the multipatches from the boundary is often incorrect (unless all rings are positive)
+			double xyTolerance = GeometryUtils.GetXyTolerance(multipatch);
+			IPolygon footprint = CreateFootprintUtils.GetFootprint(multipatch, xyTolerance);
 
 			IList<IGeometry> cutFootprintParts =
 				TryCutRingGroups(footprint, cutLine, ChangeAlongZSource.Target);
@@ -256,7 +258,18 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					}
 				}
 
-				result.AddRange(GeometryUtils.GetParts(resultCollection));
+				bool inputIsZAware = GeometryUtils.IsZAware(inputPolygon);
+
+				foreach (IGeometry resultGeometry in GeometryUtils.GetParts(resultCollection))
+				{
+					// Bug DPS/#258: Non-Z-aware polygons become Z-aware by Cut
+					if (! inputIsZAware && GeometryUtils.IsZAware(resultGeometry))
+					{
+						GeometryUtils.MakeNonZAware(resultGeometry);
+					}
+
+					result.Add(resultGeometry);
+				}
 			}
 			catch (Exception e)
 			{
@@ -691,10 +704,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				IRing ringTemplate = GeometryFactory.CreateEmptyRing(inputPolygon);
 
 				var cutResults =
-					cutRingGroups.Select(
-						             rg =>
-							             GeometryConversionUtils.CreatePolygon(
-								             inputPolygon, ringTemplate, rg))
+					cutRingGroups.Select(rg =>
+						                     GeometryConversionUtils.CreatePolygon(
+							                     inputPolygon, ringTemplate, rg))
 					             .ToList();
 
 				var largest = GeometryUtils.GetLargestGeometry(cutResults);
@@ -814,8 +826,9 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			GeometryUtils.Simplify(cutLine, true, true);
 
 			MultiPolycurve cutLinestrings = new MultiPolycurve(
-				GeometryUtils.GetPaths(cutLine).Select(
-					cutPath => GeometryConversionUtils.CreateLinestring(cutPath, ! cutLineHasZs)));
+				GeometryUtils.GetPaths(cutLine).Select(cutPath =>
+					                                       GeometryConversionUtils.CreateLinestring(
+						                                       cutPath, ! cutLineHasZs)));
 
 			IList<RingGroup> resultGroups =
 				GeomTopoOpUtils.CutPlanar(ringGroup, cutLinestrings, tolerance);

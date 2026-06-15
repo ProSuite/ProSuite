@@ -27,9 +27,9 @@ using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.UI.QA;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.ResourceLookup;
 using ProSuite.UI.QA.PropertyEditors;
-using ProSuite.UI.QA.ResourceLookup;
 using Notification = ProSuite.Commons.Validation.Notification;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon

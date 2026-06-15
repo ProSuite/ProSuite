@@ -505,7 +505,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 		}
 
 		[NotNull]
-		private static IIssueTableFields GetTargetFields(
+		public static IIssueTableFields GetTargetFields(
 			[NotNull] ICollection<IObjectClass> targetExceptionClasses,
 			bool ensureRequiredFields = true)
 		{
@@ -836,6 +836,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 
 			var attributes = new[]
 			                 {
+
 				                 // fields specific to managed exceptions
 				                 IssueAttribute.ManagedExceptionOrigin,
 				                 IssueAttribute.ManagedExceptionLineageUuid,

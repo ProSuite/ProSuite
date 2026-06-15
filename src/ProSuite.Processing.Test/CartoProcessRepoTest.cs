@@ -75,8 +75,8 @@ namespace ProSuite.Processing.Test
 			// the Types element, which legally discards info
 			// such as the assembly attribute
 
-		Assert.True(XNode.DeepEquals(doc1.Root?.Element("Groups"), doc2.Root?.Element("Groups")));
-		Assert.True(XNode.DeepEquals(doc1.Root?.Element("Processes"), doc2.Root?.Element("Processes")));
+			Assert.True(XNode.DeepEquals(doc1.Root?.Element("Groups"), doc2.Root?.Element("Groups")));
+			Assert.True(XNode.DeepEquals(doc1.Root?.Element("Processes"), doc2.Root?.Element("Processes")));
 		}
 
 		[Test]

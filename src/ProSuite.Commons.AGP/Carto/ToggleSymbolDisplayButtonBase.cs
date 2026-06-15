@@ -1,12 +1,12 @@
 using System;
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping.Events;
-using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.Logging;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto;
 
@@ -54,10 +54,10 @@ public abstract class ToggleSymbolDisplayButtonBase : Button
 
 	protected override async void OnClick()
 	{
-		Gateway.LogEntry(_msg);
-
 		try
 		{
+			Gateway.LogEntry(_msg);
+
 			var map = MapView.Active?.Map;
 			if (map is null) return;
 

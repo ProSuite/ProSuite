@@ -13,10 +13,10 @@ namespace ProSuite.DdxEditor.Framework.Dependencies
 
 		public NullablePropertyDependingItem([NotNull] Entity entity,
 		                                     [CanBeNull] string entityName,
-		                                     [NotNull] string propertyName,
+		                                     [NotNull] string affectedProperty,
 		                                     [NotNull] Action setPropertyToNull,
 		                                     [NotNull] IUnitOfWork unitOfWork)
-			: base(entity, entityName, propertyName)
+			: base(entity, entityName, affectedProperty)
 		{
 			Assert.ArgumentNotNull(entity, nameof(entity));
 			Assert.ArgumentNotNull(setPropertyToNull, nameof(setPropertyToNull));

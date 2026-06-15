@@ -10,7 +10,8 @@ public static class WorkListTestUtils
 {
 	public static GdbWorkspaceIdentity CreateWorkspaceProxy()
 	{
-		var connector = new FileGeodatabaseConnectionPath(new Uri(@"C:\temp\foo.gdb", UriKind.Absolute));
+		var connector =
+			new FileGeodatabaseConnectionPath(new Uri(@"C:\temp\foo.gdb", UriKind.Absolute));
 		return new GdbWorkspaceIdentity(connector, "magic connection string");
 	}
 

@@ -97,13 +97,19 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 				throw new InvalidOperationException("Cannot get new geometry of delete");
 			}
 
-			Assert.True(
-				IsExpectedSpatialRef(expectedSpatialRef, gdbObjectMsg.Shape.SpatialReference),
-				"Unexpected spatial reference in result feature: {0}. Expected: {1}",
-				gdbObjectMsg.Shape.SpatialReference, expectedSpatialRef.Name);
+			ShapeMsg resultShapeMsg = gdbObjectMsg?.Shape;
 
-			return
-				ProtobufConversionUtils.FromShapeMsg(gdbObjectMsg.Shape, expectedSpatialRef);
+			if (resultShapeMsg != null)
+			{
+				SpatialReferenceMsg actualSpatialRef = resultShapeMsg.SpatialReference;
+
+				Assert.True(
+					IsExpectedSpatialRef(expectedSpatialRef, actualSpatialRef),
+					"Unexpected spatial reference in result feature: {0}. Expected: {1}",
+					actualSpatialRef, expectedSpatialRef.Name);
+			}
+
+			return ProtobufConversionUtils.FromShapeMsg(resultShapeMsg, expectedSpatialRef);
 		}
 
 		private static RowChangeType ToChangeType(ResultObjectMsg.FeatureOneofCase featureCase)

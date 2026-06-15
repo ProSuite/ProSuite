@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
-using ProSuite.UI.QA.Controls;
+using ProSuite.UI.Core.QA.Controls;
 using QualityConditionControl = ProSuite.DdxEditor.Content.QA.QCon.QualityConditionControl;
 #if NET6_0_OR_GREATER
 using ProSuite.DdxEditor.Content.Blazor;

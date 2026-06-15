@@ -10,8 +10,8 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.UI.QA;
-using ProSuite.UI.QA.BoundTableRows;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.BoundTableRows;
 
 namespace ProSuite.DdxEditor.Content.Blazor.ViewModel;
 

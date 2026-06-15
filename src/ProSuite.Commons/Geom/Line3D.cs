@@ -616,6 +616,19 @@ namespace ProSuite.Commons.Geom
 			return IsCoincidentXY(other, tolerance);
 		}
 
+		public bool IsCollinear(Line3D targetLine, double tolerance)
+		{
+			double startDistance = GetDistancePerpendicular(targetLine.StartPoint);
+
+			if (startDistance > tolerance)
+			{
+				return false;
+			}
+
+			double endDistance = GetDistancePerpendicular(targetLine.EndPoint);
+			return endDistance <= tolerance;
+		}
+
 		public bool IsCoincidentXY(Line3D other, double tolerance)
 		{
 			Func<Pnt3D, Pnt3D, bool> pointComparison =

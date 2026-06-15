@@ -22,12 +22,19 @@ public interface ISymbolDisplayManager
 	public IIndexedProperty<Map, bool?> WantLM { get; }
 
 	bool? QuickUsesSLD(Map map);
+
 	bool? QuickUsesLM(Map map);
 
+	/// <remarks>Must run on MCT</remarks>
 	bool UsesSLD(Map map, bool uncached = false);
+
+	/// <remarks>Must run on MCT</remarks>
 	bool ToggleSLD(Map map, bool? enable = null);
 
+	/// <remarks>Must run on MCT</remarks>
 	bool UsesLM(Map map, bool uncached = false);
+
+	/// <remarks>Must run on MCT</remarks>
 	bool ToggleLM(Map map, bool? enable = null);
 }
 

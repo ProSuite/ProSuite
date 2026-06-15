@@ -173,7 +173,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 		public IDataset OpenExtensionDataset(esriDatasetType extensionDatasetType,
 		                                     string extensionDatasetName)
 		{

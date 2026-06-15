@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Http;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Microsoft.Extensions.Logging.Abstractions;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -15,7 +17,7 @@ namespace ProSuite.Microservices.Client.GrpcNet
 #if NET8_0
 		// NOTE: We actually have to load the library in the desired version, otherwise Grpc.Net.Client will throw a System.IO.FileNotFoundException!
 		// TODO: In case a previously loaded Add-in has already loaded a lower version, do not fail here!
-		private static readonly object _unused = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+		private static readonly object _unused = NullLogger.Instance;
 #endif
 
 		public static GrpcChannelOptions CreateChannelOptions(int maxMessageLength,
@@ -42,7 +44,8 @@ namespace ProSuite.Microservices.Client.GrpcNet
 		{
 			// Sometimes the localhost is not configured as exception in the proxy settings:
 			bool disableProxy =
-				string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase);
+				string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase) ||
+				EnvironmentUtils.GetBooleanEnvironmentVariableValue("PROSUITE_GRPC_DISABLE_PROXY");
 
 			_msg.DebugFormat("Creating channel to {0} on port {1}. Disabling proxy: {2}",
 			                 host, port, disableProxy);

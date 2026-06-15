@@ -3,34 +3,33 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AGP.Selection
+namespace ProSuite.Commons.AGP.Selection;
+
+// todo daro rename to LayerSelection
+public abstract class FeatureSelectionBase : TableSelection
 {
-	// todo daro rename to LayerSelection
-	public abstract class FeatureSelectionBase : TableSelection
+	protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer)
+		: base(basicFeatureLayer.GetTable())
 	{
-		protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer) : base(basicFeatureLayer.GetFeatureClass())
-		{
-			BasicFeatureLayer = basicFeatureLayer ??
-			                    throw new ArgumentNullException(nameof(basicFeatureLayer));
-		}
+		BasicFeatureLayer = basicFeatureLayer ??
+		                    throw new ArgumentNullException(nameof(basicFeatureLayer));
+	}
 
-		[NotNull]
-		public FeatureClass FeatureClass => (FeatureClass) Table;
+	[NotNull]
+	public FeatureClass FeatureClass => (FeatureClass) Table;
 
-		[NotNull]
-		public BasicFeatureLayer BasicFeatureLayer { get; }
+	[NotNull]
+	public BasicFeatureLayer BasicFeatureLayer { get; }
 
-		public int ShapeDimension => GeometryUtils.GetShapeDimension(GetShapeType());
+	public int ShapeDimension => GeometryUtils.GetShapeDimension(GetShapeType());
 
-		public abstract IEnumerable<Feature> GetFeatures();
+	public abstract IEnumerable<Feature> GetFeatures();
 
-		private GeometryType GetShapeType()
-		{
-			return GeometryUtils.TranslateEsriGeometryType(BasicFeatureLayer.ShapeType);
-		}
+	private GeometryType GetShapeType()
+	{
+		return GeometryUtils.TranslateEsriGeometryType(BasicFeatureLayer.ShapeType);
 	}
 }

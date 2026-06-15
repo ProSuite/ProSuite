@@ -21,7 +21,6 @@ using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 #if Server
 using ESRI.ArcGIS.DatasourcesGDB;
-
 #else
 using ESRI.ArcGIS.DataSourcesGDB;
 #endif
@@ -591,7 +590,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				// release workspace to avoid a workspace with incomplete connection properties remaining
 				// in the workspace factory cache
-				Marshal.ReleaseComObject(workspace);
+				ComUtils.ReleaseObject(workspace);
 			}
 		}
 
@@ -1411,7 +1410,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			try
 			{
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 				var version2 = version;
 #else
 				var version2 = (IVersion2) version;
@@ -1523,7 +1522,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 						deleted = true;
 					}
 
-					Marshal.ReleaseComObject(version);
+					ComUtils.ReleaseObject(version);
 				}
 			}
 			catch (COMException e)
@@ -1557,7 +1556,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				{
 					version.Delete();
 
-					Marshal.ReleaseComObject(version);
+					ComUtils.ReleaseObject(version);
 
 					deleted = true;
 				}
@@ -1668,7 +1667,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_msg.DebugFormat("Reconciling user is: {0}",
 			                 GetConnectedUser((IWorkspace) editVersion));
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 			var versionEdit = (IVersionEdit) editVersion;
 #else
 			var versionEdit = (IVersionEdit4) editVersion;
@@ -2624,7 +2623,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(versionInfos);
+				ComUtils.ReleaseObject(versionInfos);
 			}
 		}
 
@@ -2916,17 +2915,40 @@ namespace ProSuite.Commons.AO.Geodatabase
 				yield break;
 			}
 
-			IEnumConfigurationKeyword keywords =
-				workspaceConfiguration.ConfigurationKeywords;
-			keywords.Reset();
+			var list = new List<IConfigurationKeyword>();
 
-			IConfigurationKeyword keyword;
-			while ((keyword = keywords.Next()) != null)
+			try
 			{
-				if (match == null || match(keyword))
+				IEnumConfigurationKeyword keywords =
+					workspaceConfiguration.ConfigurationKeywords;
+				keywords.Reset();
+
+				IConfigurationKeyword keyword;
+				while ((keyword = keywords.Next()) != null)
 				{
-					yield return getResult(keyword);
+					if (match == null || match(keyword))
+					{
+						list.Add(keyword);
+					}
 				}
+			}
+			catch (COMException e)
+			{
+				if (e.ErrorCode == (int) fdoError.FDO_E_SE_DBMS_DOES_NOT_SUPPORT &&
+				    IsMobileGeodatabase(workspace))
+				{
+					// Mobile geodatabases implement IWorkspaceConfiguration
+					// but iterating IEnumConfigurationKeyword fails...
+				}
+				else
+				{
+					throw;
+				}
+			}
+
+			foreach (IConfigurationKeyword keyword in list)
+			{
+				yield return getResult(keyword);
 			}
 		}
 
@@ -3388,7 +3410,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			finally
 			{
-				Marshal.ReleaseComObject(childrenEnum);
+				ComUtils.ReleaseObject(childrenEnum);
 			}
 		}
 
@@ -3555,8 +3577,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				version.Delete();
 
-				Marshal.ReleaseComObject(version);
-				Marshal.ReleaseComObject(defaultWorkspace);
+				ComUtils.ReleaseObject(version);
+				ComUtils.ReleaseObject(defaultWorkspace);
 			}
 		}
 

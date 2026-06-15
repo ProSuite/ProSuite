@@ -1,4 +1,5 @@
 using ArcGIS.Core.CIM;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using esriDatasetType = ProSuite.GIS.Geodatabase.API.esriDatasetType;
 
@@ -44,6 +45,17 @@ public class FeatureDatasetDataConnectionName : CIMBasedDataConnectionName
 			       DatasetType = ToCIMDatasetType(Type),
 			       FeatureDataset = FeatureDataset
 		       };
+	}
+
+	public override void ReplaceWorkspaceName(DataConnectionWorkspaceName newWorkspaceName)
+	{
+		base.ReplaceWorkspaceName(newWorkspaceName);
+
+		if (ModelElementNameUtils.IsQualifiedName(FeatureDataset) &&
+		    UsesQualifiedNames(newWorkspaceName.FactoryType) == false)
+		{
+			FeatureDataset = ModelElementNameUtils.GetUnqualifiedName(FeatureDataset);
+		}
 	}
 
 	#endregion

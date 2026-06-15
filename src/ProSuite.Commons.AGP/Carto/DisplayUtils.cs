@@ -1,7 +1,7 @@
-using ArcGIS.Core.CIM;
-using ArcGIS.Desktop.Mapping;
 using System;
 using System.Collections.Generic;
+using ArcGIS.Core.CIM;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -104,11 +104,11 @@ public static class DisplayUtils
 				else
 				{
 					// add prefix to invalidate mask layer references
-					if (!uri.StartsWith(prefix))
+					if (! uri.StartsWith(prefix))
 						uri = string.Concat(prefix, uri);
 				}
 
-				if (!string.Equals(cim.LayerMasks[i], uri, StringComparison.Ordinal))
+				if (! string.Equals(cim.LayerMasks[i], uri, StringComparison.Ordinal))
 				{
 					cim.LayerMasks[i] = uri;
 					modified = true;
@@ -126,14 +126,25 @@ public static class DisplayUtils
 	}
 
 	/// <summary>
-	/// Return true iff the given map uses SLD on any layer
-	/// (therefore this method traverses the layer stack).
+	/// Return true iff the given map or group layer uses SLD,
+	/// configured on itself or any nested layer (therefore,
+	/// this method may traverse the layer stack).
 	/// </summary>
-	public static bool UsesSLD([CanBeNull] Map map)
+	/// <remarks>Must call on MCT</remarks>
+	public static bool UsesSLD([CanBeNull] ILayerContainer mapOrGroupLayer)
 	{
-		if (map is null) return false;
+		if (mapOrGroupLayer is null) return false;
 
-		var layers = map.GetLayersAsFlattenedList();
+		if (mapOrGroupLayer is GroupLayer rootGroupLayer)
+		{
+			var cim = rootGroupLayer.GetDefinition();
+			if (cim is CIMGroupLayer { SymbolLayerDrawing.UseSymbolLayerDrawing: true })
+			{
+				return true;
+			}
+		}
+
+		var layers = mapOrGroupLayer.GetLayersAsFlattenedList();
 
 		foreach (var layer in layers)
 		{
@@ -189,8 +200,8 @@ public static class DisplayUtils
 	public static bool ToggleSymbolLayerDrawing(ILayerContainer container, bool turnOn)
 	{
 		return turnOn
-				   ? TurnSymbolLayerDrawingOn(container)
-				   : TurnSymbolLayerDrawingOff(container);
+			       ? TurnSymbolLayerDrawingOn(container)
+			       : TurnSymbolLayerDrawingOff(container);
 	}
 
 	/// <summary>
@@ -212,7 +223,7 @@ public static class DisplayUtils
 			// Because SLD controlling layers are never nested (outermost
 			// group layer wins), a scalar suffices (no need for a stack)
 
-			if (!IsNestedLayer(layer, controllingLayer))
+			if (! IsNestedLayer(layer, controllingLayer))
 			{
 				controllingLayer = null;
 			}
@@ -230,7 +241,7 @@ public static class DisplayUtils
 					// Controlling group layer:
 					controllingLayer = groupLayer;
 
-					if (!groupCim.SymbolLayerDrawing.UseSymbolLayerDrawing)
+					if (! groupCim.SymbolLayerDrawing.UseSymbolLayerDrawing)
 					{
 						groupCim.SymbolLayerDrawing.UseSymbolLayerDrawing = true;
 						layer.SetDefinition(cim);
@@ -241,10 +252,13 @@ public static class DisplayUtils
 			else if (layer is FeatureLayer)
 			{
 				var cim = layer.GetDefinition();
-				if (cim is CIMGeoFeatureLayerBase { SymbolLayerDrawing.SymbolLayers.Length: > 0 } layerCim)
+				if (cim is CIMGeoFeatureLayerBase
+				    {
+					    SymbolLayerDrawing.SymbolLayers.Length: > 0
+				    } layerCim)
 				{
 					// Feature layer with SLD outside a controlling group layer:
-					if (!layerCim.SymbolLayerDrawing.UseSymbolLayerDrawing)
+					if (! layerCim.SymbolLayerDrawing.UseSymbolLayerDrawing)
 					{
 						layerCim.SymbolLayerDrawing.UseSymbolLayerDrawing = true;
 						layer.SetDefinition(cim);
@@ -274,7 +288,10 @@ public static class DisplayUtils
 			}
 
 			var cim = layer.GetDefinition();
-			if (cim is CIMGeoFeatureLayerBase { SymbolLayerDrawing.SymbolLayers.Length: > 0 } layerCim)
+			if (cim is CIMGeoFeatureLayerBase
+			    {
+				    SymbolLayerDrawing.SymbolLayers.Length: > 0
+			    } layerCim)
 			{
 				if (layerCim.SymbolLayerDrawing.UseSymbolLayerDrawing)
 				{
@@ -325,7 +342,7 @@ public static class DisplayUtils
 		if (a is null || b is null) return false;
 		// Same Layer URI within same Map:
 		return string.Equals(a.URI, b.URI, StringComparison.OrdinalIgnoreCase) &&
-			   string.Equals(a.Map.URI, b.Map.URI, StringComparison.OrdinalIgnoreCase);
+		       string.Equals(a.Map.URI, b.Map.URI, StringComparison.OrdinalIgnoreCase);
 	}
 
 	/// <returns>All layers in pre-order, including <paramref name="container"/>

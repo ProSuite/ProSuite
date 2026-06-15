@@ -78,7 +78,7 @@ public abstract class DbStatusWorkList : WorkList
 		return null;
 	}
 
-	public void UpdateDefinitionExpressions()
+	public virtual void UpdateDefinitionExpressions()
 	{
 		var dbStatusRepository = (DbStatusWorkItemRepository) Repository;
 

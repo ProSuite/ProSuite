@@ -772,7 +772,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			IFeatureCursor cursor = null;
 
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 
 			cursor = fc.Search(spatialFilter, true);
 #else

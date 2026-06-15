@@ -42,7 +42,7 @@ public static class GlyphUtils
 	public static GlyphTypeface FindGlyphTypeface(string familyName, string styleName)
 	{
 		var family = new FontFamily(familyName);
-		
+
 		var faces = family.GetTypefaces();
 
 		var ordinal = StringComparer.Ordinal;
@@ -61,7 +61,7 @@ public static class GlyphUtils
 
 	public static void GetFontHeights(
 		GlyphTypeface typeface, double fontSize,
-	    out double baseline, out double height,
+		out double baseline, out double height,
 		out double xHeight, out double capsHeight)
 	{
 		baseline = typeface.Baseline * fontSize;
@@ -82,7 +82,7 @@ public static class GlyphUtils
 	{
 		advance = 0.0;
 
-		if (!typeface.CharacterToGlyphMap.TryGetValue(codePoint, out ushort index))
+		if (! typeface.CharacterToGlyphMap.TryGetValue(codePoint, out ushort index))
 		{
 			return null; // font has no glyph for given code point
 		}

@@ -1,10 +1,12 @@
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Surface
 {
-	public class SimpleTerrainDataSource
+	public class SimpleTerrainDataSource : ISimpleTerrainDataSource
 	{
 		public SimpleTerrainDataSource([NotNull] IFeatureClass featureClass,
 		                               esriTinSurfaceType tinSurfaceType,
@@ -22,6 +24,11 @@ namespace ProSuite.Commons.AO.Surface
 
 		[CanBeNull]
 		public string WhereClause { get; set; }
+
+		public ISpatialReference SpatialReference =>
+			Assert.NotNull(DatasetUtils.GetSpatialReference(FeatureClass));
+
+		public IEnvelope Extent => ((IGeoDataset) FeatureClass).Extent;
 
 		public override string ToString()
 		{
@@ -41,7 +48,7 @@ namespace ProSuite.Commons.AO.Surface
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}

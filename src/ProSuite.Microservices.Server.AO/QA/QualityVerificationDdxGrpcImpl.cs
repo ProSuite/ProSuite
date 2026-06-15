@@ -10,7 +10,6 @@ using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Com;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
@@ -34,17 +33,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
-
 		// Technically probably not necessary because no proper AO-objects are used.
 		// But rather be safe than sorry (and experiencing locks and hangs).
 		private readonly StaTaskScheduler _staThreadScheduler = new StaTaskScheduler(5);
 
-		public QualityVerificationDdxGrpcImpl(
-			[NotNull] IDomainTransactionManager domainTransactions)
-		{
-			_domainTransactions = domainTransactions;
-		}
+		public QualityVerificationDdxGrpcImpl() { }
 
 		/// <summary>
 		/// The overall service process health. If it has been set, it will be marked as not serving
@@ -352,6 +345,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private GetProjectWorkspacesResponse GetProjectWorkspacesCore(
 			GetProjectWorkspacesRequest request)
 		{
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
 			IList<GdbWorkspace> gdbWorkspaces =
 				ProtobufConversionUtils.CreateSchema(request.ObjectClasses,
 				                                     request.Workspaces);
@@ -363,26 +362,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 				objectClasses.AddRange(gdbWorkspace.GetDatasets());
 			}
 
-			IVerificationDataDictionary<TModel> verificationDataDictionary =
-				Assert.NotNull(VerificationDdx,
-				               "Data Dictionary access has not been configured or failed.");
-
-			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces = null;
+			IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces;
 
 			GetProjectWorkspacesResponse response = null;
-			_domainTransactions.UseTransaction(
-				() =>
-				{
-					projectWorkspaces =
-						verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
+			{
+				projectWorkspaces =
+					verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
 
-					response = PackProjectWorkspaceResponse(projectWorkspaces);
-				});
+				response = PackProjectWorkspaceResponse(projectWorkspaces);
+			});
 
 			return response;
 		}
 
-		private static GetProjectWorkspacesResponse PackProjectWorkspaceResponse(
+		private GetProjectWorkspacesResponse PackProjectWorkspaceResponse(
 			[NotNull] IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces)
 		{
 			var response = new GetProjectWorkspacesResponse();
@@ -415,6 +409,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				TModel productionModel = project.ProductionModel;
 
 				var projectMsg = ProtobufUtils.ToProjectMsg(project);
+				projectMsg.ProjectId = project.Id;
 
 				CallbackUtils.DoWithNonNull(
 					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
@@ -432,8 +427,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private static ModelMsg ToModelMsg(TModel productionModel,
-		                                   ICollection<DatasetMsg> referencedDatasetMsgs)
+		protected static ModelMsg ToModelMsg(TModel productionModel, ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
 				productionModel.SpatialReferenceDescriptor.GetSpatialReference(),
@@ -463,14 +457,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
 			IList<QualitySpecification> foundSpecifications = null;
-			_domainTransactions.UseTransaction(
-				() =>
-				{
-					foundSpecifications =
-						verificationDataDictionary.GetQualitySpecifications(
-							request.DatasetIds, request.IncludeHidden);
-				});
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
+			{
+				foundSpecifications =
+					verificationDataDictionary.GetQualitySpecifications(
+						request.DatasetIds, request.IncludeHidden);
+			});
 
 			response.QualitySpecifications.AddRange(
 				foundSpecifications.Select(qs => new QualitySpecificationRefMsg
@@ -491,35 +486,36 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			_domainTransactions.UseTransaction(
-				() =>
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
+			{
+				QualitySpecification qualitySpecification =
+					verificationDataDictionary.GetQualitySpecification(
+						request.QualitySpecificationId);
+
+				if (qualitySpecification == null)
 				{
-					QualitySpecification qualitySpecification =
-						verificationDataDictionary.GetQualitySpecification(
-							request.QualitySpecificationId);
+					return;
+				}
 
-					if (qualitySpecification == null)
-					{
-						return;
-					}
+				ConditionListSpecificationMsg specificationMsg =
+					ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
+						qualitySpecification, SupportedInstanceDescriptors,
+						out IDictionary<int, DdxModel> modelsById);
 
-					ConditionListSpecificationMsg specificationMsg =
-						ProtoDataQualityUtils.CreateConditionListSpecificationMsg(
-							qualitySpecification, SupportedInstanceDescriptors,
-							out IDictionary<int, DdxModel> modelsById);
+				response.Specification = specificationMsg;
 
-					response.Specification = specificationMsg;
+				response.ReferencedInstanceDescriptors.AddRange(
+					ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
 
-					response.ReferencedInstanceDescriptors.AddRange(
-						ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualitySpecification));
-
-					RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
-					foreach (DdxModel model in modelsById.Values)
-					{
-						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
-						response.ReferencedModels.Add(modelMsg);
-					}
-				});
+				RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+				foreach (DdxModel model in modelsById.Values)
+				{
+					ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+					response.ReferencedModels.Add(modelMsg);
+				}
+			});
 
 			return response;
 		}
@@ -532,40 +528,41 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			_domainTransactions.UseTransaction(
-				() =>
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
+			{
+				QualityCondition qualityCondition =
+					verificationDataDictionary.GetQualityCondition(request.ConditionName);
+
+				if (qualityCondition == null)
 				{
-					QualityCondition qualityCondition =
-						verificationDataDictionary.GetQualityCondition(request.ConditionName);
+					return;
+				}
 
-					if (qualityCondition == null)
-					{
-						return;
-					}
+				// The parameters must be initialized!
+				InstanceConfigurationUtils.InitializeParameterValues(qualityCondition);
 
-					// The parameters must be initialized!
-					InstanceConfigurationUtils.InitializeParameterValues(qualityCondition);
+				IDictionary<int, DdxModel> modelsById = new Dictionary<int, DdxModel>();
 
-					IDictionary<int, DdxModel> modelsById = new Dictionary<int, DdxModel>();
+				QualityConditionMsg conditionMsg =
+					ProtoDataQualityUtils.CreateQualityConditionMsg(
+						qualityCondition, null, modelsById);
 
-					QualityConditionMsg conditionMsg =
-						ProtoDataQualityUtils.CreateQualityConditionMsg(
-							qualityCondition, null, modelsById);
+				response.Condition = conditionMsg;
+				response.CategoryName = qualityCondition.Category?.Name ?? string.Empty;
 
-					response.Condition = conditionMsg;
-					response.CategoryName = qualityCondition.Category?.Name ?? string.Empty;
+				response.ReferencedInstanceDescriptors.AddRange(
+					ProtoDataQualityUtils.GetInstanceDescriptorMsgs(
+						new[] { qualityCondition }));
 
-					response.ReferencedInstanceDescriptors.AddRange(
-						ProtoDataQualityUtils.GetInstanceDescriptorMsgs(
-							new[] { qualityCondition }));
-
-					RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
-					foreach (DdxModel model in modelsById.Values)
-					{
-						ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
-						response.ReferencedModels.Add(modelMsg);
-					}
-				});
+				RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+				foreach (DdxModel model in modelsById.Values)
+				{
+					ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+					response.ReferencedModels.Add(modelMsg);
+				}
+			});
 
 			return response;
 		}
@@ -578,41 +575,42 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Assert.NotNull(VerificationDdx,
 				               "Data Dictionary access has not been configured or failed.");
 
-			_domainTransactions.UseTransaction(
-				() =>
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
+			{
+				IList<Dataset> datasets =
+					verificationDataDictionary.GetDatasets(request.DatasetIds);
+
+				// TODO: Review batch size of lazy collections in mappings.
+
+				foreach (Dataset dataset in datasets)
 				{
-					IList<Dataset> datasets =
-						verificationDataDictionary.GetDatasets(request.DatasetIds);
+					DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(dataset, true);
 
-					// TODO: Review batch size of lazy collections in mappings.
+					response.Datasets.Add(datasetMsg);
+				}
 
-					foreach (Dataset dataset in datasets)
+				IList<Association> associations =
+					verificationDataDictionary.GetAssociations(request.DatasetIds);
+
+				foreach (Association association in associations)
+				{
+					if (association.Deleted)
 					{
-						DatasetMsg datasetMsg = ProtoDataQualityUtils.ToDatasetMsg(dataset, true);
-
-						response.Datasets.Add(datasetMsg);
+						continue;
 					}
 
-					IList<Association> associations =
-						verificationDataDictionary.GetAssociations(request.DatasetIds);
+					AssociationMsg associationMsg =
+						ProtoDataQualityUtils.ToAssociationMsg(association, true);
 
-					foreach (Association association in associations)
-					{
-						if (association.Deleted)
-						{
-							continue;
-						}
+					response.Associations.Add(associationMsg);
 
-						AssociationMsg associationMsg =
-							ProtoDataQualityUtils.ToAssociationMsg(association, true);
-
-						response.Associations.Add(associationMsg);
-
-						// And make sure all the referenced datasets are included in the response
-						EnsureDatasetAdded(association.End1.ObjectDataset, response.Datasets);
-						EnsureDatasetAdded(association.End2.ObjectDataset, response.Datasets);
-					}
-				});
+					// And make sure all the referenced datasets are included in the response
+					EnsureDatasetAdded(association.End1.ObjectDataset, response.Datasets);
+					EnsureDatasetAdded(association.End2.ObjectDataset, response.Datasets);
+				}
+			});
 
 			return response;
 		}

@@ -1,25 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing {
-	/// <summary>
-	/// Interaction logic for TargetFeatureSelectionControl.xaml
-	/// </summary>
-	public partial class TargetFeatureSelectionControl : UserControl {
-		public TargetFeatureSelectionControl() {
-			InitializeComponent();
-		}
+namespace ProSuite.AGP.Editing;
+
+/// <summary>
+/// Interaction logic for TargetFeatureSelectionControl.xaml
+/// </summary>
+public partial class TargetFeatureSelectionControl : UserControl
+{
+	public TargetFeatureSelectionControl()
+	{
+		InitializeComponent();
 	}
 }

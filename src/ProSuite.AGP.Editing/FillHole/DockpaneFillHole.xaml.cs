@@ -1,12 +1,11 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing.FillHole
+namespace ProSuite.AGP.Editing.FillHole;
+
+public partial class DockPaneFillHole : UserControl
 {
-	public partial class DockPaneFillHole : UserControl
+	public DockPaneFillHole()
 	{
-		public DockPaneFillHole()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
 	}
 }

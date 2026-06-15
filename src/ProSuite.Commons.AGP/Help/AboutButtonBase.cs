@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Core.UnitFormats;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Workflow;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
@@ -17,35 +21,44 @@ public abstract class AboutButtonBase : ButtonCommandBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly string _caption;
+	private readonly string _product;
 
-	protected AboutButtonBase([NotNull] string caption)
+	protected AboutButtonBase([NotNull] string product)
 	{
-		if (string.IsNullOrWhiteSpace(caption))
-			throw new ArgumentNullException(nameof(caption));
+		if (string.IsNullOrWhiteSpace(product))
+			throw new ArgumentNullException(nameof(product));
 
-		_caption = caption;
+		_product = product;
 	}
 
-	protected override Task<bool> OnClickAsyncCore()
+	protected override async Task<bool> OnClickAsyncCore()
 	{
-		var configFileSearcher = GetConfigFileSearcher();
-
 		var items = new List<AboutItem>();
-		CollectInformation(items, configFileSearcher);
 
-		var message = AboutItem.GetPlainText(items);
+		await CollectInformation(items);
 
-		_msg.Info(message);
+		//var message = AboutUtils.GetPlainText(items);
+		//_msg.Info(message); // Really? Or only in debug mode?
 
-		var viewModel = new AboutViewModel(_caption, items);
+		string title = string.IsNullOrEmpty(_product)
+			               ? "About"
+			               : $"About {_product}";
+
+		var viewModel = new AboutViewModel(title, items);
 		Gateway.ShowDialog<AboutWindow>(viewModel);
 
-		return Task.FromResult(true);
+		return true;
 	}
 
-	[CanBeNull]
-	protected abstract string GetConfigDirEnvVar();
+	protected virtual string EnvironmentName => "Production";
+
+	protected virtual string AddInVersion => "0.1.0"; // SemVer default
+	protected virtual string AddInFileName => null; // unknown
+
+	protected virtual IEnumerable<KeyValuePair<string, string>> GetEnvironmentVariables()
+	{
+		yield break;
+	}
 
 	[CanBeNull]
 	protected abstract IConfigFileSearcher GetConfigFileSearcher();
@@ -55,70 +68,56 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		yield break;
 	}
 
-	private void CollectInformation([NotNull] ICollection<AboutItem> items,
-	                                [CanBeNull] IConfigFileSearcher configFileSearcher)
+	private async Task CollectInformation([NotNull] ICollection<AboutItem> items)
 	{
-		if (items is null) throw new ArgumentNullException(nameof(items));
+		if (items is null)
+			throw new ArgumentNullException(nameof(items));
 
-		string currentSection = AboutItem.AddinSection;
-
-		try
-		{
-			var assembly = Assembly.GetExecutingAssembly();
-			var version = assembly.GetName().Version;
-
-			Add(items, currentSection, "Addin Version", Convert.ToString(version), "reflected");
-
-			var proVersion = Assembly.GetEntryAssembly()?.GetName().Version;
-
-			Add(items, currentSection, "ArcGIS Pro Version", Convert.ToString(proVersion),
-			    "reflected");
-		}
-		catch (Exception ex)
-		{
-			Add(items, currentSection, "Error", ex.Message, "version retrieval failed");
-		}
-
-		currentSection = AboutItem.ConfigSection;
+		string currentSection = "Addin";
 
 		try
 		{
-			string configDirEnvVar = GetConfigDirEnvVar();
+			Add(items, currentSection, "Addin version", AddInVersion);
+			Add(items, currentSection, "Addin file name", AddInFileName);
 
-			if (configDirEnvVar == null)
-			{
-				Add(items, currentSection, "ConfigDirEnvVar", string.Empty,
-				    "config dir env var undefined");
-			}
-			else
-			{
-				string configDir = Environment.GetEnvironmentVariable(configDirEnvVar);
-
-				Add(items, currentSection, $"{configDirEnvVar}",
-				    configDir ?? "environment variable is not defined", "env var");
-			}
-
-			var searchPaths = configFileSearcher?.GetSearchPaths().ToList();
-			if (searchPaths is not null)
-			{
-				int count = searchPaths.Count;
-				var remarks = new[] { "tried first", "tried second", "etc." };
-				Add(items, currentSection, "Config Search Path",
-				    $"{count} entr{(count == 1 ? "y" : "ies")}");
-				for (int i = 0; i < count; i++)
-				{
-					string path = searchPaths[i];
-					var remark = i < remarks.Length ? remarks[i] : null;
-					Add(items, currentSection, "-", path, remark);
-				}
-			}
+			Add(items, currentSection, "ArcGIS Pro product version", GetProProductVersion());
+			Add(items, currentSection, "ArcGIS Pro assembly version", GetProAssemblyVersion());
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message, "error getting config info");
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.SessionSection;
+		currentSection = "Environment Variables";
+
+		try
+		{
+			foreach (var pair in GetEnvironmentVariables())
+			{
+				string remark = pair.Value is null ? "undefined" : null;
+				Add(items, currentSection, pair.Key, pair.Value, remark);
+			}
+		}
+
+		catch (Exception ex)
+		{
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
+		}
+
+		currentSection = "Configuration";
+
+		try
+		{
+			Add(items, currentSection, "Environment", EnvironmentName);
+
+			AddConfigSearchPaths(items, currentSection);
+		}
+		catch (Exception ex)
+		{
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
+		}
+
+		currentSection = "Session";
 
 		try
 		{
@@ -126,13 +125,15 @@ public abstract class AboutButtonBase : ButtonCommandBase
 			{
 				Add(items, currentSection, pair.Key, pair.Value);
 			}
+
+			await AddProjectDefaultUnits(items, currentSection);
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message);
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.ProcessSection;
+		currentSection = "Process";
 
 		try
 		{
@@ -145,10 +146,10 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message);
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
-		currentSection = AboutItem.RuntimeSection;
+		currentSection = "Runtime";
 
 		try
 		{
@@ -166,7 +167,7 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		}
 		catch (Exception ex)
 		{
-			Add(items, currentSection, "Error", ex.Message);
+			Add(items, currentSection, "Error", ex.Message, ex.GetType().Name);
 		}
 
 		//try
@@ -177,6 +178,97 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		//{
 		//	Add(items, "All Addins", "Error", ex.Message, "getting all Addin infos failed");
 		//}
+	}
+
+	protected virtual string GetProProductVersion()
+	{
+		try
+		{
+			var assembly = Assembly.GetEntryAssembly();
+			if (assembly is null) return null;
+			var info = FileVersionInfo.GetVersionInfo(assembly.Location);
+			return Canonical(info.ProductVersion) ?? Canonical(info.FileVersion);
+		}
+		catch (Exception ex)
+		{
+			return ex.Message;
+		}
+	}
+
+	protected virtual string GetProAssemblyVersion()
+	{
+		try
+		{
+			var assembly = Assembly.GetEntryAssembly();
+			var assemblyName = assembly?.GetName();
+			return Convert.ToString(assemblyName?.Version);
+		}
+		catch (Exception ex)
+		{
+			return ex.Message;
+		}
+	}
+
+	private void AddConfigSearchPaths(ICollection<AboutItem> items, string section)
+	{
+		const string key = "Config Search Path";
+
+		var configFileSearcher = GetConfigFileSearcher();
+		var searchPaths = configFileSearcher?.GetSearchPaths().ToList();
+
+		if (searchPaths is null)
+		{
+			Add(items, section, key, "Empty");
+		}
+		else
+		{
+			int count = searchPaths.Count;
+			var remarks = new[] { "searched first", "searched second", "etc." };
+			Add(items, section, key, Humanize.FormatCount(count, "entry"));
+			for (int i = 0; i < count; i++)
+			{
+				string path = searchPaths[i];
+				var remark = i < remarks.Length ? remarks[i] : null;
+				Add(items, section, "-", path, remark);
+			}
+		}
+	}
+
+	private async Task AddProjectDefaultUnits(ICollection<AboutItem> result, string section)
+	{
+		const string key = "Project default units";
+
+		try
+		{
+			var units = await QueuedTask.Run(ProjectUtils.GetDefaultProjectUnits);
+
+			var defaultUnits = FormatProjectDefaultUnits(units);
+
+			if (!string.IsNullOrWhiteSpace(defaultUnits))
+			{
+				Add(result, section, key, defaultUnits, "to change: Project/Options/Units");
+			}
+		}
+		catch (Exception ex)
+		{
+			Add(result, section, key, $"Error: {ex.Message}", ex.GetType().Name);
+		}
+	}
+
+	protected virtual string FormatProjectDefaultUnits(DisplayUnitFormat[] units)
+	{
+		if (units is null) return null;
+		if (units.Length < 1) return null;
+
+		var sb = new StringBuilder();
+
+		foreach (var unit in units)
+		{
+			if (sb.Length > 0) sb.Append(", ");
+			sb.Append($"{unit.UnitFormatType}: {unit.UnitName}");
+		}
+
+		return sb.ToString();
 	}
 
 	private static void GetAllAddinInfos(ICollection<AboutItem> items)
@@ -213,79 +305,11 @@ public abstract class AboutButtonBase : ButtonCommandBase
 		if (string.IsNullOrEmpty(key)) return;
 		result.Add(new AboutItem(section, key, value, remark));
 	}
-}
 
-public class AboutItem
-{
-	public string Section { get; }
-	public string Key { get; }
-	public string Value { get; }
-	public string Remark { get; }
-
-	public static readonly string AddinSection = "Addin";
-	public static readonly string ConfigSection = "Config";
-	public static readonly string SessionSection = "Session";
-	public static readonly string ProcessSection = "Process";
-	public static readonly string RuntimeSection = "Runtime";
-
-	public AboutItem(string section, string key, string value, string remark = null)
+	private static string Canonical(string s)
 	{
-		Section = section; // can be null
-		Key = key ?? throw new ArgumentNullException(nameof(key));
-		Value = value ?? string.Empty;
-		Remark = remark;
-	}
-
-	public static int GetSectionOrder(string section)
-	{
-		if (string.IsNullOrEmpty(section))
-			return 0;
-		if (string.Equals(section, AddinSection, StringComparison.OrdinalIgnoreCase))
-			return 1;
-		if (string.Equals(section, ConfigSection, StringComparison.OrdinalIgnoreCase))
-			return 2;
-		if (string.Equals(section, SessionSection, StringComparison.OrdinalIgnoreCase))
-			return 3;
-		if (string.Equals(section, ProcessSection, StringComparison.OrdinalIgnoreCase))
-			return 4;
-		if (string.Equals(section, RuntimeSection, StringComparison.OrdinalIgnoreCase))
-			return 5;
-
-		return 999;
-	}
-
-	public static string GetPlainText(IEnumerable<AboutItem> items)
-	{
-		if (items is null)
-		{
-			return string.Empty;
-		}
-
-		string lastSection = null;
-		var buffer = new StringBuilder();
-
-		foreach (var group in items.GroupBy(item => item.Section)
-		                           .OrderBy(g => GetSectionOrder(g.Key)))
-		{
-			if (group.Key != lastSection)
-			{
-				buffer.AppendLine().AppendLine(group.Key);
-				lastSection = group.Key;
-			}
-
-			foreach (var item in group)
-			{
-				buffer.Append($"{item.Key}: {item.Value}");
-
-				if (! string.IsNullOrEmpty(item.Remark))
-				{
-					buffer.Append($" ({item.Remark})");
-				}
-
-				buffer.AppendLine();
-			}
-		}
-
-		return buffer.Trim().ToString();
+		if (s is null) return null;
+		s = s.Trim();
+		return s.Length > 0 ? s : null;
 	}
 }

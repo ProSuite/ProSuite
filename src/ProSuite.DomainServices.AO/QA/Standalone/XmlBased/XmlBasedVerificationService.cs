@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,6 +13,7 @@ using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainServices.AO.QA.Exceptions;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options;
@@ -58,6 +62,14 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 		public ISpatialReference IssueRepositorySpatialReference { get; set; }
 
+		/// <summary>
+		/// Optional XML verification options that provide additional configurations.
+		/// </summary>
+		public XmlVerificationOptions XmlVerificationOptions { get; set; }
+
+		public IList<KeyValuePair<string, string>> ReportProperties { get; }
+			= new List<KeyValuePair<string, string>>();
+
 		public QualityVerification Verification { get; set; }
 
 		public event EventHandler<IssueFoundEventArgs> IssueFound;
@@ -69,13 +81,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			_issueRepositoryDir = outputDirectory;
 
-			// These options might return somehow in the future.
-			XmlVerificationOptions verificationOptions = null;
 			_issueRepositoryName =
-				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
+				VerificationOptionUtils.GetIssueWorkspaceName(XmlVerificationOptions);
 
 			string verificationReportFileName =
-				VerificationOptionUtils.GetXmlReportFileName(verificationOptions);
+				VerificationOptionUtils.GetXmlReportFileName(XmlVerificationOptions);
 			_xmlVerificationReportPath = Path.Combine(outputDirectory, verificationReportFileName);
 
 			_htmlReportDir = outputDirectory;
@@ -191,7 +201,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				return true;
 			}
 
-			DdxModel primaryModel = StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
+			DdxModel primaryModel =
+				StandaloneVerificationUtils.GetPrimaryModel(qualitySpecification);
 			Assert.NotNull(primaryModel, "no primary model found for quality specification");
 
 			string issueGdbPath = null;
@@ -208,8 +219,14 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					WriteDetailedVerificationReport = true,
 					HtmlReportTemplatePath = _htmlReportTemplatePath,
 					HtmlQualitySpecificationTemplatePath = _qualitySpecificationTemplatePath,
-					ProgressStreamer = ProgressStreamer
+					ProgressStreamer = ProgressStreamer,
+					XmlVerificationOptions = XmlVerificationOptions
 				};
+
+			foreach (var kv in ReportProperties)
+			{
+				verificationReporter.ReportProperties.Add(kv);
+			}
 
 			IVerificationReportBuilder reportBuilder = verificationReporter.CreateReportBuilders();
 
@@ -230,6 +247,26 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			ISpatialReference spatialReference =
 				primaryModel.SpatialReferenceDescriptor?.GetSpatialReference();
 
+			if (areaOfInterest?.Geometry != null &&
+			    areaOfInterest.Geometry.SpatialReference == null)
+			{
+				areaOfInterest.Geometry.SpatialReference = spatialReference;
+				_msg.Info("Set spatial reference on area of interest geometry");
+			}
+
+			ExceptionObjectRepository exceptionObjectRepository =
+				StandaloneVerificationUtils.PrepareExceptionRepository(
+					qualitySpecification,
+					datasetContext,
+					datasetResolver,
+					areaOfInterest,
+					XmlVerificationOptions);
+
+			if (exceptionObjectRepository != null)
+			{
+				_msg.InfoFormat("Exception repository loaded successfully");
+			}
+
 			ISpatialReference issuesSpatialReference =
 				IssueRepositorySpatialReference ?? spatialReference;
 
@@ -245,6 +282,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			       verificationReporter.CreateIssueRepository(
 				       IssueRepositoryType, issuesSpatialReference, addExceptionFields: true))
 			{
+				service.ExceptionObjectRepository = exceptionObjectRepository;
+
 				fulfilled = service.Verify(qualitySpecification, datasetContext, datasetResolver,
 				                           issueRepository, tileSize, areaOfInterest, trackCancel,
 				                           out int _,
@@ -252,6 +291,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                           out int _);
 
 				Verification = service.Verification;
+
+				IList<IExceptionDataset> exportedExceptionDatasets =
+					ExportExceptionObjectClasses(
+						qualitySpecification,
+						_issueRepositoryDir,
+						XmlVerificationOptions,
+						exceptionObjectRepository);
 
 				verificationReporter.CreateIssueRepositoryIndexes(issueRepository, trackCancel);
 
@@ -293,6 +339,45 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			return ! trackCancel.Continue()
 				       ? null
 				       : trackCancel;
+		}
+
+		[CanBeNull]
+		private static IList<IExceptionDataset> ExportExceptionObjectClasses(
+			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] string directory,
+			[CanBeNull] XmlVerificationOptions options,
+			[CanBeNull] ExceptionObjectRepository exceptionObjectRepository)
+		{
+			if (exceptionObjectRepository == null)
+			{
+				return null;
+			}
+
+			if (! VerificationOptionUtils.ExportExceptions(options))
+			{
+				return null;
+			}
+
+			string exceptionWorkspaceName =
+				VerificationOptionUtils.GetExportedExceptionsWorkspaceName(options);
+
+			IssueRepositoryType repositoryType = exceptionObjectRepository.IsShapefileWorkspace
+				                                     ? IssueRepositoryType.Shapefiles
+				                                     : IssueRepositoryType.FileGdb;
+
+			IFeatureWorkspace exportWorkspace =
+				ExternalIssueRepositoryUtils.CreateDatabase(directory,
+				                                            exceptionWorkspaceName,
+				                                            repositoryType);
+
+			if (exportWorkspace == null)
+			{
+				return null;
+			}
+
+			return exceptionObjectRepository.ExportExceptions(
+				exportWorkspace,
+				qualitySpecification.Elements.Select(e => e.QualityCondition));
 		}
 	}
 }

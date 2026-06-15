@@ -22,17 +22,20 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public static ArcTable ToArcTable(
 			[NotNull] Table proTable,
-			bool eagerPropertyCaching = false)
+			bool eagerPropertyCaching = false,
+			bool keepJoins = false)
 		{
-			Table databaseTable = DatasetUtils.GetDatabaseTable(proTable);
+			Table databaseTable =
+				keepJoins ? proTable : DatasetUtils.GetDatabaseTable(proTable);
 
 			ArcWorkspace existingWorkspace = null;
 
-			var gdb = databaseTable.GetDatastore() as ArcGIS.Core.Data.Geodatabase;
+			var datastore = databaseTable.GetDatastore();
 
-			if (gdb != null)
+			if (datastore != null)
 			{
-				existingWorkspace = ArcWorkspace.GetByHandle(gdb.Handle.ToInt64());
+				existingWorkspace =
+					ArcWorkspace.GetByHandle(datastore.Handle.ToInt64()) as ArcWorkspace;
 
 				ArcTable found = existingWorkspace?.GetTableByName(databaseTable.GetName());
 
@@ -69,7 +72,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			if (parent == null)
 			{
-				parent = ToArcTable(proRow.GetTable());
+				parent = ToArcTable(proRow.GetTable(), cacheValues);
 			}
 
 			return ArcRow.Create(proRow, parent, cacheValues);

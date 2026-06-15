@@ -17,7 +17,19 @@ public static class GdbExtensions
 		if (featureClass is null) return null;
 		var queryFilter = new QueryFilter { ObjectIDs = new[] { oid } };
 		using var cursor = featureClass.Search(queryFilter);
-		if (!cursor.MoveNext()) return null;
-		return (Feature)cursor.Current;
+		if (! cursor.MoveNext()) return null;
+		return (Feature) cursor.Current;
+	}
+
+	/// <summary>
+	/// Get a row given its ObjectID; return null if no such row.
+	/// </summary>
+	public static Row GetRow(this Table table, long oid)
+	{
+		if (table is null) return null;
+		var queryFilter = new QueryFilter { ObjectIDs = new[] { oid } };
+		using var cursor = table.Search(queryFilter);
+		if (! cursor.MoveNext()) return null;
+		return cursor.Current;
 	}
 }

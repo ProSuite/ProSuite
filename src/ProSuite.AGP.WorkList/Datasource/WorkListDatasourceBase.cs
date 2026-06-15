@@ -99,7 +99,7 @@ public class WorkListDatasourceBase : PluginDatasourceTemplate
 
 			// Mechanism to start creating the work list and loading all items in the background
 			// so that it is ready when the user opens the navigator. This is currently opt-in by
-			// the <see	cref="IWorkEnvironment.AllowBackgroundLoading"/> flat. However, the items
+			// the <see	cref="IWorkEnvironment.AllowBackgroundLoading"/> flag. However, the items
 			// loaded in the background come from the saved workspace state and can be outdated.
 			// Only use for read-only work list items.
 			bool allowBackgroundLoading = workEnvironment?.AllowBackgroundLoading == true;

@@ -8,58 +8,57 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.Commons.AGP.LoggerUI
+namespace ProSuite.Commons.AGP.LoggerUI;
+
+public partial class LogDockPane
 {
-	public partial class LogDockPane
+	public LogDockPane()
 	{
-		public LogDockPane()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
+	}
 
-		private void logMessagesGrid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-		{
-			DataGridRow row = sender as DataGridRow;
-			logMessagesGrid.SelectedItem = row?.Item;
-		}
+	private void logMessagesGrid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+	{
+		DataGridRow row = sender as DataGridRow;
+		logMessagesGrid.SelectedItem = row?.Item;
+	}
 
-		private void logMessagesGrid_Loaded(object sender, RoutedEventArgs e)
-		{
-			var items = logMessagesGrid.ItemsSource as ObservableCollection<LoggingEventItem>;
+	private void logMessagesGrid_Loaded(object sender, RoutedEventArgs e)
+	{
+		var items = logMessagesGrid.ItemsSource as ObservableCollection<LoggingEventItem>;
 
-			if (items == null)
-				return;
+		if (items == null)
+			return;
 
-			items.CollectionChanged += CollectionChanged;
-		}
+		items.CollectionChanged += CollectionChanged;
+	}
 
-		private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-		{
-			var msSecDelay = 500; // delay to scroll to end to last message - cancelable?
-			Task.Delay(msSecDelay).ContinueWith(_ => ScrollMessagesToEnd());
-		}
+	private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+	{
+		var msSecDelay = 500; // delay to scroll to end to last message - cancelable?
+		Task.Delay(msSecDelay).ContinueWith(_ => ScrollMessagesToEnd());
+	}
 
-		private void ScrollMessagesToEnd()
-		{
-			logMessagesGrid.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action) (() =>
+	private void ScrollMessagesToEnd()
+	{
+		logMessagesGrid.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action) (() =>
+				                                       {
+					                                       if (logMessagesGrid.Items != null &&
+					                                           logMessagesGrid.Items
+						                                           .Count > 0)
 					                                       {
-						                                       if (logMessagesGrid.Items != null &&
-							                                        logMessagesGrid.Items
-								                                        .Count > 0)
-						                                       {
-							                                       logMessagesGrid.ScrollIntoView(
-								                                       logMessagesGrid.Items[
-									                                       logMessagesGrid.Items
-										                                       .Count - 1]);
-						                                       }
-					                                       }));
-		}
+						                                       logMessagesGrid.ScrollIntoView(
+							                                       logMessagesGrid.Items[
+								                                       logMessagesGrid.Items
+									                                       .Count - 1]);
+					                                       }
+				                                       }));
+	}
 
-		private void UserControl_IsVisibleChanged(object sender,
-		                                          DependencyPropertyChangedEventArgs e)
-		{
-			if (IsVisible)
-				ScrollMessagesToEnd();
-		}
+	private void UserControl_IsVisibleChanged(object sender,
+	                                          DependencyPropertyChangedEventArgs e)
+	{
+		if (IsVisible)
+			ScrollMessagesToEnd();
 	}
 }

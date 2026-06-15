@@ -97,9 +97,10 @@ public class FeaturePreview : IDisposable
 
 	#region Private stuff
 
-	private static void UpdateOverlay(MapView mapView, IDisposable overlay, Geometry geometry, CIMSymbolReference symbol, double referenceScale = -1)
+	private static void UpdateOverlay(MapView mapView, IDisposable overlay, Geometry geometry,
+	                                  CIMSymbolReference symbol, double referenceScale = -1)
 	{
-		if (!mapView.UpdateOverlay(overlay, geometry, symbol, referenceScale))
+		if (! mapView.UpdateOverlay(overlay, geometry, symbol, referenceScale))
 		{
 			_msg.Warn("UpdateOverlay() returned false; display feedback may be wrong; see K2#37");
 			// ask Redlands when this can happen and what we should do (K2#37)
@@ -111,7 +112,7 @@ public class FeaturePreview : IDisposable
 		var filter = new QueryFilter { ObjectIDs = new[] { oid } };
 		using var cursor = layer.Search(filter);
 		if (cursor is null) return null; // no valid data source
-		if (!cursor.MoveNext()) return null; // no rows match filter
+		if (! cursor.MoveNext()) return null; // no rows match filter
 		using var row = cursor.Current;
 		return row is Feature feature ? feature.GetShape() : null;
 	}

@@ -65,7 +65,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		public SimpleRasterMosaic([NotNull] string name,
 		                          [NotNull] IFeatureClass catalogClass,
 		                          [CanBeNull] IFeatureClass boundaryClass,
-		                          [NotNull] string mosaicRuleZOrderFieldName,
+		                          [CanBeNull] string mosaicRuleZOrderFieldName,
 		                          bool mosaicRuleDescending,
 		                          string rasterPathFieldName,
 		                          string cellSizeFieldName)

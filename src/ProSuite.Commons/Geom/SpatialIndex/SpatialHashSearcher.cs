@@ -304,10 +304,13 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			double xMin, double yMin, double xMax, double yMax,
 			double tolerance, Predicate<T> predicate = null)
 		{
-			xMin -= tolerance;
-			yMin -= tolerance;
-			xMax += tolerance;
-			yMax += tolerance;
+			if (! double.IsNaN(tolerance))
+			{
+				xMin -= tolerance;
+				yMin -= tolerance;
+				xMax += tolerance;
+				yMax += tolerance;
+			}
 
 			foreach (T identifier in _spatialHashIndex.FindIdentifiers(
 				         xMin, yMin, xMax, yMax, predicate))

@@ -4,7 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:ProSuite.AGP.QA.VerificationProgress"
-    xmlns:VerificationProgress="clr-namespace:ProSuite.UI.QA.VerificationProgress;assembly=ProSuite.UI"
+    xmlns:VerificationProgress="clr-namespace:ProSuite.UI.Core.QA.VerificationProgress;assembly=ProSuite.UI.Core"
     x:Class="ProSuite.AGP.QA.VerificationProgress.VerificationProgressWindow"
     mc:Ignorable="d"
     Title="VerificationProgressWindow" Height="300" Width="540"

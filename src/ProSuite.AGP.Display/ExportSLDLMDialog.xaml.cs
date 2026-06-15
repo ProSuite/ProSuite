@@ -8,7 +8,7 @@ namespace ProSuite.AGP.Display;
 /// <summary>
 /// Interaction logic for ExportSLDLMDialog.xaml
 /// </summary>
-public partial class ExportSLDLMDialog : Window
+public partial class ExportSLDLMDialog
 {
 	private readonly ExportSLDLMOptions _options;
 
@@ -38,7 +38,7 @@ public partial class ExportSLDLMDialog : Window
 		var dialog = new SaveFileDialog();
 
 		dialog.DefaultExt = ".xml";
-		dialog.Filter = "XML|*.xml|CSV|*.csv|All files|*.*";
+		dialog.Filter = "XML|*.xml|All files|*.*";
 		dialog.Title = "Export SLD/LM Configuration";
 
 		bool? result = dialog.ShowDialog(this);

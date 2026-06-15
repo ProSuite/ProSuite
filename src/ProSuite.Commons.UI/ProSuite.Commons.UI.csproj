@@ -10,7 +10,8 @@
     <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-    <NoWarn>1591</NoWarn>
+    <!-- Suppressing WFO1000 for .NET 10 temporarily until it is fixed for each control property. -->
+    <NoWarn>1591;WFO1000</NoWarn>
 
     <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
 		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
@@ -261,10 +262,10 @@
   <ItemGroup>
     <!-- DPS/#217: Allow other components in the same process to use a different log4net version.
 		     Example: X-Tools Add-in. -->
-		<PackageReference Include="log4net" Version="[2.0.12,2.0.17]" Condition="'$(TargetFramework)' != 'net48'" />
+		<PackageReference Include="log4net" Version="[2.0.12,]" Condition="'$(TargetFramework)' != 'net48'" />
     <!-- But in .NET Framework the resolution of differing package versions is somewhat different, resulting
 		     in build errors. Therefore, keep it fixed in .NET Framework: -->
-    <PackageReference Include="log4net" Version="2.0.15" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="log4net" Version="3.3.1" Condition="'$(TargetFramework)' == 'net48'" />
 
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 
     <SignAssembly>true</SignAssembly>
@@ -62,10 +62,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
 
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.6.9" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.6.9" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.7" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.7" />
   </ItemGroup>
 
   <ItemGroup>

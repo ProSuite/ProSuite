@@ -144,6 +144,12 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#endregion
 
+		/// <summary>
+		/// Allows implementors to process the added instanceDescriptor. Typically, this is used to
+		/// ensure the InstanceInfo property is cached with the appropriate, environment-specific
+		/// implementation.
+		/// </summary>
+		/// <param name="instanceDescriptor"></param>
 		protected virtual void InstanceDescriptorAdded(
 			[NotNull] InstanceDescriptor instanceDescriptor) { }
 

@@ -3,6 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.GIS.Geodatabase.API
 {
+	// TODO: Derive from IDisposable
 	public interface IWorkspace
 	{
 		//IPropertySet ConnectionProperties { get; }
@@ -35,6 +36,8 @@ namespace ProSuite.GIS.Geodatabase.API
 		string Description { get; }
 
 		object NativeImplementation { get; }
+
+		void CacheProperties();
 	}
 
 	public interface IFeatureWorkspace : IWorkspace

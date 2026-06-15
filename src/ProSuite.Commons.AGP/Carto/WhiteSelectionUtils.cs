@@ -22,7 +22,7 @@ public static class WhiteSelectionUtils
 			return true; // not a polygon layer
 		}
 
-		if (!layer.CanLookupSymbol())
+		if (! layer.CanLookupSymbol())
 		{
 			return false; // assume filled or not polygon
 		}
@@ -52,7 +52,7 @@ public static class WhiteSelectionUtils
 			{
 				yield return fsb;
 			}
-			else if (!layer.CanLookupSymbol())
+			else if (! layer.CanLookupSymbol())
 			{
 				yield return fsb;
 			}
@@ -73,7 +73,8 @@ public static class WhiteSelectionUtils
 						var shape = (Polygon) feature.GetShape();
 						var boundary = GeometryUtils.Boundary(shape);
 						var input =
-							GeometryUtils.EnsureSpatialReference(userInput, boundary.SpatialReference);
+							GeometryUtils.EnsureSpatialReference(
+								userInput, boundary.SpatialReference);
 						var distance = GeometryEngine.Instance.Distance(boundary, input);
 						if (distance <= tolerance)
 						{

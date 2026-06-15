@@ -5,6 +5,7 @@ using ArcGIS.Core.Data.Analyst3D;
 using ArcGIS.Core.Data.Raster;
 using ArcGIS.Core.Data.Topology;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.GIS.Geodatabase.API;
 using esriDatasetType = ProSuite.GIS.Geodatabase.API.esriDatasetType;
@@ -109,6 +110,15 @@ public abstract class CIMBasedDataConnectionName : IDatasetName
 	public virtual void ReplaceWorkspaceName(DataConnectionWorkspaceName newWorkspaceName)
 	{
 		DataConnectionWorkspaceName = newWorkspaceName;
+
+		if (ModelElementNameUtils.IsQualifiedName(NameString) &&
+		    UsesQualifiedNames(newWorkspaceName.FactoryType) == false)
+		{
+			NameString = ModelElementNameUtils.GetUnqualifiedName(NameString);
+		}
+
+		// TODO: What if it is the other way round (qualified names required, but unqualified name given)
+		//       -> Implement something like ModelElementUtils.GetGdbElementName(), possibly on the IWorkspaceContext
 	}
 
 	public virtual void ChangeVersion(string newVersionName)
@@ -211,6 +221,33 @@ public abstract class CIMBasedDataConnectionName : IDatasetName
 				throw new ArgumentOutOfRangeException(
 					nameof(gisDatasetType), gisDatasetType,
 					$"Unsupported dataset type: {gisDatasetType}");
+		}
+	}
+
+	protected static bool? UsesQualifiedNames(WorkspaceFactory factoryType)
+	{
+		switch (factoryType)
+		{
+			case WorkspaceFactory.SDE:
+			case WorkspaceFactory.FeatureService:
+				return true;
+
+			case WorkspaceFactory.FileGDB:
+			case WorkspaceFactory.Shapefile:
+			case WorkspaceFactory.Access:
+			case WorkspaceFactory.DelimitedTextFile:
+			case WorkspaceFactory.Tin:
+			case WorkspaceFactory.LASDataset:
+			case WorkspaceFactory.SQLite:
+			case WorkspaceFactory.ArcInfo:
+			case WorkspaceFactory.Cad:
+			case WorkspaceFactory.Excel:
+			case WorkspaceFactory.InMemoryDB:
+				return false;
+
+			default:
+				// Don't know
+				return null;
 		}
 	}
 }

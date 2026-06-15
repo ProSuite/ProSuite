@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.UI.QA.Controls;
+using ProSuite.UI.Core.QA.Controls;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {

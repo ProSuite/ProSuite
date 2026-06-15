@@ -9,8 +9,8 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Blazor.ViewModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.QA;
-using ProSuite.UI.QA.Controls;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.Controls;
 using Radzen;
 
 namespace ProSuite.DdxEditor.Content.Blazor;

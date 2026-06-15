@@ -1,9 +1,8 @@
-namespace ProSuite.Commons.AGP.Core.GeometryProcessing
+namespace ProSuite.Commons.AGP.Core.GeometryProcessing;
+
+public enum RowChangeType
 {
-	public enum RowChangeType
-	{
-		Insert,
-		Update,
-		Delete
-	}
+	Insert,
+	Update,
+	Delete
 }

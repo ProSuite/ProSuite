@@ -50,10 +50,10 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 			Item.SetXmlString(xmlString);
 		}
 
-		public void GetFromFeatureClassClicked()
+		public void GetFromWorkspaceClicked()
 		{
 			ISpatialReference spatialReference;
-			string xmlString = Item.GetXmlStringFromFeatureClass(_view, out spatialReference);
+			string xmlString = Item.GetXmlStringFromWorkspace(_view, out spatialReference);
 
 			if (string.IsNullOrEmpty(xmlString))
 			{

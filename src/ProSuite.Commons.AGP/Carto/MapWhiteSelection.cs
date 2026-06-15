@@ -5,6 +5,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -25,7 +26,8 @@ public interface IMapWhiteSelection
 	/// involved with this white selection.
 	/// </summary>
 	/// <returns>True iff this white selection changed</returns>
-	bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
+	bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method,
+	            Dictionary<FeatureLayer, List<long>> candidates = null);
 
 	/// <summary>
 	/// Select vertices within <paramref name="geometry"/> from amongst
@@ -33,7 +35,8 @@ public interface IMapWhiteSelection
 	/// already involved with this white selection.
 	/// </summary>
 	/// <returns>True iff this white selection changed</returns>
-	bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates = null);
+	bool Select(Geometry geometry, SetCombineMethod method,
+	            Dictionary<FeatureLayer, List<long>> candidates = null);
 
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
 
@@ -46,14 +49,17 @@ public interface IMapWhiteSelection
 	                 out int? segmentIndex, out int? vertexIndex);
 
 	ICollection<IWhiteSelection> GetLayerSelections();
+
 	IWhiteSelection GetLayerSelection(FeatureLayer layer);
 
 	ValueTuple<int, int> RefreshGeometries(); // all in mws; remove from sel where incompatible
+
 	ValueTuple<int, int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids);
 
 	void ClearGeometryCache();
 
 	void UpdateRegularSelection();
+
 	bool UpdateWhiteSelection(SelectionSet regular, bool selectAllVertices = false);
 }
 
@@ -66,6 +72,7 @@ public interface IMapWhiteSelection
 public class MapWhiteSelection : IMapWhiteSelection
 {
 	private readonly MapView _mapView;
+
 	// TODO probably should keep _layerSelections ordered as in the ToC
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
 
@@ -191,7 +198,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 		var uri = layer.URI ?? throw new InvalidOperationException("Layer has no URI");
 
-		if (!_layerSelections.TryGetValue(uri, out var result))
+		if (! _layerSelections.TryGetValue(uri, out var result))
 		{
 			result = new WhiteSelection(layer);
 			_layerSelections.Add(uri, result);
@@ -231,7 +238,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT</remarks>
-	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
+	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method,
+	                   Dictionary<FeatureLayer, List<long>> candidates)
 	{
 		if (clickPoint is null)
 			throw new ArgumentNullException(nameof(clickPoint));
@@ -271,7 +279,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 					changed = true;
 				}
 
-				if (SelectVertex(selection, oid, shape, clickPoint, tolerance, method, out bool vertexTouched))
+				if (SelectVertex(selection, oid, shape, clickPoint, tolerance, method,
+				                 out bool vertexTouched))
 				{
 					changed = true;
 				}
@@ -289,7 +298,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return changed;
 	}
 
-	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, MapPoint clickPoint, double tolerance)
+	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape,
+	                          MapPoint clickPoint, double tolerance)
 	{
 		if (! MustBoundarySelectUnfilledPolygons)
 		{
@@ -351,8 +361,9 @@ public class MapWhiteSelection : IMapWhiteSelection
 	#region Area-select (polygon)
 
 	/// <returns>true iff the selection changed</returns>
-	/// <remarks>Must call on MCT (if syncing with regular selection)</remarks>
-	public bool Select(Geometry geometry, SetCombineMethod method, Dictionary<FeatureLayer, List<long>> candidates)
+	/// <remarks>Must call on MCT</remarks>
+	public bool Select(Geometry geometry, SetCombineMethod method,
+	                   Dictionary<FeatureLayer, List<long>> candidates)
 	{
 		var dict = candidates ?? GetInvolvedFeatures();
 
@@ -389,12 +400,13 @@ public class MapWhiteSelection : IMapWhiteSelection
 					changed = true;
 				}
 
-				if (SelectVertices(selection, oid, shape, geometry, method, out int touchedVertices))
+				if (SelectVertices(selection, oid, shape, geometry, method,
+				                   out int touchedVertices))
 				{
 					changed = true;
 				}
 
-				if (method == SetCombineMethod.Xor && !added && touchedVertices == 0)
+				if (method == SetCombineMethod.Xor && ! added && touchedVertices == 0)
 				{
 					// user xor-selected a previously selected shape but not a single vertex:
 					// remove this entire shape/oid from the white selection
@@ -407,9 +419,10 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return changed;
 	}
 
-	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape, Geometry selectionArea)
+	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape,
+	                          Geometry selectionArea)
 	{
-		if (!MustBoundarySelectUnfilledPolygons)
+		if (! MustBoundarySelectUnfilledPolygons)
 		{
 			return true;
 		}
@@ -562,7 +575,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <returns>number of shape selections retained unchanged
 	/// and modified (presently: cleared)</returns>
 	/// <remarks>Must call on MCT</remarks>
-	public ValueTuple<int,int> RefreshGeometries()
+	public ValueTuple<int, int> RefreshGeometries()
 	{
 		int retained = 0;
 		int removed = 0;
@@ -587,9 +600,9 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <returns>number of shape selections retained unchanged
 	/// and modified (presently: cleared)</returns>
 	/// <remarks>Must call on MCT</remarks>
-	public ValueTuple<int,int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids)
+	public ValueTuple<int, int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids)
 	{
-		if (!_layerSelections.TryGetValue(layer.URI, out var ws))
+		if (! _layerSelections.TryGetValue(layer.URI, out var ws))
 		{
 			return (0, 0); // layer has no white selection
 		}
@@ -622,11 +635,18 @@ public class MapWhiteSelection : IMapWhiteSelection
 		var dict = GetLayerSelections()
 			.ToDictionary(s => s.Layer, s => s.GetInvolvedOIDs().ToList());
 
-		var regular = SelectionSet.FromDictionary(dict);
+		var current = Map.GetSelection().ToDictionary<FeatureLayer>();
 
-		// TODO This triggers an OnSelectionChangedAsync some time later (!) -- how to latch?
-		// DARO reports that using IDisplayTable to set selection does not (or synchronously) raise OnSelectionChanged
-		Map.SetSelection(regular);
+		// Check if the selection changed on the feature level (not only
+		// on the vertex level) to avoid spurious selection changed events:
+		if (! SelectionUtils.SameSelections(dict, current))
+		{
+			var regular = SelectionSet.FromDictionary(dict);
+
+			// This triggers a Selection Changed event some time later (!) -- how to latch?
+			// DARO reports that using IDisplayTable to set selection does not (or synchronously) raise OnSelectionChanged
+			Map.SetSelection(regular);
+		}
 	}
 
 	/// <summary>
@@ -679,7 +699,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 				}
 
 				var hashSet = oids.ToHashSet();
-				var drops = ws.GetInvolvedOIDs().Where(oid => !hashSet.Contains(oid)).ToList();
+				var drops = ws.GetInvolvedOIDs().Where(oid => ! hashSet.Contains(oid)).ToList();
 				foreach (var oid in drops)
 				{
 					if (ws.Remove(oid))
@@ -693,7 +713,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 			var regularLayers = dict.Keys.ToHashSet();
 			foreach (var ws in GetLayerSelections())
 			{
-				if (!regularLayers.Contains(ws.Layer)) // stable instances or better use URI?
+				if (! regularLayers.Contains(ws.Layer)) // stable instances or better use URI?
 				{
 					if (ws.Clear())
 					{

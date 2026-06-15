@@ -12,7 +12,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 		[NotNull] private readonly Configuration _configuration;
 
 		[CLSCompliant(false)]
-		public SchemaCreator([NotNull] INHConfigurationBuilder configurationBuilder)
+		public SchemaCreator([NotNull] INhConfigurationBuilder configurationBuilder)
 		{
 			_configuration = configurationBuilder.GetConfiguration();
 		}

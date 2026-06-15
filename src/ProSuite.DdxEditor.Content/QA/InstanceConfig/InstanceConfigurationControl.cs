@@ -12,8 +12,8 @@ using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using ProSuite.UI.QA;
-using ProSuite.UI.QA.Controls;
+using ProSuite.UI.Core.QA;
+using ProSuite.UI.Core.QA.Controls;
 #if NET6_0_OR_GREATER
 using System.Drawing;
 #endif

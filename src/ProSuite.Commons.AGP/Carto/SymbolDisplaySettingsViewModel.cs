@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 
 namespace ProSuite.Commons.AGP.Carto;
 
@@ -104,6 +105,39 @@ public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 			}
 		}
 	}
+
+	#region Tentatively piggyback perimeter display settings
+
+	private bool _wantPerimeter;
+	private Visibility _perimeterSettingsVisibility;
+
+	public bool WantPerimeter
+	{
+		get => _wantPerimeter;
+		set
+		{
+			if (_wantPerimeter != value)
+			{
+				_wantPerimeter = value;
+				OnPropertyChanged();
+			}
+		}
+	}
+
+	public Visibility PerimeterSettingsVisibility
+	{
+		get => _perimeterSettingsVisibility;
+		set
+		{
+			if (_perimeterSettingsVisibility != value)
+			{
+				_perimeterSettingsVisibility = value;
+				OnPropertyChanged();
+			}
+		}
+	}
+
+	#endregion
 
 	public event PropertyChangedEventHandler PropertyChanged;
 

@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 
@@ -47,7 +48,11 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		ILayerContainer container = _options.GroupLayerItem?.GroupLayer ?? (ILayerContainer) map;
 
-		var config = await QueuedTask.Run(() => CollectConfig(map, container, _options.OmitMasks));
+		bool includeMasking = _options.IncludeMaskingInfo;
+		bool extraMasking = _options.ExtraMaskingInfo;
+		bool includeHiddenDefaultSymbol = _options.IncludeHiddenDefaultSymbol;
+
+		var config = await QueuedTask.Run(() => CollectConfig(map, container, includeMasking, extraMasking, includeHiddenDefaultSymbol));
 
 		if (! string.IsNullOrWhiteSpace(_options.Remark))
 		{
@@ -90,6 +95,8 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 		return true;
 	}
+
+	#region Transform XML to CSV and save
 
 	/// <remarks>
 	/// Difference from CSV written by the older Python export tool:
@@ -241,6 +248,8 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return index < 0 ? "M?" : $"M{1 + index}";
 	}
 
+	#endregion
+
 	// <SLDLM map="MapName" [groupLayer="LayerName"] [omitMasks="true"]>
 	//   <Remark>...</Remark>                          Optional remark (any text)
 	//   <DrawingOrder>
@@ -259,14 +268,14 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 	//     <Layer name="" parent="" uri="">
 	//       <Renderer type="simple|unique" fields="(for unique only)" />
 	//       <Symbol match="" label="" type="">
-	//         <Level name="" type="" />              First level of this symbol
-	//         <Level name="" type="">                Second level, masked
+	//         <Level name="" type="" />               First level of this symbol
+	//         <Level name="" type="">                 Second level, masked
 	//           <MaskedBy name="" parent="" uri="" /> Masking info here is informational
 	//         </Level>
 	//       </Symbol>
 	//     </Layer>
 	//   </SymbolLevels>
-	//   <MaskingLayers>
+	//   <MaskingLayers>                               This section is informational (ignored on import)
 	//     <MaskingLayer name="" parent="" uri="">
 	//       <MaskedLevel level="" name="" parent="" />
 	//       <MaskedLayer name="" parent="" zgroups="foo, bar, baz" />
@@ -274,19 +283,26 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 	//   </MaskingLayers>
 	// </SLDLM>
 
-	public static XElement CollectConfig(Map map, ILayerContainer container = null, bool omitMasks = false)
+	public static XElement CollectConfig(Map map, ILayerContainer container = null, bool includeMasking = true, bool extraMasking = false, bool includeHiddenDefaultSymbol = false)
 	{
-		var order = GetDrawingOrder(container ?? map, map, omitMasks);
-		var symlyrs = GetSymbolLevels(container ?? map, map, omitMasks);
-		var masking = omitMasks ? null : GetMaskingLayers(order);
+		extraMasking &= includeMasking;
+
+		var order = GetDrawingOrder(container ?? map, map, includeMasking);
+		var symlyrs = GetSymbolLevels(container ?? map, map, extraMasking, includeHiddenDefaultSymbol);
+		var masking = extraMasking ? GetMaskingLayers(order) : null;
 
 		var mapAttr = new XAttribute("map", map.Name ?? string.Empty);
 		var groupLayerAttr = container is Layer group
 			                     ? new XAttribute("groupLayer", group.Name ?? string.Empty)
 			                     : null;
-		var omitMasksAttr = omitMasks ? new XAttribute("omitMasks", true) : null;
 
-		return new XElement("SLDLM", mapAttr, groupLayerAttr, omitMasksAttr, order, symlyrs, masking);
+		var includeMaskingAttr = new XAttribute("includeMasking", includeMasking);
+		var extraMaskingAttr = new XAttribute("extraMasking", extraMasking);
+		var includeHiddenDefSymAttr = new XAttribute("includeHiddenDefaultSymbol", includeHiddenDefaultSymbol);
+
+		return new XElement("SLDLM",
+		                    mapAttr, groupLayerAttr, includeMaskingAttr, extraMaskingAttr,
+		                    includeHiddenDefSymAttr, order, symlyrs, masking);
 	}
 
 	private static IDictionary<string, Layer> GetLayersByURI(ILayerContainer container)
@@ -302,7 +318,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static XElement GetDrawingOrder(ILayerContainer container, Map map, bool omitMasks = false)
+	private static XElement GetDrawingOrder(ILayerContainer container, Map map, bool includeMasking = false)
 	{
 		var allLayers = GetLayersByURI(map);
 
@@ -316,13 +332,14 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 			{
 				var lm = GetLM(topGroupLayer, allLayers);
 
-				var layerXml = MakeLayer(topGroupLayer);
-				result.Add(layerXml);
+				var layerElement = MakeLayer(topGroupLayer);
+				result.Add(layerElement);
 
 				foreach (var level in sld.SymbolLayers)
 				{
-					var maskedBy = omitMasks ? null : lm.GetForLevel(level);
-					layerXml.Add(MakeLevel(level, null, maskedBy));
+					var levelElement = MakeLevel(level, null);
+					MaskedBy(levelElement, includeMasking ? lm.GetForLevel(level) : null);
+					layerElement.Add(levelElement);
 				}
 
 				return result;
@@ -345,20 +362,22 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 				var lm = GetLM(featureLayer, allLayers);
 				if (sld.UseSLD)
 				{
-					var layerXml = MakeLayer(featureLayer, (string) null);
-					result.Add(layerXml);
+					var layerElement = MakeLayer(featureLayer);
+					result.Add(layerElement);
 
 					foreach (var level in sld.SymbolLayers)
 					{
-						var maskedBy = omitMasks ? null : lm.GetForLevel(level);
-						layerXml.Add(MakeLevel(level, null, maskedBy));
+						var levelElement = MakeLevel(level, null);
+						MaskedBy(levelElement, includeMasking ? lm.GetForLevel(level) : null);
+						layerElement.Add(levelElement);
 					}
 				}
 				else
 				{
 					// A feature layer without SLD (but it may have LM)
-					var maskedBy = omitMasks ? null : lm.GetAll();
-					result.Add(MakeLayer(featureLayer, maskedBy));
+					var layerElement = MakeLayer(featureLayer);
+					MaskedBy(layerElement, includeMasking ? lm.GetAll() : null);
+					result.Add(layerElement);
 				}
 			}
 			else if (layer is GroupLayer groupLayer)
@@ -368,13 +387,14 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 				{
 					var lm = GetLM(groupLayer, allLayers);
 
-					var layerXml = MakeLayer(groupLayer);
-					result.Add(layerXml);
+					var layerElement = MakeLayer(groupLayer);
+					result.Add(layerElement);
 
 					foreach (var level in sld.SymbolLayers)
 					{
-						var maskedBy = omitMasks ? null : lm.GetForLevel(level);
-						layerXml.Add(MakeLevel(level, null, maskedBy));
+						var levelElement = MakeLevel(level, null);
+						MaskedBy(levelElement, includeMasking ? lm.GetForLevel(level) : null);
+						layerElement.Add(levelElement);
 					}
 
 					// A group layer with SLD becomes the "controlling layer"
@@ -388,28 +408,38 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static XElement GetMaskingLayers(XElement order)
+	private static XElement GetMaskingLayers(XElement drawingOrder)
 	{
-		if (order is null)
-			throw new ArgumentNullException(nameof(order));
+		if (drawingOrder is null)
+			throw new ArgumentNullException(nameof(drawingOrder));
 
-		// <Layer name="" parent="" uri="" />
-		// <Layer name="" parent="" uri="">
-		//   <MaskedBy name="" parent="" uri="" />
-		// </Layer>
-		// <Layer name="" parent="" uri="">
-		//   <Level name="" />
-		//   <Level name="">
+		// Derive Masking Layers from the given drawing order, that is, create:
+		//
+		// <MaskingLayers>
+		//   <MaskingLayer name parent>
+		//     <MaskedLevel level name parent> or
+		//     <MaskedLayer levels name parent>
+		//   ...
+        //
+		// given:
+		//
+		// <DrawingOrder>
+		//   <Layer name="" parent="" uri="" />
+		//   <Layer name="" parent="" uri="">
 		//     <MaskedBy name="" parent="" uri="" />
-		//   </Level>
-		// </Layer>
+		//   </Layer>
+		//   <Layer name="" parent="" uri="">
+		//     <Level name="" />
+		//     <Level name="">
+		//       <MaskedBy name="" parent="" uri="" />
+		//     </Level>
+		//   </Layer>
+		//   ...
 
-		// <MaskingLayer name parent>
-		//   <MaskedLayer levels name parent>
 
 		var masking = new Dictionary<string, XElement>(); // MaskingLayer by URI
 
-		foreach (var layerElem in order.Elements("Layer"))
+		foreach (var layerElem in drawingOrder.Elements("Layer"))
 		{
 			var layerName = (string) layerElem.Attribute("name");
 			var layerParent = (string) layerElem.Attribute("parent");
@@ -481,7 +511,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static XElement GetSymbolLevels(ILayerContainer container, Map map, bool omitMasks = false)
+	private static XElement GetSymbolLevels(ILayerContainer container, Map map, bool includeMasking = true, bool includeHiddenDefaultSymbol = false)
 	{
 		var allLayers = GetLayersByURI(map);
 		var result = new XElement("SymbolLevels");
@@ -492,7 +522,7 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		//       <Symbol match="" label="" type="">
 		//         <Level name="" type="" />
 		//         <Level name="" type="">
-		//           <MaskedBy name="" parent="" uri="" />
+		//           <MaskedBy name="" parent="" uri="" />    ignored on import
 		//         </Level>
 		//       </Symbol>
 		//     </Layer>
@@ -509,8 +539,8 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 					layerXml.Add(MakeRendererInfo(gfl.Renderer));
 
-					var lm = omitMasks ? null : GetLM(featureLayer, allLayers);
-					var symbols = GetRendererSymbols(gfl.Renderer, lm);
+					var lm = includeMasking ? GetLM(featureLayer, allLayers) : null;
+					var symbols = GetRendererSymbols(gfl.Renderer, lm, includeHiddenDefaultSymbol);
 					layerXml.Add(symbols);
 
 					result.Add(layerXml);
@@ -521,38 +551,46 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static IEnumerable<XElement> GetRendererSymbols(CIMRenderer renderer, MaskLayers maskLayers = null)
+	private static IEnumerable<XElement> GetRendererSymbols(CIMRenderer renderer, MaskLayers maskLayers = null, bool includeHiddenDefaultSymbol = false)
 	{
 		if (renderer is null)
 		{
 			yield break;
 		}
 
+		const bool ignoredOnImport = true;
+
 		if (renderer is CIMUniqueValueRenderer unique)
 		{
-			// the default symbol
-			var symbol = unique.DefaultSymbol?.Symbol;
-			var xml = MakeSymbol("*", unique.DefaultLabel, symbol);
-			var levels = GetSymbolLayerNames(symbol);
-			foreach (var level in levels)
+			if (unique.UseDefaultSymbol || includeHiddenDefaultSymbol)
 			{
-				var maskedBy = maskLayers?.GetForLevel(level.Name);
-				xml.Add(MakeLevel(level.Name, level.Type, maskedBy));
+				// the default symbol
+				var symbol = unique.DefaultSymbol?.Symbol;
+				var xml = MakeSymbol("*", unique.DefaultLabel, symbol);
+				var levels = GetSymbolLayerNames(symbol);
+				foreach (var level in levels)
+				{
+					var levelElement = MakeLevel(level.Name, level.Type);
+					var maskedBy = maskLayers?.GetForLevel(level.Name);
+					MaskedBy(levelElement, maskedBy, ignoredOnImport);
+					xml.Add(levelElement);
+				}
+				yield return xml;
 			}
-
-			yield return xml;
 
 			// per class symbols
 			foreach (var clazz in Utils.GetUniqueValueClasses(unique))
 			{
-				symbol = clazz.Symbol?.Symbol;
+				var symbol = clazz.Symbol?.Symbol;
 				var discriminator = Utils.FormatDiscriminatorValue(clazz.Values);
-				xml = MakeSymbol(discriminator, clazz.Label, symbol);
-				levels = GetSymbolLayerNames(symbol);
+				var xml = MakeSymbol(discriminator, clazz.Label, symbol);
+				var levels = GetSymbolLayerNames(symbol);
 				foreach (var level in levels)
 				{
+					var levelElement = MakeLevel(level.Name, level.Type);
 					var maskedBy = maskLayers?.GetForLevel(level.Name);
-					xml.Add(MakeLevel(level.Name, level.Type, maskedBy));
+					MaskedBy(levelElement, maskedBy, ignoredOnImport);
+					xml.Add(levelElement);
 				}
 				yield return xml;
 			}
@@ -564,8 +602,10 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 			var levels = GetSymbolLayerNames(symbol);
 			foreach (var level in levels)
 			{
+				var levelElement = MakeLevel(level.Name, level.Type);
 				var maskedBy = maskLayers?.GetForLevel(level.Name);
-				xml.Add(MakeLevel(level.Name, level.Type, maskedBy));
+				MaskedBy(levelElement, maskedBy, ignoredOnImport);
+				xml.Add(levelElement);
 			}
 			yield return xml;
 		}
@@ -590,6 +630,23 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		}
 
 		return new[] { new SymbolLevel(string.Empty, Utils.GetPrettyTypeName(cim)) };
+	}
+
+	private static void MaskedBy(XElement element, IEnumerable<Layer> maskedBy,
+	                             bool ignoredOnImport = false)
+	{
+		if (element is not null && maskedBy is not null)
+		{
+			foreach (var maskingLayer in maskedBy)
+			{
+				var maskedByElement = MakeMaskedBy(maskingLayer);
+
+				string value = ignoredOnImport ? "ignored on import" : null;
+				maskedByElement.SetAttributeValue("info", value);
+
+				element.Add(maskedByElement);
+			}
+		}
 	}
 
 	private static XElement MakeMaskedBy(Layer maskingLayer)
@@ -619,22 +676,22 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		return result;
 	}
 
-	private static XElement MakeLayer(Layer layer, IEnumerable<Layer> maskedBy = null)
+	private static XElement MakeLayer(Layer layer/*, IEnumerable<Layer> maskedBy = null*/)
 	{
 		var result = MakeLayer(layer, "Layer");
 
-		if (maskedBy is not null)
-		{
-			foreach (var maskingLayer in maskedBy)
-			{
-				result.Add(MakeMaskedBy(maskingLayer));
-			}
-		}
+		//if (maskedBy is not null)
+		//{
+		//	foreach (var maskingLayer in maskedBy)
+		//	{
+		//		result.Add(MakeMaskedBy(maskingLayer));
+		//	}
+		//}
 
 		return result;
 	}
 
-	private static XElement MakeLevel(string name, string type, IEnumerable<Layer> maskedBy = null)
+	private static XElement MakeLevel(string name, string type/*, IEnumerable<Layer> maskedBy = null*/)
 	{
 		var result = new XElement("Level");
 
@@ -645,13 +702,13 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 			result.Add(new XAttribute("type", type));
 		}
 
-		if (maskedBy is not null)
-		{
-			foreach (var maskingLayer in maskedBy)
-			{
-				result.Add(MakeMaskedBy(maskingLayer));
-			}
-		}
+		//if (maskedBy is not null)
+		//{
+		//	foreach (var maskingLayer in maskedBy)
+		//	{
+		//		result.Add(MakeMaskedBy(maskingLayer));
+		//	}
+		//}
 
 		return result;
 	}
@@ -762,19 +819,36 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 		
 		if (cim is CIMGeoFeatureLayerBase { MaskedSymbolLayers: { } msl })
 		{
-			if (maskingLayers.Length != msl.Length)
+			if (maskingLayers.Length > msl.Length)
+			{
 				throw new InvalidOperationException(
-					"LayerMasks and MaskedSymbolLayers both exist but do not have " +
-					$"the same length (expect parallel arrays) for layer {layer.Name}");
+					$"Arrays LayerMasks (length  {maskingLayers.Length}) and " +
+					$"MaskedSymbolLayers (length {msl.Length}) both exist in CIM " +
+					$"but do not have the same length (layer {layer.Name}). Please " +
+					"fix manually using the Advanced Masking dialog in ArcGIS Pro");
+			}
+
+			if (maskingLayers.Length < msl.Length)
+			{
+				_msg.WarnFormat(
+					"Array LayerMasks (length {0}) is shorter than array " +
+					"MaskedSymbolLayers (length {1}) in CIM (layer {2})." +
+					"Will ignore excess MaskedSymbolLayers entries on export " +
+					"(as does Pro on rendering), but consider checking your CIM",
+					maskingLayers.Length, msl.Length, layer.Name);
+			}
 
 			var list = new List<MaskLayer>();
 			for (int i = 0; i < maskingLayers.Length; i++)
 			{
 				var uri = maskingLayers[i];
 				var maskLayer = new MaskLayer(uri);
-				maskLayer.AddSymbolLayers(msl[i].SymbolLayers.Select(sl => sl.SymbolLayerName));
+				// CIMSymbolLayerMasking.SymbolLayers could be null, meaning no symbol layer names
+				var zGroups = msl[i].SymbolLayers?.Select(sl => sl.SymbolLayerName);
+				maskLayer.AddSymbolLayers(zGroups);
 				list.Add(maskLayer);
 			}
+
 			return new MaskLayers(list, allLayers);
 		}
 
@@ -798,16 +872,32 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 
 			if (cim is CIMGeoFeatureLayerBase { MaskedSymbolLayers: { } msl })
 			{
-				if (maskingLayers.Length != msl.Length)
+				if (maskingLayers.Length > msl.Length)
+				{
 					throw new InvalidOperationException(
-						"LayerMasks and MaskedSymbolLayers both exist but do not have " +
-						$"the same length (expect parallel arrays) for layer {nestedLayer.Name} " +
-						$"(in group layer {groupLayer.Name})");
+						$"Arrays LayerMasks (length  {maskingLayers.Length}) and " +
+						$"MaskedSymbolLayers (length {msl.Length}) both exist in CIM " +
+						$"but do not have the same length (layer {nestedLayer.Name} " +
+						$"in controlling group layer {groupLayer.Name}). Please fix " +
+						"manually using the Advanced Masking dialog in ArcGIS Pro");
+				}
+
+				if (maskingLayers.Length < msl.Length)
+				{
+					_msg.WarnFormat(
+						"Array LayerMasks (length {0}) is shorter than array " +
+						"MaskedSymbolLayers (length {1}) in CIM (layer {2} in " +
+						"controlling group layer {3}). Will ignore excess MaskedSymbolLayers " +
+						"entries on export (as does Pro on rendering), but consider " +
+						"checking your CIM",
+						maskingLayers.Length, msl.Length, nestedLayer.Name, groupLayer.Name);
+				}
 
 				for (int i = 0; i < maskingLayers.Length; i++)
 				{
 					var uri = maskingLayers[i];
-					var zGroups = msl[i].SymbolLayers.Select(sl => sl.SymbolLayerName);
+					// CIMSymbolLayerMasking.SymbolLayers could be null, meaning no symbol layer names
+					var zGroups = msl[i].SymbolLayers?.Select(sl => sl.SymbolLayerName);
 					if (result.TryGetValue(uri, out var maskLayer))
 					{
 						maskLayer.AddSymbolLayers(zGroups);
@@ -903,11 +993,9 @@ public abstract class ExportSLDLMButtonBase : ButtonCommandBase
 			return this;
 		}
 
-		public void AddSymbolLayers(IEnumerable<string> names)
+		public void AddSymbolLayers([CanBeNull] IEnumerable<string> names)
 		{
-			if (names is null)
-				throw new ArgumentNullException(nameof(names));
-			_symbolLayers.UnionWith(names);
+			_symbolLayers.UnionWith(names ?? Enumerable.Empty<string>());
 		}
 
 		public override string ToString()

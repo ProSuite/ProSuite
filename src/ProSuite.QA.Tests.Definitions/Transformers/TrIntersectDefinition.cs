@@ -25,8 +25,8 @@ namespace ProSuite.QA.Tests.Transformers
 			IFeatureClassSchemaDef intersecting)
 			: base(new List<ITableSchemaDef> { intersected, intersecting })
 		{
-			Intersected = intersecting;
-			Intersecting = intersected;
+			Intersected = intersected;
+			Intersecting = intersecting;
 		}
 
 		[TestParameter(_defaultResultDimension)]

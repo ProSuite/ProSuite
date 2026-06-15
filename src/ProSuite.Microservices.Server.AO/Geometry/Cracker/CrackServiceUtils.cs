@@ -27,8 +27,6 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			[NotNull] CalculateCrackPointsRequest request,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
-			var watch = Stopwatch.StartNew();
-
 			CrackOptionsMsg optionsMsg =
 				Assert.NotNull(request.CrackOptions, "Crack options is null");
 
@@ -57,6 +55,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 				optionsMsg.ExcludeInteriorInteriorIntersection;
 
 			bool onlyWithinSameClass = optionsMsg.CrackOnlyWithinSameClass;
+
+			var watch = Stopwatch.StartNew();
 
 			IList<FeatureVertexInfo> vertexInfos =
 				CrackUtils.CreateFeatureVertexInfos(sourceFeatures, calculationPerimeter?.Envelope,
@@ -89,6 +89,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 						crackPointCalculator, trackCancel);
 				}
 			}
+
+			_msg.DebugStopTiming(watch, "Calculated crack points");
 
 			watch = Stopwatch.StartNew();
 
@@ -364,7 +366,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 			IEnvelope inExtent = perimeter?.Envelope;
 
 			var cracker = new CrackPointCalculator(
-				snapTolerance, minimumSegmentLength, addCrackPointsOnExistingVertices, useSourceZs, intersectionPointOptions, inExtent);
+				snapTolerance, minimumSegmentLength, addCrackPointsOnExistingVertices, useSourceZs,
+				intersectionPointOptions, inExtent);
 
 			cracker.ExcludeInteriorInteriorIntersections = excludeInteriorInteriorIntersection;
 

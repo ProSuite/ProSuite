@@ -753,6 +753,11 @@ namespace ProSuite.QA.Container.TestContainer
 			return string.Format("{0}", sb);
 		}
 
+		public void Clear()
+		{
+			CurrentTestRow = null;
+		}
+
 		#region Nested type: RowBoxTree
 
 		private class RowBoxTree : BoxTree<CachedRow>

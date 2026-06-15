@@ -41,6 +41,11 @@ namespace ProSuite.GIS.Geometry.AGP
 				return new ArcPoint(point);
 			}
 
+			if (proGeometry is Envelope envelope)
+			{
+				return new ArcEnvelope(envelope);
+			}
+
 			throw new ArgumentException("Unsupported geometry type: " + proGeometry.GeometryType);
 		}
 
@@ -237,8 +242,15 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public bool IsEqual(IClone other)
 		{
-			var geometry = (ArcGeometry) other;
-			return ProGeometry.IsEqual(geometry.ProGeometry);
+			if (other is not ArcGeometry otherArcGeometry)
+			{
+				return false;
+			}
+
+			var otherProGeometry =
+				otherArcGeometry.NativeImplementation as ArcGIS.Core.Geometry.Geometry;
+
+			return ProGeometry.IsEqual(otherProGeometry);
 		}
 	}
 }

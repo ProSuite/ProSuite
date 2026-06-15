@@ -34,7 +34,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		public SessionProvider() { }
 
-		public SessionProvider(INHConfigurationBuilder configBuilder)
+		public SessionProvider(INhConfigurationBuilder configBuilder)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 

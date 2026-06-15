@@ -368,6 +368,7 @@ namespace ProSuite.Commons.Collections
 		/// <typeparam name="T">The type of elements in the collections.</typeparam>
 		/// <param name="enumerable1">The first collection.</param>
 		/// <param name="enumerable2">The second collection.</param>
+		/// <param name="comparer">Optional: The comparer used to compare elements.</param>
 		/// <returns>true if the two collections have the same elements;
 		/// otherwise, false</returns>
 		/// <remarks>
@@ -376,12 +377,16 @@ namespace ProSuite.Commons.Collections
 		/// vice versa. This means that duplicate elements are ignored: for instance,
 		/// [1,2,3] contains the same elements as [1,2,2,3].</remarks>
 		public static bool HaveSameElements<T>([NotNull] IEnumerable<T> enumerable1,
-		                                       [NotNull] IEnumerable<T> enumerable2)
+		                                       [NotNull] IEnumerable<T> enumerable2,
+											   [CanBeNull] IEqualityComparer<T> comparer = null) 
 		{
 			Assert.ArgumentNotNull(enumerable1, nameof(enumerable1));
 			Assert.ArgumentNotNull(enumerable2, nameof(enumerable2));
 
-			IDictionary<T, int> index = new Dictionary<T, int>();
+
+			IDictionary<T, int> index = comparer != null
+				                            ? new Dictionary<T, int>(comparer)
+				                            : new Dictionary<T, int>();
 
 			ICollection<T> collection1 = GetCollection(enumerable1);
 			ICollection<T> collection2 = GetCollection(enumerable2);
@@ -415,6 +420,56 @@ namespace ProSuite.Commons.Collections
 			foreach (T element in collection1)
 			{
 				if (! index.ContainsKey(element))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Check if one collection is a subset of another collection.
+		/// </summary>
+		/// <typeparam name="T">The type of elements in the collections.</typeparam>
+		/// <param name="subset">The collection to check if it is a subset.</param>
+		/// <param name="superset">The collection to check against.</param>
+		/// <param name="comparer">Optional: The comparer used to compare elements.</param>
+		/// <returns>true if <paramref name="subset"/> is a subset of <paramref name="superset"/>;
+		/// otherwise, false</returns>
+		/// <remarks>
+		/// The implementation uses the mathematical definition of subset:
+		/// a set A is a subset of set B if all elements of A are contained in B.
+		/// This means that duplicate elements are ignored: for instance,
+		/// [1,2] is a subset of [1,2,2,3], and [1,1,2] is also a subset of [1,2,3].
+		/// Note that by mathematical definition, every set is a subset of itself.</remarks>
+		public static bool IsSubsetOf<T>([NotNull] IEnumerable<T> subset,
+		                                 [NotNull] IEnumerable<T> superset,
+		                                 [CanBeNull] IEqualityComparer<T> comparer = null)
+		{
+			Assert.ArgumentNotNull(subset, nameof(subset));
+			Assert.ArgumentNotNull(superset, nameof(superset));
+
+			IDictionary<T, int> index = comparer != null
+				                            ? new Dictionary<T, int>(comparer)
+				                            : new Dictionary<T, int>();
+
+			ICollection<T> supersetCollection = GetCollection(superset);
+			ICollection<T> subsetCollection = GetCollection(subset);
+
+			// Build index of all elements in the superset
+			foreach (T element in supersetCollection)
+			{
+				if (!index.ContainsKey(element))
+				{
+					index.Add(element, 0);
+				}
+			}
+
+			// Check if all elements in subset exist in superset
+			foreach (T element in subsetCollection)
+			{
+				if (!index.ContainsKey(element))
 				{
 					return false;
 				}

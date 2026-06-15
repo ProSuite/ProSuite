@@ -394,7 +394,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			// Keep the current tile a bit longer...
 			if (currentPolyOverlay != null)
 			{
-				return await MapUtils.FlashGeometryAsync(_mapView, currentPolyOverlay);
+				await MapUtils.FlashGeometryAsync(_mapView, currentPolyOverlay);
 			}
 
 			return true;

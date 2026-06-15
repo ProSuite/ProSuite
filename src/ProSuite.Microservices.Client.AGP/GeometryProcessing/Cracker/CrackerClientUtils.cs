@@ -107,7 +107,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				                                  intersectionPointOptions,
 				                                  addCrackPointsOnExistingVertices);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() * selectedFeatures.Count;
+			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 			CalculateCrackPointsResponse response =
 				GrpcClientUtils.Try(
@@ -340,8 +340,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				                              addCrackPointsOnExistingVertices,
 				                              out List<Feature> updatedFeatures);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
-			               request.SourceFeatures.Count;
+			int deadline =
+				FeatureProcessingUtils.GetProcessingTimeout(request.SourceFeatures.Count);
 
 			ApplyCrackPointsResponse response =
 				GrpcClientUtils.Try(
@@ -489,8 +489,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				                              addCrackPointsOnExistingVertices,
 				                              out List<Feature> updatedFeatures);
 
-			int deadline = FeatureProcessingUtils.GetPerFeatureTimeOut() *
-			               request.SourceFeatures.Count;
+			int deadline =
+				FeatureProcessingUtils.GetProcessingTimeout(request.SourceFeatures.Count);
 
 			ChopLinesResponse response =
 				GrpcClientUtils.Try(

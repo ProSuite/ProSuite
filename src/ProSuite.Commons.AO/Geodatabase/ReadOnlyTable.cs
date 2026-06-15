@@ -51,7 +51,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			try
 			{
-#if Server11
+#if ARCGIS_11_0_OR_GREATER
 				return CreateRow(BaseTable.GetRow(oid));
 #else
 				return CreateRow(BaseTable.GetRow((int) oid));

@@ -1,12 +1,11 @@
 using System;
 
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Contracts;
+
+[Flags]
+public enum WorkItemVisibility
 {
-	[Flags]
-	public enum WorkItemVisibility
-	{
-		Todo = 1,
-		Done = 2,
-		All = 3
-	}
+	Todo = 1,
+	Done = 2,
+	All = 3
 }

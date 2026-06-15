@@ -1,12 +1,11 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Editing.ChangeAlong
+namespace ProSuite.AGP.Editing.ChangeAlong;
+
+public partial class ZValueSourceSelectionControl : UserControl
 {
-	public partial class ZValueSourceSelectionControl : UserControl
+	public ZValueSourceSelectionControl()
 	{
-		public ZValueSourceSelectionControl()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
 	}
 }

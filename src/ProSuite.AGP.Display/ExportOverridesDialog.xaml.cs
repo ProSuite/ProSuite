@@ -8,7 +8,7 @@ namespace ProSuite.AGP.Display;
 /// <summary>
 /// Interaction logic for ExportOverridesDialog.xaml
 /// </summary>
-public partial class ExportOverridesDialog : Window
+public partial class ExportOverridesDialog
 {
 	private readonly ExportOverridesOptions _options;
 

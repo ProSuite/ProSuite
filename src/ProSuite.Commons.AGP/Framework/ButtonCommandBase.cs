@@ -4,70 +4,69 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 
-namespace ProSuite.Commons.AGP.Framework
+namespace ProSuite.Commons.AGP.Framework;
+
+public abstract class ButtonCommandBase : Button
 {
-	public abstract class ButtonCommandBase : Button
+	private int _updateErrorCounter;
+	private const int MaxUpdateErrors = 10;
+
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	#region Overrides of PlugIn
+
+	protected override void OnUpdate()
 	{
-		private int _updateErrorCounter;
-		private const int MaxUpdateErrors = 10;
-
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		#region Overrides of PlugIn
-
-		protected override void OnUpdate()
+		try
 		{
-			try
-			{
-				OnUpdateCore();
-			}
-			catch (Exception ex)
-			{
-				if (_updateErrorCounter < MaxUpdateErrors)
-				{
-					_msg.Error($"{GetType().Name}.{nameof(OnUpdate)}: {ex.Message}", ex);
-
-					_updateErrorCounter += 1;
-
-					if (_updateErrorCounter == MaxUpdateErrors)
-					{
-						_msg.Error("Will stop reporting errors here to avoid flooding the logs");
-					}
-				}
-				//else: silently ignore to avoid flooding the logs
-			}
+			OnUpdateCore();
 		}
+		catch (Exception ex)
+		{
+			if (_updateErrorCounter < MaxUpdateErrors)
+			{
+				_msg.Error($"{GetType().Name}.{nameof(OnUpdate)}: {ex.Message}", ex);
 
-		#endregion
+				_updateErrorCounter += 1;
 
-		#region Overrides of Button
+				if (_updateErrorCounter == MaxUpdateErrors)
+				{
+					_msg.Error("Will stop reporting errors here to avoid flooding the logs");
+				}
+			}
+			//else: silently ignore to avoid flooding the logs
+		}
+	}
 
-		protected override async void OnClick()
+	#endregion
+
+	#region Overrides of Button
+
+	protected override async void OnClick()
+	{
+		try
 		{
 			_msg.Debug($"{Caption}.OnClick");
 
-			try
-			{
-				bool success = await OnClickAsyncCore();
+			bool success = await OnClickAsyncCore();
 
-				if (! success)
-				{
-					_msg.Debug($"OnClickAsyncCore false for {Caption}");
-				}
-			}
-			catch (Exception ex)
+			if (! success)
 			{
-				ErrorHandler.HandleError(ex, _msg);
+				_msg.Debug($"OnClickAsyncCore false for {Caption}");
 			}
 		}
-
-		#endregion
-
-		protected virtual void OnUpdateCore() { }
-
-		protected virtual Task<bool> OnClickAsyncCore()
+		catch (Exception ex)
 		{
-			return Task.FromResult(true);
+			ErrorHandler.HandleError(ex, _msg);
 		}
+	}
+
+	#endregion
+
+	protected virtual void OnUpdateCore() { }
+
+	protected virtual Task<bool> OnClickAsyncCore()
+	{
+		return Task.FromResult(true);
 	}
 }

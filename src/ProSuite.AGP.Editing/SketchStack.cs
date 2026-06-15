@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -20,7 +22,8 @@ public class SketchStack
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly Stack<Geometry> _sketches = new();
-	private readonly SketchLatch _latch = new();
+
+	private const int MaxSketchCount = 10;
 
 	/// <summary>
 	/// Gets the number of sketch states currently stored.
@@ -36,21 +39,69 @@ public class SketchStack
 	/// Gets a value indicating whether the replay latch is currently active.
 	/// This is used to prevent recording operations during replay.
 	/// </summary>
-	public bool IsReplayingSketches => _latch.IsLatched;
+	public bool IsReplayingSketches { get; private set; }
 
 	/// <summary>
-	/// Adds a sketch geometry to the state stack if it's not null or empty.
+	/// Adds a sketch geometry to the state stack if it's not null or empty and no identical
+	/// sketch is already on top of the stack.
 	/// </summary>
 	/// <param name="sketch">The sketch geometry to add</param>
-	public void TryPush(Geometry sketch)
+	public bool TryPush(Geometry sketch)
 	{
-		if (sketch is not { IsEmpty: false })
+		if (sketch == null || sketch.IsEmpty)
 		{
-			return;
+			return false;
 		}
+
+		if (_sketches.TryPeek(out Geometry last))
+		{
+			if (last.IsEqual(sketch))
+			{
+				return false;
+			}
+		}
+
+		// NOTE: While the OnSketchModifiedAsync call back on the tools are called on the UI
+		// thread and also get called again once the Z value comes in,
+		// this event handler is called on the background and typically only once per vertex
+		// -> If we want to avoid NaN Zs in the sketch stack (which we want) there is no good
+		//    solution relying on just the SketchModifiedEvent. We could just leave out the
+		//    trailing vertices with Nan Z...
+		//    Long term plan:
+		//    A. Make it fast (by providing a local raster surface)
+		//    B. Provide an event fired by the tool (if our tool is active)
+		//    that provides extra meta-information whether the sketch is 'stack-ready' or if there
+		//    are still nan Zs.
+		// TEST
+		Multipart polycurve = sketch as Multipart;
+
+		if (polycurve?.PointCount > 0)
+		{
+			MapPoint lastPoint = polycurve.Points[polycurve.PointCount - 1];
+
+			_msg.VerboseDebug(() =>
+				                  $"Pushing polycurve with {polycurve.PointCount} points onto stack. " +
+				                  $"Last point: {lastPoint.X}|{lastPoint.Y}|{lastPoint.Z}");
+
+			bool noNanOnStack =
+				! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					"PROSUITE_ALLOW_NANZ_ON_STACK");
+
+			if (double.IsNaN(lastPoint.Z) && noNanOnStack)
+			{
+				_msg.Warn(
+					"Sketch point could be missing in sketch (Repressed from stack due to NaN-Z). " +
+					"MAKE SURE TO CHECK sketch when finishing sketch after switching to stereo");
+				return false;
+			}
+		}
+
+		// END TEST
 
 		_sketches.Push(sketch);
 		_msg.VerboseDebug(() => $"Pushed sketch onto stack. Count: {_sketches.Count} sketches");
+
+		return true;
 	}
 
 	/// <summary>
@@ -100,7 +151,7 @@ public class SketchStack
 	public void Clear()
 	{
 		_sketches.Clear();
-		_latch.Reset();
+		IsReplayingSketches = false;
 		_msg.VerboseDebug(() => "Sketch states cleared");
 	}
 
@@ -118,7 +169,7 @@ public class SketchStack
 		}
 
 		_msg.VerboseDebug(() =>
-			                  $"Replay: {_sketches.Count} sketches to map view: {mapView.Map?.Name}");
+			                  $"Replay: {_sketches.Count} sketches in stack. Applying to {mapView.Map?.Name}...");
 
 		if (_sketches.Count == 0)
 		{
@@ -126,30 +177,49 @@ public class SketchStack
 			return false;
 		}
 
-		int latchIncrements = 0;
 		try
 		{
-			foreach (Geometry sketch in _sketches.Reverse())
+			Stopwatch watch = Stopwatch.StartNew();
+
+			// Only replay the most recent MaxSketchCount sketches, oldest-first (for performance reasons).
+			// Stack<T> enumerates top-to-bottom, so Take() yields the most recent entries.
+			List<Geometry> sketchesToReplay =
+				_sketches.Take(MaxSketchCount).Reverse().ToList();
+
+			IsReplayingSketches = true;
+
+			foreach (Geometry sketch in sketchesToReplay)
 			{
-				_latch.Increment();
-				latchIncrements++;
 				await mapView.SetCurrentSketchAsync(sketch);
 			}
 
-			// Reset the latch after successful replay
-			// Theoretically it should be 0 already, but the SketchModified events do not fire strictly
-			// once per sketch change (e.g. due to fast changes, some events could be dropped).
-			_latch.Reset();
+			IsReplayingSketches = false;
+
+			// Trim the stack. Subsequent undo operations and future replays remain consistent.
+			// sketchesToReplay is already oldest-first, so re-pushing it rebuilds the stack.
+			if (_sketches.Count > MaxSketchCount)
+			{
+				_sketches.Clear();
+				foreach (Geometry sketch in sketchesToReplay)
+				{
+					_sketches.Push(sketch);
+				}
+
+				_msg.VerboseDebug(() => $"Trimmed sketch stack to {_sketches.Count} entries");
+			}
+
+			_msg.VerboseDebug(() =>
+				                  $"Re-applied {_sketches.Count} sketch states to map view {mapView.Map?.Name} in " +
+				                  $"{watch.ElapsedMilliseconds}ms.");
 
 			return true;
 		}
 		catch (Exception ex)
 		{
-			_msg.Error(
-				$"Error during sketch replay after {latchIncrements} operations: {ex.Message}", ex);
+			_msg.Error($"Error during sketch replay: {ex.Message}", ex);
 
-			// Reset latch to maintain consistency since replay failed
-			_latch.Reset();
+			// Reset flag to maintain consistency since replay failed
+			IsReplayingSketches = false;
 
 			throw;
 		}
@@ -180,9 +250,8 @@ public class SketchStack
 	/// <returns>True if the operation should be recorded as a new state</returns>
 	public bool ProcessSketchModification(bool isUndo, Geometry currentSketch)
 	{
-		if (_latch.IsLatched)
+		if (IsReplayingSketches)
 		{
-			_latch.Decrement();
 			return false; // Don't record - this is a replay operation
 		}
 
@@ -193,8 +262,7 @@ public class SketchStack
 		}
 
 		// Record this as a new sketch state
-		TryPush(currentSketch);
-		return true; // Operation was recorded
+		return TryPush(currentSketch);
 	}
 
 	/// <summary>
@@ -204,31 +272,5 @@ public class SketchStack
 	public Geometry PeekMostRecent()
 	{
 		return _sketches.Count > 0 ? _sketches.Peek() : null;
-	}
-
-	/// <summary>
-	/// Internal class for managing the sketch replay latch mechanism.
-	/// This prevents replayed sketch operations from being recorded again.
-	/// </summary>
-	private class SketchLatch
-	{
-		public int Count { get; private set; }
-
-		public bool IsLatched => Count > 0;
-
-		public void Increment()
-		{
-			Count++;
-		}
-
-		public void Decrement()
-		{
-			Count--;
-		}
-
-		public void Reset()
-		{
-			Count = 0;
-		}
 	}
 }

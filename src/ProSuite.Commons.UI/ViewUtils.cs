@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -237,6 +239,110 @@ namespace ProSuite.Commons.UI
 			{
 				return null;
 			}
+		}
+
+		public static bool ActivateSingleInstance<T>(Func<T, bool> predicate = null)
+			where T : Window
+		{
+			var application = Application.Current;
+
+			T view = predicate == null
+				         ? application.Windows.OfType<T>().FirstOrDefault()
+				         : application.Windows.OfType<T>().FirstOrDefault(predicate);
+
+			if (view == null)
+			{
+				return false;
+			}
+
+			view.Activate();
+			return true;
+		}
+
+		public static void ActivateOrShow<T>(params object[] args) where T : Window
+		{
+			if (ActivateSingleInstance<T>())
+			{
+				return;
+			}
+
+			try
+			{
+				CreateAndShow<T>(args);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Could not create window of type {nameof(T)}: {ex.Message}", ex);
+			}
+		}
+
+		public static void ActivateOrShow<T>([CanBeNull] Func<T, bool> findView,
+		                                     [CanBeNull] params object[] args) where T : Window
+		{
+			if (ActivateSingleInstance(findView))
+			{
+				return;
+			}
+
+			try
+			{
+				CreateAndShow<T>(args);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Could not create window of type {nameof(T)}: {ex.Message}", ex);
+			}
+		}
+
+		public static void ActivateOrShow<TWindow, TViewModel>(
+			[CanBeNull] Func<TWindow, bool> findView,
+			[NotNull] Func<TViewModel> createViewModel)
+			where TWindow : Window
+			where TViewModel : INotifyPropertyChanged
+		{
+			if (ActivateSingleInstance(findView))
+			{
+				return;
+			}
+
+			try
+			{
+				var args = createViewModel();
+				CreateAndShow<TWindow>(args);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Could not create window of type {nameof(TWindow)}: {ex.Message}", ex);
+			}
+		}
+
+
+		public static async Task ActivateOrShowAsync<TWindow, TViewModel>(
+			[CanBeNull] Func<TWindow, bool> findView,
+			[NotNull] Func<Task<TViewModel>> createViewModelAsync)
+			where TWindow : Window
+			where TViewModel : INotifyPropertyChanged
+		{
+			if (ActivateSingleInstance(findView))
+			{
+				return;
+			}
+
+			try
+			{
+				var args = await createViewModelAsync();
+				CreateAndShow<TWindow>(args);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Could not create window of type {nameof(TWindow)}: {ex.Message}", ex);
+			}
+		}
+
+		public static void CreateAndShow<T>(params object[] args) where T : Window
+		{
+			var window = (T) Activator.CreateInstance(typeof(T), args);
+			Assert.NotNull(window).Show();
 		}
 	}
 }

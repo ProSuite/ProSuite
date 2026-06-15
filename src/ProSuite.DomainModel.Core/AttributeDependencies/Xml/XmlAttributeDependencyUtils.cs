@@ -91,7 +91,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies.Xml
 					dataset.GetAttribute(xmlAttribute.Name),
 					"Dataset {0} has no Attribute named {1}",
 					dataset, xmlAttribute.Name);
-				result.SourceAttributes.Add(attribute);
+				result.AddSourceAttribute(attribute);
 			}
 
 			foreach (XmlAttribute xmlAttribute in xml.TargetAttributes)
@@ -100,7 +100,7 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies.Xml
 					dataset.GetAttribute(xmlAttribute.Name),
 					"Dataset {0} has no Attribute named {1}",
 					dataset, xmlAttribute.Name);
-				result.TargetAttributes.Add(attribute);
+				result.AddTargetAttribute(attribute);
 			}
 
 			foreach (XmlAttributeValueMapping xmlPair in xml.AttributeValueMappings)
@@ -162,16 +162,16 @@ namespace ProSuite.DomainModel.Core.AttributeDependencies.Xml
 			Assert.ArgumentNotNull(from, nameof(from));
 			Assert.ArgumentNotNull(to, nameof(to));
 
-			to.SourceAttributes.Clear();
+			to.ClearSourceAttributes();
 			foreach (Attribute attribute in from.SourceAttributes)
 			{
-				to.SourceAttributes.Add(attribute);
+				to.AddSourceAttribute(attribute);
 			}
 
-			to.TargetAttributes.Clear();
+			to.ClearTargetAttributes();
 			foreach (Attribute attribute in from.TargetAttributes)
 			{
-				to.TargetAttributes.Add(attribute);
+				to.AddTargetAttribute(attribute);
 			}
 
 			to.AttributeValueMappings.Clear();

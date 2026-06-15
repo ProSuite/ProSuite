@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 
-namespace ProSuite.AGP.WorkList.Domain.Persistence
+namespace ProSuite.AGP.WorkList.Domain.Persistence;
+
+public interface IWorkListDefinition<T> where T : IWorkItemState
 {
-	public interface IWorkListDefinition<T> where T : IWorkItemState
-	{
-		string Name { get; set; }
+	string Name { get; set; }
 
-		string Path { get; set; }
+	string Path { get; set; }
 
-		List<T> Items { get; set; }
-	}
+	List<T> Items { get; set; }
 }

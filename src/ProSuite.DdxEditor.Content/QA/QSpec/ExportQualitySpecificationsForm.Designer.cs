@@ -521,9 +521,9 @@ namespace ProSuite.DdxEditor.Content.QA.QSpec
 			this._checkBoxExportConnectionFilePaths.Location = new System.Drawing.Point(41, 76);
 			this._checkBoxExportConnectionFilePaths.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
 			this._checkBoxExportConnectionFilePaths.Name = "_checkBoxExportConnectionFilePaths";
-			this._checkBoxExportConnectionFilePaths.Size = new System.Drawing.Size(357, 19);
+			this._checkBoxExportConnectionFilePaths.Size = new System.Drawing.Size(270, 19);
 			this._checkBoxExportConnectionFilePaths.TabIndex = 2;
-			this._checkBoxExportConnectionFilePaths.Text = "Use file paths to connection files (ArcSDE: *.sde; OLE DB: *.odc)";
+			this._checkBoxExportConnectionFilePaths.Text = "Use file paths to ArcSDE connection files (.sde)";
 			this._checkBoxExportConnectionFilePaths.UseVisualStyleBackColor = true;
 			// 
 			// _checkBoxExportWorkspaceConnections

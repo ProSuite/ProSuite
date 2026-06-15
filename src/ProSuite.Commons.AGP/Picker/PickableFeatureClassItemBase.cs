@@ -7,58 +7,57 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.Commons.AGP.Picker
+namespace ProSuite.Commons.AGP.Picker;
+
+public abstract class PickableFeatureClassItemBase : PropertyChangedBase,
+                                                     IPickableFeatureClassItem
 {
-	public abstract class PickableFeatureClassItemBase : PropertyChangedBase,
-	                                                     IPickableFeatureClassItem
+	private readonly string _datasetName;
+	private bool _selected;
+	private readonly HashSet<long> _oids;
+
+	protected PickableFeatureClassItemBase([NotNull] string datasetName,
+	                                       [NotNull] IEnumerable<long> oids,
+	                                       [NotNull] Geometry geometry)
 	{
-		private readonly string _datasetName;
-		private bool _selected;
-		private readonly HashSet<long> _oids;
+		Assert.NotNullOrEmpty(datasetName);
 
-		protected PickableFeatureClassItemBase([NotNull] string datasetName,
-		                                       [NotNull] IEnumerable<long> oids,
-		                                       [NotNull] Geometry geometry)
+		_datasetName = datasetName;
+		_oids = oids.ToHashSet();
+		Geometry = geometry;
+	}
+
+	public ICollection<long> Oids => _oids;
+
+	public void AddOids(IEnumerable<long> oids)
+	{
+		foreach (long oid in oids)
 		{
-			Assert.NotNullOrEmpty(datasetName);
-
-			_datasetName = datasetName;
-			_oids = oids.ToHashSet();
-			Geometry = geometry;
+			_oids.Add(oid);
 		}
+	}
 
-		public ICollection<long> Oids => _oids;
+	public Geometry Geometry { get; }
 
-		public void AddOids(IEnumerable<long> oids)
-		{
-			foreach (long oid in oids)
-			{
-				_oids.Add(oid);
-			}
-		}
+	public List<BasicFeatureLayer> Layers { get; } = new();
 
-		public Geometry Geometry { get; }
+	// TODO: Highlight features that are in the primary workspace (ProjectWorkspace)
+	public bool Highlight => false;
 
-		public List<BasicFeatureLayer> Layers { get; } = new();
+	public bool Selected
+	{
+		get => _selected;
+		set => SetProperty(ref _selected, value);
+	}
 
-		// TODO: Highlight features that are in the primary workspace (ProjectWorkspace)
-		public bool Highlight => false;
+	public string DisplayValue => ToString();
 
-		public bool Selected
-		{
-			get => _selected;
-			set => SetProperty(ref _selected, value);
-		}
+	public abstract ImageSource ImageSource { get; }
 
-		public string DisplayValue => ToString();
+	public double Score { get; set; }
 
-		public abstract ImageSource ImageSource { get; }
-
-		public double Score { get; set; }
-
-		public override string ToString()
-		{
-			return $"{_datasetName}: #{Oids.Count}";
-		}
+	public override string ToString()
+	{
+		return $"{_datasetName}: #{Oids.Count}";
 	}
 }

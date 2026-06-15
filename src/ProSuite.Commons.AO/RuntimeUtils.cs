@@ -5,7 +5,7 @@ using ESRI.ArcGIS;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
-#if !Server11
+#if !ARCGIS_11_0_OR_GREATER
 using System.Linq;
 #endif
 
@@ -93,7 +93,7 @@ namespace ProSuite.Commons.AO
 			}
 		}
 
-#if !Server11
+#if !ARCGIS_11_0_OR_GREATER
 		[CanBeNull]
 		public static string GetInstalledDesktopVersion()
 		{
@@ -146,7 +146,7 @@ namespace ProSuite.Commons.AO
 		{
 			try
 			{
-#if !Server11
+#if !ARCGIS_11_0_OR_GREATER
 				// the following code fails
 				// - in the 64bit background environment (see COM-221): DllNotFound
 				// - in specific cross-thread situations: InvalidComObject

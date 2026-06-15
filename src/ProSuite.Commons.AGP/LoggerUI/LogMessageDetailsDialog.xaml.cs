@@ -1,25 +1,24 @@
 using System.Windows;
 using ProSuite.Commons.UI.WPF;
 
-namespace ProSuite.Commons.AGP.LoggerUI
+namespace ProSuite.Commons.AGP.LoggerUI;
+
+public partial class LogMessageDetailsDialog : ICloseableWindow
 {
-	public partial class LogMessageDetailsDialog : ICloseableWindow
+	public LogMessageDetailsDialog()
 	{
-		public LogMessageDetailsDialog()
+		// TODO get MainWindow from proper thread...
+		Owner = Application.Current.MainWindow;
+		InitializeComponent();
+	}
+
+	public void CloseWindow(bool? dialogResult = null)
+	{
+		if (dialogResult.HasValue)
 		{
-			// TODO get MainWindow from proper thread...
-			Owner = Application.Current.MainWindow;
-			InitializeComponent();
+			DialogResult = dialogResult;
 		}
 
-		public void CloseWindow(bool? dialogResult = null)
-		{
-			if (dialogResult.HasValue)
-			{
-				DialogResult = dialogResult;
-			}
-
-			Close();
-		}
+		Close();
 	}
 }
