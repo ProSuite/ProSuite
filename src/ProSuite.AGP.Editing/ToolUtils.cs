@@ -284,6 +284,51 @@ public static class ToolUtils
 		return editableClassHandles;
 	}
 
+	public static bool IsMultipatchCreationTool(string currentTool)
+	{
+		if (currentTool.Equals("Editor3D.Tool.POLYGON"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("Editor3D.Tool.CIRCLE"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("Editor3D.Tool.RECTANGLE"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateBarrelRoofTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateFlexibleBarrelRoofTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoof_CreateRegularPolygonTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("esri_editing_PushPullTool"))
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	[CanBeNull]
 	public static FeatureClass GetCurrentTargetFeatureClass(
 		[CanBeNull] EditingTemplate editTemplate,
