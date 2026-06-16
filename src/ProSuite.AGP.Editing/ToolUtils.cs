@@ -311,7 +311,7 @@ public static class ToolUtils
 			return true;
 		}
 
-		if (currentTool.Equals("GoTopRoof_CreateRegularPolygonTool"))
+		if (currentTool.Equals("GoTopRoofs_CreateRegularPolygonTool"))
 		{
 			return true;
 		}
