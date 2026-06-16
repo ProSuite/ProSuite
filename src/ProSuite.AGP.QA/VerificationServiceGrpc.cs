@@ -27,18 +27,28 @@ namespace ProSuite.AGP.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly IQualityVerificationClient _client;
-		private const string _contextTypeWorkUnit = "Work Unit";
-		private const string _contextTypePerimeter = "Perimeter";
 
-		protected VerificationServiceGrpc([NotNull] IQualityVerificationClient client)
+		private const string _defaultContextType = "Perimeter";
+
+		protected VerificationServiceGrpc([NotNull] IQualityVerificationClient client,
+		                                  [CanBeNull] string contextType = null,
+		                                  [CanBeNull] string contextName = null)
 		{
 			Assert.ArgumentNotNull(client, nameof(client));
 
 			_client = client;
+			ContextType = contextType;
+			ContextName = contextName;
 		}
 
 		[CanBeNull]
 		public string DdxEnvironmentName { get; set; }
+
+		[CanBeNull]
+		public string ContextType { get; }
+
+		[CanBeNull]
+		public string ContextName { get; }
 
 		public override async Task<ServiceCallStatus> Verify(
 			IQualitySpecificationReference qualitySpecificationRef,
@@ -164,13 +174,14 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] string resultsPath,
 			[CanBeNull] IList<Row> objectsToVerify = null)
 		{
-			string projectName = Project.Current.Name;
+			string contextType = ContextType ?? _defaultContextType;
+			string contextName = ContextName ?? Project.Current.Name;
 
 			VerificationRequest request =
 				await QueuedTask.Run(() =>
 				{
-					var result = QAUtils.CreateRequest(projectWorkspace, _contextTypePerimeter,
-					                                   projectName, specificationRef.Id,
+					var result = QAUtils.CreateRequest(projectWorkspace, contextType,
+					                                   contextName, specificationRef.Id,
 					                                   perimeter, DdxEnvironmentName);
 
 					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
@@ -193,14 +204,15 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] string resultsPath,
 			[CanBeNull] IList<Row> objectsToVerify = null)
 		{
-			string projectName = Project.Current.Name;
+			string contextType = ContextType ?? _defaultContextType;
+			string contextName = ContextName ?? Project.Current.Name;
 
 			VerificationRequest request =
 				await QueuedTask.Run(() =>
 				{
 					VerificationRequest result =
 						QAUtils.CreateRequest(
-							projectWorkspace, _contextTypePerimeter, projectName, specification,
+							projectWorkspace, contextType, contextName, specification,
 							perimeter, DdxEnvironmentName);
 
 					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
