@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Surface
@@ -31,11 +32,13 @@ namespace ProSuite.Commons.AO.Surface
 		/// be considered a spike candidate.</param>
 		/// <param name="insertionBuffer">Z-value offset added to a candidate point's Z when testing
 		/// whether existing triangle vertices form a spike.</param>
+		/// <param name="detectedSpikes">Collection to store the coordinates of detected spike points.</param>
 		public static void AddPointsToTin(
 			[NotNull] ITinEdit tin,
 			[NotNull] IEnumerable<(double x, double y, double z)> points,
 			double freezeDistance,
-			double insertionBuffer)
+			double insertionBuffer,
+			ICollection<ICoordinates> detectedSpikes = null)
 		{
 			var advancedTin = tin as ITinAdvanced;
 			Assert.ArgumentNotNull(advancedTin, nameof(advancedTin));
@@ -58,12 +61,14 @@ namespace ProSuite.Commons.AO.Surface
 				if (IsFrozen(triangle))
 				{
 					ignoredPoints++;
+					detectedSpikes?.Add(new Coordinates3D(x, y, z));
 					continue;
 				}
 
 				if (IsPointSpike(triangle, point, freezeDistance, insertionBuffer))
 				{
 					Freeze(tin, triangle);
+					detectedSpikes?.Add(new Coordinates3D(x, y, z));
 					ignoredPoints++;
 					continue;
 				}
@@ -99,7 +104,7 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		private static bool IsPointSpike(ITinTriangle triangle, IPoint point,
-		                                  double freezeDistance, double insertionBuffer)
+		                                 double freezeDistance, double insertionBuffer)
 		{
 			if (triangle.IsEmpty)
 			{
