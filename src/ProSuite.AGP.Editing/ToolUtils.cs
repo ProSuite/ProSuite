@@ -316,7 +316,27 @@ public static class ToolUtils
 			return true;
 		}
 
-		if (currentTool.Equals("GoTopRoofs_CreateRoofBaseplateTool"))
+		if (currentTool.Equals("GoTopRoofs_CreateGabledHippedAndSteepleRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateHalfHipRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateFlexibleMansardRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateOnesidedHipRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateOnesidedHalfHipRoofBaseplateTool"))
 		{
 			return true;
 		}
