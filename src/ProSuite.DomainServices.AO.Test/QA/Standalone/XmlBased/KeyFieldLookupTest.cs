@@ -61,13 +61,13 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			var model2 = new TestModel("model2");
 			var model3 = new TestModel("model3");
 
-			TestDataset dataset11 = model1.AddDataset(new TestDataset("dataset_1_1"));
-			TestDataset dataset12 = model1.AddDataset(new TestDataset("dataset_1_2"));
-			TestDataset dataset13 = model1.AddDataset(new TestDataset("dataset_1_3"));
+			TestVectorDataset dataset11 = model1.AddDataset(new TestVectorDataset("dataset_1_1"));
+			TestVectorDataset dataset12 = model1.AddDataset(new TestVectorDataset("dataset_1_2"));
+			TestVectorDataset dataset13 = model1.AddDataset(new TestVectorDataset("dataset_1_3"));
 
-			TestDataset dataset21 = model2.AddDataset(new TestDataset("dataset_2_1"));
-			TestDataset dataset22 = model2.AddDataset(new TestDataset("dataset_2_2"));
-			TestDataset dataset31 = model3.AddDataset(new TestDataset("dataset_3_1"));
+			TestVectorDataset dataset21 = model2.AddDataset(new TestVectorDataset("dataset_2_1"));
+			TestVectorDataset dataset22 = model2.AddDataset(new TestVectorDataset("dataset_2_2"));
+			TestVectorDataset dataset31 = model3.AddDataset(new TestVectorDataset("dataset_3_1"));
 
 			var lookup = new KeyFieldLookup(xmlKeyFields);
 
@@ -209,9 +209,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			}
 		}
 
-		private class TestDataset : VectorDataset
+		private class TestVectorDataset : VectorDataset
 		{
-			public TestDataset([NotNull] string name) : base(name) { }
+			public TestVectorDataset([NotNull] string name) : base(name) { }
 		}
 	}
 }

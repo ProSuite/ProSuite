@@ -180,17 +180,7 @@ public static class WorkListUtils
 		{
 			using TableDefinition tableDefinition = table.GetDefinition();
 
-			SourceClassSchema schema;
-
-			if (tableDefinition is FeatureClassDefinition featureClassDefinition)
-			{
-				schema = new SourceClassSchema(featureClassDefinition.GetObjectIDField(),
-				                               featureClassDefinition.GetShapeField());
-			}
-			else
-			{
-				schema = new SourceClassSchema(tableDefinition.GetObjectIDField());
-			}
+			SourceClassSchema schema = CreateSchema(tableDefinition);
 
 			yield return new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
 		}
@@ -253,17 +243,7 @@ public static class WorkListUtils
 		{
 			using TableDefinition tableDefinition = table.GetDefinition();
 
-			SourceClassSchema schema;
-
-			if (tableDefinition is FeatureClassDefinition featureClassDefinition)
-			{
-				schema = new SourceClassSchema(featureClassDefinition.GetObjectIDField(),
-				                               featureClassDefinition.GetShapeField());
-			}
-			else
-			{
-				schema = new SourceClassSchema(tableDefinition.GetObjectIDField());
-			}
+			SourceClassSchema schema = CreateSchema(tableDefinition);
 
 			yield return new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
 		}
@@ -805,5 +785,32 @@ public static class WorkListUtils
 		}
 
 		return connectionStringBuilder.TryGetValue("DATABASE", out workListFile);
+	}
+
+	public static SourceClassSchema CreateSchema(TableDefinition tableDefinition)
+	{
+		string oidField = tableDefinition.GetObjectIDField();
+		
+		Dictionary<string, int> subFields;
+
+		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
+		{
+			string shapeField = featureClassDefinition.GetShapeField();
+
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, featureClassDefinition.FindField(oidField) },
+				            { shapeField, featureClassDefinition.FindField(shapeField) }
+			            };
+		}
+		else
+		{
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) }
+			            };
+		}
+
+		return new SourceClassSchema(subFields);
 	}
 }

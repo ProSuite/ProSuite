@@ -40,6 +40,7 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 	private Overlaps _overlaps;
 	private RemoveOverlapsFeedback _feedback;
 	private IList<Feature> _overlappingFeatures;
+	private Envelope _calculationExtent;
 
 	protected RemoveOverlapsToolBase()
 	{
@@ -161,8 +162,14 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 			        .ToDictionary(kvp => (FeatureClass) kvp.Key,
 			                      kvp => kvp.Value);
 
-		IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(
-			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference);
+		List<Feature> selectedFeatures = MapUtils.GetFeatures(
+			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
+
+		if (_calculationExtent != null)
+		{
+			overlapsToRemove = GetFullOverlapsForRemoval(
+				selectedFeatures, overlapsToRemove, progressor);
+		}
 
 		RemoveOverlapsResult result =
 			MicroserviceClient.RemoveOverlaps(
@@ -307,12 +314,12 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 			throw new InvalidConfigurationException("Microservice has not been started.");
 		}
 
-		Envelope inExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
-			                    ? ActiveMapView.Extent
-			                    : null;
+		_calculationExtent = _removeOverlapsToolOptions.LimitOverlapCalculationToExtent
+			                     ? ActiveMapView.Extent
+			                     : null;
 
 		Overlaps overlaps = MicroserviceClient.CalculateOverlaps(
-			selectedFeatures, overlappingFeatures, inExtent, cancellationToken);
+			selectedFeatures, overlappingFeatures, _calculationExtent, cancellationToken);
 
 		return overlaps;
 	}
@@ -358,6 +365,76 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 		}
 
 		return result;
+	}
+
+	private Overlaps GetFullOverlapsForRemoval(
+		IList<Feature> allSelectedFeatures,
+		Overlaps userSelectedOverlaps,
+		CancelableProgressor progressor)
+	{
+		var featureRefsNeedingFullCalc = new HashSet<GdbObjectReference>();
+
+		foreach (var kvp in userSelectedOverlaps.OverlapGeometries)
+		{
+			if (kvp.Value.Any(g => !IsFullyInsideExtent(g, _calculationExtent)))
+				featureRefsNeedingFullCalc.Add(kvp.Key);
+		}
+
+		if (featureRefsNeedingFullCalc.Count == 0)
+			return userSelectedOverlaps;
+
+		List<Feature> involvedFeatures =
+			allSelectedFeatures
+				.Where(f => featureRefsNeedingFullCalc.Contains(new GdbObjectReference(f)))
+				.ToList();
+
+		if (involvedFeatures.Count == 0)
+			return userSelectedOverlaps;
+
+		CancellationToken cancellationToken =
+			progressor?.CancellationToken ?? new CancellationTokenSource().Token;
+
+		Overlaps fullOverlaps =
+			MicroserviceClient.CalculateOverlaps(
+				involvedFeatures, _overlappingFeatures, null, cancellationToken);
+
+		if (fullOverlaps == null)
+			return userSelectedOverlaps;
+
+		var result = new Overlaps();
+
+		foreach (var kvp in userSelectedOverlaps.OverlapGeometries)
+		{
+			if (!featureRefsNeedingFullCalc.Contains(kvp.Key))
+				result.AddGeometries(kvp.Key, kvp.Value);
+		}
+
+		foreach (var kvp in fullOverlaps.OverlapGeometries)
+		{
+			if (!userSelectedOverlaps.OverlapGeometries.TryGetValue(kvp.Key,
+				    out var selectedPartials))
+				continue;
+
+			List<Geometry> matchingFull =
+				kvp.Value
+				   .Where(full => selectedPartials.Any(
+					            partial => GeometryEngine.Instance.Intersects(full, partial)))
+				   .ToList();
+
+			if (matchingFull.Count > 0)
+				result.AddGeometries(kvp.Key, matchingFull);
+		}
+
+		return result.HasOverlaps() ? result : userSelectedOverlaps;
+	}
+
+	private static bool IsFullyInsideExtent(Geometry geometry, Envelope extent)
+	{
+		Envelope g = geometry.Extent;
+		return g.XMin > extent.XMin &&
+		       g.XMax < extent.XMax &&
+		       g.YMin > extent.YMin &&
+		       g.YMax < extent.YMax;
 	}
 
 	private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,

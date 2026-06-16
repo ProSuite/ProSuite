@@ -30,7 +30,7 @@ public class WorkListDbTest
 		CoreHostProxy.Initialize();
 	}
 
-	[Test]
+	[Test, Ignore("Requires outdated database schema")]
 	public void Can_count_rdbms_workItems_measure_performance()
 	{
 		using var geodatabase = new Geodatabase(
@@ -76,8 +76,10 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
 
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName",
-		                                 "displayName");
+		var wl = new IssueWorkList(itemRepository, null, "uniqueName", "displayName");
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
+		wl.ExtentProvider = new ExtentProviderMock();
+		wl.LoadItems();
 
 		var watch = new Stopwatch();
 		watch.Start();
@@ -145,13 +147,14 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
 
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName",
-		                                 "displayName");
+		var wl = new IssueWorkList(itemRepository, null, "uniqueName", "displayName");
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
+		wl.ExtentProvider = new ExtentProviderMock();
+		wl.LoadItems();
 
 		var watch = new Stopwatch();
 		watch.Start();
 
-		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
 		List<IWorkItem> items = wl.Search(null).ToList();
 		int itemsCount = items.Count;
 
@@ -215,19 +218,18 @@ public class WorkListDbTest
 		var itemRepository =
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
-
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName",
-		                                 "displayName");
-		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
-
 		SpatialReference ch1903plus = SpatialReferenceBuilder.CreateSpatialReference(2056);
-
-		Geometry visibleExtent = EnvelopeBuilderEx.CreateEnvelope(
+		Envelope visibleExtent = EnvelopeBuilderEx.CreateEnvelope(
 			new Coordinate2D(2624810, 1184300),
 			new Coordinate2D(2929350, 1186910), ch1903plus);
 
-		List<IWorkItem> items =
-			wl.Search(GdbQueryUtils.CreateSpatialFilter(visibleExtent)).ToList();
+		var wl = new IssueWorkList(itemRepository, visibleExtent, "uniqueName", "displayName");
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
+		wl.ExtentProvider = new ExtentProviderMock();
+
+		wl.LoadItems();
+
+		List<IWorkItem> items = wl.Search(null).ToList();
 
 		Envelope extent = wl.Extent;
 		Assert.NotNull(extent);
@@ -279,10 +281,17 @@ public class WorkListDbTest
 			new DbStatusWorkItemRepository(sourceClasses, new WorkItemStateRepositoryMock(),
 			                               WorkspaceUtils.GetCatalogPath(gdb));
 
-		IWorkList wl = new IssueWorkList(itemRepository, WorkListTestUtils.GetAOI(), "uniqueName",
-		                                 "displayName");
+		SpatialReference ch1903plus = SpatialReferenceBuilder.CreateSpatialReference(2056);
+		Envelope visibleExtent = EnvelopeBuilderEx.CreateEnvelope(
+			new Coordinate2D(2624810, 1184300),
+			new Coordinate2D(2929350, 1186910), ch1903plus);
+
+		var wl = new IssueWorkList(itemRepository, null, "uniqueName", "displayName");
 		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
-		List<IWorkItem> items = wl.Search(null).Take(20).ToList();
+		wl.ExtentProvider = new ExtentProviderMock();
+		wl.LoadItems();
+
+		List<IWorkItem> items = wl.Search(null).ToList();
 
 		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(62, items.Count);
@@ -314,7 +323,7 @@ public class WorkListDbTest
 		{
 			TableDefinition tableDefinition = table.GetDefinition();
 
-			SourceClassSchema schema = CreateSchema(tableDefinition);
+			SourceClassSchema schema = WorkListUtils.CreateSchema(tableDefinition);
 
 			ISourceClass sourceClass =
 				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
@@ -325,15 +334,17 @@ public class WorkListDbTest
 		var repository =
 			new SelectionItemRepository(sourceClasses, new WorkItemStateRepositoryMock());
 
-		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName",
-		                               "displayName");
+		var wl = new SelectionWorkList(repository, null, "uniqueName", "displayName");
+		wl.ExtentProvider = new ExtentProviderMock();
+		wl.LoadItems();
+
 		List<IWorkItem> items = wl.Search(null).ToList();
 
 		Assert.NotNull(wl.Extent);
 		Assert.AreEqual(9, items.Count);
 	}
 
-	[Test]
+	[Test, Ignore("learning test")]
 	public void LearningTest_oracle_geodatabase_handle_with_osa()
 	{
 		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
@@ -359,7 +370,7 @@ public class WorkListDbTest
 		}
 	}
 
-	[Test]
+	[Test, Ignore("learning test")]
 	public void LearningTest_oracle_geodatabase_handle()
 	{
 		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
@@ -383,7 +394,7 @@ public class WorkListDbTest
 		Assert.AreEqual((int) gdb0.Handle, (int) gdb1.Handle);
 	}
 
-	[Test]
+	[Test, Ignore("learning test")]
 	public void LearningTest_impact_of_dispose_on_oracle_geodatabase_handle()
 	{
 		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
@@ -409,7 +420,7 @@ public class WorkListDbTest
 		Assert.AreEqual((int) gdb0.Handle, (int) gdb1.Handle);
 	}
 
-	[Test]
+	[Test, Ignore("learning test")]
 	public void LearningTest_impact_of_different_geodatabase_instances_on_geodatabase_handles()
 	{
 		var gdb0 = new Geodatabase(new DatabaseConnectionProperties(EnterpriseDatabaseType.Oracle)
@@ -454,7 +465,7 @@ public class WorkListDbTest
 		{
 			TableDefinition tableDefinition = table.GetDefinition();
 
-			SourceClassSchema schema = CreateSchema(tableDefinition);
+			SourceClassSchema schema = WorkListUtils.CreateSchema(tableDefinition);
 
 			List<long> oids = new() { 0, 1, 2, 3 };
 			var sourceClass =
@@ -466,8 +477,11 @@ public class WorkListDbTest
 		var repository =
 			new SelectionItemRepository(sourceClasses, new WorkItemStateRepositoryMock());
 
-		var wl = new SelectionWorkList(repository, WorkListTestUtils.GetAOI(), "uniqueName",
-		                               "displayName");
+		var wl = new SelectionWorkList(repository, null, "uniqueName", "displayName");
+		wl.Visibility = WorkItemVisibility.All; // get all items not only Todo
+		wl.ExtentProvider = new ExtentProviderMock();
+		wl.LoadItems();
+
 		List<IWorkItem> items = wl.Search(null).ToList();
 
 		Assert.NotNull(wl.Extent);
@@ -537,34 +551,36 @@ public class WorkListDbTest
 		return filter;
 	}
 
-	private static SourceClassSchema CreateSchema(TableDefinition tableDefinition)
-	{
-		string objectIDField = tableDefinition.GetObjectIDField();
-
-		string shapeField = null;
-
-		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
-		{
-			shapeField = featureClassDefinition.GetShapeField();
-		}
-
-		return new SourceClassSchema(objectIDField, shapeField);
-	}
-
 	private static DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
-		string objectIDField = tableDefinition.GetObjectIDField();
+		var statusField = "STATUS";
+		string oidField = tableDefinition.GetObjectIDField();
 
-		string shapeField = null;
+		Dictionary<string, int> subFields;
 
 		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
 		{
-			shapeField = featureClassDefinition.GetShapeField();
+			string shapeField = featureClassDefinition.GetShapeField();
+
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, featureClassDefinition.FindField(oidField) },
+				            { shapeField, featureClassDefinition.FindField(shapeField) },
+				            { statusField, featureClassDefinition.FindField(statusField) }
+			            };
+		}
+		else
+		{
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { statusField, tableDefinition.FindField(statusField) }
+			            };
 		}
 
-		return new DbSourceClassSchema(objectIDField, shapeField, "STATUS",
-		                               tableDefinition.FindField("STATUS"),
-		                               (int) IssueCorrectionStatus.NotCorrected,
-		                               (int) IssueCorrectionStatus.Corrected);
+		return new DbSourceClassSchema(statusField,
+		                               IssueCorrectionStatus.NotCorrected,
+		                               IssueCorrectionStatus.Corrected,
+		                               subFields);
 	}
 }

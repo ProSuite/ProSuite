@@ -26,7 +26,7 @@ namespace ProSuite.Commons.Ado
 					return ConvertToString(value);
 				}
 
-				_msg.DebugFormat("no keyword {0} in {1}", keyword, _builder.ConnectionString);
+				_msg.VerboseDebug(() => $"no keyword {keyword} in {_builder.ConnectionString}");
 				return string.Empty;
 			}
 		}

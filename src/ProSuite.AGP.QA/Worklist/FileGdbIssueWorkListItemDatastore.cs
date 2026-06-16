@@ -150,38 +150,37 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
+	[NotNull]
 	public DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
-		int fieldIndex;
+		string oidField = tableDefinition.GetObjectIDField();
 
-		try
-		{
-			fieldIndex = tableDefinition.FindField(_statusFieldName);
-
-			if (fieldIndex < 0)
-			{
-				throw new ArgumentException($"No field {_statusFieldName}");
-			}
-		}
-		catch (Exception e)
-		{
-			_msg.Error($"Error find field {_statusFieldName} in {tableDefinition.GetName()}", e);
-			throw;
-		}
-
-		string shapeField = null;
-		string objectIDField = tableDefinition.GetObjectIDField();
+		Dictionary<string, int> subFields;
 
 		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
 		{
-			shapeField = featureClassDefinition.GetShapeField();
+			string shapeField = featureClassDefinition.GetShapeField();
+
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { shapeField, featureClassDefinition.FindField(shapeField) },
+				            { _statusFieldName, tableDefinition.FindField(_statusFieldName) }
+			            };
+		}
+		else
+		{
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { _statusFieldName, tableDefinition.FindField(_statusFieldName) }
+						};
 		}
 
-		// The status schema is the same for production model datasets and Issue Geodatabase tables.
-		return new DbSourceClassSchema(objectIDField, shapeField,
-		                               _statusFieldName, fieldIndex,
-		                               (int) IssueCorrectionStatus.NotCorrected,
-		                               (int) IssueCorrectionStatus.Corrected);
+		return new DbSourceClassSchema(_statusFieldName,
+		                               IssueCorrectionStatus.NotCorrected,
+		                               IssueCorrectionStatus.Corrected,
+		                               subFields);
 	}
 
 	public string SuggestWorkListName()

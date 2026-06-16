@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -17,6 +13,12 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Reflection;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.Editing;
 
@@ -79,7 +81,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 		catch (Exception ex)
 		{
-			_msg.Error(ex.Message, ex);
+			_msg.Debug($"Error in SetSketchAppearanceAsync: {ex.Message}", ex);
 		}
 	}
 
@@ -88,10 +90,10 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		var selection = SelectionUtils.GetSelection<BasicFeatureLayer>(args.Selection);
 
 		await QueuedTask.Run(async () =>
-		{
-			List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
+			{
+				List<long> oids = GetApplicableSelection(selection, out FeatureLayer featureLayer);
 
-			await TrySetSketchAppearanceAsync(featureLayer, oids);
+				await TrySetSketchAppearanceAsync(featureLayer, oids);
 		});
 	}
 
@@ -120,7 +122,7 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		}
 		catch (Exception ex)
 		{
-			_msg.Error(ex.Message, ex);
+			_msg.Debug($"Error in OnSketchModified: {ex.Message}", ex);
 		}
 	}
 
@@ -232,7 +234,23 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		var renderer = layer.GetRenderer();
 
 		IList<CIMSymbolReference> cimSymbolReferences = new List<CIMSymbolReference>();
+		IList<CIMSymbolReference> similarCimSymbolReferences = new List<CIMSymbolReference>();
 		//IList<CIMSymbol> cimSymbols = new List<CIMSymbol>();
+
+		//List of effects to ignore
+		List<Type> cimGeometricEffectTypesToIgnore = new List<Type>
+		                                           {
+			                                           typeof(CIMGeometricEffectCut),
+			                                           typeof(CIMGeometricEffectDashes)
+		                                           };
+
+		//bool - flag has value changed
+		List<(string PropertyName, bool HasChanged)> strokeProperties = new List<(string, bool)>();
+		strokeProperties.Add(new ValueTuple<string, bool>("CapStyle", false));
+		strokeProperties.Add(new ValueTuple<string, bool>("JoinStyle", false));
+		strokeProperties.Add(new ValueTuple<string, bool>("MiterLimit", false));
+		string nameOfWidthProperty = "Width";
+		strokeProperties.Add(new ValueTuple<string, bool>(nameOfWidthProperty, false));
 
 		foreach (long oid in oids)
 		{
@@ -246,9 +264,21 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 			var values = new NamedValues(feature);
 			CIMSymbolReference symref = SymbolUtils.GetSymbol(renderer, values, scaleDenom, out _);
 
-			if (cimSymbolReferences.All(s => s.ToJson() != symref.ToJson()))
+			strokeProperties.ForEach(item => item.HasChanged = false );
+
+			if (cimSymbolReferences.All(s => !Similar(s, symref, cimGeometricEffectTypesToIgnore, strokeProperties)))
+			//if (cimSymbolReferences.All(s => s.ToJson() != symref.ToJson()))
 			{
 				cimSymbolReferences.Add(symref);
+			}
+			else
+			{
+				//Symbols are same only different width
+				(string PropertyName, bool HasChanged) property = strokeProperties.Find(x => x.PropertyName == nameOfWidthProperty);
+				if (property.HasChanged)
+				{
+					similarCimSymbolReferences.Add(symref);
+				}
 			}
 		}
 
@@ -256,6 +286,30 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 		if (cimSymbolReferences.Count == 1)
 		{
 			symbolReference = cimSymbolReferences[0];
+			//Symbols are same only different width
+			if (similarCimSymbolReferences.Count > 0)
+			{
+				//look for symbol with the greatest width and use it
+				similarCimSymbolReferences.Add(symbolReference);
+
+				CIMSymbolReference maxCIMSymbolReference = null;
+				double maxWidth = 0;
+				double leftPoints;
+				double rightPoints;
+				foreach (CIMSymbolReference cimSymbolReference in similarCimSymbolReferences)
+				{
+					CIMSymbol cimSymbol = cimSymbolReference.Symbol;
+					SymbolUtils.GetLineWidth(cimSymbol as CIMMultiLayerSymbol, out leftPoints, out rightPoints);
+
+					double width = leftPoints + rightPoints;
+					if (width > maxWidth)
+					{
+						maxWidth = width;
+						maxCIMSymbolReference = cimSymbolReference;
+					}
+				}
+				symbolReference = maxCIMSymbolReference;
+			}
 		}
 
 		if (symbolReference == null)
@@ -274,8 +328,177 @@ public class SymbolizedSketchTypeBasedOnSelection : ISymbolizedSketchType
 			return null;
 		}
 
-		//return symbol.MakeSymbolReference();
 		return symbolReference;
+	}
+
+	private static bool Similar(CIMSymbolReference symrefFrom, CIMSymbolReference symrefTo, List<Type> cimGeometricEffectTypesToIgnore, List<(string PropertyName, bool HasChanged)> strokeProperties)
+	{
+		CIMSymbolReference symrefFromClone = symrefFrom.Clone();
+		CIMSymbolReference symrefToClone = symrefTo.Clone();
+		string symrefStrFrom = symrefFromClone.ToJson();
+		string symrefStrTo = symrefToClone.ToJson();
+
+		if (symrefStrFrom == symrefStrTo)
+		{
+			return true;
+		}
+
+		CIMSymbol cimSymbolFrom = symrefFromClone.Symbol;
+		CIMSymbol cimSymbolTo = symrefToClone.Symbol;
+		CIMLineSymbol cimLineSymbolFrom = cimSymbolFrom as CIMLineSymbol;
+		CIMLineSymbol cimLineSymbolTo = cimSymbolTo as CIMLineSymbol;
+		if (cimLineSymbolFrom != null && cimLineSymbolTo != null)
+		{
+			CIMSymbolLayer[] cimSymbolLayersFrom = cimLineSymbolFrom.SymbolLayers;
+			CIMSymbolLayer[] cimSymbolLayersTo = cimLineSymbolTo.SymbolLayers;
+
+			if (cimSymbolLayersFrom.Length == cimSymbolLayersTo.Length)
+			{
+				for (int i=0; i<cimSymbolLayersFrom.Length; i++)
+				{
+					CIMSymbolLayer cimSymbolLayerFrom = cimSymbolLayersFrom[i];
+					CIMSymbolLayer cimSymbolLayerTo = cimSymbolLayersTo[i];
+					CIMStroke cimStrokeFrom = cimSymbolLayerFrom as CIMStroke;
+					CIMStroke cimStrokeTo = cimSymbolLayerTo as CIMStroke;
+					if (cimStrokeFrom == null || cimStrokeTo == null)
+					{
+						return false;
+					}
+
+					//set properties equal
+					for (int ii = 0; ii < strokeProperties.Count; ii++)
+					{
+						(string PropertyName, bool HasChanged) propertyPair = strokeProperties[ii];
+						string propertyName = propertyPair.PropertyName;
+						PropertyInfo propertyInfoTo = cimStrokeTo.GetType().GetProperty(propertyName);
+						PropertyInfo propertyInfoFrom = cimStrokeFrom.GetType().GetProperty(propertyName);
+						if (propertyInfoFrom != null && propertyInfoTo != null)
+						{
+							object valueFrom = propertyInfoFrom.GetValue(cimStrokeFrom);
+							object valueTo = propertyInfoTo.GetValue(cimStrokeTo);
+
+							if (propertyInfoTo.Name == ReflectionUtils.GetProperty<CIMStroke>("Width").Name)
+							{
+								if (Math.Abs(cimStrokeFrom.Width - cimStrokeTo.Width) > Double.Epsilon)
+								{
+									cimStrokeTo.Width = cimStrokeFrom.Width;
+									propertyPair.HasChanged = true;
+								}
+							}
+							else if (!EqualsByValue(valueFrom, valueTo))
+							{
+								propertyInfoTo.SetValue(cimStrokeTo, valueFrom);
+								propertyPair.HasChanged = true;
+							}
+						}
+
+						//set back
+						strokeProperties[ii] = propertyPair;
+					}
+
+					CIMGeometricEffect[] cimEffectsFrom = cimStrokeFrom.Effects;
+					CIMGeometricEffect[] cimEffectsTo = cimStrokeTo.Effects;
+
+					if (cimEffectsFrom == null && cimEffectsTo == null)
+					{
+						// Both null - considered equal
+						continue;
+					}
+
+					if (cimEffectsFrom?.Length != cimEffectsTo?.Length)
+					{
+						return false;
+					}
+
+					if (cimGeometricEffectTypesToIgnore.Count > 0)
+					{
+						//remove given CIMGeometricEffectTypes
+						CIMGeometricEffect[] newcimEffectsFrom = cimEffectsFrom.Where(e => !cimGeometricEffectTypesToIgnore.Contains(e.GetType())).ToArray();
+						cimStrokeFrom.Effects = newcimEffectsFrom;
+						cimSymbolLayersFrom[i] = cimStrokeFrom;
+
+						CIMGeometricEffect[] newcimEffectsTo = cimEffectsTo.Where(e => !cimGeometricEffectTypesToIgnore.Contains(e.GetType())).ToArray();
+						cimStrokeTo.Effects = newcimEffectsTo;
+						cimSymbolLayersTo[i] = cimStrokeTo;
+					}
+				}
+
+				//is it now equals?
+				symrefStrFrom = symrefFromClone.ToJson();
+				symrefStrTo = symrefToClone.ToJson();
+				if (symrefStrFrom == symrefStrTo)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private static IDictionary<string, object> ToDictionary(object source)
+	{
+		var fields = source.GetType().GetFields(
+			BindingFlags.GetField |
+			BindingFlags.Public |
+			BindingFlags.Instance).ToDictionary
+		(
+			propInfo => propInfo.Name,
+			propInfo => propInfo.GetValue(source) ?? string.Empty
+		);
+
+		var properties = source.GetType().GetProperties(
+			BindingFlags.GetField |
+			BindingFlags.GetProperty |
+			BindingFlags.Public |
+			BindingFlags.Instance).ToDictionary
+		(
+			propInfo => propInfo.Name,
+			propInfo => propInfo.GetValue(source, null) ?? string.Empty
+		);
+
+		return fields.Concat(properties).ToDictionary(key => key.Key, value => value.Value); ;
+	}
+
+	private static bool IsAnonymousType(object instance)
+	{
+		if (instance == null)
+			return false;
+
+		return instance.GetType().Namespace == null;
+	}
+
+	private static IDictionary<string, object> ToFlattenDictionary(object source, string parentPropertyKey = null, IDictionary<string, object> parentPropertyValue = null)
+	{
+		var propsDic = parentPropertyValue ?? new Dictionary<string, object>();
+		//foreach (var item in source.ToDictionary())
+		foreach (var item in ToDictionary(source))
+		{
+			var key = string.IsNullOrEmpty(parentPropertyKey) ? item.Key : $"{parentPropertyKey}.{item.Key}";
+			//if (item.Value.IsAnonymousType())
+			//	return item.Value.ToFlattenDictionary(key, propsDic);
+			if (IsAnonymousType(item.Value))
+				return ToFlattenDictionary(item.Value,key, propsDic);
+			else
+				propsDic.Add(key, item.Value);
+		}
+		return propsDic;
+	}
+
+	public static bool EqualsByValue(object source, object destination)
+	{
+		//var firstDic = source.ToFlattenDictionary();
+		//var secondDic = destination.ToFlattenDictionary();
+		var firstDic = ToFlattenDictionary(source);
+		var secondDic = ToFlattenDictionary(destination);
+		if (firstDic.Count != secondDic.Count)
+			return false;
+		if (firstDic.Keys.Except(secondDic.Keys).Any())
+			return false;
+		if (secondDic.Keys.Except(firstDic.Keys).Any())
+			return false;
+		return firstDic.All(pair => pair.Value.ToString().Equals(secondDic[pair.Key].ToString())
+		);
 	}
 
 	[CanBeNull]

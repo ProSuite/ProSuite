@@ -90,57 +90,79 @@ public static class Utils
 		                   list.Select(n => n.Substring(pre, n.Length - pre - post)));
 	}
 
-	public static void ShowFeedback(ImportSLDLMButtonBase.IFeedback feedback, Window owner = null, IMsg msg = null)
+	public static void ShowFeedback(string operation, ImportSLDLMButtonBase.IFeedback feedback, Window owner = null, IMsg msg = null)
 	{
-		const string caption = "SLD/SLM Configuration";
-		const int maxMessages = 8;
+		if (string.IsNullOrEmpty(operation))
+			throw new ArgumentNullException(nameof(operation));
+		if (feedback is null)
+			throw new ArgumentNullException(nameof(feedback));
 
-		ShowFeedback(feedback, maxMessages, caption, owner, msg);
+		const int logLimit = 20;
+		const int boxLimit = 10;
+
+		string message = FormatFeedback(operation, feedback, logLimit);
+		msg ??= _msg;
+		MessageBoxImage icon;
+		bool wantDialog = owner != null;
+
+		if (feedback.Errors > 0)
+		{
+			icon = MessageBoxImage.Error;
+			msg.Error(message);
+			wantDialog = true;
+		}
+		else if (feedback.Warnings > 0)
+		{
+			icon = MessageBoxImage.Warning;
+			msg.Warn(message);
+		}
+		else // no errors, no warnings
+		{
+			icon = MessageBoxImage.Information;
+			msg.Info(message);
+		}
+
+		if (wantDialog)
+		{
+			string caption = operation;
+			message = FormatFeedback(operation, feedback, boxLimit);
+
+			if (owner is null)
+			{
+				MessageBox.Show(message, caption, MessageBoxButton.OK, icon);
+			}
+			else
+			{
+				MessageBox.Show(owner, message, caption, MessageBoxButton.OK, icon);
+			}
+		}
 	}
 
-	public static void ShowFeedback(ImportSLDLMButtonBase.IFeedback feedback, int maxMessages, string caption, Window owner = null, IMsg msg = null)
+	private static string FormatFeedback(string action, ImportSLDLMButtonBase.IFeedback feedback, int maxMessages)
 	{
 		if (feedback is null)
 			throw new ArgumentNullException(nameof(feedback));
 
-		caption ??= "Feedback Messages";
-		msg ??= _msg;
+		action ??= "(null)";
+
 		var sb = new StringBuilder();
-		string message;
-		MessageBoxImage icon;
 
 		if (feedback.Errors > 0)
 		{
-			sb.AppendLine("Validation failed:");
+			sb.AppendLine($"{action} completed with errors:");
 			AppendMessages(sb, feedback, maxMessages);
-			message = sb.TrimEnd().ToString();
-			icon = MessageBoxImage.Error;
-			msg.Error($"{caption}: {message}");
 		}
 		else if (feedback.Warnings > 0)
 		{
-			sb.AppendLine("Validated with warnings:");
+			sb.AppendLine($"{action} completed with warnings:");
 			AppendMessages(sb, feedback, maxMessages);
-			message = sb.TrimEnd().ToString();
-			icon = MessageBoxImage.Warning;
-			msg.Warn($"{caption}: {message}");
 		}
 		else
 		{
-			sb.AppendLine("Validation successful");
-			message = sb.TrimEnd().ToString();
-			icon = MessageBoxImage.Information;
-			msg.Info($"{caption}: {message}");
+			sb.AppendLine($"{action} completed successfully");
 		}
 
-		if (owner is null)
-		{
-			MessageBox.Show(message, caption, MessageBoxButton.OK, icon);
-		}
-		else
-		{
-			MessageBox.Show(owner, message, caption, MessageBoxButton.OK, icon);
-		}
+		return sb.TrimEnd().ToString();
 	}
 
 	private static void AppendMessages(StringBuilder sb, ImportSLDLMButtonBase.IFeedback feedback, int maxMessages)

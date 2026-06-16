@@ -13,7 +13,7 @@ using Subtype = ArcGIS.Core.Data.Subtype;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcRow : IObject, IRowSubtypes
+	public class ArcRow : IObject, IRowSubtypes, IDisposable
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -371,6 +371,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		#endregion
+
+		public virtual void Dispose()
+		{
+			_proRow?.Dispose();
+			(_parentTable as ArcTable)?.Dispose();
+		}
 	}
 
 	public class ArcFeature : ArcRow, IFeature, IFeatureChanges
@@ -534,6 +540,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			TryOrRefreshRow<Feature>(f => { f.SetShape(newGeometry); });
+		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+
+			_proFeature?.Dispose();
+			(_parentFeatureClass as ArcFeatureClass)?.Dispose();
 		}
 
 		#endregion

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList;
 
@@ -15,9 +17,9 @@ public class DatabaseSourceClass : SourceClass
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly int _statusFieldIndex;
-
 	[NotNull] private readonly List<WorkListFilterDefinitionExpression> _expressions = new();
+	[NotNull] private readonly Dictionary<string, int> _subFields;
+	[NotNull] private readonly string _subFieldNames;
 
 	public DatabaseSourceClass(
 		GdbTableIdentity tableIdentity,
@@ -25,11 +27,14 @@ public class DatabaseSourceClass : SourceClass
 		[CanBeNull] IAttributeReader attributeReader,
 		[CanBeNull] string definitionQuery,
 		WorkspaceDbType dbType = WorkspaceDbType.Unknown)
-		: base(tableIdentity, schema, attributeReader)
+		: base(tableIdentity, attributeReader)
 	{
 		Assert.ArgumentNotNull(schema, nameof(schema));
 
-		_statusFieldIndex = schema.StatusFieldIndex;
+		_subFields = schema.SubFields;
+		_subFieldNames = StringUtils.Concatenate(schema.SubFields.Keys, ",");
+		Assert.NotNullOrEmpty(_subFieldNames);
+
 		StatusField = schema.StatusField;
 		TodoValue = schema.TodoValue;
 		DoneValue = schema.DoneValue;
@@ -39,26 +44,35 @@ public class DatabaseSourceClass : SourceClass
 		WorkspaceDbType = dbType;
 	}
 
+	[CanBeNull]
+	protected object GetValue([NotNull] Row row, [NotNull] string fieldName)
+	{
+		bool exists = _subFields.TryGetValue(fieldName, out int index);
+		Assert.True(exists, $"{fieldName} is not a subfield");
+
+		return row[index];
+	}
+
 	public WorkItemStatus GetStatus([NotNull] Row row)
 	{
 		Assert.ArgumentNotNull(row, nameof(row));
 
 		try
 		{
-			object value = row[_statusFieldIndex];
+			object value = GetValue(row, StatusField);
 
 			return GetStatus(value);
 		}
-		catch (Exception e)
+		catch (Exception ex)
 		{
-			_msg.Error($"Error get value from row {row} with index {_statusFieldIndex}",
-			           e);
+			_msg.ErrorFormat("{0} error getting value from field {1}. {2}", StatusField,
+			                 GdbObjectUtils.GetDisplayValue(row), ex.Message);
 
 			return WorkItemStatus.Todo;
 		}
 	}
 
-	public WorkItemStatus GetStatus([CanBeNull] object value)
+	private WorkItemStatus GetStatus([CanBeNull] object value)
 	{
 		if (TodoValue.Equals(value))
 		{
@@ -146,39 +160,15 @@ public class DatabaseSourceClass : SourceClass
 		return ArcGISTableId;
 	}
 
-	protected override void EnsureValidFilterCore(ref QueryFilter filter,
-	                                              WorkItemStatus? statusFilter)
+	public override T CreateWorkItem<T>(Row row)
 	{
-		string result = string.Empty;
-
-		if (statusFilter != null)
-		{
-			object value = GetValue(statusFilter.Value);
-
-			result = value.Equals(TodoValue)
-				         ? $"({StatusField} = {value} OR {StatusField} IS NULL)"
-				         : $"{StatusField} = {value}";
-		}
-
-		if (DefaultDefinitionQuery == null)
-		{
-			return;
-		}
-
-		if (! string.IsNullOrEmpty(result))
-		{
-			result += " AND ";
-		}
-
-		result += DefaultDefinitionQuery;
-
-		filter.WhereClause = result;
+		var item = base.CreateWorkItem<T>(row);
+		item.Status = GetStatus(row);
+		return item;
 	}
 
-	protected override string GetRelevantSubFieldsCore(string subFields)
+	protected override string GetRelevantSubFieldsCore()
 	{
-		return string.IsNullOrEmpty(StatusField)
-			       ? subFields
-			       : $"{subFields},{StatusField}";
+		return _subFieldNames;
 	}
 }

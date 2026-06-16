@@ -166,7 +166,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		});
 
 		SelectionCursors = FirstPhaseCursors;
-		SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
+
+		SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), ShiftPressedToSelect));
 
 		IsInSketchPhase = false;
 	}
@@ -289,7 +290,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			return;
 		}
 
-		// This is called repeatedly while keeping the shift key pressed.
+		// This can be called repeatedly while keeping the shift key pressed (depends on the machine).
 		// Return if intermittent selection phase is running.
 		if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true)
 		{

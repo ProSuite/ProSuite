@@ -1,5 +1,4 @@
 using System;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons;
@@ -9,7 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain;
 
-public abstract class WorkItem : NotifyPropertyChangedBase, IWorkItem
+public class WorkItem : NotifyPropertyChangedBase, IWorkItem
 {
 	private readonly double _extentExpansionFactor = 1.1;
 	private readonly double _minimumSizeDegrees = 0.001;
@@ -24,10 +23,7 @@ public abstract class WorkItem : NotifyPropertyChangedBase, IWorkItem
 
 	#region constructors
 
-	protected WorkItem(long uniqueTableId, [NotNull] Row row)
-		: this(uniqueTableId, new GdbRowIdentity(row)) { }
-
-	protected WorkItem(long uniqueTableId, GdbRowIdentity identity)
+	public WorkItem(long uniqueTableId, GdbRowIdentity identity)
 	{
 		UniqueTableId = uniqueTableId;
 		GdbRowProxy = identity;

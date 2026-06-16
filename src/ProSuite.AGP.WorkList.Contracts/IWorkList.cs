@@ -117,6 +117,5 @@ public interface IWorkList : IRowCache, IWorkItemData
 	/// </summary>
 	void LoadItems();
 
-	void LoadItems(QueryFilter filter,
-	               WorkItemStatus? statusFilter = null);
+	void LoadItems(QueryFilter filter);
 }

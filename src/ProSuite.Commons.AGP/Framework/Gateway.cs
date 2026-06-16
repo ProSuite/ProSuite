@@ -218,7 +218,7 @@ public static class Gateway
 	}
 
 	/// <summary>
-	/// Write the given message to the appropriate log.
+	/// Write the given error message to the appropriate log.
 	/// Do no other reporting (no dialog, no toast, just log).
 	/// </summary>
 	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
@@ -235,6 +235,40 @@ public static class Gateway
 		else
 		{
 			logger.Error($"{caption}: {message}");
+		}
+	}
+
+	/// <summary>
+	/// Report the given warning message without interrupting the
+	/// user (i.e., no modal dialog box): write it to the given logger
+	/// (and maybe to other feedback channels, e.g., toast notifications).
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
+	public static void ReportWarning(string message, IMsg logger, string caption = null)
+	{
+		// Here we COULD consider a toast notification (in addition to a log entry)
+		// For now, just forward to LogWarning:
+		LogWarning(message, logger, caption);
+	}
+
+	/// <summary>
+	/// Write the given warning message to the appropriate log.
+	/// Do no other reporting (no dialog, no toast, just log).
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
+	public static void LogWarning(string message, IMsg logger, string caption = null)
+	{
+		if (message is null) return;
+
+		logger ??= _msg; // default to our own logger
+
+		if (string.IsNullOrEmpty(caption))
+		{
+			logger.Warn(message);
+		}
+		else
+		{
+			logger.Warn($"{caption}: {message}");
 		}
 	}
 

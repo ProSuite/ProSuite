@@ -33,7 +33,7 @@ namespace ProSuite.Microservices.Client.Test
 			Assert.NotNull(tableType);
 
 			const string filterExpression = "OBJECTID > 100";
-			Dataset dataset = new TestDataset("TEST_TABLE");
+			Dataset dataset = new TestVectorDataset("TEST_TABLE");
 			var model = new TestModel("TEST_MODEL");
 			model.AddDataset(dataset);
 
@@ -123,7 +123,7 @@ namespace ProSuite.Microservices.Client.Test
 			Assert.NotNull(tableType);
 
 			const string filterExpression = "OBJECTID > 100";
-			Dataset dataset = new TestDataset("TEST_TABLE");
+			Dataset dataset = new TestVectorDataset("TEST_TABLE");
 			var model = new TestModel("TEST_MODEL");
 			model.AddDataset(dataset);
 
@@ -200,7 +200,7 @@ namespace ProSuite.Microservices.Client.Test
 			Assert.NotNull(tableType);
 
 			const string filterExpression = "OBJECTID > 100";
-			Dataset dataset = new TestDataset("TEST_TABLE");
+			Dataset dataset = new TestVectorDataset("TEST_TABLE");
 			var model = new TestModel("TEST_MODEL");
 			model.AddDataset(dataset);
 
@@ -312,7 +312,7 @@ namespace ProSuite.Microservices.Client.Test
 			Assert.NotNull(tableType);
 
 			const string filterExpression = "OBJECTID > 100";
-			Dataset dataset = new TestDataset("TEST_TABLE");
+			Dataset dataset = new TestVectorDataset("TEST_TABLE");
 			var model = new TestModel("TEST_MODEL");
 			model.AddDataset(dataset);
 
@@ -439,9 +439,9 @@ namespace ProSuite.Microservices.Client.Test
 			#endregion
 		}
 
-		private class TestDataset : VectorDataset
+		private class TestVectorDataset : VectorDataset
 		{
-			public TestDataset(string name) : base(name) { }
+			public TestVectorDataset(string name) : base(name) { }
 		}
 	}
 }

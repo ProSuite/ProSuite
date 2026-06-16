@@ -138,8 +138,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 				//		.Select(f => f.Class)
 				//		.First(c => c.ObjectClassID == gdbObjRef.ClassId) as IFeatureClass;
 
-				IPointCollection pointsToAdd =
-					CreateCrackPointCollection(crackPointsMsg.CrackPoints);
+				IEnumerable<CrackPointMsg> crackablePoints =
+					crackPointsMsg.CrackPoints.Where(cp => ! cp.ViolatesMinimumSegmentLength);
+
+				IPointCollection pointsToAdd = CreateCrackPointCollection(crackablePoints);
 
 				IFeature feature = featureByObjRef[gdbObjRef];
 
@@ -293,7 +295,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.Cracker
 		}
 
 		private static IPointCollection CreateCrackPointCollection(
-			IReadOnlyCollection<CrackPointMsg> crackPoints)
+			IEnumerable<CrackPointMsg> crackPoints)
 		{
 			IMultipoint multipoint = GeometryFactory.CreateMultipoint(CreatePoints(crackPoints));
 

@@ -71,8 +71,8 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	{
 		if (IsPointClick)
 		{
-			Assert.NotNull(_clickPoint);
-			return GetSelectionGeometryCore(_clickPoint);
+			Assert.NotNull(_clickPoint, "ClickPoint is null");
+			return PickerUtils.ExpandGeometryByPixels(_clickPoint, Tolerance);
 		}
 
 		// Otherwise relational operators and spatial queries return the wrong result
@@ -197,11 +197,6 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	public void Dispose()
 	{
 		PressedKeys.Clear();
-	}
-
-	protected virtual Geometry GetSelectionGeometryCore(Geometry geometry)
-	{
-		return PickerUtils.ExpandGeometryByPixels(geometry, Tolerance);
 	}
 
 	private void AreModifierKeysPressed()
