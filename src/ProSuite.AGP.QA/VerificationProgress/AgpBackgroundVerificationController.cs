@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
@@ -17,9 +18,7 @@ using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.UI;
-using ProSuite.Commons.UI.Env;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
@@ -289,10 +288,10 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 				QualityVerification verification = result.GetQualityVerification(spec);
 
-				var form = new QAVerificationForm(new NopDomainTransactionManager());
-				form.SetVerification(verification, verification.ContextType, verification.ContextName);
-				form.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-				UIEnvironment.ShowDialog(form);
+				bool applyDarkTheme =
+					FrameworkApplication.ApplicationTheme == ApplicationTheme.Dark;
+
+				QAVerificationForm.ShowVerificationDialog(verification, applyDarkTheme);
 			}
 			catch (Exception e)
 			{

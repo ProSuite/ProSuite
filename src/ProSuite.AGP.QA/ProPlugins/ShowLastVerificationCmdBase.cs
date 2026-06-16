@@ -1,9 +1,7 @@
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.AGP.Framework;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Env;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
@@ -58,10 +56,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			QualityVerification verification = result.GetQualityVerification(spec);
 
-			var form = new QAVerificationForm(new NopDomainTransactionManager());
-			form.SetVerification(verification, verification.ContextType, verification.ContextName);
-			form.StartPosition = FormStartPosition.CenterScreen;
-			UIEnvironment.ShowDialog(form);
+			bool applyDarkTheme = FrameworkApplication.ApplicationTheme == ApplicationTheme.Dark;
+
+			QAVerificationForm.ShowVerificationDialog(verification, applyDarkTheme);
 
 			return true;
 		}

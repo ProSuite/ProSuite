@@ -6,7 +6,9 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Env;
 using ProSuite.Commons.UI.Persistence.WinForms;
+using ProSuite.Commons.UI.WinForms;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.Core.Properties;
 
@@ -119,6 +121,25 @@ namespace ProSuite.UI.Core.QA.VerificationResult
 			_verification = verification;
 			_contextType = contextType;
 			_contextName = contextName;
+		}
+
+		public static void ShowVerificationDialog(
+			[NotNull] QualityVerification verification,
+			bool applyDarkTheme = false)
+		{
+			Assert.ArgumentNotNull(verification, nameof(verification));
+
+			var form = new QAVerificationForm(new NopDomainTransactionManager());
+
+			if (applyDarkTheme)
+			{
+				WinFormsThemeUtils.ApplyDarkTheme(form);
+			}
+
+			form.SetVerification(verification, verification.ContextType, verification.ContextName);
+			form.StartPosition = FormStartPosition.CenterScreen;
+
+			UIEnvironment.ShowDialog(form);
 		}
 
 		private QAVerificationDisplayMode SelectedDisplayMode
@@ -483,6 +504,12 @@ namespace ProSuite.UI.Core.QA.VerificationResult
 			_textBoxWarningCount.BackColor = warningCount == 0
 				                                 ? colorNoIssues
 				                                 : colorWarnings;
+
+			// Ensure black text on bright status colours regardless of theme
+			_textBoxVerificationStatus.ForeColor = Color.Black;
+			_textBoxIssueCount.ForeColor = Color.Black;
+			_textBoxErrorCount.ForeColor = Color.Black;
+			_textBoxWarningCount.ForeColor = Color.Black;
 
 			Render(SelectedDisplayMode);
 
