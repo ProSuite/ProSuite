@@ -7,6 +7,7 @@ using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong;
 
+[UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public class PartialCutAlongOptions : PartialOptionsBase
 {
 	#region Overridable Settings
