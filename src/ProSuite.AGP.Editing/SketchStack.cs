@@ -81,7 +81,7 @@ public class SketchStack
 		// TEST
 		Multipart polycurve = sketch as Multipart;
 
-		if (polycurve?.PointCount > 0)
+		if (sketch.HasZ && polycurve?.PointCount > 0)
 		{
 			MapPoint lastPoint = polycurve.Points[polycurve.PointCount - 1];
 
