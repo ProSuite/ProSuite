@@ -93,7 +93,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
-		ZValueSource zValueSource = _cutAlongToolOptions.ZValueSource;
+		ChangeAlongZSource zValueSource = _cutAlongToolOptions.ZValueSource;
 
 		EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
@@ -103,10 +103,13 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 		bool insertVerticesInTarget = _cutAlongToolOptions.InsertVerticesInTarget;
 
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider =
+			_cutAlongToolOptions.GetZSourceOptionProvider();
+
 		List<ResultFeature> updatedFeatures = MicroserviceClient.ApplyCutLines(
 			selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
 			customTolerance, zValueSource, insertVerticesInTarget, cancellationToken,
-			out newChangeAlongCurves);
+			out newChangeAlongCurves, zSourceProvider);
 
 		// Clear the sketch to prevent duplicate calls to OnSketchCompleteAsync
 		ActiveMapView.ClearSketchAsync();
@@ -181,13 +184,16 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
-		ZValueSource zValueSource = _cutAlongToolOptions.ZValueSource;
+		ChangeAlongZSource zValueSource = _cutAlongToolOptions.ZValueSource;
 
 		EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
 		double? customTolerance = _cutAlongToolOptions.MinimalToleranceApply
 			                          ? _cutAlongToolOptions.MinimalTolerance
 			                          : null;
+
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider =
+			_cutAlongToolOptions.GetZSourceOptionProvider();
 
 		// Log geometry types of selected features
 		foreach (Feature feature in selectedFeatures)
@@ -198,7 +204,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 		ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
 			selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, customTolerance,
-			zValueSource, cancellationToken);
+			zValueSource, cancellationToken, zSourceProvider);
 
 		return result;
 	}

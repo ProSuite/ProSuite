@@ -15,6 +15,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
@@ -407,21 +408,31 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 			var zSources = request.CalculationRequest.ZSources;
 
-			// Default: target
 			ChangeAlongZSource zSource = ChangeAlongZSource.Target;
+			List<DatasetSpecificValue<ChangeAlongZSource>> datasetSpecificZSources = null;
 
-			if (zSources.Count == 1 && string.IsNullOrEmpty(zSources[0].DatasetName))
+			foreach (var zSourceMsg in zSources)
 			{
-				zSource = (ChangeAlongZSource) zSources[0].ZSource;
-			}
-			else if (zSources.Count > 1)
-			{
-				throw new NotImplementedException("Per-class Z source is not yet implemented");
+				if (string.IsNullOrEmpty(zSourceMsg.DatasetName))
+				{
+					zSource = (ChangeAlongZSource) zSourceMsg.ZSource;
+				}
+				else
+				{
+					if (datasetSpecificZSources == null)
+					{
+						datasetSpecificZSources = new List<DatasetSpecificValue<ChangeAlongZSource>>();
+					}
+
+					datasetSpecificZSources.Add(
+						new DatasetSpecificValue<ChangeAlongZSource>(
+							zSourceMsg.DatasetName, (ChangeAlongZSource) zSourceMsg.ZSource));
+				}
 			}
 
 			DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider =
 				new DatasetSpecificSettingProvider<ChangeAlongZSource>(
-					"Z values for changed vertices", zSource);
+					"Z values for changed vertices", zSource, datasetSpecificZSources);
 
 			var cutter = new FeatureCutter(sourceFeatures)
 			             {
