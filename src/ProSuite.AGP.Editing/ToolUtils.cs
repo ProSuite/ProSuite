@@ -341,6 +341,16 @@ public static class ToolUtils
 			return true;
 		}
 
+		if (currentTool.Equals("GoTopRoofs_CreateFlyingRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateBarrelDomeRoofBaseplateTool"))
+		{
+			return true;
+		}
+
 		if (currentTool.Equals("esri_editing_PushPullTool"))
 		{
 			return true;
