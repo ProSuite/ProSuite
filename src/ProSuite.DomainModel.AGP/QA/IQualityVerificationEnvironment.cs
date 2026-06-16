@@ -69,6 +69,12 @@ public interface IQualityVerificationEnvironment
 	Geometry LastVerificationPerimeter { get; set; }
 
 	/// <summary>
+	/// The result of the last quality verification run in this session.
+	/// </summary>
+	[CanBeNull]
+	IQualityVerificationResult LastVerificationResult { get; set; }
+
+	/// <summary>
 	/// Gets or sets the date for filtering issues by the 'Latest verification'.
 	/// </summary>
 	DateTime? LastVerificationFilterStartDate { get; set; }
