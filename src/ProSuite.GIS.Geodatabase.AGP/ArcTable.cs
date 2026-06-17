@@ -121,7 +121,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				while (rowCursor.MoveNext())
 				{
-					return ArcGeodatabaseUtils.ToArcRow(rowCursor.Current);
+					return ArcGeodatabaseUtils.ToArcRow(rowCursor.Current, this);
 				}
 			}
 
@@ -699,11 +699,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			proQueryFilter.WhereClause = queryFilter.WhereClause;
 			proQueryFilter.PostfixClause = queryFilter.PostfixClause;
 
-			if (proQueryFilter == null)
-			{
-				throw new ArgumentException("Unknown filter type");
-			}
-
 			return proQueryFilter;
 		}
 
@@ -757,8 +752,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public esriDatasetType Type => _dataset.Type;
 
-		public IWorkspaceName WorkspaceName =>
-			new ArcWorkspaceName((ArcWorkspace) _dataset.Workspace);
+		// Delegate to the workspace itself: the dataset may live in a BasicWorkspace
+		// (shapefiles, plug-in datasources), which is not an ArcWorkspace and would fail a cast.
+		public IWorkspaceName WorkspaceName => _dataset.Workspace.GetWorkspaceName();
 
 		#endregion
 	}

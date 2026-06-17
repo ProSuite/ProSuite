@@ -81,8 +81,8 @@ namespace ProSuite.GIS.Geodatabase.AGP.Test
 			                   "Precondition: a second physical connection (Version.Connect) to " +
 			                   "the same version must have a distinct datastore handle.");
 
-			var workspace1 = (ArcWorkspace) ArcWorkspace.Create(gdb1);
-			var workspace2 = (ArcWorkspace) ArcWorkspace.Create(gdb2);
+			var workspace1 = ArcWorkspace.Create(gdb1);
+			var workspace2 = ArcWorkspace.Create(gdb2);
 
 			Assert.AreEqual(handle1, workspace1.Geodatabase.Handle.ToInt64(),
 			                "Workspace for gdb1 must wrap gdb1.");
@@ -170,7 +170,8 @@ namespace ProSuite.GIS.Geodatabase.AGP.Test
 					Instance = _oracleInstance
 				};
 
-			return (ArcGIS.Core.Data.Geodatabase) WorkspaceUtils.OpenDatastore(connectionProperties);
+			return (ArcGIS.Core.Data.Geodatabase) WorkspaceUtils.OpenDatastore(
+				connectionProperties);
 		}
 
 		/// <summary>
@@ -185,7 +186,7 @@ namespace ProSuite.GIS.Geodatabase.AGP.Test
 			using Version currentVersion = versionManager.GetCurrentVersion();
 
 			// Version.Connect() opens a NEW physical connection to this version.
-			return (ArcGIS.Core.Data.Geodatabase) currentVersion.Connect();
+			return currentVersion.Connect();
 		}
 	}
 }
