@@ -20,7 +20,7 @@ namespace ProSuite.Processing
 
 		private readonly IList<Setting> _settings;
 
-		public string Name { get; private set; }
+		public string Name { get; set; }
 
 		public string TypeAlias { get; set; }
 

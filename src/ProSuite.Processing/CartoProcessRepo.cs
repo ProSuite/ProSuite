@@ -123,6 +123,53 @@ namespace ProSuite.Processing
 			}
 		}
 
+		public bool CanRenameProcess(string oldName, string newName, out string reason)
+		{
+			if (string.IsNullOrEmpty(newName))
+			{
+				reason = "Name must not be empty";
+				return false;
+			}
+
+			if (string.Equals(newName, oldName, StringComparison.Ordinal))
+			{
+				reason = "Name must not be the same as the old name";
+				return false;
+			}
+
+			int index;
+
+			lock (_syncLock)
+			{
+				index = FindIndex(_definitions, newName);
+			}
+
+			if (index >= 0)
+			{
+				reason = "Name already exists";
+				return false;
+			}
+
+			reason = null;
+			return true;
+		}
+
+		public void RenameProcess(string oldName, string newName)
+		{
+			lock (_syncLock)
+			{
+				int index = FindIndex(_definitions, oldName);
+				if (index < 0)
+				{
+					throw new InvalidOperationException($"No process found with name '{oldName}'");
+				}
+				var definition = _definitions[index];
+				var config = definition.Config;
+				config.Name = newName; // rename
+				_definitions[index] = new CartoProcessDefinition(config, definition.ResolvedType);
+			}
+		}
+
 		#region Private utils
 
 		private void Replace([CanBeNull] IEnumerable<CartoProcessDefinition> definitions)
