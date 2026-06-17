@@ -412,6 +412,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public void Dispose()
 		{
+			// Remove ourselves from the parent workspace's table cache first (see ArcTable.Dispose).
+			RemoveFromWorkspaceCache();
+
 			_proFeatureClass?.Dispose();
 			ProFeatureClassDefinition.Dispose();
 			ProTable.Dispose();

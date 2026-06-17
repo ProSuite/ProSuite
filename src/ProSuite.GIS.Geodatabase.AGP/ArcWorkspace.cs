@@ -811,7 +811,18 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 	internal void Cache([NotNull] ArcTable table)
 	{
-		_tablesByName.TryAdd(table.Name, table);
+		if (_tablesByName.TryAdd(table.Name, table))
+		{
+			// Record our handle so the table can find us (via GetByHandle) and remove itself
+			// from this cache on Dispose.
+			table.RememberWorkspaceHandle(Geodatabase.Handle.ToInt64());
+		}
+	}
+
+	internal void Uncache([NotNull] ArcTable table)
+	{
+		// Remove only if this very instance is the cached one (instance-matched removal).
+		_tablesByName.TryRemove(new KeyValuePair<string, ArcTable>(table.Name, table));
 	}
 
 	internal ArcDomain GetDomainByName(string name)
