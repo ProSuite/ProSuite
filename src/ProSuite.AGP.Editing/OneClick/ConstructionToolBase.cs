@@ -973,7 +973,19 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			SurfaceZsResult result = currentMap.GetZsFromSurface(point);
 
 			// Surface data is available if we got a valid result with geometry
-			return result?.Geometry != null && result.Status == SurfaceZsResultStatus.Ok;
+			bool zHasSurface = result.Status == SurfaceZsResultStatus.Ok;
+
+			if (zHasSurface)
+			{
+				var resultPoint = result.Geometry as MapPoint;
+
+				if (resultPoint != null && ! double.IsNaN(resultPoint.Z))
+				{
+					OnSketchPointZAssigned(resultPoint);
+				}
+			}
+
+			return result?.Geometry != null && zHasSurface;
 		}
 		catch (Exception ex)
 		{
@@ -982,6 +994,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			return false;
 		}
 	}
+
+	protected virtual void OnSketchPointZAssigned(MapPoint sketchPointWithZ) { }
 
 	public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
