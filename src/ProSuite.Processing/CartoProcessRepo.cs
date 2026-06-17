@@ -84,6 +84,70 @@ namespace ProSuite.Processing
 			doc.Save(writer);
 		}
 
+		/// <summary>Create and add a new carto process with a random name</summary>
+		/// <param name="resolvedType">Type for the new process (optional)</param>
+		/// <returns>The definition for the new carto process</returns>
+		public CartoProcessDefinition AddProcess(Type resolvedType = null)
+		{
+			var random = new Random();
+
+			lock (_syncLock)
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					const int min = 0x10000000;
+					const int max = 0x7FFFFFFF;
+					int number = random.Next(min, max);
+
+					var name = $"New Process {number:X8}";
+					string typeAlias = resolvedType?.Name;
+					const string description = "New Carto Process";
+
+					if (FindIndex(_definitions, name) < 0)
+					{
+						var config = CartoProcessConfig.Create(name, typeAlias, description);
+						var definition = new CartoProcessDefinition(config, resolvedType);
+						_definitions.Add(definition);
+						return definition;
+					}
+				}
+			}
+
+			throw new InvalidOperationException("Failed to generate a unique name for the new process");
+		}
+
+		/// <summary>Add the given carto process to the repo.</summary>
+		/// <seealso cref="AddProcess(Type)"/>
+		public CartoProcessDefinition AddProcess(CartoProcessConfig config, Type resolvedType = null)
+		{
+			if (config is null)
+				throw new ArgumentNullException(nameof(config));
+
+			var name = config.Name;
+			if (string.IsNullOrEmpty(name))
+				throw new InvalidOperationException("Name is missing");
+
+			if (resolvedType != null)
+			{
+				config.TypeAlias = resolvedType.Name;
+			}
+
+			lock (_syncLock)
+			{
+				int index = FindIndex(_definitions, name);
+
+				if (index < 0)
+				{
+					var definition = new CartoProcessDefinition(config, resolvedType);
+					_definitions.Add(definition);
+					return definition;
+				}
+
+				throw new InvalidOperationException(
+					$"Name '{name}' is already in use for another process");
+			}
+		}
+
 		public void UpdateProcess(CartoProcessConfig config, Type resolvedType = null)
 		{
 			if (config is null)
@@ -104,7 +168,8 @@ namespace ProSuite.Processing
 				int index = FindIndex(_definitions, name);
 				if (index < 0)
 				{
-					_definitions.Add(new CartoProcessDefinition(config, resolvedType));
+					//_definitions.Add(new CartoProcessDefinition(config, resolvedType));
+					throw new InvalidOperationException($"No process found with name '{name}'");
 				}
 				else
 				{
