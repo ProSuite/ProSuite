@@ -36,59 +36,70 @@ public static class AttributeUtils
 	                                [CanBeNull] FieldIndexCache fieldIndexCache = null)
 	{
 		// TODO search first based on name, or first based on role?
+		TableDefinition tableDefinition = null;
 
-		TableDefinition tableDefinition;
-
-		if (Equals(role, AttributeRole.Shape))
+		try
 		{
-			if (table is FeatureClass featureClass)
+			if (Equals(role, AttributeRole.Shape))
 			{
-				return GetShapeFieldIndex(featureClass, fieldIndexCache);
-			}
-		}
-		else if (Equals(role, AttributeRole.ShapeArea))
-		{
-			if (table is FeatureClass featureClass)
-			{
-				FeatureClassDefinition definition = featureClass.GetDefinition();
-
-				string areaField = DatasetUtils.GetAreaFieldName(definition);
-
-				if (areaField != null)
+				if (table is FeatureClass featureClass)
 				{
-					return fieldIndexCache?.GetFieldIndex(featureClass, areaField) ??
-					       definition.FindField(areaField);
+					FeatureClassDefinition definition = featureClass.GetDefinition();
+
+					string shapeField = definition.GetShapeField();
+
+					return fieldIndexCache?.GetFieldIndex(featureClass, shapeField) ??
+					       definition.FindField(shapeField);
 				}
 			}
-		}
-		else if (Equals(role, AttributeRole.ShapeLength))
-		{
-			if (table is FeatureClass featureClass)
+			else if (Equals(role, AttributeRole.ShapeArea))
 			{
-				FeatureClassDefinition definition = featureClass.GetDefinition();
-
-				string lengthField = DatasetUtils.GetLengthFieldName(definition);
-
-				if (lengthField != null)
+				if (table is FeatureClass featureClass)
 				{
-					return fieldIndexCache?.GetFieldIndex(featureClass, lengthField) ??
-					       definition.FindField(lengthField);
+					using FeatureClassDefinition definition = featureClass.GetDefinition();
+
+					string areaField = DatasetUtils.GetAreaFieldName(definition);
+
+					if (areaField != null)
+					{
+						return fieldIndexCache?.GetFieldIndex(featureClass, areaField) ??
+						       definition.FindField(areaField);
+					}
 				}
 			}
-		}
-		else if (Equals(role, AttributeRole.ObjectID))
-		{
+			else if (Equals(role, AttributeRole.ShapeLength))
+			{
+				if (table is FeatureClass featureClass)
+				{
+					using FeatureClassDefinition definition = featureClass.GetDefinition();
+
+					string lengthField = DatasetUtils.GetLengthFieldName(definition);
+
+					if (lengthField != null)
+					{
+						return fieldIndexCache?.GetFieldIndex(featureClass, lengthField) ??
+						       definition.FindField(lengthField);
+					}
+				}
+			}
+			else if (Equals(role, AttributeRole.ObjectID))
+			{
+				tableDefinition = table.GetDefinition();
+
+				string oidField = tableDefinition.GetObjectIDField();
+
+				return fieldIndexCache?.GetFieldIndex(table, oidField) ??
+				       tableDefinition.FindField(oidField);
+			}
+
 			tableDefinition = table.GetDefinition();
 
-			string oidField = tableDefinition.GetObjectIDField();
-
-			return fieldIndexCache?.GetFieldIndex(table, oidField) ??
-			       tableDefinition.FindField(oidField);
+			return tableDefinition.FindField(fieldName);
 		}
-
-		tableDefinition = table.GetDefinition();
-
-		return tableDefinition.FindField(fieldName);
+		finally
+		{
+			tableDefinition?.Dispose();
+		}
 	}
 
 	public static int GetFieldIndex([NotNull] TableDefinition definition,
@@ -170,18 +181,6 @@ public static class AttributeUtils
 		}
 
 		return KeyValuePair.Create(fieldName, fieldIndex);
-	}
-
-	// todo daro to Utils?
-	private static int GetShapeFieldIndex([NotNull] FeatureClass featureClass,
-	                                      [CanBeNull] FieldIndexCache fieldIndexCache)
-	{
-		FeatureClassDefinition definition = featureClass.GetDefinition();
-
-		string shapeField = definition.GetShapeField();
-
-		return fieldIndexCache?.GetFieldIndex(featureClass, shapeField) ??
-		       definition.FindField(shapeField);
 	}
 
 	[CanBeNull]
