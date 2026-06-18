@@ -10,6 +10,7 @@ using ArcGIS.Core.Data.Knowledge;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Ado;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -257,11 +258,11 @@ public static class WorkspaceUtils
         var deleted = false;
         using VersionManager manager = geodatabase.GetVersionManager();
 
-        Version version = manager.GetVersion(versionName);
+		Version version = manager.GetVersion(versionName);
 
         if (deleteChildVersions)
         {
-            DeleteVersionTree(version);
+            deleted = DeleteVersionTree(version);
         }
         else
         {
@@ -350,7 +351,9 @@ public static class WorkspaceUtils
 		using VersionManager manager = geodatabase.GetVersionManager();
 
 		DatabaseConnectionProperties props = GetConnectionProperties(geodatabase.GetConnectionString());
-		string name = $"{props.User}.{versionName}";
+		string name = ModelElementNameUtils.IsQualifiedName(versionName)
+			              ? versionName
+			              : $"{props.User}.{versionName}";
 
 		return manager.GetVersionNames()
 		              .Any(vn => string.Equals(vn, name,

@@ -17,6 +17,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
+using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
 
@@ -261,6 +262,30 @@ public static class DatasetUtils
 
 		throw new ArgumentOutOfRangeException(
 			$"Unsupported datastore type: {datastore.GetConnectionString()}.");
+	}
+
+	public static T OpenDataset<T>([NotNull] Version version, [NotNull] string datasetName)
+		where T : Dataset
+	{
+		ArcGIS.Core.Data.Geodatabase geodatabase = null;
+
+		try
+		{
+			geodatabase = version.Connect();
+
+			return OpenDataset<T>(geodatabase, datasetName);
+		}
+		catch (GeodatabaseTableException ex)
+		{
+			// dataset does not exist
+			string displayText = WorkspaceUtils.GetDatastoreDisplayText(version);
+			_msg.Debug($"Failed to open {datasetName} from {displayText}: {ex.Message}", ex);
+			throw;
+		}
+		finally
+		{
+			geodatabase?.Dispose();
+		}
 	}
 
 	/// <exception cref="ArgumentOutOfRangeException">Datastore is not Geodatabase nor
