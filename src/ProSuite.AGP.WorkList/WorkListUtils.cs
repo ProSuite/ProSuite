@@ -76,7 +76,7 @@ public static class WorkListUtils
 
 		if (workListLayers.Count == 0)
 		{
-			await LoadWorkListLayerToMapAsync(environment, worklist, workListFile);
+			await LoadWorkListLayerToMapAsync(environment, worklist);
 		}
 
 		if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
@@ -143,7 +143,7 @@ public static class WorkListUtils
 
 		if (workListLayers.Count == 0)
 		{
-			await LoadWorkListLayerToMapAsync(environment, worklist, workListFile);
+			await LoadWorkListLayerToMapAsync(environment, worklist);
 		}
 
 		if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
@@ -155,8 +155,7 @@ public static class WorkListUtils
 	}
 
 	private static async Task LoadWorkListLayerToMapAsync(IWorkEnvironment environment,
-	                                                      IWorkList workList,
-	                                                      string workListFile)
+	                                                      IWorkList workList)
 	{
 		OperationManager manager = MapView.Active.Map.OperationManager;
 
@@ -168,10 +167,7 @@ public static class WorkListUtils
 
 	public static IEnumerable<ISourceClass> CreateSourceClasses([NotNull] Map map)
 	{
-		if (map is null)
-		{
-			throw new ArgumentNullException(nameof(map));
-		}
+		ArgumentNullException.ThrowIfNull(map);
 
 		Dictionary<MapMember, List<long>> oidsByLayer = SelectionUtils.GetSelection(map);
 
@@ -189,15 +185,9 @@ public static class WorkListUtils
 	public static IEnumerable<ISourceClass> CreateSourceClasses(
 		[NotNull] Map map, [NotNull] XmlWorkListDefinition definition)
 	{
-		if (map is null)
-		{
-			throw new ArgumentNullException(nameof(map));
-		}
+		ArgumentNullException.ThrowIfNull(map);
 
-		if (definition is null)
-		{
-			throw new ArgumentNullException(nameof(definition));
-		}
+		ArgumentNullException.ThrowIfNull(definition);
 
 		var tablesById = new Dictionary<long, Table>();
 
