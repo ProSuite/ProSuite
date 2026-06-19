@@ -95,10 +95,27 @@ public static class PluginDatasourceUtils
 					identifier = part.Substring(index + 1).Trim();
 					break;
 				case "DATABASE":
-					database = part.Substring(index + 1).Trim();
+					var encodedString = part.Substring(index + 1).Trim();
+					database = PseudoPathDecode(encodedString);
 					break;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Create the <see cref="CIMStandardDataConnection.WorkspaceConnectionString"/>
+	/// to a plugin datasource (which looks like "DATABASE=foo;IDENTIFIER=bar").
+	/// Assumes that <paramref name="database"/> has already been pseudo-encoded
+	/// (use the output of <see cref="MakeConnectionPath"/>).
+	/// </summary>
+	public static string FormatPluginConnectionString(string identifier, Uri database)
+	{
+		if (string.IsNullOrEmpty(identifier) || database == null)
+		{
+			return "";
+		}
+
+		return $"DATABASE={database.OriginalString};IDENTIFIER={identifier}";
 	}
 
 	#region Pseudo URL encoding

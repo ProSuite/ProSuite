@@ -17,7 +17,7 @@ public class DatabaseSourceClass : SourceClass
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	[NotNull] private readonly List<WorkListFilterDefinitionExpression> _expressions = new();
+	[NotNull] private readonly List<IWorkListFilterDefinitionExpression> _expressions = new();
 	[NotNull] private readonly Dictionary<string, int> _subFields;
 	[NotNull] private readonly string _subFieldNames;
 
@@ -118,13 +118,13 @@ public class DatabaseSourceClass : SourceClass
 	}
 
 	public void UpdateDefinitionFilterExpressions(
-		[NotNull] IEnumerable<WorkListFilterDefinitionExpression> definitionExpressions)
+		[NotNull] IEnumerable<IWorkListFilterDefinitionExpression> definitionExpressions)
 	{
 		Assert.ArgumentNotNull(definitionExpressions, nameof(definitionExpressions));
 
-		foreach (WorkListFilterDefinitionExpression newExpression in definitionExpressions)
+		foreach (IWorkListFilterDefinitionExpression newExpression in definitionExpressions)
 		{
-			foreach (WorkListFilterDefinitionExpression expression in _expressions)
+			foreach (IWorkListFilterDefinitionExpression expression in _expressions)
 			{
 				if (Equals(expression.FilterDefinition.Name,
 				           newExpression.FilterDefinition.Name))
@@ -143,7 +143,7 @@ public class DatabaseSourceClass : SourceClass
 	}
 
 	[CanBeNull]
-	public WorkListFilterDefinitionExpression GetExpression(
+	public IWorkListFilterDefinitionExpression GetExpression(
 		[CanBeNull] WorkListFilterDefinition definition)
 	{
 		return definition == null
