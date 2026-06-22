@@ -167,7 +167,9 @@ namespace ProSuite.Commons.AGP.Core.Test
 		[Test, Ignore("Requires oracle connection")]
 		public void Can_create_version_tree_as_osa()
         {
-            string catalogPath = TestDataPreparer.FromDirectory().GetPath("dkm25k2_as_osa.sde");
+			// todo
+            string catalogPath = null;
+            catalogPath = "get path to osa connection";
             ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
 
             Version currentVersion = WorkspaceUtils.GetCurrentVersion(geodatabase);
@@ -194,9 +196,11 @@ namespace ProSuite.Commons.AGP.Core.Test
 
 		[Test, Ignore("Requires oracle connection")]
 		public void Can_create_version_tree_as_user()
-        {
-            string catalogPath = TestDataPreparer.FromDirectory().GetPath("dkm25k2_as_daro.sde");
-            ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
+		{
+			// todo
+			string catalogPath = null;
+            catalogPath = "get path to osa connection";
+			ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
 
             Version currentVersion = WorkspaceUtils.GetCurrentVersion(geodatabase);
             DatabaseConnectionProperties props = WorkspaceUtils.GetConnectionProperties(currentVersion);

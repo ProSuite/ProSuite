@@ -20,17 +20,17 @@ public class GdbQueryUtilsTest
 	{
 		CoreHostProxy.Initialize();
 
-		TestUtils.ConfigureUnitTestLogging("k2.logging.test.xml");
+		TestUtils.ConfigureUnitTestLogging();
 	}
 
-	[Test, Ignore("Requires oracle connection")]
+	[Test]
 	public void Can_get_rows_in_list()
 	{
-		string catalogPath = TestDataPreparer.FromDirectory().GetPath("dkm25k2_as_osa.sde");
-		ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
+		string path = TestDataPreparer.ExtractZip("can_get_rows_in_list.gdb.zip").GetPath();
+		ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(path);
 
 		var featureClass =
-			DatasetUtils.OpenDataset<FeatureClass>(geodatabase, "DKM25K2_MANAGER.DKM25_EINZELBAUM");
+			DatasetUtils.OpenDataset<FeatureClass>(geodatabase, "points");
 
 		var valueList = new List<string>(GetUuids(featureClass));
 
