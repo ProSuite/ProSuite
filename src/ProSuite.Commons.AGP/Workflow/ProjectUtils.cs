@@ -113,7 +113,8 @@ public static class ProjectUtils
 
 		if (! ok)
 		{
-			var existing = project.GetItems<Item>().FirstOrDefault(i => string.Equals(i.Path, item.Path));
+			var existing = project.GetItems<Item>()
+			                      .FirstOrDefault(i => string.Equals(i.Path, item.Path));
 			if (existing is null)
 			{
 				throw new InvalidOperationException($"AddItem({item.Name}) returned false");
@@ -150,18 +151,19 @@ public static class ProjectUtils
 		return SetDefaultProjectUnit(UnitFormatType.Symbol2D, abbreviation, name);
 	}
 
-	public static bool SetDefaultProjectUnit(UnitFormatType type, string abbreviation, string name = null)
+	public static bool SetDefaultProjectUnit(UnitFormatType type, string abbreviation,
+	                                         string name = null)
 	{
 		var formats = DisplayUnitFormats.Instance;
 
 		var units = formats.GetPredefinedProjectUnitFormats(type).AsEnumerable();
 
-		if (!string.IsNullOrEmpty(abbreviation))
+		if (! string.IsNullOrEmpty(abbreviation))
 		{
 			units = units.Where(u => u.Abbreviation == abbreviation);
 		}
 
-		if (!string.IsNullOrEmpty(name))
+		if (! string.IsNullOrEmpty(name))
 		{
 			const StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 			units = units.Where(u =>
