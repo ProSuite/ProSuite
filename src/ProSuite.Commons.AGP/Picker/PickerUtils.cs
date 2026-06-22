@@ -20,12 +20,24 @@ public static class PickerUtils
 {
 	#region move, refactor
 
-	public static Uri GetImagePath(esriGeometryType? geometryType)
+	[NotNull]
+	public static Uri GetImagePath([NotNull] BasicFeatureLayer layer)
 	{
+		Assert.ArgumentNotNull(layer, nameof(layer));
+
+		if (layer is AnnotationLayer)
+		{
+			return new Uri(
+				@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/Annotation.png");
+		}
+
+		var geometryType = layer.ShapeType;
+
 		// todo: daro introduce image for unknown type
 		//if (geometryType == null)
 		//{
 		//}
+
 		switch (geometryType)
 		{
 			case esriGeometryType.esriGeometryPoint:

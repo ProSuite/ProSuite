@@ -18,22 +18,19 @@ public class PickableFeatureClassItem : PickableFeatureClassItemBase
 	                                [NotNull] Geometry geometry) :
 		base(datasetName, oids, geometry) { }
 
-	[NotNull]
 	public override ImageSource ImageSource
 	{
 		get
 		{
-			BitmapImage image = _image;
-
-			if (image != null)
+			if (_image != null)
 			{
 				return _image;
 			}
 
-			// todo: daro refactor, unkown image
+			// todo: daro refactor, unknown image
 			BasicFeatureLayer layer = Assert.NotNull(Layers.FirstOrDefault());
 
-			_image = new BitmapImage(PickerUtils.GetImagePath(layer.ShapeType));
+			_image = new BitmapImage(PickerUtils.GetImagePath(layer));
 
 			return _image;
 		}

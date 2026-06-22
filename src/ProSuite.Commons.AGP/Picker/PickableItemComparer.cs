@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.Commons.AGP.Picker;
 
@@ -25,18 +26,18 @@ public class PickableItemComparer : IComparer<IPickableItem>
 		if (x.Geometry is { GeometryType: GeometryType.Polygon } &&
 		    y.Geometry is { GeometryType: GeometryType.Polygon })
 		{
-			if (x is PickableAnnotationFeatureItem &&
-			    y is PickableAnnotationFeatureItem)
+			if (x is IPickableFeatureItem { Layer: AnnotationLayer } &&
+			    y is IPickableFeatureItem { Layer: AnnotationLayer })
 			{
 				return 0;
 			}
 
-			if (x is PickableAnnotationFeatureItem)
+			if (x is IPickableFeatureItem { Layer: AnnotationLayer })
 			{
 				return -1;
 			}
 
-			if (y is PickableAnnotationFeatureItem)
+			if (y is IPickableFeatureItem { Layer: AnnotationLayer })
 			{
 				return 1;
 			}

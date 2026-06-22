@@ -59,7 +59,6 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 		bool expressionExists)
 	{
 		BasicFeatureLayer layer = classSelection.BasicFeatureLayer;
-		bool isAnnotation = layer is AnnotationLayer;
 
 		if (expressionExists)
 		{
@@ -73,13 +72,13 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 				if (! string.IsNullOrEmpty(expr) && ! string.IsNullOrWhiteSpace(expr))
 				{
 					yield return CreatePickableFeatureItem(
-						layer, feature, oid, displayValue, isAnnotation);
+						layer, feature, oid, displayValue);
 				}
 				else
 				{
 					yield return CreatePickableFeatureItem(
 						layer, feature, feature.GetObjectID(),
-						GdbObjectUtils.GetDisplayValue(feature), isAnnotation);
+						GdbObjectUtils.GetDisplayValue(feature));
 				}
 			}
 		}
@@ -92,19 +91,14 @@ public class PickableFeatureItemsFactory : IPickableItemsFactory
 			{
 				string displayValue = GdbObjectUtils.GetDisplayValue(feature, layerName);
 				yield return CreatePickableFeatureItem(layer, feature, feature.GetObjectID(),
-				                                       displayValue, isAnnotation);
+				                                       displayValue);
 			}
 		}
 	}
 
 	private static IPickableItem CreatePickableFeatureItem(BasicFeatureLayer layer,
-	                                                       Feature feature, long oid,
-	                                                       string expr,
-	                                                       bool isAnnotation = false)
+	                                                       Feature feature, long oid, string expr)
 	{
-		return isAnnotation
-			       ? new PickableAnnotationFeatureItem(layer, feature, feature.GetShape(), oid,
-			                                           expr)
-			       : new PickableFeatureItem(layer, feature, feature.GetShape(), oid, expr);
+		return new PickableFeatureItem(layer, feature, feature.GetShape(), oid, expr);
 	}
 }

@@ -19,5 +19,5 @@ public class PickableFeatureItem : PickableFeatureItemBase
 		: base(layer, feature, geometry, oid, displayValue) { }
 
 	public override ImageSource ImageSource =>
-		_image ??= new BitmapImage(PickerUtils.GetImagePath(Layer.ShapeType));
+		_image ??= new BitmapImage(PickerUtils.GetImagePath(Layer));
 }
