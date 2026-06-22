@@ -151,6 +151,8 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		[NotNull] ISourceClass sourceClass,
 		[CanBeNull] QueryFilter filter)
 	{
+		_msg.DebugFormat("Reading items for source class {0}...", sourceClass.Name);
+
 		Table table = OpenTable(sourceClass);
 
 		if (table == null)
