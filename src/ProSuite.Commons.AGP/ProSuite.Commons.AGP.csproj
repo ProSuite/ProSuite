@@ -146,10 +146,20 @@
     <Resource Include="Images\SymbolLayerDrawingUnknown32.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="PickerUI\Images\Annotation.png" />
-    <Resource Include="PickerUI\Images\LineGeometry.bmp" />
-    <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
-    <Resource Include="PickerUI\Images\PointGeometry.bmp" />
-    <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
+    <Resource Include="PickerUI\Images\Annotation.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="PickerUI\Images\LineGeometry.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="PickerUI\Images\MultipatchGeometry.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="PickerUI\Images\PointGeometry.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="PickerUI\Images\PolygonGeometry.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 </Project>

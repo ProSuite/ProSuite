@@ -43,18 +43,18 @@ public static class PickerUtils
 			case esriGeometryType.esriGeometryPoint:
 			case esriGeometryType.esriGeometryMultipoint:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.png");
 			case esriGeometryType.esriGeometryLine:
 			case esriGeometryType.esriGeometryPolyline:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.png");
 			case esriGeometryType.esriGeometryPolygon:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.bmp",
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.png",
 					UriKind.Absolute);
 			case esriGeometryType.esriGeometryMultiPatch:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.png");
 			default:
 				throw new ArgumentOutOfRangeException(
 					$"Unsupported geometry type: {geometryType}");
