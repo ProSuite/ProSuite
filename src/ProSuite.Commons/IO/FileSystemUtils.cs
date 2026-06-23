@@ -529,6 +529,14 @@ namespace ProSuite.Commons.IO
 			return result.ToArray();
 		}
 
+		/// <summary>
+		/// Returns the local path from the specified URI, or null if it is an HTTP(S) URI or
+		/// the input is null/empty. The input is expected to be a file URI (e.g.
+		/// c>file:///C:/data/file.txt</c>) or a local path (e.g. <c>C:\data\file.txt</c>),
+		/// but the method will attempt to parse any absolute URI and return the local path if possible.
+		/// </summary>
+		/// <param name="pathUri"></param>
+		/// <returns></returns>
 		[CanBeNull]
 		public static string FromPathUri([CanBeNull] string pathUri)
 		{
@@ -538,6 +546,11 @@ namespace ProSuite.Commons.IO
 			}
 
 			Uri uri = new Uri(pathUri, UriKind.Absolute);
+
+			if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+			{
+				return null;
+			}
 
 			string path = uri.LocalPath;
 
