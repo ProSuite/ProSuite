@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ArcGIS.Core.Data;
@@ -61,10 +62,6 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 
 		Geometry perimeter = restrictToPerimeter ? GetPerimeter(mapView) : null;
 
-		SelectionCombinationMethod combinationMethod = addToSelection
-			                                               ? SelectionCombinationMethod.Add
-			                                               : SelectionCombinationMethod.New;
-
 		var relatedSelected = 0;
 
 		await QueuedTask.Run(() =>
@@ -79,9 +76,7 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 			using (_msg.IncrementIndentation(
 				       "Getting related objects for current selection..."))
 			{
-				var relatedOidsByTableHandle =
-					new Dictionary<IntPtr, List<long>>();
-				var tableByHandle = new Dictionary<IntPtr, Table>();
+				var relatedByHandle = new Dictionary<IntPtr, RelatedTableRows>();
 
 				foreach (KeyValuePair<MapMember, List<long>> pair in selection)
 				{
@@ -98,37 +93,27 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 						continue;
 					}
 
-					CollectRelatedObjects(table, oids, perimeter,
-					                      relatedOidsByTableHandle,
-					                      tableByHandle);
+					CollectRelatedObjects(table, oids, perimeter, relatedByHandle);
 				}
 
-				if (relatedOidsByTableHandle.Count == 0)
+				if (relatedByHandle.Count == 0)
 				{
 					return;
 				}
 
-				if (combinationMethod == SelectionCombinationMethod.New)
+				// SelectRows always adds to the current selection, so clear it first
+				// unless the user requested to add to the existing selection.
+				if (! addToSelection)
 				{
 					map.ClearSelection();
 				}
 
-				foreach (KeyValuePair<IntPtr, List<long>> pair in
-				         relatedOidsByTableHandle)
+				foreach (RelatedTableRows related in relatedByHandle.Values)
 				{
-					List<long> relatedOids = pair.Value;
-
-					if (relatedOids.Count == 0)
-					{
-						continue;
-					}
-
-					Table relatedTable = tableByHandle[pair.Key];
-
 					relatedSelected += (int) SelectionUtils.SelectRows(
 						mapView,
-						displayTable => IsSameTable(displayTable, relatedTable),
-						relatedOids);
+						displayTable => IsSameTable(displayTable, related.Table),
+						related.GetObjectIds());
 				}
 			}
 		});
@@ -154,8 +139,7 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 		[NotNull] Table table,
 		[NotNull] List<long> oids,
 		[CanBeNull] Geometry perimeter,
-		[NotNull] Dictionary<IntPtr, List<long>> relatedOidsByTableHandle,
-		[NotNull] Dictionary<IntPtr, Table> tableByHandle)
+		[NotNull] Dictionary<IntPtr, RelatedTableRows> relatedByHandle)
 	{
 		Datastore datastore = table.GetDatastore();
 		if (datastore is not Geodatabase geodatabase)
@@ -189,8 +173,7 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 					                                 : relClass.GetRowsRelatedToDestinationRows(
 						                                 oids);
 
-				AddRelatedRows(relatedRows, perimeter,
-				               relatedOidsByTableHandle, tableByHandle);
+				AddRelatedRows(relatedRows, perimeter, relatedByHandle);
 			}
 			finally
 			{
@@ -202,8 +185,7 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 	private static void AddRelatedRows(
 		[NotNull] IReadOnlyList<Row> relatedRows,
 		[CanBeNull] Geometry perimeter,
-		[NotNull] Dictionary<IntPtr, List<long>> relatedOidsByTableHandle,
-		[NotNull] Dictionary<IntPtr, Table> tableByHandle)
+		[NotNull] Dictionary<IntPtr, RelatedTableRows> relatedByHandle)
 	{
 		foreach (Row relatedRow in relatedRows)
 		{
@@ -219,20 +201,14 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 
 			Table relatedTable = relatedRow.GetTable();
 			IntPtr handle = relatedTable.Handle;
-			long oid = relatedRow.GetObjectID();
 
-			if (! relatedOidsByTableHandle.TryGetValue(
-				    handle, out List<long> existingOids))
+			if (! relatedByHandle.TryGetValue(handle, out RelatedTableRows related))
 			{
-				existingOids = new List<long>();
-				relatedOidsByTableHandle[handle] = existingOids;
-				tableByHandle[handle] = relatedTable;
+				related = new RelatedTableRows(relatedTable);
+				relatedByHandle[handle] = related;
 			}
 
-			if (! existingOids.Contains(oid))
-			{
-				existingOids.Add(oid);
-			}
+			related.Add(relatedRow.GetObjectID());
 		}
 	}
 
@@ -257,5 +233,32 @@ public abstract class SelectRelatedFeaturesButtonBase : ButtonCommandBase
 		}
 
 		return displayTableTable.Handle == table.Handle;
+	}
+
+	/// <summary>
+	/// Accumulates the distinct object IDs of related rows that belong to a single table.
+	/// </summary>
+	private sealed class RelatedTableRows
+	{
+		private readonly HashSet<long> _objectIds = new();
+
+		public RelatedTableRows([NotNull] Table table)
+		{
+			Table = table;
+		}
+
+		[NotNull]
+		public Table Table { get; }
+
+		public void Add(long oid)
+		{
+			_objectIds.Add(oid);
+		}
+
+		[NotNull]
+		public IReadOnlyList<long> GetObjectIds()
+		{
+			return _objectIds.ToList();
+		}
 	}
 }
