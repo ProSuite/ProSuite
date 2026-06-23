@@ -16,18 +16,27 @@ public class WorkListGeometryService
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	private readonly BlockingCollection<KeyValuePair<string, QueryFilter>> _queue = new();
+	[CanBeNull] private BlockingCollection<KeyValuePair<string, QueryFilter>> _queue;
 
 	[CanBeNull] private CancellationTokenSource _cancellationTokenSource;
-	[CanBeNull] private Thread _thread;
+	[CanBeNull] private volatile Thread _thread;
 
 	public bool Start()
 	{
 		try
 		{
+			if (_thread != null && _thread.IsAlive)
+			{
+				_msg.Debug("Service is already running.");
+				return true;
+			}
+
 			_msg.Debug("Start service.");
 
+			_cancellationTokenSource?.Dispose();
 			_cancellationTokenSource = new CancellationTokenSource();
+
+			_queue = new BlockingCollection<KeyValuePair<string, QueryFilter>>();
 
 			CancellationToken token = _cancellationTokenSource.Token;
 
@@ -62,10 +71,13 @@ public class WorkListGeometryService
 
 			_cancellationTokenSource?.Cancel();
 
-			_queue.CompleteAdding();
+			_queue?.CompleteAdding();
 
 			_thread?.Join();
 			_thread = null;
+
+			_cancellationTokenSource?.Dispose();
+			_cancellationTokenSource = null;
 		}
 		catch (AggregateException ae)
 		{
@@ -87,15 +99,19 @@ public class WorkListGeometryService
 				_msg.Debug("Service has not been started. Starting now...");
 				if (! Start())
 				{
-					_msg.Warn("Could not start service. No geometries will be cached.");
+					_msg.Debug("Could not start service. No geometries will be cached.");
 					return;
 				}
 			}
 
-			bool isAlive = Assert.NotNull(_thread, "Thread is null").IsAlive;
-			Assert.True(isAlive, "Thread is dead. Maybe an exception occurred.");
+			Thread thread = _thread;
+			if (thread == null || ! thread.IsAlive)
+			{
+				_msg.Debug("Thread is dead. Maybe an exception occurred.");
+				return;
+			}
 
-			if (_queue.IsAddingCompleted)
+			if (_queue == null || _queue.IsAddingCompleted)
 			{
 				return;
 			}
@@ -110,9 +126,10 @@ public class WorkListGeometryService
 
 	private void BackgroundAction(CancellationToken token)
 	{
+		BlockingCollection<KeyValuePair<string, QueryFilter>> queue = Assert.NotNull(_queue);
 		try
 		{
-			foreach (var request in _queue.GetConsumingEnumerable(token))
+			foreach (var request in queue.GetConsumingEnumerable(token))
 			{
 				string workListName = request.Key;
 				QueryFilter filter = request.Value;
@@ -122,7 +139,7 @@ public class WorkListGeometryService
 				if (workList == null)
 				{
 					_msg.Debug("Cannot get work list.");
-					return;
+					continue;
 				}
 
 				workList.UpdateExistingItemGeometries(filter);
