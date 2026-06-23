@@ -15,7 +15,7 @@ namespace ProSuite.GIS.Geodatabase.AGP;
 
 public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposable
 {
-	private static readonly Dictionary<long, IWorkspace> _workspacesByHandle = new();
+	private static readonly ConcurrentDictionary<long, IWorkspace> _workspacesByHandle = new();
 
 	private readonly ConcurrentDictionary<string, ArcRelationshipClass> _relationshipClassesByName =
 		new();
@@ -36,6 +36,11 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 	internal static IWorkspace GetByHandle(long handle)
 	{
 		return _workspacesByHandle.GetValueOrDefault(handle);
+	}
+
+	internal static bool RemoveFromCache([NotNull] ArcWorkspace workspace)
+	{
+		return _workspacesByHandle.TryRemove(workspace.Geodatabase.Handle.ToInt64(), out _);
 	}
 
 	public static IWorkspace Create(Datastore datastore, bool cacheProperties = false)
@@ -64,7 +69,7 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 	}
 
 	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
-	                                           bool cacheProperties = false)
+	                                  bool cacheProperties = false)
 	{
 		if (_workspacesByHandle.TryGetValue(geodatabase.Handle.ToInt64(),
 		                                    out IWorkspace existing))
@@ -390,9 +395,25 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 	public bool Exists()
 	{
-		Uri uri = Geodatabase.GetPath();
+		GeodatabaseType geodatabaseType = Geodatabase.GetGeodatabaseType();
 
-		return Directory.Exists(uri.LocalPath);
+		// A live remote (enterprise) connection or feature service exists by virtue of being
+		// open; there is no local path to probe.
+		if (geodatabaseType == GeodatabaseType.RemoteDatabase ||
+		    geodatabaseType == GeodatabaseType.Service)
+		{
+			return true;
+		}
+
+		string localPath = Geodatabase.GetPath()?.LocalPath;
+
+		if (string.IsNullOrEmpty(localPath))
+		{
+			return false;
+		}
+
+		// A file geodatabase is a directory; a mobile/personal geodatabase is a file.
+		return Directory.Exists(localPath) || File.Exists(localPath);
 	}
 
 	public void ExecuteSql(string sqlStmt)
@@ -674,14 +695,14 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 	#endregion
 
-
 	#region Implementation of IDatabaseConnectionInfo
 
 	public string ConnectedDatabase
 	{
 		get
 		{
-			DatabaseConnectionProperties props = WorkspaceUtils.GetConnectionProperties(Geodatabase.GetConnectionString());
+			DatabaseConnectionProperties props =
+				WorkspaceUtils.GetConnectionProperties(Geodatabase.GetConnectionString());
 			return props.Database;
 		}
 	}
@@ -790,7 +811,18 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 	internal void Cache([NotNull] ArcTable table)
 	{
-		_tablesByName.TryAdd(table.Name, table);
+		if (_tablesByName.TryAdd(table.Name, table))
+		{
+			// Record our handle so the table can find us (via GetByHandle) and remove itself
+			// from this cache on Dispose.
+			table.RememberWorkspaceHandle(Geodatabase.Handle.ToInt64());
+		}
+	}
+
+	internal void Uncache([NotNull] ArcTable table)
+	{
+		// Remove only if this very instance is the cached one (instance-matched removal).
+		_tablesByName.TryRemove(new KeyValuePair<string, ArcTable>(table.Name, table));
 	}
 
 	internal ArcDomain GetDomainByName(string name)
@@ -805,6 +837,11 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 	public virtual void Dispose()
 	{
+		// Drop the stale entry from the static per-handle cache before disposing the connection.
+		// Otherwise GetByHandle (and thus ArcTable.Workspace) could later hand back a workspace
+		// wrapping a disposed Geodatabase.
+		RemoveFromCache(this);
+
 		Geodatabase.Dispose();
 	}
 }
@@ -813,34 +850,17 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-	// todo (daro): workspace by handle?
-	private static readonly Dictionary<string, ArcVersionedWorkspace> _workspacesByVersionName =
-		new(StringComparer.InvariantCultureIgnoreCase);
-
 	private VersionManager VersionManager { get; set; }
 	private Version Version { get; }
 
 	public static ArcWorkspace Create(Version version,
 	                                  bool cacheProperties = false)
 	{
+		// Version.Connect() opens a NEW physical connection to this version, with its own
+		// datastore handle. The per-handle cache (in ArcWorkspace.Create below) deduplicates.
 		ArcGIS.Core.Data.Geodatabase geodatabase = version.Connect();
 
-		Assert.True(geodatabase.IsVersioningSupported(),
-		            "This geodatabase cannot be used as versioned workspace.");
-
-		
-		DatabaseConnectionProperties props =
-			WorkspaceUtils.GetConnectionProperties(geodatabase.GetConnectionString());
-
-		//var qualifiedVersionName = $"{props.User}.{currentVersion.GetName()}";
-		var qualifiedVersionName = $"{version.GetName()}";
-
-		if (_workspacesByVersionName.TryGetValue(qualifiedVersionName, out ArcVersionedWorkspace existing))
-		{
-			return existing;
-		}
-
-		return new ArcVersionedWorkspace(geodatabase, cacheProperties, version);
+		return Create(geodatabase, cacheProperties, version);
 	}
 
 	public static ArcWorkspace Create(ArcGIS.Core.Data.Geodatabase geodatabase,
@@ -850,29 +870,22 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 		Assert.True(geodatabase.IsVersioningSupported(),
 		            "This geodatabase cannot be used as versioned workspace.");
 
-		VersionManager versionManager = Assert.NotNull(geodatabase.GetVersionManager());
-
-		var currentVersion = version ?? versionManager.GetCurrentVersion();
-
-		DatabaseConnectionProperties props =
-			WorkspaceUtils.GetConnectionProperties(geodatabase.GetConnectionString());
-
-		//var qualifiedVersionName = $"{props.User}.{currentVersion.GetName()}";
-		var qualifiedVersionName = $"{currentVersion.GetName()}";
-
-		if (_workspacesByVersionName.TryGetValue(qualifiedVersionName, out ArcVersionedWorkspace existing))
+		// Do NOT deduplicate by version name (a version name is not unique - the same version
+		// can be reached through several physical connections, each with its own handle).
+		// Use the per-handle cache so the workspace for THIS connection's handle is the one
+		// that gets returned (and that ArcTable.Workspace can later find via GetByHandle).
+		if (GetByHandle(geodatabase.Handle.ToInt64()) is ArcWorkspace existing)
 		{
+			if (cacheProperties)
+			{
+				existing.CacheProperties();
+			}
+
 			return existing;
 		}
 
 		return new ArcVersionedWorkspace(geodatabase, cacheProperties, version);
 	}
-
-	private ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase,
-	                              bool cacheProperties,
-	                              string versionName)
-		: this(geodatabase, cacheProperties,
-		       geodatabase.GetVersionManager().GetVersion(versionName)) { }
 
 	private ArcVersionedWorkspace(ArcGIS.Core.Data.Geodatabase geodatabase,
 	                              bool cacheProperties = false,
@@ -885,13 +898,7 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 
 		Version = version ?? VersionManager.GetCurrentVersion();
 
-		DatabaseConnectionProperties props =
-			WorkspaceUtils.GetConnectionProperties(geodatabase.GetConnectionString());
-
-		//var qualifiedVersionName = $"{props.User}.{Version.GetName()}";
-		var qualifiedVersionName = $"{Version.GetName()}";
-
-		_workspacesByVersionName.TryAdd(qualifiedVersionName, this);
+		// The base constructor already registered this workspace in the per-handle cache.
 	}
 
 	// todo: move?
@@ -970,15 +977,15 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 
 	public string VersionName => Version.GetName();
 
-	public string Description => Version.GetDescription();
+	public new string Description => Version.GetDescription();
 
 	public esriVersionAccess Access
 	{
 		get => ToEsriVersionAccess(Version.GetAccessType());
 		set => Version.Alter(new VersionDescription
 		                     {
-								 // Name mustn't be null!
-								 Name = VersionName,
+			                     // Name mustn't be null!
+			                     Name = VersionName,
 			                     AccessType = ToProVersionAccessType(value)
 		                     });
 	}
@@ -990,13 +997,13 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 
 	public void Delete()
 	{
-		Assert.True(_workspacesByVersionName.Remove(VersionName),
-		            $"Cannot delete version {VersionName} because it is unknown");
+		// Drop this workspace from the per-handle cache before disposing the connection.
+		RemoveFromCache(this);
 
-		VersionManager.Dispose();
-		Geodatabase.Dispose();
 		Version.Delete();
 		Version.Dispose();
+		VersionManager.Dispose();
+		Geodatabase.Dispose();
 	}
 
 	public void RefreshVersion()
@@ -1019,9 +1026,6 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 
 		Version version = VersionManager.CreateVersion(versionDescription);
 
-		Assert.False(_workspacesByVersionName.ContainsKey(version.GetName()),
-		             $"A versioned workspace with name {version.GetName()} does already exists. Try IVersionedWorkspace.FindVersion()");
-
 		return (IVersion) Create(version);
 	}
 
@@ -1032,8 +1036,11 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 	//public IEnumerable<IVersionInfo> Versions =>
 	//	VersionManager.GetVersions().Select(v => new VersionInfo(v));
 
-	public IVersion DefaultVersion =>
-		new ArcVersionedWorkspace(Geodatabase, false, VersionManager.GetDefaultVersion());
+	// Route through the factory (which connects to the default version and deduplicates by the
+	// resulting handle), like FindVersion/CreateVersion. Calling the constructor directly would
+	// create an off-cache duplicate sharing this connection's Geodatabase (disposing one breaks
+	// the other) and leak a fresh VersionManager on every access.
+	public IVersion DefaultVersion => (IVersion) Create(VersionManager.GetDefaultVersion());
 
 	[CanBeNull]
 	public IVersion FindVersion(string name)
@@ -1042,13 +1049,6 @@ public class ArcVersionedWorkspace : ArcWorkspace, IVersion, IVersionedWorkspace
 		{
 			// owner is case-insensitive: daro.GN_Local_RevModel_DKM10
 			Version version = VersionManager.GetVersion(name);
-
-			if (_workspacesByVersionName.TryGetValue(version.GetName(),
-			                                         out ArcVersionedWorkspace workspace))
-			{
-				version.Dispose();
-				return workspace;
-			}
 
 			return (IVersion) Create(version);
 		}
@@ -1207,13 +1207,10 @@ public class ArcWorkspaceName : IWorkspaceName
 
 	protected bool Equals(ArcWorkspaceName other)
 	{
-		// ArcWorkspace equals is comparing handles (thread-safe)
-		if (_arcWorkspace.Equals(other._arcWorkspace))
-		{
-			return true;
-		}
-
-		// Use thread-safe comparison of connection properties:
+		// Identity is the connection (datastore): a thread-safe comparison of the cached
+		// connection properties. This is the same key GetHashCode uses, so equality and hashing
+		// are guaranteed consistent. (A handle short-circuit would be redundant - the same
+		// datastore handle implies the same connector, hence equal DatastoreName.)
 		return Equals(_datastoreName, other._datastoreName);
 	}
 
