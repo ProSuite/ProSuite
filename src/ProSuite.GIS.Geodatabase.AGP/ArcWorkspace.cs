@@ -383,7 +383,8 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 	public string PathName => _pathName ??= WorkspaceUtils.GetCatalogPath(Geodatabase);
 
 	public esriWorkspaceType Type =>
-		_workspaceType ??= (esriWorkspaceType) Geodatabase.GetGeodatabaseType();
+		_workspaceType ??= ArcWorkspaceUtils.FromGeodatabaseWorkspaceType(
+			Geodatabase.GetGeodatabaseType());
 
 	public bool IsDirectory()
 	{
