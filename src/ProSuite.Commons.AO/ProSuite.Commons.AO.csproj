@@ -82,6 +82,12 @@
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
 
+  <!-- REMOVE after .net framework deprecation -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <!-- Some of these reference Json which is not in the.net framework: -->
+    <Compile Remove="Geodatabase\GdbSchema\FeatureServiceSchemaReader.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
@@ -106,6 +112,14 @@
 
   <ItemGroup>
     <PackageReference Include="C5" Version="3.0.0" />
+  </ItemGroup>
+
+  <!-- System.Text.Json (used by FeatureServiceSchemaReader to parse ArcGIS REST JSON) is
+       not needed for the .NET Framework (ArcObjects) build, where the reader is excluded.
+       On the Pro/Server (.NET) build it is in-box at runtime, but this netstandard2.0
+       assembly still needs the reference to compile against it. -->
+  <ItemGroup Condition=" '$(VSArcGISProduct)' != 'ArcGIS' ">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
   <ItemGroup>

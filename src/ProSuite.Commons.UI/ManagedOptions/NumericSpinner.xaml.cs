@@ -72,29 +72,35 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			DependencyPropertyDescriptor.FromProperty(DecimalsProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 
 			DependencyPropertyDescriptor.FromProperty(StepProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 
 			DependencyPropertyDescriptor.FromProperty(MinValueProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 			DependencyPropertyDescriptor.FromProperty(MaxValueProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 			DependencyPropertyDescriptor.FromProperty(FontStyleProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 			DependencyPropertyDescriptor.FromProperty(IsEnabledProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 
 			DataContextChanged += NumericSpinner_DataContextChanged;
 
@@ -109,6 +115,16 @@ namespace ProSuite.Commons.UI.ManagedOptions
 
 		private void UpdateTextValue()
 		{
+			// Don't reformat the text while the user is actively editing it. Otherwise
+			// in-progress edits get destroyed: e.g. backspacing the "3" from "0.3" leaves
+			// "0." which parses to 0 and would be rewritten to "0", deleting the decimal
+			// separator the user still intends to type behind. Formatting happens on
+			// LostFocus (TextBox_LostFocus) once editing is complete.
+			if (textBox.IsKeyboardFocused)
+			{
+				return;
+			}
+
 			string textValue = Value.ToString(CultureInfo.CurrentCulture);
 
 			if (textValue == textBox.Text)
@@ -120,14 +136,16 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			if (binding != null)
 			{
 				TextValue = textValue;
-				BindingOperations.GetBindingExpression(textBox, TextBox.TextProperty)?.UpdateTarget();
+				BindingOperations.GetBindingExpression(textBox, TextBox.TextProperty)
+				                 ?.UpdateTarget();
 			}
 		}
 
 		private void TextBox_LostFocus(object sender, RoutedEventArgs e)
 		{
 			string newText = ((TextBox) sender).Text;
-			string decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+			string decimalSeparator =
+				CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 			if (! double.TryParse(newText, NumberStyles.Any, CultureInfo.CurrentCulture,
 			                      out double parsed) &&
 			    ! newText.EndsWith(decimalSeparator) && newText != "-")
@@ -218,9 +236,10 @@ namespace ProSuite.Commons.UI.ManagedOptions
 
 		#region TextFontStyleProperty
 
-		public static readonly DependencyProperty TextFontStyleProperty = DependencyProperty.Register(
-			nameof(TextFontStyle), typeof(FontStyle), typeof(NumericSpinner),
-			new PropertyMetadata(FontStyles.Normal));
+		public static readonly DependencyProperty TextFontStyleProperty =
+			DependencyProperty.Register(
+				nameof(TextFontStyle), typeof(FontStyle), typeof(NumericSpinner),
+				new PropertyMetadata(FontStyles.Normal));
 
 		public FontStyle TextFontStyle
 		{

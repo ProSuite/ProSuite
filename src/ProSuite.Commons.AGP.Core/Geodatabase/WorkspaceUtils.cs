@@ -470,6 +470,11 @@ public static class WorkspaceUtils
 				return WorkspaceDbType.FileSystem;
 			}
 
+			if (gdbType == GeodatabaseType.Service)
+			{
+				return WorkspaceDbType.FeatureService;
+			}
+
 			if (gdbType != GeodatabaseType.RemoteDatabase)
 			{
 				return WorkspaceDbType.Unknown;
