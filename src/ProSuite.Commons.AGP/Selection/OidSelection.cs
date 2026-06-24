@@ -25,9 +25,7 @@ public class OidSelection : FeatureSelectionBase
 		_outputSpatialReference = outputSpatialReference;
 	}
 
-	/// <summary>
-	/// Does not have to be called on MCT
-	/// </summary>
+	/// <remarks>Must run on MCT</remarks>
 	[NotNull]
 	public override IEnumerable<Feature> GetFeatures()
 	{
