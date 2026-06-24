@@ -436,6 +436,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
 		                DisplayName);
+
+		// Refresh the cached database grand total on every full (re)load. This is the path taken
+		// after a verification (Invalidate() -> LoadItems()), where new rows change the total.
+		// Without this, the cached TotalCount (see Count()) would never be updated for the lifetime
+		// of the work list instance.
+		TotalCount = Repository.Count();
 	}
 
 	protected virtual string GetFilterDisplayText()
