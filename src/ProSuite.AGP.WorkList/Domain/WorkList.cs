@@ -669,8 +669,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	public void Count()
 	{
 		var watch = _msg.DebugStartTiming($"{this} start counting items.");
-		
-		TotalCount = CountItems(_items);
+
+		// The total is the grand total of all source rows in the database (ignoring the area of
+		// interest and which items are currently loaded). It is queried once and cached: deriving
+		// it from the in-memory _items would yield only the loaded count and would race with the
+		// background item loading.
+		TotalCount ??= Repository.Count();
 
 		_msg.DebugStopTiming(watch, $"{this} counted {TotalCount} items.");
 	}
