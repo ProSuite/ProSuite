@@ -235,8 +235,9 @@ public static class PickerUtils
 
 			case PickerMode.None:
 				return new List<IPickableItem>();
+
 			default:
-				throw new ArgumentOutOfRangeException();
+				throw new NotSupportedException($"Unknown {nameof(PickerMode)}");
 		}
 	}
 
@@ -304,7 +305,7 @@ public static class PickerUtils
 			count += selection.GetCount();
 		}
 
-		// Return the total count (may be 0 if no features were found)
+		// Return the total count (can be 0 if no features were found)
 		return count;
 	}
 

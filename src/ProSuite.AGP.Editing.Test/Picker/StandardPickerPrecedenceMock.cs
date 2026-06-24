@@ -11,234 +11,232 @@ using ProSuite.Commons.AGP.Picker;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.Test.Picker
+namespace ProSuite.AGP.Editing.Test.Picker;
+
+public class StandardPickerPrecedenceMock : IPickerPrecedence
 {
-	public class StandardPickerPrecedenceMock : IPickerPrecedence
+	private static readonly int _maxItems = 25;
+	private static MapPoint _selectionCentroid;
+	private Geometry _selectionGeometry;
+
+	public Geometry SelectionGeometry
 	{
-		private static readonly int _maxItems = 25;
-		private static MapPoint _selectionCentroid;
-
-		private Geometry _selectionGeometry;
-
-		public Geometry SelectionGeometry
+		get => _selectionGeometry;
+		set
 		{
-			get => _selectionGeometry;
-			set
-			{
-				_selectionGeometry = value;
-				_selectionCentroid = GeometryUtils.Centroid(value);
-			}
+			_selectionGeometry = value;
+			_selectionCentroid = GeometryUtils.Centroid(value);
+		}
+	}
+
+	private List<Key> PressedKeys { get; }
+
+	public IPickableItem PickBest(IEnumerable<IPickableItem> items)
+	{
+		throw new NotImplementedException();
+	}
+
+	public int SelectionTolerance { get; set; }
+	public bool IsSingleClick { get; }
+	public bool AggregateItems { get; }
+	public Point PickerLocation { get; set; }
+	public PickerPositionPreference PositionPreference { get; set; }
+
+	public SpatialRelationship SpatialRelationship { get; }
+	public SelectionCombinationMethod SelectionCombinationMethod { get; }
+	public bool NoMultiselection { get; set; }
+
+	public StandardPickerPrecedenceMock(List<Key> pressedKeys)
+	{
+		PressedKeys = pressedKeys;
+	}
+
+	public PickerMode GetPickerMode(List<int> orderedSelection)
+	{
+		PickerMode result = PickerMode.PickBest;
+
+		if (NoMultiselection)
+		{
+			result = PickerMode.ShowPicker;
 		}
 
-		protected List<Key> PressedKeys { get; }
-
-		public IPickableItem PickBest(IEnumerable<IPickableItem> items)
+		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
 		{
-			throw new NotImplementedException();
+			result = PickerMode.ShowPicker;
 		}
 
-		public int SelectionTolerance { get; set; }
-		public bool IsSingleClick { get; }
-		public bool AggregateItems { get; }
-		public Point PickerLocation { get; set; }
-		public PickerPositionPreference PositionPreference { get; set; }
-
-		public SpatialRelationship SpatialRelationship { get; }
-		public SelectionCombinationMethod SelectionCombinationMethod { get; }
-		public bool NoMultiselection { get; set; }
-
-		public StandardPickerPrecedenceMock(List<Key> pressedKeys)
+		if (orderedSelection.Count > 1)
 		{
-			PressedKeys = pressedKeys;
+			result = PickerMode.ShowPicker;
 		}
 
-		public PickerMode GetPickerMode(List<int> orderedSelection)
+		if (!IsSingleClick)
 		{
-			PickerMode result = PickerMode.PickBest;
-
-			if (NoMultiselection)
-			{
-				result = PickerMode.ShowPicker;
-			}
-
-			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
-			{
-				result = PickerMode.ShowPicker;
-			}
-
-			if (orderedSelection.Count > 1)
-			{
-				result = PickerMode.ShowPicker;
-			}
-
-			if (!IsSingleClick)
-			{
-				result = PickerMode.PickAll;
-			}
-
-			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
-			{
-				result = PickerMode.PickAll;
-			}
-
-			return result;
+			result = PickerMode.PickAll;
 		}
 
-		public PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates)
+		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
 		{
-			PickerMode result = PickerMode.PickBest;
-
-			if (NoMultiselection)
-			{
-				result = PickerMode.ShowPicker;
-			}
-
-			if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
-			{
-				result = PickerMode.ShowPicker;
-			}
-
-			if (CountLowestShapeDimension(candidates) > 1)
-			{
-				result = PickerMode.ShowPicker;
-			}
-
-			if (! IsSingleClick)
-			{
-				result = PickerMode.PickAll;
-			}
-
-			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
-			{
-				result = PickerMode.PickAll;
-			}
-
-			return result;
+			result = PickerMode.PickAll;
 		}
 
-		protected static int CountLowestShapeDimension(
-			IEnumerable<FeatureSelectionBase> layerSelection)
+		return result;
+	}
+
+	public PickerMode GetPickerMode(ICollection<FeatureSelectionBase> candidates)
+	{
+		PickerMode result = PickerMode.PickBest;
+
+		if (NoMultiselection)
 		{
-			var count = 0;
+			result = PickerMode.ShowPicker;
+		}
 
-			int? lastShapeDimension = null;
+		if (PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl))
+		{
+			result = PickerMode.ShowPicker;
+		}
 
-			foreach (FeatureSelectionBase selection in layerSelection)
+		if (CountLowestShapeDimension(candidates) > 1)
+		{
+			result = PickerMode.ShowPicker;
+		}
+
+		if (! IsSingleClick)
+		{
+			result = PickerMode.PickAll;
+		}
+
+		if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+		{
+			result = PickerMode.PickAll;
+		}
+
+		return result;
+	}
+
+	private static int CountLowestShapeDimension(
+		IEnumerable<FeatureSelectionBase> layerSelection)
+	{
+		var count = 0;
+
+		int? lastShapeDimension = null;
+
+		foreach (FeatureSelectionBase selection in layerSelection)
+		{
+			if (lastShapeDimension == null)
 			{
-				if (lastShapeDimension == null)
-				{
-					lastShapeDimension = selection.ShapeDimension;
-
-					count += selection.GetCount();
-
-					continue;
-				}
-
-				if (lastShapeDimension < selection.ShapeDimension)
-				{
-					continue;
-				}
+				lastShapeDimension = selection.ShapeDimension;
 
 				count += selection.GetCount();
+
+				continue;
 			}
 
-			return count;
-		}
-
-		public void EnsureGeometryNonEmpty()
-		{
-			throw new NotImplementedException();
-		}
-
-		public Geometry GetSelectionGeometry()
-		{
-			return SelectionGeometry;
-		}
-
-		public IPickableItemsFactory CreateItemsFactory()
-		{
-			throw new NotImplementedException();
-		}
-
-		public IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
-		{
-			throw new NotImplementedException();
-		}
-
-		public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
-		{
-			return items.Take(_maxItems)
-			            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
-			            .OrderBy(item => item, new PickableItemComparer());
-		}
-
-		[CanBeNull]
-		public T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem
-		{
-			return Order(items).FirstOrDefault() as T;
-		}
-
-		private static IPickableItem SetScoreConsideringDistances(
-			IPickableItem item,
-			Geometry selectionGeometry)
-		{
-			double score = 0.0;
-			Geometry geometry = item.Geometry;
-
-			if (geometry == null)
+			if (lastShapeDimension < selection.ShapeDimension)
 			{
-				return item;
+				continue;
 			}
 
-			switch (geometry.GeometryType)
-			{
-				case GeometryType.Point:
-					score = GeometryUtils.Engine
-					                     .NearestPoint(selectionGeometry, (MapPoint) item.Geometry)
-					                     .Distance;
-					break;
-				case GeometryType.Polyline:
-					score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) item.Geometry);
-					break;
-				case GeometryType.Polygon:
-					// negative
-					score = ((Polygon) geometry).Area;
-					break;
-				case GeometryType.Unknown:
-				case GeometryType.Envelope:
-				case GeometryType.Multipoint:
-				case GeometryType.Multipatch:
-				case GeometryType.GeometryBag:
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-			
-			SetScore(item, score);
+			count += selection.GetCount();
+		}
 
+		return count;
+	}
+
+	public void EnsureGeometryNonEmpty()
+	{
+		throw new NotImplementedException();
+	}
+
+	public Geometry GetSelectionGeometry()
+	{
+		return SelectionGeometry;
+	}
+
+	public IPickableItemsFactory CreateItemsFactory()
+	{
+		throw new NotImplementedException();
+	}
+
+	public IPickableItemsFactory CreateItemsFactory<T>() where T : IPickableItem
+	{
+		throw new NotImplementedException();
+	}
+
+	public IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
+	{
+		return items.Take(_maxItems)
+		            .Select(item => SetScoreConsideringDistances(item, _selectionCentroid))
+		            .OrderBy(item => item, new PickableItemComparer());
+	}
+
+	[CanBeNull]
+	public T PickBest<T>(IEnumerable<IPickableItem> items) where T : class, IPickableItem
+	{
+		return Order(items).FirstOrDefault() as T;
+	}
+
+	private static IPickableItem SetScoreConsideringDistances(
+		IPickableItem item,
+		Geometry selectionGeometry)
+	{
+		double score = 0.0;
+		Geometry geometry = item.Geometry;
+
+		if (geometry == null)
+		{
 			return item;
 		}
 
-		private static double SumDistancesStartEndPoint(Geometry referenceGeometry,
-		                                                Multipart multipart)
+		switch (geometry.GeometryType)
 		{
-			MapPoint startPoint = GeometryUtils.GetStartPoint(multipart);
-			MapPoint endPoint = GeometryUtils.GetEndPoint(multipart);
-
-			double distanceFromStartPoint =
-				GeometryUtils.Engine.NearestPoint(referenceGeometry, startPoint).Distance;
-
-			double distanceFromEndPoint =
-				GeometryUtils.Engine.NearestPoint(referenceGeometry, endPoint).Distance;
-
-			return distanceFromStartPoint + distanceFromEndPoint;
+			case GeometryType.Point:
+				score = GeometryUtils.Engine
+				                     .NearestPoint(selectionGeometry, (MapPoint) item.Geometry)
+				                     .Distance;
+				break;
+			case GeometryType.Polyline:
+				score = SumDistancesStartEndPoint(selectionGeometry, (Multipart) item.Geometry);
+				break;
+			case GeometryType.Polygon:
+				// negative
+				score = ((Polygon) geometry).Area;
+				break;
+			case GeometryType.Unknown:
+			case GeometryType.Envelope:
+			case GeometryType.Multipoint:
+			case GeometryType.Multipatch:
+			case GeometryType.GeometryBag:
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
 		}
+			
+		SetScore(item, score);
 
-		private static void SetScore(IPickableItem item, double score)
-		{
-			item.Score = Math.Round(score, 2);
-		}
-
-		public void Dispose() { }
+		return item;
 	}
+
+	private static double SumDistancesStartEndPoint(Geometry referenceGeometry,
+	                                                Multipart multipart)
+	{
+		MapPoint startPoint = GeometryUtils.GetStartPoint(multipart);
+		MapPoint endPoint = GeometryUtils.GetEndPoint(multipart);
+
+		double distanceFromStartPoint =
+			GeometryUtils.Engine.NearestPoint(referenceGeometry, startPoint).Distance;
+
+		double distanceFromEndPoint =
+			GeometryUtils.Engine.NearestPoint(referenceGeometry, endPoint).Distance;
+
+		return distanceFromStartPoint + distanceFromEndPoint;
+	}
+
+	private static void SetScore(IPickableItem item, double score)
+	{
+		item.Score = Math.Round(score, 2);
+	}
+
+	public void Dispose() { }
 }

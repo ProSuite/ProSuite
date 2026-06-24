@@ -3,18 +3,17 @@ using System.Windows.Media;
 using ProSuite.Commons.AGP.Picker;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Editing.Test.Picker
+namespace ProSuite.AGP.Editing.Test.Picker;
+
+class PickableFeatureMock : IPickableItem
 {
-	class PickableFeatureMock : IPickableItem
-	{
-		public event PropertyChangedEventHandler PropertyChanged;
-		public string DisplayValue { get; }
-		public bool Highlight { get; }
-		public bool Selected { get; set; }
-		public Geometry Geometry { get; set; }
-		public ImageSource ImageSource { get; }
-		public double Score { get; set; }
-		public int ShapeDimension { get; }
-		public bool Disjoint { get; set; }
-	}
+	public event PropertyChangedEventHandler PropertyChanged;
+	public string DisplayValue { get; }
+	public bool Highlight { get; }
+	public bool Selected { get; set; }
+	public Geometry Geometry { get; set; }
+	public ImageSource ImageSource { get; }
+	public double Score { get; set; }
+	public int ShapeDimension { get; }
+	public bool Disjoint { get; set; }
 }
