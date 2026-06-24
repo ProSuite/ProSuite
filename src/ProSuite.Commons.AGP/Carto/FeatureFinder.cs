@@ -262,7 +262,7 @@ public class FeatureFinder
 			{
 				yield return new FeatureSelection(
 					basicFeatureLayer,
-					features.DistinctBy(f => f.GetObjectID()).ToList());
+					features.DistinctBy(f => f.GetObjectID()));
 			}
 		}
 	}
