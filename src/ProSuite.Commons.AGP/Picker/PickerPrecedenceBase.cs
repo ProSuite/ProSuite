@@ -57,6 +57,9 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	private bool IsControlPressed =>
 		PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
 
+	private bool IsAltPressed =>
+		PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.RightAlt);
+
 	public SelectionCombinationMethod SelectionCombinationMethod { get; }
 
 	public SpatialRelationship SpatialRelationship { get; }
@@ -136,57 +139,33 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.None;
 		}
 
-		var modes = PickerMode.PickBest;
-
 		if (IsControlPressed)
 		{
 			// always show picker if CTRL pressed
 			return PickerMode.ShowPicker;
 		}
 
-		if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
+		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
 		{
-			modes |= PickerMode.ShowPicker;
-		}
-
-		int candidatesCount = candidates.Sum(fs => fs.GetCount());
-
-		if (NoMultiselection && candidatesCount > 1)
-		{
-			// If area selection: show picker
 			if (! IsPointClick)
 			{
-				modes |= PickerMode.ShowPicker;
+				return PickerMode.ShowPicker; // area selection: show picker
 			}
-			// if not: pick best
-		}
-		else
-		{
-			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+
+			if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
 			{
-				modes |= PickerMode.PickAll;
+				return PickerMode.ShowPicker;
 			}
 
-			if (! IsPointClick)
-			{
-				modes |= PickerMode.PickAll;
-			}
+			return PickerMode.PickBest;
 		}
 
-		// the higher mode wins
-		var result = PickerMode.PickBest;
-
-		if ((modes & PickerMode.ShowPicker) != 0)
+		if (IsAltPressed || ! IsPointClick)
 		{
-			result = PickerMode.ShowPicker;
+			return PickerMode.PickAll;
 		}
 
-		if ((modes & PickerMode.PickAll) != 0)
-		{
-			result = PickerMode.PickAll;
-		}
-
-		return result;
+		return PickerMode.PickBest;
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
