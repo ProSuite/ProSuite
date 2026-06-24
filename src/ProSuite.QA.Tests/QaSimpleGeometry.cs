@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
@@ -8,6 +9,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
@@ -56,6 +58,7 @@ namespace ProSuite.QA.Tests
 		{
 			public const string ShortSegment = "ShortSegment";
 			public const string SelfIntersection = "SelfIntersection";
+			public const string InteriorRingNotInside = "InteriorRingNotInside";
 			public const string DuplicatePoints = "DuplicatePoints";
 			public const string IdenticalRings = "IdenticalRings";
 			public const string UnclosedRing = "UnclosedRing";
@@ -140,9 +143,8 @@ namespace ProSuite.QA.Tests
 
 		[InternallyUsedTest]
 		public QaSimpleGeometry([NotNull] QaSimpleGeometryDefinition definition)
-			: this((IReadOnlyFeatureClass)definition.FeatureClass,
-			       definition.AllowNonPlanarLines, definition.ToleranceFactor)
-		{ }
+			: this((IReadOnlyFeatureClass) definition.FeatureClass,
+			       definition.AllowNonPlanarLines, definition.ToleranceFactor) { }
 
 		public override bool IsQueriedTable(int tableIndex)
 		{
@@ -193,7 +195,9 @@ namespace ProSuite.QA.Tests
 			                     out nonSimpleReason,
 			                     out issueCode))
 			{
-				return NoError;
+				// Pure addition: multipatches are reported as simple by the topological
+				// operator (they implement none today), so run the extra ring checks here.
+				return CheckMultiPatch(shape, feature);
 			}
 
 			// TODO: if allowNonPlanarLines, then short segments may be reported, but they are not located
@@ -207,12 +211,102 @@ namespace ProSuite.QA.Tests
 			                          targetSpatialReference, issueCode,
 			                          out errorGeometry))
 			{
-				return NoError;
+				return CheckMultiPatch(shape, feature);
 			}
 
 			return ReportError(
-				nonSimpleReason, InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
-				issueCode, _shapeFieldName);
+				       nonSimpleReason, InvolvedRowUtils.GetInvolvedRows(feature),
+				       errorGeometry, issueCode, _shapeFieldName) +
+			       CheckMultiPatch(shape, feature);
+		}
+
+		/// <summary>
+		/// Extra checks for multipatches (a pure addition: returns <see cref="TestBase.NoError"/>
+		/// for any other geometry type). Reports rings with linear or point self-intersections and
+		/// interior rings that are not part of their exterior face (not coplanar with, or not
+		/// contained within, their exterior ring).
+		/// </summary>
+		private int CheckMultiPatch([NotNull] IGeometry shape,
+		                            [NotNull] IReadOnlyFeature feature)
+		{
+			var multiPatch = shape as IMultiPatch;
+			if (multiPatch == null)
+			{
+				return NoError;
+			}
+
+			Polyhedron polyhedron = GeometryConversionUtils.CreatePolyhedron(multiPatch);
+
+			var errorCount = 0;
+
+			foreach (Linestring ring in polyhedron.GetSelfIntersectingRings(_xyTolerance))
+			{
+				IGeometry errorGeometry = GetSelfIntersectionErrorGeometry(ring);
+
+				errorCount += ReportError(
+					"Multipatch ring has a self-intersection (linear or point)",
+					InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+					Codes[Code.SelfIntersection], _shapeFieldName);
+			}
+
+			foreach (Linestring interiorRing in
+			         polyhedron.GetInteriorRingsNotInExterior(_xyTolerance))
+			{
+				IGeometry errorGeometry =
+					GeometryConversionUtils.CreatePolyline(new[] { interiorRing },
+					                                       _spatialReference);
+
+				errorCount += ReportError(
+					"Interior ring is not inside its exterior ring (not coplanar with, or not contained within, the parent face)",
+					InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
+					Codes[Code.InteriorRingNotInside], _shapeFieldName);
+			}
+
+			return errorCount;
+		}
+
+		/// <summary>
+		/// Builds the error geometry for a self-intersecting ring: the actual self-intersection
+		/// location rather than the whole ring. Linear self-intersections (overlaps / spikes)
+		/// are returned as a polyline, point self-intersections (crossings / touches) as a
+		/// multipoint. Falls back to the whole ring if the exact location cannot be determined.
+		/// </summary>
+		[NotNull]
+		private IGeometry GetSelfIntersectionErrorGeometry([NotNull] Linestring ring)
+		{
+			List<Line3D> linearSelfIntersections =
+				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(ring, _xyTolerance, in3D: true)
+				               .ToList();
+
+			if (linearSelfIntersections.Count > 0)
+			{
+				// Each overlapping segment becomes its own path.
+				IEnumerable<Linestring> paths =
+					linearSelfIntersections.Select(line => new Linestring(new[] { line }));
+
+				return GeometryConversionUtils.CreatePolyline(paths, _spatialReference);
+			}
+
+			IList<IntersectionPoint3D> selfIntersectionPoints =
+				GeomTopoOpUtils.GetSelfIntersectionPoints(ring, _xyTolerance);
+
+			if (selfIntersectionPoints.Count > 0)
+			{
+				IEnumerable<IPoint> points =
+					selfIntersectionPoints.Select(ip => GeometryConversionUtils.CreatePoint(
+						                              ip.Point, _spatialReference));
+
+				IMultipoint multipoint = GeometryFactory.CreateMultipoint(points);
+
+				// A crossing is reported once per crossing segment -> collapse the
+				// coincident points into one.
+				GeometryUtils.Simplify(multipoint);
+
+				return multipoint;
+			}
+
+			// Could not locate the exact self-intersection -> fall back to the whole ring.
+			return GeometryConversionUtils.CreatePolyline(new[] { ring }, _spatialReference);
 		}
 
 		[NotNull]

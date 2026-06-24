@@ -8,7 +8,7 @@ namespace ProSuite.Commons.Geom
 	/// <summary>
 	/// A collection of ring groups that typically build a (closed or un-closed) surface.
 	/// By (OGC-)definition the ring groups should be connected (i.e. touch in 3D). However, this
-	/// is not currently enforced. Therefore multi-surfaces (or multipatches) can also be modeled
+	/// is not currently enforced. Therefore, multi-surfaces (or multipatches) can also be modeled
 	/// using this class.
 	/// </summary>
 	public class Polyhedron : MultiLinestring
@@ -345,6 +345,105 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return new RingGroup(ringGroup.ExteriorRing, coplanarInteriors);
+		}
+
+		/// <summary>
+		/// Returns the rings (exterior or interior) that have a linear or 0-dimensional
+		/// (point / crossing) self-intersection in XY. Vertical rings are skipped because
+		/// their XY footprint degenerates to a line, which would be reported as a false
+		/// self-intersection; for planar, non-vertical faces the XY projection is a
+		/// bijection, so an XY self-intersection corresponds to a real in-plane one.
+		/// </summary>
+		/// <param name="tolerance">The XY tolerance for detecting self-intersections.</param>
+		public IEnumerable<Linestring> GetSelfIntersectingRings(double tolerance)
+		{
+			foreach (RingGroup ringGroup in RingGroups)
+			{
+				foreach (Linestring ring in ringGroup.GetLinestrings())
+				{
+					if (ring.IsEmpty || ! ring.IsClosed)
+					{
+						continue;
+					}
+
+					if (ring.IsVerticalRing(tolerance))
+					{
+						continue;
+					}
+
+					// Linear self-intersections (spikes / duplicate segment runs):
+					bool hasLinearSelfIntersection =
+						GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
+							ring, tolerance, new List<Linestring>());
+
+					// 0-dimensional self-crossings (figure-8 / bowtie rings):
+					bool hasSelfCrossing =
+						GeomTopoOpUtils.TryCrackSelfCrossingRing(
+							ring, tolerance, new List<Linestring>());
+
+					if (hasLinearSelfIntersection || hasSelfCrossing)
+					{
+						yield return ring;
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns the interior rings that are not actually part of their exterior face: an
+		/// interior ring (a hole) must lie in the plane of its exterior ring and within its
+		/// XY extent (OGC simple-polyhedron definition). A ring that is off that plane or
+		/// outside the exterior footprint is most likely a different face mis-stored as an
+		/// inner ring.
+		/// </summary>
+		/// <param name="tolerance">The tolerance for the coplanarity and XY-containment
+		/// tests.</param>
+		public IEnumerable<Linestring> GetInteriorRingsNotInExterior(double tolerance)
+		{
+			foreach (RingGroup ringGroup in RingGroups)
+			{
+				if (ringGroup.InteriorRingCount == 0)
+				{
+					continue;
+				}
+
+				Linestring exteriorRing = ringGroup.ExteriorRing;
+
+				if (exteriorRing == null || exteriorRing.IsEmpty || ! exteriorRing.IsClosed)
+				{
+					continue;
+				}
+
+				Plane3D exteriorPlane =
+					Plane3D.TryFitPlane(exteriorRing.GetPoints().ToList(), isRing: true);
+
+				bool planeDefined = exteriorPlane != null && exteriorPlane.IsDefined;
+
+				foreach (Linestring interiorRing in ringGroup.InteriorRings)
+				{
+					if (interiorRing.IsEmpty)
+					{
+						continue;
+					}
+
+					// Off the exterior ring's plane (a different face mis-stored as a hole):
+					bool notCoplanar =
+						planeDefined && ! IsCoplanar(interiorRing, exteriorPlane, tolerance);
+
+					// Reaching outside the exterior ring's XY extent: any vertex that is
+					// strictly outside (false, i.e. not inside and not on the boundary).
+					bool notContainedInXY = interiorRing.GetPoints()
+					                                    .Any(p => GeomRelationUtils.AreaContainsXY(
+							                                         exteriorRing, p, tolerance,
+							                                         disregardingOrientation:
+							                                         true) == false);
+
+					if (notCoplanar || notContainedInXY)
+					{
+						yield return interiorRing;
+					}
+				}
+			}
 		}
 
 		private static bool IsCoplanar([NotNull] Linestring ring,
