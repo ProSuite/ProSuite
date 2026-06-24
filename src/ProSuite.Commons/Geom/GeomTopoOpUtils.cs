@@ -871,6 +871,21 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
 
+			if (sourceRings.IsEmpty)
+			{
+				return targetRings.Clone();
+			}
+
+			if (targetRings.IsEmpty)
+			{
+				return sourceRings.Clone();
+			}
+
+			if (GeomRelationUtils.AreBoundsDisjoint(sourceRings, targetRings, tolerance))
+			{
+				return new MultiPolycurve(new[] { sourceRings.Clone(), targetRings.Clone() });
+			}
+
 			var subcurveNavigator = new SubcurveNavigator(sourceRings, targetRings, tolerance);
 
 			var ringOperator = new RingOperator(subcurveNavigator)

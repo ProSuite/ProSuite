@@ -3971,6 +3971,38 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanUnionDisjointRingsXY()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 0),
+				            new Pnt3D(0, 100, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(100, 0, 0)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(200, 0, 0),
+				            new Pnt3D(200, 100, 0),
+				            new Pnt3D(300, 100, 0),
+				            new Pnt3D(300, 0, 0)
+			            };
+
+			RingGroup source = GeomTestUtils.CreatePoly(ring1);
+			RingGroup target = GeomTestUtils.CreatePoly(ring2);
+
+			const double tolerance = 0.01;
+
+			MultiLinestring unionResult = GeomTopoOpUtils.GetUnionAreasXY(
+				source, target, tolerance);
+
+			Assert.AreEqual(2, unionResult.PartCount);
+			Assert.AreEqual(source.GetArea2D() + target.GetArea2D(), unionResult.GetArea2D(),
+			                0.0001);
+		}
+
+		[Test]
 		public void CanUnionWithInnerRings()
 		{
 			var ring1 = new List<Pnt3D>
