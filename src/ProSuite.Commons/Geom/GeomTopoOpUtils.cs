@@ -810,9 +810,40 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			// BUG TOP-5996 (likely a change to the union logic making the grouping criterion asymmetric):
+			// The loop above classifies a polygon as disjoint when it finds no qualifying
+			// neighbor on its own turn. That is only sound if groupingCriterion is symmetric -
+			// criterion(a,b) == criterion(b,a). Not every caller's criterion is: the dissolve
+			// path passes CanDissolveAreasXY, which is order-dependent (it intersects a onto b
+			// and runs a source/target SubcurveNavigator union), so on tolerance-boundary
+			// geometry criterion(A,B) can be true while criterion(B,A) is false (or throws).
+			// Then A groups B, but when B is processed it does not re-confirm and - if it has
+			// no other qualifying neighbor - is also added to disjointPolys, ending up in BOTH
+			// a connected group and the disjoint set (the "Lost items" assertion failure, and
+			// a polygon that would otherwise be emitted twice below: once inside its group,
+			// once as a single-item group). Group membership is authoritative (the criterion
+			// did hold in one direction), so remove any grouped polygon from the disjoint set.
+
+			int before = disjointPolys.Count;
+			disjointPolys.ExceptWith(connectedGroups.SelectMany(g => g));
+			int after = disjointPolys.Count;
+
+			if (before != after)
+			{
+				_msg.DebugFormat(
+					"Items removed from disjoint set: {0}. Grouping was not symmetric.",
+					before - after);
+			}
+
+			// Invariant: every input polygon is accounted for exactly once - in exactly one
+			// connected group or as disjoint, never both and never neither. A mismatch where
+			// actual > expected means a polygon was counted in both a group and the disjoint
+			// set (an asymmetric grouping criterion - this is what the ExceptWith above
+			// reconciles); actual < expected means a polygon was lost or two inputs collapsed
+			// (e.g. the same reference passed in twice).
 			Assert.AreEqual(multiPolygons.Count,
 			                disjointPolys.Count + connectedGroups.Sum(g => g.Count),
-			                "Lost items");
+			                "Inconsistent grouping: input count != disjoint + grouped");
 
 			var result = new List<ICollection<T>>(connectedGroups);
 
@@ -4146,7 +4177,7 @@ namespace ProSuite.Commons.Geom
 				// A genuine run intermediate projects strictly WITHIN the chord. A vertex that
 				// projects beyond an end is not a sub-resolution artifact on the shared edge
 				// (snapping it would clamp it to a corner and collapse real geometry).
-				if (ratio < - _linearRunEscapeEpsilon || ratio > 1 + _linearRunEscapeEpsilon)
+				if (ratio < -_linearRunEscapeEpsilon || ratio > 1 + _linearRunEscapeEpsilon)
 				{
 					continue;
 				}

@@ -6,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geom
@@ -9777,16 +9778,16 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		[Ignore("Repro (to be fixed): minimal, even-numbered reproduction of the " +
-				"sub-resolution corner zig-zag union failure. Currently returns 2 overlapping " +
-				"parts instead of 1 (correct area 7260). NOTE: this synthetic exercises the " +
-				"SUBSUMPTION sub-mechanism (a within-tolerance roof run subsumed by the wall " +
-				"run); real kirchweg_turgi is a DIFFERENT sub-mechanism (oppDir corruption, no " +
-				"subsumption) - faithfully reproduced by " +
-				"CanUnionRingsWithCornerZigzagCorruptingRunStartDirection. A " +
-				"snap-the-subsumed-run-onto-the-surviving-target prototype fixed " +
-				"THIS case + full Geom suite green, but regressed friedhofsmauer_roggwil " +
-				"(its subsumption keeps the spurious larger run, so snapping followed the wrong " +
-				"run) and did not touch kirchweg - reverted. Un-ignore when a general fix lands.")]
+		        "sub-resolution corner zig-zag union failure. Currently returns 2 overlapping " +
+		        "parts instead of 1 (correct area 7260). NOTE: this synthetic exercises the " +
+		        "SUBSUMPTION sub-mechanism (a within-tolerance roof run subsumed by the wall " +
+		        "run); real kirchweg_turgi is a DIFFERENT sub-mechanism (oppDir corruption, no " +
+		        "subsumption) - faithfully reproduced by " +
+		        "CanUnionRingsWithCornerZigzagCorruptingRunStartDirection. A " +
+		        "snap-the-subsumed-run-onto-the-surviving-target prototype fixed " +
+		        "THIS case + full Geom suite green, but regressed friedhofsmauer_roggwil " +
+		        "(its subsumption keeps the spurious larger run, so snapping followed the wrong " +
+		        "run) and did not touch kirchweg - reverted. Un-ignore when a general fix lands.")]
 		public void CanUnionRingsWithSubResolutionCornerZigzag()
 		{
 			// Minimal repro of the "sub-resolution corner zig-zag" union bug.
@@ -9821,10 +9822,10 @@ namespace ProSuite.Commons.Test.Geom
 				new List<Pnt3D>
 				{
 					new Pnt3D(-50, -10, 0), // shallow arrival from below-left
-					new Pnt3D(0, 0, 0),     // acute corner A
-					new Pnt3D(2, 0.008, 0),   // sub-resolution zig-zag apex (on the far-side line)
-					new Pnt3D(4, 0, 0),     // back onto the wall
-					new Pnt3D(100, 0, 0),   // B
+					new Pnt3D(0, 0, 0), // acute corner A
+					new Pnt3D(2, 0.008, 0), // sub-resolution zig-zag apex (on the far-side line)
+					new Pnt3D(4, 0, 0), // back onto the wall
+					new Pnt3D(100, 0, 0), // B
 					new Pnt3D(100, -50, 0),
 					new Pnt3D(-50, -50, 0)
 				});
@@ -9850,5 +9851,227 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(7260.0, union.GetArea2D(), 0.5);
 		}
 
+		[Test]
+		public void CanGroupDisjointPolygons()
+		{
+			const double tolerance = 0.001;
+
+			// Three well-separated squares -> three single-item groups.
+			var polys = new List<MultiLinestring>
+			            {
+				            CreateSquare(0, 0, 10),
+				            CreateSquare(100, 0, 10),
+				            CreateSquare(0, 100, 10)
+			            };
+
+			IList<ICollection<MultiLinestring>> groups =
+				GeomTopoOpUtils.GroupPolygons(
+					polys, (a, b) => ! GeomRelationUtils.AreBoundsDisjoint(a, b, tolerance),
+					tolerance);
+
+			Assert.AreEqual(3, groups.Count);
+			Assert.IsTrue(groups.All(g => g.Count == 1));
+			AssertPartitionsInput(polys, groups);
+		}
+
+		[Test]
+		public void CanGroupOverlappingPolygons()
+		{
+			const double tolerance = 0.001;
+
+			// Two overlapping squares -> a single group of two; a third disjoint -> its own.
+			var overlapA = CreateSquare(0, 0, 10);
+			var overlapB = CreateSquare(5, 0, 10);
+			var disjoint = CreateSquare(100, 100, 10);
+
+			var polys = new List<MultiLinestring> { overlapA, overlapB, disjoint };
+
+			IList<ICollection<MultiLinestring>> groups =
+				GeomTopoOpUtils.GroupPolygons(
+					polys, (a, b) => ! GeomRelationUtils.AreBoundsDisjoint(a, b, tolerance),
+					tolerance);
+
+			Assert.AreEqual(2, groups.Count);
+			Assert.AreEqual(1, groups.Count(g => g.Count == 2));
+			Assert.AreEqual(1, groups.Count(g => g.Count == 1));
+
+			ICollection<MultiLinestring> pair = groups.Single(g => g.Count == 2);
+			Assert.IsTrue(pair.Contains(overlapA));
+			Assert.IsTrue(pair.Contains(overlapB));
+			Assert.IsTrue(groups.Single(g => g.Count == 1).Contains(disjoint));
+
+			AssertPartitionsInput(polys, groups);
+		}
+
+		[Test]
+		public void CanMergeChainOfConnectedPolygonsIntoSingleGroup()
+		{
+			const double tolerance = 0.001;
+
+			// A-B overlap and B-C overlap, but A and C are disjoint. All three must still end
+			// up in one connected group (exercises the group-merge branch in AddToGroups).
+			var a = CreateSquare(0, 0, 10);
+			var b = CreateSquare(8, 0, 10);
+			var c = CreateSquare(16, 0, 10);
+
+			Assert.IsTrue(GeomRelationUtils.AreBoundsDisjoint(a, c, tolerance),
+			              "Test setup: A and C must be bounds-disjoint.");
+
+			var polys = new List<MultiLinestring> { a, b, c };
+
+			IList<ICollection<MultiLinestring>> groups =
+				GeomTopoOpUtils.GroupPolygons(
+					polys, (m1, m2) => ! GeomRelationUtils.AreBoundsDisjoint(m1, m2, tolerance),
+					tolerance);
+
+			Assert.AreEqual(1, groups.Count);
+			Assert.AreEqual(3, groups[0].Count);
+			AssertPartitionsInput(polys, groups);
+		}
+
+		[Test]
+		public void CanGroupPolygonsWithAsymmetricCriterion()
+		{
+			// Regression for the "Lost items" assertion failure in GroupPolygons.
+			//
+			// GroupPolygons classifies a polygon as disjoint when it finds no qualifying
+			// neighbor on its own turn - which is only sound for a SYMMETRIC criterion. The
+			// production dissolve path (TrDissolve.GetUnionablePolygonGroups) passes
+			// CanDissolveAreasXY, which is order-dependent (it intersects a onto b and runs a
+			// source/target SubcurveNavigator union), so on tolerance-boundary geometry
+			// criterion(A,B) can be true while criterion(B,A) is false. A is then grouped with
+			// B, but when B is processed it does not re-confirm and is also marked disjoint,
+			// ending up in BOTH a group and the disjoint set -> the +1 "Lost items" failure
+			// (and the polygon would be emitted twice in the union result).
+			//
+			// We model that asymmetry deterministically with a criterion that holds only
+			// "left-to-right" (a.XMin < b.XMin), on two polygons whose bounds overlap (so both
+			// are mutual search candidates - this is NOT about the spatial index). The
+			// higher-x polygon is grouped when the lower-x one is processed, but on its own
+			// turn classifies itself as disjoint.
+
+			const double tolerance = 0.001;
+
+			var left = CreateSquare(0, 0, 10); // XMin 0
+			var right = CreateSquare(1, 0, 10); // XMin 1, bounds overlap left
+
+			var polys = new List<MultiLinestring> { left, right };
+
+			IList<ICollection<MultiLinestring>> groups =
+				GeomTopoOpUtils.GroupPolygons(
+					polys, (a, b) => a.XMin < b.XMin, tolerance);
+
+			// Must not throw "Lost items", and every input must appear exactly once.
+			AssertPartitionsInput(polys, groups);
+
+			// Both belong to the single connected group; neither leaks out as a disjoint single.
+			Assert.AreEqual(1, groups.Count);
+			Assert.AreEqual(2, groups[0].Count);
+		}
+
+		[Test]
+		public void CanUnionMixOfOverlappingAndDisjointPolygonsWithoutDuplication()
+		{
+			const double tolerance = 0.001;
+
+			// Two overlapping unit-area-ish squares (merge into one) plus one disjoint square.
+			var overlapA = CreateSquare(0, 0, 10); // area 100
+			var overlapB = CreateSquare(5, 0, 10); // overlaps A by 5x10 = 50
+			var disjoint = CreateSquare(100, 0, 10); // area 100
+
+			var polys = new List<MultiLinestring> { overlapA, overlapB, disjoint };
+
+			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(polys, tolerance);
+
+			// Merged overlap area = 100 + 100 - 50 = 150; plus disjoint 100 = 250. No double
+			// counting of any input polygon.
+			Assert.AreEqual(250.0, union.GetArea2D(), 0.001);
+			Assert.AreEqual(2, union.PartCount);
+		}
+
+		private static void AssertPartitionsInput(
+			IList<MultiLinestring> input,
+			IList<ICollection<MultiLinestring>> groups)
+		{
+			List<MultiLinestring> flattened = groups.SelectMany(g => g).ToList();
+
+			// No item lost, none counted twice: the flattened groups are a permutation of the
+			// input (by reference).
+			Assert.AreEqual(input.Count, flattened.Count, "Lost or duplicated items");
+
+			foreach (MultiLinestring poly in input)
+			{
+				Assert.AreEqual(
+					1, flattened.Count(p => ReferenceEquals(p, poly)),
+					"Each input polygon must appear in exactly one group.");
+			}
+		}
+
+		[Test]
+		public void SpatialHashSearchIsNotPerfectlySymmetricButCriterionFiltersIt()
+		{
+			// Context: an earlier hypothesis blamed the GroupPolygons "Lost items" failure on
+			// the spatial-hash search being asymmetric. This test records what is actually
+			// true about the search - and shows that, by itself, it is NOT the cause. (The
+			// real cause is an asymmetric grouping CRITERION, e.g. CanDissolveAreasXY; see
+			// CanGroupPolygonsWithAsymmetricCriterion.)
+			//
+			// PROOF, two parts:
+			//
+			// (1) The raw candidate search IS asymmetric: Search(A) can return B while
+			//     Search(B) misses A. Cause: items are indexed by their *raw* envelope, a
+			//     query is the envelope expanded by tolerance, and tile(x)=floor((x-origin)/g)
+			//     quantizes both. The expansion can push A's query box across a tile boundary
+			//     into B's tile without the reverse holding.
+			//
+			// (2) BUT the asymmetry lives entirely in the false-positive zone: for the very
+			//     pair where it occurs, a bounds-based grouping criterion (!AreBoundsDisjoint)
+			//     reports DISJOINT, so such a pair is never grouped. More generally, because
+			//     tile() is monotonic, whenever two boxes are within tolerance on both axes
+			//     (the precondition for any sane grouping criterion to fire) BOTH searches
+			//     return each other - i.e. the search is symmetric exactly where it matters.
+			//     So search asymmetry alone cannot put a polygon into both a group and the
+			//     disjoint set.
+
+			const double gridSize = 10.0;
+			const double tolerance = 1.0;
+
+			// A occupies east-tile 0 (x in [0,9]); B occupies east-tile 1 (x in [11,12]);
+			// same north-tile 0. Gap between them on x is 2, i.e. > tolerance.
+			var index = new SpatialHashSearcher<string>(0, 0, gridSize, 16, 1);
+			index.Add("A", 0, 0, 9, 1);
+			index.Add("B", 11, 0, 12, 1);
+
+			// Search(A): query x in [-1, 10] -> east tiles {-1,0,1}; reaches B's tile 1.
+			List<string> fromA =
+				index.Search(0, 0, 9, 1, tolerance).ToList();
+
+			// Search(B): query x in [10, 13] -> east tiles {1}; never reaches A's tile 0.
+			List<string> fromB =
+				index.Search(11, 0, 12, 1, tolerance).ToList();
+
+			Assert.IsTrue(fromA.Contains("B"), "Search(A) is expected to return B.");
+			Assert.IsFalse(fromB.Contains("A"),
+			               "Search(B) is expected to MISS A -> the search is not symmetric.");
+
+			// Part (2): the precise criterion rejects this pair anyway (they are bounds-
+			// disjoint at this tolerance), so it would never be grouped.
+			Assert.IsTrue(
+				GeomRelationUtils.AreBoundsDisjoint(
+					new EnvelopeXY(0, 0, 9, 1), new EnvelopeXY(11, 0, 12, 1), tolerance),
+				"The asymmetric pair must be bounds-disjoint under the grouping tolerance.");
+		}
+
+		private static RingGroup CreateSquare(double xMin, double yMin, double size)
+		{
+			return GeomTestUtils.CreatePoly(
+				new List<Pnt3D>
+				{
+					new Pnt3D(xMin, yMin, 0),
+					new Pnt3D(xMin, yMin + size, 0),
+					new Pnt3D(xMin + size, yMin + size, 0),
+					new Pnt3D(xMin + size, yMin, 0)
+				});
+		}
 	}
 }
