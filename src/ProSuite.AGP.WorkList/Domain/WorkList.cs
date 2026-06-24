@@ -436,6 +436,14 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
 		                DisplayName);
+
+		// Refresh the total on every full (re)load. This is the path taken after a verification
+		// (Invalidate() -> LoadItems()), where new rows change the total. _items reflects the
+		// current area of interest AND the active filter definition (e.g. 'Latest verification'),
+		// so the total respects the filter - unlike Repository.Count(), which ignores the
+		// definition query. Without this line the cached TotalCount would never be updated for the
+		// lifetime of the work list instance.
+		TotalCount = _items.Count;
 	}
 
 	protected virtual string GetFilterDisplayText()
@@ -669,8 +677,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	public void Count()
 	{
 		var watch = _msg.DebugStartTiming($"{this} start counting items.");
-		
-		TotalCount = CountItems(_items);
+
+		// The total is the grand total of all source rows in the database (ignoring the area of
+		// interest and which items are currently loaded). It is queried once and cached: deriving
+		// it from the in-memory _items would yield only the loaded count and would race with the
+		// background item loading.
+		TotalCount ??= Repository.Count();
 
 		_msg.DebugStopTiming(watch, $"{this} counted {TotalCount} items.");
 	}

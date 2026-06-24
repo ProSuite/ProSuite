@@ -85,6 +85,11 @@ public abstract class GdbItemRepository : IWorkItemRepository
 			                                            ignoreDefinitionQuery));
 	}
 
+	public long Count()
+	{
+		return SourceClasses.Sum(sourceClass => Count(sourceClass, new QueryFilter()));
+	}
+
 	public abstract void UpdateTableSchemaInfo(IWorkListItemDatastore tableSchemaInfo);
 
 	public abstract bool CanUseTableSchema(
@@ -197,6 +202,30 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 		_msg.DebugStopTiming(
 			watch, $"GetItems() {sourceClass.Name}: {count} items");
+	}
+
+	private long Count([NotNull] ISourceClass sourceClass, [NotNull] QueryFilter filter)
+	{
+		Stopwatch watch = _msg.IsVerboseDebugEnabled ? _msg.DebugStartTiming() : null;
+
+		sourceClass.EnsureValidFilter(ref filter, ignoreDefinitionQuery: true);
+
+		using Table table = OpenTable(sourceClass);
+
+		if (table == null)
+		{
+			_msg.Warn($"No items for {sourceClass.Name} can be counted.");
+			return 0;
+		}
+
+		using TableDefinition definition = table.GetDefinition();
+		filter.SubFields = definition.GetObjectIDField();
+
+		long count = table.GetCount(filter);
+
+		_msg.DebugStopTiming(watch, $"Count() {sourceClass.Name}: {count} items");
+
+		return count;
 	}
 
 	private IEnumerable<Row> GetRows([NotNull] ISourceClass sourceClass,
