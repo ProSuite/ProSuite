@@ -985,16 +985,25 @@ public static class LayerUtils
 	public static void SetDisplayExpression([NotNull] BasicFeatureLayer layer,
 	                                        [NotNull] string expression)
 	{
+#if ARCGISPRO_GREATER_3_5
+		var expressionInfo = new CIMExpressionInfo
+		                     {
+			                     Expression = expression
+		                     };
+		layer.SetDisplayExpressionInfo(expressionInfo);
+#else
 		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
 
 		var expressionInfo = new CIMExpressionInfo
 		                     {
-			                     Expression = expression
+			                     Expression = $"{expression}"
 		                     };
 
 		definition.FeatureTable.DisplayExpressionInfo = expressionInfo;
 
 		layer.SetDefinition(definition);
+#endif
+	}
 
 	public static void SetDisplayField([NotNull] BasicFeatureLayer layer,
 	                                   [CanBeNull] string fieldName)
