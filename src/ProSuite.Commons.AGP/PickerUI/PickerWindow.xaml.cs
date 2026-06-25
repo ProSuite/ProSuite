@@ -43,8 +43,17 @@ public partial class PickerWindow : ProWindow, IDisposable, ICloseable
 			return;
 		}
 
-		// Confirm the highlighted item as the selection, then close
-		_viewModel.ConfirmSelectionCommand.Execute(null);
+		// Confirm the clicked item directly, then close. Do not rely on the highlighted
+		// item: a modifier key (e.g. Ctrl still held from a Ctrl+box selection) toggles the
+		// single-select ListBox selection off, leaving HighlightedItem null.
+		if (sender is FrameworkElement element)
+		{
+			if (element.DataContext is IPickableItem item)
+			{
+				_viewModel.ConfirmItem(item);
+			}
+		}
+
 		Close();
 		e.Handled = true;
 	}
