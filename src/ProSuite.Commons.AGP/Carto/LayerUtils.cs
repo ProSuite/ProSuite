@@ -995,5 +995,16 @@ public static class LayerUtils
 		definition.FeatureTable.DisplayExpressionInfo = expressionInfo;
 
 		layer.SetDefinition(definition);
+
+	public static void SetDisplayField([NotNull] BasicFeatureLayer layer,
+	                                   [CanBeNull] string fieldName)
+	{
+#if ARCGISPRO_GREATER_3_5
+		layer.SetDisplayField(fieldName);
+#else
+		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
+		definition.FeatureTable.DisplayField = fieldName;
+		layer.SetDefinition(definition);
+#endif
 	}
 }
