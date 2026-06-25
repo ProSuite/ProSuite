@@ -42,6 +42,13 @@ public interface IWorkItemRepository
 	                                                   bool ignoreDefinitionQuery = false)
 		where T : IWorkItem;
 
+	/// <summary>
+	/// Counts all work items in the source classes directly in the database, ignoring the
+	/// area of interest and definition queries. This is the grand total used for the status bar
+	/// and is independent of which items are currently loaded into memory.
+	/// </summary>
+	long Count();
+
 	void Commit();
 
 	void SetCurrentIndex(int currentIndex);
