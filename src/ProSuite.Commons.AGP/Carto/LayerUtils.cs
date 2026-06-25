@@ -293,6 +293,29 @@ public static class LayerUtils
 		}
 	}
 
+	/// <summary>
+	/// Gets the name of a layer document.
+	/// </summary>
+	/// <param name="layerDocument">The layer document</param>
+	/// <param name="predicate">The predicate. Can be null. If it is null
+	/// the name of the first layer definition is returned.</param>
+	/// <returns></returns>
+	[CanBeNull]
+	public static string GetName([NotNull] LayerDocument layerDocument,
+	                             Func<CIMDefinition, bool> predicate = null)
+	{
+		CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+
+		var definitions = cim?.LayerDefinitions;
+		if (definitions is null || definitions.Length <= 0) return null;
+
+		var definition = predicate is null
+			                 ? definitions.First()
+			                 : definitions.First(predicate);
+
+		return definition.Name;
+	}
+
 	[NotNull]
 	public static LayerDocument OpenLayerDocument([NotNull] string filePath)
 	{
