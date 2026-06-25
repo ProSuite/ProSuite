@@ -573,7 +573,7 @@ public abstract class OneClickToolBase : MapToolBase
 		Point screenLocation = await GetPopupScreenLocation(sketchGeometry);
 
 		var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-		                                  screenLocation)
+		                                  screenLocation, ActiveMapView)
 		             {
 			             NoMultiselection = ! AllowMultiSelection(out _)
 		             };
