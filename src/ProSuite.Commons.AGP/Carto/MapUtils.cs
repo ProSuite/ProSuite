@@ -1074,21 +1074,6 @@ public static class MapUtils
 		return allowSubMapToleranceResult ? result : ClampToMapTolerance(mapView, result);
 	}
 
-	public static double ConvertScreenPixelToMapLength([NotNull] MapView mapView,
-	                                                   int pixels, Point screenPoint,
-	                                                   bool allowSubMapToleranceResult = false)
-	{
-		MapPoint atPoint = mapView.ScreenToMap(screenPoint);
-
-		// Add pixels to get a "radius".
-		var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
-		var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
-
-		double result = GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
-
-		return allowSubMapToleranceResult ? result : ClampToMapTolerance(mapView, result);
-	}
-
 	/// <summary>
 	/// Ensures the given map length is at least the map's XY tolerance. A length below the XY
 	/// tolerance is not resolvable by the geometry engine and produces degenerate search
