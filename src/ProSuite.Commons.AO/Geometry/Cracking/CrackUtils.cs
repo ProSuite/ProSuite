@@ -317,9 +317,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				intersectingFeatureCount++;
 			}
 
+			int totalCrackPoints =
+				toVertexInfo.CrackPoints?.Sum(l => l.Intersections?.Count ?? 0) ?? 0;
+
 			_msg.DebugFormat("Calculated {0} crack points between {1} and {2} target features",
-			                 toVertexInfo.CrackPoints?.Count ?? 0,
-			                 GdbObjectUtils.ToString(toVertexInfo.Feature),
+			                 totalCrackPoints, GdbObjectUtils.ToString(toVertexInfo.Feature),
 			                 intersectingFeatureCount);
 		}
 
