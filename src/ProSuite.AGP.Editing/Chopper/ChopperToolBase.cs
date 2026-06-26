@@ -205,6 +205,10 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 				continue;
 			}
 
+			// TODO: Find a better place, group by table
+			newGeometry =
+				MakeGeometryStorable(newGeometry, originalFeature.GetTable().GetDefinition());
+
 			if (resultFeature.ChangeType == RowChangeType.Update)
 			{
 				updates.Add(originalFeature, newGeometry);
@@ -252,6 +256,24 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		CalculateDerivedGeometries(currentSelection, progressor);
 
 		return saved;
+	}
+
+	private static Geometry MakeGeometryStorable(Geometry newGeometry,
+	                                             FeatureClassDefinition featureClassDef)
+	{
+		// Avoid 'Geometry has null Z values':
+
+		bool classHasZ = featureClassDef.HasZ();
+		bool classHasM = featureClassDef.HasM();
+
+		Geometry geometryToStore =
+			GeometryUtils.EnsureGeometrySchema(
+				newGeometry, classHasZ, classHasM);
+
+		Geometry projected = GeometryUtils.EnsureSpatialReference(
+			geometryToStore, featureClassDef.GetSpatialReference());
+
+		return projected;
 	}
 
 	protected override void ResetDerivedGeometries()
