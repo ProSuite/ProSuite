@@ -37,8 +37,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneraliz
 
 			// In case there are non-linear segments, the calculation can take longer:
 			const int extraFactor = 5;
-			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count) *
-			               extraFactor;
+			long deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count) *
+			                extraFactor;
 
 			CalculateRemovableSegmentsResponse response = GrpcClientUtils.Try(
 				o => generalizeClient.CalculateRemovableSegments(request, o), cancellationToken,
@@ -188,7 +188,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneraliz
 			                                               minimumSegmentLength, use2DLength,
 			                                               perimeter);
 
-			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
+			long deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 			ApplySegmentRemovalResponse response =
 				GrpcClientUtils.Try(
