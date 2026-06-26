@@ -97,7 +97,14 @@ namespace ProSuite.Microservices.Client
 			}
 			catch (RpcException rpcException)
 			{
-				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
+				_msg.Debug(
+					$"Error checking health of service {serviceName}: {rpcException.Message}");
+
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					_msg.Debug(rpcException);
+				}
+
 				statusCode = rpcException.StatusCode;
 			}
 			catch (Exception e)
@@ -139,7 +146,14 @@ namespace ProSuite.Microservices.Client
 			}
 			catch (RpcException rpcException)
 			{
-				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
+				_msg.Debug(
+					$"Error checking health of service {serviceName}: {rpcException.Message}");
+
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					_msg.Debug(rpcException);
+				}
+
 				statusCode = rpcException.StatusCode;
 			}
 			catch (Exception e)
