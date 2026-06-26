@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
@@ -40,11 +41,31 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 
 	private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
+	private string _snapToleranceWarning = string.Empty;
+
 	public string Heading
 	{
 		get => _heading;
 		set { SetProperty(ref _heading, value, () => Heading); }
 	}
+
+	/// <summary>
+	/// Warning shown when the snap tolerance is larger than the current map view extent.
+	/// Empty when there is nothing to warn about.
+	/// </summary>
+	public string SnapToleranceWarning
+	{
+		get => _snapToleranceWarning;
+		private set
+		{
+			if (SetProperty(ref _snapToleranceWarning, value))
+			{
+				NotifyPropertyChanged(nameof(HasSnapToleranceWarning));
+			}
+		}
+	}
+
+	public bool HasSnapToleranceWarning => ! string.IsNullOrEmpty(_snapToleranceWarning);
 
 	public CentralizableSettingViewModel<bool> SnapToTargetVertices
 	{
@@ -103,6 +124,10 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 				                UnitLabel = unit.Label
 			                };
 
+			SnapTolerance.PropertyChanged += SnapToleranceRelatedPropertyChanged;
+			SnapToTargetVertices.PropertyChanged += SnapToleranceRelatedPropertyChanged;
+			UpdateSnapToleranceWarning();
+
 			RespectMinimumSegmentLength =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableRespectMinimumSegmentLength);
@@ -122,6 +147,41 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 				new TargetFeatureSelectionViewModel(
 					_options.CentralizableTargetFeatureSelection);
 		}
+	}
+
+	protected override void OnShowCore(bool isVisible)
+	{
+		if (isVisible)
+		{
+			// Recompute against the current extent whenever the pane is shown.
+			UpdateSnapToleranceWarning();
+		}
+	}
+
+	private void SnapToleranceRelatedPropertyChanged(object sender, PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName == nameof(CentralizableSettingViewModel<double>.CurrentValue))
+		{
+			UpdateSnapToleranceWarning();
+		}
+	}
+
+	private void UpdateSnapToleranceWarning()
+	{
+		if (SnapTolerance == null || SnapToTargetVertices == null ||
+		    ! SnapToTargetVertices.CurrentValue)
+		{
+			SnapToleranceWarning = string.Empty;
+			return;
+		}
+
+		// TODO: If there is a selection, consider using the largest extent of the smallest feature as well?
+		//       Ideally we would probably use the map extent at reference scale.
+
+		string warning = ToolDockpaneUtils.GetToleranceExceedsExtentWarning(
+			SnapTolerance.CurrentValue, MapView.Active?.Extent, SnapTolerance.UnitLabel);
+
+		SnapToleranceWarning = warning ?? string.Empty;
 	}
 
 	protected override Control CreateView()

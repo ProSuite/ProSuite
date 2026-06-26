@@ -17,6 +17,7 @@
 					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 				<ResourceDictionary Source="/ProSuite.Commons.UI;component\ManagedOptions\SettingControls.xaml" />
 			</ResourceDictionary.MergedDictionaries>
+			<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 		</ResourceDictionary>
 	</UserControl.Resources>
 
@@ -74,6 +75,14 @@
 
 		</Grid>
 
+		<!-- Warning: snap tolerance larger than the current map view extent -->
+		<TextBlock Text="{Binding SnapToleranceWarning}"
+		           Visibility="{Binding HasSnapToleranceWarning, Converter={StaticResource BooleanToVisibilityConverter}}"
+		           Foreground="#B26A00"
+		           TextWrapping="Wrap"
+		           MaxWidth="360"
+		           HorizontalAlignment="Left"
+		           Margin="6,2,6,0" />
 
 		<!-- Calculate chopping points at intersections with other -->
 
