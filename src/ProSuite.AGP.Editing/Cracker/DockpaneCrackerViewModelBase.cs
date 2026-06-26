@@ -1,6 +1,8 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.Cracker;
@@ -87,21 +89,31 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 		{
 			SetProperty(ref _options, value);
 
+			DisplayUnitInfo unit = DisplayUnitInfo.FromMap(MapView.Active?.Map);
+
 			SnapToTargetVertices =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableSnapToTargetVertices);
 
 			SnapTolerance = new CentralizableSettingViewModel<double>(
-				Options.CentralizableSnapTolerance,
-				new[] { Options.CentralizableSnapToTargetVertices });
+				                Options.CentralizableSnapTolerance,
+				                new[] { Options.CentralizableSnapToTargetVertices })
+			                {
+				                Decimals = unit.Decimals, Step = unit.Step,
+				                UnitLabel = unit.Label
+			                };
 
 			RespectMinimumSegmentLength =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableRespectMinimumSegmentLength);
 
 			MinimumSegmentLength = new CentralizableSettingViewModel<double>(
-				Options.CentralizableMinimumSegmentLength,
-				new[] { Options.CentralizableRespectMinimumSegmentLength });
+				                       Options.CentralizableMinimumSegmentLength,
+				                       new[] { Options.CentralizableRespectMinimumSegmentLength })
+			                       {
+				                       Decimals = unit.Decimals, Step = unit.Step,
+				                       UnitLabel = unit.Label
+			                       };
 
 			UseSourceZs =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableUseSourceZs);

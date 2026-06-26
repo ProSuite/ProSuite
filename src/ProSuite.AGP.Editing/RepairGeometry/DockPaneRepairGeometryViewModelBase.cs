@@ -1,6 +1,8 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.RepairGeometry;
@@ -87,6 +89,8 @@ public abstract class DockPaneRepairGeometryViewModelBase : DockPaneViewModelBas
 		{
 			SetProperty(ref _options, value);
 
+			DisplayUnitInfo unit = DisplayUnitInfo.FromMap(MapView.Active?.Map);
+
 			EnforceMinimumSegmentLength =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableEnforceMinimumSegmentLength);
@@ -94,7 +98,11 @@ public abstract class DockPaneRepairGeometryViewModelBase : DockPaneViewModelBas
 			MinimumSegmentLength =
 				new CentralizableSettingViewModel<double>(
 					Options.CentralizableMinimumSegmentLength,
-					new[] { Options.CentralizableEnforceMinimumSegmentLength });
+					new[] { Options.CentralizableEnforceMinimumSegmentLength })
+				{
+					Decimals = unit.Decimals, Step = unit.Step,
+					UnitLabel = unit.Label
+				};
 
 			AllowLoops =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableAllowLoops);
@@ -110,7 +118,11 @@ public abstract class DockPaneRepairGeometryViewModelBase : DockPaneViewModelBas
 			CrackPointTolerance =
 				new CentralizableSettingViewModel<double>(
 					Options.CentralizableCrackPointTolerance,
-					new[] { Options.CentralizableAddCrackPointsBetweenParts });
+					new[] { Options.CentralizableAddCrackPointsBetweenParts })
+				{
+					Decimals = unit.Decimals, Step = unit.Step,
+					UnitLabel = unit.Label
+				};
 
 			Use2D =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableUse2D);
