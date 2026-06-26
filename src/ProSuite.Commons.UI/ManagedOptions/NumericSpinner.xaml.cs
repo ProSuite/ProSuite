@@ -154,7 +154,7 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			}
 			else
 			{
-				double roundedValue = Math.Round(parsed, Decimals);
+				double roundedValue = RoundForDisplay(parsed, Decimals);
 
 				if (! MathUtils.AreEqual(Value, roundedValue))
 				{
@@ -186,7 +186,7 @@ namespace ProSuite.Commons.UI.ManagedOptions
 		{
 			if (sender is NumericSpinner spinner)
 			{
-				spinner.Validate();
+				spinner.ClampToBounds();
 				spinner.ValueChanged?.Invoke(spinner, EventArgs.Empty);
 				spinner.PropertyChanged?.Invoke(spinner, EventArgs.Empty);
 
@@ -319,6 +319,21 @@ namespace ProSuite.Commons.UI.ManagedOptions
 
 		#endregion
 
+		private void ClampToBounds()
+		{
+			double testValue = Value;
+
+			if (double.IsNaN(testValue) || double.IsInfinity(testValue))
+				testValue = 0;
+			if (testValue < MinValue) testValue = MinValue;
+			if (testValue > MaxValue) testValue = MaxValue;
+
+			if (! MathUtils.AreEqual(Value, testValue))
+			{
+				Value = testValue;
+			}
+		}
+
 		private void Validate()
 		{
 			double testValue = Value;
@@ -328,7 +343,7 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			if (testValue < MinValue) testValue = MinValue;
 			if (testValue > MaxValue) testValue = MaxValue;
 
-			double roundedValue = Math.Round(testValue, Decimals);
+			double roundedValue = RoundForDisplay(testValue, Decimals);
 
 			if (! MathUtils.AreEqual(Value, roundedValue))
 			{
@@ -336,6 +351,26 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			}
 
 			PropertyChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		/// <summary>
+		/// Rounds to the configured number of decimals to keep the displayed value clean (e.g.
+		/// removing floating-point fuzz from increment/decrement), but never collapses a non-zero
+		/// value to zero.
+		/// <para>
+		/// Tool tolerances can legitimately be smaller than the spinner's display precision (e.g.
+		/// a stored snap tolerance of 3E-08 with Decimals=4 in a projected, meter-based map).
+		/// Rounding such a value to 0 and writing it back through the TwoWay <see cref="Value"/>
+		/// binding would silently and permanently destroy the stored setting on every load. In
+		/// that case the original value is kept (and shown by <see cref="UpdateTextValue"/>, in
+		/// scientific notation if needed) rather than zeroed.
+		/// </para>
+		/// </summary>
+		private static double RoundForDisplay(double value, int decimals)
+		{
+			double rounded = Math.Round(value, decimals);
+
+			return rounded == 0 && value != 0 ? value : rounded;
 		}
 
 		private void OnPropertyChanged(object sender, EventArgs e)
@@ -347,11 +382,13 @@ namespace ProSuite.Commons.UI.ManagedOptions
 		private void cmdUp_Click(object sender, RoutedEventArgs e)
 		{
 			Value += Step;
+			Validate();
 		}
 
 		private void cmdDown_Click(object sender, RoutedEventArgs e)
 		{
 			Value -= Step;
+			Validate();
 		}
 	}
 }
