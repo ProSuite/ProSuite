@@ -30,11 +30,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 	private GeometryType _currentFeatureGeometryType;
 
-	protected CreateFeatureInPickedClassToolBase()
-	{
-		FireSketchEvents = true;
-	}
-
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.CreateFeatureInPickedClassOverlay);
 

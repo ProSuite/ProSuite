@@ -43,8 +43,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		IsSketchTool = true;
 
-		// It is not clear why, but this does not seem to be necessary:
-		//FireSketchEvents = true;
+		FireSketchEvents = true;
 
 		// NOTE: If UseSelection is true, ins some cases the standard selection phase is
 		// activated instead of our 'intermittent selection phase', which can result in a
