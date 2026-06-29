@@ -347,7 +347,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 		{
 			Stopwatch stopWatch = _msg.DebugStartTiming();
 
-			IDatasetRepository repository = modelBuilder.Datasets;
+			var datasetProvider = modelBuilder.GetTestParameterDatasetProvider();
 
 			return modelBuilder.ReadOnlyTransaction(
 				delegate
@@ -373,25 +373,23 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 						}
 					}
 
+					var result = new List<DatasetTableRow>();
+
 					IInstanceInfo instanceInfo = GetInstanceInfo();
 					TestParameter testParameter = instanceInfo?.GetParameter(parameterName);
+					if (testParameter == null)
+					{
+						return result;
+					}
 
-					IList<Dataset> datasets = model?.GetDatasets() ?? repository.GetAll();
+					TestParameterType parameterType =
+						TestParameterTypeUtils.GetParameterType(testParameter.Type);
 
-					var result = new List<DatasetTableRow>();
+					IEnumerable<Dataset>
+						datasets = datasetProvider.GetDatasets(parameterType, model);
 
 					foreach (Dataset dataset in datasets)
 					{
-						if (dataset.Deleted)
-						{
-							continue;
-						}
-
-						if (! IsApplicableFor(testParameter, dataset))
-						{
-							continue;
-						}
-
 						var tableRow = new DatasetTableRow(dataset);
 
 						if (nonSelectableDatasets != null)
@@ -420,93 +418,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			}
 
 			return result;
-		}
-
-		// TODO consolidate with TestParameterDatasetProviderBase
-		private static bool IsApplicableFor(TestParameter testParameter,
-		                                    [NotNull] Dataset dataset)
-		{
-			if (testParameter == null || dataset.Deleted)
-			{
-				return false;
-			}
-
-			// error datasets shouldn't be themselves testable
-			if (dataset is IErrorDataset)
-			{
-				return false;
-			}
-
-			DdxModel model = dataset.Model;
-
-			if (model == null)
-			{
-				return false;
-			}
-
-			if (! (model is ProductionModel))
-			{
-				return false;
-			}
-
-			TestParameterType parameterType =
-				TestParameterTypeUtils.GetParameterType(testParameter.Type);
-
-			if ((parameterType & TestParameterType.Dataset) != 0)
-			{
-				return false;
-			}
-
-			if ((parameterType & TestParameterType.VectorDataset) ==
-			    TestParameterType.VectorDataset &&
-			    dataset is VectorDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.ObjectDataset) ==
-			    TestParameterType.ObjectDataset &&
-			    dataset is IObjectDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.GeometricNetworkDataset) ==
-			    TestParameterType.GeometricNetworkDataset &&
-			    dataset.TypeDescription == "Geometric Network")
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.TopologyDataset) ==
-			    TestParameterType.TopologyDataset &&
-			    dataset is TopologyDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.TerrainDataset) ==
-			    TestParameterType.TerrainDataset &&
-			    dataset is ISimpleTerrainDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.RasterMosaicDataset) ==
-			    TestParameterType.RasterMosaicDataset &&
-			    dataset is RasterMosaicDataset)
-			{
-				return true;
-			}
-
-			if ((parameterType & TestParameterType.RasterDataset) ==
-			    TestParameterType.RasterDataset &&
-			    dataset is RasterDataset)
-			{
-				return true;
-			}
-
-			return false;
 		}
 
 		public bool CanBatchCreateQualityConditions(

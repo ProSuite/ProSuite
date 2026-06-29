@@ -232,6 +232,26 @@ public static class SymbolUtils
 	#region Modification
 
 	/// <summary>
+	/// Add a symbol layer to a multi-layer symbol, either as the last or the first
+	/// </summary>
+	/// <param name="symbol">The symbol to modify</param>
+	/// <param name="layer">The symbol layer to add</param>
+	/// <param name="prepend">If true: add as first layer; otherwise: add as last layer</param>
+	/// <returns>The given <paramref name="symbol"/></returns>
+	/// <remarks>Earlier symbol layers draw on top of later symbol layers
+	/// (unless symbol layer drawing defines it otherwise)</remarks>
+	public static T AddSymbolLayer<T>(this T symbol, CIMSymbolLayer layer, bool prepend = true)
+		where T : CIMMultiLayerSymbol
+	{
+		if (symbol is null)
+			throw new ArgumentNullException(nameof(symbol));
+
+		symbol.SymbolLayers = AddOne(symbol.SymbolLayers, layer, prepend);
+
+		return symbol;
+	}
+
+	/// <summary>
 	/// Set the alpha value of all colors in a symbol.
 	/// </summary>
 	/// <remarks>Modifies the given symbol!</remarks>
@@ -510,8 +530,8 @@ public static class SymbolUtils
 
 	#region Marker Placements
 
-	public static T SetMarkerPlacement<T>(this T marker,
-	                                      [CanBeNull] CIMMarkerPlacement placement)
+	public static T SetMarkerPlacement<T>(
+		this T marker, [CanBeNull] CIMMarkerPlacement placement)
 		where T : CIMMarker
 	{
 		if (marker == null)
@@ -522,8 +542,23 @@ public static class SymbolUtils
 		return marker;
 	}
 
-	public static T SetMarkerPlacementAtRatioPositions<T>(this T marker,
-	                                                      params double[] ratioPositions)
+	/// <remarks>By default, set markers on all vertices
+	/// (regular, control points, end points)</remarks>
+	public static T SetMarkerPlacementOnVertices<T>(
+		this T marker, bool? onRegularVertices = null,
+		bool? onControlPoints = null, bool? onEndPoints = null)
+		where T : CIMMarker
+	{
+		var placement = new CIMMarkerPlacementOnVertices();
+		placement.PlaceOnRegularVertices = onRegularVertices ?? true;
+		placement.PlaceOnControlPoints = onControlPoints ?? true;
+		placement.PlaceOnEndPoints = onEndPoints ?? true;
+
+		return marker.SetMarkerPlacement(placement);
+	}
+
+	public static T SetMarkerPlacementAtRatioPositions<T>(
+		this T marker, params double[] ratioPositions)
 		where T : CIMMarker // TODO overload that allows setting BeginPosition and EndPosition
 	{
 		var placement = new CIMMarkerPlacementAtRatioPositions();
@@ -547,7 +582,8 @@ public static class SymbolUtils
 		return marker.SetMarkerPlacement(placement);
 	}
 
-	public static T SetMarkerPlacementAlongLine<T>(this T marker, params double[] template)
+	public static T SetMarkerPlacementAlongLine<T>(
+		this T marker, params double[] template)
 		where T : CIMMarker
 	{
 		var placement = new CIMMarkerPlacementAlongLineSameSize();
@@ -556,10 +592,9 @@ public static class SymbolUtils
 		return marker.SetMarkerPlacement(placement);
 	}
 
-	public static T SetMarkerPlacementAtExtremities<T>(this T marker,
-	                                                   ExtremityPlacement extremities,
-	                                                   double offsetAlongLine = 0.0)
-		where T : CIMMarker
+	public static T SetMarkerPlacementAtExtremities<T>(
+		this T marker, ExtremityPlacement extremities,
+	    double offsetAlongLine = 0.0) where T : CIMMarker
 	{
 		var placement = new CIMMarkerPlacementAtExtremities();
 		placement.ExtremityPlacement = extremities;
@@ -568,8 +603,9 @@ public static class SymbolUtils
 		return marker.SetMarkerPlacement(placement);
 	}
 
-	public static T SetMarkerEndings<T>(this T marker, PlacementEndings endings,
-	                                    double customOffset = 0.0) where T : CIMMarker
+	public static T SetMarkerEndings<T>(
+		this T marker, PlacementEndings endings,
+	    double customOffset = 0.0) where T : CIMMarker
 	{
 		if (marker.MarkerPlacement is CIMMarkerPlacementAlongLine placement)
 		{
@@ -584,7 +620,8 @@ public static class SymbolUtils
 		return marker;
 	}
 
-	public static T SetMarkerOffsetAlongLine<T>(this T marker, double offsetAlongLine)
+	public static T SetMarkerOffsetAlongLine<T>(
+		this T marker, double offsetAlongLine)
 		where T : CIMMarker
 	{
 		switch (marker.MarkerPlacement)
@@ -602,7 +639,8 @@ public static class SymbolUtils
 		return marker;
 	}
 
-	public static T SetMarkerPlacePerPart<T>(this T marker, bool placePerPart) where T : CIMMarker
+	public static T SetMarkerPlacePerPart<T>(
+		this T marker, bool placePerPart) where T : CIMMarker
 	{
 		if (marker.MarkerPlacement is { } placement)
 		{
@@ -612,7 +650,8 @@ public static class SymbolUtils
 		return marker;
 	}
 
-	public static T SetMarkerAngleToLine<T>(this T marker, bool angleToLine) where T : CIMMarker
+	public static T SetMarkerAngleToLine<T>(
+		this T marker, bool angleToLine) where T : CIMMarker
 	{
 		if (marker.MarkerPlacement is CIMMarkerStrokePlacement placement)
 		{
@@ -626,8 +665,8 @@ public static class SymbolUtils
 		return marker;
 	}
 
-	public static T SetMarkerPerpendicularOffset<T>(this T marker, double offset)
-		where T : CIMMarker
+	public static T SetMarkerPerpendicularOffset<T>(
+		this T marker, double offset) where T : CIMMarker
 	{
 		if (marker.MarkerPlacement is CIMMarkerStrokePlacement placement)
 		{
@@ -1568,19 +1607,29 @@ public static class SymbolUtils
 	/// <remarks>
 	/// Usage: <c>foo.Array = AddOne(foo.Array, item)</c>
 	/// </remarks>
-	public static T[] AddOne<T>([CanBeNull] T[] array, T item)
+	public static T[] AddOne<T>([CanBeNull] T[] array, T item, bool prepend = false)
 	{
-		if (item == null)
+		if (item is null)
 			throw new ArgumentNullException(nameof(item));
 
-		if (array == null)
+		if (array is null)
 		{
 			return new[] { item };
 		}
 
 		var enlarged = new T[array.Length + 1];
-		Array.Copy(array, enlarged, array.Length);
-		enlarged[array.Length] = item;
+
+		if (prepend)
+		{
+			Array.Copy(array, 0, enlarged, 1, array.Length);
+			enlarged[0] = item;
+		}
+		else
+		{
+			Array.Copy(array, enlarged, array.Length);
+			enlarged[array.Length] = item;
+		}
+
 		return enlarged;
 	}
 

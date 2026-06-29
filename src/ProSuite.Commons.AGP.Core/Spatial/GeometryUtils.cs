@@ -8,12 +8,15 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Logging;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
 namespace ProSuite.Commons.AGP.Core.Spatial;
 
 public static class GeometryUtils
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	public static Coordinate2D Shifted(this Coordinate2D point, double dx, double dy)
 	{
 		return new Coordinate2D(point.X + dx, point.Y + dy);
@@ -390,6 +393,14 @@ public static class GeometryUtils
 	}
 
 	public static Geometry Intersection(
+		[CanBeNull] Geometry a, [CanBeNull] Geometry b, GeometryDimensionType dimension)
+	{
+		if (a is null) return null;
+		if (b is null) return null;
+		return Engine.Intersection(a, b, dimension);
+	}
+
+	public static Geometry Intersection(
 		[CanBeNull] Geometry a, [CanBeNull] Geometry b)
 	{
 		if (a is null) return null;
@@ -620,6 +631,66 @@ public static class GeometryUtils
 		}
 
 		return PolygonBuilderEx.CreatePolygon(result, flags, sref);
+	}
+
+	/// <summary>
+	/// Remove the specified part from the given geometry.
+	/// The resulting geometry may be empty (but not null).
+	/// </summary>
+	/// <returns>A new geometry instance, which may be an empty
+	/// geometry (if the last or only part was removed)</returns>
+	public static Geometry RemovePart(Geometry shape, int partIndex)
+	{
+		if (shape is null)
+			throw new ArgumentNullException(nameof(shape));
+
+		if (shape.IsEmpty)
+			throw new InvalidOperationException("Cannot remove part on an empty geometry");
+
+		if (shape is MapPoint mapPoint)
+		{
+			if (partIndex != 0)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			var builder = new MapPointBuilderEx(mapPoint);
+			builder.SetEmpty();
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipoint multipoint)
+		{
+			// take the given partIndex as the pointIndex
+			if (partIndex < 0 || partIndex >= multipoint.PointCount)
+				throw new ArgumentOutOfRangeException(
+					"partIndex index out of range for multipoint shape", (Exception) null);
+			var builder = new MultipointBuilderEx(multipoint);
+			builder.RemovePoint(partIndex);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipart multipart)
+		{
+			var builder = multipart.ToBuilder();
+			if (builder.PartCount <= 0)
+				throw new InvalidOperationException("no parts at all (empty builder)");
+			if (partIndex < 0 || partIndex >= builder.PartCount)
+				throw new ArgumentOutOfRangeException(nameof(partIndex));
+			builder.RemovePart(partIndex);
+			return builder.ToGeometry();
+		}
+
+		if (shape is Multipatch)
+		{
+			throw new NotImplementedException();
+		}
+
+		if (shape is Envelope)
+		{
+			// Could return an empty envelope, but an error is probably more useful:
+			throw new NotSupportedException("Cannot remove part on an Envelope");
+		}
+
+		throw new NotSupportedException(
+			$"Geometry type {shape.GetType().Name} is not supported");
 	}
 
 	/// <summary>
@@ -1032,6 +1103,42 @@ public static class GeometryUtils
 	}
 
 	/// <summary>
+	/// Returns a new <see cref="LineSegment"/> that has the same direction as
+	/// <paramref name="segment"/>, but with the start point moved backwards along
+	/// the line by <paramref name="extendAtStart"/> and the end point moved forward
+	/// along the line by <paramref name="extendAtEnd"/>. Negative values shorten
+	/// the segment at the respective end.
+	/// </summary>
+	/// <param name="segment">The segment to extend. Must have a non-zero length.</param>
+	/// <param name="extendAtStart">Distance (in the segment's map units) by which
+	/// to move the start point away from the end point.</param>
+	/// <param name="extendAtEnd">Distance (in the segment's map units) by which
+	/// to move the end point away from the start point.</param>
+	[NotNull]
+	public static LineSegment GetExtendedLineSegment(
+		[NotNull] Segment segment, double extendAtStart, double extendAtEnd)
+	{
+		Assert.ArgumentNotNull(segment, nameof(segment));
+
+		double dx = segment.EndCoordinate.X - segment.StartCoordinate.X;
+		double dy = segment.EndCoordinate.Y - segment.StartCoordinate.Y;
+		double length = Math.Sqrt(dx * dx + dy * dy);
+
+		Assert.ArgumentCondition(length > 0.0, "Cannot extend a zero-length segment.");
+
+		double ux = dx / length;
+		double uy = dy / length;
+
+		var newStart = new Coordinate2D(segment.StartCoordinate.X - ux * extendAtStart,
+		                                segment.StartCoordinate.Y - uy * extendAtStart);
+
+		var newEnd = new Coordinate2D(segment.EndCoordinate.X + ux * extendAtEnd,
+		                              segment.EndCoordinate.Y + uy * extendAtEnd);
+
+		return LineBuilderEx.CreateLineSegment(newStart, newEnd, segment.SpatialReference);
+	}
+
+	/// <summary>
 	/// Returns a value that indicates the size of the specified geometry:
 	/// - Multipatch, Polygon, Ring: 2D area
 	/// - Polyline, Path, Segment: 2D length
@@ -1093,7 +1200,6 @@ public static class GeometryUtils
 		[NotNull] IEnumerable<Feature> features)
 	{
 		return GetLargest(features, feature => feature.GetShape());
-		;
 	}
 
 	/// <summary>
@@ -2170,5 +2276,650 @@ public static class GeometryUtils
 
 		return new EnvelopeXY(combinedExtent.XMin, combinedExtent.YMin, combinedExtent.XMax,
 		                      combinedExtent.YMax);
+	}
+
+	private class MapPointComparer : IEqualityComparer<MapPoint>
+	{
+		public bool Equals(MapPoint x, MapPoint y) => GeometryEngine.Instance.Equals(x, y);
+
+		public int GetHashCode(MapPoint obj) => 0; // forces linear compare
+	}
+
+	public static List<MapPoint> GetUniqueEndPoints(Polyline unionLine)
+	{
+		if (unionLine.PartCount == 1)
+		{
+			return new List<MapPoint>
+			       {
+				       GetStartPoint(unionLine),
+				       GetEndPoint(unionLine)
+			       };
+		}
+
+		// Keep only unique points because duplicate points indicate that this is not
+		// a true end point, but just a split point between parts.
+
+		HashSet<MapPoint> endPoints = new HashSet<MapPoint>(new MapPointComparer());
+		HashSet<MapPoint> duplicatePoints = new HashSet<MapPoint>(new MapPointComparer());
+		foreach (var part in unionLine.Parts)
+		{
+			MapPoint startPoint = GetStartPoint(part);
+			if (! endPoints.Add(startPoint))
+			{
+				duplicatePoints.Add(startPoint);
+			}
+
+			MapPoint endPoint = GetEndPoint(part);
+			if (! endPoints.Add(endPoint))
+			{
+				duplicatePoints.Add(endPoint);
+			}
+		}
+
+		// Also remove the original point of a duplicate that has already been added to endPoints.
+		endPoints.RemoveWhere(p => duplicatePoints.Contains(p));
+
+		return endPoints.ToList();
+	}
+
+	public static bool HasNonLinearSegments([NotNull] Geometry geometry)
+	{
+		Assert.ArgumentNotNull(geometry, nameof(geometry));
+
+		if (geometry is Multipart multipart)
+		{
+			ICollection<Segment> segmentCol = new List<Segment>();
+			multipart.GetAllSegments(ref segmentCol);
+
+			if (segmentCol != null)
+			{
+				foreach (Segment segment in segmentCol)
+				{
+					if (segment.SegmentType != SegmentType.Line)
+					{
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Returns a value indicating if two MapPoints are equal 
+	/// in XY and within the XY tolerance.
+	/// </summary>
+	/// <param name="firstPoint">The first geometry.</param>
+	/// <param name="secondPoint">The second geometry.</param>
+	/// <returns></returns>
+	public static bool AreEqualInXY([CanBeNull] MapPoint firstPoint,
+	                                [CanBeNull] MapPoint secondPoint)
+	{
+		return IsSamePointXY(firstPoint, secondPoint);
+	}
+
+	public static bool IsSamePointXY(MapPoint a, MapPoint b, double xyTolerance = -1.0)
+	{
+		if (ReferenceEquals(a, b)) return true;
+		if (a is null || b is null) return false;
+
+		if (xyTolerance is < 0 or double.NaN)
+		{
+			double xyToleranceA = GetXyTolerance(a);
+			double xyToleranceB = GetXyTolerance(b);
+			xyTolerance = Math.Max(xyToleranceA, xyToleranceB);
+		}
+
+		double dx = a.X - b.X;
+		double dy = a.Y - b.Y;
+		double dd = dx * dx + dy * dy;
+
+		double xyToleranceSquared = xyTolerance * xyTolerance;
+		return dd <= xyToleranceSquared;
+	}
+
+	public static bool IsClosed(this Geometry geometry)
+	{
+		if (geometry is MapPoint) return false;
+		if (geometry is Multipoint) return false;
+		if (geometry is Polyline polyline)
+		{
+			return IsClosed(polyline);
+			//return false;
+		}
+
+		if (geometry is Polygon) return true;
+
+		return false;
+	}
+
+	private static bool IsClosed(Polyline polyline)
+	{
+		if (polyline.PartCount == 0)
+		{
+			return false;
+		}
+
+		foreach (ReadOnlySegmentCollection readOnlySegmentCollection in polyline.Parts)
+		{
+			int segmentCount = readOnlySegmentCollection.Count;
+
+			if (segmentCount > 1)
+			{
+				MapPoint segmentStartPoint = readOnlySegmentCollection[0].StartPoint;
+				MapPoint segmentEndPoint = readOnlySegmentCollection[0].EndPoint;
+
+				//double xyResolution = segmentStartPoint.SpatialReference.XYResolution;
+				//GeometryUtils.IsSamePointXY(segmentStartPoint, (readOnlySegmentCollection[segmentCount - 1]
+				//			                              .EndPoint), xyResolution)
+				if (! segmentStartPoint.IsEqual(readOnlySegmentCollection[segmentCount - 1]
+					                                .EndPoint))
+				{
+					return false;
+				}
+
+				for (int i = 1; i < segmentCount; i++)
+				{
+					if (! segmentEndPoint.IsEqual(readOnlySegmentCollection[i].StartPoint))
+					{
+						return false;
+					}
+
+					segmentEndPoint = readOnlySegmentCollection[i].EndPoint;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	[NotNull]
+	public static IEnumerable<Geometry> GetParts(Geometry geometry)
+	{
+		Assert.ArgumentNotNull(geometry, nameof(geometry));
+		GeometryType geometryType = geometry.GeometryType;
+		Assert.ArgumentCondition(
+			geometryType == GeometryType.Polygon ||
+			geometryType == GeometryType.Polyline,
+			"The geometry must be a polygon or a polyline");
+
+		for (int i = 0; i < ((Multipart) geometry).Parts.Count; i++)
+		{
+			yield return GetPart(geometry, i);
+		}
+	}
+
+	[NotNull]
+	public static Geometry GetCoincidentPath(
+		[NotNull] Polyline inCongruentGeometry, [NotNull] Polyline searchPath,
+		double xyTolerance)
+	{
+		Geometry foundPart = GetHitGeometryPart(GetStartPoint(searchPath),
+		                                        inCongruentGeometry,
+		                                        xyTolerance);
+
+		Assert.NotNull(foundPart, "GetCoincidentPath: No coincident path found.");
+
+		// safety net: if there are touching rings, they often touch in the From-/To-Points
+		// TODO: If (non-simple) rings touch along several vertices, this can still result in wrong results 
+		//       Consider using GeometryComparison.HaveSameVertices: safer but slower
+
+		// get second opinion (could be optimized by only checking if length is different -> unsafe!
+		const int testPointIdx = 1;
+		foundPart = GetPartBySecondOpinionHitTest(inCongruentGeometry, searchPath,
+		                                          testPointIdx, foundPart, xyTolerance);
+		return foundPart;
+	}
+
+	private static Geometry GetPartBySecondOpinionHitTest(
+		[NotNull] Polyline congruentGeometry,
+		[NotNull] Polyline searchPath,
+		int secondTestPointIdx,
+		[NotNull] Geometry firstOpinion,
+		double xyTolerance)
+	{
+		if (searchPath.PointCount <= secondTestPointIdx)
+		{
+			return firstOpinion;
+		}
+
+		Geometry secondOpinion =
+			GetHitGeometryPart(
+				(searchPath).Points[secondTestPointIdx],
+				congruentGeometry, xyTolerance);
+
+		Assert.NotNull(secondOpinion,
+		               "GetPartBySecondOpinionHitTest: No part could be associated with intersection.");
+
+		if (firstOpinion == secondOpinion)
+		{
+			return secondOpinion;
+		}
+
+		double firstOpinionLengthDiff =
+			Math.Abs((firstOpinion).Length - (searchPath).Length);
+
+		double secondOpinionLengthDiff =
+			Math.Abs((secondOpinion).Length - (searchPath).Length);
+
+		if (firstOpinionLengthDiff < secondOpinionLengthDiff)
+		{
+			return firstOpinion;
+		}
+
+		_msg.DebugFormat("Using second opinion hit test to determine associated part.");
+
+		return secondOpinion;
+	}
+
+	public static Geometry GetHitGeometryPart(MapPoint point, Geometry geometry,
+	                                          double searchRadius)
+	{
+		int? partIndex = FindHitPartIndex(geometry, point, searchRadius);
+
+		return partIndex != null
+			       ? GetPart(geometry, (int) partIndex)
+			       : null;
+	}
+
+	/// <summary>
+	/// Returns the part index whose boundary is within the search tolerance of the searchPoint or null.
+	/// </summary>
+	/// <param name="geometry"></param>
+	/// <param name="searchPoint"></param>
+	/// <param name="searchTolerance"></param>
+	/// <returns></returns>
+	private static int? FindHitPartIndex(Geometry geometry, MapPoint searchPoint,
+	                                     double searchTolerance)
+	{
+		//HitTest
+		ProximityResult proximity = GeometryEngine.Instance.NearestPoint(geometry, searchPoint);
+		Assert.True(proximity.Distance <= searchTolerance,
+		            "proximity.Distance <= searchTolerance");
+		int? segmentIndex = proximity.SegmentIndex;
+		int hitPart = proximity.PartIndex;
+
+		if (segmentIndex == null)
+		{
+			//Assert.True(segmentIndex != null, "segmentIndex != null");
+			Assert.Fail("partIndex == null");
+		}
+
+		return hitPart;
+	}
+
+	/// <summary>
+	/// Splits the provided path into several paths at the specified splitting points.
+	/// </summary>
+	/// <param name="pathToSplit">The path to split</param>
+	/// <param name="splittingPoints">The points where the path should be splitted</param>
+	/// <param name="projectPointsOntoPathToSplit">Whether the splitting points should be projected
+	/// onto the split path. If not, the X,Y,Z values from the splitting points will be introduced.</param>
+	/// <param name="cutOffDistance">The maximum allowed distance of a splitting point. If the splitting
+	/// point has a larger distance to the path to split it will be ignored.</param>
+	/// <param name="allowMergingNotSplitCoincidentFromToPoints">Condition to determine whether the last
+	/// part and the first part of the closed path to split should be merged if there was no split at 
+	/// the original from/to-point. Can be used to move the from/to-point in rings.
+	/// of the path or not.</param>
+	/// <returns></returns>
+	[NotNull]
+	public static Geometry SplitPath(
+		[NotNull] Polyline pathToSplit,
+		[NotNull] Multipoint splittingPoints,
+		bool projectPointsOntoPathToSplit,
+		double cutOffDistance,
+		[CanBeNull] Predicate<Geometry> allowMergingNotSplitCoincidentFromToPoints)
+	{
+		Assert.ArgumentNotNull(pathToSplit, nameof(pathToSplit));
+		Assert.ArgumentNotNull(splittingPoints, nameof(splittingPoints));
+
+		bool splitHappenedAtFrom;
+		Geometry splittedPaths = SplitPath(
+			pathToSplit, splittingPoints, projectPointsOntoPathToSplit, cutOffDistance,
+			out splitHappenedAtFrom);
+
+		{
+			if (pathToSplit.IsClosed() && ! splitHappenedAtFrom &&
+			    GetPartCount(splittedPaths) > 1 &&
+			    allowMergingNotSplitCoincidentFromToPoints != null &&
+			    allowMergingNotSplitCoincidentFromToPoints(splittedPaths))
+			{
+				int lastIndex = GetPartCount(splittedPaths) - 1;
+
+				var lastPart = ((Multipart) splittedPaths).Parts[lastIndex];
+				var firstPart = ((Multipart) splittedPaths).Parts[0];
+
+				var lastPartBuilder = new PolylineBuilderEx().Configure(splittedPaths);
+				lastPartBuilder.AddSegments(lastPart);
+
+				lastPartBuilder.AddSegments(firstPart);
+
+				MultipartBuilderEx splittedPathsBuilder =
+					(MultipartBuilderEx) splittedPaths.ToBuilder();
+				splittedPathsBuilder.RemovePart(0);
+				splittedPaths = splittedPathsBuilder.ToGeometry();
+			}
+		}
+
+		return splittedPaths;
+	}
+
+	/// <summary>
+	/// Splits the provided path into several paths at the specified splitting points.
+	/// </summary>
+	/// <param name="pathToSplit">The path to split</param>
+	/// <param name="splittingPoints">The points where the path should be splitted</param>
+	/// <param name="projectPointsOntoPathToSplit">Whether the splitting points should be projected
+	/// onto the split path. If not, the X,Y,Z values from the splitting points will be introduced.</param>
+	/// <param name="cutOffDistance">The maximum allowed distance of a splitting point. If the splitting
+	/// point has a larger distance to the path to split it will be ignored.</param>
+	/// <param name="splitHappenedAtFromPoint">Whether a split happened at the from point
+	/// of the path or not.</param>
+	/// <returns></returns>
+	[NotNull]
+	public static Geometry SplitPath(
+		[NotNull] Polyline pathToSplit,
+		[NotNull] Multipoint splittingPoints,
+		bool projectPointsOntoPathToSplit,
+		double cutOffDistance,
+		out bool splitHappenedAtFromPoint)
+	{
+		Assert.ArgumentNotNull(pathToSplit, nameof(pathToSplit));
+		Assert.ArgumentNotNull(splittingPoints, nameof(splittingPoints));
+
+		var polycurveToSplit = pathToSplit;
+
+		const bool createParts = true;
+		Multipart modifiedPolycurve;
+		CrackPolycurve(polycurveToSplit, splittingPoints, projectPointsOntoPathToSplit,
+		               createParts, cutOffDistance, out splitHappenedAtFromPoint,
+		               out modifiedPolycurve);
+
+		var subCurves = modifiedPolycurve;
+
+		_msg.DebugFormat("SplitPath: Number of parts created: {0}",
+		                 GetPartCount(subCurves));
+		return subCurves;
+	}
+
+	/// <summary>
+	/// Cracks the specified polycurve by adding vertices at the provided split points or alternatively 
+	/// splitting it into separate geometry parts. This method encapsulates IPolycurve2.SplitAtPoints
+	/// The general characteristics of the polycurve are maintained (non-linear segments).
+	/// </summary>
+	/// <param name="polycurveToSplit">The polycurve to crack up</param>
+	/// <param name="splittingPoints">The points at which vertices should be inserted or the geometry should </param>
+	/// <param name="projectPointsOntoPathToSplit">Whether the split points should be projected onto the 
+	/// geometry before cracking it</param>
+	/// <param name="createParts">Whether the geometry should be split into several geometry parts (NOTE: this is not tested for polygons)
+	/// or, if false, only vertices should be inserted</param>
+	/// <param name="cutOffDistance">The maximum distance at which split points are still considered</param>
+	/// <param name="modifiedPolycurve">The resulting polycurve</param>
+	/// <returns></returns>
+	public static IList<MapPoint> CrackPolycurve(
+		[NotNull] Multipart polycurveToSplit,
+		[NotNull] Multipoint splittingPoints,
+		bool projectPointsOntoPathToSplit,
+		bool createParts, double? cutOffDistance,
+		out Multipart modifiedPolycurve)
+	{
+		if (cutOffDistance == null)
+		{
+			// All points are used if -1 is specified (also in IPolycurve2.SplitAtPoints())
+			cutOffDistance = -1;
+		}
+
+		IList<MapPoint> splitPoints = SplitPolycurve(polycurveToSplit, splittingPoints,
+		                                             projectPointsOntoPathToSplit,
+		                                             createParts, (double) cutOffDistance,
+		                                             out modifiedPolycurve);
+
+		return splitPoints;
+	}
+
+	/// <summary>
+	/// Cracks the specified polycurve by adding vertices at the provided split points or alternatively 
+	/// splitting it into separate geometry parts. This method encapsulates IPolycurve2.SplitAtPoints
+	/// The general characteristics of the polycurve are maintained (non-linear segments).
+	/// </summary>
+	/// <param name="polycurveToSplit">The polycurve to crack up</param>
+	/// <param name="splittingPoints">The points at which vertices should be inserted or the geometry should </param>
+	/// <param name="projectPointsOntoPathToSplit">Whether the split points should be projected onto the 
+	/// geometry before cracking it</param>
+	/// <param name="createParts">Whether the geometry should be split into several geometry parts (NOTE: this is not tested for polygons)
+	/// or, if false, only vertices should be inserted</param>
+	/// <param name="cutOffDistance">The maximum distance from the polycurve at which split points are still considered</param>
+	/// <param name="splitHappenedAtFromPoint">Whether a split happened at the from-point
+	/// of the polycurve or not</param>
+	/// <param name="modifiedPolycurve">The resulting polycurve</param>
+	/// <returns></returns>
+	public static IList<MapPoint> CrackPolycurve(
+		[NotNull] Multipart polycurveToSplit,
+		[NotNull] Multipoint splittingPoints,
+		bool projectPointsOntoPathToSplit,
+		bool createParts, double? cutOffDistance,
+		out bool splitHappenedAtFromPoint,
+		out Multipart modifiedPolycurve)
+	{
+		Assert.ArgumentNotNull(polycurveToSplit, nameof(polycurveToSplit));
+		Assert.ArgumentNotNull(splittingPoints, nameof(splittingPoints));
+
+		if (cutOffDistance == null)
+		{
+			// It seems that all points are used if -1 is specified
+			cutOffDistance = -1;
+		}
+
+		IList<MapPoint> splitPoints = SplitPolycurve(polycurveToSplit, splittingPoints,
+		                                             projectPointsOntoPathToSplit,
+		                                             createParts, (double) cutOffDistance,
+		                                             out modifiedPolycurve);
+
+		splitHappenedAtFromPoint = splitPoints.Count > 0 &&
+		                           AreEqualInXY(splitPoints[0], GetStartPoint(modifiedPolycurve));
+
+		return splitPoints;
+	}
+
+	/// <summary>
+	/// Ensures that vertices exist at the provided split points and optionally splits the polycurve
+	/// into separate parts.
+	/// </summary>
+	/// <param name="polycurve">The polycurve to split</param>
+	/// <param name="splitPoints">The split points. If two consecutive split points on a line are closer
+	/// than the tolerance, an empty part results (FromPoint and ToPoint property will throw) and the next
+	/// previous part's to point is snapped to the next part's from point.
+	/// </param>
+	/// <param name="projectOnto">Wether the split points are to be projected onto the polycurve or not.
+	/// If true, the new Z and M values are interpolated. If false, they are taken from the provided split points.</param>
+	/// <param name="createParts">Whether the geometry should be split into several geometry parts (NOTE: this is not tested for polygons)
+	/// or, if false, only vertices should be inserted</param>
+	/// <param name="cutOffDistance">If larger 0 and not NaN, split points further away than cutOffDistance
+	/// are ignored</param>
+	/// <param name="modifiedPolycurve">The resulting polycurve</param>
+	/// <returns>The list of points that were used to ensure a vertex. If projectOnto is true, the projected
+	/// points are returned</returns>
+	[NotNull]
+	public static IList<MapPoint> SplitPolycurve(
+		[NotNull] Multipart polycurve,
+		[NotNull] Multipoint splitPoints,
+		bool projectOnto,
+		bool createParts,
+		double cutOffDistance,
+		out Multipart modifiedPolycurve)
+	{
+		// use descending order to avoid incorrect split locations due to slight changes in length by point insertion
+		IEnumerable<KeyValuePair<MapPoint, double>> usablePoints =
+			GetPointsOrderedDecendingAlongPolycurve(splitPoints, polycurve, cutOffDistance,
+			                                        projectOnto);
+
+		var result = new List<MapPoint>();
+
+		MultipartBuilderEx polycurveBuilder = polycurve.ToBuilder();
+
+		foreach (KeyValuePair<MapPoint, double> usablePoint in usablePoints)
+		{
+			bool splitHappened;
+			int newPartIdx;
+
+			if (projectOnto)
+			{
+				// use the presumably cheaper method
+				newPartIdx =
+					polycurveBuilder.SplitAtDistance(usablePoint.Value, false, createParts);
+			}
+			else
+			{
+				polycurve = GeometryEngine.Instance.SplitAtPoint(polycurve, usablePoint.Key,
+				                                                 false, createParts,
+				                                                 out splitHappened, out newPartIdx,
+				                                                 out int _);
+				polycurveBuilder = polycurve.ToBuilder();
+			}
+
+			splitHappened = newPartIdx > -1;
+
+			// NOTE: if createParts == true: empty parts are generated, otherwise no empty segment is created and
+			//		 splitHappens is false. But splitHappens is also false if there was a vertex already
+			if (createParts && splitHappened && polycurveBuilder.Parts[newPartIdx].Count == 0)
+			{
+				// the split point was too close to the previous split point
+				polycurveBuilder.RemovePart(newPartIdx);
+				polycurve = polycurveBuilder.ToGeometry() as Multipart;
+
+				_msg.DebugFormat(
+					"Empty part resulted from split point {0}|{1} and was removed from output",
+					usablePoint.Key.X, usablePoint.Key.Y);
+			}
+
+			// For consistency add the split point even if the result part was empty (and removed) or no additional 
+			// segment was created due to short split point distance.
+			// -> there is a vertex within the tolerance and the meaning of the result points is 'ensured a vertex 
+			//    exists at the desired split point' rather than 'a split was needed at the desired split point'
+			result.Add(usablePoint.Key);
+
+			_msg.VerboseDebug(() =>
+				                  $"Split happened at {usablePoint.Key.X}|{usablePoint.Key.Y}: {splitHappened}");
+		}
+
+		modifiedPolycurve = polycurveBuilder.ToGeometry() as Multipart;
+
+		// return used split points in ascending order along polycurve
+		result.Reverse();
+
+		return result;
+	}
+
+	private static IEnumerable<KeyValuePair<MapPoint, double>>
+		GetPointsOrderedDecendingAlongPolycurve(Multipoint points,
+		                                        Multipart polycurve,
+		                                        double maxDistanceFromCurve,
+		                                        bool projectedOnto)
+	{
+		List<KeyValuePair<MapPoint, double>> pointsToUse = GetDistancesAlongPolycurve(
+			points, polycurve, maxDistanceFromCurve, projectedOnto);
+
+		//ReshapeOverlayFeedback.UpdateReshape(polycurve);
+
+		// descending sort order
+		pointsToUse.Sort((x, y) => y.Value.CompareTo(x.Value));
+
+		return pointsToUse;
+	}
+
+	/// <summary>
+	/// Returns the list of points with their respective distance along the provided polycurve.
+	/// </summary>
+	/// <param name="points"></param>
+	/// <param name="polycurve"></param>
+	/// <param name="maxDistanceFromCurve">If larger 0 and not NaN, split points further away than maxDistanceFromCurve
+	/// are ignored</param>
+	/// <param name="projectedOnto">Whether the output points should be projected onto the polycurve or not</param>
+	/// <returns></returns>
+	public static List<KeyValuePair<MapPoint, double>> GetDistancesAlongPolycurve(
+		[NotNull] Multipoint points,
+		[NotNull] Multipart polycurve,
+		double maxDistanceFromCurve,
+		bool projectedOnto)
+	{
+		var pointsToUse = new List<KeyValuePair<MapPoint, double>>(points.PointCount);
+
+		for (var i = 0; i < points.PointCount; i++)
+		{
+			MapPoint point = points.Points[i];
+
+			AsRatioOrLength asRatio = AsRatioOrLength.AsLength;
+
+			MapPoint outPoint = GeometryEngine.Instance.QueryPointAndDistance(
+				polycurve, SegmentExtensionType.NoExtension, point, asRatio, out var distanceAlong,
+				out var distanceFrom, out _);
+
+			// filter 
+			if (double.IsNaN(maxDistanceFromCurve) || maxDistanceFromCurve < 0 ||
+			    distanceFrom <= maxDistanceFromCurve)
+			{
+				MapPoint pointToAdd = projectedOnto
+					                      ? outPoint
+					                      : GeometryFactory.Clone(point);
+
+				pointsToUse.Add(new KeyValuePair<MapPoint, double>(pointToAdd, distanceAlong));
+			}
+		}
+
+		return pointsToUse;
+	}
+
+	/// <summary>
+	/// Replaces the geometry part at the specified index in the specified geometry with the specified replacement.
+	/// </summary>
+	/// <param name="inGeometry"></param>
+	/// <param name="atIndex"></param>
+	/// <param name="replacementParts"></param>
+	public static void ReplaceGeometryPart(
+		[NotNull] MultipartBuilderEx inGeometry,
+		int atIndex,
+		[NotNull] Multipart replacementParts)
+	{
+		int addedParts = GetPartCount(replacementParts);
+
+		inGeometry.InsertParts(atIndex, replacementParts.Parts);
+
+		inGeometry.RemovePart(atIndex + addedParts);
+	}
+
+	public static void AddSegmentCollection(this PolylineBuilderEx polylineBuilder,
+	                                        Polyline addPolylineSegments)
+	{
+		ICollection<Segment> allSegments = new List<Segment>();
+		addPolylineSegments.GetAllSegments(ref allSegments);
+		polylineBuilder.AddSegments(allSegments);
+	}
+
+	public static Polyline AddSegmentCollection(Polyline polyline, Polyline addPolylineSegments)
+	{
+		PolylineBuilderEx polylineBuilder = polyline.ToBuilder();
+		polylineBuilder.AddSegmentCollection(addPolylineSegments);
+
+		return polylineBuilder.ToGeometry();
+	}
+
+	public static void AddPointCollection(this MultipointBuilderEx multipointBuilder,
+	                                      IList<MapPoint> addPoints)
+	{
+		multipointBuilder.AddPoints(addPoints);
+	}
+
+	public static Multipoint AddPointCollection(Multipoint multipoint,
+	                                            IList<MapPoint> addPoints)
+	{
+		MultipointBuilderEx multipointBuilder = (MultipointBuilderEx) multipoint.ToBuilder();
+		multipointBuilder.AddPointCollection(addPoints);
+
+		return multipointBuilder.ToGeometry();
 	}
 }

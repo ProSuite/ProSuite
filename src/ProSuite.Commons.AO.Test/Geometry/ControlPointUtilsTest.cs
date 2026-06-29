@@ -256,7 +256,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			BC.PutCoords(M, B, C, esriArcOrientation.esriArcClockwise);
 
 			var CD = new BezierCurveClass();
-			var bezierPoints = new[] {C, P, Q, D};
+			var bezierPoints = new[] { C, P, Q, D };
 			((IBezierCurveGEN) CD).PutCoords(ref bezierPoints);
 
 			object missing = Type.Missing;

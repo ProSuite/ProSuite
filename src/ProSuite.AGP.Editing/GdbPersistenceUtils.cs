@@ -120,16 +120,45 @@ public static class GdbPersistenceUtils
 	public static Feature InsertTx([NotNull] EditOperation.IEditContext editContext,
 	                               [NotNull] Feature originalFeature,
 	                               [NotNull] Geometry newGeometry,
-	                               [CanBeNull] ICollection<string> excludeFields = null)
+	                               [CanBeNull] ICollection<string> excludeFields = null,
+	                               [CanBeNull] Subtype subtype = null)
 	{
 		FeatureClass featureClass = originalFeature.GetTable();
 
 		// Un-join to prevent NotImplementedException:
-		FeatureClass targetTable = DatasetUtils.GetDatabaseFeatureClass(featureClass);
+		FeatureClass targetFeatureClass = DatasetUtils.GetDatabaseFeatureClass(featureClass);
 
-		RowBuffer rowBuffer = CopyRow(originalFeature, targetTable, excludeFields);
+		return InsertTx(editContext, targetFeatureClass, originalFeature, newGeometry,
+		                excludeFields, subtype);
+	}
 
-		using var classDefinition = featureClass.GetDefinition();
+	public static Feature InsertTx([NotNull] EditOperation.IEditContext editContext,
+	                               [NotNull] FeatureClass targetFeatureClass,
+	                               [NotNull] Feature originalFeature,
+	                               [NotNull] Geometry newGeometry,
+	                               [CanBeNull] ICollection<string> excludeFields = null,
+	                               [CanBeNull] Subtype subtype = null)
+	{
+		return InsertTx(new EditOperationContext(editContext), targetFeatureClass, originalFeature,
+		                newGeometry, excludeFields, subtype);
+	}
+
+	public static Feature InsertTx([NotNull] IEditOperationContext editOperationContext,
+	                               [NotNull] FeatureClass targetFeatureClass,
+	                               [NotNull] Feature originalFeature,
+	                               [NotNull] Geometry newGeometry,
+	                               [CanBeNull] ICollection<string> excludeFields = null,
+	                               [CanBeNull] Subtype subtype = null)
+	{
+		FeatureClass targetTable = DatasetUtils.GetDatabaseFeatureClass(targetFeatureClass);
+
+		using var classDefinition = targetFeatureClass.GetDefinition();
+
+		Subtype defaultSubtype = subtype ?? DatasetUtils.GetDefaultSubtype(classDefinition);
+
+		RowBuffer rowBuffer =
+			CopyRow(originalFeature, targetTable, excludeFields, false, defaultSubtype);
+
 		bool classHasZ = classDefinition.HasZ();
 		bool classHasM = classDefinition.HasM();
 
@@ -137,13 +166,13 @@ public static class GdbPersistenceUtils
 			GeometryUtils.EnsureGeometrySchema(newGeometry, classHasZ, classHasM);
 
 		Geometry projected = GeometryUtils.EnsureSpatialReference(
-			geometryToStore, featureClass.GetSpatialReference());
+			geometryToStore, targetFeatureClass.GetSpatialReference());
 
-		SetShape(rowBuffer, projected, featureClass);
+		SetShape(rowBuffer, projected, targetFeatureClass);
 
 		Feature newFeature = targetTable.CreateRow(rowBuffer);
 
-		StoreShape(newFeature, projected, editContext);
+		StoreShape(newFeature, projected, editOperationContext);
 
 		return newFeature;
 	}
@@ -252,7 +281,7 @@ public static class GdbPersistenceUtils
 		}
 		finally
 		{
-			rowBuffer?.Dispose();
+			rowBuffer.Dispose();
 		}
 
 		return newFeatures;
@@ -529,13 +558,15 @@ public static class GdbPersistenceUtils
 	public static RowBuffer CopyRow([NotNull] Row sourceRow,
 	                                [NotNull] Table targetTable,
 	                                [CanBeNull] ICollection<string> excludeFields = null,
-	                                bool includeShape = false)
+	                                 bool includeShape = false,
+	                                 Subtype subtype = null)
 	{
-		Table sourceTable = sourceRow.GetTable();
+		RowBuffer rowBuffer = subtype == null
+			                      ? targetTable.CreateRowBuffer()
+			                      : targetTable.CreateRowBuffer(subtype);
 
-		RowBuffer rowBuffer = targetTable.CreateRowBuffer();
-
-		TableDefinition sourceTableDefinition = sourceTable.GetDefinition();
+		using Table sourceTable = sourceRow.GetTable();
+		using TableDefinition sourceTableDefinition = sourceTable.GetDefinition();
 
 		const bool includeReadOnlyFields = false;
 		bool searchJoinedFields = sourceTable.IsJoinedTable();
@@ -559,6 +590,7 @@ public static class GdbPersistenceUtils
 	                               bool includeShape = false)
 	{
 		IReadOnlyList<Field> sourceFields = includeShape ? null : fromRow.GetFields();
+		IReadOnlyList<Field> targetFields = toRowBuffer.GetFields();
 
 		foreach (int targetIndex in copyIndexMatrix.Keys)
 		{
@@ -574,7 +606,19 @@ public static class GdbPersistenceUtils
 				continue;
 			}
 
-			toRowBuffer[targetIndex] = fromRow[sourceIndex];
+			if (! targetFields[targetIndex].IsEditable)
+			{
+				continue;
+			}
+
+			object value = fromRow[sourceIndex];
+
+			if (! targetFields[targetIndex].IsNullable && Convert.IsDBNull(value))
+			{
+				continue;
+			}
+
+			toRowBuffer[targetIndex] = value;
 		}
 	}
 
@@ -618,6 +662,39 @@ public static class GdbPersistenceUtils
 		finally
 		{
 			editContext?.Invalidate(feature);
+		}
+	}
+	public static void StoreShape(Feature feature,
+	                              Geometry geometry,
+	                              IEditOperationContext editOperationContext)
+	{
+		_msg.DebugFormat("Updating shape of {0}...", GdbObjectUtils.ToString(feature));
+
+		if (geometry == null || geometry.IsEmpty)
+		{
+			throw new Exception("One or more updates geometries have become empty.");
+		}
+
+		try
+		{
+			// NOTE: Even if the geometry is not projected before setting the shape,
+			// the result is the same. After feature.SetShape() the (new) instance of
+			// feature.GetShape() is in the feature class' spatial reference.
+			Geometry projected = GeometryUtils.EnsureSpatialReference(
+				geometry, feature.GetTable().GetSpatialReference());
+
+			feature.SetShape(projected);
+			feature.Store();
+		}
+		catch (Exception e)
+		{
+			_msg.VerboseDebug(() => $"Error persisting shape {geometry.ToXml()}");
+			throw new DataException($"Error updating shape of feature " +
+			                        $"{GdbObjectUtils.ToString(feature)}: {e.Message}", e);
+		}
+		finally
+		{
+			editOperationContext?.Invalidate(feature);
 		}
 	}
 

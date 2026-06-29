@@ -5,10 +5,12 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.NamedValuesExpressions;
 using ProSuite.Commons.Notifications;
@@ -265,6 +267,18 @@ namespace ProSuite.DomainModel.AO.Workflow
 			IWorkspace workspace = DatasetUtils.GetWorkspace(objectClass);
 
 			string gdbDatasetName = DatasetUtils.GetName(objectClass);
+
+			// Feature service (portal) workspaces are matched separately: the database identity
+			// is the service URL (declared in the model description), and the gdb table names
+			// carry an "L{id}" layer prefix that must be stripped before matching by name.
+			if (IsFeatureServiceWorkspace(workspace, out string serviceUrl))
+			{
+				return GetMatchingServiceDatasetCandidate(
+					serviceUrl, gdbDatasetName, model, workspace,
+					useOnlyModelDefaultDatabase, childDatabaseWorkspaceFilter,
+					datasetNameTransformer, ignoreDataset);
+			}
+
 			string modelDatasetName = model.TranslateToModelElementName(gdbDatasetName);
 
 			Dataset dataset = model.GetDatasetByModelName(modelDatasetName);
@@ -325,6 +339,122 @@ namespace ProSuite.DomainModel.AO.Workflow
 			return ignoreDataset == null || ! ignoreDataset(dataset)
 				       ? dataset
 				       : null;
+		}
+
+		/// <summary>
+		/// Indicates whether the given workspace is a feature service (portal) workspace and,
+		/// if so, returns its service URL.
+		/// </summary>
+		private static bool IsFeatureServiceWorkspace(
+			[CanBeNull] IWorkspace workspace,
+			[CanBeNull] out string serviceUrl)
+		{
+			// NOTE: WorkspaceUtils.GetWorkspaceDbType() recomputes the type from the esri
+			// workspace type and would report a service workspace as ArcSDE. The reliable
+			// indicator is the GdbWorkspace.DbType set when the workspace was created.
+			if (workspace is GdbWorkspace gdbWorkspace &&
+			    gdbWorkspace.DbType == WorkspaceDbType.FeatureService)
+			{
+				serviceUrl = gdbWorkspace.PathName;
+				return true;
+			}
+
+			serviceUrl = null;
+			return false;
+		}
+
+		/// <summary>
+		/// Matches a feature-service object class against the datasets of the given model.
+		/// </summary>
+		/// <remarks>
+		/// Two cases are supported:
+		/// <list type="bullet">
+		/// <item>The model declares one or more service URLs (in its description). The workspace
+		/// URL must be among them; the service is then treated like the model's master database
+		/// and a warning is logged if no dataset matches the (prefix-stripped) table name.</item>
+		/// <item>The model declares no service URLs. The service is treated like a child
+		/// geodatabase, where matching by (prefix-stripped) name is sufficient.</item>
+		/// </list>
+		/// </remarks>
+		[CanBeNull]
+		private static Dataset GetMatchingServiceDatasetCandidate(
+			[CanBeNull] string serviceUrl,
+			[NotNull] string gdbDatasetName,
+			[NotNull] DdxModel model,
+			[NotNull] IWorkspace workspace,
+			bool useOnlyModelDefaultDatabase,
+			[NotNull] IWorkspaceFilter childDatabaseWorkspaceFilter,
+			[NotNull] IDatasetNameTransformer datasetNameTransformer,
+			[CanBeNull] Predicate<Dataset> ignoreDataset)
+		{
+			List<string> serviceUrls = ModelServiceUtils.GetServiceUrls(model).ToList();
+			bool modelDeclaresUrls = serviceUrls.Count > 0;
+
+			string modelDatasetName;
+
+			if (modelDeclaresUrls)
+			{
+				if (! serviceUrls.Any(url => ModelServiceUtils.ServiceUrlEquals(url, serviceUrl)))
+				{
+					_msg.VerboseDebug(() =>
+						                  $"Feature service {serviceUrl} is not among the service URLs declared " +
+						                  $"for model {model.Name}");
+
+					return null;
+				}
+
+				// The service is recognized as (one of) the model's service(s); it is treated
+				// like the master database. Resolve the model element name with master-database
+				// semantics (no child-database name transformer), qualifying the unqualified
+				// service table name for models harvested with qualified element names.
+				modelDatasetName =
+					ModelServiceUtils.GetMasterDatabaseModelElementName(model, gdbDatasetName);
+			}
+			else
+			{
+				// TODO: Re-consider this (relatively loose) symmetry with actual child GDBs
+				//       - Make the URL-match compulsory (once in the DDX)
+				//       - Or just do this even without useOnlyModelDefaultDatabase == false?
+				// No service URL declared on the model: treat like a child geodatabase, where
+				// matching by (prefix-stripped) name is sufficient.
+				if (useOnlyModelDefaultDatabase)
+				{
+					return null;
+				}
+
+				if (childDatabaseWorkspaceFilter.Ignore(workspace, out string reason))
+				{
+					_msg.DebugFormat(
+						"Feature service workspace for object class {0} does not meet child " +
+						"database filter criteria for model {1}: {2}",
+						gdbDatasetName, model.Name, reason);
+
+					return null;
+				}
+
+				string strippedName =
+					ModelServiceUtils.StripFeatureServiceLayerPrefix(gdbDatasetName);
+
+				modelDatasetName = GetModelElementNameForChildDatabaseElement(
+					strippedName, model, datasetNameTransformer);
+			}
+
+			Dataset dataset = modelDatasetName == null
+				                  ? null
+				                  : GetDataset(model, modelDatasetName, ignoreDataset);
+
+			if (dataset == null && modelDeclaresUrls)
+			{
+				_msg.WarnFormat(
+					"Feature service {0} is associated with model {1}, but no matching dataset " +
+					"was found for service table '{2}' (model dataset name '{3}'). The service " +
+					"schema may differ from the model, or the table is not part of this model.",
+					serviceUrl, model.Name, gdbDatasetName,
+					modelDatasetName ??
+					ModelServiceUtils.StripFeatureServiceLayerPrefix(gdbDatasetName));
+			}
+
+			return dataset;
 		}
 
 		/// <summary>

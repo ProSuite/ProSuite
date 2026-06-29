@@ -39,6 +39,7 @@ public interface ISourceClass
 	/// <returns></returns>
 	long GetUniqueTableId();
 
-	void EnsureValidFilter(ref QueryFilter filter, WorkItemStatus? statusFilter,
-	                       bool excludeGeometry);
+	void EnsureValidFilter(ref QueryFilter filter, bool ignoreDefinitionQuery);
+
+	T CreateWorkItem<T>(Row row) where T : IWorkItem;
 }

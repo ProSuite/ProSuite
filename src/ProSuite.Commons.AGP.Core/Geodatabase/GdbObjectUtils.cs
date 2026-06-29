@@ -370,6 +370,34 @@ public static class GdbObjectUtils
 		return false;
 	}
 
+	public static bool IsNullOrEmpty(RowBuffer row, int fieldIndex)
+	{
+		object value = row[fieldIndex];
+
+		if (value == null)
+		{
+			return true;
+		}
+
+		if (value is DBNull)
+		{
+			return true;
+		}
+
+		if (value is string textValue)
+		{
+			if (Guid.TryParseExact(textValue.ToUpper(), "B", out Guid uuid) &&
+			    uuid.Equals(Guid.Empty))
+			{
+				return true;
+			}
+
+			return string.IsNullOrEmpty(value.ToString());
+		}
+
+		return false;
+	}
+
 	[CanBeNull]
 	public static CodedValueDomain GetCodedValueDomain([NotNull] Row row, int fieldIndex,
 	                                                   [CanBeNull] int? subtypeCode = null)

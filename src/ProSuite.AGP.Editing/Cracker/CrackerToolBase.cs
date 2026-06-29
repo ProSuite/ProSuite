@@ -16,7 +16,6 @@ using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -57,7 +56,6 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 	/// By default, the local configuration directory shall be in
 	/// %APPDATA%\Roaming\<organization>\<product>\ToolDefaults.
 	/// </summary>
-
 	protected virtual string LocalConfigDir
 		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 			AppDataFolder.Roaming, "ToolDefaults");
@@ -113,6 +111,11 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 	                                                   CancelableProgressor progressor)
 	{
+		// Begin a new calculation generation up front so a superseding request (e.g. another
+		// spinner click) or Escape cancels this whole calculation, including the target search
+		// below, before the service round-trip is issued.
+		CancellationToken cancelToken = BeginCalculation();
+
 		// Store current map extent
 		bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
 
@@ -121,7 +124,9 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		IList<Feature> intersectingFeatures =
 			GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
 
-		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+		// Bail before the (expensive) service call if a newer request or Escape already
+		// superseded this calculation during the target-feature search above.
+		if (cancelToken.IsCancellationRequested)
 		{
 			_msg.Warn("Calculation of crack points was cancelled.");
 
@@ -133,7 +138,7 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 			                     IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
 			                     false, progressor);
 
-		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+		if (cancelToken.IsCancellationRequested)
 		{
 			_msg.Warn("Calculation of crack points was cancelled.");
 
@@ -205,6 +210,9 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		var selectedFeatures = MapUtils.GetFeatures(
 			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
+		// New calculation generation for the apply operation (see CalculateDerivedGeometries).
+		CancellationToken cancelToken = BeginCalculation();
+
 		IList<Feature> intersectingFeatures =
 			GetIntersectingFeatures(selectedFeatures, _crackerToolOptions, progressor);
 
@@ -213,7 +221,7 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 				selectedFeatures, crackPointsToApply, intersectingFeatures,
 				_crackerToolOptions,
 				IntersectionPointOptions.IncludeLinearIntersectionAllPoints,
-				false, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+				false, cancelToken);
 
 		var updates = new Dictionary<Feature, Geometry>();
 
@@ -230,6 +238,11 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 			}
 
 			updates.Add(originalFeature, updatedGeometry);
+		}
+
+		if (updates.Count == 0)
+		{
+			return false;
 		}
 
 		IEnumerable<Dataset> datasets =
@@ -323,19 +336,10 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 
 	private void _crackerToolOptions_PropertyChanged(object sender,
 	                                                 PropertyChangedEventArgs eventArgs)
-
 	{
-		try
-
-		{
-			QueuedTaskUtils.Run(() => ProcessSelectionAsync());
-		}
-
-		catch (Exception e)
-
-		{
-			_msg.Error($"Error re-calculating crack points: {e.Message}", e);
-		}
+		// Coalesce rapid option changes (e.g. spinner clicks) and cancel any running calculation
+		// so they don't pile up as independent, uncancellable service calls.
+		RequestRecalculation();
 	}
 
 	#region Tool Options DockPane

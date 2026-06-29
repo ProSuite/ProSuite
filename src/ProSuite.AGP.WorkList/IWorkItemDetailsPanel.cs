@@ -11,4 +11,5 @@ public interface IWorkItemDetailsPanel
 	UserControl CreateDetailsPanelView();
 
 	void Unload();
+
 }

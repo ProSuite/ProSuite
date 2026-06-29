@@ -467,7 +467,7 @@ public abstract class ToolBase : MapToolBase, ISymbolizedSketchTool
 	protected virtual IPickerPrecedence CreatePickerPrecedence([NotNull] Geometry sketchGeometry)
 	{
 		return new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-		                            ActiveMapView.ClientToScreen(CurrentMousePosition));
+		                            ActiveMapView.ClientToScreen(CurrentMousePosition), ActiveMapView);
 	}
 
 	/// <summary>Is on GUI thread. Use QueuedTask.</summary>

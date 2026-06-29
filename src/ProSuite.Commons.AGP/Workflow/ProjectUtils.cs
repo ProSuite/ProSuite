@@ -66,6 +66,31 @@ public static class ProjectUtils
 		return AddProjectItem(project, item);
 	}
 
+	/// <summary>
+	/// Add a Jupyter Notebook (.ipynb file) as a project item
+	/// </summary>
+	/// <returns>The added project item</returns>
+	/// <remarks>Must run on MCT</remarks>
+	public static IProjectItem AddNotebookConnection(Project project, string notebookPath)
+	{
+		if (string.IsNullOrEmpty(notebookPath))
+			throw new ArgumentNullException(nameof(notebookPath));
+
+		if (! File.Exists(notebookPath))
+			throw new ArgumentException($"No such file: {notebookPath}", nameof(notebookPath));
+
+		Item item = ItemFactory.Instance.Create(notebookPath);
+
+		if (item is null)
+		{
+			// empirical: if notebookPath does not exist, ItemFactory returns null
+			throw new InvalidOperationException(
+				$"ItemFactory.Instance.Create() returned null for path: {notebookPath}");
+		}
+
+		return AddProjectItem(project, item);
+	}
+
 	/// <remarks>Must run on MCT</remarks>
 	private static IProjectItem AddProjectItem(Project project, Item item)
 	{
@@ -88,7 +113,8 @@ public static class ProjectUtils
 
 		if (! ok)
 		{
-			var existing = project.GetItems<Item>().FirstOrDefault(i => string.Equals(i.Path, item.Path));
+			var existing = project.GetItems<Item>()
+			                      .FirstOrDefault(i => string.Equals(i.Path, item.Path));
 			if (existing is null)
 			{
 				throw new InvalidOperationException($"AddItem({item.Name}) returned false");
@@ -125,18 +151,19 @@ public static class ProjectUtils
 		return SetDefaultProjectUnit(UnitFormatType.Symbol2D, abbreviation, name);
 	}
 
-	public static bool SetDefaultProjectUnit(UnitFormatType type, string abbreviation, string name = null)
+	public static bool SetDefaultProjectUnit(UnitFormatType type, string abbreviation,
+	                                         string name = null)
 	{
 		var formats = DisplayUnitFormats.Instance;
 
 		var units = formats.GetPredefinedProjectUnitFormats(type).AsEnumerable();
 
-		if (!string.IsNullOrEmpty(abbreviation))
+		if (! string.IsNullOrEmpty(abbreviation))
 		{
 			units = units.Where(u => u.Abbreviation == abbreviation);
 		}
 
-		if (!string.IsNullOrEmpty(name))
+		if (! string.IsNullOrEmpty(name))
 		{
 			const StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 			units = units.Where(u =>

@@ -13,7 +13,7 @@ using Subtype = ArcGIS.Core.Data.Subtype;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcRow : IObject, IRowSubtypes
+	public class ArcRow : IObject, IRowSubtypes, IDisposable
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -371,20 +371,19 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		}
 
 		#endregion
+
+		public virtual void Dispose()
+		{
+			_proRow?.Dispose();
+		}
 	}
 
 	public class ArcFeature : ArcRow, IFeature, IFeatureChanges
 	{
-		private readonly Feature _proFeature;
-		private readonly IFeatureClass _parentFeatureClass;
 		private IGeometry _mutableGeometry;
 
 		public ArcFeature(Feature proFeature, IFeatureClass parentClass)
-			: base(proFeature, (ITable) parentClass)
-		{
-			_proFeature = proFeature;
-			_parentFeatureClass = parentClass;
-		}
+			: base(proFeature, (ITable) parentClass) { }
 
 		protected virtual ArcGIS.Core.Geometry.Geometry GetProGeometry(IGeometry fromShape)
 		{
@@ -473,11 +472,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
+				if (_mutableGeometry != null)
+				{
+					return _mutableGeometry.Envelope;
+				}
+
 				ArcGIS.Core.Geometry.Geometry geometry = null;
 
-				TryOrRefreshRow<Feature>(r => geometry = _proFeature.GetShape());
+				TryOrRefreshRow<Feature>(r => geometry = r.GetShape());
 
-				return new ArcEnvelope(geometry.Extent);
+				return geometry == null ? null : new ArcEnvelope(geometry.Extent);
 			}
 		}
 
@@ -489,10 +493,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				int shapeFieldIdx =
-					_parentFeatureClass.FindField(_parentFeatureClass.ShapeFieldName);
+				int shapeFieldIdx = Class.FindField(Class.ShapeFieldName);
 
-				return _proFeature.HasValueChanged(shapeFieldIdx);
+				bool changed = false;
+				TryOrRefreshRow<Feature>(f => changed = f.HasValueChanged(shapeFieldIdx));
+
+				return changed;
 			}
 		}
 
@@ -500,13 +506,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			get
 			{
-				int shapeFieldIdx =
-					_parentFeatureClass.FindField(_parentFeatureClass.ShapeFieldName);
+				int shapeFieldIdx = Class.FindField(Class.ShapeFieldName);
 
-				ArcGIS.Core.Geometry.Geometry originalProGeometry =
-					(ArcGIS.Core.Geometry.Geometry) _proFeature.GetOriginalValue(shapeFieldIdx);
+				ArcGIS.Core.Geometry.Geometry originalProGeometry = null;
+				TryOrRefreshRow<Feature>(f => originalProGeometry =
+					                              (ArcGIS.Core.Geometry.Geometry)
+					                              f.GetOriginalValue(shapeFieldIdx));
 
-				return GeometryFactory(originalProGeometry);
+				return originalProGeometry == null ? null : GeometryFactory(originalProGeometry);
 			}
 		}
 

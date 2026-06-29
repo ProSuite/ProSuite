@@ -1,3 +1,5 @@
+using ProSuite.GIS.Geometry.API;
+
 namespace ProSuite.GIS.Geodatabase.API
 {
 	public interface IName
@@ -17,6 +19,22 @@ namespace ProSuite.GIS.Geodatabase.API
 		esriDatasetType Type { get; }
 
 		IWorkspaceName WorkspaceName { get; }
+	}
+
+	public interface ITableName : IDatasetName
+	{
+		
+	}
+
+	public interface IFeatureClassName : IDatasetName
+	{
+		esriGeometryType ShapeType { get; }
+
+		IDatasetName FeatureDatasetName { get; }
+
+		//esriFeatureType FeatureType { get; }
+
+		string ShapeFieldName { get; }
 	}
 
 	/// <summary>

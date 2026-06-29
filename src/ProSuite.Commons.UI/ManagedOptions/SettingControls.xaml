@@ -22,7 +22,7 @@
                 DataContext="{TemplateBinding DataContext}"
                 IsEnabled="{Binding IsEnabled}" 
                 Margin="0, 2" 
-                Value="{Binding CurrentValue, Mode=TwoWay}" 
+                Value="{Binding CurrentValue, Mode=TwoWay}"
                 Decimals="{Binding Decimals}"
                 Step="{Binding Step}"
                 MinValue="{Binding MinValue}"

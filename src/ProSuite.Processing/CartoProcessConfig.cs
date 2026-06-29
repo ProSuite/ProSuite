@@ -20,26 +20,54 @@ namespace ProSuite.Processing
 
 		private readonly IList<Setting> _settings;
 
-		private CartoProcessConfig([NotNull] IList<Setting> settings,
-		                           string name, string typeAlias, string description)
-		{
-			var reservedParams = settings.Where(
-				s => string.Equals(s.Name, nameof(Name), Comparison) ||
-				     string.Equals(s.Name, nameof(TypeAlias), Comparison) ||
-				     string.Equals(s.Name, nameof(Description), Comparison)).ToList();
-			foreach (Setting setting in reservedParams)
-			{
-				settings.Remove(setting);
-			}
-			
-			_settings = settings ?? throw new ArgumentNullException(nameof(settings));
+		public string Name { get; set; }
 
+		public string TypeAlias { get; set; }
+
+		public string Description { get; set; }
+
+		public int Count => _settings.Count;
+
+		private CartoProcessConfig(string name, string typeAlias, string description,
+		                           IEnumerable<Setting> settings)
+		{
 			Name = name;
 			TypeAlias = typeAlias;
 			Description = description;
+
+			settings ??= Enumerable.Empty<Setting>();
+			_settings = settings.Where(s => ! IsReservedName(s)).ToList();
 		}
 
-		public static CartoProcessConfig Parse(string text, bool lenient = false)
+		private static bool IsReservedName(Setting setting)
+		{
+			return string.Equals(setting.Name, nameof(Name), Comparison) ||
+			       string.Equals(setting.Name, nameof(TypeAlias), Comparison) ||
+			       string.Equals(setting.Name, nameof(Description), Comparison);
+		}
+
+		//private CartoProcessConfig([NotNull] IList<Setting> settings,
+		//                           string name, string typeAlias, string description)
+		//{
+		//	var reservedParams = settings.Where(
+		//		s => string.Equals(s.Name, nameof(Name), Comparison) ||
+		//		     string.Equals(s.Name, nameof(TypeAlias), Comparison) ||
+		//		     string.Equals(s.Name, nameof(Description), Comparison)).ToList();
+		//	foreach (Setting setting in reservedParams)
+		//	{
+		//		settings.Remove(setting);
+		//	}
+		//	
+		//	_settings = settings ?? throw new ArgumentNullException(nameof(settings));
+		//
+		//	Name = name;
+		//	TypeAlias = typeAlias;
+		//	Description = description;
+		//}
+
+		public static CartoProcessConfig Parse(string text,
+		                                       string name = null, string typeAlias = null,
+		                                       string description = null, bool lenient = false)
 		{
 			// 1. try parse as XML
 			// 2. assume new plain text format
@@ -65,17 +93,9 @@ namespace ProSuite.Processing
 			}
 			catch (XmlException)
 			{
-				return FromText(text, lenient);
+				return FromText(text, name, typeAlias, description, lenient);
 			}
 		}
-
-		public string Name { get; private set; }
-
-		public string TypeAlias { get; set; }
-
-		public string Description { get; set; }
-
-		public int Count => _settings.Count;
 
 		public IEnumerable<string> GetAllNames()
 		{
@@ -219,21 +239,29 @@ namespace ProSuite.Processing
 
 		public override string ToString()
 		{
+			return ToString(false);
+		}
+
+		public string ToString(bool parametersOnly)
+		{
 			var sb = new StringBuilder();
 
-			sb.Append(nameof(Name)).Append(" = ");
-			sb.Append(Name ?? string.Empty).AppendLine();
-
-			sb.Append(nameof(TypeAlias)).Append(" = ");
-			sb.Append(TypeAlias ?? string.Empty).AppendLine();
-
-			if (! string.IsNullOrEmpty(Description))
+			if (! parametersOnly)
 			{
-				sb.Append(nameof(Description)).Append(" = ");
-				sb.Append(Description).AppendLine();
-			}
+				sb.Append(nameof(Name)).Append(" = ");
+				sb.Append(Canonicalize(Name) ?? string.Empty).AppendLine();
 
-			sb.AppendLine();
+				sb.Append(nameof(TypeAlias)).Append(" = ");
+				sb.Append(Canonicalize(TypeAlias) ?? string.Empty).AppendLine();
+
+				if (!string.IsNullOrEmpty(Description))
+				{
+					sb.Append(nameof(Description)).Append(" = ");
+					sb.Append(Canonicalize(Description)).AppendLine();
+				}
+
+				sb.AppendLine();
+			}
 
 			foreach (var setting in _settings)
 			{
@@ -242,14 +270,26 @@ namespace ProSuite.Processing
 				if (string.Equals(setting.Name, nameof(TypeAlias), Comparison)) continue;
 				if (string.Equals(setting.Name, nameof(Description), Comparison)) continue;
 
-				sb.Append(setting.Name ?? "NN");
+				sb.Append(Canonicalize(setting.Name) ?? "NN");
 				sb.Append(" = ");
-				sb.Append(setting.Value ?? string.Empty);
+				sb.Append(Canonicalize(setting.Value) ?? string.Empty);
 				sb.AppendLine();
 			}
 
 			sb.AppendLine();
 			return sb.ToString();
+		}
+
+		private static string Canonicalize(string text)
+		{
+			if (text is null) return null;
+			text = text.Trim();
+			// Must not contain newlines of any kind in this line-based format:
+			text = text.Replace("\b", "").Replace("\0", "")
+			           .Replace("\r\n", " ")
+			           .Replace('\r', ' ').Replace('\n', ' ')
+			           .Replace('\f', ' ').Replace('\f', ' ');
+			return text;
 		}
 
 		#endregion
@@ -293,7 +333,7 @@ namespace ProSuite.Processing
 				var match = multiRegex.Match(name);
 				if (match.Success && match.Index > 0)
 				{
-					// old config did not allow multi-valued parameters; instead we had Foo1, Foo2, etc.
+					// old config did not allow multivalued parameters; instead we had Foo1, Foo2, etc.
 					// translate to new config, which allows repeated parameters; use plural name by convention
 					var stem = name.Substring(0, match.Index); // strip trailing digits
 					name = stem.EndsWith("s") ? stem : string.Concat(stem, "s");
@@ -302,7 +342,7 @@ namespace ProSuite.Processing
 				settings.Add(new Setting(name, value, e.GetLineNumber()));
 			}
 
-			return new CartoProcessConfig(settings, processName, typeAlias, description);
+			return new CartoProcessConfig(processName, typeAlias, description, settings);
 		}
 
 		/// <summary>
@@ -334,7 +374,7 @@ namespace ProSuite.Processing
 				settings.Add(new Setting(name, value, e.GetLineNumber()));
 			}
 
-			return new CartoProcessConfig(settings, processName, typeAlias, description);
+			return new CartoProcessConfig(processName, typeAlias, description, settings);
 		}
 
 		#endregion
@@ -345,17 +385,20 @@ namespace ProSuite.Processing
 		/// Parse config from given simple text format: name = value {; name = value}
 		/// </summary>
 		/// <param name="text">Config text to be parsed</param>
+		/// <param name="name">Name for the config (optional, overrides name in <paramref name="text"/></param>
+		/// <param name="typeAlias">Type alias for the config (optional, overrides type alias in <paramref name="text"/></param>
+		/// <param name="description">Description for the config (optional, overrides description in <paramref name="text"/></param>
 		/// <param name="lenient">Iff true, ignore syntax errors parse as much as possible</param>
-		private static CartoProcessConfig FromText(string text, bool lenient = false)
+		private static CartoProcessConfig FromText(string text, string name = null, string typeAlias = null, string description = null, bool lenient = false)
 		{
 			var settings = new List<Setting>();
 			LoadPairs(settings, text, lenient);
 
-			var name = GetString(settings, nameof(Name));
-			var typeAlias = GetString(settings, nameof(TypeAlias));
-			var description = GetString(settings, nameof(Description));
+			name ??= GetString(settings, nameof(Name));
+			typeAlias ??= GetString(settings, nameof(TypeAlias));
+			description ??= GetString(settings, nameof(Description));
 
-			return new CartoProcessConfig(settings, name, typeAlias, description);
+			return new CartoProcessConfig(name, typeAlias, description, settings);
 		}
 
 		private static string GetString(IEnumerable<Setting> settings, string parameterName)

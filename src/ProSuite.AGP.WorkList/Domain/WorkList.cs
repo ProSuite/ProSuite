@@ -210,7 +210,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	}
 
 	#region item geometry
-	
+
 	public Geometry GetItemDisplayGeometry(IWorkItem item)
 	{
 		try
@@ -421,9 +421,6 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			                     ? GdbQueryUtils.CreateSpatialFilter(AreaOfInterest)
 			                     : new QueryFilter();
 
-		// Must load all items, even those not visible due to status filter (otherwise the count is wrong in the navigator)
-		WorkItemStatus? status = null;
-
 		string aoiText = AreaOfInterest != null ? " within area of interest" : string.Empty;
 		string filterText = GetFilterDisplayText();
 
@@ -435,10 +432,19 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		_msg.InfoFormat("Loading work list items for {0}{1}{2}...", DisplayName, aoiText,
 		                filterText);
 
-		LoadItems(filter, status);
+		LoadItems(filter);
 
 		_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
 		                DisplayName);
+
+		// Refresh the total on every full (re)load. This is the path taken after a verification
+		// (Invalidate() -> LoadItems()), where new rows change the total. CountItems(_items)
+		// reflects the current area of interest AND the active filter definition (e.g. 'Latest
+		// verification') - unlike Repository.Count(), which ignores the definition query - and it
+		// excludes items that are not counted (e.g. 'Allowed' issues), keeping the total consistent
+		// with the loaded/todo numbers. See also OnWorkListChanged, which keeps it up to date when
+		// item states change (e.g. toggling an issue to 'Allowed').
+		TotalCount = CountItems(_items);
 	}
 
 	protected virtual string GetFilterDisplayText()
@@ -446,7 +452,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return string.Empty;
 	}
 
-	public void LoadItems([NotNull] QueryFilter filter, WorkItemStatus? statusFilter = null)
+	public void LoadItems([NotNull] QueryFilter filter)
 	{
 		double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 		double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
@@ -462,13 +468,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		// TODO: Consider keeping the updated items if they already exist in the _rowMap. Also consider
 		//       not re-reading everything if only the filter has changed?
 
-		foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-			         filter, statusFilter))
+		foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(filter))
 		{
 			item.OID = Repository.GetNextOid();
 			Assert.True(item.OID > 0, "item is not initialized");
 
-			Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Could not add {item}");
+			Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Cannot not add {item}");
 
 			if (item.GdbRowProxy.Equals(oldCurrentItem?.GdbRowProxy))
 			{
@@ -546,11 +551,11 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		if (filter.ObjectIDs.Count == 0)
 		{
-			return _items.AsEnumerable();
+			return SearchCore(_items);
 		}
 
 		List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
-		return _items.Where(item => oids.BinarySearch(item.OID) >= 0);
+		return SearchCore(_items, item => oids.BinarySearch(item.OID) >= 0);
 	}
 
 	public IEnumerable<IWorkItem> Search([CanBeNull] SpatialQueryFilter filter)
@@ -567,15 +572,22 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		if (_searcher == null || filter == null)
 		{
 			// all non-spatial items or non-spatial search:
-			return _items.Where(i => predicate == null || predicate(i)).ToList();
+			return SearchCore(_items, predicate).ToList();
 		}
 
 		Envelope extent = filter.FilterGeometry.Extent;
 
 		double tolerance = GeometryUtils.GetXyTolerance(filter.FilterGeometry);
 
-		return _searcher.Search(extent.XMin, extent.YMin,
-		                        extent.XMax, extent.YMax, tolerance, predicate);
+		return SearchCore(_searcher.Search(extent.XMin, extent.YMin,
+		                                   extent.XMax, extent.YMax, tolerance, predicate));
+	}
+
+	protected virtual IEnumerable<IWorkItem> SearchCore(
+		[NotNull] IEnumerable<IWorkItem> items,
+		[CanBeNull] Predicate<IWorkItem> predicate = null)
+	{
+		return predicate == null ? items : items.Where(i => predicate(i));
 	}
 
 	protected virtual void LoadItemsCore(QueryFilter filter)
@@ -623,6 +635,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		}
 	}
 
+	[CanBeNull]
 	private static SpatialHashSearcher<IWorkItem> CreateSpatialSearcher(List<IWorkItem> items)
 	{
 		if (items.Count == 0)
@@ -634,7 +647,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	}
 
 	[NotNull]
-	private static EnvelopeXY CreateEnvelope(IWorkItem item)
+	protected static EnvelopeXY CreateEnvelope(IWorkItem item)
 	{
 		if (item.Extent is null) throw new ArgumentNullException(nameof(item.Extent));
 
@@ -647,15 +660,29 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	public long CountLoadedItems(out int todo)
 	{
 		todo = 0;
-		todo += _items.Count(item => item.Status == WorkItemStatus.Todo);
+		todo += CountLoadedItemsCore(_items);
 
-		return _items.Count;
+		return CountItems(_items);
+	}
+
+	protected virtual int CountItems(List<IWorkItem> items)
+	{
+		return items.Count;
+	}
+
+	protected virtual int CountLoadedItemsCore(IEnumerable<IWorkItem> items)
+	{
+		return items.Count(item => item.Status == WorkItemStatus.Todo);
 	}
 
 	public void Count()
 	{
 		var watch = _msg.DebugStartTiming($"{this} start counting items.");
 
+		// The total is the grand total of all source rows in the database (ignoring the area of
+		// interest and which items are currently loaded). It is queried once and cached: deriving
+		// it from the in-memory _items would yield only the loaded count and would race with the
+		// background item loading.
 		TotalCount ??= Repository.Count();
 
 		_msg.DebugStopTiming(watch, $"{this} counted {TotalCount} items.");
@@ -1356,10 +1383,15 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 	private bool IsVisible([NotNull] IWorkItem item)
 	{
+		return IsVisibleCore(item);
+	}
+
+	protected virtual bool IsVisibleCore([NotNull] IWorkItem item)
+	{
 		return IsVisible(item, Visibility);
 	}
 
-	private bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility? visibility)
+	private static bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility? visibility)
 	{
 		WorkItemStatus status = item.Status;
 
@@ -1383,6 +1415,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	private void OnWorkListChanged([CanBeNull] Envelope extent = null,
 	                               [CanBeNull] List<long> oids = null)
 	{
+		// Keep the total in sync with the current items before notifying listeners. This is what
+		// makes the total drop when the current issue is toggled to 'Allowed' (which goes through
+		// ProcessChanges -> Invalidate(oids) -> here): CountItems excludes 'Allowed' issues, just
+		// like the loaded/todo numbers the navigator recomputes in response to this event.
+		TotalCount = CountItems(_items);
+
 		WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 	}
 
@@ -1496,10 +1534,10 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-				         table, filter, null))
+			foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(
+				         table, filter))
 			{
-				Assert.True(TryAddItem(item), $"Could not add {item}");
+				Assert.True(TryAddItem(item), $"Cannot not add {item}");
 
 				// it's a unkown item > refresh it's state (status, visited) either
 				// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
@@ -1581,41 +1619,9 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		try
 		{
-			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((IWorkItem item, Geometry geometry) in Repository.GetItems(
-				         table, filter, null))
-			{
-				Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
-				            $"Could not get {cachedItem}");
-
-				invalidateOids.Add(cachedItem.OID);
-
-				if (Equals(cachedItem.Status, item.Status))
-				{
-					// Status hasn't changed but maybe the geometry => update SpatialHashSearcher.
-					if (cachedItem.HasExtent)
-					{
-						Envelope extent = Assert.NotNull(cachedItem.Extent);
-
-						Assert.NotNull(_searcher).Remove(cachedItem,
-						                                 extent.XMin, extent.YMin,
-						                                 extent.XMax, extent.YMax);
-
-						if (CacheBufferedItemGeometries)
-						{
-							UpdateItemDisplayGeometry(cachedItem, geometry);
-						}
-
-						_searcher.Add(cachedItem, CreateEnvelope(cachedItem));
-					}
-				}
-
-				// Update cached item's state from database item. IWorkItem.Status
-				// also is updated in GdbItemRepository.SetStatusCoreAsync().
-				cachedItem.Status = item.Status;
-			}
+			invalidateOids.AddRange(ProcessUpdatesCore(table, oids, _searcher));
 
 			// TODO: Move to repository!
 			Repository.Extent = CreateExtent(_items, Repository.SpatialReference);
@@ -1628,6 +1634,46 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		}
 
 		return invalidateOids;
+	}
+
+	protected virtual IEnumerable<long> ProcessUpdatesCore(
+		[NotNull] Table table, [NotNull] List<long> oids,
+		[CanBeNull] SpatialHashSearcher<IWorkItem> searcher)
+	{
+		QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
+
+		foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(
+			         table, filter, ignoreDefinitionQuery: true))
+		{
+			Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
+			            $"Cannot not get {cachedItem}");
+
+			if (Equals(cachedItem.Status, item.Status))
+			{
+				// Status hasn't changed but maybe the geometry => update SpatialHashSearcher.
+				if (cachedItem.HasExtent)
+				{
+					Envelope extent = Assert.NotNull(cachedItem.Extent);
+
+					Assert.NotNull(searcher).Remove(cachedItem,
+					                                extent.XMin, extent.YMin,
+					                                extent.XMax, extent.YMax);
+
+					if (CacheBufferedItemGeometries)
+					{
+						UpdateItemDisplayGeometry(cachedItem, geometry);
+					}
+
+					searcher.Add(cachedItem, CreateEnvelope(cachedItem));
+				}
+			}
+
+			// Update cached item's state from database item. IWorkItem.Status
+			// also is updated in GdbItemRepository.SetStatusCoreAsync().
+			cachedItem.Status = item.Status;
+
+			yield return cachedItem.OID;
+		}
 	}
 
 	#endregion
@@ -1653,9 +1699,9 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return UpdateItemDisplayGeometry(cachedItem, geometry, exclusion);
 	}
 
-	private int UpdateItemDisplayGeometry([NotNull] IWorkItem item,
-	                                      [CanBeNull] Geometry shapeGeometry,
-	                                      Predicate<IWorkItem> exclusion = null)
+	public int UpdateItemDisplayGeometry([NotNull] IWorkItem item,
+	                                     [CanBeNull] Geometry shapeGeometry,
+	                                     Predicate<IWorkItem> exclusion = null)
 	{
 		if (shapeGeometry == null)
 		{
@@ -1748,9 +1794,10 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return true;
 	}
 
-	private bool TryGetItem(GdbRowIdentity rowProxy, out IWorkItem cachedItem)
+	protected bool TryGetItem<T>(GdbRowIdentity rowProxy, out T item) where T : IWorkItem
 	{
-		bool exists = _rowMap.TryGetValue(rowProxy, out cachedItem);
+		bool exists = _rowMap.TryGetValue(rowProxy, out IWorkItem cachedItem);
+		item = (T) cachedItem;
 
 		return exists;
 	}

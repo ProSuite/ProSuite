@@ -16,7 +16,7 @@ using ProSuite.GIS.Geometry.API;
 
 namespace ProSuite.GIS.Geodatabase.AGP
 {
-	public class ArcFeatureClass : ArcTable, ITable, IFeatureClass
+	public class ArcFeatureClass : ArcTable, ITable, IFeatureClass, IDisposable
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -408,6 +408,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 
 			return Fields.FirstOrDefault(f => f.Name.Equals(fieldName));
+		}
+
+		public void Dispose()
+		{
+			// Remove ourselves from the parent workspace's table cache first (see ArcTable.Dispose).
+			RemoveFromWorkspaceCache();
+
+			_proFeatureClass?.Dispose();
+			ProFeatureClassDefinition.Dispose();
+			ProTable.Dispose();
 		}
 	}
 }

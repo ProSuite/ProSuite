@@ -174,7 +174,9 @@ namespace ProSuite.Microservices.Server.AO
 			DateTime? defaultModificationDate =
 				FromTicks(workspaceMessage.DefaultVersionModificationTicks);
 
-			string path = FileSystemUtils.FromPathUri(workspaceMessage.Path);
+			string workspaceMessagePath = workspaceMessage.Path;
+
+			string path = FileSystemUtils.FromPathUri(workspaceMessagePath) ?? workspaceMessagePath;
 
 			var gdbWorkspace = new GdbWorkspace(container, workspaceMessage.WorkspaceHandle,
 			                                    (WorkspaceDbType) workspaceMessage.WorkspaceDbType,
