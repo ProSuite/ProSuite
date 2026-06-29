@@ -133,6 +133,16 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] CutFeatureOverlay {
+            get {
+                object obj = ResourceManager.GetObject("CutFeatureOverlay", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] CutPolygonAlongOverlay {
             get {
                 object obj = ResourceManager.GetObject("CutPolygonAlongOverlay", resourceCulture);

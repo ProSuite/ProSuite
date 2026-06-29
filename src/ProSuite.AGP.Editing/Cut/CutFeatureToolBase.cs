@@ -50,6 +50,9 @@ public abstract class CutFeatureToolBase : ConstructionToolBase
 		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 			AppDataFolder.Roaming, "ToolDefaults");
 
+	protected override SelectionCursors FirstPhaseCursors { get; } =
+		SelectionCursors.CreateArrowCursors(Resources.CutFeatureOverlay);
+
 	protected virtual IChangeAlongService MicroserviceClient { get; } = null;
 
 	protected virtual string EditOperationDescription =>
