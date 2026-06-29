@@ -83,8 +83,7 @@
   </ItemGroup>
 
   <!-- REMOVE after .net framework deprecation -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-    <!-- Some of these reference Json which is not in the.net framework: -->
+  <ItemGroup Condition=" '$(VSArcGISProduct)' == 'ArcGIS' ">
     <Compile Remove="Geodatabase\GdbSchema\FeatureServiceSchemaReader.cs" />
   </ItemGroup>
 
@@ -128,4 +127,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
 </Project>
