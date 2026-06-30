@@ -33,6 +33,9 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		[CanBeNull] private readonly Geometry _verifiedPerimeter;
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
 
+		private List<IDisposable> _activeProgressOverlays = new();
+		private int _lastTileCount;
+
 		private bool _issuesSaved;
 
 		/// <summary>
@@ -67,15 +70,16 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction { get; }
 
-		public void FlashProgress(IList<EnvelopeXY> tiles,
-		                          ServiceCallStatus currentProgressStep)
+		public void UpdateProgressOverlay(bool showOverlay,
+		                                  IList<EnvelopeXY> tiles,
+		                                  ServiceCallStatus currentProgressStep)
 		{
 			if (tiles.Count == 0)
 			{
 				return;
 			}
 
-			// Multi-threaded access: Copy the list to be able to enumerate it:
+			// Multithreaded access: Copy the list to be able to enumerate it:
 			List<EnvelopeXY> immutableList = tiles.ToList();
 
 			QueuedTaskUtils.Run(
@@ -83,36 +87,16 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				{
 					try
 					{
-						bool flashed = await FlashProgressAsync(immutableList, currentProgressStep);
-						_msg.DebugFormat("Flashed progress: {0}", flashed);
+						await UpdateProgressOverlaysAsync(immutableList, showOverlay,
+						                                  currentProgressStep);
+						_msg.DebugFormat("Updated progress overlays. Current state: {0}",
+						                 showOverlay);
 					}
 					catch (Exception e)
 					{
 						_msg.Warn($"Error flashing verification progress: {e.Message}", e);
 					}
 				}).ConfigureAwait(false).GetAwaiter();
-		}
-
-		public bool CanFlashProgress(ServiceCallStatus? currentProgressStep,
-		                             IList<EnvelopeXY> tiles,
-		                             out string reason)
-		{
-			if (currentProgressStep == ServiceCallStatus.Undefined)
-			{
-				reason =
-					"Shows the tile verification progress but tile processing has not yet started.";
-				return false;
-			}
-
-			if (tiles.Count == 0)
-			{
-				reason =
-					"Shows the tile verification progress but tile processing has not yet started";
-				return false;
-			}
-
-			reason = null;
-			return true;
 		}
 
 		public void ZoomToVerifiedPerimeter()
@@ -357,14 +341,65 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			return result;
 		}
 
-		private async Task<bool> FlashProgressAsync([NotNull] IList<EnvelopeXY> tiles,
-		                                            ServiceCallStatus currentProgressStep)
+		private async Task UpdateProgressOverlaysAsync([NotNull] IList<EnvelopeXY> tiles,
+		                                               bool showOverlay,
+		                                               ServiceCallStatus currentProgressStep)
 		{
-			if (tiles.Count == 0)
+			if (! showOverlay || currentProgressStep == ServiceCallStatus.Undefined)
 			{
-				return false;
+				foreach (var overlay in _activeProgressOverlays)
+				{
+					overlay.Dispose();
+				}
+
+				_activeProgressOverlays.Clear();
+
+				_lastTileCount = 0;
+
+				return;
 			}
 
+			if (_lastTileCount == tiles.Count && currentProgressStep != ServiceCallStatus.Finished)
+			{
+				return;
+			}
+
+			_lastTileCount = tiles.Count;
+
+			if (_activeProgressOverlays.Count > 0)
+			{
+				// Update only the previous and current tile overlays to reduce flickering and improve performance.
+
+				int lastIndex = _activeProgressOverlays.Count - 1;
+				_activeProgressOverlays[lastIndex].Dispose();
+				_activeProgressOverlays.RemoveAt(lastIndex);
+
+				var overlays =
+					CreateOverlays(tiles.TakeLast(2).ToList(), currentProgressStep);
+
+				var newOverlays = await MapUtils.AddOverlays(_mapView, overlays);
+				_activeProgressOverlays.AddRange(newOverlays);
+			}
+			else
+			{
+				// Recreate overlays completely
+
+				foreach (var overlay in _activeProgressOverlays)
+				{
+					overlay.Dispose();
+				}
+
+				_activeProgressOverlays.Clear();
+
+				var overlays = CreateOverlays(tiles, currentProgressStep);
+
+				_activeProgressOverlays = await MapUtils.AddOverlays(_mapView, overlays);
+			}
+		}
+
+		private List<Overlay> CreateOverlays(IList<EnvelopeXY> tiles,
+		                                     ServiceCallStatus currentProgressStep)
+		{
 			CIMRGBColor green = ColorUtils.CreateRGB(0, 200, 0);
 
 			CIMLineSymbol lineSymbol = SymbolUtils.CreateLineSymbol(green, 2);
@@ -389,15 +424,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				overlays.Add(currentPolyOverlay);
 			}
 
-			await MapUtils.FlashGeometriesAsync(_mapView, overlays, 1000);
-
-			// Keep the current tile a bit longer...
-			if (currentPolyOverlay != null)
-			{
-				await MapUtils.FlashGeometryAsync(_mapView, currentPolyOverlay);
-			}
-
-			return true;
+			return overlays;
 		}
 
 		[CanBeNull]
