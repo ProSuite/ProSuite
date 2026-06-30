@@ -117,12 +117,17 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 	}
 	private void OnConfirmSelection()
 	{
-		if (_highlightedItem == null)
+		ConfirmItem(_highlightedItem);
+	}
+
+	public void ConfirmItem(IPickableItem item)
+	{
+		if (item == null)
 		{
 			return;
 		}
 
-		SelectedItem = _highlightedItem;
+		SelectedItem = item;
 	}
 
 	private void FlashItem(T candidate)

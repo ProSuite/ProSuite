@@ -8,32 +8,32 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 {
 	public static class FeatureProcessingUtils
 	{
-		public static int GetProcessingTimeout(int featureCount,
-		                                       double extraFactor = 1.0)
+		public static long GetProcessingTimeout(int featureCount,
+		                                        double extraFactor = 1.0)
 		{
 			string envVarValue =
 				Environment.GetEnvironmentVariable("PROSUITE_TOOLS_RPC_DEADLINE_MS");
 
 			if (! string.IsNullOrEmpty(envVarValue) &&
-			    int.TryParse(envVarValue, out int deadlineMilliseconds))
+			    long.TryParse(envVarValue, out long deadlineMilliseconds))
 			{
 				return deadlineMilliseconds;
 			}
 
-			int count = Math.Max(1, featureCount);
+			long count = Math.Max(1, featureCount);
 
-			int deadline = GetPerFeatureTimeOut() * count;
+			long deadline = GetPerFeatureTimeOut() * count;
 
-			return (int) (deadline * extraFactor);
+			return (long) (deadline * extraFactor);
 		}
 
-		public static int GetPerFeatureTimeOut()
+		public static long GetPerFeatureTimeOut()
 		{
 			string envVarValue =
 				Environment.GetEnvironmentVariable("PROSUITE_TOOLS_RPC_DEADLINE_PER_FEATURE_MS");
 
 			if (! string.IsNullOrEmpty(envVarValue) &&
-			    int.TryParse(envVarValue, out int deadlineMilliseconds))
+			    long.TryParse(envVarValue, out long deadlineMilliseconds))
 			{
 				return deadlineMilliseconds;
 			}

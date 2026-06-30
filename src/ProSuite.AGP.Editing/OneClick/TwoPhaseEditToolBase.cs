@@ -21,6 +21,18 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	// Cached on the UI thread: whether the tool is currently in its selection phase (true) or the
+	// second / derived-geometry phase (false). Updated only at the phase transitions
+	// (OnSelectionPhaseStartedAsync sets true, StartSecondPhaseAsync sets false).
+	//
+	// This lets key handlers (e.g. the Shift cursor update in ShiftReleasedAsync/Core) determine
+	// the phase WITHOUT dispatching to the MCT. Otherwise, we'd block while the MCT is busy with a
+	// long calculation.
+	// Because ArcGIS Pro serializes the tool's async key handlers, a blocked Shift key-up handler
+	// can stall the whole key pipeline, so for example a subsequent Esc (which could stop the long
+	// calculation) is never delivered!
+	private volatile bool _inSelectionPhase = true;
+
 	protected abstract SelectionCursors FirstPhaseCursors { get; }
 
 	protected abstract SelectionCursors SecondPhaseCursors { get; }
@@ -43,23 +55,22 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 			await StartSelectionPhaseAsync();
 		}
 
-		await QueuedTask.Run(
-			async () =>
+		await QueuedTask.Run(async () =>
+		{
+			// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
+			Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
+
+			var applicableSelection =
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+					.ToList();
+
+			if (applicableSelection.Count > 0)
 			{
-				// E.g. a part of the selection has been removed (e.g. using 'clear selection' on a layer)
-				Dictionary<MapMember, List<long>> selectionByLayer = selection.ToDictionary();
-
-				var applicableSelection =
-					GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
-						.ToList();
-
-				if (applicableSelection.Count > 0)
-				{
-					using var source = GetProgressorSource();
-					var progressor = source?.Progressor;
-					await AfterSelectionAsync(applicableSelection, progressor);
-				}
-			});
+				using var source = GetProgressorSource();
+				var progressor = source?.Progressor;
+				await AfterSelectionAsync(applicableSelection, progressor);
+			}
+		});
 
 		return true;
 	}
@@ -73,36 +84,35 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 
 		if (requiresRecalculate)
 		{
-			await QueuedTask.Run(
-				async () =>
+			await QueuedTask.Run(async () =>
+			{
+				try
 				{
-					try
+					Dictionary<MapMember, List<long>> selectionByLayer =
+						SelectionUtils.GetSelection(ActiveMapView.Map);
+
+					var selectedFeatures =
+						GetDistinctApplicableSelectedFeatures(selectionByLayer).ToList();
+
+					if (selectedFeatures.Count == 0)
 					{
-						Dictionary<MapMember, List<long>> selectionByLayer =
-							SelectionUtils.GetSelection(ActiveMapView.Map);
-
-						var selectedFeatures =
-							GetDistinctApplicableSelectedFeatures(selectionByLayer).ToList();
-
-						if (selectedFeatures.Count == 0)
-						{
-							ResetDerivedGeometries();
-							await StartSelectionPhaseAsync();
-							return;
-						}
-
-						using var source = GetProgressorSource();
-						var progressor = source?.Progressor;
-
-						CalculateDerivedGeometries(selectedFeatures, progressor);
-						await DerivedGeometriesCalculated(null, true);
+						ResetDerivedGeometries();
+						await StartSelectionPhaseAsync();
+						return;
 					}
-					catch (Exception e)
-					{
-						// Do not re-throw or the application could crash (e.g. in undo)
-						_msg.Error($"Error calculating derived geometries: {e.Message}", e);
-					}
-				});
+
+					using var source = GetProgressorSource();
+					var progressor = source?.Progressor;
+
+					CalculateDerivedGeometries(selectedFeatures, progressor);
+					await DerivedGeometriesCalculated(null, true);
+				}
+				catch (Exception e)
+				{
+					// Do not re-throw or the application could crash (e.g. in undo)
+					_msg.Error($"Error calculating derived geometries: {e.Message}", e);
+				}
+			});
 		}
 
 		await base.OnEditCompletedAsyncCore(args);
@@ -148,16 +158,16 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 		}
 	}
 
-	protected override async Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
+	protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 	{
 		if (shiftDown)
 		{
-			return true;
+			return Task.FromResult(true);
 		}
 
-		bool result = await QueuedTask.Run(IsInSelectionPhaseQueued);
-
-		return result;
+		// Use the cached phase flag rather than querying the map selection on the MCT: this method
+		// is reached from key handlers (cursor updates), which must never block on a busy MCT.
+		return Task.FromResult(_inSelectionPhase);
 	}
 
 	protected override async Task HandleEscapeAsync()
@@ -180,6 +190,8 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 
 	protected override Task OnSelectionPhaseStartedAsync()
 	{
+		_inSelectionPhase = true;
+
 		SelectionCursors = FirstPhaseCursors;
 		SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 		return base.OnSelectionPhaseStartedAsync();
@@ -274,24 +286,10 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 		}
 	}
 
-	private bool IsInSelectionPhaseQueued()
-	{
-		bool result;
-
-		if (! CanUseSelection(ActiveMapView))
-		{
-			result = true;
-		}
-		else
-		{
-			result = ! CanUseDerivedGeometries();
-		}
-
-		return result;
-	}
-
 	private async Task StartSecondPhaseAsync()
 	{
+		_inSelectionPhase = false;
+
 		SetupSketch();
 
 		SelectionCursors = SecondPhaseCursors;

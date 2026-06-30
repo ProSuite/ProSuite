@@ -17,11 +17,11 @@ namespace ProSuite.Microservices.Client.GrpcCore
 		/// Deadline to be used by geometry calls. It is important to use a dead-line otherwise
 		/// blocking server calls can make Pro hang forever.
 		/// </summary>
-		public static int GeometryDefaultDeadline { get; set; } = GetToolDefaultDeadline();
+		public static long GeometryDefaultDeadline { get; set; } = GetToolDefaultDeadline();
 
 		public static async Task<T> TryAsync<T>(Func<CallOptions, Task<T>> func,
 		                                        CancellationToken cancellationToken,
-		                                        int deadlineMilliseconds = 30000,
+		                                        long deadlineMilliseconds = 30000,
 		                                        bool noWarn = false)
 		{
 			if (cancellationToken.IsCancellationRequested)
@@ -48,7 +48,7 @@ namespace ProSuite.Microservices.Client.GrpcCore
 		public static T Try<T>(
 			[NotNull] Func<CallOptions, T> func,
 			CancellationToken cancellationToken,
-			int deadlineMilliseconds = 30000,
+			long deadlineMilliseconds = 30000,
 			bool noWarn = false)
 		{
 			if (cancellationToken.IsCancellationRequested)
@@ -73,7 +73,7 @@ namespace ProSuite.Microservices.Client.GrpcCore
 		}
 
 		private static CallOptions GetCallOptions<T>(CancellationToken cancellationToken,
-		                                             int deadlineMilliseconds)
+		                                             long deadlineMilliseconds)
 		{
 			CallOptions callOptions =
 				new CallOptions(null, DateTime.UtcNow.AddMilliseconds(deadlineMilliseconds),
@@ -127,13 +127,13 @@ namespace ProSuite.Microservices.Client.GrpcCore
 			}
 		}
 
-		private static int GetToolDefaultDeadline()
+		private static long GetToolDefaultDeadline()
 		{
 			string envVarValue =
 				Environment.GetEnvironmentVariable("PROSUITE_TOOLS_RPC_DEADLINE_MS");
 
 			if (! string.IsNullOrEmpty(envVarValue) &&
-			    int.TryParse(envVarValue, out int deadlineMilliseconds))
+			    long.TryParse(envVarValue, out long deadlineMilliseconds))
 			{
 				return deadlineMilliseconds;
 			}

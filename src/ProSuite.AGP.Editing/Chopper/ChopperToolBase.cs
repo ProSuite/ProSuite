@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -16,7 +15,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
-using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -103,6 +102,11 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 	                                                   CancelableProgressor progressor)
 	{
+		// Begin a new calculation generation up front so a superseding request (e.g. another
+		// spinner click) or Escape cancels this whole calculation, including the target search
+		// below, before the service round-trip is issued.
+		CancellationToken cancelToken = BeginCalculation();
+
 		// Store current map extent
 		bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
 
@@ -111,7 +115,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		IList<Feature> intersectingFeatures =
 			GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
 
-		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+		if (cancelToken.IsCancellationRequested)
 		{
 			_msg.Warn("Calculation of chop points was cancelled.");
 			return;
@@ -122,7 +126,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 			                     IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
 			                     true, progressor);
 
-		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+		if (cancelToken.IsCancellationRequested)
 		{
 			_msg.Warn("Calculation of chop points was cancelled.");
 			return;
@@ -165,6 +169,9 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		var selectedFeatures = MapUtils.GetFeatures(
 			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
+		// New calculation generation for the chop operation (see CalculateDerivedGeometries).
+		CancellationToken cancelToken = BeginCalculation();
+
 		IList<Feature> intersectingFeatures =
 			GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
 
@@ -173,7 +180,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 				selectedFeatures, chopPointsToApply, intersectingFeatures,
 				_chopperToolOptions,
 				IntersectionPointOptions.IncludeLinearIntersectionEndpoints,
-				true, progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+				true, cancelToken);
 
 		var updates = new Dictionary<Feature, Geometry>();
 
@@ -183,6 +190,12 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 
 		foreach (ResultFeature resultFeature in result)
 		{
+			if (cancelToken.IsCancellationRequested)
+			{
+				_msg.Warn("Chop operation was cancelled.");
+				return false;
+			}
+
 			Feature originalFeature = resultFeature.OriginalFeature;
 
 			Geometry newGeometry = resultFeature.NewGeometry;
@@ -191,6 +204,10 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 			{
 				continue;
 			}
+
+			// TODO: Find a better place, group by table
+			newGeometry =
+				MakeGeometryStorable(newGeometry, originalFeature.GetTable().GetDefinition());
 
 			if (resultFeature.ChangeType == RowChangeType.Update)
 			{
@@ -239,6 +256,24 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		CalculateDerivedGeometries(currentSelection, progressor);
 
 		return saved;
+	}
+
+	private static Geometry MakeGeometryStorable(Geometry newGeometry,
+	                                             FeatureClassDefinition featureClassDef)
+	{
+		// Avoid 'Geometry has null Z values':
+
+		bool classHasZ = featureClassDef.HasZ();
+		bool classHasM = featureClassDef.HasM();
+
+		Geometry geometryToStore =
+			GeometryUtils.EnsureGeometrySchema(
+				newGeometry, classHasZ, classHasM);
+
+		Geometry projected = GeometryUtils.EnsureSpatialReference(
+			geometryToStore, featureClassDef.GetSpatialReference());
+
+		return projected;
 	}
 
 	protected override void ResetDerivedGeometries()
@@ -305,17 +340,12 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		return result;
 	}
 
-	private async void _chopperToolOptions_PropertyChanged(object sender,
-	                                                       PropertyChangedEventArgs eventArgs)
+	private void _chopperToolOptions_PropertyChanged(object sender,
+	                                                 PropertyChangedEventArgs eventArgs)
 	{
-		try
-		{
-			await QueuedTaskUtils.Run(() => ProcessSelectionAsync());
-		}
-		catch (Exception e)
-		{
-			_msg.Error($"Error re-calculating chop points: {e.Message}", e);
-		}
+		// Coalesce rapid option changes (e.g. spinner clicks) and cancel any running calculation
+		// so they don't pile up as independent, uncancellable service calls.
+		RequestRecalculation();
 	}
 
 	#region Tool Options DockPane

@@ -210,7 +210,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	}
 
 	#region item geometry
-	
+
 	public Geometry GetItemDisplayGeometry(IWorkItem item)
 	{
 		try
@@ -436,6 +436,15 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		_msg.InfoFormat("Loaded {0} work list items for {1}.", _items.Count,
 		                DisplayName);
+
+		// Refresh the total on every full (re)load. This is the path taken after a verification
+		// (Invalidate() -> LoadItems()), where new rows change the total. CountItems(_items)
+		// reflects the current area of interest AND the active filter definition (e.g. 'Latest
+		// verification') - unlike Repository.Count(), which ignores the definition query - and it
+		// excludes items that are not counted (e.g. 'Allowed' issues), keeping the total consistent
+		// with the loaded/todo numbers. See also OnWorkListChanged, which keeps it up to date when
+		// item states change (e.g. toggling an issue to 'Allowed').
+		TotalCount = CountItems(_items);
 	}
 
 	protected virtual string GetFilterDisplayText()
@@ -669,8 +678,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	public void Count()
 	{
 		var watch = _msg.DebugStartTiming($"{this} start counting items.");
-		
-		TotalCount = CountItems(_items);
+
+		// The total is the grand total of all source rows in the database (ignoring the area of
+		// interest and which items are currently loaded). It is queried once and cached: deriving
+		// it from the in-memory _items would yield only the loaded count and would race with the
+		// background item loading.
+		TotalCount ??= Repository.Count();
 
 		_msg.DebugStopTiming(watch, $"{this} counted {TotalCount} items.");
 	}
@@ -1402,6 +1415,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	private void OnWorkListChanged([CanBeNull] Envelope extent = null,
 	                               [CanBeNull] List<long> oids = null)
 	{
+		// Keep the total in sync with the current items before notifying listeners. This is what
+		// makes the total drop when the current issue is toggled to 'Allowed' (which goes through
+		// ProcessChanges -> Invalidate(oids) -> here): CountItems excludes 'Allowed' issues, just
+		// like the loaded/todo numbers the navigator recomputes in response to this event.
+		TotalCount = CountItems(_items);
+
 		WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 	}
 
@@ -1515,7 +1534,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 			Stopwatch watch = Stopwatch.StartNew();
 
-			foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(table, filter))
+			foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(
+				         table, filter))
 			{
 				Assert.True(TryAddItem(item), $"Cannot not add {item}");
 
@@ -1636,8 +1656,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 					Envelope extent = Assert.NotNull(cachedItem.Extent);
 
 					Assert.NotNull(searcher).Remove(cachedItem,
-					                                 extent.XMin, extent.YMin,
-					                                 extent.XMax, extent.YMax);
+					                                extent.XMin, extent.YMin,
+					                                extent.XMax, extent.YMax);
 
 					if (CacheBufferedItemGeometries)
 					{
@@ -1774,7 +1794,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return true;
 	}
 
-	protected bool TryGetItem<T>(GdbRowIdentity rowProxy, out T item) where T : IWorkItem 
+	protected bool TryGetItem<T>(GdbRowIdentity rowProxy, out T item) where T : IWorkItem
 	{
 		bool exists = _rowMap.TryGetValue(rowProxy, out IWorkItem cachedItem);
 		item = (T) cachedItem;

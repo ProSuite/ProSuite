@@ -12,6 +12,8 @@ namespace ProSuite.Commons.GeoDb
 		ArcSDEOracle,
 		ArcSDEPostgreSQL,
 		ArcSDEInformix,
-		ArcSDEDB2
+		ArcSDEDB2,
+
+		FeatureService
 	}
 }

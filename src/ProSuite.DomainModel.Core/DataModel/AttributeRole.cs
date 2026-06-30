@@ -139,6 +139,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 			Add(ConflictPreReconcileState);
 			Add(ConflictReconcileState);
 
+			Add(FilePath);
+
 			Add(RevisionPointFeatureClass);
 			Add(RevisionPointStatus);
 			Add(RevisionPointNote);

@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.ChangeAlong;
@@ -122,6 +124,8 @@ public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase
 		{
 			SetProperty(ref _options, value);
 
+			DisplayUnitInfo unit = DisplayUnitInfo.FromMap(MapView.Active?.Map);
+
 			DisplayExcludeCutLines =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableDisplayExcludeCutLines);
@@ -134,28 +138,40 @@ public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableDisplayHideCutLines);
 
+			// A scale denominator (1:N), not a map distance - no unit label.
 			DisplayHideCutLinesScale = new CentralizableSettingViewModel<double>(
-				Options.CentralizableDisplayHideCutLinesScale,
-				new[] { Options.CentralizableDisplayHideCutLines });
+				                           Options.CentralizableDisplayHideCutLinesScale,
+				                           new[] { Options.CentralizableDisplayHideCutLines })
+			                           {
+				                           UnitLabel = string.Empty
+			                           };
 
 			BufferTarget =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);
 
 			BufferTolerance = new CentralizableSettingViewModel<double>(
-				Options.CentralizableBufferTolerance,
-				new[] { Options.CentralizableBufferTarget });
+				                  Options.CentralizableBufferTolerance,
+				                  new[] { Options.CentralizableBufferTarget })
+			                  {
+				                  Decimals = unit.Decimals, Step = unit.Step,
+				                  UnitLabel = unit.Label
+			                  };
 
 			EnforceMinimumBufferSegmentLength = new CentralizableSettingViewModel<bool>(
 				Options.CentralizableEnforceMinimumBufferSegmentLength,
 				new[] { Options.CentralizableBufferTarget });
 
 			MinBufferSegmentLength = new CentralizableSettingViewModel<double>(
-				Options.CentralizableMinBufferSegmentLength,
-				new[]
-				{
-					Options.CentralizableEnforceMinimumBufferSegmentLength,
-					Options.CentralizableBufferTarget
-				});
+				                         Options.CentralizableMinBufferSegmentLength,
+				                         new[]
+				                         {
+					                         Options.CentralizableEnforceMinimumBufferSegmentLength,
+					                         Options.CentralizableBufferTarget
+				                         })
+			                         {
+				                         Decimals = unit.Decimals, Step = unit.Step,
+				                         UnitLabel = unit.Label
+			                         };
 
 			InsertVertices =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);

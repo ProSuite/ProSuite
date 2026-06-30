@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -8,8 +9,10 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Testing;
 using ProSuite.QA.Tests.Test.TestRunners;
+using TestCategory = ProSuite.Commons.Test.TestCategory;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -66,7 +69,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
+		[Category(TestCategory.FixMe)]
 		public void Gen2847_NonZawarePolylineWithInteriorLoops()
 		{
 			string path = TestDataPreparer.FromDirectory()
@@ -135,7 +138,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
+		[Category(TestCategory.FixMe)]
 		public void CanGetChangedDuplicateVerticesPolylineSelfIntersecting()
 		{
 			// the source polyline visits the same points several times by going back and forth
@@ -175,6 +178,108 @@ namespace ProSuite.QA.Tests.Test
 			// The error remains...
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
+		}
+
+		[Test]
+		public void CanReportSelfIntersectingMultipatchRings_ChateauDeDardagny()
+		{
+			// TLM_GEBAEUDE Chateau de Dardagny: two of the eight ring groups are figure-8
+			// (bowtie) rings, i.e. a single ring with a 0-dimensional (crossing)
+			// self-intersection. QaSimpleGeometry must report these as self-intersections.
+			IFeature feature = CreateMultipatchFeature("chateau_de_dardagny.wkb");
+
+			var test = new QaSimpleGeometry(
+				ReadOnlyTableFactory.Create((IFeatureClass) feature.Class));
+			var runner = new QaTestRunner(test) { KeepGeometry = true };
+
+			runner.Execute(feature);
+
+			int selfIntersectionCount = CountErrors(runner, "SimpleGeometry.SelfIntersection");
+			int interiorRingCount = CountErrors(runner, "SimpleGeometry.InteriorRingNotInside");
+
+			Console.WriteLine(@"SelfIntersection errors: {0}, InteriorRingNotInside errors: {1}",
+			                  selfIntersectionCount, interiorRingCount);
+
+			Assert.AreEqual(2, selfIntersectionCount,
+			                "Expected the two bowtie rings to be reported as self-intersections");
+			Assert.AreEqual(0, interiorRingCount,
+			                "Did not expect any interior-ring errors for this feature");
+
+			// The error geometry is the actual self-intersection location (the crossing
+			// point(s)) as a multipoint - not the whole ring polyline.
+			foreach (IGeometry errorGeometry in runner.ErrorGeometries)
+			{
+				Assert.AreEqual(esriGeometryType.esriGeometryMultipoint,
+				                errorGeometry.GeometryType);
+
+				int pointCount = ((IPointCollection) errorGeometry).PointCount;
+				Assert.GreaterOrEqual(pointCount, 1, "Expected at least one crossing point");
+				Assert.LessOrEqual(pointCount, 2,
+				                   "Expected only the crossing point(s), not the whole ring");
+			}
+		}
+
+		[Test]
+		public void CanReportInteriorRingNotInsideMultipatch_Dennlerstrasse()
+		{
+			// TLM_GEBAEUDE Dennlerstrasse: one ring group carries two interior rings; one is a
+			// real coplanar hole, the other is 2.69 m off the face's plane (a different face
+			// mis-stored as an inner ring). QaSimpleGeometry must report the latter as an
+			// interior ring that is not inside its exterior ring.
+			IFeature feature = CreateMultipatchFeature("dennlerstrasse.wkb");
+
+			var test = new QaSimpleGeometry(
+				ReadOnlyTableFactory.Create((IFeatureClass) feature.Class));
+			var runner = new QaTestRunner(test) { KeepGeometry = true };
+
+			runner.Execute(feature);
+
+			int interiorRingCount = CountErrors(runner, "SimpleGeometry.InteriorRingNotInside");
+			int selfIntersectionCount = CountErrors(runner, "SimpleGeometry.SelfIntersection");
+
+			Console.WriteLine(@"InteriorRingNotInside errors: {0}, SelfIntersection errors: {1}",
+			                  interiorRingCount, selfIntersectionCount);
+
+			Assert.AreEqual(1, interiorRingCount,
+			                "Expected the non-coplanar interior ring to be reported");
+			Assert.AreEqual(0, selfIntersectionCount,
+			                "Did not expect any self-intersection errors for this feature");
+		}
+
+		[NotNull]
+		private static IFeature CreateMultipatchFeature([NotNull] string wkbFileName)
+		{
+			string path = TestDataPreparer.FromDirectory().GetPath(wkbFileName);
+
+			ISpatialReference spatialReference = SpatialReferenceUtils.CreateSpatialReference(
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+			((ISpatialReferenceResolution) spatialReference).XYResolution[true] = 0.0001;
+			((ISpatialReferenceTolerance) spatialReference).XYTolerance = 0.001;
+
+			// Load through the Geom reader (which faithfully preserves interior rings) and
+			// rebuild the ArcObjects multipatch from the ring groups. The ArcObjects
+			// WkbGeometryReader flattens the MultiSurface's interior rings into separate
+			// exterior rings, which would defeat the interior-ring test.
+			var polyhedron = (Polyhedron) GeomUtils.FromWkbFile(path, out _);
+
+			IMultiPatch prototype = new MultiPatchClass { SpatialReference = spatialReference };
+			((IZAware) prototype).ZAware = true;
+
+			IMultiPatch multipatch =
+				GeometryConversionUtils.CreateMultipatch(polyhedron.RingGroups, prototype);
+			multipatch.SpatialReference = spatialReference;
+
+			var featureClassMock = new FeatureClassMock(
+				"mock", esriGeometryType.esriGeometryMultiPatch, 1,
+				esriFeatureType.esriFTSimple, spatialReference);
+
+			return featureClassMock.CreateFeature(multipatch);
+		}
+
+		private static int CountErrors([NotNull] QaTestRunner runner,
+		                               [NotNull] string issueCodeId)
+		{
+			return runner.Errors.Count(e => e.IssueCode != null && e.IssueCode.ID == issueCodeId);
 		}
 
 		[Test]
