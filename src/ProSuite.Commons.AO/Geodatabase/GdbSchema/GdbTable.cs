@@ -245,7 +245,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			{
 				if (_fullName == null)
 				{
-					_fullName = new GdbTableName(this);
+					_fullName = _workspace is GdbWorkspace gdbWorkspace
+						            ? (IName) GdbDatasetNameFactory.CreateDatasetName(
+							            gdbWorkspace, GdbDatasetMoniker.FromTable(this))
+						            : new GdbTableName(this);
 				}
 
 				return _fullName;
