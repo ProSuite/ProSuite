@@ -155,6 +155,7 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 			}
 			else
 			{
+				await RememberSketchAsync(sketch);
 				await ClearSketchAsync();
 			}
 		}
