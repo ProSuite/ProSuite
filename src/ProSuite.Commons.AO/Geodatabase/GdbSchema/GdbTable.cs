@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
@@ -134,6 +134,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		protected virtual void FieldAddedCore(IField field) { }
 
 		#endregion
+
+		private GdbIndexes _indexes;
+
+		public override IIndexes Indexes => _indexes ?? (_indexes = new GdbIndexes());
+
+		public void SetIndexes([NotNull] GdbIndexes indexes)
+		{
+			_indexes = indexes;
+		}
 
 		public int OidFieldIndex { get; private set; } = -1;
 
