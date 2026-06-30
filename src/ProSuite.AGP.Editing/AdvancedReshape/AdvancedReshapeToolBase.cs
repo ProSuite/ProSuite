@@ -80,9 +80,6 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 
 	protected AdvancedReshapeToolBase()
 	{
-		// important for SketchRecorder in base class
-		FireSketchEvents = true;
-
 		RequiresSelection = true;
 
 		HandledKeys.Add(_keyToggleNonDefaultSide);

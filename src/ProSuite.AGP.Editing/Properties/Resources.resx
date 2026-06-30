@@ -157,6 +157,9 @@
   <data name="CutPolygonAlongOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\CutPolygonAlongOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="CutFeatureOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
+	<value>Images\CutFeatureOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="EraseOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\EraseOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -179,12 +182,12 @@
     <value>Images\AdvancedGeneralizeOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="MergeFeaturesOverlay1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	  <value>Images\MergeFeaturesOverlay1.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>Images\MergeFeaturesOverlay1.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="MergeFeaturesOverlay2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	  <value>Images\MergeFeaturesOverlay2.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>Images\MergeFeaturesOverlay2.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="RepairGeometryOverlay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	  <value>Images\RepairGeometryOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>Images\RepairGeometryOverlay.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

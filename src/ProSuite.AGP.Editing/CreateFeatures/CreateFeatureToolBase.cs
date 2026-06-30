@@ -30,8 +30,6 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 
 	protected CreateFeatureToolBase()
 	{
-		FireSketchEvents = true;
-
 		RequiresSelection = false;
 
 		// This does not work unless loadOnClick="false" in the daml.xml:
