@@ -316,7 +316,6 @@ namespace ProSuite.Commons.UI
 			}
 		}
 
-
 		public static async Task ActivateOrShowAsync<TWindow, TViewModel>(
 			[CanBeNull] Func<TWindow, bool> findView,
 			[NotNull] Func<Task<TViewModel>> createViewModelAsync)
@@ -343,6 +342,38 @@ namespace ProSuite.Commons.UI
 		{
 			var window = (T) Activator.CreateInstance(typeof(T), args);
 			Assert.NotNull(window).Show();
+		}
+
+		public static async Task ActivateOrShowDialogAsync<TWindow, TViewModel>(
+			[CanBeNull] Func<TWindow, bool> findView,
+			[NotNull] Func<Task<TViewModel>> createViewModelAsync)
+			where TWindow : Window
+			where TViewModel : ViewModelBase
+		{
+			if (ActivateSingleInstance(findView))
+			{
+				return;
+			}
+
+			try
+			{
+				TViewModel args = await createViewModelAsync();
+				CreateAndShowDialog<TWindow, TViewModel>(args);
+			}
+			catch (Exception ex)
+			{
+				_msg.Debug($"Could not create window of type {nameof(TWindow)}: {ex.Message}", ex);
+			}
+		}
+
+		public static bool? CreateAndShowDialog<TWindow, TViewModel>(TViewModel viewModel)
+			where TWindow : Window
+			where TViewModel : ViewModelBase
+		{
+			//var window = (T)Activator.CreateInstance(typeof(T), viewModel);
+			TWindow window = Activator.CreateInstance<TWindow>();
+
+			return Assert.NotNull(window).ShowDialog();
 		}
 	}
 }
