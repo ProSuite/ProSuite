@@ -54,6 +54,18 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public TableDefinition ProTableDefinition { get; }
 
+		/// <summary>
+		/// Records the handle of the workspace whose table cache (<c>_tablesByName</c>) holds this
+		/// table, so it can remove itself on <see cref="Dispose"/> (see
+		/// <see cref="RemoveFromWorkspaceCache"/>) and not leave a disposed instance to be handed
+		/// out by a later OpenTable. This is the same handle the <see cref="Workspace"/> getter
+		/// resolves against.
+		/// </summary>
+		internal void RememberWorkspaceHandle(long workspaceHandle)
+		{
+			_workspaceHandle = workspaceHandle;
+		}
+
 		internal void CacheProperties()
 		{
 			if (_cachePropertiesEagerly)
@@ -121,7 +133,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			{
 				while (rowCursor.MoveNext())
 				{
-					return ArcGeodatabaseUtils.ToArcRow(rowCursor.Current);
+					return ArcGeodatabaseUtils.ToArcRow(rowCursor.Current, this);
 				}
 			}
 
@@ -699,11 +711,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			proQueryFilter.WhereClause = queryFilter.WhereClause;
 			proQueryFilter.PostfixClause = queryFilter.PostfixClause;
 
-			if (proQueryFilter == null)
-			{
-				throw new ArgumentException("Unknown filter type");
-			}
-
 			return proQueryFilter;
 		}
 
@@ -720,8 +727,26 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return field;
 		}
 
+		/// <summary>
+		/// Removes this table from its parent workspace's table cache, so a later
+		/// OpenTable/ToArcTable cache hit cannot hand out a disposed instance. No-op if the table
+		/// was never cached or its workspace is no longer in the per-handle cache.
+		/// </summary>
+		protected void RemoveFromWorkspaceCache()
+		{
+			if (_workspaceHandle is long handle &&
+			    ArcWorkspace.GetByHandle(handle) is ArcWorkspace owningWorkspace)
+			{
+				owningWorkspace.Uncache(this);
+			}
+		}
+
 		public void Dispose()
 		{
+			// Remove ourselves from the parent workspace's table cache first, so a disposed
+			// instance is never handed out by a later OpenTable/ToArcTable cache hit.
+			RemoveFromWorkspaceCache();
+
 			ProTable?.Dispose();
 			ProTableDefinition?.Dispose();
 		}
@@ -757,8 +782,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public esriDatasetType Type => _dataset.Type;
 
-		public IWorkspaceName WorkspaceName =>
-			new ArcWorkspaceName((ArcWorkspace) _dataset.Workspace);
+		// Delegate to the workspace itself: the dataset may live in a BasicWorkspace
+		// (shapefiles, plug-in datasources), which is not an ArcWorkspace and would fail a cast.
+		public IWorkspaceName WorkspaceName => _dataset.Workspace.GetWorkspaceName();
 
 		#endregion
 	}

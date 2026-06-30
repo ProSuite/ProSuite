@@ -7,6 +7,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.Workflow;
@@ -58,6 +59,17 @@ public class ProjectWorkspace : IProjectWorkspace
 	public string DisplayName { get; }
 
 	public bool IsMasterDatabaseWorkspace { get; set; }
+
+	/// <summary>
+	/// Maps a live workspace (gdb) table name to its dataset, as determined by the server.
+	/// The gdb table name can differ from the model dataset name (e.g. feature service
+	/// "L0..." prefixes, or any child-database name transformation). When populated, it is
+	/// the authoritative way to match a live table to a dataset; <see cref="GetDataset"/>
+	/// consults it before falling back to name-based matching. Empty for older servers.
+	/// </summary>
+	[NotNull]
+	public IDictionary<string, IDdxDataset> DatasetsByGdbName { get; } =
+		new Dictionary<string, IDdxDataset>(StringComparer.InvariantCultureIgnoreCase);
 
 	/// <summary>
 	/// Some projects could exclude read-only datasets from the project workspace determination
@@ -122,6 +134,17 @@ public class ProjectWorkspace : IProjectWorkspace
 		if (Datasets.Count == 0)
 		{
 			return null;
+		}
+
+		// Authoritative match: the server told us which live gdb table name maps to which
+		// dataset (handles feature service "L0..." prefixes and child-database name
+		// transformations). Fall back to name-based matching for older servers.
+		if (DatasetsByGdbName.TryGetValue(gdbTableName, out IDdxDataset mappedDataset))
+		{
+			_msg.VerboseDebug(() => $"Found project workspace dataset using server-provided gdb " +
+			                        $"name mapping for table {gdbTableName}");
+
+			return mappedDataset;
 		}
 
 		DdxModel ddxModel = Datasets.Select(d => d.Model).FirstOrDefault();

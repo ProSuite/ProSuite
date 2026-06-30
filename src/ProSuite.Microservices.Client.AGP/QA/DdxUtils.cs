@@ -736,6 +736,20 @@ namespace ProSuite.Microservices.Client.AGP.QA
 							projectMsg.ExcludeReadOnlyDatasetsFromProjectWorkspace
 					};
 
+				// Optional gdb table name -> dataset mapping (aligned by index with DatasetIds).
+				// Empty for older servers, in which case GetDataset falls back to name matching.
+				IList<string> gdbDatasetNames = projectWorkspaceMsg.GdbDatasetNames;
+				for (var i = 0; i < projectWorkspaceMsg.DatasetIds.Count; i++)
+				{
+					if (i >= gdbDatasetNames.Count || string.IsNullOrEmpty(gdbDatasetNames[i]))
+					{
+						continue;
+					}
+
+					projectWorkspace.DatasetsByGdbName[gdbDatasetNames[i]] =
+						datasetsById[projectWorkspaceMsg.DatasetIds[i]];
+				}
+
 				var projectSettings =
 					new ProjectSettings(projectMsg.ProjectId, projectMsg.ShortName,
 					                    projectMsg.Name);

@@ -9,6 +9,8 @@ namespace ProSuite.Commons.Geom
 {
 	public class RingOperator
 	{
+		private static double ToleranceFactor => Math.Sqrt(2);
+
 		private readonly SubcurveNavigator _subcurveNavigator;
 
 		public RingOperator(SubcurveNavigator subcurveNavigator)
@@ -23,6 +25,26 @@ namespace ProSuite.Commons.Geom
 
 		// TODO: Test with true for all cases, consider implementation without geometry updates and remove.
 		public bool AllowPointClustering { get; set; }
+
+		/// <summary>
+		/// Distance (typically the data resolution) within which two near-coincident, near-
+		/// parallel edge runs of source and target - bounded by two point-touches and enclosing
+		/// a sub-resolution sliver - are snapped together so the navigator sees a clean linear
+		/// intersection instead of two touch points it cannot walk. Only takes effect when
+		/// greater than the navigator tolerance; 0 (default) disables the parallel-run snap and
+		/// preserves the legacy behavior. See <see cref="SnapNearCoincidentParallelRuns"/>.
+		/// </summary>
+		public double MergeTolerance { get; set; }
+
+		/// <summary>
+		/// Whether a degenerate union walk result (see
+		/// <see cref="SubcurveNavigator.HasDisallowedSourceEntries"/>) may be repaired by
+		/// re-unioning the emitted rings with each other (see
+		/// <see cref="ReUnionProcessedRings"/>). Disabled on the re-union calls themselves
+		/// to guarantee termination; if such a nested union is degenerate again, the
+		/// nested-exterior-ring guard remains as the safety net.
+		/// </summary>
+		public bool AllowReUnionRepair { get; set; } = true;
 
 		/// <summary>
 		/// Returns the difference between source and target.
@@ -114,6 +136,27 @@ namespace ProSuite.Commons.Geom
 
 			IList<Linestring> processedRingsResult =
 				_subcurveNavigator.FollowSubcurvesTurningLeft();
+
+			if (AllowReUnionRepair && _subcurveNavigator.HasDisallowedSourceEntries)
+			{
+				// Degenerate situation (source rings touching/pinching within the tolerance):
+				// the union walk was prevented from re-entering an already departed source
+				// ring and hence emitted separate exterior rings that can overlap or even
+				// contain each other (each walk traced its own loop around the shared
+				// target). Repair this immediately, BEFORE the nested-exterior-ring guard and
+				// the ring-relationship handling below - both require simple, non-overlapping
+				// rings. Unlike the original operands, the emitted rings no longer pinch, so
+				// unioning them with each other yields the proper outline(s).
+				processedRingsResult = ReUnionProcessedRings(processedRingsResult);
+			}
+
+			// A correct union never produces an exterior (CW) ring fully contained within
+			// another exterior ring - that would double-count the inner ring's area. If it
+			// happens, the navigation was derailed (typically by a near-coincident-vertex
+			// artifact, e.g. a spurious crossing at a sub-resolution spike apex - see Grancy,
+			// now handled at the root by ClusterGeometries cracking). Assert for now so such
+			// cases surface as bugs rather than silently inflating the area.
+			AssertNoNestedExteriorRings(processedRingsResult);
 
 			_subcurveNavigator.DetermineExtraRingRelations(
 				out IList<Linestring> equalRings,
@@ -448,15 +491,34 @@ namespace ProSuite.Commons.Geom
 			// By now we know that the rings are not cutting each other, but extra checks are
 			// necessary because the unprocessed parts could be inside a processed part or within
 			// another unprocessed part.
+
+			// Interior rings that have not yet been assigned to a result ring group. An
+			// unprocessed outer ring that sits inside one of these (e.g. an island in a
+			// courtyard whose surrounding building is itself still unprocessed) is NOT a
+			// duplicate of the building and must be kept - the containing ring group does
+			// not have its hole assigned yet, so a plain AreaContainsXY against it would
+			// wrongly report containment (TOP: garden_center_giubiasco).
+			List<Linestring> unassignedInteriorRings =
+				unprocessed.GetLinestrings().Where(l => l.ClockwiseOriented == false).ToList();
+
 			foreach (var unprocessedRing in unprocessed.GetLinestrings()
 			                                           .Where(l => l.ClockwiseOriented != false)
 			                                           .OrderByDescending(l => l.GetArea2D()))
 			{
-				if (resultRingGroups.All(r => GeomRelationUtils.AreaContainsXY(
-					                              r, unprocessedRing,
-					                              _subcurveNavigator.Tolerance) == false))
+				bool containedByResultRing =
+					resultRingGroups.Any(r => GeomRelationUtils.AreaContainsXY(
+						                          r, unprocessedRing,
+						                          _subcurveNavigator.Tolerance) == true);
+
+				bool insideUnassignedInteriorRing =
+					unassignedInteriorRings.Any(island => RingContainsRobust(
+						                            island, unprocessedRing,
+						                            _subcurveNavigator.Tolerance));
+
+				if (! containedByResultRing || insideUnassignedInteriorRing)
 				{
-					// Not contained by any result ring: keep it
+					// Not contained by any result ring, or contained only because the
+					// relevant interior ring (hole) has not been assigned yet: keep it.
 					resultRingGroups.Add(new RingGroup(unprocessedRing));
 				}
 			}
@@ -497,8 +559,84 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
+		/// Re-unions the rings emitted by a degenerate union walk (see
+		/// <see cref="SubcurveNavigator.HasDisallowedSourceEntries"/>) with each other: the
+		/// suppressed source re-entries make each walk trace its own loop around the shared
+		/// target, so the emitted exterior rings can overlap or even contain each other.
+		/// Unlike the original operands they no longer pinch, so unioning them yields the
+		/// proper outline(s). Interior rings contained in an emitted exterior ring take part
+		/// in the union (and are correctly filled where another emitted ring covers them);
+		/// interior rings whose containing outer ring was NOT processed are kept as-is for
+		/// the regular downstream assignment.
+		/// </summary>
+		private IList<Linestring> ReUnionProcessedRings(
+			[NotNull] IList<Linestring> processedRings)
+		{
+			double tolerance = _subcurveNavigator.Tolerance;
+
+			List<RingGroup> components =
+				GeomTopoOpUtils.GetConnectedComponents(
+					               new MultiPolycurve(processedRings), tolerance)
+				               .OrderByDescending(c => c.GetArea2D())
+				               .ToList();
+
+			if (components.Count < 2)
+			{
+				return processedRings;
+			}
+
+			var inComponents = new HashSet<Linestring>(
+				components.SelectMany(c => c.GetLinestrings()));
+
+			List<Linestring> unassignedInteriorRings =
+				processedRings.Where(r => ! inComponents.Contains(r)).ToList();
+
+			MultiLinestring reUnion = components[0];
+
+			foreach (RingGroup component in components.Skip(1))
+			{
+				reUnion = GeomTopoOpUtils.GetUnionAreasXY(
+					reUnion, component, tolerance, MergeTolerance,
+					allowReUnionRepair: false);
+			}
+
+			List<Linestring> result = reUnion.GetLinestrings().ToList();
+			result.AddRange(unassignedInteriorRings);
+
+			return result;
+		}
+
+		private void AssertNoNestedExteriorRings(
+			[NotNull] IList<Linestring> processedRings)
+		{
+			double tolerance = _subcurveNavigator.Tolerance;
+
+			List<Linestring> exteriorRings =
+				processedRings.Where(r => r.ClockwiseOriented == true).ToList();
+
+			for (var i = 0; i < exteriorRings.Count; i++)
+			{
+				for (var j = 0; j < exteriorRings.Count; j++)
+				{
+					if (i == j)
+					{
+						continue;
+					}
+
+					if (RingContains(exteriorRings[i], exteriorRings[j], tolerance))
+					{
+						throw new AssertionException(
+							"Union produced an exterior ring contained within another exterior " +
+							"ring (double-counted area). The input is likely non-simple or the " +
+							"navigation was derailed by a near-coincident-vertex artifact.");
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Determines whether the specified interior ring which is known not to cross but only
-		/// touch the exterior ring or be completely inside or disjoint. 
+		/// touch the exterior ring or be completely inside or disjoint.
 		/// </summary>
 		/// <param name="exteriorRing"></param>
 		/// <param name="unCutInteriorRing"></param>
@@ -513,6 +651,50 @@ namespace ProSuite.Commons.Geom
 				bool? contained =
 					GeomRelationUtils.AreaContainsXY(exteriorRing, interiorRingPoint, tolerance,
 					                                 true);
+
+				if (contained != null)
+				{
+					return contained.Value;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Like <see cref="RingContains"/>, but when every vertex of
+		/// <paramref name="unCutInteriorRing"/> lies on the boundary of
+		/// <paramref name="exteriorRing"/> (all vertices boundary-ambiguous), it falls back to
+		/// probing the inner ring's segment midpoints, which lie off the boundary wherever the
+		/// inner ring dips into the interior. This resolves the case of an island whose corners
+		/// ALL touch the surrounding courtyard hole boundary, where the plain vertex test is
+		/// inconclusive and falls through to "not contained"
+		/// (TOP: brutalismus_in_duedingen / garden_center_giubiasco).
+		/// </summary>
+		private static bool RingContainsRobust([NotNull] Linestring exteriorRing,
+		                                        [NotNull] Linestring unCutInteriorRing,
+		                                        double tolerance)
+		{
+			foreach (Pnt3D interiorRingPoint in unCutInteriorRing.GetPoints())
+			{
+				bool? contained =
+					GeomRelationUtils.AreaContainsXY(exteriorRing, interiorRingPoint, tolerance,
+					                                 true);
+
+				if (contained != null)
+				{
+					return contained.Value;
+				}
+			}
+
+			// Every vertex is on the exterior ring's boundary: probe segment midpoints, which
+			// lie clearly inside (or outside) wherever the inner ring deviates from the boundary.
+			foreach (Line3D segment in unCutInteriorRing.Segments)
+			{
+				Pnt3D midPoint = segment.GetPointAlong(0.5, asRatio: true);
+
+				bool? contained =
+					GeomRelationUtils.AreaContainsXY(exteriorRing, midPoint, tolerance, true);
 
 				if (contained != null)
 				{
@@ -575,10 +757,20 @@ namespace ProSuite.Commons.Geom
 				{
 					// Intersected (processed) inner rings:
 					// Find the containing un-cut outer ring, assign and remove from un-processed list
-					Linestring containing = unprocessedOuterRings.FirstOrDefault(
-						o => o.ClockwiseOriented == true &&
-						     GeomRelationUtils.PolycurveContainsXY(
-							     o, processedResultRing.StartPoint, _subcurveNavigator.Tolerance));
+					// Use a full-ring containment test (not just the start point): the
+					// processed inner ring's start point can land exactly on the boundary
+					// of a small island that does NOT actually contain the hole (e.g. a
+					// pinch vertex shared by an island and the reshaped courtyard). A
+					// single-point test then wrongly nests a large courtyard hole inside a
+					// tiny island; RingContains skips boundary-ambiguous vertices and
+					// decides on the first conclusive (interior/exterior) one
+					// (TOP: vallee_de_la_jeunesse). Holes left unassigned here are picked up
+					// by the AssignInteriorRings call (smallest containing ring group).
+					Linestring containing =
+						unprocessedOuterRings.FirstOrDefault(o => o.ClockwiseOriented == true &&
+							                                     RingContains(
+								                                     o, processedResultRing,
+								                                     _subcurveNavigator.Tolerance));
 
 					if (containing != null)
 					{
@@ -702,10 +894,39 @@ namespace ProSuite.Commons.Geom
 			bool hasUnClusteredIntersectionPoints =
 				_subcurveNavigator.IntersectionPointNavigator.HasUnClusteredIntersectionPoints;
 
-			if (AllowPointClustering && hasUnClusteredIntersectionPoints)
+			// The parallel-run snap (MergeTolerance) targets near-coincident parallel edge runs
+			// bounded by two point-touches that are too far apart to cluster, so it must run even
+			// when the point-clustering gate is not tripped (footprint path). Gate it on a cheap
+			// scan for an actual candidate so the - per incremental footprint step - work of
+			// ClusterGeometries (point clustering + subcurve coincidence tests + clone/recompute)
+			// is skipped on the many steps that have nothing to snap.
+			bool wantParallelRunSnap =
+				MergeTolerance > _subcurveNavigator.Tolerance &&
+				HasParallelRunSnapCandidate(_subcurveNavigator.IntersectionPoints, MergeTolerance);
+
+			if (AllowPointClustering && (hasUnClusteredIntersectionPoints || wantParallelRunSnap))
 			{
-				if (ClusterGeometries(out ISegmentList newSource, out ISegmentList newTarget))
+				if (ClusterGeometries(pointClustering: true, parallelRunSnap: wantParallelRunSnap,
+				                      out ISegmentList newSource, out ISegmentList newTarget))
 				{
+					// Snapping near-coincident vertices to a common cluster point can fold
+					// a sub-resolution spike into a duplicate (out-and-back) segment. Once
+					// points have been clustered such linear self-intersections are always
+					// spurious, so remove them here; this leaves the navigator with simple,
+					// navigable rings instead of spike artefacts (Thanhalten needle, and a
+					// class of "intersection seen twice" navigator failures).
+					double tolerance = _subcurveNavigator.Tolerance;
+
+					if (newSource != null)
+					{
+						newSource = RemoveLinearSelfIntersections(newSource, tolerance);
+					}
+
+					if (newTarget != null)
+					{
+						newTarget = RemoveLinearSelfIntersections(newTarget, tolerance);
+					}
+
 					// Recalculate intersections with updated geometries:
 					_subcurveNavigator.Invalidate(
 						newSource ?? _subcurveNavigator.Source,
@@ -714,7 +935,46 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private bool ClusterGeometries([CanBeNull] out ISegmentList newSource,
+		/// <summary>
+		/// Removes linear self-intersections (duplicate out-and-back segments) from each
+		/// ring of <paramref name="clustered"/>. Such artefacts appear after
+		/// <see cref="ClusterGeometries"/> snaps near-coincident vertices together,
+		/// collapsing a sub-resolution spike into a degenerate segment. Returns the input
+		/// unchanged when nothing was removed.
+		/// </summary>
+		private static ISegmentList RemoveLinearSelfIntersections(
+			[NotNull] ISegmentList clustered, double tolerance)
+		{
+			var cleanedParts = new List<Linestring>(clustered.PartCount);
+			bool changed = false;
+
+			for (int i = 0; i < clustered.PartCount; i++)
+			{
+				Linestring part = clustered.GetPart(i);
+
+				var results = new List<Linestring>();
+				if (part.IsClosed &&
+				    GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
+					    part, tolerance, results))
+				{
+					changed = true;
+					cleanedParts.AddRange(results);
+				}
+				else
+				{
+					cleanedParts.Add(part);
+				}
+			}
+
+			return changed ? new MultiPolycurve(cleanedParts) : clustered;
+		}
+
+		/// <param name="pointClustering">Whether to snap/crack near-coincident intersection
+		/// points (the Sqrt(2)*tolerance vertex clustering).</param>
+		/// <param name="parallelRunSnap">Whether to snap near-coincident parallel edge runs
+		/// (the <see cref="MergeTolerance"/> sliver collapse).</param>
+		private bool ClusterGeometries(bool pointClustering, bool parallelRunSnap,
+		                               [CanBeNull] out ISegmentList newSource,
 		                               [CanBeNull] out ISegmentList newTarget)
 		{
 			newSource = null;
@@ -723,89 +983,600 @@ namespace ProSuite.Commons.Geom
 			List<IntersectionPoint3D> intersectionList =
 				(List<IntersectionPoint3D>) _subcurveNavigator.IntersectionPoints;
 
-			// Consider adapting cluster tolerance (Sqrt(2)?) -> better make configurable
-			double clusterDistance = _subcurveNavigator.Tolerance;
-			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
-				GeomTopoOpUtils.Cluster(intersectionList, ip => ip.Point,
-				                        clusterDistance);
+			// Crack points to be applied per source / target part. We do not just snap the
+			// existing intersection vertices to the cluster point: we also crack (split) a
+			// segment that runs past the cluster without a vertex there, inserting a vertex
+			// at the cluster point. This welds two near-coincident segments (e.g. the flanks
+			// of a sub-resolution spike, Grancy needle) into a coincident pair, so the
+			// subsequent RemoveLinearSelfIntersections can collapse the resulting duplicate
+			// out-and-back segment and the recalculated intersections no longer contain the
+			// spurious crossing that derailed the navigator.
+			//
+			// Collected against the ORIGINAL geometry (the crack points reference virtual vertex
+			// positions that index into it); the - potentially large - source/target are only
+			// cloned below if there is actually something to apply, so a union step that needs no
+			// snapping pays no clone/recompute cost (this matters: the footprint runs this on every
+			// incremental step).
+			ISegmentList originalTarget = _subcurveNavigator.Target;
+			var sourceCrackPointsByPart = new Dictionary<int, List<CrackPoint>>();
+			var targetCrackPointsByPart = new Dictionary<int, List<CrackPoint>>();
 
-			bool sourceUpdated = false;
-			bool targetUpdated = false;
+			if (pointClustering)
+			{
+				// Sqrt(2)*tolerance (instead of plain tolerance) lets a vertex pair that
+				// straddles the tolerance/resolution gap (e.g. the flanks of a sub-resolution
+				// spike, 0.0078 m apart at tol 0.00625) cluster to a common point, so the
+				// post-cluster RemoveLinearSelfIntersections can collapse the spike. The plain
+				// tolerance leaves such spikes intact and the navigator mis-handles them.
+				double clusterDistance = ToleranceFactor * _subcurveNavigator.Tolerance;
+				IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
+					GeomTopoOpUtils.Cluster(intersectionList, ip => ip.Point,
+					                        clusterDistance);
 
-			// TODO: IGeom interface with Clone() and other generic methods?
+				foreach (KeyValuePair<IPnt, List<IntersectionPoint3D>> cluster in
+				         clusteredIntersections)
+				{
+					if (cluster.Value.Count == 1)
+					{
+						continue;
+					}
+
+					IPnt clusterPoint = cluster.Key;
+
+					foreach (IntersectionPoint3D intersection in cluster.Value)
+					{
+						CollectSourceCrackPoint(intersection, clusterPoint,
+						                        sourceCrackPointsByPart);
+						CollectTargetCrackPoint(intersection, clusterPoint, originalTarget,
+						                        targetCrackPointsByPart);
+					}
+				}
+			}
+
+			// Snap near-coincident parallel edge runs (bounded by two point-touches enclosing a
+			// sub-resolution sliver) so the navigator sees a clean linear intersection. The two
+			// bounding touches are too far apart to share a cluster, so this is handled here in
+			// addition to the point clustering above.
+			if (parallelRunSnap)
+			{
+				CollectParallelRunCrackPoints(intersectionList, sourceCrackPointsByPart,
+				                              targetCrackPointsByPart, originalTarget);
+
+				CollectDegenerateLinearRunCrackPoints(intersectionList, sourceCrackPointsByPart,
+				                                      targetCrackPointsByPart, originalTarget);
+
+				CollectNearCoincidentCrossingCrackPoints(
+					intersectionList, sourceCrackPointsByPart, targetCrackPointsByPart,
+					originalTarget);
+			}
+
+			if (sourceCrackPointsByPart.Count == 0 && targetCrackPointsByPart.Count == 0)
+			{
+				// Nothing to snap - avoid cloning the (possibly large) accumulated geometry.
+				return false;
+			}
 
 			ISegmentList source = Clone(_subcurveNavigator.Source);
-			ISegmentList target = Clone(_subcurveNavigator.Target);
-			foreach (KeyValuePair<IPnt, List<IntersectionPoint3D>> cluster in
-			         clusteredIntersections)
-			{
-				if (cluster.Value.Count == 1)
-				{
-					continue;
-				}
+			ISegmentList target = Clone(originalTarget);
 
-				IPnt clusterPoint = cluster.Key;
-
-				foreach (IntersectionPoint3D intersection in cluster.Value)
-				{
-					if (intersection.IsSourceVertex())
-					{
-						Linestring linestring =
-							source.GetPart(intersection.SourcePartIndex);
-
-						int sourceVertexIdx = (int) intersection.VirtualSourceVertex;
-
-						double origZ = intersection.Point.Z;
-
-						linestring.UpdatePoint(sourceVertexIdx,
-						                       clusterPoint.X, clusterPoint.Y, origZ);
-						sourceUpdated = true;
-						// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
-						linestring.SpatialIndex = null;
-					}
-
-					if (intersection.IsTargetVertex(out int targetVertexIdx))
-					{
-						Linestring linestring =
-							target.GetPart(intersection.TargetPartIndex);
-
-						double origZ = linestring.GetPoint3D(targetVertexIdx).Z;
-
-						linestring.UpdatePoint(targetVertexIdx,
-						                       clusterPoint.X, clusterPoint.Y, origZ);
-
-						targetUpdated = true;
-						// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
-						linestring.SpatialIndex = null;
-					}
-				}
-
-				// TODO: Consider proper cracking (including segment splits) if
-				//       IntersectionPoint3d.Disallow Forward/Backward is not enough.
-			}
+			bool sourceUpdated = ApplyCrackPoints(ref source, sourceCrackPointsByPart);
+			bool targetUpdated = ApplyCrackPoints(ref target, targetCrackPointsByPart);
 
 			if (sourceUpdated)
 			{
-				// TODO: Make IUpdateableSegmentList interface to allow changing potential spatial index
-				if (source is MultiLinestring sourceMultiLinestring)
-				{
-					sourceMultiLinestring.SpatialIndex = null;
-				}
-
 				newSource = source;
 			}
 
 			if (targetUpdated)
 			{
-				if (target is MultiLinestring targetMultiLinestring)
-				{
-					targetMultiLinestring.SpatialIndex = null;
-				}
-
 				newTarget = target;
 			}
 
 			return sourceUpdated || targetUpdated;
+		}
+
+		/// <summary>
+		/// Cheap pre-check (no subcurve construction) for whether any of the parallel-run /
+		/// degenerate-linear / near-coincident-crossing snaps could possibly apply: an adjacent
+		/// same-part point-touch pair, a sub-merge-tolerance linear run, or a sub-merge-tolerance
+		/// crossing pair. Used to skip the (per incremental footprint step) ClusterGeometries work
+		/// on the many steps that have nothing to snap.
+		/// </summary>
+		private static bool HasParallelRunSnapCandidate(
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints, double mergeTolerance)
+		{
+			List<IntersectionPoint3D> ordered =
+				intersectionPoints
+					.OrderBy(ip => ip.SourcePartIndex)
+					.ThenBy(ip => ip.VirtualSourceVertex)
+					.ToList();
+
+			for (var i = 0; i < ordered.Count - 1; i++)
+			{
+				IntersectionPoint3D a = ordered[i];
+				IntersectionPoint3D b = ordered[i + 1];
+
+				if (a.SourcePartIndex != b.SourcePartIndex ||
+				    a.TargetPartIndex != b.TargetPartIndex)
+				{
+					continue;
+				}
+
+				// Adjacent point-touch pair: a potential near-coincident parallel run.
+				if (a.Type == IntersectionPointType.TouchingInPoint &&
+				    b.Type == IntersectionPointType.TouchingInPoint)
+				{
+					return true;
+				}
+
+				bool withinMerge =
+					a.Point.GetDistance(b.Point, inXY: true) <= mergeTolerance;
+
+				// Degenerate (sub-merge-tolerance) linear run, or near-coincident crossing pair.
+				if (withinMerge &&
+				    ((a.Type == IntersectionPointType.LinearIntersectionStart &&
+				      b.Type == IntersectionPointType.LinearIntersectionEnd) ||
+				     (a.Type == IntersectionPointType.Crossing &&
+				      b.Type == IntersectionPointType.Crossing)))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Detects near-coincident, near-parallel edge runs between source and target that are
+		/// bounded by two point-touches (<see cref="IntersectionPointType.TouchingInPoint"/>) and
+		/// enclose only a sub-resolution sliver, and collects crack points that snap both sides to
+		/// the touch points. After cracking, the run carries matching vertices on source and
+		/// target, so the recomputed intersection is a clean linear intersection instead of two
+		/// touches the turning-left walk cannot close ("Intersections seen twice"). This is the
+		/// fine-tolerance analogue of what the classifier does for free at coarser tolerances,
+		/// where the perpendicular offset of the two edges still falls within tolerance.
+		/// </summary>
+		private void CollectParallelRunCrackPoints(
+			[NotNull] List<IntersectionPoint3D> intersectionList,
+			[NotNull] Dictionary<int, List<CrackPoint>> sourceCrackPointsByPart,
+			[NotNull] Dictionary<int, List<CrackPoint>> targetCrackPointsByPart,
+			[NotNull] ISegmentList target)
+		{
+			List<IntersectionPoint3D> touches =
+				intersectionList
+					.Where(ip => ip.Type == IntersectionPointType.TouchingInPoint &&
+					             ! double.IsNaN(ip.VirtualTargetVertex))
+					.OrderBy(ip => ip.SourcePartIndex)
+					.ThenBy(ip => ip.VirtualSourceVertex)
+					.ToList();
+
+			for (var i = 0; i < touches.Count - 1; i++)
+			{
+				IntersectionPoint3D a = touches[i];
+				IntersectionPoint3D b = touches[i + 1];
+
+				// Adjacent along the same source part and referencing the same target part.
+				if (a.SourcePartIndex != b.SourcePartIndex ||
+				    a.TargetPartIndex != b.TargetPartIndex)
+				{
+					continue;
+				}
+
+				if (! SubPathsAreNearCoincident(a, b, MergeTolerance))
+				{
+					continue;
+				}
+
+				foreach (IntersectionPoint3D touch in new[] { a, b })
+				{
+					CollectSourceCrackPoint(touch, touch.Point, sourceCrackPointsByPart);
+					CollectTargetCrackPoint(touch, touch.Point, target, targetCrackPointsByPart);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Detects degenerate (sub-merge-tolerance) linear intersection runs - a
+		/// <see cref="IntersectionPointType.LinearIntersectionStart"/> immediately followed by its
+		/// <see cref="IntersectionPointType.LinearIntersectionEnd"/> whose two points are within
+		/// <see cref="MergeTolerance"/> - and collects crack points that snap both ends (source and
+		/// target) to the run midpoint, collapsing the spurious micro-run to a single point. Such a
+		/// run is the near-coincident-vertex artefact that survives the Sqrt(2)*tolerance point
+		/// clustering (the two ends sit just beyond that distance) and derails the turning-left walk
+		/// at fine tolerance. The inverse situation of <see cref="CollectParallelRunCrackPoints"/>.
+		/// </summary>
+		private void CollectDegenerateLinearRunCrackPoints(
+			[NotNull] List<IntersectionPoint3D> intersectionList,
+			[NotNull] Dictionary<int, List<CrackPoint>> sourceCrackPointsByPart,
+			[NotNull] Dictionary<int, List<CrackPoint>> targetCrackPointsByPart,
+			[NotNull] ISegmentList target)
+		{
+			List<IntersectionPoint3D> ordered =
+				intersectionList
+					.OrderBy(ip => ip.SourcePartIndex)
+					.ThenBy(ip => ip.VirtualSourceVertex)
+					.ToList();
+
+			for (var i = 0; i < ordered.Count - 1; i++)
+			{
+				IntersectionPoint3D start = ordered[i];
+				IntersectionPoint3D end = ordered[i + 1];
+
+				if (start.Type != IntersectionPointType.LinearIntersectionStart ||
+				    end.Type != IntersectionPointType.LinearIntersectionEnd ||
+				    start.SourcePartIndex != end.SourcePartIndex)
+				{
+					continue;
+				}
+
+				double runLength = start.Point.GetDistance(end.Point, inXY: true);
+				if (runLength <= 0 || runLength > MergeTolerance)
+				{
+					continue;
+				}
+
+				var midpoint = new Pnt3D(
+					(start.Point.X + end.Point.X) / 2,
+					(start.Point.Y + end.Point.Y) / 2,
+					(start.Point.Z + end.Point.Z) / 2);
+
+				foreach (IntersectionPoint3D linearEnd in new[] { start, end })
+				{
+					CollectSourceCrackPoint(linearEnd, midpoint, sourceCrackPointsByPart);
+					CollectTargetCrackPoint(linearEnd, midpoint, target, targetCrackPointsByPart);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Detects a pair of near-coincident <see cref="IntersectionPointType.Crossing"/> points on
+		/// the same source part that reference the same target vertex and lie within
+		/// <see cref="MergeTolerance"/> of each other (a single crossing duplicated by fine-tolerance
+		/// vertex/segment classification), and snaps both to their midpoint so the recomputed
+		/// intersection has a single crossing. Like the degenerate-linear collapse, these survive the
+		/// Sqrt(2)*tolerance point clustering because they sit just beyond that distance.
+		/// </summary>
+		private void CollectNearCoincidentCrossingCrackPoints(
+			[NotNull] List<IntersectionPoint3D> intersectionList,
+			[NotNull] Dictionary<int, List<CrackPoint>> sourceCrackPointsByPart,
+			[NotNull] Dictionary<int, List<CrackPoint>> targetCrackPointsByPart,
+			[NotNull] ISegmentList target)
+		{
+			List<IntersectionPoint3D> crossings =
+				intersectionList
+					.Where(ip => ip.Type == IntersectionPointType.Crossing &&
+					             ! double.IsNaN(ip.VirtualTargetVertex))
+					.OrderBy(ip => ip.SourcePartIndex)
+					.ThenBy(ip => ip.VirtualSourceVertex)
+					.ToList();
+
+			for (var i = 0; i < crossings.Count - 1; i++)
+			{
+				IntersectionPoint3D a = crossings[i];
+				IntersectionPoint3D b = crossings[i + 1];
+
+				if (a.SourcePartIndex != b.SourcePartIndex ||
+				    a.TargetPartIndex != b.TargetPartIndex)
+				{
+					continue;
+				}
+
+				double distance = a.Point.GetDistance(b.Point, inXY: true);
+				if (distance <= 0 || distance > MergeTolerance)
+				{
+					continue;
+				}
+
+				var midpoint = new Pnt3D(
+					(a.Point.X + b.Point.X) / 2,
+					(a.Point.Y + b.Point.Y) / 2,
+					(a.Point.Z + b.Point.Z) / 2);
+
+				foreach (IntersectionPoint3D crossing in new[] { a, b })
+				{
+					CollectSourceCrackPoint(crossing, midpoint, sourceCrackPointsByPart);
+					CollectTargetCrackPoint(crossing, midpoint, target, targetCrackPointsByPart);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Whether the source sub-path and the target sub-path between two intersection points run
+		/// (almost) coincident within <paramref name="mergeTolerance"/> over a meaningful length -
+		/// i.e. they describe the same edge (a shared wall) separated only by a sub-resolution
+		/// perpendicular offset.
+		/// </summary>
+		private bool SubPathsAreNearCoincident([NotNull] IntersectionPoint3D a,
+		                                       [NotNull] IntersectionPoint3D b,
+		                                       double mergeTolerance)
+		{
+			// Require a run meaningfully longer than the merge tolerance. A genuine shared wall is
+			// many times the resolution; a degenerate corner-touch split into two sub-resolution
+			// touches (e.g. OID_4357598: srcV1.0 / srcV1.0002) is not a parallel run and must not
+			// be snapped (doing so derails the navigator).
+			double minRunLength = mergeTolerance;
+
+			// On a closed ring the run between the two intersections can go either way (direct or
+			// wrapping past the ring start), so try every source/target candidate and accept any
+			// combination that describes the same edge (comparable length + mutual coincidence).
+			foreach (Linestring sourceSub in GetRunSubcurveCandidates(
+				         _subcurveNavigator.Source, a.SourcePartIndex,
+				         a.VirtualSourceVertex, b.VirtualSourceVertex))
+			{
+				double sourceLength = sourceSub.GetLength2D();
+				if (sourceLength <= minRunLength)
+				{
+					continue;
+				}
+
+				foreach (Linestring targetSub in GetRunSubcurveCandidates(
+					         _subcurveNavigator.Target, a.TargetPartIndex,
+					         a.VirtualTargetVertex, b.VirtualTargetVertex))
+				{
+					if (targetSub.GetLength2D() <= minRunLength)
+					{
+						continue;
+					}
+
+					// A genuine shared wall has comparable lengths on both sides; a real (large)
+					// overlap lens does not.
+					if (! MathUtils.AreEqual(sourceLength, targetSub.GetLength2D(),
+					                         mergeTolerance))
+					{
+						continue;
+					}
+
+					if (CurvesWithin(sourceSub, targetSub, mergeTolerance) &&
+					    CurvesWithin(targetSub, sourceSub, mergeTolerance))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Whether every vertex and sampled interior point of <paramref name="curve"/> lies within
+		/// <paramref name="tolerance"/> of <paramref name="other"/>.
+		/// </summary>
+		private static bool CurvesWithin([NotNull] Linestring curve,
+		                                 [NotNull] Linestring other,
+		                                 double tolerance)
+		{
+			for (var i = 0; i < curve.PointCount; i++)
+			{
+				if (! GeomRelationUtils.LinesContainXY(other, curve.GetPoint3D(i), tolerance))
+				{
+					return false;
+				}
+			}
+
+			foreach (double ratio in new[] { 0.25, 0.5, 0.75 })
+			{
+				IPnt along = curve.GetPointAlong(ratio, asRatio: true);
+				if (! GeomRelationUtils.LinesContainXY(other, along, tolerance))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Returns the candidate sub-curves of the given part between the two virtual vertex
+		/// positions: the direct (low-to-high) run, and - for a closed ring - the complementary
+		/// run that wraps past the ring start. Degenerate candidates are omitted.
+		/// </summary>
+		[NotNull]
+		private static IEnumerable<Linestring> GetRunSubcurveCandidates(
+			[NotNull] ISegmentList segments, int partIndex,
+			double virtualVertexFrom, double virtualVertexTo)
+		{
+			if (partIndex < 0 || partIndex >= segments.PartCount)
+			{
+				yield break;
+			}
+
+			double lo = Math.Min(virtualVertexFrom, virtualVertexTo);
+			double hi = Math.Max(virtualVertexFrom, virtualVertexTo);
+
+			if (hi - lo <= 0)
+			{
+				yield break;
+			}
+
+			Linestring part = segments.GetPart(partIndex);
+
+			Linestring direct = GetSubcurveBetween(part, lo, hi);
+			if (direct != null)
+			{
+				yield return direct;
+			}
+
+			if (part.IsClosed)
+			{
+				// The complementary run: from hi forward to the ring end, then from the ring
+				// start to lo.
+				Linestring toEnd = GetSubcurveBetween(part, hi, part.SegmentCount);
+				Linestring fromStart = GetSubcurveBetween(part, 0, lo);
+
+				if (toEnd != null && fromStart != null)
+				{
+					double epsilon =
+						MathUtils.GetDoubleSignificanceEpsilon(part.XMax, part.YMax);
+					yield return GeomTopoOpUtils.MergeConnectedLinestrings(
+						new List<Linestring> { toEnd, fromStart }, null, epsilon);
+				}
+				else if (toEnd != null)
+				{
+					yield return toEnd;
+				}
+				else if (fromStart != null)
+				{
+					yield return fromStart;
+				}
+			}
+		}
+
+		[CanBeNull]
+		private static Linestring GetSubcurveBetween([NotNull] Linestring part,
+		                                             double lo, double hi)
+		{
+			if (hi - lo <= 0)
+			{
+				return null;
+			}
+
+			int fromSegment = (int) Math.Floor(lo);
+			double fromRatio = lo - fromSegment;
+			int toSegment = (int) Math.Floor(hi);
+			double toRatio = hi - toSegment;
+
+			if (toSegment >= part.SegmentCount)
+			{
+				toSegment = part.SegmentCount - 1;
+				toRatio = 1;
+			}
+
+			if (fromSegment >= part.SegmentCount)
+			{
+				return null;
+			}
+
+			return part.GetSubcurve(fromSegment, fromRatio, toSegment, toRatio, true, false);
+		}
+
+		private static void CollectSourceCrackPoint(
+			[NotNull] IntersectionPoint3D intersection,
+			[NotNull] IPnt clusterPoint,
+			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart)
+		{
+			var targetPoint = new Pnt3D(clusterPoint.X, clusterPoint.Y,
+			                            intersection.Point.Z);
+
+			var crackPoint = new CrackPoint(intersection, targetPoint);
+
+			if (intersection.IsSourceVertex())
+			{
+				crackPoint.SnapVertexIndex = (int) intersection.VirtualSourceVertex;
+			}
+			else
+			{
+				crackPoint.SegmentSplitFactor = intersection.VirtualSourceVertex;
+			}
+
+			AddCrackPoint(crackPointsByPart, intersection.SourcePartIndex, crackPoint);
+		}
+
+		private static void CollectTargetCrackPoint(
+			[NotNull] IntersectionPoint3D intersection,
+			[NotNull] IPnt clusterPoint,
+			[NotNull] ISegmentList target,
+			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart)
+		{
+			if (double.IsNaN(intersection.VirtualTargetVertex))
+			{
+				// Source-only intersection (e.g. a touching point): nothing to crack on the
+				// target side.
+				return;
+			}
+
+			int partIndex = intersection.TargetPartIndex;
+			Linestring linestring = target.GetPart(partIndex);
+
+			CrackPoint crackPoint;
+			if (intersection.IsTargetVertex(out int targetVertexIdx))
+			{
+				double origZ = linestring.GetPoint3D(targetVertexIdx).Z;
+				crackPoint = new CrackPoint(
+					             intersection,
+					             new Pnt3D(clusterPoint.X, clusterPoint.Y, origZ))
+				             {
+					             SnapVertexIndex = targetVertexIdx
+				             };
+			}
+			else
+			{
+				crackPoint = new CrackPoint(
+					             intersection,
+					             new Pnt3D(clusterPoint.X, clusterPoint.Y,
+					                       intersection.Point.Z))
+				             {
+					             SegmentSplitFactor = intersection.VirtualTargetVertex
+				             };
+			}
+
+			AddCrackPoint(crackPointsByPart, partIndex, crackPoint);
+		}
+
+		/// <summary>
+		/// Adds <paramref name="crackPoint"/> to the per-part list, skipping a duplicate that
+		/// would snap the same vertex twice (<see cref="GeomTopoOpUtils.CrackLinestring"/>
+		/// keys snap points by vertex index and cannot take duplicates). Duplicate segment
+		/// split factors are tolerated - CrackLinestring already de-duplicates those.
+		/// </summary>
+		private static void AddCrackPoint(
+			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart,
+			int partIndex, [NotNull] CrackPoint crackPoint)
+		{
+			if (! crackPointsByPart.TryGetValue(partIndex, out List<CrackPoint> partList))
+			{
+				partList = new List<CrackPoint>();
+				crackPointsByPart.Add(partIndex, partList);
+			}
+
+			if (crackPoint.SnapVertexIndex != null &&
+			    partList.Exists(cp => cp.SnapVertexIndex == crackPoint.SnapVertexIndex))
+			{
+				return;
+			}
+
+			partList.Add(crackPoint);
+		}
+
+		/// <summary>
+		/// Applies the collected crack points to the affected parts of
+		/// <paramref name="segments"/> (snapping vertices and splitting segments at the
+		/// cluster points). Returns true and replaces <paramref name="segments"/> with the
+		/// cracked result if anything changed.
+		/// </summary>
+		private static bool ApplyCrackPoints(
+			[NotNull] ref ISegmentList segments,
+			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart)
+		{
+			if (crackPointsByPart.Count == 0)
+			{
+				return false;
+			}
+
+			var newParts = new List<Linestring>(segments.PartCount);
+			bool changed = false;
+
+			for (int i = 0; i < segments.PartCount; i++)
+			{
+				Linestring part = segments.GetPart(i);
+
+				if (crackPointsByPart.TryGetValue(i, out List<CrackPoint> crackPoints) &&
+				    crackPoints.Count > 0)
+				{
+					newParts.Add(GeomTopoOpUtils.CrackLinestring(part, crackPoints, null));
+					changed = true;
+				}
+				else
+				{
+					newParts.Add(part);
+				}
+			}
+
+			if (changed)
+			{
+				segments = new MultiPolycurve(newParts);
+			}
+
+			return changed;
 		}
 
 		private static ISegmentList Clone(ISegmentList source)

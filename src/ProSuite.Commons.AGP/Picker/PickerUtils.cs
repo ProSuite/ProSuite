@@ -97,7 +97,14 @@ public static class PickerUtils
 			envelope.SpatialReference);
 	}
 
-	public static bool IsPointClick(Geometry geometry, double tolerance,
+	/// <summary>
+	/// Determines whether the given sketch geometry is to be treated as a single click point
+	/// (as opposed to an area / rectangle selection).
+	/// </summary>
+	/// <param name="geometry">The sketch geometry.</param>
+	/// <param name="toleranceInMapUnits">The selection tolerance, in MAP UNITS (not pixels). </param>
+	/// <param name="clickPoint">The resulting click point if this is a single click.</param>
+	public static bool IsPointClick(Geometry geometry, double toleranceInMapUnits,
 	                                out MapPoint clickPoint)
 	{
 		clickPoint = null;
@@ -112,7 +119,7 @@ public static class PickerUtils
 		}
 
 		var extent = geometry.Extent;
-		if (extent.Length < tolerance)
+		if (extent.Length < toleranceInMapUnits)
 		{
 			clickPoint = extent.Center;
 			return true;

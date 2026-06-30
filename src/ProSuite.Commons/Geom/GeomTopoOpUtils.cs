@@ -686,7 +686,9 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
-		                                              double tolerance)
+		                                              double tolerance,
+		                                              double mergeTolerance = 0,
+		                                              bool inputRingsMayBeNonSimple = false)
 		{
 			MultiLinestring result = null;
 
@@ -700,7 +702,8 @@ namespace ProSuite.Commons.Geom
 				else
 				{
 					var watch = Stopwatch.StartNew();
-					result = GetUnionAreasXY(result, ringGroup, tolerance);
+					result = GetUnionAreasXY(result, ringGroup, tolerance, mergeTolerance,
+					                         inputRingsMayBeNonSimple);
 					watch.Stop();
 
 					const long timeout300s = 300000;
@@ -710,6 +713,13 @@ namespace ProSuite.Commons.Geom
 						// Do not continue, most likely the next result will be even more time-consuming.
 						throw new AssertionException("Unexpectedly long processing time");
 					}
+
+					// Split any exterior boundary loop (a ring that self-touches at a point) in
+					// the accumulated result into two simple rings before the next union step.
+					// A self-touching source is non-simple and derails the turning-left walk
+					// ("Intersections seen twice", e.g. OID_3925818) when the next ring grazes
+					// the touch point. Mirrors the same call in the difference path.
+					ExplodeExteriorBoundaryLoops(result, tolerance);
 				}
 			}
 
@@ -800,9 +810,40 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			// BUG TOP-5996 (likely a change to the union logic making the grouping criterion asymmetric):
+			// The loop above classifies a polygon as disjoint when it finds no qualifying
+			// neighbor on its own turn. That is only sound if groupingCriterion is symmetric -
+			// criterion(a,b) == criterion(b,a). Not every caller's criterion is: the dissolve
+			// path passes CanDissolveAreasXY, which is order-dependent (it intersects a onto b
+			// and runs a source/target SubcurveNavigator union), so on tolerance-boundary
+			// geometry criterion(A,B) can be true while criterion(B,A) is false (or throws).
+			// Then A groups B, but when B is processed it does not re-confirm and - if it has
+			// no other qualifying neighbor - is also added to disjointPolys, ending up in BOTH
+			// a connected group and the disjoint set (the "Lost items" assertion failure, and
+			// a polygon that would otherwise be emitted twice below: once inside its group,
+			// once as a single-item group). Group membership is authoritative (the criterion
+			// did hold in one direction), so remove any grouped polygon from the disjoint set.
+
+			int before = disjointPolys.Count;
+			disjointPolys.ExceptWith(connectedGroups.SelectMany(g => g));
+			int after = disjointPolys.Count;
+
+			if (before != after)
+			{
+				_msg.DebugFormat(
+					"Items removed from disjoint set: {0}. Grouping was not symmetric.",
+					before - after);
+			}
+
+			// Invariant: every input polygon is accounted for exactly once - in exactly one
+			// connected group or as disjoint, never both and never neither. A mismatch where
+			// actual > expected means a polygon was counted in both a group and the disjoint
+			// set (an asymmetric grouping criterion - this is what the ExceptWith above
+			// reconciles); actual < expected means a polygon was lost or two inputs collapsed
+			// (e.g. the same reference passed in twice).
 			Assert.AreEqual(multiPolygons.Count,
 			                disjointPolys.Count + connectedGroups.Sum(g => g.Count),
-			                "Lost items");
+			                "Inconsistent grouping: input count != disjoint + grouped");
 
 			var result = new List<ICollection<T>>(connectedGroups);
 
@@ -866,16 +907,67 @@ namespace ProSuite.Commons.Geom
 
 		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
 		                                              [NotNull] MultiLinestring targetRings,
-		                                              double tolerance)
+		                                              double tolerance,
+		                                              double mergeTolerance = 0,
+		                                              bool inputRingsMayBeNonSimple = false)
+		{
+			return GetUnionAreasXY(sourceRings, targetRings, tolerance, mergeTolerance,
+			                       allowReUnionRepair: true,
+			                       inputRingsMayBeNonSimple: inputRingsMayBeNonSimple);
+		}
+
+		internal static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
+		                                                [NotNull] MultiLinestring targetRings,
+		                                                double tolerance,
+		                                                double mergeTolerance,
+		                                                bool allowReUnionRepair,
+		                                                bool inputRingsMayBeNonSimple = false)
 		{
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
+
+			// TODO: Consider getting rid of this, replace it with more general cracking below
+			if (inputRingsMayBeNonSimple)
+			{
+				// PROTOTYPE: collapse sub-resolution micro-zig-zags in the (possibly
+				// accumulated, non-simple) input rings before navigation. With the
+				// non-monotonic-run realignment below this is now only still required for
+				// hotel_waldhorn's sub-resolution spurious HOLE (a different mechanism than
+				// the kirchweg corner zig-zag, which the realigner handles generally).
+				double weldTolerance = 2 * tolerance;
+				sourceRings = SelfWeldRingsXY(sourceRings, weldTolerance);
+				targetRings = SelfWeldRingsXY(targetRings, weldTolerance);
+			}
+
+			// TODO: Consider more general cracking, always insert the actual opposite vertex into
+			//       the segment at an intersection point. Find out why this makes other cases
+			//       fail. Snap close vertices as well! Also, after this process, handle
+			//       linear self intersections and clamps (explosion of exterior boundary loops).
+			// PROTOTYPE (option 1): repair the kirchweg_turgi-style corruption at its root by
+			// realigning linear-run intermediate vertices whose target factor escapes the run's
+			// [start, end] interval (a sub-resolution micro zig-zag attached to the wrong target
+			// segment). Runs for every union but fires only on the non-monotonic signature, so
+			// it is far more selective than a blanket crossing-noder. Symmetric in both
+			// directions (source-on-target and target-on-source).
+			if (TryRealignNonMonotonicLinearRunsXY(sourceRings, targetRings, tolerance,
+			                                       out MultiLinestring realignedSource))
+			{
+				sourceRings = realignedSource;
+			}
+
+			if (TryRealignNonMonotonicLinearRunsXY(targetRings, sourceRings, tolerance,
+			                                       out MultiLinestring realignedTarget))
+			{
+				targetRings = realignedTarget;
+			}
 
 			var subcurveNavigator = new SubcurveNavigator(sourceRings, targetRings, tolerance);
 
 			var ringOperator = new RingOperator(subcurveNavigator)
 			                   {
-				                   AllowPointClustering = true
+				                   AllowPointClustering = true,
+				                   MergeTolerance = mergeTolerance,
+				                   AllowReUnionRepair = allowReUnionRepair
 			                   };
 
 			if (_msg.IsVerboseDebugEnabled)
@@ -3806,6 +3898,335 @@ namespace ProSuite.Commons.Geom
 
 		#endregion
 
+		#region Self-weld (sub-resolution micro-notch collapse) - PROTOTYPE
+
+		/// <summary>
+		/// PROTOTYPE (bounded self-weld). Collapses sub-resolution micro-zig-zags
+		/// ("notches") in a closed ring. These are runs of consecutive vertices whose
+		/// segments are individually shorter than <paramref name="weldTolerance"/> but,
+		/// crucially, are NOT intersection points and are NOT pure out-and-back linear
+		/// self-intersections, so neither the union's intersection-point clustering nor
+		/// <see cref="TryDeleteLinearSelfIntersectionsXY"/> removes them. Such a notch
+		/// carries a meaningless local direction that corrupts the run-start
+		/// classification in the turning-left union walk (kirchweg_turgi / friedhofsmauer).
+		/// <para>The weld groups consecutive vertices by single linkage (each step shorter
+		/// than <paramref name="weldTolerance"/>) and collapses a group to its FIRST
+		/// vertex, but ONLY when the whole group is geometrically tiny (bounding-box
+		/// diagonal below 2 * <paramref name="weldTolerance"/>). The bounding-box bound is
+		/// what keeps the weld local: a densely-sampled smooth arc forms long single-linkage
+		/// chains but has a large bounding box, so it is left untouched.</para>
+		/// <remarks>The weld radius should be at least the coordinate RESOLUTION; the union
+		/// tolerance (resolution / 2) and even Sqrt(2)*tolerance are too small to see the
+		/// notch (empirically verified on kirchweg_turgi).</remarks>
+		/// </summary>
+		/// <returns>True if any vertex was welded away.</returns>
+		public static bool TrySelfWeldRingXY([NotNull] Linestring ring,
+		                                     double weldTolerance,
+		                                     [NotNull] out Linestring result)
+		{
+			result = ring;
+
+			if (weldTolerance <= 0 || ! ring.IsClosed || ring.PointCount < 5)
+			{
+				// Need at least a triangle (4 points incl. closing) plus one to weld.
+				return false;
+			}
+
+			List<Pnt3D> points = ring.GetPoints().ToList();
+			int n = points.Count - 1; // unique vertices (last == first for a closed ring)
+
+			double diagBound = 2 * weldTolerance;
+
+			var welded = new List<Pnt3D>(points.Count);
+			bool changed = false;
+
+			int i = 0;
+			while (i < n)
+			{
+				// Grow a single-linkage run [i..j] of near-coincident consecutive vertices.
+				int j = i;
+				double minX = points[i].X, maxX = points[i].X;
+				double minY = points[i].Y, maxY = points[i].Y;
+
+				while (j + 1 < n &&
+				       GetDistanceXY(points[j], points[j + 1]) < weldTolerance)
+				{
+					j++;
+					minX = Math.Min(minX, points[j].X);
+					maxX = Math.Max(maxX, points[j].X);
+					minY = Math.Min(minY, points[j].Y);
+					maxY = Math.Max(maxY, points[j].Y);
+				}
+
+				double diag = Math.Sqrt((maxX - minX) * (maxX - minX) +
+				                        (maxY - minY) * (maxY - minY));
+
+				welded.Add(points[i]); // keep the run's first (lowest-index) vertex
+
+				if (j > i && diag < diagBound)
+				{
+					// Collapse the whole tiny run onto its first vertex.
+					changed = true;
+					i = j + 1;
+				}
+				else
+				{
+					i++;
+				}
+			}
+
+			if (! changed || welded.Count < 3)
+			{
+				return false;
+			}
+
+			welded.Add(welded[0].ClonePnt3D()); // re-close
+
+			result = new Linestring(welded);
+			return true;
+		}
+
+		/// <summary>
+		/// PROTOTYPE. Applies <see cref="TrySelfWeldRingXY"/> to every ring of the
+		/// given geometry. Returns a new geometry if anything was welded, otherwise the
+		/// input is returned unchanged.
+		/// </summary>
+		[NotNull]
+		public static MultiLinestring SelfWeldRingsXY([NotNull] MultiLinestring rings,
+		                                              double weldTolerance)
+		{
+			List<Linestring> linestrings = null;
+
+			IList<Linestring> original = rings.GetLinestrings().ToList();
+			for (var idx = 0; idx < original.Count; idx++)
+			{
+				Linestring ls = original[idx];
+				if (TrySelfWeldRingXY(ls, weldTolerance, out Linestring welded))
+				{
+					if (linestrings == null)
+					{
+						linestrings = new List<Linestring>(original);
+					}
+
+					linestrings[idx] = welded;
+				}
+			}
+
+			return linestrings == null ? rings : new MultiPolycurve(linestrings);
+		}
+
+		private static double GetDistanceXY([NotNull] Pnt3D a, [NotNull] Pnt3D b)
+		{
+			double dx = a.X - b.X;
+			double dy = a.Y - b.Y;
+			return Math.Sqrt(dx * dx + dy * dy);
+		}
+
+		#endregion
+
+		#region Non-monotonic linear-run realignment
+
+		// A linear-run intermediate vertex whose target factor leaves the run's
+		// [start, end] target interval by more than this (dimensionless, fraction of a
+		// target segment) is treated as mis-attached to a neighbouring target segment.
+		private const double _linearRunEscapeEpsilon = 1e-5;
+
+		/// <summary>
+		/// PROTOTYPE (option 1). Detects and repairs the kirchweg_turgi-style corruption at
+		/// its root: a linear intersection run whose intermediate SOURCE vertices have a
+		/// target factor OUTSIDE the run's [start, end] target interval. Such a vertex is
+		/// physically within the tolerance of the shared edge but - because of a
+		/// sub-resolution micro zig-zag at a near-coincident corner - gets attached to the
+		/// neighbouring target segment, which flips the run-start direction (oppDir) and
+		/// breaks the union walk. The repair snaps each escaping source vertex back onto the
+		/// straight run chord (start-point to end-point), i.e. onto the shared edge, so the
+		/// run becomes monotonic again. Unlike a blanket crossing-noder, this fires ONLY on
+		/// the actual non-monotonic signature. Returns false (inputs unchanged) if there is
+		/// nothing to realign.
+		/// </summary>
+		internal static bool TryRealignNonMonotonicLinearRunsXY(
+			[NotNull] MultiLinestring source,
+			[NotNull] MultiLinestring target,
+			double tolerance,
+			[NotNull] out MultiLinestring realignedSource)
+		{
+			realignedSource = source;
+
+			IList<IntersectionPoint3D> intersectionPoints =
+				GetIntersectionPoints(
+					source, target, tolerance,
+					includeLinearIntersectionIntermediateRingStartEndPoints: true,
+					includeLinearIntersectionIntermediatePoints: true);
+
+			if (intersectionPoints.Count < 3)
+			{
+				return false;
+			}
+
+			List<IntersectionPoint3D> ordered =
+				intersectionPoints.OrderBy(ip => ip.VirtualSourceVertex).ToList();
+
+			// Each entry maps an original source vertex location to the location it should be
+			// snapped to (on the run chord).
+			var snaps = new List<KeyValuePair<Pnt3D, Pnt3D>>();
+
+			int i = 0;
+			while (i < ordered.Count)
+			{
+				if (ordered[i].Type != IntersectionPointType.LinearIntersectionStart)
+				{
+					i++;
+					continue;
+				}
+
+				int runStart = i;
+				int k = i + 1;
+				while (k < ordered.Count &&
+				       ordered[k].Type ==
+				       IntersectionPointType.LinearIntersectionIntermediate)
+				{
+					k++;
+				}
+
+				if (k >= ordered.Count ||
+				    ordered[k].Type != IntersectionPointType.LinearIntersectionEnd)
+				{
+					i = runStart + 1;
+					continue;
+				}
+
+				CollectEscapingRunVertexSnaps(ordered, runStart, k, tolerance, snaps);
+
+				i = k + 1;
+			}
+
+			if (snaps.Count == 0)
+			{
+				return false;
+			}
+
+			realignedSource = ApplySourceVertexSnaps(source, snaps);
+			return true;
+		}
+
+		private static void CollectEscapingRunVertexSnaps(
+			[NotNull] List<IntersectionPoint3D> ordered,
+			int runStart, int runEnd,
+			double tolerance,
+			[NotNull] List<KeyValuePair<Pnt3D, Pnt3D>> snaps)
+		{
+			IntersectionPoint3D start = ordered[runStart];
+			IntersectionPoint3D end = ordered[runEnd];
+
+			double startTarget = start.VirtualTargetVertex;
+			double endTarget = end.VirtualTargetVertex;
+
+			if (double.IsNaN(startTarget) || double.IsNaN(endTarget))
+			{
+				return;
+			}
+
+			double loTarget = Math.Min(startTarget, endTarget);
+			double hiTarget = Math.Max(startTarget, endTarget);
+
+			// Restrict to the simple case where the run is bounded by a single target segment
+			// (the shared-edge case). A multi-segment run would need a poly-chord projection.
+			if (hiTarget - loTarget > 1.0 + _linearRunEscapeEpsilon)
+			{
+				return;
+			}
+
+			var runChord = new Line3D(start.Point.ClonePnt3D(), end.Point.ClonePnt3D());
+
+			// A genuine sub-resolution artifact lies WITHIN the tolerance of the shared edge;
+			// only such a vertex may be snapped onto it. A vertex that escapes the run interval
+			// while sitting clearly off the chord is real geometry (e.g. a boundary-loop pinch)
+			// and must be left alone.
+			double maxChordDistance = Math.Sqrt(2) * tolerance;
+
+			for (int m = runStart + 1; m < runEnd; m++)
+			{
+				IntersectionPoint3D intermediate = ordered[m];
+
+				if (! intermediate.IsSourceVertex())
+				{
+					continue;
+				}
+
+				double targetVertex = intermediate.VirtualTargetVertex;
+				if (double.IsNaN(targetVertex))
+				{
+					continue;
+				}
+
+				bool escapes = targetVertex > hiTarget + _linearRunEscapeEpsilon ||
+				               targetVertex < loTarget - _linearRunEscapeEpsilon;
+				if (! escapes)
+				{
+					continue;
+				}
+
+				double chordDistance = runChord.GetDistancePerpendicular(
+					intermediate.Point, true, out double ratio, out _);
+
+				if (chordDistance > maxChordDistance)
+				{
+					continue;
+				}
+
+				// A genuine run intermediate projects strictly WITHIN the chord. A vertex that
+				// projects beyond an end is not a sub-resolution artifact on the shared edge
+				// (snapping it would clamp it to a corner and collapse real geometry).
+				if (ratio < -_linearRunEscapeEpsilon || ratio > 1 + _linearRunEscapeEpsilon)
+				{
+					continue;
+				}
+
+				Pnt3D snapped = runChord.GetPointAlong(ratio, true);
+
+				snaps.Add(new KeyValuePair<Pnt3D, Pnt3D>(
+					          intermediate.Point.ClonePnt3D(), snapped));
+			}
+		}
+
+		[NotNull]
+		private static MultiLinestring ApplySourceVertexSnaps(
+			[NotNull] MultiLinestring source,
+			[NotNull] List<KeyValuePair<Pnt3D, Pnt3D>> snaps)
+		{
+			const double matchTolerance = 1e-8;
+
+			IList<Linestring> parts = source.GetLinestrings().ToList();
+			var resultParts = new List<Linestring>(parts.Count);
+
+			foreach (Linestring part in parts)
+			{
+				var newPoints = new List<Pnt3D>(part.PointCount);
+				for (int idx = 0; idx < part.PointCount; idx++)
+				{
+					Pnt3D p = part.GetPoint3D(idx, true);
+
+					Pnt3D replacement = null;
+					foreach (var snap in snaps)
+					{
+						if (snap.Key.EqualsXY(p, matchTolerance))
+						{
+							replacement = snap.Value;
+							break;
+						}
+					}
+
+					newPoints.Add(replacement != null ? replacement.ClonePnt3D() : p);
+				}
+
+				resultParts.Add(new Linestring(newPoints));
+			}
+
+			return new MultiPolycurve(resultParts);
+		}
+
+		#endregion
+
 		#region Simplify
 
 		public static MultiLinestring PlanarizeLines([NotNull] ISegmentList segmentList,
@@ -4951,9 +5372,12 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public static IEnumerable<RingGroup> GetConnectedComponents(MultiLinestring rings,
+		public static IEnumerable<RingGroup> GetConnectedComponents(
+			[NotNull] MultiLinestring rings,
 			double tolerance)
 		{
+			Assert.NotNull(rings, nameof(rings));
+
 			RingGroup singleResult = rings as RingGroup;
 
 			if (singleResult != null)
@@ -4977,14 +5401,33 @@ namespace ProSuite.Commons.Geom
 			foreach (Linestring ring in rings.GetLinestrings()
 			                                 .Where(r => r.ClockwiseOriented == false))
 			{
+				// Assign the hole to exactly one exterior ring: the smallest one that
+				// contains it. Containment is probed with an off-boundary point of the
+				// hole (the Linestring overload) rather than the hole's start vertex,
+				// which may lie on the boundary of an unrelated ring (e.g. an island
+				// inside the hole that shares the hole's start corner) and would
+				// otherwise be reported as containing the hole.
+				RingGroup smallestContaining = null;
+				double smallestArea = double.MaxValue;
+
 				foreach (RingGroup ringGroup in result)
 				{
-					if (GeomRelationUtils.PolycurveContainsXY(
-						    ringGroup, ring.StartPoint, tolerance))
+					if (! GeomRelationUtils.PolycurveContainsXY(
+						    ringGroup.ExteriorRing, ring, tolerance))
 					{
-						ringGroup.AddInteriorRing(ring);
+						continue;
+					}
+
+					double area = Math.Abs(ringGroup.ExteriorRing.GetArea2D());
+
+					if (area < smallestArea)
+					{
+						smallestArea = area;
+						smallestContaining = ringGroup;
 					}
 				}
+
+				smallestContaining?.AddInteriorRing(ring);
 			}
 
 			return result;

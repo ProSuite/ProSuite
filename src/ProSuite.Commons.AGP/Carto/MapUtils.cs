@@ -1047,16 +1047,19 @@ public static class MapUtils
 	/// <param name="mapView"></param>
 	/// <param name="pixels"></param>
 	/// <param name="atPoint"></param>
+	/// <param name="allowSubMapToleranceResult">If true, allows the result to be smaller than the map's XY tolerance.</param>
 	/// <returns></returns>
 	/// <remarks>Must run on MCT</remarks>
 	public static double ConvertScreenPixelToMapLength(
 		[NotNull] MapView mapView,
 		int pixels,
-		[NotNull] MapPoint atPoint)
+		[NotNull] MapPoint atPoint,
+		bool allowSubMapToleranceResult = false)
 	{
 		if (mapView.ViewingMode == MapViewingMode.MapStereo)
 		{
-			return GetPixelSizeInMapUnits(mapView, atPoint) * pixels;
+			double res = GetPixelSizeInMapUnits(mapView, atPoint) * pixels;
+			return allowSubMapToleranceResult ? res : ClampToMapTolerance(mapView, res);
 		}
 
 		// The point as screen point
@@ -1066,19 +1069,20 @@ public static class MapUtils
 		var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
 		var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
 
-		return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		double result = GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+
+		return allowSubMapToleranceResult ? result : ClampToMapTolerance(mapView, result);
 	}
 
-	public static double ConvertScreenPixelToMapLength([NotNull] MapView mapView,
-	                                                   int pixels, Point screenPoint)
+	/// <summary>
+	/// Ensures the given map length is at least the map's XY tolerance. A length below the XY
+	/// tolerance is not resolvable by the geometry engine and produces degenerate search
+	/// geometries / unreliable relational results.
+	/// </summary>
+	private static double ClampToMapTolerance([NotNull] MapView mapView, double mapLength)
 	{
-		MapPoint atPoint = mapView.ScreenToMap(screenPoint);
-
-		// Add pixels to get a "radius".
-		var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
-		var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
-
-		return GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		double mapTolerance = mapView.Map.SpatialReference.XYTolerance;
+		return Math.Max(mapLength, mapTolerance);
 	}
 
 	/// <summary>

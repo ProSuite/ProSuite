@@ -596,6 +596,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return OpenTin(directory, tinName);
 		}
 
+#if !Server || ARCGIS_11_5_OR_GREATER
 		public static ILasDataset OpenLasDataset([NotNull] string lasdPath)
 		{
 			Assert.ArgumentNotNullOrEmpty(lasdPath, nameof(lasdPath));
@@ -616,6 +617,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			ILasDataset lasDataset = lasWs.OpenLasDataset(fileName);
 			return lasDataset;
 		}
+#endif
 
 		[CanBeNull]
 		public static IDatasetName FindRootDatasetName([NotNull] IWorkspace workspace,

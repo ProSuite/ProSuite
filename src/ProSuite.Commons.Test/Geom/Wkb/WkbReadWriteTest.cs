@@ -114,7 +114,7 @@ namespace ProSuite.Commons.Test.Geom.Wkb
 
 			var poly2 = new RingGroup(disjointRing);
 
-			var multipolygon = new List<RingGroup>(new[] {poly1, poly2});
+			var multipolygon = new List<RingGroup>(new[] { poly1, poly2 });
 
 			WkbGeomWriter writer = new WkbGeomWriter();
 
@@ -125,6 +125,75 @@ namespace ProSuite.Commons.Test.Geom.Wkb
 
 			Assert.IsTrue(deserialized[0].Equals(multipolygon[0]));
 			Assert.IsTrue(deserialized[1].Equals(multipolygon[1]));
+		}
+
+		[Test]
+		public void CanWriteAndReadMultiPolygonWithIslandInHoleTouchingHoleStartPoint()
+		{
+			// A closed multi-polycurve as produced by the footprint union: an exterior
+			// ring with a courtyard hole and a small island inside that hole whose
+			// boundary passes exactly through the hole's start point.
+			//
+			// WkbGeomWriter.WriteGeometry must group the loose rings into polygons using
+			// GeomTopoOpUtils.GetConnectedComponents, which should assign an interior ring to
+			// exactly one ring group.
+			//
+			// Observed in the wild with the accumulated 12-part incremental-union result
+			// of brutalismus_in_duedingen at step 65, where the courtyard hole's start
+			// vertex is exactly a shared corner with an adjacent exterior ring: the
+			// geometry round-tripped to 13 parts with the hole duplicated.
+			Linestring bigRing = CreateRing(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 100, 0),
+				                                new Pnt3D(100, 100, 0),
+				                                new Pnt3D(100, 0, 0)
+			                                });
+
+			// Counter-clockwise hole, starting exactly at (60, 60):
+			Linestring hole = CreateRing(new List<Pnt3D>
+			                             {
+				                             new Pnt3D(60, 60, 0),
+				                             new Pnt3D(40, 60, 0),
+				                             new Pnt3D(40, 40, 0),
+				                             new Pnt3D(60, 40, 0)
+			                             });
+
+			// Clockwise island inside the hole, one vertex exactly at the hole's
+			// start point:
+			Linestring island = CreateRing(new List<Pnt3D>
+			                               {
+				                               new Pnt3D(60, 60, 0),
+				                               new Pnt3D(50, 45, 0),
+				                               new Pnt3D(45, 55, 0)
+			                               });
+
+			Assert.AreEqual(true, bigRing.ClockwiseOriented);
+			Assert.AreEqual(false, hole.ClockwiseOriented);
+			Assert.AreEqual(true, island.ClockwiseOriented);
+
+			var multiPolycurve = new MultiPolycurve(new[] { bigRing, hole, island });
+
+			Assert.IsTrue(multiPolycurve.IsClosed);
+
+			double originalArea = multiPolycurve.GetArea2D();
+
+			WkbGeomWriter writer = new WkbGeomWriter();
+
+			byte[] bytes = writer.WriteGeometry(multiPolycurve);
+
+			WkbGeomReader reader = new WkbGeomReader();
+			IBoundedXY deserialized =
+				reader.ReadGeometry(new MemoryStream(bytes), out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiPolygon, wkbType);
+
+			var deserializedPolycurve = (MultiLinestring) deserialized;
+
+			Assert.AreEqual(multiPolycurve.PartCount, deserializedPolycurve.PartCount,
+			                "The hole must be written into exactly one polygon.");
+			Assert.AreEqual(originalArea, deserializedPolycurve.GetArea2D(), 0.0001,
+			                "The round-trip must not change the area.");
 		}
 
 		[Test]
@@ -144,7 +213,7 @@ namespace ProSuite.Commons.Test.Geom.Wkb
 			points2.Add(new Pnt3D(300, -10, 0));
 
 			MultiPolycurve polycurve =
-				new MultiPolycurve(new[] {new Linestring(points1), new Linestring(points2)});
+				new MultiPolycurve(new[] { new Linestring(points1), new Linestring(points2) });
 
 			WkbGeomWriter writer = new WkbGeomWriter();
 

@@ -149,6 +149,18 @@ public class DatastoreName : IEquatable<DatastoreName>
 					"PATH", mobilePath.Path.ToString());
 			}
 
+			if (_connector is ServiceConnectionProperties serviceConnection)
+			{
+				yield return new KeyValuePair<string, string>(
+					"URL", serviceConnection.URL.AbsoluteUri);
+
+				if (!string.IsNullOrEmpty(serviceConnection.User))
+					yield return new KeyValuePair<string, string>("USER", serviceConnection.User);
+
+				if (!string.IsNullOrEmpty(serviceConnection.Version))
+					yield return new KeyValuePair<string, string>("VERSION", serviceConnection.Version);
+			}
+
 			if (_connector is PluginDatasourceConnectionPath pluginPath)
 			{
 				yield return new KeyValuePair<string, string>(
@@ -157,10 +169,10 @@ public class DatastoreName : IEquatable<DatastoreName>
 					"DATASOURCE_PATH", pluginPath.DatasourcePath.ToString());
 			}
 
-			if (_connector is RealtimeServiceConnectionProperties serviceConnection)
+			if (_connector is RealtimeServiceConnectionProperties realTimeServiceConnection)
 			{
 				yield return new KeyValuePair<string, string>(
-					"URL", serviceConnection.URL.AbsolutePath);
+					"URL", realTimeServiceConnection.URL.AbsolutePath);
 			}
 		}
 	}

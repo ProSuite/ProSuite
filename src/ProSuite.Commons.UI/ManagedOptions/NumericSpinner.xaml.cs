@@ -72,29 +72,35 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			DependencyPropertyDescriptor.FromProperty(DecimalsProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 
 			DependencyPropertyDescriptor.FromProperty(StepProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 
 			DependencyPropertyDescriptor.FromProperty(MinValueProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 			DependencyPropertyDescriptor.FromProperty(MaxValueProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 			DependencyPropertyDescriptor.FromProperty(FontStyleProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 			DependencyPropertyDescriptor.FromProperty(IsEnabledProperty, typeof(NumericSpinner))
 			                            .AddValueChanged(
 				                            this,
-				                            (sender, e) => OnPropertyChanged(sender, EventArgs.Empty));
+				                            (sender, e) =>
+					                            OnPropertyChanged(sender, EventArgs.Empty));
 
 			DataContextChanged += NumericSpinner_DataContextChanged;
 
@@ -109,6 +115,16 @@ namespace ProSuite.Commons.UI.ManagedOptions
 
 		private void UpdateTextValue()
 		{
+			// Don't reformat the text while the user is actively editing it. Otherwise
+			// in-progress edits get destroyed: e.g. backspacing the "3" from "0.3" leaves
+			// "0." which parses to 0 and would be rewritten to "0", deleting the decimal
+			// separator the user still intends to type behind. Formatting happens on
+			// LostFocus (TextBox_LostFocus) once editing is complete.
+			if (textBox.IsKeyboardFocused)
+			{
+				return;
+			}
+
 			string textValue = Value.ToString(CultureInfo.CurrentCulture);
 
 			if (textValue == textBox.Text)
@@ -120,14 +136,16 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			if (binding != null)
 			{
 				TextValue = textValue;
-				BindingOperations.GetBindingExpression(textBox, TextBox.TextProperty)?.UpdateTarget();
+				BindingOperations.GetBindingExpression(textBox, TextBox.TextProperty)
+				                 ?.UpdateTarget();
 			}
 		}
 
 		private void TextBox_LostFocus(object sender, RoutedEventArgs e)
 		{
 			string newText = ((TextBox) sender).Text;
-			string decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+			string decimalSeparator =
+				CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 			if (! double.TryParse(newText, NumberStyles.Any, CultureInfo.CurrentCulture,
 			                      out double parsed) &&
 			    ! newText.EndsWith(decimalSeparator) && newText != "-")
@@ -136,7 +154,7 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			}
 			else
 			{
-				double roundedValue = Math.Round(parsed, Decimals);
+				double roundedValue = RoundForDisplay(parsed, Decimals);
 
 				if (! MathUtils.AreEqual(Value, roundedValue))
 				{
@@ -168,7 +186,7 @@ namespace ProSuite.Commons.UI.ManagedOptions
 		{
 			if (sender is NumericSpinner spinner)
 			{
-				spinner.Validate();
+				spinner.ClampToBounds();
 				spinner.ValueChanged?.Invoke(spinner, EventArgs.Empty);
 				spinner.PropertyChanged?.Invoke(spinner, EventArgs.Empty);
 
@@ -218,9 +236,10 @@ namespace ProSuite.Commons.UI.ManagedOptions
 
 		#region TextFontStyleProperty
 
-		public static readonly DependencyProperty TextFontStyleProperty = DependencyProperty.Register(
-			nameof(TextFontStyle), typeof(FontStyle), typeof(NumericSpinner),
-			new PropertyMetadata(FontStyles.Normal));
+		public static readonly DependencyProperty TextFontStyleProperty =
+			DependencyProperty.Register(
+				nameof(TextFontStyle), typeof(FontStyle), typeof(NumericSpinner),
+				new PropertyMetadata(FontStyles.Normal));
 
 		public FontStyle TextFontStyle
 		{
@@ -300,6 +319,21 @@ namespace ProSuite.Commons.UI.ManagedOptions
 
 		#endregion
 
+		private void ClampToBounds()
+		{
+			double testValue = Value;
+
+			if (double.IsNaN(testValue) || double.IsInfinity(testValue))
+				testValue = 0;
+			if (testValue < MinValue) testValue = MinValue;
+			if (testValue > MaxValue) testValue = MaxValue;
+
+			if (! MathUtils.AreEqual(Value, testValue))
+			{
+				Value = testValue;
+			}
+		}
+
 		private void Validate()
 		{
 			double testValue = Value;
@@ -309,7 +343,7 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			if (testValue < MinValue) testValue = MinValue;
 			if (testValue > MaxValue) testValue = MaxValue;
 
-			double roundedValue = Math.Round(testValue, Decimals);
+			double roundedValue = RoundForDisplay(testValue, Decimals);
 
 			if (! MathUtils.AreEqual(Value, roundedValue))
 			{
@@ -317,6 +351,26 @@ namespace ProSuite.Commons.UI.ManagedOptions
 			}
 
 			PropertyChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		/// <summary>
+		/// Rounds to the configured number of decimals to keep the displayed value clean (e.g.
+		/// removing floating-point fuzz from increment/decrement), but never collapses a non-zero
+		/// value to zero.
+		/// <para>
+		/// Tool tolerances can legitimately be smaller than the spinner's display precision (e.g.
+		/// a stored snap tolerance of 3E-08 with Decimals=4 in a projected, meter-based map).
+		/// Rounding such a value to 0 and writing it back through the TwoWay <see cref="Value"/>
+		/// binding would silently and permanently destroy the stored setting on every load. In
+		/// that case the original value is kept (and shown by <see cref="UpdateTextValue"/>, in
+		/// scientific notation if needed) rather than zeroed.
+		/// </para>
+		/// </summary>
+		private static double RoundForDisplay(double value, int decimals)
+		{
+			double rounded = Math.Round(value, decimals);
+
+			return rounded == 0 && value != 0 ? value : rounded;
 		}
 
 		private void OnPropertyChanged(object sender, EventArgs e)
@@ -328,11 +382,13 @@ namespace ProSuite.Commons.UI.ManagedOptions
 		private void cmdUp_Click(object sender, RoutedEventArgs e)
 		{
 			Value += Step;
+			Validate();
 		}
 
 		private void cmdDown_Click(object sender, RoutedEventArgs e)
 		{
 			Value -= Step;
+			Validate();
 		}
 	}
 }
