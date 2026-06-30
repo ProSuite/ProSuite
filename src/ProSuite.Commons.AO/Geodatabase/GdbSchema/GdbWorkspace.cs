@@ -74,6 +74,51 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		/// <summary>
+		/// Creates a workspace that represents a feature service / portal workspace
+		/// (geodatabase type <see cref="WorkspaceDbType.FeatureService"/>), identified by its
+		/// service URL.
+		/// </summary>
+		/// <param name="serviceUrl">The URL of the (feature) service, used as the path and
+		/// for equality comparisons.</param>
+		/// <param name="dataStore">The container that maintains the schema. If null, an empty
+		/// container is created.</param>
+		/// <param name="workspaceHandle">Application-defined handle that simplifies equality
+		/// comparisons. If null, a stable handle is derived from the service URL so that two
+		/// workspaces created from the same URL compare equal.</param>
+		public static GdbWorkspace CreateForFeatureService(
+			[NotNull] string serviceUrl,
+			[CanBeNull] BackingDataStore dataStore = null,
+			long? workspaceHandle = null)
+		{
+			if (string.IsNullOrEmpty(serviceUrl))
+			{
+				throw new ArgumentNullException(nameof(serviceUrl));
+			}
+
+			if (dataStore == null)
+			{
+				dataStore = new GdbTableContainer();
+			}
+
+			string normalizedUrl = NormalizeServiceUrl(serviceUrl);
+
+			long handle = workspaceHandle ??
+			              normalizedUrl.GetHashCode();
+
+			return new GdbWorkspace(dataStore, handle, WorkspaceDbType.FeatureService,
+			                        normalizedUrl);
+		}
+
+		/// <summary>
+		/// Normalizes a service URL so that trivially different spellings of the same service
+		/// (e.g. with or without a trailing slash) are considered equal.
+		/// </summary>
+		private static string NormalizeServiceUrl([NotNull] string serviceUrl)
+		{
+			return serviceUrl.TrimEnd('/');
+		}
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="GdbWorkspace"/> class.
 		/// </summary>
 		/// <param name="backingDataStore">The container that maintains the list of </param>
@@ -585,6 +630,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 					return esriConnectionDBMS.esriDBMS_Informix;
 				case WorkspaceDbType.ArcSDEDB2:
 					return esriConnectionDBMS.esriDBMS_DB2;
+				case WorkspaceDbType.FeatureService:
+					// A feature service has no underlying DBMS that is exposed to the client.
+					return esriConnectionDBMS.esriDBMS_Unknown;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(dbType), dbType,
 					                                      "Unknown DB type");

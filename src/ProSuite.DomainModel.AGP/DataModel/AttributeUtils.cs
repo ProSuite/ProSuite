@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
+using Attribute = ProSuite.DomainModel.Core.DataModel.Attribute;
 
 namespace ProSuite.DomainModel.AGP.DataModel;
 
@@ -32,71 +36,151 @@ public static class AttributeUtils
 	                                [CanBeNull] FieldIndexCache fieldIndexCache = null)
 	{
 		// TODO search first based on name, or first based on role?
+		TableDefinition tableDefinition = null;
 
-		TableDefinition tableDefinition;
+		try
+		{
+			if (Equals(role, AttributeRole.Shape))
+			{
+				if (table is FeatureClass featureClass)
+				{
+					FeatureClassDefinition definition = featureClass.GetDefinition();
+
+					string shapeField = definition.GetShapeField();
+
+					return fieldIndexCache?.GetFieldIndex(featureClass, shapeField) ??
+					       definition.FindField(shapeField);
+				}
+			}
+			else if (Equals(role, AttributeRole.ShapeArea))
+			{
+				if (table is FeatureClass featureClass)
+				{
+					using FeatureClassDefinition definition = featureClass.GetDefinition();
+
+					string areaField = DatasetUtils.GetAreaFieldName(definition);
+
+					if (areaField != null)
+					{
+						return fieldIndexCache?.GetFieldIndex(featureClass, areaField) ??
+						       definition.FindField(areaField);
+					}
+				}
+			}
+			else if (Equals(role, AttributeRole.ShapeLength))
+			{
+				if (table is FeatureClass featureClass)
+				{
+					using FeatureClassDefinition definition = featureClass.GetDefinition();
+
+					string lengthField = DatasetUtils.GetLengthFieldName(definition);
+
+					if (lengthField != null)
+					{
+						return fieldIndexCache?.GetFieldIndex(featureClass, lengthField) ??
+						       definition.FindField(lengthField);
+					}
+				}
+			}
+			else if (Equals(role, AttributeRole.ObjectID))
+			{
+				tableDefinition = table.GetDefinition();
+
+				string oidField = tableDefinition.GetObjectIDField();
+
+				return fieldIndexCache?.GetFieldIndex(table, oidField) ??
+				       tableDefinition.FindField(oidField);
+			}
+
+			tableDefinition = table.GetDefinition();
+
+			return tableDefinition.FindField(fieldName);
+		}
+		finally
+		{
+			tableDefinition?.Dispose();
+		}
+	}
+
+	public static int GetFieldIndex([NotNull] TableDefinition definition,
+	                                [NotNull] ObjectAttribute objectAttribute)
+	{
+		return GetFieldIndex(definition, objectAttribute.Name, objectAttribute.Role);
+	}
+
+	public static int GetFieldIndex([NotNull] TableDefinition definition,
+	                                [CanBeNull] string fieldName,
+	                                [CanBeNull] AttributeRole role)
+	{
+		// TODO search first based on name, or first based on role?
 
 		if (Equals(role, AttributeRole.Shape))
 		{
-			if (table is FeatureClass featureClass)
+			if (definition is FeatureClassDefinition featureClassDef)
 			{
-				return GetShapeFieldIndex(featureClass, fieldIndexCache);
+				return featureClassDef.FindField(featureClassDef.GetShapeField());
 			}
 		}
 		else if (Equals(role, AttributeRole.ShapeArea))
 		{
-			if (table is FeatureClass featureClass)
+			if (definition is FeatureClassDefinition featureClassDef)
 			{
-				FeatureClassDefinition definition = featureClass.GetDefinition();
-
-				string areaField = DatasetUtils.GetAreaFieldName(definition);
+				string areaField = DatasetUtils.GetAreaFieldName(featureClassDef);
 
 				if (areaField != null)
 				{
-					return fieldIndexCache?.GetFieldIndex(featureClass, areaField) ??
-					       definition.FindField(areaField);
+					return definition.FindField(areaField);
 				}
 			}
 		}
 		else if (Equals(role, AttributeRole.ShapeLength))
 		{
-			if (table is FeatureClass featureClass)
+			if (definition is FeatureClassDefinition featureClassDef)
 			{
-				FeatureClassDefinition definition = featureClass.GetDefinition();
-
-				string lengthField = DatasetUtils.GetLengthFieldName(definition);
+				string lengthField = DatasetUtils.GetLengthFieldName(featureClassDef);
 
 				if (lengthField != null)
 				{
-					return fieldIndexCache?.GetFieldIndex(featureClass, lengthField) ??
-					       definition.FindField(lengthField);
+					return definition.FindField(lengthField);
 				}
 			}
 		}
 		else if (Equals(role, AttributeRole.ObjectID))
 		{
-			tableDefinition = table.GetDefinition();
+			string oidField = definition.GetObjectIDField();
 
-			string oidField = tableDefinition.GetObjectIDField();
-
-			return fieldIndexCache?.GetFieldIndex(table, oidField) ??
-			       tableDefinition.FindField(oidField);
+			return definition.FindField(oidField);
 		}
 
-		tableDefinition = table.GetDefinition();
-
-		return tableDefinition.FindField(fieldName);
+		return definition.FindField(fieldName);
 	}
 
-	// todo daro to Utils?
-	private static int GetShapeFieldIndex([NotNull] FeatureClass featureClass,
-	                                      [CanBeNull] FieldIndexCache fieldIndexCache)
+	public static KeyValuePair<string, int> GetField([NotNull] TableDefinition definition,
+	                                                 [NotNull] IObjectDataset dataset,
+	                                                 [NotNull] AttributeRole role)
 	{
-		FeatureClassDefinition definition = featureClass.GetDefinition();
+		int fieldIndex;
+		string fieldName = null;
 
-		string shapeField = definition.GetShapeField();
+		try
+		{
+			ObjectAttribute statusAttribute = dataset.GetAttribute(role);
 
-		return fieldIndexCache?.GetFieldIndex(featureClass, shapeField) ??
-		       definition.FindField(shapeField);
+			fieldName = Assert.NotNull(statusAttribute).Name;
+			fieldIndex = GetFieldIndex(definition, statusAttribute);
+
+			if (fieldIndex < 0)
+			{
+				throw new ArgumentException($"No field {fieldName}");
+			}
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Field {fieldName} does not exist in {definition.GetName()}", e);
+			throw;
+		}
+
+		return KeyValuePair.Create(fieldName, fieldIndex);
 	}
 
 	[CanBeNull]

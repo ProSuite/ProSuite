@@ -5,5 +5,5 @@ namespace ProSuite.AGP.WorkList.Test;
 
 public class ExtentProviderMock : IExtentProvider
 {
-	public Envelope Extent { get; }
+	public Envelope Extent { get; set;  }
 }

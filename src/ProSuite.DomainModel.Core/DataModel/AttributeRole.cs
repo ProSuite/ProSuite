@@ -68,6 +68,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public static readonly AttributeRole ConflictReconcileState = new AttributeRole(64);
 
+		public static readonly AttributeRole FilePath = new AttributeRole(65);
+
 		public static readonly AttributeRole RevisionPointFeatureClass =
 			new AttributeRole(512);
 
@@ -136,6 +138,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 			Add(ConflictAncestorState);
 			Add(ConflictPreReconcileState);
 			Add(ConflictReconcileState);
+
+			Add(FilePath);
 
 			Add(RevisionPointFeatureClass);
 			Add(RevisionPointStatus);

@@ -6,6 +6,7 @@ using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -17,25 +18,31 @@ namespace ProSuite.Commons.AGP.Picker;
 public abstract class PickerPrecedenceBase : IPickerPrecedence
 {
 	[NotNull] private readonly Geometry _sketchGeometry;
-	[CanBeNull] private readonly MapPoint _clickPoint;
+	[CanBeNull] private MapPoint _clickPoint;
+	private bool? _isPointClick;
 
 	[UsedImplicitly]
 	protected PickerPrecedenceBase([NotNull] Geometry sketchGeometry,
-	                               int tolerance,
+	                               int selectionTolerancePixels,
 	                               Point pickerLocation,
+	                               [NotNull] MapView mapView,
 	                               SelectionCombinationMethod? selectionMethod = null)
 	{
-		_sketchGeometry = sketchGeometry;
-		Tolerance = tolerance;
-		PickerLocation = pickerLocation;
+		Assert.ArgumentNotNull(mapView, nameof(mapView));
 
-		IsPointClick = PickerUtils.IsPointClick(sketchGeometry, tolerance, out _clickPoint);
+		_sketchGeometry = sketchGeometry;
+		SelectionTolerancePixels = selectionTolerancePixels;
+		PickerLocation = pickerLocation;
+		MapView = mapView;
+
 		SpatialRelationship = PickerUtils.GetSpatialRelationship();
 
 		SelectionCombinationMethod = selectionMethod ?? PickerUtils.GetSelectionCombinationMethod();
 
 		AreModifierKeysPressed();
 	}
+
+	private MapView MapView { get; }
 
 	/// <summary>
 	/// The preference for the position of the picker window.
@@ -50,12 +57,26 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	protected List<Key> PressedKeys { get; } = new();
 
-	public int Tolerance { get; }
+	/// <summary>
+	/// The selection tolerance in screen pixels.
+	/// </summary>
+	public int SelectionTolerancePixels { get; }
 
-	public bool IsPointClick { get; }
+	public bool IsPointClick => _isPointClick ??= EvaluateIsPointClick();
+
+	private bool EvaluateIsPointClick()
+	{
+		double toleranceMapUnits =
+			MapUtils.ConvertScreenPixelToMapLength(MapView, SelectionTolerancePixels,
+			                                       _sketchGeometry.Extent.Center);
+		return PickerUtils.IsPointClick(_sketchGeometry, toleranceMapUnits, out _clickPoint);
+	}
 
 	private bool IsControlPressed =>
 		PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
+
+	private bool IsAltPressed =>
+		PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.RightAlt);
 
 	public SelectionCombinationMethod SelectionCombinationMethod { get; }
 
@@ -63,7 +84,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 
 	/// <summary>
 	/// Side-effect-free method that returns the geometry which can be used for spatial queries.
-	/// For single-click picks, it returns the geometry expanded by the <see cref="Tolerance" />.
+	/// For single-click picks, it returns the geometry expanded by the <see cref="SelectionTolerancePixels" />.
 	/// This method must be called on the CIM thread.
 	/// </summary>
 	/// <returns></returns>
@@ -72,7 +93,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 		if (IsPointClick)
 		{
 			Assert.NotNull(_clickPoint, "ClickPoint is null");
-			return PickerUtils.ExpandGeometryByPixels(_clickPoint, Tolerance);
+			return PickerUtils.ExpandGeometryByPixels(_clickPoint, SelectionTolerancePixels);
 		}
 
 		// Otherwise relational operators and spatial queries return the wrong result
@@ -136,57 +157,33 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.None;
 		}
 
-		var modes = PickerMode.PickBest;
-
 		if (IsControlPressed)
 		{
 			// always show picker if CTRL pressed
 			return PickerMode.ShowPicker;
 		}
 
-		if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
+		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
 		{
-			modes |= PickerMode.ShowPicker;
-		}
-
-		int candidatesCount = candidates.Sum(fs => fs.GetCount());
-
-		if (NoMultiselection && candidatesCount > 1)
-		{
-			// If area selection: show picker
 			if (! IsPointClick)
 			{
-				modes |= PickerMode.ShowPicker;
+				return PickerMode.ShowPicker; // area selection: show picker
 			}
-			// if not: pick best
-		}
-		else
-		{
-			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
+
+			if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
 			{
-				modes |= PickerMode.PickAll;
+				return PickerMode.ShowPicker;
 			}
 
-			if (! IsPointClick)
-			{
-				modes |= PickerMode.PickAll;
-			}
+			return PickerMode.PickBest;
 		}
 
-		// the higher mode wins
-		var result = PickerMode.PickBest;
-
-		if ((modes & PickerMode.ShowPicker) != 0)
+		if (IsAltPressed || ! IsPointClick)
 		{
-			result = PickerMode.ShowPicker;
+			return PickerMode.PickAll;
 		}
 
-		if ((modes & PickerMode.PickAll) != 0)
-		{
-			result = PickerMode.PickAll;
-		}
-
-		return result;
+		return PickerMode.PickBest;
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)

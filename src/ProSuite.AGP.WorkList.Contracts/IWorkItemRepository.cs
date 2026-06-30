@@ -35,13 +35,19 @@ public interface IWorkItemRepository
 	/// </summary>
 	Envelope Extent { get; set; }
 
-	long Count();
-
 	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter);
 
-	IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(Table table,
-	                                                        QueryFilter filter,
-	                                                        bool ignoreDefinitionQuery = false);
+	IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(Table table,
+	                                                   QueryFilter filter,
+	                                                   bool ignoreDefinitionQuery = false)
+		where T : IWorkItem;
+
+	/// <summary>
+	/// Counts all work items in the source classes directly in the database, ignoring the
+	/// area of interest and definition queries. This is the grand total used for the status bar
+	/// and is independent of which items are currently loaded into memory.
+	/// </summary>
+	long Count();
 
 	void Commit();
 
@@ -74,4 +80,6 @@ public interface IWorkItemRepository
 	long GetNextOid();
 
 	void Refresh(IWorkItem item);
+
+	Table OpenTable([NotNull] ISourceClass sourceClass);
 }

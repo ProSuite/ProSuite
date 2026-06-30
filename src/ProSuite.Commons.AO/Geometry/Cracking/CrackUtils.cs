@@ -198,18 +198,18 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (selectedFeature.Shape.GeometryType == esriGeometryType.esriGeometryPoint ||
 			    selectedFeature.Shape.GeometryType == esriGeometryType.esriGeometryMultipoint)
 			{
-				_msg.VerboseDebug(
-					() => $"Feature {GdbObjectUtils.ToString(selectedFeature)} is not of a " +
-					      "supported geometry type. It will be disregarded.");
+				_msg.VerboseDebug(() =>
+					                  $"Feature {GdbObjectUtils.ToString(selectedFeature)} is not of a " +
+					                  "supported geometry type. It will be disregarded.");
 
 				return null;
 			}
 
 			if (inExtent != null && GeometryUtils.Disjoint(selectedFeature.Shape, inExtent))
 			{
-				_msg.VerboseDebug(
-					() => $"Feature {GdbObjectUtils.ToString(selectedFeature)} is outside " +
-					      "the extent of interest. It will be disregarded.");
+				_msg.VerboseDebug(() =>
+					                  $"Feature {GdbObjectUtils.ToString(selectedFeature)} is outside " +
+					                  "the extent of interest. It will be disregarded.");
 
 				return null;
 			}
@@ -286,6 +286,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[NotNull] CrackPointCalculator crackPointCalculator,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
+			int intersectingFeatureCount = 0;
+
 			foreach (IFeature targetFeature in targetFeatures)
 			{
 				if (trackCancel != null && ! trackCancel.Continue())
@@ -305,20 +307,22 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					continue;
 				}
 
-				IGeometry sourceShape = toVertexInfo.Feature.Shape;
-				IGeometry targetShape = targetFeature.Shape;
-				bool cannotIntersect = crackPointCalculator.CannotIntersect(sourceShape,
-					targetShape);
-				Marshal.ReleaseComObject(sourceShape);
-				Marshal.ReleaseComObject(targetShape);
-
-				if (cannotIntersect)
+				if (CannotIntersect(toVertexInfo, targetFeature, crackPointCalculator))
 				{
 					continue;
 				}
 
 				AddCrackPoints(toVertexInfo, targetFeature, crackPointCalculator);
+
+				intersectingFeatureCount++;
 			}
+
+			int totalCrackPoints =
+				toVertexInfo.CrackPoints?.Sum(l => l.Intersections?.Count ?? 0) ?? 0;
+
+			_msg.DebugFormat("Calculated {0} crack points between {1} and {2} target features",
+			                 totalCrackPoints, GdbObjectUtils.ToString(toVertexInfo.Feature),
+			                 intersectingFeatureCount);
 		}
 
 		public static void AddFeatureIntersectionCrackPoints(
@@ -337,6 +341,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 				FeatureVertexInfo vertexInfo1 = pair.Key;
 				FeatureVertexInfo vertexInfo2 = pair.Value;
+
+				if (CannotIntersect(vertexInfo1, vertexInfo2.Feature, crackPointCalculator))
+				{
+					continue;
+				}
 
 				AddCrackPoints(vertexInfo1, vertexInfo2.Feature, crackPointCalculator);
 				AddCrackPoints(vertexInfo2, vertexInfo1.Feature, crackPointCalculator);
@@ -376,8 +385,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// Filter the segment interior-segment interior intersections:
 			var vertexIntersections =
-				intersectionPoints.Where(
-					ip => ip.IsSourceVertex() || ip.VirtualTargetVertex % 1 == 0).ToList();
+				intersectionPoints
+					.Where(ip => ip.IsSourceVertex() || ip.VirtualTargetVertex % 1 == 0).ToList();
 
 			// 3D-clustering, even if In3D == false, otherwise the averaged Z values result in
 			// crack points where no crack point should be detected.
@@ -495,10 +504,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			IPointCollection clustered = ClusterPoints(allIntersections,
 			                                           toVertexInfo.SnapTolerance);
 
-			_msg.VerboseDebug(
-				() =>
-					$"Calculated {allIntersections.PointCount} intersections in {calculationCount} " +
-					"ring pairs.");
+			_msg.VerboseDebug(() =>
+				                  $"Calculated {allIntersections.PointCount} intersections in {calculationCount} " +
+				                  "ring pairs.");
 
 			IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints(
 				clustered, inputGeometry, (IPolyline) polylineSalad, inputGeometry);
@@ -534,10 +542,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		{
 			IFeature sourceFeature = featureVertexInfo.Feature;
 
-			Stopwatch watch =
-				_msg.DebugStartTiming("Calculating intersection points between {0} and {1}",
-				                      GdbObjectUtils.ToString(sourceFeature),
-				                      GdbObjectUtils.ToString(targetFeature));
+			Stopwatch watch = Stopwatch.StartNew();
+
+			_msg.VerboseDebug(() =>
+				                  $"Calculating intersection points between {GdbObjectUtils.ToString(sourceFeature)} " +
+				                  $"and {GdbObjectUtils.ToString(targetFeature)}");
 
 			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> intersectionPnts = null;
 			try
@@ -590,8 +599,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				}
 			}
 
-			_msg.DebugStopTiming(watch, "Calculated and processed {0} intersection points",
-			                     intersectionPnts?.Count);
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugStopTiming(watch, "Calculated and processed {0} intersection points",
+				                     intersectionPnts?.Count);
+			}
 		}
 
 		#endregion
@@ -947,10 +959,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebug(
-					() =>
-						$"Identified {result.PointCount} points to weed. Weeded geometry: " +
-						$"{weededPolycurve}");
+				_msg.VerboseDebug(() =>
+					                  $"Identified {result.PointCount} points to weed. Weeded geometry: " +
+					                  $"{weededPolycurve}");
 			}
 
 			return result;
@@ -1015,10 +1026,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebug(
-					() =>
-						$"Identified {weededPoints.PointCount} points to weed. Weeded geometry: " +
-						$"{GeometryUtils.ToString(weededCurve)}");
+				_msg.VerboseDebug(() =>
+					                  $"Identified {weededPoints.PointCount} points to weed. Weeded geometry: " +
+					                  $"{GeometryUtils.ToString(weededCurve)}");
 			}
 
 			return weededPoints;
@@ -1115,6 +1125,19 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return false;
+		}
+
+		private static bool CannotIntersect(FeatureVertexInfo sourceVertexInfo,
+		                                    IFeature targetFeature,
+		                                    CrackPointCalculator crackPointCalculator)
+		{
+			IGeometry sourceShape = sourceVertexInfo.Feature.Shape;
+			IGeometry targetShape = targetFeature.Shape;
+			bool cannotIntersect = crackPointCalculator.CannotIntersect(sourceShape,
+				targetShape);
+			Marshal.ReleaseComObject(sourceShape);
+			Marshal.ReleaseComObject(targetShape);
+			return cannotIntersect;
 		}
 
 		/// <summary>
@@ -1591,11 +1614,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		                                            double coplanarityTolerance)
 		{
 			List<Plane3D> involvedPlanes =
-				relevantPlanes.Where(
-					              p =>
-						              p.GetDistanceAbs(existingVertex.X, existingVertex.Y,
-						                               existingVertex.Z) <
-						              tolerance)
+				relevantPlanes.Where(p =>
+					                     p.GetDistanceAbs(existingVertex.X, existingVertex.Y,
+					                                      existingVertex.Z) <
+					                     tolerance)
 				              .ToList();
 
 			if (involvedPlanes.Count <= 1)

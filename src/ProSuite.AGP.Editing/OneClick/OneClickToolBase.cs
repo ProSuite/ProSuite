@@ -136,6 +136,16 @@ public abstract class OneClickToolBase : MapToolBase
 
 			if (RequiresSelection)
 			{
+				// TODO: Consider fire-and-forget (or at least notify implementors) here because of the following situation:
+				// The actual tool activation only after the activation methods return. Hence, a
+				// long-running after selection process
+				// - blocks the tool activation and the user cannot see the tool is active (e.g. the cursor
+				//   does not change).
+				// - cannot be cancelled because the tool is not yet active and the key events are not yet
+				//   handled by the tool.
+				// Probably the best option is to add a OnToolActivatedAsync event / or fire-and-forget
+				// method in the MapToolBase the tool is fully activated and the cursor has changed.
+				// Then, implementors (like this method) can start a long-running task in that event handler.
 				await ProcessSelectionAsync(progressor);
 			}
 
@@ -573,7 +583,7 @@ public abstract class OneClickToolBase : MapToolBase
 		Point screenLocation = await GetPopupScreenLocation(sketchGeometry);
 
 		var result = new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-		                                  screenLocation)
+		                                  screenLocation, ActiveMapView)
 		             {
 			             NoMultiselection = ! AllowMultiSelection(out _)
 		             };

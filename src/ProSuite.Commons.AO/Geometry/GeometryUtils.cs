@@ -3735,7 +3735,6 @@ namespace ProSuite.Commons.AO.Geometry
 			                   {
 				                   SpatialReference = spatialReference
 			                   };
-
 			foreach (T geometry in geometries)
 			{
 				object missing = Type.Missing;

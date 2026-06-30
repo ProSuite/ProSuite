@@ -80,14 +80,6 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 	}
 
-	protected override IWorkItem CreateWorkItemCore(IWorkItem workItem,
-	                                                ISourceClass sourceClass, Row row)
-	{
-		workItem.Status = ((DatabaseSourceClass) sourceClass).GetStatus(row);
-
-		return workItem;
-	}
-
 	protected override async Task SetStatusCoreAsync(IWorkItem item,
 	                                                 WorkItemStatus status)
 	{
@@ -145,7 +137,7 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		}
 	}
 
-	protected override Table OpenTable(ISourceClass sourceClass)
+	public override Table OpenTable(ISourceClass sourceClass)
 	{
 		Table table = null;
 		try
@@ -168,7 +160,6 @@ public class DbStatusWorkItemRepository : GdbItemRepository
 		switch (oldState)
 		{
 			case WorkItemStatus.Todo:
-			case WorkItemStatus.Excluded:
 				return $"Set status of work item ID={item.OID} to 'Corrected'";
 
 			case WorkItemStatus.Done:

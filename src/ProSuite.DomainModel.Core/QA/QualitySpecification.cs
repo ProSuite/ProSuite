@@ -4,6 +4,7 @@ using System.Reflection;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -11,6 +12,8 @@ namespace ProSuite.DomainModel.Core.QA
 {
 	public class QualitySpecification : VersionedEntityWithMetadata, INamed, IAnnotated
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[UsedImplicitly] [Obfuscation(Exclude = true)]
 		private string _name;
 
@@ -540,6 +543,26 @@ namespace ProSuite.DomainModel.Core.QA
 				}
 
 				// The condition is not applicable for the list of datasets; disable this element
+				IList<string> deletedParameterValues =
+					element.QualityCondition.GetDeletedParameterValues();
+
+				if (deletedParameterValues.Count > 0)
+				{
+					_msg.WarnFormat(
+						"Quality condition '{0}' has deleted dataset values and is ignored: {1}",
+						element.QualityCondition.Name,
+						string.Join(", ", deletedParameterValues));
+				}
+				else
+				{
+					_msg.WarnFormat(
+						"Quality condition '{0}' does not reference any dataset being " +
+						"verified and is ignored. Verify that the correct production " +
+						"model, project, workspace and quality specification were selected " +
+						"and that the required datasets are included in the verification.",
+						element.QualityCondition.Name);
+				}
+
 				result.Add(element);
 				element.Enabled = false;
 			}

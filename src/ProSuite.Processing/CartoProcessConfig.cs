@@ -20,7 +20,7 @@ namespace ProSuite.Processing
 
 		private readonly IList<Setting> _settings;
 
-		public string Name { get; private set; }
+		public string Name { get; set; }
 
 		public string TypeAlias { get; set; }
 
@@ -64,6 +64,15 @@ namespace ProSuite.Processing
 		//	TypeAlias = typeAlias;
 		//	Description = description;
 		//}
+
+		public static CartoProcessConfig Create(
+			string name, string typeAlias = null, string description = null,
+			IEnumerable<KeyValuePair<string,string>> settings = null)
+		{
+			return new CartoProcessConfig(
+				name, typeAlias, description,
+				settings?.Select(pair => new Setting(pair.Key, pair.Value, 0)));
+		}
 
 		public static CartoProcessConfig Parse(string text,
 		                                       string name = null, string typeAlias = null,

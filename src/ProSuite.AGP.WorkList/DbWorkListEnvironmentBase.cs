@@ -95,6 +95,8 @@ public abstract class DbWorkListEnvironmentBase : WorkEnvironmentBase
 
 				featureLayer.SetExpanded(false);
 				featureLayer.SetVisibility(false);
+				featureLayer.SetSelectable(false);
+
 				string defaultDefinitionQuery = GetDefaultDefinitionQuery(table);
 
 				if (! string.IsNullOrEmpty(defaultDefinitionQuery))

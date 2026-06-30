@@ -393,8 +393,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				projectWorkspaceMsg.WorkspaceHandle = gdbWorkspace?.WorkspaceHandle ?? -1;
 
-				projectWorkspaceMsg.DatasetIds.AddRange(
-					projectWorkspace.Datasets.Select(ds => ds.Id));
+				foreach (Dataset dataset in projectWorkspace.Datasets)
+				{
+					projectWorkspaceMsg.DatasetIds.Add(dataset.Id);
+
+					// Aligned by index with DatasetIds. The live gdb table name can differ
+					// from the model dataset name (feature service prefixes, child-database
+					// name transformations); the client uses it to match a table to a dataset.
+					projectWorkspaceMsg.GdbDatasetNames.Add(
+						projectWorkspace.GetGdbDatasetName(dataset) ?? string.Empty);
+				}
 
 				projectWorkspaceMsg.IsMasterDatabaseWorkspace =
 					projectWorkspace.IsModelMasterDatabase;
@@ -427,7 +435,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		protected static ModelMsg ToModelMsg(TModel productionModel, ICollection<DatasetMsg> referencedDatasetMsgs)
+		protected static ModelMsg ToModelMsg(TModel productionModel,
+		                                     ICollection<DatasetMsg> referencedDatasetMsgs)
 		{
 			SpatialReferenceMsg srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
 				productionModel.SpatialReferenceDescriptor.GetSpatialReference(),

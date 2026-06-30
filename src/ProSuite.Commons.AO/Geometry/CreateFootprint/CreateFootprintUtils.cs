@@ -410,9 +410,14 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		/// Returns the footprint as (non-simplified) polygon using extended Weiler-Atherthon polygon walk.
 		/// </summary>
 		/// <param name="multiPatch"></param>
-		/// <param name="xyTolerance"></param>
-		/// <param name="verticalRingDetectionTolerance"></param>
-		/// <param name="tooSmallRings"></param>
+		/// <param name="xyTolerance">The calculation tolerance, which can be small (e.g. close to
+		/// the resolution in order to be able to properly calculate almost-vertical walls that are
+		/// considerably thinner than the XY tolerance)</param>
+		/// <param name="verticalRingDetectionTolerance">The tolerance for detecting vertical rings
+		/// and vertices very close to other vertices (also between the source and the target) that
+		/// ensures that the operation can succeed thanks to clustering. Should be larger than the
+		/// XY resolution, ideally similar to the tolerance.</param>
+		/// <param name="tooSmallRings">Output parameter for rings that are too small</param>
 		/// <returns></returns>
 		[PublicAPI]
 		public static IPolygon GetFootprintGeom(IMultiPatch multiPatch, double xyTolerance,

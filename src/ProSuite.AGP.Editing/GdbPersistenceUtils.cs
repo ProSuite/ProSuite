@@ -584,10 +584,10 @@ public static class GdbPersistenceUtils
 		return rowBuffer;
 	}
 
-	private static void CopyValues([NotNull] Row fromRow,
-	                               [NotNull] RowBuffer toRowBuffer,
-	                               [NotNull] IDictionary<int, int> copyIndexMatrix,
-	                               bool includeShape = false)
+    public static void CopyValues([NotNull] Row fromRow,
+                                  [NotNull] RowBuffer toRowBuffer,
+                                  [NotNull] IDictionary<int, int> copyIndexMatrix,
+                                  bool includeShape = false)
 	{
 		IReadOnlyList<Field> sourceFields = includeShape ? null : fromRow.GetFields();
 		IReadOnlyList<Field> targetFields = toRowBuffer.GetFields();
@@ -619,6 +619,44 @@ public static class GdbPersistenceUtils
 			}
 
 			toRowBuffer[targetIndex] = value;
+		}
+	}
+
+	public static void CopyValues([NotNull] Row fromRow,
+	                              [NotNull] Row toRow,
+	                              [NotNull] IDictionary<int, int> copyIndexMatrix,
+	                              bool includeShape = false)
+	{
+		IReadOnlyList<Field> sourceFields = includeShape ? null : fromRow.GetFields();
+		IReadOnlyList<Field> targetFields = toRow.GetFields();
+
+		foreach (int targetIndex in copyIndexMatrix.Keys)
+		{
+			int sourceIndex = copyIndexMatrix[targetIndex];
+
+			if (sourceIndex < 0)
+			{
+				continue;
+			}
+
+			if (sourceFields?[sourceIndex].FieldType == FieldType.Geometry)
+			{
+				continue;
+			}
+
+			if (! targetFields[targetIndex].IsEditable)
+			{
+				continue;
+			}
+
+			object value = fromRow[sourceIndex];
+
+			if (! targetFields[targetIndex].IsNullable && Convert.IsDBNull(value))
+			{
+				continue;
+			}
+
+			toRow[targetIndex] = value;
 		}
 	}
 
@@ -664,6 +702,7 @@ public static class GdbPersistenceUtils
 			editContext?.Invalidate(feature);
 		}
 	}
+
 	public static void StoreShape(Feature feature,
 	                              Geometry geometry,
 	                              IEditOperationContext editOperationContext)

@@ -57,6 +57,16 @@ public class SourceClassMock : ISourceClass
 		throw new NotImplementedException();
 	}
 
+	public IWorkItem CreateWorkItem(Row row)
+	{
+		throw new NotImplementedException();
+	}
+
+	public T CreateWorkItem<T>(Row row) where T : IWorkItem
+	{
+		throw new NotImplementedException();
+	}
+
 	public void EnsureValidFilter(ref QueryFilter filter, WorkItemStatus? statusFilter,
 	                              bool excludeGeometry)
 	{

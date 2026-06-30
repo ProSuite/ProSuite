@@ -20,29 +20,41 @@ public static class PickerUtils
 {
 	#region move, refactor
 
-	public static Uri GetImagePath(esriGeometryType? geometryType)
+	[NotNull]
+	public static Uri GetImagePath([NotNull] BasicFeatureLayer layer)
 	{
+		Assert.ArgumentNotNull(layer, nameof(layer));
+
+		if (layer is AnnotationLayer)
+		{
+			return new Uri(
+				@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/Annotation.png");
+		}
+
+		var geometryType = layer.ShapeType;
+
 		// todo: daro introduce image for unknown type
 		//if (geometryType == null)
 		//{
 		//}
+
 		switch (geometryType)
 		{
 			case esriGeometryType.esriGeometryPoint:
 			case esriGeometryType.esriGeometryMultipoint:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.png");
 			case esriGeometryType.esriGeometryLine:
 			case esriGeometryType.esriGeometryPolyline:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.png");
 			case esriGeometryType.esriGeometryPolygon:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.bmp",
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.png",
 					UriKind.Absolute);
 			case esriGeometryType.esriGeometryMultiPatch:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.png");
 			default:
 				throw new ArgumentOutOfRangeException(
 					$"Unsupported geometry type: {geometryType}");
@@ -85,7 +97,14 @@ public static class PickerUtils
 			envelope.SpatialReference);
 	}
 
-	public static bool IsPointClick(Geometry geometry, double tolerance,
+	/// <summary>
+	/// Determines whether the given sketch geometry is to be treated as a single click point
+	/// (as opposed to an area / rectangle selection).
+	/// </summary>
+	/// <param name="geometry">The sketch geometry.</param>
+	/// <param name="toleranceInMapUnits">The selection tolerance, in MAP UNITS (not pixels). </param>
+	/// <param name="clickPoint">The resulting click point if this is a single click.</param>
+	public static bool IsPointClick(Geometry geometry, double toleranceInMapUnits,
 	                                out MapPoint clickPoint)
 	{
 		clickPoint = null;
@@ -100,7 +119,7 @@ public static class PickerUtils
 		}
 
 		var extent = geometry.Extent;
-		if (extent.Length < tolerance)
+		if (extent.Length < toleranceInMapUnits)
 		{
 			clickPoint = extent.Center;
 			return true;
@@ -223,8 +242,9 @@ public static class PickerUtils
 
 			case PickerMode.None:
 				return new List<IPickableItem>();
+
 			default:
-				throw new ArgumentOutOfRangeException();
+				throw new NotSupportedException($"Unknown {nameof(PickerMode)}");
 		}
 	}
 
@@ -292,7 +312,7 @@ public static class PickerUtils
 			count += selection.GetCount();
 		}
 
-		// Return the total count (may be 0 if no features were found)
+		// Return the total count (can be 0 if no features were found)
 		return count;
 	}
 

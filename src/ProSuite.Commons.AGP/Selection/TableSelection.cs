@@ -7,15 +7,15 @@ namespace ProSuite.Commons.AGP.Selection;
 
 public abstract class TableSelection : IDisposable
 {
+	private Table _table;
+
 	protected TableSelection([NotNull] Table table)
 	{
-		Table = table ??
-		        throw new ArgumentNullException(nameof(table));
+		_table = table ?? throw new ArgumentNullException(nameof(table));
 	}
 
-	// TODO dispose when done (implement IDisposable)
 	[NotNull]
-	public Table Table { get; }
+	public Table Table => _table ?? throw new ObjectDisposedException(GetType().Name);
 
 	public abstract IEnumerable<long> GetOids();
 
@@ -23,6 +23,7 @@ public abstract class TableSelection : IDisposable
 
 	public void Dispose()
 	{
-		Table.Dispose();
+		_table?.Dispose();
+		_table = null;
 	}
 }

@@ -269,7 +269,7 @@ public static class ChangeAlongClientUtils
 			selectedFeatures, targetFeatures,
 			targetBufferOptions, curveFilterOptions, customTolerance);
 
-		int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
+		long deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 		return GrpcClientUtils.Try(
 			options => rpcClient.CalculateReshapeLines(request, options),
@@ -291,7 +291,7 @@ public static class ChangeAlongClientUtils
 			targetBufferOptions, clipExtent,
 			customTolerance, zValueSource);
 
-		int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
+		long deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 		return GrpcClientUtils.Try(
 			options => rpcClient.CalculateCutLines(request, options),

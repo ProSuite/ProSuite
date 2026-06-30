@@ -28,7 +28,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 
 	public long Count()
 	{
-		throw new NotImplementedException();
+		return _items.Count;
 	}
 
 	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)
@@ -61,9 +61,19 @@ public class ItemRepositoryMock : IWorkItemRepository
 		throw new NotImplementedException();
 	}
 
+	public IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(Table table, QueryFilter filter, bool ignoreDefinitionQuery = false) where T : IWorkItem
+	{
+		throw new NotImplementedException();
+	}
+
 	public void Refresh(IWorkItem item)
 	{
 		WorkItemStateRepository?.Refresh(item);
+	}
+
+	public Table OpenTable(ISourceClass sourceClass)
+	{
+		throw new NotImplementedException();
 	}
 
 	public void UpdateState(IWorkItem item)

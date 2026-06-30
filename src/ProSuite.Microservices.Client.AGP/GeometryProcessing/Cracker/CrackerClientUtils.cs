@@ -107,7 +107,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				                                  intersectionPointOptions,
 				                                  addCrackPointsOnExistingVertices);
 
-			int deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
+			long deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
 			CalculateCrackPointsResponse response =
 				GrpcClientUtils.Try(
@@ -340,13 +340,19 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				                              addCrackPointsOnExistingVertices,
 				                              out List<Feature> updatedFeatures);
 
-			int deadline =
+			long deadline =
 				FeatureProcessingUtils.GetProcessingTimeout(request.SourceFeatures.Count);
 
 			ApplyCrackPointsResponse response =
 				GrpcClientUtils.Try(
 					o => rpcClient.ApplyCrackPoints(request, o),
 					cancellationToken, deadline);
+
+			if (response == null || cancellationToken.IsCancellationRequested)
+			{
+				// The call was cancelled (e.g. Escape) or timed out: nothing to apply.
+				return new List<ResultFeature>();
+			}
 
 			return GetApplyCrackPointsResult(response, updatedFeatures);
 		}
@@ -489,13 +495,19 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.Cracker
 				                              addCrackPointsOnExistingVertices,
 				                              out List<Feature> updatedFeatures);
 
-			int deadline =
+			long deadline =
 				FeatureProcessingUtils.GetProcessingTimeout(request.SourceFeatures.Count);
 
 			ChopLinesResponse response =
 				GrpcClientUtils.Try(
 					o => rpcClient.ChopLines(request, o),
 					cancellationToken, deadline);
+
+			if (response == null || cancellationToken.IsCancellationRequested)
+			{
+				// The call was cancelled (e.g. Escape) or timed out: nothing to chop.
+				return new List<ResultFeature>();
+			}
 
 			return GetChopLinesResult(response, updatedFeatures);
 		}

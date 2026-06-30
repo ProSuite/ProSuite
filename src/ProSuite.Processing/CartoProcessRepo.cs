@@ -14,33 +14,31 @@ namespace ProSuite.Processing
 	public class CartoProcessRepo
 	{
 		private readonly List<CartoProcessDefinition> _definitions;
-		private readonly IReadOnlyList<CartoProcessDefinition> _list;
-		private readonly object _syncLock = new object();
+		private readonly object _syncLock = new();
 
 		public CartoProcessRepo(/*known types*/)
 		{
 			_definitions = new List<CartoProcessDefinition>();
-			_list = new ReadOnlyList<CartoProcessDefinition>(_definitions);
+			ProcessDefinitions = new ReadOnlyList<CartoProcessDefinition>(_definitions);
 		}
 
-		public IReadOnlyList<CartoProcessDefinition> ProcessDefinitions => _list;
+		public IReadOnlyList<CartoProcessDefinition> ProcessDefinitions { get; }
+
+		public Uri Uri { get; private set; }
 
 		public void Clear()
 		{
-			lock (_syncLock)
-			{
-				_definitions.Clear();
-			}
+			Replace(null);
 		}
 
 		// TODO Consider overloads to load repo from DDX, from .aprx, from ...
 
 		public void Load(string xmlFilePath, IReadOnlyList<Type> knownTypes)
 		{
-			using (var reader = File.OpenText(xmlFilePath))
-			{
-				Load(reader, knownTypes);
-			}
+			using var reader = File.OpenText(xmlFilePath);
+
+			Load(reader, knownTypes);
+			Uri = new Uri(xmlFilePath);
 		}
 
 		public void Load(TextReader reader, IReadOnlyList<Type> knownTypes)
@@ -50,7 +48,8 @@ namespace ProSuite.Processing
 
 			try
 			{
-				Reload(root, knownTypes);
+				Replace(Load(root, knownTypes));
+				Uri = null;
 			}
 			catch (FormatException ex)
 			{
@@ -59,20 +58,94 @@ namespace ProSuite.Processing
 			}
 		}
 
-		public void Save(string xmlFilePath)
+		public void Save(string xmlFilePath = null)
 		{
-			using (var stream = File.Create(xmlFilePath))
-			using (var writer = new StreamWriter(stream))
+			if (xmlFilePath is null && Uri is { IsFile: true })
 			{
-				Save(writer);
+				xmlFilePath = Uri.LocalPath;
 			}
+
+			if (xmlFilePath is null)
+			{
+				throw new InvalidOperationException("No previous file path found and no file path given as argument");
+			}
+
+			using var stream = File.Create(xmlFilePath);
+			using var writer = new StreamWriter(stream);
+
+			Save(writer);
 		}
 
 		public void Save(TextWriter writer)
 		{
+
 			var doc = ToXml();
 
 			doc.Save(writer);
+		}
+
+		/// <summary>Create and add a new carto process with a random name</summary>
+		/// <param name="resolvedType">Type for the new process (optional)</param>
+		/// <returns>The definition for the new carto process</returns>
+		public CartoProcessDefinition AddProcess(Type resolvedType = null)
+		{
+			var random = new Random();
+
+			lock (_syncLock)
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					const int min = 0x10000000;
+					const int max = 0x7FFFFFFF;
+					int number = random.Next(min, max);
+
+					var name = $"New Process {number:X8}";
+					string typeAlias = resolvedType?.Name;
+					const string description = "New Carto Process";
+
+					if (FindIndex(_definitions, name) < 0)
+					{
+						var config = CartoProcessConfig.Create(name, typeAlias, description);
+						var definition = new CartoProcessDefinition(config, resolvedType);
+						_definitions.Add(definition);
+						return definition;
+					}
+				}
+			}
+
+			throw new InvalidOperationException("Failed to generate a unique name for the new process");
+		}
+
+		/// <summary>Add the given carto process to the repo.</summary>
+		/// <seealso cref="AddProcess(Type)"/>
+		public CartoProcessDefinition AddProcess(CartoProcessConfig config, Type resolvedType = null)
+		{
+			if (config is null)
+				throw new ArgumentNullException(nameof(config));
+
+			var name = config.Name;
+			if (string.IsNullOrEmpty(name))
+				throw new InvalidOperationException("Name is missing");
+
+			if (resolvedType != null)
+			{
+				config.TypeAlias = resolvedType.Name;
+			}
+
+			lock (_syncLock)
+			{
+				int index = FindIndex(_definitions, name);
+
+				if (index < 0)
+				{
+					var definition = new CartoProcessDefinition(config, resolvedType);
+					_definitions.Add(definition);
+					return definition;
+				}
+
+				throw new InvalidOperationException(
+					$"Name '{name}' is already in use for another process");
+			}
 		}
 
 		public void UpdateProcess(CartoProcessConfig config, Type resolvedType = null)
@@ -95,7 +168,8 @@ namespace ProSuite.Processing
 				int index = FindIndex(_definitions, name);
 				if (index < 0)
 				{
-					_definitions.Add(new CartoProcessDefinition(config, resolvedType));
+					//_definitions.Add(new CartoProcessDefinition(config, resolvedType));
+					throw new InvalidOperationException($"No process found with name '{name}'");
 				}
 				else
 				{
@@ -111,6 +185,68 @@ namespace ProSuite.Processing
 				int count = _definitions.RemoveAll(
 					d => string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase));
 				return count > 0;
+			}
+		}
+
+		public bool CanRenameProcess(string oldName, string newName, out string reason)
+		{
+			if (string.IsNullOrEmpty(newName))
+			{
+				reason = "Name must not be empty";
+				return false;
+			}
+
+			if (string.Equals(newName, oldName, StringComparison.Ordinal))
+			{
+				reason = "Name must not be the same as the old name";
+				return false;
+			}
+
+			int index;
+
+			lock (_syncLock)
+			{
+				index = FindIndex(_definitions, newName);
+			}
+
+			if (index >= 0)
+			{
+				reason = "Name already exists";
+				return false;
+			}
+
+			reason = null;
+			return true;
+		}
+
+		public void RenameProcess(string oldName, string newName)
+		{
+			lock (_syncLock)
+			{
+				int index = FindIndex(_definitions, oldName);
+				if (index < 0)
+				{
+					throw new InvalidOperationException($"No process found with name '{oldName}'");
+				}
+				var definition = _definitions[index];
+				var config = definition.Config;
+				config.Name = newName; // rename
+				_definitions[index] = new CartoProcessDefinition(config, definition.ResolvedType);
+			}
+		}
+
+		#region Private utils
+
+		private void Replace([CanBeNull] IEnumerable<CartoProcessDefinition> definitions)
+		{
+			lock (_syncLock)
+			{
+				_definitions.Clear();
+
+				if (definitions is not null)
+				{
+					_definitions.AddRange(definitions);
+				}
 			}
 		}
 
@@ -137,10 +273,12 @@ namespace ProSuite.Processing
 			return -1;
 		}
 
-		private void Reload(XElement root, IReadOnlyList<Type> knownTypes)
+		private static IEnumerable<CartoProcessDefinition> Load(XElement root, IReadOnlyList<Type> knownTypes)
 		{
-			root = root ?? throw new ArgumentNullException(nameof(root));
-			knownTypes = knownTypes ?? Array.Empty<Type>();
+			if (root is null)
+				throw new ArgumentNullException(nameof(root));
+
+			knownTypes ??= Array.Empty<Type>();
 
 			var declaredTypes = root.Element("Types")?.Elements("ProcessType").ToList();
 
@@ -152,11 +290,9 @@ namespace ProSuite.Processing
 			                    .Select(e => CreateProcessItem(e, declaredTypes, knownTypes))
 			                    .ToArray() ?? Array.Empty<CartoProcessDefinition>();
 
-			lock (_syncLock)
-			{
-				_definitions.Clear();
-				_definitions.AddRange(groups.Concat(processes));
-			}
+			var definitions = groups.Concat(processes);
+
+			return definitions;
 		}
 
 		private XDocument ToXml()
@@ -172,44 +308,42 @@ namespace ProSuite.Processing
 			var groupType = typeof(IGroupCartoProcess);
 
 			var groups = definitions
-			             .Where(d => d.ResolvedType != null)
-			             .Where(d => groupType.IsAssignableFrom(d.ResolvedType))
-			             .Select(d => new XElement("ProcessGroup",
-			                                       new XAttribute("name", d.Name ?? string.Empty),
-			                                       MakeAttribute("description", d.Description),
-			                                       new XElement(
-				                                       "GroupProcessTypeReference",
-				                                       new XAttribute("name", d.TypeAlias)),
-			                                       GetProcesses(d.Config)))
-			             .ToList();
+				.Where(d => d.ResolvedType != null)
+				.Where(d => groupType.IsAssignableFrom(d.ResolvedType))
+				.Select(d => new XElement("ProcessGroup",
+					new XAttribute("name", d.Name ?? string.Empty),
+					MakeAttribute("description", d.Description),
+					new XElement(
+						"GroupProcessTypeReference",
+						new XAttribute("name", d.TypeAlias)),
+					GetProcesses(d.Config)))
+				.ToList();
 
 			var types = definitions
-			            .Where(d => d.ResolvedType != null)
-			            .GroupBy(d => d.TypeAlias)
-			            .OrderBy(g => g.Key)
-			            .Select(g => new XElement("ProcessType",
-			                                      MakeAttribute("name", g.Key), // i.e., TypeAlias
-			                                      MakeClassDescriptor(g)))
-			            .ToList();
+				.Where(d => d.ResolvedType != null)
+				.GroupBy(d => d.TypeAlias)
+				.OrderBy(g => g.Key)
+				.Select(g => new XElement("ProcessType",
+					MakeAttribute("name", g.Key), // i.e., TypeAlias
+					MakeClassDescriptor(g)))
+				.ToList();
 
-			var procs = definitions
-			            .Where(d => d.TypeAlias != null)
-			            .Where(d => ! groupType.IsAssignableFrom(d.ResolvedType))
-			            .Select(d => new XElement(
-				                    "Process",
-				                    new XAttribute("name", d.Name ?? string.Empty),
-				                    MakeAttribute("description", d.Description),
-				                    new XElement("TypeReference",
-				                                 MakeAttribute("name", d.TypeAlias)),
-				                    GetParameters(d.Config)))
-			            .ToList();
+			var processes = definitions
+				.Where(d => d.TypeAlias != null)
+				.Where(d => !groupType.IsAssignableFrom(d.ResolvedType))
+				.Select(d => new XElement("Process",
+					new XAttribute("name", d.Name ?? string.Empty),
+					MakeAttribute("description", d.Description),
+					MakeTypeReference(d.TypeAlias),
+					GetParameters(d.Config)))
+				.ToList();
 
 			return new XDocument(
 				new XDeclaration("1.0", "utf-8", "yes"),
 				new XElement("CartoProcesses",
-				             new XElement("Groups", groups),
-				             new XElement("Processes", procs),
-				             new XElement("Types", types)));
+					new XElement("Groups", groups),
+					new XElement("Processes", processes),
+					new XElement("Types", types)));
 		}
 
 		private static XElement MakeClassDescriptor(IEnumerable<CartoProcessDefinition> g)
@@ -221,6 +355,11 @@ namespace ProSuite.Processing
 			return new XElement("ClassDescriptor",
 			                    MakeAttribute("type", typeName),
 			                    MakeAttribute("assembly", assembly));
+		}
+
+		private static XElement MakeTypeReference(string typeAlias)
+		{
+			return new XElement("TypeReference", MakeAttribute("name", typeAlias));
 		}
 
 		private static XAttribute MakeAttribute(string name, string value = null)
@@ -346,6 +485,8 @@ namespace ProSuite.Processing
 			var name = (string) declaredType.Attribute("name");
 			return string.Equals(name, aliasName, StringComparison.OrdinalIgnoreCase);
 		}
+
+		#endregion
 	}
 
 	public class CartoProcessDefinition : ITagged

@@ -132,6 +132,61 @@ public static class ModuleExtensions
 		settings.Add(name, text);
 	}
 
+	public static T? GetEnum<T>(this ModuleSettingsReader settings, string name) where T : struct, Enum
+	{
+		if (settings is null || name is null) return null;
+
+		var setting = settings.Get(name);
+		if (setting is null) return null;
+		if (setting is T t) return t;
+
+		try
+		{
+			if (setting is int or long or short or byte or uint or ulong or ushort or sbyte)
+			{
+				return (T) Enum.ToObject(typeof(T), setting);
+			}
+
+			var text = Convert.ToString(setting);
+
+			if (string.IsNullOrEmpty(text))
+			{
+				return null;
+			}
+
+			if (Enum.TryParse<T>(text, out var result))
+			{
+				return result;
+			}
+
+			_msg.Error($"Cannot convert project setting {name} to {typeof(T).Name}: invalid value '{text}'");
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"Cannot convert project setting {name} to {typeof(T).Name}: {ex.Message}");
+		}
+
+		return null;
+	}
+
+	public static T GetEnum<T>(this ModuleSettingsReader settings, string name, T defaultValue) where T : struct, Enum
+	{
+		var result = settings.GetEnum<T>(name);
+		return result ?? defaultValue;
+	}
+
+	public static void Add<T>(this ModuleSettingsWriter settings, string name, T value)
+		where T : Enum
+	{
+		if (settings is null)
+			throw new ArgumentNullException(nameof(settings));
+		if (name is null)
+			throw new ArgumentNullException(nameof(name));
+
+		var text = value?.ToString();
+		settings.Add(name, text);
+	}
+
 	/// <summary>
 	/// Get the named project setting, converting it to a String;
 	/// return null if there is no such setting (or the conversion

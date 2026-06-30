@@ -46,9 +46,11 @@ public static class WhiteSelectionUtils
 	{
 		foreach (var fsb in candidates)
 		{
-			var layer = (FeatureLayer) fsb.BasicFeatureLayer;
-
-			if (layer.ShapeType != esriGeometryType.esriGeometryPolygon)
+			if (fsb.BasicFeatureLayer is not FeatureLayer layer)
+			{
+				yield return fsb;
+			}
+			else if (layer.ShapeType != esriGeometryType.esriGeometryPolygon)
 			{
 				yield return fsb;
 			}

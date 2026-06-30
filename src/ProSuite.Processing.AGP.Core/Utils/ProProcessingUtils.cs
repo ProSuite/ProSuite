@@ -65,15 +65,18 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			return FormattableString.Invariant($"OID={oid} Class={className}");
 		}
 
-		public static T GetBaseTable<T>(T table) where T : Table
+		public static T GetBaseTable<T>([CanBeNull] T table) where T : Table
 		{
-			if (table == null)
+			if (table is null)
+			{
 				return null;
+			}
 
 			while (table.IsJoinedTable())
 			{
 				var join = table.GetJoin();
 				var destination = join.GetDestinationTable();
+				// TODO dispose table? (will underlying destination table survive?)
 				table = (T) destination;
 			}
 

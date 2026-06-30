@@ -34,8 +34,10 @@ namespace ProSuite.Commons.Geom
 			Target = target;
 			Tolerance = tolerance;
 
+			// Remove non-short linear intersection runs that are fully contained, along the
+			// source, within another larger linear run on the same source and target part:
 			HashSet<IntersectionPoint3D> pointsToIgnore =
-				GetLinearIntersectionPointsWithinOtherLinearIntersection(intersectionPoints);
+				GetSubsumedLinearIntersectionPoints(intersectionPoints, tolerance);
 
 			if (pointsToIgnore.Count > 0)
 			{
@@ -47,83 +49,6 @@ namespace ProSuite.Commons.Geom
 
 			IntersectionPoints = intersectionPoints.Where(p => ! pointsToIgnore.Contains(p))
 			                                       .ToList();
-		}
-
-		private HashSet<IntersectionPoint3D>
-			GetLinearIntersectionPointsWithinOtherLinearIntersection(
-				IEnumerable<IntersectionPoint3D> intersections)
-		{
-			HashSet<IntersectionPoint3D> result = new HashSet<IntersectionPoint3D>();
-
-			// Filter linear intersections within linear intersections:
-			IntersectionPoint3D previousPoint = null;
-			Tuple<IntersectionPoint3D, IntersectionPoint3D> previousLinear = null;
-			foreach (IntersectionPoint3D current in intersections)
-			{
-				if (previousPoint != null &&
-				    previousPoint.SourcePartIndex == current.SourcePartIndex &&
-				    previousPoint.TargetPartIndex == current.TargetPartIndex &&
-				    previousPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-				    current.Type == IntersectionPointType.LinearIntersectionEnd)
-				{
-					if (IsWithinCurrentLinearIntersection(previousPoint, current, previousLinear) &&
-					    GeomUtils.GetDistanceXY(previousPoint.Point, current.Point) > Tolerance)
-					{
-						// It is a non-short linear intersection bracketed by the previous linear intersection.
-						// Ignore, most likely an 'inverted' intersection with the other side of a very acute angle
-						// See CanGetDifferenceAreaWithLinearIntersectionWithVertexOnAcuteAngle()
-						result.Add(previousPoint);
-						result.Add(current);
-					}
-
-					previousLinear =
-						new Tuple<IntersectionPoint3D, IntersectionPoint3D>(
-							previousPoint, current);
-				}
-
-				previousPoint = current;
-			}
-
-			return result;
-		}
-
-		private static bool IsWithinCurrentLinearIntersection(
-			[NotNull] IntersectionPoint3D fromPoint,
-			[NotNull] IntersectionPoint3D toPoint,
-			[CanBeNull] Tuple<IntersectionPoint3D, IntersectionPoint3D> previousLinearStretch)
-		{
-			if (previousLinearStretch == null)
-			{
-				return false;
-			}
-
-			IntersectionPoint3D previousLinearStart = previousLinearStretch.Item1;
-			IntersectionPoint3D previousLinearEnd = previousLinearStretch.Item2;
-
-			if (previousLinearStart == null || previousLinearEnd == null)
-			{
-				return false;
-			}
-
-			if (fromPoint.SourcePartIndex != previousLinearStart.SourcePartIndex)
-			{
-				return false;
-			}
-
-			if (fromPoint.TargetPartIndex != previousLinearStart.TargetPartIndex)
-			{
-				return false;
-			}
-
-			// The to-point must be before (or equal) the previous end...
-			if (toPoint.VirtualSourceVertex > previousLinearEnd.VirtualSourceVertex)
-			{
-				return false;
-			}
-
-			// ... and the from point must come after the previous start.
-			// Ignore equal 1-segments linear intersections (likely inverted) at pointy angles
-			return fromPoint.VirtualSourceVertex > previousLinearStart.VirtualSourceVertex;
 		}
 
 		/// <summary>
@@ -561,9 +486,10 @@ namespace ProSuite.Commons.Geom
 					return true;
 				}
 
-				isBoundaryLoop = IntersectionClusters.GetSourceBoundaryLoops().Any(
-					bl => bl.Start.ReferencesSameTargetVertex(
-						fromOtherSourceIntersection, Target, Tolerance));
+				isBoundaryLoop = IntersectionClusters.GetSourceBoundaryLoops()
+				                                     .Any(bl => bl.ReferencesPinchVertex(
+					                                          fromOtherSourceIntersection, Target,
+					                                          Tolerance));
 
 				if (! isBoundaryLoop)
 				{
@@ -596,8 +522,7 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D previousIntersection = start;
 			IntersectionPoint3D nextIntersection;
 
-			if (usedSubcurves.Any(
-				    s => IsIntersectionUsed(start, s, alongSource)))
+			if (usedSubcurves.Any(s => IsIntersectionUsed(start, s, alongSource)))
 			{
 				// The start point has been used already:
 				return true;
@@ -619,18 +544,20 @@ namespace ProSuite.Commons.Geom
 
 				Assert.NotNull(nextIntersection, "No next intersection");
 
-				bool usedBySubcurveStart = usedSubcurves.Any(
-					s => IsIntersectionUsed(nextIntersection, s, alongSource));
+				if (nextIntersection.Equals(andEnd))
+				{
+					// Back at the end of the loop without finding usage inside it. A used
+					// subcurve that starts at andEnd goes BEYOND the loop (it leaves through
+					// the same pinch point), so it does not count as the loop having been used.
+					return false;
+				}
+
+				bool usedBySubcurveStart =
+					usedSubcurves.Any(s => IsIntersectionUsed(nextIntersection, s, alongSource));
 
 				if (usedBySubcurveStart)
 				{
 					return true;
-				}
-
-				if (nextIntersection.Equals(andEnd))
-				{
-					// Back at the start
-					return false;
 				}
 
 				// TODO: Check this:
@@ -1419,6 +1346,123 @@ namespace ProSuite.Commons.Geom
 			//	// Remove dangles that cannot cut and would lead to duplicate result rings
 			//	RemoveDeadEndIntersections(intersectionsInboundTarget, intersectionsOutboundTarget);
 			//}
+		}
+
+		/// <summary>
+		/// Detects non-short linear intersection runs (a <see cref="IntersectionPointType.LinearIntersectionStart"/>
+		/// immediately followed by its <see cref="IntersectionPointType.LinearIntersectionEnd"/>) that
+		/// are entirely contained, along the source, within another strictly larger linear run on the
+		/// same source and target part. Such a run describes the same overlap twice and must be ignored,
+		/// otherwise the navigation is derailed by the duplicate.
+		/// <para>These redundant runs arise at acute corners where a vertex lies > tolerance from the
+		/// corner point but &lt; tolerance from the adjacent segment, so a single source segment is
+		/// linear with two adjacent target segments and the linear stretch is broken and re-seeded.
+		/// The containment is checked against ALL other runs (not just the immediately preceding one),
+		/// so it also catches the case where the larger run appears later in the source order, and it
+		/// includes runs that share an endpoint with the larger one (e.g.
+		/// CanGetDifferenceAreaWithLinearIntersectionWithVertexOnAcuteAngle - larger run first;
+		/// CanGetFootprintForFriedhofsmauerRoggwil - larger run shares the start, appears second).
+		/// Only the SOURCE span is compared (an inverted acute-angle run has a reversed/disjoint
+		/// target span) and only NON-short runs are removed (sub-tolerance runs are left to the
+		/// clustering, see CanGetUnionAreaXYWithMultipleShortSegmentsAtMultipartTouchPoints).</para>
+		/// </summary>
+		private static HashSet<IntersectionPoint3D> GetSubsumedLinearIntersectionPoints(
+			[NotNull] IList<IntersectionPoint3D> intersections, double tolerance)
+		{
+			var result = new HashSet<IntersectionPoint3D>();
+
+			var stretches =
+				new List<KeyValuePair<IntersectionPoint3D, IntersectionPoint3D>>();
+
+			for (int i = 0; i < intersections.Count - 1; i++)
+			{
+				IntersectionPoint3D start = intersections[i];
+				IntersectionPoint3D end = intersections[i + 1];
+
+				if (start.Type == IntersectionPointType.LinearIntersectionStart &&
+				    end.Type == IntersectionPointType.LinearIntersectionEnd &&
+				    start.SourcePartIndex == end.SourcePartIndex &&
+				    start.TargetPartIndex == end.TargetPartIndex)
+				{
+					stretches.Add(
+						new KeyValuePair<IntersectionPoint3D, IntersectionPoint3D>(start, end));
+				}
+			}
+
+			if (stretches.Count < 2)
+			{
+				return result;
+			}
+
+			foreach (var inner in stretches)
+			{
+				if (result.Contains(inner.Key))
+				{
+					continue;
+				}
+
+				// Leave short runs to the clustering machinery (do not remove them).
+				if (GeomUtils.GetDistanceXY(inner.Key.Point, inner.Value.Point) <= tolerance)
+				{
+					continue;
+				}
+
+				foreach (var outer in stretches)
+				{
+					if (ReferenceEquals(inner.Key, outer.Key) ||
+					    result.Contains(outer.Key))
+					{
+						continue;
+					}
+
+					if (LinearStretchSubsumes(outer.Key, outer.Value, inner.Key, inner.Value))
+					{
+						result.Add(inner.Key);
+						result.Add(inner.Value);
+						break;
+					}
+				}
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Whether the linear run [outerStart, outerEnd] strictly contains the run [innerStart,
+		/// innerEnd] ALONG THE SOURCE - same source and target part, the inner source span within
+		/// the outer source span, and the outer source span strictly larger (so two identical runs
+		/// are kept). The target span is deliberately NOT compared: an inverted acute-angle run
+		/// shares the source sub-range but its target span is reversed or on the adjacent segment.
+		/// </summary>
+		private static bool LinearStretchSubsumes(
+			[NotNull] IntersectionPoint3D outerStart,
+			[NotNull] IntersectionPoint3D outerEnd,
+			[NotNull] IntersectionPoint3D innerStart,
+			[NotNull] IntersectionPoint3D innerEnd)
+		{
+			if (outerStart.SourcePartIndex != innerStart.SourcePartIndex ||
+			    outerStart.TargetPartIndex != innerStart.TargetPartIndex)
+			{
+				return false;
+			}
+
+			const double eps = 1e-9;
+
+			double outerSrcMin = Math.Min(outerStart.VirtualSourceVertex,
+			                              outerEnd.VirtualSourceVertex);
+			double outerSrcMax = Math.Max(outerStart.VirtualSourceVertex,
+			                              outerEnd.VirtualSourceVertex);
+			double innerSrcMin = Math.Min(innerStart.VirtualSourceVertex,
+			                              innerEnd.VirtualSourceVertex);
+			double innerSrcMax = Math.Max(innerStart.VirtualSourceVertex,
+			                              innerEnd.VirtualSourceVertex);
+
+			bool sourceContained =
+				innerSrcMin >= outerSrcMin - eps && innerSrcMax <= outerSrcMax + eps;
+			bool outerStrictlyLarger =
+				outerSrcMax - outerSrcMin > innerSrcMax - innerSrcMin + eps;
+
+			return sourceContained && outerStrictlyLarger;
 		}
 
 		/// <summary>

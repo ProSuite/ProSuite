@@ -57,22 +57,26 @@ namespace ProSuite.Commons.Xml
 
 		/// <summary>
 		/// Reads T from the provided xml file and sends potential issues to the
-		/// specified delegate.
+		/// specified delegate. The raw file content can optionally be transformed
+		/// before deserialization (e.g. to rewrite legacy namespaces for
+		/// backwards-compatibility).
 		/// </summary>
 		/// <param name="xmlFile"></param>
 		/// <param name="receiveNotification">The delegate to receive potential
 		/// notifications. If null, potential issues will be logged on debug level.</param>
+		/// <param name="transformContent">A function that receives the raw file content
+		/// and returns the (possibly modified) content to be deserialized. If null, the
+		/// file is deserialized as-is.</param>
 		/// <returns></returns>
 		[NotNull]
 		public T ReadFromFile([NotNull] string xmlFile,
-		                      [CanBeNull] Action<string> receiveNotification)
+		                      [CanBeNull] Action<string> receiveNotification,
+		                      [CanBeNull] Func<string, string> transformContent = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(xmlFile, nameof(xmlFile));
 			Assert.ArgumentCondition(File.Exists(xmlFile), "file does not exist: {0}", xmlFile);
 
 			XmlSerializer serializer = GetSerializer();
-
-			FileStream stream = null;
 
 			try
 			{
@@ -82,22 +86,26 @@ namespace ProSuite.Commons.Xml
 
 				WireEvents(serializer);
 
-				stream = new FileStream(xmlFile, FileMode.Open, FileAccess.Read);
+				if (transformContent != null)
+				{
+					string xmlContent = transformContent(File.ReadAllText(xmlFile));
 
-				object result = serializer.Deserialize(stream);
+					using (var reader = new StringReader(xmlContent))
+					{
+						return (T) serializer.Deserialize(reader);
+					}
+				}
 
-				return (T) result;
+				using (var stream = new FileStream(xmlFile, FileMode.Open, FileAccess.Read))
+				{
+					return (T) serializer.Deserialize(stream);
+				}
 			}
 			finally
 			{
 				UnwireEvents(serializer);
 				_deserializingXmlFile = null;
 				_receiveNotification = null;
-
-				if (stream != null)
-				{
-					stream.Close();
-				}
 			}
 		}
 

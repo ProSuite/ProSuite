@@ -97,7 +97,14 @@ namespace ProSuite.Microservices.Client
 			}
 			catch (RpcException rpcException)
 			{
-				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
+				_msg.Debug(
+					$"Error checking health of service {serviceName}: {rpcException.Message}");
+
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					_msg.Debug(rpcException);
+				}
+
 				statusCode = rpcException.StatusCode;
 			}
 			catch (Exception e)
@@ -139,7 +146,14 @@ namespace ProSuite.Microservices.Client
 			}
 			catch (RpcException rpcException)
 			{
-				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
+				_msg.Debug(
+					$"Error checking health of service {serviceName}: {rpcException.Message}");
+
+				if (_msg.IsVerboseDebugEnabled)
+				{
+					_msg.Debug(rpcException);
+				}
+
 				statusCode = rpcException.StatusCode;
 			}
 			catch (Exception e)
@@ -173,7 +187,7 @@ namespace ProSuite.Microservices.Client
 
 		public static async Task<T> TryAsync<T>(Func<CallOptions, Task<T>> func,
 		                                        CancellationToken cancellationToken,
-		                                        int deadlineMilliseconds = 30000,
+		                                        long deadlineMilliseconds = 30000,
 		                                        bool noWarn = false)
 		{
 			if (cancellationToken.IsCancellationRequested)
@@ -200,7 +214,7 @@ namespace ProSuite.Microservices.Client
 		public static T Try<T>(
 			[NotNull] Func<CallOptions, T> func,
 			CancellationToken cancellationToken,
-			int deadlineMilliseconds = 30000,
+			long deadlineMilliseconds = 30000,
 			bool noWarn = false)
 		{
 			if (cancellationToken.IsCancellationRequested)
@@ -225,7 +239,7 @@ namespace ProSuite.Microservices.Client
 		}
 
 		public static CallOptions GetCallOptions(CancellationToken cancellationToken,
-		                                         int deadlineMilliseconds)
+		                                         long deadlineMilliseconds)
 		{
 			CallOptions callOptions =
 				new CallOptions(null, DateTime.UtcNow.AddMilliseconds(deadlineMilliseconds),

@@ -17,9 +17,17 @@ public interface IPickerViewModel : IDisposable
 	/// <summary>
 	/// Command that confirms the currently highlighted item as the selection,
 	/// completing the picker task and closing the window.
-	/// Bound to the Enter key and mouse-click in the picker window.
+	/// Bound to the Enter key in the picker window.
 	/// </summary>
 	ICommand ConfirmSelectionCommand { get; }
+
+	/// <summary>
+	/// Confirms the specified item as the selection, completing the picker task.
+	/// Used for mouse clicks, where the clicked item is known directly and must not
+	/// depend on <see cref="HighlightedItem"/> (which a modifier key such as Ctrl can
+	/// toggle off in the underlying single-select ListBox).
+	/// </summary>
+	void ConfirmItem(IPickableItem item);
 
 	/// <summary>
 	/// The awaitable task that provides the result when the dialog is closed.

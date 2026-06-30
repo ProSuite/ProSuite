@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.ChangeAlong;
@@ -152,22 +152,7 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 		{
 			SetProperty(ref _options, value);
 
-			Unit srUnit = MapView.Active?.Map.SpatialReference.Unit;
-
-			int decimalsCorrection = 0;
-			double step = 0.01;
-			string unitLabel = "meters";
-			if (srUnit != null)
-			{
-				if (srUnit.UnitType == UnitType.Angular)
-				{
-					// Decimal degrees
-					decimalsCorrection = 6;
-					unitLabel = "degrees";
-					step = 0.000001;
-				}
-				// If we ever encounter someone using a different unit, calculate the correction here...
-			}
+			DisplayUnitInfo unit = DisplayUnitInfo.FromMap(MapView.Active?.Map);
 
 			ExcludeLinesOutsideSource =
 				new CentralizableSettingViewModel<bool>(
@@ -180,9 +165,8 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 					                        Options.CentralizableExcludeLinesOutsideSource
 				                        })
 			                        {
-				                        Decimals = 2 + decimalsCorrection,
-				                        UnitLabel = unitLabel,
-				                        Step = step
+				                        Decimals = unit.Decimals, Step = unit.Step,
+				                        UnitLabel = unit.Label
 			                        };
 
 			ExcludeLinesDisplay = new CentralizableSettingViewModel<bool>(
@@ -211,9 +195,8 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 				                  Options.CentralizableBufferTolerance,
 				                  new[] { Options.CentralizableBufferTarget })
 			                  {
-				                  Decimals = 2 + decimalsCorrection,
-				                  UnitLabel = unitLabel,
-				                  Step = step
+				                  Decimals = unit.Decimals, Step = unit.Step,
+				                  UnitLabel = unit.Label
 			                  };
 
 			EnforceMinimumBufferSegmentLength = new CentralizableSettingViewModel<bool>(
@@ -229,9 +212,8 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 						Options.CentralizableBufferTarget
 					})
 				{
-					Decimals = 2 + decimalsCorrection,
-					UnitLabel = unitLabel,
-					Step = step
+					Decimals = unit.Decimals, Step = unit.Step,
+					UnitLabel = unit.Label
 				};
 
 			InsertVertices =
@@ -245,10 +227,8 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 				                   Options.CentralizableMinimalTolerance,
 				                   new[] { Options.CentralizableMinimalToleranceApply })
 			                   {
-				                   Decimals = 8 + decimalsCorrection,
-				                   UnitLabel = unitLabel,
-								   //Todo: Adjust step to actual decimals
-				                   Step = step
+				                   Decimals = unit.Decimals, Step = unit.Step,
+				                   UnitLabel = unit.Label
 			                   };
 
 			TargetFeatureSelectionVM =

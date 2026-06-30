@@ -3092,6 +3092,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				case WorkspaceDbType.ArcSDEPostgreSQL:
 				case WorkspaceDbType.ArcSDEInformix:
 				case WorkspaceDbType.ArcSDEDB2:
+				case WorkspaceDbType.FeatureService:
 					return esriWorkspaceType.esriRemoteDatabaseWorkspace;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(dbType), dbType,

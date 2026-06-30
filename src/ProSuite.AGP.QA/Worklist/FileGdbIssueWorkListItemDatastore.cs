@@ -30,7 +30,7 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	private const string _statusFieldName = "STATUS";
 	private readonly string _domainName = "CORRECTION_STATUS_CD";
 
-	private string _issueGdbPath;
+	private readonly string _issueGdbPath;
 	private readonly string _initialWorkListName;
 
 	public FileGdbIssueWorkListItemDatastore(string workListFileOrIssueGdbPath)
@@ -150,38 +150,40 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 		return new AttributeReader(definition, attributes);
 	}
 
+	[NotNull]
 	public DbSourceClassSchema CreateStatusSchema(TableDefinition tableDefinition)
 	{
-		int fieldIndex;
+		string oidField = tableDefinition.GetObjectIDField();
 
-		try
-		{
-			fieldIndex = tableDefinition.FindField(_statusFieldName);
-
-			if (fieldIndex < 0)
-			{
-				throw new ArgumentException($"No field {_statusFieldName}");
-			}
-		}
-		catch (Exception e)
-		{
-			_msg.Error($"Error find field {_statusFieldName} in {tableDefinition.GetName()}", e);
-			throw;
-		}
-
-		string shapeField = null;
-		string objectIDField = tableDefinition.GetObjectIDField();
+		Dictionary<string, int> subFields;
 
 		if (tableDefinition is FeatureClassDefinition featureClassDefinition)
 		{
-			shapeField = featureClassDefinition.GetShapeField();
+			string shapeField = featureClassDefinition.GetShapeField();
+
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { shapeField, featureClassDefinition.FindField(shapeField) },
+				            { _statusFieldName, tableDefinition.FindField(_statusFieldName) }
+			            };
+		}
+		else
+		{
+			subFields = new Dictionary<string, int>
+			            {
+				            { oidField, tableDefinition.FindField(oidField) },
+				            { _statusFieldName, tableDefinition.FindField(_statusFieldName) }
+			            };
 		}
 
-		// The status schema is the same for production model datasets and Issue Geodatabase tables.
-		return new DbSourceClassSchema(objectIDField, shapeField,
-		                               _statusFieldName, fieldIndex,
+		// NOTE: The status values must be boxed as int (not as the IssueCorrectionStatus enum).
+		//       DatabaseSourceClass.GetStatus compares with object.Equals, which is type-strict:
+		//       a boxed enum never equals a boxed int, so every item would load as 'Todo'.
+		return new DbSourceClassSchema(_statusFieldName,
 		                               (int) IssueCorrectionStatus.NotCorrected,
-		                               (int) IssueCorrectionStatus.Corrected);
+		                               (int) IssueCorrectionStatus.Corrected,
+		                               subFields);
 	}
 
 	public string SuggestWorkListName()
@@ -193,8 +195,9 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	{
 		// TODO: Consider also checking field names?
 
-		return IssueGdbSchema.IssueFeatureClassNames.Any(
-			n => n.Equals(sourceClass.Name, StringComparison.InvariantCultureIgnoreCase));
+		return IssueGdbSchema.IssueFeatureClassNames.Any(n => n.Equals(sourceClass.Name,
+			                                                 StringComparison
+				                                                 .InvariantCultureIgnoreCase));
 	}
 
 	public IObjectDataset GetObjectDataset(TableDefinition tableDefinition)

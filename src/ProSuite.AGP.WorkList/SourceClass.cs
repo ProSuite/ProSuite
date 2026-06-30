@@ -3,27 +3,21 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList;
 
+// todo daro: rename to WorkItemClass?
 public abstract class SourceClass : ISourceClass
 {
 	private readonly GdbTableIdentity _tableIdentity;
-	[NotNull] private readonly string _oidField;
-	[CanBeNull] private readonly string _shapeField;
 
 	protected SourceClass(GdbTableIdentity tableIdentity,
-	                      [NotNull] SourceClassSchema schema,
 	                      IAttributeReader attributeReader = null)
 	{
-		_oidField = schema.OIDField;
-		_shapeField = schema.ShapeField;
-
 		_tableIdentity = tableIdentity;
 		AttributeReader = attributeReader;
 	}
@@ -32,7 +26,7 @@ public abstract class SourceClass : ISourceClass
 
 	public bool HasGeometry => _tableIdentity.HasGeometry;
 
-	public long ArcGISTableId => _tableIdentity.Id;
+	protected long ArcGISTableId => _tableIdentity.Id;
 
 	public string Name => _tableIdentity.Name;
 
@@ -85,7 +79,12 @@ public abstract class SourceClass : ISourceClass
 		return tableReference.ReferencesTable(_tableIdentity.Id, _tableIdentity.Name);
 	}
 
-	public abstract bool Contains(Row row);
+	public virtual T CreateWorkItem<T>(Row row) where T : IWorkItem
+	{
+		IWorkItem item = new WorkItem(GetUniqueTableId(),
+		                              new GdbRowIdentity(row.GetObjectID(), TableIdentity));
+		return (T) item;
+	}
 
 	public T OpenDataset<T>() where T : Table
 	{
@@ -121,20 +120,12 @@ public abstract class SourceClass : ISourceClass
 
 	private string GetRelevantSubFields()
 	{
-		string subFields = $"{_oidField}";
-
-		if (HasGeometry)
-		{
-			Assert.NotNullOrEmpty(_shapeField);
-			subFields = $"{subFields},{_shapeField}";
-		}
-
-		return GetRelevantSubFieldsCore(subFields);
+		return GetRelevantSubFieldsCore();
 	}
 
-	protected virtual string GetRelevantSubFieldsCore(string subFields)
+	protected virtual string GetRelevantSubFieldsCore()
 	{
-		return subFields;
+		return string.Empty;
 	}
 
 	protected virtual void EnsureValidFilterCore(ref QueryFilter filter, bool ignoreDefinitionQuery)

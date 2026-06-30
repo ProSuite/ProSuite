@@ -479,7 +479,7 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 
 		var pickerPrecedence =
 			new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                     ActiveMapView.ClientToScreen(CurrentMousePosition));
+			                     ActiveMapView.ClientToScreen(CurrentMousePosition), ActiveMapView);
 
 		bool isInStereoFixedCursorMode =
 			await QueuedTask.Run(async () =>

@@ -143,7 +143,6 @@ namespace ProSuite.AGP.QA.WorkList
 					sourceClasses.Add(
 						new DatabaseSourceClass(new GdbTableIdentity(table), schema,
 						                        attributeReader, defaultDefinitionQuery,
-						                        FilterHelper.Create(table, defaultDefinitionQuery),
 						                        WorkspaceUtils.GetWorkspaceDbType(datastore)));
 				}
 

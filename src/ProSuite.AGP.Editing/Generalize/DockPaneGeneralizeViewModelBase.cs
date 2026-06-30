@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 
 namespace ProSuite.AGP.Editing.Generalize;
@@ -108,9 +110,16 @@ public abstract class DockPaneGeneralizeViewModelBase : DockPaneViewModelBase
 		{
 			SetProperty(ref _options, value);
 
+			DisplayUnitInfo unit = DisplayUnitInfo.FromMap(MapView.Active?.Map);
+
 			Weed = new CentralizableSettingViewModel<bool>(Options.CentralizableWeed);
 			WeedTolerance = new CentralizableSettingViewModel<double>(
-				Options.CentralizableWeedTolerance, new[] { Options.CentralizableWeed });
+				                Options.CentralizableWeedTolerance,
+				                new[] { Options.CentralizableWeed })
+			                {
+				                Decimals = unit.Decimals, Step = unit.Step,
+				                UnitLabel = unit.Label
+			                };
 
 			WeedNonLinearSegments = new CentralizableSettingViewModel<bool>(
 				Options.CentralizableWeedNonLinearSegments,
@@ -121,8 +130,12 @@ public abstract class DockPaneGeneralizeViewModelBase : DockPaneViewModelBase
 					Options.CentralizableEnforceMinimumSegmentLength);
 
 			MinimumSegmentLength = new CentralizableSettingViewModel<double>(
-				Options.CentralizableMinimumSegmentLength,
-				new[] { Options.CentralizableEnforceMinimumSegmentLength });
+				                       Options.CentralizableMinimumSegmentLength,
+				                       new[] { Options.CentralizableEnforceMinimumSegmentLength })
+			                       {
+				                       Decimals = unit.Decimals, Step = unit.Step,
+				                       UnitLabel = unit.Label
+			                       };
 
 			Only2D = new CentralizableSettingViewModel<bool>(Options.CentralizableOnly2D);
 
