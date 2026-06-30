@@ -197,7 +197,7 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private IEnumerable<ProjectWorkspace> GetProjectWorkspaceCandidatesTx(
+		private static IEnumerable<ProjectWorkspace> GetProjectWorkspaceCandidatesTx(
 			[NotNull] IWorkspace workspace,
 			[NotNull] IEnumerable<IObjectClass> objectClasses,
 			[NotNull] ICollection<Project<TModel>> projects)
@@ -247,7 +247,7 @@ namespace ProSuite.DomainServices.AO.QA
 						projectWorkspaces.Add(project, projectWorkspace);
 					}
 
-					projectWorkspace.Add(objectDataset);
+					projectWorkspace.Add(objectDataset, DatasetUtils.GetName(objectClass));
 				}
 			}
 

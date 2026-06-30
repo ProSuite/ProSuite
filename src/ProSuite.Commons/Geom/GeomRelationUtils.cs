@@ -714,15 +714,25 @@ namespace ProSuite.Commons.Geom
 				int targetPartIndex = touchPoints.First().TargetPartIndex;
 				Linestring targetRing = targetSegments.GetPart(targetPartIndex);
 
-				Pnt3D nonIntersectingTargetPnt =
-					GetNonIntersectingTargetPoint(
+				// The test point must lie clearly OFF the source boundary, otherwise the even-odd
+				// PolycurveContainsXY reports it as "on boundary -> contained". A target ring that
+				// only touches the source at isolated points lies entirely inside or entirely
+				// outside, so any vertex more than tolerance away from the source boundary is a
+				// reliable representative. GetNonIntersectingTargetPoint picks a point at mid-segment
+				// from the touch point. When the target shares a near-coincident edge with the source
+				// just beyond tolerance, that mid-point lands within tolerance of the source boundary
+				// and the disjoint target will wrongly be dropped (TOP: champ_pittet).
+				// -> Use it only as fallback if every target vertex is on the boundary.
+				Pnt3D testPoint =
+					GetOffBoundaryTargetPoint(closedPolycurve, targetRing, tolerance)
+					?? GetNonIntersectingTargetPoint(
 						targetRing,
 						intersectionPoints.Where(ip => ip.TargetPartIndex == targetPartIndex));
 
-				Assert.NotNull(nonIntersectingTargetPnt,
+				Assert.NotNull(testPoint,
 				               $"No point to check in target ring {targetPartIndex}.");
 
-				return PolycurveContainsXY(closedPolycurve, nonIntersectingTargetPnt, tolerance);
+				return PolycurveContainsXY(closedPolycurve, testPoint, tolerance);
 			}
 
 			// No decisive deviation so far -> use the touch points
@@ -771,11 +781,21 @@ namespace ProSuite.Commons.Geom
 		{
 			// This must be done per source ring to avoid getting a left side deviation from a different
 			// touching source ring despite the target being fully within the adjacent source ring.
+			// NOTE: touch points that span source rings of DIFFERENT orientation (an exterior ring
+			// touching one of its interior rings at the same point) are handled by the caller's
+			// point-in-polygon special case, so here all touch points are either on a single ring
+			// or on several rings of the SAME orientation.
 			bool hasAnyLeftSideDeviation = false;
 
 			foreach (IGrouping<int, IntersectionPoint3D> intersectionPointsPerPart in
 			         touchPoints.GroupBy(i => i.SourcePartIndex))
 			{
+				// A negatively-oriented (interior/hole) source ring needs the inverse
+				// interpretation: the filled area is on its right side and the void is on its left.
+				bool ringIsInterior =
+					closedPolycurve.GetPart(intersectionPointsPerPart.Key).ClockwiseOriented ==
+					false;
+
 				bool hasAnyRightSideDeviation = false;
 				foreach (IntersectionPoint3D intersectionPoint in intersectionPointsPerPart)
 				{
@@ -792,15 +812,23 @@ namespace ProSuite.Commons.Geom
 					hasAnyRightSideDeviation |= hasRightSideDeviation;
 				}
 
-				if (hasAnyRightSideDeviation)
+				if (hasAnyRightSideDeviation && ! ringIsInterior)
 				{
-					// Completely within this source ring: contained
+					// The target dips into the filled interior of this exterior source ring
+					// -> contained, even if a different touching ring suggests a left-side
+					// deviation.
 					return true;
 				}
+
+				// For an interior (hole) ring a right-side deviation is NOT conclusive: it only
+				// means "not inside THIS hole". The target may still sit in a neighbouring hole's
+				// void at the pinch where two holes meet. Only a left-side deviation (into the
+				// void) is conclusive there, so we defer to the hasAnyLeftSideDeviation check.
 			}
 
-			// No source ring had right-side-only touch points. It must be outside if there was
-			// any touch point with left-side deviation.
+			// No exterior source ring contained the target due to a right-side deviation. It is
+			// outside if any touch point has a left-side deviation (the target leaves an exterior
+			// ring or enters an interior ring's void); otherwise it is contained.
 			return ! hasAnyLeftSideDeviation;
 		}
 
@@ -818,19 +846,56 @@ namespace ProSuite.Commons.Geom
 			         touchPoints.GroupBy(i => i.TargetPartIndex))
 			{
 				bool hasAnyRightSideDeviation = false;
-				foreach (IntersectionPoint3D intersectionPoint in intersectionPointsPerPart)
-				{
-					DetermineSourceDeviationAtIntersection(intersectionPoint, sourceArea,
-					                                       targetArea, tolerance,
-					                                       out bool hasRightSideDeviation,
-					                                       out bool hasLeftSideDeviation);
 
-					if (hasLeftSideDeviation)
+				// Touch points that coincide in XY represent a single touch at a target
+				// corner (or pinch): both target segments adjacent to the corner graze the
+				// same source vertex, producing two TouchingInPoint intersections that
+				// straddle the target vertex. The source lies inside the target there only
+				// if it is within the corner wedge, i.e. on the right side of EVERY adjacent
+				// target segment. Evaluating a single segment's half-plane in isolation is
+				// unreliable for a test point far from the corner (hotel_waldhorn: a 124.9
+				// source ring grazing a 7.8 triangle's sharp corner was wrongly declared
+				// contained because one segment's infinite line reported "right side").
+				foreach (List<IntersectionPoint3D> coincidentTouchPoints in
+				         GroupByCoincidentXY(intersectionPointsPerPart, tolerance))
+				{
+					bool clusterHasRightSideDeviation = false;
+					bool clusterHasLeftSideDeviation = false;
+
+					foreach (IntersectionPoint3D intersectionPoint in coincidentTouchPoints)
 					{
-						hasAnyLeftSideDeviation = true;
+						DetermineSourceDeviationAtIntersection(intersectionPoint, sourceArea,
+							targetArea, tolerance,
+							out bool hasRightSideDeviation,
+							out bool hasLeftSideDeviation);
+
+						clusterHasRightSideDeviation |= hasRightSideDeviation;
+						clusterHasLeftSideDeviation |= hasLeftSideDeviation;
 					}
 
-					hasAnyRightSideDeviation |= hasRightSideDeviation;
+					if (coincidentTouchPoints.Count > 1)
+					{
+						// Corner/pinch touch: only a right-side deviation w.r.t. ALL adjacent
+						// target segments (no left-side deviation on any of them) means the
+						// source is inside the wedge.
+						if (clusterHasLeftSideDeviation)
+						{
+							hasAnyLeftSideDeviation = true;
+						}
+						else if (clusterHasRightSideDeviation)
+						{
+							hasAnyRightSideDeviation = true;
+						}
+					}
+					else
+					{
+						if (clusterHasLeftSideDeviation)
+						{
+							hasAnyLeftSideDeviation = true;
+						}
+
+						hasAnyRightSideDeviation |= clusterHasRightSideDeviation;
+					}
 				}
 
 				if (hasAnyRightSideDeviation)
@@ -843,6 +908,35 @@ namespace ProSuite.Commons.Geom
 			// No target ring had right-side-only touch points. It must be outside if there was
 			// any touch point with left-side deviation.
 			return ! hasAnyLeftSideDeviation;
+		}
+
+		/// <summary>
+		/// Groups intersection points that coincide in XY (within the tolerance). Each group
+		/// represents a single physical touch location (e.g. a corner or pinch where several
+		/// intersections are reported on the adjacent segments).
+		/// </summary>
+		private static IEnumerable<List<IntersectionPoint3D>> GroupByCoincidentXY(
+			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
+			double tolerance)
+		{
+			var clusters = new List<List<IntersectionPoint3D>>();
+
+			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+			{
+				List<IntersectionPoint3D> cluster =
+					clusters.FirstOrDefault(
+						c => c[0].Point.EqualsXY(intersectionPoint.Point, tolerance));
+
+				if (cluster == null)
+				{
+					cluster = new List<IntersectionPoint3D>();
+					clusters.Add(cluster);
+				}
+
+				cluster.Add(intersectionPoint);
+			}
+
+			return clusters;
 		}
 
 		/// <summary>
@@ -1598,6 +1692,31 @@ namespace ProSuite.Commons.Geom
 			return null;
 		}
 
+		/// <summary>
+		/// Returns the first vertex of the target ring that lies clearly off the
+		/// <paramref name="sourceRings"/> boundary (more than <paramref name="tolerance"/> away
+		/// from every source segment). Such a point yields a reliable even-odd point-in-polygon
+		/// result, whereas a point on (or within tolerance of) the boundary is reported as
+		/// contained regardless of which side it is really on. Returns null if every target
+		/// vertex lies within tolerance of the source boundary (degenerate / near-congruent case).
+		/// </summary>
+		[CanBeNull]
+		private static Pnt3D GetOffBoundaryTargetPoint(
+			[NotNull] ISegmentList sourceRings,
+			[NotNull] Linestring targetRing,
+			double tolerance)
+		{
+			foreach (Pnt3D point in targetRing.GetPoints())
+			{
+				if (! LinesContainXY(sourceRings, point, tolerance))
+				{
+					return point;
+				}
+			}
+
+			return null;
+		}
+
 		private static Pnt3D GetNonIntersectingTargetPoint(
 			Linestring targetRing,
 			IEnumerable<IntersectionPoint3D> intersectionPoints)
@@ -1688,8 +1807,8 @@ namespace ProSuite.Commons.Geom
 				segments.FindSegments(segments.XMin, testPoint.Y, testPoint.X, testPoint.Y,
 				                      tolerance);
 
-			foreach (KeyValuePair<int, Line3D> path2Segment in intersectingSegments.OrderBy(
-				         kvp => kvp.Key))
+			foreach (KeyValuePair<int, Line3D> path2Segment in
+			         intersectingSegments.OrderBy(kvp => kvp.Key))
 			{
 				Line3D segment = path2Segment.Value;
 

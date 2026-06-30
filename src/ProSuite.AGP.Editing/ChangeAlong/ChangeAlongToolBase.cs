@@ -479,7 +479,7 @@ protected virtual bool CanUseAsTargetLayer(Layer layer)
 
 		var pickerPrecedence =
 			new PickerPrecedence(sketchGeometry, GetSelectionTolerancePixels(),
-			                     ActiveMapView.ClientToScreen(CurrentMousePosition));
+			                     ActiveMapView.ClientToScreen(CurrentMousePosition), ActiveMapView);
 
 		bool isInStereoFixedCursorMode =
 			await QueuedTask.Run(async () =>

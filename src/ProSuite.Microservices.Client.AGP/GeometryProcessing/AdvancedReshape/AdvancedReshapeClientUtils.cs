@@ -77,7 +77,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			// - it hang in native code (DPS-#4)
 			// the calls block (and cannot even be cancelled)
 			// -> It is vital to use a request deadline to avoid hanging the entire application
-			int deadline = 2000 * selectedFeatures.Count;
+			long deadline = 2000L * selectedFeatures.Count;
 
 			AdvancedReshapeResponse reshapeResultMsg = GrpcClientUtils.Try(
 				o => rpcClient.AdvancedReshape(request, o),
@@ -143,7 +143,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		{
 			request.AllowOpenJawReshape = true;
 
-			int deadline = FeatureProcessingUtils.GetProcessingTimeout(request.Features.Count);
+			long deadline = FeatureProcessingUtils.GetProcessingTimeout(request.Features.Count);
 
 			AdvancedReshapeResponse reshapeResultMsg = GrpcClientUtils.Try(
 				o => rpcClient.AdvancedReshape(request, o),

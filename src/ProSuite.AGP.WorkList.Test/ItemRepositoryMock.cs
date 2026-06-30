@@ -28,7 +28,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 
 	public long Count()
 	{
-		throw new NotImplementedException();
+		return _items.Count;
 	}
 
 	public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter)

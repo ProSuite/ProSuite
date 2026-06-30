@@ -50,6 +50,10 @@ public readonly struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>,
 				ConnectionString = pluginDatasourceConnectionPath.DatasourcePath.ToString();
 				WorkspaceFactory = WorkspaceFactory.Custom;
 				break;
+			case ServiceConnectionProperties serviceConnectionProperties:
+				ConnectionString = serviceConnectionProperties.URL?.AbsolutePath ?? string.Empty;
+				WorkspaceFactory = WorkspaceFactory.FeatureService;
+				break;
 			default:
 				throw new NotImplementedException(
 					$"connector {connector.GetType()} is not implemented");
