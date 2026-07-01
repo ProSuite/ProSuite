@@ -131,8 +131,7 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 
 		[CanBeNull]
 		public string GetXmlStringFromWorkspace([NotNull] IWin32Window owner,
-		                                           [CanBeNull]
-		                                           out ISpatialReference spatialReference)
+		                                        [CanBeNull] out ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(owner, nameof(owner));
 
@@ -244,14 +243,16 @@ namespace ProSuite.DdxEditor.Content.SpatialRef
 
 				using (_msg.IncrementIndentation("Reading feature classes..."))
 				{
-					foreach (IFeatureClass featureClass in DatasetUtils
-					                                       .GetObjectClasses((IWorkspace) workspace)
-					                                       .OfType<IFeatureClass>())
+					foreach (IFeatureClass featureClass in DatasetUtils.GetFeatureClasses(
+						         (IWorkspace) workspace))
 					{
-						var item = new FeatureClassItem(featureClass);
-						_msg.InfoFormat("Reading feature class {0}", item.Name);
+						if (featureClass != null)
+						{
+							var item = new FeatureClassItem(featureClass);
+							_msg.InfoFormat("Reading feature class {0}", item.Name);
 
-						yield return item;
+							yield return item;
+						}
 					}
 				}
 			}
