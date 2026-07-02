@@ -82,13 +82,15 @@ namespace ProSuite.Microservices.Server.AO
 		/// The workspace handle is typically the DDX model ID, with a fall-back to the workspace handle.
 		/// </summary>
 		/// <param name="objectClassMessages"></param>
-		/// <param name="getRemoteDataFunc"></param>
+		/// <param name="getRemoteDataFunc">The function that gets the first batch of rows from a remote dataset</param>
+		/// <param name="readNextBatchFunc">The function that reads the next batch of rows from a remote dataset</param>
 		/// <param name="workspace"></param>
 		/// <returns></returns>
 		[NotNull]
 		public static GdbTableContainer CreateGdbTableContainer(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] Func<DataVerificationResponse, DataVerificationRequest> getRemoteDataFunc,
+			[CanBeNull] Func<DataVerificationRequest> readNextBatchFunc,
 			out GdbWorkspace workspace)
 		{
 			GdbTableContainer container = null;
@@ -130,7 +132,8 @@ namespace ProSuite.Microservices.Server.AO
 						                  {
 							                  ClassHandle = objectClassMsg.ClassHandle,
 							                  WorkspaceHandle = workspaceHandleFromClient
-						                  });
+						                  },
+						                  readNextBatchFunc: readNextBatchFunc);
 				}
 
 				GdbTable gdbTable =
@@ -203,14 +206,15 @@ namespace ProSuite.Microservices.Server.AO
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] ICollection<ObjectClassMsg> relClassMessages = null,
-			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest = null)
+			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest = null,
+			Func<DataVerificationRequest> readNextBatchFunc = null)
 		{
 			var result = new List<GdbWorkspace>();
 			foreach (IGrouping<long, ObjectClassMsg> classGroup in
 			         objectClassMessages.GroupBy(GetContainerHandle))
 			{
 				GdbTableContainer gdbTableContainer =
-					CreateGdbTableContainer(classGroup, moreDataRequest,
+					CreateGdbTableContainer(classGroup, moreDataRequest, readNextBatchFunc,
 					                        out GdbWorkspace gdbWorkspace);
 
 				result.Add(gdbWorkspace);

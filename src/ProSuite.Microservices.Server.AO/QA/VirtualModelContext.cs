@@ -25,6 +25,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private readonly Func<DataVerificationResponse, DataVerificationRequest> _dataRequestFunc;
 
+		[CanBeNull] private readonly Func<DataVerificationRequest> _readNextBatchFunc;
+
 		public VirtualModelContext(IList<GdbWorkspace> workspaces,
 		                           DdxModel model)
 		{
@@ -38,9 +40,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public VirtualModelContext(
 			Func<DataVerificationResponse, DataVerificationRequest> dataRequestFunc,
-			DdxModel model)
+			DdxModel model,
+			[CanBeNull] Func<DataVerificationRequest> readNextBatchFunc = null)
 		{
 			_dataRequestFunc = dataRequestFunc;
+			_readNextBatchFunc = readNextBatchFunc;
 			_primaryModel = model;
 
 			// Empty until schema is set:
@@ -73,7 +77,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			SetGdbSchema(ProtobufConversionUtils.CreateSchema(
 				             dataResponse.Schema.ClassDefinitions,
-				             dataResponse.Schema.RelclassDefinitions, _dataRequestFunc));
+				             dataResponse.Schema.RelclassDefinitions, _dataRequestFunc,
+				             _readNextBatchFunc));
 		}
 
 		private void SetGdbSchema(IList<GdbWorkspace> gdbWorkspaces)
@@ -292,7 +297,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			               "The context is not set up to request query table data.");
 
 			BackingDataset CreateBackingDataset(ITable t) =>
-				new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg);
+				new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg,
+				                  _readNextBatchFunc);
 
 			// It is cached on the client side, in case various tests utilize the same definition.
 			return ProtobufConversionUtils.FromQueryTableMsg(queryTableMsg, gdbWorkspace,

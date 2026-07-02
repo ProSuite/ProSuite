@@ -36,7 +36,8 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			[NotNull] ITable schema,
 			[NotNull] Func<DataVerificationResponse, DataVerificationRequest> getRemoteDataFunc,
 			[CanBeNull] ClassDef classDefinition,
-			[CanBeNull] RelationshipClassQuery queryDefinition = null)
+			[CanBeNull] RelationshipClassQuery queryDefinition = null,
+			[CanBeNull] Func<DataVerificationRequest> readNextBatchFunc = null)
 		{
 			Assert.True(classDefinition != null | queryDefinition != null,
 			            "Either the class definition or the query definition must be provided.");
@@ -46,9 +47,18 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			_queryDefinition = queryDefinition;
 
 			GetData = getRemoteDataFunc;
+			ReadNextBatch = readNextBatchFunc;
 		}
 
 		public Func<DataVerificationResponse, DataVerificationRequest> GetData { get; set; }
+
+		/// <summary>
+		/// Reads the next already-in-flight data batch from the client (without issuing a new
+		/// request), used when a <see cref="GdbData"/> response has <see cref="GdbData.HasMoreData"/>
+		/// set. May be null for callers that never send multi-batch data (single-batch clients).
+		/// </summary>
+		[CanBeNull]
+		public Func<DataVerificationRequest> ReadNextBatch { get; set; }
 
 		public override IEnvelope Extent
 		{
@@ -91,9 +101,11 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			GdbData gdbData = ConfirmDataReceived(moreData, response.DataRequest);
 
-			foreach (GdbObjectMsg gdbObjMsg in gdbData.GdbObjects)
+			// A single OID lookup returns at most one row and fits in one batch, but it may be
+			// transferred either row-wise or columnar depending on the client's transfer mode.
+			foreach (VirtualRow row in ProcessBatch(gdbData, fieldIndexes: null))
 			{
-				return ProtobufConversionUtils.FromGdbObjectMsg(gdbObjMsg, _schema);
+				return row;
 			}
 
 			// or better: COMException?
@@ -112,6 +124,8 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 					DataRequest = dataRequest
 				};
 
+			_msg.DebugFormat("Get Row count from {0} where {1}", _schema.Name, filter?.WhereClause);
+
 			DataVerificationRequest moreData = GetData(response);
 
 			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
@@ -129,15 +143,56 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 					DataRequest = dataRequest
 				};
 
+			string subFields = filter?.SubFields;
+			List<int> fieldIndexes = null;
+			if (! string.IsNullOrEmpty(subFields) && subFields != "*")
+			{
+				fieldIndexes = GetFieldsIndexes(((ITableSchemaDef) _schema).TableFields,
+				                                StringUtils.SplitAndTrim(subFields, ','));
+			}
+
+			_msg.DebugFormat("Requesting data: select {0} from {1} where {2}", filter?.SubFields,
+			                 _schema.Name, filter?.WhereClause);
+
 			Stopwatch watch = Stopwatch.StartNew();
 
+			// The client may split large results into several batches (GdbData.HasMoreData).
+			// The first batch is requested via GetData; subsequent batches are already in flight
+			// and read via ReadNextBatch without issuing a new request.
 			DataVerificationRequest moreData = GetData(response);
-
 			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
 
-			_msg.DebugStopTiming(watch, "Received {0} objects", gdbData.GdbObjects.Count);
-			watch.Restart();
+			int batchNumber = 0;
+			while (true)
+			{
+				batchNumber++;
 
+				foreach (VirtualRow row in ProcessBatch(gdbData, fieldIndexes))
+				{
+					yield return row;
+				}
+
+				if (! gdbData.HasMoreData)
+				{
+					break;
+				}
+
+				Assert.NotNull(
+					ReadNextBatch,
+					"The client signalled more data but no read-next-batch function is available " +
+					"(table {0}).", _schema.Name);
+
+				DataVerificationRequest nextData = ReadNextBatch();
+				gdbData = ConfirmDataReceived(nextData, dataRequest);
+			}
+
+			_msg.DebugStopTiming(watch, "Received and yielded objects in {0} batch(es)",
+			                     batchNumber);
+		}
+
+		private IEnumerable<VirtualRow> ProcessBatch([NotNull] GdbData gdbData,
+		                                             [CanBeNull] List<int> fieldIndexes)
+		{
 			if (gdbData.GdbColumnarData != null)
 			{
 				// Column-based data was provided:
@@ -157,22 +212,11 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 				yield break;
 			}
 
-			string subFields = filter?.SubFields;
-			List<int> fieldIndexes = null;
-			if (! string.IsNullOrEmpty(subFields) && subFields != "*")
-			{
-				fieldIndexes = GetFieldsIndexes(((ITableSchemaDef) _schema).TableFields,
-				                                StringUtils.SplitAndTrim(subFields, ','));
-			}
-
 			foreach (GdbObjectMsg gdbObjMsg in foundGdbObjects)
 			{
 				yield return ProtobufConversionUtils.FromGdbObjectMsg(
 					gdbObjMsg, _schema, fieldIndexes);
 			}
-
-			_msg.DebugStopTiming(watch, "Unpacked and yielded {0} objects",
-			                     gdbData.GdbObjects.Count);
 		}
 
 		private static List<int> GetFieldsIndexes([NotNull] IReadOnlyList<ITableField> fields,
