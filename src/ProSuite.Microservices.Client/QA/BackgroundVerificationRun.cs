@@ -71,6 +71,15 @@ namespace ProSuite.Microservices.Client.QA
 		[CanBeNull]
 		public IVerificationDataProvider VerificationDataProvider { get; set; }
 
+		/// <summary>
+		/// Optional scheduler that wraps the client-side data provisioning (schema/data reads and
+		/// the corresponding stream writes). Platforms that must read the live geodatabase on a
+		/// specific thread (e.g. the ArcGIS Pro MCT, to see unsaved edits) set this to marshal the
+		/// work accordingly. When null, data provisioning runs inline on the calling thread.
+		/// </summary>
+		[CanBeNull]
+		public Func<Func<Task>, Task> DataProvisionScheduler { get; set; }
+
 		[CanBeNull]
 		public BackgroundVerificationResult QualityVerificationResult { get; private set; }
 
@@ -202,88 +211,109 @@ namespace ProSuite.Microservices.Client.QA
 				_msg.DebugFormat("Sending verification data for {0}...", serverResponseMsg);
 			}
 
-			Assert.NotNull(VerificationDataProvider, "No verification data provider available.");
+			IVerificationDataProvider dataProvider =
+				Assert.NotNull(VerificationDataProvider,
+				               "No verification data provider available.");
 
-			// If this is called in a different STA thread, everything is extremely slow!
+			bool result = false;
 
-			bool result =
-				SatisfyDataRequest(serverResponseMsg, VerificationDataProvider, dataStream);
+			// The provider reads from the live workspace. Marshal the reads and the corresponding
+			// stream writes onto the appropriate thread (e.g. the MCT) if a scheduler is provided,
+			// so that unsaved edits and branch versions are visible.
+			Func<Task> provide = async () =>
+			{
+				result = await SatisfyDataRequestAsync(serverResponseMsg, dataProvider,
+				                                       dataStream);
+			};
 
-			//// TODO: Alternative for async-supporting platforms:
-			//result = await SatisfyDataQueryAsync(serverResponseMsg.DataRequest, dataStream);
+			if (DataProvisionScheduler != null)
+			{
+				await DataProvisionScheduler(provide);
+			}
+			else
+			{
+				await provide();
+			}
 
 			if (result)
 			{
-				_msg.DebugFormat("Successfully provided verification data for to the server.");
+				_msg.DebugFormat("Successfully provided verification data to the server.");
 			}
 
 			return result;
 		}
 
-		private static bool SatisfyDataRequest(
+		private static async Task<bool> SatisfyDataRequestAsync(
 			[NotNull] DataVerificationResponse arg,
 			[NotNull] IVerificationDataProvider verificationDataProvider,
 			[NotNull] IClientStreamWriter<DataVerificationRequest> callRequestStream)
 		{
-			DataVerificationRequest result = new DataVerificationRequest();
-
 			try
 			{
-				try
+				if (arg.SchemaRequest != null)
 				{
-					if (arg.SchemaRequest != null)
+					var result = new DataVerificationRequest();
+
+					try
 					{
-						result.Schema = verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
+						result.Schema =
+							verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
 					}
-					else if (arg.DataRequest != null)
+					catch (Exception e)
 					{
-						result.Data = verificationDataProvider
-						              .GetData(arg.DataRequest).FirstOrDefault();
+						_msg.Debug(
+							$"Error handling schema request: {ExceptionUtils.FormatMessage(e)}", e);
+
+						// Communicate the error to the server but do not throw here (it might just
+						// be a test whether a where clause is valid). The server shall decide
+						// whether it wants to continue or not.
+						result.ErrorMessage = ExceptionUtils.FormatMessage(e);
+						await callRequestStream.WriteAsync(result);
+						return false;
 					}
+
+					await callRequestStream.WriteAsync(result);
+					return true;
 				}
-				catch (Exception e)
+
+				if (arg.DataRequest != null)
 				{
-					_msg.Debug("Error handling data request", e);
+					try
+					{
+						// The provider yields one or more size-capped batches; each carries its
+						// own HasMoreData flag (the last batch has it cleared). Write them in
+						// order so the server can reassemble the full result set.
+						foreach (GdbData data in verificationDataProvider.GetData(arg.DataRequest))
+						{
+							await callRequestStream.WriteAsync(
+								new DataVerificationRequest { Data = data });
+						}
+					}
+					catch (Exception e)
+					{
+						_msg.Debug("Error handling data request", e);
 
-					// Communicate the error to the server but do not throw here (it might just be
-					// a test whether a where clause is valid). The server shall decide whether it
-					// wants to continue or not.
-					result.ErrorMessage = ExceptionUtils.FormatMessage(e);
-					callRequestStream.WriteAsync(result);
+						await callRequestStream.WriteAsync(
+							new DataVerificationRequest
+							{
+								ErrorMessage = ExceptionUtils.FormatMessage(e)
+							});
+						return false;
+					}
 
-					return false;
+					return true;
 				}
 
-				callRequestStream.WriteAsync(result);
-
-				return true;
+				return false;
 			}
 			catch (Exception e)
 			{
 				_msg.Debug("Error handling data request", e);
 
 				// Send an empty message to make sure the server does not wait forever:
-				callRequestStream.WriteAsync(result);
+				await callRequestStream.WriteAsync(new DataVerificationRequest());
 				throw;
 			}
-		}
-
-		private async Task<bool> SatisfyDataQueryAsync(
-			[NotNull] DataRequest dataRequest,
-			[NotNull] IClientStreamWriter<DataVerificationRequest> targetStream)
-		{
-			// Once the result messages are split up, this could be used for higher throughput
-			foreach (GdbData data in Assert.NotNull(VerificationDataProvider).GetData(dataRequest))
-			{
-				DataVerificationRequest r = new DataVerificationRequest
-				                            {
-					                            Data = data
-				                            };
-
-				await targetStream.WriteAsync(r);
-			}
-
-			return true;
 		}
 
 		private void HandleProgressMsg(VerificationResponse responseMsg)
