@@ -131,7 +131,7 @@ namespace ProSuite.Commons.Progress
 			get => _stepSize;
 			set
 			{
-				if (_stepSize <= 0)
+				if (value <= 0)
 				{
 					throw new ArgumentException("value must be 1 or greater");
 				}
