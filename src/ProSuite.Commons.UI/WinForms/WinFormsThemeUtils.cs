@@ -33,6 +33,17 @@ namespace ProSuite.Commons.UI.WinForms
 			ApplyDarkTheme((Control) form);
 		}
 
+		/// <summary>
+		/// Re-colors <paramref name="control"/> (and all its child controls, menus and tool
+		/// strips) to match ArcGIS Pro's dark theme. Use this for a <see cref="UserControl"/>
+		/// that is hosted (e.g. via a WindowsFormsHost) rather than shown as a top-level form.
+		/// Call this only when the dark theme is active.
+		/// </summary>
+		public static void ApplyDarkTheme([NotNull] UserControl control)
+		{
+			ApplyDarkTheme((Control) control);
+		}
+
 		#region Non-public members
 
 		private static void ApplyDarkTheme([NotNull] Control control)

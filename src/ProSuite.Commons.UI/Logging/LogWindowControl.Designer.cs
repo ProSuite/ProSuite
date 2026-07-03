@@ -47,7 +47,7 @@ namespace ProSuite.Commons.UI.Logging
 			this._toolStripMenuItemClearAllMessages = new System.Windows.Forms.ToolStripMenuItem();
 			this._toolStripMenuItemShowLogEventItemDetails = new System.Windows.Forms.ToolStripMenuItem();
 			this._toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
-			this._toolStripMenuItemHideDebugMessages = new System.Windows.Forms.ToolStripMenuItem();
+			this._toolStripMenuItemShowDebugMessages = new System.Windows.Forms.ToolStripMenuItem();
 			this._toolStripMenuItemVerboseDebugLogging = new System.Windows.Forms.ToolStripMenuItem();
 			this._forceRefreshTimer = new System.Windows.Forms.Timer();
 			this._dataGridView = new DoubleBufferedDataGridView();
@@ -88,7 +88,7 @@ namespace ProSuite.Commons.UI.Logging
             this._toolStripMenuItemClearAllMessages,
             this._toolStripMenuItemShowLogEventItemDetails,
             this._toolStripMenuItem2,
-            this._toolStripMenuItemHideDebugMessages,
+            this._toolStripMenuItemShowDebugMessages,
             this._toolStripMenuItemVerboseDebugLogging});
 			this._contextMenuStripLogGridBox.Name = "contextMenuStrip1";
 			this._contextMenuStripLogGridBox.ShowCheckMargin = true;
@@ -162,15 +162,15 @@ namespace ProSuite.Commons.UI.Logging
 			this._toolStripMenuItem2.Name = "_toolStripMenuItem2";
 			this._toolStripMenuItem2.Size = new System.Drawing.Size(198, 6);
 			// 
-			// _toolStripMenuItemHideDebugMessages
+			// _toolStripMenuItemShowDebugMessages
 			// 
-			this._toolStripMenuItemHideDebugMessages.Checked = true;
-			this._toolStripMenuItemHideDebugMessages.CheckOnClick = true;
-			this._toolStripMenuItemHideDebugMessages.CheckState = System.Windows.Forms.CheckState.Checked;
-			this._toolStripMenuItemHideDebugMessages.Name = "_toolStripMenuItemHideDebugMessages";
-			this._toolStripMenuItemHideDebugMessages.Size = new System.Drawing.Size(201, 22);
-			this._toolStripMenuItemHideDebugMessages.Text = "Hide Debug Messages";
-			this._toolStripMenuItemHideDebugMessages.CheckedChanged += new System.EventHandler(this._toolStripMenuItemHideDebugMessages_CheckedChanged);
+			this._toolStripMenuItemShowDebugMessages.Checked = false;
+			this._toolStripMenuItemShowDebugMessages.CheckOnClick = true;
+			this._toolStripMenuItemShowDebugMessages.CheckState = System.Windows.Forms.CheckState.Unchecked;
+			this._toolStripMenuItemShowDebugMessages.Name = "_toolStripMenuItemShowDebugMessages";
+			this._toolStripMenuItemShowDebugMessages.Size = new System.Drawing.Size(201, 22);
+			this._toolStripMenuItemShowDebugMessages.Text = "Show Debug Messages";
+			this._toolStripMenuItemShowDebugMessages.CheckedChanged += new System.EventHandler(this._toolStripMenuItemShowDebugMessages_CheckedChanged);
 			// 
 			// _toolStripMenuItemVerboseDebugLogging
 			// 
@@ -190,9 +190,10 @@ namespace ProSuite.Commons.UI.Logging
 			// 
 			this._dataGridView.AllowUserToAddRows = false;
 			this._dataGridView.AllowUserToDeleteRows = false;
-			this._dataGridView.AllowUserToResizeColumns = false;
+			this._dataGridView.AllowUserToResizeColumns = true;
 			this._dataGridView.AllowUserToResizeRows = false;
 			this._dataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
+			this._dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
 			this._dataGridView.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
 			this._dataGridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
 			this._dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -238,6 +239,7 @@ namespace ProSuite.Commons.UI.Logging
 			this._columnLogLevelImage.MinimumWidth = 19;
 			this._columnLogLevelImage.Name = "_columnLogLevelImage";
 			this._columnLogLevelImage.ReadOnly = true;
+			this._columnLogLevelImage.Resizable = System.Windows.Forms.DataGridViewTriState.False;
 			this._columnLogLevelImage.Width = 19;
 			// 
 			// _columnLogNumber
@@ -251,7 +253,7 @@ namespace ProSuite.Commons.UI.Logging
 			this._columnLogNumber.MinimumWidth = 30;
 			this._columnLogNumber.Name = "_columnLogNumber";
 			this._columnLogNumber.ReadOnly = true;
-			this._columnLogNumber.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+			this._columnLogNumber.Resizable = System.Windows.Forms.DataGridViewTriState.True;
 			this._columnLogNumber.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
 			this._columnLogNumber.Visible = false;
 			this._columnLogNumber.Width = 30;
@@ -267,9 +269,9 @@ namespace ProSuite.Commons.UI.Logging
 			this._columnLogDateTime.HeaderText = "Time";
 			this._columnLogDateTime.Name = "_columnLogDateTime";
 			this._columnLogDateTime.ReadOnly = true;
-			this._columnLogDateTime.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+			this._columnLogDateTime.Resizable = System.Windows.Forms.DataGridViewTriState.True;
 			this._columnLogDateTime.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-			this._columnLogDateTime.Width = 60;
+			this._columnLogDateTime.Width = 85;
 			// 
 			// _columnLogMessage
 			// 
@@ -308,7 +310,7 @@ namespace ProSuite.Commons.UI.Logging
         private System.Windows.Forms.ToolStripSeparator _toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemClearAllMessages;
         private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemShowLogEventItemDetails;
-        private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemHideDebugMessages;
+        private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemShowDebugMessages;
         private System.Windows.Forms.ToolStripSeparator _toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemShowAll;
         private System.Windows.Forms.ToolStripSeparator _toolStripMenuItem4;

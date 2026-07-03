@@ -48,6 +48,7 @@ namespace ProSuite.Commons.UI.Logging
 			[NotNull] DataGridViewRow row,
 			[CanBeNull] LogEventItem item,
 			int messageColumnIndex,
+			bool useDarkTheme,
 			params int[] textColumns)
 		{
 			if (item == null)
@@ -64,7 +65,7 @@ namespace ProSuite.Commons.UI.Logging
 				}
 			}
 
-			if (ApplyBackColor(e, item, textColumns))
+			if (ApplyBackColor(e, item, useDarkTheme, textColumns))
 			{
 				formatted = true;
 			}
@@ -127,7 +128,8 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		private static bool ApplyBackColor(DataGridViewCellFormattingEventArgs e,
-		                                   LogEventItem item, params int[] textColumns)
+		                                   LogEventItem item, bool useDarkTheme,
+		                                   params int[] textColumns)
 		{
 			Assert.ArgumentNotNull(e, nameof(e));
 			Assert.ArgumentNotNull(item, nameof(item));
@@ -157,6 +159,16 @@ namespace ProSuite.Commons.UI.Logging
 			}
 
 			e.CellStyle.BackColor = backColor;
+
+			// Under Pro's dark theme the default cell foreground is light gray, which is
+			// unreadable on these bright warn/error/fatal back colors. Force a dark foreground
+			// so the text stays readable (same approach as QAVerificationForm). In light mode
+			// the default foreground is already dark, so it is left untouched.
+			if (useDarkTheme)
+			{
+				e.CellStyle.ForeColor = Color.Black;
+			}
+
 			return true;
 		}
 

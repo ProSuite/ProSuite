@@ -61,10 +61,11 @@ namespace ProSuite.Commons.UI.Logging
             // 
             this._dataGridViewLogEvents.AllowUserToAddRows = false;
             this._dataGridViewLogEvents.AllowUserToDeleteRows = false;
-            this._dataGridViewLogEvents.AllowUserToResizeColumns = false;
+            this._dataGridViewLogEvents.AllowUserToResizeColumns = true;
             this._dataGridViewLogEvents.AllowUserToResizeRows = false;
             this._dataGridViewLogEvents.AutoGenerateColumns = false;
             this._dataGridViewLogEvents.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
+            this._dataGridViewLogEvents.BackgroundColor = System.Drawing.SystemColors.Window;
             this._dataGridViewLogEvents.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this._dataGridViewLogEvents.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             this._dataGridViewLogEvents.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -102,18 +103,19 @@ namespace ProSuite.Commons.UI.Logging
             this.logLevelImageDataGridViewImageColumn.MinimumWidth = 19;
             this.logLevelImageDataGridViewImageColumn.Name = "logLevelImageDataGridViewImageColumn";
             this.logLevelImageDataGridViewImageColumn.ReadOnly = true;
+            this.logLevelImageDataGridViewImageColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.logLevelImageDataGridViewImageColumn.Width = 19;
             // 
             // LogNummer
             // 
             this.LogNummer.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.LogNummer.DataPropertyName = "LogNummer";
+            this.LogNummer.DataPropertyName = "LogNumber";
             this.LogNummer.FillWeight = 1F;
             this.LogNummer.HeaderText = "#";
             this.LogNummer.MinimumWidth = 30;
             this.LogNummer.Name = "LogNummer";
             this.LogNummer.ReadOnly = true;
-            this.LogNummer.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.LogNummer.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.LogNummer.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.LogNummer.Visible = false;
             this.LogNummer.Width = 30;
@@ -132,9 +134,9 @@ namespace ProSuite.Commons.UI.Logging
             this.logDateTimeDataGridViewTextBoxColumn.MinimumWidth = 60;
             this.logDateTimeDataGridViewTextBoxColumn.Name = "logDateTimeDataGridViewTextBoxColumn";
             this.logDateTimeDataGridViewTextBoxColumn.ReadOnly = true;
-            this.logDateTimeDataGridViewTextBoxColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.logDateTimeDataGridViewTextBoxColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.logDateTimeDataGridViewTextBoxColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.logDateTimeDataGridViewTextBoxColumn.Width = 60;
+            this.logDateTimeDataGridViewTextBoxColumn.Width = 85;
             // 
             // logMessageDataGridViewTextBoxColumn
             // 
