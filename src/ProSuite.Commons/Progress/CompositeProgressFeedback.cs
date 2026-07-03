@@ -22,11 +22,6 @@ namespace ProSuite.Commons.Progress
 
 		private readonly IProgressFeedback[] _children;
 
-		private int _minimumValue;
-		private int _maximumValue;
-		private int _currentValue;
-		private int _stepSize = 1;
-
 		public CompositeProgressFeedback(params IProgressFeedback[] children)
 		{
 			_children = children ?? Array.Empty<IProgressFeedback>();
@@ -86,42 +81,26 @@ namespace ProSuite.Commons.Progress
 
 		public int CurrentValue
 		{
-			get => _currentValue;
-			set
-			{
-				_currentValue = value;
-				ForEachChild(child => child.CurrentValue = value);
-			}
+			get => FirstChildValue(child => child.CurrentValue);
+			set => ForEachChild(child => child.CurrentValue = value);
 		}
 
 		public int MinimumValue
 		{
-			get => _minimumValue;
-			set
-			{
-				_minimumValue = value;
-				ForEachChild(child => child.MinimumValue = value);
-			}
+			get => FirstChildValue(child => child.MinimumValue);
+			set => ForEachChild(child => child.MinimumValue = value);
 		}
 
 		public int MaximumValue
 		{
-			get => _maximumValue;
-			set
-			{
-				_maximumValue = value;
-				ForEachChild(child => child.MaximumValue = value);
-			}
+			get => FirstChildValue(child => child.MaximumValue);
+			set => ForEachChild(child => child.MaximumValue = value);
 		}
 
 		public int StepSize
 		{
-			get => _stepSize;
-			set
-			{
-				_stepSize = value;
-				ForEachChild(child => child.StepSize = value);
-			}
+			get => FirstChildValue(child => child.StepSize);
+			set => ForEachChild(child => child.StepSize = value);
 		}
 
 		public void Dispose()
@@ -132,6 +111,11 @@ namespace ProSuite.Commons.Progress
 		#endregion
 
 		#region Non-public methods
+
+		// The composite holds no progress state of its own; each child is authoritative. Reads
+		// report the first child's value (0 when there are no children); writes fan out to all.
+		private int FirstChildValue(Func<IProgressFeedback, int> selector) =>
+			_children.Length > 0 ? selector(_children[0]) : 0;
 
 		private void ForEachChild(Action<IProgressFeedback> action)
 		{
