@@ -1,4 +1,6 @@
+using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -62,6 +64,12 @@ namespace ProSuite.Commons.UI.WinForms
 			{
 				control.BackColor = _controlBackground;
 				control.ForeColor = _textColor;
+
+				if (control is TextBoxBase)
+				{
+					// Multiline text boxes (e.g. the details view) have their own scrollbars.
+					EnableDarkScrollBars(control);
+				}
 			}
 			else if (control is Button button)
 			{
@@ -122,6 +130,8 @@ namespace ProSuite.Commons.UI.WinForms
 			grid.RowHeadersDefaultCellStyle.SelectionBackColor = _dialogBackground;
 			grid.RowHeadersDefaultCellStyle.SelectionForeColor = _textColor;
 
+			EnableDarkScrollBars(grid);
+
 			if (grid.ContextMenuStrip != null)
 			{
 				ApplyDarkTheme(grid.ContextMenuStrip);
@@ -149,6 +159,49 @@ namespace ProSuite.Commons.UI.WinForms
 			{
 				ApplyDarkTheme(dropDownItem.DropDown);
 			}
+		}
+
+		[DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+		private static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName,
+		                                         string pszSubIdList);
+
+		private const string _darkExplorerTheme = "DarkMode_Explorer";
+
+		/// <summary>
+		/// Switches a control's native scrollbars to the dark Explorer theme so they are not drawn
+		/// light-grey in the otherwise dark UI. Handles the control's own scrollbars and any child
+		/// <see cref="ScrollBar"/> controls (e.g. a <see cref="DataGridView"/>'s row/column
+		/// scrollbars). Re-applies on handle creation, since the scrollbar handles may not exist
+		/// yet when the theme is first applied. Best effort: <c>SetWindowTheme</c> simply has no
+		/// visible effect on OS versions that do not support the dark scrollbar theme.
+		/// </summary>
+		private static void EnableDarkScrollBars([NotNull] Control control)
+		{
+			void Apply()
+			{
+				if (! control.IsHandleCreated)
+				{
+					return;
+				}
+
+				SetWindowTheme(control.Handle, _darkExplorerTheme, null);
+
+				foreach (Control child in control.Controls)
+				{
+					if (child is ScrollBar)
+					{
+						// Accessing Handle forces creation for scrollbars not yet visible.
+						SetWindowTheme(child.Handle, _darkExplorerTheme, null);
+					}
+				}
+			}
+
+			if (control.IsHandleCreated)
+			{
+				Apply();
+			}
+
+			control.HandleCreated += (sender, args) => Apply();
 		}
 
 		private class DarkColorTable : ProfessionalColorTable
