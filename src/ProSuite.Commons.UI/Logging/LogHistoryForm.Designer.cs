@@ -66,7 +66,7 @@ namespace ProSuite.Commons.UI.Logging
             this._dataGridViewLogEvents.AutoGenerateColumns = false;
             this._dataGridViewLogEvents.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this._dataGridViewLogEvents.BackgroundColor = System.Drawing.SystemColors.Window;
-            this._dataGridViewLogEvents.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this._dataGridViewLogEvents.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this._dataGridViewLogEvents.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             this._dataGridViewLogEvents.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this._dataGridViewLogEvents.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -125,12 +125,11 @@ namespace ProSuite.Commons.UI.Logging
             this.logDateTimeDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             this.logDateTimeDataGridViewTextBoxColumn.DataPropertyName = "LogDateTime";
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle1.Format = "T";
             dataGridViewCellStyle1.NullValue = null;
             this.logDateTimeDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle1;
             this.logDateTimeDataGridViewTextBoxColumn.FillWeight = 1F;
-            this.logDateTimeDataGridViewTextBoxColumn.HeaderText = "Date";
+            this.logDateTimeDataGridViewTextBoxColumn.HeaderText = "Time";
             this.logDateTimeDataGridViewTextBoxColumn.MinimumWidth = 60;
             this.logDateTimeDataGridViewTextBoxColumn.Name = "logDateTimeDataGridViewTextBoxColumn";
             this.logDateTimeDataGridViewTextBoxColumn.ReadOnly = true;
@@ -258,8 +257,9 @@ namespace ProSuite.Commons.UI.Logging
             // 
             // LogHistoryForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.CancelButton = this._buttonClose;
             this.ClientSize = new System.Drawing.Size(544, 458);
             this.Controls.Add(this._splitContainer);
@@ -270,7 +270,7 @@ namespace ProSuite.Commons.UI.Logging
             this.Name = "LogHistoryForm";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Log Messages";
+            this.Text = "Log messages";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.BackupLogEventsView_FormClosed);
             this.Shown += new System.EventHandler(this.BackupLogEventsView_Shown);
             ((System.ComponentModel.ISupportInitialize)(this._dataGridViewLogEvents)).EndInit();

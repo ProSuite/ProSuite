@@ -104,8 +104,9 @@ namespace ProSuite.Commons.UI.Logging
             // LogEventItemDetailsForm
             // 
             this.AcceptButton = this.buttonClose;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.CancelButton = this.buttonClose;
             this.ClientSize = new System.Drawing.Size(626, 478);
             this.Controls.Add(this.statusStrip);
@@ -117,7 +118,7 @@ namespace ProSuite.Commons.UI.Logging
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Log Message Details";
+            this.Text = "Log message details";
             this.Load += new System.EventHandler(this.LogEventItemDetails_Load);
             this.groupBoxDetails.ResumeLayout(false);
             this.groupBoxDetails.PerformLayout();
