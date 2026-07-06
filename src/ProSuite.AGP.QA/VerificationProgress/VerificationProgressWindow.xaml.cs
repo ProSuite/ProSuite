@@ -18,6 +18,11 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			window.Owner = Application.Current.MainWindow;
 
+			// Restore focus to the owner window when this window is closed.
+			// This happens automatically for windows derived from ProWindow,
+			// but not for WPF windows derived from Window.
+			window.Closed += (_, _) => window.Owner?.Activate();
+
 			return window;
 		}
 
