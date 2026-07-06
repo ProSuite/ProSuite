@@ -65,6 +65,15 @@ namespace ProSuite.Processing
 		//	Description = description;
 		//}
 
+		public static CartoProcessConfig Create(
+			string name, string typeAlias = null, string description = null,
+			IEnumerable<KeyValuePair<string,string>> settings = null)
+		{
+			return new CartoProcessConfig(
+				name, typeAlias, description,
+				settings?.Select(pair => new Setting(pair.Key, pair.Value, 0)));
+		}
+
 		public static CartoProcessConfig Parse(string text,
 		                                       string name = null, string typeAlias = null,
 		                                       string description = null, bool lenient = false)

@@ -16,27 +16,16 @@ namespace ProSuite.Microservices.Client.QA
 	public interface IApplicationBackgroundVerificationController
 	{
 		/// <summary>
-		/// Flashes the progress of the verification by highlighting the tiles that have been
+		/// Shows or hides the progress overlay of the verification by highlighting the tiles that have been
 		/// processed and the currently processing tile.
 		/// </summary>
+		/// <param name="showOverlay">Show or hide the overlay.</param>
 		/// <param name="tiles">The processed tiles. The last entry in the list is the currently
 		/// processing tile.</param>
 		/// <param name="currentProgressStep">The current process step</param>
-		void FlashProgress([NotNull] IList<EnvelopeXY> tiles,
-		                   ServiceCallStatus currentProgressStep);
-
-		/// <summary>
-		/// Whether or not flashing the current progress is possible or not. If it is not, the reason why
-		/// it is not possible shall be provided.
-		/// </summary>
-		/// <param name="currentProgressStep"></param>
-		/// <param name="tiles">The processed tiles. The last entry in the list is the currently
-		/// processing tile.</param>
-		/// <param name="reason"></param>
-		/// <returns></returns>
-		bool CanFlashProgress([CanBeNull] ServiceCallStatus? currentProgressStep,
-		                      [NotNull] IList<EnvelopeXY> tiles,
-		                      [CanBeNull] out string reason);
+		void UpdateProgressOverlay(bool showOverlay,
+		                           [NotNull] IList<EnvelopeXY> tiles,
+		                           ServiceCallStatus currentProgressStep);
 
 		/// <summary>
 		/// Zooms or pans the map to the verified perimeter.

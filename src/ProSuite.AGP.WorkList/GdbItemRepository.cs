@@ -260,7 +260,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		if (CurrentFilterDefinition != null &&
 		    sourceClass is DatabaseSourceClass dbSourceClass)
 		{
-			WorkListFilterDefinitionExpression workListDefinitionExpression =
+			IWorkListFilterDefinitionExpression workListDefinitionExpression =
 				dbSourceClass.GetExpression(CurrentFilterDefinition);
 
 			AppendWhereClause(ref filter, workListDefinitionExpression);
@@ -271,7 +271,7 @@ public abstract class GdbItemRepository : IWorkItemRepository
 
 	private static void AppendWhereClause(
 		[CanBeNull] ref QueryFilter filter,
-		[CanBeNull] WorkListFilterDefinitionExpression forDefinitionExpression)
+		[CanBeNull] IWorkListFilterDefinitionExpression forDefinitionExpression)
 	{
 		string expression = forDefinitionExpression?.Expression;
 
