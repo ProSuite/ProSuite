@@ -55,11 +55,11 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 		private readonly List<EnvelopeXY> _allTiles = new List<EnvelopeXY>();
 
-		private RelayCommand<VerificationProgressViewModel> _flashProgressCmd;
+		private bool _showProgressOverlay;
 		private bool _issueOptionsEnabled;
 		private string _showReportToolTip;
 		private string _saveErrorsToolTip;
-		private string _flashProgressToolTip;
+		private string _toggleProgressOverlayToolTip;
 		private ICommand _zoomToPerimeterCommand;
 		private string _zoomToVerifiedPerimeterToolTip;
 		private RelayCommand<VerificationProgressViewModel> _openWorkListCommand;
@@ -76,6 +76,9 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			OverallProgressVisible = Visibility.Hidden;
 
 			UpdateOptions = new UpdateIssuesOptionsViewModel();
+
+			// Set initial value to ensure the tooltip is initialized correctly
+			ToggleProgressOverlay = false;
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -94,7 +97,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		public Func<Task<ServiceCallStatus>> VerificationAction { get; set; }
 
 		/// <summary>
-		/// The gateway into application-specific actions, such as flashing the current progress,
+		/// The gateway into application-specific actions, such as showing the current progress,
 		/// saving or showing the report.
 		/// </summary>
 		public IApplicationBackgroundVerificationController ApplicationController { get; set; }
@@ -504,26 +507,26 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			}
 		}
 
-		public ICommand FlashProgressCommand
+		public bool ToggleProgressOverlay
 		{
-			get
+			get => _showProgressOverlay;
+			set
 			{
-				if (_flashProgressCmd == null)
-				{
-					_flashProgressCmd = new RelayCommand<VerificationProgressViewModel>(
-						FlashProgress, (vm) => CanFlash());
-				}
+				_showProgressOverlay = value;
 
-				return _flashProgressCmd;
+				ToggleProgressOverlayToolTip = _showProgressOverlay
+					                               ? "Hide the tile verification progress"
+					                               : "Show the tile verification progress";
+				UpdateProgressOverlay(_showProgressOverlay);
 			}
 		}
 
-		public string FlashProgressToolTip
+		public string ToggleProgressOverlayToolTip
 		{
-			get => _flashProgressToolTip;
+			get => _toggleProgressOverlayToolTip;
 			set
 			{
-				_flashProgressToolTip = value;
+				_toggleProgressOverlayToolTip = value;
 				OnPropertyChanged();
 			}
 		}
@@ -647,25 +650,13 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			}
 		}
 
-		private bool CanFlash()
+		private void UpdateProgressOverlay(bool showOverlay)
 		{
-			string reason = null;
-			bool canFlash = ApplicationController?.CanFlashProgress(
-				                ProgressTracker.RemoteCallStatus, _allTiles,
-				                out reason) == true;
-
-			FlashProgressToolTip = reason ?? "Show the tile verification progress";
-
-			return canFlash;
-		}
-
-		private void FlashProgress(VerificationProgressViewModel viewModel)
-		{
-			Try(nameof(FlashProgress),
+			Try(nameof(UpdateProgressOverlay),
 			    () =>
 			    {
-				    ApplicationController?.FlashProgress(
-					    _allTiles, ProgressTracker.RemoteCallStatus);
+				    ApplicationController?.UpdateProgressOverlay(
+					    showOverlay, _allTiles, ProgressTracker.RemoteCallStatus);
 			    });
 		}
 
@@ -733,6 +724,9 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				    {
 					    CloseAction();
 				    }
+
+					// Remove overlays on close
+				    UpdateProgressOverlay(false);
 			    }
 			);
 		}
@@ -911,14 +905,13 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					{
 						CurrentTile = ProgressTracker.CurrentTile;
 
-						// Trigger the flash command's CanExecuteChanged:
-						_flashProgressCmd?.RaiseCanExecuteChanged();
-
 						//Application.Current.Dispatcher.BeginInvoke(
 						//	new Action(delegate
 						//	{
 						//		CommandManager.InvalidateRequerySuggested();
 						//	}));
+
+						UpdateProgressOverlay(_showProgressOverlay);
 					}
 
 					break;

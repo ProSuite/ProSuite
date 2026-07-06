@@ -61,12 +61,11 @@
                         ToolTipService.ShowOnDisabled="True">
                     <Image Source="/ProSuite.UI.Core;component/Properties/Images/ZoomToVerifiedCmd.png" Stretch="None" />
                 </Button>
-                <Button Command="{Binding FlashProgressCommand}"
-                        CommandParameter="{Binding Mode=OneWay}"
-                        ToolTip="{Binding FlashProgressToolTip}"
-                        ToolTipService.ShowOnDisabled="True">
+                <ToggleButton IsChecked="{Binding ToggleProgressOverlay}"
+                              CommandParameter="{Binding Mode=OneWay}"
+                              ToolTip="{Binding ToggleProgressOverlayToolTip}">
                     <Image Source="/ProSuite.UI.Core;component/Properties/Images/FlashProgressCmd.png" Stretch="None" />
-                </Button>
+                </ToggleButton>
             </StackPanel>
 
             <!-- Progress messages and progress bars -->

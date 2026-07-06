@@ -1039,4 +1039,21 @@ public static class LayerUtils
 		layer.SetDefinition(definition);
 #endif
 	}
+
+	public static bool HasGroupLayerAsParent(Layer layer, List<string> groupLayerNames)
+	{
+		if (layer.Parent is Map)
+		{
+			return false;
+		}
+
+		var parent = (GroupLayer)layer.Parent;
+		Assert.NotNull(parent);
+		if (groupLayerNames.Contains(parent.Name))
+		{
+			return true;
+		}
+
+		return HasGroupLayerAsParent(parent, groupLayerNames);
+	}
 }
