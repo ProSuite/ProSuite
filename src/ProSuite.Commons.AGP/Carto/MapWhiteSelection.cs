@@ -179,18 +179,22 @@ public class MapWhiteSelection : IMapWhiteSelection
 		{
 			// No *vertex* and no *segment were within tolerance of click point:
 			// make a 3rd round looking for the containing polygon (part) instead
-			// (this is undefined if several polygons overlap at the click point!)
+			// (pick the smallest filled polygon that contains the click point)
+
+			double minArea = double.MaxValue;
+			Polygon minPolygon = null;
 
 			foreach (var ws in all)
 			{
-				double minArea = double.MaxValue;
-				Polygon minPolygon = null;
-
 				foreach (var involvedOid in ws.GetInvolvedOIDs())
 				{
 					var ss = ws.GetShapeSelection(involvedOid) ?? throw new AssertionException();
 
 					if (ss.Shape is not Polygon polygon) continue;
+
+					bool isFilled = WhiteSelectionUtils.IsFilledPolygon(_mapView, ws.Layer, involvedOid);
+
+					if (! isFilled) continue;
 
 					if (GeometryUtils.Contains(polygon, clickPoint))
 					{
@@ -203,14 +207,13 @@ public class MapWhiteSelection : IMapWhiteSelection
 						}
 					}
 				}
+			}
 
-				if (minPolygon is not null)
-				{
-					minPartIndex = minPolygon.PartCount == 1
-						               ? 0
-						               : GetContainingPartIndex(minPolygon, clickPoint);
-					break; // pick "first" layer (assuming layers are top down...)
-				}
+			if (minPolygon is not null)
+			{
+				minPartIndex = minPolygon.PartCount == 1
+					               ? 0
+					               : GetContainingPartIndex(minPolygon, clickPoint);
 			}
 		}
 
