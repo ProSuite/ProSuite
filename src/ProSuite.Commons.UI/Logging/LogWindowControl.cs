@@ -53,6 +53,8 @@ namespace ProSuite.Commons.UI.Logging
 			_dataGridView.AutoGenerateColumns = false;
 			_showDebugMessages = _toolStripMenuItemShowDebugMessages.Checked;
 
+			WinFormsThemeUtils.ApplyModernHeaderStyle(_dataGridView);
+
 			_textColumnIndices = new[]
 			                     {
 				                     _columnLogMessage.Index,
