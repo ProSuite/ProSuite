@@ -38,6 +38,11 @@ public static class PickerUtils
 		//{
 		//}
 
+		return GetImagePath(geometryType);
+	}
+
+	public static Uri GetImagePath(esriGeometryType? geometryType)
+	{
 		switch (geometryType)
 		{
 			case esriGeometryType.esriGeometryPoint:
