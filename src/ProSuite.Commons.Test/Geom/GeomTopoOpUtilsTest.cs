@@ -9718,27 +9718,26 @@ namespace ProSuite.Commons.Test.Geom
 			Linestring target = GeomTestUtils.CreateRing(
 				new List<Pnt3D>
 				{
-					new Pnt3D(-14.12, 4.636, 0),  // T0 (= shared edge end, run end tgtV 0.0)
-					new Pnt3D(0, 0, 0),           // T1 (= corner, run start tgtV 1.0)
+					new Pnt3D(-14.12, 4.636, 0), // T0 (= shared edge end, run end tgtV 0.0)
+					new Pnt3D(0, 0, 0), // T1 (= corner, run start tgtV 1.0)
 					//new Pnt3D(-0.011, -0.005, 0), // TEST: sub-resolution micro zig-zag vertices inserted into target
 					//new Pnt3D(-0.016, 0.005, 0),  // TEST: sub-resolution micro zig-zag vertices inserted into target
-					new Pnt3D(-13.58, -0.491, 0)  // T2 (far side end)
+					new Pnt3D(-13.58, -0.491, 0) // T2 (far side end)
 				});
 
 			Linestring source = GeomTestUtils.CreateRing(
 				new List<Pnt3D>
 				{
-					new Pnt3D(-4, 12, 0),         // body apex
-					new Pnt3D(6.873, 2.934, 0),   // shallow approach to the corner
-					new Pnt3D(0, 0, 0),           // arrive at corner T1
+					new Pnt3D(-4, 12, 0), // body apex
+					new Pnt3D(6.873, 2.934, 0), // shallow approach to the corner
+					new Pnt3D(0, 0, 0), // arrive at corner T1
 					new Pnt3D(-0.011, -0.005, 0), // sub-resolution zig-zag (toward the far side)
-					new Pnt3D(-0.016, 0.005, 0),  // sub-resolution zig-zag (back onto the edge)
-					new Pnt3D(-14.12, 4.636, 0)   // ride the shared edge down to T0
+					new Pnt3D(-0.016, 0.005, 0), // sub-resolution zig-zag (back onto the edge)
+					new Pnt3D(-14.12, 4.636, 0) // ride the shared edge down to T0
 				});
 
 			Assert.AreEqual(true, source.ClockwiseOriented);
 			Assert.AreEqual(true, target.ClockwiseOriented);
-
 
 			Polyhedron polyhedron = new Polyhedron(new List<RingGroup>()
 			                                       {
@@ -9748,23 +9747,28 @@ namespace ProSuite.Commons.Test.Geom
 			var linearSelfIntersections =
 				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(source, tolerance);
 
-
 			var zig = source.GetPoint(3) as Pnt3D;
 			var zag = source.GetPoint(4) as Pnt3D;
 
 			Line3D sourceSegment = source.Segments[4];
 
 			double perpDistanceZig =
-				sourceSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioZig, out _);
+				sourceSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioZig,
+				                                       out _);
 			double perpDistanceZag =
-				sourceSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioZag, out _);
+				sourceSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioZag,
+				                                       out _);
 
 			Line3D targetSegment = target.Segments[0];
 
 			double targetDistanceZig =
-				targetSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioTargetZig, out _);
+				targetSegment.GetDistancePerpendicular(zig, true,
+				                                       out double distanceAlongRatioTargetZig,
+				                                       out _);
 			double targetDistanceZag =
-				targetSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioTargetZag, out _);
+				targetSegment.GetDistancePerpendicular(zag, true,
+				                                       out double distanceAlongRatioTargetZag,
+				                                       out _);
 
 			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
 				new MultiPolycurve(new[] { source }),
@@ -10072,6 +10076,85 @@ namespace ProSuite.Commons.Test.Geom
 					new Pnt3D(xMin + size, yMin + size, 0),
 					new Pnt3D(xMin + size, yMin, 0)
 				});
+		}
+
+		[Test]
+		public void CanBufferStraightLineBothSides()
+		{
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+			// 100 long, 10 wide (5 to each side) => 1000, plus two round end caps
+			// (a full disc of radius 5, pi * 25 ~= 78.5) => ~1078.5.
+			Assert.AreEqual(1078.5, buffer.GetArea2D(), 1.0);
+		}
+
+		[Test]
+		public void CanBufferStraightLineOneSide()
+		{
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring left =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Left, tolerance, out _);
+			MultiLinestring right =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Right, tolerance, out _);
+
+			Assert.NotNull(left);
+			Assert.NotNull(right);
+			// Full width on one side only => 100 * 5 = 500.
+			Assert.AreEqual(500, left.GetArea2D(), 0.01);
+			Assert.AreEqual(500, right.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void CanBufferPolylineWithCorner()
+		{
+			// An L-shaped line exercises the joins at the corner: the outer (convex) corner
+			// is rounded, the inner (concave) corner stays mitered.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+			// Rounded outer corner gives ~1994.6 with flat ends; the two-sided buffer also
+			// adds round end caps at both line ends (two semicircles = pi * 25 ~= 78.5),
+			// so the area is ~2073.2.
+			Assert.AreEqual(2073.2, buffer.GetArea2D(), 1.5);
 		}
 	}
 }
