@@ -384,7 +384,17 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			DisposeOverlays();
 			DisposeMeasureOverlays();
 
-			_msg.Info("Draw the centre line of the buffer.");
+			// With RequiresSelection == false the base only resets the sketch on ESC and
+			// never clears the selection. When no sketch is in progress (e.g. right after a
+			// feature was created) also clear the selection, so the newly created feature is
+			// deselected - the standard construction-tool behaviour.
+			Geometry currentSketch = await GetCurrentSketchAsync();
+			if (currentSketch == null || currentSketch.IsEmpty)
+			{
+				await ClearSelectionAsync();
+			}
+
+			_msg.Info("Draw the line of the buffer.");
 
 			await base.HandleEscapeAsync();
 		}
