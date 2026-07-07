@@ -194,7 +194,7 @@ namespace ProSuite.Commons.UI.Logging
 			this._dataGridView.AllowUserToResizeRows = false;
 			this._dataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
 			this._dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
-			this._dataGridView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this._dataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
 			this._dataGridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
 			this._dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this._dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {

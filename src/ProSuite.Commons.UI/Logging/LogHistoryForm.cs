@@ -32,6 +32,8 @@ namespace ProSuite.Commons.UI.Logging
 		{
 			InitializeComponent();
 
+			WinFormsThemeUtils.ApplyModernHeaderStyle(_dataGridViewLogEvents);
+
 			_formStateManager = new BasicFormStateManager(this);
 			_formStateManager.RestoreState();
 
