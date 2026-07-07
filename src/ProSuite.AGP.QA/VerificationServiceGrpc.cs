@@ -8,6 +8,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -261,9 +262,8 @@ namespace ProSuite.AGP.QA
 					return false;
 				}
 
-				long datastoreHandle = (long) datastore.Handle;
-
-				return editedDatastores.Any(edited => (long) edited.Handle == datastoreHandle);
+				return editedDatastores.Any(edited =>
+					                            WorkspaceUtils.IsSameDatastore(edited, datastore));
 			}
 			catch (Exception e)
 			{
