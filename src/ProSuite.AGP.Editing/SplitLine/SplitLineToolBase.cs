@@ -100,6 +100,14 @@ public abstract class SplitLineToolBase : MapToolBase
 			return;
 		}
 
+		if (pickableItem.Layer is FeatureLayer featureLayer && !featureLayer.IsSnappable)
+		{
+			// If the layer is not snappable, we project the point onto the line ourselves
+			mapPoint = GeometryUtils.Engine.QueryPointAndDistance(polyline, SegmentExtensionType.NoExtension,
+			                                           mapPoint, AsRatioOrLength.AsLength, out _,
+			                                           out _, out _);
+		}
+
 		double xyTolerance = polyline.SpatialReference.XYTolerance;
 		List<MapPoint> uniqueEndPoints = GeometryUtils.GetUniqueEndPoints(polyline);
 		if (GeometryUtils.IsSamePointXY(mapPoint, uniqueEndPoints[0]))
@@ -227,11 +235,6 @@ public abstract class SplitLineToolBase : MapToolBase
 		}
 
 		if (featureLayer.ShapeType != esriGeometryType.esriGeometryPolyline)
-		{
-			return false;
-		}
-
-		if (! featureLayer.IsSnappable)
 		{
 			return false;
 		}
