@@ -519,7 +519,8 @@ namespace ProSuite.Microservices.Server.AO
 				{
 					var sr = ProtobufGeometryUtils.FromSpatialReferenceMsg(
 						objectClassMsg.SpatialReference);
-					field = FieldUtils.CreateShapeField(geometryType, sr, 1000, true, false);
+					field = FieldUtils.CreateShapeField(fieldMsg.Name, geometryType, sr, 1000,
+					                                    true, false);
 				}
 
 				if (toResultTable.Fields.FindField(field.Name) < 0)

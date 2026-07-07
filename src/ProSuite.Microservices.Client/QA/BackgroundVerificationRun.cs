@@ -250,14 +250,16 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			try
 			{
-				if (arg.SchemaRequest != null)
+				SchemaRequest schemaRequest = arg.SchemaRequest;
+
+				if (schemaRequest != null)
 				{
 					var result = new DataVerificationRequest();
 
 					try
 					{
 						result.Schema =
-							verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
+							verificationDataProvider.GetGdbSchema(schemaRequest);
 					}
 					catch (Exception e)
 					{
@@ -276,14 +278,16 @@ namespace ProSuite.Microservices.Client.QA
 					return true;
 				}
 
-				if (arg.DataRequest != null)
+				DataRequest dataRequest = arg.DataRequest;
+
+				if (dataRequest != null)
 				{
 					try
 					{
 						// The provider yields one or more size-capped batches; each carries its
 						// own HasMoreData flag (the last batch has it cleared). Write them in
 						// order so the server can reassemble the full result set.
-						foreach (GdbData data in verificationDataProvider.GetData(arg.DataRequest))
+						foreach (GdbData data in verificationDataProvider.GetData(dataRequest))
 						{
 							await callRequestStream.WriteAsync(
 								new DataVerificationRequest { Data = data });

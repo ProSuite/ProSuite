@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -35,23 +33,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		{
 			_proFeatureClass = proFeatureClass;
 
-			// NOTE: Joined feature classes have a FeatureClassDefinition that fails when used in
-			//       new ShapeDescription(featureClassDefinition). -> Use un-joined geometry definition.
+			// Query tables can expose qualified shape-field names in their feature-class
+			// definition. Passing such a definition into ShapeDescription(featureClassDefinition)
+			// fails because Description.SetName() rejects '.' characters. The ArcGeometryDef only
+			// needs geometry type, spatial reference, Z and M, so read them directly.
 			FeatureClassDefinition featureClassDefinition =
-				(FeatureClassDefinition) (proFeatureClass.IsJoinedTable()
-					                          ? DatasetUtils.GetDatabaseTable(proFeatureClass)
-					                                        .GetDefinition()
-					                          : (FeatureClassDefinition) ProTableDefinition);
+				(FeatureClassDefinition) ProTableDefinition;
 
-			if (featureClassDefinition.GetShapeType() != GeometryType.Unknown)
-			{
-				GeometryDefinition =
-					new ArcGeometryDef(new ShapeDescription(featureClassDefinition));
-			}
-			else
-			{
-				GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
-			}
+			GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
 
 			// Only cache properties after the GeometryDefinition is set to avoid null pointer in field caching!
 			if (cachePropertiesEagerly)
@@ -348,6 +337,48 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				return _shapeFieldName;
 			}
+		}
+
+		/// <summary>
+		/// Sets the shape field name explicitly, bypassing the <see cref="ShapeFieldName"/>
+		/// GetShapeField()-based resolution. Used for relationship-class query tables, whose
+		/// qualified shape field name is known a priori (see
+		/// <see cref="RelationshipClassJoinUtils.CreateQueryDef"/> /
+		/// <see cref="ArcWorkspace.OpenQueryTable"/>).
+		/// </summary>
+		internal void SetShapeFieldName([NotNull] string shapeFieldName)
+		{
+			Assert.ArgumentNotNullOrEmpty(shapeFieldName, nameof(shapeFieldName));
+
+			_shapeFieldName = shapeFieldName;
+		}
+
+		private int FindFieldByUnqualifiedName([NotNull] string fieldName)
+		{
+			string unqualifiedFieldName = GetUnqualifiedFieldName(fieldName);
+
+			for (int fieldIndex = 0; fieldIndex < Fields.FieldCount; fieldIndex++)
+			{
+				string existingFieldName = Fields[fieldIndex].Name;
+
+				if (string.Equals(GetUnqualifiedFieldName(existingFieldName), unqualifiedFieldName,
+				                  StringComparison.OrdinalIgnoreCase))
+				{
+					return fieldIndex;
+				}
+			}
+
+			return -1;
+		}
+
+		[NotNull]
+		private static string GetUnqualifiedFieldName([NotNull] string fieldName)
+		{
+			int separatorIndex = fieldName.LastIndexOf('.');
+
+			return separatorIndex < 0
+				       ? fieldName
+				       : fieldName.Substring(separatorIndex + 1);
 		}
 
 		public IField AreaField
