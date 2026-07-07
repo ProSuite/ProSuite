@@ -831,6 +831,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		private void EnsurePartWidths(int partCount)
 		{
+			bool partAdded = partCount > _bufferWidths.Count;
+
 			while (_bufferWidths.Count < partCount)
 			{
 				_bufferWidths.Add(_currentBufferWidth);
@@ -841,7 +843,17 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				_bufferWidths.RemoveRange(partCount, _bufferWidths.Count - partCount);
 			}
 
-			_currentPart = Math.Max(0, Math.Min(_currentPart, partCount - 1));
+			if (partAdded)
+			{
+				// The part currently being drawn (the newest one) becomes the current part,
+				// so width changes apply to it while the already drawn parts keep their
+				// width. (The CTRL-measure line can still re-select an earlier part.)
+				_currentPart = partCount - 1;
+			}
+			else
+			{
+				_currentPart = Math.Max(0, Math.Min(_currentPart, partCount - 1));
+			}
 		}
 
 		private void SetCurrentBufferWidth(double width)
