@@ -152,7 +152,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)
 		{
-			throw new NotImplementedException();
+			// Raster datasets are not streamed from the client. They are opened directly from the
+			// model's master (user connection) database on the server.
+			return GetMasterDatabaseContext(dataset.Model).OpenRasterDataset(dataset);
 		}
 
 		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
@@ -165,9 +167,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
-			// TODO: Just send the catalog & boundary feature class, assuming the raster paths
-			//       are accessible from anywhere
-			throw new NotImplementedException();
+			// Mosaic datasets are not streamed from the client. They are opened directly from the
+			// model's master (user connection) database on the server.
+			return GetMasterDatabaseContext(dataset.Model).OpenSimpleRasterMosaic(dataset);
+		}
+
+		/// <summary>
+		/// Gets the model's master-database (user connection) workspace context, used to open
+		/// dataset types that are not transferred from the client (rasters and mosaics).
+		/// </summary>
+		[NotNull]
+		private static IWorkspaceContext GetMasterDatabaseContext([NotNull] DdxModel model)
+		{
+			IWorkspaceContext masterContext = model.GetMasterDatabaseWorkspaceContext();
+
+			return Assert.NotNull(
+				masterContext,
+				"Cannot open raster/mosaic dataset: the master database of model '{0}' is not " +
+				"accessible from the server.", model.Name);
 		}
 
 		public IRelationshipClass OpenRelationshipClass(Association association)
