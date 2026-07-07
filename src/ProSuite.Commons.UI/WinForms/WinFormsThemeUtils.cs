@@ -26,6 +26,10 @@ namespace ProSuite.Commons.UI.WinForms
 		private static readonly Color _textColor = ColorTranslator.FromHtml("#D1D1D1");
 		private static readonly Color _selectionBackground = ColorTranslator.FromHtml("#1B394C");
 
+		// Matches the Attribute Table's column header look (light theme).
+		private static readonly Color _headerBackgroundLight = ColorTranslator.FromHtml("#F3F3F3");
+		private static readonly Color _headerBorderLight = ColorTranslator.FromHtml("#D6D6D6");
+
 		/// <summary>
 		/// Re-colors <paramref name="form"/> (and all its child controls, menus and tool strips)
 		/// to match ArcGIS Pro's dark theme. Call this only when the dark theme is active.
@@ -44,6 +48,40 @@ namespace ProSuite.Commons.UI.WinForms
 		public static void ApplyDarkTheme([NotNull] UserControl control)
 		{
 			ApplyDarkTheme((Control) control);
+		}
+
+		/// <summary>
+		/// Styles <paramref name="grid"/>'s column headers to match ArcGIS Pro's Attribute
+		/// Table: a light gray background, bold header text, and thin light-gray separator
+		/// lines. WinForms' own header rendering falls back to a "raised" 3-D bevel (drawn with
+		/// stark <see cref="SystemColors.ControlDark"/> edges) whenever the control isn't running
+		/// under native visual styles, as is the case here since the grid is hosted inside a WPF
+		/// dock pane. Call this once regardless of theme; if the dark theme is active,
+		/// <see cref="ApplyDarkTheme(Form)"/>/<see cref="ApplyDarkTheme(UserControl)"/> darkens
+		/// the header colors afterwards and the border color follows automatically.
+		/// </summary>
+		public static void ApplyModernHeaderStyle([NotNull] DataGridView grid)
+		{
+			grid.EnableHeadersVisualStyles = false;
+			grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+
+			// Match the body cell gridlines to the header's border color (SystemColors.Control,
+			// the designer default, is too faint to read as a boundary).
+			grid.GridColor = _headerBorderLight;
+
+			grid.ColumnHeadersDefaultCellStyle.BackColor = _headerBackgroundLight;
+			grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = _headerBackgroundLight;
+			grid.ColumnHeadersDefaultCellStyle.Font = new Font(grid.Font, FontStyle.Bold);
+			grid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+
+			// Extra vertical padding gives the header some breathing room; since the height size
+			// mode is AutoSize (set in the designer), the grid grows the header row to fit it.
+			DataGridViewCellStyle headerStyle = grid.ColumnHeadersDefaultCellStyle;
+			headerStyle.Padding = new Padding(headerStyle.Padding.Left, 3,
+			                                  headerStyle.Padding.Right, 3);
+
+			grid.CellPainting -= PaintHeaderBorder;
+			grid.CellPainting += PaintHeaderBorder;
 		}
 
 		#region Non-public members
@@ -202,6 +240,41 @@ namespace ProSuite.Commons.UI.WinForms
 			}
 
 			control.HandleCreated += (sender, args) => Apply();
+		}
+
+		/// <summary>
+		/// Draws a thin bottom and right border on each header cell instead of the default
+		/// WinForms bevel (see <see cref="ApplyModernHeaderStyle"/>). The border color is derived
+		/// from the header's current background so it stays legible whether the light or dark
+		/// theme's header colors are applied.
+		/// </summary>
+		private static void PaintHeaderBorder(object sender, DataGridViewCellPaintingEventArgs e)
+		{
+			if (e.RowIndex != -1 || e.ColumnIndex < 0)
+			{
+				return;
+			}
+
+			var grid = (DataGridView) sender;
+
+			e.Paint(e.CellBounds, DataGridViewPaintParts.All & ~DataGridViewPaintParts.Border);
+
+			Color headerBackColor = grid.ColumnHeadersDefaultCellStyle.BackColor;
+			Color borderColor = headerBackColor.GetBrightness() < 0.5f
+				                    ? _borderColor
+				                    : _headerBorderLight;
+
+			using (var pen = new Pen(borderColor))
+			{
+				e.Graphics.DrawLine(pen, e.CellBounds.Left, e.CellBounds.Top,
+				                    e.CellBounds.Right, e.CellBounds.Top);
+				e.Graphics.DrawLine(pen, e.CellBounds.Left, e.CellBounds.Bottom - 1,
+				                    e.CellBounds.Right, e.CellBounds.Bottom - 1);
+				e.Graphics.DrawLine(pen, e.CellBounds.Right - 1, e.CellBounds.Top,
+				                    e.CellBounds.Right - 1, e.CellBounds.Bottom - 1);
+			}
+
+			e.Handled = true;
 		}
 
 		private class DarkColorTable : ProfessionalColorTable

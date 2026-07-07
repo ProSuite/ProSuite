@@ -9,13 +9,16 @@ namespace ProSuite.Commons.AGP.Selection;
 
 public class FeatureSelection : FeatureSelectionBase
 {
-	private readonly IEnumerable<Feature> _features;
+	private readonly List<Feature> _features;
 
 	public FeatureSelection([NotNull] BasicFeatureLayer featureLayer,
 	                        [NotNull] IEnumerable<Feature> features)
 		: base(featureLayer)
 	{
-		_features = features ?? throw new ArgumentNullException(nameof(features));
+		if (features is null)
+			throw new ArgumentNullException(nameof(features));
+
+		_features = features.ToList(); // take ownership
 	}
 
 	[NotNull]
@@ -26,19 +29,18 @@ public class FeatureSelection : FeatureSelectionBase
 
 	public override int GetCount()
 	{
-		return _features.Count();
+		return _features.Count;
 	}
 
-	/// <summary>
-	/// Does not have to be called on MCT
-	/// </summary>
+	/// <remarks>Must run on MCT</remarks>
 	public override IEnumerable<long> GetOids()
 	{
-		return GetFeatures().Select(feature => feature.GetObjectID());
+		return _features.Select(feature => feature.GetObjectID());
 	}
 
 	public override string ToString()
 	{
-		return BasicFeatureLayer.Name;
+		int count = GetCount();
+		return $"{BasicFeatureLayer.Name} ({count} feature{(count == 1 ? "" : "s")})";
 	}
 }

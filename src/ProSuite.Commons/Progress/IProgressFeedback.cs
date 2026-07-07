@@ -1,5 +1,6 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Progress
 {
@@ -21,7 +22,7 @@ namespace ProSuite.Commons.Progress
 		[StringFormatMethod("format")]
 		void SetComplete(string format, params object[] args);
 
-		void ShowMessage([NotNull] string message);
+		void ShowMessage([NotNull] string message, LogLevel level = LogLevel.Info);
 
 		[StringFormatMethod("format")]
 		void ShowMessage([NotNull] string format, params object[] args);

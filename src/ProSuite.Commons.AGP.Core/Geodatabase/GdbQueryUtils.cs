@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -12,6 +6,15 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using ProSuite.Commons.GeoDb;
+using FieldType = ArcGIS.Core.Data.FieldType;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
 
@@ -225,6 +228,254 @@ public static class GdbQueryUtils
 			}
 		}
 	}
+
+    public static IEnumerable<Row> GetRowsInList(
+        [NotNull] Table table,
+        [NotNull] string fieldName,
+        [NotNull] IEnumerable valueList,
+        bool recycle,
+        [CanBeNull] QueryFilter queryFilter = null)
+    {
+        return GetRowsInList<Row>(table, fieldName, valueList, recycle, queryFilter);
+    }
+
+    [NotNull]
+    public static IEnumerable<T> GetRowsInList<T>(
+        [NotNull] Table table,
+        [NotNull] string fieldName,
+        [NotNull] IEnumerable valueList,
+        bool recycle,
+        [CanBeNull] QueryFilter queryFilter = null)
+        where T : Row
+    {
+        Assert.ArgumentNotNull(table, nameof(table));
+        Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+        Assert.ArgumentNotNull(valueList, nameof(valueList));
+
+        using TableDefinition definition = table.GetDefinition();
+        Field field = definition.GetFields()
+                                .FirstOrDefault(field => string.Equals(
+                                                    field.Name, fieldName,
+                                                    StringComparison.InvariantCultureIgnoreCase));
+        Assert.NotNull(field);
+
+        foreach (T row in GetRowsInList(table.GetDatastore(), field, valueList,
+                                        q => GetRows<T>(table, q, recycle), queryFilter))
+        {
+            yield return row;
+        }
+    }
+
+    private static IEnumerable<T> GetRowsInList<T>(
+        Datastore datastore, [NotNull] Field field,
+        [NotNull] IEnumerable valueList,
+        [NotNull] Func<QueryFilter, IEnumerable<T>> getRows,
+        [CanBeNull] QueryFilter queryFilter = null)
+    {
+        Assert.ArgumentNotNull(valueList, nameof(valueList));
+        Assert.ArgumentNotNull(getRows, nameof(getRows));
+
+        if (queryFilter == null)
+        {
+            queryFilter = new QueryFilter();
+        }
+
+        string origWhereClause = queryFilter.WhereClause;
+        try
+        {
+            foreach (string whereClause in
+                     EnumWhereClauses(valueList, origWhereClause, field, datastore))
+            {
+                queryFilter.WhereClause = whereClause;
+
+                foreach (T row in getRows(queryFilter))
+                {
+                    yield return row;
+                }
+            }
+        }
+        finally
+        {
+            queryFilter.WhereClause = origWhereClause;
+        }
+    }
+
+    private static IEnumerable<string> EnumWhereClauses(
+        IEnumerable valueList,
+        string origWhereClause, Field field,
+        Datastore datastore)
+    {
+        // TODO: assert that the values match the field type
+
+        FieldType fieldType = field.FieldType;
+
+        GetWhereClauseLimits(datastore, out int maxWhereClauseLength, out int maxValueCount);
+
+        StringBuilder sb = null;
+        var valueCount = 0;
+        foreach (object value in valueList)
+        {
+            if (sb == null ||
+                sb.Length >= maxWhereClauseLength ||
+                valueCount >= maxValueCount)
+            {
+                if (sb != null)
+                {
+                    // NOTE: the last value plus the closing bracket may exceed the maximum length
+                    yield return $"{sb})";
+                }
+
+                sb = new StringBuilder();
+                if (! string.IsNullOrEmpty(origWhereClause))
+                {
+                    sb.AppendFormat("({0}) AND ", origWhereClause);
+                }
+
+                sb.AppendFormat("{0} ", field.Name);
+                sb.Append("IN (");
+                valueCount = 0;
+            }
+            else
+            {
+                sb.Append(",");
+            }
+
+			sb.Append(GdbSqlUtils.GetLiteral(value, fieldType, datastore));
+            valueCount++;
+        }
+
+        if (sb != null)
+        {
+            yield return $"{sb})";
+        }
+    }
+
+    private static void GetWhereClauseLimits([CanBeNull] Datastore workspace,
+                                             out int maximumWhereClauseLength,
+                                             out int maximumInValueCount)
+    {
+        // safe defaults:
+        maximumWhereClauseLength = 2000;
+        maximumInValueCount = 1000;
+
+        if (workspace == null)
+        {
+            return;
+        }
+
+        switch (WorkspaceUtils.GetWorkspaceDbType(workspace))
+        {
+            case WorkspaceDbType.FileGeodatabase:
+                // these values have been found to work
+                maximumWhereClauseLength = 200000;
+                maximumInValueCount = 10000;
+                return;
+
+            case WorkspaceDbType.ArcSDEOracle:
+                maximumWhereClauseLength = 60000; // not sure where the limit is
+                maximumInValueCount = 1000; // this limit is documented
+                return;
+
+            case WorkspaceDbType.ArcSDESqlServer:
+                maximumWhereClauseLength = 60000; // actual limit is higher
+                maximumInValueCount = 1000; // limit may be higher
+                return;
+
+            case WorkspaceDbType.ArcSDEPostgreSQL:
+                // apparently unlimited
+                maximumWhereClauseLength = 200000;
+                maximumInValueCount = 10000;
+                return;
+
+            case WorkspaceDbType.FileSystem:
+            case WorkspaceDbType.Unknown:
+            case WorkspaceDbType.ArcSDEInformix:
+            case WorkspaceDbType.ArcSDEDB2:
+                // Unknown; use safe defaults
+                return;
+            default:
+                // Unknown; use safe defaults
+                throw new ArgumentOutOfRangeException(
+                    $"Evaluate where clause limits for {WorkspaceUtils.GetWorkspaceDbType(workspace)}");
+        }
+    }
+
+    [NotNull]
+    public static IEnumerable<Row> GetRowsNotInList([NotNull] Table table,
+                                                    [NotNull] QueryFilter filter,
+                                                    bool recycle,
+                                                    [NotNull] string fieldName,
+                                                    [NotNull] IEnumerable valueList)
+    {
+        var list = new List<object>();
+        foreach (object value in valueList)
+        {
+            if (value is null or DBNull)
+            {
+                // ignore null values in the list
+                // TODO: revise, maybe rows with null values should only be excluded if null is in the exclusion list
+                // NOTE: sql does not return rows with NULL if 'not in (list)' is used
+            }
+            else
+            {
+                // only add non-null values (otherwise comparer throws exception)
+                list.Add(value);
+            }
+        }
+
+        list.Sort();
+
+        string origFields = filter.SubFields;
+        try
+        {
+            // todo daro to utils
+            if (! ContainsSubfield(origFields, fieldName))
+            {
+                filter.SubFields = $"{filter.SubFields}, {fieldName}";
+            }
+
+            _msg.DebugFormat("GetRowsInList WhereClause: {0}", filter.WhereClause);
+
+            using TableDefinition definition = table.GetDefinition();
+            int fieldIndex = definition.FindField(fieldName);
+            foreach (Row row in GetRows<Row>(table, filter, recycle))
+            {
+                object value = row[fieldIndex];
+                bool valueIsNull = value is null or DBNull;
+
+                if (valueIsNull)
+                {
+                    // always exclude rows with null values for the exclusion field
+                }
+                else if (list.BinarySearch(value) < 0)
+                {
+                    yield return row;
+                }
+            }
+        }
+        finally
+        {
+            filter.SubFields = origFields;
+        }
+    }
+
+    private static bool ContainsSubfield([NotNull] string subFields, [CanBeNull] string subField)
+    {
+        if (subFields.Contains('*'))
+        {
+            return true;
+        }
+
+        foreach (string field in subFields.Split(","))
+        {
+            if (string.Equals(field.Trim(), subField, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 	public static RowCursor OpenCursor([NotNull] Table table,
 	                                   [CanBeNull] QueryFilter filter,
