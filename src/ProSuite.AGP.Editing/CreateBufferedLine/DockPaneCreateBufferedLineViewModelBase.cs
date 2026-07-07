@@ -8,7 +8,13 @@ using ProSuite.Commons.Geom;
 
 namespace ProSuite.AGP.Editing.CreateBufferedLine
 {
-	public class DockPaneCreateBufferedLineViewModelBase : DockPaneViewModelBase
+	/// <summary>
+	/// The non-generic part of the buffered-line options dock pane view model. It carries the
+	/// bound properties (used by the XAML at design and run time) and the restore-defaults
+	/// command; the strongly typed <c>Options</c> live on
+	/// <see cref="DockPaneCreateBufferedLineViewModelBase{TOptions,TPartial}"/>.
+	/// </summary>
+	public abstract class DockPaneCreateBufferedLineViewModelBase : DockPaneViewModelBase
 	{
 		protected DockPaneCreateBufferedLineViewModelBase()
 		{
@@ -26,16 +32,11 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		public bool IsRevertToDefaultsEnabled => true;
 
-		private void RevertToDefaults()
-		{
-			Options?.RevertToDefaults();
-		}
+		protected abstract void RevertToDefaults();
 
 		#endregion
 
 		private string _heading = "Create Buffered Line Options";
-
-		private CreateBufferedLineToolOptions _options;
 
 		private CentralizableSettingViewModel<double> _bufferWidth;
 		private CentralizableSettingViewModel<bool> _showBufferDistanceCircle;
@@ -92,8 +93,26 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			get => _bufferSide;
 			set => SetProperty(ref _bufferSide, value);
 		}
+	}
 
-		public CreateBufferedLineToolOptions Options
+	/// <summary>
+	/// The strongly typed buffered-line options dock pane view model. It is generic over the
+	/// tool's options and partial-options type so the wall tool (and any future buffered-line
+	/// derivative) can reuse the same dock pane logic with its own options type.
+	/// </summary>
+	public abstract class DockPaneCreateBufferedLineViewModelBase<TOptions, TPartial>
+		: DockPaneCreateBufferedLineViewModelBase
+		where TOptions : BufferedLineToolOptionsBase<TPartial>
+		where TPartial : PartialCreateBufferedLineOptions, new()
+	{
+		private TOptions _options;
+
+		protected override void RevertToDefaults()
+		{
+			Options?.RevertToDefaults();
+		}
+
+		public TOptions Options
 		{
 			get => _options;
 			set

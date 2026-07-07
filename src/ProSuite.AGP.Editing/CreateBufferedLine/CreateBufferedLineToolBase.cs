@@ -42,10 +42,12 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 	/// segments. A two-sided buffer additionally has round end caps; a one-sided buffer
 	/// keeps flat (straight) ends. The buffer geometry is built in the SDK-independent
 	/// geometry model
-	/// (<see cref="GeomTopoOpUtils.GetBufferedLine(MultiLinestring,double,BufferSide,double,out string)"/>).
+	/// (<see cref="GeomTopoOpUtils.GetBufferedLine(MultiLinestring,double,BufferSide,double,out string,bool,bool,double)"/>).
 	/// </summary>
 	[UsedImplicitly]
-	public abstract class CreateBufferedLineToolBase : ConstructionToolBase
+	public abstract class CreateBufferedLineToolBase<TOptions, TPartial> : ConstructionToolBase
+		where TOptions : BufferedLineToolOptionsBase<TPartial>
+		where TPartial : PartialCreateBufferedLineOptions, new()
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -73,8 +75,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		private CIMLineSymbol _measureLineSymbol;
 		private CIMLineSymbol _circleSymbol;
 
-		private CreateBufferedLineToolOptions _bufferedLineToolOptions;
-		private OverridableSettingsProvider<PartialCreateBufferedLineOptions> _settingsProvider;
+		private TOptions _bufferedLineToolOptions;
+		private OverridableSettingsProvider<TPartial> _settingsProvider;
 
 		protected CreateBufferedLineToolBase()
 		{
@@ -83,8 +85,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			LogSketchVertexZs = false;
 			ContextToolbarID = "";
 
-			_bufferedLineToolOptions =
-				new CreateBufferedLineToolOptions(null, new PartialCreateBufferedLineOptions());
+			_bufferedLineToolOptions = CreateToolOptions(null, new TPartial());
 
 			HandledKeys.Add(_keyIncreaseBufferWidth);
 			HandledKeys.Add(_keyDecreaseBufferWidth);
@@ -102,8 +103,31 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		private SelectionCursors MeasureCursors =>
 			_measureCursors ??= SelectionCursors.CreateCrossCursors(Resources.Measure);
 
-		protected CreateBufferedLineToolOptions BufferedLineToolOptions =>
+		protected TOptions BufferedLineToolOptions =>
 			_bufferedLineToolOptions;
+
+		/// <summary>
+		/// Creates the tool's options from the (optional) central and local partial options.
+		/// Each concrete tool supplies its own options type so the buffered-line and wall
+		/// tools can persist and diverge independently.
+		/// </summary>
+		[NotNull]
+		protected abstract TOptions CreateToolOptions([CanBeNull] TPartial centralOptions,
+		                                              [CanBeNull] TPartial localOptions);
+
+		/// <summary>
+		/// Whether convex corners of the buffer are mitered (and bevelled past the miter
+		/// limit) instead of rounded. The polygon buffered-line rounds corners; the wall tool
+		/// overrides this to miter them.
+		/// </summary>
+		protected virtual bool UseMiteredCorners => false;
+
+		/// <summary>
+		/// Whether a two-sided buffer is closed with straight (flat) ends instead of round end
+		/// caps. The polygon buffered-line uses round caps; the wall tool overrides this to
+		/// keep the ends straight.
+		/// </summary>
+		protected virtual bool UseFlatEndCaps => false;
 
 		// The tool buffers a single existing line at a time (shift-select).
 		protected override bool AllowMultiSelection(out string reason)
@@ -165,7 +189,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		protected override void LogEnteringSketchMode()
 		{
 			_msg.InfoFormat(
-				"Buffered line: draw the centre line to buffer, then finish the sketch. " +
+				"Buffered line: draw the line to buffer, then finish the sketch. " +
 				"Current buffer width: {0}. Hold [CTRL] to measure the width, press [1]/[2] " +
 				"to de-/increase it, [O] for options.", _currentBufferWidth);
 		}
@@ -528,7 +552,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		}
 
 		[CanBeNull]
-		private DockPaneCreateBufferedLineViewModelBase GetBufferedLineViewModel()
+		private DockPaneCreateBufferedLineViewModelBase<TOptions, TPartial>
+			GetBufferedLineViewModel()
 		{
 			if (OptionsDockPaneID == null)
 			{
@@ -537,7 +562,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			var viewModel =
 				FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
-					DockPaneCreateBufferedLineViewModelBase;
+					DockPaneCreateBufferedLineViewModelBase<TOptions, TPartial>;
 
 			return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
 			                      OptionsDockPaneID);
@@ -564,7 +589,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			MultiLinestring buffer = GeomTopoOpUtils.GetBufferedLine(
 				paths, offsetDistances, _bufferedLineToolOptions.BufferSide, tolerance,
-				out string message);
+				out string message, UseMiteredCorners, UseFlatEndCaps);
 
 			if (buffer == null)
 			{
@@ -1005,6 +1030,14 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				return;
 			}
 
+			// The buffer-width indicator circle is a flat 2D overlay and is only shown in a 2D
+			// map. It does not render meaningfully in a stereo map (as in the legacy tool), so
+			// it is skipped there.
+			if (mapView.ViewingMode != MapViewingMode.Map)
+			{
+				return;
+			}
+
 			EnsureSymbolsInitialized();
 
 			double radius = _currentBufferWidth * OffsetRatio;
@@ -1327,7 +1360,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			}
 		}
 
-		private CreateBufferedLineToolOptions InitializeOptions()
+		private TOptions InitializeOptions()
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -1335,15 +1368,14 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			string currentLocalConfigDir = LocalConfigDir;
 
 			_settingsProvider =
-				new OverridableSettingsProvider<PartialCreateBufferedLineOptions>(
+				new OverridableSettingsProvider<TPartial>(
 					currentCentralConfigDir, currentLocalConfigDir, OptionsFileName);
 
 			_settingsProvider.GetConfigurations(
-				out PartialCreateBufferedLineOptions localConfiguration,
-				out PartialCreateBufferedLineOptions centralConfiguration);
+				out TPartial localConfiguration,
+				out TPartial centralConfiguration);
 
-			var result =
-				new CreateBufferedLineToolOptions(centralConfiguration, localConfiguration);
+			TOptions result = CreateToolOptions(centralConfiguration, localConfiguration);
 
 			// Redraw the buffer preview whenever any option changes (buffer width, side,
 			// generalization, minimum segment length, ...). OptionsBase funnels every

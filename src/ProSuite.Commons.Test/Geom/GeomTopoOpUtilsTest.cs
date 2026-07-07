@@ -308,14 +308,14 @@ namespace ProSuite.Commons.Test.Geom
 							IList<RingGroup> result = CutPlanarBothWays(poly1, o, 2, 0);
 
 							var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
-								{
-									new Pnt3D(0, 0, 9),
-									new Pnt3D(0, 100, 9),
-									new Pnt3D(100, 100, 9),
-									new Pnt3D(100, 30, 9),
-									new Pnt3D(40, 30, 9),
-									new Pnt3D(40, 0, 9)
-								});
+									{
+										new Pnt3D(0, 0, 9),
+										new Pnt3D(0, 100, 9),
+										new Pnt3D(100, 100, 9),
+										new Pnt3D(100, 30, 9),
+										new Pnt3D(40, 30, 9),
+										new Pnt3D(40, 0, 9)
+									});
 
 							Assert.True(
 								GeomTopoOpUtils.AreEqualXY(expected, result[0].ExteriorRing,
@@ -8171,10 +8171,10 @@ namespace ProSuite.Commons.Test.Geom
 			containedSource.ReverseOrientation();
 			Assert.IsTrue(intersectionLinesXY[0].Equals(containedSource));
 			Assert.IsTrue(intersectionLinesXY[1].Equals(new Linestring(new[]
-				                                            {
-					                                            new Pnt3D(100, 40, 2),
-					                                            new Pnt3D(100, 20, 2)
-				                                            })));
+					                                            {
+						                                            new Pnt3D(100, 40, 2),
+						                                            new Pnt3D(100, 20, 2)
+					                                            })));
 
 			// Excluded target boundary line:
 			intersectionLinesXY =
@@ -10155,6 +10155,96 @@ namespace ProSuite.Commons.Test.Geom
 			// adds round end caps at both line ends (two semicircles = pi * 25 ~= 78.5),
 			// so the area is ~2073.2.
 			Assert.AreEqual(2073.2, buffer.GetArea2D(), 1.5);
+		}
+
+		[Test]
+		public void CanBufferStraightLineBothSidesFlatEnds()
+		{
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true);
+
+			Assert.NotNull(buffer);
+			// 100 long, 10 wide (5 to each side), no round end caps => a clean 100 x 10
+			// rectangle => 1000.
+			Assert.AreEqual(1000, buffer.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void CanBufferPolylineWithMiteredCornerAndFlatEnds()
+		{
+			// The wall tool's geometry: an L-shaped line buffered on both sides with mitered
+			// corners and straight (flat) ends. The outer (convex) corner is a sharp miter and
+			// the ends are flat, giving a clean L-band.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true);
+
+			Assert.NotNull(buffer);
+			// Two 100 x 10 bands joined by a mitered right-angle corner => 2000 exactly.
+			Assert.AreEqual(2000, buffer.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void MiteredCornerIsBevelledBeyondMiterLimit()
+		{
+			// A right-angle corner has a miter length of radius / sin(45deg) ~= 1.41 * radius,
+			// so a miter limit below that forces the corner to be bevelled instead of mitered.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring mitered =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true,
+				                                miterLimit: 10.0);
+
+			MultiLinestring bevelled =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true,
+				                                miterLimit: 1.0);
+
+			Assert.NotNull(mitered);
+			Assert.NotNull(bevelled);
+
+			// The miter keeps the full corner (2000); the bevel cuts off the outer corner
+			// triangle (0.5 * 5 * 5 = 12.5) => 1987.5.
+			Assert.AreEqual(2000, mitered.GetArea2D(), 0.01);
+			Assert.AreEqual(1987.5, bevelled.GetArea2D(), 0.01);
 		}
 	}
 }

@@ -5830,6 +5830,11 @@ namespace ProSuite.Commons.Geom
 		// of straight chord segments.
 		private const double _maxRoundJoinAngleStep = Math.PI / 36;
 
+		// The default miter limit (the ratio of the miter length to the offset distance)
+		// beyond which a mitered convex corner is bevelled instead, to avoid the long spikes
+		// that a plain miter produces at very sharp angles.
+		private const double _defaultMiterLimit = 10.0;
+
 		/// <summary>
 		/// Creates a polygon (as a <see cref="MultiLinestring"/>) by offsetting the
 		/// given line to the requested side(s) at the given distance, i.e. a buffered
@@ -5851,6 +5856,15 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance">The XY tolerance used to clean up the result.</param>
 		/// <param name="message">Receives the reason if no (valid) buffer could be
 		/// constructed, e.g. because the distance is too large.</param>
+		/// <param name="miteredCorners">When <c>true</c>, convex corners are mitered (the two
+		/// adjacent offset lines are extended to their intersection, bevelled past
+		/// <paramref name="miterLimit"/>) instead of rounded.</param>
+		/// <param name="flatEndCaps">When <c>true</c>, a two-sided (<see cref="BufferSide.Both"/>)
+		/// buffer is closed with straight ends instead of round end caps. One-sided buffers
+		/// are always flat.</param>
+		/// <param name="miterLimit">The ratio of the miter length to the offset distance beyond
+		/// which a mitered corner is bevelled. Only relevant when
+		/// <paramref name="miteredCorners"/> is <c>true</c>.</param>
 		/// <returns>The buffer polygon or null if no valid result could be constructed.</returns>
 		[CanBeNull]
 		public static MultiLinestring GetBufferedLine(
@@ -5858,7 +5872,10 @@ namespace ProSuite.Commons.Geom
 			double bufferDistance,
 			BufferSide bufferSide,
 			double tolerance,
-			out string message)
+			out string message,
+			bool miteredCorners = false,
+			bool flatEndCaps = false,
+			double miterLimit = _defaultMiterLimit)
 		{
 			Assert.ArgumentNotNull(line, nameof(line));
 
@@ -5870,12 +5887,13 @@ namespace ProSuite.Commons.Geom
 				distances.Add(bufferDistance);
 			}
 
-			return GetBufferedLine(paths, distances, bufferSide, tolerance, out message);
+			return GetBufferedLine(paths, distances, bufferSide, tolerance, out message,
+			                       miteredCorners, flatEndCaps, miterLimit);
 		}
 
 		/// <summary>
 		/// Creates a buffered line polygon with a separate offset distance per line
-		/// part (see <see cref="GetBufferedLine(MultiLinestring,double,BufferSide,double,out string)"/>).
+		/// part (see <see cref="GetBufferedLine(MultiLinestring,double,BufferSide,double,out string,bool,bool,double)"/>).
 		/// </summary>
 		/// <param name="pathsToBuffer">The line parts (open paths) to buffer.</param>
 		/// <param name="bufferDistances">The offset distance per path. Must have the
@@ -5884,6 +5902,12 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance">The XY tolerance used to clean up the result.</param>
 		/// <param name="message">Receives the reason if no (valid) buffer could be
 		/// constructed.</param>
+		/// <param name="miteredCorners">When <c>true</c>, convex corners are mitered (bevelled
+		/// past <paramref name="miterLimit"/>) instead of rounded.</param>
+		/// <param name="flatEndCaps">When <c>true</c>, a two-sided buffer is closed with
+		/// straight ends instead of round end caps.</param>
+		/// <param name="miterLimit">The ratio of the miter length to the offset distance beyond
+		/// which a mitered corner is bevelled.</param>
 		/// <returns>The buffer polygon or null if no valid result could be constructed.</returns>
 		[CanBeNull]
 		public static MultiLinestring GetBufferedLine(
@@ -5891,7 +5915,10 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IList<double> bufferDistances,
 			BufferSide bufferSide,
 			double tolerance,
-			out string message)
+			out string message,
+			bool miteredCorners = false,
+			bool flatEndCaps = false,
+			double miterLimit = _defaultMiterLimit)
 		{
 			Assert.ArgumentNotNull(pathsToBuffer, nameof(pathsToBuffer));
 			Assert.ArgumentNotNull(bufferDistances, nameof(bufferDistances));
@@ -5912,7 +5939,8 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				Linestring ring = BuildBufferRing(path, distance, bufferSide);
+				Linestring ring = BuildBufferRing(path, distance, bufferSide,
+				                                  miteredCorners, flatEndCaps, miterLimit);
 
 				if (ring == null || ring.SegmentCount < 3)
 				{
@@ -5958,14 +5986,17 @@ namespace ProSuite.Commons.Geom
 		}
 
 		// Builds the (closed, clockwise) outline of the buffer of a single open path.
-		// For a two-sided buffer the ring is the left offset, a round end cap, the reversed
-		// right offset and a round start cap (round everywhere); for a one-sided buffer one
-		// edge is the offset line and the opposite edge is the original line, leaving the
-		// ends flat. Convex corners of the offset side(s) are rounded (see
-		// GetRoundedOffsetPoints).
+		// For a two-sided buffer the ring is the left offset, an end cap, the reversed
+		// right offset and a start cap; for a one-sided buffer one edge is the offset line
+		// and the opposite edge is the original line, leaving the ends flat. The end caps are
+		// round unless <paramref name="flatEndCaps"/> is set (then the ends are closed with a
+		// straight chord). Convex corners of the offset side(s) are rounded, or mitered/
+		// bevelled when <paramref name="mitered"/> is set (see GetRoundedOffsetPoints).
 		[CanBeNull]
 		private static Linestring BuildBufferRing([NotNull] Linestring path, double distance,
-		                                          BufferSide bufferSide)
+		                                          BufferSide bufferSide,
+		                                          bool mitered, bool flatEndCaps,
+		                                          double miterLimit)
 		{
 			IList<Pnt3D> original = path.GetPoints(clone: true).ToList();
 
@@ -5979,31 +6010,43 @@ namespace ProSuite.Commons.Geom
 			switch (bufferSide)
 			{
 				case BufferSide.Both:
-					List<Pnt3D> leftBoth = GetRoundedOffsetPoints(path, original, distance);
-					List<Pnt3D> rightBoth = GetRoundedOffsetPoints(path, original, -distance);
+					List<Pnt3D> leftBoth =
+						GetRoundedOffsetPoints(path, original, distance, mitered, miterLimit);
+					List<Pnt3D> rightBoth =
+						GetRoundedOffsetPoints(path, original, -distance, mitered, miterLimit);
 					rightBoth.Reverse();
-
-					Line3D firstSegment = path.GetSegment(0);
-					Line3D lastSegment = path.GetSegment(path.SegmentCount - 1);
 
 					ringPoints = new List<Pnt3D>();
 					ringPoints.AddRange(leftBoth);
 
-					// Round end cap around the last vertex, bulging in the forward direction.
-					AppendRoundCapPoints(ringPoints, lastSegment.EndPoint, distance,
-					                     leftBoth[leftBoth.Count - 1],
-					                     lastSegment.DeltaX, lastSegment.DeltaY);
+					if (! flatEndCaps)
+					{
+						// Round end cap around the last vertex, bulging in the forward direction.
+						Line3D lastSegment = path.GetSegment(path.SegmentCount - 1);
+						AppendRoundCapPoints(ringPoints, lastSegment.EndPoint, distance,
+						                     leftBoth[leftBoth.Count - 1],
+						                     lastSegment.DeltaX, lastSegment.DeltaY);
+					}
 
+					// When flat, the straight chord from the last left-offset point to the
+					// first right-offset point (and the ring closure back to the start) forms
+					// the flat ends.
 					ringPoints.AddRange(rightBoth);
 
-					// Round start cap around the first vertex, bulging backwards.
-					AppendRoundCapPoints(ringPoints, firstSegment.StartPoint, distance,
-					                     rightBoth[rightBoth.Count - 1],
-					                     -firstSegment.DeltaX, -firstSegment.DeltaY);
+					if (! flatEndCaps)
+					{
+						// Round start cap around the first vertex, bulging backwards.
+						Line3D firstSegment = path.GetSegment(0);
+						AppendRoundCapPoints(ringPoints, firstSegment.StartPoint, distance,
+						                     rightBoth[rightBoth.Count - 1],
+						                     -firstSegment.DeltaX, -firstSegment.DeltaY);
+					}
+
 					break;
 
 				case BufferSide.Left:
-					List<Pnt3D> left = GetRoundedOffsetPoints(path, original, distance);
+					List<Pnt3D> left =
+						GetRoundedOffsetPoints(path, original, distance, mitered, miterLimit);
 
 					ringPoints = new List<Pnt3D>(left.Count + original.Count + 1);
 					ringPoints.AddRange(left);
@@ -6015,7 +6058,8 @@ namespace ProSuite.Commons.Geom
 					break;
 
 				case BufferSide.Right:
-					List<Pnt3D> right = GetRoundedOffsetPoints(path, original, -distance);
+					List<Pnt3D> right =
+						GetRoundedOffsetPoints(path, original, -distance, mitered, miterLimit);
 
 					ringPoints = new List<Pnt3D>(original.Count + right.Count + 1);
 					foreach (Pnt3D p in original)
@@ -6041,15 +6085,18 @@ namespace ProSuite.Commons.Geom
 		}
 
 		// Offsets an open path perpendicularly in XY by the signed distance (positive =
-		// left of the digitizing direction). A corner is rounded with a circular arc
-		// (radius |signedDistance|, centred on the original vertex) when the offset side is
-		// the outer, convex side of the turn; on the inner, concave side the mitered
-		// intersection of the two adjacent offset lines is used instead (its self-
-		// intersection is cleaned up by the caller). The line ends are left flat. Z values
-		// are carried over from the corresponding source vertices.
+		// left of the digitizing direction). By default a convex (outer) corner is rounded
+		// with a circular arc (radius |signedDistance|, centred on the original vertex); when
+		// <paramref name="mitered"/> is set, the two adjacent offset lines are instead extended
+		// to their intersection (mitered), falling back to a straight bevel once the miter
+		// length exceeds <paramref name="miterLimit"/> * |signedDistance|. On the inner,
+		// concave side the mitered intersection of the two adjacent offset lines is always
+		// used (its self-intersection is cleaned up by the caller). The line ends are left
+		// flat. Z values are carried over from the corresponding source vertices.
 		[NotNull]
 		private static List<Pnt3D> GetRoundedOffsetPoints(
-			[NotNull] Linestring path, [NotNull] IList<Pnt3D> vertices, double signedDistance)
+			[NotNull] Linestring path, [NotNull] IList<Pnt3D> vertices, double signedDistance,
+			bool mitered = false, double miterLimit = _defaultMiterLimit)
 		{
 			int segmentCount = path.SegmentCount;
 
@@ -6098,12 +6145,13 @@ namespace ProSuite.Commons.Geom
 
 				// The offset side is the outer (convex) side of the corner exactly when the
 				// turn direction is opposite to the side being offset.
-				bool roundThisCorner = radius > 0 &&
-				                       Math.Abs(cross) > _parallelEpsilon &&
-				                       signedDistance * cross < 0;
+				bool convexCorner = radius > 0 &&
+				                    Math.Abs(cross) > _parallelEpsilon &&
+				                    signedDistance * cross < 0;
 
-				if (roundThisCorner)
+				if (convexCorner && ! mitered)
 				{
+					// Round the outer corner with a circular arc around the original vertex.
 					result.Add(offsetEnd[j - 1]);
 					AppendRoundJoinPoints(result, vertices[j], radius,
 					                      offsetEnd[j - 1],
@@ -6111,10 +6159,37 @@ namespace ProSuite.Commons.Geom
 					                      directionX[j], directionY[j]);
 					result.Add(offsetStart[j]);
 				}
+				else if (convexCorner && mitered &&
+				         TryIntersectLinesXY(offsetStart[j - 1], directionX[j - 1],
+				                             directionY[j - 1], offsetStart[j], directionX[j],
+				                             directionY[j], out double mx, out double my))
+				{
+					// Miter the outer corner by extending the two offset lines to their
+					// intersection. A very sharp corner would produce a long spike, so fall
+					// back to a straight bevel once the miter length exceeds miterLimit * radius.
+					double miterDx = mx - vertices[j].X;
+					double miterDy = my - vertices[j].Y;
+					double miterLengthSquared = miterDx * miterDx + miterDy * miterDy;
+					double maxMiterLength = miterLimit * radius;
+
+					if (miterLengthSquared <= maxMiterLength * maxMiterLength)
+					{
+						result.Add(new Pnt3D(mx, my, vertices[j].Z));
+					}
+					else
+					{
+						// Bevel: cut the corner off with a straight chord between the ends of
+						// the two adjacent offset segments.
+						result.Add(offsetEnd[j - 1]);
+						result.Add(offsetStart[j]);
+					}
+				}
 				else if (TryIntersectLinesXY(offsetStart[j - 1], directionX[j - 1],
 				                             directionY[j - 1], offsetStart[j], directionX[j],
 				                             directionY[j], out double x, out double y))
 				{
+					// Concave (inner) corner: use the mitered intersection of the two offset
+					// lines (the self-intersection this creates is cleaned up by the caller).
 					result.Add(new Pnt3D(x, y, vertices[j].Z));
 				}
 				else
