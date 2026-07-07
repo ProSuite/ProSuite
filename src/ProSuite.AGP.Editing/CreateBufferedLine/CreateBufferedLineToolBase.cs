@@ -69,6 +69,11 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		private bool _measuring;
 		private MapPoint _measureStart;
 
+		// True while a sketch is being drawn (has at least one vertex). While a sketch is in
+		// progress, SHIFT-clicks are left to the sketch engine (e.g. SHIFT + double-click to
+		// finish the part) instead of being used for the shift-select-existing-line feature.
+		private bool _sketchInProgress;
+
 		private readonly List<IDisposable> _overlays = new();
 		private readonly List<IDisposable> _measureOverlays = new();
 		private CIMLineSymbol _bufferSymbol;
@@ -247,6 +252,9 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		protected override async Task<bool> OnSketchModifiedAsyncCore()
 		{
+			Geometry sketch = await GetCurrentSketchAsync();
+			_sketchInProgress = sketch is { IsEmpty: false };
+
 			await RefreshBufferPreviewAsync();
 			return await base.OnSketchModifiedAsyncCore();
 		}
@@ -322,11 +330,18 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		protected override void OnToolMouseDownCore(MapViewMouseButtonEventArgs args)
 		{
+			if (args.ChangedButton != MouseButton.Left)
+			{
+				return;
+			}
+
 			// Intercept CTRL-clicks (measure line) and SHIFT-clicks (select an existing line
 			// to buffer): setting Handled prevents the sketch engine from adding a vertex and
-			// routes the click to OnToolMouseDownCoreAsync instead.
-			if (args.ChangedButton == MouseButton.Left &&
-			    (KeyboardUtils.IsCtrlDown() || KeyboardUtils.IsShiftDown()))
+			// routes the click to OnToolMouseDownCoreAsync instead. SHIFT is only claimed when
+			// no sketch is in progress; while drawing, SHIFT gestures (e.g. SHIFT +
+			// double-click to finish the part) must reach the sketch engine.
+			if (KeyboardUtils.IsCtrlDown() ||
+			    (KeyboardUtils.IsShiftDown() && ! _sketchInProgress))
 			{
 				args.Handled = true;
 			}
@@ -341,7 +356,9 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			if (KeyboardUtils.IsShiftDown())
 			{
-				return HandleShiftSelectAsync(args);
+				// Only shift-select an existing line when not drawing; while a sketch is in
+				// progress the shift gesture belongs to the sketch engine.
+				return _sketchInProgress ? Task.CompletedTask : HandleShiftSelectAsync(args);
 			}
 
 			if (! KeyboardUtils.IsCtrlDown())
@@ -1308,6 +1325,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			_currentPart = 0;
 			_measuring = false;
 			_measureStart = null;
+			_sketchInProgress = false;
 		}
 
 		private void UpdateEnabled()
