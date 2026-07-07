@@ -852,6 +852,15 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			{
 				_bufferWidths[_currentPart] = width;
 			}
+
+			// Reflect the change in the option so the dockpane spinner stays in sync (the
+			// [1]/[2] keys and CTRL-measure change the width too, not only the spinner).
+			// OptionsPropertyChanged short-circuits when the option already matches the live
+			// width, so this does not recurse.
+			if (Math.Abs(_bufferedLineToolOptions.BufferWidth - width) > double.Epsilon)
+			{
+				_bufferedLineToolOptions.BufferWidth = width;
+			}
 		}
 
 		private void LogBufferWidth()
