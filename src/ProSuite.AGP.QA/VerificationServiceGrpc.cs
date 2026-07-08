@@ -65,7 +65,8 @@ namespace ProSuite.AGP.QA
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			QualityVerificationProgressTracker progress,
-			string resultsPath)
+			string resultsPath,
+			bool saveVerification = false)
 		{
 			Assert.ArgumentNotNull(qualitySpecificationRef, nameof(qualitySpecificationRef));
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
@@ -78,7 +79,7 @@ namespace ProSuite.AGP.QA
 
 			VerificationRequest request =
 				await CreateVerificationRequest(specificationRef, perimeter, projectWorkspace,
-				                                resultsPath);
+				                                resultsPath, saveVerification: saveVerification);
 
 			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
 			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
@@ -124,7 +125,7 @@ namespace ProSuite.AGP.QA
 
 			VerificationRequest request =
 				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
-				                                resultsPath, objectsToVerify);
+				                                resultsPath, objectsToVerify, false);
 
 			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
 
@@ -282,7 +283,8 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] Geometry perimeter,
 			[NotNull] ProjectWorkspace projectWorkspace,
 			[CanBeNull] string resultsPath,
-			[CanBeNull] IList<Row> objectsToVerify = null)
+			[CanBeNull] IList<Row> objectsToVerify = null,
+			bool saveVerification = false)
 		{
 			string contextType = ContextType ?? _defaultContextType;
 			string contextName = ContextName ?? Project.Current.Name;
@@ -302,7 +304,7 @@ namespace ProSuite.AGP.QA
 			SetPathParameters(resultsPath, request);
 
 			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), false, true, false);
+				request, GetTileSize(projectWorkspace), saveVerification, true, false);
 
 			return request;
 		}

@@ -94,12 +94,13 @@ public interface IQualityVerificationEnvironment
 	/// <param name="progress"></param>
 	/// <param name="perimeterDisplayName">The display name for the provided perimeter.</param>
 	/// <param name="resultsPath"></param>
+	/// <param name="saveVerification"></param>
 	/// <returns></returns>
-	Task<ServiceCallStatus> VerifyPerimeter(
-		[CanBeNull] Geometry perimeter,
-		[NotNull] QualityVerificationProgressTracker progress,
-		[NotNull] string perimeterDisplayName,
-		string resultsPath);
+	Task<ServiceCallStatus> VerifyPerimeter([CanBeNull] Geometry perimeter,
+	                                        [NotNull] QualityVerificationProgressTracker progress,
+	                                        [NotNull] string perimeterDisplayName,
+	                                        string resultsPath,
+	                                        bool saveVerification = false);
 
 	Task<ServiceCallStatus> VerifySelection(
 		IList<Row> objectsToVerify,

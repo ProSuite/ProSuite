@@ -28,7 +28,8 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			[NotNull] QualityVerificationProgressTracker progress,
-			[CanBeNull] string resultsPath);
+			[CanBeNull] string resultsPath,
+			bool saveVerification = false);
 
 		public abstract Task<ServiceCallStatus> Verify(
 			[NotNull] QualitySpecification qualitySpecification,
