@@ -9,6 +9,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
@@ -235,9 +236,24 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			Polyhedron polyhedron = GeometryConversionUtils.CreatePolyhedron(multiPatch);
+			Polyhedron polyhedron;
+			try
+			{
+				polyhedron = GeometryConversionUtils.CreatePolyhedron(multiPatch);
+			}
+			catch (Exception ex)
+			{
+				string message =
+					$"Invalid multipatch geometry: {ExceptionUtils.FormatMessage(ex)}";
 
-			var errorCount = 0;
+				_msg.Debug(
+					$"{nameof(CheckMultiPatch)} failed for {GdbObjectUtils.ToString(feature)}",
+					ex);
+
+				throw new TestDataException(message, feature);
+			}
+
+			int errorCount = CheckRings(polyhedron, feature);
 
 			foreach (Linestring ring in polyhedron.GetSelfIntersectingRings(_xyTolerance))
 			{
@@ -265,20 +281,73 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
+		private int CheckRings([NotNull] Polyhedron polyhedron,
+		                       [NotNull] IReadOnlyFeature feature)
+		{
+			var errorCount = 0;
+
+			int ringIndex = 0;
+			foreach (Linestring ring in polyhedron.GetLinestrings())
+			{
+				errorCount += CheckRing(ring, feature, ringIndex++);
+			}
+
+			return errorCount;
+		}
+
+		private int CheckRing([NotNull] Linestring ring,
+		                      [NotNull] IReadOnlyFeature feature,
+		                      int ringIndex)
+		{
+			if (ring.IsEmpty)
+			{
+				return ReportError(
+					$"Multipatch has empty ring (index {ringIndex})",
+					InvolvedRowUtils.GetInvolvedRows(feature),
+					feature.Shape, Codes[Code.EmptyPart], _shapeFieldName);
+			}
+
+			var errorCount = 0;
+
+			if (! ring.IsClosed)
+			{
+				errorCount += ReportError(
+					$"Multipatch ring is not closed (index {ringIndex})",
+					InvolvedRowUtils.GetInvolvedRows(feature),
+					GeometryConversionUtils.CreatePolyline(new[] { ring }, _spatialReference),
+					Codes[Code.UnclosedRing], _shapeFieldName);
+			}
+
+			IGeometry shortSegmentGeometry = GetShortSegmentErrorGeometry(ring);
+			if (shortSegmentGeometry != null)
+			{
+				errorCount += ReportError(
+					$"Multipatch ring has short segments (index {ringIndex})",
+					InvolvedRowUtils.GetInvolvedRows(feature), shortSegmentGeometry,
+					Codes[Code.ShortSegment], _shapeFieldName);
+			}
+
+			return errorCount;
+		}
+
 		/// <summary>
 		/// Builds the error geometry for a self-intersecting ring: the actual self-intersection
 		/// location rather than the whole ring. Linear self-intersections (overlaps / spikes)
 		/// are returned as a polyline, point self-intersections (crossings / touches) as a
 		/// multipoint. Falls back to the whole ring if the exact location cannot be determined.
 		/// </summary>
-		[NotNull]
+		[CanBeNull]
 		private IGeometry GetSelfIntersectionErrorGeometry([NotNull] Linestring ring)
 		{
 			List<Line3D> linearSelfIntersections =
 				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(ring, _xyTolerance, in3D: true)
 				               .ToList();
 
-			if (linearSelfIntersections.Count > 0)
+			double toleranceSquared = _xyTolerance * _xyTolerance;
+			int shortSegmentCount =
+				linearSelfIntersections.Count(line => ! IsShortSegment(line, toleranceSquared));
+
+			if (shortSegmentCount > 0)
 			{
 				// Each overlapping segment becomes its own path.
 				IEnumerable<Linestring> paths =
@@ -288,7 +357,10 @@ namespace ProSuite.QA.Tests
 			}
 
 			IList<IntersectionPoint3D> selfIntersectionPoints =
-				GeomTopoOpUtils.GetSelfIntersectionPoints(ring, _xyTolerance);
+				GeomTopoOpUtils.GetSelfIntersectionPoints(ring, _xyTolerance)
+				               .Where(ip => ! IsShortSegmentIntersection(
+					                            ip, ring, toleranceSquared))
+				               .ToList();
 
 			if (selfIntersectionPoints.Count > 0)
 			{
@@ -305,8 +377,59 @@ namespace ProSuite.QA.Tests
 				return multipoint;
 			}
 
+			if (linearSelfIntersections.Count > 0)
+			{
+				// There were only shorts segments, which are reported separately.
+				return null;
+			}
+
 			// Could not locate the exact self-intersection -> fall back to the whole ring.
 			return GeometryConversionUtils.CreatePolyline(new[] { ring }, _spatialReference);
+		}
+
+		[CanBeNull]
+		private IGeometry GetShortSegmentErrorGeometry([NotNull] Linestring ring)
+		{
+			double toleranceSquared = _xyTolerance * _xyTolerance;
+
+			List<IPoint> shortSegmentPoints =
+				ring.Where(line => IsShortSegment(line, toleranceSquared))
+				    .Select(segment => GeometryConversionUtils.CreatePoint(
+					            segment.StartPoint, _spatialReference))
+				    .ToList();
+
+			if (shortSegmentPoints.Count == 0)
+			{
+				return null;
+			}
+
+			IMultipoint multipoint = GeometryFactory.CreateMultipoint(shortSegmentPoints);
+			GeometryUtils.Simplify(multipoint);
+
+			return multipoint;
+		}
+
+		private static bool IsShortSegment([NotNull] Line3D segment,
+		                                   double toleranceSquared)
+		{
+			double lengthSquared = segment.DirectionVector.LengthSquared;
+
+			return lengthSquared < toleranceSquared;
+		}
+
+		private static bool IsShortSegmentIntersection(
+			[NotNull] IntersectionPoint3D intersectionPoint,
+			[NotNull] Linestring ring,
+			double xyToleranceSquared)
+		{
+			SegmentIntersection segmentIntersection = intersectionPoint.SegmentIntersection;
+			if (segmentIntersection == null)
+			{
+				return false;
+			}
+
+			return IsShortSegment(ring[segmentIntersection.SourceIndex], xyToleranceSquared) ||
+			       IsShortSegment(ring[segmentIntersection.TargetIndex], xyToleranceSquared);
 		}
 
 		[NotNull]
