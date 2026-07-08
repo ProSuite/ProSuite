@@ -3834,12 +3834,14 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <param name="results"></param>
 		/// <param name="minimumSegmentLength"></param>
+		/// <param name="keepShortSegments">Whether short (0-length segments) should be kept.</param>
 		/// <returns></returns>
 		public static bool TryDeleteLinearSelfIntersectionsXY(
 			[NotNull] Linestring ring,
 			double tolerance,
 			[NotNull] List<Linestring> results,
-			double? minimumSegmentLength = null)
+			double? minimumSegmentLength = null,
+			bool keepShortSegments = false)
 		{
 			// Basic idea:
 			// 1. Self-cracking with (potentially large) tolerance
@@ -3881,7 +3883,8 @@ namespace ProSuite.Commons.Geom
 
 				Line3D currentSegment = crackedSelfIntersections[i];
 
-				if (MathUtils.AreEqual(0, currentSegment.Length3D))
+				// Consider using minimumSegmentLength?
+				if (! keepShortSegments && MathUtils.AreEqual(0, currentSegment.Length3D))
 				{
 					continue;
 				}
