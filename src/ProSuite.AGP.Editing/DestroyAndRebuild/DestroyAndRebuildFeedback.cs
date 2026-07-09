@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
@@ -24,6 +26,10 @@ public class DestroyAndRebuildFeedback
 	private CIMPointSymbol _vertexMarkerSymbol;
 	private CIMPointSymbol _controlPointMarkerSymbol;
 	private readonly bool _useOldSymbolization;
+
+	// The map view the overlays are drawn on. Defaults to MapView.Active but can be set
+	// explicitly (via UpdateSelection) so the feedback also shows in a stereo map view.
+	[CanBeNull] private MapView _mapView;
 
 	public DestroyAndRebuildFeedback(bool useOldSymbolization = false)
 	{
@@ -83,19 +89,41 @@ public class DestroyAndRebuildFeedback
 		}
 	}
 
-	[CanBeNull]
-	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
-	                                      [NotNull] CIMSymbol cimSymbol)
+	[ItemCanBeNull]
+	private async Task<IDisposable> AddOverlayAsync([CanBeNull] Geometry geometry,
+	                                                [NotNull] CIMSymbol cimSymbol)
 	{
 		if (geometry == null || geometry.IsEmpty)
 		{
 			return null;
 		}
 
-		IDisposable result = MapView.Active.AddOverlay(
-			geometry, cimSymbol.MakeSymbolReference());
+		MapView mapView = _mapView ?? MapView.Active;
+
+		if (mapView == null)
+		{
+			return null;
+		}
+
+		// A stereo map view does not render an overlay whose geometry contains NaN Z values
+		// (and it can even crash), so skip those. In a 2D view they would simply be ignored.
+		if (MapUtils.IsStereoMapView(mapView) && HasNaNZ(geometry))
+		{
+			return null;
+		}
+
+		// Use the async overlay API: unlike the synchronous AddOverlay, it also renders in a
+		// stereo map view.
+		IDisposable result = await mapView.AddOverlayAsync(
+			                     geometry, cimSymbol.MakeSymbolReference());
 
 		return result;
+	}
+
+	private static bool HasNaNZ([NotNull] Geometry geometry)
+	{
+		return geometry is Multipart multipart &&
+		       multipart.Points.Any(point => double.IsNaN(point.Z));
 	}
 
 	private CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
@@ -116,9 +144,13 @@ public class DestroyAndRebuildFeedback
 
 	#region Selection
 
-	public bool UpdateSelection([CanBeNull] IList<Feature> selectedFeatures)
+	public async Task<bool> UpdateSelectionAsync([CanBeNull] IList<Feature> selectedFeatures,
+	                                             [CanBeNull] MapView mapView = null)
 	{
 		DisposeOverlays();
+
+		// Draw on the given view (e.g. the stereo view) or fall back to the active view.
+		_mapView = mapView ?? MapView.Active;
 
 		if (selectedFeatures == null || selectedFeatures.Count == 0)
 		{
@@ -137,47 +169,60 @@ public class DestroyAndRebuildFeedback
 			{
 				case GeometryType.Point:
 					// Use start point symbol for points, consistent across both versions
-					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						await AddOverlayAsync(geometry, Assert.NotNull(_startPointSymbol)));
 					break;
 				case GeometryType.Polyline:
-					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_lineSymbol)));
+					_overlays.Add(await AddOverlayAsync(geometry, Assert.NotNull(_lineSymbol)));
 
 					var startPointL = GeometryUtils.GetStartPoint(geometry as Polyline);
 					var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
-					_overlays.Add(AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						await AddOverlayAsync(startPointL, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
-						_overlays.Add(AddOverlay(vertexMultipoint,
-						                         Assert.NotNull(_vertexMarkerSymbol)));
-						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						_overlays.Add(await AddOverlayAsync(vertexMultipoint,
+						                                    Assert.NotNull(_vertexMarkerSymbol)));
+						_overlays.Add(await AddOverlayAsync(controlMultipoint,
+						                                    Assert.NotNull(
+							                                    _controlPointMarkerSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
+					_overlays.Add(
+						await AddOverlayAsync(endPointL, Assert.NotNull(_endPointSymbol)));
 					break;
 				case GeometryType.Polygon:
 					// Old symbolization: for polygons, show only the outline
-					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_polygonSymbol)));
+					_overlays.Add(await AddOverlayAsync(geometry, Assert.NotNull(_polygonSymbol)));
 
 					if (! _useOldSymbolization)
 					{
 						var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
 						var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
-						_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
+						_overlays.Add(
+							await AddOverlayAsync(startPointP, Assert.NotNull(_startPointSymbol)));
 
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
-						_overlays.Add(AddOverlay(vertexMultipoint,
-						                         Assert.NotNull(_vertexMarkerSymbol)));
-						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						_overlays.Add(await AddOverlayAsync(vertexMultipoint,
+						                                    Assert.NotNull(_vertexMarkerSymbol)));
+						_overlays.Add(await AddOverlayAsync(controlMultipoint,
+						                                    Assert.NotNull(
+							                                    _controlPointMarkerSymbol)));
 
-						_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
+						_overlays.Add(
+							await AddOverlayAsync(endPointP, Assert.NotNull(_endPointSymbol)));
 					}
 
+					break;
+
+				case GeometryType.Multipatch:
+					Polyline multipatchOutline = GetMultipatchOutline((Multipatch) geometry);
+					_overlays.Add(await AddOverlayAsync(multipatchOutline,
+					                                    Assert.NotNull(_lineSymbol)));
 					break;
 
 				default:
@@ -217,6 +262,35 @@ public class DestroyAndRebuildFeedback
 				controlMultipoint = simplified;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Builds a (multipart) polyline of the multipatch's patch edges, used to render the
+	/// target outline as feedback (no faces, no vertices).
+	/// </summary>
+	[CanBeNull]
+	private static Polyline GetMultipatchOutline([NotNull] Multipatch multipatch)
+	{
+		if (multipatch.IsEmpty)
+		{
+			return null;
+		}
+
+		var builder = new PolylineBuilderEx(multipatch.SpatialReference);
+
+		var multipatchBuilder = new MultipatchBuilderEx(multipatch);
+
+		foreach (Patch patch in multipatchBuilder.Patches)
+		{
+			if (patch?.Coords == null || patch.Coords.Count < 2)
+			{
+				continue;
+			}
+
+			builder.AddPart(patch.Coords);
+		}
+
+		return builder.ToGeometry();
 	}
 
 	public void ClearSelection()
