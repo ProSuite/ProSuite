@@ -253,16 +253,17 @@ namespace ProSuite.QA.Tests
 				throw new TestDataException(message, feature);
 			}
 
-			int errorCount = CheckRings(polyhedron, feature);
+			var involvedRows = InvolvedRowUtils.GetInvolvedRows(feature);
+
+			int errorCount = CheckRings(polyhedron, feature, involvedRows);
 
 			foreach (Linestring ring in polyhedron.GetSelfIntersectingRings(_xyTolerance))
 			{
 				IGeometry errorGeometry = GetSelfIntersectionErrorGeometry(ring);
 
-				errorCount += ReportError(
+				errorCount += ReportMultiPatchError(
 					"Multipatch ring has a self-intersection (linear or point)",
-					InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
-					Codes[Code.SelfIntersection], _shapeFieldName);
+					errorGeometry, Codes[Code.SelfIntersection], involvedRows);
 			}
 
 			foreach (Linestring interiorRing in
@@ -272,62 +273,85 @@ namespace ProSuite.QA.Tests
 					GeometryConversionUtils.CreatePolyline(new[] { interiorRing },
 					                                       _spatialReference);
 
-				errorCount += ReportError(
+				errorCount += ReportMultiPatchError(
 					"Interior ring is not inside its exterior ring (not coplanar with, or not contained within, the parent face)",
-					InvolvedRowUtils.GetInvolvedRows(feature), errorGeometry,
-					Codes[Code.InteriorRingNotInside], _shapeFieldName);
+					errorGeometry, Codes[Code.InteriorRingNotInside], involvedRows);
 			}
 
 			return errorCount;
 		}
 
-		private int CheckRings([NotNull] Polyhedron polyhedron,
-		                       [NotNull] IReadOnlyFeature feature)
+		private int CheckRings(Polyhedron checkedPolyhedron, IReadOnlyFeature feature,
+		                       InvolvedRows involvedRows)
 		{
-			var errorCount = 0;
+			var totalErrorCount = 0;
 
 			int ringIndex = 0;
-			foreach (Linestring ring in polyhedron.GetLinestrings())
+			foreach (Linestring ring in checkedPolyhedron.GetLinestrings())
 			{
-				errorCount += CheckRing(ring, feature, ringIndex++);
+				totalErrorCount += CheckRing(ring, ringIndex++, feature, involvedRows);
 			}
 
-			return errorCount;
+			return totalErrorCount;
 		}
 
-		private int CheckRing([NotNull] Linestring ring,
-		                      [NotNull] IReadOnlyFeature feature,
-		                      int ringIndex)
+		private int CheckRing(Linestring ring, int ringIndex, IReadOnlyFeature feature,
+		                      InvolvedRows involvedRows)
 		{
 			if (ring.IsEmpty)
 			{
-				return ReportError(
+				return ReportMultiPatchError(
 					$"Multipatch has empty ring (index {ringIndex})",
-					InvolvedRowUtils.GetInvolvedRows(feature),
-					feature.Shape, Codes[Code.EmptyPart], _shapeFieldName);
+					feature.Shape, Codes[Code.EmptyPart], involvedRows);
 			}
 
-			var errorCount = 0;
+			var ringErrorCount = 0;
 
 			if (! ring.IsClosed)
 			{
-				errorCount += ReportError(
+				ringErrorCount += ReportMultiPatchError(
 					$"Multipatch ring is not closed (index {ringIndex})",
-					InvolvedRowUtils.GetInvolvedRows(feature),
 					GeometryConversionUtils.CreatePolyline(new[] { ring }, _spatialReference),
-					Codes[Code.UnclosedRing], _shapeFieldName);
+					Codes[Code.UnclosedRing], involvedRows);
 			}
 
 			IGeometry shortSegmentGeometry = GetShortSegmentErrorGeometry(ring);
 			if (shortSegmentGeometry != null)
 			{
-				errorCount += ReportError(
+				ringErrorCount += ReportMultiPatchError(
 					$"Multipatch ring has short segments (index {ringIndex})",
-					InvolvedRowUtils.GetInvolvedRows(feature), shortSegmentGeometry,
-					Codes[Code.ShortSegment], _shapeFieldName);
+					shortSegmentGeometry, Codes[Code.ShortSegment], involvedRows);
 			}
 
-			return errorCount;
+			return ringErrorCount;
+		}
+
+		private int ReportMultiPatchError(string description, IGeometry errorGeometry,
+		                                  IssueCode issueCode, InvolvedRows involvedRows)
+		{
+			if (errorGeometry == null || errorGeometry.IsEmpty)
+			{
+				return ReportError(description, involvedRows, null, issueCode,
+				                   _shapeFieldName);
+			}
+
+			IGeometry reportGeometry = GeometryFactory.Clone(errorGeometry);
+			GeometryUtils.Simplify(reportGeometry);
+
+			if (reportGeometry.IsEmpty && errorGeometry is IPointCollection pointCollection &&
+			    pointCollection.PointCount > 0)
+			{
+				reportGeometry = GeometryFactory.CreateMultipoint(pointCollection);
+				GeometryUtils.Simplify(reportGeometry);
+			}
+
+			if (reportGeometry.IsEmpty)
+			{
+				reportGeometry = errorGeometry;
+			}
+
+			return ReportError(description, involvedRows, reportGeometry, issueCode,
+			                   _shapeFieldName);
 		}
 
 		/// <summary>
