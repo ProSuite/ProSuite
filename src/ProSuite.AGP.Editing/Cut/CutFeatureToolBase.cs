@@ -157,20 +157,13 @@ public abstract class CutFeatureToolBase : ConstructionToolBase
 
 			polyline = simpleGeometry as Polyline;
 
-			bool isClosedPolyline =
-				polyline.Points[0].Equals(polyline.Points[polyline.PointCount - 1]);
+			// A closed cut line is supported: it cuts a hole (cookie-cutter),
+			// resulting in an inner and an outer feature.
 			var cutSubcurve = new CutSubcurve(
-				                  polyline, true, true, false, null, null, null)
-			                  {
-				                  IsClosed = isClosedPolyline
-			                  };
+				polyline, true, true, false, null, null, null);
 			var cutSubcurves = new List<CutSubcurve> { cutSubcurve };
 
 			IChangeAlongService microserviceClient = MicroserviceClient;
-			if (isClosedPolyline)
-			{
-				_msg.Info("Creating a hole with the closed polyline.");
-			}
 
 			if (microserviceClient == null)
 			{

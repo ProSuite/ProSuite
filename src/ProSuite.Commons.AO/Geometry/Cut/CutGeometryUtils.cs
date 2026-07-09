@@ -18,17 +18,6 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
-		/// Checks if the provided polyline is closed (e.g., "bites its tail").
-		/// </summary>
-		/// <param name="polyline">The polyline to check.</param>
-		/// <returns>True if the polyline is closed, false otherwise.</returns>
-		private static bool IsClosedPolyline([NotNull] IPolyline polyline)
-		{
-			Assert.ArgumentNotNull(polyline, nameof(polyline));
-			return ((ICurve) polyline).IsClosed;
-		}
-
-		/// <summary>
 		/// Cuts the provided multipatch along the specified cutLine.
 		/// </summary>
 		/// <param name="multipatch"></param>
@@ -53,14 +42,6 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 
 			Assert.True(allRings,
 			            "The multipatch geometry contains triangles, triangle fans or triangle strips, which are currently not supported");
-
-			// Check if the cut line is closed (e.g., "bites its tail")
-			bool isClosedCutLine = IsClosedPolyline(cutLine);
-			if (isClosedCutLine)
-			{
-				return TryCutWithClosedCutLine(multipatch, cutLine, zSource, usedCutLine,
-				                               nonSimpleFootprintAction);
-			}
 
 			// NOTE: ITopologicalOperator4 is not supported by multipatch, ITopologicalOperator3.Cut returns non-Z-aware polygons
 			// -> Use GeomUtils.Cut implementation which could eventually classify the left/right parts and avoid footprint-cutting
@@ -875,132 +856,6 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			}
 
 			return resultGroups;
-		}
-
-		/// <summary>
-		/// Cuts a MultiPatch using a closed cut line (e.g., "bites its tail").
-		/// The MultiPatch is split into two features: the outer ring and the inner ring (hole).
-		/// </summary>
-		/// <param name="multipatch">The MultiPatch to cut.</param>
-		/// <param name="cutLine">The closed cut line.</param>
-		/// <param name="zSource">The source of the Z values to be used for the new vertices of the result features.</param>
-		/// <param name="usedCutLine">The cut result containing information about the cut operation.</param>
-		/// <param name="nonSimpleFootprintAction">The action to be performed if one of the result multipatches
-		/// has a degenerate footprint.</param>
-		/// <returns>A dictionary mapping the footprint of each resulting MultiPatch to the MultiPatch itself.</returns>
-		public static IDictionary<IPolygon, IMultiPatch> TryCutWithClosedCutLine(
-			[NotNull] IMultiPatch multipatch,
-			[NotNull] IPolyline cutLine,
-			ChangeAlongZSource zSource,
-			[CanBeNull] CutPolyline usedCutLine,
-			DegenerateMultipatchFootprintAction nonSimpleFootprintAction)
-		{
-			Assert.ArgumentNotNull(multipatch, nameof(multipatch));
-			Assert.ArgumentNotNull(cutLine, nameof(cutLine));
-
-			double xyTolerance = GeometryUtils.GetXyTolerance(multipatch);
-			IPolygon footprint = CreateFootprintUtils.GetFootprint(multipatch, xyTolerance);
-
-			// Cut the footprint using the closed cut line
-			IList<IGeometry> cutFootprintParts =
-				TryCutRingGroups(footprint, cutLine, ChangeAlongZSource.Target);
-			if (cutFootprintParts == null || cutFootprintParts.Count < 2)
-			{
-				_msg.DebugFormat(
-					"Closed cut line did not split the footprint into multiple parts. No MultiPatch cutting performed.");
-				if (usedCutLine != null)
-				{
-					usedCutLine.Polyline = cutLine;
-					usedCutLine.SuccessfulCut = false;
-				}
-
-				return new Dictionary<IPolygon, IMultiPatch>(0);
-			}
-
-			// Get the connected components of the MultiPatch
-			IList<GeometryPart> multipatchParts = GeometryPart.FromGeometry(multipatch).ToList();
-			if (multipatchParts.Count != 1)
-			{
-				_msg.DebugFormat(
-					"MultiPatch has multiple parts. Closed cut line cutting is only supported for single-part MultiPatches.");
-				if (usedCutLine != null)
-				{
-					usedCutLine.Polyline = cutLine;
-					usedCutLine.SuccessfulCut = false;
-				}
-
-				return new Dictionary<IPolygon, IMultiPatch>(0);
-			}
-
-			// Prepare the result dictionary
-			var result = new Dictionary<IPolygon, IMultiPatch>();
-
-			// Identify the largest footprint part (outer ring)
-			IGeometry largestFootprintPart = GeometryUtils.GetLargestGeometry(cutFootprintParts);
-			RingGroup outerFootprintRingGroup =
-				GeometryConversionUtils.CreateRingGroup((IPolygon) largestFootprintPart);
-
-			// Create the outer MultiPatch (preserves original attributes)
-			List<RingGroup> outerRingGroups = new List<RingGroup>
-			                                  {
-				                                  GeometryConversionUtils.CreateRingGroup(
-					                                  multipatchParts[0] as IPolygon)
-			                                  };
-			IMultiPatch outerMultipatch =
-				GeometryConversionUtils.CreateMultipatch(outerRingGroups, multipatch);
-			IRing emptyRingTemplate = GeometryFactory.CreateEmptyRing(footprint);
-			IPolygon outerFootprint =
-				GeometryConversionUtils.CreatePolygon(footprint, emptyRingTemplate,
-				                                      outerFootprintRingGroup);
-			result.Add(outerFootprint, outerMultipatch);
-
-			// Create the inner MultiPatch (hole) for each smaller footprint part
-			foreach (IGeometry cutFootprintPart in cutFootprintParts)
-			{
-				if (cutFootprintPart == largestFootprintPart)
-				{
-					continue;
-				}
-
-				// Create a new MultiPatch for the hole (inner ring)
-				RingGroup innerFootprintRingGroup =
-					GeometryConversionUtils.CreateRingGroup((IPolygon) cutFootprintPart);
-				List<RingGroup> innerRingGroups = new List<RingGroup> { innerFootprintRingGroup };
-				IMultiPatch innerMultipatch =
-					GeometryConversionUtils.CreateMultipatch(innerRingGroups, multipatch);
-
-				// Assign Z-values from the cut line to the inner MultiPatch
-				if (zSource == ChangeAlongZSource.Target && GeometryUtils.IsZAware(cutLine))
-				{
-					IPointCollection innerPoints = (IPointCollection) innerMultipatch;
-					IProximityOperator proximity = (IProximityOperator) cutLine;
-
-					for (int i = 0; i < innerPoints.PointCount; i++)
-					{
-						IPoint innerPoint = innerPoints.get_Point(i);
-						IPoint nearestCutLinePoint = new PointClass();
-						proximity.QueryNearestPoint(innerPoint,
-						                            esriSegmentExtension.esriNoExtension,
-						                            nearestCutLinePoint);
-						innerPoint.Z = nearestCutLinePoint.Z;
-						innerPoints.UpdatePoint(i, innerPoint);
-					}
-				}
-
-				// Create footprint for the inner MultiPatch
-				IPolygon innerFootprint =
-					GeometryConversionUtils.CreatePolygon(footprint, emptyRingTemplate,
-					                                      innerFootprintRingGroup);
-				result.Add(innerFootprint, innerMultipatch);
-			}
-
-			if (usedCutLine != null)
-			{
-				usedCutLine.Polyline = cutLine;
-				usedCutLine.SuccessfulCut = result.Count > 1;
-			}
-
-			return result;
 		}
 
 		private static Dictionary<IPolygon, IMultiPatch> BuildResultMultipatches(
