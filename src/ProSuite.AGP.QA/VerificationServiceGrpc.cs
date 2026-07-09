@@ -278,6 +278,46 @@ namespace ProSuite.AGP.QA
 			return new ClientIssueMessageCollector();
 		}
 
+		[NotNull]
+		protected virtual QualitySpecificationMsg CreateSpecificationMsg(
+			[NotNull] IQualitySpecificationReference specificationRef)
+		{
+			return new QualitySpecificationMsg
+			       {
+				       QualitySpecificationId = specificationRef.Id
+			       };
+		}
+
+		[NotNull]
+		protected virtual QualitySpecificationMsg CreateSpecificationMsg(
+			[NotNull] QualitySpecification qualitySpecification)
+		{
+			CustomQualitySpecification customSpecification =
+				(CustomQualitySpecification) qualitySpecification;
+
+			int specificationId = customSpecification.BaseSpecification.Id;
+
+			var specificationMsg = new QualitySpecificationMsg
+			                       {
+				                       QualitySpecificationId = specificationId
+			                       };
+
+			specificationMsg.ExcludedConditionIds.AddRange(
+				customSpecification.GetDisabledConditions().Select(c => c.Id));
+
+			return specificationMsg;
+		}
+
+		[NotNull]
+		protected virtual WorkContextMsg CreateWorkContextMsg(
+			[NotNull] ProjectWorkspace projectWorkspace)
+		{
+			string contextType = ContextType ?? _defaultContextType;
+			string contextName = ContextName ?? Project.Current.Name;
+
+			return QAUtils.CreateWorkContextMsg(projectWorkspace, contextType, contextName);
+		}
+
 		private async Task<VerificationRequest> CreateVerificationRequest(
 			[NotNull] IQualitySpecificationReference specificationRef,
 			[CanBeNull] Geometry perimeter,
@@ -286,15 +326,16 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] IList<Row> objectsToVerify = null,
 			bool saveVerification = false)
 		{
-			string contextType = ContextType ?? _defaultContextType;
-			string contextName = ContextName ?? Project.Current.Name;
+			QualitySpecificationMsg specificationMsg = CreateSpecificationMsg(specificationRef);
 
 			VerificationRequest request =
 				await QueuedTask.Run(() =>
 				{
-					var result = QAUtils.CreateRequest(projectWorkspace, contextType,
-					                                   contextName, specificationRef.Id,
-					                                   perimeter, DdxEnvironmentName);
+					WorkContextMsg workContextMsg = CreateWorkContextMsg(projectWorkspace);
+
+					VerificationRequest result =
+						QAUtils.CreateRequest(workContextMsg, specificationMsg, perimeter,
+						                      DdxEnvironmentName);
 
 					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
@@ -316,16 +357,16 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] string resultsPath,
 			[CanBeNull] IList<Row> objectsToVerify = null)
 		{
-			string contextType = ContextType ?? _defaultContextType;
-			string contextName = ContextName ?? Project.Current.Name;
+			QualitySpecificationMsg specificationMsg = CreateSpecificationMsg(specification);
 
 			VerificationRequest request =
 				await QueuedTask.Run(() =>
 				{
+					WorkContextMsg workContextMsg = CreateWorkContextMsg(projectWorkspace);
+
 					VerificationRequest result =
 						QAUtils.CreateRequest(
-							projectWorkspace, contextType, contextName, specification,
-							perimeter, DdxEnvironmentName);
+							workContextMsg, specificationMsg, perimeter, DdxEnvironmentName);
 
 					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
