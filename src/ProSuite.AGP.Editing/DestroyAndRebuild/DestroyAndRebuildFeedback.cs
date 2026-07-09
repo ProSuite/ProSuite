@@ -159,23 +159,25 @@ public class DestroyAndRebuildFeedback
 					_overlays.Add(AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
 					break;
 				case GeometryType.Polygon:
+					// Old symbolization: for polygons, show only the outline
 					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_polygonSymbol)));
-
-					var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
-					var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
-					_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
+						var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
+						var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
+						_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
+
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
 						_overlays.Add(AddOverlay(vertexMultipoint,
 						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(AddOverlay(controlMultipoint,
 						                         Assert.NotNull(_controlPointMarkerSymbol)));
+
+						_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
 					break;
 
 				default:
