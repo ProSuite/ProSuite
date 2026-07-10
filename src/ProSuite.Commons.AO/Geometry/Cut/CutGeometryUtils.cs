@@ -946,6 +946,27 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 							cutFootprintPart, resultPoly, tolerance);
 					}
 
+					if (interiorIntersects && ! resultPoly.IsVertical(tolerance))
+					{
+						// InteriorIntersectXY returns a false positive when the result's exterior
+						// coincides with a footprint hole but is not properly oriented (cookie-in-hole
+						// case with unsimplified cut output). Re-check using full-ring containment:
+						// a single test point is not sufficient because cut pieces adjacent to the
+						// hole start on the hole boundary too.
+						if (cutFootprintPart.InteriorRings.Any(
+							    hole => GeomRelationUtils.PolycurveContainsXY(
+								    hole, resultPoly.ExteriorRing, tolerance)))
+						{
+							interiorIntersects = false;
+						}
+						else if (resultPoly.InteriorRings.Any(
+							         hole => GeomRelationUtils.PolycurveContainsXY(
+								         hole, cutFootprintPart.ExteriorRing, tolerance)))
+						{
+							interiorIntersects = false;
+						}
+					}
+
 					if (interiorIntersects)
 					{
 						assignmentCount++;
