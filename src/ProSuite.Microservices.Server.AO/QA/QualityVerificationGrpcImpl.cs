@@ -356,6 +356,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                                     ServerCallContext context)
 		{
 			QueryDataRequest request = null;
+
+			// gRPC allows only one pending write per response stream. Both the result-batch
+			// writer (SendResponse) and the more-data-request writer (RequestMoreDataAsync)
+			// target the same stream, so serialize every write through this single lock.
+			SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
+
 			try
 			{
 				Stopwatch watch = Stopwatch.StartNew();
@@ -378,7 +384,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						delegate(QueryDataResponse r)
 						{
 							Task<QueryDataRequest> task = RequestMoreDataAsync(
-								requestStream, responseStream, context, r);
+								requestStream, responseStream, context, r, writeLock);
 
 							long timeOutMillis = 30 * 1000;
 							long elapsedMillis = 0;
@@ -407,7 +413,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 
 				Func<ITrackCancel, ServiceCallStatus> func = trackCancel =>
-					QueryDataCore(request, responseStream, moreDataRequest, trackCancel);
+					QueryDataCore(request, responseStream, moreDataRequest, writeLock, trackCancel);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -431,6 +437,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			finally
 			{
 				EndRequest();
+				writeLock.Dispose();
 			}
 		}
 
@@ -591,7 +598,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			IAsyncStreamReader<QueryDataRequest> requestStream,
 			IServerStreamWriter<QueryDataResponse> responseStream,
 			ServerCallContext context,
-			QueryDataResponse r)
+			QueryDataResponse r,
+			SemaphoreSlim writeLock)
 		{
 			QueryDataRequest resultData = null;
 
@@ -611,7 +619,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await WriteResponseAsync(responseStream, r, writeLock).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
@@ -1097,6 +1105,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] QueryDataRequest request,
 			IServerStreamWriter<QueryDataResponse> responseStream,
 			Func<QueryDataResponse, QueryDataRequest> moreDataRequest,
+			SemaphoreSlim writeLock,
 			ITrackCancel trackCancel)
 		{
 			SetupUserNameProvider(request.UserName);
@@ -1167,7 +1176,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					_msg.DebugFormat("Sending message with {0} rows back to client...",
 					                 resultBatch.GdbObjects.Count);
 
-					if (! SendResponse(response, responseStream, trackCancel))
+					if (! SendResponse(response, responseStream, writeLock, trackCancel))
 					{
 						return ServiceCallStatus.Failed;
 					}
@@ -1204,7 +1213,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						                       MessageLevel = Level.Error.Value
 					                       },
 					             ServiceCallStatus = (int) ServiceCallStatus.Failed
-				             }, responseStream, trackCancel);
+				             }, responseStream, writeLock, trackCancel);
 
 				return ServiceCallStatus.Failed;
 				//throw;
@@ -1213,11 +1222,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private static bool SendResponse(QueryDataResponse response,
 		                                 IServerStreamWriter<QueryDataResponse> responseStream,
+		                                 SemaphoreSlim writeLock,
 		                                 ITrackCancel trackCancel)
 		{
+			// QueryDataCore runs synchronously on the STA thread, so block until the awaited,
+			// serialized write completes. Awaiting (instead of fire-and-forget) is what prevents
+			// a still-pending write from colliding with the next one.
 			try
 			{
-				responseStream.WriteAsync(response);
+				WriteResponseAsync(responseStream, response, writeLock).GetAwaiter().GetResult();
 			}
 			catch (InvalidOperationException ex)
 			{
@@ -1231,17 +1244,36 @@ namespace ProSuite.Microservices.Server.AO.QA
 					return false;
 				}
 
-				// For example: System.InvalidOperationException: Only one write can be pending at a time
 				_msg.Warn(
 					"Error sending progress to the client. Retrying the last response in 1s...",
 					ex);
 
 				// Re-try (only for final message)
 				Task.Delay(1000).Wait();
-				responseStream.WriteAsync(response);
+				WriteResponseAsync(responseStream, response, writeLock).GetAwaiter().GetResult();
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Serializes writes to the QueryData response stream: gRPC permits only one pending
+		/// write at a time, and multiple code paths write to the same stream.
+		/// </summary>
+		private static async Task WriteResponseAsync(
+			IServerStreamWriter<QueryDataResponse> responseStream,
+			QueryDataResponse response,
+			SemaphoreSlim writeLock)
+		{
+			await writeLock.WaitAsync().ConfigureAwait(false);
+			try
+			{
+				await responseStream.WriteAsync(response).ConfigureAwait(false);
+			}
+			finally
+			{
+				writeLock.Release();
+			}
 		}
 
 		private static T WithCulture<T>(string cultureCode, Func<T> func)
