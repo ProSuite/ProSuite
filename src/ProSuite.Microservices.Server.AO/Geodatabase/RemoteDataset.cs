@@ -298,13 +298,15 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 				((ITableSchemaDef) _schema).TableFields,
 				columnarData);
 
+			Func<ShapeMsg, object> fromShapeMsgFunc =
+				shapeMsg => ProtobufGeometryUtils.FromShapeMsg(
+					shapeMsg, _schema.SpatialReference);
+
 			// Process each row
 			for (int rowIndex = 0; rowIndex < columnarData.RowCount; rowIndex++)
 			{
 				var valueList = new ColumnarValueList(
-					columnarData, rowIndex, fieldMapping,
-					shapeMsg => ProtobufGeometryUtils.FromShapeMsg(
-						shapeMsg, _schema.SpatialReference));
+					columnarData, rowIndex, fieldMapping, fromShapeMsgFunc);
 
 				// Get OID
 				long oid = fieldMapping.GetOidForRow(columnarData, rowIndex, _schema.OIDFieldName);
