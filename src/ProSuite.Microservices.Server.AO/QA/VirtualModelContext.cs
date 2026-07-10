@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -74,6 +75,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 			dataRequest.SchemaRequest.DatasetIds.AddRange(datasets.Select(d => d.Id));
 
 			DataVerificationRequest dataResponse = _dataRequestFunc(dataRequest);
+
+			if (dataResponse.Schema == null)
+			{
+				// The client could not provide the schema (e.g. a dataset or relationship class
+				// referenced by the model does not exist in the client's workspace). Fail with a
+				// descriptive error instead of a NullReferenceException, mirroring how data
+				// requests surface client-side errors (see RemoteDataset.ConfirmDataReceived).
+				throw new DataAccessException(
+					"The client failed to provide the schema for the requested datasets: " +
+					dataResponse.ErrorMessage);
+			}
 
 			SetGdbSchema(ProtobufConversionUtils.CreateSchema(
 				             dataResponse.Schema.ClassDefinitions,
