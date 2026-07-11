@@ -479,11 +479,20 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			}
 		}
 
+		// The sketch can be canceled without going through ESC, e.g. via the ArcGIS Pro sketch
+		// context menu's "Cancel" command. That path does not reach HandleEscapeAsync, so clear
+		// the buffer/measure feedback here to make sure it is removed no matter how the sketch
+		// was canceled.
+		protected override Task<bool> OnSketchCanceledAsyncCore()
+		{
+			ClearFeedback();
+
+			return base.OnSketchCanceledAsyncCore();
+		}
+
 		protected override async Task HandleEscapeAsync()
 		{
-			ResetBufferState();
-			DisposeOverlays();
-			DisposeMeasureOverlays();
+			ClearFeedback();
 
 			// With RequiresSelection == false the base only resets the sketch on ESC and
 			// never clears the selection. When no sketch is in progress (e.g. right after a
@@ -1360,6 +1369,16 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			_measuring = false;
 			_measureStart = null;
 			_sketchInProgress = false;
+		}
+
+		// Clears all sketch feedback: the buffer state and both the buffer preview and the
+		// measure/distance-circle overlays. Shared by every sketch-cancel path (ESC and the
+		// sketch context menu's "Cancel").
+		private void ClearFeedback()
+		{
+			ResetBufferState();
+			DisposeOverlays();
+			DisposeMeasureOverlays();
 		}
 
 		private void UpdateEnabled()
