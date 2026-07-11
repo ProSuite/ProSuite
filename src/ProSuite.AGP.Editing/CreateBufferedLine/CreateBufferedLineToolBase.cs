@@ -581,9 +581,16 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			if (ReplaceActive)
 			{
-				// Destroy & Rebuild: replace the selected multipatch instead of inserting.
-				return await Rebuilder.ReplaceSelectedGeometryAsync(
-					       newGeometry, activeView);
+				// Destroy & Rebuild: replace the selected multipatch instead of inserting a new
+				// feature - but only when a single, visible multipatch is selected. If not, fall
+				// through and create a new feature as usual.
+				ReplaceGeometryResult replaceResult =
+					await Rebuilder.TryReplaceSelectedGeometryAsync(newGeometry, activeView);
+
+				if (replaceResult != ReplaceGeometryResult.NoTarget)
+				{
+					return replaceResult == ReplaceGeometryResult.Replaced;
+				}
 			}
 
 			IEnumerable<Dataset> datasets = new List<Dataset> { currentTargetClass };
