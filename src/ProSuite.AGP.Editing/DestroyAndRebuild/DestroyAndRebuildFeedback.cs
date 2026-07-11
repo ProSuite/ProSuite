@@ -86,7 +86,7 @@ public class DestroyAndRebuildFeedback
 				CreateControlPointSymbol(6.5, yellow, ColorUtils.BlackRGB, 1.5);
 		}
 	}
-	
+
 	[CanBeNull]
 	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
 	                                      [NotNull] CIMSymbol cimSymbol)

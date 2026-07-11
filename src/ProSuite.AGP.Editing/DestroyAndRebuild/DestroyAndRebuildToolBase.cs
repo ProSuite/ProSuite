@@ -125,10 +125,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		_currentFeatureGeometryType = featureClass.GetShapeType();
 
 		_feedback?.UpdateSelection(selectedFeatures);
-		//if (_feedback != null)
-		//{
-		//	await _feedback.UpdateSelection(selectedFeatures);
-		//}
 
 		_msg.Info($"Rebuild the geometry for {GdbObjectUtils.GetDisplayValue(feature)}");
 
