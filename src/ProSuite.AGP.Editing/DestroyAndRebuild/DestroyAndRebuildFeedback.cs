@@ -186,7 +186,8 @@ public class DestroyAndRebuildFeedback
 					break;
 
 				case GeometryType.Multipatch:
-					Polyline multipatchOutline = GetMultipatchOutline((Multipatch) geometry);
+					Polyline multipatchOutline =
+						GeometryUtils.GetMultipatchOutline((Multipatch) geometry);
 					_overlays.Add(AddOverlay(multipatchOutline,
 					                         Assert.NotNull(_lineSymbol)));
 					break;
@@ -228,35 +229,6 @@ public class DestroyAndRebuildFeedback
 				controlMultipoint = simplified;
 			}
 		}
-	}
-
-	/// <summary>
-	/// Builds a (multipart) polyline of the multipatch's patch edges, used to render the
-	/// target outline as feedback (no faces, no vertices).
-	/// </summary>
-	[CanBeNull]
-	private static Polyline GetMultipatchOutline([NotNull] Multipatch multipatch)
-	{
-		if (multipatch.IsEmpty)
-		{
-			return null;
-		}
-
-		var builder = new PolylineBuilderEx(multipatch.SpatialReference) { HasZ = true };
-
-		var multipatchBuilder = new MultipatchBuilderEx(multipatch);
-
-		foreach (Patch patch in multipatchBuilder.Patches)
-		{
-			if (patch?.Coords == null || patch.Coords.Count < 2)
-			{
-				continue;
-			}
-
-			builder.AddPart(patch.Coords);
-		}
-
-		return builder.ToGeometry();
 	}
 
 	public void ClearSelection()
