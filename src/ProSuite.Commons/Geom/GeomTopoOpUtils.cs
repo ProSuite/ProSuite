@@ -5942,32 +5942,11 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				Linestring ring = BuildBufferRing(path, distance, bufferSide,
-				                                  miteredCorners, flatEndCaps, miterLimit);
+				MultiLinestring area = BuildBufferAreaForPath(
+					path, distance, bufferSide, miteredCorners, flatEndCaps, miterLimit,
+					tolerance);
 
-				if (ring == null || ring.SegmentCount < 3)
-				{
-					continue;
-				}
-
-				// On concave corners the raw offset ring is self-intersecting once the
-				// distance exceeds the local feature size. Crack it into simple rings so
-				// the union below gets a valid input (mirrors ConstructOffset + Simplify).
-				var simpleRings = new List<Linestring>();
-				if (! TryCrackSelfCrossingRing(ring, tolerance, simpleRings))
-				{
-					simpleRings.Add(ring);
-				}
-
-				foreach (Linestring simpleRing in simpleRings)
-				{
-					if (simpleRing.ClockwiseOriented != true)
-					{
-						simpleRing.ReverseOrientation();
-					}
-
-					ringGroups.Add(new RingGroup(simpleRing));
-				}
+				AddAreaComponents(area, tolerance, ringGroups);
 			}
 
 			if (ringGroups.Count == 0)
@@ -5986,6 +5965,352 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		// Cracks a buffer ring (or piece) at its self-intersections and adds the resulting
+		// simple, clockwise rings to the collection to be unioned.
+		private static void AddCrackedRings([CanBeNull] Linestring ring, double tolerance,
+		                                    [NotNull] List<RingGroup> ringGroups)
+		{
+			if (ring == null || ring.SegmentCount < 3)
+			{
+				return;
+			}
+
+			// On concave corners the raw offset ring is self-intersecting once the distance
+			// exceeds the local feature size. Crack it into simple rings so the union below
+			// gets valid input (mirrors ConstructOffset + Simplify).
+			var simpleRings = new List<Linestring>();
+			if (! TryCrackSelfCrossingRing(ring, tolerance, simpleRings))
+			{
+				simpleRings.Add(ring);
+			}
+
+			foreach (Linestring simpleRing in simpleRings)
+			{
+				if (simpleRing.SegmentCount < 3)
+				{
+					continue;
+				}
+
+				if (simpleRing.ClockwiseOriented != true)
+				{
+					simpleRing.ReverseOrientation();
+				}
+
+				ringGroups.Add(new RingGroup(simpleRing));
+			}
+		}
+
+		// Buffers a single line part into a filled area (with holes). The whole part is buffered
+		// as one legacy offset outline - so corners and end caps look exactly as before and the
+		// dangling tails of an intertwined line blend smoothly into it - and then the inner ring
+		// of every loop is punched out as a hole. A loop is a closed part, an almost-closed part
+		// whose ends the buffer bridges, or a loop formed where the part crosses itself.
+		[CanBeNull]
+		private static MultiLinestring BuildBufferAreaForPath(
+			[NotNull] Linestring path, double distance, BufferSide bufferSide,
+			bool mitered, bool flatEndCaps, double miterLimit, double tolerance)
+		{
+			// The buffer band has this full width; an inner ring (hole) narrower than it is
+			// not kept: the two sides' offsets meet across it, so the loop closes solid.
+			double bufferWidth = bufferSide == BufferSide.Both ? 2 * distance : distance;
+
+			// A cleanly closed loop has no ends: build it straight from its outer offset ring
+			// (BuildBufferRing would add spurious end caps at the seam).
+			if (path.IsClosed)
+			{
+				GetLoopBoundaryAreas(path, distance, bufferSide, mitered, miterLimit, tolerance,
+				                     out MultiLinestring outerArea, out MultiLinestring innerArea);
+
+				if (! IsHoleWiderThan(innerArea, bufferWidth))
+				{
+					innerArea = null;
+				}
+
+				return SubtractInnerRing(outerArea, innerArea, tolerance);
+			}
+
+			// Base: the legacy offset outline, filled. This fills the interior of any loop and
+			// blends the dangles into it smoothly.
+			var baseRings = new List<RingGroup>();
+			AddCrackedRings(
+				BuildBufferRing(path, distance, bufferSide, mitered, flatEndCaps, miterLimit),
+				tolerance, baseRings);
+
+			if (baseRings.Count == 0)
+			{
+				return null;
+			}
+
+			MultiLinestring solid =
+				GetUnionAreasXY(baseRings, tolerance, inputRingsMayBeNonSimple: true);
+
+			if (solid == null || solid.IsEmpty)
+			{
+				return null;
+			}
+
+			// Punch out the inner ring of every loop, unless that ring is narrower than the
+			// buffer width (then the offsets cross over it and the loop stays closed).
+			foreach (Linestring loop in GetLoops(path, distance, bufferSide, tolerance))
+			{
+				GetLoopBoundaryAreas(loop, distance, bufferSide, mitered, miterLimit, tolerance,
+				                     out _, out MultiLinestring innerArea);
+
+				if (! IsHoleWiderThan(innerArea, bufferWidth))
+				{
+					continue;
+				}
+
+				MultiLinestring punched = GetDifferenceAreasXY(solid, innerArea, tolerance);
+
+				if (punched != null && ! punched.IsEmpty)
+				{
+					solid = punched;
+				}
+			}
+
+			return solid;
+		}
+
+		// Whether the inner ring (a candidate hole) is wider than the buffer width in both
+		// directions. A narrower hole is filled by the buffer reaching across it from both
+		// sides, so it must not be punched out.
+		private static bool IsHoleWiderThan([CanBeNull] MultiLinestring innerArea,
+		                                    double bufferWidth)
+		{
+			if (innerArea == null || innerArea.IsEmpty)
+			{
+				return false;
+			}
+
+			return innerArea.XMax - innerArea.XMin >= bufferWidth &&
+			       innerArea.YMax - innerArea.YMin >= bufferWidth;
+		}
+
+		// Collects the loops of an open path whose interior the buffer must hollow out: a loop
+		// formed where the path crosses itself (a closed sub-arc between the two visits of a
+		// crossing), or - if the path does not cross itself - an almost-closed path whose two
+		// ends are near enough that the buffer bridges the gap (within one buffer width).
+		[NotNull]
+		private static IList<Linestring> GetLoops(
+			[NotNull] Linestring path, double distance, BufferSide bufferSide, double tolerance)
+		{
+			var loops = new List<Linestring>();
+
+			var subArcs = new List<Linestring>();
+			if (TryCrackSelfCrossingLinestring(path, tolerance, subArcs))
+			{
+				foreach (Linestring subArc in subArcs)
+				{
+					if (subArc == null || subArc.SegmentCount < 2 ||
+					    ! subArc.StartPoint.EqualsXY(subArc.EndPoint, tolerance))
+					{
+						continue;
+					}
+
+					// The two ends are the same crossing point computed on different segments,
+					// so only equal within tolerance: close the sub-arc exactly.
+					IList<Pnt3D> points = subArc.GetPoints(clone: true).ToList();
+					points[points.Count - 1] = points[0].ClonePnt3D();
+					loops.Add(new Linestring(points));
+				}
+			}
+
+			if (loops.Count == 0 && path.SegmentCount >= 2)
+			{
+				double dx = path.StartPoint.X - path.EndPoint.X;
+				double dy = path.StartPoint.Y - path.EndPoint.Y;
+				double endGap = Math.Sqrt(dx * dx + dy * dy);
+				double bridgingDistance = bufferSide == BufferSide.Both ? 2 * distance : distance;
+
+				if (endGap <= bridgingDistance)
+				{
+					loops.Add(CloseLinestring(path));
+				}
+			}
+
+			return loops;
+		}
+
+		// Fills the two boundary rings of a closed loop's band with the normal (legacy) corner
+		// style and returns them ordered by size: the larger (outer) and the smaller (inner)
+		// offset ring. Either may be null when it collapses (a large distance erodes the inner
+		// ring away). For a two-sided buffer the boundaries are the two offset rings; for a one-
+		// sided buffer they are the loop itself and its offset.
+		private static void GetLoopBoundaryAreas(
+			[NotNull] Linestring loop, double distance, BufferSide bufferSide,
+			bool mitered, double miterLimit, double tolerance,
+			[CanBeNull] out MultiLinestring outerArea, [CanBeNull] out MultiLinestring innerArea)
+		{
+			Linestring boundaryA;
+			Linestring boundaryB;
+
+			switch (bufferSide)
+			{
+				case BufferSide.Both:
+					boundaryA = GetClosedRoundedOffsetRing(loop, distance, mitered, miterLimit);
+					boundaryB = GetClosedRoundedOffsetRing(loop, -distance, mitered, miterLimit);
+					break;
+
+				case BufferSide.Left:
+					boundaryA = loop.Clone();
+					boundaryB = GetClosedRoundedOffsetRing(loop, distance, mitered, miterLimit);
+					break;
+
+				case BufferSide.Right:
+					boundaryA = loop.Clone();
+					boundaryB = GetClosedRoundedOffsetRing(loop, -distance, mitered, miterLimit);
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(bufferSide), bufferSide, null);
+			}
+
+			MultiLinestring filledA = GetFilledRingAreaXY(boundaryA, tolerance);
+			MultiLinestring filledB = GetFilledRingAreaXY(boundaryB, tolerance);
+
+			bool aEmpty = filledA == null || filledA.IsEmpty;
+			bool bEmpty = filledB == null || filledB.IsEmpty;
+
+			if (aEmpty || bEmpty)
+			{
+				outerArea = aEmpty ? filledB : filledA;
+				innerArea = null;
+				return;
+			}
+
+			bool aIsOuter = Math.Abs(filledA.GetArea2D()) >= Math.Abs(filledB.GetArea2D());
+			outerArea = aIsOuter ? filledA : filledB;
+			innerArea = aIsOuter ? filledB : filledA;
+		}
+
+		// Subtracts the inner ring area from the outer to leave it as a hole.
+		[CanBeNull]
+		private static MultiLinestring SubtractInnerRing([CanBeNull] MultiLinestring outerArea,
+		                                                 [CanBeNull] MultiLinestring innerArea,
+		                                                 double tolerance)
+		{
+			if (outerArea == null || outerArea.IsEmpty)
+			{
+				return null;
+			}
+
+			if (innerArea == null || innerArea.IsEmpty)
+			{
+				return outerArea;
+			}
+
+			MultiLinestring band = GetDifferenceAreasXY(outerArea, innerArea, tolerance);
+
+			return band != null && ! band.IsEmpty ? band : outerArea;
+		}
+
+		// Fills a (possibly self-intersecting) closed ring into its 2D area, reusing the same
+		// crack-and-union pipeline as the open-path buffer. Returns null for a degenerate ring.
+		[CanBeNull]
+		private static MultiLinestring GetFilledRingAreaXY([CanBeNull] Linestring ring,
+		                                                   double tolerance)
+		{
+			var ringGroups = new List<RingGroup>();
+			AddCrackedRings(ring, tolerance, ringGroups);
+
+			if (ringGroups.Count == 0)
+			{
+				return null;
+			}
+
+			return GetUnionAreasXY(ringGroups, tolerance, inputRingsMayBeNonSimple: true);
+		}
+
+		// Offsets a CLOSED loop path perpendicularly in XY by the signed distance, rounding (or
+		// mitering) convex corners exactly like GetRoundedOffsetPoints but joining every corner
+		// including the one at the shared start/end vertex, so the result is a closed ring. This
+		// is achieved by restarting the loop at the midpoint of its closing segment (a point
+		// that is not a corner): offsetting that equivalent open path rounds all real corners,
+		// and because both of its flat ends lie on the same straight stretch their offset
+		// endpoints coincide, closing the ring.
+		[CanBeNull]
+		private static Linestring GetClosedRoundedOffsetRing(
+			[NotNull] Linestring closedPath, double signedDistance, bool mitered,
+			double miterLimit)
+		{
+			int segmentCount = closedPath.SegmentCount;
+
+			if (segmentCount < 3)
+			{
+				return null;
+			}
+
+			IList<Pnt3D> points = closedPath.GetPoints(clone: true).ToList();
+
+			// points: p0 .. p(n-1), p0 (closed). The corner an open-path offset misses is at p0,
+			// between the last and the first segment. Restart at the midpoint of the closing
+			// segment (p(n-1) -> p0) so that corner becomes an interior corner and both ends fall
+			// on a straight stretch.
+			Pnt3D first = points[0];
+			Pnt3D last = points[segmentCount - 1];
+
+			var mid = new Pnt3D((last.X + first.X) / 2,
+			                    (last.Y + first.Y) / 2,
+			                    (last.Z + first.Z) / 2);
+
+			var openPoints = new List<Pnt3D>(segmentCount + 2) { mid.ClonePnt3D() };
+			for (var i = 0; i < segmentCount; i++)
+			{
+				openPoints.Add(points[i].ClonePnt3D());
+			}
+
+			openPoints.Add(mid.ClonePnt3D());
+
+			var openPath = new Linestring(openPoints);
+
+			List<Pnt3D> offset = GetRoundedOffsetPoints(openPath, openPoints, signedDistance,
+			                                            mitered, miterLimit);
+
+			if (offset.Count < 4)
+			{
+				return null;
+			}
+
+			// The two flat ends are the offset of the same midpoint along the same segment,
+			// hence coincident: force exact closure.
+			offset[offset.Count - 1] = offset[0].ClonePnt3D();
+
+			return new Linestring(offset);
+		}
+
+		// Adds the connected components (each an exterior ring with its holes) of an area to the
+		// collection to be unioned, preserving holes (unlike AddCrackedRings, which fills them).
+		private static void AddAreaComponents([CanBeNull] MultiLinestring area, double tolerance,
+		                                      [NotNull] List<RingGroup> ringGroups)
+		{
+			if (area == null || area.IsEmpty)
+			{
+				return;
+			}
+
+			foreach (RingGroup component in GetConnectedComponents(area, tolerance))
+			{
+				if (component == null || component.IsEmpty)
+				{
+					continue;
+				}
+
+				component.TryOrientProperly();
+				ringGroups.Add(component);
+			}
+		}
+
+		// Returns a closed copy of an (almost closed) open path by appending its start point.
+		[NotNull]
+		private static Linestring CloseLinestring([NotNull] Linestring path)
+		{
+			IList<Pnt3D> points = path.GetPoints(clone: true).ToList();
+			points.Add(points[0].ClonePnt3D());
+
+			return new Linestring(points);
 		}
 
 		// Builds the (closed, clockwise) outline of the buffer of a single open path.
