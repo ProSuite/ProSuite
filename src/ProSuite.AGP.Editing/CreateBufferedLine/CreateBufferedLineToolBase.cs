@@ -813,46 +813,14 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			return polygon;
 		}
 
+		// Turns the buffer polygon into a multipatch. A closed-loop (annulus) buffer yields a
+		// polygon with an exterior ring and an interior hole; the conversion keeps that hole
+		// (exterior ring as a FirstRing patch, each interior ring as a hole Ring patch) instead
+		// of filling it with a separate solid ring.
 		[CanBeNull]
 		protected static Multipatch ConvertToMultipatch([CanBeNull] Polygon polygon)
 		{
-			if (polygon == null || polygon.IsEmpty)
-			{
-				return null;
-			}
-
-			SpatialReference sr = polygon.SpatialReference;
-
-			var mpBuilder = new MultipatchBuilderEx(sr);
-			var patches = new List<Patch>();
-
-			foreach (ReadOnlySegmentCollection ring in polygon.Parts)
-			{
-				var coords = new List<Coordinate3D>();
-
-				foreach (Segment segment in ring)
-				{
-					coords.Add(segment.StartPoint.Coordinate3D);
-				}
-
-				if (coords.Count < 3)
-				{
-					continue;
-				}
-
-				Patch patch = mpBuilder.MakePatch(PatchType.FirstRing);
-				patch.Coords = coords;
-				patches.Add(patch);
-			}
-
-			if (patches.Count == 0)
-			{
-				return null;
-			}
-
-			mpBuilder.Patches = patches;
-
-			return mpBuilder.ToGeometry();
+			return GeomConversionUtils.CreateMultipatch(polygon);
 		}
 
 		// Removes vertices from the buffer outline so that no remaining segment is shorter
