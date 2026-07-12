@@ -680,6 +680,18 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				return null;
 			}
 
+			// Buffer the simplified line. The sketch engine hands the finished sketch to
+			// OnEditSketchCompleteCoreAsync already simplified, so a fold-back (a segment that
+			// retraces an earlier one) arrives there as a clean line; the live preview, in
+			// contrast, buffers the raw sketch from GetCurrentSketchAsync. Simplifying here makes
+			// both paths buffer the identical line, so the preview matches the created feature
+			// instead of showing the raw offset outline (with intermediate caps and loops).
+			if (GeometryEngine.Instance.SimplifyAsFeature(sketchLine, forceSimplify: true) is
+				Polyline simplifiedLine && !simplifiedLine.IsEmpty)
+			{
+				sketchLine = simplifiedLine;
+			}
+
 			MultiPolycurve line = GeomConversionUtils.CreateMultiPolycurve(sketchLine);
 			IList<Linestring> paths = line.GetLinestrings().ToList();
 

@@ -6118,7 +6118,12 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			if (loops.Count == 0 && path.SegmentCount >= 2)
+			// A genuinely simple arc (no self-intersections) whose two ends nearly meet: the
+			// buffer bridges the gap, so hollow the enclosed area. A fold-back has linear self-
+			// intersections and is excluded here, so its overlapping buffers just unify without
+			// a spurious hole between them.
+			if (loops.Count == 0 && path.SegmentCount >= 2 &&
+			    GetSelfIntersectionPoints(path, tolerance).Count == 0)
 			{
 				double dx = path.StartPoint.X - path.EndPoint.X;
 				double dy = path.StartPoint.Y - path.EndPoint.Y;
@@ -6518,7 +6523,24 @@ namespace ProSuite.Commons.Geom
 				{
 					// Concave (inner) corner: use the mitered intersection of the two offset
 					// lines (the self-intersection this creates is cleaned up by the caller).
-					result.Add(new Pnt3D(x, y, vertices[j].Z));
+					// At a near-180° fold-back (the line doubles back on itself) the two offset
+					// lines are almost parallel, so their intersection runs off far from the
+					// vertex - an endless spike. Cap the miter length and bevel the corner
+					// (join the two offset endpoints directly) instead.
+					double miterDx = x - vertices[j].X;
+					double miterDy = y - vertices[j].Y;
+					double miterLengthSquared = miterDx * miterDx + miterDy * miterDy;
+					double maxMiterLength = miterLimit * radius;
+
+					if (miterLengthSquared <= maxMiterLength * maxMiterLength)
+					{
+						result.Add(new Pnt3D(x, y, vertices[j].Z));
+					}
+					else
+					{
+						result.Add(offsetEnd[j - 1]);
+						result.Add(offsetStart[j]);
+					}
 				}
 				else
 				{
