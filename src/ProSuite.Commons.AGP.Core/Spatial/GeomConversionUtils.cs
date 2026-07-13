@@ -88,14 +88,52 @@ public static class GeomConversionUtils
 		return multipatch;
 	}
 
+	/// <summary>
+	/// Converts an SDK polygon into a multipatch, grouping each exterior ring with its
+	/// holes so an annular polygon (e.g. the buffer of a closed loop) becomes a multipatch
+	/// with an actual hole: the exterior ring is emitted as a <see cref="PatchType.FirstRing"/>
+	/// patch and every interior ring as a (hole) <see cref="PatchType.Ring"/> patch. Emitting
+	/// every ring as a FirstRing instead would fill the interior hole with a separate solid ring.
+	/// </summary>
+	/// <returns>The multipatch, or null if the input is null or empty.</returns>
+	[CanBeNull]
+	public static Multipatch CreateMultipatch([CanBeNull] Polygon polygon, int? partId = null)
+	{
+		if (polygon == null || polygon.IsEmpty)
+		{
+			return null;
+		}
+
+		List<RingGroup> ringGroups = CreateRingGroups(polygon);
+
+		if (ringGroups.Count == 0)
+		{
+			return null;
+		}
+
+		return CreateMultipatch(new Polyhedron(ringGroups), polygon.SpatialReference, partId);
+	}
+
 	public static MultiPolycurve CreateMultiPolycurve([NotNull] Polygon polygon)
 	{
+		return new MultiPolycurve(CreateRingGroups(polygon));
+	}
+
+	/// <summary>
+	/// Groups the rings of an SDK polygon into ring groups, pairing each exterior ring with
+	/// its holes (interior rings). Relies on <see cref="GeometryUtils.ConnectedComponents"/>
+	/// to split the polygon into single-shell components: within each component the first ring
+	/// is the exterior ring and the remaining rings are its holes.
+	/// </summary>
+	private static List<RingGroup> CreateRingGroups([NotNull] Polygon polygon)
+	{
 		var result = new List<RingGroup>();
-		foreach (Polygon singlePolygon in GeometryUtils.ConnectedComponents(polygon))
+
+		foreach (Polygon component in GeometryUtils.ConnectedComponents(polygon))
 		{
 			RingGroup ringGroup = null;
 
-			foreach (ReadOnlySegmentCollection ring in singlePolygon.Parts)
+			foreach (ReadOnlySegmentCollection ring in component.Parts)
 			{
 				var line = new Linestring(GetPoints(ring));
 				if (ringGroup == null)
@@ -108,10 +146,13 @@ public static class GeomConversionUtils
 				}
 			}
 
-			result.Add(ringGroup);
+			if (ringGroup != null)
+			{
+				result.Add(ringGroup);
+			}
 		}
 
-		return new MultiPolycurve(result);
+		return result;
 	}
 
 	/// <summary>

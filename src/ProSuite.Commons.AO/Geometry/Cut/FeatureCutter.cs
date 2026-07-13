@@ -398,28 +398,12 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 							: CutGeometryUtils.TryCut((IPolyline) geometryToCut, cutPolyline);
 					break;
 				case esriGeometryType.esriGeometryMultiPatch:
-					// Check if the cut line is closed (e.g., for hole cutting)
-					if (cutPolyline is IPolycurve polycurve && polycurve.IsClosed)
-					{
-						resultGeometries =
-							CutGeometryUtils.TryCutWithClosedCutLine(
-								                (IMultiPatch) geometryToCut, cutPolyline,
-								                zSource ?? DetermineZSource(feature),
-								                usedCutLine, DegenerateMultipatchFootprintAction)
-							                .Values.Cast<IGeometry>()
-							                .ToList();
-					}
-					else
-					{
-						resultGeometries =
-							CutGeometryUtils.TryCut((IMultiPatch) geometryToCut, cutPolyline,
-							                        zSource ?? DetermineZSource(feature),
-							                        usedCutLine,
-							                        DegenerateMultipatchFootprintAction)
-							                .Values.Cast<IGeometry>()
-							                .ToList();
-					}
-
+					resultGeometries =
+						CutGeometryUtils.TryCut((IMultiPatch) geometryToCut, cutPolyline,
+						                        zSource ?? DetermineZSource(feature),
+						                        usedCutLine, DegenerateMultipatchFootprintAction)
+						                .Values.Cast<IGeometry>()
+						                .ToList();
 					break;
 				default:
 					throw new InvalidOperationException(

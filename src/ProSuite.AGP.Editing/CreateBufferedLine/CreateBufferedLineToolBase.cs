@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.DestroyAndRebuild;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -141,9 +142,40 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			return false;
 		}
 
-		// Only polylines can be shift-selected as the line to buffer.
+		#region Multipatch Destroy & Rebuild wiring
+
+		/// <summary>
+		/// The multipatch "Destroy &amp; Rebuild" helper, supplied by a participating subclass (the
+		/// wall tool). Null for buffered-line tools that do not produce a multipatch (the generic
+		/// polygon buffered-line tool), which therefore do not take part in the replace mode. The
+		/// concrete implementation lives in the roofs assembly, so the subclass instantiates it.
+		/// </summary>
+		[CanBeNull]
+		protected virtual IDestroyAndRebuilder Rebuilder => null;
+
+		// Whether the tool currently replaces a multipatch (a rebuilder is supplied and mode is on).
+		private bool ReplaceActive => Rebuilder is { IsActive: true };
+
+		protected override bool AllowSelectionChangeInSketchMode =>
+			ReplaceActive || base.AllowSelectionChangeInSketchMode;
+
+		protected override void OnToolMouseMove(MapViewMouseEventArgs args)
+		{
+			Rebuilder?.EnsureInitialFeedbackRefresh();
+			base.OnToolMouseMove(args);
+		}
+
+		#endregion
+
+		// Only polylines can be shift-selected as the line to buffer. In multipatch replace mode
+		// the shift-selection instead re-picks the multipatch target (handled by the base class).
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
+			if (ReplaceActive)
+			{
+				return Rebuilder.CanSelectTargetGeometryType(geometryType);
+			}
+
 			return geometryType == GeometryType.Polyline;
 		}
 
@@ -181,7 +213,11 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
 		{
-			return SketchGeometryType.Polygon;
+			// In multipatch Destroy & Rebuild mode a rectangle selection lets SHIFT-click pick the
+			// target directly; a polygon selection would need several clicks to finish.
+			return ReplaceActive
+				       ? SketchGeometryType.Rectangle
+				       : SketchGeometryType.Polygon;
 		}
 
 		protected override SketchGeometryType GetEditSketchGeometryType()
@@ -206,6 +242,11 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			_bufferedLineToolOptions = InitializeOptions();
 			_currentBufferWidth = _bufferedLineToolOptions.BufferWidth;
 			await base.OnToolActivatingCoreAsync();
+
+			if (Rebuilder != null)
+			{
+				await Rebuilder.ActivateAsync(() => ActiveMapView);
+			}
 
 			// If a line is already selected when the tool is activated, buffer it right away.
 			await TryBufferInitialSelectionAsync();
@@ -241,6 +282,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			DisposeOverlays();
 			DisposeMeasureOverlays();
+			Rebuilder?.Deactivate();
 			return base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
@@ -252,6 +294,13 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		protected override async Task<bool> OnSketchModifiedAsyncCore()
 		{
+			// During a multipatch replace target reselection the "sketch" is the selection
+			// rectangle, not a line to buffer: skip the buffer preview and the in-progress flag.
+			if (ReplaceActive && ! IsInSketchMode)
+			{
+				return await base.OnSketchModifiedAsyncCore();
+			}
+
 			Geometry sketch = await GetCurrentSketchAsync();
 			_sketchInProgress = sketch is { IsEmpty: false };
 
@@ -340,8 +389,12 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			// routes the click to OnToolMouseDownCoreAsync instead. SHIFT is only claimed when
 			// no sketch is in progress; while drawing, SHIFT gestures (e.g. SHIFT +
 			// double-click to finish the part) must reach the sketch engine.
-			if (KeyboardUtils.IsCtrlDown() ||
-			    (KeyboardUtils.IsShiftDown() && ! _sketchInProgress))
+			// In multipatch replace mode the SHIFT-selection is handled by the base class'
+			// intermittent selection (rectangle + picker), so do not claim it here.
+			bool shiftSelectExistingLine =
+				KeyboardUtils.IsShiftDown() && ! _sketchInProgress && ! ReplaceActive;
+
+			if (KeyboardUtils.IsCtrlDown() || shiftSelectExistingLine)
 			{
 				args.Handled = true;
 			}
@@ -356,6 +409,13 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			if (KeyboardUtils.IsShiftDown())
 			{
+				// In multipatch replace mode the base class handles the shift-selection
+				// (intermittent rectangle + picker), so do not run the line shift-select.
+				if (ReplaceActive)
+				{
+					return Task.CompletedTask;
+				}
+
 				// Only shift-select an existing line when not drawing; while a sketch is in
 				// progress the shift gesture belongs to the sketch engine.
 				return _sketchInProgress ? Task.CompletedTask : HandleShiftSelectAsync(args);
@@ -419,11 +479,20 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			}
 		}
 
+		// The sketch can be canceled without going through ESC, e.g. via the ArcGIS Pro sketch
+		// context menu's "Cancel" command. That path does not reach HandleEscapeAsync, so clear
+		// the buffer/measure feedback here to make sure it is removed no matter how the sketch
+		// was canceled.
+		protected override Task<bool> OnSketchCanceledAsyncCore()
+		{
+			ClearFeedback();
+
+			return base.OnSketchCanceledAsyncCore();
+		}
+
 		protected override async Task HandleEscapeAsync()
 		{
-			ResetBufferState();
-			DisposeOverlays();
-			DisposeMeasureOverlays();
+			ClearFeedback();
 
 			// With RequiresSelection == false the base only resets the sketch on ESC and
 			// never clears the selection. When no sketch is in progress (e.g. right after a
@@ -519,6 +588,20 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				return false;
 			}
 
+			if (ReplaceActive)
+			{
+				// Destroy & Rebuild: replace the selected multipatch instead of inserting a new
+				// feature - but only when a single, visible multipatch is selected. If not, fall
+				// through and create a new feature as usual.
+				ReplaceGeometryResult replaceResult =
+					await Rebuilder.TryReplaceSelectedGeometryAsync(newGeometry, activeView);
+
+				if (replaceResult != ReplaceGeometryResult.NoTarget)
+				{
+					return replaceResult == ReplaceGeometryResult.Replaced;
+				}
+			}
+
 			IEnumerable<Dataset> datasets = new List<Dataset> { currentTargetClass };
 
 			return await GdbPersistenceUtils.ExecuteInTransactionAsync(
@@ -595,6 +678,18 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			if (sketchLine == null || sketchLine.IsEmpty)
 			{
 				return null;
+			}
+
+			// Buffer the simplified line. The sketch engine hands the finished sketch to
+			// OnEditSketchCompleteCoreAsync already simplified, so a fold-back (a segment that
+			// retraces an earlier one) arrives there as a clean line; the live preview, in
+			// contrast, buffers the raw sketch from GetCurrentSketchAsync. Simplifying here makes
+			// both paths buffer the identical line, so the preview matches the created feature
+			// instead of showing the raw offset outline (with intermediate caps and loops).
+			if (GeometryEngine.Instance.SimplifyAsFeature(sketchLine, forceSimplify: true) is
+				Polyline simplifiedLine && !simplifiedLine.IsEmpty)
+			{
+				sketchLine = simplifiedLine;
 			}
 
 			MultiPolycurve line = GeomConversionUtils.CreateMultiPolycurve(sketchLine);
@@ -718,46 +813,14 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			return polygon;
 		}
 
+		// Turns the buffer polygon into a multipatch. A closed-loop (annulus) buffer yields a
+		// polygon with an exterior ring and an interior hole; the conversion keeps that hole
+		// (exterior ring as a FirstRing patch, each interior ring as a hole Ring patch) instead
+		// of filling it with a separate solid ring.
 		[CanBeNull]
 		protected static Multipatch ConvertToMultipatch([CanBeNull] Polygon polygon)
 		{
-			if (polygon == null || polygon.IsEmpty)
-			{
-				return null;
-			}
-
-			SpatialReference sr = polygon.SpatialReference;
-
-			var mpBuilder = new MultipatchBuilderEx(sr);
-			var patches = new List<Patch>();
-
-			foreach (ReadOnlySegmentCollection ring in polygon.Parts)
-			{
-				var coords = new List<Coordinate3D>();
-
-				foreach (Segment segment in ring)
-				{
-					coords.Add(segment.StartPoint.Coordinate3D);
-				}
-
-				if (coords.Count < 3)
-				{
-					continue;
-				}
-
-				Patch patch = mpBuilder.MakePatch(PatchType.FirstRing);
-				patch.Coords = coords;
-				patches.Add(patch);
-			}
-
-			if (patches.Count == 0)
-			{
-				return null;
-			}
-
-			mpBuilder.Patches = patches;
-
-			return mpBuilder.ToGeometry();
+			return GeomConversionUtils.CreateMultipatch(polygon);
 		}
 
 		// Removes vertices from the buffer outline so that no remaining segment is shorter
@@ -1148,8 +1211,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		}
 
 		// Handles a Shift + left click: identifies the line under the cursor and either
-		// deselects it (when narrowing down a multi-selection) or makes it the sole selection
-		// and buffers it immediately.
+		// deselects it (when narrowing down a multi-selection) or loads it into the sketch (with
+		// buffer preview), leaving the user to finish the sketch (F2) to create the buffer.
 		private Task HandleShiftSelectAsync(MapViewMouseButtonEventArgs args)
 		{
 			return QueuedTask.Run(async () =>
@@ -1189,13 +1252,12 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 						return;
 					}
 
-					// Select mode: the clicked line becomes the sole selection and is buffered.
-					SelectionUtils.SelectFeature(mapView, picked.Feature,
-					                             SelectionCombinationMethod.New);
-
+					// Select mode: load the clicked line into the sketch (with buffer preview) so
+					// the user can adjust the options and finish the sketch (F2) to create the
+					// buffer, instead of buffering and creating the feature immediately.
 					if (picked.Feature.GetShape() is Polyline pickedLine)
 					{
-						await BufferExistingLineAsync(pickedLine);
+						await LoadLineIntoSketchAsync(pickedLine);
 					}
 				}
 				catch (Exception ex)
@@ -1276,45 +1338,6 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				"then finish the sketch to create the buffer.");
 		}
 
-		// Buffers a given existing line and creates the target feature.
-		private async Task BufferExistingLineAsync([CanBeNull] Polyline line)
-		{
-			if (line == null || line.IsEmpty)
-			{
-				return;
-			}
-
-			MapView activeView = MapView.Active;
-
-			await QueuedTaskUtils.Run(async () =>
-			{
-				try
-				{
-					await SetCurrentSketchAsync(null);
-
-					return await BufferLineAndCreateFeatureCoreAsync(
-						       line, EditingTemplate.Current, activeView, null);
-				}
-				catch (Exception ex)
-				{
-					_msg.Error("Error buffering the selected line", ex);
-					return false;
-				}
-				finally
-				{
-					DisposeOverlays();
-					DisposeMeasureOverlays();
-					ResetBufferState();
-
-					// If Shift is still held, stay on the selection cursor so the next line
-					// can be selected right away; otherwise return to the sketch crosshair.
-					bool shiftDown = KeyboardUtils.IsShiftDown();
-					SelectionCursors cursors = shiftDown ? FirstPhaseCursors : SketchCursors;
-					SetToolCursor(cursors?.GetCursor(GetSketchType(), shiftDown));
-				}
-			});
-		}
-
 		#endregion
 
 		#region State / helpers
@@ -1326,6 +1349,16 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			_measuring = false;
 			_measureStart = null;
 			_sketchInProgress = false;
+		}
+
+		// Clears all sketch feedback: the buffer state and both the buffer preview and the
+		// measure/distance-circle overlays. Shared by every sketch-cancel path (ESC and the
+		// sketch context menu's "Cancel").
+		private void ClearFeedback()
+		{
+			ResetBufferState();
+			DisposeOverlays();
+			DisposeMeasureOverlays();
 		}
 
 		private void UpdateEnabled()

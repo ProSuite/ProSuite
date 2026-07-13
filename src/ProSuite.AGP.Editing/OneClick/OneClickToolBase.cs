@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.CreateBufferedLine;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -57,6 +58,14 @@ public abstract class OneClickToolBase : MapToolBase
 	/// Whether this tool requires a selection and the base class should handle the selection phase.
 	/// </summary>
 	protected bool RequiresSelection { get; init; } = true;
+
+	/// <summary>
+	/// Whether this tool supports the selection phase and the base class should handle it. Per
+	/// default this includes all tools that require a selection, but subclasses can override it
+	/// to support a selection phase even if they do not strictly require a selection, for example
+	/// the optional selection in the <see cref="CreateBufferedLineToolBase{TOptions,TPartial}"/>.
+	/// </summary>
+	protected virtual bool IsSelectionPhaseSupported => RequiresSelection;
 
 	/// <summary>
 	/// Whether this tool requires editing to be enabled.
@@ -241,7 +250,7 @@ public abstract class OneClickToolBase : MapToolBase
 				return false;
 			}
 
-			if (RequiresSelection && await IsInSelectionPhaseAsync())
+			if (IsSelectionPhaseSupported && await IsInSelectionPhaseAsync())
 			{
 				return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 			}
@@ -570,7 +579,14 @@ public abstract class OneClickToolBase : MapToolBase
 	{
 		OnSelecting();
 
-		PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+		// AllowMultiSelection decides whether the existing selection is kept: single-selection
+		// tools always replace it (New), multi-selection tools honor the precedence (SHIFT = XOR).
+		SelectionCombinationMethod combinationMethod =
+			AllowMultiSelection(out _)
+				? precedence.SelectionCombinationMethod
+				: SelectionCombinationMethod.New;
+
+		PickerUtils.Select(items, combinationMethod);
 
 		return Task.CompletedTask;
 	}

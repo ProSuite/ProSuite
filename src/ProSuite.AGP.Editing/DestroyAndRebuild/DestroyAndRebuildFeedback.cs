@@ -25,6 +25,10 @@ public class DestroyAndRebuildFeedback
 	private CIMPointSymbol _controlPointMarkerSymbol;
 	private readonly bool _useOldSymbolization;
 
+	// The map view the overlays are drawn on. Defaults to MapView.Active but can be set
+	// explicitly (via UpdateSelection) so the feedback also shows in a stereo map view.
+	[CanBeNull] private MapView _mapView;
+
 	public DestroyAndRebuildFeedback(bool useOldSymbolization = false)
 	{
 		_useOldSymbolization = useOldSymbolization;
@@ -87,14 +91,8 @@ public class DestroyAndRebuildFeedback
 	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
 	                                      [NotNull] CIMSymbol cimSymbol)
 	{
-		if (geometry == null || geometry.IsEmpty)
-		{
-			return null;
-		}
-
 		IDisposable result = MapView.Active.AddOverlay(
 			geometry, cimSymbol.MakeSymbolReference());
-
 		return result;
 	}
 
@@ -137,14 +135,16 @@ public class DestroyAndRebuildFeedback
 			{
 				case GeometryType.Point:
 					// Use start point symbol for points, consistent across both versions
-					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
 					break;
 				case GeometryType.Polyline:
 					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_lineSymbol)));
 
 					var startPointL = GeometryUtils.GetStartPoint(geometry as Polyline);
 					var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
-					_overlays.Add(AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
@@ -153,10 +153,12 @@ public class DestroyAndRebuildFeedback
 						_overlays.Add(AddOverlay(vertexMultipoint,
 						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						                         Assert.NotNull(
+							                         _controlPointMarkerSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
+					_overlays.Add(
+						AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
 					break;
 				case GeometryType.Polygon:
 					// Old symbolization: for polygons, show only the outline
@@ -166,18 +168,28 @@ public class DestroyAndRebuildFeedback
 					{
 						var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
 						var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
-						_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
+						_overlays.Add(
+							AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
 
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
 						_overlays.Add(AddOverlay(vertexMultipoint,
 						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						                         Assert.NotNull(
+							                         _controlPointMarkerSymbol)));
 
-						_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
+						_overlays.Add(
+							AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
 					}
 
+					break;
+
+				case GeometryType.Multipatch:
+					Polyline multipatchOutline =
+						GeometryUtils.GetMultipatchOutline((Multipatch) geometry);
+					_overlays.Add(AddOverlay(multipatchOutline,
+					                         Assert.NotNull(_lineSymbol)));
 					break;
 
 				default:
