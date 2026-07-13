@@ -1436,9 +1436,15 @@ public static class GeometryUtils
 		var segmentCount = builder.GetSegmentCount(partIndex);
 		if (pointIndex < 0 || pointIndex > segmentCount)
 			throw new ArgumentOutOfRangeException(nameof(pointIndex));
+		if (segmentCount == 0)
+			throw new InvalidOperationException($"Part {partIndex} has no segments");
+
 		bool isEndPoint = pointIndex == segmentCount;
+
 		var segmentIndex = isEndPoint ? segmentCount - 1 : pointIndex;
+
 		var segment = builder.GetSegment(partIndex, segmentIndex);
+
 		return isEndPoint ? segment.EndPoint : segment.StartPoint;
 	}
 

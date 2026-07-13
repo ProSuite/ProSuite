@@ -163,6 +163,13 @@ public class SketchStack
 
 			for (int partIndex = 0; partIndex < builder.PartCount; partIndex++)
 			{
+				if (builder.GetSegmentCount(partIndex) == 0)
+				{
+					// Degenerate part with just a single (probably unfinished) point:
+					// there is no segment to derive its coordinates from.
+					continue;
+				}
+
 				int pointCount = builder.GetPointCount(partIndex);
 
 				for (int pointIndex = 0; pointIndex < pointCount; pointIndex++)
