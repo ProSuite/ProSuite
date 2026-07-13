@@ -552,6 +552,75 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanCutFaceWithSelfTouchingLassoCutLine()
+		{
+			// Repro of Cut Feature hole-cut on a multipatch (GoTop): a self-touching "bite its
+			// tail" lasso sketch, after Simplify, becomes a closed loop PLUS two dangling spur
+			// segments hanging off the loop's closure vertex. CutPlanar returned no result for a
+			// face, which made CutGeometryUtils hand back the uncut face -> it straddled two
+			// footprint parts -> "Unexpected number of assignments to footprint parts".
+			// Coordinates taken verbatim from the microservice diagnostic dump.
+			var face = new List<Pnt3D>
+			           {
+				           new Pnt3D(2577109.605, 1102951.827, 712.673),
+				           new Pnt3D(2577105.717, 1102961.489, 711.297),
+				           new Pnt3D(2577142.457, 1102976.273, 711.297),
+				           new Pnt3D(2577146.345, 1102966.610, 712.673)
+			           };
+
+			var sourcePoly = new RingGroup(GeomTestUtils.CreateRing(face));
+
+			// The cut line as fed to CutPlanar: closed loop + two dangling tails at the closure vertex.
+			var loop = new List<Pnt3D>
+			           {
+				           new Pnt3D(2577124.593, 1102963.892, 0),
+				           new Pnt3D(2577115.695, 1102958.842, 0),
+				           new Pnt3D(2577119.202, 1102948.947, 0),
+				           new Pnt3D(2577141.746, 1102956.337, 0),
+				           new Pnt3D(2577124.593, 1102963.892, 0)
+			           };
+			var tail1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(2577124.593, 1102963.892, 0),
+				            new Pnt3D(2577120.705, 1102965.605, 0)
+			            };
+			var tail2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(2577129.597, 1102966.732, 0),
+				            new Pnt3D(2577124.593, 1102963.892, 0)
+			            };
+
+			var cutLinesWithTails = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(loop), new Linestring(tail1), new Linestring(tail2)
+				});
+
+			const double tolerance = 0.01;
+
+			// Directly cutting with the dangling tails yields nothing (the bug):
+			IList<RingGroup> withTails =
+				GeomTopoOpUtils.CutPlanar(sourcePoly, cutLinesWithTails, tolerance);
+			Assert.AreEqual(0, withTails.Count,
+			                "Precondition: dangling tails are expected to break the raw cut");
+
+			// The fix: prune the dangling spur segments first, then cut.
+			MultiPolycurve pruned =
+				GeomTopoOpUtils.RemoveDanglingCutLines(sourcePoly, cutLinesWithTails, tolerance);
+
+			// Only the closed loop must remain (the two tails removed).
+			Assert.AreEqual(1, pruned.PartCount, "Expected only the closed loop to remain");
+
+			IList<RingGroup> result =
+				GeomTopoOpUtils.CutPlanar(sourcePoly, pruned, tolerance);
+
+			// The face is cut into 2 pieces (assignable to the donut and island footprint parts),
+			// and the pieces preserve the original area.
+			Assert.AreEqual(2, result.Count, "Pruned cut line must split the face into two pieces");
+			Assert.AreEqual(sourcePoly.GetArea2D(), result.Sum(p => p.GetArea2D()), 0.01);
+		}
+
+		[Test]
 		public void CanCutCompletelyInside()
 		{
 			var ring1 = new List<Pnt3D>

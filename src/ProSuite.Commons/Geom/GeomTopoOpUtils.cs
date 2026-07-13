@@ -253,6 +253,134 @@ namespace ProSuite.Commons.Geom
 			return resultXY.SelectMany(r => GetConnectedComponents(r, tolerance)).ToList();
 		}
 
+		/// <summary>
+		/// Removes dangling spur parts from a set of cut lines: open parts that have an endpoint
+		/// lying strictly inside <paramref name="source"/> (i.e. not on its boundary) and not
+		/// shared with any other cut part. Such spurs cannot contribute to a cut and confuse the
+		/// cutting navigator (e.g. CutPlanar returns no result). They typically arise when a
+		/// self-touching "bite its tail" sketch is simplified into a closed loop plus leftover
+		/// tail segments. Closed rings and boundary-to-boundary lines (including cut lines that
+		/// overshoot the source) are kept. Pruning is iterative so that removing one spur can
+		/// expose the next.
+		/// </summary>
+		[NotNull]
+		public static MultiPolycurve RemoveDanglingCutLines(
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList cutLines,
+			double tolerance)
+		{
+			List<Linestring> parts = GeomUtils.GetLinestrings(cutLines).ToList();
+
+			bool removedAny;
+			do
+			{
+				removedAny = false;
+
+				for (int i = parts.Count - 1; i >= 0; i--)
+				{
+					Linestring part = parts[i];
+
+					if (part.IsClosed)
+					{
+						continue;
+					}
+
+					if (HasDanglingEndpoint(part, parts, source, tolerance))
+					{
+						parts.RemoveAt(i);
+						removedAny = true;
+					}
+				}
+			} while (removedAny && parts.Count > 0);
+
+			return new MultiPolycurve(parts);
+		}
+
+		private static bool HasDanglingEndpoint([NotNull] Linestring part,
+		                                        [NotNull] IEnumerable<Linestring> allParts,
+		                                        [NotNull] ISegmentList source,
+		                                        double tolerance)
+		{
+			return IsDanglingEndpoint(part.StartPoint, part, allParts, source, tolerance) ||
+			       IsDanglingEndpoint(part.EndPoint, part, allParts, source, tolerance);
+		}
+
+		private static bool IsDanglingEndpoint([CanBeNull] Pnt3D endPoint,
+		                                       [NotNull] Linestring ownPart,
+		                                       [NotNull] IEnumerable<Linestring> allParts,
+		                                       [NotNull] ISegmentList source,
+		                                       double tolerance)
+		{
+			if (endPoint == null)
+			{
+				return false;
+			}
+
+			// Only endpoints strictly inside the source can be spurs. Endpoints on the boundary or
+			// outside it (an overshooting cut line) can reach/cross the boundary and must be kept.
+			if (! GeomRelationUtils.PolycurveContainsXY(source, endPoint, tolerance))
+			{
+				return false;
+			}
+
+			if (IsOnBoundary(source, endPoint, tolerance))
+			{
+				return false;
+			}
+
+			// Strictly interior: not dangling if another cut part also touches this point (a real
+			// junction, e.g. where two cut lines meet).
+			foreach (Linestring other in allParts)
+			{
+				if (ReferenceEquals(other, ownPart))
+				{
+					continue;
+				}
+
+				foreach (Pnt3D otherPoint in other.GetPoints())
+				{
+					if (GeomRelationUtils.IsWithinTolerance(endPoint, otherPoint, tolerance, true))
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
+		private static bool IsOnBoundary([NotNull] ISegmentList source,
+		                                 [NotNull] Pnt3D point,
+		                                 double tolerance)
+		{
+			foreach (Linestring ring in GeomUtils.GetLinestrings(source))
+			{
+				for (int i = 0; i < ring.SegmentCount; i++)
+				{
+					Line3D segment = ring[i];
+
+					if (GeomRelationUtils.IsWithinTolerance(point, segment.StartPoint, tolerance,
+					                                        true) ||
+					    GeomRelationUtils.IsWithinTolerance(point, segment.EndPoint, tolerance, true))
+					{
+						return true;
+					}
+
+					if (segment.GetDistancePerpendicular(point, true) <= tolerance)
+					{
+						double ratio = segment.GetDistanceAlong(point, true);
+
+						if (ratio >= 0 && ratio <= 1)
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
 		public static Polyhedron GetDifferenceAreasXY(
 			[NotNull] Polyhedron sourcePolyhedron,
 			[NotNull] Polyhedron targetPolyhedron,

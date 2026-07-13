@@ -830,8 +830,15 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					                                       GeometryConversionUtils.CreateLinestring(
 						                                       cutPath, ! cutLineHasZs)));
 
+			// A self-touching ("bite its tail") sketch is simplified into a closed loop plus
+			// leftover dangling tail segments. Those spurs cannot cut and make CutPlanar return
+			// nothing for faces where the loop is not fully interior, which then leaves the face
+			// uncut and trips AssignResultsToFootprintParts. Prune them before cutting.
+			ISegmentList cutLinesToUse =
+				GeomTopoOpUtils.RemoveDanglingCutLines(ringGroup, cutLinestrings, tolerance);
+
 			IList<RingGroup> resultGroups =
-				GeomTopoOpUtils.CutPlanar(ringGroup, cutLinestrings, tolerance);
+				GeomTopoOpUtils.CutPlanar(ringGroup, cutLinesToUse, tolerance);
 
 			foreach (RingGroup resultPoly in resultGroups)
 			{
