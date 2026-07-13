@@ -57,6 +57,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private const int _defaultDataRequestTimeoutSeconds = 120;
+
 		private readonly StaTaskScheduler _staThreadScheduler;
 
 		private readonly Func<VerificationRequest, IBackgroundVerificationInputs>
@@ -115,7 +117,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// when the server pulls data from the client (<see cref="VerifyDataQuality"/>). Applies
 		/// per batch, so multi-batch transfers get this budget for each batch.
 		/// </summary>
-		public int DataRequestTimeoutSeconds { get; set; } = 30;
+		public int DataRequestTimeoutSeconds { get; set; } = GetDataRequestTimeoutSeconds();
 
 		/// <summary>
 		/// The license checkout action to be performed before any service call is executed.
@@ -1790,6 +1792,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return -1;
+		}
+
+		private static int GetDataRequestTimeoutSeconds()
+		{
+			const string envVarDataRequestTimeoutSeconds =
+				"PROSUITE_QA_DATA_REQUEST_TIMEOUT_SECONDS";
+
+			string envVarValue = Environment.GetEnvironmentVariable(
+				envVarDataRequestTimeoutSeconds);
+
+			if (! string.IsNullOrEmpty(envVarValue))
+			{
+				if (int.TryParse(envVarValue, out int dataRequestTimeoutSeconds))
+				{
+					return dataRequestTimeoutSeconds;
+				}
+
+				_msg.WarnFormat("Cannot parse environment variable {0} value ({1})",
+				                envVarDataRequestTimeoutSeconds, envVarValue);
+			}
+
+			return _defaultDataRequestTimeoutSeconds;
 		}
 	}
 }
