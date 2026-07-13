@@ -47,6 +47,7 @@ public class SketchStack
 	/// sketch is already on top of the stack.
 	/// </summary>
 	/// <param name="sketch">The sketch geometry to add</param>
+	/// <param name="knownZPoints">Point with known Z values.</param>
 	public bool TryPush(Geometry sketch,
 	                    IReadOnlyCollection<MapPoint> knownZPoints = null)
 	{
@@ -100,7 +101,7 @@ public class SketchStack
 
 			if (double.IsNaN(lastPoint.Z) && noNanOnStack)
 			{
-				_msg.Warn(
+				_msg.Info(
 					"Sketch point could be missing in sketch (Repressed from stack due to NaN-Z). " +
 					"MAKE SURE TO CHECK sketch when finishing sketch after switching to stereo");
 				return false;
