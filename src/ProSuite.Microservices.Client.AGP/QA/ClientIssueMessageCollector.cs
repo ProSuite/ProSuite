@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -111,20 +112,39 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				return Task.CompletedTask;
 			});
 
-			// NOTE: Do not call transaction inside QueuedTask.Run or the EditingCompleted event
-			// will fire twice!
-			EditorTransaction transaction = new EditorTransaction(new EditOperation());
+			bool editingAlreadyEnabled = Project.Current.IsEditingEnabled;
 
-			bool success = await transaction.ExecuteAsync(
-				               editContext =>
-				               {
-					               savedIssueCount =
-						               UpdateIssuesTx(editContext, objectsToVerify,
-						                              verifiedConditionIds);
-				               },
-				               "Update issues", referencedIssueTables);
+			if (! editingAlreadyEnabled &&
+			    ! await Project.Current.SetIsEditingEnabledAsync(true))
+			{
+				throw new InvalidOperationException(
+					"Cannot save verification issues: editing could not be enabled in the application.");
+			}
 
-			return success ? savedIssueCount : 0;
+			try
+			{
+				// NOTE: Do not call transaction inside QueuedTask.Run or the EditingCompleted event
+				// will fire twice!
+				EditorTransaction transaction = new EditorTransaction(new EditOperation());
+
+				bool success = await transaction.ExecuteAsync(
+					               editContext =>
+					               {
+						               savedIssueCount =
+							               UpdateIssuesTx(editContext, objectsToVerify,
+							                              verifiedConditionIds);
+					               },
+					               "Update issues", referencedIssueTables);
+
+				return success ? savedIssueCount : 0;
+			}
+			finally
+			{
+				if (! editingAlreadyEnabled)
+				{
+					await Project.Current.SetIsEditingEnabledAsync(false);
+				}
+			}
 		}
 
 		/// <summary>
