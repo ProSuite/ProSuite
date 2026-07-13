@@ -10246,5 +10246,109 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(2000, mitered.GetArea2D(), 0.01);
 			Assert.AreEqual(1987.5, bevelled.GetArea2D(), 0.01);
 		}
+
+		[Test]
+		public void CanBufferClosedLoopBothSides()
+		{
+			// A closed (looped) sketch has no ends: its two-sided buffer must be a band
+			// (annulus) between the inner and outer offset rings, NOT a filled disk. Building
+			// it as an open path used to splice the two offset loops into one self-overlapping
+			// ring whose filled area was the whole 100 x 100 interior.
+			var line = new MultiPolycurve(
+				new[] { CreateClosedSquareLoop() });
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+
+			// The band must have a hole: an exterior ring plus one interior ring.
+			Assert.AreEqual(2, buffer.PartCount);
+
+			// Outer boundary is the square grown by 5 (Minkowski sum with a disk of radius 5):
+			// 10000 + perimeter * 5 (= 2000) + full disc (pi * 25 ~= 78.5) => ~12078.5.
+			// Inner boundary is the square shrunk by 5 => 90 x 90 = 8100. Band => ~3978.5,
+			// far less than the ~12078 filled disk the buggy version produced.
+			Assert.AreEqual(3978.5, buffer.GetArea2D(), 1.0);
+		}
+
+		[Test]
+		public void CanBufferClosedLoopOneSide()
+		{
+			// The square loop is digitized counter-clockwise, so "left" is the interior and
+			// "right" is the exterior. Each one-sided band is the annulus between the loop and
+			// its full-width offset on that side.
+			var line = new MultiPolycurve(
+				new[] { CreateClosedSquareLoop() });
+
+			const double tolerance = 0.001;
+
+			MultiLinestring left =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Left, tolerance, out _);
+			MultiLinestring right =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Right, tolerance, out _);
+
+			Assert.NotNull(left);
+			Assert.NotNull(right);
+
+			Assert.AreEqual(2, left.PartCount);
+			Assert.AreEqual(2, right.PartCount);
+
+			// Interior band: 100 x 100 loop (10000) minus the 90 x 90 inner offset (8100).
+			Assert.AreEqual(1900, left.GetArea2D(), 0.01);
+
+			// Exterior band: outer offset (~12078.5) minus the 100 x 100 loop (10000).
+			Assert.AreEqual(2078.5, right.GetArea2D(), 1.0);
+		}
+
+		[Test]
+		public void CanBufferSelfCrossingLoop()
+		{
+			// A loop drawn with crossing ends: an OPEN polyline (start != end, so not
+			// IsClosed) that crosses one of its own segments. The last segment runs from the
+			// top-left corner down through the bottom edge, forming a loop with a crossing
+			// tail. The band must keep the loop interior as a hole instead of filling it.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0),
+						               new Pnt3D(0, 100, 0),
+						               new Pnt3D(50, -50, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 3, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+
+			// The band must have at least one hole (the loop interior): more than one part.
+			Assert.GreaterOrEqual(buffer.PartCount, 2);
+
+			// A thin band around a ~458 m long line is well under 4000 m2; a filled loop
+			// interior (the bug) would push the area past 10000 m2.
+			Assert.Less(buffer.GetArea2D(), 4000);
+		}
+
+		// A counter-clockwise 100 x 100 square as a closed (start == end) loop.
+		private static Linestring CreateClosedSquareLoop()
+		{
+			return new Linestring(new List<Pnt3D>
+			                      {
+				                      new Pnt3D(0, 0, 0),
+				                      new Pnt3D(100, 0, 0),
+				                      new Pnt3D(100, 100, 0),
+				                      new Pnt3D(0, 100, 0),
+				                      new Pnt3D(0, 0, 0)
+			                      });
+		}
 	}
 }

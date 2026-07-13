@@ -385,6 +385,35 @@ public static class GeometryUtils
 		throw UnexpectedResultFrom("GeometryEngine.Boundary()", typeof(Polyline), boundary);
 	}
 
+	/// <summary>
+	/// Builds a (multipart) polyline of the multipatch's patch edges, e.g. to render the
+	/// outline as feedback (no faces, no vertices). Returns null for an empty multipatch.
+	/// </summary>
+	[CanBeNull]
+	public static Polyline GetMultipatchOutline([NotNull] Multipatch multipatch)
+	{
+		if (multipatch.IsEmpty)
+		{
+			return null;
+		}
+
+		var builder = new PolylineBuilderEx(multipatch.SpatialReference) { HasZ = true };
+
+		var multipatchBuilder = new MultipatchBuilderEx(multipatch);
+
+		foreach (Patch patch in multipatchBuilder.Patches)
+		{
+			if (patch?.Coords == null || patch.Coords.Count < 2)
+			{
+				continue;
+			}
+
+			builder.AddPart(patch.Coords);
+		}
+
+		return builder.ToGeometry();
+	}
+
 	public static Polygon Intersection(Envelope extent, Polygon perimeter)
 	{
 		if (extent == null) return perimeter;

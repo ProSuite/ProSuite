@@ -126,7 +126,7 @@ namespace ProSuite.Commons.ManagedOptions
 					// Could happen if the schema changes other than just adding new nodes:
 					_msg.WarnFormat(
 						"The local configuration file {0} in {1} could not be read completely ({2}). Please review and accept the current settings in the options dialog.",
-						ConfigFileName, CentralConfigDirectory,
+						ConfigFileName, LocalConfigDirectory,
 						issueNotifications.Concatenate(". "));
 				}
 			}
