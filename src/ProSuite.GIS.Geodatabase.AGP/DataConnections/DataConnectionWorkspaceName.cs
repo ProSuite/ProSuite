@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -83,7 +84,39 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 		}
 
 		return new DataConnectionWorkspaceName(datastore.GetConnectionString(),
-		                                       workspaceFactory);
+		                                       workspaceFactory)
+		       {
+			       ConnectionFilePath = TryGetConnectionFilePath(datastore)
+		       };
+	}
+
+	/// <summary>
+	/// The original catalog path (e.g. an .sde connection file) the datastore was opened
+	/// from, if any. Preferred over <see cref="ConnectionString"/> when re-opening, because
+	/// it preserves the authentication mode (e.g. OSA) and credentials. The connection string
+	/// round-tripped from a live enterprise geodatabase can otherwise fail with
+	/// "invalid login account" on a fresh connection.
+	/// </summary>
+	[CanBeNull]
+	public string ConnectionFilePath { get; set; }
+
+	[CanBeNull]
+	private static string TryGetConnectionFilePath([NotNull] Datastore datastore)
+	{
+		try
+		{
+			string localPath = datastore.GetPath()?.LocalPath;
+
+			return ! string.IsNullOrEmpty(localPath) &&
+			       localPath.EndsWith(".sde", StringComparison.OrdinalIgnoreCase)
+				       ? localPath
+				       : null;
+		}
+		catch (Exception e)
+		{
+			_msg.Debug("Could not determine catalog path for datastore", e);
+			return null;
+		}
 	}
 
 	public DataConnectionWorkspaceName(CIMStandardDataConnection standardConnection)
@@ -108,6 +141,19 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 
 	public Datastore OpenDatastore()
 	{
+		// Prefer the original .sde connection file: it preserves the authentication mode
+		// (e.g. OSA) and credentials. Re-opening from the round-tripped connection string can
+		// fail with "invalid login account" (stale/mismatched DBMS credentials).
+		if (! string.IsNullOrEmpty(ConnectionFilePath) && File.Exists(ConnectionFilePath))
+		{
+			_msg.DebugFormat("Opening datastore from connection file {0}", ConnectionFilePath);
+			return WorkspaceUtils.OpenGeodatabase(ConnectionFilePath);
+		}
+
+		_msg.DebugFormat(
+			"No usable connection file (path='{0}'); opening from connection string",
+			ConnectionFilePath);
+
 		Connector connector = WorkspaceUtils.CreateConnector(FactoryType, ConnectionString);
 
 		return WorkspaceUtils.OpenDatastore(connector);
