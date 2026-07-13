@@ -82,7 +82,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				throw new NotSupportedException("Unsupported operation: No issue store set up");
 			}
 
-			await PrepareIssueStore(_issueStore);
+			await PrepareIssueStore(_issueStore, verifiedConditionIds);
 
 			int savedIssueCount = 0;
 
@@ -155,18 +155,32 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_obsoleteExceptionGdbRefs.Add(gdbObjRefMsg);
 		}
 
-		private async Task PrepareIssueStore([NotNull] IIssueStore issueStore)
+		private async Task PrepareIssueStore([NotNull] IIssueStore issueStore,
+		                                     [CanBeNull] IList<int> verifiedConditionIds)
 		{
 			if (_verifiedSpecification != null)
 			{
 				issueStore.SetVerifiedSpecification(_verifiedSpecification);
 			}
+			else if (_verifiedSpecificationId >= 0)
+			{
+				issueStore.SetVerifiedSpecification(_verifiedSpecificationId);
+			}
 			else
 			{
-				Assert.False(_verifiedSpecificationId < 0,
-				             "The verified specification/specification id was not set.");
+				// No specification (id) is known on the client, e.g. because the verified
+				// specification was created on the server (Release Quality). Fall back to
+				// the verified condition ids from the verification message:
+				Assert.True(verifiedConditionIds?.Count > 0,
+				            "The verified specification/specification id was not set and " +
+				            "no verified condition ids are available.");
 
-				issueStore.SetVerifiedSpecification(_verifiedSpecificationId);
+				_msg.DebugFormat(
+					"No verified specification (id) was set. Using the {0} verified " +
+					"condition ids from the verification message instead.",
+					verifiedConditionIds.Count);
+
+				issueStore.SetVerifiedConditionIds(verifiedConditionIds);
 			}
 
 			bool allConditionsRequired =
@@ -209,11 +223,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			Assert.NotNull(_issueStore, "No issue store set up");
 
 			IList<GdbObjectReference> invalidAllowedErrorReferences =
-				obsoleteExceptions.Select(
-					m => new GdbObjectReference(m.ClassHandle, m.ObjectId)).ToList();
+				obsoleteExceptions.Select(m => new GdbObjectReference(m.ClassHandle, m.ObjectId))
+				                  .ToList();
 
 			_issueStore.DeleteInvalidAllowedErrors(invalidAllowedErrorReferences,
-			                                      invalidateRow);
+			                                       invalidateRow);
 		}
 
 		private void DeleteErrors([CanBeNull] IList<GdbObjectReference> objectSelection,

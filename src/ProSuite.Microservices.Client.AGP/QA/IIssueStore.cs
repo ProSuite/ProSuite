@@ -58,6 +58,14 @@ public interface IIssueStore
 	void SetVerifiedSpecification(Either<QualitySpecification, int> specification);
 
 	/// <summary>
+	/// Sets the data dictionary ids of the verified conditions. These are used as fall-back to
+	/// resolve the relevant conditions if no specification (id) is known on the client, e.g.
+	/// because the verified specification was created on the server (Release Quality).
+	/// </summary>
+	/// <param name="conditionIds"></param>
+	void SetVerifiedConditionIds([NotNull] IList<int> conditionIds);
+
+	/// <summary>
 	/// Prepares the conditions in async method (within the edit transaction we have no async lambda available).
 	/// </summary>
 	/// <param name="allConditionsRequired"></param>

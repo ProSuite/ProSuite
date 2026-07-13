@@ -36,6 +36,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 		QualityCondition GetQualityCondition(string conditionName);
 
+		[NotNull]
+		IList<QualityCondition> GetQualityConditions([NotNull] IList<int> conditionIds);
+
 		IList<Dataset> GetDatasets(IList<int> datasetIds);
 
 		IList<Association> GetAssociations(IList<int> referencedDatasetIds);

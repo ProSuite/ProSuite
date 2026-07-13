@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -28,5 +29,15 @@ public interface IIssueStoreContext
 	[CanBeNull]
 	ErrorTableDataset NoGeometryIssueDataset { get; }
 
+	[NotNull]
 	Task<QualitySpecification> GetQualitySpecification(int ddxId);
+
+	/// <summary>
+	/// Gets the fully populated quality conditions with the given data dictionary ids.
+	/// Conditions for unknown ids are silently omitted from the result.
+	/// </summary>
+	/// <param name="conditionIds"></param>
+	/// <returns></returns>
+	[NotNull]
+	Task<IList<QualityCondition>> GetQualityConditions([NotNull] IList<int> conditionIds);
 }
