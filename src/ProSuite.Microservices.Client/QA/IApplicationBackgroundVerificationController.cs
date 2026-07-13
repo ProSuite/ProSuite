@@ -16,6 +16,12 @@ namespace ProSuite.Microservices.Client.QA
 	public interface IApplicationBackgroundVerificationController
 	{
 		/// <summary>
+		/// Whether the work list should be opened automatically once a verification finishes (and,
+		/// for central issue datasets, the issues have been updated first).
+		/// </summary>
+		bool AutoOpenWorkListAfterVerification { get; }
+
+		/// <summary>
 		/// Shows or hides the progress overlay of the verification by highlighting the tiles that have been
 		/// processed and the currently processing tile.
 		/// </summary>

@@ -15,6 +15,8 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		private bool _issuesSaved;
 
+		public bool AutoOpenWorkListAfterVerification => false;
+
 		[CanBeNull]
 		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
 		{

@@ -611,9 +611,12 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			CommandManager.InvalidateRequerySuggested();
 
-			if (VerificationResult?.HasIssues == true &&
-			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
+			bool autoOpenWorkList =
+				ApplicationController?.AutoOpenWorkListAfterVerification == true ||
+				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					"PROSUITE_AUTO_OPEN_ISSUE_WORKLIST");
+
+			if (VerificationResult?.HasIssues == true && autoOpenWorkList)
 			{
 				await ViewUtils.RunOnUIThread(async () =>
 				{
@@ -621,6 +624,16 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					{
 						IQualityVerificationResult verificationResult =
 							Assert.NotNull(VerificationResult);
+
+						// For central issue datasets (production model issue schema) the issues must
+						// be updated (saved) before the work list can be opened. CanSaveIssues is
+						// only true in that case (and while the issues have not yet been saved).
+						if (ApplicationController.CanSaveIssues(verificationResult, out _))
+						{
+							await ApplicationController.SaveIssuesAsync(
+								verificationResult, UpdateOptions.ErrorDeletionType,
+								! UpdateOptions.KeepPreviousIssues);
+						}
 
 						await ApplicationController.OpenWorkList(
 							verificationResult, replaceExisting: true);
@@ -725,7 +738,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					    CloseAction();
 				    }
 
-					// Remove overlays on close
+				    // Remove overlays on close
 				    UpdateProgressOverlay(false);
 			    }
 			);

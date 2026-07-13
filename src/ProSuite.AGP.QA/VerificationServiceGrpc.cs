@@ -65,8 +65,7 @@ namespace ProSuite.AGP.QA
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			QualityVerificationProgressTracker progress,
-			string resultsPath,
-			bool saveVerification = false)
+			string resultsPath)
 		{
 			Assert.ArgumentNotNull(qualitySpecificationRef, nameof(qualitySpecificationRef));
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
@@ -79,7 +78,7 @@ namespace ProSuite.AGP.QA
 
 			VerificationRequest request =
 				await CreateVerificationRequest(specificationRef, perimeter, projectWorkspace,
-				                                resultsPath, saveVerification: saveVerification);
+				                                resultsPath);
 
 			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
 			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
@@ -125,7 +124,7 @@ namespace ProSuite.AGP.QA
 
 			VerificationRequest request =
 				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
-				                                resultsPath, objectsToVerify, false);
+				                                resultsPath, objectsToVerify);
 
 			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
 
@@ -323,8 +322,7 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] Geometry perimeter,
 			[NotNull] ProjectWorkspace projectWorkspace,
 			[CanBeNull] string resultsPath,
-			[CanBeNull] IList<Row> objectsToVerify = null,
-			bool saveVerification = false)
+			[CanBeNull] IList<Row> objectsToVerify = null)
 		{
 			QualitySpecificationMsg specificationMsg = CreateSpecificationMsg(specificationRef);
 
@@ -344,8 +342,10 @@ namespace ProSuite.AGP.QA
 
 			SetPathParameters(resultsPath, request);
 
+			bool saveVerificationInDdx = Parameters?.SaveVerificationStatisticsInDdx ?? false;
+
 			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), saveVerification, true, false);
+				request, GetTileSize(projectWorkspace), saveVerificationInDdx, true, false);
 
 			return request;
 		}
@@ -375,8 +375,10 @@ namespace ProSuite.AGP.QA
 
 			SetPathParameters(resultsPath, request);
 
+			bool saveVerificationInDdx = Parameters?.SaveVerificationStatisticsInDdx ?? false;
+
 			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), false, true, false);
+				request, GetTileSize(projectWorkspace), saveVerificationInDdx, true, false);
 
 			return request;
 		}
@@ -402,9 +404,18 @@ namespace ProSuite.AGP.QA
 				string xmlReport = Path.Combine(resultsPath, VerificationReportName);
 				string gdbDir = Path.Combine(resultsPath, "issues.gdb");
 
-				request.Parameters.HtmlReportPath = htmlReport;
-				request.Parameters.VerificationReportPath = xmlReport;
-				request.Parameters.IssueFileGdbPath = gdbDir;
+				// Only request the reports / the local Issue File GDB when configured to do so.
+				// Without parameters, both are written (the default, backward-compatible behavior).
+				if (Parameters?.CreateReports ?? true)
+				{
+					request.Parameters.HtmlReportPath = htmlReport;
+					request.Parameters.VerificationReportPath = xmlReport;
+				}
+
+				if (Parameters?.CreateLocalIssueFileGdb ?? true)
+				{
+					request.Parameters.IssueFileGdbPath = gdbDir;
+				}
 			}
 		}
 

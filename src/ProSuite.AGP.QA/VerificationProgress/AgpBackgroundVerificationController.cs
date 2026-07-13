@@ -73,6 +73,9 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			SaveAction = saveAction;
 		}
 
+		public bool AutoOpenWorkListAfterVerification =>
+			_verificationEnvironment?.AutoOpenWorkListAfterVerification ?? false;
+
 		[CanBeNull]
 		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction { get; }

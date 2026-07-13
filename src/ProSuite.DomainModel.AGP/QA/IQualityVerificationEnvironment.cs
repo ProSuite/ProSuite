@@ -88,25 +88,28 @@ public interface IQualityVerificationEnvironment
 	IQualityConditionProvider ConditionProvider { get; }
 
 	/// <summary>
-	/// Verifies the provided perimeter or the full extent if no perimeter is provided.
+	/// Whether the issue work list should be opened automatically once a verification finishes.
+	/// </summary>
+	bool AutoOpenWorkListAfterVerification { get; }
+
+	/// <summary>
+	/// Verifies the provided perimeter or the full extent if no perimeter is provided. The result
+	/// location is resolved by the environment (see the verification options).
 	/// </summary>
 	/// <param name="perimeter">The perimeter. Null means 'full extent'.</param>
 	/// <param name="progress"></param>
 	/// <param name="perimeterDisplayName">The display name for the provided perimeter.</param>
-	/// <param name="resultsPath"></param>
 	/// <param name="saveVerification"></param>
 	/// <returns></returns>
 	Task<ServiceCallStatus> VerifyPerimeter([CanBeNull] Geometry perimeter,
 	                                        [NotNull] QualityVerificationProgressTracker progress,
 	                                        [NotNull] string perimeterDisplayName,
-	                                        string resultsPath,
 	                                        bool saveVerification = false);
 
 	Task<ServiceCallStatus> VerifySelection(
 		IList<Row> objectsToVerify,
 		[CanBeNull] Geometry perimeter,
-		QualityVerificationProgressTracker progress,
-		[CanBeNull] string resultsPath);
+		QualityVerificationProgressTracker progress);
 
 	/// <summary>
 	/// Whether the current environment supports storing issues in the central issue feature

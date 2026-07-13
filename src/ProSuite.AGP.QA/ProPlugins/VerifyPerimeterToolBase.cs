@@ -125,8 +125,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
-
 			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
@@ -140,7 +138,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(sketchGeometry, progressTracker, resultsPath),
+					VerificationAction = () => Verify(sketchGeometry, progressTracker),
 					ApplicationController = appController
 				};
 
@@ -177,8 +175,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		private async Task<ServiceCallStatus> Verify(
 			[NotNull] Geometry perimeter,
-			[NotNull] QualityVerificationProgressTracker progressTracker,
-			string resultsPath)
+			[NotNull] QualityVerificationProgressTracker progressTracker)
 		{
 			// NOTE: If the background task is not Run( async () => ... but only Run(() => ...
 			// The tool's OnSketchCompleteAsync will be called twice! 
@@ -192,7 +189,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return await qaEnvironment.VerifyPerimeter(
-							       perimeter, progressTracker, "perimeter", resultsPath);
+							       perimeter, progressTracker, "perimeter");
 					},
 					BackgroundProgressor.None);
 

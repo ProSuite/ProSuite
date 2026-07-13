@@ -41,8 +41,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return;
 			}
 
-			foreach (var qaSpec in verificationEnvironment.QualitySpecificationReferences.Select(
-				         s => s.Name))
+			foreach (var qaSpec in
+			         verificationEnvironment.QualitySpecificationReferences.Select(s => s.Name))
 			{
 				Add(new ComboBoxItem(qaSpec));
 			}
@@ -53,8 +53,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			if (currentSpecification != null)
 			{
 				SelectedItem =
-					ItemCollection.FirstOrDefault(
-						i => Equals(((ComboBoxItem) i).Text, currentSpecification.Name));
+					ItemCollection.FirstOrDefault(i => Equals(((ComboBoxItem) i).Text,
+					                                          currentSpecification.Name));
 			}
 			else
 			{
@@ -76,8 +76,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 			}
 
 			verificationEnvironment.CurrentQualitySpecificationReference =
-				verificationEnvironment.QualitySpecificationReferences.FirstOrDefault(
-					s => s.Name == item.Text);
+				verificationEnvironment.QualitySpecificationReferences
+				                       .FirstOrDefault(s => s.Name == item.Text);
 		}
 	}
 }

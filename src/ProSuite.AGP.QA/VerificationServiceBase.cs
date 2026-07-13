@@ -23,13 +23,20 @@ namespace ProSuite.AGP.QA
 		[CanBeNull]
 		public ISupportedInstanceDescriptors SupportedInstanceDescriptors { get; set; }
 
+		/// <summary>
+		/// The parameters that shape the verification request (result path, whether to create a
+		/// local Issue File GDB, whether to save statistics in the DDX, ...). May be null, in which
+		/// case the previous hard-coded defaults apply.
+		/// </summary>
+		[CanBeNull]
+		public VerificationParameters Parameters { get; set; }
+
 		public abstract Task<ServiceCallStatus> Verify(
 			[NotNull] IQualitySpecificationReference qualitySpecificationRef,
 			[CanBeNull] Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			[NotNull] QualityVerificationProgressTracker progress,
-			[CanBeNull] string resultsPath,
-			bool saveVerification = false);
+			[CanBeNull] string resultsPath);
 
 		public abstract Task<ServiceCallStatus> Verify(
 			[NotNull] QualitySpecification qualitySpecification,

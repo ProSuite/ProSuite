@@ -106,8 +106,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
-
 			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
@@ -120,7 +118,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () =>
-						Verify(selectedPolygonGeometry, progressTracker, resultsPath),
+						Verify(selectedPolygonGeometry, progressTracker),
 					ApplicationController = appController
 				};
 
@@ -138,8 +136,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		private async Task<ServiceCallStatus> Verify(
 			[NotNull] Polygon polygon,
-			[NotNull] QualityVerificationProgressTracker progressTracker,
-			string resultsPath)
+			[NotNull] QualityVerificationProgressTracker progressTracker)
 		{
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
@@ -151,7 +148,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							polygon, progressTracker, "selected polygons", resultsPath);
+							polygon, progressTracker, "selected polygons");
 					},
 					BackgroundProgressor.None);
 
