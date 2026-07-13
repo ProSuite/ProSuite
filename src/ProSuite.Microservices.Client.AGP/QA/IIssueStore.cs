@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -18,18 +19,22 @@ public interface IIssueStore
 	/// <param name="deleteForConditionIds"></param>
 	/// <param name="verifiedPerimeter"></param>
 	/// <param name="verifiedObjects"></param>
+	/// <param name="onDeletingRow"></param>
 	void DeleteErrors([CanBeNull] IList<int> deleteForConditionIds,
 	                  [CanBeNull] Geometry verifiedPerimeter,
-	                  [CanBeNull] IList<GdbObjectReference> verifiedObjects);
+	                  [CanBeNull] IList<GdbObjectReference> verifiedObjects,
+	                  [CanBeNull] Action<Row> onDeletingRow);
 
 	/// <summary>
 	/// Saves the provided issue messages in the error tables.
 	/// </summary>
 	/// <param name="issueMessages"></param>
 	/// <param name="verifiedConditionIds"></param>
+	/// <param name="onSavedRow"></param>
 	/// <returns></returns>
 	int SaveIssues([NotNull] IList<IssueMsg> issueMessages,
-	               IEnumerable<int> verifiedConditionIds);
+	               IEnumerable<int> verifiedConditionIds,
+	               [CanBeNull] Action<Row> onSavedRow);
 
 	/// <summary>
 	/// Returns the datasets that are affected when storing the issue messages specified.
@@ -42,8 +47,9 @@ public interface IIssueStore
 	/// Deletes the specified allowed errors.
 	/// </summary>
 	/// <param name="invalidAllowedErrorReferences"></param>
-	/// <returns></returns>
-	void DeleteInvalidAllowedErrors(IList<GdbObjectReference> invalidAllowedErrorReferences);
+	/// <param name="onDeletingRow"></param>
+	void DeleteInvalidAllowedErrors(IList<GdbObjectReference> invalidAllowedErrorReferences,
+	                                [CanBeNull] Action<Row> onDeletingRow);
 
 	/// <summary>
 	/// Sets the verified specification or its ID. This will be used to get the relevant conditions.
