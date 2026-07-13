@@ -623,13 +623,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
 			{
 				_msg.Warn("Error getting more data for class id " +
 				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+				throw;
 			}
 
 			return resultData;
@@ -659,16 +660,53 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
 			{
 				_msg.Warn("Error getting more data for class id " +
 				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+				throw;
 			}
 
 			return resultData;
+		}
+
+		/// <summary>
+		/// Writes a data request to the (shared) response stream, retrying on the
+		/// gRPC "only one write can be pending at a time" limitation. Unlike progress
+		/// messages - which may simply be dropped when they collide with a concurrent
+		/// write - a data request must reach the client, otherwise the pending read
+		/// for its response blocks until the call times out.
+		/// TODO: Replace this retry stop-gap with a properly managed concurrent write
+		///       queue that prioritizes important (data-request) over non-important
+		///       (progress) messages.
+		/// </summary>
+		private static async Task WriteDataRequestWithRetryAsync<T>(
+			[NotNull] IServerStreamWriter<T> responseStream, [NotNull] T message)
+		{
+			const int maxAttempts = 10;
+			const int retryDelayMs = 100;
+
+			for (int attempt = 1;; attempt++)
+			{
+				try
+				{
+					await responseStream.WriteAsync(message).ConfigureAwait(false);
+					return;
+				}
+				catch (InvalidOperationException e) when (attempt < maxAttempts)
+				{
+					// gRPC allows only one pending write at a time; a data request can
+					// collide with a concurrent (progress) write on the shared stream.
+					_msg.Debug(
+						$"Writing data request to response stream failed on attempt " +
+						$"{attempt}/{maxAttempts}, retrying in {retryDelayMs}ms: {e.Message}");
+
+					await Task.Delay(retryDelayMs).ConfigureAwait(false);
+				}
+			}
 		}
 
 		private ServiceCallStatus ImportExceptionsCore(

@@ -317,6 +317,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			DataVerificationRequest dataResponse = _dataRequestFunc(dataRequest);
 
+			if (dataResponse?.Schema == null ||
+			    dataResponse.Schema.RelclassDefinitions.Count == 0)
+			{
+				throw new InvalidOperationException(
+					$"The client returned no schema for the query table based on " +
+					$"relationship class '{relationshipClassName}' " +
+					$"(tables: {string.Join(", ", tables.Select(t => t.Name))}). " +
+					"The data request to the client most likely failed - check the " +
+					"preceding warnings from the verification service (e.g. an error " +
+					"writing to the response stream) for the underlying cause.");
+			}
+
 			GdbWorkspace gdbWorkspace =
 				Assert.NotNull(_virtualWorkspaces).First(w => w.WorkspaceHandle == model.Id);
 
