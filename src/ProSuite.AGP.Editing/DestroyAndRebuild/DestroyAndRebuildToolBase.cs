@@ -195,6 +195,21 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return true;
 	}
 
+	/// <summary>
+	/// Hook that lets a subclass store the rebuilt feature in a specialized way, for example by
+	/// performing additional geometry manipulation before storing.
+	/// The geometry has already been simplified and, for edges, flipped to keep the original
+	/// orientation. Return <c>true</c> if the store was fully handled; return <c>false</c> to let
+	/// the base tool perform the standard modify.
+	/// </summary>
+	protected virtual Task<bool> TryStoreRebuiltGeometryCoreAsync(
+		[NotNull] BasicFeatureLayer featureLayer,
+		[NotNull] Feature originalFeature,
+		[NotNull] Geometry newGeometry)
+	{
+		return Task.FromResult(false);
+	}
+
 	private async Task StoreUpdatedFeature([NotNull] BasicFeatureLayer featureLayer,
 	                                       [NotNull] Feature originalFeature,
 	                                       [NotNull] Geometry sketchGeometry)
@@ -212,6 +227,11 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			bool allowFlip = ! KeyboardUtils.IsAltDown();
 
 			simplifiedSketch = FlipIfNeeded(newLine, oldLine, allowFlip, out bool _);
+		}
+
+		if (await TryStoreRebuiltGeometryCoreAsync(featureLayer, originalFeature, simplifiedSketch))
+		{
+			return;
 		}
 
 		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
