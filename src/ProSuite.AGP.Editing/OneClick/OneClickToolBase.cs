@@ -1007,8 +1007,13 @@ public abstract class OneClickToolBase : MapToolBase
 			}
 		}
 
-		throw new AssertionException(
-			"Empty sketch after simplify in non-single-click scenario.");
+		_msg.DebugFormat(
+			"Empty sketch after simplify in non-single-click scenario. Original sketch: {0}",
+			sketchGeometry.ToXml());
+
+		throw new InvalidOperationException(
+			"The sketch has become empty after the simplify operation. There are likely not " +
+			"enough points for the sketch geometry type.");
 	}
 
 	/// <summary>
