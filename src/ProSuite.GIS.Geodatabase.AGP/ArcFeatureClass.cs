@@ -251,19 +251,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		void IClass.AddField(IField field)
 		{
 			throw new NotImplementedException();
-			//ArcField arcField = (ArcField)field;
-
-			//Field proField = arcField.ProField;
-
-			//_aoFeatureClass.AddField(proField);
 		}
 
 		void IClass.DeleteField(IField field)
 		{
 			throw new NotImplementedException();
-
-			//ArcField arcField = (ArcField)field;
-			//_aoFeatureClass.DeleteField(arcField.ProField);
 		}
 
 		//void IClass.AddIndex(IIndex Index)
@@ -276,13 +268,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		//	_aoFeatureClass.DeleteIndex(Index);
 		//}
 
-		//public IFields Fields => new ArcFields(_aoFeatureClass.Fields);
-
-		////public IIndexes Indexes => ((IClass)_aoFeatureClass).Indexes;
-
-		//public bool HasOID => _aoFeatureClass.HasOID;
-
-		//public string OIDFieldName => _aoFeatureClass.OIDFieldName;
+		//public IIndexes Indexes => ((IClass)_aoFeatureClass).Indexes;
 
 		//public UID CLSID => _aoFeatureClass.CLSID;
 
@@ -291,10 +277,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		//public object Extension => _aoFeatureClass.Extension;
 
 		//public IPropertySet ExtensionProperties => _aoFeatureClass.ExtensionProperties;
-
-		//public int ObjectClassID => _aoFeatureClass.ObjectClassID;
-
-		//public string AliasName => _aoFeatureClass.AliasName;
 
 		private FeatureClassDefinition ProFeatureClassDefinition =>
 			(FeatureClassDefinition) ProTableDefinition;
@@ -330,6 +312,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					// GOTOP-469: In some data models the GetShapeField() does not return the actual
 					//            field name, but the model name or even the alias.
 					int shapeFieldIndex = FindField(_shapeFieldName);
+
 					Assert.False(shapeFieldIndex < 0, $"{_shapeFieldName} not found in {Name}");
 
 					_shapeFieldName = Fields[shapeFieldIndex].Name;
@@ -351,34 +334,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			Assert.ArgumentNotNullOrEmpty(shapeFieldName, nameof(shapeFieldName));
 
 			_shapeFieldName = shapeFieldName;
-		}
-
-		private int FindFieldByUnqualifiedName([NotNull] string fieldName)
-		{
-			string unqualifiedFieldName = GetUnqualifiedFieldName(fieldName);
-
-			for (int fieldIndex = 0; fieldIndex < Fields.FieldCount; fieldIndex++)
-			{
-				string existingFieldName = Fields[fieldIndex].Name;
-
-				if (string.Equals(GetUnqualifiedFieldName(existingFieldName), unqualifiedFieldName,
-				                  StringComparison.OrdinalIgnoreCase))
-				{
-					return fieldIndex;
-				}
-			}
-
-			return -1;
-		}
-
-		[NotNull]
-		private static string GetUnqualifiedFieldName([NotNull] string fieldName)
-		{
-			int separatorIndex = fieldName.LastIndexOf('.');
-
-			return separatorIndex < 0
-				       ? fieldName
-				       : fieldName.Substring(separatorIndex + 1);
 		}
 
 		public IField AreaField
@@ -441,14 +396,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return Fields.FirstOrDefault(f => f.Name.Equals(fieldName));
 		}
 
-		public void Dispose()
+		public new void Dispose()
 		{
-			// Remove ourselves from the parent workspace's table cache first (see ArcTable.Dispose).
-			RemoveFromWorkspaceCache();
+			base.Dispose();
 
 			_proFeatureClass?.Dispose();
-			ProFeatureClassDefinition.Dispose();
-			ProTable.Dispose();
 		}
 	}
 }
