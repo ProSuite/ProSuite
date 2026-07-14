@@ -8,7 +8,6 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -156,40 +155,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
 	}
 
-	private DestroyAndRebuildToolOptions InitializeOptions()
-	{
-		Stopwatch watch = _msg.DebugStartTiming();
-
-		// NOTE: by only reading the file locations we can save a couple of 100ms
-		string _ = CentralConfigDir;
-		string __ = LocalConfigDir;
-
-		// Create a new instance only if it doesn't exist yet, so that any local overrides
-		// made through the options dockpane are not lost across tool re-activations.
-		_settingsProvider ??= new OverridableSettingsProvider<PartialDestroyAndRebuildOptions>(
-			CentralConfigDir, LocalConfigDir, OptionsFileName);
-
-		_settingsProvider.GetConfigurations(
-			out PartialDestroyAndRebuildOptions localConfiguration,
-			out PartialDestroyAndRebuildOptions centralConfiguration);
-
-		var result = new DestroyAndRebuildToolOptions(centralConfiguration, localConfiguration);
-
-		result.PropertyChanged -= OptionsPropertyChanged;
-		result.PropertyChanged += OptionsPropertyChanged;
-
-		_msg.DebugStopTiming(watch, "Destroy and Rebuild Options validated / initialized");
-
-		string optionsMessage = result.GetLocalOverridesMessage();
-
-		if (! string.IsNullOrEmpty(optionsMessage))
-		{
-			_msg.Info(optionsMessage);
-		}
-
-		return result;
-	}
-
 	protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
 	{
 		await base.HandleKeyDownAsync(args);
@@ -280,6 +245,40 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		}
 
 		await base.OnSelectionPhaseStartedAsync();
+	}
+
+	private DestroyAndRebuildToolOptions InitializeOptions()
+	{
+		Stopwatch watch = _msg.DebugStartTiming();
+
+		// NOTE: by only reading the file locations we can save a couple of 100ms
+		string _ = CentralConfigDir;
+		string __ = LocalConfigDir;
+
+		// Create a new instance only if it doesn't exist yet, so that any local overrides
+		// made through the options dockpane are not lost across tool re-activations.
+		_settingsProvider ??= new OverridableSettingsProvider<PartialDestroyAndRebuildOptions>(
+			CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+		_settingsProvider.GetConfigurations(
+			out PartialDestroyAndRebuildOptions localConfiguration,
+			out PartialDestroyAndRebuildOptions centralConfiguration);
+
+		var result = new DestroyAndRebuildToolOptions(centralConfiguration, localConfiguration);
+
+		result.PropertyChanged -= OptionsPropertyChanged;
+		result.PropertyChanged += OptionsPropertyChanged;
+
+		_msg.DebugStopTiming(watch, "Destroy and Rebuild Options validated / initialized");
+
+		string optionsMessage = result.GetLocalOverridesMessage();
+
+		if (! string.IsNullOrEmpty(optionsMessage))
+		{
+			_msg.Info(optionsMessage);
+		}
+
+		return result;
 	}
 
 	/// <summary>
@@ -462,8 +461,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	{
 		await QueuedTaskUtils.Run(async () =>
 		{
-			Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-				SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+			Dictionary<MapMember, List<long>> selectionByLayer =
+				SelectionUtils.GetSelection<MapMember>(ActiveMapView.Map);
 
 			// todo daro: assert instead?
 			if (selectionByLayer.Count == 0)
@@ -474,38 +473,30 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 				return true;
 			}
 
-			try
+			List<Feature> selectedFeatures =
+				GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection)
+					.ToList();
+
+			if (selectedFeatures.Count == 0)
 			{
-				var applicableSelection =
-					SelectionUtils.GetApplicableSelectedFeatures(
-						selectionByLayer, (layer) => CanSelectFromLayer(layer));
-
-				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
-
-				if (selectedFeatures == null || selectedFeatures.Count == 0)
-				{
-					_msg.Debug("no applicable selection");
-					_feedback?.Clear();
-
-					return true;
-				}
-
-				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
-				Feature originalFeature = selectedFeatures.First();
-
-				await StoreUpdatedFeature(featureLayer, originalFeature, sketchGeometry);
-
+				_msg.Debug("no applicable selection");
 				_feedback?.Clear();
 
-				LogPromptForSelection();
+				return true;
+			}
 
-				return true;
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message, ex);
-				return true;
-			}
+			BasicFeatureLayer featureLayer =
+				(BasicFeatureLayer) selectionByLayer.Keys.First(k => k is BasicFeatureLayer);
+
+			Feature originalFeature = selectedFeatures.First();
+
+			await StoreUpdatedFeature(featureLayer, originalFeature, sketchGeometry);
+
+			_feedback?.Clear();
+
+			LogPromptForSelection();
+
+			return true;
 		});
 
 		await StartSelectionPhaseAsync();
@@ -527,13 +518,17 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return Task.FromResult(false);
 	}
 
-	private async Task StoreUpdatedFeature([NotNull] BasicFeatureLayer featureLayer,
-	                                       [NotNull] Feature originalFeature,
-	                                       [NotNull] Geometry sketchGeometry)
+	private async Task<bool> StoreUpdatedFeature([NotNull] BasicFeatureLayer featureLayer,
+	                                             [NotNull] Feature originalFeature,
+	                                             [NotNull] Geometry sketchGeometry)
 	{
 		// Prevent invalid Z values and other non-simple geometries:
-		Geometry simplifiedSketch =
-			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
+		Geometry simplifiedSketch = GeometryUtils.Simplify(sketchGeometry);
+
+		if (simplifiedSketch == null || simplifiedSketch.IsEmpty)
+		{
+			throw new InvalidOperationException("Invalid or empty sketch");
+		}
 
 		// For linear features, keep the original edge orientation unless the user
 		// suppresses the automatic flip by holding ALT while finishing the sketch.
@@ -546,54 +541,54 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			simplifiedSketch = FlipIfNeeded(newLine, oldLine, allowFlip, out bool _);
 		}
 
+		string subtypeName = GetSubtypeDisplayName(originalFeature, featureLayer);
+
+		bool success;
 		if (await TryStoreRebuiltGeometryCoreAsync(featureLayer, originalFeature, simplifiedSketch))
 		{
-			return;
+			success = true;
+		}
+		else
+		{
+			success = await StoreRebuiltGeometryAsync(originalFeature, simplifiedSketch,
+			                                          subtypeName);
 		}
 
+		if (success)
+		{
+			_msg.Info($"Updated geometry in {featureLayer.Name} ({subtypeName}) " +
+			          $"ID: {originalFeature.GetObjectID()}");
+		}
+
+		return success;
+	}
+
+	protected static async Task<bool> StoreRebuiltGeometryAsync(Feature originalFeature,
+	                                                            Geometry rebuiltGeometry,
+	                                                            string subtypeName)
+	{
+		// NOTE: Use GdbPersistenceUtils to prevent the progress pop-up
+		var dataset = new List<Dataset> { originalFeature.GetTable() };
+
+		return await GdbPersistenceUtils.ExecuteInTransactionAsync(
+			       editContext =>
+			       {
+				       GdbPersistenceUtils.StoreShape(originalFeature, rebuiltGeometry,
+				                                      editContext);
+				       return true;
+			       },
+			       $"Destroy and Rebuild {subtypeName}", dataset);
+	}
+
+	private static string
+		GetSubtypeDisplayName(Feature originalFeature, BasicFeatureLayer featureLayer)
+	{
 		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
 
 		string subtypeName = featureSubtype != null
 			                     ? featureSubtype.GetName()
 			                     : featureLayer.Name;
-
-		// note: TooltipHeading is null here.
-		var operation = new EditOperation
-		                {
-			                Name = $"Destroy and Rebuild {subtypeName}",
-			                SelectModifiedFeatures = true
-		                };
-
-		// todo: daro move to base? make utils?
-		operation.Modify(featureLayer, originalFeature.GetObjectID(), simplifiedSketch);
-
-		if (operation.IsEmpty)
-		{
-			_msg.Debug($"{Caption}: edit operation is empty");
-			return;
-		}
-
-		bool succeed = false;
-		try
-		{
-			succeed = await operation.ExecuteAsync();
-		}
-		catch (Exception e)
-		{
-			_msg.Debug($"{Caption}: edit operation threw an exception", e);
-		}
-		finally
-		{
-			if (succeed)
-			{
-				_msg.Info(
-					$"Updated feature in {featureLayer.Name} ({subtypeName}) ID: {originalFeature.GetObjectID()}");
-			}
-			else
-			{
-				_msg.Debug($"{Caption}: edit operation failed");
-			}
-		}
+		return subtypeName;
 	}
 
 	/// <summary>
