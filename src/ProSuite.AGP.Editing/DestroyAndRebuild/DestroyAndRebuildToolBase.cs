@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
@@ -11,7 +13,6 @@ using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -35,7 +36,15 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	private const Key _keyToggleMoveEndJunction = Key.M;
 
+	private const string _hideEditedFeatureFilterName = "DestroyAndRebuild_HideEditedFeature";
+
 	private DestroyAndRebuildFeedback _feedback;
+
+	// While the edited feature is hidden (HideEditedFeature option), the layer whose display
+	// filter we temporarily overrode, together with the display filter state to restore.
+	[CanBeNull] private BasicFeatureLayer _hiddenFeatureLayer;
+	[CanBeNull] private CIMDisplayFilter[] _savedDisplayFilters;
+	private bool _savedEnableDisplayFilters;
 
 	[CanBeNull]
 	private OverridableSettingsProvider<PartialDestroyAndRebuildOptions> _settingsProvider;
@@ -132,14 +141,19 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		await base.OnToolActivateCoreAsync(hasMapViewChanged);
 	}
 
-	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+	protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
 		_settingsProvider?.StoreLocalConfiguration(_destroyAndRebuildToolOptions?.LocalOptions);
 
-		_feedback?.ClearSelection();
+		if (_hiddenFeatureLayer != null)
+		{
+			await QueuedTask.Run(RestoreEditedFeatureVisibility);
+		}
+
+		_feedback?.Clear();
 		_feedback = null;
 
-		return base.OnToolDeactivateCoreAsync(hasMapViewChanged);
+		await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
 	}
 
 	private DestroyAndRebuildToolOptions InitializeOptions()
@@ -160,6 +174,9 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			out PartialDestroyAndRebuildOptions centralConfiguration);
 
 		var result = new DestroyAndRebuildToolOptions(centralConfiguration, localConfiguration);
+
+		result.PropertyChanged -= OptionsPropertyChanged;
+		result.PropertyChanged += OptionsPropertyChanged;
 
 		_msg.DebugStopTiming(watch, "Destroy and Rebuild Options validated / initialized");
 
@@ -228,15 +245,112 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	#endregion
 
-	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
-		MapSelectionChangedEventArgs args)
+	protected override async Task HandleEscapeAsync()
 	{
-		if (args.Selection.Count == 0)
+		// Clear the feedback up front - before base.HandleEscapeAsync() clears the map selection
+		// and resets the sketch (each hopping to the MCT and back) - so the overlay disappears and
+		// the hidden feature reappears without a perceptible delay. Only do so when the escape
+		// actually leaves the sketch: a non-empty sketch is merely reset and stays on the same
+		// feature, which should keep guiding the user with the reference highlight.
+		bool leavingSketch = ! IsInSketchMode || ! await HasSketchAsync();
+
+		if (leavingSketch)
 		{
-			_feedback?.ClearSelection();
+			_feedback?.Clear();
+
+			if (_hiddenFeatureLayer != null)
+			{
+				await QueuedTask.Run(RestoreEditedFeatureVisibility);
+			}
 		}
 
-		return await base.OnMapSelectionChangedCoreAsync(args);
+		await base.HandleEscapeAsync();
+	}
+
+	protected override async Task OnSelectionPhaseStartedAsync()
+	{
+		// Safety net for transitions back to the selection phase that do not go through
+		// HandleEscapeAsync (e.g. the selection being cleared externally or after an edit
+		// completes): make sure the reference overlay is gone and the hidden feature is visible.
+		_feedback?.Clear();
+
+		if (_hiddenFeatureLayer != null)
+		{
+			await QueuedTask.Run(RestoreEditedFeatureVisibility);
+		}
+
+		await base.OnSelectionPhaseStartedAsync();
+	}
+
+	/// <summary>
+	/// Reacts to live changes of the highlight/hide options in the tool options pane so their
+	/// effect is applied immediately while a replacement is being sketched, rather than only on
+	/// the next selection.
+	/// </summary>
+	private async void OptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
+	{
+		try
+		{
+			// Only relevant while actually sketching a replacement for a selected feature.
+			if (! IsInSketchMode)
+			{
+				return;
+			}
+
+			if (e.PropertyName == nameof(DestroyAndRebuildToolOptions.HighlightOriginalGeometry))
+			{
+				await ApplyHighlightOptionAsync();
+			}
+			else if (e.PropertyName == nameof(DestroyAndRebuildToolOptions.HideEditedFeature))
+			{
+				await ApplyHideOptionAsync();
+			}
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"{Caption}: error applying option change", ex);
+		}
+	}
+
+	private async Task ApplyHighlightOptionAsync()
+	{
+		if (_destroyAndRebuildToolOptions.HighlightOriginalGeometry)
+		{
+			await QueuedTask.Run(() =>
+			{
+				List<Feature> features =
+					GetApplicableSelectedFeatures(ActiveMapView).ToList();
+				_feedback?.Update(features);
+			});
+		}
+		else
+		{
+			_feedback?.Clear();
+		}
+	}
+
+	private async Task ApplyHideOptionAsync()
+	{
+		await QueuedTask.Run(() =>
+		{
+			if (_destroyAndRebuildToolOptions.HideEditedFeature)
+			{
+				if (_hiddenFeatureLayer == null)
+				{
+					Feature feature =
+						GetApplicableSelectedFeatures(ActiveMapView).FirstOrDefault();
+
+					if (feature != null)
+					{
+						HideEditedFeature(feature, feature.GetTable());
+					}
+				}
+			}
+			else
+			{
+				RestoreEditedFeatureVisibility();
+			}
+		});
 	}
 
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
@@ -247,11 +361,92 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		FeatureClass featureClass = feature.GetTable();
 		_currentFeatureGeometryType = featureClass.GetShapeType();
 
-		_feedback?.UpdateSelection(selectedFeatures);
+		// Draw the reference overlay of the original geometry while sketching the replacement.
+		if (_destroyAndRebuildToolOptions.HighlightOriginalGeometry)
+		{
+			_feedback?.Update(selectedFeatures);
+		}
+
+		// Optionally hide the actual feature so its (old) symbolized geometry does not visually
+		// interfere with the new sketch.
+		if (_destroyAndRebuildToolOptions.HideEditedFeature)
+		{
+			HideEditedFeature(feature, featureClass);
+		}
 
 		_msg.Info($"Rebuild the geometry for {GdbObjectUtils.GetDisplayValue(feature)}");
 
 		await base.AfterSelectionAsync(selectedFeatures, progressor);
+	}
+
+	/// <summary>
+	/// Temporarily hides the edited feature by adding a display filter that excludes its
+	/// object ID on the layer it belongs to. The previous display-filter state is remembered so
+	/// it can be restored in <see cref="RestoreEditedFeatureVisibility"/>.
+	/// </summary>
+	/// <remarks>Must be called on the MCT.</remarks>
+	private void HideEditedFeature([NotNull] Feature feature, [NotNull] FeatureClass featureClass)
+	{
+		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
+			SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
+
+		BasicFeatureLayer layer = selectionByLayer.Keys.FirstOrDefault();
+
+		if (layer == null || layer.GetDefinition() is not CIMFeatureLayer cimLayer)
+		{
+			return;
+		}
+
+		long oid = feature.GetObjectID();
+		string oidField = featureClass.GetDefinition().GetObjectIDField();
+
+		_hiddenFeatureLayer = layer;
+		_savedEnableDisplayFilters = cimLayer.EnableDisplayFilters;
+		_savedDisplayFilters = cimLayer.DisplayFilters;
+
+		cimLayer.DisplayFilters = new[]
+		                          {
+			                          new CIMDisplayFilter
+			                          {
+				                          Name = _hideEditedFeatureFilterName,
+				                          WhereClause = $"{oidField} <> {oid}"
+			                          }
+		                          };
+		cimLayer.EnableDisplayFilters = true;
+
+		layer.SetDefinition(cimLayer);
+	}
+
+	/// <summary>
+	/// Restores the display-filter state that was overridden by <see cref="HideEditedFeature"/>,
+	/// making the edited feature visible again.
+	/// </summary>
+	/// <remarks>Must be called on the MCT.</remarks>
+	private void RestoreEditedFeatureVisibility()
+	{
+		BasicFeatureLayer layer = _hiddenFeatureLayer;
+
+		if (layer == null)
+		{
+			return;
+		}
+
+		try
+		{
+			if (layer.GetDefinition() is CIMFeatureLayer cimLayer)
+			{
+				cimLayer.EnableDisplayFilters = _savedEnableDisplayFilters;
+				cimLayer.DisplayFilters = _savedDisplayFilters;
+
+				layer.SetDefinition(cimLayer);
+			}
+		}
+		finally
+		{
+			_hiddenFeatureLayer = null;
+			_savedDisplayFilters = null;
+			_savedEnableDisplayFilters = false;
+		}
 	}
 
 	protected override void LogEnteringSketchMode()
@@ -274,7 +469,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			if (selectionByLayer.Count == 0)
 			{
 				_msg.Debug("no selection");
-				_feedback?.ClearSelection();
+				_feedback?.Clear();
 
 				return true;
 			}
@@ -290,7 +485,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 				if (selectedFeatures == null || selectedFeatures.Count == 0)
 				{
 					_msg.Debug("no applicable selection");
-					_feedback?.ClearSelection();
+					_feedback?.Clear();
 
 					return true;
 				}
@@ -300,7 +495,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 				await StoreUpdatedFeature(featureLayer, originalFeature, sketchGeometry);
 
-				_feedback?.ClearSelection();
+				_feedback?.Clear();
 
 				LogPromptForSelection();
 

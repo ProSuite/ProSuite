@@ -15,7 +15,7 @@ namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
 public class DestroyAndRebuildFeedback
 {
-	private static readonly List<IDisposable> _overlays = new List<IDisposable>();
+	private readonly List<IDisposable> _overlays = new();
 
 	private CIMLineSymbol _lineSymbol;
 	private CIMPointSymbol _startPointSymbol;
@@ -24,10 +24,6 @@ public class DestroyAndRebuildFeedback
 	private CIMPointSymbol _vertexMarkerSymbol;
 	private CIMPointSymbol _controlPointMarkerSymbol;
 	private readonly bool _useOldSymbolization;
-
-	// The map view the overlays are drawn on. Defaults to MapView.Active but can be set
-	// explicitly (via UpdateSelection) so the feedback also shows in a stereo map view.
-	[CanBeNull] private MapView _mapView;
 
 	public DestroyAndRebuildFeedback(bool useOldSymbolization = false)
 	{
@@ -87,34 +83,7 @@ public class DestroyAndRebuildFeedback
 		}
 	}
 
-	[CanBeNull]
-	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
-	                                      [NotNull] CIMSymbol cimSymbol)
-	{
-		IDisposable result = MapView.Active.AddOverlay(
-			geometry, cimSymbol.MakeSymbolReference());
-		return result;
-	}
-
-	private CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
-	                                                CIMColor outlineColor, double outlineWidth)
-	{
-		double factor = Math.Sqrt(2.0);
-		var symbolSize = size * factor; // to compensate diamond vs square (rot 45°)
-		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, outlineWidth); //symbolSize / 5);
-		//var polySym = SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid, stroke);
-		var polySym =
-			SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
-		var marker =
-			SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, symbolSize);
-		var symbol = SymbolUtils.CreatePointSymbol(marker);
-
-		return symbol;
-	}
-
-	#region Selection
-
-	public bool UpdateSelection([CanBeNull] IList<Feature> selectedFeatures)
+	public bool Update([CanBeNull] IList<Feature> selectedFeatures)
 	{
 		DisposeOverlays();
 
@@ -201,6 +170,20 @@ public class DestroyAndRebuildFeedback
 		return true;
 	}
 
+	public void Clear()
+	{
+		DisposeOverlays();
+	}
+
+	[CanBeNull]
+	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
+	                                      [NotNull] CIMSymbol cimSymbol)
+	{
+		IDisposable result = MapView.Active.AddOverlay(
+			geometry, cimSymbol.MakeSymbolReference());
+		return result;
+	}
+
 	private static void CreateVertexMultipoint(Geometry geometry,
 	                                           out Multipoint vertexMultipoint,
 	                                           out Multipoint controlMultipoint)
@@ -231,12 +214,24 @@ public class DestroyAndRebuildFeedback
 		}
 	}
 
-	public void ClearSelection()
+	private static CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
+	                                                       CIMColor outlineColor,
+	                                                       double outlineWidth)
 	{
-		DisposeOverlays();
+		double factor = Math.Sqrt(2.0);
+		var symbolSize = size * factor; // to compensate diamond vs square (rot 45°)
+		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, outlineWidth); //symbolSize / 5);
+
+		var polySym =
+			SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
+		var marker =
+			SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, symbolSize);
+		var symbol = SymbolUtils.CreatePointSymbol(marker);
+
+		return symbol;
 	}
 
-	private static void DisposeOverlays()
+	private void DisposeOverlays()
 	{
 		foreach (IDisposable overlay in _overlays)
 		{
@@ -245,6 +240,4 @@ public class DestroyAndRebuildFeedback
 
 		_overlays.Clear();
 	}
-
-	#endregion Selection
 }
