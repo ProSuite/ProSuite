@@ -52,6 +52,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return false;
 	}
 
+	// Allow re-picking a (single) template feature while sketching by holding SHIFT, even though
+	// the tool does not support multi-selection.
+	protected override bool AllowSelectionChangeInSketchMode => true;
+
 	protected override SketchGeometryType GetEditSketchGeometryType()
 	{
 		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
@@ -102,6 +106,8 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 	protected override void LogEnteringSketchMode()
 	{
 		_msg.Info("Construct the new feature. Hit [ESC] to reselect the template feature.");
+		_msg.Info(
+			"Change the selected feature while keeping SHIFT pressed (the current selection will be cleared).");
 	}
 
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
