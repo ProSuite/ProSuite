@@ -80,6 +80,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 			AppDataFolder.Roaming, "ToolDefaults");
 
+	protected override bool AllowSelectionChangeInSketchMode => true;
+
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
 		return MapUtils.IsStereoMapView(ActiveMapView)
@@ -92,6 +94,9 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		reason = "Destroy and rebuild not possible. Please select only one feature.";
 		return false;
 	}
+
+	// Allow re-picking a (single) target feature while sketching by holding SHIFT, even though
+	// the tool does not support multi-selection.
 
 	protected override SketchGeometryType GetSelectionSketchGeometryType()
 	{
@@ -167,21 +172,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		_feedback = null;
 
 		await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
-	}
-
-	/// <summary>
-	/// Restores the hidden feature's visibility before the project is saved, so the temporary
-	/// display filter is never written into the .aprx (which would leave the feature invisible even
-	/// after a normal close and reopen).
-	/// </summary>
-	private async Task OnProjectSavingAsync(ProjectEventArgs args)
-	{
-		if (_hiddenFeatureLayer == null)
-		{
-			return;
-		}
-
-		await QueuedTask.Run(RestoreEditedFeatureVisibility);
 	}
 
 	protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
@@ -265,6 +255,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	protected override void LogEnteringSketchMode()
 	{
 		_msg.Info("Sketch the new geometry. Hit [ESC] to reselect the target feature.");
+		_msg.Info(
+			"Change the selected feature while keeping SHIFT pressed (the current selection will be cleared).");
 	}
 
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
@@ -627,6 +619,21 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	}
 
 	#region Display Feedback
+
+	/// <summary>
+	/// Restores the hidden feature's visibility before the project is saved, so the temporary
+	/// display filter is never written into the .aprx (which would leave the feature invisible even
+	/// after a normal close and reopen).
+	/// </summary>
+	private async Task OnProjectSavingAsync(ProjectEventArgs args)
+	{
+		if (_hiddenFeatureLayer == null)
+		{
+			return;
+		}
+
+		await QueuedTask.Run(RestoreEditedFeatureVisibility);
+	}
 
 	private async Task ApplyHighlightOptionAsync()
 	{
