@@ -21,6 +21,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
+using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
@@ -202,6 +203,17 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		Geometry simplifiedSketch =
 			Assert.NotNull(GeometryUtils.Simplify(sketchGeometry), "Geometry is null");
 
+		// For linear features, keep the original edge orientation unless the user
+		// suppresses the automatic flip by holding ALT while finishing the sketch.
+		if (simplifiedSketch is Polyline newLine &&
+		    originalFeature.GetShape() is Polyline oldLine &&
+		    ! newLine.IsEmpty && ! oldLine.IsEmpty)
+		{
+			bool allowFlip = ! KeyboardUtils.IsAltDown();
+
+			simplifiedSketch = FlipIfNeeded(newLine, oldLine, allowFlip, out bool _);
+		}
+
 		Subtype featureSubtype = GdbObjectUtils.GetSubtype(originalFeature);
 
 		string subtypeName = featureSubtype != null
@@ -245,6 +257,79 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 				_msg.Debug($"{Caption}: edit operation failed");
 			}
 		}
+	}
+
+	/// <summary>
+	/// Returns the new edge geometry with its orientation reversed if it turns out to be
+	/// oriented against the original edge geometry (i.e. its from/to points are closer to the
+	/// original to/from points). Reversing is suppressed when <paramref name="allowFlip"/> is
+	/// <c>false</c> (ALT held while finishing the sketch), in which case the geometry is
+	/// returned as sketched and <paramref name="isReversed"/> stays <c>true</c>.
+	/// </summary>
+	[NotNull]
+	private static Polyline FlipIfNeeded([NotNull] Polyline newLine,
+	                                     [NotNull] Polyline oldLine,
+	                                     bool allowFlip,
+	                                     out bool isReversed)
+	{
+		isReversed = IsReversed(newLine, oldLine);
+
+		if (! isReversed)
+		{
+			return newLine;
+		}
+
+		if (allowFlip)
+		{
+			Polyline flipped = GeometryUtils.ReverseOrientation(newLine);
+			isReversed = false;
+
+			_msg.Info("New edge geometry flipped to maintain the original orientation");
+			using (_msg.IncrementIndentation())
+			{
+				_msg.Info(
+					"- Use 'Flip' on the sketch context menu if the orientation should be reversed.");
+				_msg.Info(
+					"- Press 'ALT' while finishing the sketch, to apply the new edge orientation as is.");
+			}
+
+			return flipped;
+		}
+
+		_msg.Info(
+			"The new edge geometry has reversed orientation, but 'ALT' was pressed to suppress " +
+			"automatic flip. Geometry is used as is.");
+
+		return newLine;
+	}
+
+	private static bool IsReversed([NotNull] Polyline newLine, [NotNull] Polyline oldLine)
+	{
+		Assert.ArgumentNotNull(newLine, nameof(newLine));
+		Assert.ArgumentNotNull(oldLine, nameof(oldLine));
+		Assert.False(newLine.IsEmpty, "new line is empty");
+		Assert.False(oldLine.IsEmpty, "old line is empty");
+
+		MapPoint oldFrom = GeometryUtils.GetStartPoint(oldLine);
+		MapPoint oldTo = GeometryUtils.GetEndPoint(oldLine);
+		MapPoint newFrom = GeometryUtils.GetStartPoint(newLine);
+		MapPoint newTo = GeometryUtils.GetEndPoint(newLine);
+
+		double distanceSumUnchanged =
+			Distance2D(oldFrom, newFrom) + Distance2D(oldTo, newTo);
+
+		double distanceSumReversed =
+			Distance2D(oldFrom, newTo) + Distance2D(oldTo, newFrom);
+
+		return distanceSumReversed < distanceSumUnchanged;
+	}
+
+	private static double Distance2D([NotNull] MapPoint a, [NotNull] MapPoint b)
+	{
+		double dx = a.X - b.X;
+		double dy = a.Y - b.Y;
+
+		return Math.Sqrt(dx * dx + dy * dy);
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
