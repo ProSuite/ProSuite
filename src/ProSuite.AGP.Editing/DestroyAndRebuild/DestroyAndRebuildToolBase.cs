@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Templates;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -20,6 +23,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI.Input;
 
@@ -29,15 +33,43 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	private const Key _keyToggleMoveEndJunction = Key.M;
+
 	private DestroyAndRebuildFeedback _feedback;
+
+	[CanBeNull]
+	private OverridableSettingsProvider<PartialDestroyAndRebuildOptions> _settingsProvider;
+
+	protected DestroyAndRebuildToolOptions _destroyAndRebuildToolOptions;
 
 	protected virtual bool UseOldSymbolization => true;
 
 	private GeometryType _currentFeatureGeometryType;
 	//private bool? _currentFeatureHasZ;
 
+	protected DestroyAndRebuildToolBase()
+	{
+		HandledKeys.Add(_keyToggleMoveEndJunction);
+	}
+
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.DestroyAndRebuildOverlay);
+
+	protected virtual string OptionsFileName => "DestroyAndRebuildToolOptions.xml";
+
+	[CanBeNull]
+	protected virtual string OptionsDockPaneID => null;
+
+	[CanBeNull]
+	protected virtual string CentralConfigDir => null;
+
+	/// <summary>
+	/// By default, the local configuration directory shall be in
+	/// %APPDATA%\Roaming\ORGANIZATION\PRODUCT>\ToolDefaults.
+	/// </summary>
+	protected virtual string LocalConfigDir
+		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
+			AppDataFolder.Roaming, "ToolDefaults");
 
 	protected override SymbolizedSketchTypeBasedOnSelection GetSymbolizedSketch()
 	{
@@ -91,6 +123,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override async Task OnToolActivateCoreAsync(bool hasMapViewChanged)
 	{
+		_destroyAndRebuildToolOptions = InitializeOptions();
+
 		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization);
 
 		await QueuedTask.Run(_feedback.InitializeSymbolsQueued);
@@ -100,11 +134,99 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
+		_settingsProvider?.StoreLocalConfiguration(_destroyAndRebuildToolOptions?.LocalOptions);
+
 		_feedback?.ClearSelection();
 		_feedback = null;
 
 		return base.OnToolDeactivateCoreAsync(hasMapViewChanged);
 	}
+
+	private DestroyAndRebuildToolOptions InitializeOptions()
+	{
+		Stopwatch watch = _msg.DebugStartTiming();
+
+		// NOTE: by only reading the file locations we can save a couple of 100ms
+		string _ = CentralConfigDir;
+		string __ = LocalConfigDir;
+
+		// Create a new instance only if it doesn't exist yet, so that any local overrides
+		// made through the options dockpane are not lost across tool re-activations.
+		_settingsProvider ??= new OverridableSettingsProvider<PartialDestroyAndRebuildOptions>(
+			CentralConfigDir, LocalConfigDir, OptionsFileName);
+
+		_settingsProvider.GetConfigurations(
+			out PartialDestroyAndRebuildOptions localConfiguration,
+			out PartialDestroyAndRebuildOptions centralConfiguration);
+
+		var result = new DestroyAndRebuildToolOptions(centralConfiguration, localConfiguration);
+
+		_msg.DebugStopTiming(watch, "Destroy and Rebuild Options validated / initialized");
+
+		string optionsMessage = result.GetLocalOverridesMessage();
+
+		if (! string.IsNullOrEmpty(optionsMessage))
+		{
+			_msg.Info(optionsMessage);
+		}
+
+		return result;
+	}
+
+	protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs args)
+	{
+		await base.HandleKeyDownAsync(args);
+
+		if (args.Key == _keyToggleMoveEndJunction)
+		{
+			_destroyAndRebuildToolOptions.MoveOpenJawEndJunction =
+				! _destroyAndRebuildToolOptions.MoveOpenJawEndJunction;
+
+			_msg.Info(_destroyAndRebuildToolOptions.MoveOpenJawEndJunction
+				          ? "Enabled move linear network junction option"
+				          : "Disabled move linear network junction option");
+		}
+	}
+
+	#region Tool Options DockPane
+
+	[CanBeNull]
+	private DockPaneDestroyAndRebuildViewModelBase GetDestroyAndRebuildViewModel()
+	{
+		if (OptionsDockPaneID == null)
+		{
+			return null;
+		}
+
+		var viewModel =
+			FrameworkApplication.DockPaneManager.Find(OptionsDockPaneID) as
+				DockPaneDestroyAndRebuildViewModelBase;
+
+		return Assert.NotNull(viewModel, "Options DockPane with ID '{0}' not found",
+		                      OptionsDockPaneID);
+	}
+
+	protected override void ShowOptionsPane()
+	{
+		var viewModel = GetDestroyAndRebuildViewModel();
+
+		if (viewModel == null)
+		{
+			return;
+		}
+
+		viewModel.Options = _destroyAndRebuildToolOptions;
+
+		viewModel.Activate(true);
+	}
+
+	protected override void HideOptionsPane()
+	{
+		var viewModel = GetDestroyAndRebuildViewModel();
+		viewModel?.Hide();
+	}
+
+	#endregion
 
 	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 		MapSelectionChangedEventArgs args)
