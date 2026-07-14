@@ -594,7 +594,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				// feature - but only when a single, visible multipatch is selected. If not, fall
 				// through and create a new feature as usual.
 				ReplaceGeometryResult replaceResult =
-					await Rebuilder.TryReplaceSelectedGeometryAsync(newGeometry, activeView);
+					await Rebuilder.TryReplaceSelectedGeometryAsync(newGeometry, activeView, Caption);
 
 				if (replaceResult != ReplaceGeometryResult.NoTarget)
 				{

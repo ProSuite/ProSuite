@@ -44,8 +44,8 @@ public enum ReplaceGeometryResult
 public interface IDestroyAndRebuilder
 {
 	/// <summary>
-	/// Whether the replace mode is currently on (the global Destroy &amp; Rebuild mode toggle). While
-	/// active the tool replaces the selected multipatch instead of inserting a new feature.
+	/// Whether the replacement mode is currently on (the global Destroy &amp; Rebuild mode toggle).
+	/// While active the tool replaces the selected multipatch instead of inserting a new feature.
 	/// </summary>
 	bool IsActive { get; }
 
@@ -79,5 +79,7 @@ public interface IDestroyAndRebuilder
 	/// </list>
 	/// </summary>
 	Task<ReplaceGeometryResult> TryReplaceSelectedGeometryAsync(
-		[NotNull] Geometry newGeometry, [NotNull] MapView activeView);
+		[NotNull] Geometry newGeometry,
+		[NotNull] MapView activeView,
+		[NotNull] string caption);
 }
