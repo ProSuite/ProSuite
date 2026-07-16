@@ -157,33 +157,13 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.None;
 		}
 
-		if (IsControlPressed)
-		{
-			// always show picker if CTRL pressed
-			return PickerMode.ShowPicker;
-		}
-
-		if (NoMultiselection && candidates.Sum(fs => fs.GetCount()) > 1)
-		{
-			if (! IsPointClick)
-			{
-				return PickerMode.ShowPicker; // area selection: show picker
-			}
-
-			if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
-			{
-				return PickerMode.ShowPicker;
-			}
-
-			return PickerMode.PickBest;
-		}
-
-		if (IsAltPressed || ! IsPointClick)
-		{
-			return PickerMode.PickAll;
-		}
-
-		return PickerMode.PickBest;
+		// The decision logic lives in PickerModeUtils so it can be unit tested without
+		// a running ArcGIS Pro application (see ProSuite.Commons.AGP.Test).
+		return PickerModeUtils.DeterminePickerMode(
+			IsControlPressed, IsAltPressed,
+			IsPointClick, NoMultiselection,
+			candidates.Sum(fs => fs.GetCount()),
+			PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates));
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)
