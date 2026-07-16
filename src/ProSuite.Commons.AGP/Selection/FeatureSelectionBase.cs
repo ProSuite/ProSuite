@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -8,13 +7,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection;
 
-public abstract class FeatureSelectionBase : TableSelection
+public abstract class FeatureSelectionBase : TableSelection, IFeatureSelection
 {
 	protected FeatureSelectionBase([NotNull] BasicFeatureLayer basicFeatureLayer)
 		: base(basicFeatureLayer.GetTable())
 	{
-		BasicFeatureLayer = basicFeatureLayer ??
-		                    throw new ArgumentNullException(nameof(basicFeatureLayer));
+		BasicFeatureLayer = basicFeatureLayer;
 	}
 
 	[NotNull]

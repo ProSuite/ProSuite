@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection;
@@ -11,7 +12,9 @@ public abstract class TableSelection : IDisposable
 
 	protected TableSelection([NotNull] Table table)
 	{
-		_table = table ?? throw new ArgumentNullException(nameof(table));
+		Assert.ArgumentNotNull(table, nameof(table));
+
+		_table = table;
 	}
 
 	[NotNull]

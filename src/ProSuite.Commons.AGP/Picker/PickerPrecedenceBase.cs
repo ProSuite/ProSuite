@@ -163,7 +163,7 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			IsControlPressed, IsAltPressed,
 			IsPointClick, NoMultiselection,
 			candidates.Sum(fs => fs.GetCount()),
-			PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates));
+			PickerModeUtils.GetLowestGeometryDimensionFeatureCount(candidates));
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)

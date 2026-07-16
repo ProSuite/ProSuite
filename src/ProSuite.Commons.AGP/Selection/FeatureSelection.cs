@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection;
@@ -15,8 +15,7 @@ public class FeatureSelection : FeatureSelectionBase
 	                        [NotNull] IEnumerable<Feature> features)
 		: base(featureLayer)
 	{
-		if (features is null)
-			throw new ArgumentNullException(nameof(features));
+		Assert.ArgumentNotNull(features, nameof(features));
 
 		_features = features.ToList(); // take ownership
 	}
