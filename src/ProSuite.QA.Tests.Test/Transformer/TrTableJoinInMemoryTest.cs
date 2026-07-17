@@ -1083,6 +1083,169 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				"same window");
 		}
 
+		[Test]
+		public void CanInnerJoinManyToMany_AssociationFirstWithSpatialFilterMatchesLeftFirst()
+		{
+			// Plan 3: with a non-selective spatial filter the join may be driven from the
+			// association (bridge) side instead of scanning the geometry table for keys, and the
+			// spatial filter is re-applied only in the final geo read. The windowed inner-join
+			// result must be identical to the legacy left-first drive side. We force each drive
+			// side through the join-strategy env knob - LEFTFIRST (legacy) vs INDEX (which enables
+			// the client-side key filtering the association-first path relies on) - and assert
+			// equal results, both with the same spatial filter present.
+
+			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
+			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
+
+			try
+			{
+				IFeatureWorkspace ws =
+					TestWorkspaceUtils.CreateTestFgdbWorkspace(
+						"TrTableJoinInMemory_AssociationFirstWithSpatialFilter");
+
+				ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
+					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+				const string roadKey = "ROADNR";
+				const string routeKey = "ROUTENR";
+
+				IFeatureClass roadFc = DatasetUtils.CreateSimpleFeatureClass(
+					ws, "ROADS", null,
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField(roadKey),
+					FieldUtils.CreateShapeField(
+						"SHAPE", esriGeometryType.esriGeometryPoint, sref, 1000));
+
+				ITable routeTable = DatasetUtils.CreateTable(
+					ws, "ROUTES",
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField(routeKey));
+
+				ITable bridgeTable = DatasetUtils.CreateTable(
+					ws, "ROAD_ROUTE",
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("BR_ROADNR"),
+					FieldUtils.CreateIntegerField("BR_ROUTENR"));
+
+				// 16 roads on a 4x4 grid: a non-degenerate 2D extent is required for the area-ratio
+				// selectivity heuristic (a single line of points has zero-height extent). Road
+				// number nr sits at col = (nr-1) % 4, row = (nr-1) / 4, 10 m spacing.
+				const double x0 = 2600000;
+				const double y0 = 1200000;
+				const double spacing = 10;
+				for (int nr = 1; nr <= 16; nr++)
+				{
+					int col = (nr - 1) % 4;
+					int row = (nr - 1) / 4;
+					IFeature f = roadFc.CreateFeature();
+					f.Value[1] = nr;
+					f.Shape = GeometryFactory.CreatePoint(
+						x0 + col * spacing, y0 + row * spacing);
+					f.Store();
+				}
+
+				foreach (int routeNr in new[] { 100, 200, 300 })
+				{
+					IRow r = routeTable.CreateRow();
+					r.Value[1] = routeNr;
+					r.Store();
+				}
+
+				// Only 5 of the 16 roads are numbered, so the bridge (5 rows) is far smaller than
+				// the geometry table: a whole-extent (non-selective) filter makes the heuristic
+				// prefer the bridge side.
+				(int road, int route)[] links =
+				{
+					(1, 100), (2, 100), (6, 200), (11, 300), (16, 300)
+				};
+				foreach ((int road, int route) in links)
+				{
+					IRow a = bridgeTable.CreateRow();
+					a.Value[1] = road;
+					a.Value[2] = route;
+					a.Store();
+				}
+
+				// Non-selective window: covers columns 0..2 (all rows), excluding column 3 and
+				// hence road 16. Its envelope is ~as large as the dataset extent.
+				IEnvelope window = GeometryFactory.CreateEnvelope(
+					x0 - 5, y0 - 5, x0 + 2 * spacing + 5, y0 + 3 * spacing + 5, sref);
+
+				IReadOnlyTable roRoad = ReadOnlyTableFactory.Create(roadFc);
+				IReadOnlyTable roRoute = ReadOnlyTableFactory.Create(routeTable);
+				IReadOnlyTable roBridge = ReadOnlyTableFactory.Create(bridgeTable);
+
+				TrTableJoinInMemory NewJoin()
+				{
+					TrTableJoinInMemory tr =
+						new TrTableJoinInMemory(roRoad, roRoute, roadKey, routeKey,
+						                        JoinType.InnerJoin)
+						{
+							ManyToManyTable = roBridge,
+							ManyToManyTableLeftKey = "BR_ROADNR",
+							ManyToManyTableRightKey = "BR_ROUTENR"
+						};
+					((ITableTransformer) tr).TransformerName = "test_join";
+					return tr;
+				}
+
+				List<(int, int)> WindowedPairs(ITableFilter filter)
+				{
+					GdbTable joined = NewJoin().GetTransformed();
+					int roadIdx = FindJoinedField(joined, roadKey);
+					int routeIdx = FindJoinedField(joined, routeKey);
+
+					var pairs = new List<(int, int)>();
+					foreach (IReadOnlyRow row in joined.EnumReadOnlyRows(filter, false))
+					{
+						pairs.Add((Convert.ToInt32(row.get_Value(roadIdx)),
+						           Convert.ToInt32(row.get_Value(routeIdx))));
+					}
+
+					return pairs;
+				}
+
+				// Reference: whole join, filtered to the window in memory (drive side irrelevant
+				// without a spatial filter). Built under the default strategy.
+				Environment.SetEnvironmentVariable(envVar, null);
+				GdbTable refJoin = NewJoin().GetTransformed();
+				int refRoadIdx = FindJoinedField(refJoin, roadKey);
+				int refRouteIdx = FindJoinedField(refJoin, routeKey);
+				var reference = new List<(int, int)>();
+				foreach (IReadOnlyRow row in refJoin.EnumReadOnlyRows(null, false))
+				{
+					if (PointInWindow(window, ((IReadOnlyFeature) row).Shape))
+					{
+						reference.Add((Convert.ToInt32(row.get_Value(refRoadIdx)),
+						               Convert.ToInt32(row.get_Value(refRouteIdx))));
+					}
+				}
+
+				Assert.AreEqual(4, reference.Count,
+				                "Expected windowed pairs (roads 1,2,6,11; road 16 excluded)");
+
+				// Legacy left-first drive side, spatial filter present.
+				Environment.SetEnvironmentVariable(envVar, "LEFTFIRST");
+				List<(int, int)> leftFirst = WindowedPairs(new AoFeatureClassFilter(window));
+
+				// Association-first drive side (heuristic + client-side key filtering via INDEX),
+				// same spatial filter present.
+				Environment.SetEnvironmentVariable(envVar, "INDEX");
+				List<(int, int)> associationFirst = WindowedPairs(new AoFeatureClassFilter(window));
+
+				CollectionAssert.AreEquivalent(
+					reference, leftFirst,
+					"Left-first (spatial filter) result must match the in-memory reference");
+				CollectionAssert.AreEquivalent(
+					reference, associationFirst,
+					"Association-first (spatial filter) result must match the left-first result");
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable(envVar, originalStrategy);
+			}
+		}
+
 		private static int FindJoinedField(GdbTable table, string fieldName)
 		{
 			int idx = table.FindField(fieldName);

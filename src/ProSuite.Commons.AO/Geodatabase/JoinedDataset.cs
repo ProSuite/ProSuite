@@ -32,6 +32,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private readonly string
 			_joinStrategy = Environment.GetEnvironmentVariable("PROSUITE_MEMORY_JOIN_STRATEGY");
 
+		// Below this filter-envelope / dataset-extent area ratio the spatial filter is considered
+		// selective enough that the left-first key scan is cheap; the association-first heuristic
+		// (and its row counts) is skipped. See ShouldDriveFromAssociationSide.
+		private const double MinNonSelectiveExtentRatio = 0.25;
+
 		private readonly Dictionary<IReadOnlyTable, long> _tableRowStatistics =
 			new Dictionary<IReadOnlyTable, long>(3);
 
@@ -288,7 +293,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (otherRowsByFeatureKey == null)
 			{
-				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter);
+				// Decide from which side to drive the initial read. The where-clause case above keeps
+				// the (tentative) left-first path so the clause can be pushed onto the left table.
+				bool preferAssociationFirst =
+					! filterHasWhereClause && ShouldDriveFromAssociationSide(filter);
+
+				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter, preferAssociationFirst);
 			}
 
 			IEnumerable<IReadOnlyRow> leftRows = PerformFinalGeoClassRead(
@@ -329,7 +339,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="filter"></param>
 		/// <returns></returns>
 		public IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
-			[CanBeNull] ITableFilter filter)
+			[CanBeNull] ITableFilter filter,
+			bool preferAssociationFirst = false)
 		{
 			EnsureKeyFieldNames();
 
@@ -357,10 +368,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//          initial read. Open question: Can we determine for sure which table is affected
 			//          exclusively by the where clause?
 
+			// When the caller has decided (via the extent/row-count heuristic) that driving from the
+			// association side is cheaper, skip the left-table key scan entirely: leftFeatures stays
+			// null so the whole bridge is read and the spatial filter is re-applied in the final read.
 			bool queryLeftTableFirst =
-				(filter is IFeatureClassFilter spatialFilter &&
-				 spatialFilter.FilterGeometry != null) ||
-				! string.IsNullOrEmpty(filter.WhereClause);
+				! preferAssociationFirst &&
+				((filter is IFeatureClassFilter spatialFilter &&
+				  spatialFilter.FilterGeometry != null) ||
+				 ! string.IsNullOrEmpty(filter.WhereClause));
 
 			IEnumerable<IReadOnlyRow> leftFeatures =
 				queryLeftTableFirst ? GeometryEndClass.EnumRows(filter, true) : null;
@@ -492,6 +507,112 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Decides whether the initial read should be driven from the association (bridge) side
+		/// rather than by scanning the geometry table for keys. For a non-selective spatial filter
+		/// (window covers most of the dataset) the left-first key scan reads almost the whole
+		/// geometry table; reading the (typically smaller) bridge table instead and re-applying the
+		/// spatial filter only in the final read is cheaper and yields an identical inner-join result.
+		/// </summary>
+		private bool ShouldDriveFromAssociationSide([CanBeNull] ITableFilter filter)
+		{
+			// Only the M:N inner-join spatial case benefits. A left join must enumerate every left
+			// row anyway, and without a spatial filter there is nothing to prune spatially.
+			if (! (_associationDescription is ManyToManyAssociationDescription m2n))
+			{
+				return false;
+			}
+
+			if (JoinType != JoinType.InnerJoin || ! FilterHasGeometry(filter))
+			{
+				return false;
+			}
+
+			// Escape hatch: keep the legacy left-first behaviour when explicitly requested. The
+			// default (unset) and "AUTO" enable the heuristic; INDEX/FTS only affect the final read.
+			if (string.Equals(_joinStrategy, "LEFTFIRST", StringComparison.OrdinalIgnoreCase))
+			{
+				return false;
+			}
+
+			// The final read receives the whole-network key set when driving association-first, so it
+			// must filter that set client-side over the windowed enumeration (AssumeLeftTableCached,
+			// the routes case, or an INDEX override). Otherwise it would issue a select-in list over
+			// tens of thousands of keys, which is worse than the scan we are trying to avoid.
+			bool finalReadFiltersClientSide =
+				AssumeLeftTableCached ||
+				string.Equals(_joinStrategy, "INDEX", StringComparison.OrdinalIgnoreCase);
+
+			if (! finalReadFiltersClientSide)
+			{
+				return false;
+			}
+
+			double selectivity = GetSpatialFilterSelectivity(filter);
+
+			if (double.IsNaN(selectivity))
+			{
+				// Extents unavailable: stay on the safe, already-correct left-first path.
+				return false;
+			}
+
+			if (selectivity < MinNonSelectiveExtentRatio)
+			{
+				// The window covers only a small part of the dataset: the spatial index makes the
+				// left-first key scan cheap. Keep that (already fast) path and, importantly, do not
+				// pay for the row counts below on every selective query.
+				return false;
+			}
+
+			// Both counts are whole-table counts (cheap and cached in _tableRowStatistics), unlike a
+			// per-query spatial count which measured ~6 s. Drive from whichever side reads fewer rows
+			// in the initial scan: the whole bridge vs. the estimated geometry rows inside the window.
+			long bridgeCount = GetTableRowCount(m2n.AssociationTable);
+			long geoCount = GetTableRowCount(GeometryEndClass);
+
+			double estimatedGeoRowsInWindow = selectivity * geoCount;
+
+			return bridgeCount < estimatedGeoRowsInWindow;
+		}
+
+		/// <summary>
+		/// Returns the fraction of the geometry dataset's extent covered by the spatial filter
+		/// envelope (clamped to [0, 1]), or NaN when either extent is unavailable/degenerate. Uses
+		/// only cheap extent metadata, no row access.
+		/// </summary>
+		private double GetSpatialFilterSelectivity([CanBeNull] ITableFilter filter)
+		{
+			if (! (filter is IFeatureClassFilter spatialFilter) ||
+			    spatialFilter.FilterGeometry == null)
+			{
+				return double.NaN;
+			}
+
+			IEnvelope datasetExtent = (GeometryEndClass as IReadOnlyFeatureClass)?.Extent;
+
+			double datasetArea = EnvelopeArea(datasetExtent);
+			double filterArea = EnvelopeArea(spatialFilter.FilterGeometry.Envelope);
+
+			if (double.IsNaN(datasetArea) || datasetArea <= 0 || double.IsNaN(filterArea))
+			{
+				return double.NaN;
+			}
+
+			double ratio = filterArea / datasetArea;
+
+			return ratio > 1 ? 1 : ratio;
+		}
+
+		private static double EnvelopeArea([CanBeNull] IEnvelope envelope)
+		{
+			if (envelope == null || envelope.IsEmpty)
+			{
+				return double.NaN;
+			}
+
+			return envelope.Width * envelope.Height;
 		}
 
 		private IEnumerable<VirtualRow> Join(
