@@ -955,6 +955,165 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		[Test]
+		public void CanInnerJoinManyToMany_SpatialFilterMatchesAssociationFirst()
+		{
+			// Plan-3 test-plan, Assumption B: the inner-join result set within a spatial window
+			// must be identical whether the join is driven from the left (geometry) side - today's
+			// path whenever a spatial filter is present - or from the association side and then
+			// spatially filtered (the whole-network bridge read + filtered geometry read that
+			// Plan 3 would select for the non-selective case). We compare today's two existing
+			// drive-side paths: with a spatial filter (left-first) vs. without one
+			// (association-first) then filtered to the same window in memory. This is the
+			// correctness invariant Plan 3 relies on and the regression guard for its change.
+
+			IFeatureWorkspace ws =
+				TestWorkspaceUtils.CreateTestFgdbWorkspace(
+					"TrTableJoinInMemory_SpatialFilterMatchesAssociationFirst");
+
+			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			const string roadKey = "ROADNR";
+			const string routeKey = "ROUTENR";
+
+			IFeatureClass roadFc = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "ROADS", null,
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField(roadKey),
+				FieldUtils.CreateShapeField(
+					"SHAPE", esriGeometryType.esriGeometryPoint, sref, 1000));
+
+			ITable routeTable = DatasetUtils.CreateTable(
+				ws, "ROUTES",
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField(routeKey));
+
+			ITable bridgeTable = DatasetUtils.CreateTable(
+				ws, "ROAD_ROUTE",
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField("BR_ROADNR"),
+				FieldUtils.CreateIntegerField("BR_ROUTENR"));
+
+			// Five roads on a line, 10 m apart, road number 1..5.
+			const double x0 = 2600000;
+			const double y0 = 1200000;
+			for (int i = 1; i <= 5; i++)
+			{
+				IFeature f = roadFc.CreateFeature();
+				f.Value[1] = i;
+				f.Shape = GeometryFactory.CreatePoint(x0 + (i - 1) * 10, y0);
+				f.Store();
+			}
+
+			foreach (int routeNr in new[] { 100, 200, 300 })
+			{
+				IRow r = routeTable.CreateRow();
+				r.Value[1] = routeNr;
+				r.Store();
+			}
+
+			// M:N bridge; roads 2 and 5 each participate in two routes.
+			(int road, int route)[] links =
+			{
+				(1, 100), (2, 100), (2, 200), (3, 200), (4, 300), (5, 300), (5, 100)
+			};
+			foreach ((int road, int route) in links)
+			{
+				IRow a = bridgeTable.CreateRow();
+				a.Value[1] = road;
+				a.Value[2] = route;
+				a.Store();
+			}
+
+			TrTableJoinInMemory tr =
+				new TrTableJoinInMemory(ReadOnlyTableFactory.Create(roadFc),
+				                        ReadOnlyTableFactory.Create(routeTable),
+				                        roadKey, routeKey, JoinType.InnerJoin)
+				{
+					ManyToManyTable = ReadOnlyTableFactory.Create(bridgeTable),
+					ManyToManyTableLeftKey = "BR_ROADNR",
+					ManyToManyTableRightKey = "BR_ROUTENR"
+				};
+			((ITableTransformer) tr).TransformerName = "test_join";
+
+			GdbTable joined = tr.GetTransformed();
+			int roadKeyIdx = FindJoinedField(joined, roadKey);
+			int routeKeyIdx = FindJoinedField(joined, routeKey);
+			Assert.GreaterOrEqual(roadKeyIdx, 0, $"Field {roadKey} not found in joined schema");
+			Assert.GreaterOrEqual(routeKeyIdx, 0, $"Field {routeKey} not found in joined schema");
+
+			// Window covering roads 1..3 (x in [2599995, 2600025]), excluding roads 4 and 5.
+			IEnvelope window =
+				GeometryFactory.CreateEnvelope(x0 - 5, y0 - 5, x0 + 25, y0 + 5, sref);
+
+			// Association-first: no spatial filter -> whole join; filter to the window in memory.
+			var allPairs = new List<(int road, int route)>();
+			var referenceInWindow = new List<(int road, int route)>();
+			foreach (IReadOnlyRow row in joined.EnumReadOnlyRows(null, false))
+			{
+				var pair = (Convert.ToInt32(row.get_Value(roadKeyIdx)),
+				            Convert.ToInt32(row.get_Value(routeKeyIdx)));
+				allPairs.Add(pair);
+
+				IGeometry shape = ((IReadOnlyFeature) row).Shape;
+				if (PointInWindow(window, shape))
+				{
+					referenceInWindow.Add(pair);
+				}
+			}
+
+			// Whole join must be the full 7 M:N pairs.
+			Assert.AreEqual(7, allPairs.Count, "Association-first (unfiltered) join row count");
+			Assert.AreEqual(4, referenceInWindow.Count,
+			                "Association-first pairs falling inside the window");
+
+			// Left-first: spatial filter present -> today's queryLeftTableFirst path.
+			var leftFirstInWindow = new List<(int road, int route)>();
+			ITableFilter spatialFilter = new AoFeatureClassFilter(window);
+			foreach (IReadOnlyRow row in joined.EnumReadOnlyRows(spatialFilter, false))
+			{
+				leftFirstInWindow.Add((Convert.ToInt32(row.get_Value(roadKeyIdx)),
+				                       Convert.ToInt32(row.get_Value(routeKeyIdx))));
+			}
+
+			CollectionAssert.AreEquivalent(
+				referenceInWindow, leftFirstInWindow,
+				"Spatial-filter (left-first) result must match association-first filtered to the " +
+				"same window");
+		}
+
+		private static int FindJoinedField(GdbTable table, string fieldName)
+		{
+			int idx = table.FindField(fieldName);
+			if (idx >= 0)
+			{
+				return idx;
+			}
+
+			// The join may prefix a field with its source table name when the name is ambiguous;
+			// fall back to a suffix match so the test does not depend on that detail.
+			IFields fields = table.Fields;
+			for (int i = 0; i < fields.FieldCount; i++)
+			{
+				string name = fields.Field[i].Name;
+				if (name.EndsWith("_" + fieldName, StringComparison.OrdinalIgnoreCase) ||
+				    name.EndsWith("." + fieldName, StringComparison.OrdinalIgnoreCase))
+				{
+					return i;
+				}
+			}
+
+			return -1;
+		}
+
+		private static bool PointInWindow(IEnvelope window, IGeometry shape)
+		{
+			IPoint p = (IPoint) shape;
+			return p.X >= window.XMin && p.X <= window.XMax &&
+			       p.Y >= window.YMin && p.Y <= window.YMax;
+		}
+
 		private static void AssertJoinedRowExists(TrTableJoinInMemory tr, int id)
 		{
 			JoinedBackingDataset joinedDataset =
