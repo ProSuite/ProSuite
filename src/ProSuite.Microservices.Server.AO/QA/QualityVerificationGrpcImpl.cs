@@ -22,9 +22,9 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Exceptions;
-using ProSuite.Commons.IO;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Globalization;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
@@ -49,12 +49,15 @@ using ProSuite.Microservices.Server.AO.QA.Distributed;
 using ProSuite.QA.Container;
 using Quaestor.LoadReporting;
 using Quaestor.ProcessAdministration;
+using Path = System.IO.Path;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
 	public class QualityVerificationGrpcImpl : QualityVerificationGrpc.QualityVerificationGrpcBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private const int _defaultDataRequestTimeoutSeconds = 120;
 
 		private readonly StaTaskScheduler _staThreadScheduler;
 
@@ -108,6 +111,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// Admin interface to manage requests and their cancellation.
 		/// </summary>
 		public IRequestAdmin RequestAdmin { get; set; }
+
+		/// <summary>
+		/// The maximum time (in seconds) to wait for the client to provide a single data batch
+		/// when the server pulls data from the client (<see cref="VerifyDataQuality"/>). Applies
+		/// per batch, so multi-batch transfers get this budget for each batch.
+		/// </summary>
+		public int DataRequestTimeoutSeconds { get; set; } = GetDataRequestTimeoutSeconds();
 
 		/// <summary>
 		/// The license checkout action to be performed before any service call is executed.
@@ -257,42 +267,26 @@ namespace ProSuite.Microservices.Server.AO.QA
 				var trackCancellationToken =
 					new TrackCancellationToken(registeredRequest.CancellationSource.Token);
 
+				long dataRequestTimeoutMillis = DataRequestTimeoutSeconds * 1000L;
+
 				// TODO: Separate data request handler class with async method
+				// Requests schema or the first data batch from the client (writes a request,
+				// then reads the client's reply).
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
-					delegate(DataVerificationResponse r)
-					{
-						Task<DataVerificationRequest> task = RequestMoreDataAsync(
-							requestStream, responseStream, context, r);
+					r => AwaitClientData(
+						RequestMoreDataAsync(requestStream, responseStream, context, r),
+						dataRequestTimeoutMillis);
 
-						long timeOutMillis = 30 * 1000;
-						long elapsedMillis = 0;
-						int interval = 20;
-						while (! task.IsCompleted && elapsedMillis < timeOutMillis)
-						{
-							Thread.Sleep(interval);
-							elapsedMillis += interval;
-						}
-
-						if (task.IsFaulted)
-						{
-							throw task.Exception;
-						}
-
-						if (! task.IsCompleted)
-						{
-							throw new TimeoutException(
-								$"Client failed to provide data within {elapsedMillis}ms");
-						}
-
-						DataVerificationRequest moreData = task.Result;
-
-						return moreData;
-					};
+				// Reads a subsequent, already-in-flight data batch from the client without issuing
+				// a new request (used when a data response has GdbData.HasMoreData set).
+				Func<DataVerificationRequest> readNextBatch =
+					() => AwaitClientData(
+						ReadMoreDataAsync(requestStream), dataRequestTimeoutMillis);
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
-						VerifyDataQualityCore(initialRequest, moreDataRequest, responseStream,
-						                      trackCancellationToken);
+						VerifyDataQualityCore(initialRequest, moreDataRequest, readNextBatch,
+						                      responseStream, trackCancellationToken);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -547,6 +541,60 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
+		/// <summary>
+		/// Blocks the calling (STA worker) thread until the client-data task completes or the
+		/// timeout elapses. Faults are re-thrown; a timeout throws a <see cref="TimeoutException"/>.
+		/// </summary>
+		private static DataVerificationRequest AwaitClientData(
+			[NotNull] Task<DataVerificationRequest> task, long timeOutMillis)
+		{
+			long elapsedMillis = 0;
+			const int interval = 20;
+			while (! task.IsCompleted && elapsedMillis < timeOutMillis)
+			{
+				Thread.Sleep(interval);
+				elapsedMillis += interval;
+			}
+
+			if (task.IsFaulted)
+			{
+				throw task.Exception;
+			}
+
+			if (! task.IsCompleted)
+			{
+				throw new TimeoutException(
+					$"Client failed to provide data within {elapsedMillis}ms");
+			}
+
+			return task.Result;
+		}
+
+		/// <summary>
+		/// Reads the next data batch from the client stream without writing a request first. Used
+		/// to receive subsequent batches of a multi-batch data response (GdbData.HasMoreData).
+		/// </summary>
+		private static async Task<DataVerificationRequest> ReadMoreDataAsync(
+			IAsyncStreamReader<DataVerificationRequest> requestStream)
+		{
+			DataVerificationRequest resultData = null;
+
+			try
+			{
+				while (await requestStream.MoveNext().ConfigureAwait(false))
+				{
+					resultData = requestStream.Current;
+					break;
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error reading next data batch from client", e);
+			}
+
+			return resultData;
+		}
+
 		private static async Task<DataVerificationRequest> RequestMoreDataAsync(
 			IAsyncStreamReader<DataVerificationRequest> requestStream,
 			IServerStreamWriter<DataVerificationResponse> responseStream,
@@ -575,13 +623,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
 			{
 				_msg.Warn("Error getting more data for class id " +
 				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+				throw;
 			}
 
 			return resultData;
@@ -611,16 +660,53 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await responseStream.WriteAsync(r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
 			{
 				_msg.Warn("Error getting more data for class id " +
 				          $"{r.DataRequest?.ClassDef?.ClassHandle}", e);
+				throw;
 			}
 
 			return resultData;
+		}
+
+		/// <summary>
+		/// Writes a data request to the (shared) response stream, retrying on the
+		/// gRPC "only one write can be pending at a time" limitation. Unlike progress
+		/// messages - which may simply be dropped when they collide with a concurrent
+		/// write - a data request must reach the client, otherwise the pending read
+		/// for its response blocks until the call times out.
+		/// TODO: Replace this retry stop-gap with a properly managed concurrent write
+		///       queue that prioritizes important (data-request) over non-important
+		///       (progress) messages.
+		/// </summary>
+		private static async Task WriteDataRequestWithRetryAsync<T>(
+			[NotNull] IServerStreamWriter<T> responseStream, [NotNull] T message)
+		{
+			const int maxAttempts = 10;
+			const int retryDelayMs = 100;
+
+			for (int attempt = 1;; attempt++)
+			{
+				try
+				{
+					await responseStream.WriteAsync(message).ConfigureAwait(false);
+					return;
+				}
+				catch (InvalidOperationException e) when (attempt < maxAttempts)
+				{
+					// gRPC allows only one pending write at a time; a data request can
+					// collide with a concurrent (progress) write on the shared stream.
+					_msg.Debug(
+						$"Writing data request to response stream failed on attempt " +
+						$"{attempt}/{maxAttempts}, retrying in {retryDelayMs}ms: {e.Message}");
+
+					await Task.Delay(retryDelayMs).ConfigureAwait(false);
+				}
+			}
 		}
 
 		private ServiceCallStatus ImportExceptionsCore(
@@ -742,6 +828,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		private ServiceCallStatus VerifyDataQualityCore(
 			[NotNull] DataVerificationRequest initialRequest,
 			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest,
+			[CanBeNull] Func<DataVerificationRequest> readNextBatch,
 			IServerStreamWriter<DataVerificationResponse> responseStream,
 			ITrackCancel trackCancel)
 		{
@@ -789,11 +876,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 						backgroundVerificationInputs.SetGdbSchema(
 							ProtobufConversionUtils.CreateSchema(
 								initialRequest.Schema.ClassDefinitions,
-								initialRequest.Schema.RelclassDefinitions, moreDataRequest));
+								initialRequest.Schema.RelclassDefinitions, moreDataRequest,
+								readNextBatch));
 					}
 					else if (moreDataRequest != null)
 					{
-						backgroundVerificationInputs.SetRemoteDataAccess(moreDataRequest);
+						backgroundVerificationInputs.SetRemoteDataAccess(moreDataRequest,
+							readNextBatch);
 					}
 
 					responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
@@ -1658,29 +1747,29 @@ namespace ProSuite.Microservices.Server.AO.QA
 				                    ? $"Verification_{timestamp}"
 				                    : $"Verification{FileSystemUtils.ReplaceInvalidFileNameChars(specName)}_{timestamp}";
 
-			string outputDir = System.IO.Path.Combine(serverOutputDir, subDirName);
+			string outputDir = Path.Combine(serverOutputDir, subDirName);
 
 			if (! string.IsNullOrEmpty(parameters.VerificationReportPath))
 			{
-				string fileName = System.IO.Path.GetFileName(
+				string fileName = Path.GetFileName(
 					parameters.VerificationReportPath);
 				parameters.VerificationReportPath =
-					System.IO.Path.Combine(outputDir, fileName);
+					Path.Combine(outputDir, fileName);
 			}
 
 			if (! string.IsNullOrEmpty(parameters.HtmlReportPath))
 			{
-				string fileName = System.IO.Path.GetFileName(parameters.HtmlReportPath);
+				string fileName = Path.GetFileName(parameters.HtmlReportPath);
 				parameters.HtmlReportPath =
-					System.IO.Path.Combine(outputDir, fileName);
+					Path.Combine(outputDir, fileName);
 			}
 
 			if (! string.IsNullOrEmpty(parameters.IssueFileGdbPath))
 			{
-				string fileName = System.IO.Path.GetFileName(
+				string fileName = Path.GetFileName(
 					parameters.IssueFileGdbPath);
 				parameters.IssueFileGdbPath =
-					System.IO.Path.Combine(outputDir, fileName);
+					Path.Combine(outputDir, fileName);
 			}
 
 			_msg.InfoFormat(
@@ -1741,6 +1830,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			return -1;
+		}
+
+		private static int GetDataRequestTimeoutSeconds()
+		{
+			const string envVarDataRequestTimeoutSeconds =
+				"PROSUITE_QA_DATA_REQUEST_TIMEOUT_SECONDS";
+
+			string envVarValue = Environment.GetEnvironmentVariable(
+				envVarDataRequestTimeoutSeconds);
+
+			if (! string.IsNullOrEmpty(envVarValue))
+			{
+				if (int.TryParse(envVarValue, out int dataRequestTimeoutSeconds))
+				{
+					return dataRequestTimeoutSeconds;
+				}
+
+				_msg.WarnFormat("Cannot parse environment variable {0} value ({1})",
+				                envVarDataRequestTimeoutSeconds, envVarValue);
+			}
+
+			return _defaultDataRequestTimeoutSeconds;
 		}
 	}
 }

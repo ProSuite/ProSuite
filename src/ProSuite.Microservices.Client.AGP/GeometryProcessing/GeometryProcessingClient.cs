@@ -16,6 +16,7 @@ using ProSuite.Commons.AGP.Core.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.RepairGeometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneralize;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
@@ -203,8 +204,9 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 	                                           TargetBufferOptions targetBufferOptions,
 	                                           IBoundedXY clipExtent,
 	                                           double? customTolerance,
-	                                           ZValueSource zValueSource,
-	                                           CancellationToken cancellationToken)
+	                                           ChangeAlongZSource zSource,
+	                                           CancellationToken cancellationToken,
+	                                           DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null)
 	{
 		if (ChangeAlongClient == null)
 		{
@@ -213,7 +215,7 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 
 		return ChangeAlongClientUtils.CalculateCutLines(
 			ChangeAlongClient, sourceFeatures, targetFeatures, targetBufferOptions, clipExtent,
-			customTolerance, zValueSource, cancellationToken);
+			customTolerance, zSource, cancellationToken, zSourceProvider);
 	}
 
 	[NotNull]
@@ -252,10 +254,11 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 	                                         TargetBufferOptions targetBufferOptions,
 	                                         IBoundedXY clipExtent,
 	                                         double? customTolerance,
-	                                         ZValueSource zValueSource,
+	                                         ChangeAlongZSource zSource,
 	                                         bool insertVerticesInTarget,
 	                                         CancellationToken cancellationToken,
-	                                         out ChangeAlongCurves newChangeAlongCurves)
+	                                         out ChangeAlongCurves newChangeAlongCurves,
+	                                         DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null)
 	{
 		if (targetFeatures == null)
 		{
@@ -269,9 +272,9 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 
 		return ChangeAlongClientUtils.ApplyCutCurves(
 			ChangeAlongClient, sourceFeatures, targetFeatures,
-			targetBufferOptions, clipExtent, customTolerance, zValueSource,
+			targetBufferOptions, clipExtent, customTolerance, zSource,
 			insertVerticesInTarget, selectedReshapeLines, cancellationToken,
-			out newChangeAlongCurves);
+			out newChangeAlongCurves, zSourceProvider);
 	}
 
 	#endregion

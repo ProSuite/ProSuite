@@ -107,34 +107,71 @@ namespace ProSuite.Microservices.Client.QA
 
 			if (_qualityVerification == null)
 			{
-				_domainTransactions.UseTransaction(
-					() =>
+				_domainTransactions.UseTransaction(() =>
+				{
+					if (VerificationMsg.SavedVerificationId >= 0)
 					{
-						if (VerificationMsg.SavedVerificationId >= 0)
-						{
-							_msg.DebugFormat("Getting verification details from DDX (<id> {0}).",
-							                 VerificationMsg.SavedVerificationId);
-							_qualityVerification =
-								_qualityVerificationRepository.Get(
-									VerificationMsg.SavedVerificationId);
+						_msg.DebugFormat("Getting verification details from DDX (<id> {0}).",
+						                 VerificationMsg.SavedVerificationId);
+						_qualityVerification =
+							_qualityVerificationRepository.Get(
+								VerificationMsg.SavedVerificationId);
 
-							Assert.NotNull(_qualityVerification, "Quality verification not found.");
+						Assert.NotNull(_qualityVerification, "Quality verification not found.");
 
-							_domainTransactions.Initialize(
-								_qualityVerification.ConditionVerifications);
-							_domainTransactions.Initialize(
-								_qualityVerification.VerificationDatasets);
-						}
-						else
-						{
-							_msg.DebugFormat(
-								"Using verification details provided from QA service.");
-							_qualityVerification = GetQualityVerificationTx(VerificationMsg);
-						}
-					});
+						_domainTransactions.Initialize(
+							_qualityVerification.ConditionVerifications);
+						_domainTransactions.Initialize(
+							_qualityVerification.VerificationDatasets);
+					}
+					else
+					{
+						_msg.DebugFormat(
+							"Using verification details provided from QA service.");
+						_qualityVerification = GetQualityVerificationTx(VerificationMsg);
+					}
+				});
 			}
 
 			return _qualityVerification;
+		}
+
+		/// <summary>
+		/// Builds a <see cref="QualityVerification"/> from this result's verification message
+		/// combined with the already-loaded quality specification, so the form can display full
+		/// condition details (including AllowErrors / StopOnError) without going back to the server.
+		/// </summary>
+		public QualityVerification GetQualityVerification(
+			[NotNull] QualitySpecification spec)
+		{
+			var msg = Assert.NotNull(VerificationMsg);
+
+			var elementById = spec.Elements
+			                      .Where(e => e.Enabled)
+			                      .ToDictionary(e => e.QualityCondition.Id);
+
+			var conditionVerifications = new List<QualityConditionVerification>();
+
+			foreach (QualityConditionVerificationMsg cvMsg in msg.ConditionVerifications)
+			{
+				if (! elementById.TryGetValue(cvMsg.QualityConditionId, out var element))
+				{
+					continue;
+				}
+
+				var conditionVerification = new QualityConditionVerification(element);
+				ApplyVerificationStats(conditionVerification, cvMsg);
+
+				if (cvMsg.StopConditionId >= 0 &&
+				    elementById.TryGetValue(cvMsg.StopConditionId, out var stopElement))
+				{
+					conditionVerification.StopCondition = stopElement.QualityCondition;
+				}
+
+				conditionVerifications.Add(conditionVerification);
+			}
+
+			return BuildVerificationResult(msg, conditionVerifications);
 		}
 
 		public string HtmlReportPath { get; set; }
@@ -143,55 +180,25 @@ namespace ProSuite.Microservices.Client.QA
 
 		private QualityVerification GetQualityVerificationTx([NotNull] QualityVerificationMsg msg)
 		{
-			List<QualityConditionVerification> conditionVerifications =
-				GetQualityConditionVerifications(msg);
+			var conditionVerifications = new List<QualityConditionVerification>();
+			var conditionsById = new Dictionary<int, QualityCondition>();
 
-			var result = new QualityVerification(
-				msg.SpecificationId, msg.SpecificationName, msg.SpecificationDescription,
-				msg.UserName, conditionVerifications);
-
-			result.Cancelled = msg.Cancelled;
-			result.ContextName = msg.ContextName;
-			result.ContextType = msg.ContextType;
-			result.StartDate = new DateTime(msg.StartTimeTicks);
-			result.EndDate = new DateTime(msg.EndTimeTicks);
-
-			result.ProcessorTimeSeconds = msg.ProcessorTimeSeconds;
-			result.RowsWithStopConditions = msg.RowsWithStopConditions;
-
-			result.CalculateStatistics();
-
-			return result;
-		}
-
-		private List<QualityConditionVerification> GetQualityConditionVerifications(
-			[NotNull] QualityVerificationMsg msg)
-		{
-			List<QualityConditionVerification> conditionVerifications =
-				new List<QualityConditionVerification>();
-
-			Dictionary<int, QualityCondition> conditionsById =
-				new Dictionary<int, QualityCondition>();
-
-			foreach (var conditionVerificationMsg in msg.ConditionVerifications)
+			foreach (var cvMsg in msg.ConditionVerifications)
 			{
-				int qualityConditionId = conditionVerificationMsg.QualityConditionId;
+				int qualityConditionId = cvMsg.QualityConditionId;
 
-				QualityCondition qualityCondition = GetQualityCondition(
-					qualityConditionId, conditionsById);
+				QualityCondition qualityCondition = GetQualityCondition(qualityConditionId,
+					conditionsById);
 
 				Assert.NotNull(qualityCondition, $"Condition {qualityConditionId} not found");
 
-				// TODO: AllowError/StopOnError
-				QualitySpecificationElement element =
-					new QualitySpecificationElement(qualityCondition);
-
+				// TODO: AllowErrors/StopOnError not available without spec in this DDX path
+				var element = new QualitySpecificationElement(qualityCondition);
 				var conditionVerification = new QualityConditionVerification(element);
 
-				bool fullFilled = conditionVerificationMsg.Fulfilled;
-				conditionVerification.Fulfilled = fullFilled;
+				ApplyVerificationStats(conditionVerification, cvMsg);
 
-				if (! fullFilled)
+				if (! conditionVerification.Fulfilled)
 				{
 					_msg.Warn($"Condition {qualityConditionId} is not fulfilled");
 				}
@@ -200,22 +207,58 @@ namespace ProSuite.Microservices.Client.QA
 					_msg.Debug($"Condition {qualityConditionId} is fulfilled");
 				}
 
-				conditionVerification.ErrorCount = conditionVerificationMsg.ErrorCount;
-
-				conditionVerification.ExecuteTime = conditionVerificationMsg.ExecuteTime;
-				conditionVerification.RowExecuteTime = conditionVerificationMsg.RowExecuteTime;
-				conditionVerification.TileExecuteTime = conditionVerificationMsg.TileExecuteTime;
-
-				if (conditionVerificationMsg.StopConditionId >= 0)
+				if (cvMsg.StopConditionId >= 0)
 				{
-					conditionVerification.StopCondition = GetQualityCondition(
-						conditionVerificationMsg.StopConditionId, conditionsById);
+					conditionVerification.StopCondition =
+						GetQualityCondition(cvMsg.StopConditionId, conditionsById);
 				}
 
 				conditionVerifications.Add(conditionVerification);
 			}
 
-			return conditionVerifications;
+			return BuildVerificationResult(msg, conditionVerifications);
+		}
+
+		private static void ApplyVerificationStats(
+			[NotNull] QualityConditionVerification conditionVerification,
+			[NotNull] QualityConditionVerificationMsg msg)
+		{
+			conditionVerification.Fulfilled = msg.Fulfilled;
+			conditionVerification.ErrorCount = msg.ErrorCount;
+			conditionVerification.ExecuteTime = msg.ExecuteTime;
+			conditionVerification.RowExecuteTime = msg.RowExecuteTime;
+			conditionVerification.TileExecuteTime = msg.TileExecuteTime;
+		}
+
+		private static QualityVerification BuildVerificationResult(
+			[NotNull] QualityVerificationMsg msg,
+			[NotNull] List<QualityConditionVerification> conditionVerifications)
+		{
+			var result = new QualityVerification(
+				msg.SpecificationId, msg.SpecificationName, msg.SpecificationDescription,
+				msg.UserName, conditionVerifications);
+
+			result.Cancelled = msg.Cancelled;
+			result.ContextType = msg.ContextType;
+			result.ContextName = msg.ContextName;
+			result.StartDate = new DateTime(msg.StartTimeTicks);
+			result.EndDate = new DateTime(msg.EndTimeTicks);
+			result.ProcessorTimeSeconds = msg.ProcessorTimeSeconds;
+			result.RowsWithStopConditions = msg.RowsWithStopConditions;
+
+			// The constructor auto-creates QualityVerificationDatasets with LoadTime=0.
+			// Patch in actual load times from the proto message.
+			var vdatasetById = result.VerificationDatasets.ToDictionary(vd => vd.Dataset.Id);
+			foreach (QualityVerificationDatasetMsg vdMsg in msg.VerificationDatasets)
+			{
+				if (vdatasetById.TryGetValue(vdMsg.DatasetId, out QualityVerificationDataset vd))
+				{
+					vd.LoadTime = vdMsg.LoadTime;
+				}
+			}
+
+			result.CalculateStatistics();
+			return result;
 		}
 
 		private static IEnumerable<int> GetVerifiedConditionIds(
@@ -227,9 +270,9 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		private QualityCondition GetQualityCondition(int qualityConditionId,
-		                                             IDictionary<int, QualityCondition>
-			                                             conditionsById)
+		private QualityCondition GetQualityCondition(
+			int qualityConditionId,
+			[NotNull] IDictionary<int, QualityCondition> conditionsById)
 		{
 			Assert.NotNull(_qualityConditionRepository);
 

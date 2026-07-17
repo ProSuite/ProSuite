@@ -12,9 +12,18 @@
                     Title="Symbol Display Settings"
                     Height="219" MinHeight="292" MaxHeight="320"
                     Width="400" MinWidth="400" MaxWidth="800"
-                    WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-                    Background="{DynamicResource Esri_DialogFrameBackgroundBrush}">
-	<DockPanel Margin="8" Background="{DynamicResource Esri_DialogClientAreaBackgroundBrush}">
+                    WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+
+	<controls:ProWindow.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</controls:ProWindow.Resources>
+
+	<DockPanel Margin="8" >
 		<DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="4,4,4,4">
 			<Button DockPanel.Dock="Right" VerticalAlignment="Center"
 			        Content="Cancel" IsCancel="True" TabIndex="99"
@@ -28,6 +37,7 @@
 				<Run FontStyle="Italic" Text="{Binding ScopeMessage}" />
 			</TextBlock>
 		</DockPanel>
+
 		<Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto" />
@@ -38,7 +48,9 @@
 			</Grid.RowDefinitions>
 			<StackPanel Grid.Row="0" Margin="2">
 				<CheckBox Margin="4" IsChecked="{Binding AvoidSLMWithoutSLD }">Avoid SLM without SLD</CheckBox>
-				<TextBlock TextWrapping="Wrap" Background="Cornsilk"
+				<TextBlock TextWrapping="Wrap"
+				           Background="{DynamicResource Esri_BackgroundHoverSelectedBrush}"
+						   Foreground="{DynamicResource Esri_TextInfoBrush}"
 				           Margin="24,4,4,4" Padding="4,2,4,2">
 					SLD and SLM can be toggled individually, but the
 					combination SLM on with SLD off will not be possible
@@ -46,15 +58,16 @@
 			</StackPanel>
 			<Separator Grid.Row="1" />
 			<StackPanel Grid.Row="2" Margin="2">
-				<CheckBox Margin="4" IsChecked="{Binding UseScaleRange}">
-					Disable SLD/SLM when...
-				</CheckBox>
+				<CheckBox Margin="4" Content="Disable SLD/SLM when..."
+				          IsChecked="{Binding UseScaleRange}"/>
 				<StackPanel Orientation="Horizontal" Margin="28,2,2,4">
 					<TextBlock VerticalAlignment="Center">zoomed in beyond</TextBlock>
 					<Separator Width="8" Visibility="Hidden" />
 					<TextBox VerticalAlignment="Center" MinWidth="80">
 						<TextBox.Style>
 							<Style TargetType="{x:Type TextBox}">
+								<Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundBrush}"></Setter>
+								<Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}"/>
 								<Style.Triggers>
 									<Trigger Property="Validation.HasError" Value="True">
 										<Setter Property="ToolTip"
@@ -84,6 +97,8 @@
 					<TextBox VerticalAlignment="Center" MinWidth="80">
 						<TextBox.Style>
 							<Style TargetType="{x:Type TextBox}">
+								<Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundBrush}"></Setter>
+								<Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}"/>
 								<Style.Triggers>
 									<Trigger Property="Validation.HasError" Value="True">
 										<Setter Property="ToolTip"
@@ -107,7 +122,7 @@
 					<Separator Width="8" Visibility="Hidden" />
 					<TextBlock VerticalAlignment="Center">(min scale, e.g. 1:15000)</TextBlock>
 				</StackPanel>
-				<TextBlock Foreground="SlateGray" Margin="28,4,0,0">
+				<TextBlock Foreground="{DynamicResource Esri_TextStyleSubduedBrush}" Margin="28,4,0,0">
 					Want:
 					SLD = <Run Text="{Binding WantSLD}" />,
 					SLM = <Run Text="{Binding WantLM}" />
@@ -121,12 +136,4 @@
 			          ToolTip="Tentatively here -- until we have a better place" />
 		</Grid>
 	</DockPanel>
-	<controls:ProWindow.Resources>
-		<ResourceDictionary>
-			<ResourceDictionary.MergedDictionaries>
-				<extensions:DesignOnlyResourceDictionary
-					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
-			</ResourceDictionary.MergedDictionaries>
-		</ResourceDictionary>
-	</controls:ProWindow.Resources>
 </controls:ProWindow>

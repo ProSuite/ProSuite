@@ -20,8 +20,9 @@ public class ChangeAlongFeedback
 	private readonly CIMLineSymbol _filterBufferSymbol;
 
 	private readonly CIMLineSymbol _noReshapeLineSymbol;
+	private readonly object _overlaysLock = new object();
 
-	private readonly List<IDisposable> _overlays = new List<IDisposable>();
+	private readonly List<IDisposable> _overlays;
 	private readonly CIMLineSymbol _targetLineSymbol;
 	private readonly CIMLineSymbol _reshapeLineSymbol;
 	private readonly CIMPointSymbol _candidateLineEnd;
@@ -33,6 +34,7 @@ public class ChangeAlongFeedback
 
 	public ChangeAlongFeedback()
 	{
+		_overlays = new List<IDisposable>();
 		var red = ColorFactory.Instance.CreateRGBColor(248, 0, 0);
 		_noReshapeLineSymbol = SymbolFactory.Instance.ConstructLineSymbol(red, _lineWidth);
 
@@ -126,9 +128,17 @@ public class ChangeAlongFeedback
 
 	public void DisposeOverlays()
 	{
-		foreach (var overlay in _overlays) overlay.Dispose();
+		lock (_overlaysLock)
+		{
+			if (_overlays == null) return;
 
-		_overlays.Clear();
+			foreach (var overlay in _overlays)
+			{
+				overlay?.Dispose();
+			}
+
+			_overlays.Clear();
+		}
 	}
 
 	private void AddReshapeLines(IEnumerable<CutSubcurve> subcurves,

@@ -9,6 +9,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
@@ -80,12 +81,9 @@ public class FlashService : IDisposable
 				symbol = _polygonSymbol;
 				break;
 			case GeometryType.Multipatch:
-				// TODO: Fix this for stereo:
-				// Use CleanMultipatchClientUtils.GetTriangleConversionRings to get polygons,
-				// create a bag and flash that bag. This will work for stereo and 3D maps.
-				// Alternative: Wait for Menno to fix multipatch overlays in stereo.
-				flashGeometry = geometry;
-				symbol = _polygonSymbol;
+				flashGeometry = GeometryUtils.GetMultipatchOutline((Multipatch) geometry) ??
+				                geometry;
+				symbol = _lineSymbol;
 				break;
 			case GeometryType.Unknown:
 			case GeometryType.GeometryBag:
@@ -122,7 +120,8 @@ public class FlashService : IDisposable
 				flashGeometry = GetPolygonGeometry(geometry);
 				break;
 			case GeometryType.Multipatch:
-				flashGeometry = geometry;
+				flashGeometry = GeometryUtils.GetMultipatchOutline((Multipatch) geometry) ??
+				                geometry;
 				break;
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:

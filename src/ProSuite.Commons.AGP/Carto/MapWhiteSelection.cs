@@ -27,7 +27,8 @@ public interface IMapWhiteSelection
 	/// </summary>
 	/// <returns>True iff this white selection changed</returns>
 	bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method,
-	            Dictionary<FeatureLayer, List<long>> candidates = null);
+	            Dictionary<FeatureLayer, List<long>> candidates = null,
+	            WhiteSelectFlags flags = default);
 
 	/// <summary>
 	/// Select vertices within <paramref name="geometry"/> from amongst
@@ -36,7 +37,8 @@ public interface IMapWhiteSelection
 	/// </summary>
 	/// <returns>True iff this white selection changed</returns>
 	bool Select(Geometry geometry, SetCombineMethod method,
-	            Dictionary<FeatureLayer, List<long>> candidates = null);
+	            Dictionary<FeatureLayer, List<long>> candidates = null,
+	            WhiteSelectFlags flags = default);
 
 	int Remove(FeatureLayer layer, IEnumerable<long> oids);
 
@@ -76,16 +78,12 @@ public class MapWhiteSelection : IMapWhiteSelection
 	// TODO probably should keep _layerSelections ordered as in the ToC
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
 
-	public MapWhiteSelection(MapView mapView, bool mustBoundarySelectUnfilledPolygons = true)
+	public MapWhiteSelection(MapView mapView)
 	{
 		_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
-
-		MustBoundarySelectUnfilledPolygons = mustBoundarySelectUnfilledPolygons;
 	}
 
 	public Map Map => _mapView.Map;
-
-	public bool MustBoundarySelectUnfilledPolygons { get; set; }
 
 	/// <returns>true iff the no involved features (regardless of selected vertices)</returns>
 	public bool IsEmpty => _layerSelections.Values.Sum(ws => ws.InvolvedFeatureCount) <= 0;
@@ -307,7 +305,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(MapPoint clickPoint, double tolerance, SetCombineMethod method,
-	                   Dictionary<FeatureLayer, List<long>> candidates = null)
+	                   Dictionary<FeatureLayer, List<long>> candidates = null,
+	                   WhiteSelectFlags flags = default)
 	{
 		if (clickPoint is null)
 			throw new ArgumentNullException(nameof(clickPoint));
@@ -341,7 +340,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
-				if (! IsFeatureHit(featureLayer, oid, shape, clickPoint, tolerance))
+				if (! IsFeatureHit(featureLayer, oid, shape, clickPoint, tolerance, flags))
 				{
 					continue;
 				}
@@ -372,9 +371,9 @@ public class MapWhiteSelection : IMapWhiteSelection
 	}
 
 	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape,
-	                          MapPoint clickPoint, double tolerance)
+	                          MapPoint clickPoint, double tolerance, WhiteSelectFlags flags)
 	{
-		if (! MustBoundarySelectUnfilledPolygons)
+		if (! flags.MustBoundarySelectUnfilledPolygons())
 		{
 			return true;
 		}
@@ -436,7 +435,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <returns>true iff the selection changed</returns>
 	/// <remarks>Must call on MCT</remarks>
 	public bool Select(Geometry geometry, SetCombineMethod method,
-	                   Dictionary<FeatureLayer, List<long>> candidates = null)
+	                   Dictionary<FeatureLayer, List<long>> candidates = null,
+	                   WhiteSelectFlags flags = default)
 	{
 		if (method == SetCombineMethod.Nop)
 		{
@@ -467,7 +467,7 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
-				if (! IsFeatureHit(featureLayer, oid, shape, geometry))
+				if (! IsFeatureHit(featureLayer, oid, shape, geometry, flags))
 				{
 					continue;
 				}
@@ -498,9 +498,9 @@ public class MapWhiteSelection : IMapWhiteSelection
 	}
 
 	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape,
-	                          Geometry selectionArea)
+	                          Geometry selectionArea, WhiteSelectFlags flags)
 	{
-		if (! MustBoundarySelectUnfilledPolygons)
+		if (! flags.MustBoundarySelectUnfilledPolygons())
 		{
 			return true;
 		}

@@ -830,8 +830,15 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					                                       GeometryConversionUtils.CreateLinestring(
 						                                       cutPath, ! cutLineHasZs)));
 
+			// A self-touching ("bite its tail") sketch is simplified into a closed loop plus
+			// leftover dangling tail segments. Those spurs cannot cut and make CutPlanar return
+			// nothing for faces where the loop is not fully interior, which then leaves the face
+			// uncut and trips AssignResultsToFootprintParts. Prune them before cutting.
+			ISegmentList cutLinesToUse =
+				GeomTopoOpUtils.RemoveDanglingCutLines(ringGroup, cutLinestrings, tolerance);
+
 			IList<RingGroup> resultGroups =
-				GeomTopoOpUtils.CutPlanar(ringGroup, cutLinestrings, tolerance);
+				GeomTopoOpUtils.CutPlanar(ringGroup, cutLinesToUse, tolerance);
 
 			foreach (RingGroup resultPoly in resultGroups)
 			{
@@ -944,6 +951,27 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 					{
 						interiorIntersects = GeomRelationUtils.InteriorIntersectXY(
 							cutFootprintPart, resultPoly, tolerance);
+					}
+
+					if (interiorIntersects && ! resultPoly.IsVertical(tolerance))
+					{
+						// InteriorIntersectXY returns a false positive when the result's exterior
+						// coincides with a footprint hole but is not properly oriented (cookie-in-hole
+						// case with unsimplified cut output). Re-check using full-ring containment:
+						// a single test point is not sufficient because cut pieces adjacent to the
+						// hole start on the hole boundary too.
+						if (cutFootprintPart.InteriorRings.Any(
+							    hole => GeomRelationUtils.PolycurveContainsXY(
+								    hole, resultPoly.ExteriorRing, tolerance)))
+						{
+							interiorIntersects = false;
+						}
+						else if (resultPoly.InteriorRings.Any(
+							         hole => GeomRelationUtils.PolycurveContainsXY(
+								         hole, cutFootprintPart.ExteriorRing, tolerance)))
+						{
+							interiorIntersects = false;
+						}
 					}
 
 					if (interiorIntersects)

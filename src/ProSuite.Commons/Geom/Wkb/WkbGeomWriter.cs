@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom.Wkb
@@ -13,6 +14,8 @@ namespace ProSuite.Commons.Geom.Wkb
 	{
 		public byte[] WriteGeometry([NotNull] ISegmentList geometry)
 		{
+			Assert.NotNull(geometry, nameof(geometry));
+
 			if (geometry is RingGroup polygon)
 			{
 				return WritePolygon(polygon);
@@ -43,6 +46,8 @@ namespace ProSuite.Commons.Geom.Wkb
 
 		public byte[] WritePoint([NotNull] IPnt point, Ordinates ordinates = Ordinates.Xyz)
 		{
+			Assert.NotNull(point, nameof(point));
+
 			MemoryStream memoryStream = InitializeWriter();
 
 			WriteWkbType(WkbGeometryType.Point, ordinates);
@@ -52,9 +57,11 @@ namespace ProSuite.Commons.Geom.Wkb
 			return memoryStream.ToArray();
 		}
 
-		public byte[] WriteMultipolygon(MultiPolycurve multipolygon,
+		public byte[] WriteMultipolygon([NotNull] MultiPolycurve multipolygon,
 		                                Ordinates ordinates = Ordinates.Xyz)
 		{
+			Assert.NotNull(multipolygon, nameof(multipolygon));
+
 			return WriteMultipolygon(
 				GeomTopoOpUtils.GetConnectedComponents(multipolygon, double.Epsilon).ToList(),
 				ordinates);
@@ -63,6 +70,8 @@ namespace ProSuite.Commons.Geom.Wkb
 		public byte[] WriteMultipolygon([NotNull] ICollection<RingGroup> ringGroups,
 		                                Ordinates ordinates = Ordinates.Xyz)
 		{
+			Assert.NotNull(ringGroups, nameof(ringGroups));
+
 			if (ringGroups.Count == 1)
 			{
 				return WritePolygon(ringGroups.First(), ordinates);
@@ -90,6 +99,8 @@ namespace ProSuite.Commons.Geom.Wkb
 		public byte[] WritePolygon([NotNull] RingGroup ringGroup,
 		                           Ordinates ordinates = Ordinates.Xyz)
 		{
+			Assert.NotNull(ringGroup, nameof(ringGroup));
+
 			// TODO: Initialize with the proper size or allow providing the actual byte[]
 			MemoryStream memoryStream = InitializeWriter();
 
@@ -105,6 +116,8 @@ namespace ProSuite.Commons.Geom.Wkb
 		public byte[] WriteMultiLinestring([NotNull] MultiLinestring multiLinestring,
 		                                   Ordinates ordinates = Ordinates.Xyz)
 		{
+			Assert.NotNull(multiLinestring, nameof(multiLinestring));
+
 			// TODO: Initialize with the proper size or allow providing the actual byte[]
 			MemoryStream memoryStream = InitializeWriter();
 
@@ -130,6 +143,8 @@ namespace ProSuite.Commons.Geom.Wkb
 		public byte[] WriteMultipoint<T>([NotNull] Multipoint<T> multipoint,
 		                                 Ordinates ordinates = Ordinates.Xyz) where T : IPnt
 		{
+			Assert.NotNull(multipoint, nameof(multipoint));
+
 			MemoryStream memoryStream = InitializeWriter();
 
 			WriteWkbType(WkbGeometryType.MultiPoint, ordinates);
@@ -148,12 +163,16 @@ namespace ProSuite.Commons.Geom.Wkb
 		public byte[] WriteMultiSurface([NotNull] Polyhedron polyhedron,
 		                                Ordinates ordinates = Ordinates.Xyz)
 		{
-			return WriteMultiSurface(new List<Polyhedron> {polyhedron}, ordinates);
+			Assert.NotNull(polyhedron, nameof(polyhedron));
+
+			return WriteMultiSurface(new List<Polyhedron> { polyhedron }, ordinates);
 		}
 
 		public byte[] WriteMultiSurface([NotNull] IList<Polyhedron> multiPolyhedron,
 		                                Ordinates ordinates = Ordinates.Xyz)
 		{
+			Assert.NotNull(multiPolyhedron, nameof(multiPolyhedron));
+
 			MemoryStream memoryStream = InitializeWriter();
 
 			WriteWkbType(WkbGeometryType.MultiSurface, ordinates);

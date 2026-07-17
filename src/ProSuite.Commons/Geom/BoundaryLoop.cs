@@ -1,98 +1,100 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
+	/// <summary>
+	/// A boundary loop describes one source or target ring that visits the same XY
+	/// point N >= 2 times at a pinch location. Each pinch location is modelled as
+	/// a "pinch group" (N >= 2 coinciding intersections at one XY, ordered along
+	/// the ring). A single BoundaryLoop owns one pinch group; a ring with multiple
+	/// distinct pinch XYs is modelled as multiple BoundaryLoops on the same source
+	/// part, consolidated via <see cref="ExtraLoopIntersections"/> (cross-XY pinch
+	/// pairs are recorded as "extras" on a main BoundaryLoop so the atomic-loop
+	/// emission can recurse through them).
+	/// <para>
+	/// For N == 2 the legacy properties <see cref="Loop1"/> / <see cref="Loop2"/> /
+	/// <see cref="IsLoopingToOutside"/> describe the two atomic sub-rings exactly as
+	/// before. For N >= 3 the inner consecutive sub-rings between pinches in
+	/// <see cref="Pinches"/> order are the atomic sub-rings; <see cref="Loop1"/> /
+	/// <see cref="Loop2"/> only describe the first such pair and are kept for
+	/// legacy compatibility.
+	/// </para>
+	/// </summary>
 	public class BoundaryLoop
 	{
 		private readonly bool _isSourceRing;
 		private Linestring _loop1;
 		private Linestring _loop2;
 
-		public static IList<BoundaryLoop> CreateSourceBoundaryLoops(
-			[NotNull]
-			IEnumerable<Tuple<IntersectionPoint3D, IntersectionPoint3D>> intersectionPairs,
-			[NotNull] ISegmentList source,
-			double tolerance)
+		/// <summary>
+		/// N-pinch single-group constructor. Pinch points must be ordered along the ring
+		/// (by <see cref="IntersectionPoint3D.VirtualSourceVertex"/> for source loops,
+		/// <see cref="IntersectionPoint3D.VirtualTargetVertex"/> for target loops).
+		/// </summary>
+		public BoundaryLoop([NotNull] IList<IntersectionPoint3D> pinchPoints,
+		                    [NotNull] Linestring fullRing,
+		                    bool isSourceRing,
+		                    double tolerance = 0d)
 		{
-			Linestring fullSourceRing = null;
+			Assert.ArgumentNotNull(pinchPoints, nameof(pinchPoints));
+			Assert.ArgumentCondition(pinchPoints.Count >= 2,
+			                         "A boundary loop requires >= 2 coinciding intersections.");
+			Assert.ArgumentNotNull(fullRing, nameof(fullRing));
 
-			List<BoundaryLoop> allBoundaryLoops = new List<BoundaryLoop>(1);
-
-			// Decide which is the 'main' intersection, i.e. the one between outer and inner ring?
-			foreach (var pair in intersectionPairs)
-			{
-				IntersectionPoint3D intersection1 = pair.Item1;
-				IntersectionPoint3D intersection2 = pair.Item2;
-
-				if (fullSourceRing == null)
-				{
-					fullSourceRing = source.GetPart(intersection1.SourcePartIndex);
-				}
-
-				allBoundaryLoops.Add(
-					new BoundaryLoop(intersection1, intersection2, fullSourceRing, true));
-			}
-
-			if (allBoundaryLoops.Count == 1)
-			{
-				return allBoundaryLoops;
-			}
-
-			List<BoundaryLoop> result = new List<BoundaryLoop>();
-
-			// TODO: Consider boundary loop de-duplication!
-
-			// Currently all result boundary loops need to get the ExtraLoopIntersections!
-			// The only difference is the various target intersection indexes, which should
-			// probably be modelled differently/explicitly.
-
-			foreach (BoundaryLoop boundaryLoop in allBoundaryLoops
-			                                      .OrderBy(bl => bl.Start.Point.X)
-			                                      .ThenBy(bl => bl.Start.Point.Y))
-			{
-				if (result.Count == 0)
-				{
-					result.Add(boundaryLoop);
-				}
-				else if (result.Any(
-					         bl =>
-						         bl.Start.ReferencesSameSourceVertex(
-							         boundaryLoop.Start, source, tolerance) ||
-						         bl.End.ReferencesSameSourceVertex(
-							         boundaryLoop.Start, source, tolerance)))
-				{
-					// To be backward compatible: all boundary loops for all target vertex intersections
-					// -> consider special parameter to exclude these?
-					result.Add(boundaryLoop);
-				}
-				else
-				{
-					// Extra loop:
-					foreach (BoundaryLoop resultLoop in result)
-					{
-						resultLoop.AddExtraLoopIntersections(boundaryLoop.Start, boundaryLoop.End);
-					}
-				}
-			}
-
-			return result;
+			Pinches = pinchPoints;
+			FullRing = fullRing;
+			_isSourceRing = isSourceRing;
+			Tolerance = tolerance;
 		}
 
+		/// <summary>
+		/// Legacy 2-pinch constructor preserved for back-compat with callers like
+		/// <see cref="GeomTopoOpUtils.ExplodeExteriorBoundaryLoops"/>.
+		/// </summary>
 		public BoundaryLoop([NotNull] IntersectionPoint3D start,
 		                    [NotNull] IntersectionPoint3D end,
 		                    [NotNull] Linestring fullRing,
 		                    bool isSourceRing)
-		{
-			Start = start;
-			End = end;
-			FullRing = fullRing;
+			: this(new[] { start, end }, fullRing, isSourceRing) { }
 
-			_isSourceRing = isSourceRing;
+		/// <summary>
+		/// All N pinch intersections of this group, in ring-vertex order.
+		/// </summary>
+		[NotNull]
+		public IList<IntersectionPoint3D> Pinches { get; }
+
+		public bool HasMultipleAtomicLoops => Pinches.Count > 2;
+
+		public double Tolerance { get; }
+
+		/// <summary>
+		/// Whether <paramref name="otherIntersection"/> sits at this loop's pinch location, i.e. it
+		/// references the opposite-side vertex shared by every pinch of this group (the
+		/// target vertex for a source loop, the source vertex for a target loop). All
+		/// pinches share that one vertex by construction (the group is built by
+		/// <see cref="IntersectionClusters"/> from intersections referencing the same
+		/// opposite vertex), so testing <see cref="Start"/> alone is sufficient.
+		/// </summary>
+		public bool ReferencesPinchVertex([NotNull] IntersectionPoint3D otherIntersection,
+		                                  [NotNull] ISegmentList opposite,
+		                                  double tolerance)
+		{
+			return _isSourceRing
+				       ? Start.ReferencesSameTargetVertex(otherIntersection, opposite, tolerance)
+				       : Start.ReferencesSameSourceVertex(otherIntersection, opposite, tolerance);
 		}
 
+		/// <summary>
+		/// Cross-XY pinch pairs from OTHER pinch groups on the same source ring.
+		/// Set via <see cref="AddExtraLoopIntersections"/> by <see cref="IntersectionClusters"/>
+		/// during consolidation; consumed by <see cref="GetLoopSubcurves"/> to emit
+		/// the sub-rings between paired extra pinches in addition to this group's
+		/// own N atomic sub-rings.
+		/// </summary>
+		[CanBeNull]
 		public IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> ExtraLoopIntersections
 		{
 			get;
@@ -100,20 +102,14 @@ namespace ProSuite.Commons.Geom
 		}
 
 		[NotNull]
-		public IntersectionPoint3D Start { get; }
+		public IntersectionPoint3D Start => Pinches[0];
 
 		[NotNull]
-		public IntersectionPoint3D End { get; }
+		public IntersectionPoint3D End => Pinches[1];
 
-		/// <summary>
-		/// The entire linestring containing both loops.
-		/// </summary>
 		[NotNull]
 		private Linestring FullRing { get; }
 
-		/// <summary>
-		/// The first loop, which is the segments between the start and the end intersection.
-		/// </summary>
 		public Linestring Loop1
 		{
 			get
@@ -127,9 +123,6 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		/// <summary>
-		/// The second loop, which is the segments between the end and the start intersection.
-		/// </summary>
 		public Linestring Loop2
 		{
 			get
@@ -157,7 +150,6 @@ namespace ProSuite.Commons.Geom
 					return false;
 				}
 
-				// Check the actual rings
 				bool? loop1Contains2 =
 					GeomRelationUtils.AreaContainsXY(Loop1, Loop2, double.Epsilon);
 				if (loop1Contains2 == true)
@@ -186,128 +178,185 @@ namespace ProSuite.Commons.Geom
 		public IEnumerable<Linestring> GetBothRings()
 		{
 			yield return Loop1;
-
 			yield return Loop2;
 		}
 
 		/// <summary>
-		/// Returns each individual loop in form of a list of linestrings that can be used to
-		/// create the full ring.
+		/// Adds another pinch group's start/end pair from the same source ring as
+		/// "extra" intersections. Their sub-rings are emitted recursively by
+		/// <see cref="GetLoopSubcurves"/> alongside this group's own atomic sub-rings.
 		/// </summary>
-		/// <returns></returns>
-		public IEnumerable<IList<IntersectionRun>> GetLoopSubcurves()
+		public void AddExtraLoopIntersections([NotNull] IntersectionPoint3D start,
+		                                      [NotNull] IntersectionPoint3D end)
 		{
-			int loopCount = 0;
-
-			foreach (IList<IntersectionRun> loopSubcurves in GetLoopSubcurves(Start, End))
+			if (ExtraLoopIntersections == null)
 			{
-				yield return loopSubcurves;
-				loopCount = ValidateLoopCount(loopCount, loopSubcurves.Count);
+				ExtraLoopIntersections =
+					new List<Tuple<IntersectionPoint3D, IntersectionPoint3D>>();
 			}
 
-			foreach (IList<IntersectionRun> loopSubcurves in GetLoopSubcurves(End, Start))
-			{
-				yield return loopSubcurves;
-				loopCount = ValidateLoopCount(loopCount, loopSubcurves.Count);
-			}
+			ExtraLoopIntersections.Add(
+				new Tuple<IntersectionPoint3D, IntersectionPoint3D>(start, end));
 		}
 
-		private static int ValidateLoopCount(int previousCount,
-		                                     int addedLoopCount)
+		/// <summary>
+		/// Returns each atomic sub-ring as a list of <see cref="IntersectionRun"/>s.
+		/// For an N-pinch group: yields N atomic sub-rings between consecutive pinches
+		/// in ring-vertex order (with wrap-around). When <see cref="ExtraLoopIntersections"/>
+		/// is non-empty, each atomic span is split at ALL extras falling inside it
+		/// (yielding one combined main outline plus one recurse per inside extra), and
+		/// each extra is consumed exactly once — chained extras are passed down
+		/// through recursion via a remaining-extras list.
+		/// </summary>
+		[NotNull]
+		public IEnumerable<IList<IntersectionRun>> GetLoopSubcurves()
 		{
-			const int maxLoops = 100;
+			int n = Pinches.Count;
+			int loopCount = 0;
 
-			int result = previousCount + addedLoopCount;
+			IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> availableExtras =
+				ExtraLoopIntersections;
 
-			if (result > maxLoops)
+			for (int i = 0; i < n; i++)
 			{
-				throw new InvalidOperationException(
-					"Maximum number of boundary loops exceeded");
-			}
+				IntersectionPoint3D from = Pinches[i];
+				IntersectionPoint3D to = Pinches[(i + 1) % n];
 
-			return result;
+				if (IsAtomicSpanDegenerate(from, to))
+				{
+					continue;
+				}
+
+				foreach (IList<IntersectionRun> loopSubcurves in
+				         GetLoopSubcurves(from, to, availableExtras))
+				{
+					yield return loopSubcurves;
+					loopCount = ValidateLoopCount(loopCount, loopSubcurves.Count);
+				}
+			}
 		}
 
 		private IEnumerable<IList<IntersectionRun>> GetLoopSubcurves(
 			[NotNull] IntersectionPoint3D start,
-			[NotNull] IntersectionPoint3D end)
+			[NotNull] IntersectionPoint3D end,
+			[CanBeNull] IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> availableExtras)
 		{
-			if (ExtraLoopIntersections?.Count > 0)
+			List<InsideExtra> topLevelExtras =
+				CollectTopLevelInsideExtras(start, end, availableExtras);
+
+			if (topLevelExtras.Count == 0)
 			{
-				foreach (var intersectionPair in ExtraLoopIntersections
-					         .OrderBy(i => i.Item1.VirtualSourceVertex))
-				{
-					foreach (IList<IntersectionRun> loopCurves in BuildSourceLoops(
-						         start, end, intersectionPair))
-					{
-						yield return loopCurves;
-					}
-				}
+				yield return new List<IntersectionRun>
+				             { GetIntersectionRun(start, end) };
+				yield break;
 			}
-			else
+
+			// Build ONE main outline split at all top-level extras falling inside
+			// (start, end): start..first0, second0..first1, ..., secondLast..end.
+			// Nested extras stay hidden at this level; they surface inside the
+			// recursion on the enclosing top-level extra's inner span.
+			var mainRuns = new List<IntersectionRun>(topLevelExtras.Count + 1);
+			IntersectionPoint3D cursor = start;
+			foreach (InsideExtra extra in topLevelExtras)
 			{
-				yield return new List<IntersectionRun> { GetIntersectionRun(start, end) };
+				mainRuns.Add(GetIntersectionRun(cursor, extra.First));
+				cursor = extra.Second;
+			}
+
+			mainRuns.Add(GetIntersectionRun(cursor, end));
+			yield return mainRuns;
+
+			// Recurse into each top-level extra's inner span. Strict between-checks
+			// in CollectTopLevelInsideExtras keep the recursion finite — at the inner
+			// span, the enclosing pair is no longer inside (start/end are its bounds).
+			foreach (InsideExtra extra in topLevelExtras)
+			{
+				foreach (IList<IntersectionRun> innerLoop in
+				         GetLoopSubcurves(extra.First, extra.Second, availableExtras))
+				{
+					yield return innerLoop;
+				}
 			}
 		}
 
-		private IEnumerable<IList<IntersectionRun>> BuildSourceLoops(
+		private List<InsideExtra> CollectTopLevelInsideExtras(
 			[NotNull] IntersectionPoint3D start,
 			[NotNull] IntersectionPoint3D end,
-			[NotNull] Tuple<IntersectionPoint3D, IntersectionPoint3D> intersectionPair)
+			[CanBeNull] IList<Tuple<IntersectionPoint3D, IntersectionPoint3D>> availableExtras)
 		{
-			double startVertex = start.VirtualSourceVertex;
-			double endVertex = end.VirtualSourceVertex;
-
-			double intersection1Vertex = intersectionPair.Item1.VirtualSourceVertex;
-			double intersection2Vertex = intersectionPair.Item2.VirtualSourceVertex;
-
-			if (IsRingVertexIndexBetween(intersection1Vertex, startVertex, endVertex))
+			var inside = new List<InsideExtra>();
+			if (availableExtras == null || availableExtras.Count == 0)
 			{
-				// The loop is broken up at this extra intersection
+				return inside;
+			}
 
-				GetSourceIntersectionOrder(start, intersectionPair.Item1, intersectionPair.Item2,
+			double startVtx = start.VirtualSourceVertex;
+			double endVtx = end.VirtualSourceVertex;
+
+			foreach (Tuple<IntersectionPoint3D, IntersectionPoint3D> pair in availableExtras)
+			{
+				double v1 = pair.Item1.VirtualSourceVertex;
+				double v2 = pair.Item2.VirtualSourceVertex;
+
+				if (! IsRingVertexIndexBetween(v1, startVtx, endVtx) &&
+				    ! IsRingVertexIndexBetween(v2, startVtx, endVtx))
+				{
+					continue;
+				}
+
+				GetSourceIntersectionOrder(start, pair.Item1, pair.Item2,
 				                           out IntersectionPoint3D first,
 				                           out IntersectionPoint3D second);
 
-				yield return new List<IntersectionRun>
-				             {
-					             GetIntersectionRun(start, first),
-					             GetIntersectionRun(second, end)
-				             };
+				double firstDist =
+					SegmentCountBetween(FullRing, startVtx, first.VirtualSourceVertex);
+				double secondDist =
+					SegmentCountBetween(FullRing, startVtx, second.VirtualSourceVertex);
 
-				// The remaining loop, which potentially contains more sub-loops
-				foreach (var subLoopCurves in GetLoopSubcurves(first, second))
-				{
-					yield return subLoopCurves;
-				}
+				inside.Add(new InsideExtra(pair, first, second, firstDist, secondDist));
 			}
-			else if (IsRingVertexIndexBetween(intersection2Vertex, startVertex, endVertex))
+
+			// Pick top-level extras only (those not nested inside an earlier extra in
+			// the sweep). After sorting by distance-from-start, an extra is top-level
+			// iff it starts AFTER the previous top-level extra ended.
+			inside.Sort((a, b) => a.FirstDistance.CompareTo(b.FirstDistance));
+
+			var topLevel = new List<InsideExtra>(inside.Count);
+			double frontier = -1;
+			foreach (InsideExtra extra in inside)
 			{
-				// Does this ever happen (probably for seriously non-simple inputs, such as
-				// 8-shaped rings)? -> Construct extra unit tests
-
-				// The loop is broken up at this extra intersection
-
-				GetSourceIntersectionOrder(start, intersectionPair.Item1, intersectionPair.Item2,
-				                           out IntersectionPoint3D first,
-				                           out IntersectionPoint3D second);
-
-				yield return new List<IntersectionRun>
-				             {
-					             GetIntersectionRun(start, first),
-					             GetIntersectionRun(second, end)
-				             };
-
-				// The remaining loop, which potentially contains more sub-loops
-				foreach (var subLoopCurves in GetLoopSubcurves(first, second))
+				if (extra.FirstDistance > frontier)
 				{
-					yield return subLoopCurves;
+					topLevel.Add(extra);
+					frontier = extra.SecondDistance;
 				}
+				// else: nested inside the previous top-level — handled by recursion.
 			}
-			else
+
+			return topLevel;
+		}
+
+		private readonly struct InsideExtra
+		{
+			public InsideExtra(
+				Tuple<IntersectionPoint3D, IntersectionPoint3D> pair,
+				IntersectionPoint3D first,
+				IntersectionPoint3D second,
+				double firstDistance,
+				double secondDistance)
 			{
-				yield return new List<IntersectionRun> { GetIntersectionRun(start, end) };
+				Pair = pair;
+				First = first;
+				Second = second;
+				FirstDistance = firstDistance;
+				SecondDistance = secondDistance;
 			}
+
+			public Tuple<IntersectionPoint3D, IntersectionPoint3D> Pair { get; }
+			public IntersectionPoint3D First { get; }
+			public IntersectionPoint3D Second { get; }
+			public double FirstDistance { get; }
+			public double SecondDistance { get; }
 		}
 
 		private void GetSourceIntersectionOrder([NotNull] IntersectionPoint3D start,
@@ -352,7 +401,41 @@ namespace ProSuite.Commons.Geom
 		{
 			return start <= end
 				       ? ringVertex > start && ringVertex < end
-				       : (ringVertex > start) || (ringVertex < start && ringVertex < end);
+				       : ringVertex > start || (ringVertex < start && ringVertex < end);
+		}
+
+		private bool IsAtomicSpanDegenerate([NotNull] IntersectionPoint3D from,
+		                                    [NotNull] IntersectionPoint3D to)
+		{
+			double fromVtx = _isSourceRing ? from.VirtualSourceVertex : from.VirtualTargetVertex;
+			double toVtx = _isSourceRing ? to.VirtualSourceVertex : to.VirtualTargetVertex;
+
+			double segs = toVtx - fromVtx;
+			if (segs < 0)
+			{
+				segs += FullRing.SegmentCount;
+			}
+
+			// Mirrors the per-pair segment-count guard from the previous pair-based
+			// IntersectionClusters implementation: sub-loops one segment or shorter
+			// are not real loops (un-cracked intersection or near-degenerate spike).
+			return segs <= 1;
+		}
+
+		private static int ValidateLoopCount(int previousCount,
+		                                     int addedLoopCount)
+		{
+			const int maxLoops = 100;
+
+			int result = previousCount + addedLoopCount;
+
+			if (result > maxLoops)
+			{
+				throw new InvalidOperationException(
+					"Maximum number of boundary loops exceeded");
+			}
+
+			return result;
 		}
 
 		private IntersectionRun GetIntersectionRun(IntersectionPoint3D start,
@@ -395,24 +478,10 @@ namespace ProSuite.Commons.Geom
 
 			if (closed)
 			{
-				// Typically the Z-values could differ:
 				subcurve.Close();
 			}
 
 			return subcurve;
-		}
-
-		private void AddExtraLoopIntersections([NotNull] IntersectionPoint3D start,
-		                                       [NotNull] IntersectionPoint3D end)
-		{
-			if (ExtraLoopIntersections == null)
-			{
-				ExtraLoopIntersections =
-					new List<Tuple<IntersectionPoint3D, IntersectionPoint3D>>();
-			}
-
-			ExtraLoopIntersections.Add(
-				new Tuple<IntersectionPoint3D, IntersectionPoint3D>(start, end));
 		}
 
 		#region Equality members

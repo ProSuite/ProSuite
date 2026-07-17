@@ -135,11 +135,11 @@
 				DataContext="{Binding InsertVertices}" />
 		</StackPanel>
 
-		<!-- Z Value Source Section 
-        <StackPanel Grid.Row="0">
-	        <Label FontWeight="Medium" Content="Z Value Source" Padding="6,6,6,2"/>
-	        <changealong:ZValueSourceSelectionControl DataContext="{Binding ZValueSourceSelectionVM}"/>
-        </StackPanel>-->
+		<!-- Z Value Source Section -->
+		<StackPanel Grid.Row="0">
+			<Label FontWeight="Medium" Content="Z Value Source" Padding="6,6,6,2"/>
+			<changealong:ZValueSourceSelectionControl DataContext="{Binding ZValueSourceSelectionVM}"/>
+		</StackPanel>
 
 		<!-- Restore Defaults Button -->
 		<Button Grid.Row="5"

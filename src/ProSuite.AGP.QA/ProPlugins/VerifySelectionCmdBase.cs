@@ -97,19 +97,18 @@ namespace ProSuite.AGP.QA.ProPlugins
 			// Consider getting the extent of the selection:
 			Envelope currentExtent = null; //SelectionUtils.
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
-
 			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				mapView, currentExtent, spatialRef, SaveAction);
+				mapView, currentExtent, spatialRef,
+				SessionContext.VerificationEnvironment, SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(selection, progressTracker, resultsPath),
+					VerificationAction = () => Verify(selection, progressTracker),
 					ApplicationController = appController
 				};
 
@@ -127,8 +126,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		private async Task<ServiceCallStatus> Verify(
 			[NotNull] IList<Row> selection,
-			[NotNull] QualityVerificationProgressTracker progressTracker,
-			string resultsPath)
+			[NotNull] QualityVerificationProgressTracker progressTracker)
 		{
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
@@ -140,7 +138,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifySelection(
-							selection, null, progressTracker, resultsPath);
+							selection, null, progressTracker);
 					},
 					BackgroundProgressor.None);
 

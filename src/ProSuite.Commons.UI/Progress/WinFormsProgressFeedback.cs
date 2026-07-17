@@ -103,7 +103,7 @@ namespace ProSuite.Commons.UI.Progress
 			SetComplete(string.Format(format, args));
 		}
 
-		public void ShowMessage(string message)
+		public void ShowMessage(string message, LogLevel level = LogLevel.Info)
 		{
 			SetMessage(message);
 			RefreshAppearance();

@@ -7,6 +7,8 @@ namespace ProSuite.Commons.UI.Logging
 {
 	internal class LogEventItem
 	{
+		// Fully-qualified below to avoid clashing with this class's own LogLevel string
+		// property: an unqualified "LogLevel" here would bind to that member, not the type.
 		private readonly long _logNumber;
 		private readonly Image _logLevelImage;
 		private readonly string _logMessage;
@@ -15,7 +17,7 @@ namespace ProSuite.Commons.UI.Logging
 		private readonly int _indentation;
 		private readonly string _loggerName;
 		private readonly string _logLevel;
-		private readonly LogLevel _level;
+		private readonly ProSuite.Commons.Logging.LogLevel _level;
 
 		public LogEventItem(long logNumber,
 		                    [NotNull] Image logLevelImage,
@@ -39,7 +41,7 @@ namespace ProSuite.Commons.UI.Logging
 			_level = GetLogLevel(loggingEvent.Level);
 		}
 
-		public LogLevel Level => _level;
+		public ProSuite.Commons.Logging.LogLevel Level => _level;
 
 		[NotNull]
 		public Image LogLevelImage => _logLevelImage;
@@ -59,34 +61,34 @@ namespace ProSuite.Commons.UI.Logging
 
 		public string LogLevel => _logLevel;
 
-		private static LogLevel GetLogLevel(Level level)
+		private static ProSuite.Commons.Logging.LogLevel GetLogLevel(Level level)
 		{
 			if (level == log4net.Core.Level.Debug)
 			{
-				return Logging.LogLevel.Debug;
+				return ProSuite.Commons.Logging.LogLevel.Debug;
 			}
 
 			if (level == log4net.Core.Level.Info)
 			{
-				return Logging.LogLevel.Info;
+				return ProSuite.Commons.Logging.LogLevel.Info;
 			}
 
 			if (level == log4net.Core.Level.Warn)
 			{
-				return Logging.LogLevel.Warn;
+				return ProSuite.Commons.Logging.LogLevel.Warn;
 			}
 
 			if (level == log4net.Core.Level.Error)
 			{
-				return Logging.LogLevel.Error;
+				return ProSuite.Commons.Logging.LogLevel.Error;
 			}
 
 			if (level == log4net.Core.Level.Fatal)
 			{
-				return Logging.LogLevel.Fatal;
+				return ProSuite.Commons.Logging.LogLevel.Fatal;
 			}
 
-			return Logging.LogLevel.Unknown;
+			return ProSuite.Commons.Logging.LogLevel.Unknown;
 		}
 	}
 }

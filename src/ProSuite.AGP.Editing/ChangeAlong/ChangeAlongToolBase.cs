@@ -393,15 +393,15 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		return HasReshapeCurves() && ! shiftDown;
 	}
 
-	protected virtual bool CanUseAsTargetLayer(Layer layer)
-	{
-		if (layer is FeatureLayer featureLayer)
-		{
-			return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
-			       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
-		}
-
-		return false;
+protected virtual bool CanUseAsTargetLayer(Layer layer)
+{
+    if (layer is FeatureLayer featureLayer)
+    {
+        return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+               featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon ||
+               featureLayer.ShapeType == esriGeometryType.esriGeometryMultiPatch;
+    }
+    return false;
 	}
 
 	protected virtual Predicate<FeatureClass> GetTargetFeatureClassPredicate()

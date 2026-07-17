@@ -500,28 +500,15 @@ public static class GdbPersistenceUtils
 			return false;
 		}
 
-		// NOTE: Inspector can be null if create feature pane is closed (possibly starting at 3.7)
-		var inspector = template.Inspector;
-
-		if (inspector == null || ! inspector.HasAttributes)
+		// NOTE: Read the default value from the template's CIM definition rather than
+		// its Inspector (which is null until the Create Features pane has been opened).
+		if (! EditorUtils.TryGetDefaultValue(template, fieldName, out value))
 		{
 			return false;
 		}
 
-		Attribute attribute =
-			inspector.FirstOrDefault(a => a.FieldName.Equals(
-				                              fieldName,
-				                              StringComparison.InvariantCultureIgnoreCase));
-
-		if (attribute == null)
-		{
-			return false;
-		}
-
-		value = attribute.CurrentValue;
-
-		//wenn guid leer ist (alles 0) dann ist Attribute.CurrentValue eine Guid und kein String
-		//wenn guid nicht leer ist dann ist Attribute.CurrentValue ein String
+		//wenn guid leer ist (alles 0) dann ist der Default-Wert eine Guid und kein String
+		//wenn guid nicht leer ist dann ist der Default-Wert ein String
 		if (value is Guid guid)
 		{
 			value = guid.ToString("B").ToUpper();
@@ -584,10 +571,10 @@ public static class GdbPersistenceUtils
 		return rowBuffer;
 	}
 
-	private static void CopyValues([NotNull] Row fromRow,
-	                               [NotNull] RowBuffer toRowBuffer,
-	                               [NotNull] IDictionary<int, int> copyIndexMatrix,
-	                               bool includeShape = false)
+    public static void CopyValues([NotNull] Row fromRow,
+                                  [NotNull] RowBuffer toRowBuffer,
+                                  [NotNull] IDictionary<int, int> copyIndexMatrix,
+                                  bool includeShape = false)
 	{
 		IReadOnlyList<Field> sourceFields = includeShape ? null : fromRow.GetFields();
 		IReadOnlyList<Field> targetFields = toRowBuffer.GetFields();
@@ -619,6 +606,44 @@ public static class GdbPersistenceUtils
 			}
 
 			toRowBuffer[targetIndex] = value;
+		}
+	}
+
+	public static void CopyValues([NotNull] Row fromRow,
+	                              [NotNull] Row toRow,
+	                              [NotNull] IDictionary<int, int> copyIndexMatrix,
+	                              bool includeShape = false)
+	{
+		IReadOnlyList<Field> sourceFields = includeShape ? null : fromRow.GetFields();
+		IReadOnlyList<Field> targetFields = toRow.GetFields();
+
+		foreach (int targetIndex in copyIndexMatrix.Keys)
+		{
+			int sourceIndex = copyIndexMatrix[targetIndex];
+
+			if (sourceIndex < 0)
+			{
+				continue;
+			}
+
+			if (sourceFields?[sourceIndex].FieldType == FieldType.Geometry)
+			{
+				continue;
+			}
+
+			if (! targetFields[targetIndex].IsEditable)
+			{
+				continue;
+			}
+
+			object value = fromRow[sourceIndex];
+
+			if (! targetFields[targetIndex].IsNullable && Convert.IsDBNull(value))
+			{
+				continue;
+			}
+
+			toRow[targetIndex] = value;
 		}
 	}
 
@@ -664,6 +689,7 @@ public static class GdbPersistenceUtils
 			editContext?.Invalidate(feature);
 		}
 	}
+
 	public static void StoreShape(Feature feature,
 	                              Geometry geometry,
 	                              IEditOperationContext editOperationContext)

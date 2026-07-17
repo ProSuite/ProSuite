@@ -6,7 +6,6 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Internal.Mapping;
@@ -285,6 +284,81 @@ public static class ToolUtils
 		return editableClassHandles;
 	}
 
+	public static bool IsMultipatchCreationTool(string currentTool)
+	{
+		if (currentTool.Equals("Editor3D.Tool.POLYGON"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("Editor3D.Tool.CIRCLE"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("Editor3D.Tool.RECTANGLE"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateBarrelRoofTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateFlexibleBarrelRoofTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateRegularPolygonTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateGabledHippedAndSteepleRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateHalfHipRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateFlexibleMansardRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateOnesidedHipRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateOnesidedHalfHipRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateFlyingRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("GoTopRoofs_CreateBarrelDomeRoofBaseplateTool"))
+		{
+			return true;
+		}
+
+		if (currentTool.Equals("esri_editing_PushPullTool"))
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	[CanBeNull]
 	public static FeatureClass GetCurrentTargetFeatureClass(
 		[CanBeNull] EditingTemplate editTemplate,
@@ -330,15 +404,12 @@ public static class ToolUtils
 
 		if (! string.IsNullOrEmpty(subtypeField))
 		{
-			// NOTE: Inspector can be null if create feature pane is closed (possibly starting at 3.7)
-			Inspector inspector = editingTemplate.Inspector;
+			// NOTE: Read the subtype code from the template's CIM definition rather than
+			// its Inspector (which is null until the Create Features pane has been opened).
+			int? subtypeCode = EditorUtils.GetSubtypeCode(editingTemplate, subtypeField);
 
-			object subtypeValue = inspector?[subtypeField];
-
-			if (subtypeValue != null && subtypeValue != DBNull.Value)
+			if (subtypeCode != null)
 			{
-				//NOTE: Subtypes can be based on short integers
-				int subtypeCode = Convert.ToInt32(subtypeValue);
 				subtype = classDefinition.GetSubtypes()
 				                         .FirstOrDefault(s => s.GetCode() == subtypeCode);
 			}

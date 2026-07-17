@@ -98,6 +98,8 @@ namespace ProSuite.AGP.Solution.QA
 
 		public string BackendDisplayName => SpecificationProvider.BackendDisplayName;
 
+		public bool AutoOpenWorkListAfterVerification => false;
+
 		public async Task<ServiceCallStatus> VerifyPerimeter(
 			Geometry perimeter,
 			QualityVerificationProgressTracker progress,

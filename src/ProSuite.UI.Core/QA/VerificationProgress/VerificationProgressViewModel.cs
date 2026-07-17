@@ -55,11 +55,11 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 		private readonly List<EnvelopeXY> _allTiles = new List<EnvelopeXY>();
 
-		private RelayCommand<VerificationProgressViewModel> _flashProgressCmd;
+		private bool _showProgressOverlay;
 		private bool _issueOptionsEnabled;
 		private string _showReportToolTip;
 		private string _saveErrorsToolTip;
-		private string _flashProgressToolTip;
+		private string _toggleProgressOverlayToolTip;
 		private ICommand _zoomToPerimeterCommand;
 		private string _zoomToVerifiedPerimeterToolTip;
 		private RelayCommand<VerificationProgressViewModel> _openWorkListCommand;
@@ -76,6 +76,9 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			OverallProgressVisible = Visibility.Hidden;
 
 			UpdateOptions = new UpdateIssuesOptionsViewModel();
+
+			// Set initial value to ensure the tooltip is initialized correctly
+			ToggleProgressOverlay = false;
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -94,7 +97,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		public Func<Task<ServiceCallStatus>> VerificationAction { get; set; }
 
 		/// <summary>
-		/// The gateway into application-specific actions, such as flashing the current progress,
+		/// The gateway into application-specific actions, such as showing the current progress,
 		/// saving or showing the report.
 		/// </summary>
 		public IApplicationBackgroundVerificationController ApplicationController { get; set; }
@@ -426,7 +429,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				{
 					_showReportCommand =
 						new RelayCommand<VerificationProgressViewModel>(
-							vm => ShowReport(),
+							async vm => await ShowReportAsync(),
 							vm => CanShowReport());
 				}
 
@@ -504,26 +507,26 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			}
 		}
 
-		public ICommand FlashProgressCommand
+		public bool ToggleProgressOverlay
 		{
-			get
+			get => _showProgressOverlay;
+			set
 			{
-				if (_flashProgressCmd == null)
-				{
-					_flashProgressCmd = new RelayCommand<VerificationProgressViewModel>(
-						FlashProgress, (vm) => CanFlash());
-				}
+				_showProgressOverlay = value;
 
-				return _flashProgressCmd;
+				ToggleProgressOverlayToolTip = _showProgressOverlay
+					                               ? "Hide the tile verification progress"
+					                               : "Show the tile verification progress";
+				UpdateProgressOverlay(_showProgressOverlay);
 			}
 		}
 
-		public string FlashProgressToolTip
+		public string ToggleProgressOverlayToolTip
 		{
-			get => _flashProgressToolTip;
+			get => _toggleProgressOverlayToolTip;
 			set
 			{
-				_flashProgressToolTip = value;
+				_toggleProgressOverlayToolTip = value;
 				OnPropertyChanged();
 			}
 		}
@@ -608,9 +611,12 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			CommandManager.InvalidateRequerySuggested();
 
-			if (VerificationResult?.HasIssues == true &&
-			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
+			bool autoOpenWorkList =
+				ApplicationController?.AutoOpenWorkListAfterVerification == true ||
+				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					"PROSUITE_AUTO_OPEN_ISSUE_WORKLIST");
+
+			if (VerificationResult?.HasIssues == true && autoOpenWorkList)
 			{
 				await ViewUtils.RunOnUIThread(async () =>
 				{
@@ -618,6 +624,16 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					{
 						IQualityVerificationResult verificationResult =
 							Assert.NotNull(VerificationResult);
+
+						// For central issue datasets (production model issue schema) the issues must
+						// be updated (saved) before the work list can be opened. CanSaveIssues is
+						// only true in that case (and while the issues have not yet been saved).
+						if (ApplicationController.CanSaveIssues(verificationResult, out _))
+						{
+							await ApplicationController.SaveIssuesAsync(
+								verificationResult, UpdateOptions.ErrorDeletionType,
+								! UpdateOptions.KeepPreviousIssues);
+						}
 
 						await ApplicationController.OpenWorkList(
 							verificationResult, replaceExisting: true);
@@ -647,25 +663,13 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			}
 		}
 
-		private bool CanFlash()
+		private void UpdateProgressOverlay(bool showOverlay)
 		{
-			string reason = null;
-			bool canFlash = ApplicationController?.CanFlashProgress(
-				                ProgressTracker.RemoteCallStatus, _allTiles,
-				                out reason) == true;
-
-			FlashProgressToolTip = reason ?? "Show the tile verification progress";
-
-			return canFlash;
-		}
-
-		private void FlashProgress(VerificationProgressViewModel viewModel)
-		{
-			Try(nameof(FlashProgress),
+			Try(nameof(UpdateProgressOverlay),
 			    () =>
 			    {
-				    ApplicationController?.FlashProgress(
-					    _allTiles, ProgressTracker.RemoteCallStatus);
+				    ApplicationController?.UpdateProgressOverlay(
+					    showOverlay, _allTiles, ProgressTracker.RemoteCallStatus);
 			    });
 		}
 
@@ -733,6 +737,9 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				    {
 					    CloseAction();
 				    }
+
+				    // Remove overlays on close
+				    UpdateProgressOverlay(false);
 			    }
 			);
 		}
@@ -827,6 +834,23 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			    () => { ApplicationController?.ShowReport(Assert.NotNull(VerificationResult)); });
 		}
 
+		private async Task ShowReportAsync()
+		{
+			_msg.VerboseDebug(() => $"VerificationProgressViewModel.{nameof(ShowReportAsync)}");
+
+			try
+			{
+				if (ApplicationController != null)
+				{
+					await ApplicationController.ShowReportAsync(Assert.NotNull(VerificationResult));
+				}
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
 		private bool CanShowReport()
 		{
 			bool result = false;
@@ -911,14 +935,13 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					{
 						CurrentTile = ProgressTracker.CurrentTile;
 
-						// Trigger the flash command's CanExecuteChanged:
-						_flashProgressCmd?.RaiseCanExecuteChanged();
-
 						//Application.Current.Dispatcher.BeginInvoke(
 						//	new Action(delegate
 						//	{
 						//		CommandManager.InvalidateRequerySuggested();
 						//	}));
+
+						UpdateProgressOverlay(_showProgressOverlay);
 					}
 
 					break;
