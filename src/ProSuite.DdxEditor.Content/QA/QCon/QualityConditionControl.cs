@@ -50,6 +50,8 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		private IList<QualitySpecificationReferenceTableRow> _initialQSpecTableRows;
 		private IList<InstanceConfigurationReferenceTableRow> _initialIssueFilterTableRows;
 
+		private bool _algorithmMode;
+
 		[NotNull] private readonly IInstanceConfigurationTableViewControl _tableViewControl;
 
 		#region Constructors
@@ -195,6 +197,16 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 		{
 			get => _objectReferenceControlTestDescriptor.FindObjectDelegate;
 			set => _objectReferenceControlTestDescriptor.FindObjectDelegate = value;
+		}
+
+		public bool AlgorithmMode
+		{
+			get => _algorithmMode;
+			set
+			{
+				_algorithmMode = value;
+				_objectReferenceControlTestDescriptor.ReadOnly = value;
+			}
 		}
 
 		void IQualityConditionView.SetTestDescription(string value)
@@ -479,7 +491,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			);
 		}
 
-		private static string FormatTestDescriptor(object obj)
+		private string FormatTestDescriptor(object obj)
 		{
 			var testDescriptor = obj as TestDescriptor;
 
@@ -493,7 +505,12 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				IInstanceInfo instanceInfo =
 					InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
 
-				return $"{testDescriptor.Name} ( {InstanceUtils.GetTestSignature(instanceInfo)} )";
+				string text =
+					$"{testDescriptor.Name} ( {InstanceUtils.GetTestSignature(instanceInfo)} )";
+
+				return _algorithmMode
+					       ? $"{text} (resolved automatically)"
+					       : text;
 			}
 			catch (Exception e)
 			{

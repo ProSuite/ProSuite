@@ -346,6 +346,28 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_webHelpCommand?.Execute();
 		}
 
+		/// <summary>
+		/// Optional callback consulted by <see cref="GetWebHelpDescriptor"/> when the
+		/// entity's <see cref="InstanceDescriptor"/> is not yet assigned, to supply a
+		/// transient (unsaved) one instead (e.g. from an algorithm-first edit session).
+		/// <c>null</c>: falls back to the "no documentation" notice, as before.
+		/// </summary>
+		[CanBeNull]
+		public Func<InstanceDescriptor> WebHelpDescriptorProvider { get; set; }
+
+		/// <summary>
+		/// Descriptor for the "Show Documentation" command: the persisted descriptor,
+		/// or - while not yet assigned - a transient one from
+		/// <see cref="WebHelpDescriptorProvider"/> (may still be <c>null</c>).
+		/// </summary>
+		[CanBeNull]
+		public InstanceDescriptor GetWebHelpDescriptor()
+		{
+			InstanceConfiguration entity = GetEntity();
+
+			return entity?.InstanceDescriptor ?? WebHelpDescriptorProvider?.Invoke();
+		}
+
 		[CanBeNull]
 		public string GetWebHelp([CanBeNull] InstanceDescriptor instanceDescriptor,
 		                         [CanBeNull] out string title)

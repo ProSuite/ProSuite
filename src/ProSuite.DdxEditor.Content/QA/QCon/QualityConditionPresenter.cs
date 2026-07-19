@@ -71,6 +71,18 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 
 		void IQualityConditionObserver.OnTestDescriptorChanged()
 		{
+			OnTestDescriptorChanged();
+		}
+
+		/// <summary>
+		/// Called when the bound test descriptor changes (classic Finder-based descriptor
+		/// selection), to reconcile the persisted parameter values with the newly selected
+		/// descriptor's signature. The algorithm-first UI's presenter overrides this
+		/// entirely with a no-op, since there the descriptor is resolved automatically
+		/// and the parameter rows are owned by the algorithm-first edit session.
+		/// </summary>
+		protected virtual void OnTestDescriptorChanged()
+		{
 			QualityCondition qualityCondition = Assert.NotNull(_item.GetEntity());
 
 			if (TestParameterValueUtils.SyncParameterValues(qualityCondition))
@@ -315,7 +327,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_item.ExecuteWebHelpCommand();
 		}
 
-		public string GenerateName()
+		public virtual string GenerateName()
 		{
 			InstanceConfiguration instanceConfiguration = Assert.NotNull(_item.GetEntity());
 

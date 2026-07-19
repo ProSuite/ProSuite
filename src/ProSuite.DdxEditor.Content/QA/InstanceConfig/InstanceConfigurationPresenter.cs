@@ -123,7 +123,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_item.ExecuteWebHelpCommand();
 		}
 
-		public string GenerateName()
+		public virtual string GenerateName()
 		{
 			InstanceConfiguration instanceConfiguration = Assert.NotNull(_item.GetEntity());
 

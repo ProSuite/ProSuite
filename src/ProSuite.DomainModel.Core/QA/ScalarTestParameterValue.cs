@@ -157,7 +157,10 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Attempts to get a displayable string for the current culture. If the data type is
 		/// not specified and the DataType property is not initialized and the data type cannot be
 		/// inferred from the persisted string value, the <see cref="PersistedStringValue"/> is
-		/// returned. 
+		/// returned. The <see cref="PersistedStringValue"/> is also returned when the stored
+		/// value cannot be parsed to <paramref name="dataType"/> (e.g. a malformed value that
+		/// was persisted by an older code path), so a condition holding such a value can still
+		/// be opened and corrected rather than throwing while the editor binds.
 		/// </summary>
 		/// <param name="dataType">The known data type of the parameter.</param>
 		/// <returns></returns>
@@ -191,7 +194,16 @@ namespace ProSuite.DomainModel.Core.QA
 			// Only cache the result if we are certain of the data type:
 			bool allowResultCaching = DataType != null;
 
-			return GetFormattedStringValue(culture, dataType, allowResultCaching);
+			try
+			{
+				return GetFormattedStringValue(culture, dataType, allowResultCaching);
+			}
+			catch (ArgumentException)
+			{
+				// The stored value is not parseable to the data type; fall back to the raw
+				// persisted string so the value remains visible and editable.
+				return PersistedStringValue;
+			}
 		}
 
 		/// <summary>

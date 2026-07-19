@@ -39,6 +39,8 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 		[NotNull] private readonly IInstanceConfigurationTableViewControl _tableViewControl;
 
+		private bool _algorithmMode;
+
 		#region Constructors
 
 		/// <summary>
@@ -134,6 +136,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			set => _objectReferenceControlInstanceDescriptor.FindObjectDelegate = value;
 		}
 
+		public bool AlgorithmMode
+		{
+			get => _algorithmMode;
+			set
+			{
+				_algorithmMode = value;
+				_objectReferenceControlInstanceDescriptor.ReadOnly = value;
+			}
+		}
+
 		void IInstanceConfigurationView.SetDescription(string value)
 		{
 			_textBoxDescGrid.Text = FormatNewLine(value);
@@ -224,7 +236,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			);
 		}
 
-		private static string FormatInstanceDescriptor(object obj)
+		private string FormatInstanceDescriptor(object obj)
 		{
 			var descriptor = obj as InstanceDescriptor;
 
@@ -242,7 +254,11 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					                   ? "Error: Cannot create descriptor (missing class?)"
 					                   : $"( {InstanceUtils.GetTestSignature(instanceInfo)} )";
 
-				return $"{descriptor.Name} {signature}";
+				string text = $"{descriptor.Name} {signature}";
+
+				return _algorithmMode
+					       ? $"{text} (resolved automatically)"
+					       : text;
 			}
 			catch (Exception e)
 			{

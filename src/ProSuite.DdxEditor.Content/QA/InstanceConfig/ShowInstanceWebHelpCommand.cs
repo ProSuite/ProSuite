@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.QA.QCon;
@@ -55,7 +54,12 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			if (descriptor == null)
 			{
-				throw new InvalidOperationException("No instance descriptor available.");
+				// No descriptor assigned yet (e.g. algorithm-first UI, before the first
+				// save, with no algorithm chosen; or - in principle - a brand-new classic
+				// condition/config before its descriptor is picked): show a friendly
+				// notice instead.
+				ApplicationController.ShowItemHelp(Text, NoDescriptorHtml);
+				return;
 			}
 
 			string title = descriptor.TypeDisplayName;
@@ -66,24 +70,31 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		[CanBeNull]
 		private static InstanceDescriptor GetInstanceDescriptor([NotNull] Item item)
 		{
-			InstanceConfiguration instanceConfiguration;
 			if (item is QualityConditionItem qualityConditionItem)
 			{
-				instanceConfiguration = qualityConditionItem.GetEntity();
-			}
-			else if (item is InstanceConfigurationItem instanceConfigItem)
-			{
-				instanceConfiguration = instanceConfigItem.GetEntity();
-			}
-			else
-			{
-				return null;
+				return qualityConditionItem.GetWebHelpDescriptor();
 			}
 
-			InstanceDescriptor descriptor = instanceConfiguration?.InstanceDescriptor;
+			if (item is InstanceConfigurationItem instanceConfigItem)
+			{
+				return instanceConfigItem.GetWebHelpDescriptor();
+			}
 
-			return descriptor;
+			return null;
 		}
+
+		/// <summary>
+		/// Minimal, dark-mode-safe notice shown in place of the documentation when no
+		/// descriptor is available (same explicit-colors pattern as
+		/// HtmlReportBuilder.GetStyles / AlgorithmParametersControl.ShowParameterHelp, so
+		/// the help pane never renders black-on-black under a dark UA color scheme).
+		/// </summary>
+		private const string NoDescriptorHtml =
+			"<html><head><style>:root{color-scheme:light;} " +
+			"body{background-color:#ffffff;color:#000000;" +
+			"font-family:Verdana, Arial;}</style></head><body>" +
+			"<p><i>No documentation available yet. Choose an algorithm " +
+			"(or save the condition) first.</i></p></body></html>";
 
 		#endregion
 	}
