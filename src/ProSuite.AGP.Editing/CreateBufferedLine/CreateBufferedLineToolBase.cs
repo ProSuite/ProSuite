@@ -554,8 +554,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			[CanBeNull] MapView activeView,
 			[CanBeNull] CancelableProgressor cancelableProgressor)
 		{
-			Polygon bufferPolygon = BuildBufferPolygon(
-				line, out IList<Linestring> sourcePaths, out IList<double> offsetDistances);
+			Polygon bufferPolygon = BuildBufferPolygon(line);
 
 			if (bufferPolygon?.IsEmpty != false)
 			{
@@ -581,8 +580,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			string layerName = currentTargetLayer?.Name ?? currentTargetClass.GetName();
 			string subtypeName = subtype?.GetName() ?? layerName;
 
-			Geometry newGeometry =
-				CreateResultGeometry(bufferPolygon, sourcePaths, offsetDistances);
+			Geometry newGeometry = CreateResultGeometry(bufferPolygon);
 
 			if (newGeometry?.IsEmpty != false)
 			{
@@ -677,20 +675,6 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		[CanBeNull]
 		private Polygon BuildBufferPolygon([CanBeNull] Polyline sketchLine)
 		{
-			return BuildBufferPolygon(sketchLine, out _, out _);
-		}
-
-		// Also exposes the simplified line parts and the per-part offset distances the buffer
-		// was built from, so a derived tool (e.g. the wall) can build a result geometry that
-		// needs the per-segment structure rather than just the buffer outline.
-		[CanBeNull]
-		private Polygon BuildBufferPolygon([CanBeNull] Polyline sketchLine,
-		                                   out IList<Linestring> simplifiedPaths,
-		                                   out IList<double> offsetDistances)
-		{
-			simplifiedPaths = new List<Linestring>();
-			offsetDistances = new List<double>();
-
 			if (sketchLine == null || sketchLine.IsEmpty)
 			{
 				return null;
@@ -711,8 +695,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			MultiPolycurve line = GeomConversionUtils.CreateMultiPolycurve(sketchLine);
 			IList<Linestring> paths = line.GetLinestrings().ToList();
 
-			offsetDistances = GetPerPartOffsetDistances(paths.Count);
-			simplifiedPaths = paths;
+			IList<double> offsetDistances = GetPerPartOffsetDistances(paths.Count);
 
 			double tolerance = GetTolerance(sketchLine);
 
@@ -770,16 +753,10 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		/// Turns the buffer polygon into the geometry that is stored in the target feature
 		/// class. The base tool stores the polygon as-is; a derived tool (e.g. CreateWall)
 		/// overrides this to return a different geometry such as a multipatch (see
-		/// <see cref="ConvertToMultipatch"/>). The simplified source line parts and the per-part
-		/// offset distances the buffer was built from are supplied as well, so a derived tool can
-		/// reconstruct the per-segment structure (e.g. to build individually coplanar wall faces)
-		/// instead of relying on the buffer outline alone.
+		/// <see cref="ConvertToMultipatch"/>).
 		/// </summary>
 		[CanBeNull]
-		protected virtual Geometry CreateResultGeometry(
-			[NotNull] Polygon bufferPolygon,
-			[NotNull] IList<Linestring> sourcePaths,
-			[NotNull] IList<double> offsetDistances)
+		protected virtual Geometry CreateResultGeometry([NotNull] Polygon bufferPolygon)
 		{
 			return bufferPolygon;
 		}
