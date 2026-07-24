@@ -6419,36 +6419,12 @@ namespace ProSuite.Commons.Geom
 				return;
 			}
 
-			AddVerticalWallFace(faces, new[]
-			                           {
-				                           cornerVertex.ClonePnt3D(),
-				                           new Pnt3D(cornerX, cornerY, z1),
-				                           new Pnt3D(cornerX, cornerY, z2)
-			                           });
-		}
-
-		// Adds a vertical face (a gusset). Its XY area is zero by construction - two of its
-		// corners share the same XY - so AddWallFace's clockwise-in-XY rule cannot orient it and
-		// would discard it as degenerate. The ring is taken in the given order instead: from the
-		// incoming face's plane to the outgoing one, which winds consistently along the path.
-		private static void AddVerticalWallFace([NotNull] List<RingGroup> faces,
-		                                        [NotNull] IList<Pnt3D> corners)
-		{
-			if (corners.Count < 3)
-			{
-				return;
-			}
-
-			var ring = new List<Pnt3D>(corners.Count + 1);
-
-			foreach (Pnt3D corner in corners)
-			{
-				ring.Add(corner.ClonePnt3D());
-			}
-
-			ring.Add(ring[0].ClonePnt3D());
-
-			faces.Add(new RingGroup(new Linestring(ring)));
+			AddWallFace(faces, new[]
+			                   {
+				                   cornerVertex.ClonePnt3D(),
+				                   new Pnt3D(cornerX, cornerY, z1),
+				                   new Pnt3D(cornerX, cornerY, z2)
+			                   });
 		}
 
 		// The point (x, y) lifted onto the plane through 'reference' with the given normal.

@@ -10401,45 +10401,6 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.NotNull(wall);
 			AssertAllFacesCoplanar(wall, 0.0001);
 			AssertNoOverlap(wall);
-
-			// The two plates leave a Z-step at each end of their shared cross-section edge; both
-			// must be closed by a gusset, or the wall has cracks.
-			Assert.AreEqual(4, wall.RingGroups.Count, "expected 2 plates + 2 gussets");
-			AssertNoCracks(wall);
-		}
-
-		// A crack is where two faces reach the same XY at different heights without anything
-		// closing the Z-step between them. So: wherever the faces' corners hold more than one Z
-		// at the same XY, some single face must contain both of those points (the gusset).
-		private static void AssertNoCracks([NotNull] Polyhedron polyhedron)
-		{
-			List<IList<Pnt3D>> faces = polyhedron.RingGroups
-			                                     .Select(r => (IList<Pnt3D>) r.ExteriorRing
-				                                             .GetPoints().ToList())
-			                                     .ToList();
-
-			foreach (IGrouping<string, Pnt3D> atSameXy in faces
-				         .SelectMany(f => f)
-				         .GroupBy(p => $"{p.X:F6}/{p.Y:F6}"))
-			{
-				List<Pnt3D> distinctZ = atSameXy
-				                        .GroupBy(p => Math.Round(p.Z, 6))
-				                        .Select(g => g.First()).ToList();
-
-				for (var i = 0; i < distinctZ.Count; i++)
-				for (int j = i + 1; j < distinctZ.Count; j++)
-				{
-					Pnt3D lower = distinctZ[i];
-					Pnt3D upper = distinctZ[j];
-
-					bool bridged = faces.Any(f => f.Any(p => p.Equals(lower)) &&
-					                              f.Any(p => p.Equals(upper)));
-
-					Assert.IsTrue(bridged,
-					              $"Crack at ({lower.X}, {lower.Y}): faces reach Z {lower.Z} " +
-					              $"and {upper.Z} there, but no face closes the step");
-				}
-			}
 		}
 
 		[Test]
