@@ -590,7 +590,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return double.NaN;
 			}
 
-			IEnvelope datasetExtent = (GeometryEndClass as IReadOnlyFeatureClass)?.Extent;
+			IEnvelope datasetExtent = TryGetGeometryEndExtent();
 
 			double datasetArea = EnvelopeArea(datasetExtent);
 			double filterArea = EnvelopeArea(spatialFilter.FilterGeometry.Envelope);
@@ -603,6 +603,28 @@ namespace ProSuite.Commons.AO.Geodatabase
 			double ratio = filterArea / datasetArea;
 
 			return ratio > 1 ? 1 : ratio;
+		}
+
+		/// <summary>
+		/// Reads the geometry end class extent for the selectivity heuristic, returning null when the
+		/// backing dataset cannot supply one cheaply - e.g. a client-backed <c>RemoteDataset</c>
+		/// (edit session / <c>AlwaysUseClientData</c>) whose Extent is not implemented and throws.
+		/// The caller then falls back to the safe left-first drive instead of failing the query.
+		/// </summary>
+		[CanBeNull]
+		private IEnvelope TryGetGeometryEndExtent()
+		{
+			try
+			{
+				return (GeometryEndClass as IReadOnlyFeatureClass)?.Extent;
+			}
+			catch (Exception e)
+			{
+				_msg.VerboseDebug(
+					() => $"Geometry end class extent unavailable for join selectivity " +
+					      $"({e.GetType().Name}); driving left-first.");
+				return null;
+			}
 		}
 
 		private static double EnvelopeArea([CanBeNull] IEnvelope envelope)
