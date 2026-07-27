@@ -29,8 +29,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		// TODO: Implement long-term cache
 		private AssociationTableRowCache _associationRows;
 
+		// Normalized to upper-case at the env read so the "== INDEX"/"== FTS" final-read checks
+		// stay in step with the OrdinalIgnoreCase heuristic; a lowercase value must not make the
+		// two disagree (see ShouldDriveFromAssociationSide and the select-in guard it protects).
 		private readonly string
-			_joinStrategy = Environment.GetEnvironmentVariable("PROSUITE_MEMORY_JOIN_STRATEGY");
+			_joinStrategy = Environment.GetEnvironmentVariable("PROSUITE_MEMORY_JOIN_STRATEGY")
+			                           ?.ToUpperInvariant();
 
 		// Below this filter-envelope / dataset-extent area ratio the spatial filter is considered
 		// selective enough that the left-first key scan is cheap; the association-first heuristic

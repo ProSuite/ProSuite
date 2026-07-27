@@ -1233,12 +1233,23 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				Environment.SetEnvironmentVariable(envVar, "INDEX");
 				List<(int, int)> associationFirst = WindowedPairs(new AoFeatureClassFilter(window));
 
+				// The strategy knob is case-insensitive: lowercase "index" must drive the same
+				// association-first path (heuristic + client-side key filtering) as "INDEX". If the
+				// final-read comparison were case-sensitive it would fall through to a select-in over
+				// the whole-network key set and could return a different (or degenerate) result.
+				Environment.SetEnvironmentVariable(envVar, "index");
+				List<(int, int)> associationFirstLower =
+					WindowedPairs(new AoFeatureClassFilter(window));
+
 				CollectionAssert.AreEquivalent(
 					reference, leftFirst,
 					"Left-first (spatial filter) result must match the in-memory reference");
 				CollectionAssert.AreEquivalent(
 					reference, associationFirst,
 					"Association-first (spatial filter) result must match the left-first result");
+				CollectionAssert.AreEquivalent(
+					reference, associationFirstLower,
+					"Lowercase \"index\" must behave identically to \"INDEX\"");
 			}
 			finally
 			{
