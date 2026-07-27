@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -41,8 +42,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		// (and its row counts) is skipped. See ShouldDriveFromAssociationSide.
 		private const double MinNonSelectiveExtentRatio = 0.25;
 
-		private readonly Dictionary<IReadOnlyTable, long> _tableRowStatistics =
-			new Dictionary<IReadOnlyTable, long>(3);
+		// Concurrent because ShouldDriveFromAssociationSide now reads it on the normal spatial draw
+		// path (previously only the FTS branch reached it), and the microservice may enumerate the
+		// same join from more than one draw worker; a plain Dictionary mutated without a lock can
+		// corrupt or spin under concurrent Add. Reference-equality keys, as before.
+		private readonly ConcurrentDictionary<IReadOnlyTable, long> _tableRowStatistics =
+			new ConcurrentDictionary<IReadOnlyTable, long>();
 
 		private string GeometryClassKeyField { get; set; }
 		private string OtherClassKeyField { get; set; }
@@ -1203,21 +1208,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private long GetTableRowCount(IReadOnlyTable table)
 		{
-			if (! _tableRowStatistics.TryGetValue(table, out long rowCount))
-			{
-				Stopwatch watch = _msg.DebugStartTiming();
+			// A racing GetOrAdd may compute the count twice, but the value is identical and the
+			// query is cheap, so the duplicate is harmless (no lost update, no corruption).
+			return _tableRowStatistics.GetOrAdd(table, ComputeRowCount);
+		}
 
-				ITableFilter filter = new AoTableFilter
-				                      {
-					                      SubFields = table.OIDFieldName
-				                      };
+		private static long ComputeRowCount(IReadOnlyTable table)
+		{
+			Stopwatch watch = _msg.DebugStartTiming();
 
-				rowCount = table.RowCount(filter);
+			ITableFilter filter = new AoTableFilter
+			                      {
+				                      SubFields = table.OIDFieldName
+			                      };
 
-				_tableRowStatistics.Add(table, rowCount);
+			long rowCount = table.RowCount(filter);
 
-				_msg.DebugStopTiming(watch, "Determined row count of {0}", table.Name);
-			}
+			_msg.DebugStopTiming(watch, "Determined row count of {0}", table.Name);
 
 			return rowCount;
 		}
