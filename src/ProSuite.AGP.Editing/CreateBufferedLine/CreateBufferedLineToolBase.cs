@@ -224,6 +224,47 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		{
 			return SketchGeometryType.Line;
 		}
+		protected override async Task<bool?> GetEditSketchHasZ()
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int selectionCount = 0;
+			bool? result = await QueuedTask.Run(() =>
+			{
+				var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+
+				if (selectionByLayer.Count == 0)
+				{
+					_msg.Debug($"{Caption}: no feature layer found in selection");
+					return null;
+				}
+
+				bool? hasAnyZ = false;
+
+				foreach (var selectedOidByLayer in selectionByLayer)
+				{
+					if (selectedOidByLayer.Key is FeatureLayer layer)
+					{
+						FeatureClass featureClass = layer.GetFeatureClass();
+						bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+
+						if (layerHasZ == true)
+						{
+							hasAnyZ = true;
+							break;
+						}
+					}
+				}
+
+				return hasAnyZ;
+			});
+
+			_msg.DebugStopTiming(
+				watch, "Determined sketch has Z: {0} (evaluated {1} selected layers)", result,
+				selectionCount);
+
+			return result;
+		}
 
 		protected override void LogPromptForSelection() { }
 
@@ -594,7 +635,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				// feature - but only when a single, visible multipatch is selected. If not, fall
 				// through and create a new feature as usual.
 				ReplaceGeometryResult replaceResult =
-					await Rebuilder.TryReplaceSelectedGeometryAsync(newGeometry, activeView, Caption);
+					await Rebuilder.TryReplaceSelectedGeometryAsync(
+						newGeometry, activeView, Caption);
 
 				if (replaceResult != ReplaceGeometryResult.NoTarget)
 				{
@@ -687,7 +729,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			// both paths buffer the identical line, so the preview matches the created feature
 			// instead of showing the raw offset outline (with intermediate caps and loops).
 			if (GeometryEngine.Instance.SimplifyAsFeature(sketchLine, forceSimplify: true) is
-				Polyline simplifiedLine && !simplifiedLine.IsEmpty)
+				    Polyline simplifiedLine && ! simplifiedLine.IsEmpty)
 			{
 				sketchLine = simplifiedLine;
 			}
