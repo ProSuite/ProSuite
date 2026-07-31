@@ -220,7 +220,9 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 		// when it had already completed.
 		//SelectedItem = null;
 
-		_selectionGeometryOverlay?.Dispose();
-		FlashService?.Dispose();
+		// Same as in the FlashService: dispose on the MCT, where the overlay was added.
+		QueuedTask.Run(() => _selectionGeometryOverlay?.Dispose());
+
+		_flashService?.Dispose();
 	}
 }
