@@ -8,6 +8,7 @@ using log4net.Core;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WinForms;
 
 namespace ProSuite.Commons.UI.Logging
 {
@@ -18,13 +19,17 @@ namespace ProSuite.Commons.UI.Logging
 		private const int _logLevelInfoImageIndex = 1;
 		private const int _logLevelWarnImageIndex = 2;
 		private const int _maxDisplayedLogMessages = 80;
-		private const int _maxLogMessages = 750;
-		private const int _fullListRemoveCount = 20;
+		private const int _maxLogMessages = 5000;
+		private const int _fullListRemoveCount = 500;
 		private const int _refreshIntervalMs = 800;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly List<LogEventItem> _logMessages = new List<LogEventItem>();
+
+		// The four level icons, cached by image index. ImageList.Images[i] rebuilds a Bitmap on
+		// every access, so we fetch each icon at most once (see GetLevelImage).
+		private readonly Dictionary<int, Image> _levelImageCache = new Dictionary<int, Image>();
 
 		private bool _initialized;
 
@@ -33,7 +38,8 @@ namespace ProSuite.Commons.UI.Logging
 		private long _logCount;
 		private readonly int[] _textColumnIndices;
 
-		private bool _hideDebugMessages;
+		private bool _showDebugMessages;
+		private bool _useDarkTheme;
 
 		#region Constructors
 
@@ -45,7 +51,9 @@ namespace ProSuite.Commons.UI.Logging
 			InitializeComponent();
 
 			_dataGridView.AutoGenerateColumns = false;
-			_hideDebugMessages = _toolStripMenuItemHideDebugMessages.Checked;
+			_showDebugMessages = _toolStripMenuItemShowDebugMessages.Checked;
+
+			WinFormsThemeUtils.ApplyModernHeaderStyle(_dataGridView);
 
 			_textColumnIndices = new[]
 			                     {
@@ -56,6 +64,31 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Whether debug-level messages are shown in the grid. Mirrors the
+		/// "Show Debug Messages" context menu item; exposed so that a host (e.g. a dock pane
+		/// view model) can persist and restore this option. Defaults to <c>false</c>
+		/// (debug messages hidden).
+		/// </summary>
+		public bool ShowDebugMessages
+		{
+			get => _toolStripMenuItemShowDebugMessages.Checked;
+			set => _toolStripMenuItemShowDebugMessages.Checked = value;
+		}
+
+		/// <summary>
+		/// Re-colors this control (and the history/details dialogs it opens) to match
+		/// ArcGIS Pro's dark theme. Call this once, after construction, and only when Pro's
+		/// dark theme is active. ArcGIS Pro is a WPF application, so a hosted WinForms control
+		/// does not follow its theme automatically.
+		/// </summary>
+		public void ApplyDarkTheme()
+		{
+			_useDarkTheme = true;
+
+			WinFormsThemeUtils.ApplyDarkTheme(this);
+		}
 
 		#region ILogWindow Members
 
@@ -79,7 +112,7 @@ namespace ProSuite.Commons.UI.Logging
 				// Control.Invoke may hang, use BeginInvoke 
 				// (executes as soon as foreground thread is idle again)
 				BeginInvoke((AddLoggingEventCallback) AddLoggingEventCore,
-				            new object[] {loggingEvent});
+				            new object[] { loggingEvent });
 			}
 			else
 			{
@@ -96,6 +129,27 @@ namespace ProSuite.Commons.UI.Logging
 			else
 			{
 				ScrollToEndCore();
+			}
+		}
+
+		/// <summary>
+		/// Clears the grid and repopulates it with the given events (oldest first). Used by a
+		/// host that feeds the control only while it is visible: on becoming visible it rebuilds
+		/// the view from the buffered event history in one pass, rather than having fed the
+		/// (invisible) grid event by event. Thread safe.
+		/// </summary>
+		public void ReplaceLogEvents([NotNull] IEnumerable<LoggingEvent> loggingEvents)
+		{
+			Assert.ArgumentNotNull(loggingEvents, nameof(loggingEvents));
+
+			if (_dataGridView.InvokeRequired)
+			{
+				BeginInvoke((ReplaceLogEventsCallback) ReplaceLogEventsCore,
+				            new object[] { loggingEvents });
+			}
+			else
+			{
+				ReplaceLogEventsCore(loggingEvents);
 			}
 		}
 
@@ -151,6 +205,80 @@ namespace ProSuite.Commons.UI.Logging
 			}
 		}
 
+		private void ReplaceLogEventsCore([NotNull] IEnumerable<LoggingEvent> loggingEvents)
+		{
+			Assert.ArgumentNotNull(loggingEvents, nameof(loggingEvents));
+
+			if (IsDisposed)
+			{
+				return;
+			}
+
+			ClearCore();
+
+			if (_logLevelImages.Images.Count == 0)
+			{
+				// seems to happen during shutdown
+				return;
+			}
+
+			// Filter to the events that will actually be shown (honors the hide-debug filter),
+			// once, up front.
+			var relevant = new List<LoggingEvent>();
+			foreach (LoggingEvent loggingEvent in loggingEvents)
+			{
+				if (loggingEvent != null && ! IgnoreLoggingEvent(loggingEvent))
+				{
+					relevant.Add(loggingEvent);
+				}
+			}
+
+			// Feed all relevant events into the backup list (this is what the "Show All" history
+			// dialog reads), but only realize the last _maxDisplayedLogMessages of them as grid
+			// rows. The grid caps its own row count anyway, and every DataGridView row add is
+			// expensive: it forces an auto-height text measurement (GetPreferredHeight ->
+			// MeasureText) and a scroll-into-view. Replaying thousands of buffered events row by
+			// row - only to discard all but the last 80 - is what made opening the pane slow.
+			int firstGridIndex = Math.Max(0, relevant.Count - _maxDisplayedLogMessages);
+
+			_dataGridView.SuspendLayout();
+			try
+			{
+				for (var i = 0; i < relevant.Count; i++)
+				{
+					Image levelImage = GetLevelImage(relevant[i].Level);
+					_logCount++;
+					var logItem = new LogEventItem(_logCount, levelImage, relevant[i]);
+
+					AddBackupEventItem(logItem);
+
+					if (i >= firstGridIndex)
+					{
+						AddRow(logItem);
+					}
+				}
+			}
+			finally
+			{
+				_dataGridView.ResumeLayout();
+			}
+
+			ScrollToEndCore();
+			_dataGridView.Refresh();
+		}
+
+		private void ClearCore()
+		{
+			foreach (DataGridViewRow row in _dataGridView.Rows)
+			{
+				row.Tag = null;
+			}
+
+			_dataGridView.Rows.Clear();
+			_logMessages.Clear();
+			_logCount = 0;
+		}
+
 		private void UpdateLastRefreshTickCount()
 		{
 			_lastRefreshTickCount = Environment.TickCount;
@@ -187,7 +315,7 @@ namespace ProSuite.Commons.UI.Logging
 
 		private bool IgnoreLoggingEvent([NotNull] LoggingEvent loggingEvent)
 		{
-			return _hideDebugMessages && loggingEvent.Level == Level.Debug;
+			return ! _showDebugMessages && loggingEvent.Level == Level.Debug;
 		}
 
 		private void AddBackupEventItem([NotNull] LogEventItem logEventItem)
@@ -210,22 +338,39 @@ namespace ProSuite.Commons.UI.Logging
 		[NotNull]
 		private Image GetLevelImage(Level level)
 		{
+			int index = GetLevelImageIndex(level);
+
+			// ImageList.Images[i] allocates a fresh Bitmap (a GDI copy off the native image list)
+			// on every access - surprisingly expensive, and it dominated the cost of replaying a
+			// full window of events (one fetch per row). There are only four level icons, so cache
+			// them for the lifetime of the control.
+			if (! _levelImageCache.TryGetValue(index, out Image image))
+			{
+				image = _logLevelImages.Images[index];
+				_levelImageCache[index] = image;
+			}
+
+			return image;
+		}
+
+		private static int GetLevelImageIndex(Level level)
+		{
 			if (level == Level.Info)
 			{
-				return _logLevelImages.Images[_logLevelInfoImageIndex];
+				return _logLevelInfoImageIndex;
 			}
 
 			if (level == Level.Warn)
 			{
-				return _logLevelImages.Images[_logLevelWarnImageIndex];
+				return _logLevelWarnImageIndex;
 			}
 
 			if (level == Level.Debug)
 			{
-				return _logLevelImages.Images[_logLevelDebugImageIndex];
+				return _logLevelDebugImageIndex;
 			}
 
-			return _logLevelImages.Images[_logLevelErrorImageIndex];
+			return _logLevelErrorImageIndex;
 		}
 
 		[NotNull]
@@ -252,12 +397,17 @@ namespace ProSuite.Commons.UI.Logging
 			ShowItemDetailsDialog(item);
 		}
 
-		private static void ShowItemDetailsDialog([NotNull] LogEventItem item)
+		private void ShowItemDetailsDialog([NotNull] LogEventItem item)
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
 			using (var form = new LogEventItemDetailsForm())
 			{
+				if (_useDarkTheme)
+				{
+					WinFormsThemeUtils.ApplyDarkTheme(form);
+				}
+
 				form.ShowDialog(item);
 			}
 		}
@@ -320,6 +470,11 @@ namespace ProSuite.Commons.UI.Logging
 		{
 			using (var form = new LogHistoryForm())
 			{
+				if (_useDarkTheme)
+				{
+					form.ApplyDarkTheme();
+				}
+
 				form.ShowDialog(_logMessages,
 				                _columnLogNumber.Visible,
 				                _columnLogDateTime.Visible);
@@ -365,21 +520,15 @@ namespace ProSuite.Commons.UI.Logging
 		private void _toolStripMenuItemClearAllMessages_Click(object sender,
 		                                                      EventArgs e)
 		{
-			foreach (DataGridViewRow row in _dataGridView.Rows)
-			{
-				row.Tag = null;
-				row.Dispose();
-			}
-
-			_dataGridView.Rows.Clear();
+			ClearCore();
 
 			GC.Collect();
 		}
 
-		private void _toolStripMenuItemHideDebugMessages_CheckedChanged(object sender,
+		private void _toolStripMenuItemShowDebugMessages_CheckedChanged(object sender,
 			EventArgs e)
 		{
-			_hideDebugMessages = _toolStripMenuItemHideDebugMessages.Checked;
+			_showDebugMessages = _toolStripMenuItemShowDebugMessages.Checked;
 		}
 
 		private void _dataGridView_CellDoubleClick(object sender,
@@ -445,6 +594,7 @@ namespace ProSuite.Commons.UI.Logging
 
 			LogWindowUtils.HandleCellFormattingEvent(e, row, logEventItem,
 			                                         _columnLogMessage.Index,
+			                                         _useDarkTheme,
 			                                         _textColumnIndices);
 		}
 
@@ -476,6 +626,8 @@ namespace ProSuite.Commons.UI.Logging
 		#region Nested type: AddLogginEventCallback
 
 		private delegate void AddLoggingEventCallback(LoggingEvent logEvent);
+
+		private delegate void ReplaceLogEventsCallback(IEnumerable<LoggingEvent> logEvents);
 
 		#endregion
 	}

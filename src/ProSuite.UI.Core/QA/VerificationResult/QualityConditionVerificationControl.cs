@@ -34,6 +34,7 @@ namespace ProSuite.UI.Core.QA.VerificationResult
 			_textBoxIssueCount.Text = _verification.ErrorCount.ToString("N0");
 
 			_textBoxIssueCount.BackColor = GetErrorBackColor(conditionVerification);
+			_textBoxIssueCount.ForeColor = Color.Black;
 
 			_textBoxIssueType.Text = _verification.AllowErrors
 				                         ? "Warning"
@@ -75,6 +76,7 @@ namespace ProSuite.UI.Core.QA.VerificationResult
 			_qualityConditionTableViewControl.SetQualityCondition(null);
 
 			_textBoxIssueCount.BackColor = SystemColors.Control;
+			_textBoxIssueCount.ForeColor = SystemColors.ControlText;
 		}
 	}
 }

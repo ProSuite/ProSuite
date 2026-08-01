@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
@@ -25,6 +26,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private readonly Func<DataVerificationResponse, DataVerificationRequest> _dataRequestFunc;
 
+		[CanBeNull] private readonly Func<DataVerificationRequest> _readNextBatchFunc;
+
 		public VirtualModelContext(IList<GdbWorkspace> workspaces,
 		                           DdxModel model)
 		{
@@ -38,9 +41,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public VirtualModelContext(
 			Func<DataVerificationResponse, DataVerificationRequest> dataRequestFunc,
-			DdxModel model)
+			DdxModel model,
+			[CanBeNull] Func<DataVerificationRequest> readNextBatchFunc = null)
 		{
 			_dataRequestFunc = dataRequestFunc;
+			_readNextBatchFunc = readNextBatchFunc;
 			_primaryModel = model;
 
 			// Empty until schema is set:
@@ -71,9 +76,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			DataVerificationRequest dataResponse = _dataRequestFunc(dataRequest);
 
+			if (dataResponse.Schema == null)
+			{
+				// The client could not provide the schema (e.g. a dataset or relationship class
+				// referenced by the model does not exist in the client's workspace). Fail with a
+				// descriptive error instead of a NullReferenceException, mirroring how data
+				// requests surface client-side errors (see RemoteDataset.ConfirmDataReceived).
+				throw new DataAccessException(
+					"The client failed to provide the schema for the requested datasets: " +
+					dataResponse.ErrorMessage);
+			}
+
 			SetGdbSchema(ProtobufConversionUtils.CreateSchema(
 				             dataResponse.Schema.ClassDefinitions,
-				             dataResponse.Schema.RelclassDefinitions, _dataRequestFunc));
+				             dataResponse.Schema.RelclassDefinitions, _dataRequestFunc,
+				             _readNextBatchFunc));
 		}
 
 		private void SetGdbSchema(IList<GdbWorkspace> gdbWorkspaces)
@@ -147,7 +164,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public RasterDatasetReference OpenRasterDataset(IDdxRasterDataset dataset)
 		{
-			throw new NotImplementedException();
+			// Raster datasets are not streamed from the client. They are opened directly from the
+			// model's master (user connection) database on the server.
+			return GetMasterDatabaseContext(dataset.Model).OpenRasterDataset(dataset);
 		}
 
 		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
@@ -160,9 +179,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
-			// TODO: Just send the catalog & boundary feature class, assuming the raster paths
-			//       are accessible from anywhere
-			throw new NotImplementedException();
+			// Mosaic datasets are not streamed from the client. They are opened directly from the
+			// model's master (user connection) database on the server.
+			return GetMasterDatabaseContext(dataset.Model).OpenSimpleRasterMosaic(dataset);
+		}
+
+		/// <summary>
+		/// Gets the model's master-database (user connection) workspace context, used to open
+		/// dataset types that are not transferred from the client (rasters and mosaics).
+		/// </summary>
+		[NotNull]
+		private static IWorkspaceContext GetMasterDatabaseContext([NotNull] DdxModel model)
+		{
+			IWorkspaceContext masterContext = model.GetMasterDatabaseWorkspaceContext();
+
+			return Assert.NotNull(
+				masterContext,
+				"Cannot open raster/mosaic dataset: the master database of model '{0}' is not " +
+				"accessible from the server.", model.Name);
 		}
 
 		public IRelationshipClass OpenRelationshipClass(Association association)
@@ -283,6 +317,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			DataVerificationRequest dataResponse = _dataRequestFunc(dataRequest);
 
+			if (dataResponse?.Schema == null ||
+			    dataResponse.Schema.RelclassDefinitions.Count == 0)
+			{
+				throw new InvalidOperationException(
+					$"The client returned no schema for the query table based on " +
+					$"relationship class '{relationshipClassName}' " +
+					$"(tables: {string.Join(", ", tables.Select(t => t.Name))}). " +
+					"The data request to the client most likely failed - check the " +
+					"preceding warnings from the verification service (e.g. an error " +
+					"writing to the response stream) for the underlying cause.");
+			}
+
 			GdbWorkspace gdbWorkspace =
 				Assert.NotNull(_virtualWorkspaces).First(w => w.WorkspaceHandle == model.Id);
 
@@ -292,7 +338,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			               "The context is not set up to request query table data.");
 
 			BackingDataset CreateBackingDataset(ITable t) =>
-				new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg);
+				new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg,
+				                  _readNextBatchFunc);
 
 			// It is cached on the client side, in case various tests utilize the same definition.
 			return ProtobufConversionUtils.FromQueryTableMsg(queryTableMsg, gdbWorkspace,

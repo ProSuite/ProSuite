@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
@@ -258,6 +259,49 @@ namespace ProSuite.Microservices.Server.AO.Test
 			Assert.AreEqual(xmlConditionElement.XmlCondition.TestDescriptorName,
 			                testDescriptorName);
 			Assert.AreEqual(xmlConditionElement.XmlCondition.Url, url);
+		}
+
+		[Test]
+		public void FromQueryTableMsg_preserves_qualified_shape_field_name()
+		{
+			ISpatialReference spatialReference =
+				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
+
+			var objectClassMsg = new ObjectClassMsg
+			                     {
+				                     ClassHandle = 123,
+				                     Name = "TLM_NUTZUNGSAREAL_SCHULE_JOIN",
+				                     GeometryType = (int) esriGeometryType.esriGeometryPolygon,
+				                     SpatialReference = ProtobufGeometryUtils.ToSpatialReferenceMsg(
+					                     spatialReference,
+					                     SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml)
+			                     };
+
+			objectClassMsg.Fields.Add(new FieldMsg
+			                          {
+				                          Name = "TABLE_A.OBJECTID",
+				                          Type = (int) esriFieldType.esriFieldTypeOID
+			                          });
+			objectClassMsg.Fields.Add(new FieldMsg
+			                          {
+				                          Name = "TABLE_A.NAME",
+				                          Type = (int) esriFieldType.esriFieldTypeString,
+				                          Length = 50
+			                          });
+			objectClassMsg.Fields.Add(new FieldMsg
+			                          {
+				                          Name = "TABLE_A.SHAPE",
+				                          Type = (int) esriFieldType.esriFieldTypeGeometry
+			                          });
+
+			GdbTable result = ProtobufConversionUtils.FromQueryTableMsg(
+				objectClassMsg, new WorkspaceMock(), t => null,
+				new List<IReadOnlyTable>());
+
+			var featureClass = (GdbFeatureClass) result;
+
+			Assert.AreEqual("TABLE_A.SHAPE", featureClass.ShapeFieldName);
+			Assert.GreaterOrEqual(featureClass.Fields.FindField("TABLE_A.SHAPE"), 0);
 		}
 
 		private static void AssertCanConvertToDtoAndBack(IList<IFeature> features)

@@ -1,5 +1,6 @@
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong;
@@ -37,7 +38,7 @@ public class PartialReshapeAlongOptions : PartialOptionsBase
 	public OverridableSetting<bool> ExcludeLinesResultingInTargetOverlaps { get; set; }
 
 	// Z Value settings
-	public OverridableSetting<ZValueSource> ZValueSource { get; set; }
+	public OverridableSetting<ChangeAlongZSource> ZValueSource { get; set; }
 
 	#endregion
 

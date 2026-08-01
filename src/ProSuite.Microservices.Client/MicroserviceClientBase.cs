@@ -97,6 +97,8 @@ namespace ProSuite.Microservices.Client
 			{
 				if (_startedProcess != null && ! _startedProcess.HasExited)
 				{
+					_msg.DebugFormat("Stopping background microservice process {0}",
+					                 _startedProcess.Id);
 					_startedProcess?.Kill();
 				}
 			}

@@ -392,6 +392,69 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 			}
 		}
 
+		[Test]
+		public void CanCutMultiPatchWithClosedCutLine()
+		{
+			ISpatialReference lv95 = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95);
+
+			IPolygon originalPoly = GeometryFactory.CreatePolygon(
+				GeometryFactory.CreateEnvelope(2600000, 1200000, 500, 50, 20, lv95));
+
+			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(originalPoly);
+
+			// A closed cut line ("bites its tail") completely inside the footprint
+			IPolyline closedCutLine = GeometryFactory.CreateLine(
+				GeometryFactory.CreatePoint(2600000 - 5, 1200000 - 5),
+				GeometryFactory.CreatePoint(2600000 - 5, 1200000 + 5),
+				GeometryFactory.CreatePoint(2600000 + 5, 1200000 + 5),
+				GeometryFactory.CreatePoint(2600000 + 5, 1200000 - 5),
+				GeometryFactory.CreatePoint(2600000 - 5, 1200000 - 5));
+			closedCutLine.SpatialReference = lv95;
+
+			Assert.True(((ICurve) closedCutLine).IsClosed,
+			            "Cut line must be closed for this test.");
+
+			IDictionary<IPolygon, IMultiPatch> result = CutGeometryUtils.TryCut(
+				multipatch, closedCutLine, ChangeAlongZSource.SourcePlane);
+
+			// Cookie-cutter semantics: an outer part with a hole, plus the inner part
+			Assert.NotNull(result, "Cutting should produce a result.");
+			Assert.AreEqual(2, result.Count,
+			                "Cutting with a closed cut line should produce 2 features: outer (with hole) and inner.");
+
+			IPolygon outerFootprint = null;
+			IPolygon innerFootprint = null;
+			double footprintAreaSum = 0;
+
+			foreach (KeyValuePair<IPolygon, IMultiPatch> resultByFootprint in result)
+			{
+				IPolygon footprint = resultByFootprint.Key;
+				IMultiPatch resultMultipatch = resultByFootprint.Value;
+
+				Assert.IsFalse(resultMultipatch.IsEmpty, "Result multipatch is empty");
+				Assert.IsFalse(GeometryUtils.HasUndefinedZValues(resultMultipatch));
+
+				footprintAreaSum += ((IArea) footprint).Area;
+
+				if (((IGeometryCollection) footprint).GeometryCount == 2)
+				{
+					outerFootprint = footprint;
+				}
+				else
+				{
+					innerFootprint = footprint;
+				}
+			}
+
+			Assert.NotNull(outerFootprint,
+			               "Expected an outer result footprint with an interior ring (hole)");
+			Assert.NotNull(innerFootprint, "Expected an inner (cookie) result footprint");
+
+			Assert.AreEqual(10d * 10d, ((IArea) innerFootprint).Area, 0.01);
+			Assert.AreEqual(((IArea) originalPoly).Area, footprintAreaSum, 0.01);
+		}
+
 		private static void EnsureCutResult(IList<IGeometry> results,
 		                                    IPolygon originalPoly,
 		                                    Plane3D plane,

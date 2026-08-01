@@ -4,6 +4,7 @@
                     >
 
     <managedOptions:OverrideToFontStyleConverter x:Key="OverrideToFontStyleConverter" />
+    <managedOptions:NumericToDoubleConverter x:Key="NumericToDoubleConverter" />
 
     <ControlTemplate TargetType="CheckBox" x:Key="CentralizableSettingCheckbox">
         <CheckBox Content="{TemplateBinding Content}"
@@ -43,6 +44,47 @@
                 ToolTipService.ShowOnDisabled="True"
                 ToolTip="{Binding ToolTip}" 
                 FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
+    </ControlTemplate>
+
+    <!-- Override-aware slider. Set the templated control's Tag to the label text, e.g.
+         <Control Template="{StaticResource CentralizableSettingSlider}"
+                  DataContext="{Binding SearchDistance}" Tag="Search Distance (m)" /> -->
+    <ControlTemplate TargetType="Control" x:Key="CentralizableSettingSlider">
+
+            <managedOptions:CentralizableSettingSlider
+                DataContext="{TemplateBinding DataContext}"
+                Label="{TemplateBinding Tag}"
+                IsEnabled="{Binding IsEnabled}"
+                Margin="0, 2"
+                Value="{Binding CurrentValue, Mode=TwoWay, Converter={StaticResource NumericToDoubleConverter}}"
+                Decimals="{Binding Decimals}"
+                Step="{Binding Step}"
+                MinValue="{Binding MinValue}"
+                MaxValue="{Binding MaxValue}"
+                ToolTipService.ShowOnDisabled="True"
+                ToolTip="{Binding ToolTip}"
+                TextFontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
+
+    </ControlTemplate>
+
+    <!-- Override-aware combo box. Set the templated control's Tag to the ItemsSource, e.g.
+         <Control Template="{StaticResource CentralizableSettingComboBox}"
+                  DataContext="{Binding Algorithm}" Tag="{Binding AvailableAlgorithms}" />.
+         Items must expose a Value (matching the setting type) and a DisplayName. -->
+    <ControlTemplate TargetType="Control" x:Key="CentralizableSettingComboBox">
+
+            <ComboBox
+                DataContext="{TemplateBinding DataContext}"
+                ItemsSource="{TemplateBinding Tag}"
+                SelectedValue="{Binding CurrentValue, Mode=TwoWay}"
+                SelectedValuePath="Value"
+                DisplayMemberPath="DisplayName"
+                IsEnabled="{Binding IsEnabled}"
+                Margin="0, 2"
+                ToolTipService.ShowOnDisabled="True"
+                ToolTip="{Binding ToolTip}"
+                FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}" />
+
     </ControlTemplate>
 
     <ControlTemplate TargetType="Button" x:Key="RestoreDefaultsButton">

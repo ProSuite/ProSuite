@@ -429,7 +429,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				{
 					_showReportCommand =
 						new RelayCommand<VerificationProgressViewModel>(
-							vm => ShowReport(),
+							async vm => await ShowReportAsync(),
 							vm => CanShowReport());
 				}
 
@@ -611,9 +611,12 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			CommandManager.InvalidateRequerySuggested();
 
-			if (VerificationResult?.HasIssues == true &&
-			    EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-				    "PROSUITE_AUTO_OPEN_ISSUE_WORKLIST"))
+			bool autoOpenWorkList =
+				ApplicationController?.AutoOpenWorkListAfterVerification == true ||
+				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					"PROSUITE_AUTO_OPEN_ISSUE_WORKLIST");
+
+			if (VerificationResult?.HasIssues == true && autoOpenWorkList)
 			{
 				await ViewUtils.RunOnUIThread(async () =>
 				{
@@ -621,6 +624,16 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					{
 						IQualityVerificationResult verificationResult =
 							Assert.NotNull(VerificationResult);
+
+						// For central issue datasets (production model issue schema) the issues must
+						// be updated (saved) before the work list can be opened. CanSaveIssues is
+						// only true in that case (and while the issues have not yet been saved).
+						if (ApplicationController.CanSaveIssues(verificationResult, out _))
+						{
+							await ApplicationController.SaveIssuesAsync(
+								verificationResult, UpdateOptions.ErrorDeletionType,
+								! UpdateOptions.KeepPreviousIssues);
+						}
 
 						await ApplicationController.OpenWorkList(
 							verificationResult, replaceExisting: true);
@@ -725,7 +738,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					    CloseAction();
 				    }
 
-					// Remove overlays on close
+				    // Remove overlays on close
 				    UpdateProgressOverlay(false);
 			    }
 			);
@@ -819,6 +832,23 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		{
 			Try(nameof(ShowReport),
 			    () => { ApplicationController?.ShowReport(Assert.NotNull(VerificationResult)); });
+		}
+
+		private async Task ShowReportAsync()
+		{
+			_msg.VerboseDebug(() => $"VerificationProgressViewModel.{nameof(ShowReportAsync)}");
+
+			try
+			{
+				if (ApplicationController != null)
+				{
+					await ApplicationController.ShowReportAsync(Assert.NotNull(VerificationResult));
+				}
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
 		}
 
 		private bool CanShowReport()

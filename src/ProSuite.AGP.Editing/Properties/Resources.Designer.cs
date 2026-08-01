@@ -89,6 +89,16 @@ namespace ProSuite.AGP.Editing.Properties {
                 return ((byte[])(obj));
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Measure {
+            get {
+                object obj = ResourceManager.GetObject("Measure", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
@@ -126,6 +136,16 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static byte[] Cross {
             get {
                 object obj = ResourceManager.GetObject("Cross", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CutFeatureOverlay {
+            get {
+                object obj = ResourceManager.GetObject("CutFeatureOverlay", resourceCulture);
                 return ((byte[])(obj));
             }
         }

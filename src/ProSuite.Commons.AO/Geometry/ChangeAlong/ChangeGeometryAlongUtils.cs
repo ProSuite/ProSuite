@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -293,9 +294,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			IPolyline processedGeometry;
 
-			if (geometry.GeometryType == esriGeometryType.esriGeometryMultiPatch)
+			if (geometry is IMultiPatch multipatch)
 			{
-				geometry = GeometryFactory.CreatePolygon(geometry);
+				// Use the robust footprint (as the cut does), not the unreliable AO .Boundary
+				// used by GeometryFactory.CreatePolygon - see CutPolygonSubcurveCalculator.
+				geometry = CreateFootprintUtils.GetFootprint(
+					multipatch, GeometryUtils.GetXyTolerance(multipatch));
 			}
 
 			if (clipExtent != null)

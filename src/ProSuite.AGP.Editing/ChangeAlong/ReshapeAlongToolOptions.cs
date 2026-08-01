@@ -89,9 +89,9 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 
 		// Z Value settings
 		CentralizableZValueSource =
-			InitializeSetting<ZValueSource>(
+			InitializeSetting<ChangeAlongZSource>(
 				ReflectionUtils.GetProperty(() => LocalOptions.ZValueSource),
-				ZValueSource.Target);
+				ChangeAlongZSource.Target);
 
 		// Target Selection
 		CentralizableTargetFeatureSelection =
@@ -161,7 +161,7 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 	public CentralizableSetting<bool> CentralizableExcludeLinesOverlaps { get; private set; }
 
 	// Z Value settings
-	public CentralizableSetting<ZValueSource> CentralizableZValueSource { get; private set; }
+	public CentralizableSetting<ChangeAlongZSource> CentralizableZValueSource { get; private set; }
 
 	// Target Selection
 	public CentralizableSetting<TargetFeatureSelection> CentralizableTargetFeatureSelection
@@ -216,7 +216,7 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 	public bool ExcludeLinesOverlaps => CentralizableExcludeLinesOverlaps.CurrentValue;
 
 	// Z Value settings
-	public ZValueSource ZValueSource => CentralizableZValueSource.CurrentValue;
+	public ChangeAlongZSource ZValueSource => CentralizableZValueSource.CurrentValue;
 
 	// Target Selection
 	public TargetFeatureSelection TargetFeatureSelection =>

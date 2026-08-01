@@ -79,20 +79,20 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			Envelope fullExtent = null;
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
-
 			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController =
 				new AgpBackgroundVerificationController(WorkListOpener, mapView, fullExtent,
-				                                        spatialRef, SaveAction);
+				                                        spatialRef,
+				                                        SessionContext.VerificationEnvironment,
+				                                        SaveAction);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(progressTracker, resultsPath),
+					VerificationAction = () => Verify(progressTracker),
 					ApplicationController = appController
 				};
 
@@ -108,8 +108,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 		}
 
 		private async Task<ServiceCallStatus> Verify(
-			[NotNull] QualityVerificationProgressTracker progressTracker,
-			string resultsPath)
+			[NotNull] QualityVerificationProgressTracker progressTracker)
 		{
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
@@ -121,7 +120,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							null, progressTracker, "full extent", resultsPath);
+							null, progressTracker, "full extent");
 					},
 					BackgroundProgressor.None);
 

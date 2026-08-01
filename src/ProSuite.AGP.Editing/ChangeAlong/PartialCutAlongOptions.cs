@@ -1,9 +1,13 @@
+using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
-using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong;
 
+[UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public class PartialCutAlongOptions : PartialOptionsBase
 {
 	#region Overridable Settings
@@ -31,7 +35,10 @@ public class PartialCutAlongOptions : PartialOptionsBase
 	public OverridableSetting<double> MinBufferSegmentLength { get; set; }
 
 	// Z Value settings
-	public OverridableSetting<ZValueSource> ZValueSource { get; set; }
+	public OverridableSetting<ChangeAlongZSource> ZValueSource { get; set; }
+
+	[CanBeNull]
+	public List<DatasetSpecificValue<ChangeAlongZSource>> DatasetSpecificZSource { get; set; }
 
 	#endregion
 
@@ -63,6 +70,16 @@ public class PartialCutAlongOptions : PartialOptionsBase
 			             // Z Value settings
 			             ZValueSource = TryClone(ZValueSource)
 		             };
+
+		if (DatasetSpecificZSource != null)
+		{
+			result.DatasetSpecificZSource =
+				new List<DatasetSpecificValue<ChangeAlongZSource>>();
+
+			result.DatasetSpecificZSource.AddRange(
+				DatasetSpecificZSource.Select(dsz => dsz.Clone()));
+		}
+
 		return result;
 	}
 }

@@ -7,11 +7,14 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.ExtractParts
 {
 	public class GeometryPart
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private double? _size;
 
 		public GeometryPart([NotNull] IGeometry lowLevelGeometry,
@@ -369,8 +372,8 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 
 			bool zAware = GeometryUtils.IsZAware(originalGeometry);
 
-			return GeometryUtils.GetParts((IGeometryCollection) originalGeometry).Select(
-				part => new GeometryPart(part, zAware));
+			return GeometryUtils.GetParts((IGeometryCollection) originalGeometry)
+			                    .Select(part => new GeometryPart(part, zAware));
 		}
 
 		/// <summary>
@@ -433,8 +436,19 @@ namespace ProSuite.Commons.AO.Geometry.ExtractParts
 
 				// for multipatches we cannot use IsExterior property - it's just not correct
 				var isBeginningRing = false;
-				bool isExterior = multipatch.GetRingType(ring, ref isBeginningRing) !=
-				                  esriMultiPatchRingType.esriMultiPatchInnerRing;
+				bool isExterior = true;
+
+				try
+				{
+					isExterior = multipatch.GetRingType(ring, ref isBeginningRing) !=
+					             esriMultiPatchRingType.esriMultiPatchInnerRing;
+				}
+				catch (COMException comException)
+				{
+					// Likely 'The specified part could not be found in the geometry' for very corrupt geometries
+					_msg.Debug($"Error getting ring type for ring: {GeometryUtils.ToString(ring)}.",
+					           comException);
+				}
 
 				if (isExterior)
 				{

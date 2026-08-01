@@ -208,8 +208,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 			catch (Exception ex)
 			{
-				_msg.DebugFormat("Error opening master database for model {0}: {1}",
-				                 model.Name, ex.Message);
+				_msg.Warn($"Error opening master database for model {model.Name}: {ex.Message}", ex);
 
 				//_lastMasterDatabaseAccessError = ex.Message;
 				model.CachedMasterDatabaseNoAccessReason = ex.Message;

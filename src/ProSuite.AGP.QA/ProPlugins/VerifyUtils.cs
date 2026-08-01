@@ -13,6 +13,12 @@ namespace ProSuite.AGP.QA.ProPlugins
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		/// <summary>
+		/// Name of the environment variable that provides the default base folder for verification
+		/// results (reports and issue.gdb) when no explicit result path has been set.
+		/// </summary>
+		public const string ResultPathEnvVariable = "PROSUITE_VERIFICATION_RESULT_DIR";
+
 		public static void ShowProgressWindow(
 			[NotNull] Window window,
 			[NotNull] IQualitySpecificationReference qualitySpecification,
@@ -40,7 +46,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				// TODO: Global (non-APRX) settings per user -> Edit Options dialog? Project Settings?
 				string resultDir =
-					Environment.GetEnvironmentVariable("PROSUITE_VERIFICATION_RESULT_DIR");
+					Environment.GetEnvironmentVariable(ResultPathEnvVariable);
 
 				outputFolderPath = resultDir ?? Project.Current.HomeFolderPath;
 			}

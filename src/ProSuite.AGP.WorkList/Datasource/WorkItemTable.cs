@@ -116,6 +116,11 @@ public class WorkItemTable : PluginTableTemplate
 			//       null-pointer from deep inside the Pro SDK
 			_msg.VerboseDebug(() =>
 			{
+				if (filter == null)
+				{
+					return "No spatial filter";
+				}
+
 				bool willFail = filter.OutputSpatialReference == null &&
 				                WorkItems.Extent == null;
 

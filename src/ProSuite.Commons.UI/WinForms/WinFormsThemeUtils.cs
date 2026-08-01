@@ -1,0 +1,325 @@
+using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
+namespace ProSuite.Commons.UI.WinForms
+{
+	/// <summary>
+	/// Applies ArcGIS Pro's dark theme to WinForms windows.
+	/// </summary>
+	/// <remarks>
+	/// ArcGIS Pro is a WPF application: switching its theme (Options > General > Theme)
+	/// has no effect on hosted WinForms windows — WinForms always renders with the default
+	/// (light) <see cref="SystemColors"/>. This utility re-colors a WinForms control tree
+	/// to approximate the Pro dark theme. Colors match
+	/// https://esri.github.io/arcgis-pro-sdk/content/brushescolors/brushes.html
+	/// (dark theme values of Esri_DialogFrameBackgroundBrush, Esri_ControlBackgroundBrush,
+	/// Esri_BorderBrush, Esri_TextControlBrush, Esri_BackgroundSelectedBrush).
+	/// </remarks>
+	public static class WinFormsThemeUtils
+	{
+		private static readonly Color _dialogBackground = ColorTranslator.FromHtml("#333333");
+		private static readonly Color _controlBackground = ColorTranslator.FromHtml("#242424");
+		private static readonly Color _borderColor = ColorTranslator.FromHtml("#4A4A4A");
+		private static readonly Color _textColor = ColorTranslator.FromHtml("#D1D1D1");
+		private static readonly Color _selectionBackground = ColorTranslator.FromHtml("#1B394C");
+
+		// Matches the Attribute Table's column header look (light theme).
+		private static readonly Color _headerBackgroundLight = ColorTranslator.FromHtml("#F3F3F3");
+		private static readonly Color _headerBorderLight = ColorTranslator.FromHtml("#D6D6D6");
+
+		/// <summary>
+		/// Re-colors <paramref name="form"/> (and all its child controls, menus and tool strips)
+		/// to match ArcGIS Pro's dark theme. Call this only when the dark theme is active.
+		/// </summary>
+		public static void ApplyDarkTheme([NotNull] Form form)
+		{
+			ApplyDarkTheme((Control) form);
+		}
+
+		/// <summary>
+		/// Re-colors <paramref name="control"/> (and all its child controls, menus and tool
+		/// strips) to match ArcGIS Pro's dark theme. Use this for a <see cref="UserControl"/>
+		/// that is hosted (e.g. via a WindowsFormsHost) rather than shown as a top-level form.
+		/// Call this only when the dark theme is active.
+		/// </summary>
+		public static void ApplyDarkTheme([NotNull] UserControl control)
+		{
+			ApplyDarkTheme((Control) control);
+		}
+
+		/// <summary>
+		/// Styles <paramref name="grid"/>'s column headers to match ArcGIS Pro's Attribute
+		/// Table: a light gray background, bold header text, and thin light-gray separator
+		/// lines. WinForms' own header rendering falls back to a "raised" 3-D bevel (drawn with
+		/// stark <see cref="SystemColors.ControlDark"/> edges) whenever the control isn't running
+		/// under native visual styles, as is the case here since the grid is hosted inside a WPF
+		/// dock pane. Call this once regardless of theme; if the dark theme is active,
+		/// <see cref="ApplyDarkTheme(Form)"/>/<see cref="ApplyDarkTheme(UserControl)"/> darkens
+		/// the header colors afterwards and the border color follows automatically.
+		/// </summary>
+		public static void ApplyModernHeaderStyle([NotNull] DataGridView grid)
+		{
+			grid.EnableHeadersVisualStyles = false;
+			grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+
+			// Match the body cell gridlines to the header's border color (SystemColors.Control,
+			// the designer default, is too faint to read as a boundary).
+			grid.GridColor = _headerBorderLight;
+
+			grid.ColumnHeadersDefaultCellStyle.BackColor = _headerBackgroundLight;
+			grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = _headerBackgroundLight;
+			grid.ColumnHeadersDefaultCellStyle.Font = new Font(grid.Font, FontStyle.Bold);
+			grid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+
+			// Extra vertical padding gives the header some breathing room; since the height size
+			// mode is AutoSize (set in the designer), the grid grows the header row to fit it.
+			DataGridViewCellStyle headerStyle = grid.ColumnHeadersDefaultCellStyle;
+			headerStyle.Padding = new Padding(headerStyle.Padding.Left, 3,
+			                                  headerStyle.Padding.Right, 3);
+
+			grid.CellPainting -= PaintHeaderBorder;
+			grid.CellPainting += PaintHeaderBorder;
+		}
+
+		#region Non-public members
+
+		private static void ApplyDarkTheme([NotNull] Control control)
+		{
+			if (control is DataGridView dataGridView)
+			{
+				ApplyDarkTheme(dataGridView);
+				return;
+			}
+
+			if (control is ToolStrip toolStrip)
+			{
+				ApplyDarkTheme(toolStrip);
+			}
+			else if (control is TextBoxBase || control is ComboBox || control is ListControl)
+			{
+				control.BackColor = _controlBackground;
+				control.ForeColor = _textColor;
+
+				if (control is TextBoxBase)
+				{
+					// Multiline text boxes (e.g. the details view) have their own scrollbars.
+					EnableDarkScrollBars(control);
+				}
+			}
+			else if (control is Button button)
+			{
+				button.BackColor = _controlBackground;
+				button.ForeColor = _textColor;
+				button.UseVisualStyleBackColor = false;
+				button.FlatStyle = FlatStyle.Flat;
+				button.FlatAppearance.BorderColor = _borderColor;
+			}
+			else if (control is TreeView treeView)
+			{
+				treeView.BackColor = _controlBackground;
+				treeView.ForeColor = _textColor;
+			}
+			else if (control is Form || control is GroupBox || control is Panel ||
+			         control is SplitContainer || control is TabControl || control is TabPage ||
+			         control is Label || control is CheckBox || control is RadioButton ||
+			         control is UserControl)
+			{
+				control.BackColor = _dialogBackground;
+				control.ForeColor = _textColor;
+			}
+
+			if (control.ContextMenuStrip != null)
+			{
+				ApplyDarkTheme(control.ContextMenuStrip);
+			}
+
+			foreach (Control child in control.Controls)
+			{
+				ApplyDarkTheme(child);
+			}
+		}
+
+		private static void ApplyDarkTheme([NotNull] DataGridView grid)
+		{
+			grid.BackgroundColor = _controlBackground;
+			grid.GridColor = _borderColor;
+			grid.EnableHeadersVisualStyles = false;
+
+			grid.DefaultCellStyle.BackColor = _controlBackground;
+			grid.DefaultCellStyle.ForeColor = _textColor;
+			grid.DefaultCellStyle.SelectionBackColor = _selectionBackground;
+			grid.DefaultCellStyle.SelectionForeColor = _textColor;
+
+			grid.AlternatingRowsDefaultCellStyle.BackColor = _controlBackground;
+			grid.AlternatingRowsDefaultCellStyle.ForeColor = _textColor;
+			grid.AlternatingRowsDefaultCellStyle.SelectionBackColor = _selectionBackground;
+			grid.AlternatingRowsDefaultCellStyle.SelectionForeColor = _textColor;
+
+			grid.ColumnHeadersDefaultCellStyle.BackColor = _dialogBackground;
+			grid.ColumnHeadersDefaultCellStyle.ForeColor = _textColor;
+			grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = _dialogBackground;
+			grid.ColumnHeadersDefaultCellStyle.SelectionForeColor = _textColor;
+
+			grid.RowHeadersDefaultCellStyle.BackColor = _dialogBackground;
+			grid.RowHeadersDefaultCellStyle.ForeColor = _textColor;
+			grid.RowHeadersDefaultCellStyle.SelectionBackColor = _dialogBackground;
+			grid.RowHeadersDefaultCellStyle.SelectionForeColor = _textColor;
+
+			EnableDarkScrollBars(grid);
+
+			if (grid.ContextMenuStrip != null)
+			{
+				ApplyDarkTheme(grid.ContextMenuStrip);
+			}
+		}
+
+		private static void ApplyDarkTheme([NotNull] ToolStrip toolStrip)
+		{
+			toolStrip.BackColor = _dialogBackground;
+			toolStrip.ForeColor = _textColor;
+			toolStrip.Renderer = new ToolStripProfessionalRenderer(new DarkColorTable());
+
+			foreach (ToolStripItem item in toolStrip.Items)
+			{
+				ApplyDarkTheme(item);
+			}
+		}
+
+		private static void ApplyDarkTheme([NotNull] ToolStripItem item)
+		{
+			item.BackColor = _dialogBackground;
+			item.ForeColor = _textColor;
+
+			if (item is ToolStripDropDownItem dropDownItem)
+			{
+				ApplyDarkTheme(dropDownItem.DropDown);
+			}
+		}
+
+		[DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+		private static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName,
+		                                         string pszSubIdList);
+
+		private const string _darkExplorerTheme = "DarkMode_Explorer";
+
+		/// <summary>
+		/// Switches a control's native scrollbars to the dark Explorer theme so they are not drawn
+		/// light-grey in the otherwise dark UI. Handles the control's own scrollbars and any child
+		/// <see cref="ScrollBar"/> controls (e.g. a <see cref="DataGridView"/>'s row/column
+		/// scrollbars). Re-applies on handle creation, since the scrollbar handles may not exist
+		/// yet when the theme is first applied. Best effort: <c>SetWindowTheme</c> simply has no
+		/// visible effect on OS versions that do not support the dark scrollbar theme.
+		/// </summary>
+		private static void EnableDarkScrollBars([NotNull] Control control)
+		{
+			void Apply()
+			{
+				if (! control.IsHandleCreated)
+				{
+					return;
+				}
+
+				SetWindowTheme(control.Handle, _darkExplorerTheme, null);
+
+				foreach (Control child in control.Controls)
+				{
+					if (child is ScrollBar)
+					{
+						// Accessing Handle forces creation for scrollbars not yet visible.
+						SetWindowTheme(child.Handle, _darkExplorerTheme, null);
+					}
+				}
+			}
+
+			if (control.IsHandleCreated)
+			{
+				Apply();
+			}
+
+			control.HandleCreated += (sender, args) => Apply();
+		}
+
+		/// <summary>
+		/// Draws a thin bottom and right border on each header cell instead of the default
+		/// WinForms bevel (see <see cref="ApplyModernHeaderStyle"/>). The border color is derived
+		/// from the header's current background so it stays legible whether the light or dark
+		/// theme's header colors are applied.
+		/// </summary>
+		private static void PaintHeaderBorder(object sender, DataGridViewCellPaintingEventArgs e)
+		{
+			if (e.RowIndex != -1 || e.ColumnIndex < 0)
+			{
+				return;
+			}
+
+			var grid = (DataGridView) sender;
+
+			e.Paint(e.CellBounds, DataGridViewPaintParts.All & ~DataGridViewPaintParts.Border);
+
+			Color headerBackColor = grid.ColumnHeadersDefaultCellStyle.BackColor;
+			Color borderColor = headerBackColor.GetBrightness() < 0.5f
+				                    ? _borderColor
+				                    : _headerBorderLight;
+
+			using (var pen = new Pen(borderColor))
+			{
+				e.Graphics.DrawLine(pen, e.CellBounds.Left, e.CellBounds.Top,
+				                    e.CellBounds.Right, e.CellBounds.Top);
+				e.Graphics.DrawLine(pen, e.CellBounds.Left, e.CellBounds.Bottom - 1,
+				                    e.CellBounds.Right, e.CellBounds.Bottom - 1);
+				e.Graphics.DrawLine(pen, e.CellBounds.Right - 1, e.CellBounds.Top,
+				                    e.CellBounds.Right - 1, e.CellBounds.Bottom - 1);
+			}
+
+			e.Handled = true;
+		}
+
+		private class DarkColorTable : ProfessionalColorTable
+		{
+			public override Color ToolStripDropDownBackground => _controlBackground;
+			public override Color ImageMarginGradientBegin => _dialogBackground;
+			public override Color ImageMarginGradientMiddle => _dialogBackground;
+			public override Color ImageMarginGradientEnd => _dialogBackground;
+
+			public override Color MenuBorder => _borderColor;
+			public override Color MenuItemBorder => _borderColor;
+			public override Color MenuItemSelected => _selectionBackground;
+			public override Color MenuItemSelectedGradientBegin => _selectionBackground;
+			public override Color MenuItemSelectedGradientEnd => _selectionBackground;
+			public override Color MenuItemPressedGradientBegin => _selectionBackground;
+			public override Color MenuItemPressedGradientEnd => _selectionBackground;
+			public override Color MenuStripGradientBegin => _dialogBackground;
+			public override Color MenuStripGradientEnd => _dialogBackground;
+
+			public override Color SeparatorDark => _borderColor;
+			public override Color SeparatorLight => _dialogBackground;
+
+			public override Color ToolStripBorder => _borderColor;
+			public override Color ToolStripGradientBegin => _dialogBackground;
+			public override Color ToolStripGradientMiddle => _dialogBackground;
+			public override Color ToolStripGradientEnd => _dialogBackground;
+
+			public override Color StatusStripGradientBegin => _dialogBackground;
+			public override Color StatusStripGradientEnd => _dialogBackground;
+
+			public override Color ButtonSelectedHighlight => _selectionBackground;
+			public override Color ButtonSelectedHighlightBorder => _borderColor;
+			public override Color ButtonPressedHighlight => _selectionBackground;
+			public override Color ButtonPressedHighlightBorder => _borderColor;
+			public override Color ButtonCheckedHighlight => _selectionBackground;
+			public override Color ButtonCheckedHighlightBorder => _borderColor;
+
+			public override Color OverflowButtonGradientBegin => _dialogBackground;
+			public override Color OverflowButtonGradientMiddle => _dialogBackground;
+			public override Color OverflowButtonGradientEnd => _dialogBackground;
+
+			public override Color GripDark => _borderColor;
+			public override Color GripLight => _dialogBackground;
+		}
+
+		#endregion
+	}
+}

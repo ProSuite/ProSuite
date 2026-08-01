@@ -374,7 +374,7 @@ namespace ProSuite.Commons.Geom
 					// Linear self-intersections (spikes / duplicate segment runs):
 					bool hasLinearSelfIntersection =
 						GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-							ring, tolerance, new List<Linestring>());
+							ring, tolerance, new List<Linestring>(), keepShortSegments: true);
 
 					// 0-dimensional self-crossings (figure-8 / bowtie rings):
 					bool hasSelfCrossing =

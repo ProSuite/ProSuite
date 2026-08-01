@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
@@ -6,6 +5,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Selection;
@@ -20,7 +20,9 @@ public class OidSelection : FeatureSelectionBase
 	                    [CanBeNull] SpatialReference outputSpatialReference)
 		: base(featureLayer)
 	{
-		_objectIds = objectIds ?? throw new ArgumentNullException(nameof(objectIds));
+		Assert.ArgumentNotNull(objectIds, nameof(objectIds));
+
+		_objectIds = objectIds;
 		_outputSpatialReference = outputSpatialReference;
 	}
 

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.QA
@@ -14,5 +16,14 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns></returns>
 		[CanBeNull]
 		QualityCondition GetCondition([NotNull] string qualityConditionName);
+
+		/// <summary>
+		/// Gets the fully populated quality conditions with the given data dictionary ids.
+		/// Conditions for unknown ids are silently omitted from the result.
+		/// </summary>
+		/// <param name="conditionIds"></param>
+		/// <returns></returns>
+		[NotNull]
+		Task<IList<QualityCondition>> GetConditions([NotNull] IList<int> conditionIds);
 	}
 }

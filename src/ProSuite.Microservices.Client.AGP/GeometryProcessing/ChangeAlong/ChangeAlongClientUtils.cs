@@ -10,6 +10,7 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 
@@ -67,19 +68,20 @@ public static class ChangeAlongClientUtils
 		TargetBufferOptions targetBufferOptions,
 		IBoundedXY clipExtent,
 		double? customTolerance,
-		ZValueSource zValueSource,
+		ChangeAlongZSource zSource,
 		bool insertVerticesInTarget,
 		[NotNull] IList<CutSubcurve> selectedSubcurves,
 		CancellationToken cancellationToken,
-		out ChangeAlongCurves newChangeAlongCurves)
+		out ChangeAlongCurves newChangeAlongCurves,
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null)
 	{
 		Dictionary<GdbObjectReference, Feature> featuresByObjRef =
 			CreateFeatureDictionary(sourceFeatures, targetFeatures);
 
 		ApplyCutLinesRequest request =
 			CreateApplyCutCurvesRequest(sourceFeatures, targetFeatures, targetBufferOptions,
-			                            clipExtent, customTolerance, zValueSource,
-			                            insertVerticesInTarget, selectedSubcurves);
+			                            clipExtent, customTolerance, zSource,
+			                            insertVerticesInTarget, selectedSubcurves, zSourceProvider);
 
 		ApplyCutLinesResponse response =
 			rpcClient.ApplyCutLines(request, null, null, cancellationToken);
@@ -158,9 +160,10 @@ public static class ChangeAlongClientUtils
 		TargetBufferOptions targetBufferOptions,
 		IBoundedXY clipExtent,
 		double? customTolerance,
-		ZValueSource zValueSource,
+		ChangeAlongZSource zValueSource,
 		bool insertVerticesInTarget,
-		IList<CutSubcurve> selectedSubcurves)
+		IList<CutSubcurve> selectedSubcurves,
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null)
 	{
 		var result =
 			new ApplyCutLinesRequest
@@ -168,7 +171,7 @@ public static class ChangeAlongClientUtils
 				CalculationRequest =
 					CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures,
 					                               targetBufferOptions, clipExtent,
-					                               customTolerance, zValueSource)
+					                               customTolerance, zValueSource, zSourceProvider)
 			};
 
 		foreach (CutSubcurve subcurve in selectedSubcurves)
@@ -235,13 +238,14 @@ public static class ChangeAlongClientUtils
 		TargetBufferOptions targetBufferOptions,
 		IBoundedXY clipExtent,
 		double? customTolerance,
-		ZValueSource zValueSource,
-		CancellationToken cancellationToken)
+		ChangeAlongZSource zSource,
+		CancellationToken cancellationToken,
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null)
 	{
 		CalculateCutLinesResponse response =
 			CalculateCutCurvesRpc(rpcClient, sourceFeatures, targetFeatures,
 			                      targetBufferOptions, clipExtent, customTolerance,
-			                      zValueSource, cancellationToken);
+			                      zSource, cancellationToken, zSourceProvider);
 
 		if (response == null || cancellationToken.IsCancellationRequested)
 		{
@@ -283,13 +287,14 @@ public static class ChangeAlongClientUtils
 		TargetBufferOptions targetBufferOptions,
 		IBoundedXY clipExtent,
 		double? customTolerance,
-		ZValueSource zValueSource,
-		CancellationToken cancellationToken)
+		ChangeAlongZSource zSource,
+		CancellationToken cancellationToken,
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null)
 	{
 		CalculateCutLinesRequest request = CreateCalculateCutLinesRequest(
 			selectedFeatures, targetFeatures,
 			targetBufferOptions, clipExtent,
-			customTolerance, zValueSource);
+			customTolerance, zSource, zSourceProvider);
 
 		long deadline = FeatureProcessingUtils.GetProcessingTimeout(selectedFeatures.Count);
 
@@ -325,7 +330,8 @@ public static class ChangeAlongClientUtils
 		TargetBufferOptions targetBufferOptions,
 		IBoundedXY clipExtent,
 		double? customTolerance,
-		ZValueSource zValueSource)
+		ChangeAlongZSource zSource,
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null)
 	{
 		var request = new CalculateCutLinesRequest();
 
@@ -340,7 +346,28 @@ public static class ChangeAlongClientUtils
 		request.FilterOptions =
 			ToLineFilterOptionsMsg(new ReshapeCurveFilterOptions(clipExtent));
 
-		// TODO: ZValueSource (see RemoveOverlaps)
+		IList<DatasetSpecificValue<ChangeAlongZSource>> datsetValues =
+			zSourceProvider?.DatasetSpecificValues;
+
+		if (datsetValues != null)
+		{
+			var datasetZSources =
+				zSourceProvider.DatasetSpecificValues.Select(dss => new DatasetZSource
+					{
+						DatasetName = dss.Dataset,
+						ZSource = (int)dss.Value
+					});
+
+			request.ZSources.AddRange(datasetZSources);
+		}
+
+		// Add the fallback value with an empty string as dataset name
+		request.ZSources.Add(
+			new DatasetZSource
+			{
+				DatasetName = string.Empty,
+				ZSource = (int)zSource
+			});
 
 		return request;
 	}
@@ -544,6 +571,11 @@ public static class ChangeAlongClientUtils
 	private static TargetBufferOptionsMsg ToTargetBufferOptionsMsg(
 		TargetBufferOptions targetBufferOptions)
 	{
+		if (targetBufferOptions == null)
+		{
+			return null;
+		}
+
 		var targetBufferOptionsMsg = new TargetBufferOptionsMsg();
 
 		targetBufferOptionsMsg.BufferDistance =

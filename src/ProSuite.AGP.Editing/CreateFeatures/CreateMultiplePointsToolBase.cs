@@ -14,6 +14,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -127,7 +128,7 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 			{
 				SetToolCursor(Cursors.Wait);
 
-				List<long> newFeatureIds;
+				var newFeatureIds = new List<long>();
 
 				FeatureClass currentTargetClass = GetCurrentTargetClass(out Subtype subtype);
 
@@ -146,18 +147,28 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 					return false;
 				}
 
-				return await GdbPersistenceUtils.ExecuteInTransactionAsync(
-					       editContext =>
-					       {
-						       newFeatureIds = CreatePointFeatures(
-							       editContext, currentTargetClass, subtype, GetFieldValue,
-							       multipoint,
-							       cancelableProgressor);
+				bool transactionSucceeded = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+					                            editContext =>
+					                            {
+						                            newFeatureIds.AddRange(CreatePointFeatures(
+								                            editContext, currentTargetClass,
+								                            subtype, GetFieldValue,
+								                            multipoint,
+								                            cancelableProgressor));
 
-						       _msg.DebugFormat("Created new feature IDs: {0}", newFeatureIds);
+						                            _msg.DebugFormat(
+							                            "Created new feature IDs: {0}",
+							                            newFeatureIds);
 
-						       return newFeatureIds.Count > 0;
-					       }, "Create multiple points", datasets);
+						                            return newFeatureIds.Count > 0;
+					                            }, "Create multiple points", datasets);
+
+				if (transactionSucceeded)
+				{
+					SelectNewFeatures(newFeatureIds, currentTargetClass, activeView);
+				}
+
+				return transactionSucceeded;
 			}
 			finally
 			{
@@ -223,6 +234,28 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 	}
 
 	#endregion
+
+	private static void SelectNewFeatures([NotNull] List<long> newFeatureIds,
+	                                      [NotNull] FeatureClass targetFeatureClass,
+	                                      [NotNull] MapView activeView)
+	{
+		if (newFeatureIds.Count == 0)
+		{
+			return;
+		}
+
+		SelectionUtils.ClearSelection(activeView.Map);
+
+		foreach (IDisplayTable displayTable in MapUtils
+			         .GetFeatureLayersForSelection<FeatureLayer>(activeView, targetFeatureClass))
+		{
+			if (displayTable is FeatureLayer featureLayer)
+			{
+				SelectionUtils.SelectRows(featureLayer, SelectionCombinationMethod.Add,
+				                          newFeatureIds);
+			}
+		}
+	}
 
 	private static List<long> CreatePointFeatures(
 		[NotNull] EditOperation.IEditContext editContext,

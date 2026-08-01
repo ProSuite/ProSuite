@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
@@ -65,7 +66,8 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)
 	{
-		return geometryType == GeometryType.Polygon;
+		return geometryType == GeometryType.Polygon ||
+		       geometryType == GeometryType.Multipatch;
 	}
 
 	protected override void LogUsingCurrentSelection()
@@ -85,11 +87,13 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves)
 	{
+		_msg.Debug(
+			$"{nameof(CutAlongToolBase)}.{nameof(ChangeFeaturesAlong)}: Processing cut along operation for {Caption}.");
 		TargetBufferOptions targetBufferOptions = _cutAlongToolOptions.GetTargetBufferOptions();
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
-		ZValueSource zValueSource = _cutAlongToolOptions.ZValueSource;
+		ChangeAlongZSource zValueSource = _cutAlongToolOptions.ZValueSource;
 
 		EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
@@ -99,10 +103,16 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 		bool insertVerticesInTarget = _cutAlongToolOptions.InsertVerticesInTarget;
 
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider =
+			_cutAlongToolOptions.GetZSourceOptionProvider();
+
 		List<ResultFeature> updatedFeatures = MicroserviceClient.ApplyCutLines(
 			selectedFeatures, targetFeatures, cutSubcurves, targetBufferOptions, envelopeXY,
 			customTolerance, zValueSource, insertVerticesInTarget, cancellationToken,
-			out newChangeAlongCurves);
+			out newChangeAlongCurves, zSourceProvider);
+
+		// Clear the sketch to prevent duplicate calls to OnSketchCompleteAsync
+		ActiveMapView.ClearSketchAsync();
 
 		return updatedFeatures;
 	}
@@ -174,7 +184,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 
 		targetBufferOptions.ZSettingsModel = GetZSettingsModel();
 
-		ZValueSource zValueSource = _cutAlongToolOptions.ZValueSource;
+		ChangeAlongZSource zValueSource = _cutAlongToolOptions.ZValueSource;
 
 		EnvelopeXY envelopeXY = GetMapExtentEnvelopeXY();
 
@@ -182,9 +192,19 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 			                          ? _cutAlongToolOptions.MinimalTolerance
 			                          : null;
 
+		DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider =
+			_cutAlongToolOptions.GetZSourceOptionProvider();
+
+		// Log geometry types of selected features
+		foreach (Feature feature in selectedFeatures)
+		{
+			GeometryType geometryType = feature.GetShape().GeometryType;
+			_msg.Debug($"Selected source feature geometry type: {geometryType}");
+		}
+
 		ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
 			selectedFeatures, targetFeatures, targetBufferOptions, envelopeXY, customTolerance,
-			zValueSource, cancellationToken);
+			zValueSource, cancellationToken, zSourceProvider);
 
 		return result;
 	}
