@@ -1662,7 +1662,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	private List<long> ProcessUpdates(Table table, List<long> oids,
 	                                  [NotNull] List<long> insertedOids)
 	{
-		_msg.Debug($"ProcessUpdate {table.GetName()}.");
+		_msg.Debug($"ProcessUpdates {table.GetName()}.");
 
 		var invalidateOids = new List<long>(oids.Count);
 
