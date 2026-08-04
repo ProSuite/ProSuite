@@ -94,6 +94,16 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 	[DefaultValue(true)]
 	public bool OverrideCommandToolTip { get; set; }
 
+	/// <summary>
+	/// The command caption (tool name), shown as the bold header line of the tooltip.
+	/// </summary>
+	public string ToolTipHeader { get; private set; } = string.Empty;
+
+	/// <summary>
+	/// The command description, shown as the body of the tooltip.
+	/// </summary>
+	public string ToolTipBody { get; private set; } = string.Empty;
+
 	[NotNull]
 	protected IPlugInWrapper PlugInWrapper
 	{
@@ -137,14 +147,20 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			// update ToolTip
 			if (! OverrideCommandToolTip)
 			{
-				string toolTip = PlugInWrapper.Tooltip;
+				string header = CleanToolTipText(PlugInWrapper.Caption);
+				string body = CleanToolTipText(PlugInWrapper.Tooltip);
+				string combined = JoinToolTip(header, body);
 
-				if (! Equals(toolTip, _lastCommandToolTip))
+				if (! Equals(combined, _lastCommandToolTip))
 				{
-					_lastCommandToolTip = toolTip;
-					ToolTipText =
-						toolTip?.Replace(_mnemonicCharacter, string.Empty) ??
-						string.Empty;
+					_lastCommandToolTip = combined;
+
+					ToolTipHeader = header;
+					ToolTipBody = body;
+
+					// plain multi-line fallback for consumers that show the
+					// built-in tooltip (the tool palette owner-draws instead)
+					ToolTipText = combined;
 				}
 			}
 
@@ -258,6 +274,35 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 	}
 
 	#region Non-public members
+
+	/// <summary>
+	/// Removes the mnemonic marker and surrounding whitespace from a caption or
+	/// tooltip string.
+	/// </summary>
+	private static string CleanToolTipText([CanBeNull] string text)
+	{
+		return text?.Replace(_mnemonicCharacter, string.Empty).Trim() ?? string.Empty;
+	}
+
+	/// <summary>
+	/// Joins the caption (header) and description (body) into a single multi-line
+	/// tooltip string, placing the header on the first line and the description on
+	/// the following line(s).
+	/// </summary>
+	private static string JoinToolTip([NotNull] string header, [NotNull] string body)
+	{
+		if (string.IsNullOrEmpty(header))
+		{
+			return body;
+		}
+
+		if (string.IsNullOrEmpty(body))
+		{
+			return header;
+		}
+
+		return $"{header}{Environment.NewLine}{body}";
+	}
 
 	protected virtual void OnClicking(CancelEventArgs eventArgs)
 	{
