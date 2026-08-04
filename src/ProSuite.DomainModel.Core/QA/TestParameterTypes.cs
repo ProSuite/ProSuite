@@ -189,6 +189,15 @@ namespace ProSuite.DomainModel.Core.QA
 				return new DatasetTestParameterValue(parameter);
 			}
 
+			if (parameter.DefaultValue == null && parameter.Type == typeof(DateTime))
+			{
+				// The type default of DateTime (01.01.0001) is never a meaningful date
+				// parameter value, unlike 0 / false / the first enum member. Leave the
+				// value empty instead, so the user has to enter a date and validation
+				// reports the parameter as not set until then.
+				return new ScalarTestParameterValue(parameter, (object) null);
+			}
+
 			return new ScalarTestParameterValue(
 				parameter, $"{parameter.DefaultValue ?? GetDefault(parameter.Type)}");
 		}
