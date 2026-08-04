@@ -56,6 +56,24 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		public bool ReadOnly { get; set; }
 
+		/// <summary>
+		/// Whether picking a date in the drop-down calendar resets the time of day to
+		/// 00:00:00. True by default (the calendar has no time part, so a date picked
+		/// there would otherwise carry an arbitrary time along). Set to false when the
+		/// displayed format includes a time and an edited time of day must survive a
+		/// subsequent date change.
+		/// </summary>
+		public bool ResetTimeOnCalendarSelection { get; set; } = true;
+
+		/// <summary>
+		/// Whether the user can leave the null value by editing the control: by picking
+		/// a date in the drop-down calendar, or by typing a digit / pressing Up or Down.
+		/// False by default, in which case the null value can only be left through the
+		/// <see cref="Value"/> property or through the legacy WM_NOTIFY notification
+		/// (which is not sent by all common control versions).
+		/// </summary>
+		public bool AllowValueEntryWhenNull { get; set; }
+
 		public void Render([NotNull] Action<DateTimePickerNullable> procedure)
 		{
 			Assert.ArgumentNotNull(procedure, nameof(procedure));
@@ -171,6 +189,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			SetFormat();
 
 			_isNull = false;
+			_originalValue = base.Value;
 
 			base.OnValueChanged(new EventArgs());
 		}
@@ -242,6 +261,37 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			base.WndProc(ref m);
 		}
 
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			if (_isNull && AllowValueEntryWhenNull && ! ReadOnly &&
+			    IsValueEntryKey(e.KeyCode))
+			{
+				// In the null state the control displays the null text as a literal and
+				// therefore has no editable date/time fields, so typing a digit or
+				// spinning with the arrow keys would have nothing to act on. Leave the
+				// null state first; the key is then applied to the fields of the value
+				// the control is showing.
+				SetToDateTimeValue();
+			}
+
+			base.OnKeyDown(e);
+		}
+
+		private static bool IsValueEntryKey(Keys keyCode)
+		{
+			if (keyCode >= Keys.D0 && keyCode <= Keys.D9)
+			{
+				return true;
+			}
+
+			if (keyCode >= Keys.NumPad0 && keyCode <= Keys.NumPad9)
+			{
+				return true;
+			}
+
+			return keyCode == Keys.Up || keyCode == Keys.Down;
+		}
+
 		protected override void OnDropDown(EventArgs e)
 		{
 			base.OnDropDown(e);
@@ -271,7 +321,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			}
 			else
 			{
-				if (_calendarIsDroppedDown)
+				if (_calendarIsDroppedDown && ResetTimeOnCalendarSelection)
 				{
 					_forcingValueChange = true;
 
@@ -299,6 +349,16 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			base.OnCloseUp(e);
 
 			_calendarIsDroppedDown = false;
+
+			if (AllowValueEntryWhenNull && ! ReadOnly)
+			{
+				// A date picked in the calendar must leave the null value, otherwise the
+				// control keeps displaying the null text. The WM_NOTIFY based detection
+				// above cannot be relied upon for this (its notification codes do not
+				// fire on all comctl32 versions); SetToDateTimeValue() is idempotent, so
+				// doing it here too is safe.
+				SetToDateTimeValue();
+			}
 
 			OnPropertyChanged("BindableValue");
 		}
