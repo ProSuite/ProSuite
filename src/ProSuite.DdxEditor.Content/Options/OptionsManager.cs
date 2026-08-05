@@ -73,39 +73,55 @@ namespace ProSuite.DdxEditor.Content.Options
 					return;
 				}
 
-				if (form.ShowDeletedModelElements != _modelBuilder.IncludeDeletedModelElements)
-				{
-					_modelBuilder.IncludeDeletedModelElements = form.ShowDeletedModelElements;
+				bool refreshDataModels =
+					form.ShowDeletedModelElements !=
+					_modelBuilder.IncludeDeletedModelElements;
 
+				bool refreshAlgorithmDescriptors =
+					form.UseClassicConditionSpecification !=
+					_modelBuilder.UseClassicConditionSpecification;
+
+				bool refreshQualityConditions =
+					refreshAlgorithmDescriptors ||
+					form.ShowQualityConditionsBasedOnDeletedDatasets !=
+					_modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets ||
+					form.ListQualityConditionsWithDataset !=
+					_modelBuilder.ListQualityConditionsWithDataset;
+
+				// The refresh removes the tree nodes of the affected items, including
+				// the node of the item that is currently being edited. Pending changes
+				// must be settled before that: settling them afterwards - from the
+				// selection change that the node removal triggers in the tree view -
+				// would delete tree nodes while the tree view is still removing them,
+				// which terminates the process (see TreeViewUpdateScope). This is the
+				// same precondition that IApplicationController.RefreshItem() enforces.
+				if ((refreshDataModels || refreshQualityConditions) &&
+				    applicationController.HasPendingChanges &&
+				    ! applicationController.PrepareItemSelection(
+					    applicationController.CurrentItem))
+				{
+					// cancelled by the user: leave the options unchanged
+					return;
+				}
+
+				ApplyOptions(new OptionSettings
+				             {
+					             ShowDeletedModelElements = form.ShowDeletedModelElements,
+					             ShowQualityConditionsBasedOnDeletedDatasets =
+						             form.ShowQualityConditionsBasedOnDeletedDatasets,
+					             ListQualityConditionsWithDataset =
+						             form.ListQualityConditionsWithDataset,
+					             UseClassicConditionSpecification =
+						             form.UseClassicConditionSpecification
+				             });
+
+				if (refreshDataModels)
+				{
 					RefreshDataModels(applicationController);
 				}
 
-				var refreshQualityConditions = false;
-				if (form.ShowQualityConditionsBasedOnDeletedDatasets !=
-				    _modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
+				if (refreshAlgorithmDescriptors)
 				{
-					_modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets =
-						form.ShowQualityConditionsBasedOnDeletedDatasets;
-
-					refreshQualityConditions = true;
-				}
-
-				if (form.ListQualityConditionsWithDataset !=
-				    _modelBuilder.ListQualityConditionsWithDataset)
-				{
-					_modelBuilder.ListQualityConditionsWithDataset =
-						form.ListQualityConditionsWithDataset;
-
-					refreshQualityConditions = true;
-				}
-
-				if (form.UseClassicConditionSpecification !=
-				    _modelBuilder.UseClassicConditionSpecification)
-				{
-					_modelBuilder.UseClassicConditionSpecification =
-						form.UseClassicConditionSpecification;
-
-					refreshQualityConditions = true;
 					RefreshAlgorithmDescriptors(applicationController);
 				}
 
@@ -147,13 +163,10 @@ namespace ProSuite.DdxEditor.Content.Options
 			// InstanceConfigurationControlFactory), which is what makes the
 			// "Use classic condition specification" toggle take effect immediately
 			// for a currently open condition/transformer/filter item, without a
-			// restart. RefreshItem() throws if the item has pending changes, so
-			// prompt to save/discard first, as ApplicationShell does when navigating
-			// away from a dirty item; if the user cancels, leave the item alone (it
-			// keeps its current editor/content until closed and reopened).
-			if (currentItem != null &&
-			    (! controller.HasPendingChanges ||
-			     controller.PrepareItemSelection(currentItem)))
+			// restart. The caller has already settled any pending changes (which
+			// RefreshItem() requires); if the user cancelled that prompt, we are not
+			// called at all.
+			if (currentItem != null && ! controller.HasPendingChanges)
 			{
 				controller.RefreshItem(currentItem);
 			}

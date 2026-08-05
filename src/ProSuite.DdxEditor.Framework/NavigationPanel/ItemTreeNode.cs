@@ -113,10 +113,13 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 
 			if (Nodes.Count > 0)
 			{
-				TreeViewNotificationScope.EnsureNodeRemovalAllowed(TreeView, Text);
-			}
+				TreeViewUpdateScope.EnsureNodeRemovalAllowed(TreeView, Text);
 
-			Nodes.Clear();
+				using (TreeViewUpdateScope.EnterNodeRemoval(TreeView))
+				{
+					Nodes.Clear();
+				}
+			}
 
 			foreach (Item child in Item.Children)
 			{
@@ -184,12 +187,62 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 		{
 			Try(delegate
 			{
-				TreeViewNotificationScope.EnsureNodeRemovalAllowed(TreeView, Text);
+				TreeViewUpdateScope.EnsureNodeRemovalAllowed(TreeView, Text);
 
-				Remove();
+				MoveSelectionToParent();
+
+				using (TreeViewUpdateScope.EnterNodeRemoval(TreeView))
+				{
+					Remove();
+				}
 
 				Dispose();
 			});
+		}
+
+		/// <summary>
+		/// Moves the selection to the parent node if this node holds it, so that the
+		/// item to be selected next is determined here, while the tree view is still
+		/// intact: once this node is removed, the native tree view moves the selection
+		/// on its own, and the resulting events must be ignored (see
+		/// <see cref="TreeViewUpdateScope"/>).
+		/// </summary>
+		private void MoveSelectionToParent()
+		{
+			TreeView treeView = TreeView;
+
+			if (treeView == null || Parent == null)
+			{
+				return;
+			}
+
+			if (TreeViewUpdateScope.IsChangingSelection(treeView))
+			{
+				// the tree view is already selecting another node (this node is
+				// typically removed because its new item is discarded on navigating
+				// away from it); don't interfere with that selection
+				return;
+			}
+
+			if (! ContainsNode(treeView.SelectedNode))
+			{
+				return;
+			}
+
+			treeView.SelectedNode = Parent;
+		}
+
+		private bool ContainsNode([CanBeNull] TreeNode node)
+		{
+			for (TreeNode candidate = node; candidate != null; candidate = candidate.Parent)
+			{
+				if (candidate == this)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private void _item_Changed(object sender, EventArgs e)
