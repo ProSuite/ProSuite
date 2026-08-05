@@ -5,12 +5,16 @@ using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Dialogs;
 using ProSuite.DdxEditor.Framework.Items;
 
 namespace ProSuite.DdxEditor.Framework.NavigationPanel
 {
 	public class ItemTreeNode : TreeNode, IDisposable, IItemTreeNode
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull] private readonly IImageProvider _imageProvider;
 
 		#region Constructors
@@ -107,6 +111,11 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 		{
 			Assert.ArgumentNotNull(imageProvider, nameof(imageProvider));
 
+			if (Nodes.Count > 0)
+			{
+				TreeViewNotificationScope.EnsureNodeRemovalAllowed(TreeView, Text);
+			}
+
 			Nodes.Clear();
 
 			foreach (Item child in Item.Children)
@@ -154,41 +163,66 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 			Item.Deleted -= _item_Deleted;
 		}
 
+		/// <summary>
+		/// Reports an exception instead of letting it escape from an item event
+		/// handler. These handlers are typically called while the tree view is
+		/// processing a windows message, where an escaping exception ends the process.
+		/// </summary>
+		private static void Try([NotNull] Action proc)
+		{
+			try
+			{
+				proc();
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
 		private void _item_Deleted(object sender, EventArgs e)
 		{
-			Remove();
+			Try(delegate
+			{
+				TreeViewNotificationScope.EnsureNodeRemovalAllowed(TreeView, Text);
 
-			Dispose();
+				Remove();
+
+				Dispose();
+			});
 		}
 
 		private void _item_Changed(object sender, EventArgs e)
 		{
-			UpdateAppearance();
+			Try(UpdateAppearance);
 		}
 
 		private void _item_ChildAdded(object sender, ItemEventArgs e)
 		{
-			if (! IsExpanded)
+			Try(delegate
 			{
-				// this already picks up the new item
-				Expand();
-			}
+				if (! IsExpanded)
+				{
+					// this already picks up the new item
+					Expand();
+				}
 
-			TreeNode newNode = GetChildNode(e.Item);
+				TreeNode newNode = GetChildNode(e.Item);
 
-			if (newNode == null)
-			{
-				newNode = ItemTreeNodeFactory.CreateNode(e.Item, _imageProvider);
+				if (newNode == null)
+				{
+					newNode = ItemTreeNodeFactory.CreateNode(e.Item, _imageProvider);
 
-				Nodes.Add(newNode);
-			}
+					Nodes.Add(newNode);
+				}
 
-			TreeView.SelectedNode = newNode;
+				TreeView.SelectedNode = newNode;
+			});
 		}
 
 		private void _item_ChildrenRefreshed(object sender, EventArgs e)
 		{
-			RefreshChildNodes(_imageProvider);
+			Try(() => RefreshChildNodes(_imageProvider));
 		}
 	}
 }
