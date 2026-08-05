@@ -12,7 +12,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 {
 	/// <summary>
 	/// This class extends the DateTimePicker class to allow null values
-	/// for the date. Most of the code is from
+	/// for the date. Originally inspired by
 	/// http://www.codeproject.com/cs/miscctrl/NullableDateTimePicker.asp
 	/// 
 	/// It displays a null date according the fiels _nullValue.
