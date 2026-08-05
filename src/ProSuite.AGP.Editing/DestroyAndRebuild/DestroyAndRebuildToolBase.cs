@@ -523,17 +523,40 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	                                                            Geometry rebuiltGeometry,
 	                                                            string subtypeName)
 	{
+		var featureClass = originalFeature.GetTable();
+
 		// NOTE: Use GdbPersistenceUtils to prevent the progress pop-up
-		var dataset = new List<Dataset> { originalFeature.GetTable() };
+		var dataset = new List<Dataset> { featureClass };
 
 		return await GdbPersistenceUtils.ExecuteInTransactionAsync(
 			       editContext =>
 			       {
-				       GdbPersistenceUtils.StoreShape(originalFeature, rebuiltGeometry,
+				       FeatureClassDefinition featureClassDef = featureClass.GetDefinition();
+
+				       Geometry geometryToStore =
+					       MakeGeometryStorable(rebuiltGeometry, featureClassDef);
+
+				       GdbPersistenceUtils.StoreShape(originalFeature, geometryToStore,
 				                                      editContext);
 				       return true;
 			       },
 			       $"Destroy and Rebuild {subtypeName}", dataset);
+	}
+
+	private static Geometry MakeGeometryStorable(Geometry simplifiedSketch,
+	                                             FeatureClassDefinition featureClassDef)
+	{
+		bool classHasZ = featureClassDef.HasZ();
+		bool classHasM = featureClassDef.HasM();
+
+		Geometry geometryToStore =
+			GeometryUtils.EnsureGeometrySchema(
+				simplifiedSketch, classHasZ, classHasM);
+
+		Geometry projected = GeometryUtils.EnsureSpatialReference(
+			geometryToStore, featureClassDef.GetSpatialReference());
+
+		return projected;
 	}
 
 	private static string
