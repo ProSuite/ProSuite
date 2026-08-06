@@ -523,12 +523,21 @@ namespace ProSuite.DomainModel.Core.QA
 			[NotNull] List<TransformerConfiguration> transformers,
 			IDomainTransactionManager domainTransactions)
 		{
+			// Circular references must not exist, but they can be created by editing. Keep track
+			// of the processed transformers to avoid an endless loop:
+			var processed = new HashSet<TransformerConfiguration>();
+
 			while (transformers.Count > 0)
 			{
 				var nextLevelTransformers = new List<TransformerConfiguration>();
 
 				foreach (TransformerConfiguration transformer in transformers)
 				{
+					if (! processed.Add(transformer))
+					{
+						continue;
+					}
+
 					ReattachAndAddTransformers(transformer.ParameterValues, nextLevelTransformers,
 					                           domainTransactions);
 				}
