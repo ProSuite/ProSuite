@@ -1301,6 +1301,8 @@ public class ArcWorkspaceName : IWorkspaceName
 	public IEnumerable<KeyValuePair<string, string>> ConnectionProperties =>
 		_datastoreName.ConnectionProperties;
 
+	public bool IsFeatureService => _datastoreName.IsFeatureService;
+
 	#endregion
 
 	#region Equality members
