@@ -443,6 +443,15 @@ namespace ProSuite.DomainModel.AO.Workflow
 				                  ? null
 				                  : GetDataset(model, modelDatasetName, ignoreDataset);
 
+			if (dataset == null)
+			{
+				// The service table name may be the qualified name of the published table with
+				// its dots replaced by underscores ("db_owner_table"), which no name lookup can
+				// find. Compare the names without their separator characters instead.
+				dataset = ModelServiceUtils.FindDatasetForServiceTableName(
+					model, gdbDatasetName, ignoreDataset);
+			}
+
 			if (dataset == null && modelDeclaresUrls)
 			{
 				_msg.WarnFormat(
