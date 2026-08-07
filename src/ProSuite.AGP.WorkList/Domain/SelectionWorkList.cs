@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
@@ -6,7 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
-using System.Collections.Generic;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.WorkList.Domain;
 
@@ -25,7 +26,11 @@ public class SelectionWorkList : WorkList
 		SpatialHashSearcher<IWorkItem> searcher,
 		List<long> insertedOids)
 	{
-		QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
+		//TODO Quick fix for massive performance degradation:
+		// SelectionSourceClass claims QueryFilter.ObjectIDs later
+		// So we are setting up a QueryFilter here using a WhereClause instead
+		// Better would be to modify the filter in SelectionSourceClass.EnsureValidFilterCore
+		QueryFilter filter = CreateFilter(table, oids);
 
 		foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(
 			         table, filter, ignoreDefinitionQuery: true))
@@ -86,5 +91,25 @@ public class SelectionWorkList : WorkList
 
 			yield return cachedItem.OID;
 		}
+	}
+
+	private static QueryFilter CreateFilter(Table table, List<long> oids, int maxRowCount = 1000)
+	{
+		QueryFilter filter;
+
+		if (oids.Count < maxRowCount)
+		{
+			using var tableDefinition = table.GetDefinition();
+			string oidFieldName = tableDefinition.GetObjectIDField();
+			string whereClause = $"{oidFieldName} IN ({StringUtils.Concatenate(oids, ",")})";
+			filter = GdbQueryUtils.CreateFilter(whereClause);
+		}
+		else
+		{
+			_msg.Debug($"Processing more than {maxRowCount} OIDs, using an empty query filter.");
+			filter = new QueryFilter();
+		}
+
+		return filter;
 	}
 }
