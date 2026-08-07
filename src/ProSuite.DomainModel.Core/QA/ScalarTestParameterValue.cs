@@ -260,16 +260,31 @@ namespace ProSuite.DomainModel.Core.QA
 				type = Assert.NotNull(DataType, "Parameter data type not defined");
 			}
 
+			if (_stringValue.Length == 0 && type != typeof(string))
+			{
+				// Not set. For a text parameter the empty string is a value of its own
+				// and is kept, but no other type can represent it: parsing it would
+				// throw and make the entire condition unreadable. Parameters left
+				// unset used to be written this way, so such values still exist.
+				return null;
+			}
+
 			object castValue;
 			ConversionUtils.ParseTo(type, _stringValue, _persistedCulture, out castValue);
 
 			return castValue;
 		}
 
-		public void SetValue(object value)
+		public void SetValue([CanBeNull] object value)
 		{
 			_formattedStringValue = null;
-			_stringValue = GetStringValueInPersistedCulture(value);
+
+			// Keep "not set" as null. Formatting null would yield the empty string,
+			// which cannot be read back as anything but text and would make the
+			// condition unreadable - see GetValue.
+			_stringValue = value == null
+				               ? null
+				               : GetStringValueInPersistedCulture(value);
 		}
 
 		[NotNull]
