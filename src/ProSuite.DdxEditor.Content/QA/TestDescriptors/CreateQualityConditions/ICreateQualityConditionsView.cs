@@ -30,6 +30,15 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		[NotNull]
 		string ExcludeDatasetsCaption { get; set; }
 
+		/// <summary>
+		/// A short note shown next to the checkbox above, saying how many datasets it
+		/// left out of the dataset selection window — the ones that appear greyed out
+		/// there. The empty string (the default) shows nothing; the classic presenter
+		/// never sets it.
+		/// </summary>
+		[NotNull]
+		string ExcludeDatasetsNote { get; set; }
+
 		[NotNull]
 		string QualityConditionNames { get; set; }
 

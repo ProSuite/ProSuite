@@ -106,7 +106,39 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			set
 			{
 				SetTextKeepingRightEdge(_checkBoxExcludeDatasetsUsingThisTest, value);
+
+				PlaceExcludeDatasetsNote();
 			}
+		}
+
+		string ICreateQualityConditionsView.ExcludeDatasetsNote
+		{
+			get { return _labelExcludeDatasetsNote.Text; }
+			set
+			{
+				_labelExcludeDatasetsNote.Text = value;
+
+				PlaceExcludeDatasetsNote();
+			}
+		}
+
+		/// <summary>
+		/// Keeps the note directly left of the checkbox it explains. Both sit at the
+		/// bottom right of the dataset box and both size themselves to their text, so the
+		/// note has to be placed again whenever either text changes.
+		/// </summary>
+		private void PlaceExcludeDatasetsNote()
+		{
+			const int gap = 12;
+
+			_labelExcludeDatasetsNote.Left =
+				_checkBoxExcludeDatasetsUsingThisTest.Left - gap -
+				_labelExcludeDatasetsNote.Width;
+
+			_labelExcludeDatasetsNote.Top =
+				_checkBoxExcludeDatasetsUsingThisTest.Top +
+				(_checkBoxExcludeDatasetsUsingThisTest.Height -
+				 _labelExcludeDatasetsNote.Height) / 2;
 		}
 
 		/// <summary>
