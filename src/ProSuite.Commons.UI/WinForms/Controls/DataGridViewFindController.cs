@@ -58,9 +58,20 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			_toolsView.Observer = this;
 
-			_selectedFindResultBackColor = Color.FromArgb(152, 204, 202);
-			_findResultBackColor = Color.FromArgb(255, 255, 150);
-			_activeFindResultBackColor = Color.FromArgb(255, 150, 50);
+			if (IsDarkBackground(_dataGridView.DefaultCellStyle.BackColor))
+			{
+				// Darker, less saturated variants that keep the light theme's hues
+				// but stay legible against the dark grid background and light text.
+				_selectedFindResultBackColor = Color.FromArgb(60, 110, 108);
+				_findResultBackColor = Color.FromArgb(120, 103, 30);
+				_activeFindResultBackColor = Color.FromArgb(163, 90, 30);
+			}
+			else
+			{
+				_selectedFindResultBackColor = Color.FromArgb(152, 204, 202);
+				_findResultBackColor = Color.FromArgb(255, 255, 150);
+				_activeFindResultBackColor = Color.FromArgb(255, 150, 50);
+			}
 
 			RenderFindResultOnToolsView();
 
@@ -314,6 +325,11 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private bool SupportsRowFiltering => _dataGridView is IFilterableDataGridView;
 
+		private static bool IsDarkBackground(Color color)
+		{
+			return color.GetBrightness() < 0.5;
+		}
+
 		private static bool Matches([NotNull] DataGridViewRow row,
 		                            int columnIndex,
 		                            [NotNull] Regex regex)
@@ -432,16 +448,16 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			DataGridViewFindResultCell firstFindCell =
 				Assert.NotNull(_findResults).FindResultCells[CurrentFindResultIndex];
-		   
+
 			DataGridViewRow row = _dataGridView.Rows[firstFindCell.RowIndex];
 
-			if (!row.Visible)
+			if (! row.Visible)
 			{
 				return;
 			}
 
 			DataGridViewColumn column = _dataGridView.Columns[firstFindCell.ColumnIndex];
-			if (!column.Visible)
+			if (! column.Visible)
 			{
 				return;
 			}

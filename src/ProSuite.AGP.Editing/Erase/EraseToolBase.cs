@@ -39,9 +39,6 @@ public abstract class EraseToolBase : ConstructionToolBase
 
 	protected EraseToolBase()
 	{
-		// important for SketchRecorder in base class
-		FireSketchEvents = true;
-
 		// This is our property:
 		RequiresSelection = true;
 	}

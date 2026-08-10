@@ -17,7 +17,6 @@ using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.QA.Tests.Transformers;
 using ProSuite.QA.Tests.Transformers.Filters;
-using ProSuite.QA.Tests.ParameterTypes;
 using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 
 namespace ProSuite.QA.Tests.Test.Transformer

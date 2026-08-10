@@ -122,6 +122,11 @@ namespace ProSuite.DomainServices.AO.QA
 			return QualityConditions.Get(conditionName);
 		}
 
+		public IList<QualityCondition> GetQualityConditions(IList<int> conditionIds)
+		{
+			return QualityConditions.Get(conditionIds);
+		}
+
 		public QualitySpecification GetQualitySpecification(int qualitySpecificationId)
 		{
 			QualitySpecification result = QualitySpecifications.Get(qualitySpecificationId);

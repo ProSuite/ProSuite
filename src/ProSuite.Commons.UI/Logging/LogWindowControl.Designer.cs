@@ -47,7 +47,7 @@ namespace ProSuite.Commons.UI.Logging
 			this._toolStripMenuItemClearAllMessages = new System.Windows.Forms.ToolStripMenuItem();
 			this._toolStripMenuItemShowLogEventItemDetails = new System.Windows.Forms.ToolStripMenuItem();
 			this._toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
-			this._toolStripMenuItemHideDebugMessages = new System.Windows.Forms.ToolStripMenuItem();
+			this._toolStripMenuItemShowDebugMessages = new System.Windows.Forms.ToolStripMenuItem();
 			this._toolStripMenuItemVerboseDebugLogging = new System.Windows.Forms.ToolStripMenuItem();
 			this._forceRefreshTimer = new System.Windows.Forms.Timer();
 			this._dataGridView = new DoubleBufferedDataGridView();
@@ -88,7 +88,7 @@ namespace ProSuite.Commons.UI.Logging
             this._toolStripMenuItemClearAllMessages,
             this._toolStripMenuItemShowLogEventItemDetails,
             this._toolStripMenuItem2,
-            this._toolStripMenuItemHideDebugMessages,
+            this._toolStripMenuItemShowDebugMessages,
             this._toolStripMenuItemVerboseDebugLogging});
 			this._contextMenuStripLogGridBox.Name = "contextMenuStrip1";
 			this._contextMenuStripLogGridBox.ShowCheckMargin = true;
@@ -103,7 +103,7 @@ namespace ProSuite.Commons.UI.Logging
             this._toolStripMenuItemMsgDate});
 			this._toolStripMenuItemColumns.Name = "_toolStripMenuItemColumns";
 			this._toolStripMenuItemColumns.Size = new System.Drawing.Size(201, 22);
-			this._toolStripMenuItemColumns.Text = "Message Columns";
+			this._toolStripMenuItemColumns.Text = "Message columns";
 			// 
 			// _toolStripMenuItemMsgNumber
 			// 
@@ -135,7 +135,7 @@ namespace ProSuite.Commons.UI.Logging
 			// 
 			this._toolStripMenuItemShowAll.Name = "_toolStripMenuItemShowAll";
 			this._toolStripMenuItemShowAll.Size = new System.Drawing.Size(201, 22);
-			this._toolStripMenuItemShowAll.Text = "Show Message History";
+			this._toolStripMenuItemShowAll.Text = "Show message history";
 			this._toolStripMenuItemShowAll.Click += new System.EventHandler(this._toolStripMenuItemShowAll_Click);
 			// 
 			// _toolStripMenuItem4
@@ -147,14 +147,14 @@ namespace ProSuite.Commons.UI.Logging
 			// 
 			this._toolStripMenuItemClearAllMessages.Name = "_toolStripMenuItemClearAllMessages";
 			this._toolStripMenuItemClearAllMessages.Size = new System.Drawing.Size(201, 22);
-			this._toolStripMenuItemClearAllMessages.Text = "Clear All Messages";
+			this._toolStripMenuItemClearAllMessages.Text = "Clear all messages";
 			this._toolStripMenuItemClearAllMessages.Click += new System.EventHandler(this._toolStripMenuItemClearAllMessages_Click);
 			// 
 			// _toolStripMenuItemShowLogEventItemDetails
 			// 
 			this._toolStripMenuItemShowLogEventItemDetails.Name = "_toolStripMenuItemShowLogEventItemDetails";
 			this._toolStripMenuItemShowLogEventItemDetails.Size = new System.Drawing.Size(201, 22);
-			this._toolStripMenuItemShowLogEventItemDetails.Text = "Show Message Details";
+			this._toolStripMenuItemShowLogEventItemDetails.Text = "Show message details";
 			this._toolStripMenuItemShowLogEventItemDetails.Click += new System.EventHandler(this._toolStripMenuItemShowLogEventItemDetails_Click);
 			// 
 			// _toolStripMenuItem2
@@ -162,22 +162,22 @@ namespace ProSuite.Commons.UI.Logging
 			this._toolStripMenuItem2.Name = "_toolStripMenuItem2";
 			this._toolStripMenuItem2.Size = new System.Drawing.Size(198, 6);
 			// 
-			// _toolStripMenuItemHideDebugMessages
+			// _toolStripMenuItemShowDebugMessages
 			// 
-			this._toolStripMenuItemHideDebugMessages.Checked = true;
-			this._toolStripMenuItemHideDebugMessages.CheckOnClick = true;
-			this._toolStripMenuItemHideDebugMessages.CheckState = System.Windows.Forms.CheckState.Checked;
-			this._toolStripMenuItemHideDebugMessages.Name = "_toolStripMenuItemHideDebugMessages";
-			this._toolStripMenuItemHideDebugMessages.Size = new System.Drawing.Size(201, 22);
-			this._toolStripMenuItemHideDebugMessages.Text = "Hide Debug Messages";
-			this._toolStripMenuItemHideDebugMessages.CheckedChanged += new System.EventHandler(this._toolStripMenuItemHideDebugMessages_CheckedChanged);
+			this._toolStripMenuItemShowDebugMessages.Checked = false;
+			this._toolStripMenuItemShowDebugMessages.CheckOnClick = true;
+			this._toolStripMenuItemShowDebugMessages.CheckState = System.Windows.Forms.CheckState.Unchecked;
+			this._toolStripMenuItemShowDebugMessages.Name = "_toolStripMenuItemShowDebugMessages";
+			this._toolStripMenuItemShowDebugMessages.Size = new System.Drawing.Size(201, 22);
+			this._toolStripMenuItemShowDebugMessages.Text = "Show debug messages";
+			this._toolStripMenuItemShowDebugMessages.CheckedChanged += new System.EventHandler(this._toolStripMenuItemShowDebugMessages_CheckedChanged);
 			// 
 			// _toolStripMenuItemVerboseDebugLogging
 			// 
 			this._toolStripMenuItemVerboseDebugLogging.CheckOnClick = true;
 			this._toolStripMenuItemVerboseDebugLogging.Name = "_toolStripMenuItemVerboseDebugLogging";
 			this._toolStripMenuItemVerboseDebugLogging.Size = new System.Drawing.Size(201, 22);
-			this._toolStripMenuItemVerboseDebugLogging.Text = "Verbose Debug Logging";
+			this._toolStripMenuItemVerboseDebugLogging.Text = "Verbose debug logging";
 			this._toolStripMenuItemVerboseDebugLogging.CheckedChanged += new System.EventHandler(this._toolStripMenuItemVerboseDebugLogging_CheckedChanged);
 			// 
 			// _forceRefreshTimer
@@ -190,10 +190,11 @@ namespace ProSuite.Commons.UI.Logging
 			// 
 			this._dataGridView.AllowUserToAddRows = false;
 			this._dataGridView.AllowUserToDeleteRows = false;
-			this._dataGridView.AllowUserToResizeColumns = false;
+			this._dataGridView.AllowUserToResizeColumns = true;
 			this._dataGridView.AllowUserToResizeRows = false;
 			this._dataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
-			this._dataGridView.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+			this._dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
+			this._dataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
 			this._dataGridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
 			this._dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this._dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -238,20 +239,20 @@ namespace ProSuite.Commons.UI.Logging
 			this._columnLogLevelImage.MinimumWidth = 19;
 			this._columnLogLevelImage.Name = "_columnLogLevelImage";
 			this._columnLogLevelImage.ReadOnly = true;
+			this._columnLogLevelImage.Resizable = System.Windows.Forms.DataGridViewTriState.False;
 			this._columnLogLevelImage.Width = 19;
 			// 
 			// _columnLogNumber
 			// 
 			this._columnLogNumber.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
 			dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-			dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this._columnLogNumber.DefaultCellStyle = dataGridViewCellStyle2;
 			this._columnLogNumber.FillWeight = 1F;
 			this._columnLogNumber.HeaderText = "#";
 			this._columnLogNumber.MinimumWidth = 30;
 			this._columnLogNumber.Name = "_columnLogNumber";
 			this._columnLogNumber.ReadOnly = true;
-			this._columnLogNumber.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+			this._columnLogNumber.Resizable = System.Windows.Forms.DataGridViewTriState.True;
 			this._columnLogNumber.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
 			this._columnLogNumber.Visible = false;
 			this._columnLogNumber.Width = 30;
@@ -260,16 +261,15 @@ namespace ProSuite.Commons.UI.Logging
 			// 
 			this._columnLogDateTime.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
 			dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-			dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			dataGridViewCellStyle3.Format = "T";
 			this._columnLogDateTime.DefaultCellStyle = dataGridViewCellStyle3;
 			this._columnLogDateTime.FillWeight = 1F;
 			this._columnLogDateTime.HeaderText = "Time";
 			this._columnLogDateTime.Name = "_columnLogDateTime";
 			this._columnLogDateTime.ReadOnly = true;
-			this._columnLogDateTime.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+			this._columnLogDateTime.Resizable = System.Windows.Forms.DataGridViewTriState.True;
 			this._columnLogDateTime.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-			this._columnLogDateTime.Width = 60;
+			this._columnLogDateTime.Width = 85;
 			// 
 			// _columnLogMessage
 			// 
@@ -284,8 +284,9 @@ namespace ProSuite.Commons.UI.Logging
 			// 
 			// LogWindowControl
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.Font = new System.Drawing.Font("Segoe UI", 9F);
 			this.Controls.Add(this._dataGridView);
 			this.Controls.Add(this._labelPlaceholder);
 			this.Name = "LogWindowControl";
@@ -308,7 +309,7 @@ namespace ProSuite.Commons.UI.Logging
         private System.Windows.Forms.ToolStripSeparator _toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemClearAllMessages;
         private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemShowLogEventItemDetails;
-        private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemHideDebugMessages;
+        private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemShowDebugMessages;
         private System.Windows.Forms.ToolStripSeparator _toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem _toolStripMenuItemShowAll;
         private System.Windows.Forms.ToolStripSeparator _toolStripMenuItem4;

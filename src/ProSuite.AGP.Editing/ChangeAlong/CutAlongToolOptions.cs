@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
@@ -62,9 +64,9 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 
 		// Z Value settings
 		CentralizableZValueSource =
-			InitializeSetting<ZValueSource>(
+			InitializeSetting<ChangeAlongZSource>(
 				ReflectionUtils.GetProperty(() => LocalOptions.ZValueSource),
-				ZValueSource.Target);
+				ChangeAlongZSource.Target);
 
 		// Target Selection
 		CentralizableTargetFeatureSelection =
@@ -103,7 +105,7 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 	public CentralizableSetting<double> CentralizableMinBufferSegmentLength { get; private set; }
 
 	// Z Value settings
-	public CentralizableSetting<ZValueSource> CentralizableZValueSource { get; private set; }
+	public CentralizableSetting<ChangeAlongZSource> CentralizableZValueSource { get; private set; }
 
 	// Target Selection
 	public CentralizableSetting<TargetFeatureSelection> CentralizableTargetFeatureSelection
@@ -143,13 +145,39 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 	public double MinBufferSegmentLength => CentralizableMinBufferSegmentLength.CurrentValue;
 
 	// Z Value settings
-	public ZValueSource ZValueSource => CentralizableZValueSource.CurrentValue;
+	public ChangeAlongZSource ZValueSource => CentralizableZValueSource.CurrentValue;
 
 	// Target Selection
 	public TargetFeatureSelection TargetFeatureSelection =>
 		CentralizableTargetFeatureSelection.CurrentValue;
 
 	#endregion
+
+	public DatasetSpecificSettingProvider<ChangeAlongZSource> GetZSourceOptionProvider()
+	{
+		return new DatasetSpecificSettingProvider<ChangeAlongZSource>(
+			"Z values for changed vertices", ZValueSource, ZSourceByDataset);
+	}
+
+	private List<DatasetSpecificValue<ChangeAlongZSource>> ZSourceByDataset
+	{
+		get
+		{
+			List<DatasetSpecificValue<ChangeAlongZSource>> zSourceByDataset = null;
+
+			if (LocalOptions.DatasetSpecificZSource != null &&
+			    LocalOptions.DatasetSpecificZSource.Count > 0)
+			{
+				zSourceByDataset = LocalOptions.DatasetSpecificZSource;
+			}
+			else if (CentralOptions != null)
+			{
+				zSourceByDataset = CentralOptions.DatasetSpecificZSource;
+			}
+
+			return zSourceByDataset;
+		}
+	}
 
 	public override void RevertToDefaults()
 	{

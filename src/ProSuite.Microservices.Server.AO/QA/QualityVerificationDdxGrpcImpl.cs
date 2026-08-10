@@ -290,6 +290,55 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
+		public override async Task<GetConditionsResponse> GetQualityConditions(
+			GetConditionsRequest request, ServerCallContext context)
+		{
+			GetConditionsResponse response;
+
+			try
+			{
+				await StartRequestAsync(context.Peer, request);
+
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				Func<ITrackCancel, GetConditionsResponse> func =
+					trackCancel => GetConditionsCore(request);
+
+				using (_msg.IncrementIndentation("Getting {0} quality conditions for {1}",
+				                                 request.ConditionIds.Count, context.Peer))
+				{
+					response =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _staThreadScheduler, true) ??
+						new GetConditionsResponse();
+				}
+
+				_msg.DebugStopTiming(
+					watch, "Gotten {0} quality condition(s) for peer {1}",
+					response.Conditions.Count, context.Peer);
+
+				_msg.InfoFormat("Returning {0} quality condition(s)",
+				                response.Conditions.Count);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error getting quality conditions {request}", e);
+
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
+
+				throw;
+			}
+			finally
+			{
+				EndRequest();
+			}
+
+			return response;
+		}
+
 		public override async Task<GetDatasetDetailsResponse> GetDatasetDetails(
 			GetDatasetDetailsRequest request,
 			ServerCallContext context)
@@ -564,6 +613,54 @@ namespace ProSuite.Microservices.Server.AO.QA
 				response.ReferencedInstanceDescriptors.AddRange(
 					ProtoDataQualityUtils.GetInstanceDescriptorMsgs(
 						new[] { qualityCondition }));
+
+				RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
+				foreach (DdxModel model in modelsById.Values)
+				{
+					ModelMsg modelMsg = ToModelMsg((TModel) model, referencedDatasets);
+					response.ReferencedModels.Add(modelMsg);
+				}
+			});
+
+			return response;
+		}
+
+		private GetConditionsResponse GetConditionsCore([NotNull] GetConditionsRequest request)
+		{
+			var response = new GetConditionsResponse();
+
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx,
+				               "Data Dictionary access has not been configured or failed.");
+
+			verificationDataDictionary.ActivateForCurrentThread(request.Environment);
+
+			VerificationDdx.DomainTransactions.UseTransaction(() =>
+			{
+				IList<QualityCondition> qualityConditions =
+					verificationDataDictionary.GetQualityConditions(request.ConditionIds);
+
+				if (qualityConditions.Count == 0)
+				{
+					return;
+				}
+
+				IDictionary<int, DdxModel> modelsById = new Dictionary<int, DdxModel>();
+
+				foreach (QualityCondition qualityCondition in qualityConditions)
+				{
+					// The parameters must be initialized!
+					InstanceConfigurationUtils.InitializeParameterValues(qualityCondition);
+
+					QualityConditionMsg conditionMsg =
+						ProtoDataQualityUtils.CreateQualityConditionMsg(
+							qualityCondition, null, modelsById);
+
+					response.Conditions.Add(conditionMsg);
+				}
+
+				response.ReferencedInstanceDescriptors.AddRange(
+					ProtoDataQualityUtils.GetInstanceDescriptorMsgs(qualityConditions));
 
 				RepeatedField<DatasetMsg> referencedDatasets = response.ReferencedDatasets;
 				foreach (DdxModel model in modelsById.Values)

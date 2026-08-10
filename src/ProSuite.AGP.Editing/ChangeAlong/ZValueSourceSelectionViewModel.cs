@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.AGP.Editing.ChangeAlong;
@@ -8,7 +8,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong;
 public class ZValueSourceSelectionViewModel : INotifyPropertyChanged
 {
 	public ZValueSourceSelectionViewModel(
-		CentralizableSetting<ZValueSource> centralizableSetting)
+		CentralizableSetting<ChangeAlongZSource> centralizableSetting)
 	{
 		CentralizableSetting = centralizableSetting;
 
@@ -34,9 +34,9 @@ public class ZValueSourceSelectionViewModel : INotifyPropertyChanged
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}
 
-	public CentralizableSetting<ZValueSource> CentralizableSetting { get; }
+	public CentralizableSetting<ChangeAlongZSource> CentralizableSetting { get; }
 
-	public ZValueSource CurrentValue
+	public ChangeAlongZSource CurrentValue
 	{
 		get { return CentralizableSetting.CurrentValue; }
 		set

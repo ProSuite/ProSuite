@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:ProSuite.AGP.Editing.ChangeAlong"
              xmlns:managedOptionsUi="clr-namespace:ProSuite.Commons.UI.ManagedOptions;assembly=ProSuite.Commons.UI"
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
-             xmlns:changeAlong="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;assembly=ProSuite.Commons.AGP.Core"
+             xmlns:changeAlong="clr-namespace:ProSuite.Commons.Geom;assembly=ProSuite.Commons"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=local:ZValueSourceSelectionViewModel}">
 
@@ -21,19 +21,19 @@
 		</StackPanel.Resources>
 
 		<RadioButton Content="Target"
-		             IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static changeAlong:ZValueSource.Target}}"
+		             IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static changeAlong:ChangeAlongZSource.Target}}"
 		             FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}"
 		             IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}"
 		             Margin="6,6,0,2" />
 
 		<RadioButton Content="Source plane"
-		             IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static changeAlong:ZValueSource.SourcePlane}}"
+		             IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static changeAlong:ChangeAlongZSource.SourcePlane}}"
 		             FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}"
 		             IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}"
 		             Margin="6,0,0,2" />
 
 		<RadioButton Content="Interpolated source"
-		             IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static changeAlong:ZValueSource.InterpolatedSource}}"
+		             IsChecked="{Binding Path=CurrentValue, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static changeAlong:ChangeAlongZSource.InterpolatedSource}}"
 		             FontStyle="{Binding CentralizableSetting.HasLocalOverride, Mode=OneWay, Converter={StaticResource OverrideToFontStyleConverter}}"
 		             IsEnabled="{Binding CentralizableSetting.CanOverrideLocally}"
 		             Margin="6,0,0,2" />

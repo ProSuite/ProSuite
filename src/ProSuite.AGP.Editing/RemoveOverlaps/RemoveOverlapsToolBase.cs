@@ -376,7 +376,7 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 
 		foreach (var kvp in userSelectedOverlaps.OverlapGeometries)
 		{
-			if (kvp.Value.Any(g => !IsFullyInsideExtent(g, _calculationExtent)))
+			if (kvp.Value.Any(g => ! IsFullyInsideExtent(g, _calculationExtent)))
 				featureRefsNeedingFullCalc.Add(kvp.Key);
 		}
 
@@ -387,9 +387,6 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 			allSelectedFeatures
 				.Where(f => featureRefsNeedingFullCalc.Contains(new GdbObjectReference(f)))
 				.ToList();
-
-		if (involvedFeatures.Count == 0)
-			return userSelectedOverlaps;
 
 		CancellationToken cancellationToken =
 			progressor?.CancellationToken ?? new CancellationTokenSource().Token;
@@ -405,20 +402,21 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 
 		foreach (var kvp in userSelectedOverlaps.OverlapGeometries)
 		{
-			if (!featureRefsNeedingFullCalc.Contains(kvp.Key))
+			if (! featureRefsNeedingFullCalc.Contains(kvp.Key))
 				result.AddGeometries(kvp.Key, kvp.Value);
 		}
 
 		foreach (var kvp in fullOverlaps.OverlapGeometries)
 		{
-			if (!userSelectedOverlaps.OverlapGeometries.TryGetValue(kvp.Key,
+			if (! userSelectedOverlaps.OverlapGeometries.TryGetValue(kvp.Key,
 				    out var selectedPartials))
 				continue;
 
 			List<Geometry> matchingFull =
 				kvp.Value
-				   .Where(full => selectedPartials.Any(
-					            partial => GeometryEngine.Instance.Intersects(full, partial)))
+				   .Where(full => selectedPartials.Any(partial =>
+					                                       PartialBelongsToFullOverlap(
+						                                       partial, full)))
 				   .ToList();
 
 			if (matchingFull.Count > 0)
@@ -426,6 +424,21 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 		}
 
 		return result.HasOverlaps() ? result : userSelectedOverlaps;
+	}
+
+	/// <summary>
+	/// Determines whether the (extent-clipped) <paramref name="partial"/> overlap that the user
+	/// picked is a part of the unclipped <paramref name="full"/> overlap. The partial overlap is
+	/// the full overlap clipped to the calculation extent, hence its interior must lie inside the
+	/// full overlap. Adjacent overlaps of the same source feature (e.g. with two neighbouring
+	/// target features) only touch along a shared boundary - their interiors are disjoint - and
+	/// must therefore NOT be matched, otherwise neighbouring overlaps get removed as well.
+	/// </summary>
+	private static bool PartialBelongsToFullOverlap(Geometry partial, Geometry full)
+	{
+		// DE-9IM: interior(full) intersects interior(partial). This excludes mere boundary
+		// touching and works for both polygon and polyline overlaps.
+		return GeometryEngine.Instance.Relate(full, partial, "T********");
 	}
 
 	private static bool IsFullyInsideExtent(Geometry geometry, Envelope extent)

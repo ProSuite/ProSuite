@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Persistence.WinForms;
+using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.WinForms.Controls;
 
 namespace ProSuite.Commons.UI.Logging
@@ -18,6 +19,7 @@ namespace ProSuite.Commons.UI.Logging
 
 		private IList<LogEventItem> _logEventItems;
 		private readonly int[] _textColumnIndices;
+		private bool _useDarkTheme;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -29,6 +31,8 @@ namespace ProSuite.Commons.UI.Logging
 		public LogHistoryForm()
 		{
 			InitializeComponent();
+
+			WinFormsThemeUtils.ApplyModernHeaderStyle(_dataGridViewLogEvents);
 
 			_formStateManager = new BasicFormStateManager(this);
 			_formStateManager.RestoreState();
@@ -43,6 +47,17 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Re-colors this form to match ArcGIS Pro's dark theme. Call this once, before
+		/// showing the dialog, and only when Pro's dark theme is active.
+		/// </summary>
+		public void ApplyDarkTheme()
+		{
+			_useDarkTheme = true;
+
+			WinFormsThemeUtils.ApplyDarkTheme(this);
+		}
 
 		public DialogResult ShowDialog([NotNull] IList<LogEventItem> logEventItems,
 		                               bool showLogNr, bool showLogDate)
@@ -153,10 +168,25 @@ namespace ProSuite.Commons.UI.Logging
 				return;
 			}
 
-			_bindingSourceLogEvent.Clear();
-			foreach (LogEventItem item in _logEventItems)
+			// Populate in bulk: with the grid data-bound, each individual Add would raise a
+			// ListChanged event and force a grid relayout, making load O(n) in UI work. Suspend
+			// list-change notifications and layout so the (potentially large) history loads in a
+			// single pass with one relayout at the end.
+			_dataGridViewLogEvents.SuspendLayout();
+			_bindingSourceLogEvent.RaiseListChangedEvents = false;
+			try
 			{
-				_bindingSourceLogEvent.Add(item);
+				_bindingSourceLogEvent.Clear();
+				foreach (LogEventItem item in _logEventItems)
+				{
+					_bindingSourceLogEvent.Add(item);
+				}
+			}
+			finally
+			{
+				_bindingSourceLogEvent.RaiseListChangedEvents = true;
+				_bindingSourceLogEvent.ResetBindings(false);
+				_dataGridViewLogEvents.ResumeLayout();
 			}
 
 			_dataGridViewLogEvents.CurrentCell =
@@ -206,7 +236,7 @@ namespace ProSuite.Commons.UI.Logging
 
 			LogWindowUtils.HandleCellFormattingEvent(
 				e, row, logEventItem, logMessageDataGridViewTextBoxColumn.Index,
-				_textColumnIndices);
+				_useDarkTheme, _textColumnIndices);
 		}
 
 		private static void _dataGridView_DataError(object sender,

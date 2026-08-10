@@ -19,20 +19,37 @@ namespace ProSuite.GIS.Geodatabase.AGP.DataConnections;
 public abstract class CIMBasedDataConnectionName : IDatasetName
 {
 	[NotNull]
-	public static CIMBasedDataConnectionName FromCIMDataConnection(
+	public static CIMBasedDataConnectionName CreateFromCIMDataConnection(
 		[NotNull] CIMDataConnection cimDataConnection)
+	{
+		if (! TryCreateFromCIMDataConnection(cimDataConnection, out var result))
+		{
+			throw new ArgumentOutOfRangeException(nameof(cimDataConnection));
+		}
+
+		return result;
+	}
+
+	[NotNull]
+	public static bool TryCreateFromCIMDataConnection(
+		[NotNull] CIMDataConnection cimDataConnection, out CIMBasedDataConnectionName result)
 	{
 		switch (cimDataConnection)
 		{
 			case CIMFeatureDatasetDataConnection cimFeatureDatasetDataConnection:
-				return FeatureDatasetDataConnectionName.FromCIMDataConnection(
+				result = FeatureDatasetDataConnectionName.FromCIMDataConnection(
 					cimFeatureDatasetDataConnection);
+				return true;
 			case CIMStandardDataConnection cimStandardDataConnection:
-				return StandardDataConnectionName.FromCIMDataConnection(cimStandardDataConnection);
+				result = StandardDataConnectionName.FromCIMDataConnection(
+					cimStandardDataConnection);
+				return true;
 			case CIMRelQueryTableDataConnection cimRelQueryTableConnection:
-				return new MemoryRelQueryTableName(cimRelQueryTableConnection);
+				result = new MemoryRelQueryTableName(cimRelQueryTableConnection);
+				return true;
 			default:
-				throw new ArgumentOutOfRangeException(nameof(cimDataConnection));
+				result = null;
+				return false;
 		}
 	}
 
@@ -53,7 +70,7 @@ public abstract class CIMBasedDataConnectionName : IDatasetName
 
 	public IWorkspaceName WorkspaceName => DataConnectionWorkspaceName;
 
-	public string Name => NameString;
+	public virtual string Name => NameString;
 
 	public object Open()
 	{

@@ -203,7 +203,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 			out GdbTableContainer container)
 		{
 			container = ProtobufConversionUtils.CreateGdbTableContainer(
-				request.ClassDefinitions, null, out _);
+				request.ClassDefinitions, null, null, out _);
 
 			foreach (VirtualTable dataset in container.GetDatasets(esriDatasetType.esriDTAny))
 			{

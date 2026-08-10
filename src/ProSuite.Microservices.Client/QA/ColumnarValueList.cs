@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Google.Protobuf;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -96,7 +97,7 @@ namespace ProSuite.Microservices.Client.QA
 			try
 			{
 				// Check null bitmap first (now on column level)
-				if (IsNull(column.Nulls.ToByteArray(), rowIndex))
+				if (IsNull(column.Nulls, rowIndex))
 				{
 					return DBNull.Value;
 				}
@@ -170,8 +171,10 @@ namespace ProSuite.Microservices.Client.QA
 			}
 		}
 
-		private static bool IsNull(byte[] nullBitmap, int rowIndex)
+		private static bool IsNull(ByteString nullBitmap, int rowIndex)
 		{
+			// Index into the ByteString directly (zero-copy). ToByteArray() would allocate and
+			// copy the entire bitmap (rowCount / 8 bytes) on every value extraction.
 			int byteIndex = rowIndex / 8;
 			if (byteIndex >= nullBitmap.Length)
 				return false;
@@ -189,6 +192,10 @@ namespace ProSuite.Microservices.Client.QA
 		private readonly IReadOnlyList<ITableField> _tableFields;
 		private readonly Dictionary<int, int> _fieldToColumnMapping;
 		private readonly Dictionary<string, int> _columnNameToIndex;
+
+		// The OID column resolved once per mapping (i.e. once per batch) rather than per row.
+		[CanBeNull] private string _resolvedOidFieldName;
+		private int _resolvedOidColumnIndex = -1;
 
 		public ColumnarFieldMapping(
 			[NotNull] IReadOnlyList<ITableField> tableFields,
@@ -244,13 +251,20 @@ namespace ProSuite.Microservices.Client.QA
 				return -1;
 			}
 
-			if (! _columnNameToIndex.TryGetValue(oidFieldName, out int oidColumnIndex))
+			if (! string.Equals(oidFieldName, _resolvedOidFieldName, StringComparison.Ordinal))
+			{
+				_resolvedOidFieldName = oidFieldName;
+				_resolvedOidColumnIndex =
+					_columnNameToIndex.TryGetValue(oidFieldName, out int index) ? index : -1;
+			}
+
+			if (_resolvedOidColumnIndex < 0)
 			{
 				return -1;
 			}
 
-			var column = columnarData.Columns[oidColumnIndex];
-			if (IsNull(column.Nulls.ToByteArray(), rowIndex))
+			var column = columnarData.Columns[_resolvedOidColumnIndex];
+			if (IsNull(column.Nulls, rowIndex))
 			{
 				return -1;
 			}
@@ -268,8 +282,10 @@ namespace ProSuite.Microservices.Client.QA
 			return -1;
 		}
 
-		private static bool IsNull(byte[] nullBitmap, int rowIndex)
+		private static bool IsNull(ByteString nullBitmap, int rowIndex)
 		{
+			// Index into the ByteString directly (zero-copy). ToByteArray() would allocate and
+			// copy the entire bitmap (rowCount / 8 bytes) on every call.
 			int byteIndex = rowIndex / 8;
 			if (byteIndex >= nullBitmap.Length)
 				return false;

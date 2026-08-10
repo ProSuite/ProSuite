@@ -38,6 +38,11 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="ArcGIS.Desktop.Editing">
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
@@ -64,8 +69,8 @@
   <ItemGroup>
     <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
 
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.8" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.8" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.9" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.9" />
   </ItemGroup>
 
   <ItemGroup>

@@ -256,6 +256,12 @@ namespace ProSuite.Commons.UI
 			}
 
 			view.Activate();
+
+			if (view.WindowState == WindowState.Minimized)
+			{
+				view.WindowState = WindowState.Normal;
+			}
+
 			return true;
 		}
 

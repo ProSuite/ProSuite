@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.Carto;
@@ -18,9 +19,11 @@ using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.UI;
+using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
+using ProSuite.UI.Core.QA.VerificationResult;
 
 namespace ProSuite.AGP.QA.VerificationProgress
 {
@@ -32,6 +35,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		private readonly MapView _mapView;
 		[CanBeNull] private readonly Geometry _verifiedPerimeter;
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
+		[CanBeNull] private readonly IQualityVerificationEnvironment _verificationEnvironment;
 
 		private List<IDisposable> _activeProgressOverlays = new();
 		private int _lastTileCount;
@@ -45,12 +49,14 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		/// <param name="mapView"></param>
 		/// <param name="verifiedPerimeter"></param>
 		/// <param name="verificationSpatialReference"></param>
+		/// <param name="verificationEnvironment"></param>
 		/// <param name="saveAction"></param>
 		public AgpBackgroundVerificationController(
 			[NotNull] IWorkListOpener workListOpener,
 			[NotNull] MapView mapView,
 			[CanBeNull] Geometry verifiedPerimeter,
 			[CanBeNull] SpatialReference verificationSpatialReference,
+			[CanBeNull] IQualityVerificationEnvironment verificationEnvironment = null,
 			[CanBeNull]
 			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>> saveAction =
 				null)
@@ -62,9 +68,13 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			_mapView = mapView;
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
+			_verificationEnvironment = verificationEnvironment;
 
 			SaveAction = saveAction;
 		}
+
+		public bool AutoOpenWorkListAfterVerification =>
+			_verificationEnvironment?.AutoOpenWorkListAfterVerification ?? false;
 
 		[CanBeNull]
 		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
@@ -228,12 +238,52 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 		public void ShowReport(IQualityVerificationResult verificationResult)
 		{
-			if (verificationResult.HtmlReportPath == null)
-			{
-				return;
-			}
+			_ = ShowReportAsync(verificationResult);
+		}
 
-			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
+		public Task ShowReportAsync(IQualityVerificationResult verificationResult)
+		{
+			return ShowReportCoreAsync(verificationResult);
+		}
+
+		private async Task ShowReportCoreAsync(IQualityVerificationResult verificationResult)
+		{
+			try
+			{
+				if (_verificationEnvironment == null)
+				{
+					// Fallback: open HTML report if environment not available
+					if (verificationResult.HtmlReportPath != null)
+					{
+						ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
+					}
+
+					return;
+				}
+
+				var result = (BackgroundVerificationResult) verificationResult;
+				int specId = Assert.NotNull(result.VerificationMsg).SpecificationId;
+
+				QualitySpecification spec =
+					await _verificationEnvironment.GetQualitySpecification(specId);
+
+				if (spec == null)
+				{
+					_msg.Warn($"Quality specification {specId} could not be loaded.");
+					return;
+				}
+
+				QualityVerification verification = result.GetQualityVerification(spec);
+
+				bool applyDarkTheme =
+					FrameworkApplication.ApplicationTheme == ApplicationTheme.Dark;
+
+				QAVerificationForm.ShowVerificationDialog(verification, applyDarkTheme);
+			}
+			catch (Exception e)
+			{
+				_msg.Error("Error showing quality verification report.", e);
+			}
 		}
 
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,
@@ -255,22 +305,17 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
-			if (string.IsNullOrEmpty(verificationResult.HtmlReportPath))
+			var backgroundResult = verificationResult as BackgroundVerificationResult;
+
+			if (backgroundResult?.VerificationMsg == null ||
+			    backgroundResult.VerificationMsg.SpecificationId < 0)
 			{
-				reason = "No HTML report has been created";
+				reason = "No quality specification is associated with this verification";
 
 				return false;
 			}
 
-			if (! File.Exists(verificationResult.HtmlReportPath))
-			{
-				reason =
-					$"HTML report at {verificationResult.HtmlReportPath} does not exist or cannot be accessed";
-
-				return false;
-			}
-
-			reason = null;
+			reason = "Show quality verification report";
 
 			return true;
 		}

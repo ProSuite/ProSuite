@@ -3,6 +3,7 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.ManagedOptions;
 
 namespace ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 
@@ -24,8 +25,9 @@ public interface IChangeAlongService
 	                                    TargetBufferOptions targetBufferOptions,
 	                                    IBoundedXY clipExtent,
 	                                    double? customTolerance,
-	                                    ZValueSource zValueSource,
-	                                    CancellationToken cancellationToken);
+	                                    ChangeAlongZSource zSource,
+	                                    CancellationToken cancellationToken,
+	                                    DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null);
 
 	List<ResultFeature> ApplyReshapeLines(
 		[NotNull] IList<Feature> sourceFeatures,
@@ -45,8 +47,9 @@ public interface IChangeAlongService
 	                                  TargetBufferOptions targetBufferOptions,
 	                                  IBoundedXY clipExtent,
 	                                  double? customTolerance,
-	                                  ZValueSource zValueSource,
+	                                  ChangeAlongZSource zSource,
 	                                  bool insertVerticesInTarget,
 	                                  CancellationToken cancellationToken,
-	                                  out ChangeAlongCurves newChangeAlongCurves);
+	                                  out ChangeAlongCurves newChangeAlongCurves,
+	                                  DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider = null);
 }

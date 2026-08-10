@@ -15,6 +15,8 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		private bool _issuesSaved;
 
+		public bool AutoOpenWorkListAfterVerification => false;
+
 		[CanBeNull]
 		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
 		{
@@ -62,6 +64,12 @@ namespace ProSuite.Microservices.Client.QA
 			}
 
 			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
+		}
+
+		public Task ShowReportAsync(IQualityVerificationResult verificationResult)
+		{
+			ShowReport(verificationResult);
+			return Task.CompletedTask;
 		}
 
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,

@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.GIS.Geodatabase.API;
+using JoinType = ProSuite.Commons.GeoDb.JoinType;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.GIS.Geodatabase.AGP;
@@ -522,6 +523,72 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		return new ArcRelationshipClass(proRelClass);
 	}
 
+	/// <summary>
+	/// Opens a geodatabase query table that joins the tables participating in the specified
+	/// relationship class (two tables for simple foreign-key relationship classes; origin,
+	/// bridge table and destination for attributed or m:n relationship classes).
+	/// </summary>
+	/// <param name="relationshipClassName">The name of the relationship class.</param>
+	/// <param name="tables">The tables to be joined, in the requested order (the join type
+	/// refers to this order). Null or empty means origin/destination order.</param>
+	/// <param name="joinType">The join type w.r.t. the list order of the tables.</param>
+	/// <param name="whereClause">An optional where clause.</param>
+	[NotNull]
+	public ITable OpenQueryTable([NotNull] string relationshipClassName,
+	                             [CanBeNull] IList<string> tables,
+	                             JoinType joinType,
+	                             [CanBeNull] string whereClause = null)
+	{
+		Assert.ArgumentNotNullOrEmpty(relationshipClassName, nameof(relationshipClassName));
+
+		IRelationshipClass relationshipClass = OpenRelationshipClass(relationshipClassName);
+
+		Assert.NotNull(relationshipClass,
+		               "Relationship class {0} not found", relationshipClassName);
+
+		// The requested join type refers to the requested table order; the query def is built
+		// in origin -> destination direction:
+		JoinType directedJoinType =
+			RelationshipClassJoinUtils.AdaptJoinTypeToRelationshipDirection(
+				relationshipClass, tables, joinType);
+
+		QueryDef queryDef = RelationshipClassJoinUtils.CreateQueryDef(
+			relationshipClass, directedJoinType, whereClause,
+			out string primaryKeyField, out string shapeFieldName);
+
+		var queryTableDescription =
+			new QueryTableDescription(queryDef)
+			{
+				Name = RelationshipClassJoinUtils.GenerateQueryTableName(relationshipClass),
+				// The field used to manufacture the ObjectIDs of the joined rows
+				// (AO: IQueryName2.PrimaryKey):
+				PrimaryKeys = primaryKeyField
+			};
+
+		Table queryTable = Geodatabase.OpenQueryTable(queryTableDescription);
+
+		// Wrap the query table directly (not via ArcGeodatabaseUtils.ToArcTable) so it never
+		// enters the name-keyed workspace cache: the generated <RELCLASS>_JOIN name is not unique
+		// per query definition - two definitions differing only in where clause or join type share
+		// the same name, so a cache hit could hand back a *different* definition's wrapper (stale
+		// where clause). The query table has IsJoinedTable() always false (this is not a layer
+		// join), so there is nothing to unwrap.
+		ArcTable result = queryTable is FeatureClass proFeatureClass
+			                  ? new ArcFeatureClass(proFeatureClass)
+			                  : new ArcTable(queryTable);
+
+		// The qualified shape field name of a relationship-class query table is known a priori
+		// (RelationshipClassJoinUtils computed it as the last subfield). Set it explicitly so the
+		// wrapper does not have to resolve it via GetShapeField() (which returns unpredictable
+		// results for query tables). Null for table-only joins (no participating feature class).
+		if (shapeFieldName != null && result is ArcFeatureClass featureClass)
+		{
+			featureClass.SetShapeFieldName(shapeFieldName);
+		}
+
+		return result;
+	}
+
 	public ITable OpenRelationshipQuery(
 		IRelationshipClass relClass,
 		bool joinForward,
@@ -530,10 +597,11 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		string targetColumns,
 		bool doNotPushJoinToDb)
 	{
-		var aoRelClass = ((ArcRelationshipClass) relClass).ProRelationshipClass;
-		var aoFilter = (srcQueryFilter as ArcQueryFilter)?.ProQueryFilter;
-		var aoSelectionSet = ((ArcSelectionSet) srcSelectionSet)?.ProSelection;
+		//var aoRelClass = ((ArcRelationshipClass) relClass).ProRelationshipClass;
+		//var aoFilter = (srcQueryFilter as ArcQueryFilter)?.ProQueryFilter;
+		//var aoSelectionSet = ((ArcSelectionSet) srcSelectionSet)?.ProSelection;
 
+		// TODO: Re-direct to OpenQueryTable
 		// TODO: Move RelationshipClassJoinDefinition from Commons.AO to some other namespace (Commons.GIS?).
 		//var joinDef = new RelationshipClassJoinDefinition(relationshipClass, joinType);
 
