@@ -334,18 +334,15 @@ public static class PickerUtils
 			return;
 		}
 
-		// New selection: clear the selection on the map level, NOT on the layer level
-		if (selectionMethod == SelectionCombinationMethod.New)
-		{
-			ClearSelection();
-		}
+		Map map = MapView.Active?.Map;
+		SelectionService selectionService = new SelectionService(MapView.Active, selectionMethod);
 
 		foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
 		{
 			// Important to loop over each layer, they could have different definition queries!
 			foreach (BasicFeatureLayer layer in item.Layers)
 			{
-				SelectionUtils.SelectRows(layer, selectionMethod, item.Oids.ToList());
+				selectionService.Add(layer, selectionMethod, item.Oids.ToList());
 			}
 		}
 
@@ -355,8 +352,10 @@ public static class PickerUtils
 			BasicFeatureLayer layer = itemsByLayer.Key;
 			List<long> oids = itemsByLayer.Select(item => item.Oid).ToList();
 
-			SelectionUtils.SelectRows(layer, selectionMethod, oids);
+			selectionService.Add(layer, selectionMethod, oids);
 		}
+
+		selectionService.Select();
 	}
 
 	private static void ClearSelection()
