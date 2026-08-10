@@ -564,7 +564,7 @@ public static class SelectionUtils
 		return SameSelections(a.ToDictionary(), b.ToDictionary());
 	}
 
-	/// <returns>true iff the two selection sets have the same
+	/// <returns>true if the two selection sets have the same
 	/// map members and the same OIDs per map member</returns>
 	public static bool SameSelections<T>(
 		Dictionary<T, List<long>> a, Dictionary<T, List<long>> b)
