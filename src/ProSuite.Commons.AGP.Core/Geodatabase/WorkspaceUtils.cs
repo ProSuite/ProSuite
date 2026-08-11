@@ -15,7 +15,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
-
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
@@ -207,6 +206,9 @@ public static class WorkspaceUtils
 					new Uri(connectionString, UriKind.Absolute),
 					FileSystemDatastoreType.Shapefile);
 
+			case WorkspaceFactory.FeatureService:
+				return new ServiceConnectionProperties(new Uri(connectionString, UriKind.Absolute));
+
 			// TODO: SQLite, others?
 
 			default:
@@ -251,59 +253,59 @@ public static class WorkspaceUtils
 		return uri.LocalPath;
 	}
 
-    public static bool DeleteVersion(
-        [NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
-        [NotNull] string versionName, bool deleteChildVersions = false)
-    {
-        var deleted = false;
-        using VersionManager manager = geodatabase.GetVersionManager();
+	public static bool DeleteVersion(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] string versionName, bool deleteChildVersions = false)
+	{
+		var deleted = false;
+		using VersionManager manager = geodatabase.GetVersionManager();
 
 		Version version = manager.GetVersion(versionName);
 
-        if (deleteChildVersions)
-        {
-            deleted = DeleteVersionTree(version);
-        }
-        else
-        {
-            version.Delete();
-            version.Dispose();
+		if (deleteChildVersions)
+		{
+			deleted = DeleteVersionTree(version);
+		}
+		else
+		{
+			version.Delete();
+			version.Dispose();
 			deleted = true;
-        }
+		}
 
-        return deleted;
-    }
+		return deleted;
+	}
 
-    private static bool DeleteVersionTree(Version version)
-    {
-        var allDeleted = true;
+	private static bool DeleteVersionTree(Version version)
+	{
+		var allDeleted = true;
 
-        foreach (Version child in version.GetChildren())
-        {
-            bool deleted = DeleteVersionTree(child);
-            if (! deleted)
-            {
-                allDeleted = false;
-            }
-        }
+		foreach (Version child in version.GetChildren())
+		{
+			bool deleted = DeleteVersionTree(child);
+			if (! deleted)
+			{
+				allDeleted = false;
+			}
+		}
 
-        if (allDeleted)
-        {
-            if (version.GetParent() != null)
+		if (allDeleted)
+		{
+			if (version.GetParent() != null)
 			{
 				version.Delete();
 				version.Dispose();
 			}
-            else
-            {
-                allDeleted = false;
-            }
-        }
+			else
+			{
+				allDeleted = false;
+			}
+		}
 
-        return allDeleted;
-    }
+		return allDeleted;
+	}
 
-    [CanBeNull]
+	[CanBeNull]
 	public static Version GetDefaultVersion([NotNull] Datastore datastore)
 	{
 		Assert.ArgumentNotNull(datastore, nameof(datastore));
@@ -350,7 +352,8 @@ public static class WorkspaceUtils
 	{
 		using VersionManager manager = geodatabase.GetVersionManager();
 
-		DatabaseConnectionProperties props = GetConnectionProperties(geodatabase.GetConnectionString());
+		DatabaseConnectionProperties props =
+			GetConnectionProperties(geodatabase.GetConnectionString());
 		string name = ModelElementNameUtils.IsQualifiedName(versionName)
 			              ? versionName
 			              : $"{props.User}.{versionName}";
@@ -366,7 +369,8 @@ public static class WorkspaceUtils
 	{
 		using VersionManager manager = geodatabase.GetVersionManager();
 
-		DatabaseConnectionProperties props = GetConnectionProperties(geodatabase.GetConnectionString());
+		DatabaseConnectionProperties props =
+			GetConnectionProperties(geodatabase.GetConnectionString());
 		string name = $"{props.User}.{versionName}";
 
 		return manager.GetVersion(name);
