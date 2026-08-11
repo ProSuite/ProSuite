@@ -207,8 +207,14 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		/// <summary>
+		/// Sets the value from its string representation in the given culture (default:
+		/// the current culture). A null value means "not set" and is stored as such,
+		/// except for a text parameter, where the missing value becomes the empty
+		/// string, which text can represent.
 		/// Note: public for unit tests
 		/// </summary>
+		/// <exception cref="ArgumentException">The string cannot be parsed to the
+		/// parameter's data type.</exception>
 		public void SetStringValue([CanBeNull] string value,
 		                           [CanBeNull] CultureInfo cultureInfo = null)
 		{
@@ -224,6 +230,17 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			Assert.NotNull(DataType, "Parameter data type not defined");
+
+			if (value == null && DataType != typeof(string))
+			{
+				// No value: keep it unset, exactly as SetValue(null) does. There is no
+				// string that stands for the missing value of a number, a boolean, a date
+				// or an enumeration, so parsing it would throw and make a parameter that
+				// was legitimately left empty unreadable.
+				SetValue(null);
+				_formattedStringValueCulture = cultureInfo;
+				return;
+			}
 
 			// verify that the string value can be cast to the correct data type, assuming it is in 
 			// the current culture.
