@@ -572,7 +572,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 				_view.GoToTestDescriptorEnabled = false;
 			}
 
-			string html = _item.GetWebHelp(testDescriptor, out string title);
+			string html = _item.GetWebHelp(out string title);
 			_itemNavigation.UpdateItemHelp(title, html ?? string.Empty);
 		}
 	}

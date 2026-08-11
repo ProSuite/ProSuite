@@ -1,11 +1,11 @@
 using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.QA.AlgorithmUI;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Properties;
-using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
@@ -22,10 +22,16 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_image = Resources.ShowOnlineHelpCmd;
 		}
 
-		public ShowInstanceWebHelpCommand([NotNull] T item,
-		                                  [NotNull] IApplicationController applicationController)
+		[CanBeNull] private readonly IInstanceDocumentationProvider _documentationProvider;
+
+		public ShowInstanceWebHelpCommand(
+			[NotNull] T item,
+			[NotNull] IApplicationController applicationController,
+			[CanBeNull] IInstanceDocumentationProvider documentationProvider = null)
 			: base(item, applicationController)
 		{
+			_documentationProvider = documentationProvider;
+
 			// This could be made more generic to support Html help of other entities.
 			InstanceDescriptor descriptor = GetInstanceDescriptor(Item);
 			if (descriptor is TransformerDescriptor)
@@ -62,8 +68,9 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 				return;
 			}
 
-			string title = descriptor.TypeDisplayName;
-			string html = TestReportUtils.WriteDescriptorDoc(descriptor);
+			string html = InstanceDocumentationPage.Render(
+				_documentationProvider, descriptor, out string title);
+
 			ApplicationController.ShowItemHelp(title, html);
 		}
 

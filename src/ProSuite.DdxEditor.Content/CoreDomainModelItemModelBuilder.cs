@@ -74,6 +74,16 @@ namespace ProSuite.DdxEditor.Content
 		public IAlgorithmEditorUiFactory AlgorithmEditorUi { get; set; }
 
 		/// <summary>
+		/// The provider of the algorithm documentation page, registered by the
+		/// composition root. <c>null</c>: the "Show Documentation" link and the
+		/// documentation context-menu entry keep showing the classic per-constructor
+		/// report. Independent of <see cref="UseAlgorithmUi"/> - the page documents the
+		/// algorithm either way.
+		/// </summary>
+		[CanBeNull]
+		public IInstanceDocumentationProvider InstanceDocumentation { get; set; }
+
+		/// <summary>
 		/// If <c>true</c>, the classic condition specification flow (Finder + constructor
 		/// combo + Blazor parameter grid) is used even if an
 		/// <see cref="AlgorithmEditorUi"/> is registered. Surfaced as the "Use classic

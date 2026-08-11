@@ -274,7 +274,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_view.GoToInstanceDescriptorEnabled = instanceDescriptor != null;
 
-			string html = _item.GetWebHelp(instanceDescriptor, out string title);
+			string html = _item.GetWebHelp(out string title);
 			_itemNavigation.UpdateItemHelp(title, html ?? string.Empty);
 		}
 	}
