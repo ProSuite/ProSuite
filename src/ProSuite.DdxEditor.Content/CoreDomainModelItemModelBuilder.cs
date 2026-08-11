@@ -521,6 +521,18 @@ namespace ProSuite.DdxEditor.Content
 			return null;
 		}
 
+		/// <summary>
+		/// The provider of the output schema of a transformer, used where a parameter value
+		/// is fed by a transformer instead of a stored dataset (e.g. to build a SQL
+		/// expression against the transformer's output). Null where no data access is
+		/// available; callers then treat a transformer-fed value as having no known schema.
+		/// </summary>
+		[CanBeNull]
+		public virtual ITransformerOutputSchemaProvider GetTransformerOutputSchemaProvider()
+		{
+			return null;
+		}
+
 		public virtual C Resolve<C>()
 		{
 			// implement in project-specific subclass based on project registry
