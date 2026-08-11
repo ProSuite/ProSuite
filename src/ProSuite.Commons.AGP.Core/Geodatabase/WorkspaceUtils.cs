@@ -207,7 +207,7 @@ public static class WorkspaceUtils
 					FileSystemDatastoreType.Shapefile);
 
 			case WorkspaceFactory.FeatureService:
-				return new ServiceConnectionProperties(new Uri(connectionString, UriKind.Absolute));
+				return CreateServiceConnectionProperties(connectionString);
 
 			// TODO: SQLite, others?
 
@@ -215,6 +215,45 @@ public static class WorkspaceUtils
 				throw new ArgumentOutOfRangeException(nameof(factory), factory,
 				                                      $"Unsupported workspace factory: {factory}");
 		}
+	}
+
+	/// <summary>
+	/// Creates the <see cref="ServiceConnectionProperties"/> for the specified feature service
+	/// connection string, which can either be a plain URL or a semi-colon separated list of
+	/// key/value pairs (as used by .lyr / .sde connection files), such as
+	/// URL=https://server/rest/services/Service/FeatureServer;VERSION=version_name;
+	/// VERSIONGUID={guid}
+	/// </summary>
+	private static ServiceConnectionProperties CreateServiceConnectionProperties(
+		[NotNull] string connectionString)
+	{
+		if (Uri.TryCreate(connectionString, UriKind.Absolute, out Uri directUri) &&
+		    (directUri.Scheme == Uri.UriSchemeHttp || directUri.Scheme == Uri.UriSchemeHttps))
+		{
+			return new ServiceConnectionProperties(directUri);
+		}
+
+		var builder = new ConnectionStringBuilder(connectionString);
+
+		string url = builder["url"];
+		Assert.False(string.IsNullOrEmpty(url),
+		            "No URL found in feature service connection string: {0}", connectionString);
+
+		var serviceConnection = new ServiceConnectionProperties(new Uri(url, UriKind.Absolute));
+
+		string version = builder["version"];
+		if (! string.IsNullOrEmpty(version))
+		{
+			serviceConnection.Version = version;
+		}
+
+		string user = builder["user"];
+		if (! string.IsNullOrEmpty(user))
+		{
+			serviceConnection.User = user;
+		}
+
+		return serviceConnection;
 	}
 
 	public static bool IsSameDatastore([CanBeNull] Datastore datastore1,
