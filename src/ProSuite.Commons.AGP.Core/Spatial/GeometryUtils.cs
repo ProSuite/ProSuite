@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
@@ -9,6 +6,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
 namespace ProSuite.Commons.AGP.Core.Spatial;
@@ -16,6 +17,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial;
 public static class GeometryUtils
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private const int _maxToStringPointCount = 1000;
 
 	public static Coordinate2D Shifted(this Coordinate2D point, double dx, double dy)
 	{
@@ -2957,4 +2960,294 @@ public static class GeometryUtils
 
 		return multipointBuilder.ToGeometry();
 	}
+
+	public static bool IsMAware([NotNull] Geometry geometry)
+	{
+		return geometry.ToBuilder().HasM;
+	}
+
+	public static bool IsZAware([NotNull] Geometry geometry)
+	{
+		return geometry.ToBuilder().HasZ;
+	}
+
+	#region ToString
+
+	[NotNull]
+	public static string ToString([CanBeNull] MapPoint point)
+	{
+		try
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine("[Point]");
+
+			if (point == null)
+			{
+				sb.AppendLine("Point is null");
+			}
+			else if (point.IsEmpty)
+			{
+				sb.AppendLine("Point is empty");
+			}
+			else
+			{
+				AppendZAware(sb, point);
+				AppendMAware(sb, point);
+
+				sb.AppendFormat("{0} {1} {2} {3}",
+				                point.X, point.Y, point.Z, point.M);
+			}
+
+			return sb.ToString();
+		}
+		catch (Exception e)
+		{
+			return HandleToStringException(e);
+		}
+	}
+
+	[NotNull]
+	public static string ToString([CanBeNull] Multipart path)
+	{
+		var sb = new StringBuilder();
+		sb.AppendLine("[path]");
+
+		if (path == null)
+		{
+			sb.AppendLine("Path is null");
+		}
+		else
+		{
+			AppendPart(sb, path, 0);
+			sb.Append(path.SpatialReference.ToString());
+		}
+
+		return sb.ToString();
+	}
+
+	[NotNull]
+	public static string ToString([CanBeNull] Multipoint multipoint)
+	{
+		try
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine("[Multipoint]");
+
+			if (multipoint == null)
+			{
+				sb.AppendLine("Multipoint is null");
+			}
+			else if (multipoint.IsEmpty)
+			{
+				sb.AppendLine("Multipoint is empty");
+			}
+			else
+			{
+				AppendTotalPointCount(sb, multipoint);
+				AppendIsSimple(sb, multipoint);
+				AppendZAware(sb, multipoint);
+				AppendMAware(sb, multipoint);
+
+				sb.Append(ToString(multipoint.Points,
+				                   _maxToStringPointCount));
+			}
+
+			return sb.ToString();
+		}
+		catch (Exception e)
+		{
+			return HandleToStringException(e);
+		}
+	}
+
+	[NotNull]
+	private static ReadOnlyPointCollection AppendPart([NotNull] StringBuilder sb,
+													  [NotNull] Multipart part,
+													  int totalPointsWritten)
+	{
+		//var points = (IPointCollection)part;
+		ReadOnlyPointCollection points = part.Points;
+		int maxPointCount = Math.Max(0,
+									 _maxToStringPointCount -
+									 totalPointsWritten);
+
+		sb.Append(ToString(points, maxPointCount));
+		return points;
+	}
+
+	private static string ToString([CanBeNull] ReadOnlyPointCollection points,
+								   int maxPointCount)
+	{
+		var sb = new StringBuilder();
+
+		if (points == null)
+		{
+			sb.AppendLine("Point collection is null");
+		}
+		else
+		{
+			AppendPoints(sb, points, maxPointCount);
+		}
+
+		return sb.ToString();
+	}
+
+	private static void AppendTotalPointCount([NotNull] StringBuilder sb,
+											  [CanBeNull] Geometry geometry)
+	{
+		if (geometry == null)
+		{
+			return;
+		}
+
+		sb.AppendFormat("Total point count: {0}", geometry.PointCount);
+		sb.AppendLine();
+	}
+
+	private static void AppendIsSimple([NotNull] StringBuilder sb,
+									   [CanBeNull] Geometry geometry)
+	{
+		try
+		{
+			string value = "n/a";
+
+			if (geometry != null)
+			{
+				bool isSimpleAsFeature = GeometryEngine.Instance.IsSimpleAsFeature(geometry);
+				bool geometryIsKnownSimple = geometry.IsKnownSimple;
+				sb.AppendFormat("Is known simple: {0}", geometryIsKnownSimple);
+				sb.AppendLine();
+			}
+			else
+			{
+				value = "n/a";
+			}
+
+			sb.AppendFormat("Simple: {0}", value);
+			sb.AppendLine();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug("Error in simple check.", e);
+
+			sb.AppendFormat(
+				"Simple: Unable to determine if geometry simple or not ({0}).",
+				e.Message);
+			sb.AppendLine();
+		}
+	}
+
+	private static void AppendZAware([NotNull] StringBuilder sb,
+									 [CanBeNull] Geometry geometry)
+	{
+		bool isZAware = IsZAware(geometry);
+		sb.AppendFormat("Z Aware: {0}", isZAware);
+		sb.AppendLine();
+	}
+
+	private static void AppendMAware([NotNull] StringBuilder sb,
+									 [CanBeNull] Geometry geometry)
+	{
+		bool isMAware = IsMAware(geometry);
+		sb.AppendFormat("M Aware: {0}", isMAware);
+		sb.AppendLine();
+	}
+
+	private static void AppendPoints([NotNull] StringBuilder sb,
+									 [NotNull] ReadOnlyPointCollection points,
+									 int maxPointCount)
+	{
+		const bool printPointID = false;
+		AppendPoints(sb, points, printPointID, maxPointCount);
+	}
+
+	private static void AppendPoints([NotNull] StringBuilder sb,
+									 [NotNull] ReadOnlyPointCollection points,
+									 bool printPointID,
+									 int maxPointCount)
+	{
+		sb.AppendFormat("Point count: {0}", points.Count);
+		sb.AppendLine();
+
+		//var maware = points as IMAware;
+		bool printM = false; //maware != null && maware.MAware;
+
+		//var zaware = points as IZAware;
+		bool printZ = false; //zaware != null && zaware.ZAware;
+
+		int pointCount = points.Count;
+
+		int startSkipIndex = maxPointCount - 1;
+		int endSkipIndex = pointCount - 1; // always write the end point
+		int skippedCount = pointCount - maxPointCount;
+
+		for (var pointIndex = 0; pointIndex < pointCount; pointIndex++)
+		{
+			if (pointIndex > startSkipIndex && pointIndex < endSkipIndex)
+			{
+				// skip point
+				continue;
+			}
+
+			if (pointIndex == startSkipIndex)
+			{
+				sb.AppendFormat("... skipping {0} point{1} ...",
+								skippedCount, skippedCount == 1
+												  ? string.Empty
+												  : "s");
+			}
+			else
+			{
+				var templatePoint = points[pointIndex];
+
+				AppendPoint(templatePoint, sb, pointIndex, printZ, printM,
+							printPointID);
+			}
+
+			sb.AppendLine();
+		}
+	}
+
+	private static void AppendPoint([NotNull] MapPoint point,
+									[NotNull] StringBuilder sb,
+									int pointIndex,
+									bool printZ,
+									bool printM,
+									bool printPointID)
+	{
+		double x = point.X;
+		double y = point.Y;
+
+		printZ = IsZAware(point);
+		printM = IsMAware(point);
+
+		sb.AppendFormat("{0}: {1} {2}", pointIndex, x, y);
+
+		if (printZ)
+		{
+			sb.AppendFormat(" z:{0}", point.Z);
+		}
+
+		if (printM)
+		{
+			sb.AppendFormat(" m:{0}", point.M);
+		}
+
+		if (printPointID)
+		{
+			sb.AppendFormat(" id:{0}", point.ID);
+		}
+	}
+
+	[NotNull]
+	private static string HandleToStringException(Exception e)
+	{
+		string msg = string.Format("Error converting to string: {0}",
+		                           e.Message);
+		_msg.Debug(msg, e);
+		return msg;
+	}
+
+	#endregion ToString
+
 }

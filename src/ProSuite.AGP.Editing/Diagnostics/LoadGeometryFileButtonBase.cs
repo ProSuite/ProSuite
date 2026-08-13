@@ -95,14 +95,22 @@ public abstract class LoadGeometryFileButtonBase : Button
 
 			op.Create(template, geometry);
 
-			if (! op.Execute())
+			try
 			{
-				_msg.Warn($"Edit operation failed: {op.ErrorMessage}");
-				return null;
+				if (! op.Execute())
+				{
+					_msg.Warn($"Edit operation failed: {op.ErrorMessage}");
+					return null;
+				}
+
+				_msg.InfoFormat("Created feature from '{0}' using template '{1}'.",
+				                Path.GetFileName(fileName), template.Name);
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Edit operation failed: {ex.Message}", ex);
 			}
 
-			_msg.InfoFormat("Created feature from '{0}' using template '{1}'.",
-			                Path.GetFileName(fileName), template.Name);
 			return geometry;
 		});
 

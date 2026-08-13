@@ -442,7 +442,7 @@ public abstract class OneClickToolBase : MapToolBase
 		try
 		{
 			_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
-
+			
 			if (IsCompletingSelectionSketch)
 			{
 				return;

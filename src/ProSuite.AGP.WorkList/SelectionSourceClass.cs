@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
@@ -29,7 +30,22 @@ public class SelectionSourceClass : SourceClass
 	protected override void EnsureValidFilterCore(ref QueryFilter filter,
 	                                              bool ignoreDefinitionQuery)
 	{
-		filter.ObjectIDs = Oids;
+		if (filter.ObjectIDs.Count == 0)
+		{
+			// the filter is not constraint with object IDs:
+			// just use the selection OIDs
+			filter.ObjectIDs = Oids;
+		}
+		else
+		{
+			// the filter is already constraint with object IDs:
+			// use the intersection of OIds
+			// or, if there is no intersection, make sure the filter returns nothing by setting the ObjectIDs to -1
+			var remainingObjectIDs = filter.ObjectIDs.Intersect(Oids).ToList();
+			filter.ObjectIDs = remainingObjectIDs.Count > 0
+				                   ? remainingObjectIDs
+				                   : new List<long> { -1 };
+		}
 
 		if (filter is SpatialQueryFilter spatialFilter)
 		{
