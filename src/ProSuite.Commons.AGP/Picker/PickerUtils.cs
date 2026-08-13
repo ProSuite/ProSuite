@@ -323,7 +323,7 @@ public static class PickerUtils
 		return result;
 	}
 
-	public static void Select(IEnumerable<IPickableItem> items,
+	public static void Select([NotNull] IEnumerable<IPickableItem> items,
 	                          SelectionCombinationMethod selectionMethod)
 	{
 		Dictionary<BasicFeatureLayer, List<long>> oidsByLayer = new();
