@@ -575,10 +575,9 @@ public static class GeometryUtils
 				mapPoints, multipoint.GetAttributeFlags());
 		}
 
-		if (geometry is Multipatch)
+		if (geometry is Multipatch multipatch)
 		{
-			// Currently, we're assuming multipatches are z-simple. TODO: Check all vertices
-			return geometry;
+			return (T) (Geometry) SimplifyZ(multipatch, defaultZ);
 		}
 
 		throw new NotImplementedException("The provided geometry type is not yet supported");
@@ -595,6 +594,64 @@ public static class GeometryUtils
 		}
 
 		return (T) (Geometry) mapPoint;
+	}
+
+	/// <summary>
+	/// Replaces NaN Z values in the patches with <paramref name="defaultZ"/>, the equivalent of
+	/// what Engine.CalculateNonSimpleZs does for multiparts.
+	/// </summary>
+	/// <remarks>
+	/// Construction tools that take their vertices from map clicks produce NaN Zs whenever the
+	/// map cannot supply an elevation - a 2D map without an elevation surface, most notably. The
+	/// geodatabase rejects such a geometry when it is assigned to the row buffer's shape field,
+	/// with an unspecific COM exception, so the NaNs have to be resolved on the way in.
+	/// </remarks>
+	[NotNull]
+	public static Multipatch SimplifyZ([NotNull] Multipatch multipatch, double defaultZ = 0d)
+	{
+		// Scanning is cheap, rebuilding the patches is not, and the vast majority of
+		// multipatches are z-simple already.
+		if (! multipatch.HasZ || ! multipatch.Points.Any(point => double.IsNaN(point.Z)))
+		{
+			return multipatch;
+		}
+
+		var builder = new MultipatchBuilderEx(multipatch);
+
+		foreach (Patch patch in builder.Patches)
+		{
+			IList<Coordinate3D> coords = patch?.Coords;
+
+			if (coords == null)
+			{
+				continue;
+			}
+
+			var changed = false;
+
+			for (var i = 0; i < coords.Count; i++)
+			{
+				Coordinate3D coord = coords[i];
+
+				if (! double.IsNaN(coord.Z))
+				{
+					continue;
+				}
+
+				// Coordinate3D is a struct: write the copy back into the list.
+				coord.Z = defaultZ;
+				coords[i] = coord;
+				changed = true;
+			}
+
+			if (changed)
+			{
+				// Coords may hand out a copy of the patch's coordinates, so assign it back.
+				patch.Coords = coords;
+			}
+		}
+
+		return builder.ToGeometry();
 	}
 
 	/// <summary>
