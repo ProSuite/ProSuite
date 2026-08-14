@@ -10,6 +10,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -252,11 +253,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				_verificationReportBuilder.AddVerifiedDataset(
 					verificationDataset, workspaceDisplayText, spatialReference);
 
-				// TEST
-				if (spatialReference != null)
-				{
-					Marshal.ReleaseComObject(spatialReference);
-				}
+				// TODO: Confirm the non-release does not result in new locks.
+				// if (spatialReference != null)
+				// {
+				// 	ComUtils.ReleaseObject(spatialReference);
+				// }
 			}
 			catch (Exception e)
 			{
