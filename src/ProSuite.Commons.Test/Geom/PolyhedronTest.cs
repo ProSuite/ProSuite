@@ -1074,6 +1074,122 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetFootprintForLugano8711144()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8711144 (Lugano). Regression guard for the
+			// linear-intersection subsumption in
+			// SubcurveIntersectionPointNavigator.GetSubsumedLinearIntersectionPoints:
+			// at union step 14 the target is a needle-thin triangle whose tip is narrower
+			// than the tolerance, so two linear runs start at the same source vertex. The
+			// generalized (all-runs) subsumption dropped the shorter of the two, the
+			// turning-left walk cut into the source and the footprint lost 2 sq m
+			// (117.1739 instead of 119.22; AO reference 119.2084). The isolated pairwise
+			// union is covered by SubcurveIntersectionPointNavigatorTest.
+			// CanKeepLinearRunsSharingSourceStartAtTargetSpike.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8711144.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(119.2084, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8711671()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8711671 (Lugano). Same mechanism as
+			// CanGetFootprintForLugano8711144 (union step 24, a needle triangle sharing its
+			// long edge with the source boundary): the footprint lost 4 sq m
+			// (447.1731 instead of 451.36; AO reference 451.3716).
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8711671.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(451.3716, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8706452()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8706452 (Lugano). Regression guard for
+			// GeomTopoOpUtils.RemoveSubToleranceBoundaryLoops. A union step leaves a boundary
+			// loop of 0.0017 sq m that is 0.0096 m wide - narrower than the 0.01 tolerance.
+			// Its two flanks intersect each other LINEARLY, which ExplodeExteriorBoundaryLoops
+			// deliberately ignores, so the spike survived into the following steps. There it
+			// made GetIntersectionPoints report a zero-extent "linear run" (start point == end
+			// point, target span 3 -> 0 on a 3-segment ring). The old, over-broad subsumption
+			// happened to delete the one REAL run as "contained" in that phantom run, which
+			// masked the problem; with the corrected subsumption (see
+			// CanGetFootprintForLugano8711144) the real run survives and the walk collapses to
+			// 1.08 sq m in 5 parts. AO reference 130.3004.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8706452.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(130.3004, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8839728()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8839728 (Lugano). Same sub-tolerance boundary loop
+			// as CanGetFootprintForLugano8706452, but here the surviving spike made the union
+			// throw ("Intersections seen twice") instead of collapsing, so the transformer fell
+			// back to the ArcObjects footprint. AO reference 124.4206.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8839728.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(124.4206, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		[Ignore(
+			"TOP-5999 issue 2 (open): repro for IntersectionClusters.PointsClusterButVertexCheckMissed")]
+		public void CanGetFootprintForLugano8710513()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8710513 (Lugano). NOT the subsumption issue:
+			// this one collapses in IntersectionClusters.PointsClusterButVertexCheckMissed
+			// (the XY-proximity cluster gate). At union step 43 the accumulated footprint
+			// drops from 232.71 to 11.91 sq m; the final footprint is 12.0467 in 2 parts
+			// instead of the AO reference 232.7076 in 1 part. Simply disabling the gate is
+			// not the fix - it repairs this feature but collapses five others.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8710513.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(232.7076, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		/// <summary>
+		/// Reads a multipatch (WKB MultiSurface) test fixture. Depending on the fixture the
+		/// reader returns a <see cref="Polyhedron"/> or a <see cref="MultiPolyhedron"/>; the
+		/// latter is flattened into a single polyhedron because the footprint is calculated
+		/// over all ring groups of the feature.
+		/// </summary>
+		private static Polyhedron ReadPolyhedron(string fileName)
+		{
+			object geometry = GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(fileName), out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			if (geometry is Polyhedron polyhedron)
+			{
+				return polyhedron;
+			}
+
+			var multiPolyhedron = (MultiPolyhedron) geometry;
+
+			return new Polyhedron(
+				multiPolyhedron.Polyhedra.SelectMany(ph => ph.RingGroups).ToList());
+		}
+
+		[Test]
 		[Ignore("Diagnostic: writes current footprint area/parts to C:\\Temp")]
 		public void DumpNewFootprintCases()
 		{
