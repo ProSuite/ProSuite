@@ -101,9 +101,16 @@ namespace ProSuite.Commons.Geom
 		/// ensures that the operation can succeed thanks to clustering. Should be larger than the
 		/// XY resolution, ideally similar to the tolerance.</param>
 		/// <param name="verticalRings">Output parameter for rings that are too small in XY.</param>
+		/// <param name="crackAndClusterOptions">Controls the crack-and-cluster pass that
+		/// makes the input rings simple at the tolerance before they are unioned. Pass
+		/// <see cref="CrackAndClusterOptions.Disabled"/> to skip it, e.g. because the
+		/// caller has already called <see cref="SimplificationUtils"/> itself. Null
+		/// uses the defaults.</param>
 		public MultiLinestring GetXYFootprint(double tolerance,
 		                                      double verticalRingDetectionTolerance,
-		                                      out List<Linestring> verticalRings)
+		                                      out List<Linestring> verticalRings,
+		                                      [CanBeNull] CrackAndClusterOptions
+			                                      crackAndClusterOptions = null)
 		{
 			// TODO: Explain the rationale for the vertical ring detection tolerance and how it
 			// differs from the XY tolerance, if at all. 
@@ -162,6 +169,17 @@ namespace ProSuite.Commons.Geom
 					ringGroupsToUnionize.Add(orientedGroup);
 				}
 			}
+
+			// Crack and cluster ALL rings against each other before the union: this makes
+			// the input simple at the tolerance, so that sub-tolerance rings and slivers
+			// are gone before the pairwise union has to reason about them (TOP-5999,
+			// friedhofsmauer_roggwil). The whole operation lives in SimplificationUtils
+			// and can be moved out to the caller by passing
+			// CrackAndClusterOptions.Disabled here and calling the utility there.
+			ringGroupsToUnionize =
+				SimplificationUtils.CrackAndCluster(
+					ringGroupsToUnionize, tolerance, crackAndClusterOptions, out int _)
+				                    .ToList();
 
 			// Pass the resolution as the merge tolerance so the union snaps near-coincident
 			// parallel edge runs (shared walls separated only by a sub-resolution offset) into

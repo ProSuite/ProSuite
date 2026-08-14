@@ -1025,10 +1025,11 @@ namespace ProSuite.Commons.Geom
 
 					foreach (IntersectionPoint3D intersection in cluster.Value)
 					{
-						CollectSourceCrackPoint(intersection, clusterPoint,
-						                        sourceCrackPointsByPart);
-						CollectTargetCrackPoint(intersection, clusterPoint, originalTarget,
-						                        targetCrackPointsByPart);
+						SimplificationUtils.CollectSourceCrackPoint(
+							intersection, clusterPoint, sourceCrackPointsByPart);
+						SimplificationUtils.CollectTargetCrackPoint(
+							intersection, clusterPoint, originalTarget,
+							targetCrackPointsByPart);
 					}
 				}
 			}
@@ -1059,8 +1060,10 @@ namespace ProSuite.Commons.Geom
 			ISegmentList source = Clone(_subcurveNavigator.Source);
 			ISegmentList target = Clone(originalTarget);
 
-			bool sourceUpdated = ApplyCrackPoints(ref source, sourceCrackPointsByPart);
-			bool targetUpdated = ApplyCrackPoints(ref target, targetCrackPointsByPart);
+			bool sourceUpdated =
+				SimplificationUtils.ApplyCrackPoints(ref source, sourceCrackPointsByPart);
+			bool targetUpdated =
+				SimplificationUtils.ApplyCrackPoints(ref target, targetCrackPointsByPart);
 
 			if (sourceUpdated)
 			{
@@ -1169,8 +1172,10 @@ namespace ProSuite.Commons.Geom
 
 				foreach (IntersectionPoint3D touch in new[] { a, b })
 				{
-					CollectSourceCrackPoint(touch, touch.Point, sourceCrackPointsByPart);
-					CollectTargetCrackPoint(touch, touch.Point, target, targetCrackPointsByPart);
+					SimplificationUtils.CollectSourceCrackPoint(
+						touch, touch.Point, sourceCrackPointsByPart);
+					SimplificationUtils.CollectTargetCrackPoint(
+						touch, touch.Point, target, targetCrackPointsByPart);
 				}
 			}
 		}
@@ -1222,8 +1227,10 @@ namespace ProSuite.Commons.Geom
 
 				foreach (IntersectionPoint3D linearEnd in new[] { start, end })
 				{
-					CollectSourceCrackPoint(linearEnd, midpoint, sourceCrackPointsByPart);
-					CollectTargetCrackPoint(linearEnd, midpoint, target, targetCrackPointsByPart);
+					SimplificationUtils.CollectSourceCrackPoint(
+						linearEnd, midpoint, sourceCrackPointsByPart);
+					SimplificationUtils.CollectTargetCrackPoint(
+						linearEnd, midpoint, target, targetCrackPointsByPart);
 				}
 			}
 		}
@@ -1274,8 +1281,10 @@ namespace ProSuite.Commons.Geom
 
 				foreach (IntersectionPoint3D crossing in new[] { a, b })
 				{
-					CollectSourceCrackPoint(crossing, midpoint, sourceCrackPointsByPart);
-					CollectTargetCrackPoint(crossing, midpoint, target, targetCrackPointsByPart);
+					SimplificationUtils.CollectSourceCrackPoint(
+						crossing, midpoint, sourceCrackPointsByPart);
+					SimplificationUtils.CollectTargetCrackPoint(
+						crossing, midpoint, target, targetCrackPointsByPart);
 				}
 			}
 		}
@@ -1447,136 +1456,6 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return part.GetSubcurve(fromSegment, fromRatio, toSegment, toRatio, true, false);
-		}
-
-		private static void CollectSourceCrackPoint(
-			[NotNull] IntersectionPoint3D intersection,
-			[NotNull] IPnt clusterPoint,
-			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart)
-		{
-			var targetPoint = new Pnt3D(clusterPoint.X, clusterPoint.Y,
-			                            intersection.Point.Z);
-
-			var crackPoint = new CrackPoint(intersection, targetPoint);
-
-			if (intersection.IsSourceVertex())
-			{
-				crackPoint.SnapVertexIndex = (int) intersection.VirtualSourceVertex;
-			}
-			else
-			{
-				crackPoint.SegmentSplitFactor = intersection.VirtualSourceVertex;
-			}
-
-			AddCrackPoint(crackPointsByPart, intersection.SourcePartIndex, crackPoint);
-		}
-
-		private static void CollectTargetCrackPoint(
-			[NotNull] IntersectionPoint3D intersection,
-			[NotNull] IPnt clusterPoint,
-			[NotNull] ISegmentList target,
-			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart)
-		{
-			if (double.IsNaN(intersection.VirtualTargetVertex))
-			{
-				// Source-only intersection (e.g. a touching point): nothing to crack on the
-				// target side.
-				return;
-			}
-
-			int partIndex = intersection.TargetPartIndex;
-			Linestring linestring = target.GetPart(partIndex);
-
-			CrackPoint crackPoint;
-			if (intersection.IsTargetVertex(out int targetVertexIdx))
-			{
-				double origZ = linestring.GetPoint3D(targetVertexIdx).Z;
-				crackPoint = new CrackPoint(
-					             intersection,
-					             new Pnt3D(clusterPoint.X, clusterPoint.Y, origZ))
-				             {
-					             SnapVertexIndex = targetVertexIdx
-				             };
-			}
-			else
-			{
-				crackPoint = new CrackPoint(
-					             intersection,
-					             new Pnt3D(clusterPoint.X, clusterPoint.Y,
-					                       intersection.Point.Z))
-				             {
-					             SegmentSplitFactor = intersection.VirtualTargetVertex
-				             };
-			}
-
-			AddCrackPoint(crackPointsByPart, partIndex, crackPoint);
-		}
-
-		/// <summary>
-		/// Adds <paramref name="crackPoint"/> to the per-part list, skipping a duplicate that
-		/// would snap the same vertex twice (<see cref="GeomTopoOpUtils.CrackLinestring"/>
-		/// keys snap points by vertex index and cannot take duplicates). Duplicate segment
-		/// split factors are tolerated - CrackLinestring already de-duplicates those.
-		/// </summary>
-		private static void AddCrackPoint(
-			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart,
-			int partIndex, [NotNull] CrackPoint crackPoint)
-		{
-			if (! crackPointsByPart.TryGetValue(partIndex, out List<CrackPoint> partList))
-			{
-				partList = new List<CrackPoint>();
-				crackPointsByPart.Add(partIndex, partList);
-			}
-
-			if (crackPoint.SnapVertexIndex != null &&
-			    partList.Exists(cp => cp.SnapVertexIndex == crackPoint.SnapVertexIndex))
-			{
-				return;
-			}
-
-			partList.Add(crackPoint);
-		}
-
-		/// <summary>
-		/// Applies the collected crack points to the affected parts of
-		/// <paramref name="segments"/> (snapping vertices and splitting segments at the
-		/// cluster points). Returns true and replaces <paramref name="segments"/> with the
-		/// cracked result if anything changed.
-		/// </summary>
-		private static bool ApplyCrackPoints(
-			[NotNull] ref ISegmentList segments,
-			[NotNull] Dictionary<int, List<CrackPoint>> crackPointsByPart)
-		{
-			if (crackPointsByPart.Count == 0)
-			{
-				return false;
-			}
-
-			var newParts = new List<Linestring>(segments.PartCount);
-			bool changed = false;
-
-			for (int i = 0; i < segments.PartCount; i++)
-			{
-				Linestring part = segments.GetPart(i);
-
-				if (crackPointsByPart.TryGetValue(i, out List<CrackPoint> crackPoints) &&
-				    crackPoints.Count > 0)
-				{
-					newParts.Add(GeomTopoOpUtils.CrackLinestring(part, crackPoints, null));
-					changed = true;
-				}
-				else
-				{
-					newParts.Add(part);
-				}
-			}
-
-			if (changed)
-			{
-				segments = new MultiPolycurve(newParts);
-			}
-
-			return changed;
 		}
 
 		private static ISegmentList Clone(ISegmentList source)
