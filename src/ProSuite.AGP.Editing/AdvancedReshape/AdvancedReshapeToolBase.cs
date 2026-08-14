@@ -620,14 +620,23 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		// Snapshot:
 		MapView activeMapView = ActiveMapView;
 
+		if (activeMapView?.Map == null)
+		{
+			// Transiently null while ArcGIS Pro switches panes
+			return false;
+		}
+
 		List<Feature> polylineSelection;
 		List<Feature> polygonSelection;
 
 		bool result =
 			await QueuedTaskUtils.Run(async () =>
 			{
+				// Distinct, like the tool's main path in Reshape()
 				List<Feature> selection =
-					GetApplicableSelectedFeatures(activeMapView).ToList();
+					GetDistinctApplicableSelectedFeatures(
+						SelectionUtils.GetSelection(activeMapView.Map), UnJoinedSelection)
+						.ToList();
 
 				polylineSelection =
 					GdbObjectUtils.Filter(selection, GeometryType.Polyline).ToList();

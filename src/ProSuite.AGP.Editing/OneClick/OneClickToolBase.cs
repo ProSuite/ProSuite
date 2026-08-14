@@ -903,6 +903,12 @@ public abstract class OneClickToolBase : MapToolBase
 
 	protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
 	{
+		// The active view is transiently null while ArcGIS Pro switches panes.
+		if (mapView?.Map == null)
+		{
+			return Enumerable.Empty<Feature>();
+		}
+
 		Dictionary<MapMember, List<long>> selectionByLayer =
 			SelectionUtils.GetSelection(mapView.Map);
 
