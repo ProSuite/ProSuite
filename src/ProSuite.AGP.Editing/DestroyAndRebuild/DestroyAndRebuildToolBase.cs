@@ -254,9 +254,10 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override void LogEnteringSketchMode()
 	{
-		_msg.Info("Sketch the new geometry. Hit [ESC] to reselect the target feature.");
-		_msg.Info(
-			"Change the selected feature while keeping SHIFT pressed (the current selection will be cleared).");
+		_msg.InfoFormat(
+			"Sketch the new geometry. Press [ESC] to reselect the target feature.{0}" +
+			"Change the selected feature while keeping SHIFT pressed (the current selection will be cleared).",
+			Environment.NewLine);
 	}
 
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
