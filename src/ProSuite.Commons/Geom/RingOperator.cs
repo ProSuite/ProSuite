@@ -169,6 +169,27 @@ namespace ProSuite.Commons.Geom
 			unprocessedOuterRings.AddRange(
 				equalRings.Where(r => r.ClockwiseOriented == true));
 
+			// Remove unprocessed outer rings that are already covered by the walk result, i.e. they
+			// lie inside one of the walk's exterior rings and not inside one of its islands. Adding
+			// such a ring would double-count its area, so it must be suppressed.
+			if (unprocessedOuterRings.Count > 0 && processedRingsResult.Count > 0)
+			{
+				// The islands are not only the walk result's own interior rings: the
+				// un-intersected interior rings are assigned further down, and a ring
+				// inside one of them is NOT covered by the result.
+				List<Linestring> islands =
+					processedRingsResult.Where(r => r.ClockwiseOriented == false)
+					                    .Concat(
+						                    ringsOutsideOtherPoly.Where(r => r.ClockwiseOriented ==
+							                    false))
+					                    .Concat(equalRings.Where(r => r.ClockwiseOriented == false))
+					                    .ToList();
+
+				unprocessedOuterRings.RemoveAll(ring => IsCoveredByProcessedRings(
+					                                ring, processedRingsResult, islands,
+					                                _subcurveNavigator.Tolerance));
+			}
+
 			// ... can be used where necessary to aggregate the processed inner rings into ring groups
 			IList<RingGroup> resultRingGroups =
 				AssignToResultRingGroups(processedRingsResult, unprocessedOuterRings);
@@ -232,6 +253,52 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Whether the specified ring is already covered by the rings the walk has produced,
+		/// i.e. it lies inside one of their exterior rings and not inside one of their
+		/// islands. Adding such a ring to the result would double-count its area.
+		/// </summary>
+		private static bool IsCoveredByProcessedRings(
+			[NotNull] Linestring ring,
+			[NotNull] IEnumerable<Linestring> processedRings,
+			[NotNull] IEnumerable<Linestring> islands,
+			double tolerance)
+		{
+			var insideExterior = false;
+
+			foreach (Linestring processed in processedRings)
+			{
+				// Containment is decided with RingContainsRobust rather than with the plain
+				// area predicate: the candidate rings touch the walk result along their whole
+				// boundary, which is exactly where the plain predicate is unreliable.
+				if (processed.ClockwiseOriented == true &&
+				    RingContainsRobust(processed, ring, tolerance))
+				{
+					insideExterior = true;
+					break;
+				}
+			}
+
+			if (! insideExterior)
+			{
+				return false;
+			}
+
+			foreach (Linestring island in islands)
+			{
+				Linestring exterior = island.Clone();
+				exterior.ReverseOrientation();
+
+				if (RingContainsRobust(exterior, ring, tolerance))
+				{
+					// Inside a hole of the result: not covered.
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		/// <summary>
@@ -672,8 +739,8 @@ namespace ProSuite.Commons.Geom
 		/// (TOP: brutalismus_in_duedingen / garden_center_giubiasco).
 		/// </summary>
 		private static bool RingContainsRobust([NotNull] Linestring exteriorRing,
-		                                        [NotNull] Linestring unCutInteriorRing,
-		                                        double tolerance)
+		                                       [NotNull] Linestring unCutInteriorRing,
+		                                       double tolerance)
 		{
 			foreach (Pnt3D interiorRingPoint in unCutInteriorRing.GetPoints())
 			{
