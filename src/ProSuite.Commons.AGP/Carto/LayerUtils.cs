@@ -38,6 +38,24 @@ public static class LayerUtils
 		return null;
 	}
 
+	[NotNull]
+	public static IList<string> GetLayerPathNames([NotNull] Layer layer)
+	{
+		var names = new List<string> { layer.Name };
+
+		// Walk up parent layers, if any, stopping just before the Map:
+
+		Layer candidate = layer;
+		while (candidate.Parent is Layer parent)
+		{
+			names.Add(parent.Name);
+			candidate = parent;
+		}
+
+		names.Reverse();
+		return names;
+	}
+
 	/// <summary>
 	/// Check if a layer (and optionally its parents) matches a pattern.
 	/// Pattern matching behaves roughly like gitignore patterns:
@@ -65,20 +83,7 @@ public static class LayerUtils
 
 		if (hasSeparator)
 		{
-			var names = new List<string>();
-
-			names.Add(layer.Name);
-
-			// Walk up parent layers, if any, stopping just before the Map:
-
-			Layer candidate = layer;
-			while (candidate.Parent is Layer parent)
-			{
-				names.Add(parent.Name);
-				candidate = parent;
-			}
-
-			names.Reverse();
+			IList<string> names = GetLayerPathNames(layer);
 
 			var patterns = pattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 			// "/foo/bar///" => ["foo", "bar"] (layer names CAN be empty, but we don't handle this)
