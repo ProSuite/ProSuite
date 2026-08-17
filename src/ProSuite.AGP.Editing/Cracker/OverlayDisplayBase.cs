@@ -58,6 +58,14 @@ public abstract class OverlayDisplayBase : IDisposable
 
 	public bool HasShapes => _shapes.Count > 0;
 
+	/// <summary>
+	/// Identifies the features currently displayed (feature class and object ID), or null
+	/// if they were set without their features. Lets a subclass tell whether the same
+	/// object has been selected again or a different one.
+	/// </summary>
+	[CanBeNull]
+	protected string ShapesSignature { get; private set; }
+
 	/// <summary>The shapes to be displayed, in their original spatial reference.</summary>
 	[NotNull]
 	protected IList<Geometry> Shapes => _shapes;
@@ -121,7 +129,10 @@ public abstract class OverlayDisplayBase : IDisposable
 	/// </summary>
 	public void SetFeatures([CanBeNull] IEnumerable<Feature> features)
 	{
-		SetShapes(features?.Select(feature => feature.GetShape()));
+		List<Feature> featureList = features?.ToList();
+
+		SetShapes(featureList?.Select(feature => feature.GetShape()),
+		          GetSignature(featureList));
 	}
 
 	/// <summary>
@@ -129,6 +140,14 @@ public abstract class OverlayDisplayBase : IDisposable
 	/// </summary>
 	public void SetShapes([CanBeNull] IEnumerable<Geometry> shapes)
 	{
+		SetShapes(shapes, null);
+	}
+
+	private void SetShapes([CanBeNull] IEnumerable<Geometry> shapes,
+	                       [CanBeNull] string signature)
+	{
+		ShapesSignature = signature;
+
 		_shapes.Clear();
 
 		if (shapes is not null)
@@ -157,6 +176,32 @@ public abstract class OverlayDisplayBase : IDisposable
 	/// Called after the shapes have changed, before the display is refreshed.
 	/// </summary>
 	protected virtual void OnShapesChangedCore() { }
+
+	// Identifies the features currently displayed, so that a subclass can tell whether the
+	// same object has been selected again or a different one. Null if the shapes were set
+	// without their features (SetShapes) or if there are none.
+	[CanBeNull]
+	private static string GetSignature([CanBeNull] IList<Feature> features)
+	{
+		if (features is null || features.Count == 0)
+		{
+			return null;
+		}
+
+		var keys = new List<string>(features.Count);
+
+		foreach (Feature feature in features)
+		{
+			using FeatureClass featureClass = feature.GetTable();
+
+			keys.Add($"{featureClass.GetID()}|{featureClass.GetName()}|{feature.GetObjectID()}");
+		}
+
+		// The selection order must not matter
+		keys.Sort(StringComparer.Ordinal);
+
+		return string.Join(";", keys);
+	}
 
 	#endregion
 
