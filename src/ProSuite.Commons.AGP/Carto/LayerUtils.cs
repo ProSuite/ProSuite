@@ -38,18 +38,6 @@ public static class LayerUtils
 		return null;
 	}
 
-	/// <summary>
-	/// The layer's qualified path: the names of all container layers followed by the layer's
-	/// own name, backslash-separated. The map itself is not part of the path. Compare paths
-	/// case-insensitively: layer names are user-facing labels and may drift in casing between
-	/// two maps populated from the same CIM definitions.
-	/// </summary>
-	[NotNull]
-	public static string GetLayerPath([NotNull] Layer layer)
-	{
-		return string.Join("\\", GetLayerPathNames(layer));
-	}
-
 	[NotNull]
 	public static IList<string> GetLayerPathNames([NotNull] Layer layer)
 	{
