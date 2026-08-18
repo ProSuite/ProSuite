@@ -223,23 +223,36 @@ public abstract class ArcSegment : ISegment
 		throw new NotImplementedException();
 	}
 
-	public double GetDistancePerpendicular2d(IPoint ofPoint,
-	                                         out double distanceAlongRatio,
-	                                         out IPoint pointOnLine)
+	public double GetDistance2d(IPoint toPoint, out CurveLocation location)
 	{
-		MapPoint proPoint = (MapPoint) ofPoint.NativeImplementation;
+		MapPoint proPoint = (MapPoint) toPoint.NativeImplementation;
 
 		MapPoint nearestPoint = GeometryEngine.Instance.QueryPointAndDistance(
 			HighLevelSegment,
 			SegmentExtensionType.NoExtension,
 			proPoint, AsRatioOrLength.AsRatio,
-			out distanceAlongRatio,
+			out double alongSegmentRatio,
 			out double distanceFromCurve,
 			out LeftOrRightSide _);
 
-		pointOnLine = nearestPoint != null ? new ArcPoint(nearestPoint) : null;
+		// This curve is a single segment, hence the index is always 0 and the ratio along
+		// the curve is the ratio along the segment.
+		location = new CurveLocation(
+			0, alongSegmentRatio, nearestPoint == null ? null : new ArcPoint(nearestPoint));
 
 		return distanceFromCurve;
+	}
+
+	public double GetDistanceAlongCurve2d(CurveLocation location)
+	{
+		if (location.SegmentIndex != 0)
+		{
+			throw new ArgumentOutOfRangeException(
+				nameof(location),
+				$"A segment is a single segment, hence the only valid index is 0 (was {location.SegmentIndex}).");
+		}
+
+		return location.AlongSegmentRatio * Length;
 	}
 
 	public void QueryTangent(double distanceAlongCurve, bool asRatio, double length,
