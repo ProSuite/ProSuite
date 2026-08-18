@@ -18,6 +18,12 @@ public static class GeometryUtils
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	/// <summary>
+	/// default search radius when a geometry has no spatial reference (1cm)
+	/// </summary>
+	private const double _defaultSearchRadius = 0.01; // TODO eliminate need for this!
+
+
 	private const int _maxToStringPointCount = 1000;
 
 	public static Coordinate2D Shifted(this Coordinate2D point, double dx, double dy)
@@ -2385,6 +2391,44 @@ public static class GeometryUtils
 	}
 
 	/// <summary>
+	/// Returns a value indicating if two geometries are equal 
+	/// in XY and within the XY tolerance.
+	/// duplicate of <see cref= "K2GeometryUtils.AreEqualInXY"/>
+	/// </summary>
+	/// <param name="firstGeometry">The first geometry.</param>
+	/// <param name="secondGeometry">The second geometry.</param>
+	/// <returns></returns>
+	public static bool AreEqualInXY([CanBeNull] Geometry firstGeometry,
+	                                [CanBeNull] Geometry secondGeometry)
+	{
+		if (firstGeometry == null && secondGeometry == null)
+		{
+			return true;
+		}
+
+		if (firstGeometry == null || secondGeometry == null)
+		{
+			return false;
+		}
+
+		bool areEqual = GeometryEngine.Instance.Equals(firstGeometry, secondGeometry);
+
+		Geometry difference =
+			GeometryEngine.Instance.SymmetricDifference(firstGeometry, secondGeometry);
+		// return true only if the difference is really empty
+		bool differenceIsEmpty = difference == null || difference.IsEmpty;
+		//areEqual = !differenceIsEmpty;
+
+		if (!areEqual)
+		{
+			return false;
+		}
+
+		return true; // trust Equals() for all other cases
+	}
+
+
+	/// <summary>
 	/// Returns a value indicating if two MapPoints are equal 
 	/// in XY and within the XY tolerance.
 	/// </summary>
@@ -2970,6 +3014,95 @@ public static class GeometryUtils
 	{
 		return geometry.ToBuilder().HasZ;
 	}
+
+	// TODO This should probably be made obsolete, as the geometry's tolerance may not be well 
+	// defined (may be the minimum default from the map spatial reference!)
+	public static double GetSearchRadius([NotNull] Geometry geometry)
+	{
+		Assert.ArgumentNotNull(geometry, nameof(geometry));
+
+		if (geometry.SpatialReference == null)
+		{
+			return GetDefaultSearchRadius(geometry);
+		}
+
+		double tolerance = GeometryUtils.GetXyTolerance(geometry);
+
+		return double.IsNaN(tolerance)
+			       ? GetDefaultSearchRadius(geometry)
+			       : tolerance;
+	}
+
+	private static double GetDefaultSearchRadius([NotNull] Geometry geometry)
+	{
+		// TODO should be based on xmax/ymax 
+		return _defaultSearchRadius;
+	}
+
+	/// <summary>
+	/// Returns the point index as a global index in the geometry's pointcollection
+	/// </summary>
+	/// <param name="geometry"></param>
+	/// <param name="partIndex">index of the geometry part in the geometry collection</param>
+	/// <param name="pointIndex">index in the part of the geometry</param>
+	/// <returns></returns>
+	public static int GetGlobalIndex([NotNull] MultipartBuilderEx geometry,
+	                                 int partIndex,
+	                                 int pointIndex)
+	{
+		int result = pointIndex;
+
+		// in case of multipoint both partIndex and pointIndex are the same (also by hit test's opinion)
+		if (geometry.GeometryType == GeometryType.Multipoint)
+		{
+			return pointIndex;
+		}
+
+		var collection = geometry;
+
+		if (collection != null && partIndex > 0)
+		{
+			for (var i = 0; i < partIndex; i++)
+			{
+				result += geometry.GetPointCount(i);
+			}
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Add vertex
+	/// </summary>
+	/// <param name="geometry"></param>
+	/// <param name="newVertex"></param>
+	/// <param name="partIndex"></param>
+	/// <returns></returns>
+	public static bool AddVertex([NotNull] MultipartBuilderEx geometry, MapPoint newVertex,
+	                             int partIndex = 0)
+	{
+		if (geometry == null || newVertex == null)
+			return false;
+
+		if (partIndex < geometry.PartCount)
+		{
+			int segmentCount = geometry.GetSegmentCount(partIndex);
+			Segment segment = geometry.GetSegment(partIndex, segmentCount - 1);
+
+			MapPoint segmentEndPoint = segment.EndPoint;
+
+			SegmentBuilderEx segmentBuilder = segment.ToBuilder();
+			segmentBuilder.SetEmpty();
+			segmentBuilder.StartPoint = segmentEndPoint;
+			segmentBuilder.EndPoint = newVertex;
+			geometry.AddSegment(segmentBuilder);
+
+			return true;
+		}
+
+		return false;
+	}
+
 
 	#region ToString
 
