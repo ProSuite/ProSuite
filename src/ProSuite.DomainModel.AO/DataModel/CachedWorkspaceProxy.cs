@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -145,28 +144,28 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			foreach (var kvp in _topologiesByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_topologiesByName.Clear();
 
 			foreach (var kvp in _relClassesByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_relClassesByName.Clear();
 
 			foreach (var kvp in _mosaicDatasetsByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_mosaicDatasetsByName.Clear();
 
 			foreach (var kvp in _rasterDatasetsByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_rasterDatasetsByName.Clear();
