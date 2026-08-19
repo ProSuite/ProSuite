@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -16,6 +17,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -37,9 +39,16 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 
 	private Envelope _calculationExtent;
 
+	private const Key _vertexDisplayModeToggleKey = Key.V;
+
+	// Additional display mode, toggled with [V]
+	private VertexCoordinateDisplay _vertexDisplay;
+
 	protected CrackerToolBase()
 	{
 		GeomIsSimpleAsFeature = false;
+
+		HandledKeys.Add(_vertexDisplayModeToggleKey);
 	}
 
 	protected string OptionsFileName => "CrackerToolOptions.xml";
@@ -59,6 +68,12 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 	protected virtual string LocalConfigDir
 		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 			AppDataFolder.Roaming, "ToolDefaults");
+
+	/// <summary>
+	/// The scale denominator beyond which (i.e. zoomed further out than) the vertex labels
+	/// are hidden. Zooming in again restores them.
+	/// </summary>
+	protected virtual double LabelMinimumScaleDenominator => 1000;
 
 	protected override void OnUpdateCore()
 	{
@@ -81,6 +96,12 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 
 		_feedback = new CrackerFeedback();
 
+		// The display mode starts off and is toggled with [V]
+		_vertexDisplay = new VertexCoordinateDisplay
+		                 {
+			                 MinimumScaleDenominator = LabelMinimumScaleDenominator
+		                 };
+
 		return base.OnToolActivatingCoreAsync();
 	}
 
@@ -91,6 +112,9 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		_feedback?.DisposeOverlays();
 
 		_feedback = null;
+
+		_vertexDisplay?.Dispose();
+		_vertexDisplay = null;
 
 		HideOptionsPane();
 
@@ -151,6 +175,8 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		{
 			_feedback.UpdateExtent(_calculationExtent);
 		}
+
+		UpdateActiveDisplayFeatures(selectedFeatures);
 	}
 
 	protected override bool CanUseDerivedGeometries()
@@ -158,33 +184,44 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		return _resultCrackPoints != null && _resultCrackPoints.ResultsByFeature.Count > 0;
 	}
 
-	// TODO: Show/hide Vertex labels, maybe impl on TopologicalCrackingToolBase / Shortcut T
+	protected override async Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
+	{
+		if (args.Key == _vertexDisplayModeToggleKey)
+		{
+			await ToggleVertexDisplayAsync();
+		}
 
-	//protected override void ToggleVertices()
+		await base.HandleKeyDownCoreAsync(args);
+	}
 
-	//{
+	// Hands the current selection to the display before switching it on. Unlike the crack
+	// point feedback the labels are available in both phases of the tool, i.e. without
+	// waiting for the crack points to be calculated. Switching off needs no shapes.
+	private async Task ToggleVertexDisplayAsync()
+	{
+		if (_vertexDisplay == null)
+		{
+			return;
+		}
 
-	//	base.ToggleVertices();
+		if (! _vertexDisplay.IsEnabled)
+		{
+			await QueuedTaskUtils.Run(() => _vertexDisplay.SetFeatures(
+				                          GetApplicableSelectedFeatures(ActiveMapView).ToList()));
+		}
 
-	//	try
+		await _vertexDisplay.ToggleAsync();
+	}
 
-	//	{
-
-	//		//_vertexLabels.Toggle();
-
-	//		//_vertexLabels.UpdateLabels();
-
-	//	}
-
-	//	catch (Exception ex)
-
-	//	{
-
-	//		_msg.Error($"Toggling Vertices Labels Error: {ex.Message}");
-
-	//	}
-
-	//}
+	// Keeps the display mode in sync with the selection while it is on. If it is off it
+	// picks up the selection when it is switched on.
+	private void UpdateActiveDisplayFeatures([CanBeNull] IList<Feature> selectedFeatures)
+	{
+		if (_vertexDisplay?.IsEnabled == true)
+		{
+			_vertexDisplay.SetFeatures(selectedFeatures);
+		}
+	}
 
 	protected override async Task<bool> SelectAndProcessDerivedGeometry(
 		Dictionary<MapMember, List<long>> selection,
@@ -261,10 +298,6 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 
 		CalculateDerivedGeometries(currentSelection, progressor);
 
-		// TODO:
-
-		//_vertexLabels.UpdateLabels();
-
 		return saved;
 	}
 
@@ -275,6 +308,10 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		_calculationExtent = null;
 
 		_feedback.DisposeOverlays();
+
+		// The selection is gone (e.g. [ESC]): drop the labels with it. The display mode
+		// stays on and picks up the next selection.
+		_vertexDisplay?.SetShapes(null);
 	}
 
 	protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
@@ -291,7 +328,7 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 				             ? "Select the crack points to apply."
 				             : $"Crack points have been found in {_resultCrackPoints.ResultsByFeature.Count} features. Select one or more crack points. Draw a box to select targets completely within the box.";
 
-			_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
+			_msg.InfoFormat(LocalizableStrings.CrackerTool_AfterSelection, msg);
 		}
 	}
 
