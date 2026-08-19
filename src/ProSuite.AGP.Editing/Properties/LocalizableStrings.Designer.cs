@@ -110,21 +110,18 @@ namespace ProSuite.AGP.Editing.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Press [ESC] to select one or more different features.
-        ///	Press [V] to toggle vertex display mode..
+        ///   Looks up a localized string similar to {0}&lt;br&gt;Press [ESC] to select one or more different features.&lt;br&gt;Press [V] to toggle vertex display mode..
         /// </summary>
-        internal static string CrackerTool_AfterSelection
-        {
-	        get
-	        {
-		        return ResourceManager.GetString("CrackerTool_AfterSelection", resourceCulture);
-	        }
+        internal static string CrackerTool_AfterSelection {
+            get {
+                return ResourceManager.GetString("CrackerTool_AfterSelection", resourceCulture);
+            }
         }
 
-		/// <summary>
-		///   Looks up a localized string similar to Select one or more line or polygon features to cut along other feature(s).&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
-		/// </summary>
-		internal static string CutPolygonAlongTool_LogPromptForSelection {
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more line or polygon features to cut along other feature(s).&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        /// </summary>
+        internal static string CutPolygonAlongTool_LogPromptForSelection {
             get {
                 return ResourceManager.GetString("CutPolygonAlongTool_LogPromptForSelection", resourceCulture);
             }
