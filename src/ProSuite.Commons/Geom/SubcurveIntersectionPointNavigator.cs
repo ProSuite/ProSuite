@@ -1469,7 +1469,7 @@ namespace ProSuite.Commons.Geom
 			// sub-tolerance boundary loop in the accumulated footprint. No sound duplicate
 			// test can reproduce that deletion, and every predicate that does also re-breaks
 			// CanGetFootprintForLugano8711144. The loop is now removed at the source, in
-			// GeomTopoOpUtils.RemoveSubToleranceBoundaryLoops; do not widen this predicate to
+			// RingSimplifier.RemoveSubToleranceBoundaryLoop; do not widen this predicate to
 			// chase such cases.
 			// The end is compared non-strictly: the duplicate at an acute corner ends exactly
 			// where the run it duplicates ends (see

@@ -313,11 +313,9 @@ namespace ProSuite.Commons.Geom
 				// ReSharper disable once AccessToModifiedClosure
 				_msg.VerboseDebug(() => $"Processed target ring index at {count}");
 
-				// Degenerate boundary loops narrower than the tolerance must go first: they
-				// are LINEAR self-intersections, which the exploder deliberately does not judge.
-				RemoveSubToleranceBoundaryLoops(result, tolerance);
-
-				ExplodeExteriorBoundaryLoops(result, tolerance);
+				// Re-establish the invariant that the accumulated result is simple in XY
+				// before the next target ring is subtracted from it.
+				RingSimplifier.SimplifyRingsXY(result, tolerance);
 
 				count++;
 			}
@@ -689,6 +687,16 @@ namespace ProSuite.Commons.Geom
 			return GetUnionAreasXY(allInputRings, tolerance);
 		}
 
+		/// <summary>
+		/// The union of the ring groups, calculated incrementally.
+		/// </summary>
+		/// <param name="ringGroups">The rings to unionize. They must be simple in XY, see
+		/// <see cref="RingSimplifier"/>.</param>
+		/// <param name="tolerance">The XY tolerance.</param>
+		/// <param name="mergeTolerance">The distance within which near-coincident parallel
+		/// edge runs are snapped together, see <see cref="RingOperator.MergeTolerance"/>.</param>
+		/// <param name="inputRingsMayBeNonSimple">Whether the intersection calculation must
+		/// expect (and cluster) near-coincident vertices.</param>
 		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
 		                                              double tolerance,
 		                                              double mergeTolerance = 0,
@@ -718,18 +726,14 @@ namespace ProSuite.Commons.Geom
 						throw new AssertionException("Unexpectedly long processing time");
 					}
 
-					// Drop degenerate boundary loops that are narrower than the tolerance
-					// first: they are LINEAR self-intersections, which the exploder
-					// deliberately does not judge, and they derail the following steps
-					// (TOP-5999, TLM_GEBAEUDEKOERPER 8706452).
-					RemoveSubToleranceBoundaryLoops(result, tolerance);
-
-					// Split any exterior boundary loop (a ring that self-touches at a point) in
-					// the accumulated result into two simple rings before the next union step.
-					// A self-touching source is non-simple and derails the turning-left walk
-					// ("Intersections seen twice", e.g. OID_3925818) when the next ring grazes
-					// the touch point. Mirrors the same call in the difference path.
-					ExplodeExteriorBoundaryLoops(result, tolerance);
+					// The loop invariant: the accumulated result is simple in XY when the
+					// next ring group is unioned into it. A non-simple accumulated result
+					// derails the turning-left walk of the following step - it either loses
+					// the large ring (TOP-5999, TLM_GEBAEUDEKOERPER 8706452: 130 sq m down to
+					// 1.08) or throws "Intersections seen twice" (8712317, 8839728, 3925818).
+					// The invariant is established for the inputs by the caller (see
+					// RingSimplifyFlags.Input) and re-established here after every step.
+					RingSimplifier.SimplifyRingsXY(result, tolerance);
 				}
 			}
 
@@ -4510,215 +4514,6 @@ namespace ProSuite.Commons.Geom
 					.ToList();
 
 			return TryCrackAtSelfIntersections(linestring, intersectionPoints, results);
-		}
-
-		/// <summary>
-		/// Removes boundary loops that are thinner than the tolerance from the rings of
-		/// <paramref name="result"/>.
-		/// <para>Such a loop is a sliver spike whose two flanks are closer to each other than
-		/// the tolerance. It carries no area worth keeping, but it makes the ring intersect
-		/// itself LINEARLY, and a linear self-intersection is exactly what
-		/// <see cref="ExplodeExteriorBoundaryLoops"/> declines to judge. The spike therefore
-		/// survives into the following union steps, where the intersection calculation reports
-		/// a zero-extent linear run for it (start point == end point, target span collapsed to
-		/// a single location) and the turning-left walk is derailed by it - it either loses the
-		/// large ring (TOP-5999, TLM_GEBAEUDEKOERPER 8706452: 130 sq m down to 1.08) or throws
-		/// "Intersections seen twice" (8712317, 8839728).</para>
-		/// <para>Only rings with EXACTLY ONE self-touch are treated. Where a ring has several
-		/// loops the decomposition is ambiguous: removing one of them changes how the remaining
-		/// ones are classified (8778451 loses 5 sq m if its sliver is removed while a second,
-		/// legitimate loop is present), so those rings are left to
-		/// <see cref="ExplodeExteriorBoundaryLoops"/> as before.</para>
-		/// <para>Must run BEFORE <see cref="ExplodeExteriorBoundaryLoops"/>: once the ring has
-		/// been split at the sliver, the spike is a separate part and no longer recognizable as
-		/// a boundary loop.</para>
-		/// </summary>
-		private static void RemoveSubToleranceBoundaryLoops(
-			[NotNull] MultiLinestring result, double tolerance)
-		{
-			foreach (Linestring linestring in result.GetLinestrings().ToList())
-			{
-				List<Pnt3D> withoutLoop = RemoveSubToleranceBoundaryLoop(linestring, tolerance);
-
-				if (withoutLoop == null)
-				{
-					continue;
-				}
-
-				int index = result.GetLinestrings().ToList().IndexOf(linestring);
-
-				result.RemoveLinestring(linestring);
-				result.InsertLinestring(index, new Linestring(withoutLoop));
-			}
-		}
-
-		/// <summary>
-		/// The vertices of <paramref name="linestring"/> without its single sub-tolerance
-		/// boundary loop, or null if there is nothing to remove. See
-		/// <see cref="RemoveSubToleranceBoundaryLoops"/>.
-		/// </summary>
-		[CanBeNull]
-		private static List<Pnt3D> RemoveSubToleranceBoundaryLoop(
-			[NotNull] Linestring linestring, double tolerance)
-		{
-			// Below 6 points there is no room for two loops of at least 3 vertices each.
-			if (! linestring.IsClosed || linestring.PointCount < 6)
-			{
-				return null;
-			}
-
-			// Work on the open vertex list (without the duplicated closing point).
-			List<Pnt3D> vertices =
-				linestring.GetPoints(0, linestring.PointCount - 1, true).ToList();
-
-			int vertexCount = vertices.Count;
-
-			int loopStart = -1;
-			int loopEnd = -1;
-
-			for (var i = 0; i < vertexCount; i++)
-			for (int j = i + 3; j < vertexCount; j++)
-			{
-				// Both sides of the self-touch must be a ring of their own.
-				if (vertexCount - (j - i) < 3)
-				{
-					continue;
-				}
-
-				if (GeomUtils.GetDistanceXY(vertices[i], vertices[j]) > tolerance)
-				{
-					continue;
-				}
-
-				if (loopStart >= 0)
-				{
-					// More than one self-touch: ambiguous, leave the ring alone.
-					return null;
-				}
-
-				loopStart = i;
-				loopEnd = j;
-			}
-
-			if (loopStart < 0)
-			{
-				return null;
-			}
-
-			if (IsSubToleranceLoop(vertices, loopStart, loopEnd, false, tolerance))
-			{
-				vertices.RemoveRange(loopStart + 1, loopEnd - loopStart);
-			}
-			else if (IsSubToleranceLoop(vertices, loopStart, loopEnd, true, tolerance))
-			{
-				// Keep the inner loop only. Its last vertex coincides with its first.
-				vertices = vertices.GetRange(loopStart, loopEnd - loopStart);
-			}
-			else
-			{
-				return null;
-			}
-
-			if (vertices.Count < 3)
-			{
-				return null;
-			}
-
-			vertices.Add(vertices[0].ClonePnt3D());
-
-			return vertices;
-		}
-
-		/// <summary>
-		/// Whether the loop between the coincident vertices <paramref name="loopStart"/> and
-		/// <paramref name="loopEnd"/> is a sliver, i.e. its mean width (2 * area / perimeter)
-		/// is below the tolerance. With <paramref name="complement"/> the loop that wraps
-		/// around the end of the vertex list is evaluated instead.
-		/// </summary>
-		private static bool IsSubToleranceLoop([NotNull] IList<Pnt3D> vertices, int loopStart,
-		                                       int loopEnd, bool complement, double tolerance)
-		{
-			int vertexCount = vertices.Count;
-			var loop = new List<Pnt3D>();
-
-			if (complement)
-			{
-				for (int i = loopEnd; i <= loopStart + vertexCount; i++)
-				{
-					loop.Add(vertices[i % vertexCount]);
-				}
-			}
-			else
-			{
-				for (int i = loopStart; i <= loopEnd; i++)
-				{
-					loop.Add(vertices[i]);
-				}
-			}
-
-			double perimeter = 0;
-			for (var i = 0; i < loop.Count - 1; i++)
-			{
-				perimeter += GeomUtils.GetDistanceXY(loop[i], loop[i + 1]);
-			}
-
-			if (perimeter <= 0)
-			{
-				return false;
-			}
-
-			loop.Add(loop[0].ClonePnt3D());
-
-			return 2 * Math.Abs(new Linestring(loop).GetArea2D()) / perimeter < tolerance;
-		}
-
-		/// <summary>
-		/// Exterior boundary loops are considered non-simple in most systems and lead to problems
-		/// especially as they tend to aggregate into multi-loop boundary loops.
-		/// </summary>
-		/// <param name="result"></param>
-		/// <param name="tolerance"></param>
-		private static void ExplodeExteriorBoundaryLoops([NotNull] MultiLinestring result,
-		                                                 double tolerance)
-		{
-			foreach (Linestring linestring in result.GetLinestrings().ToList())
-			{
-				if (linestring.ClockwiseOriented != true)
-				{
-					continue;
-				}
-
-				// In some sliver situations there might be linear self intersections.
-				// Let's not judge them already here.
-				IList<IntersectionPoint3D> selfIntersectionPoints =
-					GetSelfIntersectionPoints(linestring, tolerance)
-						.Where(i => i.Type == IntersectionPointType.TouchingInPoint).ToList();
-
-				Assert.True(
-					selfIntersectionPoints.All(i => i.Type == IntersectionPointType
-						                                .TouchingInPoint),
-					"Unexpected, probably linear self intersection in result.");
-
-				if (selfIntersectionPoints.Count == 2)
-				{
-					// Positive boundary loops are non-simple and lead to problems, especially if there
-					// are more than 2 loops (which typically happens in cupolas)
-					BoundaryLoop bl = new BoundaryLoop(selfIntersectionPoints[0],
-					                                   selfIntersectionPoints[1], linestring,
-					                                   true);
-
-					result.RemoveLinestring(linestring);
-					result.AddLinestring(bl.Loop1);
-					result.AddLinestring(bl.Loop2);
-				}
-				else if (selfIntersectionPoints.Count > 2)
-				{
-					// TODO: Cluster by point, build pairs
-					_msg.WarnFormat(
-						"Multiple boundary loops or otherwise unexpected self-intersections in {0}",
-						linestring.Segments);
-				}
-			}
 		}
 
 		private static bool TryCrackAtSelfIntersections(Linestring linestring,

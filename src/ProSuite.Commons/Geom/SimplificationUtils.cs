@@ -455,8 +455,8 @@ namespace ProSuite.Commons.Geom
 		/// Snaps every near-coincident intersection of the input onto its cluster point and
 		/// cracks the segments that pass the cluster point without a vertex.
 		/// </summary>
-		private static bool SnapAndCrack([NotNull] IList<Linestring> parts,
-		                                 double clusterTolerance)
+		public static bool SnapAndCrack([NotNull] IList<Linestring> parts,
+		                                double clusterTolerance)
 		{
 			ISegmentList segments = new MultiPolycurve(parts);
 
@@ -490,9 +490,9 @@ namespace ProSuite.Commons.Geom
 			{
 				IPnt snapTo = GetClusterRepresentative(cluster.Value, cluster.Key);
 
-				// NOTE: Unlike RingOperator.ClusterGeometries, singleton clusters are NOT
-				//       skipped: a single intersection is exactly the T-junction case where
-				//       the passing segment must be cracked.
+				// NOTE: Singleton clusters are NOT skipped: a single intersection is
+				//       exactly the T-junction case where the passing segment must be
+				//       cracked. Same as RingOperator.ClusterGeometries.
 				foreach (IntersectionPoint3D intersection in cluster.Value)
 				{
 					CollectSourceCrackPoint(intersection, snapTo, crackPointsByPart);

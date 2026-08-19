@@ -11,6 +11,13 @@ namespace ProSuite.Commons.Geom
 	{
 		private static double ToleranceFactor => Math.Sqrt(2);
 
+		/// <summary>
+		/// Cap on the crack/cluster fixpoint iterations of <see cref="CrackAndClusterPair"/>.
+		/// Snapping can bring further vertices within the tolerance of each other, so the
+		/// loop has to be bounded; a pair that has not settled by then is left alone.
+		/// </summary>
+		private const int _maxCrackIterations = 12;
+
 		private readonly SubcurveNavigator _subcurveNavigator;
 
 		public RingOperator(SubcurveNavigator subcurveNavigator)
@@ -957,6 +964,13 @@ namespace ProSuite.Commons.Geom
 
 		private void ClusterPointsIfNecessary()
 		{
+			if (AllowPointClustering)
+			{
+				// Runs BEFORE the gate below, so that HasUnClusteredIntersectionPoints and
+				// the parallel-run scan are evaluated on the cracked geometry.
+				CrackAndClusterPair();
+			}
+
 			// Desired side-effect: determine target navigability
 			bool hasUnClusteredIntersectionPoints =
 				_subcurveNavigator.IntersectionPointNavigator.HasUnClusteredIntersectionPoints;
@@ -998,6 +1012,120 @@ namespace ProSuite.Commons.Geom
 					_subcurveNavigator.Invalidate(
 						newSource ?? _subcurveNavigator.Source,
 						newTarget ?? _subcurveNavigator.Target);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Cracks and clusters the source and the target of this union step against each
+		/// other - and against themselves - to a fixpoint, before the pair is navigated.
+		/// </summary>
+		/// <remarks>
+		/// The source and target parts go into ONE part list, so that each side's own
+		/// self-intersections are seen as well; that scope is what the intersection-point
+		/// clustering below structurally cannot reach, and it accounts for most of the
+		/// quality difference (Lugano 41'231 TLM_GEBAEUDEKOERPER: 153 -> 83 footprints
+		/// falling back to ArcObjects, 33 -> 4 areas off the ArcObjects reference by more
+		/// than 1 m2).
+		/// <para>The tolerances are the ArcObjects ones - cluster at 2*sqrt(2)*tolerance,
+		/// drop segments shorter than sqrt(2)*tolerance. The radius is what carries the
+		/// quality: at the plain tolerance 9 areas are still off, and the wide radius
+		/// repairs 6 of them to within a few square millimetres.</para>
+		/// </remarks>
+		private void CrackAndClusterPair()
+		{
+			ISegmentList source = _subcurveNavigator.Source;
+			ISegmentList target = _subcurveNavigator.Target;
+
+			var parts = new List<Linestring>(source.PartCount + target.PartCount);
+			var isSourcePart = new List<bool>(source.PartCount + target.PartCount);
+
+			for (var i = 0; i < source.PartCount; i++)
+			{
+				parts.Add(source.GetPart(i).Clone());
+				isSourcePart.Add(true);
+			}
+
+			for (var i = 0; i < target.PartCount; i++)
+			{
+				parts.Add(target.GetPart(i).Clone());
+				isSourcePart.Add(false);
+			}
+
+			double tol = _subcurveNavigator.Tolerance;
+
+			double clusterTolerance = 2 * Math.Sqrt(2) * tol;
+
+			// A segment shorter than this cannot carry a crack point anyway, so what is left
+			// of one after the snap is a leftover of the snap, not a segment the input meant.
+			double minimumSegmentLength = Math.Sqrt(2) * tol;
+
+			var changed = false;
+			var converged = false;
+
+			for (var i = 0; i < _maxCrackIterations; i++)
+			{
+				bool snapped = SimplificationUtils.SnapAndCrack(parts, clusterTolerance);
+				bool dropped =
+					SimplificationUtils.RemoveDegenerateSegments(parts, minimumSegmentLength);
+
+				if (dropped)
+				{
+					// An emptied part breaks the global segment indexing of the
+					// MultiPolycurve the next SnapAndCrack builds.
+					RemoveEmptyParts(parts, isSourcePart);
+				}
+
+				if (snapped || dropped)
+				{
+					changed = true;
+					continue;
+				}
+
+				converged = true;
+				break;
+			}
+
+			if (! changed || ! converged)
+			{
+				// A half-snapped geometry is worse than the original.
+				return;
+			}
+
+			var sourceParts = new List<Linestring>();
+			var targetParts = new List<Linestring>();
+
+			for (var i = 0; i < parts.Count; i++)
+			{
+				(isSourcePart[i] ? sourceParts : targetParts).Add(parts[i]);
+			}
+
+			if (sourceParts.Count == 0 || targetParts.Count == 0)
+			{
+				// One side collapsed entirely - that cannot be what the input meant.
+				return;
+			}
+
+			// Snapping can fold a sub-resolution spike into a duplicate (out-and-back)
+			// segment; once the vertices are clustered such linear self-intersections are
+			// always spurious, so the navigator gets simple rings instead of spike artefacts.
+			ISegmentList newSource =
+				RemoveLinearSelfIntersections(new MultiPolycurve(sourceParts), tol);
+			ISegmentList newTarget =
+				RemoveLinearSelfIntersections(new MultiPolycurve(targetParts), tol);
+
+			_subcurveNavigator.Invalidate(newSource, newTarget);
+		}
+
+		private static void RemoveEmptyParts([NotNull] List<Linestring> parts,
+		                                     [NotNull] List<bool> isSourcePart)
+		{
+			for (int i = parts.Count - 1; i >= 0; i--)
+			{
+				if (parts[i].IsEmpty)
+				{
+					parts.RemoveAt(i);
+					isSourcePart.RemoveAt(i);
 				}
 			}
 		}
@@ -1083,11 +1211,14 @@ namespace ProSuite.Commons.Geom
 				foreach (KeyValuePair<IPnt, List<IntersectionPoint3D>> cluster in
 				         clusteredIntersections)
 				{
-					if (cluster.Value.Count == 1)
-					{
-						continue;
-					}
-
+					// Singleton clusters are cracked as well, which is the T-junction case:
+					// the intersection exists on one side only and the other side runs past
+					// it without a vertex. Nothing MOVES here - the cluster point of a
+					// singleton is the intersection's own coordinate - a vertex is merely
+					// inserted where the navigator already sees an intersection. Measured
+					// over 137'042 TLM_GEBAEUDEKOERPER, against skipping the singletons:
+					// Lugano 41'231 253 -> 153 footprints falling back to ArcObjects,
+					// Bern 95'811 773 -> 426.
 					IPnt clusterPoint = cluster.Key;
 
 					foreach (IntersectionPoint3D intersection in cluster.Value)

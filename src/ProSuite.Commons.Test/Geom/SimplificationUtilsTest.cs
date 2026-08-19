@@ -150,31 +150,6 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		public void BothToleranceStrategiesFixFriedhofsmauer()
-		{
-			// The tolerance used by PolyhedronTest.CanGetFootprintForFriedhofsmauerRoggwil.
-			const double tolerance = 0.00625;
-
-			Polyhedron polyhedron = ReadPolyhedron("friedhofsmauer_roggwil.wkb");
-
-			foreach (CrackAndClusterToleranceStrategy strategy in new[]
-			         {
-				         CrackAndClusterToleranceStrategy.Uniform,
-				         CrackAndClusterToleranceStrategy.Aggressive
-			         })
-			{
-				var options = new CrackAndClusterOptions { ToleranceStrategy = strategy };
-
-				MultiLinestring footprint =
-					polyhedron.GetXYFootprint(tolerance, tolerance, out _, options);
-
-				// AO reference: 58.8638 in one part.
-				Assert.AreEqual(58.8638, footprint.GetArea2D(), 0.05, strategy.ToString());
-				Assert.AreEqual(1, footprint.PartCount, strategy.ToString());
-			}
-		}
-
-		[Test]
 		public void ArcObjectsStyleClustersMoreAggressivelyThanUniform()
 		{
 			// 1.5 * tolerance apart: beyond the uniform cluster radius, inside the

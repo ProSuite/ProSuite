@@ -373,10 +373,12 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.IsTrue(GeomRelationUtils.AreaContainsXY(source, target, tolerance));
 			Assert.IsTrue(GeomRelationUtils.IsContainedXY(target, source, tolerance));
 
-			// And hence the union should be equal to the source:
+			// And hence the union should be equal to the source. Not bit-identical: the
+			// per-pair crack-and-cluster pass may move a vertex by up to the tolerance, so
+			// compare within what such a snap can change on this ~76 m2 polygon.
 			MultiLinestring unionAreasXY =
 				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
-			Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D());
+			Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D(), 0.001);
 
 			//// TODO: The target is multi-part (touching in point) and the start point is at the touch point
 			////       -> filter out touch point type intersections?

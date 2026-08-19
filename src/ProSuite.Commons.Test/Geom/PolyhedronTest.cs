@@ -797,7 +797,8 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring target = (MultiLinestring) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("cluster_crash_repro_target.wkb"), out _);
 
-			const double tolerance = 0.0005;
+			// With the expanded clustering, the spike is simplified away at 0.0005
+			const double tolerance = 0.0001;
 
 			double sourceArea = source.GetArea2D();
 
@@ -874,7 +875,8 @@ namespace ProSuite.Commons.Test.Geom
 				GeomTestUtils.GetGeometryTestDataPath(
 					"champ_pittet_step32_ring.wkb"), out _);
 
-			double tolerance = 0.00625;
+			// With the expanded clustering, the overshoot is simplified away at 0.00625
+			double tolerance = 0.0025;
 			double sourceArea = source.GetArea2D();
 
 			MultiLinestring disjoint =
@@ -1169,6 +1171,42 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
 
 			Assert.AreEqual(232.7076, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForBern4644019()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 4644019 (Bern). Regression guard for the
+			// re-simplification after the crack-and-cluster pass. Cracking inserts a foreign
+			// vertex into BOTH segments adjacent to the apex of a 0.0135 sq m sliver ring,
+			// which turns the apex into a 2 mm zero-width needle. At union step 84 that ring
+			// meets the accumulated 164.76 sq m footprint in two TouchingInPoints only; the
+			// turning-left walk emits nothing and IsContainedXY then declares the 164 sq m
+			// ring "contained" in the 0.0135 sq m needle, so the whole footprint is dropped.
+			// AO reference 164.7894.
+			Polyhedron polyhedron = ReadPolyhedron("bern_4644019.wkb");
+
+			// The tolerance the TrFootprint default (null) resolves to: resolution / 2.
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.01, out _);
+
+			Assert.AreEqual(164.7894, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8708844()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8708844 (Lugano). Same needle mechanism as
+			// CanGetFootprintForBern4644019, but here the needle-carrying sliver is
+			// additionally congruent with an accumulated part, so the union returned exactly
+			// the sliver (0.2917 sq m) instead of the 88.58 sq m footprint.
+			// AO reference 88.5845.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8708844.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.01, out _);
+
+			Assert.AreEqual(88.5845, footprint.GetArea2D(), 0.05);
 			Assert.AreEqual(1, footprint.PartCount);
 		}
 
@@ -1865,7 +1903,8 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("thanhalten_step6_ring.wkb"), out _);
 
-			double tolerance = 0.00625;
+			// With the expanded clustering, the spike is simplified away at 0.00625
+			double tolerance = 0.001;
 
 			double sourceArea = source.GetArea2D();
 
@@ -1905,7 +1944,8 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("grancy_step5_ring.wkb"), out _);
 
-			double tolerance = 0.00625;
+			// With the expanded clustering, the overshoot is simplified away at 0.00625
+			double tolerance = 0.0025;
 			double sourceArea = source.GetArea2D();
 
 			MultiLinestring disjoint =
