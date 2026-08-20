@@ -241,13 +241,35 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return new ArcRelationship(aoRelationship, ProRelationshipClass);
 		}
 
-		public IRelationship GetRelationship(IObject originObject, IObject destinationObject)
+		public IRelationship GetRelationship(IObject firstObject, IObject secondObject)
 		{
-			foreach (Row destinationRow in ProRelationshipClass.GetRowsRelatedToOriginRows(
-				         new[] { originObject.OID }))
+			bool firstIsOrigin;
+
+			if (firstObject.Class.Equals(OriginClass))
 			{
-				if (destinationRow.GetObjectID() == destinationObject.OID)
+				firstIsOrigin = true;
+			}
+			else
+			{
+				Assert.True(firstObject.Class.Equals(DestinationClass),
+				            "Object is neither origin nor destination of relationship class");
+
+				firstIsOrigin = false;
+			}
+
+			IEnumerable<Row> relatedRows =
+				firstIsOrigin
+					? ProRelationshipClass.GetRowsRelatedToOriginRows(new[] { firstObject.OID })
+					: ProRelationshipClass.GetRowsRelatedToDestinationRows(
+						new[] { firstObject.OID });
+
+			foreach (Row relatedRow in relatedRows)
+			{
+				if (relatedRow.GetObjectID() == secondObject.OID)
 				{
+					IObject originObject = firstIsOrigin ? firstObject : secondObject;
+					IObject destinationObject = firstIsOrigin ? secondObject : firstObject;
+
 					return new ArcRelationship(originObject, destinationObject, this);
 				}
 			}

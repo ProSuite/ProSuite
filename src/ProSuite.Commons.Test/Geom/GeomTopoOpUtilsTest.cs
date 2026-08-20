@@ -308,14 +308,14 @@ namespace ProSuite.Commons.Test.Geom
 							IList<RingGroup> result = CutPlanarBothWays(poly1, o, 2, 0);
 
 							var expected = GeomTestUtils.CreateRing(new List<Pnt3D>
-								{
-									new Pnt3D(0, 0, 9),
-									new Pnt3D(0, 100, 9),
-									new Pnt3D(100, 100, 9),
-									new Pnt3D(100, 30, 9),
-									new Pnt3D(40, 30, 9),
-									new Pnt3D(40, 0, 9)
-								});
+									{
+										new Pnt3D(0, 0, 9),
+										new Pnt3D(0, 100, 9),
+										new Pnt3D(100, 100, 9),
+										new Pnt3D(100, 30, 9),
+										new Pnt3D(40, 30, 9),
+										new Pnt3D(40, 0, 9)
+									});
 
 							Assert.True(
 								GeomTopoOpUtils.AreEqualXY(expected, result[0].ExteriorRing,
@@ -549,6 +549,75 @@ namespace ProSuite.Commons.Test.Geom
 			poly.AddInteriorRing(GeomTestUtils.CreateRing(inner3));
 			result = CutPlanarBothWays(poly, target, 2, 2);
 			Assert.AreEqual(4, result.Sum(p => p.Count));
+		}
+
+		[Test]
+		public void CanCutFaceWithSelfTouchingLassoCutLine()
+		{
+			// Repro of Cut Feature hole-cut on a multipatch (GoTop): a self-touching "bite its
+			// tail" lasso sketch, after Simplify, becomes a closed loop PLUS two dangling spur
+			// segments hanging off the loop's closure vertex. CutPlanar returned no result for a
+			// face, which made CutGeometryUtils hand back the uncut face -> it straddled two
+			// footprint parts -> "Unexpected number of assignments to footprint parts".
+			// Coordinates taken verbatim from the microservice diagnostic dump.
+			var face = new List<Pnt3D>
+			           {
+				           new Pnt3D(2577109.605, 1102951.827, 712.673),
+				           new Pnt3D(2577105.717, 1102961.489, 711.297),
+				           new Pnt3D(2577142.457, 1102976.273, 711.297),
+				           new Pnt3D(2577146.345, 1102966.610, 712.673)
+			           };
+
+			var sourcePoly = new RingGroup(GeomTestUtils.CreateRing(face));
+
+			// The cut line as fed to CutPlanar: closed loop + two dangling tails at the closure vertex.
+			var loop = new List<Pnt3D>
+			           {
+				           new Pnt3D(2577124.593, 1102963.892, 0),
+				           new Pnt3D(2577115.695, 1102958.842, 0),
+				           new Pnt3D(2577119.202, 1102948.947, 0),
+				           new Pnt3D(2577141.746, 1102956.337, 0),
+				           new Pnt3D(2577124.593, 1102963.892, 0)
+			           };
+			var tail1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(2577124.593, 1102963.892, 0),
+				            new Pnt3D(2577120.705, 1102965.605, 0)
+			            };
+			var tail2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(2577129.597, 1102966.732, 0),
+				            new Pnt3D(2577124.593, 1102963.892, 0)
+			            };
+
+			var cutLinesWithTails = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(loop), new Linestring(tail1), new Linestring(tail2)
+				});
+
+			const double tolerance = 0.01;
+
+			// Directly cutting with the dangling tails yields nothing (the bug):
+			IList<RingGroup> withTails =
+				GeomTopoOpUtils.CutPlanar(sourcePoly, cutLinesWithTails, tolerance);
+			Assert.AreEqual(0, withTails.Count,
+			                "Precondition: dangling tails are expected to break the raw cut");
+
+			// The fix: prune the dangling spur segments first, then cut.
+			MultiPolycurve pruned =
+				GeomTopoOpUtils.RemoveDanglingCutLines(sourcePoly, cutLinesWithTails, tolerance);
+
+			// Only the closed loop must remain (the two tails removed).
+			Assert.AreEqual(1, pruned.PartCount, "Expected only the closed loop to remain");
+
+			IList<RingGroup> result =
+				GeomTopoOpUtils.CutPlanar(sourcePoly, pruned, tolerance);
+
+			// The face is cut into 2 pieces (assignable to the donut and island footprint parts),
+			// and the pieces preserve the original area.
+			Assert.AreEqual(2, result.Count, "Pruned cut line must split the face into two pieces");
+			Assert.AreEqual(sourcePoly.GetArea2D(), result.Sum(p => p.GetArea2D()), 0.01);
 		}
 
 		[Test]
@@ -8179,10 +8248,10 @@ namespace ProSuite.Commons.Test.Geom
 			containedSource.ReverseOrientation();
 			Assert.IsTrue(intersectionLinesXY[0].Equals(containedSource));
 			Assert.IsTrue(intersectionLinesXY[1].Equals(new Linestring(new[]
-				                                            {
-					                                            new Pnt3D(100, 40, 2),
-					                                            new Pnt3D(100, 20, 2)
-				                                            })));
+					                                            {
+						                                            new Pnt3D(100, 40, 2),
+						                                            new Pnt3D(100, 20, 2)
+					                                            })));
 
 			// Excluded target boundary line:
 			intersectionLinesXY =
@@ -9726,27 +9795,26 @@ namespace ProSuite.Commons.Test.Geom
 			Linestring target = GeomTestUtils.CreateRing(
 				new List<Pnt3D>
 				{
-					new Pnt3D(-14.12, 4.636, 0),  // T0 (= shared edge end, run end tgtV 0.0)
-					new Pnt3D(0, 0, 0),           // T1 (= corner, run start tgtV 1.0)
+					new Pnt3D(-14.12, 4.636, 0), // T0 (= shared edge end, run end tgtV 0.0)
+					new Pnt3D(0, 0, 0), // T1 (= corner, run start tgtV 1.0)
 					//new Pnt3D(-0.011, -0.005, 0), // TEST: sub-resolution micro zig-zag vertices inserted into target
 					//new Pnt3D(-0.016, 0.005, 0),  // TEST: sub-resolution micro zig-zag vertices inserted into target
-					new Pnt3D(-13.58, -0.491, 0)  // T2 (far side end)
+					new Pnt3D(-13.58, -0.491, 0) // T2 (far side end)
 				});
 
 			Linestring source = GeomTestUtils.CreateRing(
 				new List<Pnt3D>
 				{
-					new Pnt3D(-4, 12, 0),         // body apex
-					new Pnt3D(6.873, 2.934, 0),   // shallow approach to the corner
-					new Pnt3D(0, 0, 0),           // arrive at corner T1
+					new Pnt3D(-4, 12, 0), // body apex
+					new Pnt3D(6.873, 2.934, 0), // shallow approach to the corner
+					new Pnt3D(0, 0, 0), // arrive at corner T1
 					new Pnt3D(-0.011, -0.005, 0), // sub-resolution zig-zag (toward the far side)
-					new Pnt3D(-0.016, 0.005, 0),  // sub-resolution zig-zag (back onto the edge)
-					new Pnt3D(-14.12, 4.636, 0)   // ride the shared edge down to T0
+					new Pnt3D(-0.016, 0.005, 0), // sub-resolution zig-zag (back onto the edge)
+					new Pnt3D(-14.12, 4.636, 0) // ride the shared edge down to T0
 				});
 
 			Assert.AreEqual(true, source.ClockwiseOriented);
 			Assert.AreEqual(true, target.ClockwiseOriented);
-
 
 			Polyhedron polyhedron = new Polyhedron(new List<RingGroup>()
 			                                       {
@@ -9756,23 +9824,28 @@ namespace ProSuite.Commons.Test.Geom
 			var linearSelfIntersections =
 				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(source, tolerance);
 
-
 			var zig = source.GetPoint(3) as Pnt3D;
 			var zag = source.GetPoint(4) as Pnt3D;
 
 			Line3D sourceSegment = source.Segments[4];
 
 			double perpDistanceZig =
-				sourceSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioZig, out _);
+				sourceSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioZig,
+				                                       out _);
 			double perpDistanceZag =
-				sourceSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioZag, out _);
+				sourceSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioZag,
+				                                       out _);
 
 			Line3D targetSegment = target.Segments[0];
 
 			double targetDistanceZig =
-				targetSegment.GetDistancePerpendicular(zig, true, out double distanceAlongRatioTargetZig, out _);
+				targetSegment.GetDistancePerpendicular(zig, true,
+				                                       out double distanceAlongRatioTargetZig,
+				                                       out _);
 			double targetDistanceZag =
-				targetSegment.GetDistancePerpendicular(zag, true, out double distanceAlongRatioTargetZag, out _);
+				targetSegment.GetDistancePerpendicular(zag, true,
+				                                       out double distanceAlongRatioTargetZag,
+				                                       out _);
 
 			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(
 				new MultiPolycurve(new[] { source }),
@@ -10080,6 +10153,417 @@ namespace ProSuite.Commons.Test.Geom
 					new Pnt3D(xMin + size, yMin + size, 0),
 					new Pnt3D(xMin + size, yMin, 0)
 				});
+		}
+
+		[Test]
+		public void CanBufferStraightLineBothSides()
+		{
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+			// 100 long, 10 wide (5 to each side) => 1000, plus two round end caps
+			// (a full disc of radius 5, pi * 25 ~= 78.5) => ~1078.5.
+			Assert.AreEqual(1078.5, buffer.GetArea2D(), 1.0);
+		}
+
+		[Test]
+		public void CanBufferStraightLineOneSide()
+		{
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring left =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Left, tolerance, out _);
+			MultiLinestring right =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Right, tolerance, out _);
+
+			Assert.NotNull(left);
+			Assert.NotNull(right);
+			// Full width on one side only => 100 * 5 = 500.
+			Assert.AreEqual(500, left.GetArea2D(), 0.01);
+			Assert.AreEqual(500, right.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void CanBufferPolylineWithCorner()
+		{
+			// An L-shaped line exercises the joins at the corner: the outer (convex) corner
+			// is rounded, the inner (concave) corner stays mitered.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+			// Rounded outer corner gives ~1994.6 with flat ends; the two-sided buffer also
+			// adds round end caps at both line ends (two semicircles = pi * 25 ~= 78.5),
+			// so the area is ~2073.2.
+			Assert.AreEqual(2073.2, buffer.GetArea2D(), 1.5);
+		}
+
+		[Test]
+		public void CanBufferStraightLineBothSidesFlatEnds()
+		{
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true);
+
+			Assert.NotNull(buffer);
+			// 100 long, 10 wide (5 to each side), no round end caps => a clean 100 x 10
+			// rectangle => 1000.
+			Assert.AreEqual(1000, buffer.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void CanBufferPolylineWithMiteredCornerAndFlatEnds()
+		{
+			// The wall tool's geometry: an L-shaped line buffered on both sides with mitered
+			// corners and straight (flat) ends. The outer (convex) corner is a sharp miter and
+			// the ends are flat, giving a clean L-band.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true);
+
+			Assert.NotNull(buffer);
+			// Two 100 x 10 bands joined by a mitered right-angle corner => 2000 exactly.
+			Assert.AreEqual(2000, buffer.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void MiteredCornerIsBevelledBeyondMiterLimit()
+		{
+			// A right-angle corner has a miter length of radius / sin(45deg) ~= 1.41 * radius,
+			// so a miter limit below that forces the corner to be bevelled instead of mitered.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring mitered =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true,
+				                                miterLimit: 10.0);
+
+			MultiLinestring bevelled =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _,
+				                                miteredCorners: true, flatEndCaps: true,
+				                                miterLimit: 1.0);
+
+			Assert.NotNull(mitered);
+			Assert.NotNull(bevelled);
+
+			// The miter keeps the full corner (2000); the bevel cuts off the outer corner
+			// triangle (0.5 * 5 * 5 = 12.5) => 1987.5.
+			Assert.AreEqual(2000, mitered.GetArea2D(), 0.01);
+			Assert.AreEqual(1987.5, bevelled.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void WallFacesMergeCoplanarFlatRun()
+		{
+			// A flat (horizontal) L is a single plane, so the whole wall is one face - the run
+			// of coplanar segments must not be sub-divided. Its area equals the 2000 footprint
+			// of the mitered, flat-end buffer.
+			var path = new Linestring(new List<Pnt3D>
+			                          {
+				                          new Pnt3D(0, 0, 0),
+				                          new Pnt3D(100, 0, 0),
+				                          new Pnt3D(100, 100, 0)
+			                          });
+
+			Polyhedron wall = GeomTopoOpUtils.GetWallFaces(
+				new List<Linestring> { path }, new List<double> { 5 }, BufferSide.Both);
+
+			Assert.NotNull(wall);
+			Assert.AreEqual(1, wall.RingGroups.Count);
+			AssertAllFacesCoplanar(wall, 0.0001);
+			Assert.AreEqual(2000, wall.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void WallFacesMergeConstantSlopeRun()
+		{
+			// A straight line at a constant slope is one plane too: the three collinear,
+			// equal-slope segments merge into a single face.
+			var path = new Linestring(new List<Pnt3D>
+			                          {
+				                          new Pnt3D(0, 0, 0),
+				                          new Pnt3D(100, 0, 10),
+				                          new Pnt3D(200, 0, 20),
+				                          new Pnt3D(300, 0, 30)
+			                          });
+
+			Polyhedron wall = GeomTopoOpUtils.GetWallFaces(
+				new List<Linestring> { path }, new List<double> { 5 }, BufferSide.Both);
+
+			Assert.NotNull(wall);
+			Assert.AreEqual(1, wall.RingGroups.Count);
+			AssertAllFacesCoplanar(wall, 0.0001);
+		}
+
+		[Test]
+		public void WallFacesSplitAtSlopeBreakWithoutOverlap()
+		{
+			// A straight (XY-collinear) wall with a slope break at the middle vertex is two
+			// planes: two coplanar faces that meet flush along their shared cross-section edge
+			// (no gusset needed, no overlap). The summed face area equals the footprint.
+			var path = new Linestring(new List<Pnt3D>
+			                          {
+				                          new Pnt3D(0, 0, 0),
+				                          new Pnt3D(100, 0, 20),
+				                          new Pnt3D(200, 0, 0)
+			                          });
+
+			Polyhedron wall = GeomTopoOpUtils.GetWallFaces(
+				new List<Linestring> { path }, new List<double> { 5 }, BufferSide.Both);
+
+			Assert.NotNull(wall);
+			Assert.AreEqual(2, wall.RingGroups.Count);
+			AssertAllFacesCoplanar(wall, 0.0001);
+			AssertNoOverlap(wall);
+			Assert.AreEqual(2000, wall.GetArea2D(), 0.01);
+		}
+
+		[Test]
+		public void WallFacesCornerWithZChangeAreCoplanarWithoutOverlap()
+		{
+			// The reported problem: a bent corner whose Z does not continue the previous slope.
+			// Each face must be planar and the mitred faces must not overlap - so the summed
+			// face area equals the true (union) footprint.
+			var path = new Linestring(new List<Pnt3D>
+			                          {
+				                          new Pnt3D(0, 0, 0),
+				                          new Pnt3D(100, 0, 0),
+				                          new Pnt3D(100, 100, 40)
+			                          });
+
+			Polyhedron wall = GeomTopoOpUtils.GetWallFaces(
+				new List<Linestring> { path }, new List<double> { 5 }, BufferSide.Both);
+
+			Assert.NotNull(wall);
+			AssertAllFacesCoplanar(wall, 0.0001);
+			AssertNoOverlap(wall);
+		}
+
+		[Test]
+		public void WallFacesOneSidedMergeCoplanarRun()
+		{
+			// A one-sided wall offsets a single side by the full width; the other boundary is
+			// the centerline. A flat L is still one plane, so a single face (the 975 band).
+			var path = new Linestring(new List<Pnt3D>
+			                          {
+				                          new Pnt3D(0, 0, 0),
+				                          new Pnt3D(100, 0, 0),
+				                          new Pnt3D(100, 100, 0)
+			                          });
+
+			Polyhedron left = GeomTopoOpUtils.GetWallFaces(
+				new List<Linestring> { path }, new List<double> { 5 }, BufferSide.Left);
+
+			Assert.NotNull(left);
+			Assert.AreEqual(1, left.RingGroups.Count);
+			AssertAllFacesCoplanar(left, 0.0001);
+			Assert.AreEqual(975, left.GetArea2D(), 0.01);
+		}
+
+		// The mitred faces must tile the footprint without overlap: the sum of the individual
+		// face areas (GetArea2D) then equals the true union footprint area. A vertical gusset
+		// contributes ~0 XY area, so it does not affect the comparison.
+		private static void AssertNoOverlap([NotNull] Polyhedron polyhedron)
+		{
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.001, 0.001, out _);
+			Assert.AreEqual(footprint.GetArea2D(), polyhedron.GetArea2D(), 0.01,
+			                "The faces overlap in XY");
+		}
+
+		private static void AssertAllFacesCoplanar([NotNull] Polyhedron polyhedron,
+		                                           double tolerance)
+		{
+			foreach (RingGroup ringGroup in polyhedron.RingGroups)
+			{
+				IList<Pnt3D> points = ringGroup.ExteriorRing.GetPoints().ToList();
+
+				Plane3D plane = Plane3D.TryFitPlane(points, isRing: true);
+
+				Assert.NotNull(plane, "Face plane could not be fitted");
+				Assert.IsTrue(plane.IsDefined, "Face plane is not defined (degenerate face)");
+
+				foreach (Pnt3D point in points)
+				{
+					Assert.LessOrEqual(plane.GetDistanceAbs(point.X, point.Y, point.Z),
+					                   tolerance, "Face is not coplanar");
+				}
+			}
+		}
+
+		[Test]
+		public void CanBufferClosedLoopBothSides()
+		{
+			// A closed (looped) sketch has no ends: its two-sided buffer must be a band
+			// (annulus) between the inner and outer offset rings, NOT a filled disk. Building
+			// it as an open path used to splice the two offset loops into one self-overlapping
+			// ring whose filled area was the whole 100 x 100 interior.
+			var line = new MultiPolycurve(
+				new[] { CreateClosedSquareLoop() });
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+
+			// The band must have a hole: an exterior ring plus one interior ring.
+			Assert.AreEqual(2, buffer.PartCount);
+
+			// Outer boundary is the square grown by 5 (Minkowski sum with a disk of radius 5):
+			// 10000 + perimeter * 5 (= 2000) + full disc (pi * 25 ~= 78.5) => ~12078.5.
+			// Inner boundary is the square shrunk by 5 => 90 x 90 = 8100. Band => ~3978.5,
+			// far less than the ~12078 filled disk the buggy version produced.
+			Assert.AreEqual(3978.5, buffer.GetArea2D(), 1.0);
+		}
+
+		[Test]
+		public void CanBufferClosedLoopOneSide()
+		{
+			// The square loop is digitized counter-clockwise, so "left" is the interior and
+			// "right" is the exterior. Each one-sided band is the annulus between the loop and
+			// its full-width offset on that side.
+			var line = new MultiPolycurve(
+				new[] { CreateClosedSquareLoop() });
+
+			const double tolerance = 0.001;
+
+			MultiLinestring left =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Left, tolerance, out _);
+			MultiLinestring right =
+				GeomTopoOpUtils.GetBufferedLine(line, 5, BufferSide.Right, tolerance, out _);
+
+			Assert.NotNull(left);
+			Assert.NotNull(right);
+
+			Assert.AreEqual(2, left.PartCount);
+			Assert.AreEqual(2, right.PartCount);
+
+			// Interior band: 100 x 100 loop (10000) minus the 90 x 90 inner offset (8100).
+			Assert.AreEqual(1900, left.GetArea2D(), 0.01);
+
+			// Exterior band: outer offset (~12078.5) minus the 100 x 100 loop (10000).
+			Assert.AreEqual(2078.5, right.GetArea2D(), 1.0);
+		}
+
+		[Test]
+		public void CanBufferSelfCrossingLoop()
+		{
+			// A loop drawn with crossing ends: an OPEN polyline (start != end, so not
+			// IsClosed) that crosses one of its own segments. The last segment runs from the
+			// top-left corner down through the bottom edge, forming a loop with a crossing
+			// tail. The band must keep the loop interior as a hole instead of filling it.
+			var line = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(new List<Pnt3D>
+					               {
+						               new Pnt3D(0, 0, 0),
+						               new Pnt3D(100, 0, 0),
+						               new Pnt3D(100, 100, 0),
+						               new Pnt3D(0, 100, 0),
+						               new Pnt3D(50, -50, 0)
+					               })
+				});
+
+			const double tolerance = 0.001;
+
+			MultiLinestring buffer =
+				GeomTopoOpUtils.GetBufferedLine(line, 3, BufferSide.Both, tolerance, out _);
+
+			Assert.NotNull(buffer);
+
+			// The band must have at least one hole (the loop interior): more than one part.
+			Assert.GreaterOrEqual(buffer.PartCount, 2);
+
+			// A thin band around a ~458 m long line is well under 4000 m2; a filled loop
+			// interior (the bug) would push the area past 10000 m2.
+			Assert.Less(buffer.GetArea2D(), 4000);
+		}
+
+		// A counter-clockwise 100 x 100 square as a closed (start == end) loop.
+		private static Linestring CreateClosedSquareLoop()
+		{
+			return new Linestring(new List<Pnt3D>
+			                      {
+				                      new Pnt3D(0, 0, 0),
+				                      new Pnt3D(100, 0, 0),
+				                      new Pnt3D(100, 100, 0),
+				                      new Pnt3D(0, 100, 0),
+				                      new Pnt3D(0, 0, 0)
+			                      });
 		}
 	}
 }

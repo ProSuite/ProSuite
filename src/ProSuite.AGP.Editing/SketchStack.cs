@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -46,17 +47,25 @@ public class SketchStack
 	/// sketch is already on top of the stack.
 	/// </summary>
 	/// <param name="sketch">The sketch geometry to add</param>
-	public bool TryPush(Geometry sketch)
+	/// <param name="knownZPoints">Point with known Z values.</param>
+	public bool TryPush(Geometry sketch,
+	                    IReadOnlyCollection<MapPoint> knownZPoints = null)
 	{
 		if (sketch == null || sketch.IsEmpty)
 		{
 			return false;
 		}
 
+		if (_msg.IsVerboseDebugEnabled)
+		{
+			_msg.Debug("Sketch to be pushed: " + sketch.ToXml());
+		}
+
 		if (_sketches.TryPeek(out Geometry last))
 		{
 			if (last.IsEqual(sketch))
 			{
+				_msg.VerboseDebug(() => "Sketch is equal to last in stack. Not recorded.");
 				return false;
 			}
 		}
@@ -75,8 +84,11 @@ public class SketchStack
 		// TEST
 		Multipart polycurve = sketch as Multipart;
 
-		if (polycurve?.PointCount > 0)
+		if (sketch.HasZ && polycurve?.PointCount > 0)
 		{
+			polycurve = HandleNanZs(polycurve, knownZPoints);
+			sketch = polycurve;
+
 			MapPoint lastPoint = polycurve.Points[polycurve.PointCount - 1];
 
 			_msg.VerboseDebug(() =>
@@ -89,7 +101,7 @@ public class SketchStack
 
 			if (double.IsNaN(lastPoint.Z) && noNanOnStack)
 			{
-				_msg.Warn(
+				_msg.Info(
 					"Sketch point could be missing in sketch (Repressed from stack due to NaN-Z). " +
 					"MAKE SURE TO CHECK sketch when finishing sketch after switching to stereo");
 				return false;
@@ -102,6 +114,127 @@ public class SketchStack
 		_msg.VerboseDebug(() => $"Pushed sketch onto stack. Count: {_sketches.Count} sketches");
 
 		return true;
+	}
+
+	private Multipart HandleNanZs(Multipart polycurve, IReadOnlyCollection<MapPoint> knownZPoints)
+	{
+		// Go through all vertices, if any has NaN Z, try look-up via knownZPoints
+		if (polycurve == null || polycurve.PointCount == 0)
+		{
+			return polycurve;
+		}
+
+		if (knownZPoints == null || knownZPoints.Count == 0)
+		{
+			return polycurve;
+		}
+
+		if (polycurve.Points.All(p => ! double.IsNaN(p.Z)))
+		{
+			return polycurve;
+		}
+
+		try
+		{
+			_msg.VerboseDebug(() => $"Handling NaN Z values in sketch: {polycurve.ToXml()}");
+
+			List<MapPoint> zPointCandidates = knownZPoints
+			                                  .Where(p => p != null && ! double.IsNaN(p.Z))
+			                                  .ToList();
+
+			if (zPointCandidates.Count == 0)
+			{
+				return polycurve;
+			}
+
+			MultipartBuilderEx builder = polycurve switch
+			{
+				Polyline polyline => polyline.ToBuilder(),
+				Polygon polygon => polygon.ToBuilder(),
+				_ => null
+			};
+
+			if (builder == null)
+			{
+				return polycurve;
+			}
+
+			int replacedPointCount = 0;
+
+			for (int partIndex = 0; partIndex < builder.PartCount; partIndex++)
+			{
+				if (builder.GetSegmentCount(partIndex) == 0)
+				{
+					// Degenerate part with just a single (probably unfinished) point:
+					// there is no segment to derive its coordinates from.
+					continue;
+				}
+
+				int pointCount = builder.GetPointCount(partIndex);
+
+				for (int pointIndex = 0; pointIndex < pointCount; pointIndex++)
+				{
+					MapPoint currentPoint = builder.GetPoint(partIndex, pointIndex);
+					if (! double.IsNaN(currentPoint.Z))
+					{
+						continue;
+					}
+
+					MapPoint replacementPoint = FindKnownZPoint(zPointCandidates, currentPoint);
+
+					if (replacementPoint == null)
+					{
+						continue;
+					}
+
+					var pointBuilder = new MapPointBuilderEx(currentPoint)
+					                   {
+						                   Z = replacementPoint.Z
+					                   };
+
+					builder.SetPoint(partIndex, pointIndex, pointBuilder.ToGeometry());
+					replacedPointCount++;
+				}
+			}
+
+			if (replacedPointCount == 0)
+			{
+				return polycurve;
+			}
+
+			_msg.VerboseDebug(() =>
+				                  $"Replaced {replacedPointCount} sketch point Z value(s) from known sketch points.");
+
+			return (Multipart) builder.ToGeometry();
+		}
+		catch (Exception ex)
+		{
+			_msg.Warn($"Error handling NaN Z values in sketch: {ex.Message}", ex);
+			return polycurve;
+		}
+	}
+
+	[CanBeNull]
+	private static MapPoint FindKnownZPoint([NotNull] List<MapPoint> candidates,
+	                                        [NotNull] MapPoint target)
+	{
+		double tolerance = MathUtils.GetDoubleSignificanceEpsilon(target.X, target.Y);
+
+		// Iterate in reverse so the most recently captured Z wins on a duplicate XY.
+		for (int i = candidates.Count - 1; i >= 0; i--)
+		{
+			MapPoint candidate = candidates[i];
+
+			// Use a magnitude-scaled epsilon so the comparison absorbs floating-point
+			// representation differences regardless of the coordinate magnitude.
+			if (MathUtils.AreEqual(candidate.X, target.X, tolerance) &&
+			    MathUtils.AreEqual(candidate.Y, target.Y, tolerance))
+			{
+				return candidate;
+			}
+		}
+
+		return null;
 	}
 
 	/// <summary>
@@ -165,7 +298,8 @@ public class SketchStack
 	{
 		if (mapView == null)
 		{
-			throw new ArgumentNullException(nameof(mapView));
+			_msg.Warn("Cannot replay sketches because the target map view is null.");
+			return false;
 		}
 
 		_msg.VerboseDebug(() =>
@@ -193,8 +327,6 @@ public class SketchStack
 				await mapView.SetCurrentSketchAsync(sketch);
 			}
 
-			IsReplayingSketches = false;
-
 			// Trim the stack. Subsequent undo operations and future replays remain consistent.
 			// sketchesToReplay is already oldest-first, so re-pushing it rebuilds the stack.
 			if (_sketches.Count > MaxSketchCount)
@@ -217,11 +349,11 @@ public class SketchStack
 		catch (Exception ex)
 		{
 			_msg.Error($"Error during sketch replay: {ex.Message}", ex);
-
-			// Reset flag to maintain consistency since replay failed
+			return false;
+		}
+		finally
+		{
 			IsReplayingSketches = false;
-
-			throw;
 		}
 	}
 
@@ -229,13 +361,13 @@ public class SketchStack
 	/// Replays all stored sketch states to the active map view.
 	/// </summary>
 	/// <returns>A task representing the asynchronous operation</returns>
-	/// <exception cref="InvalidOperationException">Thrown when there is no active map view</exception>
 	public async Task<bool> ReplaySketchesAsync()
 	{
 		var activeMapView = MapView.Active;
 		if (activeMapView == null)
 		{
-			throw new InvalidOperationException("No active map view available for sketch replay");
+			_msg.Warn("Cannot replay sketches because there is no active map view.");
+			return false;
 		}
 
 		return await ReplaySketchesAsync(activeMapView);
@@ -248,7 +380,8 @@ public class SketchStack
 	/// <param name="isUndo">Whether this is an undo operation</param>
 	/// <param name="currentSketch">The current sketch geometry</param>
 	/// <returns>True if the operation should be recorded as a new state</returns>
-	public bool ProcessSketchModification(bool isUndo, Geometry currentSketch)
+	public bool ProcessSketchModification(bool isUndo, Geometry currentSketch,
+	                                      IReadOnlyCollection<MapPoint> knownZPoints = null)
 	{
 		if (IsReplayingSketches)
 		{
@@ -262,7 +395,7 @@ public class SketchStack
 		}
 
 		// Record this as a new sketch state
-		return TryPush(currentSketch);
+		return TryPush(currentSketch, knownZPoints);
 	}
 
 	/// <summary>

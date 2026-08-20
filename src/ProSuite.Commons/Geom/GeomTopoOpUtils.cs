@@ -253,6 +253,134 @@ namespace ProSuite.Commons.Geom
 			return resultXY.SelectMany(r => GetConnectedComponents(r, tolerance)).ToList();
 		}
 
+		/// <summary>
+		/// Removes dangling spur parts from a set of cut lines: open parts that have an endpoint
+		/// lying strictly inside <paramref name="source"/> (i.e. not on its boundary) and not
+		/// shared with any other cut part. Such spurs cannot contribute to a cut and confuse the
+		/// cutting navigator (e.g. CutPlanar returns no result). They typically arise when a
+		/// self-touching "bite its tail" sketch is simplified into a closed loop plus leftover
+		/// tail segments. Closed rings and boundary-to-boundary lines (including cut lines that
+		/// overshoot the source) are kept. Pruning is iterative so that removing one spur can
+		/// expose the next.
+		/// </summary>
+		[NotNull]
+		public static MultiPolycurve RemoveDanglingCutLines(
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList cutLines,
+			double tolerance)
+		{
+			List<Linestring> parts = GeomUtils.GetLinestrings(cutLines).ToList();
+
+			bool removedAny;
+			do
+			{
+				removedAny = false;
+
+				for (int i = parts.Count - 1; i >= 0; i--)
+				{
+					Linestring part = parts[i];
+
+					if (part.IsClosed)
+					{
+						continue;
+					}
+
+					if (HasDanglingEndpoint(part, parts, source, tolerance))
+					{
+						parts.RemoveAt(i);
+						removedAny = true;
+					}
+				}
+			} while (removedAny && parts.Count > 0);
+
+			return new MultiPolycurve(parts);
+		}
+
+		private static bool HasDanglingEndpoint([NotNull] Linestring part,
+		                                        [NotNull] IEnumerable<Linestring> allParts,
+		                                        [NotNull] ISegmentList source,
+		                                        double tolerance)
+		{
+			return IsDanglingEndpoint(part.StartPoint, part, allParts, source, tolerance) ||
+			       IsDanglingEndpoint(part.EndPoint, part, allParts, source, tolerance);
+		}
+
+		private static bool IsDanglingEndpoint([CanBeNull] Pnt3D endPoint,
+		                                       [NotNull] Linestring ownPart,
+		                                       [NotNull] IEnumerable<Linestring> allParts,
+		                                       [NotNull] ISegmentList source,
+		                                       double tolerance)
+		{
+			if (endPoint == null)
+			{
+				return false;
+			}
+
+			// Only endpoints strictly inside the source can be spurs. Endpoints on the boundary or
+			// outside it (an overshooting cut line) can reach/cross the boundary and must be kept.
+			if (! GeomRelationUtils.PolycurveContainsXY(source, endPoint, tolerance))
+			{
+				return false;
+			}
+
+			if (IsOnBoundary(source, endPoint, tolerance))
+			{
+				return false;
+			}
+
+			// Strictly interior: not dangling if another cut part also touches this point (a real
+			// junction, e.g. where two cut lines meet).
+			foreach (Linestring other in allParts)
+			{
+				if (ReferenceEquals(other, ownPart))
+				{
+					continue;
+				}
+
+				foreach (Pnt3D otherPoint in other.GetPoints())
+				{
+					if (GeomRelationUtils.IsWithinTolerance(endPoint, otherPoint, tolerance, true))
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
+		private static bool IsOnBoundary([NotNull] ISegmentList source,
+		                                 [NotNull] Pnt3D point,
+		                                 double tolerance)
+		{
+			foreach (Linestring ring in GeomUtils.GetLinestrings(source))
+			{
+				for (int i = 0; i < ring.SegmentCount; i++)
+				{
+					Line3D segment = ring[i];
+
+					if (GeomRelationUtils.IsWithinTolerance(point, segment.StartPoint, tolerance,
+					                                        true) ||
+					    GeomRelationUtils.IsWithinTolerance(point, segment.EndPoint, tolerance, true))
+					{
+						return true;
+					}
+
+					if (segment.GetDistancePerpendicular(point, true) <= tolerance)
+					{
+						double ratio = segment.GetDistanceAlong(point, true);
+
+						if (ratio >= 0 && ratio <= 1)
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
 		public static Polyhedron GetDifferenceAreasXY(
 			[NotNull] Polyhedron sourcePolyhedron,
 			[NotNull] Polyhedron targetPolyhedron,
@@ -5462,5 +5590,1270 @@ namespace ProSuite.Commons.Geom
 
 			return resultPaths;
 		}
+
+		#region Buffered line (offset-based)
+
+		// Two 2D direction vectors whose cross product is below this magnitude are
+		// treated as parallel, i.e. their offset lines do not yield a miter point.
+		private const double _parallelEpsilon = 1e-12;
+
+		// The maximum angular step (~5°) used when rounding a convex corner into a series
+		// of straight chord segments.
+		private const double _maxRoundJoinAngleStep = Math.PI / 36;
+
+		// The default miter limit (the ratio of the miter length to the offset distance)
+		// beyond which a mitered convex corner is bevelled instead, to avoid the long spikes
+		// that a plain miter produces at very sharp angles.
+		private const double _defaultMiterLimit = 10.0;
+
+		/// <summary>
+		/// Creates a polygon (as a <see cref="MultiLinestring"/>) by offsetting the
+		/// given line to the requested side(s) at the given distance, i.e. a buffered
+		/// line with flat (straight) ends and rounded corners between the segments.
+		/// Convex corners are rounded with a circular arc around the original vertex;
+		/// concave corners keep the mitered intersection of the adjacent offset lines
+		/// (the resulting self-intersection is cracked and unioned away). For a two-sided
+		/// buffer the line ends are closed with round (semicircular) caps; for a one-sided
+		/// buffer they stay flat (uncapped). This method is deliberately free of any
+		/// ArcGIS Pro SDK types so it can be unit-tested and reused on the
+		/// SDK-independent geometry model.
+		/// </summary>
+		/// <param name="line">The line to buffer. Each part is buffered on its own and
+		/// the parts are unioned into the result.</param>
+		/// <param name="bufferDistance">The offset distance. For
+		/// <see cref="BufferSide.Both"/> the distance is applied to each side (i.e. it
+		/// is the half-width); for a one-sided buffer it is the full width.</param>
+		/// <param name="bufferSide">The side(s) to offset, seen in digitizing direction.</param>
+		/// <param name="tolerance">The XY tolerance used to clean up the result.</param>
+		/// <param name="message">Receives the reason if no (valid) buffer could be
+		/// constructed, e.g. because the distance is too large.</param>
+		/// <param name="miteredCorners">When <c>true</c>, convex corners are mitered (the two
+		/// adjacent offset lines are extended to their intersection, bevelled past
+		/// <paramref name="miterLimit"/>) instead of rounded.</param>
+		/// <param name="flatEndCaps">When <c>true</c>, a two-sided (<see cref="BufferSide.Both"/>)
+		/// buffer is closed with straight ends instead of round end caps. One-sided buffers
+		/// are always flat.</param>
+		/// <param name="miterLimit">The ratio of the miter length to the offset distance beyond
+		/// which a mitered corner is bevelled. Only relevant when
+		/// <paramref name="miteredCorners"/> is <c>true</c>.</param>
+		/// <returns>The buffer polygon or null if no valid result could be constructed.</returns>
+		[CanBeNull]
+		public static MultiLinestring GetBufferedLine(
+			[NotNull] MultiLinestring line,
+			double bufferDistance,
+			BufferSide bufferSide,
+			double tolerance,
+			out string message,
+			bool miteredCorners = false,
+			bool flatEndCaps = false,
+			double miterLimit = _defaultMiterLimit)
+		{
+			Assert.ArgumentNotNull(line, nameof(line));
+
+			IList<Linestring> paths = line.GetLinestrings().ToList();
+
+			var distances = new List<double>(paths.Count);
+			for (var i = 0; i < paths.Count; i++)
+			{
+				distances.Add(bufferDistance);
+			}
+
+			return GetBufferedLine(paths, distances, bufferSide, tolerance, out message,
+			                       miteredCorners, flatEndCaps, miterLimit);
+		}
+
+		/// <summary>
+		/// Creates a buffered line polygon with a separate offset distance per line
+		/// part (see <see cref="GetBufferedLine(MultiLinestring,double,BufferSide,double,out string,bool,bool,double)"/>).
+		/// </summary>
+		/// <param name="pathsToBuffer">The line parts (open paths) to buffer.</param>
+		/// <param name="bufferDistances">The offset distance per path. Must have the
+		/// same count as <paramref name="pathsToBuffer"/>.</param>
+		/// <param name="bufferSide">The side(s) to offset, seen in digitizing direction.</param>
+		/// <param name="tolerance">The XY tolerance used to clean up the result.</param>
+		/// <param name="message">Receives the reason if no (valid) buffer could be
+		/// constructed.</param>
+		/// <param name="miteredCorners">When <c>true</c>, convex corners are mitered (bevelled
+		/// past <paramref name="miterLimit"/>) instead of rounded.</param>
+		/// <param name="flatEndCaps">When <c>true</c>, a two-sided buffer is closed with
+		/// straight ends instead of round end caps.</param>
+		/// <param name="miterLimit">The ratio of the miter length to the offset distance beyond
+		/// which a mitered corner is bevelled.</param>
+		/// <returns>The buffer polygon or null if no valid result could be constructed.</returns>
+		[CanBeNull]
+		public static MultiLinestring GetBufferedLine(
+			[NotNull] IList<Linestring> pathsToBuffer,
+			[NotNull] IList<double> bufferDistances,
+			BufferSide bufferSide,
+			double tolerance,
+			out string message,
+			bool miteredCorners = false,
+			bool flatEndCaps = false,
+			double miterLimit = _defaultMiterLimit)
+		{
+			Assert.ArgumentNotNull(pathsToBuffer, nameof(pathsToBuffer));
+			Assert.ArgumentNotNull(bufferDistances, nameof(bufferDistances));
+			Assert.ArgumentCondition(pathsToBuffer.Count == bufferDistances.Count,
+			                         "Path count and buffer distance count must match");
+
+			message = null;
+
+			var ringGroups = new List<RingGroup>();
+
+			for (var i = 0; i < pathsToBuffer.Count; i++)
+			{
+				Linestring path = pathsToBuffer[i];
+				double distance = bufferDistances[i];
+
+				if (path == null || path.SegmentCount == 0 || distance <= 0)
+				{
+					continue;
+				}
+
+				MultiLinestring area = BuildBufferAreaForPath(
+					path, distance, bufferSide, miteredCorners, flatEndCaps, miterLimit,
+					tolerance);
+
+				AddAreaComponents(area, tolerance, ringGroups);
+			}
+
+			if (ringGroups.Count == 0)
+			{
+				message = "Unable to construct a buffer for the given line and distance.";
+				return null;
+			}
+
+			MultiLinestring result =
+				GetUnionAreasXY(ringGroups, tolerance, inputRingsMayBeNonSimple: true);
+
+			if (result == null || result.IsEmpty)
+			{
+				message = "The buffer result is empty. The distance is probably too large.";
+				return null;
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Decomposes a buffered line into planar "wall" faces, ready to be turned into a
+		/// multipatch. Unlike <see cref="GetBufferedLine(IList{Linestring},IList{double},BufferSide,double,out string,bool,bool,double)"/>,
+		/// which returns a single outline that becomes one - potentially warped, non-coplanar -
+		/// multipatch face when the vertices do not share a plane in Z, this mitres consecutive
+		/// segments together so the faces are individually planar and butt against each other
+		/// with no gaps and no overlaps:
+		/// <list type="bullet">
+		/// <item>each maximal run of consecutive coplanar segments becomes a single flat face,
+		/// so a flat or constant-slope stretch is not sub-divided;</item>
+		/// <item>where the plane changes at a corner, the two faces are cut along the corner
+		/// bisector - a straight, in-plane cut that keeps each face flat - and the resulting
+		/// vertical Z-step between them is closed with one triangle "gusset" per buffered side.
+		/// When the two faces are coplanar the gusset is degenerate and dropped.</item>
+		/// </list>
+		/// The footprint matches the mitered buffer outline. Ends are left flat and very sharp
+		/// corners are clamped to the miter limit. Faces are wound clockwise (the Esri
+		/// exterior-ring convention), so a roughly horizontal face has an upward normal.
+		/// </summary>
+		/// <param name="pathsToBuffer">The line parts (open or closed) to build the wall from.</param>
+		/// <param name="offsetDistances">The offset distance per part, applied to each buffered
+		/// side (the half-width for a two-sided wall, the full width for a one-sided wall). Must
+		/// have the same count as <paramref name="pathsToBuffer"/>.</param>
+		/// <param name="bufferSide">The side(s) to offset, seen in digitizing direction.</param>
+		/// <param name="miterLimit">The ratio of the miter length to the offset distance beyond
+		/// which a corner point is clamped, to avoid long spikes at very sharp corners.</param>
+		/// <returns>A polyhedron whose ring groups are the planar wall faces, or null if no
+		/// valid face could be built.</returns>
+		[CanBeNull]
+		public static Polyhedron GetWallFaces(
+			[NotNull] IList<Linestring> pathsToBuffer,
+			[NotNull] IList<double> offsetDistances,
+			BufferSide bufferSide,
+			double miterLimit = _defaultMiterLimit)
+		{
+			Assert.ArgumentNotNull(pathsToBuffer, nameof(pathsToBuffer));
+			Assert.ArgumentNotNull(offsetDistances, nameof(offsetDistances));
+			Assert.ArgumentCondition(pathsToBuffer.Count == offsetDistances.Count,
+			                         "Path count and offset distance count must match");
+
+			var faces = new List<RingGroup>();
+
+			for (var i = 0; i < pathsToBuffer.Count; i++)
+			{
+				Linestring path = pathsToBuffer[i];
+				double distance = offsetDistances[i];
+
+				if (path == null || path.SegmentCount == 0 || distance <= 0)
+				{
+					continue;
+				}
+
+				// The side that is not buffered gets a zero offset, so its face edge lies on
+				// the centerline (matching the one-sided buffer, whose one boundary is the line).
+				double leftDistance = bufferSide == BufferSide.Right ? 0 : distance;
+				double rightDistance = bufferSide == BufferSide.Left ? 0 : distance;
+
+				AddWallFacesForPath(path, leftDistance, rightDistance, miterLimit, faces);
+			}
+
+			return faces.Count == 0 ? null : new Polyhedron(faces);
+		}
+
+		private static void AddWallFacesForPath(
+			[NotNull] Linestring path, double leftDistance, double rightDistance,
+			double miterLimit, [NotNull] List<RingGroup> faces)
+		{
+			int segmentCount = path.SegmentCount;
+
+			IList<Pnt3D> vertices = path.GetPoints(clone: true).ToList();
+			bool closed = path.IsClosed && segmentCount >= 3;
+
+			// Per-segment XY direction, unit left normal, and the (unnormalized) plate-plane
+			// normal. The plane normal's Z component is the segment's horizontal length, hence
+			// > 0 for a non-degenerate segment, so the plane is never vertical and Z(x, y) is
+			// defined.
+			var dirX = new double[segmentCount];
+			var dirY = new double[segmentCount];
+			var normalX = new double[segmentCount];
+			var normalY = new double[segmentCount];
+			var planeNx = new double[segmentCount];
+			var planeNy = new double[segmentCount];
+			var planeNz = new double[segmentCount];
+
+			for (var s = 0; s < segmentCount; s++)
+			{
+				Line3D segment = path.GetSegment(s);
+
+				double dx = segment.DeltaX;
+				double dy = segment.DeltaY;
+				double dz = segment.EndPoint.Z - segment.StartPoint.Z;
+				double length = Math.Sqrt(dx * dx + dy * dy);
+
+				double nx = 0, ny = 0;
+				if (length > _parallelEpsilon)
+				{
+					// Left normal of the direction (rotate by +90° in XY).
+					nx = -dy / length;
+					ny = dx / length;
+				}
+
+				dirX[s] = dx;
+				dirY[s] = dy;
+				normalX[s] = nx;
+				normalY[s] = ny;
+
+				// Plate plane normal = segment direction (dx, dy, dz) x horizontal cross-section
+				// direction (nx, ny, 0). Its Z component works out to the segment length.
+				planeNx[s] = -dz * ny;
+				planeNy[s] = dz * nx;
+				planeNz[s] = length;
+			}
+
+			// The left/right corner XY at each vertex: the miter point where the two adjacent
+			// offset lines meet (clamped to the miter limit), or the perpendicular offset at a
+			// flat end. Adjacent faces share these corner points (differing only in Z), so they
+			// butt together with no gap and no overlap.
+			int cornerCount = segmentCount + 1;
+			var leftCornerX = new double[cornerCount];
+			var leftCornerY = new double[cornerCount];
+			var rightCornerX = new double[cornerCount];
+			var rightCornerY = new double[cornerCount];
+
+			for (var k = 0; k < cornerCount; k++)
+			{
+				ComputeWallCorner(k, segmentCount, closed, vertices, dirX, dirY, normalX, normalY,
+				                  leftDistance, +1, miterLimit,
+				                  out leftCornerX[k], out leftCornerY[k]);
+				ComputeWallCorner(k, segmentCount, closed, vertices, dirX, dirY, normalX, normalY,
+				                  rightDistance, -1, miterLimit,
+				                  out rightCornerX[k], out rightCornerY[k]);
+			}
+
+			// One flat face per maximal run of coplanar segments (so flat/constant-slope runs
+			// are not sub-divided). A group boundary is a change of plane; for a closed part the
+			// seam is always a boundary (runs are not merged across it).
+			int groupStart = 0;
+			for (var s = 0; s < segmentCount; s++)
+			{
+				bool boundaryAfter =
+					s == segmentCount - 1 ||
+					! PlanesAreParallel(planeNx[s], planeNy[s], planeNz[s],
+					                    planeNx[s + 1], planeNy[s + 1], planeNz[s + 1]);
+
+				if (! boundaryAfter)
+				{
+					continue;
+				}
+
+				AddMergedWallFace(faces, groupStart, s, vertices,
+				                  leftCornerX, leftCornerY, rightCornerX, rightCornerY,
+				                  planeNx[groupStart], planeNy[groupStart], planeNz[groupStart]);
+
+				groupStart = s + 1;
+			}
+
+			// Close the Z-step at each group boundary (and the closed seam) with gussets.
+			for (var s = 0; s < segmentCount; s++)
+			{
+				int nextSeg = s + 1;
+				bool seam = false;
+
+				if (nextSeg == segmentCount)
+				{
+					if (! closed)
+					{
+						continue; // open path: no corner past the last vertex.
+					}
+
+					nextSeg = 0;
+					seam = true;
+				}
+
+				if (! seam &&
+				    PlanesAreParallel(planeNx[s], planeNy[s], planeNz[s],
+				                      planeNx[nextSeg], planeNy[nextSeg], planeNz[nextSeg]))
+				{
+					continue; // coplanar: the two faces already share the cross-section edge.
+				}
+
+				int vertexIndex = seam ? 0 : nextSeg;
+
+				AddWallGusset(faces, vertices[vertexIndex],
+				              leftCornerX[vertexIndex], leftCornerY[vertexIndex],
+				              planeNx[s], planeNy[s], planeNz[s], vertices[s],
+				              planeNx[nextSeg], planeNy[nextSeg], planeNz[nextSeg],
+				              vertices[nextSeg]);
+
+				AddWallGusset(faces, vertices[vertexIndex],
+				              rightCornerX[vertexIndex], rightCornerY[vertexIndex],
+				              planeNx[s], planeNy[s], planeNz[s], vertices[s],
+				              planeNx[nextSeg], planeNy[nextSeg], planeNz[nextSeg],
+				              vertices[nextSeg]);
+			}
+		}
+
+		// Computes the XY of one buffered-side corner at vertex 'k': the intersection of the two
+		// adjacent offset lines (the miter point), clamped to the miter limit, or the
+		// perpendicular offset at a flat path end. A zero distance yields the centerline vertex.
+		private static void ComputeWallCorner(
+			int k, int segmentCount, bool closed, [NotNull] IList<Pnt3D> vertices,
+			[NotNull] double[] dirX, [NotNull] double[] dirY,
+			[NotNull] double[] normalX, [NotNull] double[] normalY,
+			double distance, int sideSign, double miterLimit, out double x, out double y)
+		{
+			Pnt3D vertex = vertices[k];
+
+			if (distance <= 0)
+			{
+				x = vertex.X;
+				y = vertex.Y;
+				return;
+			}
+
+			int prevSeg = closed ? (k - 1 + segmentCount) % segmentCount : k - 1;
+			int nextSeg = closed ? k % segmentCount : k;
+
+			bool hasPrev = closed || k > 0;
+			bool hasNext = closed || k < segmentCount;
+
+			if (! hasPrev)
+			{
+				// Path start: the perpendicular offset of the first segment (flat end).
+				x = vertex.X + sideSign * normalX[nextSeg] * distance;
+				y = vertex.Y + sideSign * normalY[nextSeg] * distance;
+				return;
+			}
+
+			if (! hasNext)
+			{
+				// Path end: the perpendicular offset of the last segment (flat end).
+				x = vertex.X + sideSign * normalX[prevSeg] * distance;
+				y = vertex.Y + sideSign * normalY[prevSeg] * distance;
+				return;
+			}
+
+			var pointPrev = new Pnt3D(vertex.X + sideSign * normalX[prevSeg] * distance,
+			                          vertex.Y + sideSign * normalY[prevSeg] * distance, 0);
+			var pointNext = new Pnt3D(vertex.X + sideSign * normalX[nextSeg] * distance,
+			                          vertex.Y + sideSign * normalY[nextSeg] * distance, 0);
+
+			if (TryIntersectLinesXY(pointPrev, dirX[prevSeg], dirY[prevSeg],
+			                        pointNext, dirX[nextSeg], dirY[nextSeg],
+			                        out double mx, out double my))
+			{
+				double ddx = mx - vertex.X;
+				double ddy = my - vertex.Y;
+				double length = Math.Sqrt(ddx * ddx + ddy * ddy);
+				double maxLength = miterLimit * distance;
+
+				if (length > maxLength && length > _parallelEpsilon)
+				{
+					double scale = maxLength / length;
+					mx = vertex.X + ddx * scale;
+					my = vertex.Y + ddy * scale;
+				}
+
+				x = mx;
+				y = my;
+				return;
+			}
+
+			// Parallel offset lines (collinear segments): the perpendicular offset point.
+			x = pointPrev.X;
+			y = pointPrev.Y;
+		}
+
+		// Emits one flat face for the run of segments [firstSeg, lastSeg]. All corners are lifted
+		// onto the run's common plane, so the face is planar even where the run bends.
+		private static void AddMergedWallFace(
+			[NotNull] List<RingGroup> faces, int firstSeg, int lastSeg,
+			[NotNull] IList<Pnt3D> vertices,
+			[NotNull] double[] leftCornerX, [NotNull] double[] leftCornerY,
+			[NotNull] double[] rightCornerX, [NotNull] double[] rightCornerY,
+			double planeNx, double planeNy, double planeNz)
+		{
+			if (planeNz <= _parallelEpsilon)
+			{
+				return; // degenerate (vertical / zero-length) run
+			}
+
+			Pnt3D reference = vertices[firstSeg];
+
+			var ring = new List<Pnt3D>();
+
+			// Left boundary forward, then the right boundary back, over the run's vertices.
+			for (int k = firstSeg; k <= lastSeg + 1; k++)
+			{
+				ring.Add(OnPlane(leftCornerX[k], leftCornerY[k],
+				                 planeNx, planeNy, planeNz, reference));
+			}
+
+			for (int k = lastSeg + 1; k >= firstSeg; k--)
+			{
+				ring.Add(OnPlane(rightCornerX[k], rightCornerY[k],
+				                 planeNx, planeNy, planeNz, reference));
+			}
+
+			AddWallFace(faces, ring);
+		}
+
+		// Emits the gusset triangle that closes the vertical Z-step at a corner on one side: the
+		// centerline vertex plus the shared corner XY at the height of each adjacent face's
+		// plane. Dropped when the two planes meet at the same height there (a coplanar step or
+		// the centerline side of a one-sided wall).
+		private static void AddWallGusset(
+			[NotNull] List<RingGroup> faces, [NotNull] Pnt3D cornerVertex,
+			double cornerX, double cornerY,
+			double plane1Nx, double plane1Ny, double plane1Nz, [NotNull] Pnt3D plane1Ref,
+			double plane2Nx, double plane2Ny, double plane2Nz, [NotNull] Pnt3D plane2Ref)
+		{
+			if (plane1Nz <= _parallelEpsilon || plane2Nz <= _parallelEpsilon)
+			{
+				return;
+			}
+
+			double z1 = PlaneZ(plane1Nx, plane1Ny, plane1Nz, plane1Ref, cornerX, cornerY);
+			double z2 = PlaneZ(plane2Nx, plane2Ny, plane2Nz, plane2Ref, cornerX, cornerY);
+
+			if (Math.Abs(z1 - z2) <= _parallelEpsilon)
+			{
+				return;
+			}
+
+			AddWallFace(faces, new[]
+			                   {
+				                   cornerVertex.ClonePnt3D(),
+				                   new Pnt3D(cornerX, cornerY, z1),
+				                   new Pnt3D(cornerX, cornerY, z2)
+			                   });
+		}
+
+		// The point (x, y) lifted onto the plane through 'reference' with the given normal.
+		private static Pnt3D OnPlane(double x, double y, double planeNx, double planeNy,
+		                             double planeNz, [NotNull] Pnt3D reference)
+		{
+			return new Pnt3D(x, y, PlaneZ(planeNx, planeNy, planeNz, reference, x, y));
+		}
+
+		private static double PlaneZ(double planeNx, double planeNy, double planeNz,
+		                             [NotNull] Pnt3D reference, double x, double y)
+		{
+			return reference.Z -
+			       (planeNx * (x - reference.X) + planeNy * (y - reference.Y)) / planeNz;
+		}
+
+		// Whether the two (unnormalized) plane normals point the same way, i.e. the planes are
+		// parallel. Since adjacent faces share a vertex, parallel normals mean the same plane.
+		private static bool PlanesAreParallel(double ax, double ay, double az,
+		                                      double bx, double by, double bz)
+		{
+			double aLengthSquared = ax * ax + ay * ay + az * az;
+			double bLengthSquared = bx * bx + by * by + bz * bz;
+
+			if (aLengthSquared <= _parallelEpsilon || bLengthSquared <= _parallelEpsilon)
+			{
+				return false;
+			}
+
+			double cx = ay * bz - az * by;
+			double cy = az * bx - ax * bz;
+			double cz = ax * by - ay * bx;
+
+			const double angleTolerance = 1e-6;
+
+			if (cx * cx + cy * cy + cz * cz >
+			    angleTolerance * angleTolerance * aLengthSquared * bLengthSquared)
+			{
+				return false;
+			}
+
+			return ax * bx + ay * by + az * bz > 0;
+		}
+
+		// Adds the given corners as one multipatch-ready face (a closed, clockwise ring group).
+		// A degenerate (zero-area / collinear) face is skipped.
+		private static void AddWallFace([NotNull] List<RingGroup> faces,
+		                                [NotNull] IList<Pnt3D> corners)
+		{
+			IList<Pnt3D> ring = OrientClockwise(corners);
+
+			if (ring != null)
+			{
+				faces.Add(new RingGroup(new Linestring(ring)));
+			}
+		}
+
+		// Returns the corners as a closed ring wound clockwise in XY (the Esri exterior-ring /
+		// front-facing convention, so a roughly horizontal face has its normal pointing up),
+		// or null if the face is degenerate (collinear / zero area).
+		[CanBeNull]
+		private static IList<Pnt3D> OrientClockwise([NotNull] IList<Pnt3D> corners)
+		{
+			int count = corners.Count;
+
+			if (count < 3)
+			{
+				return null;
+			}
+
+			// Twice the signed XY area (shoelace): positive for a counter-clockwise ring.
+			double signedArea2 = 0;
+			for (var i = 0; i < count; i++)
+			{
+				Pnt3D current = corners[i];
+				Pnt3D next = corners[(i + 1) % count];
+
+				signedArea2 += current.X * next.Y - next.X * current.Y;
+			}
+
+			if (Math.Abs(signedArea2) < _parallelEpsilon)
+			{
+				return null;
+			}
+
+			var ring = new List<Pnt3D>(count + 1);
+
+			// Reverse a counter-clockwise ring so the result is clockwise.
+			if (signedArea2 > 0)
+			{
+				for (int i = count - 1; i >= 0; i--)
+				{
+					ring.Add(corners[i].ClonePnt3D());
+				}
+			}
+			else
+			{
+				foreach (Pnt3D corner in corners)
+				{
+					ring.Add(corner.ClonePnt3D());
+				}
+			}
+
+			ring.Add(ring[0].ClonePnt3D());
+
+			return ring;
+		}
+
+		// Cracks a buffer ring (or piece) at its self-intersections and adds the resulting
+		// simple, clockwise rings to the collection to be unioned.
+		private static void AddCrackedRings([CanBeNull] Linestring ring, double tolerance,
+		                                    [NotNull] List<RingGroup> ringGroups)
+		{
+			if (ring == null || ring.SegmentCount < 3)
+			{
+				return;
+			}
+
+			// On concave corners the raw offset ring is self-intersecting once the distance
+			// exceeds the local feature size. Crack it into simple rings so the union below
+			// gets valid input (mirrors ConstructOffset + Simplify).
+			var simpleRings = new List<Linestring>();
+			if (! TryCrackSelfCrossingRing(ring, tolerance, simpleRings))
+			{
+				simpleRings.Add(ring);
+			}
+
+			foreach (Linestring simpleRing in simpleRings)
+			{
+				if (simpleRing.SegmentCount < 3)
+				{
+					continue;
+				}
+
+				if (simpleRing.ClockwiseOriented != true)
+				{
+					simpleRing.ReverseOrientation();
+				}
+
+				ringGroups.Add(new RingGroup(simpleRing));
+			}
+		}
+
+		// Buffers a single line part into a filled area (with holes). The whole part is buffered
+		// as one legacy offset outline - so corners and end caps look exactly as before and the
+		// dangling tails of an intertwined line blend smoothly into it - and then the inner ring
+		// of every loop is punched out as a hole. A loop is a closed part, an almost-closed part
+		// whose ends the buffer bridges, or a loop formed where the part crosses itself.
+		[CanBeNull]
+		private static MultiLinestring BuildBufferAreaForPath(
+			[NotNull] Linestring path, double distance, BufferSide bufferSide,
+			bool mitered, bool flatEndCaps, double miterLimit, double tolerance)
+		{
+			// The buffer band has this full width; an inner ring (hole) narrower than it is
+			// not kept: the two sides' offsets meet across it, so the loop closes solid.
+			double bufferWidth = bufferSide == BufferSide.Both ? 2 * distance : distance;
+
+			// A cleanly closed loop has no ends: build it straight from its outer offset ring
+			// (BuildBufferRing would add spurious end caps at the seam).
+			if (path.IsClosed)
+			{
+				GetLoopBoundaryAreas(path, distance, bufferSide, mitered, miterLimit, tolerance,
+				                     out MultiLinestring outerArea, out MultiLinestring innerArea);
+
+				if (! IsHoleWiderThan(innerArea, bufferWidth))
+				{
+					innerArea = null;
+				}
+
+				return SubtractInnerRing(outerArea, innerArea, tolerance);
+			}
+
+			// Base: the legacy offset outline, filled. This fills the interior of any loop and
+			// blends the dangles into it smoothly.
+			var baseRings = new List<RingGroup>();
+			AddCrackedRings(
+				BuildBufferRing(path, distance, bufferSide, mitered, flatEndCaps, miterLimit),
+				tolerance, baseRings);
+
+			if (baseRings.Count == 0)
+			{
+				return null;
+			}
+
+			MultiLinestring solid =
+				GetUnionAreasXY(baseRings, tolerance, inputRingsMayBeNonSimple: true);
+
+			if (solid == null || solid.IsEmpty)
+			{
+				return null;
+			}
+
+			// Punch out the inner ring of every loop, unless that ring is narrower than the
+			// buffer width (then the offsets cross over it and the loop stays closed).
+			foreach (Linestring loop in GetLoops(path, distance, bufferSide, tolerance))
+			{
+				GetLoopBoundaryAreas(loop, distance, bufferSide, mitered, miterLimit, tolerance,
+				                     out _, out MultiLinestring innerArea);
+
+				if (! IsHoleWiderThan(innerArea, bufferWidth))
+				{
+					continue;
+				}
+
+				MultiLinestring punched = GetDifferenceAreasXY(solid, innerArea, tolerance);
+
+				if (punched != null && ! punched.IsEmpty)
+				{
+					solid = punched;
+				}
+			}
+
+			return solid;
+		}
+
+		// Whether the inner ring (a candidate hole) is wider than the buffer width in both
+		// directions. A narrower hole is filled by the buffer reaching across it from both
+		// sides, so it must not be punched out.
+		private static bool IsHoleWiderThan([CanBeNull] MultiLinestring innerArea,
+		                                    double bufferWidth)
+		{
+			if (innerArea == null || innerArea.IsEmpty)
+			{
+				return false;
+			}
+
+			return innerArea.XMax - innerArea.XMin >= bufferWidth &&
+			       innerArea.YMax - innerArea.YMin >= bufferWidth;
+		}
+
+		// Collects the loops of an open path whose interior the buffer must hollow out: a loop
+		// formed where the path crosses itself (a closed sub-arc between the two visits of a
+		// crossing), or - if the path does not cross itself - an almost-closed path whose two
+		// ends are near enough that the buffer bridges the gap (within one buffer width).
+		[NotNull]
+		private static IList<Linestring> GetLoops(
+			[NotNull] Linestring path, double distance, BufferSide bufferSide, double tolerance)
+		{
+			var loops = new List<Linestring>();
+
+			var subArcs = new List<Linestring>();
+			if (TryCrackSelfCrossingLinestring(path, tolerance, subArcs))
+			{
+				foreach (Linestring subArc in subArcs)
+				{
+					if (subArc == null || subArc.SegmentCount < 2 ||
+					    ! subArc.StartPoint.EqualsXY(subArc.EndPoint, tolerance))
+					{
+						continue;
+					}
+
+					// The two ends are the same crossing point computed on different segments,
+					// so only equal within tolerance: close the sub-arc exactly.
+					IList<Pnt3D> points = subArc.GetPoints(clone: true).ToList();
+					points[points.Count - 1] = points[0].ClonePnt3D();
+					loops.Add(new Linestring(points));
+				}
+			}
+
+			// A genuinely simple arc (no self-intersections) whose two ends nearly meet: the
+			// buffer bridges the gap, so hollow the enclosed area. A fold-back has linear self-
+			// intersections and is excluded here, so its overlapping buffers just unify without
+			// a spurious hole between them.
+			if (loops.Count == 0 && path.SegmentCount >= 2 &&
+			    GetSelfIntersectionPoints(path, tolerance).Count == 0)
+			{
+				double dx = path.StartPoint.X - path.EndPoint.X;
+				double dy = path.StartPoint.Y - path.EndPoint.Y;
+				double endGap = Math.Sqrt(dx * dx + dy * dy);
+				double bridgingDistance = bufferSide == BufferSide.Both ? 2 * distance : distance;
+
+				if (endGap <= bridgingDistance)
+				{
+					loops.Add(CloseLinestring(path));
+				}
+			}
+
+			return loops;
+		}
+
+		// Fills the two boundary rings of a closed loop's band with the normal (legacy) corner
+		// style and returns them ordered by size: the larger (outer) and the smaller (inner)
+		// offset ring. Either may be null when it collapses (a large distance erodes the inner
+		// ring away). For a two-sided buffer the boundaries are the two offset rings; for a one-
+		// sided buffer they are the loop itself and its offset.
+		private static void GetLoopBoundaryAreas(
+			[NotNull] Linestring loop, double distance, BufferSide bufferSide,
+			bool mitered, double miterLimit, double tolerance,
+			[CanBeNull] out MultiLinestring outerArea, [CanBeNull] out MultiLinestring innerArea)
+		{
+			Linestring boundaryA;
+			Linestring boundaryB;
+
+			switch (bufferSide)
+			{
+				case BufferSide.Both:
+					boundaryA = GetClosedRoundedOffsetRing(loop, distance, mitered, miterLimit);
+					boundaryB = GetClosedRoundedOffsetRing(loop, -distance, mitered, miterLimit);
+					break;
+
+				case BufferSide.Left:
+					boundaryA = loop.Clone();
+					boundaryB = GetClosedRoundedOffsetRing(loop, distance, mitered, miterLimit);
+					break;
+
+				case BufferSide.Right:
+					boundaryA = loop.Clone();
+					boundaryB = GetClosedRoundedOffsetRing(loop, -distance, mitered, miterLimit);
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(bufferSide), bufferSide, null);
+			}
+
+			MultiLinestring filledA = GetFilledRingAreaXY(boundaryA, tolerance);
+			MultiLinestring filledB = GetFilledRingAreaXY(boundaryB, tolerance);
+
+			bool aEmpty = filledA == null || filledA.IsEmpty;
+			bool bEmpty = filledB == null || filledB.IsEmpty;
+
+			if (aEmpty || bEmpty)
+			{
+				outerArea = aEmpty ? filledB : filledA;
+				innerArea = null;
+				return;
+			}
+
+			bool aIsOuter = Math.Abs(filledA.GetArea2D()) >= Math.Abs(filledB.GetArea2D());
+			outerArea = aIsOuter ? filledA : filledB;
+			innerArea = aIsOuter ? filledB : filledA;
+		}
+
+		// Subtracts the inner ring area from the outer to leave it as a hole.
+		[CanBeNull]
+		private static MultiLinestring SubtractInnerRing([CanBeNull] MultiLinestring outerArea,
+		                                                 [CanBeNull] MultiLinestring innerArea,
+		                                                 double tolerance)
+		{
+			if (outerArea == null || outerArea.IsEmpty)
+			{
+				return null;
+			}
+
+			if (innerArea == null || innerArea.IsEmpty)
+			{
+				return outerArea;
+			}
+
+			MultiLinestring band = GetDifferenceAreasXY(outerArea, innerArea, tolerance);
+
+			return band != null && ! band.IsEmpty ? band : outerArea;
+		}
+
+		// Fills a (possibly self-intersecting) closed ring into its 2D area, reusing the same
+		// crack-and-union pipeline as the open-path buffer. Returns null for a degenerate ring.
+		[CanBeNull]
+		private static MultiLinestring GetFilledRingAreaXY([CanBeNull] Linestring ring,
+		                                                   double tolerance)
+		{
+			var ringGroups = new List<RingGroup>();
+			AddCrackedRings(ring, tolerance, ringGroups);
+
+			if (ringGroups.Count == 0)
+			{
+				return null;
+			}
+
+			return GetUnionAreasXY(ringGroups, tolerance, inputRingsMayBeNonSimple: true);
+		}
+
+		// Offsets a CLOSED loop path perpendicularly in XY by the signed distance, rounding (or
+		// mitering) convex corners exactly like GetRoundedOffsetPoints but joining every corner
+		// including the one at the shared start/end vertex, so the result is a closed ring. This
+		// is achieved by restarting the loop at the midpoint of its closing segment (a point
+		// that is not a corner): offsetting that equivalent open path rounds all real corners,
+		// and because both of its flat ends lie on the same straight stretch their offset
+		// endpoints coincide, closing the ring.
+		[CanBeNull]
+		private static Linestring GetClosedRoundedOffsetRing(
+			[NotNull] Linestring closedPath, double signedDistance, bool mitered,
+			double miterLimit)
+		{
+			int segmentCount = closedPath.SegmentCount;
+
+			if (segmentCount < 3)
+			{
+				return null;
+			}
+
+			IList<Pnt3D> points = closedPath.GetPoints(clone: true).ToList();
+
+			// points: p0 .. p(n-1), p0 (closed). The corner an open-path offset misses is at p0,
+			// between the last and the first segment. Restart at the midpoint of the closing
+			// segment (p(n-1) -> p0) so that corner becomes an interior corner and both ends fall
+			// on a straight stretch.
+			Pnt3D first = points[0];
+			Pnt3D last = points[segmentCount - 1];
+
+			var mid = new Pnt3D((last.X + first.X) / 2,
+			                    (last.Y + first.Y) / 2,
+			                    (last.Z + first.Z) / 2);
+
+			var openPoints = new List<Pnt3D>(segmentCount + 2) { mid.ClonePnt3D() };
+			for (var i = 0; i < segmentCount; i++)
+			{
+				openPoints.Add(points[i].ClonePnt3D());
+			}
+
+			openPoints.Add(mid.ClonePnt3D());
+
+			var openPath = new Linestring(openPoints);
+
+			List<Pnt3D> offset = GetRoundedOffsetPoints(openPath, openPoints, signedDistance,
+			                                            mitered, miterLimit);
+
+			if (offset.Count < 4)
+			{
+				return null;
+			}
+
+			// The two flat ends are the offset of the same midpoint along the same segment,
+			// hence coincident: force exact closure.
+			offset[offset.Count - 1] = offset[0].ClonePnt3D();
+
+			return new Linestring(offset);
+		}
+
+		// Adds the connected components (each an exterior ring with its holes) of an area to the
+		// collection to be unioned, preserving holes (unlike AddCrackedRings, which fills them).
+		private static void AddAreaComponents([CanBeNull] MultiLinestring area, double tolerance,
+		                                      [NotNull] List<RingGroup> ringGroups)
+		{
+			if (area == null || area.IsEmpty)
+			{
+				return;
+			}
+
+			foreach (RingGroup component in GetConnectedComponents(area, tolerance))
+			{
+				if (component == null || component.IsEmpty)
+				{
+					continue;
+				}
+
+				component.TryOrientProperly();
+				ringGroups.Add(component);
+			}
+		}
+
+		// Returns a closed copy of an (almost closed) open path by appending its start point.
+		[NotNull]
+		private static Linestring CloseLinestring([NotNull] Linestring path)
+		{
+			IList<Pnt3D> points = path.GetPoints(clone: true).ToList();
+			points.Add(points[0].ClonePnt3D());
+
+			return new Linestring(points);
+		}
+
+		// Builds the (closed, clockwise) outline of the buffer of a single open path.
+		// For a two-sided buffer the ring is the left offset, an end cap, the reversed
+		// right offset and a start cap; for a one-sided buffer one edge is the offset line
+		// and the opposite edge is the original line, leaving the ends flat. The end caps are
+		// round unless <paramref name="flatEndCaps"/> is set (then the ends are closed with a
+		// straight chord). Convex corners of the offset side(s) are rounded, or mitered/
+		// bevelled when <paramref name="mitered"/> is set (see GetRoundedOffsetPoints).
+		[CanBeNull]
+		private static Linestring BuildBufferRing([NotNull] Linestring path, double distance,
+		                                          BufferSide bufferSide,
+		                                          bool mitered, bool flatEndCaps,
+		                                          double miterLimit)
+		{
+			IList<Pnt3D> original = path.GetPoints(clone: true).ToList();
+
+			if (original.Count < 2)
+			{
+				return null;
+			}
+
+			List<Pnt3D> ringPoints;
+
+			switch (bufferSide)
+			{
+				case BufferSide.Both:
+					List<Pnt3D> leftBoth =
+						GetRoundedOffsetPoints(path, original, distance, mitered, miterLimit);
+					List<Pnt3D> rightBoth =
+						GetRoundedOffsetPoints(path, original, -distance, mitered, miterLimit);
+					rightBoth.Reverse();
+
+					ringPoints = new List<Pnt3D>();
+					ringPoints.AddRange(leftBoth);
+
+					if (! flatEndCaps)
+					{
+						// Round end cap around the last vertex, bulging in the forward direction.
+						Line3D lastSegment = path.GetSegment(path.SegmentCount - 1);
+						AppendRoundCapPoints(ringPoints, lastSegment.EndPoint, distance,
+						                     leftBoth[leftBoth.Count - 1],
+						                     lastSegment.DeltaX, lastSegment.DeltaY);
+					}
+
+					// When flat, the straight chord from the last left-offset point to the
+					// first right-offset point (and the ring closure back to the start) forms
+					// the flat ends.
+					ringPoints.AddRange(rightBoth);
+
+					if (! flatEndCaps)
+					{
+						// Round start cap around the first vertex, bulging backwards.
+						Line3D firstSegment = path.GetSegment(0);
+						AppendRoundCapPoints(ringPoints, firstSegment.StartPoint, distance,
+						                     rightBoth[rightBoth.Count - 1],
+						                     -firstSegment.DeltaX, -firstSegment.DeltaY);
+					}
+
+					break;
+
+				case BufferSide.Left:
+					List<Pnt3D> left =
+						GetRoundedOffsetPoints(path, original, distance, mitered, miterLimit);
+
+					ringPoints = new List<Pnt3D>(left.Count + original.Count + 1);
+					ringPoints.AddRange(left);
+					for (int k = original.Count - 1; k >= 0; k--)
+					{
+						ringPoints.Add(original[k].ClonePnt3D());
+					}
+
+					break;
+
+				case BufferSide.Right:
+					List<Pnt3D> right =
+						GetRoundedOffsetPoints(path, original, -distance, mitered, miterLimit);
+
+					ringPoints = new List<Pnt3D>(original.Count + right.Count + 1);
+					foreach (Pnt3D p in original)
+					{
+						ringPoints.Add(p.ClonePnt3D());
+					}
+
+					for (int k = right.Count - 1; k >= 0; k--)
+					{
+						ringPoints.Add(right[k]);
+					}
+
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(bufferSide), bufferSide, null);
+			}
+
+			// Close the ring.
+			ringPoints.Add(ringPoints[0].ClonePnt3D());
+
+			return new Linestring(ringPoints, ensureClockwise: true);
+		}
+
+		// Offsets an open path perpendicularly in XY by the signed distance (positive =
+		// left of the digitizing direction). By default a convex (outer) corner is rounded
+		// with a circular arc (radius |signedDistance|, centred on the original vertex); when
+		// <paramref name="mitered"/> is set, the two adjacent offset lines are instead extended
+		// to their intersection (mitered), falling back to a straight bevel once the miter
+		// length exceeds <paramref name="miterLimit"/> * |signedDistance|. On the inner,
+		// concave side the mitered intersection of the two adjacent offset lines is always
+		// used (its self-intersection is cleaned up by the caller). The line ends are left
+		// flat. Z values are carried over from the corresponding source vertices.
+		[NotNull]
+		private static List<Pnt3D> GetRoundedOffsetPoints(
+			[NotNull] Linestring path, [NotNull] IList<Pnt3D> vertices, double signedDistance,
+			bool mitered = false, double miterLimit = _defaultMiterLimit)
+		{
+			int segmentCount = path.SegmentCount;
+
+			var offsetStart = new Pnt3D[segmentCount];
+			var offsetEnd = new Pnt3D[segmentCount];
+			var directionX = new double[segmentCount];
+			var directionY = new double[segmentCount];
+
+			for (var i = 0; i < segmentCount; i++)
+			{
+				Line3D segment = path.GetSegment(i);
+
+				double dx = segment.DeltaX;
+				double dy = segment.DeltaY;
+				double length = Math.Sqrt(dx * dx + dy * dy);
+
+				double normalX = 0;
+				double normalY = 0;
+				if (length > _parallelEpsilon)
+				{
+					// Left normal of the direction (rotate by +90° in XY).
+					normalX = -dy / length;
+					normalY = dx / length;
+				}
+
+				directionX[i] = dx;
+				directionY[i] = dy;
+
+				Pnt3D start = segment.StartPoint;
+				Pnt3D end = segment.EndPoint;
+
+				offsetStart[i] = new Pnt3D(start.X + normalX * signedDistance,
+				                           start.Y + normalY * signedDistance, start.Z);
+				offsetEnd[i] = new Pnt3D(end.X + normalX * signedDistance,
+				                         end.Y + normalY * signedDistance, end.Z);
+			}
+
+			double radius = Math.Abs(signedDistance);
+
+			var result = new List<Pnt3D> { offsetStart[0] };
+
+			for (var j = 1; j < segmentCount; j++)
+			{
+				double cross = directionX[j - 1] * directionY[j] -
+				               directionY[j - 1] * directionX[j];
+
+				// The offset side is the outer (convex) side of the corner exactly when the
+				// turn direction is opposite to the side being offset.
+				bool convexCorner = radius > 0 &&
+				                    Math.Abs(cross) > _parallelEpsilon &&
+				                    signedDistance * cross < 0;
+
+				if (convexCorner && ! mitered)
+				{
+					// Round the outer corner with a circular arc around the original vertex.
+					result.Add(offsetEnd[j - 1]);
+					AppendRoundJoinPoints(result, vertices[j], radius,
+					                      offsetEnd[j - 1],
+					                      directionX[j - 1], directionY[j - 1],
+					                      directionX[j], directionY[j]);
+					result.Add(offsetStart[j]);
+				}
+				else if (convexCorner && mitered &&
+				         TryIntersectLinesXY(offsetStart[j - 1], directionX[j - 1],
+				                             directionY[j - 1], offsetStart[j], directionX[j],
+				                             directionY[j], out double mx, out double my))
+				{
+					// Miter the outer corner by extending the two offset lines to their
+					// intersection. A very sharp corner would produce a long spike, so fall
+					// back to a straight bevel once the miter length exceeds miterLimit * radius.
+					double miterDx = mx - vertices[j].X;
+					double miterDy = my - vertices[j].Y;
+					double miterLengthSquared = miterDx * miterDx + miterDy * miterDy;
+					double maxMiterLength = miterLimit * radius;
+
+					if (miterLengthSquared <= maxMiterLength * maxMiterLength)
+					{
+						result.Add(new Pnt3D(mx, my, vertices[j].Z));
+					}
+					else
+					{
+						// Bevel: cut the corner off with a straight chord between the ends of
+						// the two adjacent offset segments.
+						result.Add(offsetEnd[j - 1]);
+						result.Add(offsetStart[j]);
+					}
+				}
+				else if (TryIntersectLinesXY(offsetStart[j - 1], directionX[j - 1],
+				                             directionY[j - 1], offsetStart[j], directionX[j],
+				                             directionY[j], out double x, out double y))
+				{
+					// Concave (inner) corner: use the mitered intersection of the two offset
+					// lines (the self-intersection this creates is cleaned up by the caller).
+					// At a near-180° fold-back (the line doubles back on itself) the two offset
+					// lines are almost parallel, so their intersection runs off far from the
+					// vertex - an endless spike. Cap the miter length and bevel the corner
+					// (join the two offset endpoints directly) instead.
+					double miterDx = x - vertices[j].X;
+					double miterDy = y - vertices[j].Y;
+					double miterLengthSquared = miterDx * miterDx + miterDy * miterDy;
+					double maxMiterLength = miterLimit * radius;
+
+					if (miterLengthSquared <= maxMiterLength * maxMiterLength)
+					{
+						result.Add(new Pnt3D(x, y, vertices[j].Z));
+					}
+					else
+					{
+						result.Add(offsetEnd[j - 1]);
+						result.Add(offsetStart[j]);
+					}
+				}
+				else
+				{
+					// Parallel / collinear segments: the two offset lines coincide, so the
+					// shared offset endpoint is the join.
+					result.Add(offsetEnd[j - 1]);
+				}
+			}
+
+			result.Add(offsetEnd[segmentCount - 1]);
+
+			return result;
+		}
+
+		// Appends the intermediate points of the circular arc that rounds a convex corner,
+		// sweeping around 'center' (radius) from the point 'from' by the corner's signed
+		// turn angle. The arc's start and end points are added by the caller, so only the
+		// in-between points are appended here.
+		private static void AppendRoundJoinPoints(
+			[NotNull] List<Pnt3D> result, [NotNull] Pnt3D center, double radius,
+			[NotNull] Pnt3D from,
+			double inDirectionX, double inDirectionY,
+			double outDirectionX, double outDirectionY)
+		{
+			double cross = inDirectionX * outDirectionY - inDirectionY * outDirectionX;
+			double dot = inDirectionX * outDirectionX + inDirectionY * outDirectionY;
+
+			// Signed turn angle in (-pi, pi]; equals the angle swept by the offset vector.
+			double sweep = Math.Atan2(cross, dot);
+
+			var steps = (int) Math.Ceiling(Math.Abs(sweep) / _maxRoundJoinAngleStep);
+
+			if (steps <= 1)
+			{
+				return;
+			}
+
+			double startAngle = Math.Atan2(from.Y - center.Y, from.X - center.X);
+
+			for (var k = 1; k < steps; k++)
+			{
+				double angle = startAngle + sweep * k / steps;
+
+				result.Add(new Pnt3D(center.X + radius * Math.Cos(angle),
+				                     center.Y + radius * Math.Sin(angle), center.Z));
+			}
+		}
+
+		// Appends the intermediate points of a semicircular end cap of the given radius
+		// around 'center', starting at 'from' (which lies on the circle) and sweeping 180°
+		// to the diametrically opposite point, bulging towards the outward direction. The
+		// cap's start and end points are added by the caller.
+		private static void AppendRoundCapPoints(
+			[NotNull] List<Pnt3D> ring, [NotNull] Pnt3D center, double radius,
+			[NotNull] Pnt3D from, double outwardX, double outwardY)
+		{
+			if (radius <= 0)
+			{
+				return;
+			}
+
+			double startAngle = Math.Atan2(from.Y - center.Y, from.X - center.X);
+			double outwardAngle = Math.Atan2(outwardY, outwardX);
+
+			// Sweep 180° in the direction that makes the cap bulge outwards (towards the
+			// forward/backward extension of the line end).
+			double delta = Math.Atan2(Math.Sin(outwardAngle - startAngle),
+			                          Math.Cos(outwardAngle - startAngle));
+			double sweep = delta >= 0 ? Math.PI : -Math.PI;
+
+			var steps = (int) Math.Ceiling(Math.PI / _maxRoundJoinAngleStep);
+
+			for (var k = 1; k < steps; k++)
+			{
+				double angle = startAngle + sweep * k / steps;
+
+				ring.Add(new Pnt3D(center.X + radius * Math.Cos(angle),
+				                   center.Y + radius * Math.Sin(angle), center.Z));
+			}
+		}
+
+		// Intersects two infinite lines in XY, each given by a point and a direction.
+		// Returns false if the directions are parallel.
+		private static bool TryIntersectLinesXY(
+			[NotNull] Pnt3D point1, double direction1X, double direction1Y,
+			[NotNull] Pnt3D point2, double direction2X, double direction2Y,
+			out double x, out double y)
+		{
+			x = 0;
+			y = 0;
+
+			double denominator = direction1X * direction2Y - direction1Y * direction2X;
+
+			if (Math.Abs(denominator) < _parallelEpsilon)
+			{
+				return false;
+			}
+
+			double t = ((point2.X - point1.X) * direction2Y -
+			            (point2.Y - point1.Y) * direction2X) / denominator;
+
+			x = point1.X + t * direction1X;
+			y = point1.Y + t * direction1Y;
+
+			return true;
+		}
+
+		#endregion
 	}
 }

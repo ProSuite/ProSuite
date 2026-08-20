@@ -1503,14 +1503,23 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		_msg.Debug(
 			$"ProcessChanges - {inserts.Count} inserts, {deletes.Count} deletes, {updates.Count} updates.");
 
+		// OIDs of items that are new to the work list (genuine inserts and updates that
+		// turned out to be inserts). These must be invalidated by extent rather than by
+		// OID: the work list layer's display cache does not know these features yet, so
+		// an OID-based invalidation would not make the layer re-query and draw them.
+		var insertedOids = new List<long>();
+
 		foreach ((Table table, List<long> oids) in inserts)
 		{
-			Invalidate(ProcessInserts(table, oids));
+			insertedOids.AddRange(ProcessInserts(table, oids));
 		}
 
 		foreach ((Table table, List<long> oids) in updates)
 		{
-			Invalidate(ProcessUpdates(table, oids));
+			// Genuine updates (rare!) are invalidated by OID (handles a changed feature at both
+			// its old and new location); items that were actually inserts are collected in
+			// insertedOids and invalidated by extent below.
+			Invalidate(ProcessUpdates(table, oids, insertedOids));
 		}
 
 		foreach ((Table table, List<long> oids) in deletes)
@@ -1521,6 +1530,44 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			// been removed from _items.
 			Invalidate();
 		}
+
+		InvalidateNewItems(insertedOids);
+	}
+
+	/// <summary>
+	/// Invalidates the work list layer over the extent of the newly added items so the
+	/// layer re-queries the affected area and draws the new features. New items cannot be
+	/// invalidated by OID because the layer's display cache does not know them yet.
+	/// </summary>
+	private void InvalidateNewItems([NotNull] List<long> insertedOids)
+	{
+		if (insertedOids.Count == 0)
+		{
+			return;
+		}
+
+		Envelope extent = GetItemsExtent(insertedOids);
+
+		if (extent != null)
+		{
+			Invalidate(extent);
+		}
+		else
+		{
+			// Fall back to OID-based invalidation (e.g. non-spatial items).
+			Invalidate(insertedOids);
+		}
+	}
+
+	[CanBeNull]
+	private Envelope GetItemsExtent([NotNull] List<long> oids)
+	{
+		var oidSet = new HashSet<long>(oids);
+
+		List<IWorkItem> items =
+			_items.Where(item => item.HasExtent && oidSet.Contains(item.OID)).ToList();
+
+		return items.Count > 0 ? CreateExtent(items, Repository.SpatialReference) : null;
 	}
 
 	private List<long> ProcessInserts(Table table, List<long> oids)
@@ -1537,17 +1584,18 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(
 				         table, filter))
 			{
+				// Assign extent/display geometry before adding the item so it is
+				// registered in the spatial searcher (TryAddItem only adds items that
+				// already have an extent). The extent is always cached, independent of
+				// CacheBufferedItemGeometries; only the buffered display geometry is optional.
+				SetItemGeometry(item, geometry);
+
 				Assert.True(TryAddItem(item), $"Cannot not add {item}");
 
 				// it's a unkown item > refresh it's state (status, visited) either
 				// from DB (DbStatusWorkItem) or from definition file (SelectionItem).
 				// TODO: (daro) really necessary? It's a virgin new item...
 				Repository.Refresh(item);
-
-				if (CacheBufferedItemGeometries)
-				{
-					UpdateItemDisplayGeometry(item, geometry);
-				}
 
 				invalidateOids.Add(item.OID);
 			}
@@ -1611,7 +1659,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		}
 	}
 
-	private List<long> ProcessUpdates(Table table, List<long> oids)
+	private List<long> ProcessUpdates(Table table, List<long> oids,
+	                                  [NotNull] List<long> insertedOids)
 	{
 		_msg.Debug($"ProcessUpdate {table.GetName()}.");
 
@@ -1621,7 +1670,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			invalidateOids.AddRange(ProcessUpdatesCore(table, oids, _searcher));
+			invalidateOids.AddRange(ProcessUpdatesCore(table, oids, _searcher, insertedOids));
 
 			// TODO: Move to repository!
 			Repository.Extent = CreateExtent(_items, Repository.SpatialReference);
@@ -1638,34 +1687,55 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 	protected virtual IEnumerable<long> ProcessUpdatesCore(
 		[NotNull] Table table, [NotNull] List<long> oids,
-		[CanBeNull] SpatialHashSearcher<IWorkItem> searcher)
+		[CanBeNull] SpatialHashSearcher<IWorkItem> searcher,
+		[NotNull] List<long> insertedOids)
 	{
 		QueryFilter filter = GdbQueryUtils.CreateFilter(oids);
 
 		foreach ((WorkItem item, Geometry geometry) in Repository.GetItems<WorkItem>(
 			         table, filter, ignoreDefinitionQuery: true))
 		{
-			Assert.True(TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem),
-			            $"Cannot not get {cachedItem}");
-
-			if (Equals(cachedItem.Status, item.Status))
+			if (! TryGetItem(item.GdbRowProxy, out IWorkItem cachedItem))
 			{
-				// Status hasn't changed but maybe the geometry => update SpatialHashSearcher.
-				if (cachedItem.HasExtent)
+				// The edit was reported as an update but the item is not in the cache.
+				// This happens e.g. when an insert is reported as a modify by the edit
+				// event. Treat it as an insert so the new item still shows up.
+				_msg.Debug(
+					$"Update for {item.GdbRowProxy} but item is not in the cache. Treating as insert.");
+
+				// Assign extent/display geometry before adding so the item is
+				// registered in the spatial searcher (see ProcessInserts).
+				SetItemGeometry(item, geometry);
+
+				if (! TryAddItem(item))
 				{
-					Envelope extent = Assert.NotNull(cachedItem.Extent);
-
-					Assert.NotNull(searcher).Remove(cachedItem,
-					                                extent.XMin, extent.YMin,
-					                                extent.XMax, extent.YMax);
-
-					if (CacheBufferedItemGeometries)
-					{
-						UpdateItemDisplayGeometry(cachedItem, geometry);
-					}
-
-					searcher.Add(cachedItem, CreateEnvelope(cachedItem));
+					_msg.Debug($"Cannot add {item} as insert.");
+					continue;
 				}
+
+				Repository.Refresh(item);
+
+				// Report as an insert (invalidated by extent), not as an update: the
+				// layer's display cache does not know this feature's OID yet.
+				insertedOids.Add(item.OID);
+				continue;
+			}
+
+			// Keep the cached geometry/extent in sync with the source, regardless of a
+			// status change. The extent is always maintained (also updates the
+			// SpatialHashSearcher); the buffered display geometry only when
+			// CacheBufferedItemGeometries is set.
+			if (geometry != null && cachedItem.HasExtent)
+			{
+				Envelope extent = Assert.NotNull(cachedItem.Extent);
+
+				searcher?.Remove(cachedItem,
+				                 extent.XMin, extent.YMin,
+				                 extent.XMax, extent.YMax);
+
+				SetItemGeometry(cachedItem, geometry);
+
+				searcher?.Add(cachedItem, CreateEnvelope(cachedItem));
 			}
 
 			// Update cached item's state from database item. IWorkItem.Status
@@ -1673,6 +1743,32 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			cachedItem.Status = item.Status;
 
 			yield return cachedItem.OID;
+		}
+	}
+
+	/// <summary>
+	/// Assigns the source geometry to the work item. The item's extent is always
+	/// updated; the buffered display geometry is only cached when
+	/// <see cref="CacheBufferedItemGeometries"/> is set.
+	/// </summary>
+	protected void SetItemGeometry([NotNull] IWorkItem item, [CanBeNull] Geometry geometry)
+	{
+		if (geometry == null)
+		{
+			return;
+		}
+
+		item.SourceGeometryType = geometry.GeometryType;
+
+		if (CacheBufferedItemGeometries)
+		{
+			// Caches the buffered display geometry and sets the extent.
+			UpdateItemDisplayGeometry(item, geometry);
+		}
+		else
+		{
+			// Keep the extent up to date even when display geometries are not cached.
+			item.SetExtent(geometry.Extent);
 		}
 	}
 
@@ -1767,7 +1863,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		}
 	}
 
-	private bool TryAddItem(IWorkItem item)
+	protected bool TryAddItem(IWorkItem item)
 	{
 		Assert.True(item.OID <= 0, "item is already initialized");
 		item.OID = Repository.GetNextOid();

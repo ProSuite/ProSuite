@@ -293,6 +293,29 @@ public static class LayerUtils
 		}
 	}
 
+	/// <summary>
+	/// Gets the name of a layer document.
+	/// </summary>
+	/// <param name="layerDocument">The layer document</param>
+	/// <param name="predicate">The predicate. Can be null. If it is null
+	/// the name of the first layer definition is returned.</param>
+	/// <returns></returns>
+	[CanBeNull]
+	public static string GetName([NotNull] LayerDocument layerDocument,
+	                             Func<CIMDefinition, bool> predicate = null)
+	{
+		CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+
+		var definitions = cim?.LayerDefinitions;
+		if (definitions is null || definitions.Length <= 0) return null;
+
+		var definition = predicate is null
+			                 ? definitions.First()
+			                 : definitions.First(predicate);
+
+		return definition.Name;
+	}
+
 	[NotNull]
 	public static LayerDocument OpenLayerDocument([NotNull] string filePath)
 	{
@@ -985,15 +1008,35 @@ public static class LayerUtils
 	public static void SetDisplayExpression([NotNull] BasicFeatureLayer layer,
 	                                        [NotNull] string expression)
 	{
+#if ARCGISPRO_GREATER_3_5
+		var expressionInfo = new CIMExpressionInfo
+		                     {
+			                     Expression = expression
+		                     };
+		layer.SetDisplayExpressionInfo(expressionInfo);
+#else
 		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
 
 		var expressionInfo = new CIMExpressionInfo
 		                     {
-			                     Expression = expression
+			                     Expression = $"{expression}"
 		                     };
 
 		definition.FeatureTable.DisplayExpressionInfo = expressionInfo;
 
 		layer.SetDefinition(definition);
+#endif
+	}
+
+	public static void SetDisplayField([NotNull] BasicFeatureLayer layer,
+	                                   [CanBeNull] string fieldName)
+	{
+#if ARCGISPRO_GREATER_3_5
+		layer.SetDisplayField(fieldName);
+#else
+		var definition = (CIMBasicFeatureLayer) layer.GetDefinition();
+		definition.FeatureTable.DisplayField = fieldName;
+		layer.SetDefinition(definition);
+#endif
 	}
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -82,7 +83,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				throw new NotSupportedException("Unsupported operation: No issue store set up");
 			}
 
-			await PrepareIssueStore(_issueStore);
+			await PrepareIssueStore(_issueStore, verifiedConditionIds);
 
 			int savedIssueCount = 0;
 
@@ -111,28 +112,39 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				return Task.CompletedTask;
 			});
 
-			// NOTE: Do not call transaction inside QueuedTask.Run or the EditingCompleted event
-			// will fire twice!
-			EditorTransaction transaction = new EditorTransaction(new EditOperation());
+			bool editingAlreadyEnabled = Project.Current.IsEditingEnabled;
 
-			bool success = await transaction.ExecuteAsync(
-				               editContext =>
-				               {
-					               savedIssueCount =
-						               UpdateIssuesTx(editContext, objectsToVerify,
-						                              verifiedConditionIds);
+			if (! editingAlreadyEnabled &&
+			    ! await Project.Current.SetIsEditingEnabledAsync(true))
+			{
+				throw new InvalidOperationException(
+					"Cannot save verification issues: editing could not be enabled in the application.");
+			}
 
-					               // Deleting issues can be pretty undiscriminating, we don't even
-					               // know if there were deletes or not.
-					               // TODO: Only invalidate the updated tables
-					               foreach (Dataset issueTable in referencedIssueTables)
+			try
+			{
+				// NOTE: Do not call transaction inside QueuedTask.Run or the EditingCompleted event
+				// will fire twice!
+				EditorTransaction transaction = new EditorTransaction(new EditOperation());
+
+				bool success = await transaction.ExecuteAsync(
+					               editContext =>
 					               {
-						               editContext.Invalidate(issueTable);
-					               }
-				               },
-				               "Update issues", referencedIssueTables);
+						               savedIssueCount =
+							               UpdateIssuesTx(editContext, objectsToVerify,
+							                              verifiedConditionIds);
+					               },
+					               "Update issues", referencedIssueTables);
 
-			return success ? savedIssueCount : 0;
+				return success ? savedIssueCount : 0;
+			}
+			finally
+			{
+				if (! editingAlreadyEnabled)
+				{
+					await Project.Current.SetIsEditingEnabledAsync(false);
+				}
+			}
 		}
 
 		/// <summary>
@@ -163,18 +175,32 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_obsoleteExceptionGdbRefs.Add(gdbObjRefMsg);
 		}
 
-		private async Task PrepareIssueStore([NotNull] IIssueStore issueStore)
+		private async Task PrepareIssueStore([NotNull] IIssueStore issueStore,
+		                                     [CanBeNull] IList<int> verifiedConditionIds)
 		{
 			if (_verifiedSpecification != null)
 			{
 				issueStore.SetVerifiedSpecification(_verifiedSpecification);
 			}
+			else if (_verifiedSpecificationId >= 0)
+			{
+				issueStore.SetVerifiedSpecification(_verifiedSpecificationId);
+			}
 			else
 			{
-				Assert.False(_verifiedSpecificationId < 0,
-				             "The verified specification/specification id was not set.");
+				// No specification (id) is known on the client, e.g. because the verified
+				// specification was created on the server (Release Quality). Fall back to
+				// the verified condition ids from the verification message:
+				Assert.True(verifiedConditionIds?.Count > 0,
+				            "The verified specification/specification id was not set and " +
+				            "no verified condition ids are available.");
 
-				issueStore.SetVerifiedSpecification(_verifiedSpecificationId);
+				_msg.DebugFormat(
+					"No verified specification (id) was set. Using the {0} verified " +
+					"condition ids from the verification message instead.",
+					verifiedConditionIds.Count);
+
+				issueStore.SetVerifiedConditionIds(verifiedConditionIds);
 			}
 
 			bool allConditionsRequired =
@@ -189,16 +215,16 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[CanBeNull] IList<GdbObjectReference> verifiedObjects,
 			IList<int> verifiedConditionIds)
 		{
-			// TODO: Invalidate deleted / inserted features / issue tables
-			//editContext.Invalidate();
+			Action<Row> invalidateRow = row => editContext.Invalidate(row);
 
-			DeleteErrors(verifiedObjects, verifiedConditionIds);
+			DeleteErrors(verifiedObjects, verifiedConditionIds, invalidateRow);
 
 			_msg.Debug("Saving new issues in verification perimeter...");
 			int saveCount = Assert.NotNull(_issueStore)
-			                      .SaveIssues(_issueMessages, verifiedConditionIds);
+			                      .SaveIssues(_issueMessages, verifiedConditionIds,
+			                                  invalidateRow);
 
-			DeleteInvalidAllowedErrors(_obsoleteExceptionGdbRefs);
+			DeleteInvalidAllowedErrors(_obsoleteExceptionGdbRefs, invalidateRow);
 
 			_msg.Debug("Deleted invalid allowed errors.");
 
@@ -206,7 +232,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		}
 
 		private void DeleteInvalidAllowedErrors(
-			IReadOnlyCollection<GdbObjRefMsg> obsoleteExceptions)
+			IReadOnlyCollection<GdbObjRefMsg> obsoleteExceptions,
+			[CanBeNull] Action<Row> invalidateRow)
 		{
 			if (obsoleteExceptions.Count == 0)
 			{
@@ -216,14 +243,16 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			Assert.NotNull(_issueStore, "No issue store set up");
 
 			IList<GdbObjectReference> invalidAllowedErrorReferences =
-				obsoleteExceptions.Select(
-					m => new GdbObjectReference(m.ClassHandle, m.ObjectId)).ToList();
+				obsoleteExceptions.Select(m => new GdbObjectReference(m.ClassHandle, m.ObjectId))
+				                  .ToList();
 
-			_issueStore.DeleteInvalidAllowedErrors(invalidAllowedErrorReferences);
+			_issueStore.DeleteInvalidAllowedErrors(invalidAllowedErrorReferences,
+			                                       invalidateRow);
 		}
 
 		private void DeleteErrors([CanBeNull] IList<GdbObjectReference> objectSelection,
-		                          IList<int> verifiedConditionIds)
+		                          IList<int> verifiedConditionIds,
+		                          [CanBeNull] Action<Row> invalidateRow)
 		{
 			_msg.Debug("Deleting existing issues in verification perimeter...");
 
@@ -233,7 +262,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					: verifiedConditionIds;
 
 			Assert.NotNull(_issueStore).DeleteErrors(
-				deleteForConditions, VerifiedPerimeter, objectSelection);
+				deleteForConditions, VerifiedPerimeter, objectSelection, invalidateRow);
 		}
 	}
 }

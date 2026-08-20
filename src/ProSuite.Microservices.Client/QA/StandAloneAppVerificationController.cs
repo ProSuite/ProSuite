@@ -15,6 +15,8 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		private bool _issuesSaved;
 
+		public bool AutoOpenWorkListAfterVerification => false;
+
 		[CanBeNull]
 		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
 		{
@@ -22,16 +24,11 @@ namespace ProSuite.Microservices.Client.QA
 			set;
 		}
 
-		public void FlashProgress(IList<EnvelopeXY> tiles, ServiceCallStatus currentProgressStep)
+		public void UpdateProgressOverlay(bool showOverlay,
+		                                  IList<EnvelopeXY> tiles,
+		                                  ServiceCallStatus currentProgressStep)
 		{
 			throw new NotImplementedException();
-		}
-
-		public bool CanFlashProgress(ServiceCallStatus? currentProgressStep,
-		                             IList<EnvelopeXY> tiles, out string reason)
-		{
-			reason = "Flashing is not supported";
-			return false;
 		}
 
 		public void ZoomToVerifiedPerimeter()
@@ -67,6 +64,12 @@ namespace ProSuite.Microservices.Client.QA
 			}
 
 			ProcessUtils.StartProcess(verificationResult.HtmlReportPath);
+		}
+
+		public Task ShowReportAsync(IQualityVerificationResult verificationResult)
+		{
+			ShowReport(verificationResult);
+			return Task.CompletedTask;
 		}
 
 		public bool CanShowReport(ServiceCallStatus? currentProgressStep,

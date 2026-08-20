@@ -18,8 +18,8 @@ public class MemoryRelQueryTableName : CIMBasedDataConnectionName, IMemoryRelQue
 
 	public MemoryRelQueryTableName(CIMRelQueryTableDataConnection relQueryConnection)
 		: this(relQueryConnection.Name,
-		       FromCIMDataConnection(relQueryConnection.SourceTable),
-		       FromCIMDataConnection(relQueryConnection.DestinationTable),
+		       CreateFromCIMDataConnection(relQueryConnection.SourceTable),
+		       CreateFromCIMDataConnection(relQueryConnection.DestinationTable),
 		       relQueryConnection.PrimaryKey,
 		       relQueryConnection.ForeignKey,
 		       (esriRelCardinality) relQueryConnection.Cardinality,
@@ -50,6 +50,38 @@ public class MemoryRelQueryTableName : CIMBasedDataConnectionName, IMemoryRelQue
 		ForeignKey = foreignKey;
 
 		_joinType = joinType;
+	}
+
+	/// <summary>
+	/// The name of the joined dataset that best represents this rel query table.
+	/// If exactly one of the two joined tables is a feature class, its name is
+	/// returned (the spatial dataset is the relevant one). If both are feature
+	/// classes or both are plain tables, the source (left) table that drives
+	/// the join is used.
+	/// </summary>
+	public override string Name
+	{
+		get
+		{
+			bool sourceIsFeatureClass =
+				_sourceConnectionName.Type == esriDatasetType.esriDTFeatureClass;
+			bool destinationIsFeatureClass =
+				_destinationConnectionName.Type == esriDatasetType.esriDTFeatureClass;
+
+			if (sourceIsFeatureClass && ! destinationIsFeatureClass)
+			{
+				return _sourceConnectionName.Name;
+			}
+
+			if (destinationIsFeatureClass && ! sourceIsFeatureClass)
+			{
+				return _destinationConnectionName.Name;
+			}
+
+			// Both are feature classes or both are plain tables: use the source
+			// (left) table, which drives the join.
+			return _sourceConnectionName.Name;
+		}
 	}
 
 	#region Implementation of IMemoryRelQueryTableName
@@ -84,7 +116,8 @@ public class MemoryRelQueryTableName : CIMBasedDataConnectionName, IMemoryRelQue
 	{
 		var result = new CIMRelQueryTableDataConnection
 		             {
-			             Name = Name,
+			             // The join name, not the overridden (feature class) Name.
+			             Name = NameString,
 			             Cardinality = (ArcGIS.Core.CIM.esriRelCardinality) Cardinality,
 			             JoinType = _joinType,
 			             JoinForward = ForwardDirection,

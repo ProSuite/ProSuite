@@ -75,6 +75,9 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 	private bool IsControlPressed =>
 		PressedKeys.Contains(Key.LeftCtrl) || PressedKeys.Contains(Key.RightCtrl);
 
+	private bool IsAltPressed =>
+		PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.RightAlt);
+
 	public SelectionCombinationMethod SelectionCombinationMethod { get; }
 
 	public SpatialRelationship SpatialRelationship { get; }
@@ -154,57 +157,13 @@ public abstract class PickerPrecedenceBase : IPickerPrecedence
 			return PickerMode.None;
 		}
 
-		var modes = PickerMode.PickBest;
-
-		if (IsControlPressed)
-		{
-			// always show picker if CTRL pressed
-			return PickerMode.ShowPicker;
-		}
-
-		if (PickerUtils.GetLowestGeometryDimensionFeatureCount(candidates) > 1)
-		{
-			modes |= PickerMode.ShowPicker;
-		}
-
-		int candidatesCount = candidates.Sum(fs => fs.GetCount());
-
-		if (NoMultiselection && candidatesCount > 1)
-		{
-			// If area selection: show picker
-			if (! IsPointClick)
-			{
-				modes |= PickerMode.ShowPicker;
-			}
-			// if not: pick best
-		}
-		else
-		{
-			if (PressedKeys.Contains(Key.LeftAlt) || PressedKeys.Contains(Key.LeftAlt))
-			{
-				modes |= PickerMode.PickAll;
-			}
-
-			if (! IsPointClick)
-			{
-				modes |= PickerMode.PickAll;
-			}
-		}
-
-		// the higher mode wins
-		var result = PickerMode.PickBest;
-
-		if ((modes & PickerMode.ShowPicker) != 0)
-		{
-			result = PickerMode.ShowPicker;
-		}
-
-		if ((modes & PickerMode.PickAll) != 0)
-		{
-			result = PickerMode.PickAll;
-		}
-
-		return result;
+		// The decision logic lives in PickerModeUtils so it can be unit tested without
+		// a running ArcGIS Pro application (see ProSuite.Commons.AGP.Test).
+		return PickerModeUtils.DeterminePickerMode(
+			IsControlPressed, IsAltPressed,
+			IsPointClick, NoMultiselection,
+			candidates.Sum(fs => fs.GetCount()),
+			PickerModeUtils.GetLowestGeometryDimensionFeatureCount(candidates));
 	}
 
 	public virtual IEnumerable<IPickableItem> Order(IEnumerable<IPickableItem> items)

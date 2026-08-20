@@ -30,8 +30,6 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 
 	protected CreateFeatureToolBase()
 	{
-		FireSketchEvents = true;
-
 		RequiresSelection = false;
 
 		// This does not work unless loadOnClick="false" in the daml.xml:
@@ -157,6 +155,7 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 			}
 			else
 			{
+				await RememberSketchAsync(sketch);
 				await ClearSketchAsync();
 			}
 		}
@@ -173,7 +172,7 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 		MapView activeView,
 		CancelableProgressor cancelableProgressor = null)
 	{
-		await QueuedTaskUtils.Run(async () =>
+		bool result = await QueuedTaskUtils.Run(async () =>
 		{
 			try
 			{
@@ -190,7 +189,7 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 			}
 		});
 
-		return false;
+		return result;
 	}
 
 	#endregion

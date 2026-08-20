@@ -1337,6 +1337,39 @@ public static class MapUtils
 		}
 	}
 
+	/// <summary>
+	/// Flashes using the provided overlays. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlays"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task<List<IDisposable>> AddOverlays([NotNull] MapView mapView,
+	                                              IEnumerable<Overlay> overlays,
+	                                              bool useReferenceScale = false)
+	{
+		List<IDisposable> disposables = new List<IDisposable>();
+
+		try
+		{
+			foreach (Overlay overlay in overlays)
+			{
+				disposables.Add(await overlay.AddToMapAsync(mapView, useReferenceScale));
+			}
+
+			return disposables;
+		}
+		catch(Exception)
+		{
+			foreach (IDisposable disposable in disposables)
+			{
+				disposable.Dispose();
+			}
+
+			throw;
+		}
+	}
+
 	#endregion
 
 	private static FeatureClass GetUnJoinedFeatureClass(FeatureClass featureClass)

@@ -15,7 +15,7 @@ namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
 public class DestroyAndRebuildFeedback
 {
-	private static readonly List<IDisposable> _overlays = new List<IDisposable>();
+	private readonly List<IDisposable> _overlays = new();
 
 	private CIMLineSymbol _lineSymbol;
 	private CIMPointSymbol _startPointSymbol;
@@ -83,40 +83,7 @@ public class DestroyAndRebuildFeedback
 		}
 	}
 
-	[CanBeNull]
-	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
-	                                      [NotNull] CIMSymbol cimSymbol)
-	{
-		if (geometry == null || geometry.IsEmpty)
-		{
-			return null;
-		}
-
-		IDisposable result = MapView.Active.AddOverlay(
-			geometry, cimSymbol.MakeSymbolReference());
-
-		return result;
-	}
-
-	private CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
-	                                                CIMColor outlineColor, double outlineWidth)
-	{
-		double factor = Math.Sqrt(2.0);
-		var symbolSize = size * factor; // to compensate diamond vs square (rot 45°)
-		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, outlineWidth); //symbolSize / 5);
-		//var polySym = SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid, stroke);
-		var polySym =
-			SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
-		var marker =
-			SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, symbolSize);
-		var symbol = SymbolUtils.CreatePointSymbol(marker);
-
-		return symbol;
-	}
-
-	#region Selection
-
-	public bool UpdateSelection([CanBeNull] IList<Feature> selectedFeatures)
+	public bool Update([CanBeNull] IList<Feature> selectedFeatures)
 	{
 		DisposeOverlays();
 
@@ -137,14 +104,16 @@ public class DestroyAndRebuildFeedback
 			{
 				case GeometryType.Point:
 					// Use start point symbol for points, consistent across both versions
-					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
 					break;
 				case GeometryType.Polyline:
 					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_lineSymbol)));
 
 					var startPointL = GeometryUtils.GetStartPoint(geometry as Polyline);
 					var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
-					_overlays.Add(AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
@@ -153,29 +122,43 @@ public class DestroyAndRebuildFeedback
 						_overlays.Add(AddOverlay(vertexMultipoint,
 						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						                         Assert.NotNull(
+							                         _controlPointMarkerSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
+					_overlays.Add(
+						AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
 					break;
 				case GeometryType.Polygon:
+					// Old symbolization: for polygons, show only the outline
 					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_polygonSymbol)));
-
-					var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
-					var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
-					_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
+						var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
+						var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
+						_overlays.Add(
+							AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
+
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
 						_overlays.Add(AddOverlay(vertexMultipoint,
 						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						                         Assert.NotNull(
+							                         _controlPointMarkerSymbol)));
+
+						_overlays.Add(
+							AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
+					break;
+
+				case GeometryType.Multipatch:
+					Polyline multipatchOutline =
+						GeometryUtils.GetMultipatchOutline((Multipatch) geometry);
+					_overlays.Add(AddOverlay(multipatchOutline,
+					                         Assert.NotNull(_lineSymbol)));
 					break;
 
 				default:
@@ -185,6 +168,20 @@ public class DestroyAndRebuildFeedback
 		}
 
 		return true;
+	}
+
+	public void Clear()
+	{
+		DisposeOverlays();
+	}
+
+	[CanBeNull]
+	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
+	                                      [NotNull] CIMSymbol cimSymbol)
+	{
+		IDisposable result = MapView.Active.AddOverlay(
+			geometry, cimSymbol.MakeSymbolReference());
+		return result;
 	}
 
 	private static void CreateVertexMultipoint(Geometry geometry,
@@ -217,12 +214,24 @@ public class DestroyAndRebuildFeedback
 		}
 	}
 
-	public void ClearSelection()
+	private static CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
+	                                                       CIMColor outlineColor,
+	                                                       double outlineWidth)
 	{
-		DisposeOverlays();
+		double factor = Math.Sqrt(2.0);
+		var symbolSize = size * factor; // to compensate diamond vs square (rot 45°)
+		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, outlineWidth); //symbolSize / 5);
+
+		var polySym =
+			SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
+		var marker =
+			SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, symbolSize);
+		var symbol = SymbolUtils.CreatePointSymbol(marker);
+
+		return symbol;
 	}
 
-	private static void DisposeOverlays()
+	private void DisposeOverlays()
 	{
 		foreach (IDisposable overlay in _overlays)
 		{
@@ -231,6 +240,4 @@ public class DestroyAndRebuildFeedback
 
 		_overlays.Clear();
 	}
-
-	#endregion Selection
 }

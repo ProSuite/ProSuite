@@ -65,7 +65,7 @@ public abstract class DbStatusWorkList : WorkList
 	}
 
 	[CanBeNull]
-	protected virtual IList<WorkListFilterDefinitionExpression> GetDefinitionExpressions(
+	protected virtual IList<IWorkListFilterDefinitionExpression> GetDefinitionExpressions(
 		[NotNull] ISourceClass sourceClass)
 	{
 		if (CurrentFilterDefinition == null)
@@ -86,7 +86,7 @@ public abstract class DbStatusWorkList : WorkList
 		{
 			DatabaseSourceClass dbSourceClass = (DatabaseSourceClass) sourceClass;
 
-			IList<WorkListFilterDefinitionExpression> expressions =
+			IList<IWorkListFilterDefinitionExpression> expressions =
 				GetDefinitionExpressions(sourceClass);
 
 			if (expressions == null)

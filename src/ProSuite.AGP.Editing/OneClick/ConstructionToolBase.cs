@@ -43,6 +43,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		IsSketchTool = true;
 
+		FireSketchEvents = true;
+
 		// NOTE: If UseSelection is true, ins some cases the standard selection phase is
 		// activated instead of our 'intermittent selection phase', which can result in a
 		// mix-up of the selection phase and the edit sketch phase. Symptoms are
@@ -82,12 +84,13 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	{
 		get
 		{
-			bool selectingDuringSketchPhase =
-				RequiresSelection &&
-				KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-				KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+			// A tool changes the selection during the sketch phase either because it requires a
+			// selection or because it allows changing the selection while sketching.
+			bool canChangeSelection = RequiresSelection || AllowSelectionChangeInSketchMode;
 
-			return selectingDuringSketchPhase;
+			return canChangeSelection &&
+			       KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			       KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
 		}
 	}
 
@@ -101,10 +104,12 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	protected bool IsInSketchPhase { get; set; }
 
 	/// <summary>
-	/// Whether this tool supports adding/removing from the current selection during the sketch
-	/// phase.
+	/// Whether the user can change the selection while sketching (by holding SHIFT to run an
+	/// intermittent selection sketch). Enables the shift-selection sub-phase.
+	/// Subclasses can widen it (e.g. to re-pick a single target during construction).
 	/// </summary>
-	protected virtual bool SupportIntermediateSelectionPhase => AllowMultiSelection(out _);
+	protected virtual bool AllowSelectionChangeInSketchMode =>
+		RequiresSelection && AllowMultiSelection(out _);
 
 	protected bool SupportRestoreLastSketch => true;
 
@@ -146,6 +151,9 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	#endregion
 
 	#region OneClickToolBase overrides
+
+	protected override bool IsSelectionPhaseSupported =>
+		RequiresSelection || AllowSelectionChangeInSketchMode;
 
 	protected override async Task OnSelectionPhaseStartedAsync()
 	{
@@ -194,11 +202,12 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		{
 			await StartSketchPhaseAsync();
 		}
-		else
-		{
-			_intermediateSketchStates = new IntermediateSketchStates();
-			await _intermediateSketchStates.ActivateAsync();
-		}
+
+		// The intermittent sketch states back the "change selection while sketching" capability
+		// (see AllowSelectionChangeInSketchMode). Create them for every construction tool: they
+		// only record the sketch and are inert unless a shift-selection is actually started.
+		_intermediateSketchStates = new IntermediateSketchStates();
+		await _intermediateSketchStates.ActivateAsync();
 	}
 
 	protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
@@ -225,19 +234,21 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected override Task<bool> IsInSelectionPhaseCoreAsync(bool shiftDown)
 	{
-		if (! RequiresSelection)
-		{
-			return Task.FromResult(false);
-		}
-
-		if (shiftDown && SupportIntermediateSelectionPhase)
+		// A shift-held selection change during the sketch phase is (transiently) a selection
+		// phase - for selection-based tools and for tools that allow changing the selection
+		// while sketching alike.
+		if (shiftDown && AllowSelectionChangeInSketchMode)
 		{
 			return Task.FromResult(true);
 		}
 
-		bool result = ! IsInSketchPhase;
+		if (! RequiresSelection)
+		{
+			// No selection phase; the tool is always in the sketch phase.
+			return Task.FromResult(false);
+		}
 
-		return Task.FromResult(result);
+		return Task.FromResult(! IsInSketchPhase);
 	}
 
 	protected override void LogUsingCurrentSelection()
@@ -277,12 +288,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected override async Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 	{
-		if (! RequiresSelection)
-		{
-			return;
-		}
-
-		if (! AllowMultiSelection(out _))
+		if (! AllowSelectionChangeInSketchMode)
 		{
 			return;
 		}
@@ -316,7 +322,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		try
 		{
-			// must not be null because of entrance guard RequiresSelection
+			// Non-null: the intermittent sketch states are created for every tool on activation.
 			Assert.NotNull(_intermediateSketchStates);
 			await _intermediateSketchStates.StartIntermittentSelection();
 
@@ -344,19 +350,18 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected override async Task ShiftReleasedCoreAsync()
 	{
-		if (! RequiresSelection)
-		{
-			return;
-		}
-
 		// For symmetry with ShiftPressed. Additionally, in tools without intermediate selection
 		// ESC would stop working after SHIFT during sketch phase without this:
-		if (! AllowMultiSelection(out _))
+		if (! AllowSelectionChangeInSketchMode)
 		{
 			return;
 		}
 
-		bool restartSketch = await QueuedTask.Run(() => CanUseSelection(ActiveMapView));
+		// A tool without a compulsory selection (RequiresSelection == false) always returns to the
+		// sketch phase after a reselection - it constructs and must keep sketching even if nothing
+		// was picked. Otherwise, restart only when the new selection is usable.
+		bool restartSketch = ! RequiresSelection ||
+		                     await QueuedTask.Run(() => CanUseSelection(ActiveMapView));
 
 		if (restartSketch)
 		{
@@ -553,6 +558,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			}
 		}
 
+		// NOTE: No sketch complete event is fired when returning false
 		return false;
 	}
 
@@ -604,6 +610,15 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		return false;
 	}
 
+	/// <summary>
+	/// Implementations for the completion of the edit sketch.
+	/// NOTE: When returning false, no SketchComplete event is fired.
+	/// </summary>
+	/// <param name="sketchGeometry"></param>
+	/// <param name="editTemplate"></param>
+	/// <param name="activeView"></param>
+	/// <param name="cancelableProgressor"></param>
+	/// <returns>True if the operation was successful, false otherwise.</returns>
 	protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
 		Geometry sketchGeometry,
 		EditingTemplate editTemplate,
@@ -831,6 +846,11 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			currentLastIndex = sketch.PointCount - 1;
 		}
 
+		if (_msg.IsVerboseDebugEnabled)
+		{
+			_msg.DebugFormat("Tool sketch: {0}", sketch.ToXml());
+		}
+
 		_msg.DebugFormat(
 			"Vertex added [{0}], currentLastIndex[{1}], _lastloggedVertexIndex[{2}]",
 			sketch.PointCount, currentLastIndex, _lastLoggedVertexIndex);
@@ -955,7 +975,19 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			SurfaceZsResult result = currentMap.GetZsFromSurface(point);
 
 			// Surface data is available if we got a valid result with geometry
-			return result?.Geometry != null && result.Status == SurfaceZsResultStatus.Ok;
+			bool zHasSurface = result.Status == SurfaceZsResultStatus.Ok;
+
+			if (zHasSurface)
+			{
+				var resultPoint = result.Geometry as MapPoint;
+
+				if (resultPoint != null && ! double.IsNaN(resultPoint.Z))
+				{
+					OnSketchPointZAssigned(resultPoint);
+				}
+			}
+
+			return result?.Geometry != null && zHasSurface;
 		}
 		catch (Exception ex)
 		{
@@ -964,6 +996,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			return false;
 		}
 	}
+
+	protected virtual void OnSketchPointZAssigned(MapPoint sketchPointWithZ) { }
 
 	public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{

@@ -154,6 +154,76 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			return result;
 		}
 
+		/// <summary>
+		/// Loads the fully populated quality conditions with the specified data dictionary ids.
+		/// Conditions for unknown ids are silently omitted from the result.
+		/// </summary>
+		/// <param name="conditionIds"></param>
+		/// <param name="supportedInstanceDescriptors"></param>
+		/// <param name="ddxClient"></param>
+		/// <param name="ddxEnvironment"></param>
+		/// <returns>The loaded conditions or null, if the request was cancelled or timed out.</returns>
+		[CanBeNull]
+		public static async Task<IList<QualityCondition>> LoadQualityConditions(
+			[NotNull] IList<int> conditionIds,
+			[CanBeNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
+			[CanBeNull] string ddxEnvironment = null)
+		{
+			var request = new GetConditionsRequest
+			              {
+				              Environment = ProtobufGeomUtils.NullToEmpty(ddxEnvironment)
+			              };
+
+			request.ConditionIds.AddRange(conditionIds);
+
+			_msg.DebugFormat("Getting {0} quality conditions by id.", conditionIds.Count);
+
+			GetConditionsResponse response =
+				await GrpcClientUtils.TryAsync(async callOptions =>
+					                               await ddxClient.GetQualityConditionsAsync(
+						                               request, callOptions),
+				                               CancellationToken.None,
+				                               _timeoutMilliseconds);
+
+			if (response == null)
+			{
+				// Cancelled or timed out:
+				return null;
+			}
+
+			IList<QualityCondition> result =
+				CreateQualityConditions(response, supportedInstanceDescriptors);
+
+			_msg.DebugFormat("Found {0} quality conditions for {1} requested ids.",
+			                 result.Count, conditionIds.Count);
+
+			return result;
+		}
+
+		[NotNull]
+		public static IList<QualityCondition> CreateQualityConditions(
+			[NotNull] GetConditionsResponse getConditionsResponse,
+			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors = null)
+		{
+			instanceDescriptors = AddMissingInstanceDescriptors(
+				instanceDescriptors, getConditionsResponse.ReferencedInstanceDescriptors);
+
+			Dictionary<int, IDdxDataset> datasetsById =
+				FromDatasetMsgs(getConditionsResponse.ReferencedDatasets);
+
+			IDictionary<string, DdxModel> modelsByWorkspaceId =
+				GetModelsByWorkspaceId(getConditionsResponse.ReferencedModels, datasetsById);
+
+			var factory = new ProtoBasedQualitySpecificationFactory(
+				modelsByWorkspaceId, instanceDescriptors);
+
+			return getConditionsResponse.Conditions
+			                            .Select(factory.CreateQualityCondition)
+			                            .Where(condition => condition != null)
+			                            .ToList();
+		}
+
 		public static QualityCondition CreateQualityCondition(
 			[NotNull] GetConditionResponse getConditionResponse,
 			[CanBeNull] ISupportedInstanceDescriptors instanceDescriptors = null)
