@@ -170,11 +170,11 @@ public static class GdbPersistenceUtils
 
 		SetShape(rowBuffer, projected, targetFeatureClass);
 
-		Feature newFeature = targetTable.CreateRow(rowBuffer);
+		Feature feature = targetTable.CreateRow(rowBuffer);
 
-		StoreShape(newFeature, projected, editOperationContext);
+		editOperationContext.Invalidate(feature);
 
-		return newFeature;
+		return feature;
 	}
 
 	public static IEnumerable<Feature> InsertTx(
