@@ -111,6 +111,9 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	protected virtual bool AllowSelectionChangeInSketchMode =>
 		RequiresSelection && AllowMultiSelection(out _);
 
+	[CanBeNull]
+	protected IntermediateSketchStates SketchStates => _intermediateSketchStates;
+
 	protected bool SupportRestoreLastSketch => true;
 
 	protected bool LogSketchVertexZs { get; set; }
