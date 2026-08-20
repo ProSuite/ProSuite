@@ -1031,26 +1031,20 @@ namespace ProSuite.Commons.Geom
 		/// drop segments shorter than sqrt(2)*tolerance. The radius is what carries the
 		/// quality: at the plain tolerance 9 areas are still off, and the wide radius
 		/// repairs 6 of them to within a few square millimetres.</para>
+		/// <para>Two restrictions keep the incremental union from becoming quadratic in the
+		/// number of input rings. The source is the accumulated result, which grows with every
+		/// step, and it was already cracked and clustered by the steps that produced it: the
+		/// source parts away from the target are left out altogether, and the source parts
+		/// that do take part are not intersected with EACH OTHER, only with the target. Both
+		/// are approximations of the full pass. Measured over the 41'231 TLM_GEBAEUDEKOERPER
+		/// of the Lugano extent: 117.8 s down to 92.1 s, with 83 footprints falling back to
+		/// ArcObjects before and 84 after, and 4 areas off the ArcObjects reference by more
+		/// than 1 m2 before and 3 after.</para>
 		/// </remarks>
 		private void CrackAndClusterPair()
 		{
 			ISegmentList source = _subcurveNavigator.Source;
 			ISegmentList target = _subcurveNavigator.Target;
-
-			var parts = new List<Linestring>(source.PartCount + target.PartCount);
-			var isSourcePart = new List<bool>(source.PartCount + target.PartCount);
-
-			for (var i = 0; i < source.PartCount; i++)
-			{
-				parts.Add(source.GetPart(i).Clone());
-				isSourcePart.Add(true);
-			}
-
-			for (var i = 0; i < target.PartCount; i++)
-			{
-				parts.Add(target.GetPart(i).Clone());
-				isSourcePart.Add(false);
-			}
 
 			double tol = _subcurveNavigator.Tolerance;
 
@@ -1060,12 +1054,46 @@ namespace ProSuite.Commons.Geom
 			// of one after the snap is a leftover of the snap, not a segment the input meant.
 			double minimumSegmentLength = Math.Sqrt(2) * tol;
 
+			var parts = new List<Linestring>(source.PartCount + target.PartCount);
+			var isSourcePart = new List<bool>(source.PartCount + target.PartCount);
+
+			// The source parts too far from the target to be affected by it. They are not even
+			// cloned, and they are put back into the result unchanged.
+			var unaffectedSourceParts = new List<Linestring>();
+
+			// The source parts come first, so their segments occupy the front of the segment
+			// list that SnapAndCrack builds - which is what lets it skip the source/source
+			// pairs.
+			var sourceSegmentCount = 0;
+
+			for (var i = 0; i < source.PartCount; i++)
+			{
+				Linestring sourcePart = source.GetPart(i);
+
+				if (GeomRelationUtils.AreBoundsDisjoint(sourcePart, target, clusterTolerance))
+				{
+					unaffectedSourceParts.Add(sourcePart);
+					continue;
+				}
+
+				parts.Add(sourcePart.Clone());
+				isSourcePart.Add(true);
+				sourceSegmentCount += sourcePart.SegmentCount;
+			}
+
+			for (var i = 0; i < target.PartCount; i++)
+			{
+				parts.Add(target.GetPart(i).Clone());
+				isSourcePart.Add(false);
+			}
+
 			var changed = false;
 			var converged = false;
 
 			for (var i = 0; i < _maxCrackIterations; i++)
 			{
-				bool snapped = SimplificationUtils.SnapAndCrack(parts, clusterTolerance);
+				bool snapped = SimplificationUtils.SnapAndCrack(
+					parts, clusterTolerance, target, sourceSegmentCount);
 				bool dropped =
 					SimplificationUtils.RemoveDegenerateSegments(parts, minimumSegmentLength);
 
@@ -1100,7 +1128,8 @@ namespace ProSuite.Commons.Geom
 				(isSourcePart[i] ? sourceParts : targetParts).Add(parts[i]);
 			}
 
-			if (sourceParts.Count == 0 || targetParts.Count == 0)
+			if (sourceParts.Count + unaffectedSourceParts.Count == 0 ||
+			    targetParts.Count == 0)
 			{
 				// One side collapsed entirely - that cannot be what the input meant.
 				return;
@@ -1114,7 +1143,35 @@ namespace ProSuite.Commons.Geom
 			ISegmentList newTarget =
 				RemoveLinearSelfIntersections(new MultiPolycurve(targetParts), tol);
 
+			newSource = Append(newSource, unaffectedSourceParts);
+
 			_subcurveNavigator.Invalidate(newSource, newTarget);
+		}
+
+		/// <summary>
+		/// Returns a segment list with the parts of <paramref name="segments"/> followed by
+		/// <paramref name="additionalParts"/>, or <paramref name="segments"/> itself if there
+		/// is nothing to add.
+		/// </summary>
+		[NotNull]
+		private static ISegmentList Append([NotNull] ISegmentList segments,
+		                                   [NotNull] ICollection<Linestring> additionalParts)
+		{
+			if (additionalParts.Count == 0)
+			{
+				return segments;
+			}
+
+			var allParts = new List<Linestring>(segments.PartCount + additionalParts.Count);
+
+			for (var i = 0; i < segments.PartCount; i++)
+			{
+				allParts.Add(segments.GetPart(i));
+			}
+
+			allParts.AddRange(additionalParts);
+
+			return new MultiPolycurve(allParts);
 		}
 
 		private static void RemoveEmptyParts([NotNull] List<Linestring> parts,

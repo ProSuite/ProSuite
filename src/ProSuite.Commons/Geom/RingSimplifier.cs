@@ -49,11 +49,17 @@ namespace ProSuite.Commons.Geom
 		/// <param name="rings">The rings to simplify. Modified in place.</param>
 		/// <param name="tolerance">The XY tolerance.</param>
 		/// <param name="flags">The repairs to perform.</param>
+		/// <param name="areaOfInterest">If specified, the rings whose bounds lie outside this
+		/// area are left alone. Use it after a step of an incremental operation that could
+		/// only have changed the rings within a known area: the rings outside it were made
+		/// simple by the step that produced them, and re-checking all of them after every
+		/// step makes the operation quadratic in the number of inputs.</param>
 		/// <returns>Whether any ring was changed.</returns>
 		public static bool SimplifyRingsXY([NotNull] MultiLinestring rings,
 		                                   double tolerance,
 		                                   RingSimplifyFlags flags =
-			                                   RingSimplifyFlags.StepResult)
+			                                   RingSimplifyFlags.StepResult,
+		                                   [CanBeNull] IBoundedXY areaOfInterest = null)
 		{
 			if (flags == RingSimplifyFlags.None || rings.IsEmpty)
 			{
@@ -68,6 +74,12 @@ namespace ProSuite.Commons.Geom
 			// The parts are replaced while iterating, hence the snapshot.
 			foreach (Linestring ring in rings.GetLinestrings().ToList())
 			{
+				if (areaOfInterest != null &&
+				    GeomRelationUtils.AreBoundsDisjoint(ring, areaOfInterest, tolerance))
+				{
+					continue;
+				}
+
 				replacement.Clear();
 
 				if (! TrySimplifyRingXY(ring, tolerance, flags, replacement))

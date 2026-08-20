@@ -169,8 +169,7 @@ namespace ProSuite.Commons.Geom
 			// near-coincident parallel edge runs (shared walls separated only by a
 			// sub-resolution offset) are snapped into clean linear intersections.
 			return GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
-			                                       verticalRingDetectionTolerance,
-			                                       inputRingsMayBeNonSimple: true);
+			                                       verticalRingDetectionTolerance);
 		}
 
 		/// <summary>

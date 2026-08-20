@@ -455,8 +455,19 @@ namespace ProSuite.Commons.Geom
 		/// Snaps every near-coincident intersection of the input onto its cluster point and
 		/// cracks the segments that pass the cluster point without a vertex.
 		/// </summary>
+		/// <param name="parts">The parts to snap and crack. Modified in place.</param>
+		/// <param name="clusterTolerance">The distance within which intersections are
+		/// detected and snapped onto a common point.</param>
+		/// <param name="areaOfInterest">If specified, only the intersections within this area
+		/// are snapped and cracked.</param>
+		/// <param name="knownSimpleSegmentCount">If greater than zero, the first this many
+		/// segments of <paramref name="parts"/> are known not to intersect each other, so
+		/// those pairs are not looked for. Both parameters are approximations, see
+		/// <see cref="GeomTopoOpUtils.GetSelfIntersections"/>.</param>
 		public static bool SnapAndCrack([NotNull] IList<Linestring> parts,
-		                                double clusterTolerance)
+		                                double clusterTolerance,
+		                                [CanBeNull] IBoundedXY areaOfInterest = null,
+		                                int knownSimpleSegmentCount = 0)
 		{
 			ISegmentList segments = new MultiPolycurve(parts);
 
@@ -472,7 +483,9 @@ namespace ProSuite.Commons.Geom
 			// intersection are exactly the T-junctions where the other side has no vertex
 			// yet (same flag as CrackUtils.AddSelfIntersectionCrackPoints3d passes).
 			var intersections = (List<IntersectionPoint3D>)
-				GeomTopoOpUtils.GetSelfIntersections(segments, clusterTolerance, true);
+				GeomTopoOpUtils.GetSelfIntersections(segments, clusterTolerance, true,
+				                                     areaOfInterest,
+				                                     knownSimpleSegmentCount);
 
 			if (intersections.Count == 0)
 			{
