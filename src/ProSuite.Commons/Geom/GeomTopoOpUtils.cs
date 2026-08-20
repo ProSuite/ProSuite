@@ -5723,8 +5723,7 @@ namespace ProSuite.Commons.Geom
 				return null;
 			}
 
-			MultiLinestring result =
-				GetUnionAreasXY(ringGroups, tolerance, inputRingsMayBeNonSimple: true);
+			MultiLinestring result = GetUnionAreasXY(ringGroups, tolerance);
 
 			if (result == null || result.IsEmpty)
 			{
@@ -6249,8 +6248,7 @@ namespace ProSuite.Commons.Geom
 				return null;
 			}
 
-			MultiLinestring solid =
-				GetUnionAreasXY(baseRings, tolerance, inputRingsMayBeNonSimple: true);
+			MultiLinestring solid = GetUnionAreasXY(baseRings, tolerance);
 
 			if (solid == null || solid.IsEmpty)
 			{
@@ -6432,7 +6430,7 @@ namespace ProSuite.Commons.Geom
 				return null;
 			}
 
-			return GetUnionAreasXY(ringGroups, tolerance, inputRingsMayBeNonSimple: true);
+			return GetUnionAreasXY(ringGroups, tolerance);
 		}
 
 		// Offsets a CLOSED loop path perpendicularly in XY by the signed distance, rounding (or
