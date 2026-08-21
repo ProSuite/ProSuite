@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.Documentation {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class DocIfStrings {
@@ -122,6 +122,27 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string IfInvolvedRows_Tables {
             get {
                 return ResourceManager.GetString("IfInvolvedRows_Tables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filters (suppresses) issues that fulfill &apos;constraint&apos;. The constraint is evaluated on the issue itself: on $IssueCode, $Description, $AffectedComponent, $Value1, $Value2, $TextValue, and on all geometry properties available in QaGeometryConstraint ($Area, $Length, $VertexCount, ...), calculated on the issue geometry.
+        ///Notes:
+        ///- The filter is applied per quality condition; it must be attached to each condition it should act on.
+        ///- Only container tests support issue filters; for other tests the filter is igno [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string IfIssueConstraint_0 {
+            get {
+                return ResourceManager.GetString("IfIssueConstraint_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on the issue attributes and/or the issue geometry. If it is fulfilled, the issue is not reported. Example: $IssueCode = &apos;PartlyCovered&apos; AND $Area &lt; 10.
+        /// </summary>
+        public static string IfIssueConstraint_constraint {
+            get {
+                return ResourceManager.GetString("IfIssueConstraint_constraint", resourceCulture);
             }
         }
         

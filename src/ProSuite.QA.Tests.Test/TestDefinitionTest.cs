@@ -3534,6 +3534,7 @@ namespace ProSuite.QA.Tests.Test
 					                               typeof(IfAll),
 					                               typeof(IfIntersecting),
 					                               typeof(IfInvolvedRows),
+					                               typeof(IfIssueConstraint),
 					                               typeof(IfNear),
 					                               typeof(IfWithin)
 				                               };
@@ -3683,6 +3684,7 @@ namespace ProSuite.QA.Tests.Test
 			AddIfAllCases(model, ifCases);
 			//ToDo: Find correct special case for IfInvolvedRows ...
 			AddIfInvolvedRowsCases(model, ifCases);
+			AddIfIssueConstraintCases(model, ifCases);
 
 			return ifCases;
 		}
@@ -3813,6 +3815,16 @@ namespace ProSuite.QA.Tests.Test
 			                                 new object[]
 			                                 { },
 			                                 optionalValues));
+		}
+
+		private static void AddIfIssueConstraintCases(TestDataModel model,
+		                                             ICollection<IfDefinitionCase> ifCases)
+		{
+			ifCases.Add(new IfDefinitionCase(typeof(IfIssueConstraint), 0,
+			                                 new object[]
+			                                 {
+				                                 "$IssueCode = 'Foo'"
+			                                 }));
 		}
 
 		private static void AddIfInvolvedRowsCases(TestDataModel model,
