@@ -133,13 +133,13 @@ namespace ProSuite.DomainModel.Persistence.Core
 		public static void MapMetadataProperties<T>([NotNull] ClassMapping<T> mapping)
 			where T : EntityWithMetadata
 		{
+			// NOTE: Do not set an explicit SqlType here. The SQL type must be chosen by the
+			//       dialect: Oracle DATE carries a time component, PostgreSQL date and
+			//       SQL Server date do not. OracleDialect registers DbType.DateTime as DATE,
+			//       so Oracle keeps its DATE columns either way.
 			mapping.Property(d => d.CreatedDate, pm =>
 			{
-				pm.Column(c =>
-				{
-					c.Name("CREATED_DATE");
-					c.SqlType("DATE");
-				});
+				pm.Column("CREATED_DATE");
 
 				pm.Access(Accessor.Field);
 			});
@@ -152,11 +152,7 @@ namespace ProSuite.DomainModel.Persistence.Core
 
 			mapping.Property(d => d.LastChangedDate, pm =>
 			{
-				pm.Column(c =>
-				{
-					c.Name("LAST_CHANGED_DATE");
-					c.SqlType("DATE");
-				});
+				pm.Column("LAST_CHANGED_DATE");
 			});
 
 			mapping.Property(d => d.LastChangedByUser, pm =>
