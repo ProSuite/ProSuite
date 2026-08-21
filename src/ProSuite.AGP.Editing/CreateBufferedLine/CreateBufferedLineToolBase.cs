@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -59,6 +60,12 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		private readonly Latch _drawFeedbackLatch = new();
 
+		// Guards against out-of-order buffer preview refreshes. Every refresh takes a ticket
+		// and only draws while it still holds the newest one. Rapid sketch changes (holding
+		// CTRL+Z down) put several refreshes in flight at once, and one that reads an older
+		// sketch but finishes last would otherwise leave that older preview on the map.
+		private int _previewRefreshTicket;
+
 		// Per-part full buffer widths, aligned to the sketch parts. New parts inherit
 		// the current width; the CTRL measure line and the 1/2 keys change the width of
 		// the current part.
@@ -70,10 +77,40 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		private bool _measuring;
 		private MapPoint _measureStart;
 
+		// True once the second measure click has applied a new width, until CTRL is
+		// released. It is what brings the buffer-width circle back - at the new width -
+		// while the measure gesture itself keeps the circle hidden.
+		private bool _measuredWidthApplied;
+
 		// True while a sketch is being drawn (has at least one vertex). While a sketch is in
 		// progress, SHIFT-clicks are left to the sketch engine (e.g. SHIFT + double-click to
 		// finish the part) instead of being used for the shift-select-existing-line feature.
 		private bool _sketchInProgress;
+
+		// While CTRL is held the edit sketch is suspended: it is taken away from the sketch
+		// engine and drawn as a static overlay instead. Without this the sketch engine stays
+		// live during the measure, so the last segment keeps rubber banding to the cursor and
+		// the snap chip advertises a snap for a vertex that is never added - the measure
+		// points come from ClientToMapPoint and are not snapped. Suspending and restoring
+		// both go through SketchStates, which also draws the overlay.
+		// _suspendedSketch is only kept to test the measure line against the sketch parts.
+		private Geometry _suspendedSketch;
+		private bool _sketchSuspended;
+
+		// UseSnapping as it was before the measure suspended the sketch. Captured rather
+		// than assumed, so a subclass that sketches without snapping is not switched on by
+		// the restore.
+		private bool _snappingBeforeMeasure = true;
+
+		// Latched while the sketch is taken away and put back, so the sketch-modified and
+		// sketch-canceled callbacks caused by our own SetCurrentSketchAsync calls are not
+		// mistaken for the user editing (or canceling) the sketch.
+		private readonly Latch _sketchSuspensionLatch = new();
+
+		// True once CTRL turned out to be part of a chord (CTRL+Z, CTRL+Y, ...) rather than
+		// the bare measure modifier. It suppresses the suspension and the measure until CTRL
+		// is released, so application shortcuts keep working while a sketch is in progress.
+		private bool _ctrlUsedInChord;
 
 		private readonly List<IDisposable> _overlays = new();
 		private readonly List<IDisposable> _measureOverlays = new();
@@ -224,6 +261,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		{
 			return SketchGeometryType.Line;
 		}
+
 		protected override async Task<bool?> GetEditSketchHasZ()
 		{
 			Stopwatch watch = Stopwatch.StartNew();
@@ -323,6 +361,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			DisposeOverlays();
 			DisposeMeasureOverlays();
+			ResetSuspendedSketchState();
 			Rebuilder?.Deactivate();
 			return base.OnToolDeactivateCore(hasMapViewChanged);
 		}
@@ -335,6 +374,15 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		protected override async Task<bool> OnSketchModifiedAsyncCore()
 		{
+			// Suspending and restoring the sketch around a CTRL measure clears and re-sets
+			// the sketch: those are our own modifications, not the user's. Ignoring them
+			// keeps _sketchInProgress reflecting the real sketch (it gates the SHIFT
+			// gesture) and keeps the buffer preview frozen during the measure.
+			if (_sketchSuspensionLatch.IsLatched || _sketchSuspended)
+			{
+				return await base.OnSketchModifiedAsyncCore();
+			}
+
 			// During a multipatch replace target reselection the "sketch" is the selection
 			// rectangle, not a line to buffer: skip the buffer preview and the in-progress flag.
 			if (ReplaceActive && ! IsInSketchMode)
@@ -351,6 +399,23 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs args)
 		{
+			// CTRL is the measure modifier only while it is held alone. As soon as another
+			// key joins it the chord belongs to the application (CTRL+Z / CTRL+Y above all),
+			// so hand the sketch back at once and do not measure until CTRL is released and
+			// pressed again. This has to be done here: HandleKeyDownCoreAsync is only called
+			// for modifier keys and for HandledKeys, so it never sees a key such as Z.
+			if (KeyboardUtils.IsCtrlDown() && ! KeyboardUtils.IsModifierKey(args.Key))
+			{
+				_ctrlUsedInChord = true;
+
+				if (_sketchSuspended)
+				{
+					// Not awaited (this override is synchronous): the sketch type is put back
+					// before the first await, the sketch itself follows immediately after.
+					_ = ResumeSketchAsync();
+				}
+			}
+
 			// [1]/[2] change the buffer width only as bare keys. When a modifier is held
 			// (e.g. SHIFT+1 / SHIFT+2, the "Synchronize Map Centers [and Scales]" shortcuts)
 			// do not claim the key: returning here leaves args.Handled false, so it falls
@@ -364,20 +429,26 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			base.OnToolKeyDown(args);
 		}
 
-		protected override Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
+		protected override async Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
 		{
 			if (args.Key == Key.LeftCtrl || args.Key == Key.RightCtrl)
 			{
 				// Show the measure cursor (cross + Measure overlay) while CTRL is held.
 				SetToolCursor(MeasureCursors.GetCursor(GetSketchType(), shiftDown: false));
+
+				// NOTE: the sketch is deliberately NOT suspended here. CTRL on its own is
+				// still ambiguous at this point - it may well be the start of CTRL+Z. The
+				// suspension happens on the first CTRL + mouse move instead, which is both
+				// the first moment the rubber band would actually be visible and a gesture
+				// no keyboard shortcut performs. See OnToolMouseMoveCore.
 			}
 
 			if (args.Key == _keyIncreaseBufferWidth)
 			{
 				SetCurrentBufferWidth(_currentBufferWidth + _bufferWidthIncrement);
 				LogBufferWidth();
-				QueuedTask.Run(RefreshBufferPreviewAsync);
-				return Task.CompletedTask;
+				await QueuedTask.Run(RefreshBufferPreviewAsync);
+				return;
 			}
 
 			if (args.Key == _keyDecreaseBufferWidth)
@@ -389,7 +460,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				{
 					SetCurrentBufferWidth(decreased);
 					LogBufferWidth();
-					QueuedTask.Run(RefreshBufferPreviewAsync);
+					await QueuedTask.Run(RefreshBufferPreviewAsync);
 				}
 				else
 				{
@@ -399,23 +470,35 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 						_currentBufferWidth, _bufferWidthIncrement);
 				}
 
-				return Task.CompletedTask;
+				return;
 			}
 
-			return base.HandleKeyDownCoreAsync(args);
+			await base.HandleKeyDownCoreAsync(args);
 		}
 
-		protected override Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
+		protected override async Task HandleKeyUpCoreAsync(MapViewKeyEventArgs args)
 		{
 			if (args.Key == Key.LeftCtrl || args.Key == Key.RightCtrl)
 			{
-				// CTRL released: restore the sketch (or, if SHIFT is held, selection) cursor.
+				_ctrlUsedInChord = false;
+				_measuredWidthApplied = false;
+
+				// A measure started with one click and never completed ends here: drop the
+				// pending start point and its overlay, which would otherwise keep following
+				// the cursor across the restored sketch.
+				CancelPendingMeasure();
+
+				// Hand the sketch back to the sketch engine and redraw the buffer preview
+				// before reading the sketch type for the cursor below.
+				await ResumeSketchAsync();
+
+				// Restore the sketch (or, if SHIFT is held, selection) cursor.
 				bool shiftDown = KeyboardUtils.IsShiftDown();
 				SelectionCursors cursors = shiftDown ? FirstPhaseCursors : SketchCursors;
 				SetToolCursor(cursors?.GetCursor(GetSketchType(), shiftDown));
 			}
 
-			return base.HandleKeyUpCoreAsync(args);
+			await base.HandleKeyUpCoreAsync(args);
 		}
 
 		protected override void OnToolMouseDownCore(MapViewMouseButtonEventArgs args)
@@ -435,7 +518,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			bool shiftSelectExistingLine =
 				KeyboardUtils.IsShiftDown() && ! _sketchInProgress && ! ReplaceActive;
 
-			if (KeyboardUtils.IsCtrlDown() || shiftSelectExistingLine)
+			if ((KeyboardUtils.IsCtrlDown() && ! _ctrlUsedInChord) || shiftSelectExistingLine)
 			{
 				args.Handled = true;
 			}
@@ -462,8 +545,9 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				return _sketchInProgress ? Task.CompletedTask : HandleShiftSelectAsync(args);
 			}
 
-			if (! KeyboardUtils.IsCtrlDown())
+			if (! KeyboardUtils.IsCtrlDown() || _ctrlUsedInChord)
 			{
+				// CTRL is held as part of an application chord, not as the measure modifier.
 				return Task.CompletedTask;
 			}
 
@@ -475,7 +559,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				{
 					_measureStart = mapPoint;
 					_measuring = true;
-					_msg.Info("Measuring buffer width: click the opposite side of the feature.");
+					_msg.Info("Measuring buffer width.");
 				}
 				else
 				{
@@ -488,10 +572,47 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		{
 			try
 			{
+				// Keyboard.IsKeyDown is a WPF call and belongs on the UI thread, so the
+				// measure state is evaluated here and handed to the drawing below, which
+				// runs on the MCT.
+				bool ctrlDown = KeyboardUtils.IsCtrlDown();
+
+				if (! ctrlDown)
+				{
+					_ctrlUsedInChord = false;
+					_measuredWidthApplied = false;
+
+					if (_sketchSuspended)
+					{
+						// The CTRL key-up can be lost, e.g. by ALT+TAB while measuring. Hand
+						// the sketch back as soon as the mouse moves over the map again, so
+						// the user is never left with an overlay and no editable sketch.
+						CancelPendingMeasure();
+
+						await ResumeSketchAsync();
+
+						SetToolCursor(
+							SketchCursors?.GetCursor(GetSketchType(), shiftDown: false));
+						return;
+					}
+				}
+				else if (! _ctrlUsedInChord)
+				{
+					// First CTRL + mouse move: now the measure gesture is unambiguous (no
+					// keyboard shortcut moves the mouse), so take the sketch away from the
+					// sketch engine. A no-op once suspended.
+					await SuspendSketchAsync();
+				}
+
 				if (_drawFeedbackLatch.IsLatched)
 				{
 					return;
 				}
+
+				// The measure gesture runs from CTRL down until the second click applies a
+				// width. The circle is hidden for its duration, see DrawCursorFeedback.
+				bool measureGestureActive =
+					ctrlDown && ! _ctrlUsedInChord && ! _measuredWidthApplied;
 
 				_drawFeedbackLatch.Increment();
 
@@ -500,14 +621,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 					MapPoint mapPoint =
 						MapUtils.ClientToMapPoint(MapView.Active, args.ClientPoint);
 
-					if (_measuring && _measureStart != null)
-					{
-						DrawMeasureLine(_measureStart, mapPoint);
-					}
-					else if (_bufferedLineToolOptions.ShowBufferDistanceCircle)
-					{
-						DrawBufferDistanceCircle(mapPoint);
-					}
+					DrawCursorFeedback(mapPoint, measureGestureActive);
 				});
 			}
 			catch (Exception ex)
@@ -526,6 +640,13 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		// was canceled.
 		protected override Task<bool> OnSketchCanceledAsyncCore()
 		{
+			if (_sketchSuspensionLatch.IsLatched || _sketchSuspended)
+			{
+				// Clearing the sketch in order to suspend it can surface as a sketch cancel.
+				// That must not throw away the per-part buffer widths and the preview.
+				return base.OnSketchCanceledAsyncCore();
+			}
+
 			ClearFeedback();
 
 			return base.OnSketchCanceledAsyncCore();
@@ -533,6 +654,10 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		protected override async Task HandleEscapeAsync()
 		{
+			// Before ClearFeedback, which resets the suspension state: ESC while measuring
+			// must still put the sketch type back.
+			AbandonSuspendedSketch();
+
 			ClearFeedback();
 
 			// With RequiresSelection == false the base only resets the sketch on ESC and
@@ -1002,6 +1127,211 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			_msg.InfoFormat("Buffer width: {0:N2}", _currentBufferWidth);
 		}
 
+		// Suspends the edit sketch while CTRL is held for a measure. Three things happen:
+		// the sketch is taken away from the sketch engine (no more last segment rubber
+		// banding to the cursor), the sketch type is set to None so the engine stops
+		// tracking the cursor at all, and snapping is switched off. The measure points come
+		// from ClientToMapPoint and are never snapped, so any snap feedback shown during the
+		// measure would be a promise the tool does not keep. All three are undone by
+		// ResumeSketchAsync. The sketch is drawn as a static overlay (the same one the
+		// intermittent SHIFT selection of the other sketch tools uses) so the user keeps
+		// seeing the line that is being buffered.
+		private async Task SuspendSketchAsync()
+		{
+			if (_sketchSuspended)
+			{
+				return;
+			}
+
+			MapView mapView = MapView.Active;
+
+			if (mapView == null || ! IsInSketchMode)
+			{
+				return;
+			}
+
+			if (KeyboardUtils.IsShiftDown())
+			{
+				// SHIFT owns the sketch in this situation (intermittent selection): it has
+				// already suspended it and will restore it on its own.
+				return;
+			}
+
+			IntermediateSketchStates sketchStates = SketchStates;
+
+			if (sketchStates is not { IsInIntermittentSelectionPhase: false })
+			{
+				// Either the history is not recording yet, or the sketch is already
+				// suspended by the SHIFT intermittent selection: leave the sketch alone.
+				return;
+			}
+
+			_sketchSuspended = true;
+			_suspendedSketch = await GetCurrentSketchAsync();
+
+			_snappingBeforeMeasure = UseSnapping;
+			UseSnapping = false;
+
+			// Make sure the history ends at the sketch as it really is now. The states are
+			// recorded from SketchModifiedEvent, which fires on a background thread and can
+			// run before the Z of the newest vertex has been assigned - SketchStack.TryPush
+			// then drops that state, and the replay would hand back a sketch missing its
+			// last vertex. Reading the sketch here (on the UI thread, after the Z has come
+			// in) and pushing it closes that window. TryPush ignores it if it is already on
+			// top of the stack.
+			sketchStates.SketchStack.TryPush(_suspendedSketch);
+
+			// Draws the sketch as an overlay and suspends recording, so that clearing the
+			// sketch below is not recorded as the user emptying it.
+			await sketchStates.StartIntermittentSelection();
+
+			_sketchSuspensionLatch.Increment();
+			try
+			{
+				await SetCurrentSketchAsync(null);
+				SetSketchType(SketchGeometryType.None);
+			}
+			finally
+			{
+				_sketchSuspensionLatch.Decrement();
+			}
+		}
+
+		// Hands the sketch suspended by <see cref="SuspendSketchAsync"/> back to the sketch
+		// engine, removes its overlay and redraws the buffer preview (which was frozen for
+		// the duration of the measure and may now use a newly measured width).
+		private async Task ResumeSketchAsync()
+		{
+			if (! _sketchSuspended)
+			{
+				return;
+			}
+
+			// Cleared directly rather than through ResetSuspendedSketchState, which would
+			// throw the recorded history away - the history is what is replayed below.
+			_sketchSuspended = false;
+			_suspendedSketch = null;
+
+			bool sketchRestored = false;
+
+			_sketchSuspensionLatch.Increment();
+			try
+			{
+				UseSnapping = _snappingBeforeMeasure;
+
+				SetSketchType(GetEditSketchGeometryType());
+
+				EditingTemplate sketchTemplate = GetSketchTemplate();
+
+				if (sketchTemplate != null)
+				{
+					await StartSketchAsync(sketchTemplate);
+				}
+				else
+				{
+					await StartSketchAsync();
+				}
+
+				// Replays the recorded sketch states one by one instead of putting the
+				// sketch back in a single step, and clears the overlay. The replay is what
+				// keeps CTRL+Z removing one vertex at a time after a measure: a single-step
+				// restore collapses the entire sketch into one sketch operation, so the
+				// first undo would drop all of it. Same mechanism the SHIFT intermittent
+				// selection of the other sketch tools uses.
+				IntermediateSketchStates sketchStates = SketchStates;
+
+				if (sketchStates != null)
+				{
+					sketchRestored = await sketchStates.StopIntermittentSelectionAsync();
+				}
+
+				if (sketchRestored)
+				{
+					// The replay pushes a fresh series of sketch operations, which leaves
+					// Pro's redo stack pointing at states from before the measure: redoing
+					// one of those wipes the sketch instead of re-adding a vertex. SketchStack
+					// has no redo support (see its TODO), so the only safe thing is to drop
+					// the redo stack - CTRL+Y after a measure then does nothing rather than
+					// something destructive. Undo keeps working, one vertex at a time.
+					OperationManager operationManager =
+						MapView.Active?.Map?.OperationManager;
+
+					operationManager?.ClearRedoCategory("SketchOperations");
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Error($"Error restoring the sketch after measuring: {ex.Message}", ex);
+			}
+			finally
+			{
+				_sketchSuspensionLatch.Decrement();
+			}
+
+			if (sketchRestored)
+			{
+				// Refreshes the buffer preview and the in-progress flag for the sketch that
+				// is back in the sketch engine.
+				await OnSketchModifiedAsync();
+			}
+			else
+			{
+				await RefreshBufferPreviewAsync();
+			}
+		}
+
+		// Drops a suspended sketch without handing it back (ESC while measuring). Only the
+		// overlay and the sketch type are put back in order - the sketch itself is gone.
+		private void AbandonSuspendedSketch()
+		{
+			if (! _sketchSuspended)
+			{
+				return;
+			}
+
+			ResetSuspendedSketchState();
+
+			// The sketch type was set to None to suspend the sketch: put it back, or the
+			// sketch engine stays disabled for the rest of the tool session.
+			SetSketchType(GetEditSketchGeometryType());
+		}
+
+		// Aborts a measure that was started with a single CTRL-click but never completed,
+		// removing the measure line overlay along with the pending start point. Without this
+		// the overlay survives the restored sketch and keeps tracking the cursor.
+		private void CancelPendingMeasure()
+		{
+			if (! _measuring)
+			{
+				return;
+			}
+
+			_measuring = false;
+			_measureStart = null;
+
+			DisposeMeasureOverlays();
+
+			_msg.Info("Measuring canceled. The buffer width is unchanged.");
+		}
+
+		private void ResetSuspendedSketchState()
+		{
+			if (_sketchSuspended)
+			{
+				// Drops the overlay and the recorded history without replaying it. Only when
+				// actually suspended: otherwise this would throw away the history that the
+				// next measure (and the SHIFT intermittent selection) still needs.
+				SketchStates?.ResetSketchStates();
+
+				// The sketch is abandoned rather than restored (ESC, tool deactivation), so
+				// ResumeSketchAsync never runs: put snapping back here.
+				UseSnapping = _snappingBeforeMeasure;
+			}
+
+			_sketchSuspended = false;
+			_suspendedSketch = null;
+		}
+
 		private async Task StopMeasureAsync([NotNull] MapPoint measureEnd)
 		{
 			_measuring = false;
@@ -1025,11 +1355,20 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			}
 
 			// If a sketch part is crossed by the measure line, make it the current part.
-			Geometry sketch = await GetCurrentSketchAsync();
+			// The sketch is suspended for the duration of the measure, so the stashed
+			// geometry is the one to test against: the engine's current sketch is empty.
+			Geometry sketch = _sketchSuspended
+				                  ? _suspendedSketch
+				                  : await GetCurrentSketchAsync();
+
 			TrySelectPartByMeasureLine(start, measureEnd, sketch as Polyline);
 
 			SetCurrentBufferWidth(measuredWidth);
 			LogBufferWidth();
+
+			// Ends the measure gesture: the circle may be drawn again, now at the width just
+			// measured, even though CTRL is typically still held.
+			_measuredWidthApplied = true;
 
 			await RefreshBufferPreviewAsync();
 		}
@@ -1088,10 +1427,27 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				return;
 			}
 
+			if (_sketchSuspended)
+			{
+				// The sketch is stashed for a CTRL measure and the engine's sketch is empty,
+				// so there is nothing to build a preview from: leave the current preview on
+				// screen frozen. ResumeSketchAsync redraws it once CTRL is released.
+				return;
+			}
+
+			int ticket = Interlocked.Increment(ref _previewRefreshTicket);
+
 			Geometry sketch = await GetCurrentSketchAsync();
 
 			await QueuedTask.Run(() =>
 			{
+				if (ticket != Volatile.Read(ref _previewRefreshTicket))
+				{
+					// Superseded while this refresh was reading the sketch: the newer one
+					// owns the overlays now, so do not touch them.
+					return;
+				}
+
 				DisposeOverlays();
 
 				if (sketch is not Polyline sketchLine || sketchLine.IsEmpty)
@@ -1144,11 +1500,21 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			return offsetOnly == null || offsetOnly.IsEmpty ? boundary : offsetOnly;
 		}
 
-		private void DrawMeasureLine([NotNull] MapPoint start, [NotNull] MapPoint end)
+		// Draws the transient feedback that follows the cursor: the measure line while a
+		// measure is running, and the buffer-width circle around the cursor. Both are drawn
+		// in one pass because they share _measureOverlays - drawing them through separate
+		// entry points made each one dispose the other.
+		// While the measure gesture is running the circle is suppressed: it would be showing
+		// the width that is about to be replaced, next to a measure line that means
+		// something else. The second click applies the measured width and ends the gesture,
+		// so from then on the circle is back and shows the new width - CTRL may still be
+		// held at that point.
+		private void DrawCursorFeedback([NotNull] MapPoint cursor, bool measureGestureActive)
 		{
 			DisposeMeasureOverlays();
 
 			MapView mapView = MapView.Active;
+
 			if (mapView == null)
 			{
 				return;
@@ -1156,6 +1522,21 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			EnsureSymbolsInitialized();
 
+			if (_measuring && _measureStart != null)
+			{
+				AddMeasureLineOverlay(mapView, _measureStart, cursor);
+			}
+
+			if (! measureGestureActive && _bufferedLineToolOptions.ShowBufferDistanceCircle)
+			{
+				AddBufferDistanceCircleOverlay(mapView, cursor);
+			}
+		}
+
+		private void AddMeasureLineOverlay([NotNull] MapView mapView,
+		                                   [NotNull] MapPoint start,
+		                                   [NotNull] MapPoint end)
+		{
 			Polyline line = PolylineBuilderEx.CreatePolyline(
 				new[] { start, end }, end.SpatialReference);
 
@@ -1163,12 +1544,10 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				mapView.AddOverlay(line, _measureLineSymbol.MakeSymbolReference()));
 		}
 
-		private void DrawBufferDistanceCircle([NotNull] MapPoint center)
+		private void AddBufferDistanceCircleOverlay([NotNull] MapView mapView,
+		                                            [NotNull] MapPoint center)
 		{
-			DisposeMeasureOverlays();
-
-			MapView mapView = MapView.Active;
-			if (mapView == null || _currentBufferWidth <= 0)
+			if (_currentBufferWidth <= 0)
 			{
 				return;
 			}
@@ -1180,8 +1559,6 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			{
 				return;
 			}
-
-			EnsureSymbolsInitialized();
 
 			double radius = _currentBufferWidth * OffsetRatio;
 
@@ -1391,6 +1768,10 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			_measuring = false;
 			_measureStart = null;
 			_sketchInProgress = false;
+			_ctrlUsedInChord = false;
+			_measuredWidthApplied = false;
+
+			ResetSuspendedSketchState();
 		}
 
 		// Clears all sketch feedback: the buffer state and both the buffer preview and the
