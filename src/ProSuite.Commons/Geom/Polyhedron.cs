@@ -108,12 +108,30 @@ namespace ProSuite.Commons.Geom
 			// TODO: Explain the rationale for the vertical ring detection tolerance and how it
 			// differs from the XY tolerance, if at all. 
 
-			verticalRings = new List<Linestring>();
-
 			if (RingGroups.Count == 0)
 			{
+				verticalRings = new List<Linestring>();
 				return MultiPolycurve.CreateEmpty();
 			}
+
+			List<RingGroup> ringGroupsToUnionize =
+				PrepareFootprintInputRings(verticalRingDetectionTolerance, out verticalRings);
+
+			// The rings are made simple at the tolerance pair by pair, inside the union
+			// (RingOperator.CrackAndClusterPair), not by a pass over all rings beforehand.
+			// The vertical ring detection tolerance doubles as the merge tolerance, so that
+			// near-coincident parallel edge runs (shared walls separated only by a
+			// sub-resolution offset) are snapped into clean linear intersections.
+			return GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
+			                                       verticalRingDetectionTolerance);
+		}
+
+		[NotNull]
+		public List<RingGroup> PrepareFootprintInputRings(
+			double verticalRingDetectionTolerance,
+			[NotNull] out List<Linestring> verticalRings)
+		{
+			verticalRings = new List<Linestring>();
 
 			var ringGroupsToUnionize = new List<RingGroup>();
 
@@ -163,13 +181,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			// The rings are made simple at the tolerance pair by pair, inside the union
-			// (RingOperator.CrackAndClusterPair), not by a pass over all rings beforehand.
-			// The vertical ring detection tolerance doubles as the merge tolerance, so that
-			// near-coincident parallel edge runs (shared walls separated only by a
-			// sub-resolution offset) are snapped into clean linear intersections.
-			return GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
-			                                       verticalRingDetectionTolerance);
+			return ringGroupsToUnionize;
 		}
 
 		/// <summary>
@@ -242,8 +254,8 @@ namespace ProSuite.Commons.Geom
 			var simpleRings = new List<Linestring>();
 
 			if (! RingSimplifier.TrySimplifyRingXY(ring, verticalRingDetectionTolerance,
-			                                      RingSimplifyFlags.Input, simpleRings,
-			                                      verticalRings))
+			                                       RingSimplifyFlags.Input, simpleRings,
+			                                       verticalRings))
 			{
 				// Already simple.
 				simpleRings.Add(ring);

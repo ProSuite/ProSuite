@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Geom
 {
@@ -16,7 +17,7 @@ namespace ProSuite.Commons.Geom
 	/// <para>Two levels of API:</para>
 	/// <list type="bullet">
 	/// <item>The crack point primitives (<see cref="CollectSourceCrackPoint"/>,
-	/// <see cref="CollectTargetCrackPoint"/>, <see cref="ApplyCrackPoints(IList{Linestring},
+	/// <see cref="CollectTargetCrackPoint"/>, <see cref="ApplyCrackPoints(System.Collections.Generic.IList{ProSuite.Commons.Geom.Linestring},
 	/// Dictionary{int, List{CrackPoint}}, double?)"/>, <see cref="RemoveDegenerateSegments"/>),
 	/// which turn clustered <see cref="IntersectionPoint3D"/>s into per-part
 	/// <see cref="CrackPoint"/>s and apply them. Used by <see cref="RingOperator"/> during
@@ -32,6 +33,8 @@ namespace ProSuite.Commons.Geom
 	/// </remarks>
 	public static class SimplificationUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		#region Crack points
 
 		/// <summary>
@@ -279,6 +282,227 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return removed;
+		}
+
+		#endregion
+
+		#region Simplify ring relationships
+
+		/// <summary>
+		/// The number of ring merges after which the fixpoint of
+		/// <see cref="MergeRingsTouchingInPoint"/> gives up and keeps what it has. Every
+		/// merge removes one ring, so the bound is never reached by a real geometry.
+		/// </summary>
+		private const int _maxRingMerges = 16;
+
+		/// <summary>
+		/// Makes the relationships between the rings of <paramref name="rings"/> simple at
+		/// <paramref name="tolerance"/>: rings that come closer to each other than the
+		/// tolerance are snapped together, and a ring that ends up touching another one of
+		/// opposite orientation is re-assembled into a single ring with a boundary loop.
+		/// The rings themselves are made simple by <see cref="RingSimplifier"/>, which this
+		/// method finishes with; what it adds is the between-rings part that a per-ring
+		/// repair structurally cannot see.
+		/// </summary>
+		/// <param name="rings">The rings to simplify. Not modified.</param>
+		/// <param name="tolerance">The tolerance at which the ring relationships must become
+		/// simple.</param>
+		/// <returns>The simplified rings, or the unchanged input if there was nothing to
+		/// do.</returns>
+		[NotNull]
+		public static MultiLinestring SimplifyRingRelationships(
+			[NotNull] MultiLinestring rings,
+			double tolerance)
+		{
+			Assert.ArgumentNotNull(rings, nameof(rings));
+
+			if (rings.IsEmpty)
+			{
+				return rings;
+			}
+
+			// ArcObjects style tolerances:
+			// cluster at 2*sqrt(2)*tolerance, drop what is shorter than sqrt(2)*tolerance.
+			double clusterTolerance = 2 * Math.Sqrt(2) * tolerance;
+			double minimumSegmentLength = Math.Sqrt(2) * tolerance;
+
+			List<Linestring> parts = rings.GetLinestrings().Select(l => l.Clone()).ToList();
+
+			if (! HasCrossPartIntersection(parts, tolerance))
+			{
+				return rings;
+			}
+
+			// 1. Make the near-coincident runs exactly coincident.
+			bool changed = SnapAndCrack(parts, clusterTolerance);
+
+			changed |= RemoveDegenerateSegments(parts, minimumSegmentLength);
+
+			parts = parts.Where(p => ! p.IsEmpty).ToList();
+
+			// 2. Splice an interior ring that touches its containing ring in a point into that
+			//    containing ring. The union walk explodes such boundary loops into separate rings
+			//    because the navigation needs simple rings and nothing puts them back.
+			changed |= MergeRingsTouchingInPoint(parts, tolerance);
+
+			if (! changed)
+			{
+				return rings;
+			}
+
+			var result = new MultiPolycurve(parts);
+
+			// 3. Now that the two flanks of a pinched-shut channel are in the SAME ring, the
+			//    linear self-intersection deletion can cancel them out - which opens the
+			//    channel and turns the former hole into a bay, preserving the area.
+			RingSimplifier.SimplifyRingsXY(result, tolerance, RingSimplifyFlags.Input);
+
+			return result;
+		}
+
+		/// <summary>
+		/// Whether any two different rings of <paramref name="parts"/> come closer to each
+		/// other than <paramref name="tolerance"/>. This is the precondition of everything
+		/// <see cref="SimplifyRingRelationships"/> repairs: a ring that is only close to itself is
+		/// handled by <see cref="RingSimplifier"/> during the union already, and a result
+		/// whose rings are far apart is simple at every tolerance up to their distance.
+		/// </summary>
+		private static bool HasCrossPartIntersection([NotNull] IList<Linestring> parts,
+		                                             double tolerance)
+		{
+			if (parts.Count < 2)
+			{
+				return false;
+			}
+
+			var segments = new MultiPolycurve(parts);
+
+			return GeomTopoOpUtils
+			       .GetSelfIntersections(segments, tolerance)
+			       .Any(ip => ip.SourcePartIndex != ip.TargetPartIndex);
+		}
+
+		/// <summary>
+		/// Merges every pair of rings that touches in a point and has opposite orientation
+		/// into a single ring with a boundary loop. Opposite orientation is what identifies
+		/// the container/contained pairs - a hole touching its exterior ring, an island
+		/// touching the hole it lies in - which are the pairs ArcObjects resolves by deleting
+		/// one of the two rings. Two exterior rings touching in a point are left alone:
+		/// ArcObjects keeps those as two parts, and so do we.
+		/// </summary>
+		/// <param name="parts">The rings. Modified in place.</param>
+		/// <param name="tolerance">The tolerance at which the touch is detected.</param>
+		/// <returns>Whether any pair was merged.</returns>
+		private static bool MergeRingsTouchingInPoint([NotNull] IList<Linestring> parts,
+		                                              double tolerance)
+		{
+			var merged = false;
+
+			for (var iteration = 0; iteration < _maxRingMerges; iteration++)
+			{
+				if (parts.Count < 2)
+				{
+					return merged;
+				}
+
+				var segments = new MultiPolycurve(parts);
+
+				List<IntersectionPoint3D> candidates =
+					GeomTopoOpUtils.GetSelfIntersections(segments, tolerance)
+					               .Where(ip => IsMergeableTouch(ip, parts))
+					               .ToList();
+
+				// A pure point-touch is the cleaner splice point, so prefer it over the
+				// start of a linear run.
+				IntersectionPoint3D touchPoint =
+					candidates.FirstOrDefault(ip => ip.Type ==
+					                                IntersectionPointType.TouchingInPoint) ??
+					candidates.FirstOrDefault();
+
+				if (touchPoint == null)
+				{
+					return merged;
+				}
+
+				Linestring containing = parts[touchPoint.SourcePartIndex];
+				Linestring contained = parts[touchPoint.TargetPartIndex];
+
+				Linestring withBoundaryLoop =
+					CreateWithBoundaryLoop(containing, contained, touchPoint, tolerance);
+
+				if (withBoundaryLoop == null || ! withBoundaryLoop.IsClosed)
+				{
+					// Splicing failed - keep the two rings rather than a broken one.
+					_msg.Debug($"Unable to merge the rings touching at {touchPoint.Point}.");
+
+					return merged;
+				}
+
+				parts[touchPoint.SourcePartIndex] = withBoundaryLoop;
+				parts.RemoveAt(touchPoint.TargetPartIndex);
+
+				merged = true;
+			}
+
+			return merged;
+		}
+
+		private static bool IsMergeableTouch([NotNull] IntersectionPoint3D intersection,
+		                                     [NotNull] IList<Linestring> parts)
+		{
+			// TouchingInPoint is the pinched-shut channel as the fine-tolerance union sees
+			// it; LinearIntersectionStart is the same thing after the snap above made the
+			// two flanks of the channel exactly coincident. Splicing at either point puts
+			// the flanks into one ring, where step 3 of SimplifyRingRelationships can cancel them.
+			if (intersection.Type != IntersectionPointType.TouchingInPoint &&
+			    intersection.Type != IntersectionPointType.LinearIntersectionStart)
+			{
+				return false;
+			}
+
+			if (intersection.SourcePartIndex == intersection.TargetPartIndex)
+			{
+				// A ring touching itself is a boundary loop already.
+				return false;
+			}
+
+			bool? sourceOrientation = parts[intersection.SourcePartIndex].ClockwiseOriented;
+			bool? targetOrientation = parts[intersection.TargetPartIndex].ClockwiseOriented;
+
+			return sourceOrientation != null && targetOrientation != null &&
+			       sourceOrientation != targetOrientation;
+		}
+
+		/// <summary>
+		/// Splices <paramref name="touchingRing"/> into <paramref name="ring"/> at the point
+		/// where the two touch, resulting in a single ring with a boundary loop. The
+		/// orientation of both rings is kept, hence the signed area of the result is the sum
+		/// of the two input areas.
+		/// </summary>
+		[CanBeNull]
+		private static Linestring CreateWithBoundaryLoop(
+			[NotNull] Linestring ring,
+			[NotNull] Linestring touchingRing,
+			[NotNull] IntersectionPoint3D touchPoint,
+			double tolerance)
+		{
+			int sourceSegmentIdx = touchPoint.GetLocalSourceIntersectionSegmentIdx(
+				ring, out double sourceRatio);
+
+			int targetSegmentIdx = touchPoint.GetLocalTargetIntersectionSegmentIdx(
+				touchingRing, out double targetRatio);
+
+			var subcurves = new List<Linestring>(3)
+			                {
+				                ring.GetSubcurve(0, 0, sourceSegmentIdx, sourceRatio,
+				                                 false, false),
+				                touchingRing.GetSubcurve(targetSegmentIdx, targetRatio,
+				                                         false, true),
+				                ring.GetSubcurve(sourceSegmentIdx, sourceRatio,
+				                                 ring.SegmentCount - 1, 1, false, false)
+			                };
+
+			return GeomTopoOpUtils.MergeConnectedLinestrings(subcurves, null, tolerance);
 		}
 
 		#endregion

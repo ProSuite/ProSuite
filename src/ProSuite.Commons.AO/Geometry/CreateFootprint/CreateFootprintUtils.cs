@@ -401,6 +401,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			                                          verticalRingDetectionTolerance,
 			                                          out verticalOrSmallRings);
 
+			// Still required, SimplifyRingRelationships is not enough (but it is cheap):
 			GeometryUtils.Simplify(footprintPoly);
 
 			return footprintPoly;
@@ -464,6 +465,21 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 				//footprint = polyhedron.GetXYFootprint(xyTolerance, out verticalRings);
 
 				throw;
+			}
+
+			// The union above ran at xyTolerance, which can be a lot finer than the tolerance
+			// of the polygon the footprint ends up in (with a null tolerance it is half the
+			// resolution, i.e. 20 times finer than the typical XY tolerance). A result that
+			// is simple at the fine tolerance need not be simple at the coarse one, and
+			// GeometryUtils.Simplify below repairs that destructively - it deletes whole
+			// interior rings instead of keeping their area out of the footprint. Reduce the
+			// result while it is still ours.
+			double outputTolerance = GeometryUtils.GetXyTolerance(multiPatch);
+
+			if (outputTolerance > xyTolerance)
+			{
+				footprint =
+					SimplificationUtils.SimplifyRingRelationships(footprint, outputTolerance);
 			}
 
 			IPolygon footprintPoly =
