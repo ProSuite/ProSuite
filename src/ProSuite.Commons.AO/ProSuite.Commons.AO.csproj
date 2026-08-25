@@ -18,6 +18,8 @@
 
     <NoWarn>1591</NoWarn>
 
+    <NetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</NetFrameworkVersion>
+
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
@@ -110,7 +112,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="C5" Version="3.0.0" />
+    <!-- C5 3.0.0 is not strong-named and this assembly is; .NET Framework refuses to bind a
+         strong-named assembly to a weak-named dependency (HRESULT 0x80131044). 2.5.3 is the
+         last strong-named release. The C5 API used here (IntervalHeap, IPriorityQueue) is
+         the same in both, so no conditional compilation is needed. -->
+    <PackageReference Include="C5" Version="3.0.0" Condition="'$(NetFrameworkVersion)' != 'net48'" />
+    <PackageReference Include="C5" Version="2.5.3" Condition="'$(NetFrameworkVersion)' == 'net48'" />
   </ItemGroup>
 
   <!-- System.Text.Json (used by FeatureServiceSchemaReader to parse ArcGIS REST JSON) is
