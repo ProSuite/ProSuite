@@ -28,6 +28,8 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 
 	public void UpdateState(IWorkItem item) { }
 
+	public void BeginUpdateStates() { }
+
 	public void Commit(IList<ISourceClass> sourceClasses, Envelope extent)
 	{
 		int index = -1;

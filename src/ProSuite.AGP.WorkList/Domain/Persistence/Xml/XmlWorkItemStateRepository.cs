@@ -67,8 +67,7 @@ public class XmlWorkItemStateRepository
 		// has an invalid TableId.
 		HashSet<long> tableIds = new HashSet<long>();
 
-		foreach (XmlTableReference table in xmlWorkspaces.SelectMany(
-			         workspace => workspace.Tables))
+		foreach (XmlTableReference table in xmlWorkspaces.SelectMany(workspace => workspace.Tables))
 		{
 			tableIds.Add(table.Id);
 		}
@@ -128,8 +127,8 @@ public class XmlWorkItemStateRepository
 		// Persist the unique and stable table ID instead of the standard TableId.
 		var xmlGdbRowIdentity = new XmlGdbRowIdentity(item.GdbRowProxy, item.UniqueTableId);
 
-		var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
-		                                 xmlGdbRowIdentity);
+		var state = new XmlWorkItemState(item.OID, item.Visited, filtered: false,
+		                                 WorkItemStatus.Unknown, xmlGdbRowIdentity);
 
 		if (item.Extent != null)
 		{
@@ -146,9 +145,25 @@ public class XmlWorkItemStateRepository
 
 	protected override void RefreshCore(IWorkItem item, XmlWorkItemState state) { }
 
+	public override void BeginUpdateStates()
+	{
+		if (StatesByRow == null)
+		{
+			return;
+		}
+
+		foreach (var state in StatesByRow.Values)
+		{
+			state.Filtered = true;
+		}
+	}
+
 	protected override void UpdateStateCore(XmlWorkItemState state, IWorkItem item)
 	{
 		state.Status = item.Status;
+
+		// UpdateStateCore is only called for items that were not filtered.
+		state.Filtered = false;
 	}
 
 	public override void Rename(string name)

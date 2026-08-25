@@ -10,13 +10,14 @@ public class XmlWorkItemState : IWorkItemState
 	public XmlWorkItemState() { }
 
 	[UsedImplicitly]
-	public XmlWorkItemState(long oid, bool visited, WorkItemStatus status,
+	public XmlWorkItemState(long oid, bool visited, bool filtered, WorkItemStatus status,
 	                        XmlGdbRowIdentity row)
 	{
 		OID = oid;
 		Visited = visited;
 		Status = status;
 		Row = row;
+		Filtered = filtered;
 	}
 
 	[XmlAttribute("id")]
@@ -27,6 +28,9 @@ public class XmlWorkItemState : IWorkItemState
 
 	[XmlAttribute("status")]
 	public WorkItemStatus Status { get; set; }
+
+	[XmlAttribute("filtered")]
+	public bool Filtered { get; set; }
 
 	[XmlElement("Row")]
 	public XmlGdbRowIdentity Row { get; set; }

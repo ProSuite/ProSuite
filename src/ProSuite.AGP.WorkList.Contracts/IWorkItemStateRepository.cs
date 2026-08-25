@@ -18,6 +18,8 @@ public interface IWorkItemStateRepository
 
 	void Refresh(IWorkItem item);
 
+	void BeginUpdateStates();
+
 	void UpdateState(IWorkItem item);
 
 	/// <summary>
