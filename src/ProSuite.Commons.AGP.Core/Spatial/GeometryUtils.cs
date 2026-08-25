@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
 namespace ProSuite.Commons.AGP.Core.Spatial;
@@ -3382,5 +3383,18 @@ public static class GeometryUtils
 	}
 
 	#endregion ToString
+
+	public static void ToXmlFile([NotNull] Geometry geometry,
+	                             [NotNull] string filePath)
+	{
+		Assert.ArgumentNotNull(geometry, nameof(geometry));
+		Assert.ArgumentNotNullOrEmpty(filePath, nameof(filePath));
+
+		var xmlString = geometry.ToXml();
+
+		var doc = new XmlDocument();
+		doc.LoadXml(xmlString);
+		doc.Save(filePath);
+	}
 
 }
