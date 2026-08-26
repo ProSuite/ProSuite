@@ -43,7 +43,7 @@ namespace ProSuite.DomainModel.AO.QA
 			return GetDatasets(model)
 			       .Where(dataset => ! dataset.Deleted &&
 			                         IsSelectable(dataset) &&
-			                         IsApplicable(dataset.GeometryType, validTypes))
+			                         IsApplicable(dataset, validTypes))
 			       .OrderBy(d => d.Name);
 		}
 
@@ -118,6 +118,22 @@ namespace ProSuite.DomainModel.AO.QA
 
 			return _transformerConfigRepository
 				.GetInstanceConfigurations<TransformerConfiguration>();
+		}
+
+		private static bool IsApplicable([NotNull] Dataset dataset,
+		                                 TestParameterType applicableParameterTypes)
+		{
+			// Some datasets are valid for a parameter type that their geometry type does not
+			// imply: a raster catalog is physically a polygon feature class, but it is a valid
+			// raster mosaic source. Such datasets are identified by the same marker interface
+			// that TestParameterTypeUtils.IsValidDataset() uses.
+			if ((applicableParameterTypes & TestParameterType.RasterMosaicDataset) != 0 &&
+			    dataset is IRasterMosaicDataset)
+			{
+				return true;
+			}
+
+			return IsApplicable(dataset.GeometryType, applicableParameterTypes);
 		}
 
 		private static bool IsApplicable([CanBeNull] GeometryType geometryType,
