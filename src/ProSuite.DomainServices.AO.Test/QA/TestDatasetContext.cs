@@ -1,13 +1,18 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 
 namespace ProSuite.DomainServices.AO.Test.QA
 {
@@ -70,7 +75,20 @@ namespace ProSuite.DomainServices.AO.Test.QA
 
 		public virtual MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
-			throw new NotImplementedException();
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			if (dataset is IRasterCatalogDataset catalogDataset)
+			{
+				// A raster catalog (such as an elevation raster dataset): the tiles and their file
+				// paths are provided by a polygon feature class.
+				return ModelElementUtils.CreateRasterCatalogMosaic(
+					catalogDataset, OpenFeatureClass);
+			}
+
+			IMosaicDataset mosaic =
+				MosaicUtils.OpenMosaicDataset((IWorkspace) _workspace, dataset.Name);
+
+			return new MosaicRasterReference(new SimpleRasterMosaic(mosaic));
 		}
 
 		public TopologyReference OpenTopology(ITopologyDataset dataset)

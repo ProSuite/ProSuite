@@ -1,8 +1,3 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +8,11 @@ using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -139,6 +139,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 		public override MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			if (dataset is IRasterCatalogDataset catalogDataset)
+			{
+				// A raster catalog (such as an elevation raster dataset): the tiles and their file
+				// paths are provided by a polygon feature class.
+				return ModelElementUtils.CreateRasterCatalogMosaic(
+					catalogDataset, OpenFeatureClass);
+			}
 
 			IMosaicDataset mosaic = MosaicUtils.OpenMosaicDataset(Workspace, dataset.Name);
 

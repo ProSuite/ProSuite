@@ -99,6 +99,16 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public override MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			if (dataset is IRasterCatalogDataset catalogDataset)
+			{
+				// A raster catalog (such as an elevation raster dataset): the tiles and their file
+				// paths are provided by a polygon feature class.
+				return ModelElementUtils.CreateRasterCatalogMosaic(
+					catalogDataset, OpenFeatureClass);
+			}
+
 			IMosaicDataset mosaic = _workspaceProxy.OpenMosaicDataset(dataset.Name);
 
 			var simpleRasterMosaic = new SimpleRasterMosaic(mosaic);
