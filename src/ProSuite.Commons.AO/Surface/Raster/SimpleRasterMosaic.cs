@@ -146,7 +146,9 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		public IEnumerable<ISimpleRaster> GetSimpleRasters(IEnvelope envelope)
 		{
-			return GetCatalogFeatures(CatalogClass, envelope).Select(CreateSimpleRaster);
+			return GetCatalogFeatures(CatalogClass, envelope)
+			       .Select(CreateSimpleRaster)
+			       .Where(simpleRaster => simpleRaster != null);
 		}
 
 		public ISimpleRaster GetSimpleRaster(double atX, double atY)
@@ -154,18 +156,23 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			IPoint searchGeometry = GeometryFactory.CreatePoint(
 				atX, atY, DatasetUtils.GetSpatialReference(CatalogClass));
 
-			IFeature catalogFeature = GetCatalogFeature(CatalogClass, searchGeometry);
+			ISimpleRaster result = null;
 
-			Marshal.ReleaseComObject(searchGeometry);
-
-			if (catalogFeature == null)
+			foreach (IFeature catalogFeature in GetCatalogFeatures(CatalogClass, searchGeometry))
 			{
-				return null;
+				result = CreateSimpleRaster(catalogFeature);
+
+				Marshal.ReleaseComObject(catalogFeature);
+
+				// A catalog tile without a file is skipped: continue with the next tile
+				// covering the location, if any.
+				if (result != null)
+				{
+					break;
+				}
 			}
 
-			ISimpleRaster result = CreateSimpleRaster(catalogFeature);
-
-			Marshal.ReleaseComObject(catalogFeature);
+			Marshal.ReleaseComObject(searchGeometry);
 
 			return result;
 		}
@@ -326,6 +333,12 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		#endregion
 
+		/// <summary>
+		/// Creates the raster referenced by the specified catalog feature, or null if the feature
+		/// references no file. A catalog can legitimately contain tiles without a file, such as an
+		/// archive tile index that lists every tile whether a file has been delivered or not.
+		/// </summary>
+		[CanBeNull]
 		private ISimpleRaster CreateSimpleRaster(IFeature catalogFeature)
 		{
 			string path;
@@ -356,17 +369,16 @@ namespace ProSuite.Commons.AO.Surface.Raster
 				path = GetPathViaCatalogItemDataset(catalogFeature);
 			}
 
+			if (string.IsNullOrWhiteSpace(path))
+			{
+				_msg.VerboseDebug(
+					() => $"Catalog feature {GdbObjectUtils.GetObjectId(catalogFeature)} of " +
+					      $"{Name} references no raster file. The tile is skipped.");
+
+				return null;
+			}
+
 			return new SimpleAoRaster(path);
-		}
-
-		[CanBeNull]
-		private IFeature GetCatalogFeature([NotNull] IFeatureClass rasterCatalog,
-		                                   [NotNull] IGeometry searchGeometry)
-		{
-			IEnumerable<IFeature> orderedCatalogFeatures =
-				GetCatalogFeatures(rasterCatalog, searchGeometry);
-
-			return orderedCatalogFeatures.FirstOrDefault();
 		}
 
 		private IEnumerable<IFeature> GetCatalogFeatures([NotNull] IFeatureClass rasterCatalog,
