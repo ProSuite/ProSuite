@@ -30,6 +30,29 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 	private string _lastCommandToolTip;
 	private const string _mnemonicCharacter = "&";
 
+	/// <summary>
+	/// The image source the current <see cref="ToolStripItem.Image"/> was created from.
+	/// Rasterizing is expensive (and, in some environments, unreliable), hence it is done
+	/// only when the wrapped command actually provides a different image source.
+	/// </summary>
+	private ImageSource _currentImageSource;
+
+	/// <summary>
+	/// The bitmap assigned to <see cref="ToolStripItem.Image"/>. It is owned (and must be
+	/// disposed) by this control: the tool strip item does not dispose its image.
+	/// </summary>
+	private Bitmap _currentImage;
+
+	private int _rasterizeFailureCount;
+
+	/// <summary>
+	/// Maximum number of attempts to create the image for a given image source. Creating
+	/// the image can fail for reasons outside our control (no render target available in
+	/// some remote desktop / virtualized graphics environments); retrying on every single
+	/// appearance update would just burn resources and spam the log.
+	/// </summary>
+	private const int _maxRasterizeFailures = 3;
+
 	#region Constructors
 
 	/// <summary>
@@ -167,27 +190,7 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			if (Image == null || force)
 			{
 				// update Image
-				Bitmap bitmap = null;
-				if (PlugInWrapper.SmallImage is BitmapImage bitmapImage)
-				{
-					bitmap = BitmapUtils.CreateBitmap(bitmapImage);
-				}
-
-				if (PlugInWrapper.SmallImage is DrawingImage drawingImage)
-				{
-					bitmap = BitmapUtils.CreateBitmap(drawingImage);
-				}
-
-				if (bitmap != null)
-				{
-					Image = bitmap;
-
-					Color firstPixelValue = bitmap.GetPixel(0, 0);
-					if (firstPixelValue.A != 0)
-					{
-						ImageTransparentColor = bitmap.GetPixel(0, 0);
-					}
-				}
+				UpdateImage(PlugInWrapper.SmallImage as ImageSource);
 			}
 		}
 		catch (Exception e)
@@ -195,6 +198,100 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			_msg.Warn(
 				$"Error updating appearance of wrapper control: {ExceptionUtils.FormatMessage(e)}",
 				e);
+		}
+	}
+
+	/// <summary>
+	/// Creates the button image from the given image source, unless the current image was
+	/// already created from it. A failure to create the image is not propagated: the button
+	/// keeps whatever image it has (possibly none) and remains fully functional.
+	/// </summary>
+	private void UpdateImage([CanBeNull] ImageSource imageSource)
+	{
+		if (imageSource == null)
+		{
+			// No image (yet) - keep the current one, if any
+			return;
+		}
+
+		if (ReferenceEquals(imageSource, _currentImageSource) && Image != null)
+		{
+			// Unchanged: no need to rasterize again
+			return;
+		}
+
+		if (! ReferenceEquals(imageSource, _currentImageSource))
+		{
+			_rasterizeFailureCount = 0;
+		}
+
+		if (_rasterizeFailureCount >= _maxRasterizeFailures)
+		{
+			return;
+		}
+
+		Bitmap bitmap;
+		try
+		{
+			bitmap = CreateBitmap(imageSource);
+		}
+		catch (Exception e)
+		{
+			_rasterizeFailureCount++;
+
+			string message =
+				$"Error creating the image of {_damlId ?? PlugInWrapper.Caption}: " +
+				$"{ExceptionUtils.FormatMessage(e)}. The button is shown without image.";
+
+			if (_rasterizeFailureCount == 1)
+			{
+				_msg.Warn(message, e);
+			}
+			else
+			{
+				_msg.Debug(message, e);
+			}
+
+			return;
+		}
+
+		if (bitmap == null)
+		{
+			return;
+		}
+
+		Bitmap previousImage = _currentImage;
+
+		Image = bitmap;
+
+		_currentImage = bitmap;
+		_currentImageSource = imageSource;
+		_rasterizeFailureCount = 0;
+
+		// The previous bitmap is no longer referenced by this item: dispose it right away
+		// instead of leaving it to the finalizer (each one holds a GDI bitmap handle).
+		previousImage?.Dispose();
+
+		Color firstPixelValue = bitmap.GetPixel(0, 0);
+		if (firstPixelValue.A != 0)
+		{
+			ImageTransparentColor = firstPixelValue;
+		}
+	}
+
+	[CanBeNull]
+	private static Bitmap CreateBitmap([NotNull] ImageSource imageSource)
+	{
+		switch (imageSource)
+		{
+			case BitmapImage bitmapImage:
+				return BitmapUtils.CreateBitmap(bitmapImage);
+
+			case DrawingImage drawingImage:
+				return BitmapUtils.CreateBitmap(drawingImage);
+
+			default:
+				return null;
 		}
 	}
 
@@ -231,6 +328,12 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			}
 
 			UnwireEvents();
+
+			Image = null;
+
+			_currentImage?.Dispose();
+			_currentImage = null;
+			_currentImageSource = null;
 
 			if (PlugInWrapper is IDisposable disposablePlugin)
 			{

@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -32,9 +33,24 @@ namespace ProSuite.Commons.UI.Drawing
 			}
 		}
 
-		public static Bitmap CreateBitmap(DrawingImage drawingImage)
+		/// <summary>
+		/// Rasterizes the given drawing image into a bitmap.
+		/// </summary>
+		/// <returns>The bitmap, or null if the drawing has no usable extent.</returns>
+		/// <remarks>Rasterization goes through the WPF rendering subsystem (MIL), which can
+		/// fail with a COMException (such as MILERR_WIN32ERROR) if no render target can be
+		/// created, for example in remote desktop / virtualized graphics environments or
+		/// when graphics resources are exhausted.
+		/// </remarks>
+		[CanBeNull]
+		public static Bitmap CreateBitmap([NotNull] DrawingImage drawingImage)
 		{
 			BitmapSource bitmapSource = Rasterize(drawingImage.Drawing);
+
+			if (bitmapSource == null)
+			{
+				return null;
+			}
 
 			Bitmap bitmap = new Bitmap(bitmapSource.PixelWidth, bitmapSource.PixelHeight,
 			                           PixelFormat.Format32bppPArgb);
@@ -53,21 +69,53 @@ namespace ProSuite.Commons.UI.Drawing
 			return bitmap;
 		}
 
-		private static RenderTargetBitmap Rasterize([NotNull] System.Windows.Media.Drawing drawing)
+		[CanBeNull]
+		private static RenderTargetBitmap Rasterize(
+			[CanBeNull] System.Windows.Media.Drawing drawing)
 		{
+			if (drawing == null)
+			{
+				return null;
+			}
+
+			// The drawing is rendered in its own coordinates, i.e. the render target
+			// extends from the origin to the lower right corner of the drawing.
+			Rect bounds = drawing.Bounds;
+
+			if (bounds.IsEmpty || ! IsFinite(bounds.Right) || ! IsFinite(bounds.Bottom))
+			{
+				return null;
+			}
+
+			var width = (int) Math.Ceiling(bounds.Right);
+			var height = (int) Math.Ceiling(bounds.Bottom);
+
+			if (width <= 0 || height <= 0)
+			{
+				return null;
+			}
+
 			DrawingVisual visual = new DrawingVisual();
 			using (DrawingContext dc = visual.RenderOpen())
 			{
 				dc.DrawDrawing(drawing);
-				dc.Close();
 			}
 
 			RenderTargetBitmap target = new RenderTargetBitmap(
-				(int) drawing.Bounds.Right, (int) drawing.Bounds.Bottom, 96.0, 96.0,
-				PixelFormats.Pbgra32);
+				width, height, 96.0, 96.0, PixelFormats.Pbgra32);
+
 			target.Render(visual);
 
+			// Freeze: the pixels are read (and the bitmap released) right away, there is
+			// no point in keeping it attached to the rendering thread's media context.
+			target.Freeze();
+
 			return target;
+		}
+
+		private static bool IsFinite(double value)
+		{
+			return ! double.IsNaN(value) && ! double.IsInfinity(value);
 		}
 	}
 }
