@@ -573,13 +573,13 @@ namespace ProSuite.Commons.Geom
 			}
 
 			double clusterTolerance = options.GetClusterTolerance(tolerance);
-			double crackTolerance = options.GetCrackTolerance(tolerance);
+			double minimumSegmentLength = options.GetMinimumSegmentLength(tolerance);
 
-			if (clusterTolerance <= crackTolerance)
+			if (clusterTolerance <= minimumSegmentLength)
 			{
 				throw new ArgumentException(
-					"The cluster tolerance must be larger than the crack tolerance, " +
-					"otherwise the vertices inserted by cracking are never absorbed.",
+					"The cluster tolerance must be larger than the minimum segment length, " +
+					"otherwise the vertices inserted by cracking are dropped again right away.",
 					nameof(options));
 			}
 
@@ -608,7 +608,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			if (! TryReachFixpoint(parts, tags, crackTolerance, clusterTolerance,
+			if (! TryReachFixpoint(parts, tags, minimumSegmentLength, clusterTolerance,
 			                       options.MaxIterations, out iterations))
 			{
 				// A half-snapped geometry is worse than the original.
@@ -623,16 +623,15 @@ namespace ProSuite.Commons.Geom
 
 		private static bool TryReachFixpoint([NotNull] List<Linestring> parts,
 		                                     [NotNull] List<PartTag> tags,
-		                                     double crackTolerance,
+		                                     double minimumSegmentLength,
 		                                     double clusterTolerance,
 		                                     int maxIterations,
 		                                     out int iterations)
 		{
-			// The crack tolerance: a segment shorter than it cannot carry a crack point
-			// anyway, so anything shorter is a leftover of the snap, not a segment the input
-			// meant to have. For the Aggressive strategy this is exactly half the
-			// cluster tolerance (2*sqrt(2)*tol / 2 == sqrt(2)*tol).
-			double minimumSegmentLength = crackTolerance;
+			// A segment shorter than the minimum length cannot carry a crack point anyway, so
+			// anything shorter is a leftover of the snap, not a segment the input meant to
+			// have. For the Aggressive strategy this is exactly half the cluster tolerance
+			// (2*sqrt(2)*tol / 2 == sqrt(2)*tol).
 
 			for (iterations = 0; iterations < maxIterations; iterations++)
 			{
@@ -695,13 +694,13 @@ namespace ProSuite.Commons.Geom
 		{
 			ISegmentList segments = new MultiPolycurve(parts);
 
-			// Detection runs at the CLUSTER tolerance, not at the crack tolerance: a vertex
-			// pair is only seen here if the two segments carrying it come within the
-			// detection radius, so detecting at the smaller crack tolerance under-clusters
-			// relative to what the cluster tolerance promises. Measured over the 41'231
+			// Detection runs at the CLUSTER tolerance, not at the minimum segment length: a
+			// vertex pair is only seen here if the two segments carrying it come within the
+			// detection radius, so detecting at the smaller distance under-clusters relative
+			// to what the cluster tolerance promises. Measured over the 41'231
 			// TLM_GEBAEUDEKOERPER of the Lugano extent: 110 footprint failures / 30 areas off
 			// by more than 1 m2 when detecting at the cluster tolerance, against 141 / 37
-			// when detecting at the crack tolerance (and 154 / 21 for the previous
+			// when detecting at the minimum segment length (and 154 / 21 for the previous
 			// vertex-clustering implementation, 330 / 75 without any cracking).
 			// includeLinearIntersectionIntermediatePoints: the vertices INSIDE a linear
 			// intersection are exactly the T-junctions where the other side has no vertex

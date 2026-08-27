@@ -5071,9 +5071,26 @@ namespace ProSuite.Commons.Test.Geom
 			// With the expanded clustering, the small segments are simplified away at 0.01
 			const double tolerance = 0.003;
 
-			MultiLinestring union = GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+			// Removing the island needs the WIDE snap radius: at 2*sqrt(2)*tolerance = 8.5 mm
+			// the two flanks of the island are pulled together, at the default Balanced
+			// 4.2 mm they are not. See CrackAndClusterToleranceStrategy for why Balanced is
+			// the default; this is one of the two known cases that pays for it.
+			var options = new CrackAndClusterOptions
+			              {
+				              ToleranceStrategy = CrackAndClusterToleranceStrategy.Aggressive
+			              };
+
+			MultiLinestring union =
+				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance,
+				                                crackAndClusterOptions: options);
 
 			Assert.AreEqual(source.PartCount - 1, union.PartCount);
+
+			// The default keeps the island. Pinned so that a future fix shows up here.
+			MultiLinestring atDefault =
+				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.AreEqual(source.PartCount, atDefault.PartCount);
 
 			// The extremely narrow island part was completely removed.
 			Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.03);

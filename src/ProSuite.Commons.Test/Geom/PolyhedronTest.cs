@@ -1027,11 +1027,30 @@ namespace ProSuite.Commons.Test.Geom
 
 			double tolerance = 0.00625;
 
+			// This case needs the WIDE snap radius. With the default Balanced strategy the
+			// area is still correct but the spurious hole survives and splits the result into
+			// 2 parts; only Aggressive (2*sqrt(2)*tolerance = 1.77 cm here) pulls the two
+			// flanks of the hole together. Balanced is the default because it is measurably
+			// closer to the ArcObjects footprint over 137'042 buildings (see
+			// CrackAndClusterToleranceStrategy) - this geometry is one of the two known cases
+			// that pays for it, and it needs a fix of its own rather than a wider radius.
+			var options = new CrackAndClusterOptions
+			              {
+				              ToleranceStrategy = CrackAndClusterToleranceStrategy.Aggressive
+			              };
+
 			MultiLinestring footprint =
-				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _, options);
 
 			Assert.AreEqual(438.53446, footprint.GetArea2D(), 0.05);
 			Assert.AreEqual(1, footprint.PartCount);
+
+			// The default: same area, but 2 parts. Pinned so that a future fix shows up here.
+			MultiLinestring atDefault =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
+
+			Assert.AreEqual(438.53446, atDefault.GetArea2D(), 0.05);
+			Assert.AreEqual(2, atDefault.PartCount);
 		}
 
 		[Test]

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -823,11 +823,20 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance">The XY tolerance.</param>
 		/// <param name="mergeTolerance">The distance within which near-coincident parallel
 		/// edge runs are snapped together, see <see cref="RingOperator.MergeTolerance"/>.</param>
-		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
-		                                              double tolerance,
-		                                              double mergeTolerance = 0)
+		/// <param name="crackAndClusterOptions">How far a vertex may be moved when the two
+		/// operands of a step are snapped onto each other, see
+		/// <see cref="RingOperator.CrackAndClusterOptions"/>. Null uses the default.</param>
+		public static MultiLinestring GetUnionAreasXY(
+			[NotNull] IEnumerable<RingGroup> ringGroups,
+			double tolerance,
+			double mergeTolerance = 0,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			MultiLinestring result = null;
+
+			// The area of the accumulated result, carried forward from the previous step so
+			// that the post-condition below needs no extra pass over the previous result.
+			double accumulatedArea = 0;
 
 			// TODO: Optimize and use potential spatial index (change to input polyhedron?)
 			foreach (RingGroup ringGroup in ringGroups.OrderByDescending(r => r.GetArea2D()))
@@ -835,11 +844,18 @@ namespace ProSuite.Commons.Geom
 				if (result == null)
 				{
 					result = ringGroup.Clone();
+					accumulatedArea = result.GetArea2D();
 				}
 				else
 				{
+					// Keep the previous state: the union shares linestrings with its operands
+					// and RingSimplifier below edits in place, so a reference is not enough.
+					MultiLinestring previous = result.Clone();
+					double ringArea = ringGroup.GetArea2D();
+
 					var watch = Stopwatch.StartNew();
-					result = GetUnionAreasXY(result, ringGroup, tolerance, mergeTolerance);
+					result = GetUnionAreasXY(result, ringGroup, tolerance, mergeTolerance,
+					                         crackAndClusterOptions);
 					watch.Stop();
 
 					const long timeout300s = 300000;
@@ -848,6 +864,19 @@ namespace ProSuite.Commons.Geom
 					{
 						// Do not continue, most likely the next result will be even more time-consuming.
 						throw new AssertionException("Unexpectedly long processing time");
+					}
+
+					// The post-condition is checked on what the WALK produced, before the
+					// repair below runs: RingSimplifier legitimately removes area (a
+					// sub-tolerance boundary loop can enclose several square metres), and
+					// charging that to the union turns correct steps into rejected ones.
+					if (UnionStepIsImplausible(previous, ringGroup, accumulatedArea, ringArea,
+					                           result, tolerance, mergeTolerance))
+					{
+						// Accepting it would return a silently wrong area; the previous
+						// result is a subset of the correct answer, which is not.
+						result = previous;
+						continue;
 					}
 
 					// The loop invariant: the accumulated result is simple in XY when the
@@ -862,10 +891,125 @@ namespace ProSuite.Commons.Geom
 					// previous result, and the invariant held for that one already.
 					RingSimplifier.SimplifyRingsXY(result, tolerance,
 					                               RingSimplifyFlags.StepResult, ringGroup);
+
+					accumulatedArea = result.GetArea2D();
 				}
 			}
 
 			return result ?? MultiPolycurve.CreateEmpty();
+		}
+
+		/// <summary>
+		/// TEMPORARY MEASUREMENT PROBE (TOP-5999): how often
+		/// <see cref="UnionStepIsImplausible"/> rejected a step. Remove once the underlying
+		/// walk defect is fixed.
+		/// </summary>
+		private static int _rejectedUnionStepCount;
+
+		/// <summary>
+		/// The post-condition of a single incremental union step: the area of a union of two
+		/// areas lies between the larger operand and their sum. Snapping (crack-and-cluster,
+		/// and the parallel-run snap at the merge tolerance) moves the boundary, so the
+		/// bounds are relaxed by the largest possible displacement times the perimeter
+		/// involved.
+		/// <para>A step outside those bounds is a defect of the turning-left walk, not an
+		/// effect of the tolerance: measured on TOP-5999 the offending operand is typically a
+		/// sliver ring roughly one tolerance thick that only TOUCHES the accumulated result,
+		/// and the walk then drops or duplicates whole parts (TLM_GEBAEUDEKOERPER 3737244:
+		/// 181.05 + 0.08 -> 30.59).</para>
+		/// <para>The bounds are evaluated on the NET signed area and, independently, on the
+		/// sum of ABSOLUTE ring areas, and a step is only rejected when both agree. The net
+		/// area alone raises false alarms: the walk can transiently emit extra rings with the
+		/// wrong sign, which swings the net area by more than a hundred square metres while
+		/// the geometry is intact and a later step untangles it again (3871761:
+		/// net 301.63 -> 162.78 but absolute 588.75 -> 722.11, and the fold still ends at the
+		/// correct 546.04). The absolute sum is blind to orientation, so requiring both to
+		/// break means only genuinely lost or duplicated geometry is rejected.</para>
+		/// </summary>
+		private static bool UnionStepIsImplausible([NotNull] MultiLinestring previous,
+		                                           [NotNull] RingGroup ringGroup,
+		                                           double previousArea,
+		                                           double ringArea,
+		                                           [NotNull] MultiLinestring stepResult,
+		                                           double tolerance,
+		                                           double mergeTolerance)
+		{
+			double stepArea = stepResult.GetArea2D();
+
+			double netLoss = Math.Max(previousArea, ringArea) - stepArea;
+			double netGain = stepArea - (previousArea + ringArea);
+
+			if (netLoss <= 0 && netGain <= 0)
+			{
+				// The overwhelmingly common case: no perimeter has to be measured.
+				return false;
+			}
+
+			// The most aggressive crack-and-cluster strategy moves a vertex by up to
+			// 2 * sqrt(2) * tolerance; the parallel-run snap by up to the merge tolerance.
+			double maxDisplacement =
+				Math.Max(2 * Math.Sqrt(2) * tolerance, mergeTolerance);
+
+			double perimeter = previous.GetLength2D() + ringGroup.GetLength2D();
+
+			// Plus a relative epsilon for the accumulated floating point error.
+			double slack = perimeter * maxDisplacement +
+			               1e-9 * Math.Abs(previousArea + ringArea);
+
+			if (netLoss <= slack && netGain <= slack)
+			{
+				return false;
+			}
+
+			// Confirm on the orientation-blind measure before rejecting anything.
+			double previousAbsolute = GetAbsoluteRingAreaSum(previous);
+			double stepAbsolute = GetAbsoluteRingAreaSum(stepResult);
+
+			bool confirmed =
+				netLoss > slack
+					? Math.Max(previousAbsolute, ringArea) - stepAbsolute > slack
+					: stepAbsolute - (previousAbsolute + ringArea) > slack;
+
+			if (! confirmed)
+			{
+				_msg.VerboseDebug(
+					() =>
+						$"Union step {previousArea:N3} + {ringArea:N3} -> {stepArea:N3} is " +
+						"outside the plausible range on the net area but not on the absolute " +
+						$"ring areas ({previousAbsolute:N3} -> {stepAbsolute:N3}): treating " +
+						"it as a transiently mis-oriented ring rather than lost geometry.");
+
+				return false;
+			}
+
+			// TEMPORARY MEASUREMENT PROBE (TOP-5999): read by the analysis harness through
+			// reflection to report the firing rate over a whole extent. Remove with it.
+			_rejectedUnionStepCount++;
+
+			_msg.Debug(
+				$"Union step rejected: {previousArea:N3} + {ringArea:N3} -> {stepArea:N3} " +
+				$"is outside [{Math.Max(previousArea, ringArea):N3}, " +
+				$"{previousArea + ringArea:N3}] by more than the snap slack {slack:N3} " +
+				$"(tolerance {tolerance}), confirmed on the absolute ring areas " +
+				$"({previousAbsolute:N3} -> {stepAbsolute:N3}). The ring is left out.");
+
+			return true;
+		}
+
+		/// <summary>
+		/// The sum of the ABSOLUTE ring areas: how much geometry the rings carry, measured
+		/// so that it does not change when a ring comes out oriented the wrong way round.
+		/// </summary>
+		private static double GetAbsoluteRingAreaSum([NotNull] MultiLinestring rings)
+		{
+			double sum = 0;
+
+			foreach (Linestring ring in rings.GetLinestrings())
+			{
+				sum += Math.Abs(ring.GetArea2D());
+			}
+
+			return sum;
 		}
 
 		public static MultiLinestring GetUnionAreasXY(
@@ -1047,20 +1191,25 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
-		                                              [NotNull] MultiLinestring targetRings,
-		                                              double tolerance,
-		                                              double mergeTolerance = 0)
+		public static MultiLinestring GetUnionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] MultiLinestring targetRings,
+			double tolerance,
+			double mergeTolerance = 0,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			return GetUnionAreasXY(sourceRings, targetRings, tolerance, mergeTolerance,
-			                       allowReUnionRepair: true);
+			                       allowReUnionRepair: true,
+			                       crackAndClusterOptions: crackAndClusterOptions);
 		}
 
-		internal static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
-		                                                [NotNull] MultiLinestring targetRings,
-		                                                double tolerance,
-		                                                double mergeTolerance,
-		                                                bool allowReUnionRepair)
+		internal static MultiLinestring GetUnionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] MultiLinestring targetRings,
+			double tolerance,
+			double mergeTolerance,
+			bool allowReUnionRepair,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
@@ -1071,7 +1220,8 @@ namespace ProSuite.Commons.Geom
 			                   {
 				                   AllowPointClustering = true,
 				                   MergeTolerance = mergeTolerance,
-				                   AllowReUnionRepair = allowReUnionRepair
+				                   AllowReUnionRepair = allowReUnionRepair,
+				                   CrackAndClusterOptions = crackAndClusterOptions
 			                   };
 
 			if (_msg.IsVerboseDebugEnabled)

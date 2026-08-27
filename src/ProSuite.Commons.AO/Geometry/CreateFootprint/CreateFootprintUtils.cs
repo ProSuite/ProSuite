@@ -263,13 +263,16 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return result;
 		}
 
-		public static IPolygon GetFootprint([NotNull] IMultiPatch multipatch,
-		                                    double? tolerance = null)
+		public static IPolygon GetFootprint(
+			[NotNull] IMultiPatch multipatch,
+			double? tolerance = null,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			IPolygon result = null;
 			if (IntersectionUtils.UseCustomIntersect)
 			{
-				result = TryGetGeomFootprint(multipatch, tolerance, out _);
+				result = TryGetGeomFootprint(multipatch, tolerance, out _,
+				                             crackAndClusterOptions);
 			}
 
 			if (result == null)
@@ -343,7 +346,8 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		[CanBeNull]
 		public static IPolygon TryGetGeomFootprint(
 			[NotNull] IMultiPatch multiPatch, double? tolerance,
-			[CanBeNull] out IPolyline verticalRings)
+			[CanBeNull] out IPolyline verticalRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
 
@@ -351,7 +355,8 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			try
 			{
 				IPolygon footprintPoly =
-					GetFootprintGeom(multiPatch, tolerance, out verticalRings);
+					GetFootprintGeom(multiPatch, tolerance, out verticalRings,
+					                 crackAndClusterOptions);
 
 				return footprintPoly;
 			}
@@ -377,7 +382,8 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		[PublicAPI]
 		public static IPolygon GetFootprintGeom(
 			[NotNull] IMultiPatch multiPatch, double? tolerance,
-			out IPolyline verticalOrSmallRings)
+			out IPolyline verticalOrSmallRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			double verticalRingDetectionTolerance;
 			double xyTolerance;
@@ -399,7 +405,8 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 
 			IPolygon footprintPoly = GetFootprintGeom(multiPatch, xyTolerance,
 			                                          verticalRingDetectionTolerance,
-			                                          out verticalOrSmallRings);
+			                                          out verticalOrSmallRings,
+			                                          crackAndClusterOptions);
 
 			// Still required, SimplifyRingRelationships is not enough (but it is cheap):
 			GeometryUtils.Simplify(footprintPoly);
@@ -423,7 +430,8 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		[PublicAPI]
 		public static IPolygon GetFootprintGeom(
 			IMultiPatch multiPatch, double xyTolerance,
-			double verticalRingDetectionTolerance, out IPolyline tooSmallRings)
+			double verticalRingDetectionTolerance, out IPolyline tooSmallRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			Polyhedron polyhedron =
 				GeometryConversionUtils.CreatePolyhedron(multiPatch, false, true);
@@ -434,7 +442,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			{
 				footprint =
 					polyhedron.GetXYFootprint(xyTolerance, verticalRingDetectionTolerance,
-					                          out verticalRings);
+					                          out verticalRings, crackAndClusterOptions);
 			}
 			catch (Exception)
 			{

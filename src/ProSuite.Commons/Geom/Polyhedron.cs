@@ -101,9 +101,14 @@ namespace ProSuite.Commons.Geom
 		/// ensures that the operation can succeed thanks to clustering. Should be larger than the
 		/// XY resolution, ideally similar to the tolerance.</param>
 		/// <param name="verticalRings">Output parameter for rings that are too small in XY.</param>
-		public MultiLinestring GetXYFootprint(double tolerance,
-		                                      double verticalRingDetectionTolerance,
-		                                      out List<Linestring> verticalRings)
+		/// <param name="crackAndClusterOptions">How far the union may move a vertex when it
+		/// snaps two rings onto each other, see
+		/// <see cref="RingOperator.CrackAndClusterOptions"/>. Null uses the default.</param>
+		public MultiLinestring GetXYFootprint(
+			double tolerance,
+			double verticalRingDetectionTolerance,
+			out List<Linestring> verticalRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			// TODO: Explain the rationale for the vertical ring detection tolerance and how it
 			// differs from the XY tolerance, if at all. 
@@ -123,7 +128,8 @@ namespace ProSuite.Commons.Geom
 			// near-coincident parallel edge runs (shared walls separated only by a
 			// sub-resolution offset) are snapped into clean linear intersections.
 			return GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
-			                                       verticalRingDetectionTolerance);
+			                                       verticalRingDetectionTolerance,
+			                                       crackAndClusterOptions);
 		}
 
 		[NotNull]

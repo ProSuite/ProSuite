@@ -11,13 +11,6 @@ namespace ProSuite.Commons.Geom
 	{
 		private static double ToleranceFactor => Math.Sqrt(2);
 
-		/// <summary>
-		/// Cap on the crack/cluster fixpoint iterations of <see cref="CrackAndClusterPair"/>.
-		/// Snapping can bring further vertices within the tolerance of each other, so the
-		/// loop has to be bounded; a pair that has not settled by then is left alone.
-		/// </summary>
-		private const int _maxCrackIterations = 12;
-
 		private readonly SubcurveNavigator _subcurveNavigator;
 
 		public RingOperator(SubcurveNavigator subcurveNavigator)
@@ -32,6 +25,23 @@ namespace ProSuite.Commons.Geom
 
 		// TODO: Test with true for all cases, consider implementation without geometry updates and remove.
 		public bool AllowPointClustering { get; set; }
+
+		/// <summary>
+		/// How far <see cref="CrackAndClusterPair"/> may move a vertex when it snaps the
+		/// source and the target onto each other, and how short a segment has to be before it
+		/// is dropped. Both distances are derived from the XY tolerance, see
+		/// <see cref="CrackAndClusterToleranceStrategy"/>. Never null; assigning null restores
+		/// the default.
+		/// </summary>
+		[NotNull]
+		public CrackAndClusterOptions CrackAndClusterOptions
+		{
+			get => _crackAndClusterOptions;
+			set => _crackAndClusterOptions = value ?? new CrackAndClusterOptions();
+		}
+
+		[NotNull] private CrackAndClusterOptions _crackAndClusterOptions =
+			new CrackAndClusterOptions();
 
 		/// <summary>
 		/// Distance (typically the data resolution) within which two near-coincident, near-
@@ -964,7 +974,7 @@ namespace ProSuite.Commons.Geom
 
 		private void ClusterPointsIfNecessary()
 		{
-			if (AllowPointClustering)
+			if (AllowPointClustering && CrackAndClusterOptions.Enabled)
 			{
 				// Runs BEFORE the gate below, so that HasUnClusteredIntersectionPoints and
 				// the parallel-run scan are evaluated on the cracked geometry.
@@ -1048,11 +1058,13 @@ namespace ProSuite.Commons.Geom
 
 			double tol = _subcurveNavigator.Tolerance;
 
-			double clusterTolerance = 2 * Math.Sqrt(2) * tol;
+			CrackAndClusterOptions options = CrackAndClusterOptions;
+
+			double clusterTolerance = options.GetClusterTolerance(tol);
 
 			// A segment shorter than this cannot carry a crack point anyway, so what is left
 			// of one after the snap is a leftover of the snap, not a segment the input meant.
-			double minimumSegmentLength = Math.Sqrt(2) * tol;
+			double minimumSegmentLength = options.GetMinimumSegmentLength(tol);
 
 			var parts = new List<Linestring>(source.PartCount + target.PartCount);
 			var isSourcePart = new List<bool>(source.PartCount + target.PartCount);
@@ -1090,7 +1102,9 @@ namespace ProSuite.Commons.Geom
 			var changed = false;
 			var converged = false;
 
-			for (var i = 0; i < _maxCrackIterations; i++)
+			// Snapping can bring further vertices within the tolerance of each other, so the
+			// loop has to be bounded; a pair that has not settled by then is left alone.
+			for (var i = 0; i < options.MaxIterations; i++)
 			{
 				bool snapped = SimplificationUtils.SnapAndCrack(
 					parts, clusterTolerance, target, sourceSegmentCount);
