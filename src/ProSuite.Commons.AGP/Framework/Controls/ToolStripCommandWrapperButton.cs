@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -43,6 +42,11 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 	/// </summary>
 	private Bitmap _currentImage;
 
+	/// <summary>
+	/// The size (in device pixels) the current <see cref="_currentImage"/> was rendered at.
+	/// </summary>
+	private int _currentImagePixelSize;
+
 	private int _rasterizeFailureCount;
 
 	/// <summary>
@@ -52,6 +56,15 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 	/// appearance update would just burn resources and spam the log.
 	/// </summary>
 	private const int _maxRasterizeFailures = 3;
+
+	/// <summary>
+	/// The image size in device-independent pixels. This is the size at which the ArcGIS
+	/// Pro ribbon renders the small image of a command; rendering at the same logical size
+	/// makes the wrapper buttons match the ribbon buttons on any display scaling.
+	/// </summary>
+	private const int _logicalImageSize = 16;
+
+	private const int _defaultDpi = 96;
 
 	#region Constructors
 
@@ -214,7 +227,10 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			return;
 		}
 
-		if (ReferenceEquals(imageSource, _currentImageSource) && Image != null)
+		int pixelSize = GetImagePixelSize();
+
+		if (ReferenceEquals(imageSource, _currentImageSource) &&
+		    pixelSize == _currentImagePixelSize && Image != null)
 		{
 			// Unchanged: no need to rasterize again
 			return;
@@ -233,7 +249,7 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 		Bitmap bitmap;
 		try
 		{
-			bitmap = CreateBitmap(imageSource);
+			bitmap = BitmapUtils.CreateBitmap(imageSource, pixelSize);
 		}
 		catch (Exception e)
 		{
@@ -266,6 +282,7 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 
 		_currentImage = bitmap;
 		_currentImageSource = imageSource;
+		_currentImagePixelSize = pixelSize;
 		_rasterizeFailureCount = 0;
 
 		// The previous bitmap is no longer referenced by this item: dispose it right away
@@ -279,19 +296,36 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 		}
 	}
 
-	[CanBeNull]
-	private static Bitmap CreateBitmap([NotNull] ImageSource imageSource)
+	/// <summary>
+	/// The size (in device pixels) at which the image is to be rendered, i.e. the logical
+	/// image size scaled by the display scaling of the tool strip this item belongs to.
+	/// </summary>
+	private int GetImagePixelSize()
 	{
-		switch (imageSource)
+		ToolStrip owner = Owner;
+
+		if (owner != null && ImageScaling == ToolStripItemImageScaling.SizeToFit)
 		{
-			case BitmapImage bitmapImage:
-				return BitmapUtils.CreateBitmap(bitmapImage);
+			// The tool strip scales the image to its ImageScalingSize anyway: rendering
+			// at any other size would just add another (lower quality) scaling step.
+			return Math.Max(owner.ImageScalingSize.Width, owner.ImageScalingSize.Height);
+		}
 
-			case DrawingImage drawingImage:
-				return BitmapUtils.CreateBitmap(drawingImage);
+		return (int) Math.Round(
+			_logicalImageSize * GetDeviceDpi(owner) / (double) _defaultDpi);
+	}
 
-			default:
-				return null;
+	private static int GetDeviceDpi([CanBeNull] Control control)
+	{
+		if (control != null && control.DeviceDpi > 0)
+		{
+			return control.DeviceDpi;
+		}
+
+		// Not (yet) added to a tool strip: fall back to the desktop dpi
+		using (Graphics graphics = Graphics.FromHwnd(IntPtr.Zero))
+		{
+			return (int) Math.Round(graphics.DpiX);
 		}
 	}
 
@@ -315,6 +349,24 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 	}
 
 	/// <summary>
+	/// The tool strip enforces the (dpi-scaled) default item width, but derives the item
+	/// height from the image alone. The resulting box is wider than high - increasingly so
+	/// on a high-dpi display - which makes the image-only buttons look squeezed. Make them
+	/// square instead, matching the buttons of the ArcGIS Pro ribbon.
+	/// </summary>
+	public override Size GetPreferredSize(Size constrainingSize)
+	{
+		Size preferredSize = base.GetPreferredSize(constrainingSize);
+
+		if (DisplayStyle == ToolStripItemDisplayStyle.Image)
+		{
+			preferredSize.Height = Math.Max(preferredSize.Height, preferredSize.Width);
+		}
+
+		return preferredSize;
+	}
+
+	/// <summary>
 	/// Clean up any resources being used.
 	/// </summary>
 	/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
@@ -334,6 +386,7 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			_currentImage?.Dispose();
 			_currentImage = null;
 			_currentImageSource = null;
+			_currentImagePixelSize = 0;
 
 			if (PlugInWrapper is IDisposable disposablePlugin)
 			{
