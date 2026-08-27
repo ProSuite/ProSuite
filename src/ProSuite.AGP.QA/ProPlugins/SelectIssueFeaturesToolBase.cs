@@ -9,6 +9,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 {
 	public abstract class SelectIssueFeaturesToolBase : SelectionToolBase
 	{
+		protected SelectIssueFeaturesToolBase()
+		{
+			SelectOnlySelectableFeatures = false;
+		}
+
 		protected override bool CanSelectFromLayerCore(BasicFeatureLayer basicFeatureLayer,
 		                                               NotificationCollection notifications)
 		{

@@ -159,11 +159,16 @@ public class FeatureFinder
 				// TODO: Honour ReturnUnJoinedFeatures value.
 				filter.OutputSpatialReference = outputSpatialReference;
 
+				// NOTE: FeatureSelection takes ownership (ToList) of the features.
+				// A recycling cursor would yield N references to the same row!
 				IEnumerable<Feature> features =
+#if ARCGISPRO_GREATER_3_5
+					LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate,
+					                      recycling: false);
+#else
 					LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate);
+#endif
 
-				// Return the selection without counting the result features to
-				// avoid enumerating the features several times (Recycling cursor!).
 				yield return new FeatureSelection(basicFeatureLayer, features);
 			}
 		}

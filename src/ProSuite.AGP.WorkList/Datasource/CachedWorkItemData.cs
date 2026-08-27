@@ -131,11 +131,12 @@ public class CachedWorkItemData : IWorkItemData
 
 		if (filter.ObjectIDs.Count == 0)
 		{
-			return _spatialSearcher.Select(xmlItem => ToWorkItem(xmlItem, spatialReference));
+			return _spatialSearcher.Where(item => ! item.Filtered)
+			                       .Select(xmlItem => ToWorkItem(xmlItem, spatialReference));
 		}
 
 		List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
-		return _spatialSearcher.Where(item => oids.BinarySearch(item.OID) >= 0)
+		return _spatialSearcher.Where(item => oids.BinarySearch(item.OID) >= 0 && ! item.Filtered)
 		                       .Select(xmlItem => ToWorkItem(xmlItem, spatialReference));
 	}
 
@@ -155,7 +156,7 @@ public class CachedWorkItemData : IWorkItemData
 
 		if (filterGeometry == null || filterGeometry.IsEmpty)
 		{
-			return _spatialSearcher.Where(item => predicate(item))
+			return _spatialSearcher.Where(item => ! item.Filtered && predicate(item))
 			                       .Select(xmlItem => ToWorkItem(xmlItem, spatialReference));
 		}
 
@@ -165,6 +166,7 @@ public class CachedWorkItemData : IWorkItemData
 		return _spatialSearcher.Search(extent.XMin, extent.YMin,
 		                               extent.XMax, extent.YMax,
 		                               tolerance, predicate)
+		                       .Where(item => ! item.Filtered)
 		                       .Select(xmlItem => ToWorkItem(xmlItem, spatialReference));
 	}
 

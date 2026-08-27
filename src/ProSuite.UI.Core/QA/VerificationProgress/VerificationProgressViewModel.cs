@@ -266,7 +266,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		}
 
 		public SolidColorBrush ErrorTextBoxBackColor =>
-			ErrorCount > 0 ? Brushes.Red : Brushes.Transparent;
+			ErrorCount > 0 ? Brushes.Salmon : Brushes.Transparent;
 
 		public SolidColorBrush WarningTextBoxBackColor =>
 			WarningCount > 0 ? Brushes.Yellow : Brushes.Transparent;

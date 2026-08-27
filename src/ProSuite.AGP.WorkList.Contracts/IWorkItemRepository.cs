@@ -55,6 +55,8 @@ public interface IWorkItemRepository
 
 	int GetCurrentIndex();
 
+	void BeginUpdateStates();
+
 	void UpdateState(IWorkItem item);
 
 	/// <summary>

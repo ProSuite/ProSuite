@@ -134,6 +134,11 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		return ++_lastUsedOid;
 	}
 
+	public void BeginUpdateStates()
+	{
+		WorkItemStateRepository.BeginUpdateStates();
+	}
+
 	public void UpdateState(IWorkItem item)
 	{
 		WorkItemStateRepository.UpdateState(item);

@@ -592,6 +592,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 	protected virtual void LoadItemsCore(QueryFilter filter)
 	{
+		Repository.BeginUpdateStates();
+
 		foreach (IWorkItem item in Search(filter))
 		{
 			Repository.UpdateState(item);

@@ -791,6 +791,8 @@ public static class WorkspaceUtils
 
 		if (! hasConflicts)
 		{
+			// With default reconcile options (ConflictResolutionMethod.Continue) no
+			// conflicts are expected.
 			yield break;
 		}
 

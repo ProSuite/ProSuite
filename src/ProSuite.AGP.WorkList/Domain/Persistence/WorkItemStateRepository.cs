@@ -132,6 +132,8 @@ public abstract class WorkItemStateRepository<TState, TDefinition> : IWorkItemSt
 
 	protected virtual void RefreshCore([NotNull] IWorkItem item, [NotNull] TState state) { }
 
+	public virtual void BeginUpdateStates() { }
+
 	protected virtual void UpdateStateCore(TState state, IWorkItem item) { }
 
 	[CanBeNull]
