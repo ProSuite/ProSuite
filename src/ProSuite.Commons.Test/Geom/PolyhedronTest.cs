@@ -1102,6 +1102,35 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		[Ignore("TOP-5999: open defect, see the comment below")]
+		public void CanGetFootprintForVicinoCimiteroSavosa()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8708219 {074E0B9F-2D15-4329-95CB-14870236BD9B}
+			// (Vicino Cimitero Savosa, Lugano). Regression guard for the
+			// Balanced crack-and-cluster proportions. The reference is 128.6895
+			// in one part, and both the wider (Aggressive) and the narrower (Uniform)
+			// proportions reproduce it: 128.6873 and 128.6586. Only Balanced - whose minimum
+			// segment length is EXACTLY the tolerance the subsequent walk runs at - lost
+			// 16.5 sq m and split the result into 3 parts (112.1756). It surfaced as two
+			// spurious QA warnings on TLM_DACH_GRUNDRISS 7059028 (5.28 + 11.17 sq m).
+			Polyhedron polyhedron = ReadPolyhedron("vicino_cimitero_savosa.wkb");
+
+			foreach (CrackAndClusterToleranceStrategy strategy in
+			         Enum.GetValues(typeof(CrackAndClusterToleranceStrategy)))
+			{
+				var options = new CrackAndClusterOptions { ToleranceStrategy = strategy };
+
+				MultiLinestring footprint =
+					polyhedron.GetXYFootprint(0.01, 0.01, out _, options);
+
+				Assert.AreEqual(128.6895, footprint.GetArea2D(), 0.05,
+				                $"Unexpected area with {strategy}");
+				Assert.AreEqual(1, footprint.PartCount,
+				                $"Unexpected part count with {strategy}");
+			}
+		}
+
+		[Test]
 		public void CanGetFootprintForLugano8711144()
 		{
 			// TOP-5999: TLM_GEBAEUDEKOERPER 8711144 (Lugano). Regression guard for the

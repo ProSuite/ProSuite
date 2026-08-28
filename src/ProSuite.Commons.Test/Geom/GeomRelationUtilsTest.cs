@@ -389,6 +389,83 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		[Ignore("TOP-5999 break-out: open defect, see the comment below")]
+		public void CanDetermineContainmentOfVicinoCimiteroSavosaStep5Ring()
+		{
+			// TOP-5999 break-out from PolyhedronTest.CanGetFootprintForVicinoCimiteroSavosa
+			// (TLM_GEBAEUDEKOERPER 8708219 {074E0B9F-2D15-4329-95CB-14870236BD9B}, Lugano).
+			// These are the two operands of incremental-union step 5 of that building, as
+			// the footprint calculation hands them to the union at tolerance 0.01.
+			//
+			// The source (73.8656) is convex, and its NW edge from the apex
+			// (2717030.691 1097858.715) down to (2717024.568 1097850.697) is ONE straight
+			// line that carries two extra collinear vertices. The triangular ring (19.2146)
+			// is NOT contained: its apex (2717030.675 1097858.721) lies 0.016358 outside that
+			// line - 1.6 times the tolerance - so a sliver of 0.00024 sq m, 0.0107 wide and
+			// 0.0164 deep, really does protrude. The two Crossing intersections are therefore
+			// genuine (the entry and the exit of that sliver), and they are reported at one
+			// and the same XY only because the collinear vertex 2717030.674 1097858.693 lies
+			// within the tolerance of both target segments (0.0087 and 0.0000004).
+			//
+			// The union nevertheless has to absorb the ring: the sliver is sub-tolerance, and
+			// RingSimplifier removes it. What used to break was the crack pass inside the
+			// union: at the Balanced proportions it cracks the source apex into the ring
+			// (0.013525 away, just inside the 0.014142 cluster tolerance) and makes the ring
+			// touch itself at the collinear vertex. That pinched ring is non-simple, the walk
+			// then finds no outbound intersection and emits nothing, and the ring-relation
+			// fallback declares the two rings mutually outside - 93.0443, the exact SUM.
+			// RingOperator.CrackAndClusterPair now drops such sub-tolerance boundary loops.
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vicino_cimitero_savosa_step5_source.wkb"), out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup ring = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vicino_cimitero_savosa_step5_ring.wkb"), out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			const double tolerance = 0.01;
+
+			Assert.AreEqual(73.8656, source.GetArea2D(), 0.0001);
+			Assert.AreEqual(19.2146, ring.GetArea2D(), 0.0001);
+
+			// (1) The ring protrudes, hence it is NOT contained. Note that the difference
+			// does not show the protrusion: both crossings snap onto the collinear vertex,
+			// which degenerates the sliver ring and drops it.
+			Assert.IsFalse(GeomRelationUtils.AreaContainsXY(source, ring, tolerance));
+			Assert.IsFalse(GeomRelationUtils.IsContainedXY(ring, source, tolerance));
+
+			MultiLinestring ringOutsideSource =
+				GeomTopoOpUtils.GetDifferenceAreasXY(ring, source, tolerance);
+
+			Assert.AreEqual(0, ringOutsideSource.PartCount);
+
+			// (2) The two Crossing intersections are the entry and the exit of the protruding
+			// sliver, reported at one and the same location.
+			List<IntersectionPoint3D> crossings =
+				GeomTopoOpUtils
+					.GetIntersectionPoints(source, (ISegmentList) ring, tolerance)
+					.Where(ip => ip.Type == IntersectionPointType.Crossing).ToList();
+
+			Assert.AreEqual(2, crossings.Count);
+			Assert.IsTrue(crossings[0].Point.EqualsXY(crossings[1].Point, tolerance),
+			              "the two crossings are expected at the same XY");
+			Assert.IsTrue(
+				crossings[0].Point.EqualsXY(
+					new Pnt3D(2717030.674424, 1097858.693294, 0), 0.000001));
+
+			// (3) The union absorbs the ring all the same - the protrusion is sub-tolerance.
+			MultiLinestring union =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.001);
+			Assert.AreEqual(1, union.PartCount);
+		}
+
+		[Test]
 		public void CanDetermineTargetInCourtyardVoidTouchingPinchOfTwoInteriorRings()
 		{
 			// Minimal repro for the vallee_de_la_jeunesse touch-point bug (step 24).
