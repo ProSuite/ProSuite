@@ -21,7 +21,6 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 	public static class CreateFootprintUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private static double? _knownTolerance;
 
 		[NotNull]
 		public static IList<IFeature> GetFootprintableFeatures(
@@ -283,23 +282,12 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return result;
 		}
 
+		/// <summary>
+		/// The tolerance for detecting vertical rings and near-coincident vertices when no
+		/// explicit tolerance is given.
+		/// </summary>
 		private static double GetXyTolerance(IGeometry geometry)
 		{
-			if (_knownTolerance != null)
-			{
-				return _knownTolerance.Value;
-			}
-
-			string toleranceString =
-				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_VERTICAL_TOLERANCE");
-
-			if (toleranceString != null &&
-			    double.TryParse(toleranceString, out double envTolerance))
-			{
-				_knownTolerance = envTolerance;
-				return _knownTolerance.Value;
-			}
-
 			double xyTolerance = GeometryUtils.GetXyTolerance(geometry);
 
 			// Prevent bogus tolerance (everything smaller the resolution) that
@@ -310,23 +298,13 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return Math.Max(xyTolerance, minimumTolerance);
 		}
 
+		/// <summary>
+		/// The calculation tolerance used when no explicit tolerance is given. Deliberately
+		/// finer than the XY tolerance so that almost-vertical walls thinner than the
+		/// tolerance can still be processed.
+		/// </summary>
 		private static double GetSmallXyTolerance(IGeometry geometry)
 		{
-			if (_knownTolerance != null)
-			{
-				return _knownTolerance.Value;
-			}
-
-			string toleranceString =
-				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_TOLERANCE");
-
-			if (toleranceString != null &&
-			    double.TryParse(toleranceString, out double envTolerance))
-			{
-				_knownTolerance = envTolerance;
-				return _knownTolerance.Value;
-			}
-
 			return GeometryUtils.GetXyResolution(geometry) / 2;
 		}
 
