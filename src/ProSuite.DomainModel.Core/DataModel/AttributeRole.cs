@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -69,7 +70,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public static readonly AttributeRole ConflictReconcileState = new AttributeRole(64);
 
 		public static readonly AttributeRole FilePath = new AttributeRole(65);
-		
+
 		public static readonly AttributeRole RevisionPointFeatureClass =
 			new AttributeRole(512);
 
@@ -199,6 +200,56 @@ namespace ProSuite.DomainModel.Core.DataModel
 			return string.IsNullOrEmpty(name)
 				       ? string.Format("{0} id={1}", role.GetType().Name, role.Id)
 				       : name;
+		}
+
+		/// <summary>
+		/// The unqualified name of a role, i.e. "FilePath" rather than "AttributeRole.FilePath".
+		/// This is the form used where a role has to be named in a document or a message, such as
+		/// the field roles transported with a standalone dataset parameter value.
+		/// </summary>
+		[NotNull]
+		public static string GetSimpleName([NotNull] AttributeRole role)
+		{
+			return GetSimpleName(GetName(role));
+		}
+
+		/// <summary>
+		/// The counterpart of <see cref="GetSimpleName(AttributeRole)"/>: resolves a role by name.
+		/// Both the qualified form ("AttributeRole.FilePath") and the unqualified one ("FilePath")
+		/// are accepted; only the roles registered by this class can be resolved.
+		/// </summary>
+		public static bool TryResolve([CanBeNull] string name,
+		                              [CanBeNull] out AttributeRole role)
+		{
+			role = null;
+
+			if (string.IsNullOrWhiteSpace(name))
+			{
+				return false;
+			}
+
+			foreach (AttributeRole candidate in _roles.Values)
+			{
+				string candidateName = GetName(candidate);
+
+				if (string.Equals(candidateName, name, StringComparison.OrdinalIgnoreCase) ||
+				    string.Equals(GetSimpleName(candidateName), name,
+				                  StringComparison.OrdinalIgnoreCase))
+				{
+					role = candidate;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		[NotNull]
+		private static string GetSimpleName([NotNull] string qualifiedName)
+		{
+			int index = qualifiedName.LastIndexOf('.');
+
+			return index < 0 ? qualifiedName : qualifiedName.Substring(index + 1);
 		}
 
 		#endregion

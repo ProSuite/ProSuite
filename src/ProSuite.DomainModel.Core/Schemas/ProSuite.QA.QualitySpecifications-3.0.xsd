@@ -116,11 +116,23 @@
 	<xs:complexType name="XmlDatasetTestParameterValue">
 		<xs:complexContent mixed="false">
 			<xs:extension base="tns:XmlTestParameterValue">
+				<xs:sequence>
+					<xs:element minOccurs="0" maxOccurs="1" name="Fields" type="tns:ArrayOfXmlDatasetFieldRole" />
+				</xs:sequence>
 				<xs:attribute name="where" type="xs:string" />
 				<xs:attribute default="false" name="usedAsReferenceData" type="xs:boolean" />
 				<xs:attribute name="workspace" type="xs:string" />
 			</xs:extension>
 		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ArrayOfXmlDatasetFieldRole">
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="Field" nillable="true" type="tns:XmlDatasetFieldRole" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="XmlDatasetFieldRole">
+		<xs:attribute name="role" type="xs:string" />
+		<xs:attribute name="name" type="xs:string" />
 	</xs:complexType>
 	<xs:complexType name="ArrayOfXmlDataQualityCategory">
 		<xs:sequence>

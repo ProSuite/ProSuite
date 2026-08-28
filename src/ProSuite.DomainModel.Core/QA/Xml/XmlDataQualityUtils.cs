@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -823,7 +823,11 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					return new DatasetTestParameterValue(testParameter, dataset,
 					                                     xmlDatasetTestParameterValue.WhereClause,
 					                                     xmlDatasetTestParameterValue
-						                                     .UsedAsReferenceData);
+						                                     .UsedAsReferenceData)
+					       {
+						       FieldRoles = CreateFieldRoles(
+							       xmlDatasetTestParameterValue.FieldRoles)
+					       };
 				}
 
 				// Exception must already be thrown in GetDataset()
@@ -852,9 +856,48 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			var paramValue = new DatasetTestParameterValue(
 				testParameter, dataset,
 				xmlValue.WhereClause,
-				xmlValue.UsedAsReferenceData);
+				xmlValue.UsedAsReferenceData)
+			                 {
+				                 FieldRoles = CreateFieldRoles(xmlValue.FieldRoles)
+			                 };
 
 			return paramValue;
+		}
+
+		/// <summary>
+		/// Converts the transported field roles, resolving each role by name. An unknown role name
+		/// is an error rather than something to skip: silently dropping it would leave the dataset
+		/// without the field it needs and fail later, far from the cause.
+		/// </summary>
+		[CanBeNull]
+		private static IList<DatasetFieldRole> CreateFieldRoles(
+			[CanBeNull] ICollection<XmlDatasetFieldRole> xmlFieldRoles)
+		{
+			if (xmlFieldRoles == null || xmlFieldRoles.Count == 0)
+			{
+				return null;
+			}
+
+			var result = new List<DatasetFieldRole>(xmlFieldRoles.Count);
+
+			foreach (XmlDatasetFieldRole xmlFieldRole in xmlFieldRoles)
+			{
+				if (! AttributeRole.TryResolve(xmlFieldRole.Role, out AttributeRole role))
+				{
+					throw new InvalidConfigurationException(
+						$"Unknown attribute role '{xmlFieldRole.Role}'");
+				}
+
+				if (string.IsNullOrWhiteSpace(xmlFieldRole.Name))
+				{
+					throw new InvalidConfigurationException(
+						$"No field name for attribute role '{xmlFieldRole.Role}'");
+				}
+
+				result.Add(new DatasetFieldRole(Assert.NotNull(role), xmlFieldRole.Name));
+			}
+
+			return result;
 		}
 
 		[CanBeNull]
@@ -1306,6 +1349,87 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					yield return datasetName;
 				}
 			}
+		}
+
+		/// <summary>
+		/// The attribute-role assignments carried by the dataset parameter values of the given
+		/// conditions, per dataset of the given workspace. Empty for the common case; non-empty
+		/// only where a standalone condition references a dataset that a harvested model cannot
+		/// describe on its own, such as a raster catalog and its file-path field.
+		/// </summary>
+		[NotNull]
+		public static IDictionary<string, IList<DatasetFieldRole>> GetFieldRolesByDatasetName(
+			[NotNull] string workspaceId,
+			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
+		{
+			Assert.ArgumentNotNull(referencedConditions, nameof(referencedConditions));
+			Assert.ArgumentNotNullOrEmpty(workspaceId, nameof(workspaceId));
+
+			var result = new Dictionary<string, IList<DatasetFieldRole>>(
+				StringComparer.OrdinalIgnoreCase);
+
+			foreach (XmlInstanceConfiguration xmlConfiguration in referencedConditions)
+			foreach (XmlTestParameterValue parameterValue in
+			         xmlConfiguration.EnumParameterValues(ignoreEmptyValues: true))
+			{
+				if (! (parameterValue is XmlDatasetTestParameterValue datasetParameterValue))
+				{
+					continue;
+				}
+
+				if (datasetParameterValue.FieldRoles == null ||
+				    datasetParameterValue.FieldRoles.Count == 0)
+				{
+					continue;
+				}
+
+				string datasetWorkspaceId = datasetParameterValue.WorkspaceId ?? string.Empty;
+
+				if (! string.Equals(datasetWorkspaceId, workspaceId,
+				                    StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+
+				string datasetName = datasetParameterValue.Value;
+
+				if (datasetName == null)
+				{
+					continue;
+				}
+
+				IList<DatasetFieldRole> fieldRoles =
+					Assert.NotNull(CreateFieldRoles(datasetParameterValue.FieldRoles));
+
+				if (result.TryGetValue(datasetName, out IList<DatasetFieldRole> existing))
+				{
+					// The same dataset may be referenced by several conditions. Identical role
+					// assignments are fine; conflicting ones are a configuration error, because
+					// only one of them can end up on the dataset.
+					AssertSameFieldRoles(datasetName, existing, fieldRoles);
+					continue;
+				}
+
+				result.Add(datasetName, fieldRoles);
+			}
+
+			return result;
+		}
+
+		private static void AssertSameFieldRoles(
+			[NotNull] string datasetName,
+			[NotNull] ICollection<DatasetFieldRole> existing,
+			[NotNull] ICollection<DatasetFieldRole> other)
+		{
+			if (existing.Count == other.Count && ! existing.Except(other).Any())
+			{
+				return;
+			}
+
+			throw new InvalidConfigurationException(
+				$"Dataset {datasetName} is referenced with conflicting field roles: " +
+				$"[{StringUtils.Concatenate(existing, ", ")}] vs " +
+				$"[{StringUtils.Concatenate(other, ", ")}]");
 		}
 
 		private static void ImportMetadata([NotNull] IEntityMetadata entity,
@@ -2177,8 +2301,33 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				       Value = datasetName,
 				       WhereClause = Escape(datasetTestParameterValue.FilterExpression),
 				       UsedAsReferenceData = datasetTestParameterValue.UsedAsReferenceData,
-				       WorkspaceId = Escape(workspaceId)
+				       WorkspaceId = Escape(workspaceId),
+				       FieldRoles = CreateXmlFieldRoles(datasetTestParameterValue.FieldRoles)
 			       };
+		}
+
+		[CanBeNull]
+		private static List<XmlDatasetFieldRole> CreateXmlFieldRoles(
+			[CanBeNull] ICollection<DatasetFieldRole> fieldRoles)
+		{
+			if (fieldRoles == null || fieldRoles.Count == 0)
+			{
+				// Keep the element out of the document altogether for the common case.
+				return null;
+			}
+
+			var result = new List<XmlDatasetFieldRole>(fieldRoles.Count);
+
+			foreach (DatasetFieldRole fieldRole in fieldRoles)
+			{
+				result.Add(new XmlDatasetFieldRole
+				           {
+					           Role = AttributeRole.GetSimpleName(fieldRole.Role),
+					           Name = Escape(fieldRole.FieldName)
+				           });
+			}
+
+			return result;
 		}
 
 		[NotNull]

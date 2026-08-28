@@ -161,6 +161,20 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		/// <summary>
+		/// Optional attribute-role assignments for fields of the referenced dataset, used where
+		/// the model is harvested from the workspace rather than read from a DDX and the roles are
+		/// therefore not on the dataset itself. Transported with the standalone condition list and
+		/// applied by the factory when it builds the model; null or empty otherwise, which is the
+		/// common case.
+		/// <para>
+		/// Deliberately not persisted: a DDX dataset carries its own roles, and the DDX-backed
+		/// paths ignore this list.
+		/// </para>
+		/// </summary>
+		[CanBeNull]
+		public IList<DatasetFieldRole> FieldRoles { get; set; }
+
+		/// <summary>
 		/// Gets the name of the referenced dataset or the name of the referenced transformer.
 		/// </summary>
 		/// <returns></returns>
@@ -214,7 +228,13 @@ namespace ProSuite.DomainModel.Core.QA
 				             _datasetValue = _datasetValue,
 				             _filterExpression = _filterExpression,
 				             _usedAsReferenceData = _usedAsReferenceData,
-				             ValueSource = ValueSource
+				             ValueSource = ValueSource,
+				             // The roles themselves are immutable, so a shallow copy of the list
+				             // is enough - but it must be a copy, or the clone and the original
+				             // would share it.
+				             FieldRoles = FieldRoles == null
+					                          ? null
+					                          : new List<DatasetFieldRole>(FieldRoles)
 			             };
 
 			return result;

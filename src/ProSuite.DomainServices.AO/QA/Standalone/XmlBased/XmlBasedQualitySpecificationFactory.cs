@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -281,8 +281,16 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			DdxModel result = ModelFactory.CreateModel(
 				workspace, modelName, modelId, databaseName, schemaOwner, datasetNames);
 
+			// A harvested model cannot tell a raster catalog from any other polygon feature class.
+			// Where the condition list says one is, turn the harvested dataset into a catalog
+			// dataset, so that the opener resolves its file-path field just like a DDX dataset's.
+			IDictionary<string, IList<DatasetFieldRole>> fieldRolesByDatasetName =
+				XmlDataQualityUtils.GetFieldRolesByDatasetName(workspaceId, referencedConditions);
+
+			RasterCatalogDatasetUtils.ApplyFieldRoles(result, fieldRolesByDatasetName);
+
 			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>
-					XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))
+						XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))
 				.Where(dataset => dataset != null);
 
 			ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);
