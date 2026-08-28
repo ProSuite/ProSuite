@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Threading;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.DDL;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
+using AssertionException = ProSuite.Commons.Essentials.Assertions.AssertionException;
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Test
@@ -17,6 +21,45 @@ namespace ProSuite.Commons.AGP.Core.Test
 		public void OneTimeSetUp()
 		{
 			CoreHostProxy.Initialize();
+		}
+
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		public void GetDatastorePathIsNullForMemoryGeodatabase()
+		{
+			// An in-memory geodatabase has no catalog path: the SDK's Datastore.GetPath()
+			// returns null for it, which is what the [CanBeNull] annotation on
+			// GetDatastorePath makes explicit to callers.
+			using ArcGIS.Core.Data.Geodatabase memoryGdb =
+				SchemaBuilder.CreateGeodatabase(
+					new MemoryConnectionProperties("WorkspaceUtilsPathTest"));
+
+			Assert.Null(WorkspaceUtils.GetDatastorePath(memoryGdb));
+
+			// GetCatalogPath promises a path, so it fails rather than returning null
+			Assert.Throws<AssertionException>(
+				() => WorkspaceUtils.GetCatalogPath(memoryGdb));
+		}
+
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		public void GetDatastorePathIsPathForFileGeodatabase()
+		{
+			// Counterpart to GetDatastorePathIsNullForMemoryGeodatabase: make sure the
+			// method does report a path where there is one.
+			string gdbPath =
+				TestDataPreparer.ExtractZip("can_get_rows_in_list.gdb.zip").GetPath();
+
+			using ArcGIS.Core.Data.Geodatabase fileGdb =
+				WorkspaceUtils.OpenGeodatabase(gdbPath);
+
+			Uri path = WorkspaceUtils.GetDatastorePath(fileGdb);
+
+			Assert.NotNull(path);
+			Assert.AreEqual(Path.GetFullPath(gdbPath), Path.GetFullPath(path.LocalPath));
+
+			// GetCatalogPath returns the same path, as a local file system path
+			Assert.AreEqual(path.LocalPath, WorkspaceUtils.GetCatalogPath(fileGdb));
 		}
 
 		[Test]

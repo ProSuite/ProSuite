@@ -384,6 +384,24 @@ public static class DatasetUtils
 	}
 
 	/// <summary>
+	/// Gets the catalog path of the given dataset, or <c>null</c> if the dataset has none.
+	/// Prefer this method over <see cref="Dataset.GetPath"/>, which is not annotated and
+	/// therefore easily mistaken for never returning null.
+	/// </summary>
+	/// <param name="dataset">The dataset, must not be null.</param>
+	/// <returns>The dataset's catalog path, or <c>null</c> if it has none. Datasets in an
+	/// in-memory geodatabase (see <see cref="MemoryConnectionProperties"/>) have no path,
+	/// and neither have datasets of some plug-in datastores.</returns>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	[CanBeNull]
+	public static Uri GetDatasetPath([NotNull] Dataset dataset)
+	{
+		Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+		return dataset.GetPath();
+	}
+
+	/// <summary>
 	/// Opens a LAS dataset from a .lasd file path.
 	/// NOTE: Must be called on the MCT. Use QueuedTask.Run.
 	/// </summary>

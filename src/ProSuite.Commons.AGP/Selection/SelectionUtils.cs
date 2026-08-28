@@ -7,6 +7,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -76,9 +77,11 @@ public static class SelectionUtils
 		// A table's Path is a URI of the form C:\Path\To\File.gdb\Dataset or C:\Path\To\Conn.sde\Dataset
 		// If two different connection files (.sde) point to the same database and version, our approach
 		// here considers it different, a false negative... but probably good enough for now
-		Uri aUri = a.GetPath();
-		Uri bUri = b.GetPath();
-		return aUri.Equals(bUri);
+		// The path is null for classes without one, e.g. in a memory geodatabase
+		Uri aUri = DatasetUtils.GetDatasetPath(a);
+		Uri bUri = DatasetUtils.GetDatasetPath(b);
+
+		return aUri != null && aUri.Equals(bUri);
 	}
 
 	public static void SelectFeature([NotNull] BasicFeatureLayer basicFeatureLayer,
