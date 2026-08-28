@@ -281,13 +281,14 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			DdxModel result = ModelFactory.CreateModel(
 				workspace, modelName, modelId, databaseName, schemaOwner, datasetNames);
 
-			// A harvested model cannot tell a raster catalog from any other polygon feature class.
-			// Where the condition list says one is, turn the harvested dataset into a catalog
-			// dataset, so that the opener resolves its file-path field just like a DDX dataset's.
-			IDictionary<string, IList<DatasetFieldRole>> fieldRolesByDatasetName =
-				XmlDataQualityUtils.GetFieldRolesByDatasetName(workspaceId, referencedConditions);
+			// A harvested model cannot tell a file catalog from any other polygon feature class.
+			// Where the condition list declares one, turn the harvested dataset into the catalog
+			// dataset it declares, so that the opener resolves its file-path field just like a
+			// DDX dataset's.
+			IList<DatasetDeclaration> datasetDeclarations =
+				XmlDataQualityUtils.GetDatasetDeclarations(workspaceId, referencedConditions);
 
-			RasterCatalogDatasetUtils.ApplyFieldRoles(result, fieldRolesByDatasetName);
+			CatalogDatasetUtils.ApplyDeclarations(result, datasetDeclarations);
 
 			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>
 						XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))

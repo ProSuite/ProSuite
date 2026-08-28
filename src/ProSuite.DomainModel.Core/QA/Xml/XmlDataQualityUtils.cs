@@ -826,7 +826,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 						                                     .UsedAsReferenceData)
 					       {
 						       FieldRoles = CreateFieldRoles(
-							       xmlDatasetTestParameterValue.FieldRoles)
+							       xmlDatasetTestParameterValue.FieldRoles),
+						       DatasetType = xmlDatasetTestParameterValue.DatasetType
 					       };
 				}
 
@@ -858,7 +859,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				xmlValue.WhereClause,
 				xmlValue.UsedAsReferenceData)
 			                 {
-				                 FieldRoles = CreateFieldRoles(xmlValue.FieldRoles)
+				                 FieldRoles = CreateFieldRoles(xmlValue.FieldRoles),
+				                 DatasetType = xmlValue.DatasetType
 			                 };
 
 			return paramValue;
@@ -1352,20 +1354,22 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 		}
 
 		/// <summary>
-		/// The attribute-role assignments carried by the dataset parameter values of the given
-		/// conditions, per dataset of the given workspace. Empty for the common case; non-empty
+		/// What the dataset parameter values of the given conditions declare about the datasets
+		/// of the given workspace, one entry per dataset. Empty for the common case; non-empty
 		/// only where a standalone condition references a dataset that a harvested model cannot
 		/// describe on its own, such as a raster catalog and its file-path field.
 		/// </summary>
 		[NotNull]
-		public static IDictionary<string, IList<DatasetFieldRole>> GetFieldRolesByDatasetName(
+		public static IList<DatasetDeclaration> GetDatasetDeclarations(
 			[NotNull] string workspaceId,
 			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
 		{
-			Assert.ArgumentNotNull(referencedConditions, nameof(referencedConditions));
 			Assert.ArgumentNotNullOrEmpty(workspaceId, nameof(workspaceId));
+			Assert.ArgumentNotNull(referencedConditions, nameof(referencedConditions));
 
-			var result = new Dictionary<string, IList<DatasetFieldRole>>(
+			// Keyed while collecting, because the same dataset may be declared by any number of
+			// conditions and all of them must agree.
+			var result = new Dictionary<string, DatasetDeclaration>(
 				StringComparer.OrdinalIgnoreCase);
 
 			foreach (XmlInstanceConfiguration xmlConfiguration in referencedConditions)
@@ -1398,22 +1402,47 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					continue;
 				}
 
-				IList<DatasetFieldRole> fieldRoles =
-					Assert.NotNull(CreateFieldRoles(datasetParameterValue.FieldRoles));
-
-				if (result.TryGetValue(datasetName, out IList<DatasetFieldRole> existing))
+				if (datasetParameterValue.DatasetType == SupportedDatasetType.Null)
 				{
-					// The same dataset may be referenced by several conditions. Identical role
-					// assignments are fine; conflicting ones are a configuration error, because
-					// only one of them can end up on the dataset.
-					AssertSameFieldRoles(datasetName, existing, fieldRoles);
+					// The roles say which field holds the path, not what to do with it. Without
+					// the kind there is nothing to build, and guessing would pick the wrong
+					// catalog as soon as there is more than one kind.
+					throw new InvalidConfigurationException(
+						$"Dataset {datasetName} in {xmlConfiguration.Name} carries field roles " +
+						"but no datasetType. Field roles are only meaningful together with the " +
+						"kind of dataset they describe.");
+				}
+
+				var declaration = new DatasetDeclaration(
+					datasetName, datasetParameterValue.DatasetType,
+					Assert.NotNull(CreateFieldRoles(datasetParameterValue.FieldRoles)));
+
+				if (result.TryGetValue(datasetName, out DatasetDeclaration existing))
+				{
+					// Identical declarations are fine; conflicting ones are a configuration
+					// error, because only one of them can end up on the dataset.
+					AssertSameDeclaration(existing, declaration);
 					continue;
 				}
 
-				result.Add(datasetName, fieldRoles);
+				result.Add(datasetName, declaration);
 			}
 
-			return result;
+			return result.Values.ToList();
+		}
+
+		private static void AssertSameDeclaration(
+			[NotNull] DatasetDeclaration existing,
+			[NotNull] DatasetDeclaration other)
+		{
+			if (existing.DatasetType != other.DatasetType)
+			{
+				throw new InvalidConfigurationException(
+					$"Dataset {existing.DatasetName} is referenced as both " +
+					$"{existing.DatasetType} and {other.DatasetType}");
+			}
+
+			AssertSameFieldRoles(existing.DatasetName, existing.FieldRoles, other.FieldRoles);
 		}
 
 		private static void AssertSameFieldRoles(
@@ -2302,7 +2331,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				       WhereClause = Escape(datasetTestParameterValue.FilterExpression),
 				       UsedAsReferenceData = datasetTestParameterValue.UsedAsReferenceData,
 				       WorkspaceId = Escape(workspaceId),
-				       FieldRoles = CreateXmlFieldRoles(datasetTestParameterValue.FieldRoles)
+				       FieldRoles = CreateXmlFieldRoles(datasetTestParameterValue.FieldRoles),
+				       DatasetType = datasetTestParameterValue.DatasetType
 			       };
 		}
 

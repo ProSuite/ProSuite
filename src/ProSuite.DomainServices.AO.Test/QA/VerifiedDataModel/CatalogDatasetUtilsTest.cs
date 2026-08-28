@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -12,7 +14,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 	/// a standalone condition list transports alongside the dataset parameter value.
 	/// </summary>
 	[TestFixture]
-	public class RasterCatalogDatasetUtilsTest
+	public class CatalogDatasetUtilsTest
 	{
 		private const string _catalogName = "RAS_DTM_TILES";
 		private const string _pathField = "CURRENT_FILE_PATH";
@@ -28,7 +30,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				                                 AliasName = "DTM tiles"
 			                                 });
 
-			RasterCatalogDatasetUtils.ApplyFieldRoles(model, GetFilePathRole(_catalogName));
+			CatalogDatasetUtils.ApplyDeclarations(model, GetFilePathRole(_catalogName));
 
 			Dataset applied = model.GetDatasetByModelName(_catalogName);
 
@@ -63,7 +65,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				                             GeometryType = PolygonGeometryType
 			                             });
 
-			RasterCatalogDatasetUtils.ApplyFieldRoles(model, GetFilePathRole(_catalogName));
+			CatalogDatasetUtils.ApplyDeclarations(model, GetFilePathRole(_catalogName));
 
 			Assert.AreSame(other, model.GetDatasetByModelName("TLM_STRASSE"));
 		}
@@ -78,8 +80,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				                                 GeometryType = PolygonGeometryType
 			                                 });
 
-			RasterCatalogDatasetUtils.ApplyFieldRoles(
-				model, new Dictionary<string, IList<DatasetFieldRole>>());
+			CatalogDatasetUtils.ApplyDeclarations(
+				model, new List<DatasetDeclaration>());
 
 			Assert.AreSame(harvested, model.GetDatasetByModelName(_catalogName));
 		}
@@ -91,9 +93,8 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			// unknown-dataset handling, not here.
 			DdxModel model = CreateModel();
 
-			Assert.DoesNotThrow(
-				() => RasterCatalogDatasetUtils.ApplyFieldRoles(
-					model, GetFilePathRole(_catalogName)));
+			Assert.DoesNotThrow(() => CatalogDatasetUtils.ApplyDeclarations(
+				                    model, GetFilePathRole(_catalogName)));
 		}
 
 		[Test]
@@ -103,11 +104,41 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 
 			model.AddDataset(new VerifiedTableDataset(_catalogName));
 
-			var exception = Assert.Throws<InvalidConfigurationException>(
-				() => RasterCatalogDatasetUtils.ApplyFieldRoles(
-					model, GetFilePathRole(_catalogName)));
+			var exception =
+				Assert.Throws<InvalidConfigurationException>(() =>
+					                                             CatalogDatasetUtils
+						                                             .ApplyDeclarations(
+							                                             model,
+							                                             GetFilePathRole(
+								                                             _catalogName)));
 
 			Assert.IsTrue(exception.Message.Contains(_catalogName), exception.Message);
+		}
+
+		[Test]
+		public void The_declared_type_decides_which_catalog_is_created()
+		{
+			// A file-path role by itself does not say what kind of catalog this is: a point
+			// cloud catalog has one too. Only the declared type does.
+			DdxModel model = CreateModel();
+
+			model.AddDataset(new VerifiedVectorDataset(_catalogName)
+			                 {
+				                 GeometryType = PolygonGeometryType
+			                 });
+
+			var exception =
+				Assert.Throws<InvalidConfigurationException>(() =>
+					                                             CatalogDatasetUtils
+						                                             .ApplyDeclarations(
+							                                             model,
+							                                             GetFilePathRole(
+								                                             _catalogName,
+								                                             SupportedDatasetType
+									                                             .FeatureClass)));
+
+			Assert.IsTrue(exception.Message.Contains(_catalogName), exception.Message);
+			Assert.IsTrue(exception.Message.Contains("FeatureClass"), exception.Message);
 		}
 
 		[Test]
@@ -119,27 +150,27 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 				            new DatasetFieldRole(AttributeRole.ObjectID, "OBJECTID")
 			            };
 
-			Assert.Throws<System.ArgumentException>(
-				() => new VerifiedRasterCatalogDataset(_catalogName, roles));
+			Assert.Throws<ArgumentException>(() => new VerifiedRasterCatalogDataset(
+				                                 _catalogName, roles));
 		}
 
 		#region Test setup
 
 		private static readonly GeometryTypeShape PolygonGeometryType =
-			new GeometryTypeShape("Polygon", Commons.Geom.EsriShape.ProSuiteGeometryType.Polygon);
+			new GeometryTypeShape("Polygon", ProSuiteGeometryType.Polygon);
 
-		private static IDictionary<string, IList<DatasetFieldRole>> GetFilePathRole(
-			string datasetName)
+		private static IList<DatasetDeclaration> GetFilePathRole(
+			string datasetName,
+			SupportedDatasetType datasetType = SupportedDatasetType.RasterCatalog)
 		{
-			return new Dictionary<string, IList<DatasetFieldRole>>
+			return new List<DatasetDeclaration>
 			       {
-				       {
-					       datasetName,
+				       new DatasetDeclaration(
+					       datasetName, datasetType,
 					       new List<DatasetFieldRole>
 					       {
 						       new DatasetFieldRole(AttributeRole.FilePath, _pathField)
-					       }
-				       }
+					       })
 			       };
 		}
 

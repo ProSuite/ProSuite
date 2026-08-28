@@ -122,9 +122,23 @@
 				<xs:attribute name="where" type="xs:string" />
 				<xs:attribute default="false" name="usedAsReferenceData" type="xs:boolean" />
 				<xs:attribute name="workspace" type="xs:string" />
+				<xs:attribute default="Null" name="datasetType" type="tns:SupportedDatasetType" />
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
+	<xs:simpleType name="SupportedDatasetType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Null" />
+			<xs:enumeration value="Table" />
+			<xs:enumeration value="FeatureClass" />
+			<xs:enumeration value="Topology" />
+			<xs:enumeration value="Terrain" />
+			<xs:enumeration value="RasterDataset" />
+			<xs:enumeration value="RasterMosaic" />
+			<xs:enumeration value="RasterCatalog" />
+			<xs:enumeration value="PointCloudCatalog" />
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:complexType name="ArrayOfXmlDatasetFieldRole">
 		<xs:sequence>
 			<xs:element minOccurs="0" maxOccurs="unbounded" name="Field" nillable="true" type="tns:XmlDatasetFieldRole" />

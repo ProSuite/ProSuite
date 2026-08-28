@@ -50,7 +50,7 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
 		public void Can_read_field_roles_from_document()
 		{
 			XmlDataQualityDocument document = Deserialize(GetDocument(
-				$@"<Fields>
+				   $@"<Fields>
                      <Field role=""FilePath"" name=""{_pathField}"" />
                    </Fields>"));
 
@@ -74,7 +74,7 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
 		[Test]
 		public void Can_round_trip_field_roles_through_the_parameter_value()
 		{
-			var testParameter = new global::ProSuite.QA.Core.TestParameter(
+			var testParameter = new TestParameter(
 				"dtm", typeof(string), "the surface");
 
 			var original = new DatasetTestParameterValue(testParameter)
@@ -97,7 +97,7 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
 		[Test]
 		public void Value_without_field_roles_writes_no_element()
 		{
-			var testParameter = new global::ProSuite.QA.Core.TestParameter(
+			var testParameter = new TestParameter(
 				"dtm", typeof(string), "the surface");
 
 			// The common case: nothing extra in the document.
@@ -110,49 +110,97 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
 			// Skipping it silently would leave the dataset without the field it needs and fail
 			// much later, far from the cause.
 			XmlDataQualityDocument document = Deserialize(GetDocument(
-				$@"<Fields>
+				                                              $@"<Fields>
                      <Field role=""NoSuchRole"" name=""{_pathField}"" />
                    </Fields>"));
 
-			var exception = Assert.Throws<InvalidConfigurationException>(
-				() => XmlDataQualityUtils.GetFieldRolesByDatasetName(
-					"ws1", GetConditions(document)));
+			var exception =
+				Assert.Throws<InvalidConfigurationException>(() => GetDeclarations(
+					                                             document, "ws1"));
 
 			Assert.IsTrue(exception.Message.Contains("NoSuchRole"), exception.Message);
 		}
 
 		[Test]
-		public void Can_collect_field_roles_by_dataset_name()
+		public void Can_collect_declarations_by_dataset_name()
 		{
 			XmlDataQualityDocument document = Deserialize(GetDocument(
-				$@"<Fields>
+				                                              $@"<Fields>
                      <Field role=""FilePath"" name=""{_pathField}"" />
                    </Fields>"));
 
-			IDictionary<string, IList<DatasetFieldRole>> byDatasetName =
-				XmlDataQualityUtils.GetFieldRolesByDatasetName("ws1", GetConditions(document));
+			DatasetDeclaration declaration = GetSingleDeclaration(document, "ws1");
 
-			Assert.AreEqual(1, byDatasetName.Count);
+			Assert.AreEqual("RAS_DTM_TILES", declaration.DatasetName);
+			Assert.AreEqual(1, declaration.FieldRoles.Count);
+			Assert.AreEqual(AttributeRole.FilePath, declaration.FieldRoles[0].Role);
+			Assert.AreEqual(_pathField, declaration.FieldRoles[0].FieldName);
+		}
 
-			IList<DatasetFieldRole> fieldRoles = byDatasetName["RAS_DTM_TILES"];
+		[Test]
+		public void Collected_declaration_carries_the_declared_dataset_type()
+		{
+			// The roles alone do not say what kind of catalog this is - every file catalog has a
+			// file-path field. The declared type does.
+			XmlDataQualityDocument document = Deserialize(GetDocument(
+				                                              $@"<Fields>
+                     <Field role=""FilePath"" name=""{_pathField}"" />
+                   </Fields>"));
 
-			Assert.AreEqual(1, fieldRoles.Count);
-			Assert.AreEqual(AttributeRole.FilePath, fieldRoles[0].Role);
-			Assert.AreEqual(_pathField, fieldRoles[0].FieldName);
+			Assert.AreEqual(SupportedDatasetType.RasterCatalog,
+			                GetSingleDeclaration(document, "ws1").DatasetType);
+		}
+
+		[Test]
+		public void Field_roles_without_a_declared_dataset_type_are_an_error()
+		{
+			// Guessing would pick the wrong catalog kind as soon as there is more than one.
+			XmlDataQualityDocument document = Deserialize(GetDocument(
+				                                              $@"<Fields>
+                     <Field role=""FilePath"" name=""{_pathField}"" />
+                   </Fields>", datasetType: null));
+
+			var exception =
+				Assert.Throws<InvalidConfigurationException>(() => GetDeclarations(
+					                                             document, "ws1"));
+
+			Assert.IsTrue(exception.Message.Contains("datasetType"), exception.Message);
+		}
+
+		[Test]
+		public void Document_without_a_declared_dataset_type_still_reads()
+		{
+			// The attribute is optional: every existing document must keep working unchanged.
+			XmlDataQualityDocument document =
+				Deserialize(GetDocument(string.Empty, datasetType: null));
+
+			Assert.AreEqual(SupportedDatasetType.Null,
+			                GetDtmParameterValue(document).DatasetType);
+		}
+
+		[Test]
+		public void Can_round_trip_the_declared_dataset_type()
+		{
+			var testParameter = new TestParameter(
+				"dtm", typeof(string), "the surface");
+
+			var original = new DatasetTestParameterValue(testParameter)
+			               {
+				               DatasetType = SupportedDatasetType.RasterCatalog
+			               };
+
+			Assert.AreEqual(SupportedDatasetType.RasterCatalog, Roundtrip(original).DatasetType);
 		}
 
 		[Test]
 		public void Field_roles_of_another_workspace_are_not_collected()
 		{
 			XmlDataQualityDocument document = Deserialize(GetDocument(
-				$@"<Fields>
+				                                              $@"<Fields>
                      <Field role=""FilePath"" name=""{_pathField}"" />
                    </Fields>"));
 
-			Assert.AreEqual(
-				0,
-				XmlDataQualityUtils.GetFieldRolesByDatasetName("other", GetConditions(document))
-				                   .Count);
+			Assert.AreEqual(0, GetDeclarations(document, "other").Count);
 		}
 
 		[Test]
@@ -189,20 +237,33 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
 
 			public string[] TestCategories => new string[0];
 
-			public IList<global::ProSuite.QA.Core.TestParameter> Parameters { get; } =
-				new List<global::ProSuite.QA.Core.TestParameter>
+			public IList<TestParameter> Parameters { get; } =
+				new List<TestParameter>
 				{
-					new global::ProSuite.QA.Core.TestParameter("dtm", typeof(string))
+					new TestParameter("dtm", typeof(string))
 				};
 
 			public Type InstanceType => typeof(DatasetFieldRole);
 
-			public global::ProSuite.QA.Core.TestParameter GetParameter(string parameterName)
+			public TestParameter GetParameter(string parameterName)
 			{
 				return Parameters.FirstOrDefault(p => p.Name == parameterName);
 			}
 
 			public string GetParameterDescription(string parameterName) => null;
+		}
+
+		private static IList<DatasetDeclaration> GetDeclarations(
+			XmlDataQualityDocument document, string workspaceId)
+		{
+			return XmlDataQualityUtils.GetDatasetDeclarations(
+				workspaceId, GetConditions(document));
+		}
+
+		private static DatasetDeclaration GetSingleDeclaration(
+			XmlDataQualityDocument document, string workspaceId)
+		{
+			return GetDeclarations(document, workspaceId).Single();
 		}
 
 		private static IList<XmlInstanceConfiguration> GetConditions(
@@ -275,8 +336,12 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
 			               .Single();
 		}
 
-		private static string GetDocument(string fieldsElement)
+		private static string GetDocument(string fieldsElement,
+		                                  string datasetType = "RasterCatalog")
 		{
+			string datasetTypeAttribute =
+				datasetType == null ? string.Empty : $@"datasetType=""{datasetType}""";
+
 			return $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <DataQuality xmlns=""urn:ProSuite.QA.QualitySpecifications-3.0"">
   <QualitySpecifications>
@@ -290,7 +355,8 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
     <QualityCondition name=""surface_vertex"" testDescriptor=""QaSurfaceVertex"">
       <Parameters>
         <Dataset parameter=""featureClass"" value=""TLM_STRASSE"" workspace=""ws1"" />
-        <Dataset parameter=""dtm"" value=""RAS_DTM_TILES"" workspace=""ws1"">
+        <Dataset parameter=""dtm"" value=""RAS_DTM_TILES"" workspace=""ws1""
+                 {datasetTypeAttribute}>
           {fieldsElement}
         </Dataset>
         <Scalar parameter=""limit"" value=""1"" />

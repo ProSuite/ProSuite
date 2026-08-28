@@ -175,6 +175,14 @@ namespace ProSuite.DomainModel.Core.QA
 		public IList<DatasetFieldRole> FieldRoles { get; set; }
 
 		/// <summary>
+		/// Optional declaration of the kind of the referenced dataset, transported alongside the
+		/// value for the same reason as <see cref="FieldRoles"/>: there is no DDX in the
+		/// standalone paths to say what the dataset is. Transient, like the roles - a DDX dataset
+		/// knows its own type.
+		/// </summary>
+		public SupportedDatasetType DatasetType { get; set; }
+
+		/// <summary>
 		/// Gets the name of the referenced dataset or the name of the referenced transformer.
 		/// </summary>
 		/// <returns></returns>
@@ -234,7 +242,8 @@ namespace ProSuite.DomainModel.Core.QA
 				             // would share it.
 				             FieldRoles = FieldRoles == null
 					                          ? null
-					                          : new List<DatasetFieldRole>(FieldRoles)
+					                          : new List<DatasetFieldRole>(FieldRoles),
+				             DatasetType = DatasetType
 			             };
 
 			return result;
