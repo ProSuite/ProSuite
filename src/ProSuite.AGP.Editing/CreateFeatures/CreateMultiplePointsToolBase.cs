@@ -69,7 +69,7 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 	{
 		return MapUtils.IsStereoMapView(ActiveMapView)
 			       ? null
-			       : new SymbolizedSketchTypeBasedOnSelection(this);
+			       : new SymbolizedSketchTypeBasedOnTemplate(this);
 	}
 
 	protected override SketchGeometryType GetEditSketchGeometryType()
