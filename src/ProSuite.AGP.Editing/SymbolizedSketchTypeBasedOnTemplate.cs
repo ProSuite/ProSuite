@@ -152,7 +152,8 @@ public class SymbolizedSketchTypeBasedOnTemplate : ISymbolizedSketchType
 		}
 	}
 
-	private async Task ApplySketchSymbolWorkAround()
+	//ToDo: Do we really need this workaround?
+	private static async Task ApplySketchSymbolWorkAround()
 	{
 		MapView mapView = MapView.Active;
 		if (mapView == null)
@@ -162,15 +163,17 @@ public class SymbolizedSketchTypeBasedOnTemplate : ISymbolizedSketchType
 
 		Geometry sketch = await mapView.GetCurrentSketchAsync();
 
-		// Clearing the sketch is needed to make the (new) sketch symbol take effect. Unlike
-		// the selection-based variant we deliberately preserve and restore any in-progress
-		// sketch: a template change must re-symbolize the existing points, not discard them.
-		await mapView.ClearSketchAsync();
-
 		if (sketch?.IsEmpty == false)
 		{
-			await mapView.SetCurrentSketchAsync(sketch);
+			// The symbol only takes effect on an empty sketch (see below), and we must not
+			// clear a sketch that is in progress. The tool re-applies the symbol on an empty
+			// sketch (e.g. by restarting the sketch phase when the template changes).
+			return;
 		}
+
+		// This is needed (apparently inside a QueuedTask) to make the sketch symbol take effect.
+		// It likely triggers the relevant events internally...
+		await mapView.ClearSketchAsync();
 	}
 
 	#region Nested type: TemplateNamedValues

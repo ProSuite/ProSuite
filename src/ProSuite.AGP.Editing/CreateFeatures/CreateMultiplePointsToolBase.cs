@@ -51,9 +51,18 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 
 	protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
 
-	protected override void OnCurrentTemplateUpdated()
+	protected override async void OnCurrentTemplateUpdated()
 	{
 		UpdateEnabled();
+
+		try
+		{
+			await RememberSketchAsync();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug($"Error remembering sketch on template change: {e.Message}", e);
+		}
 	}
 
 	#region Overrides of PlugIn
