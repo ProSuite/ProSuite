@@ -116,6 +116,17 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 		return result;
 	}
 
+	protected override async Task HandleEscapeAsync()
+	{
+		Geometry currentSketch = await GetCurrentSketchAsync();
+		if (currentSketch == null || currentSketch.IsEmpty)
+		{
+			await ClearSelectionAsync();
+		}
+
+		await base.HandleEscapeAsync();
+	}
+
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 		Geometry sketchGeometry,
 		EditingTemplate editTemplate,
