@@ -1102,7 +1102,6 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		[Ignore("TOP-5999: open defect, see the comment below")]
 		public void CanGetFootprintForVicinoCimiteroSavosa()
 		{
 			// TOP-5999: TLM_GEBAEUDEKOERPER 8708219 {074E0B9F-2D15-4329-95CB-14870236BD9B}

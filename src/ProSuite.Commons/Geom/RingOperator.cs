@@ -1157,6 +1157,16 @@ namespace ProSuite.Commons.Geom
 			ISegmentList newTarget =
 				RemoveLinearSelfIntersections(new MultiPolycurve(targetParts), tol);
 
+			// ...and cracking can make a ring touch itself: the other operand's vertices are
+			// inserted into it in an order that has it leave the crack point, run around a
+			// lobe narrower than the tolerance, and return to that same point. The lobe is a
+			// snap artefact, but it leaves the operand non-simple, which the union walk
+			// cannot navigate - it finds no outbound intersection at all and emits nothing,
+			// whereupon the ring-relation fallback declares the two rings mutually outside
+			// and the result becomes their overlapping sum.
+			newSource = RemoveSubToleranceBoundaryLoops(newSource, tol);
+			newTarget = RemoveSubToleranceBoundaryLoops(newTarget, tol);
+
 			newSource = Append(newSource, unaffectedSourceParts);
 
 			_subcurveNavigator.Invalidate(newSource, newTarget);
@@ -1233,6 +1243,28 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return changed ? new MultiPolycurve(cleanedParts) : clustered;
+		}
+
+		/// <summary>
+		/// Removes the boundary loops whose two flanks are closer to each other than the
+		/// tolerance, i.e. the self-touches the crack pass can introduce (see the caller).
+		/// Only such sub-tolerance loops are removed: a wider boundary loop can be a
+		/// legitimate part of the outline.
+		/// </summary>
+		[NotNull]
+		private static ISegmentList RemoveSubToleranceBoundaryLoops(
+			[NotNull] ISegmentList cracked, double tolerance)
+		{
+			if (! (cracked is MultiLinestring rings))
+			{
+				return cracked;
+			}
+
+			// The parts are this method's own clones, hence the in-place simplification.
+			RingSimplifier.SimplifyRingsXY(
+				rings, tolerance, RingSimplifyFlags.RemoveSubToleranceBoundaryLoops);
+
+			return cracked;
 		}
 
 		/// <param name="pointClustering">Whether to snap/crack near-coincident intersection

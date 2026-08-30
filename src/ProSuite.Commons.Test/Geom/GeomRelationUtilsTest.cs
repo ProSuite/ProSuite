@@ -389,7 +389,6 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		[Ignore("TOP-5999 break-out: open defect, see the comment below")]
 		public void CanDetermineContainmentOfVicinoCimiteroSavosaStep5Ring()
 		{
 			// TOP-5999 break-out from PolyhedronTest.CanGetFootprintForVicinoCimiteroSavosa
