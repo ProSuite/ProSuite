@@ -1329,4 +1329,16 @@
   <data name="MinExtent_ExtentSmallerThanLimit" xml:space="preserve">
     <value>Feature extent is below than the minimum limit</value>
   </data>
+  <data name="LasFileZRange_NoLasFile" xml:space="preserve">
+    <value>The LAS file referenced by the point cloud tile does not exist</value>
+  </data>
+  <data name="LasFileZRange_InvalidLasHeader" xml:space="preserve">
+    <value>The header of the LAS file cannot be read</value>
+  </data>
+  <data name="LasFileZRange_ZRange_TooLow" xml:space="preserve">
+    <value>The minimum Z declared by the LAS file header is below the limit</value>
+  </data>
+  <data name="LasFileZRange_ZRange_TooHigh" xml:space="preserve">
+    <value>The maximum Z declared by the LAS file header is above the limit</value>
+  </data>
 </root>

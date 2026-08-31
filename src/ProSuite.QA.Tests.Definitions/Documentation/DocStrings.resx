@@ -4878,4 +4878,19 @@ Remarks: A source row may be exported several times with different tile ids.</va
   <data name="QaMinExtent_limit" xml:space="preserve">
     <value>minimum extension in (x,y)-units</value>
   </data>
+  <data name="QaLasFileZRange_0" xml:space="preserve">
+    <value>Finds LAS files of 'pointCloud' covering the features of 'perimeterClass' whose header cannot be read, or whose declared Z range is not within 'minimumZ' and 'maximumZ'</value>
+  </data>
+  <data name="QaLasFileZRange_perimeterClass" xml:space="preserve">
+    <value>The feature class whose features define the areas of the point cloud to check. Each LAS file covering at least one feature is checked once.</value>
+  </data>
+  <data name="QaLasFileZRange_pointCloud" xml:space="preserve">
+    <value>Point cloud (a catalog of LAS files, one per tile) to check</value>
+  </data>
+  <data name="QaLasFileZRange_minimumZ" xml:space="preserve">
+    <value>Lowest allowed Z value (in z-units). Use double.MinValue to not check the lower bound.</value>
+  </data>
+  <data name="QaLasFileZRange_maximumZ" xml:space="preserve">
+    <value>Highest allowed Z value (in z-units). Use double.MaxValue to not check the upper bound.</value>
+  </data>
 </root>
