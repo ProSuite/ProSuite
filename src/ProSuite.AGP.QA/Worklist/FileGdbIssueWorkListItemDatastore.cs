@@ -260,7 +260,8 @@ public class FileGdbIssueWorkListItemDatastore : IWorkListItemDatastore
 	{
 		Stopwatch watch = Stopwatch.StartNew();
 
-		string path = table.GetPath().LocalPath;
+		string path = Assert.NotNull(DatasetUtils.GetDatasetPath(table),
+		                             "table has no catalog path").LocalPath;
 
 		// the GP tool is not going to fail on adding a field with the same name
 		// But it still takes hell of a long time...

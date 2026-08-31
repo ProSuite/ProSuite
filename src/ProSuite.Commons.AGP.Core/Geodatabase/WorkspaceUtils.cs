@@ -243,9 +243,35 @@ public static class WorkspaceUtils
 		return datastoreName1.Equals(datastoreName2, comparison);
 	}
 
+	/// <summary>
+	/// Gets the catalog path of the given datastore, or <c>null</c> if the datastore has
+	/// none. Prefer this method over <see cref="Datastore.GetPath"/>, which is not annotated
+	/// and therefore easily mistaken for never returning null.
+	/// </summary>
+	/// <param name="datastore">The datastore, must not be null.</param>
+	/// <returns>The datastore's catalog path, or <c>null</c> if it has none. An in-memory
+	/// geodatabase (see <see cref="MemoryConnectionProperties"/>) has no path, and neither
+	/// have some plug-in datastores.</returns>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	[CanBeNull]
+	public static Uri GetDatastorePath([NotNull] Datastore datastore)
+	{
+		Assert.ArgumentNotNull(datastore, nameof(datastore));
+
+		return datastore.GetPath();
+	}
+
+	/// <summary>
+	/// Gets the catalog path of the given geodatabase. Use
+	/// <see cref="GetDatastorePath"/> for datastores that may have no path, such as an
+	/// in-memory geodatabase.
+	/// </summary>
+	/// <exception cref="AssertionException">The geodatabase has no catalog path.</exception>
+	[NotNull]
 	public static string GetCatalogPath([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase)
 	{
-		Uri uri = geodatabase.GetPath();
+		Uri uri = Assert.NotNull(GetDatastorePath(geodatabase),
+		                         "geodatabase has no catalog path");
 
 		// NOTE: AbsolutePath messes up blanks!
 		return uri.LocalPath;
