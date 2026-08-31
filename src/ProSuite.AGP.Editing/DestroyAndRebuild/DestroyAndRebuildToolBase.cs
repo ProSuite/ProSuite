@@ -56,6 +56,10 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	private GeometryType _currentFeatureGeometryType;
 	//private bool? _currentFeatureHasZ;
 
+	// The geometry of the edge feature being rebuilt, kept to determine which of its end points
+	// (and hence which connected junctions) the current sketch relocates.
+	[CanBeNull] private Polyline _originalLine;
+
 	protected DestroyAndRebuildToolBase()
 	{
 		HandledKeys.Add(_keyToggleMoveEndJunction);
@@ -143,7 +147,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		// before a save writes the .aprx (see OnProjectSavingAsync).
 		ProjectSavingEvent.Subscribe(OnProjectSavingAsync);
 
-		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization);
+		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization,
+		                                          _destroyAndRebuildToolOptions);
 
 		await QueuedTask.Run(() =>
 		{
@@ -217,6 +222,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		// HandleEscapeAsync (e.g. the selection being cleared externally or after an edit
 		// completes): make sure the reference overlay is gone and the hidden feature is visible.
 		_feedback?.Clear();
+		_originalLine = null;
 
 		if (_hiddenFeatureLayer != null)
 		{
@@ -233,6 +239,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 		FeatureClass featureClass = feature.GetTable();
 		_currentFeatureGeometryType = featureClass.GetShapeType();
+
+		_originalLine = feature.GetShape() as Polyline;
 
 		// Draw the reference overlay of the original geometry while sketching the replacement.
 		if (_destroyAndRebuildToolOptions.HighlightOriginalGeometry)
@@ -258,6 +266,86 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			"Sketch the new geometry. Press [ESC] to reselect the target feature.{0}" +
 			"Change the selected feature while keeping SHIFT pressed (the current selection will be cleared).",
 			Environment.NewLine);
+	}
+
+	protected override async Task<bool> OnSketchModifiedAsyncCore()
+	{
+		await UpdateMovedEndJunctionFeedbackAsync();
+
+		return await base.OnSketchModifiedAsyncCore();
+	}
+
+	/// <summary>
+	/// Marks the end points that the current sketch relocates, i.e. the locations where the
+	/// junctions connected to the rebuilt edge would end up.
+	/// </summary>
+	private async Task UpdateMovedEndJunctionFeedbackAsync()
+	{
+		// Snapshot: the tool can be deactivated or go back to the selection phase while the
+		// sketch is being fetched.
+		DestroyAndRebuildFeedback feedback = _feedback;
+		Polyline originalLine = _originalLine;
+
+		if (feedback == null || originalLine == null || originalLine.IsEmpty)
+		{
+			return;
+		}
+
+		var sketchLine = await GetCurrentSketchAsync() as Polyline;
+
+		await QueuedTaskUtils.Run(() =>
+		{
+			Multipoint movedEndPoints =
+				sketchLine == null || sketchLine.IsEmpty || sketchLine.PointCount < 2
+					? null
+					: GetMovedEndPoints(sketchLine, originalLine);
+
+			feedback.UpdateMovedEndJunctions(movedEndPoints);
+		});
+	}
+
+	/// <summary>
+	/// Returns those end points of the new line that do not coincide with the corresponding end
+	/// point of the original line. The correspondence between the two lines' end points is
+	/// established the same way as for the automatic flip on store, so that a sketch drawn
+	/// against the original orientation does not report both ends as relocated.
+	/// </summary>
+	[CanBeNull]
+	private static Multipoint GetMovedEndPoints([NotNull] Polyline newLine,
+	                                            [NotNull] Polyline oldLine)
+	{
+		MapPoint oldFrom = GeometryUtils.GetStartPoint(oldLine);
+		MapPoint oldTo = Assert.NotNull(GeometryUtils.GetEndPoint(oldLine));
+
+		MapPoint newFrom = GeometryUtils.GetStartPoint(newLine);
+		MapPoint newTo = Assert.NotNull(GeometryUtils.GetEndPoint(newLine));
+
+		if (IsReversed(newLine, oldLine))
+		{
+			(oldFrom, oldTo) = (oldTo, oldFrom);
+		}
+
+		var movedPoints = new List<MapPoint>(2);
+
+		if (! GeometryUtils.IsSamePointXY(oldFrom, newFrom))
+		{
+			movedPoints.Add(newFrom);
+		}
+
+		if (! GeometryUtils.IsSamePointXY(oldTo, newTo))
+		{
+			movedPoints.Add(newTo);
+		}
+
+		if (movedPoints.Count == 0)
+		{
+			return null;
+		}
+
+		var builder = new MultipointBuilderEx(oldLine.SpatialReference);
+		builder.AddPoints(movedPoints);
+
+		return builder.ToGeometry();
 	}
 
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
