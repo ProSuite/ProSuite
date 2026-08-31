@@ -70,7 +70,7 @@
     <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
 
     <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.8.9" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.9" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.8.10" />
   </ItemGroup>
 
   <ItemGroup>
