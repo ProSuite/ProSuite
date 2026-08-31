@@ -11,6 +11,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Xml;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Commons;
 using ProSuite.Microservices.Definitions.Shared.Ddx;
@@ -246,6 +247,12 @@ namespace ProSuite.Microservices.Client.QA
 
 					parameterMsg.WhereClause = datasetParamValue.FilterExpression ?? string.Empty;
 					parameterMsg.UsedAsReferenceData = datasetParamValue.UsedAsReferenceData;
+
+					// Both are transient and empty for the DDX-backed paths, where the dataset
+					// knows its own type and carries its own attribute roles.
+					parameterMsg.DatasetType = (int) datasetParamValue.DatasetType;
+
+					AddFieldRoleMessages(datasetParamValue.FieldRoles, parameterMsg.FieldRoles);
 				}
 				else if (parameterValue is ScalarTestParameterValue scalarParamValue)
 				{
@@ -262,6 +269,28 @@ namespace ProSuite.Microservices.Client.QA
 				}
 
 				parameterMsgs.Add(parameterMsg);
+			}
+		}
+
+		private static void AddFieldRoleMessages(
+			[CanBeNull] IEnumerable<DatasetFieldRole> fieldRoles,
+			[NotNull] ICollection<DatasetFieldRoleMsg> fieldRoleMsgs)
+		{
+			if (fieldRoles == null)
+			{
+				return;
+			}
+
+			foreach (DatasetFieldRole fieldRole in fieldRoles)
+			{
+				fieldRoleMsgs.Add(
+					new DatasetFieldRoleMsg
+					{
+						// The simple name, not the registry's integer id: the id is an
+						// implementation detail that must not reach the wire.
+						Role = AttributeRole.GetSimpleName(fieldRole.Role),
+						Name = fieldRole.FieldName
+					});
 			}
 		}
 
@@ -1202,6 +1231,118 @@ namespace ProSuite.Microservices.Client.QA
 
 			return _geometryTypes.OfType<GeometryTypeShape>()
 			                     .FirstOrDefault(gt => gt.ShapeType == proSuiteGeometryType);
+		}
+
+		#endregion
+
+		#region Dataset declarations
+
+		/// <summary>
+		/// What the dataset parameter values of the given conditions declare about the datasets of
+		/// the given workspace, one entry per dataset. The proto twin of
+		/// <see cref="XmlDataQualityUtils.GetDatasetDeclarations"/>: empty for the common case,
+		/// non-empty only where a standalone condition references a dataset that a harvested model
+		/// cannot describe on its own, such as a raster catalog and its file-path field.
+		/// </summary>
+		[NotNull]
+		public static IList<DatasetDeclaration> GetDatasetDeclarations(
+			[NotNull] string workspaceId,
+			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
+		{
+			Assert.ArgumentNotNullOrEmpty(workspaceId, nameof(workspaceId));
+			Assert.ArgumentNotNull(referencedConditions, nameof(referencedConditions));
+
+			// Keyed while collecting, because the same dataset may be declared by any number of
+			// conditions and all of them must agree.
+			var result = new Dictionary<string, DatasetDeclaration>(
+				StringComparer.OrdinalIgnoreCase);
+
+			foreach (QualityConditionMsg conditionMsg in referencedConditions)
+			{
+				CollectDatasetDeclarations(conditionMsg.Name, conditionMsg.Parameters,
+				                           workspaceId, result);
+
+				foreach (InstanceConfigurationMsg issueFilterMsg in
+				         conditionMsg.ConditionIssueFilters)
+				{
+					CollectDatasetDeclarations(issueFilterMsg, workspaceId, result);
+				}
+			}
+
+			return result.Values.ToList();
+		}
+
+		private static void CollectDatasetDeclarations(
+			[NotNull] InstanceConfigurationMsg instanceConfigMsg,
+			[NotNull] string workspaceId,
+			[NotNull] IDictionary<string, DatasetDeclaration> result)
+		{
+			CollectDatasetDeclarations(instanceConfigMsg.Name, instanceConfigMsg.Parameters,
+			                           workspaceId, result);
+		}
+
+		private static void CollectDatasetDeclarations(
+			[NotNull] string configurationName,
+			[NotNull] IEnumerable<ParameterMsg> parameterMsgs,
+			[NotNull] string workspaceId,
+			[NotNull] IDictionary<string, DatasetDeclaration> result)
+		{
+			foreach (ParameterMsg parameterMsg in parameterMsgs)
+			{
+				if (parameterMsg.Transformer != null)
+				{
+					// A transformer's own dataset parameters can reference a catalog just as a
+					// condition's can, so the whole tree has to be walked.
+					CollectDatasetDeclarations(parameterMsg.Transformer, workspaceId, result);
+					continue;
+				}
+
+				if (parameterMsg.FieldRoles.Count == 0)
+				{
+					continue;
+				}
+
+				if (! string.Equals(parameterMsg.WorkspaceId ?? string.Empty, workspaceId,
+				                    StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+
+				string datasetName = parameterMsg.Value;
+
+				if (string.IsNullOrEmpty(datasetName))
+				{
+					continue;
+				}
+
+				var datasetType = (SupportedDatasetType) parameterMsg.DatasetType;
+
+				DatasetDeclarationUtils.AssertTypeDeclared(datasetType, datasetName,
+				                                           configurationName);
+
+				DatasetDeclarationUtils.AddDeclaration(
+					result,
+					new DatasetDeclaration(datasetName, datasetType,
+					                       CreateFieldRoles(parameterMsg.FieldRoles)));
+			}
+		}
+
+		/// <summary>
+		/// Converts the transported field roles, resolving each role by name.
+		/// </summary>
+		[NotNull]
+		public static IList<DatasetFieldRole> CreateFieldRoles(
+			[NotNull] ICollection<DatasetFieldRoleMsg> fieldRoleMsgs)
+		{
+			var result = new List<DatasetFieldRole>(fieldRoleMsgs.Count);
+
+			foreach (DatasetFieldRoleMsg fieldRoleMsg in fieldRoleMsgs)
+			{
+				result.Add(DatasetDeclarationUtils.CreateFieldRole(
+					           fieldRoleMsg.Role, fieldRoleMsg.Name));
+			}
+
+			return result;
 		}
 
 		#endregion

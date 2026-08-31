@@ -5,6 +5,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Test;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core;
+using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -95,6 +96,65 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			Assert.IsTrue(Directory.Exists(Path.Combine(tempDirPath, "issues.gdb")));
 			Assert.IsTrue(File.Exists(Path.Combine(tempDirPath, "verification.xml")));
+		}
+
+		[Test]
+		public void CanApplyDatasetDeclarationsFromConditionList()
+		{
+			// A model harvested from the workspace cannot tell a file catalog from any other
+			// feature class. The condition list says so with the field roles and the declared
+			// dataset type, and the factory must turn the harvested dataset into the catalog
+			// dataset those declare - the same step the XML factory makes.
+			const string specificationName = "TestSpec";
+			const string condition1Name = "Str_Simple";
+			const string featureClassName = "lines";
+			const string pathField = "CURRENT_FILE_PATH";
+			const string workspaceId = "35";
+
+			string gdbPath = TestData.GetGdb1Path();
+
+			var modelFactory =
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
+				                         new SimpleVerifiedDatasetHarvester());
+
+			ConditionListSpecificationMsg specificationMsg =
+				CreateConditionListSpecificationMsg(
+					workspaceId, specificationName, condition1Name, featureClassName,
+					out ISupportedInstanceDescriptors instanceDescriptors);
+
+			// The transformer's dataset parameter is where the feature class is referenced.
+			ParameterMsg datasetParameter =
+				specificationMsg.Elements[0].Condition.Parameters[0].Transformer.Parameters[0];
+
+			datasetParameter.DatasetType = (int) SupportedDatasetType.RasterCatalog;
+			datasetParameter.FieldRoles.Add(
+				new DatasetFieldRoleMsg { Role = "FilePath", Name = pathField });
+
+			QualitySpecification qualitySpecification = CreateQualitySpecification(
+				modelFactory, instanceDescriptors, specificationMsg,
+				new[] { new DataSource("Test DataSource", workspaceId, gdbPath) });
+
+			QualityCondition condition = qualitySpecification.Elements[0].QualityCondition;
+			Assert.NotNull(condition);
+
+			TransformerConfiguration transformer = condition.ParameterValues[0].ValueSource;
+			Assert.NotNull(transformer);
+
+			var datasetValue = transformer.ParameterValues[0] as DatasetTestParameterValue;
+			Assert.NotNull(datasetValue);
+
+			var catalogDataset = datasetValue.DatasetValue as IFileCatalogDataset;
+			Assert.NotNull(catalogDataset, "The harvested dataset was not replaced by a catalog");
+			Assert.IsInstanceOf<IRasterCatalogDataset>(catalogDataset);
+
+			// The file-path field comes from the transported role, never from a constant.
+			Assert.AreEqual(pathField, catalogDataset.FilePathFieldName);
+
+			// The declarations stay on the parameter value, so it still describes itself.
+			Assert.AreEqual(SupportedDatasetType.RasterCatalog, datasetValue.DatasetType);
+			Assert.NotNull(datasetValue.FieldRoles);
+			Assert.AreEqual(AttributeRole.FilePath, datasetValue.FieldRoles[0].Role);
+			Assert.AreEqual(pathField, datasetValue.FieldRoles[0].FieldName);
 		}
 
 		[Test]

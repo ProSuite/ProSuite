@@ -32,6 +32,9 @@ namespace ProSuite.QA.Tests.Test.TestData
 		private const string _featureClassMultipatch = "multipatch";
 		private const string _topology = "topology";
 
+		/// <summary>The LAS file path field of the 'footprints' catalog feature class.</summary>
+		private const string _lasFilePathField = "LASFILE";
+
 		/// <summary>
 		/// Creates a new geodatabase with test data and its associated model.
 		/// In-memory geodatabase is used by default, but it does not support topologies.
@@ -58,7 +61,25 @@ namespace ProSuite.QA.Tests.Test.TestData
 			_model.AddDataset(CreateTerrainDataset());
 		}
 
-		#region IDatasetContext override -> Mock the mosaic
+		#region IDatasetContext override -> Mock the mosaic and the point cloud
+
+		/// <summary>
+		/// Mimics a catalog-based point cloud (an archive point cloud dataset): the polygon
+		/// 'footprints' feature class is the LAS tile index, and the reference is built through
+		/// the shared seam. See ModelElementUtils.CreatePointCloudCatalog.
+		/// </summary>
+		public new PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			VectorDataset footprints =
+				_model.GetDatasetByModelName(_featureClassFootprints) as VectorDataset;
+
+			Assert.NotNull(footprints);
+
+			var catalog = new TestPointCloudCatalogDataset(
+				dataset.Name, footprints, filePathFieldName: _lasFilePathField);
+
+			return ModelElementUtils.CreatePointCloudCatalog(catalog, OpenFeatureClass);
+		}
 
 		public new MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
@@ -187,10 +208,13 @@ namespace ProSuite.QA.Tests.Test.TestData
 			DatasetUtils.CreateSimpleFeatureClass(workspace, _featureClassPolylines,
 			                                      lineFields);
 
+			// The 'footprints' class doubles as a file catalog: one polygon per tile, with the
+			// tile's file path in a field (see OpenSimpleRasterMosaic / OpenPointCloud).
 			DatasetUtils.CreateSimpleFeatureClass(
 				workspace, _featureClassFootprints, null,
 				FieldUtils.CreateOIDField(),
-				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolygon, sr));
+				FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolygon, sr),
+				FieldUtils.CreateTextField(_lasFilePathField, 500));
 
 			DatasetUtils.CreateSimpleFeatureClass(
 				workspace, _featureClassMasspoints, null,

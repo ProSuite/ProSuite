@@ -884,19 +884,8 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 
 			foreach (XmlDatasetFieldRole xmlFieldRole in xmlFieldRoles)
 			{
-				if (! AttributeRole.TryResolve(xmlFieldRole.Role, out AttributeRole role))
-				{
-					throw new InvalidConfigurationException(
-						$"Unknown attribute role '{xmlFieldRole.Role}'");
-				}
-
-				if (string.IsNullOrWhiteSpace(xmlFieldRole.Name))
-				{
-					throw new InvalidConfigurationException(
-						$"No field name for attribute role '{xmlFieldRole.Role}'");
-				}
-
-				result.Add(new DatasetFieldRole(Assert.NotNull(role), xmlFieldRole.Name));
+				result.Add(DatasetDeclarationUtils.CreateFieldRole(
+					           xmlFieldRole.Role, xmlFieldRole.Name));
 			}
 
 			return result;
@@ -1402,63 +1391,17 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					continue;
 				}
 
-				if (datasetParameterValue.DatasetType == SupportedDatasetType.Null)
-				{
-					// The roles say which field holds the path, not what to do with it. Without
-					// the kind there is nothing to build, and guessing would pick the wrong
-					// catalog as soon as there is more than one kind.
-					throw new InvalidConfigurationException(
-						$"Dataset {datasetName} in {xmlConfiguration.Name} carries field roles " +
-						"but no datasetType. Field roles are only meaningful together with the " +
-						"kind of dataset they describe.");
-				}
+				DatasetDeclarationUtils.AssertTypeDeclared(
+					datasetParameterValue.DatasetType, datasetName, xmlConfiguration.Name);
 
 				var declaration = new DatasetDeclaration(
 					datasetName, datasetParameterValue.DatasetType,
 					Assert.NotNull(CreateFieldRoles(datasetParameterValue.FieldRoles)));
 
-				if (result.TryGetValue(datasetName, out DatasetDeclaration existing))
-				{
-					// Identical declarations are fine; conflicting ones are a configuration
-					// error, because only one of them can end up on the dataset.
-					AssertSameDeclaration(existing, declaration);
-					continue;
-				}
-
-				result.Add(datasetName, declaration);
+				DatasetDeclarationUtils.AddDeclaration(result, declaration);
 			}
 
 			return result.Values.ToList();
-		}
-
-		private static void AssertSameDeclaration(
-			[NotNull] DatasetDeclaration existing,
-			[NotNull] DatasetDeclaration other)
-		{
-			if (existing.DatasetType != other.DatasetType)
-			{
-				throw new InvalidConfigurationException(
-					$"Dataset {existing.DatasetName} is referenced as both " +
-					$"{existing.DatasetType} and {other.DatasetType}");
-			}
-
-			AssertSameFieldRoles(existing.DatasetName, existing.FieldRoles, other.FieldRoles);
-		}
-
-		private static void AssertSameFieldRoles(
-			[NotNull] string datasetName,
-			[NotNull] ICollection<DatasetFieldRole> existing,
-			[NotNull] ICollection<DatasetFieldRole> other)
-		{
-			if (existing.Count == other.Count && ! existing.Except(other).Any())
-			{
-				return;
-			}
-
-			throw new InvalidConfigurationException(
-				$"Dataset {datasetName} is referenced with conflicting field roles: " +
-				$"[{StringUtils.Concatenate(existing, ", ")}] vs " +
-				$"[{StringUtils.Concatenate(other, ", ")}]");
 		}
 
 		private static void ImportMetadata([NotNull] IEntityMetadata entity,
