@@ -56,6 +56,49 @@ namespace ProSuite.DomainModel.AO.Test.QA
 		}
 
 		[Test]
+		public void CanGetPointCloudCatalogDatasetForPointCloudParameter()
+		{
+			// Same shape as the raster catalog, second marker: physically a polygon feature class,
+			// offered for a PointCloudDataset parameter nevertheless.
+			var pointCloud = new TestPointCloudCatalogDataset("pointcloud");
+			var polygons = new TestVectorDataset("polygons");
+
+			IList<Dataset> datasets =
+				GetDatasets(TestParameterType.PointCloudDataset, pointCloud, polygons);
+
+			Assert.AreEqual(1, datasets.Count);
+			Assert.AreSame(pointCloud, datasets[0]);
+		}
+
+		[Test]
+		public void CannotGetPointCloudCatalogDatasetForRasterMosaicParameter()
+		{
+			// The markers are separate on purpose: a LAS catalog is not a valid surface source,
+			// and must not be offered as one.
+			var pointCloud = new TestPointCloudCatalogDataset("pointcloud");
+			var catalog = new TestRasterCatalogDataset("catalog");
+
+			IList<Dataset> datasets =
+				GetDatasets(TestParameterType.RasterMosaicDataset, pointCloud, catalog);
+
+			Assert.AreEqual(1, datasets.Count);
+			Assert.AreSame(catalog, datasets[0]);
+		}
+
+		[Test]
+		public void CannotGetRasterCatalogDatasetForPointCloudParameter()
+		{
+			var pointCloud = new TestPointCloudCatalogDataset("pointcloud");
+			var catalog = new TestRasterCatalogDataset("catalog");
+
+			IList<Dataset> datasets =
+				GetDatasets(TestParameterType.PointCloudDataset, pointCloud, catalog);
+
+			Assert.AreEqual(1, datasets.Count);
+			Assert.AreSame(pointCloud, datasets[0]);
+		}
+
+		[Test]
 		public void CannotGetPlainVectorDatasetForRasterMosaicParameter()
 		{
 			var polygons = new TestVectorDataset("polygons");
@@ -103,9 +146,9 @@ namespace ProSuite.DomainModel.AO.Test.QA
 		{
 			public TestRasterCatalogDataset(string name) : base(name) { }
 
-			IVectorDataset IRasterCatalogDataset.CatalogDataset => this;
+			IVectorDataset IFileCatalogDataset.CatalogDataset => this;
 
-			string IRasterCatalogDataset.FilePathFieldName => "FILE_PATH";
+			string IFileCatalogDataset.FilePathFieldName => "FILE_PATH";
 
 			IVectorDataset IRasterCatalogDataset.BoundaryDataset => null;
 
@@ -114,6 +157,19 @@ namespace ProSuite.DomainModel.AO.Test.QA
 			bool IRasterCatalogDataset.ZOrderDescending => false;
 
 			string IRasterCatalogDataset.CellSizeFieldName => null;
+		}
+
+		/// <summary>
+		/// Mimics an archive point cloud dataset: a polygon vector dataset that is also a point
+		/// cloud catalog.
+		/// </summary>
+		private class TestPointCloudCatalogDataset : TestVectorDataset, IPointCloudCatalogDataset
+		{
+			public TestPointCloudCatalogDataset(string name) : base(name) { }
+
+			IVectorDataset IFileCatalogDataset.CatalogDataset => this;
+
+			string IFileCatalogDataset.FilePathFieldName => "CURRENT_FILE_PATH";
 		}
 
 		private class TestRasterMosaicDataset : RasterMosaicDataset

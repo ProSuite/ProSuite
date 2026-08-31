@@ -65,9 +65,17 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			switch (declaration.DatasetType)
 			{
 				case SupportedDatasetType.RasterCatalog:
-					// A point cloud catalog will be added here, dispatched on
-					// SupportedDatasetType.PointCloudCatalog.
 					return new VerifiedRasterCatalogDataset(
+						       declaration.DatasetName,
+						       declaration.FieldRoles)
+					       {
+						       GeometryType = AssertVectorDataset(declaration, harvested)
+							       .GeometryType,
+						       AliasName = harvested.AliasName
+					       };
+
+				case SupportedDatasetType.PointCloudCatalog:
+					return new VerifiedPointCloudCatalogDataset(
 						       declaration.DatasetName,
 						       declaration.FieldRoles)
 					       {

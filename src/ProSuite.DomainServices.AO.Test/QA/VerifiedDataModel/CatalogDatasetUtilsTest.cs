@@ -17,6 +17,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 	public class CatalogDatasetUtilsTest
 	{
 		private const string _catalogName = "RAS_DTM_TILES";
+		private const string _pointCloudName = "LAS_TILES";
 		private const string _pathField = "CURRENT_FILE_PATH";
 
 		[Test]
@@ -48,6 +49,89 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			Assert.IsInstanceOf<VectorDataset>(applied);
 			Assert.AreSame(PolygonGeometryType, applied.GeometryType);
 			Assert.AreEqual("DTM tiles", applied.AliasName);
+		}
+
+		[Test]
+		public void Harvested_vector_dataset_becomes_a_point_cloud_catalog()
+		{
+			DdxModel model = CreateModel();
+
+			var harvested = model.AddDataset(new VerifiedVectorDataset(_pointCloudName)
+			                                 {
+				                                 GeometryType = PolygonGeometryType,
+				                                 AliasName = "LAS tiles"
+			                                 });
+
+			CatalogDatasetUtils.ApplyDeclarations(
+				model, GetFilePathRole(_pointCloudName,
+				                       SupportedDatasetType.PointCloudCatalog));
+
+			Dataset applied = model.GetDatasetByModelName(_pointCloudName);
+
+			Assert.AreNotSame(harvested, applied, "The harvested dataset was not replaced");
+
+			var catalog = applied as IPointCloudCatalogDataset;
+
+			Assert.NotNull(catalog, "Not a point cloud catalog dataset");
+			Assert.AreEqual(_pathField, catalog.FilePathFieldName);
+			Assert.AreSame(applied, catalog.CatalogDataset,
+			               "The catalog of a point cloud catalog dataset is the dataset itself");
+
+			// It stays a polygon vector dataset - dual-natured, exactly like the raster catalog.
+			Assert.IsInstanceOf<VectorDataset>(applied);
+			Assert.AreSame(PolygonGeometryType, applied.GeometryType);
+			Assert.AreEqual("LAS tiles", applied.AliasName);
+		}
+
+		[Test]
+		public void A_point_cloud_catalog_is_not_a_raster_source()
+		{
+			// The two catalogs are indistinguishable in the geodatabase and carry the same file
+			// path role. Only the declared type decides, and the resulting dataset must not be
+			// bindable to a raster mosaic parameter.
+			DdxModel model = CreateModel();
+
+			model.AddDataset(new VerifiedVectorDataset(_pointCloudName)
+			                 {
+				                 GeometryType = PolygonGeometryType
+			                 });
+
+			CatalogDatasetUtils.ApplyDeclarations(
+				model, GetFilePathRole(_pointCloudName,
+				                       SupportedDatasetType.PointCloudCatalog));
+
+			Dataset applied = model.GetDatasetByModelName(_pointCloudName);
+
+			Assert.IsNotInstanceOf<IRasterMosaicDataset>(applied);
+			Assert.IsNotInstanceOf<IRasterCatalogDataset>(applied);
+		}
+
+		[Test]
+		public void A_raster_catalog_is_not_a_point_cloud_source()
+		{
+			DdxModel model = CreateModel();
+
+			model.AddDataset(new VerifiedVectorDataset(_catalogName)
+			                 {
+				                 GeometryType = PolygonGeometryType
+			                 });
+
+			CatalogDatasetUtils.ApplyDeclarations(model, GetFilePathRole(_catalogName));
+
+			Assert.IsNotInstanceOf<IPointCloudDataset>(
+				model.GetDatasetByModelName(_catalogName));
+		}
+
+		[Test]
+		public void Point_cloud_catalog_without_a_file_path_role_is_rejected()
+		{
+			var roles = new List<DatasetFieldRole>
+			            {
+				            new DatasetFieldRole(AttributeRole.ObjectID, "OBJECTID")
+			            };
+
+			Assert.Throws<ArgumentException>(() => new VerifiedPointCloudCatalogDataset(
+				                                 _pointCloudName, roles));
 		}
 
 		[Test]

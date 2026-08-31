@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
@@ -71,6 +72,22 @@ namespace ProSuite.DomainServices.AO.Test.QA
 				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
 
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
+		}
+
+		public virtual PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			if (dataset is IPointCloudCatalogDataset catalogDataset)
+			{
+				// A point cloud catalog: the tiles and their LAS file paths are provided by a
+				// polygon feature class.
+				return ModelElementUtils.CreatePointCloudCatalog(
+					catalogDataset, OpenFeatureClass);
+			}
+
+			throw new ArgumentException(
+				$"Unsupported point cloud dataset {dataset.Name}: not a point cloud catalog.");
 		}
 
 		public virtual MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)

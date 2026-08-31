@@ -134,6 +134,11 @@ namespace ProSuite.DomainModel.AO.QA
 			return InnerModelContext.OpenSimpleRasterMosaic(dataset);
 		}
 
+		public PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			return InnerModelContext.OpenPointCloud(dataset);
+		}
+
 		//public ITopology OpenTopology(ITopologyDataset dataset)
 		//{
 		//	if (! (_modelContext is IDatasetContextEx modelContextEx))

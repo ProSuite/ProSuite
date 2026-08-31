@@ -133,6 +133,12 @@ namespace ProSuite.DomainModel.AO.QA
 				return true;
 			}
 
+			if ((applicableParameterTypes & TestParameterType.PointCloudDataset) != 0 &&
+			    dataset is IPointCloudDataset)
+			{
+				return true;
+			}
+
 			return IsApplicable(dataset.GeometryType, applicableParameterTypes);
 		}
 

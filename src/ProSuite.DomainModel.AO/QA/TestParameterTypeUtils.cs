@@ -66,6 +66,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.ObjectDataset;
 			if (typeof(IMosaicRasterDatasetDef).IsAssignableFrom(dataType))
 				return TestParameterType.RasterMosaicDataset;
+			if (typeof(IPointCloudDatasetDef).IsAssignableFrom(dataType))
+				return TestParameterType.PointCloudDataset;
 			if (typeof(IRasterDatasetDef).IsAssignableFrom(dataType))
 				return TestParameterType.RasterDataset;
 			if (typeof(ITerrainDef).IsAssignableFrom(dataType))
@@ -91,6 +93,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.RasterDataset;
 			if (typeof(SimpleRasterMosaic).IsAssignableFrom(dataType))
 				return TestParameterType.RasterMosaicDataset;
+			if (typeof(PointCloudReference).IsAssignableFrom(dataType))
+				return TestParameterType.PointCloudDataset;
 			if (typeof(TerrainReference).IsAssignableFrom(dataType))
 				return TestParameterType.TerrainDataset;
 			if (typeof(TopologyReference).IsAssignableFrom(dataType))
@@ -165,6 +169,7 @@ namespace ProSuite.DomainModel.AO.QA
 			if (typeof(IFeatureClassSchemaDef).IsAssignableFrom(type) ||
 			    typeof(ITableSchemaDef).IsAssignableFrom(type) ||
 			    typeof(IRasterDatasetDef).IsAssignableFrom(type) ||
+			    typeof(IPointCloudDatasetDef).IsAssignableFrom(type) ||
 			    typeof(ITerrainDef).IsAssignableFrom(type) ||
 			    typeof(ITopologyDef).IsAssignableFrom(type))
 			{
@@ -190,6 +195,7 @@ namespace ProSuite.DomainModel.AO.QA
 #endif
 			       typeof(TerrainReference).IsAssignableFrom(type) ||
 			       typeof(SimpleRasterMosaic).IsAssignableFrom(type) ||
+			       typeof(PointCloudReference).IsAssignableFrom(type) ||
 			       typeof(TopologyReference).IsAssignableFrom(type);
 		}
 
@@ -221,6 +227,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 				case TestParameterType.RasterMosaicDataset:
 					return dataset is IRasterMosaicDataset;
+
+				case TestParameterType.PointCloudDataset:
+					return dataset is IPointCloudDataset;
 
 				case TestParameterType.RasterDataset:
 					return dataset is RasterDataset;

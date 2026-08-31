@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -149,6 +149,44 @@ namespace ProSuite.DomainModel.Core.Test.QA.Xml
 
 			Assert.AreEqual(SupportedDatasetType.RasterCatalog,
 			                GetSingleDeclaration(document, "ws1").DatasetType);
+		}
+
+		[Test]
+		public void Can_declare_a_point_cloud_catalog()
+		{
+			// The second file catalog kind travels the same way; the only difference is the
+			// declared type, which is what decides whether the dataset ends up as a surface
+			// source or as a point cloud.
+			XmlDataQualityDocument document = Deserialize(GetDocument(
+				                                              $@"<Fields>
+                     <Field role=""FilePath"" name=""{_pathField}"" />
+                   </Fields>", datasetType: "PointCloudCatalog"));
+
+			DatasetDeclaration declaration = GetSingleDeclaration(document, "ws1");
+
+			Assert.AreEqual(SupportedDatasetType.PointCloudCatalog, declaration.DatasetType);
+			Assert.AreEqual(AttributeRole.FilePath, declaration.FieldRoles.Single().Role);
+			Assert.AreEqual(_pathField, declaration.FieldRoles.Single().FieldName);
+		}
+
+		[Test]
+		public void Can_round_trip_a_point_cloud_catalog_declaration()
+		{
+			var original = new DatasetTestParameterValue(
+				               new TestParameter("dtm", typeof(string), "the point cloud"))
+			               {
+				               DatasetType = SupportedDatasetType.PointCloudCatalog,
+				               FieldRoles = new List<DatasetFieldRole>
+				                            {
+					                            new DatasetFieldRole(
+						                            AttributeRole.FilePath, _pathField)
+				                            }
+			               };
+
+			XmlDatasetTestParameterValue xmlValue = Roundtrip(original);
+
+			Assert.AreEqual(SupportedDatasetType.PointCloudCatalog, xmlValue.DatasetType);
+			Assert.AreEqual(_pathField, xmlValue.FieldRoles.Single().Name);
 		}
 
 		[Test]
