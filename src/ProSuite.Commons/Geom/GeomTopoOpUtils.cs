@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -838,6 +838,10 @@ namespace ProSuite.Commons.Geom
 			// that the post-condition below needs no extra pass over the previous result.
 			double accumulatedArea = 0;
 
+			// The rings whose step the post-condition rejected. They are parked, not
+			// discarded: see RetryRejectedRings below.
+			List<RingGroup> rejectedRings = null;
+
 			// TODO: Optimize and use potential spatial index (change to input polyhedron?)
 			foreach (RingGroup ringGroup in ringGroups.OrderByDescending(r => r.GetArea2D()))
 			{
@@ -866,6 +870,9 @@ namespace ProSuite.Commons.Geom
 						throw new AssertionException("Unexpectedly long processing time");
 					}
 
+					// TODO: All this plausibility checking and re-trying is a workaround!
+					// Fix the actual problem!
+
 					// The post-condition is checked on what the WALK produced, before the
 					// repair below runs: RingSimplifier legitimately removes area (a
 					// sub-tolerance boundary loop can enclose several square metres), and
@@ -874,7 +881,18 @@ namespace ProSuite.Commons.Geom
 					                           result, tolerance, mergeTolerance))
 					{
 						// Accepting it would return a silently wrong area; the previous
-						// result is a subset of the correct answer, which is not.
+						// result is a subset of the correct answer, which is not. Park the
+						// ring and try it again once the fold has settled - what derails the
+						// walk here is the state of the accumulated result at THIS point in
+						// the fold, not the ring.
+
+						if (rejectedRings == null)
+						{
+							rejectedRings = new List<RingGroup>();
+						}
+
+						rejectedRings.Add(ringGroup);
+
 						result = previous;
 						continue;
 					}
@@ -896,15 +914,103 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			if (rejectedRings != null)
+			{
+				result = RetryRejectedRings(Assert.NotNull(result), rejectedRings,
+				                            accumulatedArea, tolerance, mergeTolerance,
+				                            crackAndClusterOptions);
+			}
+
 			return result ?? MultiPolycurve.CreateEmpty();
 		}
 
 		/// <summary>
-		/// TEMPORARY MEASUREMENT PROBE (TOP-5999): how often
-		/// <see cref="UnionStepIsImplausible"/> rejected a step. Remove once the underlying
-		/// walk defect is fixed.
+		/// Unions the rings that <see cref="UnionStepIsImplausible"/> rejected during the
+		/// fold into the finished result.
+		/// <para>A rejected step says nothing bad about the ring: measured on TOP-5999
+		/// (TLM_GEBAEUDEKOERPER 8413141 and 8714809) the walk goes wrong because the
+		/// accumulated result is still half-built at that point - its exterior ring is
+		/// self-touching mid-fold, and the walk answers with the outline traversed twice
+		/// (293.98 + 0.22 -> 882.97, a spurious 588.80 ring with 59 self-intersections).
+		/// By the end of the fold the same ring unions in cleanly, resulting in the correct
+		/// area.</para>
+		/// <para>Each pass can unblock the next one, so the retry repeats while it makes
+		/// progress. A ring that is still implausible - or whose retry throws, which the
+		/// half-built accumulated result is equally capable of causing - is left out, i.e.
+		/// the behaviour without the retry.</para>
 		/// </summary>
-		private static int _rejectedUnionStepCount;
+		private static MultiLinestring RetryRejectedRings(
+			[NotNull] MultiLinestring result,
+			[NotNull] IList<RingGroup> rejectedRings,
+			double accumulatedArea,
+			double tolerance,
+			double mergeTolerance,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions)
+		{
+			var anyAccepted = true;
+
+			while (anyAccepted && rejectedRings.Count > 0)
+			{
+				anyAccepted = false;
+
+				// The rings this pass could not place either, in the fold's order.
+				IList<RingGroup> stillRejected = new List<RingGroup>();
+
+				foreach (RingGroup ringGroup in rejectedRings)
+				{
+					// As in the fold: the step cracks its operands in place, so the state
+					// to fall back on has to be a copy taken before it runs.
+					MultiLinestring previous = result.Clone();
+					double ringArea = ringGroup.GetArea2D();
+
+					MultiLinestring stepResult;
+
+					try
+					{
+						stepResult = GetUnionAreasXY(result, ringGroup, tolerance,
+						                             mergeTolerance, crackAndClusterOptions);
+					}
+					catch (Exception e)
+					{
+						// Leaving the ring out is exactly what happened before the retry
+						// existed, so a failure here cannot make the result worse.
+						_msg.Debug(
+							$"Retrying the rejected ring of {ringArea:N3} m2 failed.", e);
+
+						result = previous;
+						stillRejected.Add(ringGroup);
+						continue;
+					}
+
+					if (UnionStepIsImplausible(previous, ringGroup, accumulatedArea, ringArea,
+					                           stepResult, tolerance, mergeTolerance))
+					{
+						result = previous;
+						stillRejected.Add(ringGroup);
+						continue;
+					}
+
+					RingSimplifier.SimplifyRingsXY(stepResult, tolerance,
+					                               RingSimplifyFlags.StepResult, ringGroup);
+
+					result = stepResult;
+					accumulatedArea = result.GetArea2D();
+
+					anyAccepted = true;
+				}
+
+				rejectedRings = stillRejected;
+			}
+
+			foreach (RingGroup droppedRing in rejectedRings)
+			{
+				_msg.Debug(
+					$"The rejected ring of {droppedRing.GetArea2D():N3} m2 is still " +
+					"implausible against the finished union result. It is left out.");
+			}
+
+			return result;
+		}
 
 		/// <summary>
 		/// The post-condition of a single incremental union step: the area of a union of two
@@ -912,6 +1018,8 @@ namespace ProSuite.Commons.Geom
 		/// and the parallel-run snap at the merge tolerance) moves the boundary, so the
 		/// bounds are relaxed by the largest possible displacement times the perimeter
 		/// involved.
+		/// <para>A rejected step leaves the accumulated result untouched and the ring is
+		/// retried after the fold, see <see cref="RetryRejectedRings"/>.</para>
 		/// <para>A step outside those bounds is a defect of the turning-left walk, not an
 		/// effect of the tolerance: measured on TOP-5999 the offending operand is typically a
 		/// sliver ring roughly one tolerance thick that only TOUCHES the accumulated result,
@@ -982,16 +1090,12 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			// TEMPORARY MEASUREMENT PROBE (TOP-5999): read by the analysis harness through
-			// reflection to report the firing rate over a whole extent. Remove with it.
-			_rejectedUnionStepCount++;
-
 			_msg.Debug(
 				$"Union step rejected: {previousArea:N3} + {ringArea:N3} -> {stepArea:N3} " +
 				$"is outside [{Math.Max(previousArea, ringArea):N3}, " +
 				$"{previousArea + ringArea:N3}] by more than the snap slack {slack:N3} " +
 				$"(tolerance {tolerance}), confirmed on the absolute ring areas " +
-				$"({previousAbsolute:N3} -> {stepAbsolute:N3}). The ring is left out.");
+				$"({previousAbsolute:N3} -> {stepAbsolute:N3}).");
 
 			return true;
 		}

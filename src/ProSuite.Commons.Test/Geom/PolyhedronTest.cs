@@ -1257,6 +1257,43 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(1, footprint.PartCount);
 		}
 
+		[Test]
+		public void CanGetFootprintForLugano8714809()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8714809 (palazzo vicino alla piazza carlo battaglini).
+			// {77BF2892-A5D0-459D-A3F2-67A4632137BC}
+			// Regression guard for the retry of the rings the union post-condition rejects
+			// (GeomTopoOpUtils.RetryRejectedRings). Two coincident 0.7866 sq m rings meet
+			// the half-built accumulated result at step 30 in TouchingInPoints only; the
+			// walk answers 30.96 + 0.79 -> 22.09, the guard rejects it, and dropping the
+			// rings left the footprint 0.7866 short (33.6960 instead of 34.4825). Unioned
+			// in again once the fold has settled they fit exactly. AO reference 34.4825.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8714809.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(34.4825, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8413141()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8413141 (Lugano).
+			// {F3D0B282-062B-4CF8-9753-915FE8487D7D}
+			// The same mechanism as CanGetFootprintForLugano8714809, with the walk's failure
+			// in the other direction: at step 190 it answers 293.68 + 0.22 -> 882.97, adding a
+			// spurious 588.80 sq m ring with 59 self-intersections - the accumulated outline
+			// traversed twice. Four rejected rings (two coincident pairs) used to cost
+			// 0.3601 sq m (294.5764 instead of 294.9365). AO reference 294.9365.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8413141.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(294.9365, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
 		/// <summary>
 		/// Reads a multipatch (WKB MultiSurface) test fixture. Depending on the fixture the
 		/// reader returns a <see cref="Polyhedron"/> or a <see cref="MultiPolyhedron"/>; the
