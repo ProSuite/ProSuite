@@ -305,10 +305,9 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	}
 
 	/// <summary>
-	/// Returns those end points of the new line that do not coincide with the corresponding end
-	/// point of the original line. The correspondence between the two lines' end points is
-	/// established the same way as for the automatic flip on store, so that a sketch drawn
-	/// against the original orientation does not report both ends as relocated.
+	/// Returns the end points of the original line that do not coincide with the corresponding
+	/// end point of the new line. This is the equivalent of the Y-Reshape's junction moving only
+	/// for the end point(s) changed by the sketch.
 	/// </summary>
 	[CanBeNull]
 	private static Multipoint GetMovedEndPoints([NotNull] Polyline newLine,
@@ -329,12 +328,12 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 		if (! GeometryUtils.IsSamePointXY(oldFrom, newFrom))
 		{
-			movedPoints.Add(newFrom);
+			movedPoints.Add(oldFrom);
 		}
 
 		if (! GeometryUtils.IsSamePointXY(oldTo, newTo))
 		{
-			movedPoints.Add(newTo);
+			movedPoints.Add(oldTo);
 		}
 
 		if (movedPoints.Count == 0)
