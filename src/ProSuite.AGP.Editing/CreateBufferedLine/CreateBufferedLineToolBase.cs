@@ -958,9 +958,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			try
 			{
-				SurfaceZsResult result = map.GetZsFromSurface(polygon);
-
-				if (result.Status == SurfaceZsResultStatus.Ok &&
+				if (MapUtils.ApplyZsFromElevation(polygon, map, out SurfaceZsResult result) &&
 				    result.Geometry is Polygon draped && ! draped.IsEmpty)
 				{
 					return draped;
