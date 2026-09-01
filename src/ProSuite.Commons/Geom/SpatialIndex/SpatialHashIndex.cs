@@ -29,7 +29,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			new ThreadLocal<HashSet<T>>(() => new HashSet<T>());
 
 		public SpatialHashIndex(EnvelopeXY envelope, double gridsize, double estimatedItemsPerTile)
-			: this(new TilingDefinition(envelope.XMin, envelope.XMin, gridsize, gridsize),
+			: this(new TilingDefinition(envelope.XMin, envelope.YMin, gridsize, gridsize),
 			       (int) Math.Ceiling(
 				       Math.Pow(
 					       Math.Max((envelope.XMax - envelope.XMin),
