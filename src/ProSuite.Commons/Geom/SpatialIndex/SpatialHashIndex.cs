@@ -379,6 +379,25 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			                                                   null,
 		                                                   bool returnEmptyTiles = false)
 		{
+			foreach ((IEnumerable<T> items, double _) in FindTilesAroundWithDistance(
+				         x, y, maxDistance, metric, predicate, returnEmptyTiles))
+			{
+				yield return items;
+			}
+		}
+
+		/// <summary>
+		/// As <see cref="FindTilesAround"/>, but each tile comes with a lower bound on how far
+		/// any item in it can be from x/y. A caller walking outward can stop on that bound - and
+		/// one whose radius is not known until it has seen an item can set the bound as it goes.
+		/// </summary>
+		public IEnumerable<(IEnumerable<T> Items, double MinimumDistance)>
+			FindTilesAroundWithDistance(double x, double y,
+			                            double maxDistance = double.MaxValue,
+			                            DistanceMetric metric = DistanceMetric.EuclideanDistance,
+			                            [CanBeNull] Predicate<T> predicate = null,
+			                            bool returnEmptyTiles = false)
+		{
 			if (_tiles.Count == 0)
 				yield break;
 
@@ -393,15 +412,27 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			foreach (var tileIndex in TilingDefinition.GetTileIndexAround(
 				         x, y, metric, effectiveMaxDistance))
 			{
-				// Only yield tiles that exist and have items
-				if (_tiles.ContainsKey(tileIndex))
+				bool populated = _tiles.ContainsKey(tileIndex);
+
+				if (! populated && ! returnEmptyTiles)
 				{
-					yield return FindItemsWithinTile(tileIndex, predicate);
+					continue;
 				}
-				else if (returnEmptyTiles)
-				{
-					yield return new List<T>();
-				}
+
+				// The distance to the tile itself, not between tile origins: an item sits
+				// anywhere in its tile, and a caller stopping on this bound walks exactly as far
+				// as it has to.
+				TilingDefinition.QueryTileBounds(tileIndex, out double tileMinX,
+				                                 out double tileMinY, out double tileMaxX,
+				                                 out double tileMaxY);
+
+				double dx = x < tileMinX ? tileMinX - x : x > tileMaxX ? x - tileMaxX : 0;
+				double dy = y < tileMinY ? tileMinY - y : y > tileMaxY ? y - tileMaxY : 0;
+
+				yield return (populated
+					              ? FindItemsWithinTile(tileIndex, predicate)
+					              : new List<T>(),
+				              Math.Sqrt((dx * dx) + (dy * dy)));
 			}
 		}
 
