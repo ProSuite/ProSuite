@@ -1227,4 +1227,7 @@
   <data name="Extent_ExtentSmallerThanLimit" xml:space="preserve">
     <value>Ausdehnung des Features ist kleiner als der definierte Minimalwert</value>
   </data>
+  <data name="SimpleGeometry_InteriorRingNotInside" xml:space="preserve">
+    <value>Innerer Ring nicht innerhalb</value>
+  </data>
 </root>

@@ -223,7 +223,7 @@ namespace ProSuite.AGP.QA
 			{
 				// Branch versions cannot be opened by the server's Enterprise SDK (it silently falls
 				// back to Default) -> always provide the data from the client.
-				if (IsBranchVersion(datastore))
+				if (IsFeatureService(datastore))
 				{
 					return true;
 				}
@@ -235,10 +235,9 @@ namespace ProSuite.AGP.QA
 			return result;
 		}
 
-		private static bool IsBranchVersion([CanBeNull] Datastore datastore)
+		private static bool IsFeatureService([CanBeNull] Datastore datastore)
 		{
-			return datastore?.GetConnector() is DatabaseConnectionProperties dbConnectionProperties
-			       && ! string.IsNullOrEmpty(dbConnectionProperties.Branch);
+			return datastore?.GetConnector() is ServiceConnectionProperties;
 		}
 
 		private static bool HasUnsavedEdits([CanBeNull] Datastore datastore)

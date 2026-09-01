@@ -18,6 +18,13 @@ public class FeatureSelection : FeatureSelectionBase
 		Assert.ArgumentNotNull(features, nameof(features));
 
 		_features = features.ToList(); // take ownership
+
+		// Taking ownership is only valid for a non-recycling cursor. With a recycling
+		// cursor every entry references the same row, which silently corrupts consumers
+		// instead of failing (see FeatureFinder.FindFeaturesByLayer).
+		Assert.False(_features.Count > 1 && ReferenceEquals(_features[0], _features[1]),
+		             "The features originate from a recycling cursor and cannot be owned " +
+		             "by this selection.");
 	}
 
 	[NotNull]

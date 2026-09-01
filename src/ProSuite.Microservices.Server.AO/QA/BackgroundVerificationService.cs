@@ -20,7 +20,7 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
-	public class BackgroundVerificationService : QualityVerificationServiceBase
+	public class BackgroundVerificationService : QualityVerificationServiceBase, IDisposable
 	{
 		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
 
@@ -297,6 +297,23 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				yield return allowedError;
 			}
+		}
+
+		private bool _disposed;
+
+		public void Dispose()
+		{
+			if (_disposed)
+			{
+				return;
+			}
+
+			_issueRepository = null;
+			_backgroundVerificationInputs = null;
+			DistributedTestRunner = null;
+			VerifiedPerimeter = null;
+			ReleaseRunReferences();
+			_disposed = true;
 		}
 	}
 }

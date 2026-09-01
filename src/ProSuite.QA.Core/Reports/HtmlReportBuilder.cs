@@ -220,7 +220,13 @@ namespace ProSuite.QA.Core.Reports
 		{
 			var sb = new StringBuilder();
 
-			sb.Append(" body { font-family: Verdana, Arial; } ");
+			// Pin explicit foreground/background colors and declare color-scheme: light,
+			// otherwise a dark-mode host browser/control can auto-darken the background
+			// while text stays black, producing black-on-black text.
+			sb.Append(" :root { color-scheme: light; } ");
+
+			sb.Append(
+				" body { font-family: Verdana, Arial; background-color: #ffffff; color: #000000; } ");
 
 			sb.Append(" table { border-collapse: collapse; }");
 

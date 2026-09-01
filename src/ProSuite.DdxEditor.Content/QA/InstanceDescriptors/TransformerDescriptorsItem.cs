@@ -4,8 +4,6 @@ using System.Drawing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
 using ProSuite.QA.Container;
@@ -49,11 +47,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		protected override InstanceDescriptor CreateDescriptor(Type type, int constructor)
 		{
-			InstanceDescriptor result = new TransformerDescriptor(
-				InstanceFactoryUtils.GetDefaultDescriptorName(type, constructor),
-				new ClassDescriptor(type), constructor);
-
-			return result;
+			return InstanceDescriptorItemUtils.CreateTransformerDescriptor(type, constructor);
 		}
 
 		protected override IEnumerable<InstanceDescriptorTableRow> GetTableRows()
