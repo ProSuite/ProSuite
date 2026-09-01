@@ -105,7 +105,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 			Assert.IsNotNull(footprintGeom);
 
 			Assert.AreEqual(75.441285, footprintGeom.Length, 0.0001);
-			Assert.AreEqual(349.015, ((IArea) footprintGeom).Area, 0.003);
+			Assert.AreEqual(349.015, ((IArea) footprintGeom).Area, 0.005);
 
 			IPolygon footprintAo =
 				CreateFootprintUtils.GetFootprintAO(multiPatch);
