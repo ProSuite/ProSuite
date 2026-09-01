@@ -208,82 +208,113 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 			return new TileIndex(indexEast, indexNorth);
 		}
 
+		/// <summary>
+		/// Tiles in order of their distance from the tile holding x/y, nearest first, out to
+		/// <paramref name="maxDistance"/>.
+		/// </summary>
+		/// <remarks>
+		/// Expanding square rings: no tile in ring r or later is nearer than r times the shorter
+		/// tile side, so once ring r is generated everything nearer than the next ring's bound
+		/// can be handed out. Rings do not overlap, so this needs neither a priority queue nor a
+		/// visited set - it runs once per interpolated point, where allocating either shows.
+		/// </remarks>
 		private IEnumerable<TileIndex> GetTileIndexAroundEuclidean(
 			double x, double y, double maxDistance = double.MaxValue)
 		{
-			var maxDistance2 = maxDistance * maxDistance;
-			var centerTile = GetTileIndexAt(x, y);
-			var visitedTiles = new HashSet<TileIndex>();
-			var tilesToCheck = new SortedSet<(TileIndex tile, double distance)>(
-				Comparer<(TileIndex tile, double distance)>.Create((a, b) =>
-				{
-					int distanceComparison = a.distance.CompareTo(b.distance);
-					if (distanceComparison != 0)
-						return distanceComparison;
+			double maxDistance2 = maxDistance * maxDistance;
+			TileIndex centerTile = GetTileIndexAt(x, y);
 
-					// If distances are equal, compare by tile coordinates for consistent ordering
-					int eastComparison = a.tile.East.CompareTo(b.tile.East);
-					if (eastComparison != 0)
-						return eastComparison;
+			double ringStep = Math.Min(TileWidth, TileHeight);
 
-					return a.tile.North.CompareTo(b.tile.North);
-				}));
+			var pending = new List<(TileIndex Tile, double Distance2)>();
 
-			// Add the center tile
-			tilesToCheck.Add((centerTile, 0));
-
-			while (tilesToCheck.Count > 0)
+			for (int ring = 0; ring * ringStep <= maxDistance; ring++)
 			{
-				var (currentTile, currentDistance) = tilesToCheck.Min;
-				tilesToCheck.Remove((currentTile, currentDistance));
+				AddRing(centerTile, ring, maxDistance2, pending);
 
-				// Skip if already visited or beyond max distance
-				if (visitedTiles.Contains(currentTile) || currentDistance > maxDistance2)
-					continue;
+				// Strictly nearer: a tile exactly on the bound must still sort against the
+				// next ring.
+				double settled = (ring + 1) * ringStep;
 
-				visitedTiles.Add(currentTile);
-				yield return currentTile;
+				pending.Sort(_byDistanceThenIndex);
 
-				// Add neighboring tiles if not already visited
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
-				AddNeighborIfNotVisited(currentTile.East, currentTile.North - 1, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
-				AddNeighborIfNotVisited(currentTile.East, currentTile.North + 1, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
+				int released = 0;
 
-				// Add diagonal neighbors for better coverage
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North - 1, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
-				AddNeighborIfNotVisited(currentTile.East - 1, currentTile.North + 1, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North - 1, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
-				AddNeighborIfNotVisited(currentTile.East + 1, currentTile.North + 1, centerTile,
-				                        visitedTiles, tilesToCheck, maxDistance2);
+				while (released < pending.Count &&
+				       pending[released].Distance2 < settled * settled)
+				{
+					yield return pending[released].Tile;
+					released++;
+				}
+
+				pending.RemoveRange(0, released);
+			}
+
+			pending.Sort(_byDistanceThenIndex);
+
+			foreach ((TileIndex tile, double _) in pending)
+			{
+				yield return tile;
 			}
 		}
 
-		private void AddNeighborIfNotVisited(int east, int north, TileIndex centerTile,
-		                                     HashSet<TileIndex> visitedTiles,
-		                                     SortedSet<(TileIndex tile, double distance)>
-			                                     tilesToCheck, double maxDistance2)
+		/// <summary>The border of the square <paramref name="ring"/> tiles out from the centre;
+		/// the inside of it belongs to earlier rings.</summary>
+		private void AddRing(TileIndex centerTile, int ring, double maxDistance2,
+		                     List<(TileIndex Tile, double Distance2)> pending)
 		{
-			var neighborTile = new TileIndex(east, north);
-
-			if (visitedTiles.Contains(neighborTile))
+			if (ring == 0)
+			{
+				pending.Add((centerTile, 0));
 				return;
+			}
 
-			var distance2 =
-				TileUtils.EuclideanTileDistance2(neighborTile, centerTile, TileWidth, TileHeight);
+			for (int east = centerTile.East - ring; east <= centerTile.East + ring; east++)
+			{
+				AddToRing(east, centerTile.North - ring, centerTile, maxDistance2, pending);
+				AddToRing(east, centerTile.North + ring, centerTile, maxDistance2, pending);
+			}
+
+			for (int north = centerTile.North - ring + 1;
+			     north <= centerTile.North + ring - 1;
+			     north++)
+			{
+				AddToRing(centerTile.East - ring, north, centerTile, maxDistance2, pending);
+				AddToRing(centerTile.East + ring, north, centerTile, maxDistance2, pending);
+			}
+		}
+
+		private void AddToRing(int east, int north, TileIndex centerTile, double maxDistance2,
+		                       List<(TileIndex Tile, double Distance2)> pending)
+		{
+			var tile = new TileIndex(east, north);
+
+			double distance2 =
+				TileUtils.EuclideanTileDistance2(tile, centerTile, TileWidth, TileHeight);
 
 			if (distance2 <= maxDistance2)
 			{
-				tilesToCheck.Add((neighborTile, distance2));
+				pending.Add((tile, distance2));
 			}
 		}
+
+		/// <summary>Hoisted so the per-ring sort does not allocate a delegate. Ties break on the
+		/// tile index.</summary>
+		private static readonly Comparison<(TileIndex Tile, double Distance2)>
+			_byDistanceThenIndex =
+				(a, b) =>
+				{
+					int byDistance = a.Distance2.CompareTo(b.Distance2);
+
+					if (byDistance != 0)
+					{
+						return byDistance;
+					}
+
+					int byEast = a.Tile.East.CompareTo(b.Tile.East);
+
+					return byEast != 0 ? byEast : a.Tile.North.CompareTo(b.Tile.North);
+				};
 
 		private IEnumerable<TileIndex> GetTileIndexAroundChebyshev(
 			double x, double y, double maxDistance = double.MaxValue)
