@@ -373,19 +373,6 @@ namespace ProSuite.Commons.UI.Logging
 			return _logLevelErrorImageIndex;
 		}
 
-		[NotNull]
-		private static string FormatToolTip([NotNull] LogEventItem logEventItem)
-		{
-			if (logEventItem.Exception == null)
-			{
-				return logEventItem.LogMessage;
-			}
-
-			return string.Format(@"{0}<br><br>{1}",
-			                     logEventItem.LogMessage,
-			                     logEventItem.Exception);
-		}
-
 		private void ShowLastClickedRowDetails()
 		{
 			LogEventItem item = GetLastClickedRowLogEventItem();
@@ -560,25 +547,6 @@ namespace ProSuite.Commons.UI.Logging
 			}
 
 			_lastClickedRowIndex = e.RowIndex;
-		}
-
-		private void _dataGridView_CellToolTipTextNeeded(object sender,
-		                                                 DataGridViewCellToolTipTextNeededEventArgs
-			                                                 e)
-		{
-			if (e.RowIndex < 0)
-			{
-				return;
-			}
-
-			DataGridViewRow row = _dataGridView.Rows[e.RowIndex];
-
-			LogEventItem logEventItem = GetLogEventItem(row);
-
-			if (logEventItem != null)
-			{
-				e.ToolTipText = FormatToolTip(logEventItem);
-			}
 		}
 
 		private void _dataGridView_CellFormatting(object sender,

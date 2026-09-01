@@ -100,7 +100,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 				workspace, project.ProductionModel);
 
 			return GetDataset<P, M>(project, datasetName,
-			                        isModelDefaultDatabase);
+			                        isModelDefaultDatabase,
+			                        IsFeatureServiceWorkspace(workspace, out _));
 		}
 
 		[NotNull]
@@ -443,6 +444,15 @@ namespace ProSuite.DomainModel.AO.Workflow
 				                  ? null
 				                  : GetDataset(model, modelDatasetName, ignoreDataset);
 
+			if (dataset == null)
+			{
+				// The service table name may be the qualified name of the published table with
+				// its dots replaced by underscores ("db_owner_table"), which no name lookup can
+				// find. Compare the names without their separator characters instead.
+				dataset = ModelServiceUtils.FindDatasetForServiceTableName(
+					model, gdbDatasetName, ignoreDataset);
+			}
+
 			if (dataset == null && modelDeclaresUrls)
 			{
 				_msg.WarnFormat(
@@ -661,13 +671,14 @@ namespace ProSuite.DomainModel.AO.Workflow
 		[CanBeNull]
 		private static Dataset GetDataset<P, M>([NotNull] P project,
 		                                        [NotNull] IDatasetName datasetName,
-		                                        bool isModelMasterDatabase)
+		                                        bool isModelMasterDatabase,
+		                                        bool isFeatureServiceWorkspace)
 			where P : Project<M>
 			where M : ProductionModel
 		{
 			// called when activating a work context
 
-			// assume that the workspace is valid (according to the project) 
+			// assume that the workspace is valid (according to the project)
 			DdxModel model = project.ProductionModel;
 			if (model == null)
 			{
@@ -683,12 +694,23 @@ namespace ProSuite.DomainModel.AO.Workflow
 				() =>
 					$"Dataset name for {datasetName.Name} in model {model.Name} (from master db: {isModelMasterDatabase}): {modelName ?? "<null>"}");
 
-			if (modelName == null)
-			{
-				return null;
-			}
+			Dataset dataset = modelName == null
+				                  ? null
+				                  : model.GetDatasetByModelName(modelName);
 
-			Dataset dataset = model.GetDatasetByModelName(modelName);
+			if (dataset == null && isFeatureServiceWorkspace)
+			{
+				// The gdb dataset name may carry a feature-service layer prefix (e.g.
+				// "L0Roads" for a table published as a service layer), which the standard
+				// name lookup above does not account for. Fall back to the consolidated
+				// feature-service matching logic (used elsewhere for the same purpose) to
+				// recover the model dataset. Only attempted for feature-service workspaces:
+				// for ordinary workspaces a failed match can be an intentional exclusion
+				// (wrong schema, child-database transformer rules) that must not be
+				// silently overridden by this more lenient, separator-insensitive match.
+				dataset = ModelServiceUtils.FindDatasetForServiceTableName(
+					model, datasetName.Name);
+			}
 
 			if (dataset == null)
 			{
@@ -787,6 +809,14 @@ namespace ProSuite.DomainModel.AO.Workflow
 			                                                schemaOwner)
 			                               .ToList();
 
+			// Determined once per workspace, not per dataset: the feature-service fallback
+			// matching below must only be attempted for feature-service workspaces, where a
+			// failed match is expected to be due to the "L{id}" layer-name prefix. For an
+			// ordinary workspace a failed match can be an intentional exclusion (wrong schema,
+			// child-database transformer rules) that must not be silently overridden by the
+			// more lenient, separator-insensitive fallback match.
+			bool isFeatureServiceWorkspace = IsFeatureServiceWorkspace(workspace, out _);
+
 			var result = new List<DatasetMapping>();
 
 			foreach (IDatasetName datasetName in datasetNames)
@@ -794,7 +824,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 				_msg.VerboseDebug(() => $"Workspace dataset: {datasetName.Name}");
 
 				Dataset dataset = GetDataset<P, M>(project, datasetName,
-				                                   isModelMasterDatabase);
+				                                   isModelMasterDatabase,
+				                                   isFeatureServiceWorkspace);
 				if (dataset == null)
 				{
 					continue;

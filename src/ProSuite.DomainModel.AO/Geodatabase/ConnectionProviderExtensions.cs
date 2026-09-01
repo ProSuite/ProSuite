@@ -22,6 +22,14 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		public static IFeatureWorkspace OpenWorkspace(this ConnectionProvider connectionProvider,
 		                                              int hWnd = 0)
 		{
+			IKnownWorkspaceFactory knownFactory =
+				KnownWorkspaceFactories.GetFactory(connectionProvider);
+
+			if (knownFactory != null)
+			{
+				return knownFactory.OpenWorkspace(connectionProvider, hWnd);
+			}
+
 			if (connectionProvider is FileGdbConnectionProvider fileGdbConnectionProvider)
 			{
 				fileGdbConnectionProvider.AssertDirectoryExists();
@@ -105,7 +113,7 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 				                       connectionProvider.AlternatePassword, versionName, hWnd)
 				       : OpenWorkspaceCore(connectionProvider, versionName, hWnd);
 		}
-		
+
 		private static IFeatureWorkspace OpenWorkspaceCore(
 			this SdeDirectConnectionProvider connectionProvider,
 			string versionName = null, int hWnd = 0)

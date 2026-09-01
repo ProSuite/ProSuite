@@ -6,8 +6,10 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
 using ProSuite.QA.Core.ParameterTypes;
+using ProSuite.QA.Core.Signatures;
 
 namespace ProSuite.QA.Core
 {
@@ -33,6 +35,17 @@ namespace ProSuite.QA.Core
 
 			InvolvedTables = new List<ITableSchemaDef>(involvedTables);
 		}
+
+		/// <summary>
+		/// Validates the configured parameter values beyond the structural checks the
+		/// edit model performs (required/type/dataset compatibility). Called on an
+		/// instance created via the resolved constructor with the actual values, so
+		/// overrides can express cross-parameter rules. Add one notification per
+		/// problem; an empty collection means the configuration is valid.
+		/// </summary>
+		public virtual void ValidateParameters(
+			[NotNull] IParameterValidationContext context,
+			[NotNull] NotificationCollection issues) { }
 
 		public object CreateInstance(AlgorithmDefinition definition)
 		{

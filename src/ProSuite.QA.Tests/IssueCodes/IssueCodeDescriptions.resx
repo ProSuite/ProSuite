@@ -1329,4 +1329,7 @@
   <data name="MinExtent_ExtentSmallerThanLimit" xml:space="preserve">
     <value>Feature extent is below than the minimum limit</value>
   </data>
+  <data name="SimpleGeometry_InteriorRingNotInside" xml:space="preserve">
+    <value>Interior Ring Not Inside</value>
+  </data>
 </root>
