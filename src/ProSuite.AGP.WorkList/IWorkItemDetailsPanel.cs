@@ -9,7 +9,4 @@ public interface IWorkItemDetailsPanel
 	Task SetCurrentItemAsync(IWorkItem workItem);
 
 	UserControl CreateDetailsPanelView();
-
-	void Unload();
-
 }
