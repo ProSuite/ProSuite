@@ -519,6 +519,93 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanDetermineTouchesXYRoofBasePlate()
+		{
+			// Roof template with a base plate (GOTOP): the base plate is the downward-facing
+			// bottom face, i.e. it is counter-clockwise in XY, while the upward-facing roof
+			// faces are clockwise. The base plate's footprint covers the entire roof, so the
+			// roof faces are 'contained' in it in XY - they only touch along the eaves.
+			// This is the grouping criterion used by
+			// CleanMultipatchUtils.HaveLinearBoundaryIntersection3DAndTouch2D.
+
+			// Base plate at z=0, counter-clockwise (faces down):
+			var basePlate = new Linestring(new List<Pnt3D>
+			                               {
+				                               new Pnt3D(0, 0, 0),
+				                               new Pnt3D(10, 0, 0),
+				                               new Pnt3D(10, 10, 0),
+				                               new Pnt3D(0, 10, 0),
+				                               new Pnt3D(0, 0, 0)
+			                               });
+
+			// Southern gable roof face, clockwise (faces up), sharing the eave (0,0)-(10,0):
+			var slopedRing = new Linestring(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 5, 5),
+				                                new Pnt3D(10, 5, 5),
+				                                new Pnt3D(10, 0, 0)
+			                                });
+
+			Assert.AreEqual(false, basePlate.ClockwiseOriented);
+			Assert.AreEqual(true, slopedRing.ClockwiseOriented);
+
+			const double tolerance = 0.001;
+
+			// Using the ring orientation, the base plate is an island (negative ring) and the
+			// roof face lies outside its area -> they touch, and hence can be grouped:
+			Assert.True(GeomRelationUtils.TouchesXY(basePlate, slopedRing, tolerance,
+			                                        out bool disjoint));
+			Assert.False(disjoint);
+
+			// ... and the relation must be symmetric, the rings are tested in both orders:
+			Assert.True(GeomRelationUtils.TouchesXY(slopedRing, basePlate, tolerance,
+			                                        out disjoint));
+			Assert.False(disjoint);
+
+			// Disregarding the ring orientation, the base plate is a positive ring which
+			// contains the roof face -> they do not touch. This is the reason why base plates
+			// used to end up in their own multipatch part.
+			Assert.False(GeomRelationUtils.TouchesXY(basePlate, slopedRing, tolerance,
+			                                         out disjoint,
+			                                         disregardRingOrientation: true));
+
+			// The vertical gable triangle sits on the base plate boundary. Its self-
+			// intersecting XY footprint requires ring2CanHaveLinearSelfIntersections:
+			var verticalGable = new Linestring(new List<Pnt3D>
+			                                   {
+				                                   new Pnt3D(0, 0, 0),
+				                                   new Pnt3D(0, 5, 5),
+				                                   new Pnt3D(0, 10, 0),
+				                                   new Pnt3D(0, 0, 0)
+			                                   });
+
+			Assert.True(verticalGable.IsVerticalRing(tolerance));
+
+			Assert.True(GeomRelationUtils.TouchesXY(basePlate, verticalGable, tolerance,
+			                                        out disjoint,
+			                                        ring2CanHaveLinearSelfIntersections: true));
+			Assert.True(GeomRelationUtils.TouchesXY(slopedRing, verticalGable, tolerance,
+			                                        out disjoint,
+			                                        ring2CanHaveLinearSelfIntersections: true));
+
+			// Two base plates of adjacent roof templates share the wall at x=10. Both are
+			// islands, i.e. they overlap in XY and must not be grouped into one part:
+			var adjacentBasePlate = new Linestring(new List<Pnt3D>
+			                                       {
+				                                       new Pnt3D(10, 0, 0),
+				                                       new Pnt3D(20, 0, 0),
+				                                       new Pnt3D(20, 10, 0),
+				                                       new Pnt3D(10, 10, 0),
+				                                       new Pnt3D(10, 0, 0)
+			                                       });
+
+			Assert.False(GeomRelationUtils.TouchesXY(basePlate, adjacentBasePlate, tolerance,
+			                                         out disjoint));
+		}
+
+		[Test]
 		public void CanDetermineTouchesXYVerticalRing()
 		{
 			var verticalRing = new Linestring(new List<Pnt3D>
