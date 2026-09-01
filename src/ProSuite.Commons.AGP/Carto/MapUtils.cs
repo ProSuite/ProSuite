@@ -829,6 +829,23 @@ public static class MapUtils
 		return existingSurfaceLayer;
 	}
 
+	/// <summary>
+	/// Applies the Z values from the specified map's elevation surface to the vertices of the
+	/// specified geometry, a copy of which is provided through the out parameter.
+	/// Returns false if no Z values have been applied providing the reason in
+	/// <paramref name="surfaceZsResult"/>.
+	/// Must be called on the MCT.
+	/// </summary>
+	public static bool ApplyZsFromElevation([NotNull] Geometry geometry,
+	                                        [NotNull] Map mapWithElevation,
+	                                        out SurfaceZsResult surfaceZsResult)
+	{
+		surfaceZsResult = mapWithElevation.GetZsFromSurface(geometry);
+
+		return surfaceZsResult.Status == SurfaceZsResultStatus.Ok &&
+		       surfaceZsResult.Geometry != null;
+	}
+
 	#region Not MapUtils --> move elsewhere
 
 	/// <summary>
@@ -1345,8 +1362,8 @@ public static class MapUtils
 	/// <param name="useReferenceScale"></param>
 	/// <returns></returns>
 	public static async Task<List<IDisposable>> AddOverlays([NotNull] MapView mapView,
-	                                              IEnumerable<Overlay> overlays,
-	                                              bool useReferenceScale = false)
+	                                                        IEnumerable<Overlay> overlays,
+	                                                        bool useReferenceScale = false)
 	{
 		List<IDisposable> disposables = new List<IDisposable>();
 
@@ -1359,7 +1376,7 @@ public static class MapUtils
 
 			return disposables;
 		}
-		catch(Exception)
+		catch (Exception)
 		{
 			foreach (IDisposable disposable in disposables)
 			{
