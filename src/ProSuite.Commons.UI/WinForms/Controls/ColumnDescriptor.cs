@@ -135,6 +135,11 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				{
 					column.MinimumWidth = columnConfiguration.MinimumWidth;
 				}
+
+				if (columnConfiguration.FillWeight > 0)
+				{
+					column.FillWeight = columnConfiguration.FillWeight;
+				}
 			}
 
 			return column;

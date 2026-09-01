@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Windows;
-using ArcGIS.Desktop.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
@@ -16,6 +15,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 		/// <summary>
 		/// Name of the environment variable that provides the default base folder for verification
 		/// results (reports and issue.gdb) when no explicit result path has been set.
+		/// This is now obsolete, but still supported for backward compatibility. The new way to
+		/// set the default result path is via the QualityVerificationOptions.ResultPathMode setting.
 		/// </summary>
 		public const string ResultPathEnvVariable = "PROSUITE_VERIFICATION_RESULT_DIR";
 
@@ -32,24 +33,21 @@ namespace ProSuite.AGP.QA.ProPlugins
 			window.Show();
 		}
 
+		[CanBeNull]
 		public static string GetResultsPath(
 			[NotNull] IQualitySpecificationReference qualitySpecification,
-			[CanBeNull] string outputFolderPath = null)
+			[CanBeNull] string outputFolderPath)
 		{
+			if (outputFolderPath == null)
+			{
+				return null;
+			}
+
 			string specificationName =
 				FileSystemUtils.ReplaceInvalidFileNameChars(
 					qualitySpecification.Name, '_');
 
 			string directoryName = $"{specificationName}_{DateTime.Now:yyyyMMdd_HHmmss}";
-
-			if (outputFolderPath == null)
-			{
-				// TODO: Global (non-APRX) settings per user -> Edit Options dialog? Project Settings?
-				string resultDir =
-					Environment.GetEnvironmentVariable(ResultPathEnvVariable);
-
-				outputFolderPath = resultDir ?? Project.Current.HomeFolderPath;
-			}
 
 			string outputParentFolder = Path.Combine(outputFolderPath, "Verifications");
 

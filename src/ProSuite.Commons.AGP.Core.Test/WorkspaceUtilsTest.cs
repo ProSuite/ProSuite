@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using NUnit.Framework;
@@ -205,6 +206,37 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.AreEqual("osm", properties.User);
 			Assert.AreEqual("sde.DEFAULT", properties.Version);
 			Assert.AreEqual(string.Empty, properties.ProjectInstance);
+		}
+
+		[Test]
+		public void CanCreateFeatureServiceConnectorWithVersion()
+		{
+			const string connectionString =
+				"URL=https://portal.dirageosystems.ch/server/rest/services/NSW/FeatureServer;" +
+				"VERSION=paede@dira.ay_test;VERSIONGUID={D98F1C56-FDE7-4D2A-B067-1357442FFA12}";
+
+			Connector connector =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.FeatureService, connectionString);
+
+			var serviceConnection = (ServiceConnectionProperties) connector;
+
+			Assert.AreEqual(
+				"https://portal.dirageosystems.ch/server/rest/services/NSW/FeatureServer",
+				serviceConnection.URL.AbsoluteUri);
+			Assert.AreEqual("paede@dira.ay_test", serviceConnection.Version);
+
+			Connector otherConnector =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.FeatureService, connectionString);
+
+			var datastoreName1 = new DatastoreName(connector);
+			var datastoreName2 = new DatastoreName(otherConnector);
+
+			Assert.AreEqual(datastoreName1, datastoreName2);
+			Assert.IsTrue(datastoreName1.Equals(datastoreName2));
+			Assert.AreEqual(datastoreName1.GetHashCode(), datastoreName2.GetHashCode());
+
+			Assert.IsTrue(
+				datastoreName1.References(WorkspaceFactory.FeatureService, connectionString));
 		}
 
 		[Test, Ignore("Requires oracle connection")]

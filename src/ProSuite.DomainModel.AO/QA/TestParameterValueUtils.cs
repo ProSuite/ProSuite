@@ -208,6 +208,15 @@ namespace ProSuite.DomainModel.AO.QA
 				instanceConfiguration, parameterName, value);
 		}
 
+		/// <summary>
+		/// Determines whether any of the dataset parameters of the specified configuration
+		/// references, directly or indirectly, the configuration itself.
+		/// </summary>
+		/// <param name="testable">The configuration to be checked.</param>
+		/// <param name="testParameterName">The name of the parameter that starts the circular
+		/// reference, or null if there is none.</param>
+		/// <param name="configurationNames">The names of the configurations along the circular
+		/// reference, starting and ending with <paramref name="testable"/>.</param>
 		public static bool CheckCircularReferencesInGraph(
 			[NotNull] InstanceConfiguration testable,
 			[CanBeNull] out string testParameterName,
@@ -217,25 +226,31 @@ namespace ProSuite.DomainModel.AO.QA
 
 			configurationNames = new NotificationCollection();
 
-			NotificationUtils.Add(configurationNames, testable.Name);
-
-			foreach (var dsValue in testable.ParameterValues.OfType<DatasetTestParameterValue>())
+			foreach (var datasetValue in
+			         testable.ParameterValues.OfType<DatasetTestParameterValue>())
 			{
-				testParameterName = dsValue.TestParameterName;
-
-				if (testable.Equals(dsValue.ValueSource) && dsValue.ValueSource != null)
+				if (datasetValue.ValueSource == null)
 				{
-					return true;
+					continue;
 				}
 
-				if (CheckCircularReferencesInGraph(testable, dsValue.ValueSource,
-				                                   configurationNames))
+				var visitedConfigurations = new List<InstanceConfiguration> { testable };
+
+				if (! LeadsBackToConfiguration(datasetValue.ValueSource, testable,
+				                               visitedConfigurations))
 				{
-					return true;
+					continue;
 				}
 
-				testParameterName = null;
-				return false;
+				foreach (InstanceConfiguration configuration in visitedConfigurations)
+				{
+					NotificationUtils.Add(configurationNames, configuration.Name);
+				}
+
+				NotificationUtils.Add(configurationNames, testable.Name);
+
+				testParameterName = datasetValue.TestParameterName;
+				return true;
 			}
 
 			testParameterName = null;
@@ -255,20 +270,69 @@ namespace ProSuite.DomainModel.AO.QA
 				return false;
 			}
 
-			NotificationUtils.Add(configurationNames, instanceConfiguration.Name);
+			var visitedConfigurations = new List<InstanceConfiguration>();
 
-			foreach (var dsValue in instanceConfiguration.ParameterValues
-			                                             .OfType<DatasetTestParameterValue>())
+			if (! LeadsBackToConfiguration(instanceConfiguration, testable,
+			                               visitedConfigurations))
 			{
-				if (testable.Equals(dsValue.ValueSource))
+				return false;
+			}
+
+			foreach (InstanceConfiguration configuration in visitedConfigurations)
+			{
+				NotificationUtils.Add(configurationNames, configuration.Name);
+			}
+
+			NotificationUtils.Add(configurationNames, testable.Name);
+
+			return true;
+		}
+
+		/// <summary>
+		/// Determines whether <paramref name="candidate"/> is <paramref name="searched"/>, or
+		/// references it through the transformers of its dataset parameters.
+		/// </summary>
+		/// <param name="candidate">The configuration to start from.</param>
+		/// <param name="searched">The configuration to look for.</param>
+		/// <param name="visitedConfigurations">The configurations visited on the way to
+		/// <paramref name="candidate"/>. They are not visited a second time, which makes sure
+		/// that configurations referencing each other in a circle do not result in an endless
+		/// recursion. If this method returns true, the list contains the configurations leading
+		/// to <paramref name="searched"/> (excluding it), which is used for the error message.
+		/// </param>
+		private static bool LeadsBackToConfiguration(
+			[NotNull] InstanceConfiguration candidate,
+			[NotNull] InstanceConfiguration searched,
+			[NotNull] List<InstanceConfiguration> visitedConfigurations)
+		{
+			if (searched.Equals(candidate))
+			{
+				return true;
+			}
+
+			// Compare by reference, not with Equals(): a circle can only be closed by the very
+			// same configuration instance.
+			if (visitedConfigurations.Any(visited => ReferenceEquals(visited, candidate)))
+			{
+				return false;
+			}
+
+			visitedConfigurations.Add(candidate);
+
+			foreach (var datasetValue in candidate.ParameterValues
+			                                      .OfType<DatasetTestParameterValue>())
+			{
+				if (datasetValue.ValueSource != null &&
+				    LeadsBackToConfiguration(datasetValue.ValueSource, searched,
+				                             visitedConfigurations))
 				{
-					NotificationUtils.Add(configurationNames, testable.Name);
 					return true;
 				}
-
-				return CheckCircularReferencesInGraph(testable, dsValue.ValueSource,
-				                                      configurationNames);
 			}
+
+			// This configuration does not lead back to the searched one: remove it again
+			// (it was added last), so that the names reported are those of the circle only.
+			visitedConfigurations.RemoveAt(visitedConfigurations.Count - 1);
 
 			return false;
 		}

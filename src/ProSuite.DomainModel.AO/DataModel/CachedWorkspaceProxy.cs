@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -135,48 +135,43 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			foreach (var kvp in _tablesByName)
 			{
-				// ANALYSIS:
-				int remaining;
-				while ((remaining = Marshal.ReleaseComObject(kvp.Value)) > 0)
-				{
-					_msg.DebugFormat("Released table {0}, remaining references: {1}", kvp.Key,
-					                 remaining);
-				}
-
-				//Marshal.FinalReleaseComObject(kvp.Value);
+				// Not necessarily a COM object: client-provided data is served from
+				// virtual (managed) tables.
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_tablesByName.Clear();
 
 			foreach (var kvp in _topologiesByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_topologiesByName.Clear();
 
 			foreach (var kvp in _relClassesByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_relClassesByName.Clear();
 
 			foreach (var kvp in _mosaicDatasetsByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_mosaicDatasetsByName.Clear();
 
 			foreach (var kvp in _rasterDatasetsByName)
 			{
-				Marshal.FinalReleaseComObject(kvp.Value);
+				ComUtils.ReleaseComObject(kvp.Value);
 			}
 
 			_rasterDatasetsByName.Clear();
 
-			Marshal.FinalReleaseComObject(FeatureWorkspace);
+			// See above: the workspace is managed for client-provided data.
+			ComUtils.ReleaseComObject(FeatureWorkspace);
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();

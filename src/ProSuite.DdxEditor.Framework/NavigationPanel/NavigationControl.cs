@@ -261,7 +261,11 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 		}
 
 		private bool IgnoreSelectionEvents =>
-			_nodeSelectedBeforeOpeningContextMenu != null;
+			_nodeSelectedBeforeOpeningContextMenu != null ||
+			// the selection only moves because the node it was on is being removed;
+			// acting on it here would delete further nodes from within the native
+			// control's own item deletion (see TreeViewUpdateScope)
+			TreeViewUpdateScope.IsRemovingNodes(_treeView);
 
 		private void Try([NotNull] Action proc, [CanBeNull] Cursor cursor = null)
 		{
@@ -342,23 +346,28 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 			{
 				_inBeforeSelection = true;
 
-				Try(delegate
+				// the node of a discarded new item is removed from within this call;
+				// it must leave the selection to this method (see TreeViewUpdateScope)
+				using (TreeViewUpdateScope.EnterSelectionChange(_treeView))
 				{
-					if (_observer == null)
+					Try(delegate
 					{
-						return;
-					}
+						if (_observer == null)
+						{
+							return;
+						}
 
-					// NOTE: if a dialog is shown, then the AfterSelect event is
-					//       raised before the pending changes can be discarded (when showing the dialog)
-					var node = (ItemTreeNode) e.Node;
-					e.Cancel = ! _observer.PrepareItemSelection(node.Item);
+						// NOTE: if a dialog is shown, then the AfterSelect event is
+						//       raised before the pending changes can be discarded (when showing the dialog)
+						var node = (ItemTreeNode) e.Node;
+						e.Cancel = ! _observer.PrepareItemSelection(node.Item);
 
-					if (_afterSelectionSkipped)
-					{
-						_observer.HandleItemSelected(node.Item);
-					}
-				});
+						if (_afterSelectionSkipped)
+						{
+							_observer.HandleItemSelected(node.Item);
+						}
+					});
+				}
 			}
 			finally
 			{
@@ -437,7 +446,13 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 				return;
 			}
 
-			_treeView.SelectedNode = _nodeSelectedBeforeOpeningContextMenu;
+			// NOTE: the selection events are still ignored here (the field is cleared
+			//       below), but assigning the node can fail, e.g. if it was removed
+			//       from the tree in the meantime
+			Try(delegate
+			{
+				_treeView.SelectedNode = _nodeSelectedBeforeOpeningContextMenu;
+			});
 
 			_nodeSelectedBeforeOpeningContextMenu = null;
 		}

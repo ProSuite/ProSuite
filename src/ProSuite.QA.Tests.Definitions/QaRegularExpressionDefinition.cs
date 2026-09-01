@@ -4,6 +4,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.Signatures;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.ParameterTypes;
@@ -22,6 +23,7 @@ namespace ProSuite.QA.Tests
 		public string PatternDescription { get; }
 
 		[Doc(nameof(DocStrings.QaRegularExpression_0))]
+		[NotAScalarListRedirect] // fieldName is a token string, split by GetTokens
 		public QaRegularExpressionDefinition(
 				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 				ITableSchemaDef table,
@@ -44,6 +46,7 @@ namespace ProSuite.QA.Tests
 			: this(table, pattern, fieldNames, false, null) { }
 
 		[Doc(nameof(DocStrings.QaRegularExpression_2))]
+		[NotAScalarListRedirect] // fieldName is a token string, split by GetTokens
 		public QaRegularExpressionDefinition(
 				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 				ITableSchemaDef table,
@@ -71,6 +74,7 @@ namespace ProSuite.QA.Tests
 			: this(table, pattern, fieldNames, matchIsError, null) { }
 
 		[Doc(nameof(DocStrings.QaRegularExpression_4))]
+		[NotAScalarListRedirect] // fieldName is a token string, split by GetTokens
 		public QaRegularExpressionDefinition(
 			[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 			ITableSchemaDef table,

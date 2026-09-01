@@ -3,7 +3,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 {
-	internal class ScalarParameterValue
+	public class ScalarParameterValue
 	{
 		private readonly string _name;
 		private readonly string _value;

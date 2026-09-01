@@ -15,7 +15,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Logging;
-
 using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
@@ -207,12 +206,54 @@ public static class WorkspaceUtils
 					new Uri(connectionString, UriKind.Absolute),
 					FileSystemDatastoreType.Shapefile);
 
+			case WorkspaceFactory.FeatureService:
+				return CreateServiceConnectionProperties(connectionString);
+
 			// TODO: SQLite, others?
 
 			default:
 				throw new ArgumentOutOfRangeException(nameof(factory), factory,
 				                                      $"Unsupported workspace factory: {factory}");
 		}
+	}
+
+	/// <summary>
+	/// Creates the <see cref="ServiceConnectionProperties"/> for the specified feature service
+	/// connection string, which can either be a plain URL or a semi-colon separated list of
+	/// key/value pairs (as used by .lyr / .sde connection files), such as
+	/// URL=https://server/rest/services/Service/FeatureServer;VERSION=version_name;
+	/// VERSIONGUID={guid}
+	/// </summary>
+	private static ServiceConnectionProperties CreateServiceConnectionProperties(
+		[NotNull] string connectionString)
+	{
+		if (Uri.TryCreate(connectionString, UriKind.Absolute, out Uri directUri) &&
+		    (directUri.Scheme == Uri.UriSchemeHttp || directUri.Scheme == Uri.UriSchemeHttps))
+		{
+			return new ServiceConnectionProperties(directUri);
+		}
+
+		var builder = new ConnectionStringBuilder(connectionString);
+
+		string url = builder["url"];
+		Assert.False(string.IsNullOrEmpty(url),
+		            "No URL found in feature service connection string: {0}", connectionString);
+
+		var serviceConnection = new ServiceConnectionProperties(new Uri(url, UriKind.Absolute));
+
+		string version = builder["version"];
+		if (! string.IsNullOrEmpty(version))
+		{
+			serviceConnection.Version = version;
+		}
+
+		string user = builder["user"];
+		if (! string.IsNullOrEmpty(user))
+		{
+			serviceConnection.User = user;
+		}
+
+		return serviceConnection;
 	}
 
 	public static bool IsSameDatastore([CanBeNull] Datastore datastore1,
@@ -277,59 +318,59 @@ public static class WorkspaceUtils
 		return uri.LocalPath;
 	}
 
-    public static bool DeleteVersion(
-        [NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
-        [NotNull] string versionName, bool deleteChildVersions = false)
-    {
-        var deleted = false;
-        using VersionManager manager = geodatabase.GetVersionManager();
+	public static bool DeleteVersion(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] string versionName, bool deleteChildVersions = false)
+	{
+		var deleted = false;
+		using VersionManager manager = geodatabase.GetVersionManager();
 
 		Version version = manager.GetVersion(versionName);
 
-        if (deleteChildVersions)
-        {
-            deleted = DeleteVersionTree(version);
-        }
-        else
-        {
-            version.Delete();
-            version.Dispose();
+		if (deleteChildVersions)
+		{
+			deleted = DeleteVersionTree(version);
+		}
+		else
+		{
+			version.Delete();
+			version.Dispose();
 			deleted = true;
-        }
+		}
 
-        return deleted;
-    }
+		return deleted;
+	}
 
-    private static bool DeleteVersionTree(Version version)
-    {
-        var allDeleted = true;
+	private static bool DeleteVersionTree(Version version)
+	{
+		var allDeleted = true;
 
-        foreach (Version child in version.GetChildren())
-        {
-            bool deleted = DeleteVersionTree(child);
-            if (! deleted)
-            {
-                allDeleted = false;
-            }
-        }
+		foreach (Version child in version.GetChildren())
+		{
+			bool deleted = DeleteVersionTree(child);
+			if (! deleted)
+			{
+				allDeleted = false;
+			}
+		}
 
-        if (allDeleted)
-        {
-            if (version.GetParent() != null)
+		if (allDeleted)
+		{
+			if (version.GetParent() != null)
 			{
 				version.Delete();
 				version.Dispose();
 			}
-            else
-            {
-                allDeleted = false;
-            }
-        }
+			else
+			{
+				allDeleted = false;
+			}
+		}
 
-        return allDeleted;
-    }
+		return allDeleted;
+	}
 
-    [CanBeNull]
+	[CanBeNull]
 	public static Version GetDefaultVersion([NotNull] Datastore datastore)
 	{
 		Assert.ArgumentNotNull(datastore, nameof(datastore));
@@ -376,7 +417,8 @@ public static class WorkspaceUtils
 	{
 		using VersionManager manager = geodatabase.GetVersionManager();
 
-		DatabaseConnectionProperties props = GetConnectionProperties(geodatabase.GetConnectionString());
+		DatabaseConnectionProperties props =
+			GetConnectionProperties(geodatabase.GetConnectionString());
 		string name = ModelElementNameUtils.IsQualifiedName(versionName)
 			              ? versionName
 			              : $"{props.User}.{versionName}";
@@ -392,7 +434,8 @@ public static class WorkspaceUtils
 	{
 		using VersionManager manager = geodatabase.GetVersionManager();
 
-		DatabaseConnectionProperties props = GetConnectionProperties(geodatabase.GetConnectionString());
+		DatabaseConnectionProperties props =
+			GetConnectionProperties(geodatabase.GetConnectionString());
 		string name = $"{props.User}.{versionName}";
 
 		return manager.GetVersion(name);

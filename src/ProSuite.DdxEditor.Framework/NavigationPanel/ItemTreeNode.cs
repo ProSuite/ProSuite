@@ -5,12 +5,16 @@ using System.Windows.Forms;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Dialogs;
 using ProSuite.DdxEditor.Framework.Items;
 
 namespace ProSuite.DdxEditor.Framework.NavigationPanel
 {
 	public class ItemTreeNode : TreeNode, IDisposable, IItemTreeNode
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull] private readonly IImageProvider _imageProvider;
 
 		#region Constructors
@@ -107,7 +111,15 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 		{
 			Assert.ArgumentNotNull(imageProvider, nameof(imageProvider));
 
-			Nodes.Clear();
+			if (Nodes.Count > 0)
+			{
+				TreeViewUpdateScope.EnsureNodeRemovalAllowed(TreeView, Text);
+
+				using (TreeViewUpdateScope.EnterNodeRemoval(TreeView))
+				{
+					Nodes.Clear();
+				}
+			}
 
 			foreach (Item child in Item.Children)
 			{
@@ -154,41 +166,116 @@ namespace ProSuite.DdxEditor.Framework.NavigationPanel
 			Item.Deleted -= _item_Deleted;
 		}
 
+		/// <summary>
+		/// Reports an exception instead of letting it escape from an item event
+		/// handler. These handlers are typically called while the tree view is
+		/// processing a windows message, where an escaping exception ends the process.
+		/// </summary>
+		private static void Try([NotNull] Action proc)
+		{
+			try
+			{
+				proc();
+			}
+			catch (Exception e)
+			{
+				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
 		private void _item_Deleted(object sender, EventArgs e)
 		{
-			Remove();
+			Try(delegate
+			{
+				TreeViewUpdateScope.EnsureNodeRemovalAllowed(TreeView, Text);
 
-			Dispose();
+				MoveSelectionToParent();
+
+				using (TreeViewUpdateScope.EnterNodeRemoval(TreeView))
+				{
+					Remove();
+				}
+
+				Dispose();
+			});
+		}
+
+		/// <summary>
+		/// Moves the selection to the parent node if this node holds it, so that the
+		/// item to be selected next is determined here, while the tree view is still
+		/// intact: once this node is removed, the native tree view moves the selection
+		/// on its own, and the resulting events must be ignored (see
+		/// <see cref="TreeViewUpdateScope"/>).
+		/// </summary>
+		private void MoveSelectionToParent()
+		{
+			TreeView treeView = TreeView;
+
+			if (treeView == null || Parent == null)
+			{
+				return;
+			}
+
+			if (TreeViewUpdateScope.IsChangingSelection(treeView))
+			{
+				// the tree view is already selecting another node (this node is
+				// typically removed because its new item is discarded on navigating
+				// away from it); don't interfere with that selection
+				return;
+			}
+
+			if (! ContainsNode(treeView.SelectedNode))
+			{
+				return;
+			}
+
+			treeView.SelectedNode = Parent;
+		}
+
+		private bool ContainsNode([CanBeNull] TreeNode node)
+		{
+			for (TreeNode candidate = node; candidate != null; candidate = candidate.Parent)
+			{
+				if (candidate == this)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private void _item_Changed(object sender, EventArgs e)
 		{
-			UpdateAppearance();
+			Try(UpdateAppearance);
 		}
 
 		private void _item_ChildAdded(object sender, ItemEventArgs e)
 		{
-			if (! IsExpanded)
+			Try(delegate
 			{
-				// this already picks up the new item
-				Expand();
-			}
+				if (! IsExpanded)
+				{
+					// this already picks up the new item
+					Expand();
+				}
 
-			TreeNode newNode = GetChildNode(e.Item);
+				TreeNode newNode = GetChildNode(e.Item);
 
-			if (newNode == null)
-			{
-				newNode = ItemTreeNodeFactory.CreateNode(e.Item, _imageProvider);
+				if (newNode == null)
+				{
+					newNode = ItemTreeNodeFactory.CreateNode(e.Item, _imageProvider);
 
-				Nodes.Add(newNode);
-			}
+					Nodes.Add(newNode);
+				}
 
-			TreeView.SelectedNode = newNode;
+				TreeView.SelectedNode = newNode;
+			});
 		}
 
 		private void _item_ChildrenRefreshed(object sender, EventArgs e)
 		{
-			RefreshChildNodes(_imageProvider);
+			Try(() => RefreshChildNodes(_imageProvider));
 		}
 	}
 }
