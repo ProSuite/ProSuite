@@ -209,6 +209,19 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns></returns>
 		public IEnumerable<Dataset> GetAllSourceDatasets(bool excludeReferenceDatasets = false)
 		{
+			return GetAllSourceDatasets(excludeReferenceDatasets,
+			                            new List<InstanceConfiguration>());
+		}
+
+		/// <summary>
+		/// Same as <see cref="GetAllSourceDatasets(bool)"/>, but guarded against configurations
+		/// that reference each other in a circle (see
+		/// <see cref="InstanceConfiguration.GetDatasetParameterValues(bool,bool,bool,List{InstanceConfiguration})"/>).
+		/// </summary>
+		internal IEnumerable<Dataset> GetAllSourceDatasets(
+			bool excludeReferenceDatasets,
+			[NotNull] List<InstanceConfiguration> alreadyVisitedConfigurations)
+		{
 			if (excludeReferenceDatasets && UsedAsReferenceData)
 			{
 				yield break;
@@ -221,8 +234,10 @@ namespace ProSuite.DomainModel.Core.QA
 			else if (ValueSource != null)
 			{
 				foreach (Dataset referencedDataset in ValueSource.GetDatasetParameterValues(
+					         includeReferencedProcessors: false,
 					         includeSourceDatasets: true,
-					         excludeReferenceDatasets: excludeReferenceDatasets))
+					         excludeReferenceDatasets: excludeReferenceDatasets,
+					         alreadyVisitedConfigurations: alreadyVisitedConfigurations))
 				{
 					yield return referencedDataset;
 				}

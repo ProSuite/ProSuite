@@ -655,6 +655,36 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
+		[Test]
+		public void QaFlowLogicInstantiatesCtor3WithoutFlipExpressions()
+		{
+			// A condition built against QaFlowLogic constructor 3
+			// (polylineClasses, flipExpressions, allowMultipleOutgoingLines) with the
+			// chain-optional 'flipExpressions' left unfilled must still instantiate. The
+			// InstanceFactory passes an empty list for the absent constructor parameter,
+			// and QaFlowLogic(3) treats an empty flipExpressions like the chaining default
+			// (null).
+			var model = new TestDataModel("flowlogic_model", false);
+
+			TestDescriptor descriptor = CreateTestDescriptor(typeof(QaFlowLogic), 3);
+
+			var condition = new QualityCondition("qc", descriptor);
+
+			TestFactory factory = TestFactoryUtils.CreateTestFactory(condition);
+			Assert.NotNull(factory);
+
+			// fill polylineClasses + the ctor-3-only bool, but NOT flipExpressions:
+			InstanceConfigurationUtils.AddParameterValue(
+				condition, "polylineClasses", model.GetVectorDataset());
+			InstanceConfigurationUtils.AddParameterValue(
+				condition, "allowMultipleOutgoingLines", true);
+
+			IList<ITest> tests = factory.CreateTests(new SimpleDatasetOpener(model));
+
+			Assert.AreEqual(1, tests.Count);
+			Assert.IsInstanceOf<QaFlowLogic>(tests[0]);
+		}
+
 		#region Methods to add special TestDefinitionCases
 
 		private static void AddQaContainedPointsCountCases(TestDataModel model,
@@ -3534,6 +3564,7 @@ namespace ProSuite.QA.Tests.Test
 					                               typeof(IfAll),
 					                               typeof(IfIntersecting),
 					                               typeof(IfInvolvedRows),
+					                               typeof(IfIssueConstraint),
 					                               typeof(IfNear),
 					                               typeof(IfWithin)
 				                               };
@@ -3683,6 +3714,7 @@ namespace ProSuite.QA.Tests.Test
 			AddIfAllCases(model, ifCases);
 			//ToDo: Find correct special case for IfInvolvedRows ...
 			AddIfInvolvedRowsCases(model, ifCases);
+			AddIfIssueConstraintCases(model, ifCases);
 
 			return ifCases;
 		}
@@ -3813,6 +3845,16 @@ namespace ProSuite.QA.Tests.Test
 			                                 new object[]
 			                                 { },
 			                                 optionalValues));
+		}
+
+		private static void AddIfIssueConstraintCases(TestDataModel model,
+		                                             ICollection<IfDefinitionCase> ifCases)
+		{
+			ifCases.Add(new IfDefinitionCase(typeof(IfIssueConstraint), 0,
+			                                 new object[]
+			                                 {
+				                                 "$IssueCode = 'Foo'"
+			                                 }));
 		}
 
 		private static void AddIfInvolvedRowsCases(TestDataModel model,

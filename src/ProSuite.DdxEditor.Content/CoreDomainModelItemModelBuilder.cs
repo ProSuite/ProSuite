@@ -15,6 +15,7 @@ using ProSuite.DdxEditor.Content.Datasets;
 using ProSuite.DdxEditor.Content.LinearNetworks;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Content.ObjectCategories;
+using ProSuite.DdxEditor.Content.QA.AlgorithmUI;
 using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
@@ -63,6 +64,40 @@ namespace ProSuite.DdxEditor.Content
 		public bool IncludeDeletedModelElements { get; set; }
 		public bool IncludeQualityConditionsBasedOnDeletedDatasets { get; set; }
 		public bool ListQualityConditionsWithDataset { get; set; }
+
+		/// <summary>
+		/// The algorithm-first UI factory, registered by the composition root (e.g. the
+		/// launcher). <c>null</c> as long as the algorithm-first UI project is not wired
+		/// up, in which case the classic Finder/constructor-combo/Blazor UI is used.
+		/// </summary>
+		[CanBeNull]
+		public IAlgorithmEditorUiFactory AlgorithmEditorUi { get; set; }
+
+		/// <summary>
+		/// The provider of the algorithm documentation page, registered by the
+		/// composition root. <c>null</c>: the "Show Documentation" link and the
+		/// documentation context-menu entry keep showing the classic per-constructor
+		/// report. Independent of <see cref="UseAlgorithmUi"/> - the page documents the
+		/// algorithm either way.
+		/// </summary>
+		[CanBeNull]
+		public IInstanceDocumentationProvider InstanceDocumentation { get; set; }
+
+		/// <summary>
+		/// If <c>true</c>, the classic condition specification flow (Finder + constructor
+		/// combo + Blazor parameter grid) is used even if an
+		/// <see cref="AlgorithmEditorUi"/> is registered. Surfaced as the "Use classic
+		/// condition specification" option.
+		/// </summary>
+		public bool UseClassicConditionSpecification { get; set; }
+
+		/// <summary>
+		/// <c>true</c> if the algorithm-first UI is to be used: an
+		/// <see cref="AlgorithmEditorUi"/> is registered and
+		/// <see cref="UseClassicConditionSpecification"/> is not set.
+		/// </summary>
+		public bool UseAlgorithmUi => ! UseClassicConditionSpecification &&
+		                              AlgorithmEditorUi != null;
 
 		[CanBeNull]
 		public virtual string QualitySpecificationReportTemplate => null;
@@ -482,6 +517,18 @@ namespace ProSuite.DdxEditor.Content
 		public abstract ITestParameterDatasetProvider GetTestParameterDatasetProvider();
 
 		public virtual ISqlExpressionBuilder GetSqlExpressionBuilder()
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// The provider of the output schema of a transformer, used where a parameter value
+		/// is fed by a transformer instead of a stored dataset (e.g. to build a SQL
+		/// expression against the transformer's output). Null where no data access is
+		/// available; callers then treat a transformer-fed value as having no known schema.
+		/// </summary>
+		[CanBeNull]
+		public virtual ITransformerOutputSchemaProvider GetTransformerOutputSchemaProvider()
 		{
 			return null;
 		}

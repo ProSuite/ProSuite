@@ -5,7 +5,7 @@ using ProSuite.DdxEditor.Framework.Commands;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 {
-	internal class FillDownCommand : CommandBase
+	public class FillDownCommand : CommandBase
 	{
 		private readonly CellSelection _cellSelection;
 		private readonly ICreateQualityConditionsFillDown _fillDown;

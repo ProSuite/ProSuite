@@ -8,10 +8,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 {
@@ -53,50 +50,24 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		public void AddInstanceDescriptors(string dllFilePath, IItemNavigation itemNavigation)
 		{
-			// NOTE: This method could profit from a re-unification with TestDescriptorsItem
-
 			using (_msg.IncrementIndentation(
 				       "Adding {0}s from assembly {1}", DescriptorTypeDisplayName, dllFilePath))
 			{
 				Assembly assembly = Assembly.LoadFile(dllFilePath);
 
-				AddInstanceDescriptors(itemNavigation, assembly);
+				IList<InstanceDescriptor> newDescriptors =
+					InstanceDescriptorItemUtils.CreateInstanceDescriptors(
+						assembly, GetInstanceType(), DescriptorTypeDisplayName,
+						CreateDescriptor);
+
+				itemNavigation.GoToItem(this);
+
+				InstanceDescriptorItemUtils.RegisterDescriptors(
+					ModelBuilder, newDescriptors, ModelBuilder.InstanceDescriptors,
+					DescriptorTypeDisplayName);
+
+				RefreshChildren();
 			}
-		}
-
-		protected void AddInstanceDescriptors(IItemNavigation itemNavigation, Assembly assembly)
-		{
-			const bool includeObsolete = false;
-			const bool includeInternallyUsed = false;
-
-			Type instanceBaseType = GetInstanceType();
-
-			IEnumerable<Type> instanceTypes = InstanceFactoryUtils.GetClasses(
-				assembly, instanceBaseType, includeObsolete, includeInternallyUsed);
-
-			var newDescriptors = new List<InstanceDescriptor>();
-
-			// TODO allow specifying naming convention
-			// TODO optionally use alternate display name 
-			// TODO allow selection of types/constructors
-			// TODO optionally change properties of existing descriptors with same definition
-			var count = 0;
-
-			foreach (Type instanceType in instanceTypes)
-			{
-				foreach (int constructorIndex in
-				         InstanceUtils.GetConstructorIndexes(instanceType))
-				{
-					count++;
-					newDescriptors.Add(CreateDescriptor(instanceType, constructorIndex));
-				}
-			}
-
-			_msg.InfoFormat("The assembly contains {0} {1}s", count, DescriptorTypeDisplayName);
-
-			itemNavigation.GoToItem(this);
-
-			TryAddInstanceDescriptors(newDescriptors, ModelBuilder.InstanceDescriptors);
 		}
 
 		protected abstract string DescriptorTypeDisplayName { get; }
@@ -132,25 +103,5 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		[NotNull]
 		protected abstract IEnumerable<InstanceDescriptorTableRow> GetTableRows();
-
-		private void TryAddInstanceDescriptors(
-			[NotNull] IEnumerable<InstanceDescriptor> descriptors,
-			IInstanceDescriptorRepository repository)
-		{
-			Assert.ArgumentNotNull(descriptors, nameof(descriptors));
-
-			var addedCount = 0;
-			ModelBuilder.NewTransaction(
-				delegate
-				{
-					addedCount =
-						InstanceDescriptorItemUtils.TryAddInstanceDescriptorsTx(
-							descriptors, repository);
-				});
-
-			_msg.InfoFormat("{0} {1}s added", addedCount, DescriptorTypeDisplayName);
-
-			RefreshChildren();
-		}
 	}
 }

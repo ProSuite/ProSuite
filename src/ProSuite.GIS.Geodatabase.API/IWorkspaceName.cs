@@ -19,5 +19,12 @@ namespace ProSuite.GIS.Geodatabase.API
 		string Category { get; }
 
 		string ConnectionString { get; }
+
+		/// <summary>
+		/// Whether this workspace is a feature service (portal) connection, as opposed to a
+		/// direct database or file connection. Feature-service dataset names carry an "L{id}"
+		/// layer-name prefix that callers matching against model dataset names must account for.
+		/// </summary>
+		bool IsFeatureService { get; }
 	}
 }

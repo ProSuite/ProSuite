@@ -15,66 +15,46 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.DataModel.LegacyTypes;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
-using RasterDataset = ProSuite.DomainModel.Core.DataModel.RasterDataset;
 
 namespace ProSuite.DomainModel.AO.QA
 {
 	public static class TestParameterTypeUtils
 	{
-		public static void AssertValidDataset([NotNull] TestParameter testParameter,
-		                                      [CanBeNull] Dataset dataset)
+		private static bool _registered;
+
+		static TestParameterTypeUtils()
 		{
-			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
-
-			if (dataset == null) return;
-
-			TestParameterType parameterType = GetParameterType(testParameter.Type);
-
-			Assert.True(IsValidDataset(parameterType, dataset),
-			            "Invalid dataset for test parameter type {0}: {1} ({2})",
-			            Enum.GetName(typeof(TestParameterType), parameterType), dataset,
-			            testParameter.Name);
+			// Belt-and-braces: also register on first access to this type. The authoritative
+			// registration is EnsureRegistered, called from the composition roots that load
+			// DomainModel.AO (DDX Editor launcher, microservices server startup), so that the
+			// legacy ArcObjects mapping is present before any core TestParameterTypes call.
+			EnsureRegistered();
 		}
 
-		public static void AssertValidDataset([NotNull] Type testParameterType,
-		                                      [CanBeNull] Dataset dataset)
+		/// <summary>
+		/// Registers the ArcObjects-specific (legacy) type mapping as a fallback for the
+		/// platform-independent mapping in <see cref="TestParameterTypes"/>. Idempotent: safe to
+		/// call multiple times and from multiple composition roots. Must be called early during
+		/// startup so that core mappings resolve legacy AO dataset types correctly regardless of
+		/// which code path first touches <see cref="TestParameterTypes"/>.
+		/// </summary>
+		public static void EnsureRegistered()
 		{
-			Assert.ArgumentNotNull(testParameterType, nameof(testParameterType));
+			if (_registered)
+			{
+				return;
+			}
 
-			if (dataset == null) return;
-
-			TestParameterType parameterType = GetParameterType(testParameterType);
-
-			Assert.True(IsValidDataset(parameterType, dataset),
-			            "Invalid dataset for test parameter type {0}: {1}",
-			            Enum.GetName(typeof(TestParameterType), parameterType), dataset);
+			TestParameterTypes.RegisterTypeMapping(GetLegacyArcObjectsParameterType);
+			_registered = true;
 		}
 
-		public static TestParameterType GetParameterType([NotNull] Type dataType)
+		[CanBeNull]
+		private static TestParameterType? GetLegacyArcObjectsParameterType(
+			[NotNull] Type dataType)
 		{
-			Assert.ArgumentNotNull(dataType, nameof(dataType));
-
-			// NOTE: test more specific types first, base types last
-
-			// Platform independent definition Types:
-			if (typeof(IFeatureClassSchemaDef).IsAssignableFrom(dataType))
-				return TestParameterType.VectorDataset;
-			if (typeof(ITableSchemaDef).IsAssignableFrom(dataType))
-				return TestParameterType.ObjectDataset;
-			if (typeof(IMosaicRasterDatasetDef).IsAssignableFrom(dataType))
-				return TestParameterType.RasterMosaicDataset;
-			if (typeof(IPointCloudDatasetDef).IsAssignableFrom(dataType))
-				return TestParameterType.PointCloudDataset;
-			if (typeof(IRasterDatasetDef).IsAssignableFrom(dataType))
-				return TestParameterType.RasterDataset;
-			if (typeof(ITerrainDef).IsAssignableFrom(dataType))
-				return TestParameterType.TerrainDataset;
-			if (typeof(ITopologyDef).IsAssignableFrom(dataType))
-				return TestParameterType.TopologyDataset;
-
 			if (typeof(IReadOnlyFeatureClass).IsAssignableFrom(dataType))
 				return TestParameterType.VectorDataset;
 			if (typeof(IFeatureClass).IsAssignableFrom(dataType))
@@ -121,20 +101,43 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.TerrainDataset;
 			}
 
-			if (dataType == typeof(double))
-				return TestParameterType.Double;
-			if (dataType == typeof(int))
-				return TestParameterType.Integer;
-			if (dataType == typeof(bool))
-				return TestParameterType.Boolean;
-			if (dataType == typeof(string))
-				return TestParameterType.String;
-			if (dataType == typeof(DateTime))
-				return TestParameterType.DateTime;
-			if (dataType.IsEnum)
-				return TestParameterType.Integer;
+			return null;
+		}
 
-			return TestParameterType.CustomScalar;
+		public static void AssertValidDataset([NotNull] TestParameter testParameter,
+		                                      [CanBeNull] Dataset dataset)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			if (dataset == null) return;
+
+			TestParameterType parameterType = GetParameterType(testParameter.Type);
+
+			Assert.True(IsValidDataset(parameterType, dataset),
+			            "Invalid dataset for test parameter type {0}: {1} ({2})",
+			            Enum.GetName(typeof(TestParameterType), parameterType), dataset,
+			            testParameter.Name);
+		}
+
+		public static void AssertValidDataset([NotNull] Type testParameterType,
+		                                      [CanBeNull] Dataset dataset)
+		{
+			Assert.ArgumentNotNull(testParameterType, nameof(testParameterType));
+
+			if (dataset == null) return;
+
+			TestParameterType parameterType = GetParameterType(testParameterType);
+
+			Assert.True(IsValidDataset(parameterType, dataset),
+			            "Invalid dataset for test parameter type {0}: {1}",
+			            Enum.GetName(typeof(TestParameterType), parameterType), dataset);
+		}
+
+		public static TestParameterType GetParameterType([NotNull] Type dataType)
+		{
+			// Delegates to the AO-free core mapping (schema-def interfaces + scalars), which in
+			// turn falls back to GetLegacyArcObjectsParameterType for the ArcObjects-specific types.
+			return TestParameterTypes.GetParameterType(dataType);
 		}
 
 		/// <summary>
@@ -147,7 +150,6 @@ namespace ProSuite.DomainModel.AO.QA
 		/// </summary>
 		public static bool AreCompatibleParameterTypes([NotNull] Type type1, [NotNull] Type type2)
 		{
-			// Scalar parameters must match exactly:
 			if (type1 == type2)
 				return true;
 
@@ -159,113 +161,24 @@ namespace ProSuite.DomainModel.AO.QA
 
 		public static bool IsDatasetType([NotNull] Type type)
 		{
-			Assert.ArgumentNotNull(type, nameof(type));
-
-			if (type.IsValueType)
-			{
-				return false;
-			}
-
-			if (typeof(IFeatureClassSchemaDef).IsAssignableFrom(type) ||
-			    typeof(ITableSchemaDef).IsAssignableFrom(type) ||
-			    typeof(IRasterDatasetDef).IsAssignableFrom(type) ||
-			    typeof(IPointCloudDatasetDef).IsAssignableFrom(type) ||
-			    typeof(ITerrainDef).IsAssignableFrom(type) ||
-			    typeof(ITopologyDef).IsAssignableFrom(type))
-			{
-				return true;
-			}
-
-			// Legacy types:
-			return typeof(IReadOnlyFeatureClass).IsAssignableFrom(type) ||
-			       typeof(IReadOnlyTable).IsAssignableFrom(type) ||
-			       typeof(IFeatureClass).IsAssignableFrom(type) ||
-			       typeof(ITable).IsAssignableFrom(type) ||
-			       typeof(IObjectClass).IsAssignableFrom(type) ||
-			       typeof(ITopology).IsAssignableFrom(type) ||
-			       typeof(IRasterDataset).IsAssignableFrom(type) ||
-			       typeof(IRasterDataset2).IsAssignableFrom(type) ||
-			       typeof(IMosaicDataset).IsAssignableFrom(type) ||
-
-			       // Remove once all 3d and GdbNetwork tests are officially de-supported:
-#if ArcGIS // 10.x:
-			       type.Name == "IMosaicLayer" ||
-			       type.Name == "ITerrain" ||
-			       type.Name == "IGeometricNetwork" ||
-#endif
-			       typeof(TerrainReference).IsAssignableFrom(type) ||
-			       typeof(SimpleRasterMosaic).IsAssignableFrom(type) ||
-			       typeof(PointCloudReference).IsAssignableFrom(type) ||
-			       typeof(TopologyReference).IsAssignableFrom(type);
+			// Delegates to the AO-free core mapping, which resolves legacy ArcObjects dataset
+			// types (feature class, table, raster, topology, terrain, ...) via the fallback
+			// registered by EnsureRegistered. Deriving both this and GetParameterType from the
+			// same resolver guarantees they cannot disagree.
+			return TestParameterTypes.IsDatasetType(type);
 		}
 
 		public static bool IsValidDataset(TestParameterType parameterType,
 		                                  [NotNull] Dataset dataset)
 		{
-			switch (parameterType)
-			{
-				case TestParameterType.Dataset:
-					return true;
-
-				case TestParameterType.ObjectDataset:
-					return dataset is ObjectDataset;
-
-				case TestParameterType.VectorDataset:
-					return dataset is VectorDataset;
-
-				case TestParameterType.TableDataset:
-					return dataset is TableDataset;
-
-				case TestParameterType.TopologyDataset:
-					return dataset is TopologyDataset;
-
-				case TestParameterType.TerrainDataset:
-					return dataset is ISimpleTerrainDataset;
-
-				case TestParameterType.GeometricNetworkDataset:
-					return dataset is IGeometricNetworkDataset;
-
-				case TestParameterType.RasterMosaicDataset:
-					return dataset is IRasterMosaicDataset;
-
-				case TestParameterType.PointCloudDataset:
-					return dataset is IPointCloudDataset;
-
-				case TestParameterType.RasterDataset:
-					return dataset is RasterDataset;
-
-				default:
-					throw new ArgumentException(
-						string.Format("Unsupported parameter type: {0}",
-						              Enum.GetName(typeof(TestParameterType), parameterType)));
-			}
+			return TestParameterTypes.IsValidDataset(parameterType, dataset);
 		}
 
 		[NotNull]
 		public static TestParameterValue GetEmptyParameterValue(
 			[NotNull] TestParameter testParameter)
 		{
-			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
-
-			if (IsDatasetType(testParameter.Type))
-			{
-				return new DatasetTestParameterValue(testParameter);
-			}
-
-			if (testParameter.Type == typeof(double) ||
-			    testParameter.Type == typeof(int) ||
-			    testParameter.Type == typeof(bool) ||
-			    testParameter.Type == typeof(string) ||
-			    testParameter.Type == typeof(DateTime) ||
-			    testParameter.Type.IsEnum)
-			{
-				return new ScalarTestParameterValue(testParameter,
-				                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
-			}
-
-			return new ScalarTestParameterValue(testParameter,
-			                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
-			//throw new ArgumentException("Unhandled type " + _type);
+			return TestParameterTypes.CreateEmptyParameterValue(testParameter);
 		}
 
 		[CanBeNull]

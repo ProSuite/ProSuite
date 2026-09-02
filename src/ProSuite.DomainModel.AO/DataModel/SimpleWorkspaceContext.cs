@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
@@ -16,9 +17,10 @@ using ESRI.ArcGIS.DataSourcesRaster;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	public class SimpleWorkspaceContext : WorkspaceContextBase
+	public class SimpleWorkspaceContext : WorkspaceContextBase, IDisposable
 	{
 		[NotNull] private readonly DdxModel _model;
+		[CanBeNull] private readonly IWorkspaceProxy _workspaceProxy;
 
 		private Dictionary<string, WorkspaceDataset> _workspaceDatasetByModelName;
 		private Dictionary<string, WorkspaceDataset> _workspaceDatasetByGdbDatasetName;
@@ -35,6 +37,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] IFeatureWorkspace featureWorkspace,
 			[NotNull] IEnumerable<WorkspaceDataset> workspaceDatasets,
 			[NotNull] IEnumerable<WorkspaceAssociation> workspaceAssociations)
+			: this(model, featureWorkspace, workspaceDatasets, workspaceAssociations,
+			       keepDatasetLocks: false) { }
+
+		public SimpleWorkspaceContext(
+			[NotNull] DdxModel model,
+			[NotNull] IFeatureWorkspace featureWorkspace,
+			[NotNull] IEnumerable<WorkspaceDataset> workspaceDatasets,
+			[NotNull] IEnumerable<WorkspaceAssociation> workspaceAssociations,
+			bool keepDatasetLocks)
 			: base(featureWorkspace)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
@@ -43,6 +54,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 			Assert.ArgumentNotNull(workspaceAssociations, nameof(workspaceAssociations));
 
 			_model = model;
+			_workspaceProxy = keepDatasetLocks
+				                  ? (IWorkspaceProxy) new CachedWorkspaceProxy(featureWorkspace)
+				                  : null;
 
 			UpdateContent(workspaceDatasets, workspaceAssociations);
 		}
@@ -90,11 +104,22 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			WorkspaceDataset workspaceDataset = GetWorkspaceDataset(dataset);
 
-			return workspaceDataset == null
-				       ? null
-				       : ModelElementUtils.OpenObjectClass(FeatureWorkspace,
+			if (workspaceDataset == null)
+			{
+				return null;
+			}
+
+			return _workspaceProxy == null
+				       ? ModelElementUtils.OpenObjectClass(FeatureWorkspace,
 				                                           workspaceDataset.Name,
-				                                           dataset);
+				                                           dataset)
+				       : (IObjectClass) _workspaceProxy.OpenTable(
+					       workspaceDataset.Name,
+					       dataset.GetAttribute(AttributeRole.ObjectID)?.Name,
+					       dataset.Model?.SpatialReferenceDescriptor,
+					       dataset.GeometryType is GeometryTypeShape shapeType
+						       ? (esriGeometryType) shapeType.ShapeType
+						       : esriGeometryType.esriGeometryNull);
 		}
 
 		public override TopologyReference OpenTopology(ITopologyDataset dataset)
@@ -108,8 +133,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			ITopology topology =
-				TopologyUtils.OpenTopology(FeatureWorkspace, workspaceDataset.Name);
+			ITopology topology = _workspaceProxy == null
+				                     ? TopologyUtils.OpenTopology(
+					                     FeatureWorkspace, workspaceDataset.Name)
+				                     : _workspaceProxy.OpenTopology(workspaceDataset.Name);
 
 			return new TopologyReference(topology);
 		}
@@ -123,7 +150,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return workspaceDataset == null
 				       ? null
 				       : new RasterDatasetReference(
-					       DatasetUtils.OpenRasterDataset(Workspace, workspaceDataset.Name));
+					       _workspaceProxy == null
+						       ? DatasetUtils.OpenRasterDataset(
+							       Workspace, workspaceDataset.Name)
+						       : _workspaceProxy.OpenRasterDataset(workspaceDataset.Name));
 		}
 
 		public override TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
@@ -164,7 +194,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 					catalogDataset, OpenFeatureClass);
 			}
 
-			IMosaicDataset mosaic = MosaicUtils.OpenMosaicDataset(Workspace, dataset.Name);
+			IMosaicDataset mosaic = _workspaceProxy == null
+				                         ? MosaicUtils.OpenMosaicDataset(Workspace, dataset.Name)
+				                         : _workspaceProxy.OpenMosaicDataset(dataset.Name);
 
 			var simpleRasterMosaic = new SimpleRasterMosaic(mosaic);
 
@@ -182,9 +214,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			return DatasetUtils.OpenRelationshipClass(
-				FeatureWorkspace,
-				workspaceAssociation.RelationshipClassName);
+			return _workspaceProxy == null
+				       ? DatasetUtils.OpenRelationshipClass(
+					       FeatureWorkspace, workspaceAssociation.RelationshipClassName)
+				       : _workspaceProxy.OpenRelationshipClass(
+					       workspaceAssociation.RelationshipClassName);
 		}
 
 		public override Dataset GetDatasetByGdbName(string gdbDatasetName)
@@ -283,6 +317,19 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			return result;
+		}
+
+		private bool _disposed;
+
+		public void Dispose()
+		{
+			if (_disposed)
+			{
+				return;
+			}
+
+			(_workspaceProxy as IDisposable)?.Dispose();
+			_disposed = true;
 		}
 
 		[NotNull]

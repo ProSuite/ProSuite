@@ -1329,6 +1329,9 @@
   <data name="MinExtent_ExtentSmallerThanLimit" xml:space="preserve">
     <value>Feature extent is below than the minimum limit</value>
   </data>
+  <data name="SimpleGeometry_InteriorRingNotInside" xml:space="preserve">
+    <value>Interior Ring Not Inside</value>
+  </data>
   <data name="LasFileZRange_NoLasFile" xml:space="preserve">
     <value>The LAS file referenced by the point cloud tile does not exist</value>
   </data>
