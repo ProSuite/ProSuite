@@ -34,7 +34,17 @@ namespace ProSuite.Commons.Geom
 		/// rings to the inside of the bends, where they are least conspicuous, and needs no
 		/// miter limit on the outside.
 		/// </summary>
-		Round = 2
+		Round = 2,
+
+		/// <summary>
+		/// No filler rings at all: the corner point is the mitered one as in
+		/// <see cref="Miter"/>, but both faces are extended (or cut back) to it at the same
+		/// height - the average of the two planes there - so that they meet along one and the
+		/// same cross-section. There is still no gap, but the faces are no longer planar: each
+		/// one is warped at the corners where it does not share a plane with its neighbour.
+		/// Trades the coplanarity of the faces for a wall without any extra rings.
+		/// </summary>
+		None = 3
 	}
 
 	/// <summary>
@@ -162,13 +172,14 @@ namespace ProSuite.Commons.Geom
 		private sealed class SideJoint
 		{
 			public SideJoint(double prevX, double prevY, double nextX, double nextY,
-			                 [CanBeNull] IList<double[]> fan = null)
+			                 [CanBeNull] IList<double[]> fan = null, double? sharedZ = null)
 			{
 				PrevX = prevX;
 				PrevY = prevY;
 				NextX = nextX;
 				NextY = nextY;
 				Fan = fan ?? new List<double[]>(0);
+				SharedZ = sharedZ;
 			}
 
 			public double PrevX { get; }
@@ -178,6 +189,13 @@ namespace ProSuite.Commons.Geom
 
 			[NotNull]
 			public IList<double[]> Fan { get; }
+
+			/// <summary>
+			/// The height both adjacent faces use at the corner point instead of the one their
+			/// own plane would give, which is how <see cref="WallCornerJoin.None"/> closes the Z
+			/// step without a filler ring. Null everywhere else.
+			/// </summary>
+			public double? SharedZ { get; }
 		}
 
 		private sealed class Joint
@@ -272,6 +290,13 @@ namespace ProSuite.Commons.Geom
 				{
 					AddFace(faces, runStart, runEnd);
 					runStart = runEnd + 1;
+				}
+
+				if (_cornerJoin == WallCornerJoin.None)
+				{
+					// The faces already meet along one and the same cross-section, at the cost
+					// of being warped there.
+					return;
 				}
 
 				// The corners between the runs: close the Z step (and, for a bevelled or rounded
@@ -509,15 +534,21 @@ namespace ProSuite.Commons.Geom
 				// other way round.
 				bool leftIsOutside = cross < 0;
 
-				bool cutBackOutside = planeChange && _cornerJoin != WallCornerJoin.Miter;
+				bool cutBackOutside = planeChange &&
+				                      (_cornerJoin == WallCornerJoin.Bevel ||
+				                       _cornerJoin == WallCornerJoin.Round);
+
+				// Without filler rings the Z step is taken up by the faces themselves, which
+				// both end at the average of their two planes at the corner point.
+				bool averageHeight = planeChange && _cornerJoin == WallCornerJoin.None;
 
 				SideJoint left = GetSideJoint(vertex, previousSegment, nextSegment, +1,
 				                              _leftDistance,
-				                              cutBackOutside && leftIsOutside);
+				                              cutBackOutside && leftIsOutside, averageHeight);
 
 				SideJoint right = GetSideJoint(vertex, previousSegment, nextSegment, -1,
 				                               _rightDistance,
-				                               cutBackOutside && ! leftIsOutside);
+				                               cutBackOutside && ! leftIsOutside, averageHeight);
 
 				return new Joint(left, right);
 			}
@@ -525,14 +556,17 @@ namespace ProSuite.Commons.Geom
 			/// <param name="sideSign">+1 for the left side, -1 for the right side.</param>
 			/// <param name="cutBack">Whether to cut the corner back to the two perpendicular
 			/// offset points instead of extending both faces to the mitered corner point.</param>
+			/// <param name="averageHeight">Whether both faces meet at the corner point at the
+			/// average of their two planes there, instead of each at its own plane.</param>
 			[NotNull]
 			private SideJoint GetSideJoint([NotNull] Pnt3D vertex, int previousSegment,
 			                               int nextSegment, int sideSign, double distance,
-			                               bool cutBack)
+			                               bool cutBack, bool averageHeight)
 			{
 				if (distance <= 0)
 				{
-					// The un-offset side: both faces end on the sketch line itself.
+					// The un-offset side: both faces end on the sketch line itself, which is
+					// where the two planes meet anyway.
 					return new SideJoint(vertex.X, vertex.Y, vertex.X, vertex.Y);
 				}
 
@@ -554,7 +588,15 @@ namespace ProSuite.Commons.Geom
 				double[] miter = GetMiterPoint(vertex, fromPrevious, fromNext, previousSegment,
 				                               nextSegment, distance);
 
-				return new SideJoint(miter[0], miter[1], miter[0], miter[1]);
+				double? sharedZ = null;
+
+				if (averageHeight)
+				{
+					sharedZ = (GetPlane(previousSegment).GetZ(miter[0], miter[1]) +
+					           GetPlane(nextSegment).GetZ(miter[0], miter[1])) / 2;
+				}
+
+				return new SideJoint(miter[0], miter[1], miter[0], miter[1], null, sharedZ);
 			}
 
 			[NotNull]
@@ -696,8 +738,8 @@ namespace ProSuite.Commons.Geom
 					SideJoint left = _joints[k].Left;
 
 					ring.Add(k == firstSegment
-						         ? plane.Project(left.NextX, left.NextY)
-						         : plane.Project(left.PrevX, left.PrevY));
+						         ? Project(plane, left, left.NextX, left.NextY)
+						         : Project(plane, left, left.PrevX, left.PrevY));
 				}
 
 				ring.Add(_vertices[lastSegment + 1].ClonePnt3D());
@@ -707,13 +749,27 @@ namespace ProSuite.Commons.Geom
 					SideJoint right = _joints[k].Right;
 
 					ring.Add(k == firstSegment
-						         ? plane.Project(right.NextX, right.NextY)
-						         : plane.Project(right.PrevX, right.PrevY));
+						         ? Project(plane, right, right.NextX, right.NextY)
+						         : Project(plane, right, right.PrevX, right.PrevY));
 				}
 
 				ring.Add(_vertices[firstSegment].ClonePnt3D());
 
 				AddRing(faces, ring, _tolerance);
+			}
+
+			/// <summary>
+			/// The boundary point on the face's plane - or, where the joint prescribes a height
+			/// because the Z step is not closed by a filler ring, at that height, which is what
+			/// warps the face.
+			/// </summary>
+			[NotNull]
+			private static Pnt3D Project(FacePlane plane, [NotNull] SideJoint side, double x,
+			                             double y)
+			{
+				return side.SharedZ.HasValue
+					       ? new Pnt3D(x, y, side.SharedZ.Value)
+					       : plane.Project(x, y);
 			}
 
 			/// <summary>

@@ -19,16 +19,26 @@ namespace ProSuite.Commons.Test.Geom
 	{
 		private const double _tolerance = 1e-8;
 
-		private static readonly WallCornerJoin[] _allJoins =
+		/// <summary>
+		/// The joins that keep every face planar, i.e. all but
+		/// <see cref="WallCornerJoin.None"/>.
+		/// </summary>
+		private static readonly WallCornerJoin[] _planarJoins =
 		{
 			WallCornerJoin.Miter, WallCornerJoin.Bevel, WallCornerJoin.Round
+		};
+
+		private static readonly WallCornerJoin[] _allJoins =
+		{
+			WallCornerJoin.Miter, WallCornerJoin.Bevel, WallCornerJoin.Round,
+			WallCornerJoin.None
 		};
 
 		#region The reported case
 
 		[Test]
 		public void CanBuildCornerWithBendAndSlopeChangeRight(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			// The reported case: the sketch bends in XY (by 90°) and changes slope at the same
 			// vertex, so the two faces meet at different heights and would leave a Z gap.
@@ -40,7 +50,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void CanBuildCornerWithBendAndSlopeChangeLeft(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			Polyhedron wall = GetWall(ReportedCase(), 10, BufferSide.Left, join);
 
@@ -50,7 +60,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void CanBuildCornerWithBendAndSlopeChangeBothSides(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			Polyhedron wall = GetWall(ReportedCase(), 10, BufferSide.Both, join);
 
@@ -124,11 +134,101 @@ namespace ProSuite.Commons.Test.Geom
 
 		#endregion
 
+		#region No filler rings at all
+
+		[Test]
+		public void NoFillersMeansTheFacesMeetAtTheAveragedHeight()
+		{
+			// The alternative: instead of a filler ring, both faces are extended to the mitered
+			// corner point at the average of the two planes there (9 and 14 -> 11.5). They then
+			// meet along one and the same cross-section - no gap - but neither is planar any
+			// more.
+			Polyhedron wall = GetWall(ReportedCase(), 10, BufferSide.Right, WallCornerJoin.None);
+
+			WallAssert.AssertGapFree(wall);
+
+			Assert.AreEqual(2, wall.RingGroups.Count);
+			WallAssert.AssertHasFace(wall, "0/0/0 0/100/10 10/90/11.5 10/0/0");
+			WallAssert.AssertHasFace(wall, "0/100/10 100/100/50 100/90/50 10/90/11.5");
+		}
+
+		[Test]
+		public void NoFillersProducesNoExtraRings(
+			[Values(BufferSide.Both, BufferSide.Left, BufferSide.Right)] BufferSide side)
+		{
+			// One ring per run of coplanar segments and nothing else, where mitering needs a
+			// filler per corner and side.
+			var path = Path("0/0/0 0/100/10 100/100/50 160/40/30");
+
+			Polyhedron none = GetWall(path, 10, side, WallCornerJoin.None);
+			Polyhedron mitered = GetWall(path, 10, side, WallCornerJoin.Miter);
+
+			Assert.AreEqual(3, none.RingGroups.Count);
+			Assert.Greater(mitered.RingGroups.Count, none.RingGroups.Count);
+
+			WallAssert.AssertGapFree(none);
+			WallAssert.AssertFacesAreClockwise(none);
+
+			// The corner points are the mitered ones, so the footprint is unchanged.
+			Assert.AreEqual(mitered.GetArea2D(), none.GetArea2D(), 0.001);
+		}
+
+		[Test]
+		public void NoFillersGivesUpCoplanarityOnlyWhereThePlaneChanges()
+		{
+			// Where the sketch stays in one plane there is nothing to average out, so those
+			// faces are still planar; only the faces at a corner with a slope change are warped.
+			Polyhedron flat = GetWall(Path("0/0/0 100/0/0 100/100/0"), 5, BufferSide.Both,
+			                          WallCornerJoin.None);
+
+			Assert.AreEqual(1, flat.RingGroups.Count);
+			WallAssert.AssertFacesArePlanar(flat);
+
+			Polyhedron warped = GetWall(ReportedCase(), 10, BufferSide.Both, WallCornerJoin.None);
+
+			WallAssert.AssertGapFree(warped);
+			Assert.Throws<AssertionException>(() => WallAssert.AssertFacesArePlanar(warped));
+		}
+
+		[Test]
+		public void NoFillersIsGapFreeOnZigZag()
+		{
+			var path = Path("0/0/0 50/40/10 100/0/5 150/40/30 200/0/0 250/60/40");
+
+			Polyhedron wall = GetWall(path, 4, BufferSide.Both, WallCornerJoin.None);
+
+			WallAssert.AssertGapFree(wall);
+			WallAssert.AssertFacesAreClockwise(wall);
+		}
+
+		[Test]
+		public void NoFillersIsGapFreeOnAClosedLoop()
+		{
+			var path = ClosedPath("0/0/0 100/0/10 100/100/25 0/100/5 0/0/0");
+
+			Polyhedron wall = GetWall(path, 5, BufferSide.Both, WallCornerJoin.None);
+
+			WallAssert.AssertGapFree(wall);
+			WallAssert.AssertFacesAreClockwise(wall);
+		}
+
+		[Test]
+		public void NoFillersIsGapFreeAtAVeryTightCorner()
+		{
+			var path = Path("0/0/0 30/0/6 " + PointAt(30, 0, 180 - 8, 30, 20));
+
+			Polyhedron wall = GetWall(path, 5, BufferSide.Both, WallCornerJoin.None);
+
+			WallAssert.AssertGapFree(wall, requireNoOverlap: false);
+		}
+
+		#endregion
+
 		#region Coplanar runs are not sub-divided
 
 		[Test]
 		public void FlatCornerIsASingleFace(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			// A horizontal L is one plane, so the whole wall must be a single face - and the
 			// bevel/round joins must not cut the corner back, which would open an XY gap.
@@ -169,7 +269,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void SlopeBreakWithoutBendNeedsNoFiller(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			// Straight in XY but with a slope break: the two faces meet flush along the full
 			// cross-section, there is no Z step and therefore no filler.
@@ -191,7 +291,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void CanBuildAcuteCornerWithSlopeChange(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			// A 30° corner (a 150° turn): the miter runs far out, the bevel cuts one long chord
 			// and the round join replaces it with a fan of triangles.
@@ -238,7 +338,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void CanBuildZigZagWithSlopeChanges(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			var path = Path("0/0/0 50/40/10 100/0/5 150/40/30 200/0/0 250/60/40");
 
@@ -250,7 +350,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void CanBuildVeryTightCornerWithoutGaps(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			// A hairpin whose miter point would run far beyond both segments: the corner point
 			// is clamped, which lets the faces overlap slightly - but they must still be joined
@@ -265,7 +365,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void CanBuildCornerWithOppositeSlopes(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			// The second segment falls where the first one rises, so the Z step at the corner
 			// point is large.
@@ -283,7 +383,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void CanBuildClosedLoopWithSlopeChanges(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			var path = ClosedPath("0/0/0 100/0/10 100/100/25 0/100/5 0/0/0");
 
@@ -440,7 +540,7 @@ namespace ProSuite.Commons.Test.Geom
 
 		[Test]
 		public void GapCheckDetectsAMissingFiller(
-			[ValueSource(nameof(_allJoins))] WallCornerJoin join)
+			[ValueSource(nameof(_planarJoins))] WallCornerJoin join)
 		{
 			// The check must have teeth: dropping the corner fillers - which is exactly the
 			// defect this is all about - has to be reported.
@@ -501,8 +601,12 @@ namespace ProSuite.Commons.Test.Geom
 				try
 				{
 					WallAssert.AssertGapFree(wall);
-					WallAssert.AssertFacesArePlanar(wall);
 					WallAssert.AssertFacesAreClockwise(wall);
+
+					if (join != WallCornerJoin.None)
+					{
+						WallAssert.AssertFacesArePlanar(wall);
+					}
 				}
 				catch (AssertionException e)
 				{
