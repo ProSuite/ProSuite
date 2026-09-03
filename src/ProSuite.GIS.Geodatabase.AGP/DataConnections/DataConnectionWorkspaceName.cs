@@ -139,6 +139,17 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 
 	public string NameString { get; set; }
 
+	/// <summary>
+	/// The versioned-database version to open, regardless of the one baked into the connection
+	/// file / string. Set it when the application works in a different version than the one
+	/// captured when this name was persisted - a route layer, for instance, stores the version its
+	/// source table happened to be in when the layer was created, and would otherwise keep reading
+	/// that version after the work unit switched to its daily version. Null keeps whatever the
+	/// connection carries.
+	/// </summary>
+	[CanBeNull]
+	public string VersionOverride { get; set; }
+
 	public Datastore OpenDatastore()
 	{
 		// Prefer the original .sde connection file: it preserves the authentication mode
@@ -147,7 +158,7 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 		if (! string.IsNullOrEmpty(ConnectionFilePath) && File.Exists(ConnectionFilePath))
 		{
 			_msg.DebugFormat("Opening datastore from connection file {0}", ConnectionFilePath);
-			return WorkspaceUtils.OpenGeodatabase(ConnectionFilePath);
+			return ApplyVersionOverride(WorkspaceUtils.OpenGeodatabase(ConnectionFilePath));
 		}
 
 		_msg.DebugFormat(
@@ -156,7 +167,56 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 
 		Connector connector = WorkspaceUtils.CreateConnector(FactoryType, ConnectionString);
 
-		return WorkspaceUtils.OpenDatastore(connector);
+		return ApplyVersionOverride(WorkspaceUtils.OpenDatastore(connector));
+	}
+
+	/// <summary>
+	/// Re-opens <paramref name="datastore"/> in <see cref="VersionOverride"/> unless it is already
+	/// there. The new connector is derived from the opened datastore's own one, so authentication
+	/// mode and credentials are carried over; rewriting <see cref="ConnectionString"/> instead
+	/// (see <see cref="ChangeVersion"/>) would have no effect at all whenever the connection file
+	/// wins above.
+	/// </summary>
+	[NotNull]
+	private Datastore ApplyVersionOverride([NotNull] Datastore datastore)
+	{
+		if (string.IsNullOrEmpty(VersionOverride) ||
+		    datastore is not Geodatabase geodatabase)
+		{
+			return datastore;
+		}
+
+		if (geodatabase.GetConnector() is not DatabaseConnectionProperties properties ||
+		    string.IsNullOrEmpty(properties.Version) ||
+		    string.Equals(properties.Version, VersionOverride,
+		                  StringComparison.OrdinalIgnoreCase))
+		{
+			return datastore;
+		}
+
+		string openedVersion = properties.Version;
+
+		try
+		{
+			properties.Version = VersionOverride;
+
+			Datastore versioned = WorkspaceUtils.OpenDatastore(properties);
+
+			_msg.DebugFormat("Opened datastore in version {0} instead of {1}",
+			                 VersionOverride, openedVersion);
+
+			datastore.Dispose();
+
+			return versioned;
+		}
+		catch (Exception e)
+		{
+			_msg.Warn(
+				$"Could not open the datastore in version {VersionOverride}; " +
+				$"continuing with {openedVersion}.", e);
+
+			return datastore;
+		}
 	}
 
 	public object Open()
@@ -212,6 +272,39 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	public string ConnectionString { get; set; }
 
 	public bool IsFeatureService => FactoryType == WorkspaceFactory.FeatureService;
+
+	/// <summary>
+	/// Reads the version keyword out of a database connection string, or null when it carries
+	/// none. Cheap and thread-safe: unlike ProjectWorkspace.GetVersionName it does not touch the
+	/// datastore, so it can be called off the MCT.
+	/// </summary>
+	[CanBeNull]
+	public static string GetVersionName([CanBeNull] string connectionString)
+	{
+		if (string.IsNullOrEmpty(connectionString))
+		{
+			return null;
+		}
+
+		const string keyword = "VERSION=";
+
+		int keywordIndex =
+			connectionString.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
+
+		if (keywordIndex < 0)
+		{
+			return null;
+		}
+
+		int startIndex = keywordIndex + keyword.Length;
+		int endIndex = connectionString.IndexOf(";", startIndex, StringComparison.Ordinal);
+		if (endIndex < 0)
+		{
+			endIndex = connectionString.Length;
+		}
+
+		return connectionString.Substring(startIndex, endIndex - startIndex);
+	}
 
 	public void ChangeVersion(string newVersionName)
 	{
