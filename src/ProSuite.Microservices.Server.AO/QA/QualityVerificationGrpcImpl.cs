@@ -415,6 +415,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				HandleCancellationException(request, context, canceledException);
 			}
+			catch (Exception e) when (IsClientDataUnavailable(e))
+			{
+				// The client declined the data request (its worker was busy) or did not answer
+				// within the per-request timeout. Both are expected and self-healing - the client
+				// retries on its next refresh - so log the message only. As an ERROR each
+				// occurrence cost a stack trace plus the full request JSON, roughly 16 KB; one
+				// reported editing session produced close to a megabyte of error log this way.
+				// The client is still told, but the service is not marked unhealthy for it.
+				_msg.Debug($"Data request abandoned: {e.Message}");
+				_msg.VerboseDebug(() => $"Abandoned data request: {request}", e);
+
+				ServiceUtils.SendFatalException(e, responseStream);
+			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error querying data for request {request}", e);
@@ -426,6 +439,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				EndRequest();
 			}
+		}
+
+		/// <summary>
+		/// True for the expected "the client did not provide the requested data" cases - a refusal
+		/// (<see cref="IOException"/> from RemoteDataset.ConfirmDataReceived) or a timeout waiting
+		/// for the answer - as opposed to a genuine server-side fault.
+		/// </summary>
+		private static bool IsClientDataUnavailable([NotNull] Exception exception)
+		{
+			if (exception is TimeoutException || exception is IOException)
+			{
+				return true;
+			}
+
+			// RequestMoreDataAsync rethrows a faulted task's AggregateException as-is.
+			return exception is AggregateException aggregate &&
+			       aggregate.InnerExceptions.Count > 0 &&
+			       aggregate.InnerExceptions.All(IsClientDataUnavailable);
 		}
 
 		private async Task StartRequest(VerificationRequest request)
