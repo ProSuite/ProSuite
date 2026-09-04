@@ -181,7 +181,7 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	private Datastore ApplyVersionOverride([NotNull] Datastore datastore)
 	{
 		if (string.IsNullOrEmpty(VersionOverride) ||
-		    datastore is not Geodatabase geodatabase)
+		    datastore is not ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
 			return datastore;
 		}
