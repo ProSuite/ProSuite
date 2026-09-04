@@ -11,7 +11,6 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.ProjectItem;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -85,11 +84,21 @@ public abstract class WorkListFactoryBase : IWorkListFactory
 
 		try
 		{
+			var activeView = MapView.Active;
+			if (activeView == null)
+			{
+				// NOTE MapView.Active can be null although a work list is opened:
+				//		1) open work list
+				//		2) open table from the catalog pane
+				//		3) ensure the table view of the open table (opened from catalog pane) is active
+				return;
+			}
+
 			await QueuedTask.Run(() =>
 			{
 				var workList = (IWorkList) sender;
 
-				var layers = MapUtils.GetActiveMap().GetLayersAsFlattenedList();
+				var layers = activeView.Map.GetLayersAsFlattenedList();
 
 				var worklistLayers = WorkListUtils.GetWorklistLayers(layers, workList).ToList();
 
