@@ -4878,4 +4878,37 @@ Remarks: A source row may be exported several times with different tile ids.</va
   <data name="QaMinExtent_limit" xml:space="preserve">
     <value>minimum extension in (x,y)-units</value>
   </data>
+  <data name="QaAreaPredictionMatch_0" xml:space="preserve">
+    <value>Finds differences between building polygons predicted from an image and the existing building features.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_featureClass" xml:space="preserve">
+    <value>Polygon feature class containing the existing buildings.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_imageRaster" xml:space="preserve">
+    <value>Raster image used by the prediction service to detect buildings.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_imageMosaic" xml:space="preserve">
+    <value>Image mosaic used by the prediction service to detect buildings.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_apiUrl" xml:space="preserve">
+    <value>Base address of the prediction service.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_modelName" xml:space="preserve">
+    <value>Name used to identify the prediction model in log messages.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_minimumArea" xml:space="preserve">
+    <value>Predicted polygons smaller than this area are ignored. The value is expressed in square map units and must be zero or greater.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_minimumOverlapRatio" xml:space="preserve">
+    <value>Minimum share of a polygon that must overlap for the existing feature and prediction to be considered a match. The value must be between 0 and 1; for example, 0.9 requires at least 90% overlap.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_PredictionShapefilePath" xml:space="preserve">
+    <value>Optional prediction shapefile export path. Empty disables export. Each execution replaces the previous prediction output.</value>
+  </data>
+  <data name="QaAreaPredictionMatch_MatchMode" xml:space="preserve">
+    <value>Determines which differences are reported:
+- NewPredictions: predicted buildings that have no matching existing feature
+- MissingPredictions: existing buildings that have no matching prediction
+- Both: both types of difference</value>
+  </data>
 </root>
