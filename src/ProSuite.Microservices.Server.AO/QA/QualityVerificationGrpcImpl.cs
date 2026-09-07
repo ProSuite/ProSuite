@@ -1308,6 +1308,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				return ServiceCallStatus.Finished;
 			}
+			// TODO (GOTOP-1257, still open): a client that declines a data request because its
+			//      worker is busy, or that does not answer within the 30 s in QueryData, arrives
+			//      here as a TimeoutException or an IOException and is logged below as an ERROR
+			//      together with the whole request - about 16 KB each time. One reported editing
+			//      session produced close to a megabyte of error log this way. Those two cases are
+			//      expected and self-healing (the client retries on its next refresh), so they
+			//      belong in a separate catch that logs at DEBUG and does not mark the service
+			//      unhealthy. The guard has to sit here, where the exception actually arrives; an
+			//      earlier attempt put it in QueryData, outside ExecuteServiceCall, where it could
+			//      never be reached because this catch does not rethrow.
 			catch (Exception e)
 			{
 				_msg.Error($"Error querying data for request {request}", e);
