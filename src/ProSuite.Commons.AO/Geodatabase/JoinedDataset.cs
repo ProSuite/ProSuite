@@ -547,9 +547,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// The final read receives the whole-network key set when driving association-first, so it
-			// must filter that set client-side over the windowed enumeration (AssumeLeftTableCached,
-			// the routes case, or an INDEX override). Otherwise it would issue a select-in list over
-			// tens of thousands of keys, which is worse than the scan we are trying to avoid.
+			// must filter that set client-side over the windowed enumeration. Otherwise, it would
+			// issue a select-in list over tens of thousands of keys, which is worse than the scan
+			// we are trying to avoid.
 			bool finalReadFiltersClientSide =
 				AssumeLeftTableCached ||
 				string.Equals(_joinStrategy, "INDEX", StringComparison.OrdinalIgnoreCase);
