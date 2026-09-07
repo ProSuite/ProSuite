@@ -326,7 +326,7 @@ public class WorkListDbTest
 			SourceClassSchema schema = WorkListUtils.CreateSchema(tableDefinition);
 
 			ISourceClass sourceClass =
-				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
+				new SelectionSourceClass(new GdbTableIdentity(table), oids);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -469,7 +469,7 @@ public class WorkListDbTest
 
 			List<long> oids = new() { 0, 1, 2, 3 };
 			var sourceClass =
-				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
+				new SelectionSourceClass(new GdbTableIdentity(table), oids);
 
 			sourceClasses.Add(sourceClass);
 		}
