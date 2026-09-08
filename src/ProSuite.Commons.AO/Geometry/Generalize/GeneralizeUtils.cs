@@ -698,7 +698,8 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			[NotNull] IPolycurve fromPolycurve,
 			[NotNull] FeatureVertexInfo vertexInfo,
 			bool use2DLengthOnly,
-			[CanBeNull] IGeometry inPerimeter)
+			[CanBeNull] IGeometry inPerimeter,
+			[CanBeNull] NotificationCollection notifications = null)
 		{
 			IList<esriSegmentInfo> shortSegmentInfos = vertexInfo.ShortSegments;
 
@@ -716,7 +717,7 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			int originalSegmentCount = fromSegmentCollection.SegmentCount;
 
 			RemoveShortSegments(fromPolycurve, vertexInfo, use2DLengthOnly,
-			                    inPerimeter);
+			                    inPerimeter, notifications);
 
 			fromSegmentCollection.SegmentsChanged();
 
@@ -739,12 +740,15 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 		/// <param name="featureVertexInfo"></param>
 		/// <param name="use2DLengthOnly"></param>
 		/// <param name="inPerimeter"></param>
+		/// <param name="toNotifications">The optional collection that receives the reasons why
+		/// individual parts could not be generalized.</param>
 		/// <returns></returns>
 		private static void RemoveShortSegments(
 			[NotNull] IPolycurve fromPolycurve,
 			[NotNull] FeatureVertexInfo featureVertexInfo,
 			bool use2DLengthOnly,
-			[CanBeNull] IGeometry inPerimeter)
+			[CanBeNull] IGeometry inPerimeter,
+			[CanBeNull] NotificationCollection toNotifications)
 		{
 			Assert.ArgumentNotNull(fromPolycurve, nameof(fromPolycurve));
 			Assert.ArgumentNotNull(featureVertexInfo, nameof(featureVertexInfo));
@@ -771,6 +775,8 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 				_msg.WarnFormat("Feature {0}: {1}",
 				                GdbObjectUtils.ToString(featureVertexInfo.Feature),
 				                notifications.Concatenate(" "));
+
+				toNotifications?.AddRange(notifications);
 			}
 		}
 	}
