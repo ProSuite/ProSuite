@@ -15,15 +15,22 @@ namespace ProSuite.Commons.Geom
 		/// <param name="sourceLine"></param>
 		/// <param name="containingSegmentList"></param>
 		/// <param name="tolerance"></param>
+		/// <param name="additionalPredicate">An optional extra condition a segment must
+		/// satisfy to be intersected with <paramref name="sourceLine"/>, on top of not being
+		/// the source line itself.</param>
 		/// <returns></returns>
 		public static IEnumerable<SegmentIntersection> GetRelevantSelfIntersectionsXY(
 			int sourceLineGlobalIdx,
 			[NotNull] Line3D sourceLine,
 			[NotNull] ISegmentList containingSegmentList,
-			double tolerance)
+			double tolerance,
+			[CanBeNull] Predicate<int> additionalPredicate = null)
 		{
 			// a predicate, i.e. i != sourceGlobalIdx && i != sourceGlobalIdx - 1 && i != sourceGlobalIdx + 1
-			Predicate<int> predicate = i => i != sourceLineGlobalIdx;
+			Predicate<int> predicate =
+				additionalPredicate == null
+					? (Predicate<int>) (i => i != sourceLineGlobalIdx)
+					: i => i != sourceLineGlobalIdx && additionalPredicate(i);
 
 			IEnumerable<KeyValuePair<int, Line3D>> segmentsByGlobalIdx =
 				containingSegmentList.FindSegments(sourceLine, tolerance, true,

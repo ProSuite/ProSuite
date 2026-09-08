@@ -101,19 +101,43 @@ namespace ProSuite.Commons.Geom
 		/// ensures that the operation can succeed thanks to clustering. Should be larger than the
 		/// XY resolution, ideally similar to the tolerance.</param>
 		/// <param name="verticalRings">Output parameter for rings that are too small in XY.</param>
-		public MultiLinestring GetXYFootprint(double tolerance,
-		                                      double verticalRingDetectionTolerance,
-		                                      out List<Linestring> verticalRings)
+		/// <param name="crackAndClusterOptions">How far the union may move a vertex when it
+		/// snaps two rings onto each other, see
+		/// <see cref="RingOperator.CrackAndClusterOptions"/>. Null uses the default.</param>
+		public MultiLinestring GetXYFootprint(
+			double tolerance,
+			double verticalRingDetectionTolerance,
+			out List<Linestring> verticalRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			// TODO: Explain the rationale for the vertical ring detection tolerance and how it
 			// differs from the XY tolerance, if at all. 
 
-			verticalRings = new List<Linestring>();
-
 			if (RingGroups.Count == 0)
 			{
+				verticalRings = new List<Linestring>();
 				return MultiPolycurve.CreateEmpty();
 			}
+
+			List<RingGroup> ringGroupsToUnionize =
+				PrepareFootprintInputRings(verticalRingDetectionTolerance, out verticalRings);
+
+			// The rings are made simple at the tolerance pair by pair, inside the union
+			// (RingOperator.CrackAndClusterPair), not by a pass over all rings beforehand.
+			// The vertical ring detection tolerance doubles as the merge tolerance, so that
+			// near-coincident parallel edge runs (shared walls separated only by a
+			// sub-resolution offset) are snapped into clean linear intersections.
+			return GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
+			                                       verticalRingDetectionTolerance,
+			                                       crackAndClusterOptions);
+		}
+
+		[NotNull]
+		public List<RingGroup> PrepareFootprintInputRings(
+			double verticalRingDetectionTolerance,
+			[NotNull] out List<Linestring> verticalRings)
+		{
+			verticalRings = new List<Linestring>();
 
 			var ringGroupsToUnionize = new List<RingGroup>();
 
@@ -163,15 +187,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			// Pass the resolution as the merge tolerance so the union snaps near-coincident
-			// parallel edge runs (shared walls separated only by a sub-resolution offset) into
-			// clean linear intersections, making the footprint robust at fine tolerances.
-			MultiLinestring result =
-				GeomTopoOpUtils.GetUnionAreasXY(ringGroupsToUnionize, tolerance,
-				                                verticalRingDetectionTolerance,
-				                                inputRingsMayBeNonSimple: true);
-
-			return result;
+			return ringGroupsToUnionize;
 		}
 
 		/// <summary>
@@ -234,52 +250,39 @@ namespace ProSuite.Commons.Geom
 			[NotNull] List<Linestring> verticalRings)
 		{
 			var candidates = new List<Linestring>();
-			var withoutLinearSelfIntersections = new List<Linestring>();
 
-			// TODO: Move both to GeomTopoOpUtils, calculate intersection points only once
-			//       and consolidate with polyline simplification.
-			if (! GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-				    ring, verticalRingDetectionTolerance, withoutLinearSelfIntersections))
+			// The same repairs the incremental union re-applies to its own result after
+			// every step (see RingSimplifier), here in the variant the raw input needs:
+			// delete the needles and all other linear self-intersections and explode the
+			// figure-8 rings, so that the ring is simple - and hence its
+			// ClockwiseOriented and its 2D area are meaningful - before the verticality and
+			// the orientation are judged below.
+			var simpleRings = new List<Linestring>();
+
+			if (! RingSimplifier.TrySimplifyRingXY(ring, verticalRingDetectionTolerance,
+			                                       RingSimplifyFlags.Input, simpleRings,
+			                                       verticalRings))
 			{
-				// No linear self-intersection was removed: keep the original ring, but
-				// still explode any 0-dimensional (crossing) self-intersections below.
-				withoutLinearSelfIntersections.Add(ring);
+				// Already simple.
+				simpleRings.Add(ring);
 			}
-			else if (withoutLinearSelfIntersections.Count == 0)
+			else if (simpleRings.Count == 0)
 			{
 				// All segments cancelled out: the original ring was entirely vertical.
 				verticalRings.Add(ring);
 				return candidates;
 			}
 
-			foreach (Linestring fragment in withoutLinearSelfIntersections)
+			foreach (Linestring simpleRing in simpleRings)
 			{
-				if (! fragment.IsClosed)
+				if (simpleRing.IsClosed &&
+				    ! simpleRing.IsVerticalRing(verticalRingDetectionTolerance))
 				{
-					verticalRings.Add(fragment);
-					continue;
+					candidates.Add(simpleRing);
 				}
-
-				// Explode figure-8 / self-crossing rings into separate simple rings before any
-				// area-based verticality or orientation check!
-				var simpleRings = new List<Linestring>();
-				if (! GeomTopoOpUtils.TryCrackSelfCrossingRing(
-					    fragment, verticalRingDetectionTolerance, simpleRings))
+				else
 				{
-					simpleRings.Add(fragment);
-				}
-
-				foreach (Linestring simpleRing in simpleRings)
-				{
-					if (simpleRing.IsClosed &&
-					    ! simpleRing.IsVerticalRing(verticalRingDetectionTolerance))
-					{
-						candidates.Add(simpleRing);
-					}
-					else
-					{
-						verticalRings.Add(simpleRing);
-					}
+					verticalRings.Add(simpleRing);
 				}
 			}
 
