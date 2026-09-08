@@ -693,6 +693,8 @@ public abstract class OneClickToolBase : MapToolBase
 		return Task.CompletedTask;
 	}
 
+	protected virtual void AfterNoUsableSelection() { }
+
 	/// <remarks>Must be called on MCT</remarks>
 	protected async Task ProcessSelectionAsync(
 		[CanBeNull] CancelableProgressor progressor = null)
@@ -731,6 +733,12 @@ public abstract class OneClickToolBase : MapToolBase
 			{
 				_msg.DebugFormat(notifications.Concatenate(Environment.NewLine));
 			}
+
+			// No usable selection left: let the tool drop whatever it derived from the previous
+			// one. OnMapSelectionChangedCoreAsync cannot do this while a selection sketch is being
+			// completed, because IsCompletingSelectionSketch mutes it. This method, in contrast,
+			// runs once at the end of the pick, on the final selection.
+			AfterNoUsableSelection();
 
 			LogPromptForSelection();
 			await StartSelectionPhaseAsync();
