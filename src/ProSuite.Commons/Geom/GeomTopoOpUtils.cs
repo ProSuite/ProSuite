@@ -361,7 +361,8 @@ namespace ProSuite.Commons.Geom
 
 					if (GeomRelationUtils.IsWithinTolerance(point, segment.StartPoint, tolerance,
 					                                        true) ||
-					    GeomRelationUtils.IsWithinTolerance(point, segment.EndPoint, tolerance, true))
+					    GeomRelationUtils.IsWithinTolerance(point, segment.EndPoint, tolerance,
+					                                        true))
 					{
 						return true;
 					}
@@ -948,8 +949,17 @@ namespace ProSuite.Commons.Geom
 			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions)
 		{
 			var anyAccepted = true;
+			var timedOut = false;
 
-			while (anyAccepted && rejectedRings.Count > 0)
+			// TODO: Remove all of this once the underlying reason for rejecting rings is fixed!
+			// The same bound the fold puts on a single step, applied to the retry as a
+			// whole: it re-unions the FINISHED result against every parked ring and may
+			// need one pass per ring, so without it a pathological polyhedron can spin
+			// here for an unbounded time - and allocate while it does.
+			var watch = Stopwatch.StartNew();
+			const long timeout300s = 300000;
+
+			while (anyAccepted && ! timedOut && rejectedRings.Count > 0)
 			{
 				anyAccepted = false;
 
@@ -958,9 +968,19 @@ namespace ProSuite.Commons.Geom
 
 				foreach (RingGroup ringGroup in rejectedRings)
 				{
-					// As in the fold: the step cracks its operands in place, so the state
-					// to fall back on has to be a copy taken before it runs.
-					MultiLinestring previous = result.Clone();
+					if (timedOut || watch.ElapsedMilliseconds > timeout300s)
+					{
+						// Give up on the rest. Leaving a ring out is the behaviour without
+						// the retry, so the result stays as good as it was before.
+						timedOut = true;
+
+						stillRejected.Add(ringGroup);
+						continue;
+					}
+
+					// As in the fold: a reference is enough, the step does not modify its
+					// operands (see the fold and UnionStepSourceMutationTest).
+					MultiLinestring previous = result;
 					double ringArea = ringGroup.GetArea2D();
 
 					MultiLinestring stepResult;
@@ -1006,11 +1026,20 @@ namespace ProSuite.Commons.Geom
 				rejectedRings = stillRejected;
 			}
 
-			foreach (RingGroup droppedRing in rejectedRings)
+			if (timedOut)
 			{
 				_msg.Debug(
-					$"The rejected ring of {droppedRing.GetArea2D():N3} m2 is still " +
-					"implausible against the finished union result. It is left out.");
+					$"Retrying the rejected rings exceeded {timeout300s} ms. " +
+					$"{rejectedRings.Count} ring(s) are left out.");
+			}
+			else
+			{
+				foreach (RingGroup droppedRing in rejectedRings)
+				{
+					_msg.Debug(
+						$"The rejected ring of {droppedRing.GetArea2D():N3} m2 is still " +
+						"implausible against the finished union result. It is left out.");
+				}
 			}
 
 			return result;
@@ -1084,12 +1113,11 @@ namespace ProSuite.Commons.Geom
 
 			if (! confirmed)
 			{
-				_msg.VerboseDebug(
-					() =>
-						$"Union step {previousArea:N3} + {ringArea:N3} -> {stepArea:N3} is " +
-						"outside the plausible range on the net area but not on the absolute " +
-						$"ring areas ({previousAbsolute:N3} -> {stepAbsolute:N3}): treating " +
-						"it as a transiently mis-oriented ring rather than lost geometry.");
+				_msg.VerboseDebug(() =>
+					                  $"Union step {previousArea:N3} + {ringArea:N3} -> {stepArea:N3} is " +
+					                  "outside the plausible range on the net area but not on the absolute " +
+					                  $"ring areas ({previousAbsolute:N3} -> {stepAbsolute:N3}): treating " +
+					                  "it as a transiently mis-oriented ring rather than lost geometry.");
 
 				return false;
 			}
@@ -4671,8 +4699,8 @@ namespace ProSuite.Commons.Geom
 					linestrings.Where(l => l.StartPoint.EqualsXY(previous.EndPoint, tolerance));
 
 				Linestring nextString = matchingStrings.MaxElement(s => Assert
-						.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
-						.Value);
+					.NotNull(GeomUtils.GetDirectionChange(previousLine, s.GetSegment(0)))
+					.Value);
 
 				linestrings.Remove(nextString);
 

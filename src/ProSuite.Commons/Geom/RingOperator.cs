@@ -198,7 +198,7 @@ namespace ProSuite.Commons.Geom
 					processedRingsResult.Where(r => r.ClockwiseOriented == false)
 					                    .Concat(
 						                    ringsOutsideOtherPoly.Where(r => r.ClockwiseOriented ==
-							                    false))
+								                    false))
 					                    .Concat(equalRings.Where(r => r.ClockwiseOriented == false))
 					                    .ToList();
 
