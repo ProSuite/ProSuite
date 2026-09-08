@@ -852,9 +852,9 @@ namespace ProSuite.Commons.Geom
 				}
 				else
 				{
-					// Keep the previous state: the union shares linestrings with its operands
-					// and RingSimplifier below edits in place, so a reference is not enough.
-					MultiLinestring previous = result.Clone();
+					// The state to roll back to if the post-condition rejects the step. A
+					// reference is enough: a union step does not modify its operands.
+					MultiLinestring previous = result;
 					double ringArea = ringGroup.GetArea2D();
 
 					var watch = Stopwatch.StartNew();
