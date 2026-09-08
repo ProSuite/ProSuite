@@ -110,6 +110,46 @@ namespace ProSuite.Microservices.Client.Test
 		}
 
 		[Test]
+		public void Anonymous_workspace_is_not_a_missing_workspace()
+		{
+			// DataSource.AnonymousId is the empty string, DataSource documents its id as optional,
+			// and proto3 defaults DataSourceMsg.id to it. A client that never names its data source
+			// must not fail here - it would fail every verification, not only those using a catalog.
+			var parameterMsg = new ParameterMsg
+			                   {
+				                   Name = "featureClass",
+				                   Value = _catalogName
+			                   };
+
+			Assert.IsEmpty(ProtoDataQualityUtils.GetDatasetDeclarations(
+				               string.Empty, new[] { CreateCondition(parameterMsg) }));
+		}
+
+		[Test]
+		public void Can_declare_a_catalog_in_the_anonymous_workspace()
+		{
+			// The counterpart of the above: a declaration with no workspace id belongs to the
+			// anonymous workspace and must be collected for it.
+			var parameterMsg = new ParameterMsg
+			                   {
+				                   Name = "featureClass",
+				                   Value = _catalogName,
+				                   DatasetType = (int) SupportedDatasetType.RasterCatalog,
+				                   FieldRoles =
+				                   {
+					                   new DatasetFieldRoleMsg
+					                   { Role = "FilePath", Name = _pathField }
+				                   }
+			                   };
+
+			DatasetDeclaration declaration =
+				GetSingleDeclaration(string.Empty, CreateCondition(parameterMsg));
+
+			Assert.AreEqual(_catalogName, declaration.DatasetName);
+			Assert.AreEqual(SupportedDatasetType.RasterCatalog, declaration.DatasetType);
+		}
+
+		[Test]
 		public void Declarations_inside_a_transformer_are_collected()
 		{
 			// A transformer has dataset parameters of its own, and one of them can reference a

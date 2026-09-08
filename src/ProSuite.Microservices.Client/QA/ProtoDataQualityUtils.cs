@@ -1244,12 +1244,18 @@ namespace ProSuite.Microservices.Client.QA
 		/// non-empty only where a standalone condition references a dataset that a harvested model
 		/// cannot describe on its own, such as a raster catalog and its file-path field.
 		/// </summary>
+		/// <param name="workspaceId">The data source id the declarations are collected for. The
+		/// empty string is the anonymous workspace, not a missing argument: <c>DataSource</c>
+		/// documents its id as optional, <c>DataSource.AnonymousId</c> is the empty string, and
+		/// proto3 defaults <c>DataSourceMsg.id</c> to it. A client that never names its data source
+		/// must not fail here.</param>
+		/// <param name="referencedConditions">The conditions to collect from.</param>
 		[NotNull]
 		public static IList<DatasetDeclaration> GetDatasetDeclarations(
 			[NotNull] string workspaceId,
 			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
 		{
-			Assert.ArgumentNotNullOrEmpty(workspaceId, nameof(workspaceId));
+			Assert.ArgumentNotNull(workspaceId, nameof(workspaceId));
 			Assert.ArgumentNotNull(referencedConditions, nameof(referencedConditions));
 
 			// Keyed while collecting, because the same dataset may be declared by any number of
