@@ -970,6 +970,10 @@ namespace ProSuite.Commons.Geom
 						stepResult = GetUnionAreasXY(result, ringGroup, tolerance,
 						                             mergeTolerance, crackAndClusterOptions);
 					}
+					catch (OutOfMemoryException)
+					{
+						throw;
+					}
 					catch (Exception e)
 					{
 						// Leaving the ring out is exactly what happened before the retry

@@ -338,6 +338,11 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 
 				return footprintPoly;
 			}
+			catch (OutOfMemoryException)
+			{
+				// Non-recoverable - probably a smaller tile size would help but this is not a recoverable situation
+				throw;
+			}
 			catch (Exception e)
 			{
 				_msg.Warn(

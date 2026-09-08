@@ -1564,7 +1564,7 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 				}
 			}
-			catch (COMException ex)
+			catch (COMException ex) when (! IsOutOfMemory(ex))
 			{
 				// this does not work with esriGeometryError - use integer value?: -2147220930
 				//if (comException.ErrorCode == (int)esriGeometryError.E_GEOMETRY_UNKNOWNERROR)
@@ -1596,6 +1596,20 @@ namespace ProSuite.Commons.AO.Geometry
 				//    throw;
 				//}
 			}
+		}
+
+		/// <summary>
+		/// Whether the COM call failed because there was not enough memory. Such a failure
+		/// must not be retried: the retry asks for the memory that was just refused, and it
+		/// is not the geometry that is at fault.
+		/// </summary>
+		private static bool IsOutOfMemory([NotNull] COMException exception)
+		{
+			const int eOutOfMemory = unchecked((int) 0x8007000E);
+			const int eNotEnoughMemory = unchecked((int) 0x80070008);
+
+			return exception.ErrorCode == eOutOfMemory ||
+			       exception.ErrorCode == eNotEnoughMemory;
 		}
 
 		public static void SimplifyNetworkGeometry([NotNull] IGeometry geometry)
