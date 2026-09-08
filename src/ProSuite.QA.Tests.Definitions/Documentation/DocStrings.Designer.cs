@@ -11078,5 +11078,95 @@ namespace ProSuite.QA.Tests.Documentation {
                 return ResourceManager.GetString("QaZDifferenceSelf_zRelationConstraint", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Compares building predictions from a raster with existing area features. The service must return exterior Polygon rings in the uploaded raster coordinate system; holes and MultiPolygons are unsupported.
+        /// </summary>
+        public static string QaAreaPredictionMatch_0 {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_0", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Existing polygon features to compare with predictions.
+        /// </summary>
+        public static string QaAreaPredictionMatch_featureClass {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_featureClass", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Raster image submitted as TIFF tiles to the prediction service.
+        /// </summary>
+        public static string QaAreaPredictionMatch_imageRaster {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_imageRaster", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Image mosaic submitted as TIFF tiles to the prediction service.
+        /// </summary>
+        public static string QaAreaPredictionMatch_imageMosaic {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_imageMosaic", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Base URL of the prediction jobs API.
+        /// </summary>
+        public static string QaAreaPredictionMatch_apiUrl {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_apiUrl", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Descriptive model label used in diagnostics and exported attributes. It does not select a model; the service uses the buildings target.
+        /// </summary>
+        public static string QaAreaPredictionMatch_modelName {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_modelName", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum polygon area in squared raster map units to include in matching; zero or greater.
+        /// </summary>
+        public static string QaAreaPredictionMatch_minimumArea {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_minimumArea", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Required fraction of polygon area covered by the union of matching areas, from zero to one.
+        /// </summary>
+        public static string QaAreaPredictionMatch_minimumOverlapRatio {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_minimumOverlapRatio", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Optional prediction shapefile export path. Empty disables export. Each execution replaces the previous prediction output.
+        /// </summary>
+        public static string QaAreaPredictionMatch_PredictionShapefilePath {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_PredictionShapefilePath", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reports new predictions, existing features missing predictions, or both.
+        /// </summary>
+        public static string QaAreaPredictionMatch_MatchMode {
+            get {
+                return ResourceManager.GetString("QaAreaPredictionMatch_MatchMode", resourceCulture);
+            }
+        }
     }
 }
