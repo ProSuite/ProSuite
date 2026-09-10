@@ -510,10 +510,12 @@ namespace ProSuite.Commons.Geom
 				return RingGroup.CreateEmpty();
 			}
 
-			if (clockwiseOriented == false)
-			{
-				resultRingGroup.ReverseOrientation();
-			}
+			// Orient each ring by its role rather than reversing the group as a whole: a
+			// multipatch does not guarantee that an inner ring is stored opposite to its
+			// outer ring (Kaspar/July has courtyards stored with the same orientation), and
+			// a group-wide reverse keeps such a hole positive - adding its area instead of
+			// subtracting it.
+			resultRingGroup.TryOrientProperly();
 
 			return resultRingGroup;
 		}

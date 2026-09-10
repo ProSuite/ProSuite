@@ -30,6 +30,20 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(83.746, footprint.GetArea2D(), 0.01);
 		}
 
+		/// <summary>
+		/// The courtyard is stored with the same orientation as its exterior ring. Reversing
+		/// the ring group as a whole kept the hole positive, so its area was added instead of
+		/// subtracted (110.0 instead of 51.7 m2).
+		/// </summary>
+		[Test]
+		public void CanSubtractCourtyardStoredWithExteriorOrientation()
+		{
+			MultiLinestring footprint = GetFootprint("kaspar_july_hole_81");
+
+			Assert.AreEqual(1, CountInteriorRings(footprint), "the courtyard");
+			Assert.AreEqual(51.695, footprint.GetArea2D(), 0.01);
+		}
+
 		private static MultiLinestring GetFootprint(string stem)
 		{
 			return ReadPolyhedron(stem).GetXYFootprint(_tolerance, _tolerance, out _);
