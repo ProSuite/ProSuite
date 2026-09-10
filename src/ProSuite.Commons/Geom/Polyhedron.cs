@@ -311,7 +311,9 @@ namespace ProSuite.Commons.Geom
 				return ringGroup;
 			}
 
-			IList<Pnt3D> exteriorPoints = ringGroup.ExteriorRing.GetPoints().ToList();
+			Linestring exteriorRing = ringGroup.ExteriorRing;
+
+			IList<Pnt3D> exteriorPoints = exteriorRing.GetPoints().ToList();
 
 			Plane3D exteriorPlane = Plane3D.TryFitPlane(exteriorPoints, isRing: true);
 
@@ -322,20 +324,38 @@ namespace ProSuite.Commons.Geom
 				return ringGroup;
 			}
 
+			// The exterior ring need not be planar itself: warped quads and folded roof faces
+			// are common in the TLM multipatches (Kaspar/July has exterior rings 0.20 m and
+			// 0.75 m off their own best-fit plane). Against such a plane an absolute
+			// tolerance rejects perfectly good courtyards, so only an interior ring that is
+			// off it by MORE than the exterior ring itself is can be a different face.
+			double exteriorDeviation =
+				exteriorPoints.Max(p => exteriorPlane.GetDistanceAbs(p.X, p.Y, p.Z));
+
+			double coplanarityThreshold = exteriorDeviation + coplanarityTolerance;
+
 			var coplanarInteriors = new List<Linestring>(ringGroup.InteriorRingCount);
 			foreach (Linestring interiorRing in ringGroup.InteriorRings)
 			{
-				if (IsCoplanar(interiorRing, exteriorPlane, coplanarityTolerance))
+				double interiorDeviation =
+					interiorRing.GetPoints()
+					            .Max(p => exteriorPlane.GetDistanceAbs(p.X, p.Y, p.Z));
+
+				// A hole must also lie within its exterior ring in XY; a ring reaching
+				// outside is a different face however planar the exterior is.
+				bool containedInXY = IsContainedInXY(interiorRing, exteriorRing,
+				                                     coplanarityTolerance);
+
+				if (containedInXY && interiorDeviation <= coplanarityThreshold)
 				{
 					coplanarInteriors.Add(interiorRing);
 				}
 				else
 				{
 					_msg.DebugFormat(
-						"Detected interior ring that is not coplanar with its exterior. Interior ring has {0} segments (max. distance to exterior plane: {1})",
-						interiorRing.SegmentCount,
-						interiorRing.GetPoints()
-						            .Max(p => exteriorPlane.GetDistanceAbs(p.X, p.Y, p.Z)));
+						"Detected interior ring that is not part of its exterior face. Interior ring has {0} segments, max. distance to the exterior plane: {1} (threshold {2}, the exterior ring's own deviation is {3}), contained in XY: {4}",
+						interiorRing.SegmentCount, interiorDeviation, coplanarityThreshold,
+						exteriorDeviation, containedInXY);
 
 					nonCoplanarRings.Add(interiorRing);
 				}
@@ -447,6 +467,21 @@ namespace ProSuite.Commons.Geom
 					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Whether every vertex of <paramref name="ring"/> is inside or on the boundary of
+		/// <paramref name="container"/> in XY.
+		/// </summary>
+		private static bool IsContainedInXY([NotNull] Linestring ring,
+		                                    [NotNull] Linestring container,
+		                                    double tolerance)
+		{
+			const bool disregardingOrientation = true;
+
+			return ! ring.GetPoints().Any(
+				       p => GeomRelationUtils.AreaContainsXY(
+					            container, p, tolerance, disregardingOrientation) == false);
 		}
 
 		private static bool IsCoplanar([NotNull] Linestring ring,
