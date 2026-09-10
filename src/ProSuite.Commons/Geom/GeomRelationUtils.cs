@@ -653,13 +653,23 @@ namespace ProSuite.Commons.Geom
 				GetRealIntersectionPoints(closedPolycurve, targetSegments, tolerance,
 				                          intersectionPoints, predicate);
 
-			// if there is no intersection, the boundaries do not intersect: check a single point
 			if (intersectionPoints.Count == 0)
 			{
 				int partIndex = filterTargetByPartIndex ?? 0;
-				Pnt3D anyPoint = targetSegments.GetPart(partIndex).GetSegment(0).StartPoint;
+				Linestring targetPart = targetSegments.GetPart(partIndex);
 
-				return AreaContainsXY(closedPolycurve, anyPoint, tolerance);
+				// No intersection point for this part - but it can still touch the source: a
+				// touch within a linear intersection of another target part is absorbed into
+				// that stretch (Kaspar/July: an island touching its exterior ring where that
+				// ring runs along the source). The test point must be off the boundary, where
+				// the answer is decisive.
+				Pnt3D testPoint =
+					GetOffBoundaryTargetPoint(closedPolycurve, targetPart, tolerance) ??
+					GetOffBoundarySegmentMidPoint(closedPolycurve, targetPart, tolerance);
+
+				return testPoint == null
+					       ? (bool?) null
+					       : AreaContainsXY(closedPolycurve, testPoint, tolerance);
 			}
 
 			// First check the non-touching points. If there is any left-side deviation of the target
@@ -1711,6 +1721,31 @@ namespace ProSuite.Commons.Geom
 				if (! LinesContainXY(sourceRings, point, tolerance))
 				{
 					return point;
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// The first segment mid-point of <paramref name="targetRing"/> that is not on the
+		/// boundary of <paramref name="sourceRings"/>. A ring can have all its vertices on the
+		/// boundary while its segments are not, e.g. a square rotated by 45 degrees touching
+		/// another square from the inside.
+		/// </summary>
+		[CanBeNull]
+		private static Pnt3D GetOffBoundarySegmentMidPoint(
+			[NotNull] ISegmentList sourceRings,
+			[NotNull] Linestring targetRing,
+			double tolerance)
+		{
+			for (var i = 0; i < targetRing.SegmentCount; i++)
+			{
+				Pnt3D midPoint = targetRing[i].GetPointAlong(0.5, true);
+
+				if (! LinesContainXY(sourceRings, midPoint, tolerance))
+				{
+					return midPoint;
 				}
 			}
 

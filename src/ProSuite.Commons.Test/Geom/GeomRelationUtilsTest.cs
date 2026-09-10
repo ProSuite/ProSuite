@@ -845,5 +845,69 @@ namespace ProSuite.Commons.Test.Geom
 				GeomRelationUtils.SourceInteriorIntersectsXY(
 					line1, otherLineInteriorIntersected, 0.01));
 		}
+
+		[Test]
+		public void CanDetermineAreaContainsRingWithTouchAbsorbedByOtherTargetPart()
+		{
+			// The source and the target's exterior ring share the wall x = 10. The island
+			// touches the exterior ring at (10, 5), i.e. on that wall - so its touch with the
+			// source lies within the linear intersection of the source with the exterior ring
+			// and yields no intersection point of its own. Its first vertex is that touch point.
+			const double tolerance = 0.001;
+
+			Linestring source = CreateRing(0, 0, 0, 10, 10, 10, 10, 5, 10, 0);
+
+			RingGroup target = RingGroup.CreateProperlyOriented(
+				CreateRing(10, 0, 10, 5, 10, 10, 20, 10, 20, 0),
+				new[] { CreateRing(10, 5, 13, 3, 16, 5, 13, 7) });
+
+			Assert.False(GetIntersectionPoints(source, target, tolerance)
+				             .Any(ip => ip.TargetPartIndex == 1),
+			             "Precondition: no intersection point for the island");
+
+			Assert.AreEqual(false,
+			                GeomRelationUtils.AreaContainsXY(source, target, tolerance, null, 1));
+		}
+
+		[Test]
+		public void CanDetermineAreaContainsRingWithAllVerticesOnBoundary()
+		{
+			// As above, but the U-shaped source runs along three walls of the target's exterior
+			// ring and the island touches each of them with one vertex: every vertex is on the
+			// source boundary, the segments are not.
+			const double tolerance = 0.001;
+
+			Linestring source = CreateRing(0, 0, 0, 20, 30, 20, 30, 0, 20, 0, 20, 5, 20, 10,
+			                               15, 10, 10, 10, 10, 5, 10, 0);
+
+			RingGroup target = RingGroup.CreateProperlyOriented(
+				CreateRing(10, 0, 10, 5, 10, 10, 15, 10, 20, 10, 20, 5, 20, 0),
+				new[] { CreateRing(10, 5, 15, 10, 20, 5) });
+
+			Assert.False(GetIntersectionPoints(source, target, tolerance)
+				             .Any(ip => ip.TargetPartIndex == 1),
+			             "Precondition: no intersection point for the island");
+
+			Assert.AreEqual(false,
+			                GeomRelationUtils.AreaContainsXY(source, target, tolerance, null, 1));
+		}
+
+		private static IList<IntersectionPoint3D> GetIntersectionPoints(
+			ISegmentList source, ISegmentList target, double tolerance)
+		{
+			return GeomTopoOpUtils.GetIntersectionPoints(source, target, tolerance);
+		}
+
+		private static Linestring CreateRing(params double[] xy)
+		{
+			var points = new List<Pnt3D>();
+
+			for (var i = 0; i < xy.Length; i += 2)
+			{
+				points.Add(new Pnt3D(xy[i], xy[i + 1], 0));
+			}
+
+			return GeomTestUtils.CreateRing(points);
+		}
 	}
 }
