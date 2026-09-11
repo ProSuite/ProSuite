@@ -270,9 +270,14 @@ public static class LayerUtils
 			                 ? definitions.First()
 			                 : definitions.First(predicate);
 
-		return definition is CIMFeatureLayer featureLayer
-			       ? featureLayer.Renderer
-			       : null;
+		if (definition is CIMFeatureLayer featureLayer)
+		{
+			return featureLayer.Renderer;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/// <summary>
@@ -346,6 +351,40 @@ public static class LayerUtils
 			       Name = alias,
 			       MapMemberPosition = MapMemberPosition.AddToTop
 		       };
+	}
+
+	[NotNull]
+	public static FeatureLayer CreateFeatureLayer([NotNull] MapView mapView,
+	                                              [NotNull] string layerPath,
+	                                              MapMemberPosition mapMemberPosition,
+	                                              FeatureClass dataSource = null)
+	{
+		LayerDocument layerDocument = OpenLayerDocument(layerPath);
+
+		CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+		var layerParams = new FeatureLayerCreationParams(cim)
+		                  {
+			                  MapMemberPosition = mapMemberPosition
+		                  };
+
+		FeatureLayer featureLayer = CreateFeatureLayer(layerParams, mapView.Map);
+		Assert.NotNull(featureLayer);
+
+		if (dataSource != null)
+		{
+			featureLayer.ReplaceDataSource(dataSource);
+		}
+
+		return featureLayer;
+	}
+
+	[CanBeNull]
+	private static FeatureLayer CreateFeatureLayer(
+		[NotNull] FeatureLayerCreationParams layerCreationParams,
+		[NotNull] ILayerContainerEdit layerContainer)
+	{
+		return LayerFactory.Instance.CreateLayer<FeatureLayer>(
+			layerCreationParams, layerContainer);
 	}
 
 	/// <summary>
