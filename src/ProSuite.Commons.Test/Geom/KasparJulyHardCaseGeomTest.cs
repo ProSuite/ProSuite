@@ -77,6 +77,31 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		/// <summary>
+		/// The building is stored as ONE ring that touches itself, tracing an outline and two
+		/// courtyards. Cracking the ring made every loop clockwise, so all three were taken as
+		/// solid rings and the courtyards were filled in (1279.5 instead of 755.0 m2).
+		/// </summary>
+		[Test]
+		public void CanReadCourtyardsOfSelfTouchingRingAsHoles()
+		{
+			MultiLinestring footprint = GetFootprint("kaspar_july_extra_1280");
+
+			Assert.AreEqual(2, CountInteriorRings(footprint), "the two courtyards");
+			Assert.AreEqual(754.983, footprint.GetArea2D(), 0.01);
+		}
+
+		/// <summary>
+		/// One part of this building is a ring whose inner loop is wound the same way as its
+		/// outer loop. It is nevertheless a hole (even-odd), as in ArcObjects: 453.1 m2, not
+		/// 469.4 m2 with the loop taken as solid.
+		/// </summary>
+		[Test]
+		public void CanReadSameWoundLoopOfSelfTouchingRingAsHole()
+		{
+			Assert.AreEqual(453.124, GetFootprint("kaspar_july_hole_469").GetArea2D(), 0.01);
+		}
+
+		/// <summary>
 		/// The group's exterior ring split at its self-touching point, with the smaller loops
 		/// as interior rings of the largest one.
 		/// </summary>

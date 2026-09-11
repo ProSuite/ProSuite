@@ -167,7 +167,7 @@ namespace ProSuite.Commons.Geom
 				// duplicate segments sticking out. This makes ClockwiseOriented correct
 				// for each cleaned ring before AsProperlyOriented runs. This operation
 				// can change the ring's orientation!
-				IEnumerable<RingGroup> cleanedGroups = SimplifyRings(
+				List<RingGroup> cleanedGroups = SimplifyRings(
 					coplanarGroup, verticalRingDetectionTolerance,
 					out List<Linestring> cleanupVerticals);
 
@@ -205,7 +205,7 @@ namespace ProSuite.Commons.Geom
 		/// <returns>Zero or more cleaned ring groups. Empty if the input was
 		/// entirely vertical or degenerate. May contain more than one group if the
 		/// exterior ring split into multiple simple rings.</returns>
-		private static IEnumerable<RingGroup> SimplifyRings(
+		private static List<RingGroup> SimplifyRings(
 			[NotNull] RingGroup input,
 			double verticalRingDetectionTolerance,
 			[NotNull] out List<Linestring> verticalRings)
@@ -217,7 +217,7 @@ namespace ProSuite.Commons.Geom
 
 			if (cleanedExteriors.Count == 0)
 			{
-				return Enumerable.Empty<RingGroup>();
+				return new List<RingGroup>(0);
 			}
 
 			var cleanedInteriors = new List<Linestring>();
@@ -227,18 +227,109 @@ namespace ProSuite.Commons.Geom
 					SimplifyRing(interior, verticalRingDetectionTolerance, verticalRings));
 			}
 
-			// Reassemble. Interior rings are attached to the first exterior fragment
-			// only.
-			// TODO: When the exterior ring splits, distribute interior rings across
+			return AssembleByContainment(cleanedExteriors, cleanedInteriors,
+			                             verticalRingDetectionTolerance);
+		}
 
-			// the exterior fragments by geometric containment.
-			var result = new List<RingGroup>(cleanedExteriors.Count);
-			for (int i = 0; i < cleanedExteriors.Count; i++)
+		/// <summary>
+		/// Builds the ring groups from the fragments of a cleaned exterior ring and the
+		/// cleaned interior rings, deriving the nesting from XY containment: a fragment
+		/// contained in an odd number of other fragments is a hole of its innermost
+		/// container.
+		/// <para>The orientation cannot be used, because
+		/// <see cref="GeomTopoOpUtils.TryCrackSelfCrossingRing"/> makes every fragment of an
+		/// exploded self-touching ring clockwise - so the loops the ring traced as courtyards
+		/// would be filled in (Kaspar/July: a building stored as ONE ring tracing an outline
+		/// of 1279.5 m2 and two courtyards, 524.5 m2 too much). Containment parity is also
+		/// the even-odd reading ArcObjects gives for the same multipatch, including for a
+		/// ring whose loops are wound the same way.</para>
+		/// </summary>
+		[NotNull]
+		private static List<RingGroup> AssembleByContainment(
+			[NotNull] List<Linestring> exteriorFragments,
+			[NotNull] List<Linestring> interiorRings,
+			double tolerance)
+		{
+			if (exteriorFragments.Count == 1)
 			{
-				RingGroup group = i == 0 && cleanedInteriors.Count > 0
-					                  ? new RingGroup(cleanedExteriors[i], cleanedInteriors)
-					                  : new RingGroup(cleanedExteriors[i]);
-				result.Add(group);
+				// The common case: no explosion, everything belongs to the single ring.
+				return new List<RingGroup>
+				       {
+					       interiorRings.Count > 0
+						       ? new RingGroup(exteriorFragments[0], interiorRings)
+						       : new RingGroup(exteriorFragments[0])
+				       };
+			}
+
+			// containers[i]: the fragments that contain fragment i, i.e. its nesting depth.
+			var containers = new List<List<int>>(exteriorFragments.Count);
+
+			for (var i = 0; i < exteriorFragments.Count; i++)
+			{
+				var containersOfI = new List<int>();
+
+				for (var j = 0; j < exteriorFragments.Count; j++)
+				{
+					if (i != j &&
+					    IsContainedInXY(exteriorFragments[i], exteriorFragments[j], tolerance))
+					{
+						containersOfI.Add(j);
+					}
+				}
+
+				containers.Add(containersOfI);
+			}
+
+			var groupsByFragment = new RingGroup[exteriorFragments.Count];
+			var result = new List<RingGroup>(exteriorFragments.Count);
+
+			foreach (int i in Enumerable.Range(0, exteriorFragments.Count)
+			                            .OrderBy(i => containers[i].Count))
+			{
+				RingGroup parentGroup = containers[i].Count % 2 != 0
+					                        ? groupsByFragment[
+						                        containers[i].OrderByDescending(
+							                        j => containers[j].Count).First()]
+					                        : null;
+
+				if (parentGroup == null)
+				{
+					var group = new RingGroup(exteriorFragments[i]);
+					groupsByFragment[i] = group;
+					result.Add(group);
+				}
+				else
+				{
+					parentGroup.AddInteriorRing(exteriorFragments[i]);
+					groupsByFragment[i] = parentGroup;
+				}
+			}
+
+			// The declared interior rings go to the innermost solid fragment containing them
+			// (not to the first one, which need not contain them at all).
+			foreach (Linestring interiorRing in interiorRings)
+			{
+				RingGroup owner = null;
+				var ownerDepth = -1;
+
+				for (var i = 0; i < exteriorFragments.Count; i++)
+				{
+					if (containers[i].Count % 2 != 0)
+					{
+						continue; // that fragment is itself a hole
+					}
+
+					if (containers[i].Count <= ownerDepth ||
+					    ! IsContainedInXY(interiorRing, exteriorFragments[i], tolerance))
+					{
+						continue;
+					}
+
+					owner = groupsByFragment[i];
+					ownerDepth = containers[i].Count;
+				}
+
+				(owner ?? result[0]).AddInteriorRing(interiorRing);
 			}
 
 			return result;
