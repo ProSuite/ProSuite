@@ -1345,8 +1345,8 @@ public static class MapUtils
 	/// <param name="useReferenceScale"></param>
 	/// <returns></returns>
 	public static async Task<List<IDisposable>> AddOverlays([NotNull] MapView mapView,
-	                                              IEnumerable<Overlay> overlays,
-	                                              bool useReferenceScale = false)
+	                                                        IEnumerable<Overlay> overlays,
+	                                                        bool useReferenceScale = false)
 	{
 		List<IDisposable> disposables = new List<IDisposable>();
 
@@ -1359,7 +1359,7 @@ public static class MapUtils
 
 			return disposables;
 		}
-		catch(Exception)
+		catch (Exception)
 		{
 			foreach (IDisposable disposable in disposables)
 			{
