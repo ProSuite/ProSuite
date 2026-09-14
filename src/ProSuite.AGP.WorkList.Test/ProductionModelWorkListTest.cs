@@ -147,10 +147,13 @@ public class ProductionModelWorkListTest
 			                { errorTypeFieldName, tableDefinition.FindField(errorTypeFieldName) }
 		                };
 
+		// NOTE: The status values must be boxed as int (not as the IssueCorrectionStatus enum).
+		//       DatabaseSourceClass.GetStatus compares with object.Equals, which is type-strict:
+		//       a boxed enum never equals a boxed int, so every item would load as 'Todo'.
 		DbSourceClassSchema schema =
 			new DbSourceClassSchema(statusField,
-			                        IssueCorrectionStatus.NotCorrected,
-			                        IssueCorrectionStatus.Corrected,
+			                        (int) IssueCorrectionStatus.NotCorrected,
+			                        (int) IssueCorrectionStatus.Corrected,
 			                        subFields);
 
 		string defaultDefinitionQuery = $"{errorTypeFieldName} < 300";
