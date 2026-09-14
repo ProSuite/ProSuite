@@ -1452,6 +1452,12 @@ public static class MapUtils
 
 		MapPoint mapPoint = GeometryUtils.Centroid(newExtent);
 
+		if (newExtent.HasZ && ! double.IsNaN(newExtent.ZMin) && ! double.IsNaN(newExtent.ZMax))
+		{
+			// Keep the height. Stereo maps need it to show the extent at the correct location.
+			mapPoint = GeometryUtils.SetConstantZ(mapPoint, (newExtent.ZMin + newExtent.ZMax) / 2);
+		}
+
 		double newWidth = width < minWidth
 			                  ? minWidth
 			                  : width;
