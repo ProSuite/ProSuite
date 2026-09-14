@@ -13,18 +13,10 @@ namespace ProSuite.Commons.GeoDb
 		Raster = 12,
 		RasterMosaic = 29,
 		Terrain = 20,
-		Multipatch = 30,
 
 		/// <summary>
 		/// A LAS point cloud (Esri: esriDTLasDataset).
 		/// </summary>
-		/// <remarks>
-		/// Esri's id for a LAS dataset is 30, which this enum has been using for the non-Esri
-		/// <see cref="Multipatch"/> member since before point clouds were modelled. Rather than
-		/// renumber a member that other systems may already have received, point clouds get a
-		/// value well outside the Esri range; map it explicitly when converting to or from
-		/// esriDatasetType.
-		/// </remarks>
-		PointCloud = 130
+		PointCloud = 30
 	}
 }
