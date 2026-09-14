@@ -132,7 +132,7 @@ public static class SelectionUtils
 		return totalSelected;
 	}
 
-	private static long SelectFeatures(
+	public static long SelectFeatures(
 		[NotNull] MapView mapView,
 		[NotNull] QueryFilter queryFilter,
 		SelectionCombinationMethod combinationMethod = SelectionCombinationMethod.Add,
