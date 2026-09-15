@@ -206,6 +206,8 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
+		protected virtual void OnLocalServerStarted(Process process) { }
+
 		public bool CanAcceptCalls(bool allowFailOver = false,
 		                           bool logOnlyIfUnhealthy = false)
 		{
@@ -468,6 +470,7 @@ namespace ProSuite.Microservices.Client
 			const bool useShellExecute = true;
 			_startedProcess =
 				ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
+			OnLocalServerStarted(_startedProcess);
 
 			_msg.DebugFormat("Started microservice {0} in background. Arguments: {1}",
 			                 Path.GetFileNameWithoutExtension(executable), arguments);
