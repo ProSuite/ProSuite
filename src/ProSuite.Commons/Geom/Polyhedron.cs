@@ -233,10 +233,11 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Builds the ring groups from the fragments of a cleaned exterior ring and the
-		/// cleaned interior rings, deriving the nesting from XY containment: a fragment
-		/// contained in an odd number of other fragments is a hole of its innermost
-		/// container.
-		/// <para>The orientation cannot be used, because
+		/// cleaned interior rings. Only the role of each ring is decided here: a fragment
+		/// contained in an odd number of other fragments is a hole, and so is every declared
+		/// interior ring. Each hole then goes to the smallest solid ring containing it, see
+		/// <see cref="GeomTopoOpUtils.GetConnectedComponents"/>.
+		/// <para>The role cannot be taken from the orientation of a fragment, because
 		/// <see cref="GeomTopoOpUtils.TryCrackSelfCrossingRing"/> makes every fragment of an
 		/// exploded self-touching ring clockwise - so the loops the ring traced as courtyards
 		/// would be filled in (Kaspar/July: a building stored as ONE ring tracing an outline
@@ -261,76 +262,44 @@ namespace ProSuite.Commons.Geom
 				       };
 			}
 
-			// containers[i]: the fragments that contain fragment i, i.e. its nesting depth.
-			var containers = new List<List<int>>(exteriorFragments.Count);
+			var rings = new List<Linestring>(exteriorFragments.Count + interiorRings.Count);
 
 			for (var i = 0; i < exteriorFragments.Count; i++)
 			{
-				var containersOfI = new List<int>();
+				var nestingDepth = 0;
 
 				for (var j = 0; j < exteriorFragments.Count; j++)
 				{
 					if (i != j &&
 					    IsContainedInXY(exteriorFragments[i], exteriorFragments[j], tolerance))
 					{
-						containersOfI.Add(j);
+						nestingDepth++;
 					}
 				}
 
-				containers.Add(containersOfI);
+				rings.Add(WithOrientation(exteriorFragments[i], nestingDepth % 2 == 0));
 			}
 
-			var groupsByFragment = new RingGroup[exteriorFragments.Count];
-			var result = new List<RingGroup>(exteriorFragments.Count);
+			rings.AddRange(interiorRings.Select(ring => WithOrientation(ring, false)));
 
-			foreach (int i in Enumerable.Range(0, exteriorFragments.Count)
-			                            .OrderBy(i => containers[i].Count))
+			return GeomTopoOpUtils.GetConnectedComponents(new MultiPolycurve(rings), tolerance)
+			                      .ToList();
+		}
+
+		/// <summary>
+		/// The ring itself if it has the specified orientation, otherwise a reversed copy:
+		/// the ring can still be one of the polyhedron's own.
+		/// </summary>
+		[NotNull]
+		private static Linestring WithOrientation([NotNull] Linestring ring, bool clockwise)
+		{
+			if (ring.ClockwiseOriented == clockwise)
 			{
-				RingGroup parentGroup = containers[i].Count % 2 != 0
-					                        ? groupsByFragment[
-						                        containers[i].OrderByDescending(
-							                        j => containers[j].Count).First()]
-					                        : null;
-
-				if (parentGroup == null)
-				{
-					var group = new RingGroup(exteriorFragments[i]);
-					groupsByFragment[i] = group;
-					result.Add(group);
-				}
-				else
-				{
-					parentGroup.AddInteriorRing(exteriorFragments[i]);
-					groupsByFragment[i] = parentGroup;
-				}
+				return ring;
 			}
 
-			// The declared interior rings go to the innermost solid fragment containing them
-			// (not to the first one, which need not contain them at all).
-			foreach (Linestring interiorRing in interiorRings)
-			{
-				RingGroup owner = null;
-				var ownerDepth = -1;
-
-				for (var i = 0; i < exteriorFragments.Count; i++)
-				{
-					if (containers[i].Count % 2 != 0)
-					{
-						continue; // that fragment is itself a hole
-					}
-
-					if (containers[i].Count <= ownerDepth ||
-					    ! IsContainedInXY(interiorRing, exteriorFragments[i], tolerance))
-					{
-						continue;
-					}
-
-					owner = groupsByFragment[i];
-					ownerDepth = containers[i].Count;
-				}
-
-				(owner ?? result[0]).AddInteriorRing(interiorRing);
-			}
+			Linestring result = ring.Clone();
+			result.ReverseOrientation();
 
 			return result;
 		}
