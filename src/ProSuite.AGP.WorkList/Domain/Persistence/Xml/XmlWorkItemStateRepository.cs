@@ -40,20 +40,22 @@ public class XmlWorkItemStateRepository
 		IEnumerable<XmlWorkItemState> states,
 		Envelope extent)
 	{
-		int index = -1;
-		if (CurrentIndex.HasValue)
-		{
-			index = CurrentIndex.Value;
-		}
-
 		var definition = new XmlWorkListDefinition
 		                 {
 			                 Name = Name,
 			                 DisplayName = DisplayName,
 			                 TypeName = Type.FullName,
-			                 AssemblyName = Type.Assembly.GetName().Name,
-			                 CurrentIndex = index
+			                 AssemblyName = Type.Assembly.GetName().Name
 		                 };
+
+		if (CurrentItem.HasValue)
+		{
+			definition.CurrentItem = new XmlGdbRowIdentity
+			                         {
+				                         TableId = CurrentItem.Value.ClassId,
+				                         OID = CurrentItem.Value.ObjectId
+			                         };
+		}
 
 		definition.Extent = extent?.ToXml();
 
@@ -67,8 +69,7 @@ public class XmlWorkItemStateRepository
 		// has an invalid TableId.
 		HashSet<long> tableIds = new HashSet<long>();
 
-		foreach (XmlTableReference table in xmlWorkspaces.SelectMany(
-			         workspace => workspace.Tables))
+		foreach (XmlTableReference table in xmlWorkspaces.SelectMany(workspace => workspace.Tables))
 		{
 			tableIds.Add(table.Id);
 		}
@@ -96,6 +97,11 @@ public class XmlWorkItemStateRepository
 		}
 
 		XmlWorkListDefinition definition = Import(WorkListDefinitionFilePath);
+
+		CurrentItem = definition.CurrentItem == null
+			              ? null
+			              : new GdbObjectReference(definition.CurrentItem.TableId,
+			                                       definition.CurrentItem.OID);
 
 		// Challenge: Re-create the GdbRowIdentity from the XmlWorkItemState:
 		// NOTE: Either we re-open the workspaces or we also maintain the workspaces here

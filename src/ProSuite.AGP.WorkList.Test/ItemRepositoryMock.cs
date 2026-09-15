@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Test;
@@ -13,6 +14,7 @@ public class ItemRepositoryMock : IWorkItemRepository
 {
 	private readonly List<IWorkItem> _items;
 	private int _currentIndex;
+	private GdbObjectReference? _currentItem;
 	private int _lastUsedOid;
 
 	public ItemRepositoryMock(IEnumerable<IWorkItem> items,
@@ -94,6 +96,18 @@ public class ItemRepositoryMock : IWorkItemRepository
 	public int GetCurrentIndex()
 	{
 		return _currentIndex;
+	}
+
+	public void SetCurrentItem(IWorkItem item)
+	{
+		_currentItem = item == null
+			               ? null
+			               : new GdbObjectReference(item.UniqueTableId, item.ObjectID);
+	}
+
+	public GdbObjectReference? GetCurrentItemReference()
+	{
+		return _currentItem;
 	}
 
 	public Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
