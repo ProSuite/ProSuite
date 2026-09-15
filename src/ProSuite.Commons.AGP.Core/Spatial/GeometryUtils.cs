@@ -2392,6 +2392,32 @@ public static class GeometryUtils
 	}
 
 	/// <summary>
+	/// Returns a value indicating if two geometries are exactly equal, i.e.
+	/// all properties are identical (exact numbers compared, no tolerances applied).
+	/// duplicate of <see cref= "K2GeometryUtils.AreEqual"/>
+	/// </summary>
+	/// <param name="firstGeometry">The first geometry.</param>
+	/// <param name="secondGeometry">The second geometry.</param>
+	/// <returns></returns>
+	public static bool AreEqual([CanBeNull] Geometry firstGeometry,
+	                            [CanBeNull] Geometry secondGeometry)
+	{
+		if (ReferenceEquals(firstGeometry, secondGeometry))
+		{
+			// same instance
+			return true;
+		}
+
+		if (firstGeometry == null || secondGeometry == null)
+		{
+			// one is null, the other isn't
+			return false;
+		}
+
+		return firstGeometry.IsEqual(secondGeometry);
+	}
+
+	/// <summary>
 	/// Returns a value indicating if two geometries are equal 
 	/// in XY and within the XY tolerance.
 	/// duplicate of <see cref= "K2GeometryUtils.AreEqualInXY"/>
@@ -3073,7 +3099,7 @@ public static class GeometryUtils
 	}
 
 	/// <summary>
-	/// Add vertex
+	/// Add vertex to End
 	/// </summary>
 	/// <param name="geometry"></param>
 	/// <param name="newVertex"></param>
