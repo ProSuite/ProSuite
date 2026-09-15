@@ -138,7 +138,6 @@ public class LoadWorkListLayersOperation : Operation
 		                              .WorkListDefinitionFilePath;
 		Assert.NotNullOrEmpty(workListFile);
 
-		_workEnvironment.LoadWorkListLayer(mapView, workList, workListFile);
-		_workEnvironment.LoadAssociatedLayers(mapView, workList);
+		_workEnvironment.LoadLayers(mapView, workList, workListFile);
 	}
 }
