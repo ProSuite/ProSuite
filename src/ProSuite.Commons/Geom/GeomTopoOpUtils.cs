@@ -979,7 +979,7 @@ namespace ProSuite.Commons.Geom
 					}
 
 					// As in the fold: a reference is enough, the step does not modify its
-					// operands (see the fold and UnionStepSourceMutationTest).
+					// operands.
 					MultiLinestring previous = result;
 					double ringArea = ringGroup.GetArea2D();
 
