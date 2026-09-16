@@ -223,19 +223,36 @@ namespace ProSuite.Commons.Geom
 
 			IntersectionPoint3D previousLinearEnd = null;
 
+			// The intersections of other target parts within the current linear stretch
+			var otherPartsWithinStretch = new List<IntersectionPoint3D>(0);
+
 			foreach (SegmentIntersection intersection in sortedRelevantIntersections)
 			{
 				if (! intersection.HasLinearIntersection)
 				{
+					IntersectionPoint3D singleIntersectionPoint =
+						IntersectionPoint3D.CreateSingleIntersectionPoint(
+							intersection, sourceSegments, targetSegments,
+							tolerance);
+
+					// Not for self-intersections, see SegmentIntersectionFilter
+					if (! ReferenceEquals(sourceSegments, targetSegments) &&
+					    IsWithinLinearStretchOfOtherTargetPart(
+						    singleIntersectionPoint, previousLinearEnd))
+					{
+						// E.g. an island touching its exterior ring where that ring runs along the
+						// source: The linear intersection with the exterior ring continues.
+						otherPartsWithinStretch.Add(singleIntersectionPoint);
+						continue;
+					}
+
 					// emit previous linear stretch (to maintain order along source)
-					TryAddLinearIntersectionStretch(startPoint, previousLinearEnd, result);
+					TryAddLinearIntersectionStretch(startPoint, previousLinearEnd,
+					                                otherPartsWithinStretch, result);
 					startPoint = null;
 					previousLinearEnd = null;
 
-					result.Add(
-						IntersectionPoint3D.CreateSingleIntersectionPoint(
-							intersection, sourceSegments, targetSegments,
-							tolerance));
+					result.Add(singleIntersectionPoint);
 					continue;
 				}
 
@@ -270,7 +287,8 @@ namespace ProSuite.Commons.Geom
 				else
 				{
 					// emit
-					TryAddLinearIntersectionStretch(startPoint, previousLinearEnd, result);
+					TryAddLinearIntersectionStretch(startPoint, previousLinearEnd,
+					                                otherPartsWithinStretch, result);
 
 					// re-start with current from/to
 					startPoint = fromPoint; // isTargetRingNullPoint ? fromPoint : null;
@@ -278,9 +296,25 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			TryAddLinearIntersectionStretch(startPoint, previousLinearEnd, result);
+			TryAddLinearIntersectionStretch(startPoint, previousLinearEnd,
+			                                otherPartsWithinStretch, result);
 
 			return result;
+		}
+
+		/// <summary>
+		/// Whether the single intersection point is an intersection with a different target part
+		/// than the currently open linear intersection stretch, and lies within that stretch.
+		/// </summary>
+		private static bool IsWithinLinearStretchOfOtherTargetPart(
+			[NotNull] IntersectionPoint3D singleIntersectionPoint,
+			[CanBeNull] IntersectionPoint3D currentLinearEnd)
+		{
+			return currentLinearEnd != null &&
+			       singleIntersectionPoint.TargetPartIndex != currentLinearEnd.TargetPartIndex &&
+			       singleIntersectionPoint.SourcePartIndex == currentLinearEnd.SourcePartIndex &&
+			       singleIntersectionPoint.VirtualSourceVertex <=
+			       currentLinearEnd.VirtualSourceVertex;
 		}
 
 		private static bool ContinueLinearIntersectionStretch(
@@ -655,12 +689,17 @@ namespace ProSuite.Commons.Geom
 		private static void TryAddLinearIntersectionStretch(
 			[CanBeNull] IntersectionPoint3D startPoint,
 			[CanBeNull] IntersectionPoint3D endPoint,
+			[NotNull] List<IntersectionPoint3D> otherPartsWithinStretch,
 			[NotNull] List<IntersectionPoint3D> result)
 		{
 			if (startPoint != null)
 			{
 				result.Add(startPoint);
 			}
+
+			// In between, to maintain the order along the source
+			result.AddRange(otherPartsWithinStretch);
+			otherPartsWithinStretch.Clear();
 
 			if (endPoint != null)
 			{

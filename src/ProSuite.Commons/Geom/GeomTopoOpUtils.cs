@@ -3554,6 +3554,85 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		/// <summary>
+		/// Returns the touching and crossing intersection points that lie within a linear
+		/// intersection (including its start and end) of the same source part with a different
+		/// target part, e.g. an island touching its exterior ring where that ring runs along the
+		/// source. Such a point is relevant for the relation of its own target part only.
+		/// </summary>
+		/// <param name="intersectionPoints">The intersection points, in any order.</param>
+		/// <param name="sourceSegments">The source segments of the intersection points.</param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D>
+			GetIntersectionsWithinLinearIntersectionOfOtherTargetPart(
+				[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
+				[NotNull] ISegmentList sourceSegments)
+		{
+			// The same epsilon as for the intersection factors in the SegmentIntersectionFilter
+			double epsilon =
+				MathUtils.GetDoubleSignificanceEpsilon(sourceSegments.XMax, sourceSegments.YMax);
+
+			foreach (IGrouping<int, IntersectionPoint3D> alongSourcePart in
+			         intersectionPoints.GroupBy(i => i.SourcePartIndex))
+			{
+				List<IntersectionPoint3D> orderedAlongSource =
+					alongSourcePart.OrderBy(i => i.VirtualSourceVertex).ToList();
+
+				if (orderedAlongSource.Select(i => i.TargetPartIndex).Distinct().Count() < 2)
+				{
+					continue;
+				}
+
+				// The start and end of each linear intersection
+				var linearIntersections =
+					new List<KeyValuePair<IntersectionPoint3D, IntersectionPoint3D>>();
+
+				var openStartsByTargetPart = new Dictionary<int, IntersectionPoint3D>();
+
+				foreach (IntersectionPoint3D intersection in orderedAlongSource)
+				{
+					if (intersection.Type == IntersectionPointType.LinearIntersectionStart)
+					{
+						openStartsByTargetPart[intersection.TargetPartIndex] = intersection;
+					}
+					else if (intersection.Type == IntersectionPointType.LinearIntersectionEnd &&
+					         openStartsByTargetPart.TryGetValue(
+						         intersection.TargetPartIndex, out IntersectionPoint3D start))
+					{
+						linearIntersections.Add(
+							new KeyValuePair<IntersectionPoint3D, IntersectionPoint3D>(
+								start, intersection));
+
+						openStartsByTargetPart.Remove(intersection.TargetPartIndex);
+					}
+				}
+
+				if (linearIntersections.Count == 0)
+				{
+					continue;
+				}
+
+				foreach (IntersectionPoint3D intersection in orderedAlongSource)
+				{
+					if (intersection.Type != IntersectionPointType.TouchingInPoint &&
+					    intersection.Type != IntersectionPointType.Crossing)
+					{
+						continue;
+					}
+
+					double alongSource = intersection.VirtualSourceVertex;
+
+					if (linearIntersections.Any(
+						    l => l.Key.TargetPartIndex != intersection.TargetPartIndex &&
+						         l.Key.VirtualSourceVertex - epsilon <= alongSource &&
+						         alongSource <= l.Value.VirtualSourceVertex + epsilon))
+					{
+						yield return intersection;
+					}
+				}
+			}
+		}
+
 		private static void FilterLinearIntersectionBreaksAtRingStart(
 			ISegmentList sourceSegments,
 			ISegmentList targetSegments,

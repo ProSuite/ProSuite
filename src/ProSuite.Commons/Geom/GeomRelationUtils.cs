@@ -908,7 +908,13 @@ namespace ProSuite.Commons.Geom
 					}
 				}
 
-				if (hasAnyRightSideDeviation)
+				// As in IsTargetTouchingFromInside: For an interior (hole) target ring a right-side
+				// deviation only means "not inside THIS hole". The source may still sit in a
+				// neighbouring hole's void at the pinch where the holes meet.
+				bool ringIsInterior =
+					targetArea.GetPart(intersectionPointsPerPart.Key).ClockwiseOriented == false;
+
+				if (hasAnyRightSideDeviation && ! ringIsInterior)
 				{
 					// Completely within this target ring: contained
 					return true;
@@ -1201,6 +1207,25 @@ namespace ProSuite.Commons.Geom
 			{
 				// No deviations to the left nor to the right -> congruent
 				return null;
+			}
+
+			if (touchPoints.Count > 1 &&
+			    AreTouchingExteriorAndInteriorRings(touchPoints, containingClosedTarget,
+			                                        ip => ip.TargetPartIndex))
+			{
+				// As in AreaContainsXY, with the roles swapped: An interior ring of the target
+				// touching its exterior ring in the same point in which it touches the source
+				// makes the deviations misleading -> Use point-in-polygon check.
+				Linestring sourceRing =
+					containedSource.GetPart(touchPoints.First().SourcePartIndex);
+
+				Pnt3D testPoint =
+					GetOffBoundaryTargetPoint(containingClosedTarget, sourceRing, tolerance) ??
+					GetOffBoundarySegmentMidPoint(containingClosedTarget, sourceRing, tolerance);
+
+				return testPoint == null
+					       ? (bool?) null
+					       : PolycurveContainsXY(containingClosedTarget, testPoint, tolerance);
 			}
 
 			// No decisive deviation so far -> use the touch points
@@ -2038,6 +2063,20 @@ namespace ProSuite.Commons.Geom
 			{
 				intersectionPoints = intersectionPoints
 				                     .Where(i => predicate(i))
+				                     .ToList();
+			}
+
+			// A touch of a target part within the linear intersection with another target part
+			// tells nothing about the relation to the other part. It is only relevant for its own
+			// target part - checked on its own, the other part's linear intersection is filtered.
+			List<IntersectionPoint3D> withinLinearIntersectionOfOtherPart =
+				GeomTopoOpUtils.GetIntersectionsWithinLinearIntersectionOfOtherTargetPart(
+					intersectionPoints, source).ToList();
+
+			if (withinLinearIntersectionOfOtherPart.Count > 0)
+			{
+				intersectionPoints = intersectionPoints
+				                     .Where(i => ! withinLinearIntersectionOfOtherPart.Contains(i))
 				                     .ToList();
 			}
 

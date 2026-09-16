@@ -1835,6 +1835,27 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetFootprintForOid3828241()
+		{
+			// TLM_GEBAEUDEKOERPER OID 3828241 (Bern). When the self-intersections got an
+			// intersection for every other ring touching the same location (as the intersections
+			// with another target part do), the union failed with a NullReferenceException in
+			// GeomTopoOpUtils.IsOnTheRightSide. See SegmentIntersectionFilter.
+			object geometry = GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("oid_3828241.wkb"), out _);
+
+			Polyhedron polyhedron = geometry as Polyhedron ??
+			                        new Polyhedron(((MultiPolyhedron) geometry)
+			                                       .Polyhedra.SelectMany(p => p.RingGroups)
+			                                       .ToList());
+
+			// The tolerances of CreateFootprintUtils.GetFootprintGeom without a tolerance
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.01, out _);
+
+			Assert.AreEqual(201.692, footprint.GetArea2D(), 0.01);
+		}
+
+		[Test]
 		public void CanGetFootprintAtFineToleranceWithParallelRun()
 		{
 			// TLM_GEBAEUDE OID 3939229. At a fine tolerance (0.0005, finer than the data
