@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
+using ProSuite.QA.Core.Signatures;
 
 namespace ProSuite.QA.Core
 {
@@ -19,6 +21,16 @@ namespace ProSuite.QA.Core
 		{
 			return $"{GetType().Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
 		}
+
+		/// <summary>
+		/// Validates the configured parameter values beyond the structural checks the
+		/// edit model performs (required/type/dataset compatibility). Add one
+		/// notification per problem; an empty collection means the configuration is
+		/// valid.
+		/// </summary>
+		public virtual void ValidateParameters(
+			[NotNull] IParameterValidationContext context,
+			[NotNull] NotificationCollection issues) { }
 
 		#region Overrides of InstanceInfoBase
 

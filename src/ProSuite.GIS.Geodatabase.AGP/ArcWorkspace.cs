@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -1195,6 +1196,8 @@ public class ArcConflictClass : IConflictClass
 
 public class VersionInfo : IVersionInfo
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	private readonly bool _isOwner;
 
 	public VersionInfo(Version version)
@@ -1204,7 +1207,7 @@ public class VersionInfo : IVersionInfo
 		Created = version.GetCreatedDate();
 		Modified = version.GetModifiedDate();
 		Parent = version.GetParent() != null ? new VersionInfo(version.GetParent()) : null;
-		Children = version.GetChildren().Select(c => new VersionInfo(c));
+		Children = GetChildren(version);
 
 		_isOwner = version.IsOwner();
 	}
@@ -1226,6 +1229,34 @@ public class VersionInfo : IVersionInfo
 	}
 
 	#endregion
+
+	private static IEnumerable<IVersionInfo> GetChildren(Version version)
+	{
+		try
+		{
+			return version.GetChildren().Select(c => new VersionInfo(c)).ToList();
+		}
+		catch (NotImplementedException)
+		{
+			// Not all datastores support retrieving the version tree's children
+			// (e.g. non-traditional / branch-versioned geodatabases).
+			_msg.VerboseDebug(() => $"GetChildren() is not implemented for version " +
+			                        $"{version.GetName()}. Assuming no children.");
+
+			return Enumerable.Empty<IVersionInfo>();
+		}
+		catch (GeodatabaseException ex)
+		{
+			// The version's children could not be determined, e.g. because the version
+			// (or one of its children) has meanwhile been deleted/renamed by another user.
+			// Do not fail the whole operation (such as a workspace comparison) just because
+			// the version tree cannot be fully resolved.
+			_msg.Debug($"Error getting children of version {version.GetName()}: " +
+			           $"{ex.Message}. Assuming no children.", ex);
+
+			return Enumerable.Empty<IVersionInfo>();
+		}
+	}
 }
 
 public class ArcWorkspaceName : IWorkspaceName
@@ -1269,6 +1300,8 @@ public class ArcWorkspaceName : IWorkspaceName
 
 	public IEnumerable<KeyValuePair<string, string>> ConnectionProperties =>
 		_datastoreName.ConnectionProperties;
+
+	public bool IsFeatureService => _datastoreName.IsFeatureService;
 
 	#endregion
 

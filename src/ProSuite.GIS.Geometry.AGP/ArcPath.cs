@@ -82,19 +82,16 @@ public class ArcPath : ArcGeometry, IPath
 		throw new NotImplementedException();
 	}
 
-	public double GetDistancePerpendicular2d(IPoint ofPoint, out double distanceAlongRatio,
-	                                         out IPoint pointOnLine)
+	public double GetDistance2d(IPoint toPoint, out CurveLocation location)
 	{
-		var proPoint = (MapPoint) ofPoint.NativeImplementation;
+		var proPoint = (MapPoint) toPoint.NativeImplementation;
 
-		MapPoint nearestPoint = GeometryEngine.Instance.QueryPointAndDistance(
-			(Multipart) ProGeometry, SegmentExtensionType.NoExtension, proPoint,
-			AsRatioOrLength.AsRatio,
-			out distanceAlongRatio, out double distanceFromCurve, out LeftOrRightSide _);
+		return ArcGeometryUtils.GetDistance2d((Multipart) ProGeometry, proPoint, out location);
+	}
 
-		pointOnLine = nearestPoint != null ? new ArcPoint(nearestPoint) : null;
-
-		return distanceFromCurve;
+	public double GetDistanceAlongCurve2d(CurveLocation location)
+	{
+		return ArcGeometryUtils.GetDistanceAlongCurve2d((Multipart) ProGeometry, location);
 	}
 
 	#endregion

@@ -13,6 +13,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		private int _shapeFieldIndex = -1;
 
+		private readonly IFeatureDataset _featureDataset;
+
 		public GdbFeatureClass(int? objectClassId,
 		                       [NotNull] string name,
 		                       esriGeometryType shapeType,
@@ -30,6 +32,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			: base((ITable) template, useTemplateForQuerying)
 		{
 			ShapeType = template.ShapeType;
+
+			_featureDataset = template.FeatureDataset;
 		}
 
 #if ARCGIS_11_0_OR_GREATER
@@ -111,7 +115,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override esriFeatureType FeatureType => esriFeatureType.esriFTSimple;
 
+		public override IFeatureDataset FeatureDataset => _featureDataset;
+
 		private string _shapeFieldName;
+
 		public override string ShapeFieldName => _shapeFieldName ?? base.ShapeFieldName;
 
 		public override IField AreaField => null;

@@ -363,6 +363,15 @@ namespace ProSuite.QA.TestFactories {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An optional expression that selects the groups to be tested. A group is only tested if at least one of its rows fulfills this expression. If no expression is defined, all groups are tested..
+        /// </summary>
+        public static string QaRelGroupConstraints_ExistsRowGroupFilter {
+            get {
+                return ResourceManager.GetString("QaRelGroupConstraints_ExistsRowGroupFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find errors in checking if connected polylines of a joined table with same attributes related to &apos;groupBy&apos; meet the conditions defined by the parameters.
         /// </summary>
         public static string QaRelLineGroupConstraints {

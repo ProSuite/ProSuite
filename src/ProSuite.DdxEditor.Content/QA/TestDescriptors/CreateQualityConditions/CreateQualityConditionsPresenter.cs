@@ -191,6 +191,12 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			ValidateRow(dataRow, columnName);
 		}
 
+		void ICreateQualityConditionsObserver.CellButtonClicked(DataRow dataRow,
+		                                                        string columnName)
+		{
+			// the classic dialog has no button cells
+		}
+
 		void ICreateQualityConditionsObserver.CancelClicked()
 		{
 			_view.QualityConditionParameters = null;
@@ -410,7 +416,9 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 
 			SetQualityConditionName(row, dataset, targetCategory, naming);
 
-			// TODO set default values for all optional parameters
+			// Only parameters that carry a default in code get a pre-filled cell. There
+			// is nothing else to fall back to: a parameter without a declared default
+			// has no meaningful value the dialog could invent.
 			foreach (TestParameter parameter in _testParameters)
 			{
 				DataColumn dataColumn;

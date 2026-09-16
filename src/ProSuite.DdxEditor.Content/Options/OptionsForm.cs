@@ -28,6 +28,12 @@ namespace ProSuite.DdxEditor.Content.Options
 			set { _checkBoxListQualityConditionsWithDataset.Checked = value; }
 		}
 
+		public bool UseClassicConditionSpecification
+		{
+			get { return _checkBoxUseClassicConditionSpecification.Checked; }
+			set { _checkBoxUseClassicConditionSpecification.Checked = value; }
+		}
+
 		private void _buttonCancel_Click(object sender, EventArgs e)
 		{
 			DialogResult = DialogResult.Cancel;

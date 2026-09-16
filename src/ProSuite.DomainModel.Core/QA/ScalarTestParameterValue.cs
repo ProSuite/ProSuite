@@ -157,7 +157,10 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Attempts to get a displayable string for the current culture. If the data type is
 		/// not specified and the DataType property is not initialized and the data type cannot be
 		/// inferred from the persisted string value, the <see cref="PersistedStringValue"/> is
-		/// returned. 
+		/// returned. The <see cref="PersistedStringValue"/> is also returned when the stored
+		/// value cannot be parsed to <paramref name="dataType"/> (e.g. a malformed value that
+		/// was persisted by an older code path), so a condition holding such a value can still
+		/// be opened and corrected rather than throwing while the editor binds.
 		/// </summary>
 		/// <param name="dataType">The known data type of the parameter.</param>
 		/// <returns></returns>
@@ -191,12 +194,27 @@ namespace ProSuite.DomainModel.Core.QA
 			// Only cache the result if we are certain of the data type:
 			bool allowResultCaching = DataType != null;
 
-			return GetFormattedStringValue(culture, dataType, allowResultCaching);
+			try
+			{
+				return GetFormattedStringValue(culture, dataType, allowResultCaching);
+			}
+			catch (ArgumentException)
+			{
+				// The stored value is not parseable to the data type; fall back to the raw
+				// persisted string so the value remains visible and editable.
+				return PersistedStringValue;
+			}
 		}
 
 		/// <summary>
+		/// Sets the value from its string representation in the given culture (default:
+		/// the current culture). A null value means "not set" and is stored as such,
+		/// except for a text parameter, where the missing value becomes the empty
+		/// string, which text can represent.
 		/// Note: public for unit tests
 		/// </summary>
+		/// <exception cref="ArgumentException">The string cannot be parsed to the
+		/// parameter's data type.</exception>
 		public void SetStringValue([CanBeNull] string value,
 		                           [CanBeNull] CultureInfo cultureInfo = null)
 		{
@@ -212,6 +230,17 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			Assert.NotNull(DataType, "Parameter data type not defined");
+
+			if (value == null && DataType != typeof(string))
+			{
+				// No value: keep it unset, exactly as SetValue(null) does. There is no
+				// string that stands for the missing value of a number, a boolean, a date
+				// or an enumeration, so parsing it would throw and make a parameter that
+				// was legitimately left empty unreadable.
+				SetValue(null);
+				_formattedStringValueCulture = cultureInfo;
+				return;
+			}
 
 			// verify that the string value can be cast to the correct data type, assuming it is in 
 			// the current culture.
@@ -248,16 +277,31 @@ namespace ProSuite.DomainModel.Core.QA
 				type = Assert.NotNull(DataType, "Parameter data type not defined");
 			}
 
+			if (_stringValue.Length == 0 && type != typeof(string))
+			{
+				// Not set. For a text parameter the empty string is a value of its own
+				// and is kept, but no other type can represent it: parsing it would
+				// throw and make the entire condition unreadable. Parameters left
+				// unset used to be written this way, so such values still exist.
+				return null;
+			}
+
 			object castValue;
 			ConversionUtils.ParseTo(type, _stringValue, _persistedCulture, out castValue);
 
 			return castValue;
 		}
 
-		public void SetValue(object value)
+		public void SetValue([CanBeNull] object value)
 		{
 			_formattedStringValue = null;
-			_stringValue = GetStringValueInPersistedCulture(value);
+
+			// Keep "not set" as null. Formatting null would yield the empty string,
+			// which cannot be read back as anything but text and would make the
+			// condition unreadable - see GetValue.
+			_stringValue = value == null
+				               ? null
+				               : GetStringValueInPersistedCulture(value);
 		}
 
 		[NotNull]

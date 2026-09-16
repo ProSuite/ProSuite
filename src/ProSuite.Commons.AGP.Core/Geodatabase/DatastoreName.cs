@@ -41,6 +41,8 @@ public class DatastoreName : IEquatable<DatastoreName>
 
 	private WorkspaceFactory WorkspaceFactory => WorkspaceUtils.GetWorkspaceFactory(_connector);
 
+	public bool IsFeatureService => WorkspaceFactory == WorkspaceFactory.FeatureService;
+
 	/// <summary>
 	/// Opens the associated datastore. This method must be run on the MCT.
 	/// </summary>

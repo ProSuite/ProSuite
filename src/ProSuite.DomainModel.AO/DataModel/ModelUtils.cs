@@ -56,13 +56,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[NotNull]
 		public static IWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext(DdxModel model)
 		{
+			return CreateDefaultMasterDatabaseWorkspaceContext(model, model.KeepDatasetLocks);
+		}
+
+		/// <summary>
+		/// Creates a master database context owned by the caller.
+		/// </summary>
+		[NotNull]
+		public static IWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext(
+			DdxModel model, bool keepDatasetLocks)
+		{
 			Assert.ArgumentNotNull(model, nameof(model));
 
 			_msg.Debug("Opening default master database workspace context...");
 
 			IFeatureWorkspace featureWorkspace = model.UserConnectionProvider.OpenWorkspace();
 
-			var result = new MasterDatabaseWorkspaceContext(featureWorkspace, model);
+			var result = new MasterDatabaseWorkspaceContext(
+				featureWorkspace, model, keepDatasetLocks);
 
 			if (model.AutoEnableSchemaCache && ! model.DisableAutomaticSchemaCaching)
 			{

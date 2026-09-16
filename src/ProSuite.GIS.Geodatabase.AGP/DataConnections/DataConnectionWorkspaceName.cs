@@ -211,6 +211,8 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	public string Category => throw new NotImplementedException();
 	public string ConnectionString { get; set; }
 
+	public bool IsFeatureService => FactoryType == WorkspaceFactory.FeatureService;
+
 	public void ChangeVersion(string newVersionName)
 	{
 		string keyword = $"VERSION=";

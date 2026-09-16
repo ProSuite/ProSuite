@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.Signatures;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
@@ -66,6 +67,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[Doc(nameof(DocStrings.QaRequiredFields_0))]
+		[NotAScalarListRedirect] // requiredFieldNamesString is a token string (GetTokens)
 		public QaRequiredFieldsDefinition(
 			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
 			ITableSchemaDef table,

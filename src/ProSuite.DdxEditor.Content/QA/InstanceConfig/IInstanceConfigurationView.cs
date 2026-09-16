@@ -15,6 +15,10 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 	{
 		Func<object> FindInstanceDescriptorDelegate { get; set; }
 
+		/// <summary>If true, the instance descriptor reference control is read-only
+		/// ("(resolved automatically)") instead of Find/Clear. Default false.</summary>
+		bool AlgorithmMode { get; set; }
+
 		void BindToParameterValues(
 			[NotNull] BindingList<ParameterValueListItem> parameterValues);
 

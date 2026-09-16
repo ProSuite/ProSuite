@@ -29,6 +29,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <param name="model">The model.</param>
 		public MasterDatabaseWorkspaceContext([NotNull] IFeatureWorkspace featureWorkspace,
 		                                      [NotNull] DdxModel model)
+			: this(featureWorkspace, model, model.KeepDatasetLocks) { }
+
+		public MasterDatabaseWorkspaceContext([NotNull] IFeatureWorkspace featureWorkspace,
+		                                      [NotNull] DdxModel model,
+		                                      bool keepDatasetLocks)
 			: base(featureWorkspace)
 		{
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));
@@ -36,7 +41,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			_model = model;
 
-			_workspaceProxy = model.KeepDatasetLocks
+			_workspaceProxy = keepDatasetLocks
 				                  ? (IWorkspaceProxy) new CachedWorkspaceProxy(featureWorkspace)
 				                  : new SimpleWorkspaceProxy(featureWorkspace);
 		}

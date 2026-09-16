@@ -93,6 +93,17 @@ namespace ProSuite.DdxEditor.Framework.ItemViews
 
 		#endregion
 
+		/// <summary>
+		/// Whether hovering over a cell whose text is too long for the column shows the
+		/// full text in a small pop-up window. Off by default, as in all the tables that
+		/// existed before this was introduced.
+		/// </summary>
+		public bool ShowFullTextOfCutOffCells
+		{
+			get { return _dataGridView.ShowCellToolTips; }
+			set { _dataGridView.ShowCellToolTips = value; }
+		}
+
 		public bool HideGridLines
 		{
 			get { return _dataGridView.CellBorderStyle == DataGridViewCellBorderStyle.None; }
