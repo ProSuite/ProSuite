@@ -1136,7 +1136,7 @@ public static class MapUtils
 		double pixelSizeX = mapExtent.Width / widthPixels;
 		double pixelSizeY = mapExtent.Height / heightPixels;
 
-		return pixelSizeX + pixelSizeY / 2;
+		return (pixelSizeX + pixelSizeY) / 2;
 	}
 
 	/// <summary>
