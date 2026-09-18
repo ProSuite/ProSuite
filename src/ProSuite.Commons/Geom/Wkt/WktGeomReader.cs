@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.Wkb;
 
-namespace ProSuite.Commons.Geom.Wkb
+namespace ProSuite.Commons.Geom.Wkt
 {
 	/// <summary>
 	/// Reads geometries from their Well-known Text representation, producing the same

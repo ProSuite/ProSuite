@@ -5,8 +5,9 @@ using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.Wkb;
+using ProSuite.Commons.Geom.Wkt;
 
-namespace ProSuite.Commons.Test.Geom.Wkb
+namespace ProSuite.Commons.Test.Geom.Wkt
 {
 	[TestFixture]
 	public class WktReadTest
