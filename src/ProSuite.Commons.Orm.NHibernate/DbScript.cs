@@ -105,7 +105,9 @@ namespace ProSuite.Commons.Orm.NHibernate
 			}
 			catch (Exception e)
 			{
-				_msg.Warn(e.Message, e);
+				// Include the statement: without it the warning names only the database
+				// error, which is not enough to tell which script line failed.
+				_msg.Warn($"{e.Message} Failed statement: {statement}", e);
 			}
 		}
 
