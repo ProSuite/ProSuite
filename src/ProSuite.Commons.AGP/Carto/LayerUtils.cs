@@ -133,6 +133,11 @@ public static class LayerUtils
 		_msg.VerboseDebug(() => $"Querying layer {((MapMember) layer).Name} using filter: " +
 		                        $"{GdbQueryUtils.FilterPropertiesToString(filter)}");
 
+		using (Table layerTable = layer.GetTable())
+		{
+			GdbQueryUtils.WarnIfSpatialQueryComparesZ(layerTable, filter);
+		}
+
 		RowCursor cursor = null;
 		try
 		{
