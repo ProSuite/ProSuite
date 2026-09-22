@@ -1207,6 +1207,10 @@ public class VersionInfo : IVersionInfo
 
 	private readonly bool _isOwner;
 
+	// The children must be read lazily: a child's parent reads its children again,
+	// which would otherwise recurse endlessly between parent and child.
+	private readonly Lazy<IEnumerable<IVersionInfo>> _children;
+
 	public VersionInfo(Version version)
 	{
 		VersionName = version.GetName();
@@ -1214,7 +1218,7 @@ public class VersionInfo : IVersionInfo
 		Created = version.GetCreatedDate();
 		Modified = version.GetModifiedDate();
 		Parent = version.GetParent() != null ? new VersionInfo(version.GetParent()) : null;
-		Children = GetChildren(version);
+		_children = new Lazy<IEnumerable<IVersionInfo>>(() => GetChildren(version));
 
 		_isOwner = version.IsOwner();
 	}
@@ -1228,7 +1232,8 @@ public class VersionInfo : IVersionInfo
 
 	public IVersionInfo Parent { get; }
 
-	public IEnumerable<IVersionInfo> Children { get; }
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public IEnumerable<IVersionInfo> Children => _children.Value;
 
 	public bool IsOwner()
 	{
