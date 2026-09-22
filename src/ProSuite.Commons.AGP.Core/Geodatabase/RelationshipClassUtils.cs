@@ -6,31 +6,113 @@ using ArcGIS.Core.Data.Mapping;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase;
 
 public static class RelationshipClassUtils
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	/// <summary>
+	/// Gets the definitions of the simple and the attributed relationship classes of the
+	/// geodatabase.
+	/// </summary>
 	public static IEnumerable<RelationshipClassDefinition> GetRelationshipClassDefinitions(
 		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 		[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
 	{
-		foreach (RelationshipClassDefinition definition in geodatabase
-			         .GetDefinitions<RelationshipClassDefinition>())
+		var result = new List<RelationshipClassDefinition>();
+
+		if (! TryAddRelationshipClassDefinitions(geodatabase, result, out string message,
+		                                         predicate))
 		{
-			if (predicate is null || predicate(definition))
-			{
-				yield return definition;
-			}
+			_msg.Debug(message);
 		}
 
-		foreach (AttributedRelationshipClassDefinition definition in
-		         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
+		return result;
+	}
+
+	/// <summary>
+	/// Adds the definitions of the simple and the attributed relationship classes of the
+	/// geodatabase to the result.
+	/// </summary>
+	/// <param name="geodatabase">The geodatabase to read the definitions from.</param>
+	/// <param name="toResult">The list to which the definitions are added.</param>
+	/// <param name="message">The reason why a relationship class type could not be read,
+	/// or null if all types could be read.</param>
+	/// <param name="predicate">An optional condition that a definition must fulfill to be
+	/// added.</param>
+	/// <returns>True if the definitions of all relationship class types could be read.</returns>
+	public static bool TryAddRelationshipClassDefinitions(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] ICollection<RelationshipClassDefinition> toResult,
+		[CanBeNull] out string message,
+		[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
+	{
+		Assert.ArgumentNotNull(geodatabase, nameof(geodatabase));
+		Assert.ArgumentNotNull(toResult, nameof(toResult));
+
+		if (geodatabase.GetGeodatabaseType() == GeodatabaseType.Memory)
+		{
+			// NOTE: Currently (3.8) pro throws InvalidOperationException for a memory geodatabase
+			//       when getting RelationshipClassDefinition or AttributedRelationshipClassDefinition
+			message = $"{WorkspaceUtils.GetDatastoreDisplayText(geodatabase)} does not " +
+			          "support relationship classes";
+			return false;
+		}
+
+		var failures = new List<string>();
+
+		TryAddDefinitions<RelationshipClassDefinition>(
+			geodatabase, toResult, predicate, failures);
+		TryAddDefinitions<AttributedRelationshipClassDefinition>(
+			geodatabase, toResult, predicate, failures);
+
+		message = failures.Count == 0
+			          ? null
+			          : $"Not all relationship classes of " +
+			            $"{WorkspaceUtils.GetDatastoreDisplayText(geodatabase)} can be read: " +
+			            $"{string.Join(" ", failures)}";
+
+		return failures.Count == 0;
+	}
+
+	private static void TryAddDefinitions<T>(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] ICollection<RelationshipClassDefinition> toResult,
+		[CanBeNull] Predicate<RelationshipClassDefinition> predicate,
+		[NotNull] ICollection<string> failures) where T : RelationshipClassDefinition
+	{
+		IReadOnlyList<T> definitions;
+		try
+		{
+			// NOTE: Currently (3.8) pro throws InvalidOperationException for a memory geodatabase,
+			//       therefore it is filtered by the caller.
+			definitions = geodatabase.GetDefinitions<T>();
+		}
+		catch (NotSupportedException e)
+		{
+			// For future Pro versions which might throw the proper exception type for unsupported geodatabases...
+			failures.Add(e.Message);
+			return;
+		}
+		catch (NotImplementedException e)
+		{
+			failures.Add(e.Message);
+			return;
+		}
+
+		foreach (T definition in definitions)
 		{
 			if (predicate is null || predicate(definition))
 			{
-				yield return definition;
+				toResult.Add(definition);
+			}
+			else
+			{
+				definition.Dispose();
 			}
 		}
 	}
@@ -97,25 +179,29 @@ public static class RelationshipClassUtils
 	public static IEnumerable<Table> GetOriginClasses([NotNull] Dataset destinationClass)
 	{
 		string destinationClassName = destinationClass.GetName();
-		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) destinationClass.GetDatastore())
+		using Datastore datastore = destinationClass.GetDatastore();
+		if (datastore is not ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
-			Predicate<RelationshipClassDefinition> predicate =
-				relClass => string.Equals(relClass.GetDestinationClass(),
-				                          destinationClassName,
-				                          StringComparison.OrdinalIgnoreCase);
+			// Shapefiles and plug-in data sources have no relationship classes.
+			yield break;
+		}
 
-			foreach (RelationshipClassDefinition definition in
-			         GetRelationshipClassDefinitions(geodatabase, predicate))
+		Predicate<RelationshipClassDefinition> predicate =
+			relClass => string.Equals(relClass.GetDestinationClass(),
+			                          destinationClassName,
+			                          StringComparison.OrdinalIgnoreCase);
+
+		foreach (RelationshipClassDefinition definition in
+		         GetRelationshipClassDefinitions(geodatabase, predicate))
+		{
+			try
 			{
-				try
-				{
-					yield return DatasetUtils.OpenDataset<Table>(geodatabase,
-					                                             definition.GetOriginClass());
-				}
-				finally
-				{
-					definition.Dispose();
-				}
+				yield return DatasetUtils.OpenDataset<Table>(geodatabase,
+				                                             definition.GetOriginClass());
+			}
+			finally
+			{
+				definition.Dispose();
 			}
 		}
 	}
@@ -123,14 +209,18 @@ public static class RelationshipClassUtils
 	public static IEnumerable<string> GetOriginClassNames([NotNull] Dataset destinationClass)
 	{
 		string destinationClassName = destinationClass.GetName();
-		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) destinationClass.GetDatastore())
+		using Datastore datastore = destinationClass.GetDatastore();
+		if (datastore is not ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
-			// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
-			// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
-			foreach (string name in GetOriginClassNames(geodatabase, destinationClassName))
-			{
-				yield return name;
-			}
+			// Shapefiles and plug-in data sources have no relationship classes.
+			yield break;
+		}
+
+		// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
+		// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
+		foreach (string name in GetOriginClassNames(geodatabase, destinationClassName))
+		{
+			yield return name;
 		}
 	}
 
@@ -161,15 +251,18 @@ public static class RelationshipClassUtils
 	public static IEnumerable<string> GetDestinationClassNames([NotNull] Dataset originClass)
 	{
 		string originClassName = originClass.GetName();
-		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) originClass.GetDatastore())
-
+		using Datastore datastore = originClass.GetDatastore();
+		if (datastore is not ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
-			// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
-			// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
-			foreach (string name in GetDestinationClassNames(geodatabase, originClassName))
-			{
-				yield return name;
-			}
+			// Shapefiles and plug-in data sources have no relationship classes.
+			yield break;
+		}
+
+		// NOTE: Don't return IEnumerable<string>. It leads to exception because of the disposed geodatabase:
+		// System.InvalidOperationException: Could not get the definitions of type RelationshipClassDefinition. Please make sure a valid geodatabase or data store has been opened first.
+		foreach (string name in GetDestinationClassNames(geodatabase, originClassName))
+		{
+			yield return name;
 		}
 	}
 
@@ -221,33 +314,37 @@ public static class RelationshipClassUtils
 	                                                    [NotNull] ICollection<long> oids)
 	{
 		string destinationDatasetName = dataset.GetName();
-		using (var geodatabase = (ArcGIS.Core.Data.Geodatabase) dataset.GetDatastore())
+		using Datastore datastore = dataset.GetDatastore();
+		if (datastore is not ArcGIS.Core.Data.Geodatabase geodatabase)
 		{
-			Predicate<RelationshipClassDefinition> predicate =
-				relClass => string.Equals(relClass.GetDestinationClass(),
-				                          destinationDatasetName,
-				                          StringComparison.OrdinalIgnoreCase);
+			// Shapefiles and plug-in data sources have no relationship classes.
+			yield break;
+		}
 
-			// NOTE: Don't return IEnumerable<Row> like this.
-			// It leads to ArcGIS.Core.ObjectDisconnectedException : This object has been previously disposed and cannot be manipulated
-			// of the geodatabase.
-			//return relationshipClasses.SelectMany(relClass =>
-			//										  relClass.GetRowsRelatedToDestinationRows(oids));
+		Predicate<RelationshipClassDefinition> predicate =
+			relClass => string.Equals(relClass.GetDestinationClass(),
+			                          destinationDatasetName,
+			                          StringComparison.OrdinalIgnoreCase);
 
-			foreach (RelationshipClass relClass in GetRelationshipClasses(geodatabase, predicate))
+		// NOTE: Don't return IEnumerable<Row> like this.
+		// It leads to ArcGIS.Core.ObjectDisconnectedException : This object has been previously disposed and cannot be manipulated
+		// of the geodatabase.
+		//return relationshipClasses.SelectMany(relClass =>
+		//										  relClass.GetRowsRelatedToDestinationRows(oids));
+
+		foreach (RelationshipClass relClass in GetRelationshipClasses(geodatabase, predicate))
+		{
+			// try finally in case an exception happens after yield return
+			try
 			{
-				// try finally in case an exception happens after yield return
-				try
+				foreach (Row row in relClass.GetRowsRelatedToDestinationRows(oids))
 				{
-					foreach (Row row in relClass.GetRowsRelatedToDestinationRows(oids))
-					{
-						yield return row;
-					}
+					yield return row;
 				}
-				finally
-				{
-					relClass.Dispose();
-				}
+			}
+			finally
+			{
+				relClass.Dispose();
 			}
 		}
 	}

@@ -209,12 +209,38 @@ public static class WorkspaceUtils
 			case WorkspaceFactory.FeatureService:
 				return CreateServiceConnectionProperties(connectionString);
 
+			case WorkspaceFactory.InMemoryDB:
+				return CreateMemoryConnectionProperties(connectionString);
+
 			// TODO: SQLite, others?
 
 			default:
 				throw new ArgumentOutOfRangeException(nameof(factory), factory,
 				                                      $"Unsupported workspace factory: {factory}");
 		}
+	}
+
+	/// <summary>
+	/// Creates the <see cref="MemoryConnectionProperties"/> for the specified connection
+	/// string, which is either INSTANCE_ID=&lt;name&gt; or the plain name.
+	/// </summary>
+	private static MemoryConnectionProperties CreateMemoryConnectionProperties(
+		[NotNull] string connectionString)
+	{
+		var builder = new ConnectionStringBuilder(connectionString);
+
+		string name = builder["instance_id"];
+
+		if (string.IsNullOrEmpty(name))
+		{
+			name = connectionString;
+		}
+
+		Assert.False(string.IsNullOrEmpty(name),
+		             "No name found in in-memory geodatabase connection string: {0}",
+		             connectionString);
+
+		return new MemoryConnectionProperties(name);
 	}
 
 	/// <summary>
@@ -237,7 +263,7 @@ public static class WorkspaceUtils
 
 		string url = builder["url"];
 		Assert.False(string.IsNullOrEmpty(url),
-		            "No URL found in feature service connection string: {0}", connectionString);
+		             "No URL found in feature service connection string: {0}", connectionString);
 
 		var serviceConnection = new ServiceConnectionProperties(new Uri(url, UriKind.Absolute));
 
@@ -748,53 +774,100 @@ public static class WorkspaceUtils
 		return sb.ToString();
 	}
 
-	public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+	public static bool TryGetWorkspaceFactory([CanBeNull] Connector connector,
+	                                          out WorkspaceFactory workspaceFactory)
 	{
-		WorkspaceFactory result;
-
 		switch (connector)
 		{
 #if ARCGISPRO_GREATER_3_2
 			case BimFileConnectionProperties:
-				result = WorkspaceFactory.BIMFile;
-				break;
+				workspaceFactory = WorkspaceFactory.BIMFile;
+				return true;
 #endif
 			case DatabaseConnectionFile:
 			case DatabaseConnectionProperties:
-				result = WorkspaceFactory.SDE;
-				break;
+				workspaceFactory = WorkspaceFactory.SDE;
+				return true;
 			case FileGeodatabaseConnectionPath:
-				result = WorkspaceFactory.FileGDB;
-				break;
+				workspaceFactory = WorkspaceFactory.FileGDB;
+				return true;
 			case FileSystemConnectionPath:
-				result = WorkspaceFactory.Shapefile;
-				break;
+				workspaceFactory = WorkspaceFactory.Shapefile;
+				return true;
 			case KnowledgeGraphConnectionProperties:
-				result = WorkspaceFactory.KnowledgeGraph;
-				break;
+				workspaceFactory = WorkspaceFactory.KnowledgeGraph;
+				return true;
 			case MemoryConnectionProperties:
-				result = WorkspaceFactory.InMemoryDB;
-				break;
+				workspaceFactory = WorkspaceFactory.InMemoryDB;
+				return true;
 			case MobileGeodatabaseConnectionPath:
 			case SQLiteConnectionPath:
-				result = WorkspaceFactory.SQLite;
-				break;
+				workspaceFactory = WorkspaceFactory.SQLite;
+				return true;
 			case PluginDatasourceConnectionPath:
-				result = WorkspaceFactory.Custom;
-				break;
+				workspaceFactory = WorkspaceFactory.Custom;
+				return true;
 			case RealtimeServiceConnectionProperties:
-				result = WorkspaceFactory.StreamService;
-				break;
+				workspaceFactory = WorkspaceFactory.StreamService;
+				return true;
 			case ServiceConnectionProperties:
-				result = WorkspaceFactory.FeatureService;
-				break;
+				workspaceFactory = WorkspaceFactory.FeatureService;
+				return true;
 
 			default:
-				throw new NotImplementedException(
-					$"connector {connector.GetType()} is not implemented");
+				workspaceFactory = default;
+				return false;
+		}
+	}
+
+	/// <exception cref="NotImplementedException">The connector type is not known.</exception>
+	public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+	{
+		Assert.ArgumentNotNull(connector, nameof(connector));
+
+		if (! TryGetWorkspaceFactory(connector, out WorkspaceFactory result))
+		{
+			throw new NotImplementedException(
+				$"connector {connector.GetType()} is not implemented");
 		}
 
 		return result;
+	}
+
+	/// <summary>
+	/// The path or URL the connector opens, or <paramref name="datastoreConnectionString"/>
+	/// for a connector that has none.
+	/// </summary>
+	/// <remarks>
+	/// Persisted in work list definition files: the value per connector type must not change.
+	/// </remarks>
+	[NotNull]
+	public static string GetConnectionString(
+		[NotNull] Connector connector,
+		[CanBeNull] string datastoreConnectionString)
+	{
+		Assert.ArgumentNotNull(connector, nameof(connector));
+
+		switch (connector)
+		{
+			case FileGeodatabaseConnectionPath fileGeodatabaseConnection:
+				return fileGeodatabaseConnection.Path?.ToString() ?? string.Empty;
+
+			case FileSystemConnectionPath fileSystemConnection:
+				return fileSystemConnection.Path?.ToString() ?? string.Empty;
+
+			case MobileGeodatabaseConnectionPath mobileConnection:
+				return mobileConnection.Path?.ToString() ?? string.Empty;
+
+			case PluginDatasourceConnectionPath pluginConnection:
+				return pluginConnection.DatasourcePath?.ToString() ?? string.Empty;
+
+			case ServiceConnectionProperties serviceConnection:
+				return serviceConnection.URL?.AbsolutePath ?? string.Empty;
+
+			default:
+				return datastoreConnectionString ?? string.Empty;
+		}
 	}
 
 	/// <summary>

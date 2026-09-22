@@ -507,23 +507,7 @@ public static class DatasetUtils
 		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 		[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
 	{
-		foreach (RelationshipClassDefinition definition in geodatabase
-			         .GetDefinitions<RelationshipClassDefinition>())
-		{
-			if (predicate is null || predicate(definition))
-			{
-				yield return definition;
-			}
-		}
-
-		foreach (AttributedRelationshipClassDefinition definition in
-		         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
-		{
-			if (predicate is null || predicate(definition))
-			{
-				yield return definition;
-			}
-		}
+		return RelationshipClassUtils.GetRelationshipClassDefinitions(geodatabase, predicate);
 	}
 
 	[Obsolete($"use {nameof(RelationshipClassUtils)}")]
