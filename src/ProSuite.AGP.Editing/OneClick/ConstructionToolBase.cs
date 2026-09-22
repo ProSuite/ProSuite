@@ -95,8 +95,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			bool canChangeSelection = RequiresSelection || AllowSelectionChangeInSketchMode;
 
 			return canChangeSelection &&
-			       KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-			       KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+			       (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+			        KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true));
 		}
 	}
 
