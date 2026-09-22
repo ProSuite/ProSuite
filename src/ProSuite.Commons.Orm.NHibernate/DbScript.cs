@@ -42,6 +42,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 		}
 
 		/// <summary>
+		/// Whether a statement that fails aborts the script. The default is to log the failure
+		/// and carry on, which suits scripts whose statements are allowed to fail (dropping an
+		/// object that is not there yet). A caller that cannot tell a harmless failure from a
+		/// broken result - schema setup, above all - sets this instead, so that what went wrong
+		/// reaches it rather than a log nobody reads.
+		/// </summary>
+		[UsedImplicitly]
+		public bool FailOnError { get; set; }
+
+		/// <summary>
 		/// Runs the script.
 		/// </summary>
 		public void Run()
@@ -77,7 +87,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 							{
 								statementBuilder.AppendLine(trimmedLine.TrimEnd(';'));
 
-								Execute(statementBuilder.ToString().Trim(), cmd);
+								Execute(statementBuilder.ToString().Trim(), cmd, FailOnError);
 
 								statementBuilder = new StringBuilder();
 							}
@@ -91,7 +101,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 			}
 		}
 
-		private static void Execute([NotNull] string statement, [NotNull] IDbCommand cmd)
+		private static void Execute([NotNull] string statement, [NotNull] IDbCommand cmd,
+		                            bool failOnError)
 		{
 			Assert.ArgumentNotNullOrEmpty(statement, nameof(statement));
 			Assert.ArgumentNotNull(cmd, nameof(cmd));
@@ -105,9 +116,16 @@ namespace ProSuite.Commons.Orm.NHibernate
 			}
 			catch (Exception e)
 			{
-				// Include the statement: without it the warning names only the database
+				// Include the statement: without it the message names only the database
 				// error, which is not enough to tell which script line failed.
-				_msg.Warn($"{e.Message} Failed statement: {statement}", e);
+				string message = $"{e.Message} Failed statement: {statement}";
+
+				if (failOnError)
+				{
+					throw new InvalidOperationException(message, e);
+				}
+
+				_msg.Warn(message, e);
 			}
 		}
 
