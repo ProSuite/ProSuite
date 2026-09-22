@@ -32,6 +32,12 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	[CanBeNull] private IntermediateSketchStates _intermediateSketchStates;
 
+	// Set while the shift key is held down and another key has joined it. The shift press
+	// then belongs to an application shortcut (for example the ArcGIS Pro stereo snapping
+	// shortcuts SHIFT+<key>) and must not start an intermittent selection - not even when
+	// the held shift key repeats its key-down event.
+	private bool _shiftIsPartOfKeyCombination;
+
 	[CanBeNull] private ISymbolizedSketchType _symbolizedSketch;
 
 	[CanBeNull] private MapPoint _lastLoggedVertex;
@@ -225,6 +231,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		// TODO: Move as much as possible to OnToolDeactivateCoreAsync
 		_intermediateSketchStates?.Deactivate();
 
+		_shiftIsPartOfKeyCombination = false;
+
 		IsInSketchPhase = false;
 
 		_symbolizedSketch?.Dispose();
@@ -289,6 +297,27 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		}
 	}
 
+	protected override void OnKeyDownCore(MapViewKeyEventArgs args)
+	{
+		// The shift key starts an intermittent selection only while it is pressed on its own.
+		// As soon as another key joins it, the key press belongs to an application shortcut,
+		// such as the ArcGIS Pro stereo snapping shortcuts SHIFT+<key>. Pressing such a
+		// shortcut must not cost the user the construction in progress, so end the
+		// intermittent selection again, which puts the suspended edit sketch back on the map.
+		if (KeyboardUtils.IsShiftDown() && ! KeyboardUtils.IsModifierKey(args.Key))
+		{
+			_shiftIsPartOfKeyCombination = true;
+
+			if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true)
+			{
+				_ = ViewUtils.TryAsync(EndIntermittentSelectionAsync, _msg,
+				                       suppressErrorMessageBox: true);
+			}
+		}
+
+		base.OnKeyDownCore(args);
+	}
+
 	protected override async Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 	{
 		if (! AllowSelectionChangeInSketchMode)
@@ -305,9 +334,18 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		if (! KeyboardUtils.IsShiftDown())
 		{
+			// Also recovers a stale combination flag from a shift release the tool never saw.
+			_shiftIsPartOfKeyCombination = false;
+
 			// The key is not held down, but was pressed and released quickly.
 			// In this situation the ShiftReleasedCoreAsync will typically not be called, so
 			// it is better not to start the intermittent selection phase in the first place.
+			return;
+		}
+
+		if (_shiftIsPartOfKeyCombination)
+		{
+			// The shift key is part of a key combination, see OnKeyDownCore.
 			return;
 		}
 
@@ -353,6 +391,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected override async Task ShiftReleasedCoreAsync()
 	{
+		_shiftIsPartOfKeyCombination = false;
+
 		// For symmetry with ShiftPressed. Additionally, in tools without intermediate selection
 		// ESC would stop working after SHIFT during sketch phase without this:
 		if (! AllowSelectionChangeInSketchMode)
@@ -360,6 +400,15 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			return;
 		}
 
+		await EndIntermittentSelectionAsync();
+	}
+
+	/// <summary>
+	/// Returns from an intermittent selection to the sketch phase and puts the edit sketch
+	/// that was suspended when the shift key was pressed back onto the map.
+	/// </summary>
+	private async Task EndIntermittentSelectionAsync()
+	{
 		// A tool without a compulsory selection (RequiresSelection == false) always returns to the
 		// sketch phase after a reselection - it constructs and must keep sketching even if nothing
 		// was picked. Otherwise, restart only when the new selection is usable.
