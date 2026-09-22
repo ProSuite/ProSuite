@@ -464,7 +464,8 @@ public static class LayerUtils
 			featureClass2 = DatasetUtils.GetDatabaseFeatureClass(featureClass2);
 		}
 
-		return DatasetUtils.IsSameTable(featureClass1, featureClass2);
+		return DatasetUtils.IsSameTable(featureClass1, featureClass2,
+		                                TableEquality.SameTableSameVersion);
 	}
 
 	/// <summary>

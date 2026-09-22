@@ -401,19 +401,21 @@ public class DatastoreName : IEquatable<DatastoreName>
 		                  a.AuthenticationMode == b.AuthenticationMode &&
 		                  Equals(a.ProjectInstance, b.ProjectInstance);
 
-		if (comparison == DatastoreComparison.AnyUserAnyVersion)
+		if (! basicEqual || comparison == DatastoreComparison.AnyUserAnyVersion)
 		{
 			return basicEqual;
 		}
 
+		bool sameVersion = Equals(a.Version, b.Version) &&
+		                   Equals(a.Branch, b.Branch);
+
 		if (comparison == DatastoreComparison.AnyUserSameVersion)
 		{
-			return Equals(a.Version, b.Version) &&
-			       Equals(a.Branch, b.Branch);
+			return sameVersion;
 		}
 
 		// Do not compare password (one can be empty, the other encrypted)
-		return Equals(a.User, b.User);
+		return sameVersion && Equals(a.User, b.User);
 	}
 
 	private static bool AreEqual([NotNull] RealtimeServiceConnectionProperties a,

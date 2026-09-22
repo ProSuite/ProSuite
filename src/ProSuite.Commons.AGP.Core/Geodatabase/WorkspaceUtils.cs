@@ -311,6 +311,135 @@ public static class WorkspaceUtils
 	}
 
 	/// <summary>
+	/// Determines whether two datastores represent the same version in the same database,
+	/// regardless of the connection details such as the user.
+	/// </summary>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public static bool IsSameVersion([CanBeNull] Datastore datastore1,
+	                                 [CanBeNull] Datastore datastore2)
+	{
+		if (! IsSameDatabase(datastore1, datastore2))
+		{
+			return false;
+		}
+
+		if (IsSameInstance(datastore1, datastore2))
+		{
+			return true;
+		}
+
+		if (datastore1 is not ArcGIS.Core.Data.Geodatabase geodatabase1 ||
+		    datastore2 is not ArcGIS.Core.Data.Geodatabase geodatabase2 ||
+		    ! geodatabase1.IsVersioningSupported() ||
+		    ! geodatabase2.IsVersioningSupported())
+		{
+			// Not versioned: the only version is the default version
+			return true;
+		}
+
+		using VersionManager versionManager1 = geodatabase1.GetVersionManager();
+		using VersionManager versionManager2 = geodatabase2.GetVersionManager();
+		using Version version1 = versionManager1.GetCurrentVersion();
+		using Version version2 = versionManager2.GetCurrentVersion();
+
+		// Versions within a database are identified by their names.
+		// Only the names qualified with the owner are unique. They are case-sensitive.
+		return string.Equals(version1.GetName(), version2.GetName());
+	}
+
+	/// <summary>
+	/// Determines whether two datastores point to the same database, regardless of the
+	/// version or the connection details such as the user.
+	/// Two enterprise geodatabases are the same database if their default versions have
+	/// the same name, creation date and modification date.
+	/// </summary>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public static bool IsSameDatabase([CanBeNull] Datastore datastore1,
+	                                  [CanBeNull] Datastore datastore2)
+	{
+		if (datastore1 == null || datastore2 == null)
+		{
+			return false;
+		}
+
+		if (IsSameInstance(datastore1, datastore2))
+		{
+			return true;
+		}
+
+		if (IsSameDatastore(datastore1, datastore2, DatastoreComparison.AnyUserAnyVersion))
+		{
+			// Same connection properties, apart from user and version
+			return true;
+		}
+
+		bool isVersioned1 = datastore1 is ArcGIS.Core.Data.Geodatabase geodatabase1 &&
+		                    geodatabase1.IsVersioningSupported();
+		bool isVersioned2 = datastore2 is ArcGIS.Core.Data.Geodatabase geodatabase2 &&
+		                    geodatabase2.IsVersioningSupported();
+
+		if (isVersioned1 != isVersioned2)
+		{
+			return false;
+		}
+
+		if (! isVersioned1)
+		{
+			// Both are not versioned. Compare the paths of file geodatabases, folders, etc.
+			Uri path1 = GetDatastorePath(datastore1);
+			Uri path2 = GetDatastorePath(datastore2);
+
+			return path1 != null && path2 != null && Equals(path1, path2);
+		}
+
+		// Both are versioned, but connected differently (other user, other connection file).
+		// Compare the default versions, like the ArcObjects implementation.
+		using VersionManager versionManager1 =
+			((ArcGIS.Core.Data.Geodatabase) datastore1).GetVersionManager();
+		using VersionManager versionManager2 =
+			((ArcGIS.Core.Data.Geodatabase) datastore2).GetVersionManager();
+		using Version defaultVersion1 = versionManager1.GetDefaultVersion();
+		using Version defaultVersion2 = versionManager2.GetDefaultVersion();
+
+		string defaultVersionName1 = defaultVersion1.GetName() ?? string.Empty;
+		string defaultVersionName2 = defaultVersion2.GetName() ?? string.Empty;
+
+		if (! defaultVersionName1.Equals(defaultVersionName2,
+		                                 StringComparison.OrdinalIgnoreCase))
+		{
+			return false;
+		}
+
+		DateTime created1 = defaultVersion1.GetCreatedDate();
+		DateTime created2 = defaultVersion2.GetCreatedDate();
+
+		_msg.VerboseDebug(() => $"Compare default version creation date: {created1}, {created2}");
+
+		if (created1 != created2)
+		{
+			return false;
+		}
+
+		DateTime modified1 = defaultVersion1.GetModifiedDate();
+		DateTime modified2 = defaultVersion2.GetModifiedDate();
+
+		_msg.VerboseDebug(() =>
+			                  $"Compare default version modification date: {modified1}, {modified2}");
+
+		return modified1 == modified2;
+	}
+
+	/// <summary>
+	/// Whether the two datastores wrap the same underlying geodatabase object.
+	/// </summary>
+	private static bool IsSameInstance([NotNull] Datastore datastore1,
+	                                   [NotNull] Datastore datastore2)
+	{
+		return ReferenceEquals(datastore1, datastore2) ||
+		       Equals(datastore1.Handle, datastore2.Handle);
+	}
+
+	/// <summary>
 	/// Gets the catalog path of the given datastore, or <c>null</c> if the datastore has
 	/// none. Prefer this method over <see cref="Datastore.GetPath"/>, which is not annotated
 	/// and therefore easily mistaken for never returning null.
