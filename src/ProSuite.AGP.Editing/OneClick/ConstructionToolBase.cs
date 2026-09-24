@@ -17,6 +17,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
+using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick;
@@ -32,16 +33,16 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	[CanBeNull] private IntermediateSketchStates _intermediateSketchStates;
 
-	// Set while the shift key is held down and another key has joined it. The shift press
-	// then belongs to an application shortcut (for example the ArcGIS Pro stereo snapping
-	// shortcuts SHIFT+<key>) and must not start an intermittent selection - not even when
-	// the held shift key repeats its key-down event.
+	// Set while the shift key is held down and another key has joined it. The shift press then
+	// belongs to an application shortcut and must not start an intermittent selection.
 	private bool _shiftIsPartOfKeyCombination;
 
 	[CanBeNull] private ISymbolizedSketchType _symbolizedSketch;
 
 	[CanBeNull] private MapPoint _lastLoggedVertex;
 	private int _lastLoggedVertexIndex = -1;
+
+	private bool _ignoreMouseDownDuringReplay;
 
 	protected ConstructionToolBase()
 	{
@@ -155,6 +156,44 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	protected override async Task<bool> OnSketchCanceledAsync()
 	{
 		return await OnSketchCanceledAsyncCore();
+	}
+
+	protected override void OnToolMouseDown(MapViewMouseButtonEventArgs args)
+	{
+		try
+		{
+			if (SketchStack.IsAnyStackReplayingSketches)
+			{
+				// A vertex added while the sketch states are replayed ends up in an intermediate
+				// state, which the replay then overwrites, and it corrupts the undo history of
+				// the sketch. The Handled flag prevents the sketch from adding a vertex.
+				args.Handled = true;
+				_ignoreMouseDownDuringReplay = true;
+
+				_msg.Warn("The sketch is being restored, the click was ignored. " +
+				          "Please click again.");
+				return;
+			}
+		}
+		catch (Exception e)
+		{
+			ErrorHandler.HandleError(e, _msg);
+		}
+
+		base.OnToolMouseDown(args);
+	}
+
+	protected override async Task HandleMouseDownAsync(MapViewMouseButtonEventArgs args)
+	{
+		if (_ignoreMouseDownDuringReplay)
+		{
+			// Called because Handled was set for the ignored click
+			_ignoreMouseDownDuringReplay = false;
+			return;
+		}
+
+		// The base method catches and handles its exceptions
+		await base.HandleMouseDownAsync(args);
 	}
 
 	#endregion
