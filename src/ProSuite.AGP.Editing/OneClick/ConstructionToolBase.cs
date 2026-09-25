@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -619,6 +620,14 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		if (IsInSketchMode)
 		{
+			if (sketchGeometry is MapPoint sketchPoint &&
+			    ! MapUtils.IsStereoMapView(ActiveMapView))
+			{
+				//  In a 2D map with a Z source a point sketch takes only X and Y from the snap target; its Z
+				// comes from the elevation surface.
+				sketchGeometry = UseSnappedZ(sketchPoint);
+			}
+
 			if (LogSketchVertexZs && sketchGeometry is MapPoint)
 			{
 				// NOTE: OnSketchModified for Point sketches is dysfunctional. The sketch is already empty!
@@ -1089,6 +1098,32 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	}
 
 	protected virtual void OnSketchPointZAssigned(MapPoint sketchPointWithZ) { }
+
+	/// <summary>
+	/// Returns the point sketch with the height of the feature it snapped to.
+	/// Without a snap target that has a height, the input sketch point is returned.
+	/// </summary>
+	[NotNull]
+	private MapPoint UseSnappedZ([NotNull] MapPoint sketchPoint)
+	{
+		double snappedZ = GetSnappedZ(sketchPoint);
+
+		if (double.IsNaN(snappedZ))
+		{
+			return sketchPoint;
+		}
+
+		_msg.Info($"Z taken from the snapped feature: {snappedZ:N2} " +
+		          $"(instead of {sketchPoint.Z:N2} from the sketch)");
+
+		var builder = new MapPointBuilderEx(sketchPoint)
+		              {
+			              HasZ = true,
+			              Z = snappedZ
+		              };
+
+		return builder.ToGeometry();
+	}
 
 	public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
 	{
