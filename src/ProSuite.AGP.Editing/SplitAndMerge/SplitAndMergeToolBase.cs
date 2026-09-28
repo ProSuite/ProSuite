@@ -470,11 +470,15 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 			if (_mergeAction == MergeAction.MergeIntoFirstFeature)
 			{
+				//QueuedTaskUtils.Run(() => _feedback?.UpdatePreviewFeatureToBeUpdated(
+				//	                    _firstFeature));
 				//SaveMergedFeatures(_firstFeature, _secondFeature, mergeResult,
 				//                   SecondFeatureIsEditable);
 			}
 			else if (_mergeAction == MergeAction.MergeIntoSecondFeature) //(SecondFeatureIsEditable)
 			{
+				//QueuedTaskUtils.Run(() => _feedback?.UpdatePreviewFeatureToBeUpdated(
+				//	                    _secondFeature));
 				//SaveMergedFeatures(_secondFeature, _firstFeature, mergeResult, true);
 			}
 			else
