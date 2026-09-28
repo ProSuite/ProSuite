@@ -88,13 +88,66 @@ namespace ProSuite.Commons.Geom
 			return differentInZ;
 		}
 
+		/// <summary>
+		/// Determines whether the linear intersection differs in Z from the target by comparing
+		/// only the Z values (and not the 3D distance) of the start and end points. An undefined
+		/// (NaN) Z value is considered different from a defined Z value.
+		/// </summary>
+		public static bool IsLinearIntersectionDifferentInZOnly(
+			[NotNull] SegmentIntersection intersection,
+			[NotNull] Line3D intersectionLine,
+			[NotNull] ISegmentList target,
+			double zTolerance)
+		{
+			Line3D targetSegment = target[intersection.TargetIndex];
+
+			Pnt3D fromPointOnTarget =
+				intersection.GetLinearIntersectionStartOnTarget(targetSegment);
+			Pnt3D toPointOnTarget =
+				intersection.GetLinearIntersectionEndOnTarget(targetSegment);
+
+			Assert.NotNull(fromPointOnTarget, nameof(fromPointOnTarget));
+			Assert.NotNull(toPointOnTarget, nameof(toPointOnTarget));
+
+			return IsDifferentZ(intersectionLine.StartPoint.Z, fromPointOnTarget.Z, zTolerance) ||
+			       IsDifferentZ(intersectionLine.EndPoint.Z, toPointOnTarget.Z, zTolerance);
+		}
+
+		/// <summary>
+		/// Whether the two Z values differ by more than the tolerance. An undefined (NaN) Z value
+		/// is considered different from a defined Z value.
+		/// </summary>
+		public static bool IsDifferentZ(double z1, double z2, double zTolerance)
+		{
+			if (double.IsNaN(z1) || double.IsNaN(z2))
+			{
+				return double.IsNaN(z1) != double.IsNaN(z2);
+			}
+
+			return ! MathUtils.AreEqual(z1, z2, zTolerance);
+		}
+
+		/// <summary>
+		/// Calculates the linear intersections (i.e. where the geometries are coincident in XY)
+		/// of the linestring with the multi-linestring that differ in Z.
+		/// </summary>
+		/// <param name="linestring1">The linestring whose Z values are used in the result.</param>
+		/// <param name="multiLinestring2">The other geometry.</param>
+		/// <param name="tolerance">The XY tolerance used to calculate the linear intersections.
+		/// If no <paramref name="zTolerance"/> is specified, it is also used as 3D distance
+		/// tolerance to compare the intersection's start and end points.</param>
+		/// <param name="zTolerance">Optional Z tolerance. If specified, only the Z values are
+		/// compared using this tolerance. This allows detecting even minimal Z differences
+		/// independent of the XY tolerance.</param>
+		/// <returns></returns>
 		public static IList<Linestring> GetZOnlyDifferences(
 			[NotNull] Linestring linestring1,
 			[NotNull] MultiPolycurve multiLinestring2,
-			double tolerance)
+			double tolerance,
+			double zTolerance = double.NaN)
 		{
 			IEnumerable<Line3D> zOnlyDifferenceLines =
-				GetZOnlyDifferenceLines(linestring1, multiLinestring2, tolerance);
+				GetZOnlyDifferenceLines(linestring1, multiLinestring2, tolerance, zTolerance);
 
 			double epsilon =
 				MathUtils.GetDoubleSignificanceEpsilon(linestring1.XMax, linestring1.YMax);
@@ -5610,7 +5663,8 @@ namespace ProSuite.Commons.Geom
 		private static IEnumerable<Line3D> GetZOnlyDifferenceLines(
 			[NotNull] Linestring linestring1,
 			[NotNull] MultiLinestring multiLinestring2,
-			double tolerance)
+			double tolerance,
+			double zTolerance)
 		{
 			if (! linestring1.ExtentsIntersectXY(
 				    multiLinestring2.XMin, multiLinestring2.YMin,
@@ -5637,8 +5691,11 @@ namespace ProSuite.Commons.Geom
 				}
 
 				bool differentInZ =
-					IsLinearIntersectionDifferentInZ(intersection, intersectionLine,
-					                                 multiLinestring2, tolSquared);
+					double.IsNaN(zTolerance)
+						? IsLinearIntersectionDifferentInZ(intersection, intersectionLine,
+						                                   multiLinestring2, tolSquared)
+						: IsLinearIntersectionDifferentInZOnly(intersection, intersectionLine,
+						                                       multiLinestring2, zTolerance);
 				if (differentInZ)
 				{
 					yield return intersectionLine;

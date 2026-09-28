@@ -1200,12 +1200,16 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="polycurve1"></param>
 		/// <param name="polycurve2"></param>
 		/// <param name="tolerance"></param>
+		/// <param name="zTolerance">Optional Z tolerance. If specified, only the Z values of the
+		/// XY-coincident segments are compared using this tolerance. Otherwise the 3D distance is
+		/// compared using the (XY) tolerance.</param>
 		/// <remarks>Polycurves with non-linear segments are currently not supported!</remarks>
 		/// <returns></returns>
 		public static IPolyline GetZOnlyDifferenceLines(
 			IPolycurve polycurve1,
 			IPolycurve polycurve2,
-			double tolerance)
+			double tolerance,
+			double zTolerance = double.NaN)
 		{
 			IPolyline result = GeometryFactory.CreateEmptyPolyline(polycurve1);
 
@@ -1229,7 +1233,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				IList<Linestring> intersectionLines =
 					GeomTopoOpUtils.GetZOnlyDifferences(path1Linestring, otherLinestrings,
-					                                    tolerance);
+					                                    tolerance, zTolerance);
 
 				GeometryConversionUtils.AddPaths(intersectionLines, result);
 			}

@@ -6,6 +6,8 @@ using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
@@ -437,6 +439,65 @@ public abstract class MapToolBase : MapTool
 
 		// Subclasses shall individually configure the progressor source
 		return null;
+	}
+
+	/// <summary>
+	/// The height of the feature the given sketch point snapped to, or NaN where it did not
+	/// snap to anything that has one.
+	/// </summary>
+	protected double GetSnappedZ([NotNull] MapPoint sketchPoint)
+	{
+		IReadOnlyList<SnapResult> snapResults = SnappingResults;
+
+		if (snapResults == null || sketchPoint.IsEmpty)
+		{
+			return double.NaN;
+		}
+
+		// The snapping results live on while the cursor moves: only a result the sketch
+		// point actually landed on is the one this click snapped to. The two are the same
+		// location, but they get there by different routes, so they are compared with the
+		// tolerance of the data - and never tighter than double arithmetic can tell apart.
+		double tolerance =
+			MathUtils.GetDoubleSignificanceEpsilon(sketchPoint.X, sketchPoint.Y);
+
+		double xyTolerance = GeometryUtils.GetXyTolerance(sketchPoint);
+
+		if (xyTolerance > tolerance)
+		{
+			tolerance = xyTolerance;
+		}
+
+		foreach (SnapResult snapResult in snapResults)
+		{
+			if (snapResult == null || snapResult.SnapType == SnapType.None)
+			{
+				continue;
+			}
+
+			MapPoint snapLocation = snapResult.SnapLocation;
+
+			if (snapLocation == null || snapLocation.IsEmpty || ! snapLocation.HasZ ||
+			    double.IsNaN(snapLocation.Z))
+			{
+				continue;
+			}
+
+			if (! MathUtils.AreEqual(snapLocation.X, sketchPoint.X, tolerance) ||
+			    ! MathUtils.AreEqual(snapLocation.Y, sketchPoint.Y, tolerance))
+			{
+				continue;
+			}
+
+			SnapType snapType = snapResult.SnapType;
+			double snappedZ = snapLocation.Z;
+
+			_msg.VerboseDebug(() => $"Sketch point snapped to {snapType} at Z {snappedZ}.");
+
+			return snappedZ;
+		}
+
+		return double.NaN;
 	}
 
 	protected void SetToolCursor([CanBeNull] Cursor cursor)

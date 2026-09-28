@@ -15,7 +15,7 @@ namespace ProSuite.Commons.AO.Surface
 	/// and equality members. Those are properties of the container, not of the file list.
 	/// <para>
 	/// Note that only <see cref="LasCatalogReference"/> exists today. The other
-	/// <see cref="ILasFileSource"/> implementations (Esri .lasd, LasDatasetDef json, single file)
+	/// <see cref="ILasFileSource"/> implementations (Esri .lasd, checkout reference json, single file)
 	/// could be added later, as needed.
 	/// </para>
 	/// </remarks>
