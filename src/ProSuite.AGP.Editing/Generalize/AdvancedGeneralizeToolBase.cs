@@ -39,6 +39,9 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 	private GeneralizeResult _generalizeResult;
 	private GeneralizeFeedback _feedback;
 
+	private CancellationTokenSource _calculationCancellationSource;
+	private int _recalculationGeneration;
+
 	protected AdvancedGeneralizeToolBase()
 	{
 		GeomIsSimpleAsFeature = false;
@@ -112,25 +115,43 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 	                                                   CancelableProgressor progressor)
 	{
+		CancellationToken cancellationToken = CreateCancellationToken();
+
 		IList<Feature> intersectingFeatures = GetTargetFeatures(progressor);
 
-		if (progressor?.CancellationToken.IsCancellationRequested == true)
+		if (cancellationToken.IsCancellationRequested)
 		{
-			_msg.Warn("Calculation of removable segments was cancelled.");
+			_msg.Debug("Calculation of removable segments was cancelled.");
 			return;
 		}
 
 		_generalizeResult =
 			CalculateRemovableSegments(selectedFeatures, intersectingFeatures,
-			                           _generalizeToolOptions, progressor);
+			                           _generalizeToolOptions, cancellationToken);
 
-		if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+		if (cancellationToken.IsCancellationRequested)
 		{
-			_msg.Warn("Calculation of removable segments was cancelled.");
+			_msg.Debug("Calculation of removable segments was cancelled.");
 			return;
 		}
 
-		_feedback.Update(_generalizeResult, selectedFeatures);
+		_feedback.Update(_generalizeResult, selectedFeatures, cancellationToken);
+	}
+
+	private CancellationToken CreateCancellationToken()
+	{
+		_calculationCancellationSource?.Cancel();
+
+		var source = new CancellationTokenSource();
+		_calculationCancellationSource = source;
+		return source.Token;
+	}
+
+	protected override async Task HandleEscapeAsync()
+	{
+		_calculationCancellationSource?.Cancel();
+
+		await base.HandleEscapeAsync();
 	}
 
 	protected override bool CanUseDerivedGeometries()
@@ -177,16 +198,22 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 
 		Geometry perimeter = GetPerimeter(generalizeOptions);
 
+		CancellationToken cancellationToken = CreateCancellationToken();
+
 		SegmentRemovalResult result =
 			MicroserviceClient.ApplySegmentRemoval(
 				selectedFeatures, shortSegmentsToApply, weedTolerance, weedNonLinearSegments,
-				minimumSegmentLength, use2DLength, perimeter,
-				progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+				minimumSegmentLength, use2DLength, perimeter, cancellationToken);
 
 		var updates = new Dictionary<Feature, Geometry>();
 
 		if (result == null)
 		{
+			if (cancellationToken.IsCancellationRequested)
+			{
+				_msg.Warn("The segment removal was cancelled. No feature was changed.");
+			}
+
 			return false;
 		}
 
@@ -306,14 +333,26 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 
 	private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
 	{
-		try
+		_calculationCancellationSource?.Cancel();
+
+		int generation = ++_recalculationGeneration;
+
+		QueuedTaskUtils.Run(async () =>
 		{
-			QueuedTaskUtils.Run(() => ProcessSelectionAsync());
-		}
-		catch (Exception e)
-		{
-			_msg.Error($"Error re-calculating removable segments : {e.Message}", e);
-		}
+			if (generation != _recalculationGeneration)
+			{
+				return;
+			}
+
+			try
+			{
+				await ProcessSelectionAsync();
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating removable segments : {e.Message}", e);
+			}
+		});
 	}
 
 	[CanBeNull]
@@ -345,21 +384,9 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 		[NotNull] IList<Feature> selectedFeatures,
 		[CanBeNull] IList<Feature> intersectingFeatures,
 		AdvancedGeneralizeToolOptions generalizeOptions,
-		CancelableProgressor progressor)
+		CancellationToken cancellationToken)
 	{
 		GeneralizeResult result;
-
-		CancellationToken cancellationToken;
-
-		if (progressor != null)
-		{
-			cancellationToken = progressor.CancellationToken;
-		}
-		else
-		{
-			var cancellationTokenSource = new CancellationTokenSource();
-			cancellationToken = cancellationTokenSource.Token;
-		}
 
 		_msg.DebugFormat("Calculating removable segments with the following options: {0}",
 		                 generalizeOptions);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -45,7 +46,8 @@ public class GeneralizeFeedback
 	}
 
 	public void Update([CanBeNull] GeneralizeResult generalizeResult,
-	                   [NotNull] IEnumerable<Feature> selectedFeatures)
+	                   [NotNull] IEnumerable<Feature> selectedFeatures,
+	                   CancellationToken cancellationToken)
 	{
 		// clear any previous drawings
 		DisposeOverlays();
@@ -89,6 +91,12 @@ public class GeneralizeFeedback
 
 		foreach (GeneralizedFeature generalizedFeature in generalizedFeatures)
 		{
+			if (cancellationToken.IsCancellationRequested)
+			{
+				DisposeOverlays();
+				return;
+			}
+
 			AddRemovableSegmentsOverlay(generalizedFeature);
 
 			if (generalizedFeature.DeletablePoints != null)
