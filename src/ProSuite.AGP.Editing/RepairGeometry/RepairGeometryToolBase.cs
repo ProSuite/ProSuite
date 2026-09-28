@@ -172,6 +172,21 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 
 		if (result == null)
 		{
+			// GrpcClientUtils returns null if the call was cancelled or if its deadline expired.
+			// Without a message the user sees no reaction at all and clicks again, which starts
+			// another calculation on the server while the abandoned one is still running.
+			if (cancellationToken.IsCancellationRequested)
+			{
+				_msg.Warn("The geometry repair was cancelled. No feature was changed.");
+			}
+			else
+			{
+				_msg.Warn(
+					"The geometry repair did not finish in time. No feature was changed. " +
+					"Repair fewer or smaller features, or increase the time limit with the " +
+					"environment variable PROSUITE_TOOLS_RPC_DEADLINE_MS.");
+			}
+
 			return false;
 		}
 
@@ -229,6 +244,14 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 	{
 		if (_repairGeometryResult == null)
 		{
+			if (progressor?.CancellationToken.IsCancellationRequested != true)
+			{
+				_msg.Warn(
+					"The search for geometry issues did not finish in time. Select fewer or " +
+					"smaller features, or increase the time limit with the environment " +
+					"variable PROSUITE_TOOLS_RPC_DEADLINE_MS.");
+			}
+
 			return;
 		}
 
