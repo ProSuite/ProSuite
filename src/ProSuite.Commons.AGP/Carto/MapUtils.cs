@@ -9,6 +9,8 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core.UnitFormats;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -100,6 +102,51 @@ public static class MapUtils
 	public static bool IsStereoMapView([CanBeNull] MapView mapView)
 	{
 		return mapView?.ViewingMode == MapViewingMode.MapStereo;
+	}
+
+	/// <summary>
+	/// Runs <paramref name="func"/> so that the user cannot undo its changes to the map.
+	/// Must be called on the MCT.
+	/// </summary>
+	public static T RunWithoutUndo<T>([NotNull] Map map, [NotNull] Func<T> func)
+	{
+		Assert.ArgumentNotNull(map, nameof(map));
+		Assert.ArgumentNotNull(func, nameof(func));
+
+		OperationManager operationManager = map.OperationManager;
+
+		if (operationManager is null)
+		{
+			return func();
+		}
+
+		List<Operation> operationsBefore = operationManager.FindUndoOperations(_ => true);
+
+		try
+		{
+			return func();
+		}
+		finally
+		{
+			// Also after a failure: partial changes must not be undoable either.
+			foreach (Operation operation in operationManager.FindUndoOperations(
+				         operation => ! operationsBefore.Contains(operation)))
+			{
+				operationManager.RemoveUndoOperation(operation);
+			}
+		}
+	}
+
+	/// <inheritdoc cref="RunWithoutUndo{T}"/>
+	public static void RunWithoutUndo([NotNull] Map map, [NotNull] Action action)
+	{
+		Assert.ArgumentNotNull(action, nameof(action));
+
+		RunWithoutUndo(map, () =>
+		{
+			action();
+			return true;
+		});
 	}
 
 	public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
