@@ -733,8 +733,8 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 			//thisParts = GeometryUtils.Simplify(thisParts, true);
 			//otherParts = GeometryUtils.Simplify(otherParts, true);
 
-			//GeometryUtils.ToXmlFile(thisParts, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_thisParts.xml"));
-			//GeometryUtils.ToXmlFile(otherParts, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_otherParts.xml"));
+			GeometryUtils.ToXmlFile(thisParts, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_thisParts.xml"));
+			GeometryUtils.ToXmlFile(otherParts, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_otherParts.xml"));
 
 			if (thisParts == null || otherParts == null)
 			{
@@ -762,7 +762,7 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 			}
 
 			Polygon newPoly = MergePolygonParts(thisParts, otherParts);
-			//GeometryUtils.ToXmlFile(newPoly, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_newPoly.xml"));
+			GeometryUtils.ToXmlFile(newPoly, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_newPoly.xml"));
 
 			if (newPoly == null || newPoly.IsEmpty)
 			{
@@ -783,7 +783,7 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 				newPoly = RemoveProcessGeneratedPoints(newPoly, thisState, otherState, perimeter,
 				                                        notifications);
 			}
-			//GeometryUtils.ToXmlFile(newPoly, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_newPolyPointsRemoved.xml"));
+			GeometryUtils.ToXmlFile(newPoly, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "pro_newPolyPointsRemoved.xml"));
 
 			return ValidatePolygon(newPoly, notifications);
 		}
@@ -1683,9 +1683,9 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 		{
 			// To make sure IsEmpty returns the correct result simplify first
 			// For example the polygons could have been disjoint originally.
-			//GeometryUtils.ToXmlFile(polygon, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "proPolygon.xml"));
+			GeometryUtils.ToXmlFile(polygon, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "proPolygon.xml"));
 			Polygon simplifiedPolygon = GeometryUtils.Simplify(polygon, true);
-			//GeometryUtils.ToXmlFile(simplifiedPolygon, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "proSimplifiedPolygon.xml"));
+			GeometryUtils.ToXmlFile(simplifiedPolygon, System.IO.Path.Combine("C:\\Temp\\TestGeometry", "proSimplifiedPolygon.xml"));
 
 			if (simplifiedPolygon.IsEmpty)
 			{

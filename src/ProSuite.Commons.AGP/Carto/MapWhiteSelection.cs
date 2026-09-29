@@ -74,6 +74,7 @@ public interface IMapWhiteSelection
 public class MapWhiteSelection : IMapWhiteSelection
 {
 	private readonly MapView _mapView;
+	private readonly Dictionary<FeatureKey, WhitePolygonType> _polygonTypeCache = new();
 
 	// TODO probably should keep _layerSelections ordered as in the ToC
 	private readonly Dictionary<string, IWhiteSelection> _layerSelections = new();
@@ -343,21 +344,32 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
-				if (! IsFeatureHit(featureLayer, oid, shape, clickPoint, tolerance, flags))
+				var polygonType = IsPolygon(featureLayer, oid, shape);
+
+				if (polygonType == WhitePolygonType.UnfilledPolygon &&
+				    flags.MustBoundarySelectUnfilledPolygons() &&
+				    ! IsBoundaryClick(shape, clickPoint, tolerance))
 				{
 					continue;
 				}
 
-				bool added = selection.Add(oid);
-				if (added)
-				{
-					changed = true;
-				}
+				bool wantFullSelect = polygonType == WhitePolygonType.FilledPolygon &&
+				                      flags.FilledPolygonClickSelectsAllVertices() &&
+				                      ! IsBoundaryClick(shape, clickPoint, tolerance);
 
-				if (SelectVertex(selection, oid, shape, clickPoint, tolerance, method,
-				                 out bool vertexTouched))
+				bool added = selection.Add(oid);
+				changed |= added;
+
+				bool vertexTouched;
+				if (wantFullSelect)
 				{
-					changed = true;
+					changed |= selection.Combine(oid, method);
+					vertexTouched = false;
+				}
+				else
+				{
+					changed |= SelectVertex(selection, oid, shape, clickPoint, tolerance,
+					                        method, out vertexTouched);
 				}
 
 				if (method == SetCombineMethod.Xor && ! added && ! vertexTouched)
@@ -373,29 +385,10 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return changed;
 	}
 
-	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape,
-	                          MapPoint clickPoint, double tolerance, WhiteSelectFlags flags)
+	private static bool IsBoundaryClick(Geometry shape, MapPoint clickPoint, double tolerance)
 	{
-		if (! flags.MustBoundarySelectUnfilledPolygons())
-		{
-			return true;
-		}
-
-		if (featureShape is not Polygon polygon)
-		{
-			return true;
-		}
-
-		if (WhiteSelectionUtils.IsFilledPolygon(_mapView, layer, oid))
-		{
-			return true;
-		}
-
-		// This is an unfilled polygon: can only select at its boundary,
-		// not on the (invisible) interior
-
+		if (shape is not Polygon polygon) return false;
 		var boundary = GeometryUtils.Boundary(polygon);
-
 		var point = GeometryUtils.EnsureSpatialReference(clickPoint, polygon.SpatialReference);
 		var distance = GeometryEngine.Instance.Distance(boundary, point);
 		return distance <= tolerance;
@@ -470,7 +463,18 @@ public class MapWhiteSelection : IMapWhiteSelection
 				var shape = selection.GetGeometry(oid);
 				if (shape is null || shape.IsEmpty) continue;
 
-				if (! IsFeatureHit(featureLayer, oid, shape, geometry, flags))
+				var polygonType = IsPolygon(featureLayer, oid, shape);
+
+				if (polygonType == WhitePolygonType.UnfilledPolygon &&
+				    flags.MustBoundarySelectUnfilledPolygons() &&
+				    ! IsBoundaryDrag(shape, geometry))
+				{
+					continue;
+				}
+
+				if (polygonType == WhitePolygonType.FilledPolygon &&
+				    flags.MustBoundarySelectFilledPolygons() &&
+				    ! IsBoundaryDrag(shape, geometry))
 				{
 					continue;
 				}
@@ -500,29 +504,10 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return changed;
 	}
 
-	private bool IsFeatureHit(FeatureLayer layer, long oid, Geometry featureShape,
-	                          Geometry selectionArea, WhiteSelectFlags flags)
+	private static bool IsBoundaryDrag(Geometry shape, Geometry selectionArea)
 	{
-		if (! flags.MustBoundarySelectUnfilledPolygons())
-		{
-			return true;
-		}
-
-		if (featureShape is not Polygon polygon)
-		{
-			return true;
-		}
-
-		if (WhiteSelectionUtils.IsFilledPolygon(_mapView, layer, oid))
-		{
-			return true;
-		}
-
-		// This is an unfilled polygon: can only select at its boundary,
-		// not on the (invisible) interior
-
+		if (shape is not Polygon polygon) return false;
 		var boundary = GeometryUtils.Boundary(polygon);
-
 		var area = GeometryUtils.EnsureSpatialReference(selectionArea, polygon.SpatialReference);
 		return GeometryUtils.Intersects(boundary, area);
 	}
@@ -658,6 +643,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 	/// <remarks>Must call on MCT</remarks>
 	public ValueTuple<int, int> RefreshGeometries()
 	{
+		ClearPolygonTypeCache();
+
 		int retained = 0;
 		int removed = 0;
 
@@ -698,6 +685,8 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 	public void ClearGeometryCache()
 	{
+		ClearPolygonTypeCache();
+
 		var all = GetLayerSelections();
 
 		foreach (var selection in all)
@@ -806,4 +795,67 @@ public class MapWhiteSelection : IMapWhiteSelection
 
 		return changed;
 	}
+
+	#region Polygon type (and cache)
+
+	/// <remarks>Must call on MCT</remarks>
+	private WhitePolygonType IsPolygon(FeatureLayer layer, long oid, Geometry shape)
+	{
+		if (shape is not Polygon)
+		{
+			return WhitePolygonType.NoPolygon;
+		}
+
+		var key = new FeatureKey(layer, oid);
+
+		if (!_polygonTypeCache.TryGetValue(key, out var type))
+		{
+			type = WhiteSelectionUtils.IsFilledPolygon(_mapView, layer, oid)
+				       ? WhitePolygonType.FilledPolygon
+				       : WhitePolygonType.UnfilledPolygon;
+
+			_polygonTypeCache[key] = type;
+		}
+
+		return type;
+	}
+
+	private void ClearPolygonTypeCache()
+	{
+		_polygonTypeCache.Clear();
+	}
+
+	private readonly struct FeatureKey : IEquatable<FeatureKey>
+	{
+		private readonly BasicFeatureLayer _layer;
+		private readonly long _oid;
+
+		public FeatureKey(BasicFeatureLayer layer, long oid)
+		{
+			_layer = layer;
+			_oid = oid;
+		}
+
+		public bool Equals(FeatureKey other)
+		{
+			return _layer?.URI == other._layer?.URI && _oid == other._oid;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is FeatureKey other && Equals(other);
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(_layer?.URI, _oid);
+		}
+
+		public override string ToString()
+		{
+			return $"Layer {_layer?.Name ?? "(null)"} OID {_oid}";
+		}
+	}
+
+	#endregion
 }

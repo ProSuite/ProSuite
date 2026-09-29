@@ -1158,9 +1158,7 @@ public static class MapUtils
 		Envelope zoomExtent = GetZoomExtent(newExtentMap, currentExtent,
 		                                    currentScale, minimumScale);
 
-		await mapView.ZoomToAsync(zoomExtent, duration);
-
-		return true;
+		return await mapView.ZoomToAsync(zoomExtent, duration);
 	}
 
 	public static bool HasSelection([CanBeNull] MapView mapView)
