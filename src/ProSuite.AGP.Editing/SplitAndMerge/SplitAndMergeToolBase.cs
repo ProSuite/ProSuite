@@ -45,6 +45,8 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 		private const Key _alternateSplitAndMergeKey = Key.A;
 		public bool AlternateSplitAndMerge { get; private set; } = false;
 
+		public bool SecondFeatureIsEditable { get; private set; }
+
 		private Feature _firstFeature;
 		private Feature _secondFeature;
 
@@ -58,6 +60,8 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 		protected SplitAndMergeToolBase()
 		{
+			//SelectOnlyEditFeatures = false;
+			//SelectOnlySelectableFeatures = false;
 			IsSketchTool = true;
 
 			GeomIsSimpleAsFeature = false;
@@ -88,8 +92,6 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 		#region MapToolBase and OneClickToolBase overrides
 
 
-
-
 		protected override async Task HandleEscapeAsync()
 		{
 			try
@@ -98,7 +100,6 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 				_feedback?.Clear();
 				_feedback?.ClearSelection();
-				AlternateSplitAndMerge = false;
 
 				LogPromptForSelection();
 
@@ -114,6 +115,8 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 		{
 			_firstFeature = null;
 			_secondFeature = null;
+			AlternateSplitAndMerge = false;
+			SecondFeatureIsEditable = false;
 
 			//_feedback?.Clear();
 			//_feedback?.ClearSelection();
@@ -359,13 +362,20 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 		private async Task<bool> PickLastFeatureAndMerge(Geometry sketchGeometry,
 		                                                 CancelableProgressor progressor)
 		{
-			_secondFeature =
-				await QueuedTask.Run(() => PickLastFeature(sketchGeometry, progressor));
+			//_secondFeature = await QueuedTask.Run(() => PickLastFeature(sketchGeometry, progressor));
+			IPickableFeatureItem selectedItem = await QueuedTask.Run(() => PickLastFeature(sketchGeometry, progressor));
+			_secondFeature = selectedItem?.Feature;
+
+			AlternateSplitAndMerge = PressedKeys.Contains(_alternateSplitAndMergeKey);
+			PressedKeys.Remove(_alternateSplitAndMergeKey);
 
 			if (_secondFeature == null)
 			{
 				return false;
 			}
+
+			//SecondFeatureIsEditable = selectedItem.Layer.CanEditData();
+			SecondFeatureIsEditable = selectedItem.Layer.IsEditable;
 
 			// Get all features in a single QueuedTask call to ensure thread consistency
 			Feature survivingFeature = await QueuedTask.Run(async () =>
@@ -382,7 +392,6 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 				Geometry firstGeometry = _firstFeature.GetShape();
 				Geometry secondGeometry = _secondFeature.GetShape();
-
 
 				//TODO also display MergeDiscontinuities
 				var splitAndMerge = new SplitAndMergeGeometries(secondGeometry, firstGeometry, perimeter);
@@ -475,7 +484,7 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 				//SaveMergedFeatures(_firstFeature, _secondFeature, mergeResult,
 				//                   SecondFeatureIsEditable);
 			}
-			else if (_mergeAction == MergeAction.MergeIntoSecondFeature) //(SecondFeatureIsEditable)
+			else if (SecondFeatureIsEditable)
 			{
 				//QueuedTaskUtils.Run(() => _feedback?.UpdatePreviewFeatureToBeUpdated(
 				//	                    _secondFeature));
@@ -565,14 +574,13 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 
 		[CanBeNull]
-		private async Task<Feature> PickLastFeature(Geometry sketchGeometry,
-		                                            CancelableProgressor cancellabelProgressor)
+		private async Task<IPickableFeatureItem> PickLastFeature(Geometry sketchGeometry,
+		                                                         CancelableProgressor cancellabelProgressor)
 		{
 			IPickerPrecedence precedence = await CreatePickerPrecedenceAsync(sketchGeometry);
 
 			var featureFinder = new FeatureFinder(ActiveMapView,
-			                                      TargetFeatureSelection
-				                                      .VisibleSelectableEditableFeatures)
+			                                      TargetFeatureSelection.VisibleSelectableFeatures)// .VisibleSelectableEditableFeatures)
 			                    {
 				                    ReturnUnJoinedFeatures = true
 			                    };
@@ -602,9 +610,8 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 				return null;
 			}
 
-			AlternateSplitAndMerge = PressedKeys.Contains(_alternateSplitAndMergeKey);
-			PressedKeys.Remove(_alternateSplitAndMergeKey);
-			return selectedItem.Feature;
+			//return selectedItem.Feature;
+			return selectedItem;
 		}
 
 		private bool CanLayerContainSecondFeature(BasicFeatureLayer layer)
