@@ -580,7 +580,7 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 			IPickerPrecedence precedence = await CreatePickerPrecedenceAsync(sketchGeometry);
 
 			var featureFinder = new FeatureFinder(ActiveMapView,
-			                                      TargetFeatureSelection.VisibleSelectableFeatures)// .VisibleSelectableEditableFeatures)
+			                                      TargetFeatureSelection.VisibleFeatures)// .VisibleSelectableEditableFeatures)
 			                    {
 				                    ReturnUnJoinedFeatures = true
 			                    };
