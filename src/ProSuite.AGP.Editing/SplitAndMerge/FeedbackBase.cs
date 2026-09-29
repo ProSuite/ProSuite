@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using ArcGIS.Core.Geometry;
 
-namespace ProSuite.AGP.Editing.AdvancedReshape
+namespace ProSuite.AGP.Editing.SplitAndMerge
 {
 	public abstract class FeedbackBase
 	{
