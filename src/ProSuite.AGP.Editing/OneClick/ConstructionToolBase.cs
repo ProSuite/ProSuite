@@ -98,7 +98,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 			return canChangeSelection &&
 			       (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-			        KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true));
+			        KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true)) &&
+			       ! IsShiftPartOfShortcut;
 		}
 	}
 
@@ -365,6 +366,13 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			return;
 		}
 
+		if (IsShiftPartOfShortcut)
+		{
+			// SHIFT is part of someone else's shortcut, e.g. Right SHIFT + ä (Z-only
+			// snapping): not the tool's SHIFT, so no selection.
+			return;
+		}
+
 		// This can be called repeatedly while keeping the shift key pressed (depends on the machine).
 		// Return if intermittent selection phase is running.
 		if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true)
@@ -440,12 +448,19 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			return;
 		}
 
+		if (IsShiftPartOfShortcut)
+		{
+			// The SHIFT being released was a shortcut's. Whatever it had started was ended when
+			// the shortcut was recognised, in OnShiftBecameShortcut.
+			return;
+		}
+
 		await EndIntermittentSelectionAsync();
 	}
 
 	/// <summary>
-	/// Returns from an intermittent selection to the sketch phase and puts the edit sketch
-	/// that was suspended when the shift key was pressed back onto the map.
+	/// Leaves the intermittent selection that SHIFT started and returns to the sketch phase,
+	/// with the sketch as it was.
 	/// </summary>
 	private async Task EndIntermittentSelectionAsync()
 	{
@@ -475,6 +490,26 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		{
 			// No sketch phase restart (e.g. because selection gone), reset the sketch states
 			_intermediateSketchStates?.ResetSketchStates();
+		}
+	}
+
+	protected override async void OnShiftBecameShortcut()
+	{
+		// SHIFT went down first, so it may already have started an intermittent selection
+		// before the shortcut's other key arrived. End it, so that the shortcut does not leave
+		// the tool in a selection it was never asked for.
+		try
+		{
+			if (_intermediateSketchStates?.IsInIntermittentSelectionPhase != true)
+			{
+				return;
+			}
+
+			await EndIntermittentSelectionAsync();
+		}
+		catch (Exception e)
+		{
+			_msg.Warn("Could not end the selection started by a SHIFT shortcut", e);
 		}
 	}
 
@@ -858,7 +893,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		}
 	}
 
-	private async Task RestorePreviousSketchAsync()
+	protected async Task RestorePreviousSketchAsync()
 	{
 		if (! SupportRestoreLastSketch)
 		{

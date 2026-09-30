@@ -37,6 +37,47 @@ public abstract class MapToolBase : MapTool
 	protected List<Key> HandledKeys { get; } = new();
 
 	/// <summary>
+	/// Whether the SHIFT key currently held has been combined with a key this tool does not
+	/// handle itself. That makes it part of someone else's keyboard shortcut rather than the
+	/// tool's own SHIFT - for example Right SHIFT + ä, which toggles ArcGIS Pro's Z-only
+	/// snapping. The tool's SHIFT behaviour is suspended until SHIFT is released. It is
+	/// recognised from the key events, so it works whatever the keyboard layout and whatever
+	/// the other key is. The tool's own SHIFT combinations are not affected: their keys are in
+	/// <see cref="HandledKeys"/>.
+	/// </summary>
+	protected bool IsShiftPartOfShortcut { get; private set; }
+
+	/// <summary>
+	/// Which key it was, while <see cref="IsShiftPartOfShortcut"/> holds; null otherwise.
+	/// <para>
+	/// A <see cref="Key"/> is a virtual key, which for the OEM keys is the key's position on the
+	/// keyboard rather than the character printed on it, so the same value is expected whatever
+	/// the layout - the ä of a Swiss German keyboard and whatever sits in that position
+	/// elsewhere. That makes it usable for telling one SHIFT shortcut from another, which
+	/// matters where a tool has to react to one of them in particular: ArcGIS Pro's XY-only
+	/// snapping publishes no property, so the key is the only sign of it.
+	/// </para>
+	/// </summary>
+	protected Key? ShiftShortcutKey { get; private set; }
+
+	/// <summary>
+	/// Called once when the SHIFT key being held turns out to be part of a shortcut (see
+	/// <see cref="IsShiftPartOfShortcut"/>), so that a subclass can undo what SHIFT already
+	/// started - SHIFT goes down before the shortcut's other key does.
+	/// </summary>
+	protected virtual void OnShiftBecameShortcut() { }
+
+	/// <summary>
+	/// Whether <paramref name="key"/>, pressed while SHIFT is held, makes SHIFT part of a
+	/// shortcut (<see cref="IsShiftPartOfShortcut"/>). By default every key the tool does not
+	/// handle itself; a tool whose own keys mean something else with SHIFT adds them.
+	/// </summary>
+	protected virtual bool IsShiftShortcutKey(Key key)
+	{
+		return ! HandledKeys.Contains(key);
+	}
+
+	/// <summary>
 	/// The currently pressed keys.
 	/// </summary>
 	protected HashSet<Key> PressedKeys { get; } = new();
@@ -97,6 +138,8 @@ public abstract class MapToolBase : MapTool
 			_msg.VerboseDebug(() => $"{nameof(OnToolActivateAsync)} ({Caption})");
 
 			PressedKeys.Clear();
+			IsShiftPartOfShortcut = false;
+			ShiftShortcutKey = null;
 
 			// ReSharper disable once MethodHasAsyncOverload
 			OnToolActivatingCore();
@@ -137,6 +180,17 @@ public abstract class MapToolBase : MapTool
 			_msg.VerboseDebug(() => nameof(OnToolKeyDown));
 
 			PressedKeys.Add(args.Key);
+
+			// A key this tool does not handle, pressed while SHIFT is held, belongs to a
+			// shortcut such as Right SHIFT + ä (ArcGIS Pro's Z-only snapping). Until SHIFT is
+			// released it is not the tool's SHIFT.
+			if (! IsShiftPartOfShortcut && KeyboardUtils.IsShiftDown() &&
+			    ! KeyboardUtils.IsModifierKey(args.Key) && IsShiftShortcutKey(args.Key))
+			{
+				IsShiftPartOfShortcut = true;
+				ShiftShortcutKey = args.Key;
+				OnShiftBecameShortcut();
+			}
 
 			// NOTE: Only claim a handled key while no modifier is down. Otherwise the tool
 			//       swallows application shortcuts that happen to use the same letter, such as
@@ -225,6 +279,16 @@ public abstract class MapToolBase : MapTool
 		{
 			// Use ErrorHandler to allow custom implementation of DialogService
 			ErrorHandler.HandleError(e, _msg);
+		}
+		finally
+		{
+			// Only now, after the release was handled: the handlers need to know that the SHIFT
+			// being released was a shortcut's.
+			if (KeyboardUtils.IsShiftKey(args.Key))
+			{
+				IsShiftPartOfShortcut = false;
+				ShiftShortcutKey = null;
+			}
 		}
 	}
 

@@ -661,8 +661,9 @@ public abstract class OneClickToolBase : MapToolBase
 
 	protected Task<bool> IsInSelectionPhaseAsync()
 	{
-		bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-		                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+		bool shiftDown = (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+		                  KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true)) &&
+		                 ! IsShiftPartOfShortcut;
 
 		return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
 	}
