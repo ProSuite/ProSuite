@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -172,6 +175,17 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 	protected virtual void ConfigureWorkList(IWorkList workList) { }
 
 	/// <summary>
+	/// Loads the work list layer and its associated layers into the specified map view.
+	/// </summary>
+	public virtual void LoadLayers(MapView mapView,
+	                               IWorkList worklist,
+	                               string workListDefinitionFilePath)
+	{
+		LoadWorkListLayer(mapView, worklist, workListDefinitionFilePath);
+		LoadAssociatedLayers(mapView, worklist);
+	}
+
+	/// <summary>
 	/// Loads the work list layer, containing the navigable items based on the plugin
 	/// datasource, into the specified map view.
 	/// </summary>
@@ -182,34 +196,159 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 	                              [NotNull] IWorkList worklist,
 	                              [NotNull] string workListDefinitionFilePath)
 	{
-		//Create the work list layer with basic properties and connect to datasource
-		FeatureLayer worklistLayer =
-			CreateWorklistLayer(worklist, workListDefinitionFilePath,
-			                    GetLayerContainerCore<ILayerContainerEdit>(mapView));
+		ILayerContainerEdit layerContainer = GetLayerContainerCore<ILayerContainerEdit>(mapView);
 
-		//Set some hard-coded properties
-		worklistLayer.SetScaleSymbols(false);
-		worklistLayer.SetSelectable(false);
-		worklistLayer.SetSnappable(false);
+		CIMFeatureLayer layerDefinition =
+			CreateWorkListLayerDefinition(worklist, workListDefinitionFilePath);
 
-#if ARCGISPRO_GREATER_3_2
-		worklistLayer.SetShowLayerAtAllScales(true);
-#endif
+		CreateLayer(layerDefinition, new[] { layerDefinition }, null, layerContainer);
+	}
+
+	/// <summary>
+	/// Creates the complete layer definition of the work list layer, based on the layer
+	/// definition in the work list symbology template layer file. All properties are set in
+	/// the definition rather than on the created layer: In an edit session, Pro synchronizes
+	/// (and saves) the editing templates of all open maps for every added layer and for most
+	/// layer property changes, which makes each change after creation very expensive.
+	/// </summary>
+	[NotNull]
+	protected CIMFeatureLayer CreateWorkListLayerDefinition(
+		[NotNull] IWorkList worklist,
+		[NotNull] string workListDefinitionFilePath)
+	{
+		CIMDataConnection dataConnection;
+
+		using (Table table = OpenTable(workListDefinitionFilePath, worklist.Name))
+		{
+			Assert.NotNull(table, $"Cannot open work list table {worklist.Name}");
+
+			dataConnection = table.GetDataConnection();
+		}
+
+		CIMFeatureLayer result = GetWorkListTemplateLayerDefinition();
+
+		result.Name = SuggestWorkListLayerName() ?? worklist.DisplayName;
+		result.Description = worklist.Name;
+		result.URI = CreateMapMemberUri();
+		result.Visibility = true;
+
+		result.FeatureTable ??= new CIMFeatureTable();
+		result.FeatureTable.DataConnection = dataConnection;
+
+		// The work list data source is read-only:
+		result.FeatureTable.Editable = false;
+
+		// Hard-coded properties:
+		result.ScaleSymbols = false;
+		result.Selectable = false;
+		result.Snappable = false;
 
 		// The explore tool should ignore the work list layer:
-		worklistLayer.SetShowPopups(false);
+		result.ShowPopups = false;
 
 		// Avoid incorrect features after changes in tables of DbStatusWorkLists
-		worklistLayer.SetCacheOptions(LayerCacheType.None);
+		result.DisplayCacheType = DisplayCacheType.None;
+		result.FeatureCacheType = FeatureCacheType.None;
 
-		//Set renderer based on symbology from template layer
-		LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
-		var renderer = LayerUtils.GetRenderer(templateLayer, worklistLayer);
-		if (renderer != null)
+		// The work list layer is read-only, editing templates are not needed
+		result.AutoGenerateFeatureTemplates = false;
+
+#if ARCGISPRO_GREATER_3_2
+		result.LayerScaleVisibilityOptions =
+			new CIMLayerScaleVisibilityOptions { ShowLayerAtAllScales = true };
+#endif
+
+		return result;
+	}
+
+	/// <summary>
+	/// Adds the specified top-level layer, including all its sub-layers and standalone tables
+	/// in a single layer document to the container. The layers are added in one step, which
+	/// results in a single LayersAdded event.
+	/// </summary>
+	[NotNull]
+	protected static Layer CreateLayer([NotNull] CIMBaseLayer topLayer,
+	                                   [NotNull] IEnumerable<CIMDefinition> layerDefinitions,
+	                                   [CanBeNull] IEnumerable<CIMDefinition> tableDefinitions,
+	                                   [NotNull] ILayerContainerEdit layerContainer)
+	{
+		var layerDocument = new CIMLayerDocument
+		                    {
+			                    Layers = new[] { topLayer.URI },
+			                    LayerDefinitions = layerDefinitions.ToArray(),
+			                    TableDefinitions = tableDefinitions?.ToArray()
+		                    };
+
+		var creationParams = new LayerCreationParams(layerDocument)
+		                     {
+			                     MapMemberPosition = MapMemberPosition.AddToTop
+		                     };
+
+		Layer result = LayerFactory.Instance.CreateLayer<Layer>(creationParams, layerContainer);
+
+		if (result == null)
 		{
-			worklistLayer.SetRenderer(renderer);
+			_msg.WarnFormat("Failed to create layer {0}. Trying one more time...", topLayer.Name);
+
+			result = LayerFactory.Instance.CreateLayer<Layer>(creationParams, layerContainer);
 		}
-		//else: no compatible renderer found in layer file
+
+		Assert.NotNull(
+			result,
+			$"Creation of layer {topLayer.Name} failed even after the second time. Please try again manually.");
+
+		LoadLegendOfExpandedLayers(result);
+
+		return result;
+	}
+
+	/// <summary>
+	/// Loads the legend of the expanded layers. Pro does not always load the legend of an expanded
+	/// layer that is added inside a collapsed group layer: the tree node is shown as expanded, but
+	/// the legend patches only appear after collapsing and expanding the layer again.
+	/// Loading the legend does not change the layer definition.
+	/// </summary>
+	private static void LoadLegendOfExpandedLayers([NotNull] Layer layer)
+	{
+		IEnumerable<Layer> layers = layer is ILayerContainer layerContainer
+			                            ? layerContainer.GetLayersAsFlattenedList()
+			                            : new[] { layer };
+
+		foreach (Layer expandedLayer in layers.Where(l => l is not CompositeLayer && l.IsExpanded))
+		{
+			expandedLayer.LoadLegend();
+		}
+	}
+
+	[NotNull]
+	protected static CIMGroupLayer CreateGroupLayerDefinition(
+		[NotNull] string name,
+		[NotNull] IEnumerable<string> layerUris,
+		[CanBeNull] IEnumerable<string> standaloneTableUris = null)
+	{
+		var result = new CIMGroupLayer
+		             {
+			             Name = name,
+			             URI = CreateMapMemberUri(),
+			             Visibility = true,
+			             Expanded = false,
+			             ShowLegends = true,
+			             Layers = layerUris.ToArray(),
+			             StandaloneTables = standaloneTableUris?.ToArray()
+		             };
+
+#if ARCGISPRO_GREATER_3_2
+		result.LayerScaleVisibilityOptions =
+			new CIMLayerScaleVisibilityOptions { ShowLayerAtAllScales = true };
+#endif
+
+		return result;
+	}
+
+	[NotNull]
+	protected static string CreateMapMemberUri()
+	{
+		return $"CIMPATH=worklists/{Guid.NewGuid():N}.json";
 	}
 
 	/// <summary>
@@ -220,6 +359,11 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 	public virtual void LoadAssociatedLayers(MapView mapView, IWorkList worklist) { }
 
 	public virtual void RemoveAssociatedLayers(MapView mapView) { }
+
+	public virtual bool UseMapForWorkLists(MapView mapView)
+	{
+		return true;
+	}
 
 	/// <summary>
 	/// Returns the layer container (group layer or map) for the work list layer(s) to be added
@@ -256,45 +400,35 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 
 	#region Private
 
+	/// <summary>
+	/// Gets the layer definition from the work list symbology template layer file, or a
+	/// minimal definition if the template contains no single feature layer.
+	/// </summary>
 	[NotNull]
-	private FeatureLayer CreateWorklistLayer(
-		[NotNull] IWorkList worklist,
-		[NotNull] string path,
-		[NotNull] ILayerContainerEdit layerContainer)
+	private CIMFeatureLayer GetWorkListTemplateLayerDefinition()
 	{
-		Table table = null;
+		LayerDocument templateLayer = GetWorkListSymbologyTemplateLayer();
 
-		try
+		// The document is de-serialized for each call, the definition can be modified.
+		CIMFeatureLayer result = LayerUtils.GetSingleLayerCIM<CIMFeatureLayer>(templateLayer);
+
+		if (result != null)
 		{
-			table = OpenTable(path, worklist.Name);
-			Assert.NotNull(table);
-
-			string workListLayerName = SuggestWorkListLayerName() ?? worklist.DisplayName;
-
-			FeatureLayer result = LayerFactory.Instance.CreateLayer<FeatureLayer>(
-				LayerUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
-				layerContainer);
-
-			if (result == null)
-			{
-				_msg.WarnFormat(
-					"Failed to create work list layer for {0}. Trying one more time...",
-					worklist.Name);
-				result = LayerFactory.Instance.CreateLayer<FeatureLayer>(
-					LayerUtils.CreateLayerParams((FeatureClass) table, workListLayerName),
-					layerContainer);
-			}
-
-			Assert.NotNull(
-				result,
-				"Layer creation failed even after the second time. Please try again manually.");
-
 			return result;
 		}
-		finally
-		{
-			table?.Dispose();
-		}
+
+		_msg.DebugFormat("No single feature layer found in work list symbology template layer");
+
+		// The work list layer is always a polygon layer (see WorkItemTable):
+		CIMPolygonSymbol symbol =
+			SymbolFactory.Instance.ConstructPolygonSymbol(ColorFactory.Instance.GreyRGB);
+
+		return new CIMFeatureLayer
+		       {
+			       Expanded = true,
+			       ShowLegends = true,
+			       Renderer = new CIMSimpleRenderer { Symbol = symbol.MakeSymbolReference() }
+		       };
 	}
 
 	protected virtual Table OpenTable([NotNull] string path, [NotNull] string tableName)

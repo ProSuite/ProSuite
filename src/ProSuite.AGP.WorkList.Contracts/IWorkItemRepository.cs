@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts;
@@ -51,9 +53,24 @@ public interface IWorkItemRepository
 
 	void Commit();
 
+	[Obsolete("The index depends on the order of the loaded items and cannot be restored. " +
+	          "Use SetCurrentItem instead.")]
 	void SetCurrentIndex(int currentIndex);
 
+	[Obsolete("The index depends on the order of the loaded items and cannot be restored. " +
+	          "Use GetCurrentItemReference instead.")]
 	int GetCurrentIndex();
+
+	/// <summary>
+	/// Remembers the specified item as the current item, or forgets the current item if
+	/// the item is null. The remembered current item is persisted in the definition file.
+	/// </summary>
+	void SetCurrentItem([CanBeNull] IWorkItem item);
+
+	/// <summary>
+	/// The reference of the remembered current item, or null if there is none.
+	/// </summary>
+	GdbObjectReference? GetCurrentItemReference();
 
 	void UpdateState(IWorkItem item);
 

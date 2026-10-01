@@ -58,6 +58,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}
 
+		public PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
+		}
+
 		public IRelationshipClass OpenRelationshipClass(Association association)
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(association);

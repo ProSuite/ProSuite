@@ -32,6 +32,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 		MosaicRasterReference OpenSimpleRasterMosaic([NotNull] IRasterMosaicDataset dataset);
 
 		[CanBeNull]
+		PointCloudReference OpenPointCloud([NotNull] IPointCloudDataset dataset);
+
+		[CanBeNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] Association association);
 	}
 }

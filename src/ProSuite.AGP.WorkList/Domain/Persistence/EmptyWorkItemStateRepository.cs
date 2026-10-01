@@ -4,6 +4,7 @@ using System.IO;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence;
@@ -30,18 +31,11 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 
 	public void Commit(IList<ISourceClass> sourceClasses, Envelope extent)
 	{
-		int index = -1;
-		if (CurrentIndex.HasValue)
-		{
-			index = CurrentIndex.Value;
-		}
-
 		var definition = new XmlWorkListDefinition
 		                 {
 			                 Name = Name,
 			                 TypeName = Type.FullName,
-			                 AssemblyName = Type.Assembly.GetName().Name,
-			                 CurrentIndex = index
+			                 AssemblyName = Type.Assembly.GetName().Name
 		                 };
 
 		definition.Extent = extent.ToXml();
@@ -53,6 +47,8 @@ public class EmptyWorkItemStateRepository : IWorkItemStateRepository
 	}
 
 	public int? CurrentIndex { get; set; }
+
+	public GdbObjectReference? CurrentItem { get; set; }
 
 	public void Rename(string name)
 	{

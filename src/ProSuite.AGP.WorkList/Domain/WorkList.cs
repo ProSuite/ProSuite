@@ -56,7 +56,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		_displayName = displayName;
 
-		CurrentIndex = repository.GetCurrentIndex();
+		// The current item is set when the items are loaded (see LoadItems).
+		CurrentIndex = -1;
 	}
 
 	/// <summary>
@@ -465,6 +466,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		IWorkItem oldCurrentItem = CurrentItem;
 		IWorkItem newCurrentItem = null;
 
+		// If there is no current item in memory (e.g. the items are loaded for the first time after
+		// re-opening the project), use the remembered current item from the definition file. This
+		// makes sure the current item does not change when a work list is opened again.
+		GdbObjectReference? rememberedCurrentItem =
+			oldCurrentItem == null ? Repository.GetCurrentItemReference() : null;
+
 		// TODO: Consider keeping the updated items if they already exist in the _rowMap. Also consider
 		//       not re-reading everything if only the filter has changed?
 
@@ -475,7 +482,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 			Assert.True(rowMap.TryAdd(item.GdbRowProxy, item), $"Cannot not add {item}");
 
-			if (item.GdbRowProxy.Equals(oldCurrentItem?.GdbRowProxy))
+			if (item.GdbRowProxy.Equals(oldCurrentItem?.GdbRowProxy) ||
+			    IsReferencedItem(item, rememberedCurrentItem))
 			{
 				newCurrentItem = item;
 			}
@@ -540,6 +548,13 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 				OnWorkListChanged();
 			}
 		}
+	}
+
+	private static bool IsReferencedItem([NotNull] IWorkItem item,
+	                                     GdbObjectReference? reference)
+	{
+		return reference.HasValue &&
+		       reference.Value.Equals(new GdbObjectReference(item.UniqueTableId, item.ObjectID));
 	}
 
 	public IEnumerable<IWorkItem> Search([NotNull] QueryFilter filter)
@@ -1220,7 +1235,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		nextItem.Visited = true;
 		CurrentIndex = _items.IndexOf(nextItem);
 
-		Repository.SetCurrentIndex(CurrentIndex);
+		Repository.SetCurrentItem(nextItem);
 		Repository.UpdateState(nextItem);
 
 		var oids = currentItem != null
@@ -1908,6 +1923,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		}
 
 		CurrentIndex = -1;
+
+		Repository.SetCurrentItem(null);
 
 		OnWorkListChanged(null, new List<long> { current.OID });
 	}

@@ -209,12 +209,38 @@ public static class WorkspaceUtils
 			case WorkspaceFactory.FeatureService:
 				return CreateServiceConnectionProperties(connectionString);
 
+			case WorkspaceFactory.InMemoryDB:
+				return CreateMemoryConnectionProperties(connectionString);
+
 			// TODO: SQLite, others?
 
 			default:
 				throw new ArgumentOutOfRangeException(nameof(factory), factory,
 				                                      $"Unsupported workspace factory: {factory}");
 		}
+	}
+
+	/// <summary>
+	/// Creates the <see cref="MemoryConnectionProperties"/> for the specified connection
+	/// string, which is either INSTANCE_ID=&lt;name&gt; or the plain name.
+	/// </summary>
+	private static MemoryConnectionProperties CreateMemoryConnectionProperties(
+		[NotNull] string connectionString)
+	{
+		var builder = new ConnectionStringBuilder(connectionString);
+
+		string name = builder["instance_id"];
+
+		if (string.IsNullOrEmpty(name))
+		{
+			name = connectionString;
+		}
+
+		Assert.False(string.IsNullOrEmpty(name),
+		             "No name found in in-memory geodatabase connection string: {0}",
+		             connectionString);
+
+		return new MemoryConnectionProperties(name);
 	}
 
 	/// <summary>
@@ -237,7 +263,7 @@ public static class WorkspaceUtils
 
 		string url = builder["url"];
 		Assert.False(string.IsNullOrEmpty(url),
-		            "No URL found in feature service connection string: {0}", connectionString);
+		             "No URL found in feature service connection string: {0}", connectionString);
 
 		var serviceConnection = new ServiceConnectionProperties(new Uri(url, UriKind.Absolute));
 
@@ -282,6 +308,135 @@ public static class WorkspaceUtils
 		DatastoreName datastoreName2 = new DatastoreName(datastore2.GetConnector());
 
 		return datastoreName1.Equals(datastoreName2, comparison);
+	}
+
+	/// <summary>
+	/// Determines whether two datastores represent the same version in the same database,
+	/// regardless of the connection details such as the user.
+	/// </summary>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public static bool IsSameVersion([CanBeNull] Datastore datastore1,
+	                                 [CanBeNull] Datastore datastore2)
+	{
+		if (! IsSameDatabase(datastore1, datastore2))
+		{
+			return false;
+		}
+
+		if (IsSameInstance(datastore1, datastore2))
+		{
+			return true;
+		}
+
+		if (datastore1 is not ArcGIS.Core.Data.Geodatabase geodatabase1 ||
+		    datastore2 is not ArcGIS.Core.Data.Geodatabase geodatabase2 ||
+		    ! geodatabase1.IsVersioningSupported() ||
+		    ! geodatabase2.IsVersioningSupported())
+		{
+			// Not versioned: the only version is the default version
+			return true;
+		}
+
+		using VersionManager versionManager1 = geodatabase1.GetVersionManager();
+		using VersionManager versionManager2 = geodatabase2.GetVersionManager();
+		using Version version1 = versionManager1.GetCurrentVersion();
+		using Version version2 = versionManager2.GetCurrentVersion();
+
+		// Versions within a database are identified by their names.
+		// Only the names qualified with the owner are unique. They are case-sensitive.
+		return string.Equals(version1.GetName(), version2.GetName());
+	}
+
+	/// <summary>
+	/// Determines whether two datastores point to the same database, regardless of the
+	/// version or the connection details such as the user.
+	/// Two enterprise geodatabases are the same database if their default versions have
+	/// the same name, creation date and modification date.
+	/// </summary>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public static bool IsSameDatabase([CanBeNull] Datastore datastore1,
+	                                  [CanBeNull] Datastore datastore2)
+	{
+		if (datastore1 == null || datastore2 == null)
+		{
+			return false;
+		}
+
+		if (IsSameInstance(datastore1, datastore2))
+		{
+			return true;
+		}
+
+		if (IsSameDatastore(datastore1, datastore2, DatastoreComparison.AnyUserAnyVersion))
+		{
+			// Same connection properties, apart from user and version
+			return true;
+		}
+
+		bool isVersioned1 = datastore1 is ArcGIS.Core.Data.Geodatabase geodatabase1 &&
+		                    geodatabase1.IsVersioningSupported();
+		bool isVersioned2 = datastore2 is ArcGIS.Core.Data.Geodatabase geodatabase2 &&
+		                    geodatabase2.IsVersioningSupported();
+
+		if (isVersioned1 != isVersioned2)
+		{
+			return false;
+		}
+
+		if (! isVersioned1)
+		{
+			// Both are not versioned. Compare the paths of file geodatabases, folders, etc.
+			Uri path1 = GetDatastorePath(datastore1);
+			Uri path2 = GetDatastorePath(datastore2);
+
+			return path1 != null && path2 != null && Equals(path1, path2);
+		}
+
+		// Both are versioned, but connected differently (other user, other connection file).
+		// Compare the default versions, like the ArcObjects implementation.
+		using VersionManager versionManager1 =
+			((ArcGIS.Core.Data.Geodatabase) datastore1).GetVersionManager();
+		using VersionManager versionManager2 =
+			((ArcGIS.Core.Data.Geodatabase) datastore2).GetVersionManager();
+		using Version defaultVersion1 = versionManager1.GetDefaultVersion();
+		using Version defaultVersion2 = versionManager2.GetDefaultVersion();
+
+		string defaultVersionName1 = defaultVersion1.GetName() ?? string.Empty;
+		string defaultVersionName2 = defaultVersion2.GetName() ?? string.Empty;
+
+		if (! defaultVersionName1.Equals(defaultVersionName2,
+		                                 StringComparison.OrdinalIgnoreCase))
+		{
+			return false;
+		}
+
+		DateTime created1 = defaultVersion1.GetCreatedDate();
+		DateTime created2 = defaultVersion2.GetCreatedDate();
+
+		_msg.VerboseDebug(() => $"Compare default version creation date: {created1}, {created2}");
+
+		if (created1 != created2)
+		{
+			return false;
+		}
+
+		DateTime modified1 = defaultVersion1.GetModifiedDate();
+		DateTime modified2 = defaultVersion2.GetModifiedDate();
+
+		_msg.VerboseDebug(() =>
+			                  $"Compare default version modification date: {modified1}, {modified2}");
+
+		return modified1 == modified2;
+	}
+
+	/// <summary>
+	/// Whether the two datastores wrap the same underlying geodatabase object.
+	/// </summary>
+	private static bool IsSameInstance([NotNull] Datastore datastore1,
+	                                   [NotNull] Datastore datastore2)
+	{
+		return ReferenceEquals(datastore1, datastore2) ||
+		       Equals(datastore1.Handle, datastore2.Handle);
 	}
 
 	/// <summary>
@@ -748,53 +903,100 @@ public static class WorkspaceUtils
 		return sb.ToString();
 	}
 
-	public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+	public static bool TryGetWorkspaceFactory([CanBeNull] Connector connector,
+	                                          out WorkspaceFactory workspaceFactory)
 	{
-		WorkspaceFactory result;
-
 		switch (connector)
 		{
 #if ARCGISPRO_GREATER_3_2
 			case BimFileConnectionProperties:
-				result = WorkspaceFactory.BIMFile;
-				break;
+				workspaceFactory = WorkspaceFactory.BIMFile;
+				return true;
 #endif
 			case DatabaseConnectionFile:
 			case DatabaseConnectionProperties:
-				result = WorkspaceFactory.SDE;
-				break;
+				workspaceFactory = WorkspaceFactory.SDE;
+				return true;
 			case FileGeodatabaseConnectionPath:
-				result = WorkspaceFactory.FileGDB;
-				break;
+				workspaceFactory = WorkspaceFactory.FileGDB;
+				return true;
 			case FileSystemConnectionPath:
-				result = WorkspaceFactory.Shapefile;
-				break;
+				workspaceFactory = WorkspaceFactory.Shapefile;
+				return true;
 			case KnowledgeGraphConnectionProperties:
-				result = WorkspaceFactory.KnowledgeGraph;
-				break;
+				workspaceFactory = WorkspaceFactory.KnowledgeGraph;
+				return true;
 			case MemoryConnectionProperties:
-				result = WorkspaceFactory.InMemoryDB;
-				break;
+				workspaceFactory = WorkspaceFactory.InMemoryDB;
+				return true;
 			case MobileGeodatabaseConnectionPath:
 			case SQLiteConnectionPath:
-				result = WorkspaceFactory.SQLite;
-				break;
+				workspaceFactory = WorkspaceFactory.SQLite;
+				return true;
 			case PluginDatasourceConnectionPath:
-				result = WorkspaceFactory.Custom;
-				break;
+				workspaceFactory = WorkspaceFactory.Custom;
+				return true;
 			case RealtimeServiceConnectionProperties:
-				result = WorkspaceFactory.StreamService;
-				break;
+				workspaceFactory = WorkspaceFactory.StreamService;
+				return true;
 			case ServiceConnectionProperties:
-				result = WorkspaceFactory.FeatureService;
-				break;
+				workspaceFactory = WorkspaceFactory.FeatureService;
+				return true;
 
 			default:
-				throw new NotImplementedException(
-					$"connector {connector.GetType()} is not implemented");
+				workspaceFactory = default;
+				return false;
+		}
+	}
+
+	/// <exception cref="NotImplementedException">The connector type is not known.</exception>
+	public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+	{
+		Assert.ArgumentNotNull(connector, nameof(connector));
+
+		if (! TryGetWorkspaceFactory(connector, out WorkspaceFactory result))
+		{
+			throw new NotImplementedException(
+				$"connector {connector.GetType()} is not implemented");
 		}
 
 		return result;
+	}
+
+	/// <summary>
+	/// The path or URL the connector opens, or <paramref name="datastoreConnectionString"/>
+	/// for a connector that has none.
+	/// </summary>
+	/// <remarks>
+	/// Persisted in work list definition files: the value per connector type must not change.
+	/// </remarks>
+	[NotNull]
+	public static string GetConnectionString(
+		[NotNull] Connector connector,
+		[CanBeNull] string datastoreConnectionString)
+	{
+		Assert.ArgumentNotNull(connector, nameof(connector));
+
+		switch (connector)
+		{
+			case FileGeodatabaseConnectionPath fileGeodatabaseConnection:
+				return fileGeodatabaseConnection.Path?.ToString() ?? string.Empty;
+
+			case FileSystemConnectionPath fileSystemConnection:
+				return fileSystemConnection.Path?.ToString() ?? string.Empty;
+
+			case MobileGeodatabaseConnectionPath mobileConnection:
+				return mobileConnection.Path?.ToString() ?? string.Empty;
+
+			case PluginDatasourceConnectionPath pluginConnection:
+				return pluginConnection.DatasourcePath?.ToString() ?? string.Empty;
+
+			case ServiceConnectionProperties serviceConnection:
+				return serviceConnection.URL?.AbsolutePath ?? string.Empty;
+
+			default:
+				return datastoreConnectionString ?? string.Empty;
+		}
 	}
 
 	/// <summary>

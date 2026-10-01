@@ -1,7 +1,6 @@
 using System;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -26,44 +25,23 @@ public readonly struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>,
 
 		_datastoreName = new DatastoreName(connector);
 
-		ConnectionString = string.Empty;
+		ConnectionString = WorkspaceUtils.GetConnectionString(connector, connectionString);
 
-		switch (connector)
-		{
-			case DatabaseConnectionProperties:
-				ConnectionString = connectionString;
-				WorkspaceFactory = WorkspaceFactory.SDE;
-				break;
-			case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
-				ConnectionString = fileGeodatabaseConnectionPath.Path.ToString();
-				WorkspaceFactory = WorkspaceFactory.FileGDB;
-				break;
-			case FileSystemConnectionPath fileSystemConnection:
-				ConnectionString = fileSystemConnection.Path.ToString();
-				WorkspaceFactory = WorkspaceFactory.Shapefile;
-				break;
-			case MobileGeodatabaseConnectionPath mobileGeodatabaseConnectionPath:
-				ConnectionString = mobileGeodatabaseConnectionPath.Path.ToString();
-				WorkspaceFactory = WorkspaceFactory.SQLite;
-				break;
-			case PluginDatasourceConnectionPath pluginDatasourceConnectionPath:
-				ConnectionString = pluginDatasourceConnectionPath.DatasourcePath.ToString();
-				WorkspaceFactory = WorkspaceFactory.Custom;
-				break;
-			case ServiceConnectionProperties serviceConnectionProperties:
-				ConnectionString = serviceConnectionProperties.URL?.AbsolutePath ?? string.Empty;
-				WorkspaceFactory = WorkspaceFactory.FeatureService;
-				break;
-			default:
-				throw new NotImplementedException(
-					$"connector {connector.GetType()} is not implemented");
-		}
+		WorkspaceFactory =
+			WorkspaceUtils.TryGetWorkspaceFactory(connector, out WorkspaceFactory factory)
+				? factory
+				: null;
 	}
 
 	[NotNull]
 	public string ConnectionString { get; }
 
-	public WorkspaceFactory WorkspaceFactory { get; }
+	/// <summary>
+	/// The workspace factory describing this workspace, or <c>null</c> for a connector type
+	/// <see cref="WorkspaceUtils"/> does not know. Such a workspace cannot be written to a
+	/// work list definition file, because it could not be re-opened from one.
+	/// </summary>
+	public WorkspaceFactory? WorkspaceFactory { get; }
 
 	// TODO: Currently only used from un-used classes and unit test. Remove?
 	public Geodatabase OpenGeodatabase()

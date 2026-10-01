@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.Commons.Geom
 {
@@ -598,6 +599,158 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return HasRayOddCrossingNumber(closedPolycurve, testPoint, tolerance);
+		}
+
+		/// <summary>
+		/// Determines how the specified envelope relates to the specified closed polycurve:
+		/// whether the polycurve contains all of it, none of it, or part of it.
+		/// </summary>
+		/// <remarks>
+		/// For asking a question of a whole envelope of points at once instead of of each of
+		/// them. An envelope no boundary comes near is uniform - every point in it gets the same
+		/// answer - so one containment test speaks for all of them; only an
+		/// <see cref="EnvelopeRelation.Straddling"/> envelope has to be looked into.
+		/// <para>
+		/// The tolerance decides the safe direction. Segments are searched for in the envelope
+		/// grown by it, so a boundary running just outside still makes it straddling: at that
+		/// distance a point inside the envelope can be contained by a tolerant test, and an
+		/// envelope reported <see cref="EnvelopeRelation.Disjoint"/> is one whose points a caller
+		/// never looks at.
+		/// </para>
+		/// </remarks>
+		/// <param name="xMin">The envelope's minimum x.</param>
+		/// <param name="yMin">The envelope's minimum y.</param>
+		/// <param name="xMax">The envelope's maximum x.</param>
+		/// <param name="yMax">The envelope's maximum y.</param>
+		/// <param name="closedPolycurve">The closed polycurve.</param>
+		/// <param name="tolerance">The tolerance the containment test will be run at.</param>
+		public static EnvelopeRelation GetEnvelopeRelation(
+			double xMin, double yMin, double xMax, double yMax,
+			[NotNull] ISegmentList closedPolycurve, double tolerance)
+		{
+			Assert.ArgumentNotNull(closedPolycurve, nameof(closedPolycurve));
+
+			double searchXMin = xMin - tolerance;
+			double searchYMin = yMin - tolerance;
+			double searchXMax = xMax + tolerance;
+			double searchYMax = yMax + tolerance;
+
+			foreach (KeyValuePair<int, Line3D> found in closedPolycurve.FindSegments(
+				         searchXMin, searchYMin, searchXMax, searchYMax, tolerance))
+			{
+				// FindSegments filters by segment extent, and a diagonal segment's extent covers
+				// everything between its ends - for a diamond, the whole shape. Taking that as
+				// the answer would call every envelope under such a segment straddling, and
+				// nothing would ever be answered whole.
+				if (IntersectsBoxXY(found.Value, searchXMin, searchYMin, searchXMax, searchYMax))
+				{
+					return EnvelopeRelation.Straddling;
+				}
+			}
+
+			// No boundary within reach, so the envelope lies wholly on one side of it and its
+			// centre says which.
+			var centre = new Coordinates2D((xMin + xMax) / 2, (yMin + yMax) / 2);
+
+			return PolycurveContainsXY(closedPolycurve, centre, tolerance)
+				       ? EnvelopeRelation.Inside
+				       : EnvelopeRelation.Disjoint;
+		}
+
+		/// <summary>
+		/// Whether the segment meets the box in XY, the box included. Clips the segment against
+		/// the box one side at a time and reports whether anything of it is left.
+		/// </summary>
+		private static bool IntersectsBoxXY([NotNull] Line3D segment,
+		                                    double xMin, double yMin, double xMax, double yMax)
+		{
+			double x0 = segment.StartPoint.X;
+			double y0 = segment.StartPoint.Y;
+
+			double dx = segment.EndPoint.X - x0;
+			double dy = segment.EndPoint.Y - y0;
+
+			double enter = 0;
+			double exit = 1;
+
+			return Clip(-dx, x0 - xMin, ref enter, ref exit) &&
+			       Clip(dx, xMax - x0, ref enter, ref exit) &&
+			       Clip(-dy, y0 - yMin, ref enter, ref exit) &&
+			       Clip(dy, yMax - y0, ref enter, ref exit);
+		}
+
+		/// <summary>
+		/// One side of <see cref="IntersectsBoxXY"/>: narrows the stretch of the segment still in
+		/// play, and reports false once nothing is left of it.
+		/// </summary>
+		private static bool Clip(double direction, double distance, ref double enter,
+		                         ref double exit)
+		{
+			if (direction == 0)
+			{
+				// Parallel to this side: in play only if it starts on the inside of it.
+				return distance >= 0;
+			}
+
+			double at = distance / direction;
+
+			if (direction < 0)
+			{
+				if (at > exit)
+				{
+					return false;
+				}
+
+				if (at > enter)
+				{
+					enter = at;
+				}
+			}
+			else
+			{
+				if (at < enter)
+				{
+					return false;
+				}
+
+				if (at < exit)
+				{
+					exit = at;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// <see cref="GetEnvelopeRelation(double,double,double,double,ISegmentList,double)"/> for
+		/// an envelope that is already an object.
+		/// </summary>
+		public static EnvelopeRelation GetEnvelopeRelation([NotNull] IBoundedXY envelope,
+		                                                   [NotNull] ISegmentList closedPolycurve,
+		                                                   double tolerance)
+		{
+			Assert.ArgumentNotNull(envelope, nameof(envelope));
+
+			return GetEnvelopeRelation(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax,
+			                           closedPolycurve, tolerance);
+		}
+
+		/// <summary>
+		/// <see cref="GetEnvelopeRelation(double,double,double,double,ISegmentList,double)"/> for
+		/// one tile of a tiling, which is an envelope the tiling can produce from its index.
+		/// </summary>
+		public static EnvelopeRelation GetTileRelation([NotNull] TilingDefinition tiling,
+		                                               TileIndex tile,
+		                                               [NotNull] ISegmentList closedPolycurve,
+		                                               double tolerance)
+		{
+			Assert.ArgumentNotNull(tiling, nameof(tiling));
+
+			tiling.QueryTileBounds(tile, out double xMin, out double yMin,
+			                       out double xMax, out double yMax);
+
+			return GetEnvelopeRelation(xMin, yMin, xMax, yMax, closedPolycurve, tolerance);
 		}
 
 		/// <summary>

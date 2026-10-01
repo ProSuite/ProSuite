@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -823,7 +823,12 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					return new DatasetTestParameterValue(testParameter, dataset,
 					                                     xmlDatasetTestParameterValue.WhereClause,
 					                                     xmlDatasetTestParameterValue
-						                                     .UsedAsReferenceData);
+						                                     .UsedAsReferenceData)
+					       {
+						       FieldRoles = CreateFieldRoles(
+							       xmlDatasetTestParameterValue.FieldRoles),
+						       DatasetType = xmlDatasetTestParameterValue.DatasetType
+					       };
 				}
 
 				// Exception must already be thrown in GetDataset()
@@ -852,9 +857,38 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 			var paramValue = new DatasetTestParameterValue(
 				testParameter, dataset,
 				xmlValue.WhereClause,
-				xmlValue.UsedAsReferenceData);
+				xmlValue.UsedAsReferenceData)
+			                 {
+				                 FieldRoles = CreateFieldRoles(xmlValue.FieldRoles),
+				                 DatasetType = xmlValue.DatasetType
+			                 };
 
 			return paramValue;
+		}
+
+		/// <summary>
+		/// Converts the transported field roles, resolving each role by name. An unknown role name
+		/// is an error rather than something to skip: silently dropping it would leave the dataset
+		/// without the field it needs and fail later, far from the cause.
+		/// </summary>
+		[CanBeNull]
+		private static IList<DatasetFieldRole> CreateFieldRoles(
+			[CanBeNull] ICollection<XmlDatasetFieldRole> xmlFieldRoles)
+		{
+			if (xmlFieldRoles == null || xmlFieldRoles.Count == 0)
+			{
+				return null;
+			}
+
+			var result = new List<DatasetFieldRole>(xmlFieldRoles.Count);
+
+			foreach (XmlDatasetFieldRole xmlFieldRole in xmlFieldRoles)
+			{
+				result.Add(DatasetDeclarationUtils.CreateFieldRole(
+					           xmlFieldRole.Role, xmlFieldRole.Name));
+			}
+
+			return result;
 		}
 
 		[CanBeNull]
@@ -1306,6 +1340,68 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 					yield return datasetName;
 				}
 			}
+		}
+
+		/// <summary>
+		/// What the dataset parameter values of the given conditions declare about the datasets
+		/// of the given workspace, one entry per dataset. Empty for the common case; non-empty
+		/// only where a standalone condition references a dataset that a harvested model cannot
+		/// describe on its own, such as a raster catalog and its file-path field.
+		/// </summary>
+		[NotNull]
+		public static IList<DatasetDeclaration> GetDatasetDeclarations(
+			[NotNull] string workspaceId,
+			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
+		{
+			Assert.ArgumentNotNullOrEmpty(workspaceId, nameof(workspaceId));
+			Assert.ArgumentNotNull(referencedConditions, nameof(referencedConditions));
+
+			// Keyed while collecting, because the same dataset may be declared by any number of
+			// conditions and all of them must agree.
+			var result = new Dictionary<string, DatasetDeclaration>(
+				StringComparer.OrdinalIgnoreCase);
+
+			foreach (XmlInstanceConfiguration xmlConfiguration in referencedConditions)
+			foreach (XmlTestParameterValue parameterValue in
+			         xmlConfiguration.EnumParameterValues(ignoreEmptyValues: true))
+			{
+				if (! (parameterValue is XmlDatasetTestParameterValue datasetParameterValue))
+				{
+					continue;
+				}
+
+				if (datasetParameterValue.FieldRoles == null ||
+				    datasetParameterValue.FieldRoles.Count == 0)
+				{
+					continue;
+				}
+
+				string datasetWorkspaceId = datasetParameterValue.WorkspaceId ?? string.Empty;
+
+				if (! string.Equals(datasetWorkspaceId, workspaceId,
+				                    StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+
+				string datasetName = datasetParameterValue.Value;
+
+				if (datasetName == null)
+				{
+					continue;
+				}
+
+				DatasetDeclarationUtils.AssertTypeDeclared(
+					datasetParameterValue.DatasetType, datasetName, xmlConfiguration.Name);
+
+				var declaration = new DatasetDeclaration(
+					datasetName, datasetParameterValue.DatasetType,
+					Assert.NotNull(CreateFieldRoles(datasetParameterValue.FieldRoles)));
+
+				DatasetDeclarationUtils.AddDeclaration(result, declaration);
+			}
+
+			return result.Values.ToList();
 		}
 
 		private static void ImportMetadata([NotNull] IEntityMetadata entity,
@@ -2177,8 +2273,34 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				       Value = datasetName,
 				       WhereClause = Escape(datasetTestParameterValue.FilterExpression),
 				       UsedAsReferenceData = datasetTestParameterValue.UsedAsReferenceData,
-				       WorkspaceId = Escape(workspaceId)
+				       WorkspaceId = Escape(workspaceId),
+				       FieldRoles = CreateXmlFieldRoles(datasetTestParameterValue.FieldRoles),
+				       DatasetType = datasetTestParameterValue.DatasetType
 			       };
+		}
+
+		[CanBeNull]
+		private static List<XmlDatasetFieldRole> CreateXmlFieldRoles(
+			[CanBeNull] ICollection<DatasetFieldRole> fieldRoles)
+		{
+			if (fieldRoles == null || fieldRoles.Count == 0)
+			{
+				// Keep the element out of the document altogether for the common case.
+				return null;
+			}
+
+			var result = new List<XmlDatasetFieldRole>(fieldRoles.Count);
+
+			foreach (DatasetFieldRole fieldRole in fieldRoles)
+			{
+				result.Add(new XmlDatasetFieldRole
+				           {
+					           Role = AttributeRole.GetSimpleName(fieldRole.Role),
+					           Name = Escape(fieldRole.FieldName)
+				           });
+			}
+
+			return result;
 		}
 
 		[NotNull]

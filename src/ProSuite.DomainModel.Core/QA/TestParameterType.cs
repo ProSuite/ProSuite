@@ -32,6 +32,8 @@ namespace ProSuite.DomainModel.Core.QA
 		GeometricNetworkDataset = 65536,
 
 		RasterMosaicDataset = 131072,
-		RasterDataset = 262144
+		RasterDataset = 262144,
+
+		PointCloudDataset = 524288
 	}
 }

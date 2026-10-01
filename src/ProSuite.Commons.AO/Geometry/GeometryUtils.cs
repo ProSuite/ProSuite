@@ -8220,6 +8220,35 @@ namespace ProSuite.Commons.AO.Geometry
 				.ToList();
 		}
 
+		public static bool IsShortSegment([NotNull] ISegment segment,
+		                                  double minimumSegmentLength,
+		                                  bool use3DLength,
+		                                  [CanBeNull] IGeometry perimeter = null)
+		{
+			Assert.ArgumentNotNull(segment, nameof(segment));
+
+			if (GetLength(segment, use3DLength) >= minimumSegmentLength)
+			{
+				return false;
+			}
+
+			if (perimeter == null)
+			{
+				return true;
+			}
+
+			IGeometry highLevelSegment = GetHighLevelGeometry(segment, false);
+
+			try
+			{
+				return ! Disjoint(highLevelSegment, perimeter);
+			}
+			finally
+			{
+				Marshal.ReleaseComObject(highLevelSegment);
+			}
+		}
+
 		[NotNull]
 		private static IEnumerable<esriSegmentInfo> GetShortSegmentsCore(
 			[NotNull] ISegmentCollection segmentCollection,
@@ -8275,34 +8304,13 @@ namespace ProSuite.Commons.AO.Geometry
 
 			while (segmentInfo.pSegment != null)
 			{
-				ICurve segment = segmentInfo.pSegment;
-
-				double segmentLength = GetLength(segment, use3DLength);
-
-				if (segmentLength < minimumSegmentLength)
+				if (IsShortSegment(segmentInfo.pSegment, minimumSegmentLength, use3DLength,
+				                   perimeter))
 				{
-					var disjoint = false;
-					if (perimeter != null)
-					{
-						IGeometry highLevelSegment =
-							GetHighLevelGeometry(segmentInfo.pSegment, false);
-						try
-						{
-							disjoint = Disjoint(highLevelSegment, perimeter);
-						}
-						finally
-						{
-							Marshal.ReleaseComObject(highLevelSegment);
-						}
-					}
+					// clone the segment otherwise it will point to the last one in the curve
+					segmentInfo.pSegment = GeometryFactory.Clone(segmentInfo.pSegment);
 
-					if (! disjoint)
-					{
-						// clone the segment otherwise it will point to the last one in the curve
-						segmentInfo.pSegment = GeometryFactory.Clone(segmentInfo.pSegment);
-
-						yield return segmentInfo;
-					}
+					yield return segmentInfo;
 				}
 
 				enumSegment.NextEx(out segmentInfo);

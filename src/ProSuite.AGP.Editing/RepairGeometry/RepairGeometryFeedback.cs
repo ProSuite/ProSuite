@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -44,7 +46,8 @@ public class RepairGeometryFeedback
 
 	public void Update(
 		[CanBeNull] RepairGeometryResult repairResult,
-		[NotNull] IEnumerable<Feature> selectedFeatures)
+		[NotNull] IEnumerable<Feature> selectedFeatures,
+		CancellationToken cancellationToken)
 	{
 		DisposeOverlays();
 
@@ -69,18 +72,13 @@ public class RepairGeometryFeedback
 
 		foreach (RepairableFeature repairableFeature in repairResult.ResultsByFeature)
 		{
-			// Draw invalid (short) segments in red
-			foreach (InvalidSegment invalidSegment in repairableFeature.InvalidSegments)
+			if (cancellationToken.IsCancellationRequested)
 			{
-				Segment segment = invalidSegment.Segment;
-				Polyline highLevelSegment =
-					PolylineBuilderEx.CreatePolyline(segment, segment.SpatialReference);
-
-				IDisposable addedSegment =
-					MapView.Active.AddOverlay(highLevelSegment,
-					                          _redSegmentSymbol.MakeSymbolReference());
-				_overlays.Add(addedSegment);
+				DisposeOverlays();
+				return;
 			}
+
+			AddInvalidSegmentsOverlay(repairableFeature);
 
 			// Draw points to delete as red X markers
 			if (repairableFeature.PointsToDelete != null)
@@ -102,6 +100,29 @@ public class RepairGeometryFeedback
 
 		_msg.DebugStopTiming(stopwatch, "Added {0} overlays for {1} features.",
 		                     _overlays.Count, repairResult.ResultsByFeature.Count);
+	}
+
+	/// <summary>
+	/// One overlay per segment blocks the main CIM thread for seconds on features with thousands
+	/// of short segments, hence the single multipart overlay.
+	/// </summary>
+	private void AddInvalidSegmentsOverlay([NotNull] RepairableFeature repairableFeature)
+	{
+		IList<InvalidSegment> invalidSegments = repairableFeature.InvalidSegments;
+
+		if (invalidSegments.Count == 0)
+		{
+			return;
+		}
+
+		IEnumerable<IEnumerable<Segment>> parts =
+			invalidSegments.Select(invalidSegment => new[] { invalidSegment.Segment });
+
+		Polyline polyline = PolylineBuilderEx.CreatePolyline(
+			parts, invalidSegments[0].Segment.SpatialReference);
+
+		_overlays.Add(MapView.Active.AddOverlay(
+			              polyline, _redSegmentSymbol.MakeSymbolReference()));
 	}
 
 	public void DisposeOverlays()

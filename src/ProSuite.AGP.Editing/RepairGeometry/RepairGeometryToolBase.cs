@@ -36,6 +36,9 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 	private RepairGeometryResult _repairGeometryResult;
 	private RepairGeometryFeedback _feedback;
 
+	private CancellationTokenSource _calculationCancellationSource;
+	private int _recalculationGeneration;
+
 	protected abstract IRepairGeometryService MicroserviceClient { get; }
 
 	protected RepairGeometryToolBase()
@@ -107,20 +110,38 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 	protected override void CalculateDerivedGeometries(
 		IList<Feature> selectedFeatures, CancelableProgressor progressor)
 	{
+		CancellationToken cancellationToken = CreateCancellationToken();
+
 		// Re-read features from feature class (instead of using the selected feature's map SR)
 		// Optionally, allow a non-standard tolerance
 		selectedFeatures = ReReadFeaturesFromFeatureClass(selectedFeatures);
 
 		_repairGeometryResult = CalculateRepairInfo(
-			selectedFeatures, _repairGeometryToolOptions, progressor);
+			selectedFeatures, _repairGeometryToolOptions, cancellationToken);
 
-		if (progressor?.CancellationToken.IsCancellationRequested == true)
+		if (cancellationToken.IsCancellationRequested)
 		{
-			_msg.Warn("Calculation of repair info was cancelled.");
+			_msg.Debug("Calculation of repair info was cancelled.");
 			return;
 		}
 
-		_feedback.Update(_repairGeometryResult, selectedFeatures);
+		_feedback.Update(_repairGeometryResult, selectedFeatures, cancellationToken);
+	}
+
+	private CancellationToken CreateCancellationToken()
+	{
+		_calculationCancellationSource?.Cancel();
+
+		var source = new CancellationTokenSource();
+		_calculationCancellationSource = source;
+		return source.Token;
+	}
+
+	protected override async Task HandleEscapeAsync()
+	{
+		_calculationCancellationSource?.Cancel();
+
+		await base.HandleEscapeAsync();
 	}
 
 	protected override bool CanUseDerivedGeometries()
@@ -152,8 +173,7 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 		IList<Feature> selectedFeatures = MapUtils.GetFeatures(
 			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
-		CancellationToken cancellationToken =
-			progressor?.CancellationToken ?? new CancellationTokenSource().Token;
+		CancellationToken cancellationToken = CreateCancellationToken();
 
 		RepairGeometryToolOptions applyOptions = _repairGeometryToolOptions;
 
@@ -172,6 +192,18 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 
 		if (result == null)
 		{
+			if (cancellationToken.IsCancellationRequested)
+			{
+				_msg.Warn("The geometry repair was cancelled. No feature was changed.");
+			}
+			else
+			{
+				_msg.Warn(
+					"The geometry repair did not finish in time. No feature was changed. " +
+					"Repair fewer or smaller features, or increase the time limit with the " +
+					"environment variable PROSUITE_TOOLS_RPC_DEADLINE_MS.");
+			}
+
 			return false;
 		}
 
@@ -229,6 +261,14 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 	{
 		if (_repairGeometryResult == null)
 		{
+			if (_calculationCancellationSource?.IsCancellationRequested != true)
+			{
+				_msg.Warn(
+					"The search for geometry issues did not finish in time. Select fewer or " +
+					"smaller features, or increase the time limit with the environment " +
+					"variable PROSUITE_TOOLS_RPC_DEADLINE_MS.");
+			}
+
 			return;
 		}
 
@@ -254,15 +294,12 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 	private RepairGeometryResult CalculateRepairInfo(
 		[NotNull] IList<Feature> selectedFeatures,
 		[NotNull] RepairGeometryToolOptions options,
-		[CanBeNull] CancelableProgressor progressor)
+		CancellationToken cancellationToken)
 	{
 		if (MicroserviceClient == null)
 		{
 			throw new InvalidConfigurationException("Microservice has not been started.");
 		}
-
-		CancellationToken cancellationToken = progressor?.CancellationToken
-		                                      ?? new CancellationTokenSource().Token;
 
 		_msg.DebugFormat("Calculating repair info with the following options: {0}", options);
 
@@ -399,14 +436,26 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 
 	private void OptionsPropertyChanged(object sender, PropertyChangedEventArgs args)
 	{
-		try
+		_calculationCancellationSource?.Cancel();
+
+		int generation = ++_recalculationGeneration;
+
+		QueuedTaskUtils.Run(async () =>
 		{
-			QueuedTaskUtils.Run(() => ProcessSelectionAsync());
-		}
-		catch (Exception e)
-		{
-			_msg.Error($"Error re-calculating repair info: {e.Message}", e);
-		}
+			if (generation != _recalculationGeneration)
+			{
+				return;
+			}
+
+			try
+			{
+				await ProcessSelectionAsync();
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error re-calculating repair info: {e.Message}", e);
+			}
+		});
 	}
 
 	#region Tool Options Dockpane

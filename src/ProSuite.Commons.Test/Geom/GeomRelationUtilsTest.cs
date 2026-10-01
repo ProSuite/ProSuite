@@ -1,8 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geom
@@ -932,5 +933,147 @@ namespace ProSuite.Commons.Test.Geom
 				GeomRelationUtils.SourceInteriorIntersectsXY(
 					line1, otherLineInteriorIntersected, 0.01));
 		}
+
+		#region Envelope relations
+
+		[Test]
+		public void CanRelateEnvelopeContainedByPolycurve()
+		{
+			Assert.AreEqual(EnvelopeRelation.Inside, Relate(40, 40, 50, 50, Square(20, 80)));
+		}
+
+		/// <summary>A diagonal boundary is the case a bounds-based segment search degenerates on:
+		/// one segment of a diamond has a bounding box covering the whole shape.</summary>
+		[Test]
+		public void CanRelateEnvelopeContainedByPolycurveWithDiagonalEdges()
+		{
+			MultiLinestring diamond = GeomTestUtils.CreatePoly(
+				new List<Pnt3D>
+				{
+					new Pnt3D(50, 0, 0),
+					new Pnt3D(100, 50, 0),
+					new Pnt3D(50, 100, 0),
+					new Pnt3D(0, 50, 0)
+				});
+
+			Assert.AreEqual(EnvelopeRelation.Inside, Relate(45, 45, 55, 55, diamond));
+			Assert.AreEqual(EnvelopeRelation.Disjoint, Relate(0, 0, 10, 10, diamond));
+		}
+
+		[Test]
+		public void CanRelateEnvelopePolycurveDoesNotReach()
+		{
+			Assert.AreEqual(EnvelopeRelation.Disjoint, Relate(0, 0, 10, 10, Square(20, 80)));
+		}
+
+		[Test]
+		public void CanRelateEnvelopeTheBoundaryCrosses()
+		{
+			// Holds the polygon's lower left corner.
+			Assert.AreEqual(EnvelopeRelation.Straddling, Relate(20, 20, 30, 30, Square(20, 80)));
+		}
+
+		/// <summary>The envelope is outside the polygon, but the boundary runs along its edge -
+		/// and a point on the boundary is contained. Reporting it disjoint would drop those
+		/// points.</summary>
+		[Test]
+		public void AnEnvelopeTheBoundaryRunsAlongIsStraddling()
+		{
+			Assert.AreEqual(EnvelopeRelation.Straddling, Relate(10, 30, 20, 40, Square(20, 80)));
+		}
+
+		/// <summary>The same one tolerance further out: still straddling, because a tolerant
+		/// containment test reaches that far.</summary>
+		[Test]
+		public void AnEnvelopeTheBoundaryPassesWithinTheToleranceOfIsStraddling()
+		{
+			Assert.AreEqual(EnvelopeRelation.Straddling,
+			                Relate(10, 30, 20, 40, Square(20.0005, 80)));
+		}
+
+		[Test]
+		public void AnEnvelopeTheBoundaryStaysClearOfIsNotStraddling()
+		{
+			Assert.AreEqual(EnvelopeRelation.Disjoint,
+			                Relate(0, 30, 10, 40, Square(20.0005, 80)));
+		}
+
+		[Test]
+		public void CanRelateEnvelopeInsideAHole()
+		{
+			MultiLinestring donut = Donut();
+
+			Assert.AreEqual(EnvelopeRelation.Disjoint, Relate(40, 40, 50, 50, donut),
+			                "inside the hole, so the polygon contains none of it");
+			Assert.AreEqual(EnvelopeRelation.Inside, Relate(10, 10, 20, 20, donut),
+			                "between the rings");
+			Assert.AreEqual(EnvelopeRelation.Straddling, Relate(30, 30, 40, 40, donut),
+			                "holding the hole's corner");
+		}
+
+		[Test]
+		public void CanRelateEnvelopeGivenAsObject()
+		{
+			Assert.AreEqual(
+				EnvelopeRelation.Inside,
+				GeomRelationUtils.GetEnvelopeRelation(new EnvelopeXY(40, 40, 50, 50),
+				                                      Square(20, 80), _tolerance));
+		}
+
+		/// <summary>The tile overload is the same test over the envelope the tiling gives the
+		/// tile, so what it adds is that bounds are taken from the right tile.</summary>
+		[Test]
+		public void CanRelateTileOfATiling()
+		{
+			var tiling = new TilingDefinition(0, 0, 10, 10);
+			MultiLinestring polygon = Square(20, 80);
+
+			Assert.AreEqual(
+				EnvelopeRelation.Inside,
+				GeomRelationUtils.GetTileRelation(tiling, new TileIndex(4, 4), polygon,
+				                                  _tolerance));
+			Assert.AreEqual(
+				EnvelopeRelation.Disjoint,
+				GeomRelationUtils.GetTileRelation(tiling, new TileIndex(0, 0), polygon,
+				                                  _tolerance));
+			Assert.AreEqual(
+				EnvelopeRelation.Straddling,
+				GeomRelationUtils.GetTileRelation(tiling, new TileIndex(2, 2), polygon,
+				                                  _tolerance));
+		}
+
+		private const double _tolerance = 0.001;
+
+		private static EnvelopeRelation Relate(double xMin, double yMin, double xMax, double yMax,
+		                                       ISegmentList polygon)
+		{
+			return GeomRelationUtils.GetEnvelopeRelation(xMin, yMin, xMax, yMax, polygon,
+			                                             _tolerance);
+		}
+
+		private static MultiLinestring Square(double min, double max)
+		{
+			return GeomTestUtils.CreatePoly(Corners(min, max));
+		}
+
+		/// <summary>A square from 0 to 100 with a square hole from 30 to 70.</summary>
+		private static MultiLinestring Donut()
+		{
+			return new RingGroup(GeomTestUtils.CreateRing(Corners(0, 100)),
+			                     new[] { GeomTestUtils.CreateRing(Corners(30, 70)) });
+		}
+
+		private static List<Pnt3D> Corners(double min, double max)
+		{
+			return new List<Pnt3D>
+			       {
+				       new Pnt3D(min, min, 0),
+				       new Pnt3D(min, max, 0),
+				       new Pnt3D(max, max, 0),
+				       new Pnt3D(max, min, 0)
+			       };
+		}
+
+		#endregion
 	}
 }

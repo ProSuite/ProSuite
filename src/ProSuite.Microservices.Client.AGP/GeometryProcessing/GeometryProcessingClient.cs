@@ -456,7 +456,7 @@ public class GeometryProcessingClient : MicroserviceClientBase,
 			cancellationToken);
 	}
 
-	public IList<ResultFeature> ApplySegmentRemoval(IList<Feature> selectedFeatures,
+	public SegmentRemovalResult ApplySegmentRemoval(IList<Feature> selectedFeatures,
 	                                                IList<GeneralizedFeature> segmentsToRemove,
 	                                                double? weedTolerance,
 	                                                bool weedNonLinearSegments,

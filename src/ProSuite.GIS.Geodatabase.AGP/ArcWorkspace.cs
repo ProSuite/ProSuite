@@ -231,14 +231,7 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		{
 			_allRelationshipClasses = new List<IRelationshipClass>();
 
-			foreach (RelationshipClassDefinition definition in Geodatabase
-				         .GetDefinitions<RelationshipClassDefinition>())
-			{
-				TryAddRelClass(definition, _allRelationshipClasses);
-			}
-
-			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
-				         .GetDefinitions<AttributedRelationshipClassDefinition>())
+			foreach (RelationshipClassDefinition definition in GetRelationshipClassDefinitions())
 			{
 				TryAddRelClass(definition, _allRelationshipClasses);
 			}
@@ -248,6 +241,20 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		{
 			yield return relationshipClass;
 		}
+	}
+
+	private List<RelationshipClassDefinition> GetRelationshipClassDefinitions()
+	{
+		var result = new List<RelationshipClassDefinition>();
+
+		if (! RelationshipClassUtils.TryAddRelationshipClassDefinitions(
+			    Geodatabase, result, out string message))
+		{
+			// For example, a memory geodatabase has no relationship classes.
+			_msg.Debug(message);
+		}
+
+		return result;
 	}
 
 	private void TryAddRelClass(RelationshipClassDefinition definition,
@@ -334,14 +341,8 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 				break;
 			case esriDatasetType.esriDTRelationshipClass:
-				foreach (RelationshipClassDefinition definition in Geodatabase
-					         .GetDefinitions<RelationshipClassDefinition>())
-				{
-					yield return new ArcRelationshipClassDefinitionName(definition, this);
-				}
-
-				foreach (AttributedRelationshipClassDefinition definition in Geodatabase
-					         .GetDefinitions<AttributedRelationshipClassDefinition>())
+				foreach (RelationshipClassDefinition definition in
+				         GetRelationshipClassDefinitions())
 				{
 					yield return new ArcRelationshipClassDefinitionName(definition, this);
 				}
@@ -382,7 +383,12 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		}
 	}
 
-	public string PathName => _pathName ??= WorkspaceUtils.GetCatalogPath(Geodatabase);
+	/// <summary>
+	/// The catalog path, or an empty string for a geodatabase that has none, such as an
+	/// in-memory geodatabase.
+	/// </summary>
+	public string PathName =>
+		_pathName ??= WorkspaceUtils.GetDatastorePath(Geodatabase)?.LocalPath ?? string.Empty;
 
 	public esriWorkspaceType Type =>
 		_workspaceType ??= ArcWorkspaceUtils.FromGeodatabaseWorkspaceType(
@@ -400,10 +406,11 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 	{
 		GeodatabaseType geodatabaseType = Geodatabase.GetGeodatabaseType();
 
-		// A live remote (enterprise) connection or feature service exists by virtue of being
-		// open; there is no local path to probe.
+		// A live remote (enterprise) connection, feature service or in-memory geodatabase
+		// exists by virtue of being open; there is no local path to probe.
 		if (geodatabaseType == GeodatabaseType.RemoteDatabase ||
-		    geodatabaseType == GeodatabaseType.Service)
+		    geodatabaseType == GeodatabaseType.Service ||
+		    geodatabaseType == GeodatabaseType.Memory)
 		{
 			return true;
 		}
@@ -1200,6 +1207,10 @@ public class VersionInfo : IVersionInfo
 
 	private readonly bool _isOwner;
 
+	// The children must be read lazily: a child's parent reads its children again,
+	// which would otherwise recurse endlessly between parent and child.
+	private readonly Lazy<IEnumerable<IVersionInfo>> _children;
+
 	public VersionInfo(Version version)
 	{
 		VersionName = version.GetName();
@@ -1207,7 +1218,7 @@ public class VersionInfo : IVersionInfo
 		Created = version.GetCreatedDate();
 		Modified = version.GetModifiedDate();
 		Parent = version.GetParent() != null ? new VersionInfo(version.GetParent()) : null;
-		Children = GetChildren(version);
+		_children = new Lazy<IEnumerable<IVersionInfo>>(() => GetChildren(version));
 
 		_isOwner = version.IsOwner();
 	}
@@ -1221,7 +1232,8 @@ public class VersionInfo : IVersionInfo
 
 	public IVersionInfo Parent { get; }
 
-	public IEnumerable<IVersionInfo> Children { get; }
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public IEnumerable<IVersionInfo> Children => _children.Value;
 
 	public bool IsOwner()
 	{

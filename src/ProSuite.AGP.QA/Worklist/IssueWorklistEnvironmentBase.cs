@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
@@ -18,6 +19,8 @@ namespace ProSuite.AGP.QA.WorkList
 	public abstract class IssueWorkListEnvironmentBase : DbWorkListEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private const string _qaGroupLayerName = "QA";
 
 		// TODO: (daro) create different Environments for IssueWorkList and ErrorWorkList and...
 		protected IssueWorkListEnvironmentBase(
@@ -41,12 +44,82 @@ namespace ProSuite.AGP.QA.WorkList
 			RemoveFromMapCore(mapView, GetTablesCore());
 		}
 
+		/// <summary>
+		/// Loads the work list group layer containing the work list layer and the issue layers
+		/// in a single step. In an edit session, Pro synchronizes the editing templates of all
+		/// open maps for every added map member and for most property changes of a layer.
+		/// Adding the layers one by one and changing their properties afterwards results in
+		/// dozens of template synchronizations that block the application for a long time.
+		/// </summary>
+		public override void LoadLayers(MapView mapView, IWorkList worklist,
+		                                string workListDefinitionFilePath)
+		{
+			Map map = mapView.Map;
+
+			GroupLayer qaGroupLayer = FindQaGroupLayer(map);
+
+			string groupName = GetDisplayName();
+
+			if (groupName == null ||
+			    qaGroupLayer?.FindLayers(groupName).OfType<GroupLayer>().Any() == true)
+			{
+				// The work list group layer exists already, add the missing layers into it:
+				base.LoadLayers(mapView, worklist, workListDefinitionFilePath);
+				return;
+			}
+
+			_msg.DebugFormat("Creating group layer {0} with work list and issue layers", groupName);
+
+			var layerDefinitions = new List<CIMDefinition>();
+			var tableDefinitions = new List<CIMDefinition>();
+
+			// The issue layers on top, the work list layer at the bottom:
+			foreach (Table table in GetTablesCore().OrderBy(GetDrawingOrder))
+			{
+				CIMDefinition definition = CreateAssociatedMapMemberDefinition(table, worklist);
+
+				if (definition is CIMStandaloneTable)
+				{
+					tableDefinitions.Add(definition);
+				}
+				else
+				{
+					layerDefinitions.Add(definition);
+				}
+			}
+
+			layerDefinitions.Add(
+				CreateWorkListLayerDefinition(worklist, workListDefinitionFilePath));
+
+			CIMGroupLayer workListGroupLayer = CreateGroupLayerDefinition(
+				groupName,
+				layerDefinitions.Select(definition => definition.URI).ToList(),
+				tableDefinitions.Select(definition => definition.URI).ToList());
+
+			layerDefinitions.Add(workListGroupLayer);
+
+			CIMBaseLayer topLayer = workListGroupLayer;
+			ILayerContainerEdit layerContainer = qaGroupLayer;
+
+			if (qaGroupLayer == null)
+			{
+				CIMGroupLayer qaGroupLayerDefinition =
+					CreateGroupLayerDefinition(_qaGroupLayerName, new[] { workListGroupLayer.URI });
+
+				layerDefinitions.Add(qaGroupLayerDefinition);
+
+				topLayer = qaGroupLayerDefinition;
+				layerContainer = map;
+			}
+
+			CreateLayer(topLayer, layerDefinitions, tableDefinitions, layerContainer);
+		}
+
 		protected override T GetLayerContainerCore<T>(MapView mapView)
 		{
-			var qaGroupLayerName = "QA";
+			var qaGroupLayerName = _qaGroupLayerName;
 
-			GroupLayer qaGroupLayer = mapView.Map.FindLayers(qaGroupLayerName)
-			                                 .OfType<GroupLayer>().FirstOrDefault();
+			GroupLayer qaGroupLayer = FindQaGroupLayer(mapView.Map);
 
 			if (qaGroupLayer == null)
 			{
@@ -86,6 +159,12 @@ namespace ProSuite.AGP.QA.WorkList
 			}
 
 			return qaGroupLayer as T;
+		}
+
+		[CanBeNull]
+		private static GroupLayer FindQaGroupLayer([NotNull] Map map)
+		{
+			return map.FindLayers(_qaGroupLayerName).OfType<GroupLayer>().FirstOrDefault();
 		}
 
 		// TODO: (daro) drop!

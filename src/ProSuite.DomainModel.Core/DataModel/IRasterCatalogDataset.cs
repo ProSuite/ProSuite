@@ -7,23 +7,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 	/// dataset with the additional properties, such as the boundary dataset, ZOrder field, etc.
 	/// Even a plain vector dataset with a configured file-path field could serve the same role by
 	/// implementing this interface in the future.
+	/// <para>
+	/// The catalog and the file-path field are inherited from <see cref="IFileCatalogDataset"/>,
+	/// which a point cloud catalog carries too; only the raster-specific extras are declared here.
+	/// </para>
 	/// </summary>
-	public interface IRasterCatalogDataset : IRasterMosaicDataset
+	public interface IRasterCatalogDataset : IFileCatalogDataset, IRasterMosaicDataset
 	{
-		/// <summary>
-		/// The feature class that catalogs the raster tiles (one feature per tile). This is the
-		/// dataset itself in case of a basic raster catalog, but is modelled separately to keep the
-		/// abstraction generic. The footprint class in case of a mosaic.
-		/// </summary>
-		[NotNull]
-		IVectorDataset CatalogDataset { get; }
-
-		/// <summary>
-		/// Name of the field holding the path to each tile's raster file. Required.
-		/// </summary>
-		[NotNull]
-		string FilePathFieldName { get; }
-
 		/// <summary>
 		/// Optional boundary polygon dataset. When null, the union of the catalog tiles is used as
 		/// the interpolation domain.

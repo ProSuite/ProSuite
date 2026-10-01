@@ -60,6 +60,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return PrimaryWorkspaceContext.OpenSimpleRasterMosaic(dataset);
 		}
 
+		public PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			return PrimaryWorkspaceContext.OpenPointCloud(dataset);
+		}
+
 		public IRelationshipClass OpenRelationshipClass(Association association)
 		{
 			return PrimaryWorkspaceContext.OpenRelationshipClass(association);

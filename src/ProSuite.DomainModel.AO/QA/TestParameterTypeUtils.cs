@@ -73,6 +73,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.RasterDataset;
 			if (typeof(SimpleRasterMosaic).IsAssignableFrom(dataType))
 				return TestParameterType.RasterMosaicDataset;
+			if (typeof(PointCloudReference).IsAssignableFrom(dataType))
+				return TestParameterType.PointCloudDataset;
 			if (typeof(TerrainReference).IsAssignableFrom(dataType))
 				return TestParameterType.TerrainDataset;
 			if (typeof(TopologyReference).IsAssignableFrom(dataType))

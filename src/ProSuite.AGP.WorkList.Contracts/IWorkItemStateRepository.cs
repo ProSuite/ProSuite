@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts;
@@ -28,7 +30,16 @@ public interface IWorkItemStateRepository
 	void Commit([NotNull] IList<ISourceClass> sourceClasses,
 	            Envelope extent);
 
+	[Obsolete("The index depends on the order of the loaded items and cannot be restored. " +
+	          "Use CurrentItem instead.")]
 	int? CurrentIndex { get; set; }
+
+	/// <summary>
+	/// The reference (unique table id and object id) of the current item. Unlike the
+	/// deprecated CurrentIndex it stays valid when the items are loaded again in a different
+	/// order, for example after re-opening the project.
+	/// </summary>
+	GdbObjectReference? CurrentItem { get; set; }
 
 	void Rename(string name);
 

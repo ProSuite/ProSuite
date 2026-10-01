@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.PointCloud;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
@@ -133,6 +134,16 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
+		public static PointCloudReference TryOpenFromMasterDatabase(
+			IPointCloudDataset dataset, bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+				allowAlways);
+
+			return context?.OpenPointCloud(dataset);
+		}
+
+		[CanBeNull]
 		public static TopologyReference TryOpenFromMasterDatabase(
 			ITopologyDataset dataset, bool allowAlways = false)
 		{
@@ -198,6 +209,40 @@ namespace ProSuite.DomainModel.AO.DataModel
 				dataset.FilePathFieldName, dataset.CellSizeFieldName);
 
 			return new MosaicRasterReference(simpleRasterMosaic);
+		}
+
+		/// <summary>
+		/// Creates a <see cref="PointCloudReference"/> for a point-cloud catalog dataset, i.e. a
+		/// polygon feature class whose features reference one LAS file each via a file-path field.
+		/// The point cloud counterpart of <see cref="CreateRasterCatalogMosaic"/>, and the shared
+		/// seam all <c>OpenPointCloud</c> implementations funnel through.
+		/// </summary>
+		/// <param name="dataset">The point cloud catalog dataset to open.</param>
+		/// <param name="openFeatureClass">A delegate that opens the feature class for a vector
+		/// dataset (typically the dataset context's <c>OpenFeatureClass</c>). The seam never opens
+		/// the catalog itself, which is what lets each context supply its own opener.</param>
+		[NotNull]
+		public static PointCloudReference CreatePointCloudCatalog(
+			[NotNull] IPointCloudCatalogDataset dataset,
+			[NotNull] Func<IVectorDataset, IFeatureClass> openFeatureClass)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+			Assert.ArgumentNotNull(openFeatureClass, nameof(openFeatureClass));
+
+			IVectorDataset catalogDataset = Assert.NotNull(
+				dataset.CatalogDataset, "Catalog dataset not defined for {0}", dataset.Name);
+
+			IFeatureClass catalogClass = Assert.NotNull(
+				openFeatureClass(catalogDataset),
+				"Catalog feature class cannot be opened for {0}", dataset.Name);
+
+			string filePathFieldName = Assert.NotNullOrEmpty(
+				dataset.FilePathFieldName,
+				"No file path field defined for point cloud {0}", dataset.Name);
+
+			var catalogSource = new LasPointCloudCatalogSource(catalogClass, filePathFieldName);
+
+			return new LasCatalogReference(dataset.Name, catalogSource);
 		}
 
 		/// <summary>
