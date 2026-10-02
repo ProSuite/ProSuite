@@ -789,12 +789,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private IDictionary<string, IReadOnlyRow> GetOtherRowsByKey(
-			[NotNull] IEnumerable<string> keyValues)
+			[NotNull] ICollection<string> keyValues)
 		{
 			// Get the non-feature-rows:
 			IDictionary<string, IReadOnlyRow> otherRows = new Dictionary<string, IReadOnlyRow>();
-			foreach (IReadOnlyRow row in TableFilterUtils.GetRowsInList(
-				         OtherEndClass, OtherClassKeyField, keyValues, false))
+			foreach (IReadOnlyRow row in FetchRowsByKeyAdaptive(
+				         keyValues, OtherEndClass, OtherClassKeyField, false))
 			{
 				string otherRowKey = GetKeyValue(row, OtherClassKeyFieldIndex);
 
@@ -876,8 +876,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				otherRows = TableFilterUtils.GetRowsInList(
-					OtherEndClass, OtherClassKeyField, fClassKeys, false);
+				otherRows = FetchRowsByKeyAdaptive(
+					fClassKeys, OtherEndClass, OtherClassKeyField, false);
 			}
 
 			// Get the non-feature-rows:
@@ -962,8 +962,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				bridgeTableRows = FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
-				                                            bridgeTableGeoKeyField, recycle);
+				bridgeTableRows = FetchRowsByKeyAdaptive(geoKeys, bridgeTable,
+				                                         bridgeTableGeoKeyField, recycle);
 			}
 
 			foreach (IReadOnlyRow row in bridgeTableRows)
@@ -1092,9 +1092,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#endregion
 
-		private IEnumerable<IReadOnlyRow> FetchBridgeTableRowsByKey(
-			[NotNull] HashSet<string> keys,
-			[NotNull] IReadOnlyTable bridgeTable,
+		/// <summary>
+		/// Fetches the rows of <paramref name="table" /> whose key is in <paramref name="keys" />,
+		/// either with select-in lists or by reading the whole table and filtering by key. With
+		/// many keys the select-in lists cost one round trip per ~1000 keys (65 sequential
+		/// queries / ~30 s for a 64K-key TLM route peek), a single full read is far cheaper.
+		/// </summary>
+		private IEnumerable<IReadOnlyRow> FetchRowsByKeyAdaptive(
+			[NotNull] ICollection<string> keys,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string keyFieldName,
 			bool recycle)
 		{
@@ -1114,12 +1120,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				long ftsCount = GetTableRowCount(bridgeTable);
+				long ftsCount = GetTableRowCount(table);
 
 				clientSideKeyFiltering = (double) keys.Count / ftsCount > 0.025;
 			}
 
-			return FetchRowsByKey(bridgeTable, keys, keyFieldName, recycle, clientSideKeyFiltering);
+			return FetchRowsByKey(table, keys, keyFieldName, recycle, clientSideKeyFiltering);
 		}
 
 		private static IEnumerable<IReadOnlyRow> FetchRowsByKey(

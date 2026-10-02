@@ -1257,6 +1257,84 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		[Test]
+		public void CanInnerJoinOneToMany_WholeTableReadMatchesSelectIn()
+		{
+			// The non-M:N key fetch switches from select-in lists to one whole-table read filtered
+			// by key when the key set is large (the TLM_WANDERWEG -> TLM_STRASSE route case). Force
+			// each strategy (FTS = select-in, INDEX = whole-table read) and compare the results.
+			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
+			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
+
+			try
+			{
+				IFeatureWorkspace ws =
+					TestWorkspaceUtils.CreateInMemoryWorkspace(
+						"TrTableJoinInMemory_OneToManyWholeTableRead");
+
+				IFeatureClass roadFc =
+					CreateFeatureClass(
+						ws, "roadFc", esriGeometryType.esriGeometryPolyline,
+						new[] { FieldUtils.CreateIntegerField("Nr_Road") });
+
+				ITable trailTable = DatasetUtils.CreateTable(
+					ws, "trails",
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("Trail_Road"),
+					FieldUtils.CreateIntegerField("Trail_Nr"));
+
+				for (var nr = 1; nr <= 4; nr++)
+				{
+					IFeature f = roadFc.CreateFeature();
+					f.Value[1] = nr;
+					f.Shape = CurveConstruction.StartLine(nr * 10, 0).LineTo(nr * 10, 10).Curve;
+					f.Store();
+				}
+
+				// Road 1 carries two trails, road 3 one; road 9 does not exist and must not join.
+				(int road, int trail)[] trails = { (1, 100), (1, 101), (3, 300), (9, 900) };
+				foreach ((int road, int trail) in trails)
+				{
+					IRow r = trailTable.CreateRow();
+					r.Value[1] = road;
+					r.Value[2] = trail;
+					r.Store();
+				}
+
+
+				// The strategy decides which trail rows are fetched, which shows as the multiset of
+				// joined roads (road 1 twice, road 3 once, road 9 never). The trail attributes are not
+				// asserted: in this in-memory setup they read 0 in the joined row regardless of
+				// strategy (pre-existing, unrelated to the key fetch).
+				List<int> JoinedRoads(string strategy)
+				{
+					Environment.SetEnvironmentVariable(envVar, strategy);
+
+					var tr = new TrTableJoinInMemory(
+						ReadOnlyTableFactory.Create(roadFc),
+						ReadOnlyTableFactory.Create(trailTable),
+						"Nr_Road", "Trail_Road", JoinType.InnerJoin);
+					((ITableTransformer) tr).TransformerName = "test_join";
+
+					GdbTable joined = tr.GetTransformed();
+					int roadIdx = FindJoinedField(joined, "Nr_Road");
+					return joined.EnumReadOnlyRows(null, false)
+					             .Select(row => Convert.ToInt32(row.get_Value(roadIdx)))
+					             .OrderBy(r => r)
+					             .ToList();
+				}
+
+				var expected = new List<int> { 1, 1, 3 };
+
+				CollectionAssert.AreEqual(expected, JoinedRoads("FTS"));
+				CollectionAssert.AreEqual(expected, JoinedRoads("INDEX"));
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable(envVar, originalStrategy);
+			}
+		}
+
 		private static int FindJoinedField(GdbTable table, string fieldName)
 		{
 			int idx = table.FindField(fieldName);
