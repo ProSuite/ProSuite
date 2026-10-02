@@ -1335,6 +1335,102 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		[Test]
+		public void CanInnerJoinOneToMany_ReadOnlyRequestedOtherFields()
+		{
+			// The whole-table read of the other table fetches only its key, OID and the requested
+			// fields. Requested values must be unchanged; an unrequested field comes back empty,
+			// which shows the restriction was applied.
+			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
+			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
+
+			try
+			{
+				Environment.SetEnvironmentVariable(envVar, "INDEX");
+
+				IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace(
+					"TrTableJoinInMemory_ReadOnlyRequestedOtherFields");
+
+				ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
+					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+				IFeatureClass roadFc = DatasetUtils.CreateSimpleFeatureClass(
+					ws, "ROADS", null,
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("ROADNR"),
+					FieldUtils.CreateShapeField(
+						"SHAPE", esriGeometryType.esriGeometryPoint, sref, 1000));
+
+				ITable trailTable = DatasetUtils.CreateTable(
+					ws, "TRAILS",
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("TRAIL_ROAD"),
+					FieldUtils.CreateIntegerField("TRAIL_TYPE"),
+					FieldUtils.CreateIntegerField("TRAIL_INFO"));
+
+				for (var nr = 1; nr <= 3; nr++)
+				{
+					IFeature f = roadFc.CreateFeature();
+					f.Value[1] = nr;
+					f.Shape = GeometryFactory.CreatePoint(2600000 + nr * 10, 1200000);
+					f.Store();
+				}
+
+				foreach ((int road, int type) in new[] { (1, 10), (1, 20), (3, 30) })
+				{
+					IRow r = trailTable.CreateRow();
+					r.Value[1] = road;
+					r.Value[2] = type;
+					r.Value[3] = type * 100;
+					r.Store();
+				}
+
+				var tr = new TrTableJoinInMemory(
+					ReadOnlyTableFactory.Create(roadFc), ReadOnlyTableFactory.Create(trailTable),
+					"ROADNR", "TRAIL_ROAD", JoinType.InnerJoin);
+				((ITableTransformer) tr).TransformerName = "test_join";
+				((ITableTransformerFieldSettings) tr).FullyQualifyFieldNames = true;
+
+				GdbTable joined = tr.GetTransformed();
+				int roadIdx = joined.FindField("ROADS.ROADNR");
+				int typeIdx = joined.FindField("TRAILS.TRAIL_TYPE");
+				int infoIdx = joined.FindField("TRAILS.TRAIL_INFO");
+				Assert.True(roadIdx >= 0 && typeIdx >= 0 && infoIdx >= 0);
+
+				List<(int, int, object)> Read(string subFields)
+				{
+					var filter = new AoFeatureClassFilter(
+						             GeometryFactory.CreateEnvelope(
+							             2599000, 1199000, 2601000, 1201000, sref))
+					             { SubFields = subFields };
+
+					return joined.EnumReadOnlyRows(filter, false)
+					             .Select(row => (Convert.ToInt32(row.get_Value(roadIdx)),
+						                            Convert.ToInt32(row.get_Value(typeIdx)),
+						                            row.get_Value(infoIdx)))
+					             .OrderBy(t => t.Item2)
+					             .ToList();
+				}
+
+				List<(int, int, object)> all = Read("*");
+				List<(int, int, object)> restricted =
+					Read("ROADS.ROADNR,ROADS.SHAPE,TRAILS.TRAIL_TYPE");
+
+				CollectionAssert.AreEqual(new[] { (1, 10), (1, 20), (3, 30) },
+				                          all.Select(t => (t.Item1, t.Item2)));
+				CollectionAssert.AreEqual(all.Select(t => (t.Item1, t.Item2)),
+				                          restricted.Select(t => (t.Item1, t.Item2)));
+
+				Assert.True(all.All(t => Convert.ToInt32(t.Item3) == t.Item2 * 100));
+				Assert.True(restricted.All(t => t.Item3 == null || t.Item3 is DBNull),
+				            "the unrequested TRAIL_INFO should not have been read");
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable(envVar, originalStrategy);
+			}
+		}
+
 		private static int FindJoinedField(GdbTable table, string fieldName)
 		{
 			int idx = table.FindField(fieldName);
