@@ -142,7 +142,17 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			{
 				if (! editingAlreadyEnabled)
 				{
-					await Project.Current.SetIsEditingEnabledAsync(false);
+					bool editsSaved = ! Project.Current.HasEdits ||
+					                  await Project.Current.SaveEditsAsync();
+
+					if (editsSaved)
+					{
+						await Project.Current.SetIsEditingEnabledAsync(false);
+					}
+					else
+					{
+						_msg.Warn("The issue updates could not be saved. Editing remains enabled.");
+					}
 				}
 			}
 		}

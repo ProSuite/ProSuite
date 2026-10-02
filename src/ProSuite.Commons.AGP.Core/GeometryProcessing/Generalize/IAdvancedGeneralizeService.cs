@@ -22,7 +22,7 @@ public interface IAdvancedGeneralizeService
 	                                            CancellationToken cancellationToken);
 
 	[CanBeNull]
-	IList<ResultFeature> ApplySegmentRemoval([NotNull] IList<Feature> selectedFeatures,
+	SegmentRemovalResult ApplySegmentRemoval([NotNull] IList<Feature> selectedFeatures,
 	                                         [NotNull] IList<GeneralizedFeature> segmentsToRemove,
 	                                         double? weedTolerance,
 	                                         bool weedNonLinearSegments,

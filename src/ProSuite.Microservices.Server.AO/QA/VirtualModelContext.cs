@@ -184,6 +184,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return GetMasterDatabaseContext(dataset.Model).OpenSimpleRasterMosaic(dataset);
 		}
 
+		public PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			// Like mosaics, point cloud catalogs are not streamed from the client: the catalog is
+			// opened from the model's master database on the server, and the LAS files it points
+			// to must be reachable from the server process.
+			return GetMasterDatabaseContext(dataset.Model).OpenPointCloud(dataset);
+		}
+
 		/// <summary>
 		/// Gets the model's master-database (user connection) workspace context, used to open
 		/// dataset types that are not transferred from the client (rasters and mosaics).

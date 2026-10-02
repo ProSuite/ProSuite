@@ -102,8 +102,34 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
+		public override PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			if (dataset is IPointCloudCatalogDataset catalogDataset)
+			{
+				// A point cloud catalog: the tiles and their LAS file paths are provided by a
+				// polygon feature class.
+				return ModelElementUtils.CreatePointCloudCatalog(
+					catalogDataset, OpenFeatureClass);
+			}
+
+			throw new ArgumentException(
+				$"Unsupported point cloud dataset {dataset.Name}: not a point cloud catalog.");
+		}
+
 		public override MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			if (dataset is IRasterCatalogDataset catalogDataset)
+			{
+				// A raster catalog (such as an elevation raster dataset): the tiles and their file
+				// paths are provided by a polygon feature class.
+				return ModelElementUtils.CreateRasterCatalogMosaic(
+					catalogDataset, OpenFeatureClass);
+			}
+
 			IMosaicDataset mosaic = _workspaceProxy.OpenMosaicDataset(dataset.Name);
 
 			var simpleRasterMosaic = new SimpleRasterMosaic(mosaic);

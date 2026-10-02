@@ -47,6 +47,7 @@ public class WorkItemTable : PluginTableTemplate
 	/// initialized and no data source or metadata other than the work list definition file
 	/// is available yet.
 	/// </summary>
+	[CanBeNull]
 	private IWorkItemData WorkItems
 	{
 		get
@@ -121,8 +122,7 @@ public class WorkItemTable : PluginTableTemplate
 					return "No spatial filter";
 				}
 
-				bool willFail = filter.OutputSpatialReference == null &&
-				                WorkItems.Extent == null;
+				bool willFail = filter.OutputSpatialReference == null && GetExtent() == null;
 
 				return "Querying WorkItemTable '" + _tableName +
 				       (willFail

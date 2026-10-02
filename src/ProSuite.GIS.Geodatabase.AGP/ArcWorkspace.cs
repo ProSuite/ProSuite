@@ -408,7 +408,7 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 			return true;
 		}
 
-		string localPath = Geodatabase.GetPath()?.LocalPath;
+		string localPath = WorkspaceUtils.GetDatastorePath(Geodatabase)?.LocalPath;
 
 		if (string.IsNullOrEmpty(localPath))
 		{

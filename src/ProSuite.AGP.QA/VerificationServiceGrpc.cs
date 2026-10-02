@@ -175,7 +175,11 @@ namespace ProSuite.AGP.QA
 			IVerificationDataProvider dataProvider =
 				CreateVerificationDataProvider(projectWorkspace);
 
-			if (dataProvider != null && await ShouldProvideDataFromClient(projectWorkspace))
+			ClientDataReason clientDataReason = dataProvider == null
+				                                    ? ClientDataReason.None
+				                                    : await GetClientDataReason(projectWorkspace);
+
+			if (clientDataReason != ClientDataReason.None)
 			{
 				provideDataFromClient = true;
 
@@ -186,9 +190,7 @@ namespace ProSuite.AGP.QA
 				// so blocking on the MCT here does not dead-lock.
 				verificationRun.DataProvisionScheduler = func => ProContext.Run(func);
 
-				_msg.DebugFormat(
-					"Verification data will be provided by the client (branch version or " +
-					"unsaved edits detected, or client data forced).");
+				_msg.Info(GetClientDataMessage(clientDataReason));
 			}
 
 			// Mode 2 (server-driven schema): send no schema; the client answers the server's
@@ -207,32 +209,6 @@ namespace ProSuite.AGP.QA
 			[NotNull] ProjectWorkspace projectWorkspace)
 		{
 			return null;
-		}
-
-		private async Task<bool> ShouldProvideDataFromClient(
-			[NotNull] ProjectWorkspace projectWorkspace)
-		{
-			if (AlwaysUseClientData)
-			{
-				return true;
-			}
-
-			Datastore datastore = projectWorkspace.Datastore;
-
-			bool result = await QueuedTask.Run(() =>
-			{
-				// Branch versions cannot be opened by the server's Enterprise SDK (it silently falls
-				// back to Default) -> always provide the data from the client.
-				if (IsFeatureService(datastore))
-				{
-					return true;
-				}
-
-				// Unsaved edits are invisible to the server -> provide the edited data from the client.
-				return HasUnsavedEdits(datastore);
-			});
-
-			return result;
 		}
 
 		private static bool IsFeatureService([CanBeNull] Datastore datastore)
@@ -422,6 +398,60 @@ namespace ProSuite.AGP.QA
 		{
 			// TODO
 			return -1;
+		}
+
+		private enum ClientDataReason
+		{
+			None,
+			Forced,
+			FeatureService,
+			UnsavedEdits
+		}
+
+		private async Task<ClientDataReason> GetClientDataReason(
+			[NotNull] ProjectWorkspace projectWorkspace)
+		{
+			if (AlwaysUseClientData)
+			{
+				return ClientDataReason.Forced;
+			}
+
+			Datastore datastore = projectWorkspace.Datastore;
+
+			return await QueuedTask.Run(() =>
+			{
+				if (IsFeatureService(datastore))
+				{
+					return ClientDataReason.FeatureService;
+				}
+
+				return HasUnsavedEdits(datastore)
+					       ? ClientDataReason.UnsavedEdits
+					       : ClientDataReason.None;
+			});
+		}
+
+		[NotNull]
+		private static string GetClientDataMessage(ClientDataReason reason)
+		{
+			const string sentFromHere =
+				"the data is read from this ArcGIS Pro session and sent to the verification service";
+
+			switch (reason)
+			{
+				case ClientDataReason.UnsavedEdits:
+					return $"The verified data has unsaved edits, so {sentFromHere}.";
+
+				case ClientDataReason.FeatureService:
+					return
+						$"The verified data is provided from a feature service, so {sentFromHere}.";
+
+				case ClientDataReason.Forced:
+					return $"Client-provided verification data is switched on, so {sentFromHere}.";
+
+				default:
+					return $"For this verification, {sentFromHere}.";
+			}
 		}
 	}
 }

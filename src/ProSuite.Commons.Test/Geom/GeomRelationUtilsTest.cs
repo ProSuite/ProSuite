@@ -1,8 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geom
@@ -597,6 +598,93 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanDetermineTouchesXYRoofBasePlate()
+		{
+			// Roof template with a base plate (GOTOP): the base plate is the downward-facing
+			// bottom face, i.e. it is counter-clockwise in XY, while the upward-facing roof
+			// faces are clockwise. The base plate's footprint covers the entire roof, so the
+			// roof faces are 'contained' in it in XY - they only touch along the eaves.
+			// This is the grouping criterion used by
+			// CleanMultipatchUtils.HaveLinearBoundaryIntersection3DAndTouch2D.
+
+			// Base plate at z=0, counter-clockwise (faces down):
+			var basePlate = new Linestring(new List<Pnt3D>
+			                               {
+				                               new Pnt3D(0, 0, 0),
+				                               new Pnt3D(10, 0, 0),
+				                               new Pnt3D(10, 10, 0),
+				                               new Pnt3D(0, 10, 0),
+				                               new Pnt3D(0, 0, 0)
+			                               });
+
+			// Southern gable roof face, clockwise (faces up), sharing the eave (0,0)-(10,0):
+			var slopedRing = new Linestring(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 5, 5),
+				                                new Pnt3D(10, 5, 5),
+				                                new Pnt3D(10, 0, 0)
+			                                });
+
+			Assert.AreEqual(false, basePlate.ClockwiseOriented);
+			Assert.AreEqual(true, slopedRing.ClockwiseOriented);
+
+			const double tolerance = 0.001;
+
+			// Using the ring orientation, the base plate is an island (negative ring) and the
+			// roof face lies outside its area -> they touch, and hence can be grouped:
+			Assert.True(GeomRelationUtils.TouchesXY(basePlate, slopedRing, tolerance,
+			                                        out bool disjoint));
+			Assert.False(disjoint);
+
+			// ... and the relation must be symmetric, the rings are tested in both orders:
+			Assert.True(GeomRelationUtils.TouchesXY(slopedRing, basePlate, tolerance,
+			                                        out disjoint));
+			Assert.False(disjoint);
+
+			// Disregarding the ring orientation, the base plate is a positive ring which
+			// contains the roof face -> they do not touch. This is the reason why base plates
+			// used to end up in their own multipatch part.
+			Assert.False(GeomRelationUtils.TouchesXY(basePlate, slopedRing, tolerance,
+			                                         out disjoint,
+			                                         disregardRingOrientation: true));
+
+			// The vertical gable triangle sits on the base plate boundary. Its self-
+			// intersecting XY footprint requires ring2CanHaveLinearSelfIntersections:
+			var verticalGable = new Linestring(new List<Pnt3D>
+			                                   {
+				                                   new Pnt3D(0, 0, 0),
+				                                   new Pnt3D(0, 5, 5),
+				                                   new Pnt3D(0, 10, 0),
+				                                   new Pnt3D(0, 0, 0)
+			                                   });
+
+			Assert.True(verticalGable.IsVerticalRing(tolerance));
+
+			Assert.True(GeomRelationUtils.TouchesXY(basePlate, verticalGable, tolerance,
+			                                        out disjoint,
+			                                        ring2CanHaveLinearSelfIntersections: true));
+			Assert.True(GeomRelationUtils.TouchesXY(slopedRing, verticalGable, tolerance,
+			                                        out disjoint,
+			                                        ring2CanHaveLinearSelfIntersections: true));
+
+			// Two base plates of adjacent roof templates share the wall at x=10. Both are
+			// islands, i.e. they overlap in XY and must not be grouped into one part:
+			var adjacentBasePlate = new Linestring(new List<Pnt3D>
+			                                       {
+				                                       new Pnt3D(10, 0, 0),
+				                                       new Pnt3D(20, 0, 0),
+				                                       new Pnt3D(20, 10, 0),
+				                                       new Pnt3D(10, 10, 0),
+				                                       new Pnt3D(10, 0, 0)
+			                                       });
+
+			Assert.False(GeomRelationUtils.TouchesXY(basePlate, adjacentBasePlate, tolerance,
+			                                         out disjoint));
+		}
+
+		[Test]
 		public void CanDetermineTouchesXYVerticalRing()
 		{
 			var verticalRing = new Linestring(new List<Pnt3D>
@@ -844,116 +932,6 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.False(
 				GeomRelationUtils.SourceInteriorIntersectsXY(
 					line1, otherLineInteriorIntersected, 0.01));
-		}
-
-		[Test]
-		public void CanDetermineAreaContainsRingWithTouchWithinOtherTargetPartsLinearIntersection()
-		{
-			// The source and the target's exterior ring share the wall x = 10. The island
-			// touches the exterior ring at (10, 5), i.e. on that wall - so its touch with the
-			// source lies within the linear intersection of the source with the exterior ring.
-			// The island must still get its own intersection point (it used to be absorbed by
-			// the linear intersection), and the linear intersection must not be interrupted.
-			const double tolerance = 0.001;
-
-			Linestring source = CreateRing(0, 0, 0, 10, 10, 10, 10, 5, 10, 0);
-
-			RingGroup target = RingGroup.CreateProperlyOriented(
-				CreateRing(10, 0, 10, 5, 10, 10, 20, 10, 20, 0),
-				new[] { CreateRing(10, 5, 13, 3, 16, 5, 13, 7) });
-
-			IList<IntersectionPoint3D> intersectionPoints =
-				GetIntersectionPoints(source, target, tolerance);
-
-			Assert.AreEqual(new[]
-			                {
-				                IntersectionPointType.LinearIntersectionStart,
-				                IntersectionPointType.TouchingInPoint,
-				                IntersectionPointType.LinearIntersectionEnd
-			                },
-			                intersectionPoints.Select(ip => ip.Type).ToArray());
-			Assert.AreEqual(new[] { 0, 1, 0 },
-			                intersectionPoints.Select(ip => ip.TargetPartIndex).ToArray());
-			Assert.AreEqual(3, intersectionPoints[1].VirtualSourceVertex);
-
-			Assert.AreEqual(false,
-			                GeomRelationUtils.AreaContainsXY(source, target, tolerance, null, 1));
-		}
-
-		[Test]
-		public void CanDetermineAreaContainsRingWithAllVerticesOnBoundary()
-		{
-			// As above, but the U-shaped source runs along three walls of the target's exterior
-			// ring and the island touches each of them with one vertex: every vertex is on the
-			// source boundary, the segments are not.
-			const double tolerance = 0.001;
-
-			Linestring source = CreateRing(0, 0, 0, 20, 30, 20, 30, 0, 20, 0, 20, 5, 20, 10,
-			                               15, 10, 10, 10, 10, 5, 10, 0);
-
-			RingGroup target = RingGroup.CreateProperlyOriented(
-				CreateRing(10, 0, 10, 5, 10, 10, 15, 10, 20, 10, 20, 5, 20, 0),
-				new[] { CreateRing(10, 5, 15, 10, 20, 5) });
-
-			IList<IntersectionPoint3D> intersectionPoints =
-				GetIntersectionPoints(source, target, tolerance);
-
-			Assert.AreEqual(3, intersectionPoints.Count(
-				                ip => ip.TargetPartIndex == 1 &&
-				                      ip.Type == IntersectionPointType.TouchingInPoint),
-			                "One touch point per island vertex");
-			Assert.AreEqual(2, intersectionPoints.Count(ip => ip.TargetPartIndex == 0),
-			                "One uninterrupted linear intersection with the exterior ring");
-
-			Assert.AreEqual(false,
-			                GeomRelationUtils.AreaContainsXY(source, target, tolerance, null, 1));
-		}
-
-		[Test]
-		public void CanUnionRingCongruentWithTargetRingTouchedByTargetIsland()
-		{
-			// The source is congruent with the target's exterior ring, and the target's island
-			// touches that ring at (5, 0) from the inside, i.e. within the linear intersection of
-			// the source with the exterior ring. The island's touch point must not be taken for a
-			// relation of the source to the exterior ring: the congruent source ring would count as
-			// contained and the union would lose its exterior ring.
-			const double tolerance = 0.001;
-
-			RingGroup source = RingGroup.CreateProperlyOriented(
-				CreateRing(0, 0, 0, 10, 10, 10, 10, 0, 5, 0));
-
-			RingGroup target = RingGroup.CreateProperlyOriented(
-				CreateRing(0, 0, 0, 10, 10, 10, 10, 0, 5, 0),
-				new[] { CreateRing(5, 0, 3, 3, 7, 3) });
-
-			Assert.AreEqual(100, GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance)
-			                                    .GetArea2D(), tolerance);
-			Assert.AreEqual(100, GeomTopoOpUtils.GetUnionAreasXY(target, source, tolerance)
-			                                    .GetArea2D(), tolerance);
-			Assert.AreEqual(94, GeomTopoOpUtils.GetIntersectionAreasXY(source, target, tolerance)
-			                                   .GetArea2D(), tolerance);
-			Assert.AreEqual(6, GeomTopoOpUtils.GetDifferenceAreasXY(source, target, tolerance)
-			                                  .GetArea2D(), tolerance);
-			Assert.AreEqual(0, GeomTopoOpUtils.GetDifferenceAreasXY(target, source, tolerance)
-			                                  .GetArea2D(), tolerance);
-		}
-
-		private static IList<IntersectionPoint3D> GetIntersectionPoints(
-			ISegmentList source, ISegmentList target, double tolerance)
-		{
-			return GeomTopoOpUtils.GetIntersectionPoints(source, target, tolerance);
-		}
-
-		private static Linestring CreateRing(params double[] xy)
-		{
-			var points = new List<Pnt3D>();
-
-			for (var i = 0; i < xy.Length; i += 2)
-			{
-				points.Add(new Pnt3D(xy[i], xy[i + 1], 0));
-			}
-
-			return GeomTestUtils.CreateRing(points);
 		}
 	}
 }

@@ -221,6 +221,11 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 
 	public virtual void RemoveAssociatedLayers(MapView mapView) { }
 
+	public virtual bool UseMapForWorkLists(MapView mapView)
+	{
+		return true;
+	}
+
 	/// <summary>
 	/// Returns the layer container (group layer or map) for the work list layer(s) to be added
 	/// to the specified map view.

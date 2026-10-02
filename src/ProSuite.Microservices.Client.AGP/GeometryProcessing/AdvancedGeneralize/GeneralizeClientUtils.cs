@@ -172,7 +172,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneraliz
 
 		#region Remove segments
 
-		public static IList<ResultFeature> ApplySegmentRemoval(
+		[CanBeNull]
+		public static SegmentRemovalResult ApplySegmentRemoval(
 			GeneralizeGrpc.GeneralizeGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<GeneralizedFeature> segmentsToRemove,
@@ -282,7 +283,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneraliz
 		}
 
 		[NotNull]
-		private static List<ResultFeature> GetRemovedSegmentsResult(
+		private static SegmentRemovalResult GetRemovedSegmentsResult(
 			[NotNull] ApplySegmentRemovalResponse response,
 			[NotNull] IList<Feature> featuresToUpdate)
 		{
@@ -295,11 +296,20 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedGeneraliz
 			SpatialReference resultSpatialReference =
 				featuresToUpdate.FirstOrDefault()?.GetShape().SpatialReference;
 
-			var resultFeatures = new List<ResultFeature>(
-				FeatureDtoConversionUtils.FromUpdateMsgs(response.ResultFeatures, featuresByObjRef,
-				                                         resultSpatialReference));
+			var result = new SegmentRemovalResult
+			             {
+				             ResultFeatures = new List<ResultFeature>(
+					             FeatureDtoConversionUtils.FromUpdateMsgs(
+						             response.ResultFeatures, featuresByObjRef,
+						             resultSpatialReference))
+			             };
 
-			return resultFeatures;
+			foreach (string message in response.NonStorableMessages)
+			{
+				result.NonStorableMessages.Add(message);
+			}
+
+			return result;
 		}
 
 		#endregion

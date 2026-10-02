@@ -292,7 +292,7 @@ namespace ProSuite.Commons.AO.Surface
 		/// <param name="maxExtent"></param>
 		/// <returns>The enlarged extent or null, if the search area exceeds the terrain extent.</returns>
 		[CanBeNull]
-		private IEnvelope EnlargeSearchArea(
+		protected IEnvelope EnlargeSearchArea(
 			[NotNull] IEnvelope searchedExtent,
 			[NotNull] IEnvelope areaOfInterest,
 			[CanBeNull] IPolygon currentInterpolationDomain,
@@ -599,7 +599,8 @@ namespace ProSuite.Commons.AO.Surface
 			}
 		}
 
-		private IPolygon GetInterpolationDomainInSourceSpatialRef(ITinEdit tin)
+		[CanBeNull]
+		protected IPolygon GetInterpolationDomainInSourceSpatialRef(ITinEdit tin)
 		{
 			tin.Refresh();
 

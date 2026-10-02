@@ -57,6 +57,11 @@ namespace ProSuite.DomainModel.AO.QA
 					return _datasetContext.OpenSimpleRasterMosaic(simpleRasterMosaicDataset);
 				}
 
+				if (dataset is IPointCloudDataset pointCloudDataset)
+				{
+					return _datasetContext.OpenPointCloud(pointCloudDataset);
+				}
+
 				if (dataset is ITopologyDataset topologyDataset)
 				{
 					return _datasetContext.OpenTopology(topologyDataset);
@@ -87,6 +92,8 @@ namespace ProSuite.DomainModel.AO.QA
 			if (typeof(ITableSchemaDef) == dataType)
 				return true;
 			if (typeof(IMosaicRasterDatasetDef) == dataType)
+				return true;
+			if (typeof(IPointCloudDatasetDef) == dataType)
 				return true;
 			if (typeof(IRasterDatasetDef) == dataType)
 				return true;
@@ -126,6 +133,9 @@ namespace ProSuite.DomainModel.AO.QA
 				return true;
 
 			if (typeof(MosaicRasterReference) == dataType)
+				return true;
+
+			if (typeof(PointCloudReference) == dataType)
 				return true;
 
 			if (typeof(TerrainReference) == dataType)
@@ -193,6 +203,10 @@ namespace ProSuite.DomainModel.AO.QA
 			    typeof(MosaicRasterReference) == knownType ||
 			    typeof(IMosaicRasterDatasetDef) == knownType)
 				return _datasetContext.OpenSimpleRasterMosaic((IRasterMosaicDataset) dataset);
+
+			if (typeof(PointCloudReference) == knownType ||
+			    typeof(IPointCloudDatasetDef) == knownType)
+				return _datasetContext.OpenPointCloud((IPointCloudDataset) dataset);
 
 			if (typeof(TerrainReference) == knownType ||
 			    typeof(ITerrainDef) == knownType)

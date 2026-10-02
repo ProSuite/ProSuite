@@ -30,6 +30,13 @@ public interface IWorkEnvironment
 	void LoadAssociatedLayers([NotNull] MapView mapView,
 	                          [NotNull] IWorkList worklist);
 
+	/// <summary>
+	/// Whether the specified map view should be used for work lists that are loaded into and
+	/// navigated in all map views. This allows excluding special-purpose maps, such as
+	/// overview maps.
+	/// </summary>
+	bool UseMapForWorkLists([NotNull] MapView mapView);
+
 	string GetDisplayName();
 
 	bool WorkListFileExistsInProjectFolder(out string worklistFilePath);

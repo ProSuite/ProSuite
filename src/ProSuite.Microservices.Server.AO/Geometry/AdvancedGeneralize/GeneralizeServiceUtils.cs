@@ -13,6 +13,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
+using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -102,6 +103,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedGeneralize
 					GeometryUtils.EnsureLinearized(polycurve, 0);
 				}
 
+				var notifications = new NotificationCollection();
+
 				try
 				{
 					IPointCollection pointsToDelete =
@@ -140,14 +143,22 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedGeneralize
 						Assert.NotNull(polycurveToUpdate, "Feature's shape must be a polycurve");
 
 						removeCount = GeneralizeUtils.DeleteShortSegments(
-							polycurveToUpdate, featureVertexInfo, options.Only2D, perimeter);
+							polycurveToUpdate, featureVertexInfo, options.Only2D, perimeter,
+							notifications);
+					}
+
+					foreach (INotification notification in notifications)
+					{
+						nonStorableMessagess.Add(
+							$"Feature {GeometryProcessingUtils.GetGdbObjectLabel(feature)}: " +
+							$"{notification.Message}");
 					}
 
 					if (updateGeometry.IsEmpty)
 					{
 						string message =
 							$"Feature {GeometryProcessingUtils.GetGdbObjectLabel(feature)} would become " +
-							$"empty after removing points. The feature was not changed.";
+							$"empty by the removal of the points/segments. The feature was not changed.";
 						_msg.Warn(message);
 						nonStorableMessagess.Add(message);
 					}

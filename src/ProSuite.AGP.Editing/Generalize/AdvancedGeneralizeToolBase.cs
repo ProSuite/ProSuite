@@ -177,7 +177,7 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 
 		Geometry perimeter = GetPerimeter(generalizeOptions);
 
-		IList<ResultFeature> result =
+		SegmentRemovalResult result =
 			MicroserviceClient.ApplySegmentRemoval(
 				selectedFeatures, shortSegmentsToApply, weedTolerance, weedNonLinearSegments,
 				minimumSegmentLength, use2DLength, perimeter,
@@ -190,9 +190,14 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 			return false;
 		}
 
+		foreach (string message in result.NonStorableMessages)
+		{
+			_msg.Warn(message);
+		}
+
 		HashSet<long> editableClassHandles = ToolUtils.GetEditableClassHandles(activeMapView);
 
-		foreach (ResultFeature resultFeature in result)
+		foreach (ResultFeature resultFeature in result.ResultFeatures)
 		{
 			Feature originalFeature = resultFeature.OriginalFeature;
 			Geometry newGeometry = resultFeature.NewGeometry;
@@ -206,6 +211,12 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 			                $"Unexpected type of change: {resultFeature.ChangeType}");
 
 			updates.Add(originalFeature, newGeometry);
+		}
+
+		if (updates.Count == 0)
+		{
+			_msg.Info("No feature was updated.");
+			return false;
 		}
 
 		IEnumerable<Dataset> datasets =

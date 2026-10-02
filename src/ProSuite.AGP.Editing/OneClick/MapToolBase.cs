@@ -136,7 +136,11 @@ public abstract class MapToolBase : MapTool
 
 			PressedKeys.Add(args.Key);
 
-			if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
+			// NOTE: Only claim a handled key while no modifier is down. Otherwise the tool
+			//       swallows application shortcuts that happen to use the same letter, such as
+			//       CTRL+SHIFT+O, and they never reach the DAML shortcut table.
+			if (KeyboardUtils.IsModifierKey(args.Key) ||
+			    (HandledKeys.Contains(args.Key) && ! KeyboardUtils.IsAnyModifierDown()))
 			{
 				// Trigger the call to HandleKeyDownAsync
 				args.Handled = true;
@@ -166,7 +170,7 @@ public abstract class MapToolBase : MapTool
 				await HandleEscapeAsync();
 			}
 
-			if (args.Key == _keyShowOptionsPane)
+			if (args.Key == _keyShowOptionsPane && ! KeyboardUtils.IsAnyModifierDown())
 			{
 				await UIEnvironment.ReleaseCursorAsync();
 

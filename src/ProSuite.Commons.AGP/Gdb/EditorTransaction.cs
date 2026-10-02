@@ -4,14 +4,11 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Gdb;
 
 public class EditorTransaction
 {
-	private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 	private readonly EditOperation _editOperation;
 
 	private Exception _exception;
@@ -98,61 +95,13 @@ public class EditorTransaction
 
 	private bool HasError(bool executeResult, out Exception exception)
 	{
-		exception = null;
-
-		if (executeResult)
-		{
-			return false;
-		}
-
-		_msg.Debug("The edit operation failed.");
-
-		if (_exception != null)
-		{
-			_msg.Debug("The exception from the call-back is: ", _exception);
-
-			exception = new AggregateException(
-				$"Edit operation failed: {_exception.Message}", _exception);
-		}
-		else if (_editOperation.ErrorMessage != null)
-		{
-			_msg.DebugFormat("The message from the operation execution is: {0}",
-			                 _editOperation.ErrorMessage);
-			exception = new AggregateException(
-				$"Edit operation failed: {_editOperation.ErrorMessage}");
-		}
-
-		return true;
+		return EditOperationUtils.HasError(_editOperation, executeResult, _exception,
+		                                   out exception);
 	}
 
 	private Action<EditOperation.IEditContext> GetWrappedAction(
 		[NotNull] Action<EditOperation.IEditContext> procedure)
 	{
-		void WrappedAction(EditOperation.IEditContext context)
-		{
-			try
-			{
-				procedure(context);
-			}
-			catch (Exception e)
-			{
-				// NOTE: No exception should be thrown here otherwise the process will crash
-				_msg.Debug("Error in edit operation", e);
-
-				// The Exception is internal, therefore we cannot use typeof
-				if (e.GetType().Name == "AbortEditException")
-				{
-					// Or probably if it's the wrong SR?
-					_msg.Debug("The edit operation was aborted. This could happen for " +
-					           "example if the coordinates are out of bounds.");
-				}
-
-				_exception = e;
-
-				context.Abort(e.Message);
-			}
-		}
-
-		return WrappedAction;
+		return EditOperationUtils.WrapCallback(procedure, e => _exception = e);
 	}
 }

@@ -105,7 +105,7 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	{
 		try
 		{
-			string localPath = datastore.GetPath()?.LocalPath;
+			string localPath = WorkspaceUtils.GetDatastorePath(datastore)?.LocalPath;
 
 			return ! string.IsNullOrEmpty(localPath) &&
 			       localPath.EndsWith(".sde", StringComparison.OrdinalIgnoreCase)
