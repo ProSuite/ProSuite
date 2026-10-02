@@ -1835,6 +1835,46 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetFootprintWithoutReorientingTheInputRings()
+		{
+			// The exterior ring touches itself at (5, 0), so it is split into the square and the
+			// triangle, and the grouping needs the declared interior ring anticlockwise. It is
+			// stored clockwise here (like the exterior ring, as in the Kaspar/July multipatches)
+			// and must not be reversed: the rings still belong to the caller's polyhedron.
+			Linestring exteriorRing =
+				GeomTestUtils.CreateRing(CreatePoints(0, 0, 0, 10, 10, 10, 10, 0, 5, 0, 3, 3,
+				                                      7, 3, 5, 0));
+			Linestring interiorRing =
+				GeomTestUtils.CreateRing(CreatePoints(1, 8, 1, 9, 2, 9, 2, 8));
+
+			Assert.IsTrue(exteriorRing.ClockwiseOriented);
+			Assert.IsTrue(interiorRing.ClockwiseOriented, "Interior ring as stored: clockwise");
+
+			var polyhedron = new Polyhedron(
+				new List<RingGroup> { new RingGroup(exteriorRing, new[] { interiorRing }) });
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.001, 0.001, out _);
+
+			// The square without the triangle (6) and without the interior ring (1)
+			Assert.AreEqual(93, footprint.GetArea2D(), 0.001);
+
+			Assert.IsTrue(exteriorRing.ClockwiseOriented);
+			Assert.IsTrue(interiorRing.ClockwiseOriented, "Interior ring reoriented in place");
+		}
+
+		private static List<Pnt3D> CreatePoints(params double[] xy)
+		{
+			var points = new List<Pnt3D>();
+
+			for (var i = 0; i < xy.Length; i += 2)
+			{
+				points.Add(new Pnt3D(xy[i], xy[i + 1], 0));
+			}
+
+			return points;
+		}
+
+		[Test]
 		public void CanGetFootprintForOid3828241()
 		{
 			// TLM_GEBAEUDEKOERPER OID 3828241 (Bern). When the self-intersections got an
