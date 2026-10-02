@@ -112,14 +112,31 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 							if (pointIndex != null)
 							{
 								int partIndex = proximity.PartIndex;
-								int idx = pointIndex.Value;
-								MapPoint mapPoint = targetGeometryBuilder.GetPoint(partIndex, idx);
-								//MapPointBuilderEx builder = new MapPointBuilderEx(proximity.Point);
-								MapPointBuilderEx builder = new MapPointBuilderEx(mapPoint);
-								builder.HasID = true;
-								builder.ID = sourcePoint.ID;
-								builder.HasID = sourcePoint.ID != 0;
-								targetGeometryBuilder.SetPoint(partIndex, idx, builder.ToGeometry());
+								int globalPointIndex = pointIndex.Value;
+								MapPoint mapPoint = null;
+								int targetPartIndex = -1;
+								int targetLocalPointIndex = -1;
+								//try
+								{
+									targetLocalPointIndex = GeometryUtils.GetLocalVertexIndex(
+										targetGeometryBuilder.ToGeometry(), globalPointIndex, out targetPartIndex);
+									if (targetPartIndex > -1 && targetLocalPointIndex > -1)
+									{
+										mapPoint =
+											targetGeometryBuilder.GetPoint(
+												targetPartIndex, targetLocalPointIndex);
+										MapPointBuilderEx builder = new MapPointBuilderEx(mapPoint);
+										builder.HasID = true;
+										builder.ID = sourcePoint.ID;
+										builder.HasID = sourcePoint.ID != 0;
+										targetGeometryBuilder.SetPoint(targetPartIndex, targetLocalPointIndex, builder.ToGeometry());
+									}
+								}
+								//catch (Exception exception)
+								//{
+								//	//Console.WriteLine(exception);
+								//	throw;
+								//}
 							}
 						}
 						else
