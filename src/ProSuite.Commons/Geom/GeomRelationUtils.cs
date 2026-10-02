@@ -653,23 +653,13 @@ namespace ProSuite.Commons.Geom
 				GetRealIntersectionPoints(closedPolycurve, targetSegments, tolerance,
 				                          intersectionPoints, predicate);
 
+			// if there is no intersection, the boundaries do not intersect: check a single point
 			if (intersectionPoints.Count == 0)
 			{
 				int partIndex = filterTargetByPartIndex ?? 0;
-				Linestring targetPart = targetSegments.GetPart(partIndex);
+				Pnt3D anyPoint = targetSegments.GetPart(partIndex).GetSegment(0).StartPoint;
 
-				// No intersection point for this part - but it can still touch the source: a
-				// touch within a linear intersection of another target part is absorbed into
-				// that stretch (Kaspar/July: an island touching its exterior ring where that
-				// ring runs along the source). The test point must be off the boundary, where
-				// the answer is decisive.
-				Pnt3D testPoint =
-					GetOffBoundaryTargetPoint(closedPolycurve, targetPart, tolerance) ??
-					GetOffBoundarySegmentMidPoint(closedPolycurve, targetPart, tolerance);
-
-				return testPoint == null
-					       ? (bool?) null
-					       : AreaContainsXY(closedPolycurve, testPoint, tolerance);
+				return AreaContainsXY(closedPolycurve, anyPoint, tolerance);
 			}
 
 			// First check the non-touching points. If there is any left-side deviation of the target
