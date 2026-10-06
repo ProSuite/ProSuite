@@ -1,0 +1,21 @@
+<Image xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Stretch="Uniform">
+  <Image.Source>
+    <DrawingImage>
+      <DrawingImage.Drawing>
+        <DrawingGroup>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H32 V32 H0 Z" />
+          <GeometryDrawing Brush="#E7E7E8" Geometry="M0,10 H4 L6,12 H0 Z M26,10 H32 V12 H24 Z M0,26 H32 V28 H0 Z M10,0 H20 V8 L18,10 H12 L10,8 Z" />
+          <GeometryDrawing Brush="#202040" Geometry="M0,12 H6 L10,16 H0 Z M24,12 H32 V16 H20 Z M0,22 H32 V26 H0 Z M12,0 H18 V10 H12 Z" />
+          <GeometryDrawing Brush="#FFFFFF" Geometry="M0,16 H10 L12,18 H18 L20,16 H32 V22 H0 Z" />
+          <GeometryDrawing Geometry="M10,12 C10,5.5 20,5.5 20,12 C20,16 15,16 15,20.5 V22">
+            <GeometryDrawing.Pen>
+              <Pen Brush="#FF3322" Thickness="3.4" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#FF3322" Geometry="M13,26 A2,2 0 1 1 17,26 A2,2 0 1 1 13,26 Z" />
+        </DrawingGroup>
+      </DrawingImage.Drawing>
+    </DrawingImage>
+  </Image.Source>
+</Image>

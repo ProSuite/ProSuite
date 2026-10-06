@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
-using System.Windows.Media.Imaging;
+using System.Windows.Markup;
+using System.Windows.Media;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -91,9 +92,10 @@ public abstract class ToggleSymbolDisplayButtonBase : Button
 	/// <remarks>Will be called on MCT</remarks>
 	protected abstract bool Toggle(Map map);
 
-	private protected static BitmapImage GetImage(string fileName)
+	private protected static ImageSource GetImage(string fileName)
 	{
-		return new BitmapImage(GetPackUri(fileName));
+		using var stream = System.Windows.Application.GetResourceStream(GetPackUri(fileName)).Stream;
+		return ((System.Windows.Controls.Image) XamlReader.Load(stream)).Source;
 	}
 
 	private static Uri GetPackUri(string fileName, string assemblyName = null)

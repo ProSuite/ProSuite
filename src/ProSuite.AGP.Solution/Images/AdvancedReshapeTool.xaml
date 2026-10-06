@@ -1,0 +1,19 @@
+<Image xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Stretch="Uniform">
+  <Image.Source>
+    <DrawingImage>
+      <DrawingImage.Drawing>
+        <DrawingGroup>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H32 V32 H0 Z" />
+          <GeometryDrawing Brush="#B3E9F9" Geometry="M2,4 H16 V10 H10 V24 H16 V30 H2 Z M22,6 H28 V12 H22 Z" />
+          <GeometryDrawing Brush="#404040" Geometry="M0,2 H18 V6 H16 V4 H2 V30 H16 V28 H18 V32 H0 Z M16,12 H18 V14 H16 Z M16,16 H18 V18 H16 Z M16,20 H18 V22 H16 Z M24,2 H26 V6 H24 Z M24,8 H26 V10 H24 Z M24,12 H26 V16 H24 Z M18,8 H22 V10 H18 Z M28,8 H32 V10 H28 Z" />
+          <GeometryDrawing Brush="#FF0000" Geometry="M6,6 H12 V12 H6 Z" />
+          <GeometryDrawing Brush="#8C0000" Geometry="M8,8 H10 V10 H8 Z" />
+          <GeometryDrawing Brush="#808000" Geometry="M14,10 H16 V12 H14 Z M12,12 H14 V14 H12 Z M10,14 H12 V16 H10 Z M14,14 H16 V16 H14 Z M12,16 H14 V18 H12 Z M10,18 H12 V20 H10 Z M14,18 H16 V20 H14 Z M12,20 H14 V22 H12 Z M14,22 H16 V24 H14 Z" />
+          <GeometryDrawing Brush="#008800" Geometry="M12,8 H18 V10 H12 Z M8,12 H10 V22 H8 Z M6,22 H12 V24 H22 V22 H28 V28 H22 V26 H12 V28 H6 Z" />
+          <GeometryDrawing Brush="#404040" Geometry="M8,24 H10 V26 H8 Z M24,24 H26 V26 H24 Z" />
+        </DrawingGroup>
+      </DrawingImage.Drawing>
+    </DrawingImage>
+  </Image.Source>
+</Image>
