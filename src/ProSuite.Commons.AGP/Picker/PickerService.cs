@@ -60,6 +60,8 @@ public class PickerService : IPickerService
 
 			SetWindowLocation(window, location);
 
+			RestrictToMonitor(window, location, moveIntoMonitor: positioner == null);
+
 			positioner?.SetWindow(window, location);
 
 			await UIEnvironment.WithReleasedCursorAsync(async () =>
@@ -104,6 +106,47 @@ public class PickerService : IPickerService
 
 		window.Left = dipLocation.X;
 		window.Top = dipLocation.Y;
+	}
+
+	/// <summary>
+	/// Limits the height of the window to the monitor at the location, so that a longer
+	/// list gets a scroll bar. Optionally the window is also moved up or to the left if it
+	/// extends beyond the lower or the right edge of the monitor.
+	/// </summary>
+	/// <remarks>Must call on main (UI) thread</remarks>
+	private static void RestrictToMonitor(Window window, Point location, bool moveIntoMonitor)
+	{
+		if (LocationUnknown(location))
+		{
+			return;
+		}
+
+		Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
+
+		Rect monitor = DisplayUtils.ToDeviceIndependentPixels(
+			WindowPositioner.GetClosestMonitor(location), ownerWindow);
+
+		window.MaxHeight = monitor.Height;
+
+		_msg.DebugFormat("Monitor of the picker (device independent pixels): {0}", monitor);
+
+		if (! moveIntoMonitor)
+		{
+			return;
+		}
+
+		window.SizeChanged += (_, _) =>
+		{
+			if (window.Top + window.ActualHeight > monitor.Bottom)
+			{
+				window.Top = monitor.Bottom - window.ActualHeight;
+			}
+
+			if (window.Left + window.ActualWidth > monitor.Right)
+			{
+				window.Left = monitor.Right - window.ActualWidth;
+			}
+		};
 	}
 
 	private static bool LocationUnknown(Point location)

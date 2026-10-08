@@ -530,6 +530,16 @@ public class WindowPositioner
 		return rectangles.OrderBy(rect => DistanceToRectSquared(position, rect)).ToList();
 	}
 
+	/// <summary>
+	/// Gets the working area of the monitor that is closest to the position.
+	/// </summary>
+	/// <param name="screenPosition">The position in screen pixels</param>
+	/// <returns>The working area in screen pixels</returns>
+	public static Rect GetClosestMonitor(Point screenPosition)
+	{
+		return OrderByDistance(GetMonitorExtends(), screenPosition)[0];
+	}
+
 	// The monitor working areas in screen pixels
 	private static List<Rect> GetMonitorExtends()
 	{
