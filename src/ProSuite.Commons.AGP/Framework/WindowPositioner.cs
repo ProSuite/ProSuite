@@ -609,6 +609,13 @@ public class WindowPositioner
 	[NotNull]
 	private static MapView GetMapViewAt(Point screenPosition, [NotNull] MapView activeMapView)
 	{
+		MapView visibleMapView = MapViewUtils.GetMapViewAt(screenPosition);
+
+		if (visibleMapView != null)
+		{
+			return visibleMapView;
+		}
+
 		if (GetMapViewScreenRect(activeMapView).Contains(screenPosition))
 		{
 			return activeMapView;
