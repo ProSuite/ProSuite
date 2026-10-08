@@ -201,10 +201,12 @@ public class WindowPositioner
 	}
 
 	// Note that preferredAreas are assumed to be ordered such that the best area comes first (e.g. mapView area first, then client window)
-	private Point FindPositionForObject(Point desiredPosition, double objectWidth,
-	                                    double objectHeight, List<Rect> preferredAreas,
-	                                    List<Rect> areasToAvoid, List<Rect> monitors,
-	                                    EvaluationMethod method)
+	// The monitors are assumed to be ordered by their distance to the desired position.
+	// All arguments must be in the same unit.
+	public Point FindPositionForObject(Point desiredPosition, double objectWidth,
+	                                   double objectHeight, List<Rect> preferredAreas,
+	                                   List<Rect> areasToAvoid, List<Rect> monitors,
+	                                   EvaluationMethod method)
 	{
 		// Find a suitable position while ensuring that the object is kept completely on one monitor and inside a preferred area.
 		foreach (Rect monitor in monitors)
@@ -236,6 +238,18 @@ public class WindowPositioner
 				    areasToAvoid, out var result))
 			{
 				return result;
+			}
+
+			// The search tries a limited number of positions. It misses the only possible
+			// position of an object that fits into the monitor without spare space.
+			Rect movedIntoMonitor =
+				new Rect(desiredPosition.X, desiredPosition.Y, objectWidth, objectHeight);
+			MoveInside(monitor, ref movedIntoMonitor);
+
+			if (monitor.Contains(movedIntoMonitor) &&
+			    ! IntersectsWithAny(movedIntoMonitor, areasToAvoid))
+			{
+				return movedIntoMonitor.TopLeft;
 			}
 		}
 

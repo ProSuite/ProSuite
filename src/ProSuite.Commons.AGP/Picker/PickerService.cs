@@ -26,6 +26,10 @@ public class PickerService : IPickerService
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+	// The space that the picker window leaves free on its monitor, in device independent
+	// pixels, so that it does not touch both the upper and the lower edge of the monitor.
+	private const double _monitorMargin = 40;
+
 	private readonly IPickerPrecedence _precedence;
 
 	public PickerService(IPickerPrecedence precedence)
@@ -126,7 +130,7 @@ public class PickerService : IPickerService
 		Rect monitor = DisplayUtils.ToDeviceIndependentPixels(
 			WindowPositioner.GetClosestMonitor(location), ownerWindow);
 
-		window.MaxHeight = monitor.Height;
+		window.MaxHeight = monitor.Height - _monitorMargin;
 
 		_msg.DebugFormat("Monitor of the picker (device independent pixels): {0}", monitor);
 

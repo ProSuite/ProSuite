@@ -153,6 +153,49 @@ namespace ProSuite.Commons.AGP.Test
 			Assert.AreEqual(_externalMonitor, ordered[0]);
 		}
 
+		[Test]
+		public void ObjectWithFullMonitorHeightStaysOnClosestMonitor()
+		{
+			// The observed case: the picker window was as high as the laptop monitor and
+			// too high for the map view. It was placed on the external monitor.
+			List<Rect> preferredAreas = [new Rect(335, 203, 920, 785)];
+			List<Rect> areasToAvoid = [];
+			List<Rect> monitors = [_laptopMonitor, _externalMonitor];
+
+			const WindowPositioner.EvaluationMethod method =
+				WindowPositioner.EvaluationMethod.DistanceToRect;
+
+			var positioner = new WindowPositioner(preferredAreas, areasToAvoid, method);
+
+			Point result = positioner.FindPositionForObject(
+				new Point(641, 418), 610, _laptopMonitor.Height,
+				preferredAreas, areasToAvoid, monitors, method);
+
+			Assert.AreEqual(new Point(641, 0), result);
+		}
+
+		[Test]
+		public void ObjectHigherThanClosestMonitorIsPlacedOnNextMonitor()
+		{
+			List<Rect> preferredAreas = [];
+			List<Rect> areasToAvoid = [];
+			List<Rect> monitors = [_laptopMonitor, _externalMonitor];
+
+			const WindowPositioner.EvaluationMethod method =
+				WindowPositioner.EvaluationMethod.DistanceToRect;
+
+			var positioner = new WindowPositioner(preferredAreas, areasToAvoid, method);
+
+			const double width = 610;
+			const double height = 1200;
+
+			Point result = positioner.FindPositionForObject(
+				new Point(641, 418), width, height,
+				preferredAreas, areasToAvoid, monitors, method);
+
+			Assert.True(_externalMonitor.Contains(new Rect(result.X, result.Y, width, height)));
+		}
+
 		private static void TestConfiguration(Point initialPosition, List<Rect> preferredAreas,
 		                                      List<Rect> areasToAvoid,
 		                                      WindowPositioner.EvaluationMethod method,
