@@ -121,7 +121,7 @@ public class WindowPositioner
 
 		if (_mapView != null)
 		{
-			RestrictToMapView(_mapView);
+			RestrictToMapView(GetMapViewAt(desiredPosition, _mapView));
 		}
 
 		_window.SizeChanged += (sender, args) =>
@@ -576,6 +576,9 @@ public class WindowPositioner
 	{
 		Rect mapViewArea = GetMapViewScreenRect(mapView);
 
+		_msg.DebugFormat("Screen rectangle of map view {0}: {1}", mapView.Map?.Name,
+		                 mapViewArea);
+
 		List<Rect> areasInMapView = new();
 		foreach (Rect rect in _areasToAvoid)
 		{
@@ -595,15 +598,40 @@ public class WindowPositioner
 		}
 	}
 
+	/// <summary>
+	/// Gets the map view at the screen position, which is not necessarily the active map
+	/// view: the mouse can be over another map view when a command is started by its
+	/// keyboard shortcut. Must be called on the UI thread.
+	/// </summary>
+	/// <param name="screenPosition">The position in screen pixels</param>
+	/// <param name="activeMapView">The map view to return if it is at the position or if no
+	/// map view is at the position.</param>
+	[NotNull]
+	private static MapView GetMapViewAt(Point screenPosition, [NotNull] MapView activeMapView)
+	{
+		if (GetMapViewScreenRect(activeMapView).Contains(screenPosition))
+		{
+			return activeMapView;
+		}
+
+		// NOTE: A map view that is hidden behind another tab still reports its last rectangle.
+		// It has the same rectangle as the visible map view of the same tab group.
+		foreach (MapView mapView in MapViewUtils.GetAllMapViews())
+		{
+			if (GetMapViewScreenRect(mapView).Contains(screenPosition))
+			{
+				return mapView;
+			}
+		}
+
+		return activeMapView;
+	}
+
 	private static Rect GetMapViewScreenRect([NotNull] MapView mapView)
 	{
 		try
 		{
-			Rect result = GetScreenRect(mapView);
-
-			_msg.DebugFormat("Screen rectangle of map view {0}: {1}", mapView.Map?.Name, result);
-
-			return result;
+			return GetScreenRect(mapView);
 		}
 		catch (Exception e)
 		{

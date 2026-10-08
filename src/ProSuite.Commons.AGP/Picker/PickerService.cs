@@ -139,18 +139,39 @@ public class PickerService : IPickerService
 			return;
 		}
 
+		Point desiredTopLeft = DisplayUtils.ToDeviceIndependentPixels(location, ownerWindow);
+
 		window.SizeChanged += (_, _) =>
 		{
-			if (window.Top + window.ActualHeight > monitor.Bottom)
-			{
-				window.Top = monitor.Bottom - window.ActualHeight;
-			}
+			Point topLeft = GetTopLeftOnMonitor(desiredTopLeft, window.RenderSize, monitor);
 
-			if (window.Left + window.ActualWidth > monitor.Right)
-			{
-				window.Left = monitor.Right - window.ActualWidth;
-			}
+			window.Left = topLeft.X;
+			window.Top = topLeft.Y;
+
+			_msg.DebugFormat(
+				"Picker window at {0} (device independent pixels). Desired location: {1}, window size: {2}",
+				topLeft, desiredTopLeft, window.RenderSize);
 		};
+	}
+
+	/// <summary>
+	/// Gets the location of the upper left corner of a window that shall appear at the
+	/// desired location. The window is only moved up or to the left if it would extend
+	/// beyond the lower or the right edge of the monitor.
+	/// </summary>
+	/// <param name="desiredTopLeft">The desired location of the upper left corner</param>
+	/// <param name="windowSize">The size of the window</param>
+	/// <param name="monitor">The working area of the monitor</param>
+	/// <returns></returns>
+	/// <remarks>All arguments must be in the same unit.</remarks>
+	public static Point GetTopLeftOnMonitor(Point desiredTopLeft, Size windowSize, Rect monitor)
+	{
+		double lowestBottom = monitor.Bottom - _monitorMargin / 2;
+
+		double top = Math.Min(desiredTopLeft.Y, lowestBottom - windowSize.Height);
+		double left = Math.Min(desiredTopLeft.X, monitor.Right - windowSize.Width);
+
+		return new Point(Math.Max(left, monitor.Left), Math.Max(top, monitor.Top));
 	}
 
 	private static bool LocationUnknown(Point location)
