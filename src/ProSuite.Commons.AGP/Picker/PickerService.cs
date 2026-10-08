@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Env;
 using ProSuite.Commons.UI.WPF;
 
@@ -23,6 +24,8 @@ namespace ProSuite.Commons.AGP.Picker;
 
 public class PickerService : IPickerService
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	private readonly IPickerPrecedence _precedence;
 
 	public PickerService(IPickerPrecedence precedence)
@@ -42,6 +45,9 @@ public class PickerService : IPickerService
 	private async Task<IPickableItem> ShowPickerControlAsync(
 		IPickerViewModel vm, Point location)
 	{
+		_msg.DebugFormat("Showing picker at screen location {0}, position preference: {1}",
+		                 location, _precedence.PositionPreference);
+
 		WindowPositioner positioner = GetWindowPositioner(_precedence.PositionPreference);
 
 		IPickableItem pickable = null;
