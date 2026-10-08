@@ -195,11 +195,12 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 		}
 		catch (Exception e)
 		{
-			_msg.Warn(
-				$"Could not open the datastore in version {VersionOverride}; " +
-				$"continuing with {openedVersion}.", e);
+			// Continuing in the opened version would silently read stale data.
+			datastore.Dispose();
 
-			return datastore;
+			throw new InvalidOperationException(
+				$"Could not open the datastore in version {VersionOverride} " +
+				$"instead of {openedVersion}", e);
 		}
 	}
 
