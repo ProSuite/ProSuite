@@ -1421,7 +1421,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                          restricted.Select(t => (t.Item1, t.Item2)));
 
 				Assert.True(all.All(t => Convert.ToInt32(t.Item3) == t.Item2 * 100));
-				Assert.True(restricted.All(t => t.Item3 == null || t.Item3 is DBNull),
+				Assert.True(restricted.All(t => t.Item3 is null || t.Item3 is DBNull),
 				            "the unrequested TRAIL_INFO should not have been read");
 			}
 			finally

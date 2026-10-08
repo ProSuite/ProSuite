@@ -480,7 +480,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				string tableName = dot < 0 ? null : name.Substring(0, dot);
 
 				bool isOther = OtherEndClass.FindField(fieldName) >= 0 &&
-				               (tableName == null || IsTable(OtherEndClass, tableName));
+				               (tableName is null || IsTable(OtherEndClass, tableName));
 
 				if (isOther)
 				{
@@ -493,7 +493,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 
 				bool isGeometry = GeometryEndClass.FindField(fieldName) >= 0 &&
-				                  (tableName == null || IsTable(GeometryEndClass, tableName));
+				                  (tableName is null || IsTable(GeometryEndClass, tableName));
 
 				if (! isGeometry)
 				{
@@ -950,7 +950,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (fClassKeys == null)
 			{
 				ITableFilter subFieldsFilter =
-					otherSubFields == null
+					otherSubFields is null
 						? null
 						: new AoTableFilter { SubFields = otherSubFields };
 
@@ -1208,7 +1208,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				clientSideKeyFiltering = (double) keys.Count / ftsCount > 0.025;
 			}
 
-			ITableFilter filter = subFields == null ? null : new AoTableFilter();
+			ITableFilter filter = subFields is null ? null : new AoTableFilter();
 
 			return FetchRowsByKey(table, keys, keyFieldName, recycle, clientSideKeyFiltering,
 			                      filter, subFields);
