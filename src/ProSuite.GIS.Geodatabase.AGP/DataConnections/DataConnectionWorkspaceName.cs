@@ -126,10 +126,8 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	/// <summary>
 	/// The versioned-database version to open, regardless of the one baked into the connection
 	/// file / string. Set it when the application works in a different version than the one
-	/// captured when this name was persisted - a route layer, for instance, stores the version its
-	/// source table happened to be in when the layer was created, and would otherwise keep reading
-	/// that version after the work unit switched to its daily version. Null keeps whatever the
-	/// connection carries.
+	/// captured when this name was persisted, which would otherwise keep being read. Null keeps
+	/// whatever the connection carries.
 	/// </summary>
 	[CanBeNull]
 	public string VersionOverride { get; set; }

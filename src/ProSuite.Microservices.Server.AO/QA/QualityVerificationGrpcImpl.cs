@@ -1309,9 +1309,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				// The client declined a data request (worker busy), abandoned the call (watchdog)
 				// or did not answer in time. Expected and self-healing - the client retries on its
-				// next refresh. Logged as an ERROR with the request this was ~20 KB per occurrence
-				// (GOTOP-1257). The exception message embeds the data request (IN lists), so only
-				// the type is logged here.
+				// next refresh. The exception message embeds the data request (IN lists, ~20 KB),
+				// so only the type is logged here.
 				_msg.Debug($"{request.Transformer?.Name}: client did not provide the requested " +
 				           $"data ({e.GetBaseException().GetType().Name}); query abandoned.");
 				_msg.VerboseDebug(() => $"Abandoned data request: {request}", e);

@@ -1261,8 +1261,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		public void CanInnerJoinOneToMany_WholeTableReadMatchesSelectIn()
 		{
 			// The non-M:N key fetch switches from select-in lists to one whole-table read filtered
-			// by key when the key set is large (the TLM_WANDERWEG -> TLM_STRASSE route case). Force
-			// each strategy (FTS = select-in, INDEX = whole-table read) and compare the results.
+			// by key when the key set is large. Force each strategy (FTS = select-in, INDEX = whole-table read) and compare the results.
 			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
 			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
 

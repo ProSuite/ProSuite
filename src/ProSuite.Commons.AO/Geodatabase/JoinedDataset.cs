@@ -442,8 +442,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <summary>
 		/// The columns of <see cref="OtherEndClass" /> the query needs: its key, its OID and the
 		/// requested fields that belong to it. Reading only those made the whole-table read of a
-		/// wide table much cheaper (TLM_WANDERWEG: 412K rows x 31 columns took 35 s for a route
-		/// peek that needs one attribute). Returns null - all columns - whenever the requested
+		/// wide table much cheaper (412K rows x 31 columns took 35 s for a query that needs one
+		/// attribute). Returns null - all columns - whenever the requested
 		/// fields cannot be attributed with certainty: '*', no sub-fields, a where clause (it is
 		/// re-applied to the joined rows and may reference any column), or a name that matches
 		/// neither joined table.
@@ -1178,7 +1178,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Fetches the rows of <paramref name="table" /> whose key is in <paramref name="keys" />,
 		/// either with select-in lists or by reading the whole table and filtering by key. With
 		/// many keys the select-in lists cost one round trip per ~1000 keys (65 sequential
-		/// queries / ~30 s for a 64K-key TLM route peek), a single full read is far cheaper.
+		/// queries / ~30 s for 64K keys), a single full read is far cheaper.
 		/// </summary>
 		private IEnumerable<IReadOnlyRow> FetchRowsByKeyAdaptive(
 			[NotNull] ICollection<string> keys,
