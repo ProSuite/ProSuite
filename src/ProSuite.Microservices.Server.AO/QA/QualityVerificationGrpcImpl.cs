@@ -286,7 +286,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
 						VerifyDataQualityCore(initialRequest, moreDataRequest, readNextBatch,
-						                      responseStream, trackCancellationToken);
+						                      responseStream, trackCancellationToken,
+						                      registeredRequest.CancellationSource.Token);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -620,7 +621,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r, context.CancellationToken)
+					.ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
@@ -657,7 +659,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r, context.CancellationToken)
+					.ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
@@ -681,7 +684,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		///       (progress) messages.
 		/// </summary>
 		private static async Task WriteDataRequestWithRetryAsync<T>(
-			[NotNull] IServerStreamWriter<T> responseStream, [NotNull] T message)
+			[NotNull] IServerStreamWriter<T> responseStream, [NotNull] T message,
+			CancellationToken cancellationToken)
 		{
 			const int maxAttempts = 10;
 			const int retryDelayMs = 100;
@@ -693,7 +697,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					await responseStream.WriteAsync(message).ConfigureAwait(false);
 					return;
 				}
-				catch (InvalidOperationException e) when (attempt < maxAttempts)
+				// Once the client has cancelled, the stream is finished for good: no retry.
+				catch (InvalidOperationException e) when (
+					attempt < maxAttempts && ! cancellationToken.IsCancellationRequested)
 				{
 					// gRPC allows only one pending write at a time; a data request can
 					// collide with a concurrent (progress) write on the shared stream.
@@ -827,7 +833,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest,
 			[CanBeNull] Func<DataVerificationRequest> readNextBatch,
 			IServerStreamWriter<DataVerificationResponse> responseStream,
-			ITrackCancel trackCancel)
+			ITrackCancel trackCancel,
+			CancellationToken cancellationToken)
 		{
 			var request = initialRequest.Request;
 
@@ -895,6 +902,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 					deletableAllowedErrorRefs.AddRange(
 						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
 				}
+			}
+			catch (Exception e) when (cancellationToken.IsCancellationRequested)
+			{
+				// Typically the client cancelled while the server was requesting data from it:
+				// System.InvalidOperationException: Already finished.
+				_msg.Warn("Verification was cancelled, likely by the client", e);
+				cancellationMessage = "Verification cancelled";
 			}
 			catch (Exception e)
 			{

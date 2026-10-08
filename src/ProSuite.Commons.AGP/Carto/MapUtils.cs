@@ -945,8 +945,14 @@ public static class MapUtils
 			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
 			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
 
-			return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
-			                 (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+			var result = new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
+			                       (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+
+			_msg.DebugFormat(
+				"Fixed stereo cursor: screen location {0} from map extent center at Z {1} (mouse screen location: {2})",
+				result, mapZValue, defaultScreenLocation);
+
+			return result;
 		});
 	}
 
@@ -1150,9 +1156,10 @@ public static class MapUtils
 	}
 
 	/// <summary>
-	/// Gets the pixel size for the specified map view in the map space without
-	/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3).
-	/// This method is not particularly robust against rotated maps!
+	/// Gets the pixel size for the specified map view in the map space without using
+	/// the ScreenToMap method (which is incorrect in stereo maps at 3.3).
+	/// This method is also correct in a map that is rotated on the screen (a stereo
+	/// map is rotated to the flight direction of the image pair).
 	/// </summary>
 	/// <param name="mapView"></param>
 	/// <param name="atPoint"></param>
@@ -1165,25 +1172,22 @@ public static class MapUtils
 
 		double z = atPoint.Z;
 
-		MapPoint mapLowerLeft = GeometryFactory.CreatePoint(
-			mapExtent.XMin, mapExtent.YMin, z, sr);
-		MapPoint mapUpperRight = GeometryFactory.CreatePoint(
-			mapExtent.XMax, mapExtent.YMax, z, sr);
+		double stepLength = Math.Max(mapExtent.Width, mapExtent.Height) / 2;
 
-		Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
-		Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+		MapPoint mapStepEast = GeometryFactory.CreatePoint(
+			atPoint.X + stepLength, atPoint.Y, z, sr);
+		MapPoint mapStepNorth = GeometryFactory.CreatePoint(
+			atPoint.X, atPoint.Y + stepLength, z, sr);
 
 		// Client window coordinates (probably makes no difference for this calculation but it is correct)
-		Point clientLowerLeft = mapView.ScreenToClient(screenLowerLeft);
-		Point clientUpperRight = mapView.ScreenToClient(screenUpperRight);
+		Point clientOrigin = mapView.ScreenToClient(mapView.MapToScreen(atPoint));
+		Point clientStepEast = mapView.ScreenToClient(mapView.MapToScreen(mapStepEast));
+		Point clientStepNorth = mapView.ScreenToClient(mapView.MapToScreen(mapStepNorth));
 
-		double widthPixels = Math.Abs(clientUpperRight.X - clientLowerLeft.X);
-		double heightPixels = Math.Abs(clientUpperRight.Y - clientLowerLeft.Y);
+		double pixelSizeEast = stepLength / (clientStepEast - clientOrigin).Length;
+		double pixelSizeNorth = stepLength / (clientStepNorth - clientOrigin).Length;
 
-		double pixelSizeX = mapExtent.Width / widthPixels;
-		double pixelSizeY = mapExtent.Height / heightPixels;
-
-		return (pixelSizeX + pixelSizeY) / 2;
+		return (pixelSizeEast + pixelSizeNorth) / 2;
 	}
 
 	/// <summary>
