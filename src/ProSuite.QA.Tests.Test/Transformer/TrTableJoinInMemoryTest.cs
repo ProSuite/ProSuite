@@ -24,6 +24,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 	[TestFixture]
 	public class TrTableJoinInMemoryTest
 	{
+		private const string _joinStrategyEnvVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
+
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
@@ -1094,8 +1096,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			// the client-side key filtering the association-first path relies on) - and assert
 			// equal results, both with the same spatial filter present.
 
-			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
-			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
+			string originalStrategy = Environment.GetEnvironmentVariable(_joinStrategyEnvVar);
 
 			try
 			{
@@ -1207,7 +1208,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				// Reference: whole join, filtered to the window in memory (drive side irrelevant
 				// without a spatial filter). Built under the default strategy.
-				Environment.SetEnvironmentVariable(envVar, null);
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, null);
 				GdbTable refJoin = NewJoin().GetTransformed();
 				int refRoadIdx = FindJoinedField(refJoin, roadKey);
 				int refRouteIdx = FindJoinedField(refJoin, routeKey);
@@ -1225,19 +1226,19 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                "Expected windowed pairs (roads 1,2,6,11; road 16 excluded)");
 
 				// Legacy left-first drive side, spatial filter present.
-				Environment.SetEnvironmentVariable(envVar, "LEFTFIRST");
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "LEFTFIRST");
 				List<(int, int)> leftFirst = WindowedPairs(new AoFeatureClassFilter(window));
 
 				// Association-first drive side (heuristic + client-side key filtering via INDEX),
 				// same spatial filter present.
-				Environment.SetEnvironmentVariable(envVar, "INDEX");
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "INDEX");
 				List<(int, int)> associationFirst = WindowedPairs(new AoFeatureClassFilter(window));
 
 				// The strategy knob is case-insensitive: lowercase "index" must drive the same
 				// association-first path (heuristic + client-side key filtering) as "INDEX". If the
 				// final-read comparison were case-sensitive it would fall through to a select-in over
 				// the whole-network key set and could return a different (or degenerate) result.
-				Environment.SetEnvironmentVariable(envVar, "index");
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "index");
 				List<(int, int)> associationFirstLower =
 					WindowedPairs(new AoFeatureClassFilter(window));
 
@@ -1253,7 +1254,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 			finally
 			{
-				Environment.SetEnvironmentVariable(envVar, originalStrategy);
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, originalStrategy);
 			}
 		}
 
@@ -1262,8 +1263,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		{
 			// The non-M:N key fetch switches from select-in lists to one whole-table read filtered
 			// by key when the key set is large. Force each strategy (FTS = select-in, INDEX = whole-table read) and compare the results.
-			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
-			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
+			string originalStrategy = Environment.GetEnvironmentVariable(_joinStrategyEnvVar);
 
 			try
 			{
@@ -1300,14 +1300,13 @@ namespace ProSuite.QA.Tests.Test.Transformer
 					r.Store();
 				}
 
-
 				// The strategy decides which trail rows are fetched, which shows as the multiset of
 				// joined roads (road 1 twice, road 3 once, road 9 never). The trail attributes are not
 				// asserted: in this in-memory setup they read 0 in the joined row regardless of
 				// strategy (pre-existing, unrelated to the key fetch).
 				List<int> JoinedRoads(string strategy)
 				{
-					Environment.SetEnvironmentVariable(envVar, strategy);
+					Environment.SetEnvironmentVariable(_joinStrategyEnvVar, strategy);
 
 					var tr = new TrTableJoinInMemory(
 						ReadOnlyTableFactory.Create(roadFc),
@@ -1330,7 +1329,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 			finally
 			{
-				Environment.SetEnvironmentVariable(envVar, originalStrategy);
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, originalStrategy);
 			}
 		}
 
@@ -1340,12 +1339,11 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			// The whole-table read of the other table fetches only its key, OID and the requested
 			// fields. Requested values must be unchanged; an unrequested field comes back empty,
 			// which shows the restriction was applied.
-			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
-			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
+			string originalStrategy = Environment.GetEnvironmentVariable(_joinStrategyEnvVar);
 
 			try
 			{
-				Environment.SetEnvironmentVariable(envVar, "INDEX");
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "INDEX");
 
 				IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace(
 					"TrTableJoinInMemory_ReadOnlyRequestedOtherFields");
@@ -1426,7 +1424,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 			finally
 			{
-				Environment.SetEnvironmentVariable(envVar, originalStrategy);
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, originalStrategy);
 			}
 		}
 
