@@ -156,9 +156,8 @@ public class WindowPositioner
 		{
 			desiredPosition = DisplayUtils.ToDeviceIndependentPixels(desiredPosition, ownerWindow);
 
-			var monitors = GetMonitorExtends(desiredPosition);
 			monitorsDeviceIndependent.AddRange(
-				monitors.Select(
+				GetMonitorExtends().Select(
 					rect => DisplayUtils.ToDeviceIndependentPixels(rect, ownerWindow)));
 
 			preferredAreasDeviceIndependent.AddRange(
@@ -183,10 +182,13 @@ public class WindowPositioner
 		}
 		else
 		{
-			monitorsDeviceIndependent = GetMonitorExtends(desiredPosition);
+			monitorsDeviceIndependent = GetMonitorExtends();
 			preferredAreasDeviceIndependent.AddRange(_preferredAreas);
 			areasToAvoidDeviceIndependent.AddRange(_areasToAvoid);
 		}
+
+		// The position and the monitors must be in the same unit for this comparison
+		monitorsDeviceIndependent = OrderByDistance(monitorsDeviceIndependent, desiredPosition);
 
 		// The window should be close to the initial position of the window.
 		var result =
@@ -518,8 +520,18 @@ public class WindowPositioner
 		return areasToAvoid.Any(rect => objRect.IntersectsWith(rect));
 	}
 
-	// The resulting list is sorted by proximity to focusPoint
-	private static List<Rect> GetMonitorExtends(Point focusPoint)
+	/// <summary>
+	/// Orders the rectangles by their distance to the position, the closest one first.
+	/// The rectangles and the position must be in the same unit.
+	/// </summary>
+	public static List<Rect> OrderByDistance([NotNull] IEnumerable<Rect> rectangles,
+	                                         Point position)
+	{
+		return rectangles.OrderBy(rect => DistanceToRectSquared(position, rect)).ToList();
+	}
+
+	// The monitor working areas in screen pixels
+	private static List<Rect> GetMonitorExtends()
 	{
 		List<Rect> screens = new();
 		foreach (var screen2 in Screen.AllScreens)
@@ -528,14 +540,6 @@ public class WindowPositioner
 
 			screens.Add(new Rect(rect.X, rect.Y, rect.Width, rect.Height));
 		}
-
-		screens.Sort(
-			(a, b) =>
-			{
-				double distanceA = DistanceToRectSquared(focusPoint, a);
-				double distanceB = DistanceToRectSquared(focusPoint, b);
-				return distanceA.CompareTo(distanceB);
-			});
 
 		return screens;
 	}
