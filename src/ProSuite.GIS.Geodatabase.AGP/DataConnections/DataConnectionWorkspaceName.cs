@@ -266,11 +266,31 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	[CanBeNull]
 	public static string GetVersionName([CanBeNull] string connectionString)
 	{
-		if (string.IsNullOrEmpty(connectionString))
+		if (string.IsNullOrEmpty(connectionString) ||
+		    ! TryFindVersion(connectionString, out int startIndex, out int length))
 		{
 			return null;
 		}
 
+		return connectionString.Substring(startIndex, length);
+	}
+
+	public void ChangeVersion(string newVersionName)
+	{
+		if (! TryFindVersion(ConnectionString, out int startIndex, out int length))
+		{
+			_msg.DebugFormat("No version keyword found in connection string: {0}",
+			                 ConnectionString);
+			return;
+		}
+
+		ConnectionString = ConnectionString.Remove(startIndex, length)
+		                                   .Insert(startIndex, newVersionName);
+	}
+
+	private static bool TryFindVersion([NotNull] string connectionString,
+	                                   out int startIndex, out int length)
+	{
 		const string keyword = "VERSION=";
 
 		int keywordIndex =
@@ -278,42 +298,19 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 
 		if (keywordIndex < 0)
 		{
-			return null;
+			startIndex = length = 0;
+			return false;
 		}
 
-		int startIndex = keywordIndex + keyword.Length;
+		startIndex = keywordIndex + keyword.Length;
 		int endIndex = connectionString.IndexOf(";", startIndex, StringComparison.Ordinal);
 		if (endIndex < 0)
 		{
 			endIndex = connectionString.Length;
 		}
 
-		return connectionString.Substring(startIndex, endIndex - startIndex);
-	}
-
-	public void ChangeVersion(string newVersionName)
-	{
-		string keyword = $"VERSION=";
-
-		int keywordIndex =
-			ConnectionString.IndexOf(keyword, StringComparison.OrdinalIgnoreCase);
-
-		if (keywordIndex < 0)
-		{
-			_msg.DebugFormat("No version keyword found in connection string: {0}",
-			                 ConnectionString);
-			return;
-		}
-
-		int startIndex = keywordIndex + keyword.Length;
-		int endIndex = ConnectionString.IndexOf(";", startIndex, StringComparison.Ordinal);
-		if (endIndex < 0)
-		{
-			endIndex = ConnectionString.Length;
-		}
-
-		ConnectionString = ConnectionString.Remove(startIndex, endIndex - startIndex)
-		                                   .Insert(startIndex, newVersionName);
+		length = endIndex - startIndex;
+		return true;
 	}
 
 	#endregion
