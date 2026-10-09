@@ -108,5 +108,41 @@ namespace ProSuite.GIS.Geometry.AGP
 
 			throw new NotSupportedException("Unsupported segment type");
 		}
+
+		public static GeometryType GetProGeometryType(esriGeometryType esriGeometryType)
+		{
+			switch (esriGeometryType)
+			{
+				case esriGeometryType.esriGeometryAny:
+				case esriGeometryType.esriGeometryNull:
+					return GeometryType.Unknown;
+				case esriGeometryType.esriGeometryPoint: return GeometryType.Point;
+				case esriGeometryType.esriGeometryMultipoint:
+					return GeometryType.Multipoint;
+				case esriGeometryType.esriGeometryPolyline:
+					return GeometryType.Polyline;
+				case esriGeometryType.esriGeometryPolygon:
+					return GeometryType.Polygon;
+				case esriGeometryType.esriGeometryEnvelope:
+					return GeometryType.Envelope;
+				case esriGeometryType.esriGeometryBag:
+					return GeometryType.GeometryBag;
+				case esriGeometryType.esriGeometryPath:
+				case esriGeometryType.esriGeometryMultiPatch:
+				case esriGeometryType.esriGeometryRing:
+				case esriGeometryType.esriGeometryLine:
+				case esriGeometryType.esriGeometryCircularArc:
+				case esriGeometryType.esriGeometryBezier3Curve:
+				case esriGeometryType.esriGeometryEllipticArc:
+				case esriGeometryType.esriGeometryTriangleStrip:
+				case esriGeometryType.esriGeometryTriangleFan:
+				case esriGeometryType.esriGeometryRay:
+				case esriGeometryType.esriGeometrySphere:
+				case esriGeometryType.esriGeometryTriangles:
+				default:
+					throw new ArgumentOutOfRangeException(nameof(esriGeometryType),
+					                                      esriGeometryType, null);
+			}
+		}
 	}
 }
