@@ -482,7 +482,9 @@ public static class ProtobufConversionUtils
 				SpatialReference = ToSpatialReferenceMsg(
 					spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
 				GeometryType = (int) geometryType,
-				WorkspaceHandle = objectClass.GetDatastore().Handle.ToInt64()
+				WorkspaceHandle = objectClass.GetDatastore().Handle.ToInt64(),
+				WorkspaceDbType =
+					(int) WorkspaceUtils.GetWorkspaceDbType(objectClass.GetDatastore())
 			};
 
 		if (includeFields)

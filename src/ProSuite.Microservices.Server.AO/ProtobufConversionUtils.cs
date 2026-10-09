@@ -118,8 +118,12 @@ namespace ProSuite.Microservices.Server.AO
 
 					container = new GdbTableContainer();
 
-					workspace = new GdbWorkspace(container, workspaceHandle,
-					                             ClientDataWorkspaceDbType);
+					// The client's database runs the where clauses, so its type sets their limits.
+					WorkspaceDbType dbType = objectClassMsg.WorkspaceDbType == 0
+						                         ? ClientDataWorkspaceDbType
+						                         : (WorkspaceDbType) objectClassMsg.WorkspaceDbType;
+
+					workspace = new GdbWorkspace(container, workspaceHandle, dbType);
 				}
 				else
 				{
