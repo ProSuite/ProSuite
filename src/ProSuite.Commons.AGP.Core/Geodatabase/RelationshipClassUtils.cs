@@ -201,6 +201,46 @@ public static class RelationshipClassUtils
 	/// Gets the list of rows that are related to the given row.
 	/// </summary>
 	/// <param name="gdbRow">Row for which related rows should be found.</param>
+	/// <returns>List with rows related to the input row, could be empty.</returns>
+	public static IEnumerable<Row> GetRelatedRows([NotNull] Row gdbRow)
+	{
+		using Table table = gdbRow.GetTable();
+		using Datastore datastore = table.GetDatastore();
+
+		if (datastore is not ArcGIS.Core.Data.Geodatabase geodatabase)
+		{
+			yield break;
+		}
+
+		string tableName = table.GetName();
+
+		IEnumerable<RelationshipClassDefinition> definitions =
+			GetRelationshipClassDefinitions(
+				geodatabase, rc => rc.GetOriginClass() == tableName ||
+				                   rc.GetDestinationClass() == tableName);
+
+		foreach (RelationshipClassDefinition definition in definitions)
+		{
+			// Origin: contains primary key
+			// Destination: contains foreign key
+			bool sourceFeatureIsOrigin = IsFeatureFromOriginClass(tableName, definition);
+
+			var relationshipClass =
+				geodatabase.OpenDataset<RelationshipClass>(definition.GetName());
+
+			foreach (Row relatedRow in
+			         GetRelatedRows(gdbRow, relationshipClass,
+			                        sourceFeatureIsOrigin))
+			{
+				yield return relatedRow;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Gets the list of rows that are related to the given row.
+	/// </summary>
+	/// <param name="gdbRow">Row for which related rows should be found.</param>
 	/// <param name="relationshipClass">The relationship class</param>
 	/// <param name="rowIsOrigin">Whether the <see cref="gdbRow"/> is part of the origin class.</param>
 	/// <returns>List with rows related to the input row, could be empty.</returns>
@@ -390,5 +430,14 @@ public static class RelationshipClassUtils
 		object value = row[fieldIndex];
 
 		return value;
+	}
+
+	private static bool IsFeatureFromOriginClass(
+		[NotNull] string tableName,
+		[NotNull] RelationshipClassDefinition relationshipClassDefinition)
+	{
+		string originTableName = relationshipClassDefinition.GetOriginClass();
+
+		return tableName.Equals(originTableName);
 	}
 }
