@@ -41,6 +41,7 @@ public abstract class OverlayDisplayBase : IDisposable
 
 	private Envelope _lastExtent;
 	private double _lastScale = double.NaN;
+	private double _lastHeading = double.NaN;
 
 	private bool _refreshQueued;
 
@@ -240,6 +241,7 @@ public abstract class OverlayDisplayBase : IDisposable
 		// (all the more so with several displays, which trigger each other)
 		_lastExtent = viewExtent;
 		_lastScale = scale;
+		_lastHeading = mapView.Camera?.Heading ?? double.NaN;
 
 		if (! double.IsNaN(scale) && scale > MinimumScaleDenominator)
 		{
@@ -287,6 +289,20 @@ public abstract class OverlayDisplayBase : IDisposable
 		if (graphics.Count == 0)
 		{
 			return;
+		}
+
+		// Turn the text of an overlay with rotated map (e.g. a 2D map aligned with the
+		// stereo map): counter-rotate it to keep the labels horizontal on the screen. The
+		// symbols may be shared and cached by the subclass, hence the angle is set anew on
+		// every rendering.
+		double mapRotation = mapView.Camera?.Heading ?? 0;
+
+		foreach (CIMTextGraphic textGraphic in graphics.OfType<CIMTextGraphic>())
+		{
+			if (textGraphic.Symbol?.Symbol is CIMTextSymbol textSymbol)
+			{
+				textSymbol.Angle = mapRotation;
+			}
 		}
 
 		// Reference scale -1: the symbol sizes are in points, independent of the map scale
@@ -392,10 +408,13 @@ public abstract class OverlayDisplayBase : IDisposable
 			}
 
 			double scale = mapView.Camera?.Scale ?? double.NaN;
+			double heading = mapView.Camera?.Heading ?? double.NaN;
 
 			// This event is raised repeatedly, also without anything having changed - and in
-			// particular by our own drawing (see Refresh)
-			if (SameExtent(_lastExtent, extent) && scale.Equals(_lastScale))
+			// particular by our own drawing (see Refresh). A rotation alone must re-render:
+			// the labels are counter-rotated (see AddGraphics).
+			if (SameExtent(_lastExtent, extent) && scale.Equals(_lastScale) &&
+			    heading.Equals(_lastHeading))
 			{
 				return;
 			}
