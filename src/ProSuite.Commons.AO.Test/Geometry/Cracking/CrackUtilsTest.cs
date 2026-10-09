@@ -275,5 +275,41 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 
 			Assert.AreEqual(expectedRemaining, result.PointCount);
 		}
+
+		[Test]
+		public void CanGetSplitPolycurvesWithSplitPointZ()
+		{
+			ISpatialReference lv95 = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			IPolyline originalPolyline = GeometryFactory.CreatePolyline(
+				lv95,
+				GeometryFactory.CreatePoint(2600000, 1200000, 500),
+				GeometryFactory.CreatePoint(2600100, 1200000, 600));
+
+			IFeature mockFeature = TestUtils.CreateMockFeature(originalPolyline, 0.01, 0.001);
+
+			// The interpolated Z at the split point would be 540
+			const double splitPointZ = 450;
+			IPointCollection splitPoints = (IPointCollection) GeometryFactory.CreateMultipoint(
+				new[] { new WKSPointZ { X = 2600040, Y = 1200000, Z = splitPointZ } }, lv95);
+
+			foreach (double? snapTolerance in new double?[] { null, 0.5 })
+			{
+				List<IPolyline> splitLines =
+					CrackUtils.GetSplitPolycurves(mockFeature, splitPoints, snapTolerance)
+					          .ToList();
+
+				Assert.AreEqual(2, splitLines.Count, $"Snap tolerance: {snapTolerance}");
+
+				IPolyline first = splitLines.Single(l => Math.Abs(l.FromPoint.Z - 500) < 0.001);
+				IPolyline second = splitLines.Single(l => Math.Abs(l.ToPoint.Z - 600) < 0.001);
+
+				Assert.AreEqual(splitPointZ, first.ToPoint.Z, 0.001,
+				                $"Snap tolerance: {snapTolerance}");
+				Assert.AreEqual(splitPointZ, second.FromPoint.Z, 0.001,
+				                $"Snap tolerance: {snapTolerance}");
+			}
+		}
 	}
 }
