@@ -18,7 +18,8 @@ namespace ProSuite.DomainModel.AO.QA
 	/// </summary>
 	public class BackgroundVerificationContext : IVerificationContext,
 	                                             IQueryTableContext,
-	                                             IDetachedState
+	                                             IDetachedState,
+	                                             IDisposable
 	{
 		[NotNull] private readonly ICollection<Dataset> _verifiedDatasets;
 
@@ -134,6 +135,11 @@ namespace ProSuite.DomainModel.AO.QA
 			return InnerModelContext.OpenSimpleRasterMosaic(dataset);
 		}
 
+		public PointCloudReference OpenPointCloud(IPointCloudDataset dataset)
+		{
+			return InnerModelContext.OpenPointCloud(dataset);
+		}
+
 		//public ITopology OpenTopology(ITopologyDataset dataset)
 		//{
 		//	if (! (_modelContext is IDatasetContextEx modelContextEx))
@@ -211,6 +217,19 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				inner.ReattachState(unitOfWork);
 			}
+		}
+
+		private bool _disposed;
+
+		public void Dispose()
+		{
+			if (_disposed)
+			{
+				return;
+			}
+
+			(InnerModelContext as IDisposable)?.Dispose();
+			_disposed = true;
 		}
 
 		#region IQueryTableContext members

@@ -77,11 +77,19 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException();
 		}
 
+		public override IEnumerable<GdbDatasetMoniker> GetDatasetMonikers(
+			esriDatasetType datasetType)
+		{
+			return _tablesByName.Values
+			                    .Where(t => t.DatasetType == datasetType ||
+			                                datasetType == esriDatasetType.esriDTAny)
+			                    .Select(GdbDatasetMoniker.FromTable);
+		}
+
 		public override IEnumerable<VirtualTable> GetDatasets(esriDatasetType datasetType)
 		{
-			return _tablesByName.Values.Where(
-				t => t.DatasetType == datasetType ||
-				     datasetType == esriDatasetType.esriDTAny);
+			return _tablesByName.Values.Where(t => t.DatasetType == datasetType ||
+			                                       datasetType == esriDatasetType.esriDTAny);
 		}
 
 		public override VirtualTable OpenTable(string name)

@@ -14,7 +14,7 @@ namespace ProSuite.QA.Container
 	{
 		[NotNull] private readonly DataView _constraintView;
 
-		[NotNull] private readonly List<ColumnHandler<PropertyCache>> _columnHandlers;
+		[NotNull] private readonly List<ColumnHandler<IGeometry, PropertyCache>> _columnHandlers;
 
 		public GeometryConstraint([NotNull] string constraint)
 		{
@@ -24,7 +24,8 @@ namespace ProSuite.QA.Container
 
 			var dataTable = new DataTable("table") {CaseSensitive = false};
 
-			_columnHandlers = AddColumns(dataTable, constraint);
+			_columnHandlers = ConstraintUtils.AddColumns(dataTable, constraint,
+			                                              GetAvailableColumnHandlers());
 			_constraintView = new DataView(dataTable) {RowFilter = constraint};
 		}
 
@@ -38,7 +39,7 @@ namespace ProSuite.QA.Container
 			var propertyCache = new PropertyCache(geometry);
 
 			var index = 0;
-			foreach (ColumnHandler<PropertyCache> columnHandler in _columnHandlers)
+			foreach (ColumnHandler<IGeometry, PropertyCache> columnHandler in _columnHandlers)
 			{
 				row[index] = columnHandler.GetValue(geometry, propertyCache);
 				index++;
@@ -59,7 +60,7 @@ namespace ProSuite.QA.Container
 
 			var propertyCache = new PropertyCache(geometry);
 
-			foreach (ColumnHandler<PropertyCache> columnHandler in
+			foreach (ColumnHandler<IGeometry, PropertyCache> columnHandler in
 			         _columnHandlers.OrderBy(c => c.ColumnName))
 			{
 				if (sb.Length > 0)
@@ -80,31 +81,8 @@ namespace ProSuite.QA.Container
 		public string Constraint { get; }
 
 		[NotNull]
-		private static List<ColumnHandler<PropertyCache>> AddColumns(
-			[NotNull] DataTable dataTable,
-			[NotNull] string constraint)
-		{
-			var columnHandlers = new List<ColumnHandler<PropertyCache>>();
-
-			DataColumnCollection columns = dataTable.Columns;
-
-			foreach (ColumnHandler<PropertyCache> columnHandler in GetAvailableColumnHandlers()
-			        )
-			{
-				if (! UsesField(constraint, columnHandler.ColumnName))
-				{
-					continue;
-				}
-
-				columns.Add(columnHandler.CreateColumn());
-				columnHandlers.Add(columnHandler);
-			}
-
-			return columnHandlers;
-		}
-
-		[NotNull]
-		private static IEnumerable<ColumnHandler<PropertyCache>> GetAvailableColumnHandlers()
+		internal static IEnumerable<ColumnHandler<IGeometry, PropertyCache>>
+			GetAvailableColumnHandlers()
 		{
 			yield return Get("$Area", typeof(double), GetArea, FormatLinearUnit);
 			yield return Get("$Length", typeof(double), GetLength, FormatLinearUnit);
@@ -153,24 +131,24 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		private static ColumnHandler<PropertyCache> Get(
+		private static ColumnHandler<IGeometry, PropertyCache> Get(
 			[NotNull] string columnName,
 			[NotNull] Type type,
 			[NotNull] Func<IGeometry, PropertyCache, object> valueFunction,
 			[CanBeNull] string valueFormat = null)
 		{
-			return new ColumnHandler<PropertyCache>(columnName, type, valueFunction,
-			                                        valueFormat);
+			return new ColumnHandler<IGeometry, PropertyCache>(columnName, type, valueFunction,
+			                                                   valueFormat);
 		}
 
-		private static ColumnHandler<PropertyCache> Get(
+		private static ColumnHandler<IGeometry, PropertyCache> Get(
 			[NotNull] string columnName,
 			[NotNull] Type type,
 			[NotNull] Func<IGeometry, PropertyCache, object> valueFunction,
 			[NotNull] Func<IGeometry, object, IFormatProvider, string> formatFunction)
 		{
-			return new ColumnHandler<PropertyCache>(columnName, type, valueFunction,
-			                                        formatFunction);
+			return new ColumnHandler<IGeometry, PropertyCache>(columnName, type, valueFunction,
+			                                                   formatFunction);
 		}
 
 		[NotNull]
@@ -516,12 +494,6 @@ namespace ProSuite.QA.Container
 				       : GeometryProperties.GetTriangleFanCount(geometry);
 		}
 
-		private static bool UsesField([NotNull] string constraint,
-		                              [NotNull] string fieldName)
-		{
-			return constraint.IndexOf(fieldName, StringComparison.OrdinalIgnoreCase) >= 0;
-		}
-
 		private static double? NaNtoNull(double? value)
 		{
 			return value == null ? null : NaNtoNull(value.Value);
@@ -532,7 +504,7 @@ namespace ProSuite.QA.Container
 			return double.IsNaN(value) ? (double?) null : value;
 		}
 
-		private class PropertyCache
+		internal class PropertyCache
 		{
 			[CanBeNull] private readonly IGeometry _geometry;
 			[CanBeNull] private SegmentCounts _segmentCounts;
@@ -744,92 +716,6 @@ namespace ProSuite.QA.Container
 					_pointIdMax = 0;
 					_pointIdCount = 0;
 				}
-			}
-		}
-
-		private class ColumnHandler<T>
-		{
-			[NotNull] private readonly Type _type;
-			[NotNull] private readonly Func<IGeometry, T, object> _valueFunction;
-
-			[NotNull] private readonly Func<IGeometry, object, IFormatProvider, string>
-				_formatFunction;
-
-			public ColumnHandler(
-				[NotNull] string columnName,
-				[NotNull] Type type,
-				[NotNull] Func<IGeometry, T, object> valueFunction,
-				[CanBeNull] string valueFormat = null)
-				: this(columnName, type, valueFunction, GetFormatFunction(valueFormat)) { }
-
-			public ColumnHandler(
-				[NotNull] string columnName,
-				[NotNull] Type type,
-				[NotNull] Func<IGeometry, T, object> valueFunction,
-				[NotNull] Func<IGeometry, object, IFormatProvider, string> formatFunction)
-			{
-				Assert.ArgumentNotNullOrEmpty(columnName, nameof(columnName));
-				Assert.ArgumentNotNull(type, nameof(type));
-				Assert.ArgumentNotNull(valueFunction, nameof(valueFunction));
-				Assert.ArgumentNotNull(formatFunction, nameof(formatFunction));
-
-				ColumnName = columnName;
-				_type = type;
-				_valueFunction = valueFunction;
-				_formatFunction = formatFunction;
-			}
-
-			[NotNull]
-			public string ColumnName { get; }
-
-			[NotNull]
-			public DataColumn CreateColumn()
-			{
-				return new DataColumn(ColumnName, _type);
-			}
-
-			[NotNull]
-			public object GetValue([CanBeNull] IGeometry geometry,
-			                       [NotNull] T propertyCache)
-			{
-				return _valueFunction(geometry, propertyCache);
-			}
-
-			[NotNull]
-			public string FormatValue([CanBeNull] IGeometry geometry,
-			                          [NotNull] IFormatProvider formatProvider,
-			                          [NotNull] T propertyCache)
-			{
-				object value = GetValue(geometry, propertyCache);
-
-				return _formatFunction(geometry, value, formatProvider);
-			}
-
-			[NotNull]
-			private static Func<IGeometry, object, IFormatProvider, string> GetFormatFunction(
-				[CanBeNull] string valueFormat)
-			{
-				return (geometry, value, formatProvider) =>
-				{
-					if (value is DBNull)
-					{
-						return "<NULL>";
-					}
-
-					string format;
-					if (valueFormat == null)
-					{
-						format = value is int ? "{0:N0}" : "{0}";
-					}
-					else
-					{
-						format = valueFormat;
-					}
-
-					return string.Format(
-						formatProvider,
-						format, value);
-				};
 			}
 		}
 	}

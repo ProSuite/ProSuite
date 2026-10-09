@@ -187,47 +187,88 @@ namespace ProSuite.DomainModel.Core.QA
 			bool includeSourceDatasets = false,
 			bool excludeReferenceDatasets = false)
 		{
-			foreach (TestParameterValue parameterValue in ParameterValues)
+			return GetDatasetParameterValues(includeReferencedProcessors, includeSourceDatasets,
+			                                 excludeReferenceDatasets,
+			                                 new List<InstanceConfiguration>());
+		}
+
+		/// <summary>
+		/// Same as <see cref="GetDatasetParameterValues(bool,bool,bool)"/>, but guarded against
+		/// configurations that reference each other in a circle.
+		/// </summary>
+		/// <param name="alreadyVisitedConfigurations">The configurations whose parameters are
+		/// currently being enumerated, i.e. this configuration and the ones it was reached from.
+		/// A configuration that is already in this list is not entered a second time, otherwise
+		/// a circular reference would result in an endless recursion. Such references must not
+		/// exist, but they can be created by editing.</param>
+		[NotNull]
+		internal IEnumerable<Dataset> GetDatasetParameterValues(
+			bool includeReferencedProcessors,
+			bool includeSourceDatasets,
+			bool excludeReferenceDatasets,
+			[NotNull] List<InstanceConfiguration> alreadyVisitedConfigurations)
+		{
+			// Compare by reference, not with Equals(): Equals() compares name and descriptor
+			// only, while a circle can only be closed by the very same configuration instance.
+			if (alreadyVisitedConfigurations.Any(visited => ReferenceEquals(visited, this)))
 			{
-				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
+				yield break;
+			}
 
-				if (datasetTestParameterValue == null)
+			alreadyVisitedConfigurations.Add(this);
+
+			try
+			{
+				foreach (TestParameterValue parameterValue in ParameterValues)
 				{
-					continue;
+					var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
+
+					if (datasetTestParameterValue == null)
+					{
+						continue;
+					}
+
+					if (excludeReferenceDatasets && datasetTestParameterValue.UsedAsReferenceData)
+					{
+						continue;
+					}
+
+					Dataset dataset = datasetTestParameterValue.DatasetValue;
+
+					if (dataset != null)
+					{
+						yield return dataset;
+					}
+					else if (includeSourceDatasets)
+					{
+						foreach (Dataset referencedDataset in
+						         datasetTestParameterValue.GetAllSourceDatasets(
+							         excludeReferenceDatasets, alreadyVisitedConfigurations))
+						{
+							yield return referencedDataset;
+						}
+					}
 				}
 
-				if (excludeReferenceDatasets && datasetTestParameterValue.UsedAsReferenceData)
+				if (includeReferencedProcessors)
 				{
-					continue;
-				}
-
-				Dataset dataset = datasetTestParameterValue.DatasetValue;
-
-				if (dataset != null)
-				{
-					yield return dataset;
-				}
-				else if (includeSourceDatasets)
-				{
-					foreach (Dataset referencedDataset in
-					         datasetTestParameterValue.GetAllSourceDatasets(
-						         excludeReferenceDatasets))
+					foreach (var referencedDataset in
+					         EnumReferencedDatasetParameterValues(alreadyVisitedConfigurations))
 					{
 						yield return referencedDataset;
 					}
 				}
 			}
-
-			if (includeReferencedProcessors)
+			finally
 			{
-				foreach (var referencedDataset in EnumReferencedDatasetParameterValues())
-				{
-					yield return referencedDataset;
-				}
+				// This configuration is done: remove it again (it was added last), so that it
+				// can still be reached through another parameter, which is not a circle.
+				alreadyVisitedConfigurations.RemoveAt(alreadyVisitedConfigurations.Count - 1);
 			}
 		}
 
-		protected virtual IEnumerable<Dataset> EnumReferencedDatasetParameterValues()
+		protected virtual IEnumerable<Dataset> EnumReferencedDatasetParameterValues(
+			[NotNull] List<InstanceConfiguration> alreadyVisitedConfigurations)
 		{
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{
@@ -236,7 +277,10 @@ namespace ProSuite.DomainModel.Core.QA
 				{
 					foreach (Dataset referencedDataset in
 					         parameterValue.ValueSource.GetDatasetParameterValues(
-						         includeReferencedProcessors: true))
+						         includeReferencedProcessors: true,
+						         includeSourceDatasets: false,
+						         excludeReferenceDatasets: false,
+						         alreadyVisitedConfigurations: alreadyVisitedConfigurations))
 					{
 						yield return referencedDataset;
 					}

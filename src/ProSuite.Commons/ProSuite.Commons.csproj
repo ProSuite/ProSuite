@@ -15,9 +15,20 @@
 
     <NoWarn>1591</NoWarn>
 
+    <NetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</NetFrameworkVersion>
+
     <TargetFramework>netstandard2.0</TargetFramework>
 
   </PropertyGroup>
+  <!-- C5 3.0.0 is not strong-named, and this assembly is. .NET Framework refuses to bind
+       a strong-named assembly to a weak-named dependency ("A strongly-named assembly is
+       required", HRESULT 0x80131044), so the .NET Framework build uses the last
+       strong-named release, 2.5.3. C5_LEGACY selects the matching KeyValuePair API,
+       which C5 3.0.0 replaced with System.Collections.Generic.KeyValuePair. -->
+  <PropertyGroup Condition=" '$(NetFrameworkVersion)' == 'net48' ">
+    <DefineConstants>$(DefineConstants);C5_LEGACY</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
   </PropertyGroup>
@@ -42,7 +53,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="C5" Version="3.0.0" />
+    <!-- See the C5_LEGACY comment above: .NET Framework needs the strong-named 2.5.3. -->
+    <PackageReference Include="C5" Version="3.0.0" Condition="'$(NetFrameworkVersion)' != 'net48'" />
+    <PackageReference Include="C5" Version="2.5.3" Condition="'$(NetFrameworkVersion)' == 'net48'" />
   </ItemGroup>
 
   <!-- License files: -->

@@ -52,7 +52,7 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Legacy 2-pinch constructor preserved for back-compat with callers like
-		/// <see cref="GeomTopoOpUtils.ExplodeExteriorBoundaryLoops"/>.
+		/// <see cref="RingSimplifier"/>.
 		/// </summary>
 		public BoundaryLoop([NotNull] IntersectionPoint3D start,
 		                    [NotNull] IntersectionPoint3D end,

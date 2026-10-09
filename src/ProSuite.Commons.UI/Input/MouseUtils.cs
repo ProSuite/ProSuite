@@ -17,6 +17,16 @@ namespace ProSuite.Commons.UI.Input
 			return new Point(result.X, result.Y);
 		}
 
+		/// <summary>
+		/// Moves the mouse pointer to the specified position in (global) screen coordinates,
+		/// as returned by <see cref="GetMouseScreenPosition"/>.
+		/// </summary>
+		/// <param name="position"></param>
+		public static void SetMouseScreenPosition(Point position)
+		{
+			SetCursorPos((int) position.X, (int) position.Y);
+		}
+
 		#region Win32 methods
 
 		// ReSharper disable InconsistentNaming, UnassignedField.Global
@@ -24,6 +34,9 @@ namespace ProSuite.Commons.UI.Input
 
 		[DllImport("user32.dll")]
 		private static extern bool GetCursorPos(out POINT pt);
+
+		[DllImport("user32.dll")]
+		private static extern bool SetCursorPos(int x, int y);
 
 		/// <summary>
 		/// cursor position

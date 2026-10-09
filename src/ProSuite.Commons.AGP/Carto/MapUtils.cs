@@ -9,6 +9,8 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core.UnitFormats;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -100,6 +102,51 @@ public static class MapUtils
 	public static bool IsStereoMapView([CanBeNull] MapView mapView)
 	{
 		return mapView?.ViewingMode == MapViewingMode.MapStereo;
+	}
+
+	/// <summary>
+	/// Runs <paramref name="func"/> so that the user cannot undo its changes to the map.
+	/// Must be called on the MCT.
+	/// </summary>
+	public static T RunWithoutUndo<T>([NotNull] Map map, [NotNull] Func<T> func)
+	{
+		Assert.ArgumentNotNull(map, nameof(map));
+		Assert.ArgumentNotNull(func, nameof(func));
+
+		OperationManager operationManager = map.OperationManager;
+
+		if (operationManager is null)
+		{
+			return func();
+		}
+
+		List<Operation> operationsBefore = operationManager.FindUndoOperations(_ => true);
+
+		try
+		{
+			return func();
+		}
+		finally
+		{
+			// Also after a failure: partial changes must not be undoable either.
+			foreach (Operation operation in operationManager.FindUndoOperations(
+				         operation => ! operationsBefore.Contains(operation)))
+			{
+				operationManager.RemoveUndoOperation(operation);
+			}
+		}
+	}
+
+	/// <inheritdoc cref="RunWithoutUndo{T}"/>
+	public static void RunWithoutUndo([NotNull] Map map, [NotNull] Action action)
+	{
+		Assert.ArgumentNotNull(action, nameof(action));
+
+		RunWithoutUndo(map, () =>
+		{
+			action();
+			return true;
+		});
 	}
 
 	public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
@@ -829,6 +876,23 @@ public static class MapUtils
 		return existingSurfaceLayer;
 	}
 
+	/// <summary>
+	/// Applies the Z values from the specified map's elevation surface to the vertices of the
+	/// specified geometry, a copy of which is provided through the out parameter.
+	/// Returns false if no Z values have been applied providing the reason in
+	/// <paramref name="surfaceZsResult"/>.
+	/// Must be called on the MCT.
+	/// </summary>
+	public static bool ApplyZsFromElevation([NotNull] Geometry geometry,
+	                                        [NotNull] Map mapWithElevation,
+	                                        out SurfaceZsResult surfaceZsResult)
+	{
+		surfaceZsResult = mapWithElevation.GetZsFromSurface(geometry);
+
+		return surfaceZsResult.Status == SurfaceZsResultStatus.Ok &&
+		       surfaceZsResult.Geometry != null;
+	}
+
 	#region Not MapUtils --> move elsewhere
 
 	/// <summary>
@@ -881,8 +945,14 @@ public static class MapUtils
 			Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
 			Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
 
-			return new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
-			                 (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+			var result = new Point((screenLowerLeft.X + screenUpperRight.X) / 2,
+			                       (screenLowerLeft.Y + screenUpperRight.Y) / 2);
+
+			_msg.DebugFormat(
+				"Fixed stereo cursor: screen location {0} from map extent center at Z {1} (mouse screen location: {2})",
+				result, mapZValue, defaultScreenLocation);
+
+			return result;
 		});
 	}
 
@@ -1086,9 +1156,10 @@ public static class MapUtils
 	}
 
 	/// <summary>
-	/// Gets the pixel size for the specified map view in the map space without
-	/// using the ScreenToMap method (which is incorrect in stereo maps at 3.3).
-	/// This method is not particularly robust against rotated maps!
+	/// Gets the pixel size for the specified map view in the map space without using
+	/// the ScreenToMap method (which is incorrect in stereo maps at 3.3).
+	/// This method is also correct in a map that is rotated on the screen (a stereo
+	/// map is rotated to the flight direction of the image pair).
 	/// </summary>
 	/// <param name="mapView"></param>
 	/// <param name="atPoint"></param>
@@ -1101,25 +1172,22 @@ public static class MapUtils
 
 		double z = atPoint.Z;
 
-		MapPoint mapLowerLeft = GeometryFactory.CreatePoint(
-			mapExtent.XMin, mapExtent.YMin, z, sr);
-		MapPoint mapUpperRight = GeometryFactory.CreatePoint(
-			mapExtent.XMax, mapExtent.YMax, z, sr);
+		double stepLength = Math.Max(mapExtent.Width, mapExtent.Height) / 2;
 
-		Point screenLowerLeft = mapView.MapToScreen(mapLowerLeft);
-		Point screenUpperRight = mapView.MapToScreen(mapUpperRight);
+		MapPoint mapStepEast = GeometryFactory.CreatePoint(
+			atPoint.X + stepLength, atPoint.Y, z, sr);
+		MapPoint mapStepNorth = GeometryFactory.CreatePoint(
+			atPoint.X, atPoint.Y + stepLength, z, sr);
 
 		// Client window coordinates (probably makes no difference for this calculation but it is correct)
-		Point clientLowerLeft = mapView.ScreenToClient(screenLowerLeft);
-		Point clientUpperRight = mapView.ScreenToClient(screenUpperRight);
+		Point clientOrigin = mapView.ScreenToClient(mapView.MapToScreen(atPoint));
+		Point clientStepEast = mapView.ScreenToClient(mapView.MapToScreen(mapStepEast));
+		Point clientStepNorth = mapView.ScreenToClient(mapView.MapToScreen(mapStepNorth));
 
-		double widthPixels = Math.Abs(clientUpperRight.X - clientLowerLeft.X);
-		double heightPixels = Math.Abs(clientUpperRight.Y - clientLowerLeft.Y);
+		double pixelSizeEast = stepLength / (clientStepEast - clientOrigin).Length;
+		double pixelSizeNorth = stepLength / (clientStepNorth - clientOrigin).Length;
 
-		double pixelSizeX = mapExtent.Width / widthPixels;
-		double pixelSizeY = mapExtent.Height / heightPixels;
-
-		return pixelSizeX + pixelSizeY / 2;
+		return (pixelSizeEast + pixelSizeNorth) / 2;
 	}
 
 	/// <summary>
@@ -1337,6 +1405,39 @@ public static class MapUtils
 		}
 	}
 
+	/// <summary>
+	/// Flashes using the provided overlays. Must be called on the MCT.
+	/// </summary>
+	/// <param name="mapView"></param>
+	/// <param name="overlays"></param>
+	/// <param name="useReferenceScale"></param>
+	/// <returns></returns>
+	public static async Task<List<IDisposable>> AddOverlays([NotNull] MapView mapView,
+	                                                        IEnumerable<Overlay> overlays,
+	                                                        bool useReferenceScale = false)
+	{
+		List<IDisposable> disposables = new List<IDisposable>();
+
+		try
+		{
+			foreach (Overlay overlay in overlays)
+			{
+				disposables.Add(await overlay.AddToMapAsync(mapView, useReferenceScale));
+			}
+
+			return disposables;
+		}
+		catch (Exception)
+		{
+			foreach (IDisposable disposable in disposables)
+			{
+				disposable.Dispose();
+			}
+
+			throw;
+		}
+	}
+
 	#endregion
 
 	private static FeatureClass GetUnJoinedFeatureClass(FeatureClass featureClass)
@@ -1401,6 +1502,12 @@ public static class MapUtils
 		}
 
 		MapPoint mapPoint = GeometryUtils.Centroid(newExtent);
+
+		if (newExtent.HasZ && ! double.IsNaN(newExtent.ZMin) && ! double.IsNaN(newExtent.ZMax))
+		{
+			// Keep the height. Stereo maps need it to show the extent at the correct location.
+			mapPoint = GeometryUtils.SetConstantZ(mapPoint, (newExtent.ZMin + newExtent.ZMax) / 2);
+		}
 
 		double newWidth = width < minWidth
 			                  ? minWidth

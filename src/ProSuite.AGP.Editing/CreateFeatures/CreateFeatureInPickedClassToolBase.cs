@@ -52,6 +52,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return false;
 	}
 
+	// Allow re-picking a (single) template feature while sketching by holding SHIFT, even though
+	// the tool does not support multi-selection.
+	protected override bool AllowSelectionChangeInSketchMode => true;
+
 	protected override SketchGeometryType GetEditSketchGeometryType()
 	{
 		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
@@ -101,7 +105,10 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 	protected override void LogEnteringSketchMode()
 	{
-		_msg.Info("Construct the new feature. Hit [ESC] to reselect the template feature.");
+		_msg.InfoFormat(
+			"Construct the new feature. Press [ESC] to reselect the template feature.{0}" +
+			"Change the selected feature while keeping SHIFT pressed (the current selection will be cleared).",
+			Environment.NewLine);
 	}
 
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(
@@ -141,7 +148,6 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 				BasicFeatureLayer featureLayer = selectionByLayer.Keys.First();
 				Feature originalFeature = selectedFeatures.First();
 
-				// TODO exclude fields: pass table/featureClass
 				await StoreNewFeature(featureLayer, originalFeature, sketchGeometry,
 				                      GetExclusionFieldNames(originalFeature),
 				                      cancelableProgressor);
@@ -185,7 +191,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 	protected override void LogPromptForSelection()
 	{
-		_msg.Info("Select a template feature");
+		_msg.Info("Select a template feature.");
 	}
 
 	protected override bool CanSelectFromLayerCore(

@@ -46,6 +46,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			_statusStrip=new System.Windows.Forms.StatusStrip();
 			_groupBoxDatasets=new System.Windows.Forms.GroupBox();
 			_checkBoxExcludeDatasetsUsingThisTest=new System.Windows.Forms.CheckBox();
+			_labelExcludeDatasetsNote=new System.Windows.Forms.Label();
 			label3=new System.Windows.Forms.Label();
 			label5=new System.Windows.Forms.Label();
 			_textBoxSupportedVariables=new System.Windows.Forms.TextBox();
@@ -237,6 +238,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			// _groupBoxDatasets
 			// 
 			_groupBoxDatasets.Controls.Add(_checkBoxExcludeDatasetsUsingThisTest);
+			_groupBoxDatasets.Controls.Add(_labelExcludeDatasetsNote);
 			_groupBoxDatasets.Controls.Add(_dataGridView);
 			_groupBoxDatasets.Controls.Add(_toolStripElements);
 			_groupBoxDatasets.Controls.Add(label3);
@@ -264,6 +266,18 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			_checkBoxExcludeDatasetsUsingThisTest.TabIndex=2;
 			_checkBoxExcludeDatasetsUsingThisTest.Text="Exclude datasets for which this test descriptor is already used";
 			_checkBoxExcludeDatasetsUsingThisTest.UseVisualStyleBackColor=true;
+			// 
+			// _labelExcludeDatasetsNote
+			// 
+			_labelExcludeDatasetsNote.Anchor=System.Windows.Forms.AnchorStyles.Bottom|System.Windows.Forms.AnchorStyles.Right;
+			_labelExcludeDatasetsNote.AutoSize=true;
+			_labelExcludeDatasetsNote.ForeColor=System.Drawing.SystemColors.GrayText;
+			_labelExcludeDatasetsNote.Location=new System.Drawing.Point(180, 231);
+			_labelExcludeDatasetsNote.Margin=new System.Windows.Forms.Padding(4, 0, 4, 0);
+			_labelExcludeDatasetsNote.Name="_labelExcludeDatasetsNote";
+			_labelExcludeDatasetsNote.Size=new System.Drawing.Size(0, 15);
+			_labelExcludeDatasetsNote.TabIndex=26;
+			_labelExcludeDatasetsNote.Text="";
 			// 
 			// label3
 			// 
@@ -508,6 +522,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		private global::ProSuite.Commons.UI.WinForms.Controls.DoubleBufferedDataGridView _dataGridViewQualitySpecifications;
 		private System.Windows.Forms.DataGridViewTextBoxColumn _columnName;
 		private System.Windows.Forms.CheckBox _checkBoxExcludeDatasetsUsingThisTest;
+		private System.Windows.Forms.Label _labelExcludeDatasetsNote;
 		private global::ProSuite.Commons.UI.WinForms.Controls.ObjectReferenceControl _objectReferenceControlCategory;
 		private System.Windows.Forms.Label _labelTargetCategory;
 		private System.Windows.Forms.Panel _panelMain;

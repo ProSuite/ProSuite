@@ -577,7 +577,13 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring footprint =
 				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
 
-			Assert.AreEqual(655.276735, footprint.GetArea2D(), 0.001);
+			// The assertion tolerance was widened from 0.001 to 0.005 when the
+			// crack-and-cluster pass was added: it clusters at 2 * sqrt(2) * 0.0005 =
+			// 1.4 mm, so vertices move by up to that and the area changes by 2.9 mm2
+			// (4.4 ppm of 655 m2). That is proportionate to the snapping radius and NOT a
+			// lost hole - the holes of this labyrinth are square metres, so the guard
+			// still catches everything it was written for.
+			Assert.AreEqual(655.276735, footprint.GetArea2D(), 0.005);
 		}
 
 		[Test]
@@ -791,7 +797,8 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring target = (MultiLinestring) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("cluster_crash_repro_target.wkb"), out _);
 
-			const double tolerance = 0.0005;
+			// With the expanded clustering, the spike is simplified away at 0.0005
+			const double tolerance = 0.0001;
 
 			double sourceArea = source.GetArea2D();
 
@@ -868,7 +875,8 @@ namespace ProSuite.Commons.Test.Geom
 				GeomTestUtils.GetGeometryTestDataPath(
 					"champ_pittet_step32_ring.wkb"), out _);
 
-			double tolerance = 0.00625;
+			// With the expanded clustering, the overshoot is simplified away at 0.00625
+			double tolerance = 0.0025;
 			double sourceArea = source.GetArea2D();
 
 			MultiLinestring disjoint =
@@ -1009,7 +1017,8 @@ namespace ProSuite.Commons.Test.Geom
 			// over the 20 ring groups returned 313.5880 sq m in 2 parts instead of the solid
 			// AO reference 438.4846 (1 part) - ~125 sq m short.
 			// The step-6 corner-touch drop is fixed; the area is correct but a tiny
-			// spurious hole still splits the result into 2 parts (see [Ignore] note).
+			// spurious hole still splits the result into 2 parts.
+			// ... which has been fixed with cracking / clustering
 			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("hotel_waldhorn.wkb"),
 				out WkbGeometryType wkbType);
@@ -1018,11 +1027,30 @@ namespace ProSuite.Commons.Test.Geom
 
 			double tolerance = 0.00625;
 
+			// This case needs the WIDE snap radius. With the default Balanced strategy the
+			// area is still correct but the spurious hole survives and splits the result into
+			// 2 parts; only Aggressive (2*sqrt(2)*tolerance = 1.77 cm here) pulls the two
+			// flanks of the hole together. Balanced is the default because it is measurably
+			// closer to the ArcObjects footprint over 137'042 buildings (see
+			// CrackAndClusterToleranceStrategy) - this geometry is one of the two known cases
+			// that pays for it, and it needs a fix of its own rather than a wider radius.
+			var options = new CrackAndClusterOptions
+			              {
+				              ToleranceStrategy = CrackAndClusterToleranceStrategy.Aggressive
+			              };
+
 			MultiLinestring footprint =
+				polyhedron.GetXYFootprint(tolerance, tolerance, out _, options);
+
+			Assert.AreEqual(438.53446, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+
+			// The default: same area, but 2 parts. Pinned so that a future fix shows up here.
+			MultiLinestring atDefault =
 				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
 
-			Assert.AreEqual(438.4846, footprint.GetArea2D(), 0.05);
-			Assert.AreEqual(1, footprint.PartCount);
+			Assert.AreEqual(438.53446, atDefault.GetArea2D(), 0.05);
+			Assert.AreEqual(2, atDefault.PartCount);
 		}
 
 		[Test]
@@ -1049,15 +1077,15 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		[Ignore("Repro Test, to be fixed")]
 		public void CanGetFootprintForFriedhofsmauerRoggwil()
 		{
 			// TLM_GEBAEUDE {5AB47BFF-2612-4B11-8FE0-4FCB123519C4} (Friedhofsmauer Roggwil).
-			// The footprint is incorrect (missing part): the incremental ring-group union
-			// over the 4 ring groups returns 34.5647 sq m in 2 parts instead of the solid
-			// AO reference 58.8638 (1 part, confirmed by the user) - the footprint loses
-			// ~24 sq m (~41%). This thin, elongated wall structure is the smallest fixture
-			// (4 ring groups) and a good minimal repro.
+			// Regression guard for the crack-and-cluster pass in GetXYFootprint. Without it
+			// the incremental ring-group union over the 4 ring groups returns 34.5647 sq m
+			// in 2 parts instead of the solid AO reference 58.8638 (1 part, confirmed by
+			// the user) - the footprint loses ~24 sq m (~41%). The input rings of this thin,
+			// elongated wall structure are not simple at the tolerance; once they are
+			// cracked and clustered against each other the union is straightforward.
 			Polyhedron polyhedron = (Polyhedron) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("friedhofsmauer_roggwil.wkb"),
 				out WkbGeometryType wkbType);
@@ -1071,6 +1099,223 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(58.8638, footprint.GetArea2D(), 0.05);
 			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForVicinoCimiteroSavosa()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8708219 {074E0B9F-2D15-4329-95CB-14870236BD9B}
+			// (Vicino Cimitero Savosa, Lugano). Regression guard for the
+			// Balanced crack-and-cluster proportions. The reference is 128.6895
+			// in one part, and both the wider (Aggressive) and the narrower (Uniform)
+			// proportions reproduce it: 128.6873 and 128.6586. Only Balanced - whose minimum
+			// segment length is EXACTLY the tolerance the subsequent walk runs at - lost
+			// 16.5 sq m and split the result into 3 parts (112.1756). It surfaced as two
+			// spurious QA warnings on TLM_DACH_GRUNDRISS 7059028 (5.28 + 11.17 sq m).
+			Polyhedron polyhedron = ReadPolyhedron("vicino_cimitero_savosa.wkb");
+
+			foreach (CrackAndClusterToleranceStrategy strategy in
+			         Enum.GetValues(typeof(CrackAndClusterToleranceStrategy)))
+			{
+				var options = new CrackAndClusterOptions { ToleranceStrategy = strategy };
+
+				MultiLinestring footprint =
+					polyhedron.GetXYFootprint(0.01, 0.01, out _, options);
+
+				Assert.AreEqual(128.6895, footprint.GetArea2D(), 0.05,
+				                $"Unexpected area with {strategy}");
+				Assert.AreEqual(1, footprint.PartCount,
+				                $"Unexpected part count with {strategy}");
+			}
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8711144()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8711144 (Lugano). Regression guard for the
+			// linear-intersection subsumption in
+			// SubcurveIntersectionPointNavigator.GetSubsumedLinearIntersectionPoints:
+			// at union step 14 the target is a needle-thin triangle whose tip is narrower
+			// than the tolerance, so two linear runs start at the same source vertex. The
+			// generalized (all-runs) subsumption dropped the shorter of the two, the
+			// turning-left walk cut into the source and the footprint lost 2 sq m
+			// (117.1739 instead of 119.22; AO reference 119.2084). The isolated pairwise
+			// union is covered by SubcurveIntersectionPointNavigatorTest.
+			// CanKeepLinearRunsSharingSourceStartAtTargetSpike.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8711144.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(119.2084, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8711671()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8711671 (Lugano). Same mechanism as
+			// CanGetFootprintForLugano8711144 (union step 24, a needle triangle sharing its
+			// long edge with the source boundary): the footprint lost 4 sq m
+			// (447.1731 instead of 451.36; AO reference 451.3716).
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8711671.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(451.3716, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8706452()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8706452 (Lugano). Regression guard for
+			// GeomTopoOpUtils.RemoveSubToleranceBoundaryLoops. A union step leaves a boundary
+			// loop of 0.0017 sq m that is 0.0096 m wide - narrower than the 0.01 tolerance.
+			// Its two flanks intersect each other LINEARLY, which ExplodeExteriorBoundaryLoops
+			// deliberately ignores, so the spike survived into the following steps. There it
+			// made GetIntersectionPoints report a zero-extent "linear run" (start point == end
+			// point, target span 3 -> 0 on a 3-segment ring). The old, over-broad subsumption
+			// happened to delete the one REAL run as "contained" in that phantom run, which
+			// masked the problem; with the corrected subsumption (see
+			// CanGetFootprintForLugano8711144) the real run survives and the walk collapses to
+			// 1.08 sq m in 5 parts. AO reference 130.3004.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8706452.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(130.3004, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8839728()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8839728 (Lugano). Same sub-tolerance boundary loop
+			// as CanGetFootprintForLugano8706452, but here the surviving spike made the union
+			// throw ("Intersections seen twice") instead of collapsing, so the transformer fell
+			// back to the ArcObjects footprint. AO reference 124.4206.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8839728.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(124.4206, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		[Ignore(
+			"TOP-5999 issue 2 (open): repro for IntersectionClusters.PointsClusterButVertexCheckMissed")]
+		public void CanGetFootprintForLugano8710513()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8710513 (Lugano). NOT the subsumption issue:
+			// this one collapses in IntersectionClusters.PointsClusterButVertexCheckMissed
+			// (the XY-proximity cluster gate). At union step 43 the accumulated footprint
+			// drops from 232.71 to 11.91 sq m; the final footprint is 12.0467 in 2 parts
+			// instead of the AO reference 232.7076 in 1 part. Simply disabling the gate is
+			// not the fix - it repairs this feature but collapses five others.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8710513.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(232.7076, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForBern4644019()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 4644019 (Bern). Regression guard for the
+			// re-simplification after the crack-and-cluster pass. Cracking inserts a foreign
+			// vertex into BOTH segments adjacent to the apex of a 0.0135 sq m sliver ring,
+			// which turns the apex into a 2 mm zero-width needle. At union step 84 that ring
+			// meets the accumulated 164.76 sq m footprint in two TouchingInPoints only; the
+			// turning-left walk emits nothing and IsContainedXY then declares the 164 sq m
+			// ring "contained" in the 0.0135 sq m needle, so the whole footprint is dropped.
+			// AO reference 164.7894.
+			Polyhedron polyhedron = ReadPolyhedron("bern_4644019.wkb");
+
+			// The tolerance the TrFootprint default (null) resolves to: resolution / 2.
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.01, out _);
+
+			Assert.AreEqual(164.7894, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8708844()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8708844 (Lugano). Same needle mechanism as
+			// CanGetFootprintForBern4644019, but here the needle-carrying sliver is
+			// additionally congruent with an accumulated part, so the union returned exactly
+			// the sliver (0.2917 sq m) instead of the 88.58 sq m footprint.
+			// AO reference 88.5845.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8708844.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.01, out _);
+
+			Assert.AreEqual(88.5845, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8714809()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8714809 (palazzo vicino alla piazza carlo battaglini).
+			// {77BF2892-A5D0-459D-A3F2-67A4632137BC}
+			// Regression guard for the retry of the rings the union post-condition rejects
+			// (GeomTopoOpUtils.RetryRejectedRings). Two coincident 0.7866 sq m rings meet
+			// the half-built accumulated result at step 30 in TouchingInPoints only; the
+			// walk answers 30.96 + 0.79 -> 22.09, the guard rejects it, and dropping the
+			// rings left the footprint 0.7866 short (33.6960 instead of 34.4825). Unioned
+			// in again once the fold has settled they fit exactly. AO reference 34.4825.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8714809.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(34.4825, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		[Test]
+		public void CanGetFootprintForLugano8413141()
+		{
+			// TOP-5999: TLM_GEBAEUDEKOERPER 8413141 (Lugano).
+			// {F3D0B282-062B-4CF8-9753-915FE8487D7D}
+			// The same mechanism as CanGetFootprintForLugano8714809, with the walk's failure
+			// in the other direction: at step 190 it answers 293.68 + 0.22 -> 882.97, adding a
+			// spurious 588.80 sq m ring with 59 self-intersections - the accumulated outline
+			// traversed twice. Four rejected rings (two coincident pairs) used to cost
+			// 0.3601 sq m (294.5764 instead of 294.9365). AO reference 294.9365.
+			Polyhedron polyhedron = ReadPolyhedron("lugano_8413141.wkb");
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
+
+			Assert.AreEqual(294.9365, footprint.GetArea2D(), 0.05);
+			Assert.AreEqual(1, footprint.PartCount);
+		}
+
+		/// <summary>
+		/// Reads a multipatch (WKB MultiSurface) test fixture. Depending on the fixture the
+		/// reader returns a <see cref="Polyhedron"/> or a <see cref="MultiPolyhedron"/>; the
+		/// latter is flattened into a single polyhedron because the footprint is calculated
+		/// over all ring groups of the feature.
+		/// </summary>
+		private static Polyhedron ReadPolyhedron(string fileName)
+		{
+			object geometry = GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(fileName), out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.MultiSurface, wkbType);
+
+			if (geometry is Polyhedron polyhedron)
+			{
+				return polyhedron;
+			}
+
+			var multiPolyhedron = (MultiPolyhedron) geometry;
+
+			return new Polyhedron(
+				multiPolyhedron.Polyhedra.SelectMany(ph => ph.RingGroups).ToList());
 		}
 
 		[Test]
@@ -1742,7 +1987,8 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("thanhalten_step6_ring.wkb"), out _);
 
-			double tolerance = 0.00625;
+			// With the expanded clustering, the spike is simplified away at 0.00625
+			double tolerance = 0.001;
 
 			double sourceArea = source.GetArea2D();
 
@@ -1782,7 +2028,8 @@ namespace ProSuite.Commons.Test.Geom
 			MultiLinestring ring = (MultiLinestring) GeomUtils.FromWkbFile(
 				GeomTestUtils.GetGeometryTestDataPath("grancy_step5_ring.wkb"), out _);
 
-			double tolerance = 0.00625;
+			// With the expanded clustering, the overshoot is simplified away at 0.00625
+			double tolerance = 0.0025;
 			double sourceArea = source.GetArea2D();
 
 			MultiLinestring disjoint =

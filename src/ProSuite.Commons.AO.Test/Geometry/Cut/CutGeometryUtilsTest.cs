@@ -398,33 +398,61 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 			ISpatialReference lv95 = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95);
 
-			// Create a MultiPatch (ring-based)
-			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(
-				GeometryFactory.CreatePolygon(2600000, 1200000, 500, 100, lv95));
+			IPolygon originalPoly = GeometryFactory.CreatePolygon(
+				GeometryFactory.CreateEnvelope(2600000, 1200000, 500, 50, 20, lv95));
 
-			// Create a closed cut line (e.g., "bites its tail")
+			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(originalPoly);
+
+			// A closed cut line ("bites its tail") completely inside the footprint
 			IPolyline closedCutLine = GeometryFactory.CreateLine(
-				GeometryFactory.CreatePoint(2600000 - 30, 1200000 - 30),
-				GeometryFactory.CreatePoint(2600000 - 30, 1200000 + 30),
-				GeometryFactory.CreatePoint(2600000 + 30, 1200000 + 30),
-				GeometryFactory.CreatePoint(2600000 + 30, 1200000 - 30),
-				GeometryFactory.CreatePoint(2600000 - 30, 1200000 - 30));
+				GeometryFactory.CreatePoint(2600000 - 5, 1200000 - 5),
+				GeometryFactory.CreatePoint(2600000 - 5, 1200000 + 5),
+				GeometryFactory.CreatePoint(2600000 + 5, 1200000 + 5),
+				GeometryFactory.CreatePoint(2600000 + 5, 1200000 - 5),
+				GeometryFactory.CreatePoint(2600000 - 5, 1200000 - 5));
 			closedCutLine.SpatialReference = lv95;
 
-			// Ensure the cut line is closed
 			Assert.True(((ICurve) closedCutLine).IsClosed,
 			            "Cut line must be closed for this test.");
 
-			// Cut the MultiPatch using the closed cut line
-			var result = CutGeometryUtils.TryCut(
-				multipatch,
-				closedCutLine,
-				ChangeAlongZSource.Target);
+			IDictionary<IPolygon, IMultiPatch> result = CutGeometryUtils.TryCut(
+				multipatch, closedCutLine, ChangeAlongZSource.SourcePlane);
 
-			// Verify the result
+			// Cookie-cutter semantics: an outer part with a hole, plus the inner part
 			Assert.NotNull(result, "Cutting should produce a result.");
 			Assert.AreEqual(2, result.Count,
-			                "Cutting with a closed cut line should produce 2 features: outer ring and inner ring.");
+			                "Cutting with a closed cut line should produce 2 features: outer (with hole) and inner.");
+
+			IPolygon outerFootprint = null;
+			IPolygon innerFootprint = null;
+			double footprintAreaSum = 0;
+
+			foreach (KeyValuePair<IPolygon, IMultiPatch> resultByFootprint in result)
+			{
+				IPolygon footprint = resultByFootprint.Key;
+				IMultiPatch resultMultipatch = resultByFootprint.Value;
+
+				Assert.IsFalse(resultMultipatch.IsEmpty, "Result multipatch is empty");
+				Assert.IsFalse(GeometryUtils.HasUndefinedZValues(resultMultipatch));
+
+				footprintAreaSum += ((IArea) footprint).Area;
+
+				if (((IGeometryCollection) footprint).GeometryCount == 2)
+				{
+					outerFootprint = footprint;
+				}
+				else
+				{
+					innerFootprint = footprint;
+				}
+			}
+
+			Assert.NotNull(outerFootprint,
+			               "Expected an outer result footprint with an interior ring (hole)");
+			Assert.NotNull(innerFootprint, "Expected an inner (cookie) result footprint");
+
+			Assert.AreEqual(10d * 10d, ((IArea) innerFootprint).Area, 0.01);
+			Assert.AreEqual(((IArea) originalPoly).Area, footprintAreaSum, 0.01);
 		}
 
 		private static void EnsureCutResult(IList<IGeometry> results,

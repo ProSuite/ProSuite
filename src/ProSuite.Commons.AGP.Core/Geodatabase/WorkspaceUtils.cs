@@ -10,6 +10,7 @@ using ArcGIS.Core.Data.Knowledge;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Data.Realtime;
 using ProSuite.Commons.Ado;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
@@ -205,12 +206,80 @@ public static class WorkspaceUtils
 					new Uri(connectionString, UriKind.Absolute),
 					FileSystemDatastoreType.Shapefile);
 
+			case WorkspaceFactory.FeatureService:
+				return CreateServiceConnectionProperties(connectionString);
+
+			case WorkspaceFactory.InMemoryDB:
+				return CreateMemoryConnectionProperties(connectionString);
+
 			// TODO: SQLite, others?
 
 			default:
 				throw new ArgumentOutOfRangeException(nameof(factory), factory,
 				                                      $"Unsupported workspace factory: {factory}");
 		}
+	}
+
+	/// <summary>
+	/// Creates the <see cref="MemoryConnectionProperties"/> for the specified connection
+	/// string, which is either INSTANCE_ID=&lt;name&gt; or the plain name.
+	/// </summary>
+	private static MemoryConnectionProperties CreateMemoryConnectionProperties(
+		[NotNull] string connectionString)
+	{
+		var builder = new ConnectionStringBuilder(connectionString);
+
+		string name = builder["instance_id"];
+
+		if (string.IsNullOrEmpty(name))
+		{
+			name = connectionString;
+		}
+
+		Assert.False(string.IsNullOrEmpty(name),
+		             "No name found in in-memory geodatabase connection string: {0}",
+		             connectionString);
+
+		return new MemoryConnectionProperties(name);
+	}
+
+	/// <summary>
+	/// Creates the <see cref="ServiceConnectionProperties"/> for the specified feature service
+	/// connection string, which can either be a plain URL or a semi-colon separated list of
+	/// key/value pairs (as used by .lyr / .sde connection files), such as
+	/// URL=https://server/rest/services/Service/FeatureServer;VERSION=version_name;
+	/// VERSIONGUID={guid}
+	/// </summary>
+	private static ServiceConnectionProperties CreateServiceConnectionProperties(
+		[NotNull] string connectionString)
+	{
+		if (Uri.TryCreate(connectionString, UriKind.Absolute, out Uri directUri) &&
+		    (directUri.Scheme == Uri.UriSchemeHttp || directUri.Scheme == Uri.UriSchemeHttps))
+		{
+			return new ServiceConnectionProperties(directUri);
+		}
+
+		var builder = new ConnectionStringBuilder(connectionString);
+
+		string url = builder["url"];
+		Assert.False(string.IsNullOrEmpty(url),
+		             "No URL found in feature service connection string: {0}", connectionString);
+
+		var serviceConnection = new ServiceConnectionProperties(new Uri(url, UriKind.Absolute));
+
+		string version = builder["version"];
+		if (! string.IsNullOrEmpty(version))
+		{
+			serviceConnection.Version = version;
+		}
+
+		string user = builder["user"];
+		if (! string.IsNullOrEmpty(user))
+		{
+			serviceConnection.User = user;
+		}
+
+		return serviceConnection;
 	}
 
 	public static bool IsSameDatastore([CanBeNull] Datastore datastore1,
@@ -241,12 +310,219 @@ public static class WorkspaceUtils
 		return datastoreName1.Equals(datastoreName2, comparison);
 	}
 
+	/// <summary>
+	/// Determines whether two datastores represent the same version in the same database,
+	/// regardless of the connection details such as the user.
+	/// </summary>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public static bool IsSameVersion([CanBeNull] Datastore datastore1,
+	                                 [CanBeNull] Datastore datastore2)
+	{
+		if (! IsSameDatabase(datastore1, datastore2))
+		{
+			return false;
+		}
+
+		if (IsSameInstance(datastore1, datastore2))
+		{
+			return true;
+		}
+
+		if (datastore1 is not ArcGIS.Core.Data.Geodatabase geodatabase1 ||
+		    datastore2 is not ArcGIS.Core.Data.Geodatabase geodatabase2 ||
+		    ! geodatabase1.IsVersioningSupported() ||
+		    ! geodatabase2.IsVersioningSupported())
+		{
+			// Not versioned: the only version is the default version
+			return true;
+		}
+
+		using VersionManager versionManager1 = geodatabase1.GetVersionManager();
+		using VersionManager versionManager2 = geodatabase2.GetVersionManager();
+		using Version version1 = versionManager1.GetCurrentVersion();
+		using Version version2 = versionManager2.GetCurrentVersion();
+
+		// Versions within a database are identified by their names.
+		// Only the names qualified with the owner are unique. They are case-sensitive.
+		return string.Equals(version1.GetName(), version2.GetName());
+	}
+
+	/// <summary>
+	/// Determines whether two datastores point to the same database, regardless of the
+	/// version or the connection details such as the user.
+	/// Two enterprise geodatabases are the same database if their default versions have
+	/// the same name, creation date and modification date.
+	/// </summary>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public static bool IsSameDatabase([CanBeNull] Datastore datastore1,
+	                                  [CanBeNull] Datastore datastore2)
+	{
+		if (datastore1 == null || datastore2 == null)
+		{
+			return false;
+		}
+
+		if (IsSameInstance(datastore1, datastore2))
+		{
+			return true;
+		}
+
+		if (IsSameDatastore(datastore1, datastore2, DatastoreComparison.AnyUserAnyVersion))
+		{
+			// Same connection properties, apart from user and version
+			return true;
+		}
+
+		bool isVersioned1 = datastore1 is ArcGIS.Core.Data.Geodatabase geodatabase1 &&
+		                    geodatabase1.IsVersioningSupported();
+		bool isVersioned2 = datastore2 is ArcGIS.Core.Data.Geodatabase geodatabase2 &&
+		                    geodatabase2.IsVersioningSupported();
+
+		if (isVersioned1 != isVersioned2)
+		{
+			return false;
+		}
+
+		if (! isVersioned1)
+		{
+			// Both are not versioned. Compare the paths of file geodatabases, folders, etc.
+			Uri path1 = GetDatastorePath(datastore1);
+			Uri path2 = GetDatastorePath(datastore2);
+
+			return path1 != null && path2 != null && Equals(path1, path2);
+		}
+
+		// Both are versioned, but connected differently (other user, other connection file).
+		// Compare the default versions, like the ArcObjects implementation.
+		using VersionManager versionManager1 =
+			((ArcGIS.Core.Data.Geodatabase) datastore1).GetVersionManager();
+		using VersionManager versionManager2 =
+			((ArcGIS.Core.Data.Geodatabase) datastore2).GetVersionManager();
+		using Version defaultVersion1 = versionManager1.GetDefaultVersion();
+		using Version defaultVersion2 = versionManager2.GetDefaultVersion();
+
+		string defaultVersionName1 = defaultVersion1.GetName() ?? string.Empty;
+		string defaultVersionName2 = defaultVersion2.GetName() ?? string.Empty;
+
+		if (! defaultVersionName1.Equals(defaultVersionName2,
+		                                 StringComparison.OrdinalIgnoreCase))
+		{
+			return false;
+		}
+
+		DateTime created1 = defaultVersion1.GetCreatedDate();
+		DateTime created2 = defaultVersion2.GetCreatedDate();
+
+		_msg.VerboseDebug(() => $"Compare default version creation date: {created1}, {created2}");
+
+		if (created1 != created2)
+		{
+			return false;
+		}
+
+		DateTime modified1 = defaultVersion1.GetModifiedDate();
+		DateTime modified2 = defaultVersion2.GetModifiedDate();
+
+		_msg.VerboseDebug(() =>
+			                  $"Compare default version modification date: {modified1}, {modified2}");
+
+		return modified1 == modified2;
+	}
+
+	/// <summary>
+	/// Whether the two datastores wrap the same underlying geodatabase object.
+	/// </summary>
+	private static bool IsSameInstance([NotNull] Datastore datastore1,
+	                                   [NotNull] Datastore datastore2)
+	{
+		return ReferenceEquals(datastore1, datastore2) ||
+		       Equals(datastore1.Handle, datastore2.Handle);
+	}
+
+	/// <summary>
+	/// Gets the catalog path of the given datastore, or <c>null</c> if the datastore has
+	/// none. Prefer this method over <see cref="Datastore.GetPath"/>, which is not annotated
+	/// and therefore easily mistaken for never returning null.
+	/// </summary>
+	/// <param name="datastore">The datastore, must not be null.</param>
+	/// <returns>The datastore's catalog path, or <c>null</c> if it has none. An in-memory
+	/// geodatabase (see <see cref="MemoryConnectionProperties"/>) has no path, and neither
+	/// have some plug-in datastores.</returns>
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	[CanBeNull]
+	public static Uri GetDatastorePath([NotNull] Datastore datastore)
+	{
+		Assert.ArgumentNotNull(datastore, nameof(datastore));
+
+		return datastore.GetPath();
+	}
+
+	/// <summary>
+	/// Gets the catalog path of the given geodatabase. Use
+	/// <see cref="GetDatastorePath"/> for datastores that may have no path, such as an
+	/// in-memory geodatabase.
+	/// </summary>
+	/// <exception cref="AssertionException">The geodatabase has no catalog path.</exception>
+	[NotNull]
 	public static string GetCatalogPath([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase)
 	{
-		Uri uri = geodatabase.GetPath();
+		Uri uri = Assert.NotNull(GetDatastorePath(geodatabase),
+		                         "geodatabase has no catalog path");
 
 		// NOTE: AbsolutePath messes up blanks!
 		return uri.LocalPath;
+	}
+
+	public static bool DeleteVersion(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+		[NotNull] string versionName, bool deleteChildVersions = false)
+	{
+		var deleted = false;
+		using VersionManager manager = geodatabase.GetVersionManager();
+
+		Version version = manager.GetVersion(versionName);
+
+		if (deleteChildVersions)
+		{
+			deleted = DeleteVersionTree(version);
+		}
+		else
+		{
+			version.Delete();
+			version.Dispose();
+			deleted = true;
+		}
+
+		return deleted;
+	}
+
+	private static bool DeleteVersionTree(Version version)
+	{
+		var allDeleted = true;
+
+		foreach (Version child in version.GetChildren())
+		{
+			bool deleted = DeleteVersionTree(child);
+			if (! deleted)
+			{
+				allDeleted = false;
+			}
+		}
+
+		if (allDeleted)
+		{
+			if (version.GetParent() != null)
+			{
+				version.Delete();
+				version.Dispose();
+			}
+			else
+			{
+				allDeleted = false;
+			}
+		}
+
+		return allDeleted;
 	}
 
 	[CanBeNull]
@@ -281,7 +557,7 @@ public static class WorkspaceUtils
 		if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase &&
 		    geodatabase.IsVersioningSupported())
 		{
-			VersionManager versionManager = geodatabase.GetVersionManager();
+			using VersionManager versionManager = geodatabase.GetVersionManager();
 
 			Version version = versionManager.GetCurrentVersion();
 
@@ -289,6 +565,75 @@ public static class WorkspaceUtils
 		}
 
 		return null;
+	}
+
+	public static bool ExistsVersion([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                 [NotNull] string versionName)
+	{
+		using VersionManager manager = geodatabase.GetVersionManager();
+
+		DatabaseConnectionProperties props =
+			GetConnectionProperties(geodatabase.GetConnectionString());
+		string name = ModelElementNameUtils.IsQualifiedName(versionName)
+			              ? versionName
+			              : $"{props.User}.{versionName}";
+
+		return manager.GetVersionNames()
+		              .Any(vn => string.Equals(vn, name,
+		                                       StringComparison.InvariantCultureIgnoreCase));
+	}
+
+	[NotNull]
+	public static Version GetVersion([NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                 [NotNull] string versionName)
+	{
+		using VersionManager manager = geodatabase.GetVersionManager();
+
+		DatabaseConnectionProperties props =
+			GetConnectionProperties(geodatabase.GetConnectionString());
+		string name = $"{props.User}.{versionName}";
+
+		return manager.GetVersion(name);
+	}
+
+	public static Version CreateVersion([NotNull] Version parent,
+	                                    [NotNull] string versionName,
+	                                    VersionAccessType accessType = VersionAccessType.Private)
+	{
+		parent.Refresh();
+
+		using ArcGIS.Core.Data.Geodatabase geodatabase = parent.Connect();
+
+		return CreateVersion(geodatabase, versionName, accessType);
+	}
+
+	public static Version CreateVersion([NotNull] ArcGIS.Core.Data.Geodatabase parent,
+	                                    [NotNull] string versionName,
+	                                    VersionAccessType accessType = VersionAccessType.Private)
+	{
+		using VersionManager manager = parent.GetVersionManager();
+
+		var desc = new VersionDescription
+		           {
+			           Name = versionName,
+			           AccessType = accessType
+		           };
+
+		return manager.CreateVersion(desc);
+	}
+
+	public static DatabaseConnectionProperties GetConnectionProperties(
+		[NotNull] Version version)
+	{
+		ArcGIS.Core.Data.Geodatabase geodatabase = version.Connect();
+
+		return GetConnectionProperties(geodatabase);
+	}
+
+	public static DatabaseConnectionProperties GetConnectionProperties(
+		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase)
+	{
+		return GetConnectionProperties(geodatabase.GetConnectionString());
 	}
 
 	public static DatabaseConnectionProperties GetConnectionProperties(
@@ -377,6 +722,22 @@ public static class WorkspaceUtils
 			};
 
 		return connectionProperties;
+	}
+
+	[NotNull]
+	public static string GetDatastoreDisplayText(Table table)
+	{
+		using Datastore datastore = table.GetDatastore();
+
+		Connector connector = datastore?.GetConnector();
+
+		return GetDatastoreDisplayText(connector);
+	}
+
+	public static string GetDatastoreDisplayText(Version version)
+	{
+		ArcGIS.Core.Data.Geodatabase geodatabase = version.Connect();
+		return GetDatastoreDisplayText(geodatabase.GetConnector());
 	}
 
 	/// <summary>
@@ -542,53 +903,100 @@ public static class WorkspaceUtils
 		return sb.ToString();
 	}
 
-	public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+	public static bool TryGetWorkspaceFactory([CanBeNull] Connector connector,
+	                                          out WorkspaceFactory workspaceFactory)
 	{
-		WorkspaceFactory result;
-
 		switch (connector)
 		{
 #if ARCGISPRO_GREATER_3_2
 			case BimFileConnectionProperties:
-				result = WorkspaceFactory.BIMFile;
-				break;
+				workspaceFactory = WorkspaceFactory.BIMFile;
+				return true;
 #endif
 			case DatabaseConnectionFile:
 			case DatabaseConnectionProperties:
-				result = WorkspaceFactory.SDE;
-				break;
+				workspaceFactory = WorkspaceFactory.SDE;
+				return true;
 			case FileGeodatabaseConnectionPath:
-				result = WorkspaceFactory.FileGDB;
-				break;
+				workspaceFactory = WorkspaceFactory.FileGDB;
+				return true;
 			case FileSystemConnectionPath:
-				result = WorkspaceFactory.Shapefile;
-				break;
+				workspaceFactory = WorkspaceFactory.Shapefile;
+				return true;
 			case KnowledgeGraphConnectionProperties:
-				result = WorkspaceFactory.KnowledgeGraph;
-				break;
+				workspaceFactory = WorkspaceFactory.KnowledgeGraph;
+				return true;
 			case MemoryConnectionProperties:
-				result = WorkspaceFactory.InMemoryDB;
-				break;
+				workspaceFactory = WorkspaceFactory.InMemoryDB;
+				return true;
 			case MobileGeodatabaseConnectionPath:
 			case SQLiteConnectionPath:
-				result = WorkspaceFactory.SQLite;
-				break;
+				workspaceFactory = WorkspaceFactory.SQLite;
+				return true;
 			case PluginDatasourceConnectionPath:
-				result = WorkspaceFactory.Custom;
-				break;
+				workspaceFactory = WorkspaceFactory.Custom;
+				return true;
 			case RealtimeServiceConnectionProperties:
-				result = WorkspaceFactory.StreamService;
-				break;
+				workspaceFactory = WorkspaceFactory.StreamService;
+				return true;
 			case ServiceConnectionProperties:
-				result = WorkspaceFactory.FeatureService;
-				break;
+				workspaceFactory = WorkspaceFactory.FeatureService;
+				return true;
 
 			default:
-				throw new NotImplementedException(
-					$"connector {connector.GetType()} is not implemented");
+				workspaceFactory = default;
+				return false;
+		}
+	}
+
+	/// <exception cref="NotImplementedException">The connector type is not known.</exception>
+	public static WorkspaceFactory GetWorkspaceFactory([NotNull] Connector connector)
+	{
+		Assert.ArgumentNotNull(connector, nameof(connector));
+
+		if (! TryGetWorkspaceFactory(connector, out WorkspaceFactory result))
+		{
+			throw new NotImplementedException(
+				$"connector {connector.GetType()} is not implemented");
 		}
 
 		return result;
+	}
+
+	/// <summary>
+	/// The path or URL the connector opens, or <paramref name="datastoreConnectionString"/>
+	/// for a connector that has none.
+	/// </summary>
+	/// <remarks>
+	/// Persisted in work list definition files: the value per connector type must not change.
+	/// </remarks>
+	[NotNull]
+	public static string GetConnectionString(
+		[NotNull] Connector connector,
+		[CanBeNull] string datastoreConnectionString)
+	{
+		Assert.ArgumentNotNull(connector, nameof(connector));
+
+		switch (connector)
+		{
+			case FileGeodatabaseConnectionPath fileGeodatabaseConnection:
+				return fileGeodatabaseConnection.Path?.ToString() ?? string.Empty;
+
+			case FileSystemConnectionPath fileSystemConnection:
+				return fileSystemConnection.Path?.ToString() ?? string.Empty;
+
+			case MobileGeodatabaseConnectionPath mobileConnection:
+				return mobileConnection.Path?.ToString() ?? string.Empty;
+
+			case PluginDatasourceConnectionPath pluginConnection:
+				return pluginConnection.DatasourcePath?.ToString() ?? string.Empty;
+
+			case ServiceConnectionProperties serviceConnection:
+				return serviceConnection.URL?.AbsolutePath ?? string.Empty;
+
+			default:
+				return datastoreConnectionString ?? string.Empty;
+		}
 	}
 
 	/// <summary>
@@ -637,5 +1045,39 @@ public static class WorkspaceUtils
 				throw new NotSupportedException(
 					$"More than one qualifier in geodatabase: {joined}");
 		}
+	}
+
+	public static IEnumerable<Conflict> ReconcileAndPost([NotNull] Version editVersion,
+	                                                     [NotNull] Version parentVersion)
+	{
+		editVersion.Refresh();
+		parentVersion.Refresh();
+
+		PostOptions postOptions = new(parentVersion);
+		ReconcileOptions reconcileOptions = GetDefaultReconcileOptions(parentVersion);
+
+		ReconcileResult result = editVersion.Reconcile(reconcileOptions, postOptions);
+
+		bool hasConflicts = result.HasConflicts;
+
+		if (! hasConflicts)
+		{
+			yield break;
+		}
+
+		foreach (Conflict conflict in editVersion.GetConflicts())
+		{
+			yield return conflict;
+		}
+	}
+
+	private static ReconcileOptions GetDefaultReconcileOptions(Version targetVersion)
+	{
+		return new ReconcileOptions(targetVersion)
+		       {
+			       ConflictResolutionType = ConflictResolutionType.FavorTargetVersion,
+			       ConflictResolutionMethod = ConflictResolutionMethod.Continue,
+			       ConflictDetectionType = ConflictDetectionType.ByRow
+		       };
 	}
 }

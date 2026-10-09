@@ -70,6 +70,101 @@ namespace ProSuite.DomainModel.Core.Test.QA
 		}
 
 		[Test]
+		public void EmptyStoredValueCountsAsNotSet()
+		{
+			// A parameter left unset used to be stored as an empty string. Reading it
+			// back must report "not set" instead of throwing, otherwise the whole
+			// condition cannot be opened and corrected.
+			foreach (Type dataType in new[]
+			                          {
+				                          typeof(bool), typeof(int), typeof(double),
+				                          typeof(DateTime), typeof(FieldType)
+			                          })
+			{
+				var value = new ScalarTestParameterValue("Test", dataType);
+				value.SetValue(string.Empty);
+
+				Assert.AreEqual(string.Empty, value.PersistedStringValue,
+				                $"stored value for {dataType.Name}");
+				Assert.IsNull(value.GetValue(), $"value read back for {dataType.Name}");
+			}
+		}
+
+		[Test]
+		public void EmptyStoredValueIsKeptForTextParameter()
+		{
+			// Unlike the other types, text can represent the empty string, so it stays
+			// a value of its own.
+			var value = new ScalarTestParameterValue("Test", typeof(string));
+			value.SetValue(string.Empty);
+
+			Assert.AreEqual(string.Empty, value.GetValue());
+		}
+
+		[Test]
+		public void UnsetValueCanBeAssignedAsNullStringValue()
+		{
+			// The read paths (protobuf transport, XML document) hand the missing value
+			// over as a null string. It must stay unset instead of failing to parse:
+			// otherwise a single parameter left empty makes the whole specification
+			// unreadable.
+			foreach (Type dataType in new[]
+			                          {
+				                          typeof(bool), typeof(int), typeof(double),
+				                          typeof(DateTime), typeof(FieldType)
+			                          })
+			{
+				var value = new ScalarTestParameterValue("Test", dataType);
+
+				value.StringValue = null;
+
+				Assert.IsNull(value.PersistedStringValue, $"stored value for {dataType.Name}");
+				Assert.IsNull(value.GetValue(), $"value read back for {dataType.Name}");
+				Assert.AreEqual(string.Empty, value.StringValue,
+				                $"string value for {dataType.Name}");
+			}
+		}
+
+		[Test]
+		public void AssigningNullStringValueClearsAnExistingValue()
+		{
+			var value = new ScalarTestParameterValue("Test", typeof(bool));
+			value.SetValue(true);
+
+			value.StringValue = null;
+
+			Assert.IsNull(value.PersistedStringValue);
+			Assert.IsNull(value.GetValue());
+		}
+
+		[Test]
+		public void NullStringValueBecomesTheEmptyStringForTextParameter()
+		{
+			// Text is the one type that can represent the missing value as a string.
+			var value = new ScalarTestParameterValue("Test", typeof(string));
+
+			value.StringValue = null;
+
+			Assert.AreEqual(string.Empty, value.PersistedStringValue);
+			Assert.AreEqual(string.Empty, value.GetValue());
+		}
+
+		[Test]
+		public void UnsetValueIsStoredAsNull()
+		{
+			var value = new ScalarTestParameterValue("Test", typeof(bool));
+
+			value.SetValue(true);
+			Assert.AreEqual("True", value.PersistedStringValue);
+
+			value.SetValue(null);
+
+			// Not the empty string: that cannot be read back as a boolean.
+			Assert.IsNull(value.PersistedStringValue);
+			Assert.IsNull(value.GetValue());
+		}
+
+		[Test]
 		public void CanGetDisplayValue()
 		{
 			EnsureDisplayValue(typeof(double), 0.123d.ToString(CultureInfo.CurrentCulture));

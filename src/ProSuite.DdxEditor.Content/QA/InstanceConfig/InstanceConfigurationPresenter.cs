@@ -123,7 +123,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_item.ExecuteWebHelpCommand();
 		}
 
-		public string GenerateName()
+		public virtual string GenerateName()
 		{
 			InstanceConfiguration instanceConfiguration = Assert.NotNull(_item.GetEntity());
 
@@ -274,7 +274,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 
 			_view.GoToInstanceDescriptorEnabled = instanceDescriptor != null;
 
-			string html = _item.GetWebHelp(instanceDescriptor, out string title);
+			string html = _item.GetWebHelp(out string title);
 			_itemNavigation.UpdateItemHelp(title, html ?? string.Empty);
 		}
 	}

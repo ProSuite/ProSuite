@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -246,6 +247,128 @@ namespace ProSuite.QA.Tests.Test
 			                "Did not expect any self-intersection errors for this feature");
 		}
 
+		[Test]
+		public void CanReportUnclosedMultipatchOuterRing()
+		{
+			IFeature feature = CreateMultipatchFeatureWithUnclosedOuterRing();
+
+			QaTestRunner runner = ExecuteQaSimpleGeometry(feature);
+
+			Assert.GreaterOrEqual(CountErrors(runner, "SimpleGeometry.UnclosedRing"), 1);
+			Assert.False(runner.Errors.Any(e => e.AssertionFailed));
+		}
+
+		[Test]
+		public void CanReportUnclosedMultipatchRingFromXml()
+		{
+			string path = TestDataPreparer.FromDirectory()
+			                              .GetPath("BuildingWithUnClosedRing.xml");
+
+			var multipatch = (IMultiPatch) GeometryUtils.FromXmlFile(path);
+			var featureClassMock = new FeatureClassMock(
+				"mock", esriGeometryType.esriGeometryMultiPatch, 1,
+				esriFeatureType.esriFTSimple, multipatch.SpatialReference);
+
+			IFeature feature = featureClassMock.CreateFeature(multipatch);
+
+			QaTestRunner runner = ExecuteQaSimpleGeometry(feature);
+
+			Assert.GreaterOrEqual(CountErrors(runner, "SimpleGeometry.UnclosedRing"), 1);
+			Assert.False(runner.Errors.Any(e => e.AssertionFailed));
+		}
+
+		[Test]
+		public void CanReportEmptyMultipatchInnerRing()
+		{
+			IFeature feature = CreateMultipatchFeature(
+				(esriMultiPatchRingType.esriMultiPatchOuterRing, true, new[]
+						{
+							GeometryFactory.CreatePoint(0, 0, 0),
+							GeometryFactory.CreatePoint(10, 0, 0),
+							GeometryFactory.CreatePoint(10, 10, 0),
+							GeometryFactory.CreatePoint(0, 10, 0)
+						}),
+				(esriMultiPatchRingType.esriMultiPatchInnerRing, false, new[]
+						{
+							GeometryFactory.CreatePoint(4, 4, 0)
+						}));
+
+			QaTestRunner runner = ExecuteQaSimpleGeometry(feature);
+
+			Assert.GreaterOrEqual(CountErrors(runner, "SimpleGeometry.EmptyPart"), 1);
+		}
+
+		[Test]
+		public void CanReportUnclosedMultipatchInnerRing()
+		{
+			IFeature feature = CreateMultipatchFeature(
+				(esriMultiPatchRingType.esriMultiPatchOuterRing, true, new[]
+						{
+							GeometryFactory.CreatePoint(0, 0, 0),
+							GeometryFactory.CreatePoint(10, 0, 0),
+							GeometryFactory.CreatePoint(10, 10, 0),
+							GeometryFactory.CreatePoint(0, 10, 0)
+						}),
+				(esriMultiPatchRingType.esriMultiPatchInnerRing, false, new[]
+						{
+							GeometryFactory.CreatePoint(2, 2, 0),
+							GeometryFactory.CreatePoint(8, 2, 0),
+							GeometryFactory.CreatePoint(8, 8, 0),
+							GeometryFactory.CreatePoint(2, 8, 0)
+						}));
+
+			QaTestRunner runner = ExecuteQaSimpleGeometry(feature);
+
+			Assert.GreaterOrEqual(CountErrors(runner, "SimpleGeometry.UnclosedRing"), 1);
+		}
+
+		[Test]
+		public void CanReportShortSegmentInMultipatchRing()
+		{
+			IFeature feature = CreateMultipatchFeature(
+				(esriMultiPatchRingType.esriMultiPatchOuterRing, true, new[]
+						{
+							GeometryFactory.CreatePoint(0, 0, 0),
+							GeometryFactory.CreatePoint(10, 0, 0),
+							GeometryFactory.CreatePoint(10, 0, 0),
+							GeometryFactory.CreatePoint(10, 10, 0),
+							GeometryFactory.CreatePoint(0, 10, 0)
+						}));
+
+			QaTestRunner runner = ExecuteQaSimpleGeometry(feature);
+
+			// No duplicate detection: No self intersection in addition to short segments:
+			Assert.AreEqual(1, runner.Errors.Count);
+			Assert.AreEqual(1, CountErrors(runner, "SimpleGeometry.ShortSegment"));
+		}
+
+		[Test]
+		public void DoesNotReportShortSegmentAsSelfIntersectionGeometry()
+		{
+			QaSimpleGeometry test = CreateQaSimpleGeometry();
+
+			var ring = new Linestring(new[]
+			                          {
+				                          new Pnt3D(0, 0, 0),
+				                          new Pnt3D(10, 10, 0),
+				                          new Pnt3D(0, 10, 0),
+				                          new Pnt3D(0, 10, 0),
+				                          new Pnt3D(10, 0, 0),
+				                          new Pnt3D(0, 0, 0)
+			                          });
+
+			MethodInfo method = typeof(QaSimpleGeometry).GetMethod(
+				"GetSelfIntersectionErrorGeometry",
+				BindingFlags.Instance | BindingFlags.NonPublic);
+			Assert.NotNull(method);
+
+			var errorGeometry = (IGeometry) method.Invoke(test, new object[] { ring });
+
+			Assert.AreEqual(esriGeometryType.esriGeometryMultipoint,
+			                errorGeometry.GeometryType);
+			Assert.AreEqual(1, ((IPointCollection) errorGeometry).PointCount);
+		}
+
 		[NotNull]
 		private static IFeature CreateMultipatchFeature([NotNull] string wkbFileName)
 		{
@@ -274,6 +397,130 @@ namespace ProSuite.QA.Tests.Test
 				esriFeatureType.esriFTSimple, spatialReference);
 
 			return featureClassMock.CreateFeature(multipatch);
+		}
+
+		[NotNull]
+		private static IFeature CreateMultipatchFeatureWithUnclosedOuterRing()
+		{
+			ISpatialReference spatialReference = CreateMultipatchSpatialReference();
+			IRing outerRing = CreateRing(
+				spatialReference, closeRing: false,
+				GeometryFactory.CreatePoint(0, 0, 0),
+				GeometryFactory.CreatePoint(10, 0, 0),
+				GeometryFactory.CreatePoint(10, 10, 0),
+				GeometryFactory.CreatePoint(0, 10, 0));
+
+			Assert.False(outerRing.IsClosed);
+
+			IMultiPatch multipatch = CreateMultipatch(spatialReference,
+			                                          (esriMultiPatchRingType
+					                                          .esriMultiPatchOuterRing, outerRing));
+
+			Assert.False(((IRing) ((IGeometryCollection) multipatch).Geometry[0]).IsClosed);
+
+			var featureClassMock = new FeatureClassMock(
+				"mock", esriGeometryType.esriGeometryMultiPatch, 1,
+				esriFeatureType.esriFTSimple, spatialReference);
+
+			return featureClassMock.CreateFeature(multipatch);
+		}
+
+		[NotNull]
+		private static QaTestRunner ExecuteQaSimpleGeometry([NotNull] IFeature feature)
+		{
+			QaSimpleGeometry test =
+				new QaSimpleGeometry(ReadOnlyTableFactory.Create((IFeatureClass) feature.Class));
+			var runner = new QaTestRunner(test) { KeepGeometry = true };
+
+			runner.Execute(feature);
+
+			return runner;
+		}
+
+		[NotNull]
+		private static QaSimpleGeometry CreateQaSimpleGeometry()
+		{
+			ISpatialReference spatialReference = CreateMultipatchSpatialReference();
+			var featureClassMock = new FeatureClassMock(
+				"mock", esriGeometryType.esriGeometryMultiPatch, 1,
+				esriFeatureType.esriFTSimple, spatialReference);
+
+			return new QaSimpleGeometry(ReadOnlyTableFactory.Create(featureClassMock));
+		}
+
+		[NotNull]
+		private static IFeature CreateMultipatchFeature(
+			params (esriMultiPatchRingType RingType, bool CloseRing, IPoint[] Points)[] rings)
+		{
+			ISpatialReference spatialReference = CreateMultipatchSpatialReference();
+
+			IMultiPatch multipatch = CreateMultipatch(
+				spatialReference,
+				rings.Select(ring =>
+					             (ring.RingType,
+						             CreateRing(spatialReference, ring.CloseRing, ring.Points)))
+				     .ToArray());
+
+			var featureClassMock = new FeatureClassMock(
+				"mock", esriGeometryType.esriGeometryMultiPatch, 1,
+				esriFeatureType.esriFTSimple, spatialReference);
+
+			return featureClassMock.CreateFeature(multipatch);
+		}
+
+		[NotNull]
+		private static IMultiPatch CreateMultipatch(
+			[NotNull] ISpatialReference spatialReference,
+			params (esriMultiPatchRingType RingType, IRing Ring)[] rings)
+		{
+			var multipatch = new MultiPatchClass { SpatialReference = spatialReference };
+			((IZAware) multipatch).ZAware = true;
+
+			object missing = Type.Missing;
+			var geometryCollection = (IGeometryCollection) multipatch;
+
+			foreach ((esriMultiPatchRingType ringType, IRing ring) in rings)
+			{
+				geometryCollection.AddGeometry((IGeometry) ring, ref missing, ref missing);
+				multipatch.PutRingType(ring, ringType);
+			}
+
+			return multipatch;
+		}
+
+		[NotNull]
+		private static IRing CreateRing([NotNull] ISpatialReference spatialReference,
+		                                bool closeRing,
+		                                params IPoint[] points)
+		{
+			var ring = (IRing) new RingClass { SpatialReference = spatialReference };
+			((IZAware) ring).ZAware = true;
+
+			object missing = Type.Missing;
+			var pointCollection = (IPointCollection) ring;
+
+			foreach (IPoint point in points)
+			{
+				pointCollection.AddPoint(point, ref missing, ref missing);
+			}
+
+			if (closeRing && pointCollection.PointCount > 0 && ! ring.IsClosed)
+			{
+				ring.Close();
+			}
+
+			return ring;
+		}
+
+		[NotNull]
+		private static ISpatialReference CreateMultipatchSpatialReference()
+		{
+			ISpatialReference spatialReference = SpatialReferenceUtils.CreateSpatialReference(
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+			((ISpatialReferenceResolution) spatialReference).XYResolution[true] = 0.0001;
+			((ISpatialReferenceTolerance) spatialReference).XYTolerance = 0.001;
+
+			return spatialReference;
 		}
 
 		private static int CountErrors([NotNull] QaTestRunner runner,

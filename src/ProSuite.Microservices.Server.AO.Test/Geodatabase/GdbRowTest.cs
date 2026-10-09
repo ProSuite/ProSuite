@@ -33,7 +33,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 
 			GdbTableContainer gdbTableContainer =
 				ProtobufConversionUtils.CreateGdbTableContainer(
-					new[] { objectClassMsg }, null, out GdbWorkspace _);
+					new[] { objectClassMsg }, null, null, out GdbWorkspace _);
 
 			var virtualFeatureClass = (IFeatureClass) gdbTableContainer.OpenTable(tlmStrasse);
 

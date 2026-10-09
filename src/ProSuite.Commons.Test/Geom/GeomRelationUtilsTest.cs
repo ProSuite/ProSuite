@@ -1,8 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geom
@@ -373,10 +374,12 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.IsTrue(GeomRelationUtils.AreaContainsXY(source, target, tolerance));
 			Assert.IsTrue(GeomRelationUtils.IsContainedXY(target, source, tolerance));
 
-			// And hence the union should be equal to the source:
+			// And hence the union should be equal to the source. Not bit-identical: the
+			// per-pair crack-and-cluster pass may move a vertex by up to the tolerance, so
+			// compare within what such a snap can change on this ~76 m2 polygon.
 			MultiLinestring unionAreasXY =
 				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
-			Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D());
+			Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D(), 0.001);
 
 			//// TODO: The target is multi-part (touching in point) and the start point is at the touch point
 			////       -> filter out touch point type intersections?
@@ -384,6 +387,82 @@ namespace ProSuite.Commons.Test.Geom
 			//// The Outbound source must not be inbound into a touching other source part!
 			//unionAreasXY = GeomTopoOpUtils.GetUnionAreasXY(target, source, tolerance);
 			//Assert.AreEqual(source.GetArea2D(), unionAreasXY.GetArea2D());
+		}
+
+		[Test]
+		public void CanDetermineContainmentOfVicinoCimiteroSavosaStep5Ring()
+		{
+			// TOP-5999 break-out from PolyhedronTest.CanGetFootprintForVicinoCimiteroSavosa
+			// (TLM_GEBAEUDEKOERPER 8708219 {074E0B9F-2D15-4329-95CB-14870236BD9B}, Lugano).
+			// These are the two operands of incremental-union step 5 of that building, as
+			// the footprint calculation hands them to the union at tolerance 0.01.
+			//
+			// The source (73.8656) is convex, and its NW edge from the apex
+			// (2717030.691 1097858.715) down to (2717024.568 1097850.697) is ONE straight
+			// line that carries two extra collinear vertices. The triangular ring (19.2146)
+			// is NOT contained: its apex (2717030.675 1097858.721) lies 0.016358 outside that
+			// line - 1.6 times the tolerance - so a sliver of 0.00024 sq m, 0.0107 wide and
+			// 0.0164 deep, really does protrude. The two Crossing intersections are therefore
+			// genuine (the entry and the exit of that sliver), and they are reported at one
+			// and the same XY only because the collinear vertex 2717030.674 1097858.693 lies
+			// within the tolerance of both target segments (0.0087 and 0.0000004).
+			//
+			// The union nevertheless has to absorb the ring: the sliver is sub-tolerance, and
+			// RingSimplifier removes it. What used to break was the crack pass inside the
+			// union: at the Balanced proportions it cracks the source apex into the ring
+			// (0.013525 away, just inside the 0.014142 cluster tolerance) and makes the ring
+			// touch itself at the collinear vertex. That pinched ring is non-simple, the walk
+			// then finds no outbound intersection and emits nothing, and the ring-relation
+			// fallback declares the two rings mutually outside - 93.0443, the exact SUM.
+			// RingOperator.CrackAndClusterPair now drops such sub-tolerance boundary loops.
+			RingGroup source = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vicino_cimitero_savosa_step5_source.wkb"), out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup ring = (RingGroup) GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath(
+					"vicino_cimitero_savosa_step5_ring.wkb"), out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			const double tolerance = 0.01;
+
+			Assert.AreEqual(73.8656, source.GetArea2D(), 0.0001);
+			Assert.AreEqual(19.2146, ring.GetArea2D(), 0.0001);
+
+			// (1) The ring protrudes, hence it is NOT contained. Note that the difference
+			// does not show the protrusion: both crossings snap onto the collinear vertex,
+			// which degenerates the sliver ring and drops it.
+			Assert.IsFalse(GeomRelationUtils.AreaContainsXY(source, ring, tolerance));
+			Assert.IsFalse(GeomRelationUtils.IsContainedXY(ring, source, tolerance));
+
+			MultiLinestring ringOutsideSource =
+				GeomTopoOpUtils.GetDifferenceAreasXY(ring, source, tolerance);
+
+			Assert.AreEqual(0, ringOutsideSource.PartCount);
+
+			// (2) The two Crossing intersections are the entry and the exit of the protruding
+			// sliver, reported at one and the same location.
+			List<IntersectionPoint3D> crossings =
+				GeomTopoOpUtils
+					.GetIntersectionPoints(source, (ISegmentList) ring, tolerance)
+					.Where(ip => ip.Type == IntersectionPointType.Crossing).ToList();
+
+			Assert.AreEqual(2, crossings.Count);
+			Assert.IsTrue(crossings[0].Point.EqualsXY(crossings[1].Point, tolerance),
+			              "the two crossings are expected at the same XY");
+			Assert.IsTrue(
+				crossings[0].Point.EqualsXY(
+					new Pnt3D(2717030.674424, 1097858.693294, 0), 0.000001));
+
+			// (3) The union absorbs the ring all the same - the protrusion is sub-tolerance.
+			MultiLinestring union =
+				GeomTopoOpUtils.GetUnionAreasXY(source, ring, tolerance);
+
+			Assert.AreEqual(source.GetArea2D(), union.GetArea2D(), 0.001);
+			Assert.AreEqual(1, union.PartCount);
 		}
 
 		[Test]
@@ -516,6 +595,93 @@ namespace ProSuite.Commons.Test.Geom
 			pnts2.Reverse();
 			var innerRing2 = new Linestring(pnts2);
 			Assert.IsFalse(GeomRelationUtils.TouchesXY(ring1, innerRing2, 0.00001, out disjoint));
+		}
+
+		[Test]
+		public void CanDetermineTouchesXYRoofBasePlate()
+		{
+			// Roof template with a base plate (GOTOP): the base plate is the downward-facing
+			// bottom face, i.e. it is counter-clockwise in XY, while the upward-facing roof
+			// faces are clockwise. The base plate's footprint covers the entire roof, so the
+			// roof faces are 'contained' in it in XY - they only touch along the eaves.
+			// This is the grouping criterion used by
+			// CleanMultipatchUtils.HaveLinearBoundaryIntersection3DAndTouch2D.
+
+			// Base plate at z=0, counter-clockwise (faces down):
+			var basePlate = new Linestring(new List<Pnt3D>
+			                               {
+				                               new Pnt3D(0, 0, 0),
+				                               new Pnt3D(10, 0, 0),
+				                               new Pnt3D(10, 10, 0),
+				                               new Pnt3D(0, 10, 0),
+				                               new Pnt3D(0, 0, 0)
+			                               });
+
+			// Southern gable roof face, clockwise (faces up), sharing the eave (0,0)-(10,0):
+			var slopedRing = new Linestring(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 5, 5),
+				                                new Pnt3D(10, 5, 5),
+				                                new Pnt3D(10, 0, 0)
+			                                });
+
+			Assert.AreEqual(false, basePlate.ClockwiseOriented);
+			Assert.AreEqual(true, slopedRing.ClockwiseOriented);
+
+			const double tolerance = 0.001;
+
+			// Using the ring orientation, the base plate is an island (negative ring) and the
+			// roof face lies outside its area -> they touch, and hence can be grouped:
+			Assert.True(GeomRelationUtils.TouchesXY(basePlate, slopedRing, tolerance,
+			                                        out bool disjoint));
+			Assert.False(disjoint);
+
+			// ... and the relation must be symmetric, the rings are tested in both orders:
+			Assert.True(GeomRelationUtils.TouchesXY(slopedRing, basePlate, tolerance,
+			                                        out disjoint));
+			Assert.False(disjoint);
+
+			// Disregarding the ring orientation, the base plate is a positive ring which
+			// contains the roof face -> they do not touch. This is the reason why base plates
+			// used to end up in their own multipatch part.
+			Assert.False(GeomRelationUtils.TouchesXY(basePlate, slopedRing, tolerance,
+			                                         out disjoint,
+			                                         disregardRingOrientation: true));
+
+			// The vertical gable triangle sits on the base plate boundary. Its self-
+			// intersecting XY footprint requires ring2CanHaveLinearSelfIntersections:
+			var verticalGable = new Linestring(new List<Pnt3D>
+			                                   {
+				                                   new Pnt3D(0, 0, 0),
+				                                   new Pnt3D(0, 5, 5),
+				                                   new Pnt3D(0, 10, 0),
+				                                   new Pnt3D(0, 0, 0)
+			                                   });
+
+			Assert.True(verticalGable.IsVerticalRing(tolerance));
+
+			Assert.True(GeomRelationUtils.TouchesXY(basePlate, verticalGable, tolerance,
+			                                        out disjoint,
+			                                        ring2CanHaveLinearSelfIntersections: true));
+			Assert.True(GeomRelationUtils.TouchesXY(slopedRing, verticalGable, tolerance,
+			                                        out disjoint,
+			                                        ring2CanHaveLinearSelfIntersections: true));
+
+			// Two base plates of adjacent roof templates share the wall at x=10. Both are
+			// islands, i.e. they overlap in XY and must not be grouped into one part:
+			var adjacentBasePlate = new Linestring(new List<Pnt3D>
+			                                       {
+				                                       new Pnt3D(10, 0, 0),
+				                                       new Pnt3D(20, 0, 0),
+				                                       new Pnt3D(20, 10, 0),
+				                                       new Pnt3D(10, 10, 0),
+				                                       new Pnt3D(10, 0, 0)
+			                                       });
+
+			Assert.False(GeomRelationUtils.TouchesXY(basePlate, adjacentBasePlate, tolerance,
+			                                         out disjoint));
 		}
 
 		[Test]
@@ -767,5 +933,147 @@ namespace ProSuite.Commons.Test.Geom
 				GeomRelationUtils.SourceInteriorIntersectsXY(
 					line1, otherLineInteriorIntersected, 0.01));
 		}
+
+		#region Envelope relations
+
+		[Test]
+		public void CanRelateEnvelopeContainedByPolycurve()
+		{
+			Assert.AreEqual(EnvelopeRelation.Inside, Relate(40, 40, 50, 50, Square(20, 80)));
+		}
+
+		/// <summary>A diagonal boundary is the case a bounds-based segment search degenerates on:
+		/// one segment of a diamond has a bounding box covering the whole shape.</summary>
+		[Test]
+		public void CanRelateEnvelopeContainedByPolycurveWithDiagonalEdges()
+		{
+			MultiLinestring diamond = GeomTestUtils.CreatePoly(
+				new List<Pnt3D>
+				{
+					new Pnt3D(50, 0, 0),
+					new Pnt3D(100, 50, 0),
+					new Pnt3D(50, 100, 0),
+					new Pnt3D(0, 50, 0)
+				});
+
+			Assert.AreEqual(EnvelopeRelation.Inside, Relate(45, 45, 55, 55, diamond));
+			Assert.AreEqual(EnvelopeRelation.Disjoint, Relate(0, 0, 10, 10, diamond));
+		}
+
+		[Test]
+		public void CanRelateEnvelopePolycurveDoesNotReach()
+		{
+			Assert.AreEqual(EnvelopeRelation.Disjoint, Relate(0, 0, 10, 10, Square(20, 80)));
+		}
+
+		[Test]
+		public void CanRelateEnvelopeTheBoundaryCrosses()
+		{
+			// Holds the polygon's lower left corner.
+			Assert.AreEqual(EnvelopeRelation.Straddling, Relate(20, 20, 30, 30, Square(20, 80)));
+		}
+
+		/// <summary>The envelope is outside the polygon, but the boundary runs along its edge -
+		/// and a point on the boundary is contained. Reporting it disjoint would drop those
+		/// points.</summary>
+		[Test]
+		public void AnEnvelopeTheBoundaryRunsAlongIsStraddling()
+		{
+			Assert.AreEqual(EnvelopeRelation.Straddling, Relate(10, 30, 20, 40, Square(20, 80)));
+		}
+
+		/// <summary>The same one tolerance further out: still straddling, because a tolerant
+		/// containment test reaches that far.</summary>
+		[Test]
+		public void AnEnvelopeTheBoundaryPassesWithinTheToleranceOfIsStraddling()
+		{
+			Assert.AreEqual(EnvelopeRelation.Straddling,
+			                Relate(10, 30, 20, 40, Square(20.0005, 80)));
+		}
+
+		[Test]
+		public void AnEnvelopeTheBoundaryStaysClearOfIsNotStraddling()
+		{
+			Assert.AreEqual(EnvelopeRelation.Disjoint,
+			                Relate(0, 30, 10, 40, Square(20.0005, 80)));
+		}
+
+		[Test]
+		public void CanRelateEnvelopeInsideAHole()
+		{
+			MultiLinestring donut = Donut();
+
+			Assert.AreEqual(EnvelopeRelation.Disjoint, Relate(40, 40, 50, 50, donut),
+			                "inside the hole, so the polygon contains none of it");
+			Assert.AreEqual(EnvelopeRelation.Inside, Relate(10, 10, 20, 20, donut),
+			                "between the rings");
+			Assert.AreEqual(EnvelopeRelation.Straddling, Relate(30, 30, 40, 40, donut),
+			                "holding the hole's corner");
+		}
+
+		[Test]
+		public void CanRelateEnvelopeGivenAsObject()
+		{
+			Assert.AreEqual(
+				EnvelopeRelation.Inside,
+				GeomRelationUtils.GetEnvelopeRelation(new EnvelopeXY(40, 40, 50, 50),
+				                                      Square(20, 80), _tolerance));
+		}
+
+		/// <summary>The tile overload is the same test over the envelope the tiling gives the
+		/// tile, so what it adds is that bounds are taken from the right tile.</summary>
+		[Test]
+		public void CanRelateTileOfATiling()
+		{
+			var tiling = new TilingDefinition(0, 0, 10, 10);
+			MultiLinestring polygon = Square(20, 80);
+
+			Assert.AreEqual(
+				EnvelopeRelation.Inside,
+				GeomRelationUtils.GetTileRelation(tiling, new TileIndex(4, 4), polygon,
+				                                  _tolerance));
+			Assert.AreEqual(
+				EnvelopeRelation.Disjoint,
+				GeomRelationUtils.GetTileRelation(tiling, new TileIndex(0, 0), polygon,
+				                                  _tolerance));
+			Assert.AreEqual(
+				EnvelopeRelation.Straddling,
+				GeomRelationUtils.GetTileRelation(tiling, new TileIndex(2, 2), polygon,
+				                                  _tolerance));
+		}
+
+		private const double _tolerance = 0.001;
+
+		private static EnvelopeRelation Relate(double xMin, double yMin, double xMax, double yMax,
+		                                       ISegmentList polygon)
+		{
+			return GeomRelationUtils.GetEnvelopeRelation(xMin, yMin, xMax, yMax, polygon,
+			                                             _tolerance);
+		}
+
+		private static MultiLinestring Square(double min, double max)
+		{
+			return GeomTestUtils.CreatePoly(Corners(min, max));
+		}
+
+		/// <summary>A square from 0 to 100 with a square hole from 30 to 70.</summary>
+		private static MultiLinestring Donut()
+		{
+			return new RingGroup(GeomTestUtils.CreateRing(Corners(0, 100)),
+			                     new[] { GeomTestUtils.CreateRing(Corners(30, 70)) });
+		}
+
+		private static List<Pnt3D> Corners(double min, double max)
+		{
+			return new List<Pnt3D>
+			       {
+				       new Pnt3D(min, min, 0),
+				       new Pnt3D(min, max, 0),
+				       new Pnt3D(max, max, 0),
+				       new Pnt3D(max, min, 0)
+			       };
+		}
+
+		#endregion
 	}
 }

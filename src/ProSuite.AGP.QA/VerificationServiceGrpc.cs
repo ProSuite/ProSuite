@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ProSuite.Commons.AGP;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -50,6 +54,12 @@ namespace ProSuite.AGP.QA
 		[CanBeNull]
 		public string ContextName { get; }
 
+		/// <summary>
+		/// Forces the client to provide the verified data from its edit session, regardless of
+		/// whether unsaved edits or a branch version are detected. Intended for testing/forcing.
+		/// </summary>
+		public bool AlwaysUseClientData { get; set; }
+
 		public override async Task<ServiceCallStatus> Verify(
 			IQualitySpecificationReference qualitySpecificationRef,
 			Geometry perimeter,
@@ -74,7 +84,7 @@ namespace ProSuite.AGP.QA
 			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
 
 			return await Verify(Assert.NotNull(_client.QaGrpcClient), request,
-			                    messageCollector, progress);
+			                    messageCollector, projectWorkspace, progress);
 		}
 
 		public override async Task<ServiceCallStatus> Verify(
@@ -96,7 +106,7 @@ namespace ProSuite.AGP.QA
 			messageCollector.SetVerifiedSpecification(qualitySpecification);
 
 			return await Verify(Assert.NotNull(_client.QaGrpcClient), request,
-			                    messageCollector, progress);
+			                    messageCollector, projectWorkspace, progress);
 		}
 
 		public override async Task<ServiceCallStatus> VerifySelection(
@@ -122,7 +132,7 @@ namespace ProSuite.AGP.QA
 			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
 
 			return await Verify(Assert.NotNull(_client.QaGrpcClient), request, messageCollector,
-			                    progress);
+			                    projectWorkspace, progress);
 		}
 
 		public override async Task<ServiceCallStatus> VerifySelection(
@@ -147,24 +157,139 @@ namespace ProSuite.AGP.QA
 			messageCollector.SetVerifiedSpecification(qualitySpecification);
 
 			return await Verify(Assert.NotNull(_client.QaGrpcClient), request, messageCollector,
-			                    progress);
+			                    projectWorkspace, progress);
 		}
 
 		private async Task<ServiceCallStatus> Verify(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
 			[NotNull] VerificationRequest request,
 			[NotNull] ClientIssueMessageCollector messageCollector,
+			[NotNull] ProjectWorkspace projectWorkspace,
 			[NotNull] QualityVerificationProgressTracker progress)
 		{
 			BackgroundVerificationRun verificationRun =
 				QAUtils.CreateQualityVerificationRun(request, messageCollector, progress);
 
-			return await verificationRun.ExecuteAndProcessMessagesAsync(qaClient);
+			bool provideDataFromClient = false;
+
+			IVerificationDataProvider dataProvider =
+				CreateVerificationDataProvider(projectWorkspace);
+
+			ClientDataReason clientDataReason = dataProvider == null
+				                                    ? ClientDataReason.None
+				                                    : await GetClientDataReason(projectWorkspace);
+
+			if (clientDataReason != ClientDataReason.None)
+			{
+				provideDataFromClient = true;
+
+				verificationRun.VerificationDataProvider = dataProvider;
+
+				// The provider reads the live workspace; the reads must run on the MCT so that
+				// unsaved edits are visible. The interactive verification runs on a worker thread,
+				// so blocking on the MCT here does not dead-lock.
+				verificationRun.DataProvisionScheduler = func => ProContext.Run(func);
+
+				_msg.Info(GetClientDataMessage(clientDataReason));
+			}
+
+			// Mode 2 (server-driven schema): send no schema; the client answers the server's
+			// schema requests on demand.
+			return await verificationRun.ExecuteAndProcessMessagesAsync(
+				       qaClient, provideDataFromClient, schemaMsg: null);
+		}
+
+		/// <summary>
+		/// Creates the data provider that serves verified data (and schema) from the client's edit
+		/// session for the given project workspace. The base implementation returns null, which
+		/// lets the server pull the data itself. Override to enable client-provided data.
+		/// </summary>
+		[CanBeNull]
+		protected virtual IVerificationDataProvider CreateVerificationDataProvider(
+			[NotNull] ProjectWorkspace projectWorkspace)
+		{
+			return null;
+		}
+
+		private static bool IsFeatureService([CanBeNull] Datastore datastore)
+		{
+			return datastore?.GetConnector() is ServiceConnectionProperties;
+		}
+
+		private static bool HasUnsavedEdits([CanBeNull] Datastore datastore)
+		{
+			if (datastore == null)
+			{
+				return false;
+			}
+
+			try
+			{
+				Project project = Project.Current;
+				if (project?.HasEdits != true)
+				{
+					return false;
+				}
+
+				IReadOnlyList<Datastore> editedDatastores = project.EditedDatastores;
+				if (editedDatastores == null || editedDatastores.Count == 0)
+				{
+					return false;
+				}
+
+				return editedDatastores.Any(edited =>
+					                            WorkspaceUtils.IsSameDatastore(edited, datastore));
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error checking edited datastores: {e.Message}", e);
+				return false;
+			}
 		}
 
 		protected virtual ClientIssueMessageCollector CreateIssueMessageCollector()
 		{
 			return new ClientIssueMessageCollector();
+		}
+
+		[NotNull]
+		protected virtual QualitySpecificationMsg CreateSpecificationMsg(
+			[NotNull] IQualitySpecificationReference specificationRef)
+		{
+			return new QualitySpecificationMsg
+			       {
+				       QualitySpecificationId = specificationRef.Id
+			       };
+		}
+
+		[NotNull]
+		protected virtual QualitySpecificationMsg CreateSpecificationMsg(
+			[NotNull] QualitySpecification qualitySpecification)
+		{
+			CustomQualitySpecification customSpecification =
+				(CustomQualitySpecification) qualitySpecification;
+
+			int specificationId = customSpecification.BaseSpecification.Id;
+
+			var specificationMsg = new QualitySpecificationMsg
+			                       {
+				                       QualitySpecificationId = specificationId
+			                       };
+
+			specificationMsg.ExcludedConditionIds.AddRange(
+				customSpecification.GetDisabledConditions().Select(c => c.Id));
+
+			return specificationMsg;
+		}
+
+		[NotNull]
+		protected virtual WorkContextMsg CreateWorkContextMsg(
+			[NotNull] ProjectWorkspace projectWorkspace)
+		{
+			string contextType = ContextType ?? _defaultContextType;
+			string contextName = ContextName ?? Project.Current.Name;
+
+			return QAUtils.CreateWorkContextMsg(projectWorkspace, contextType, contextName);
 		}
 
 		private async Task<VerificationRequest> CreateVerificationRequest(
@@ -174,15 +299,16 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] string resultsPath,
 			[CanBeNull] IList<Row> objectsToVerify = null)
 		{
-			string contextType = ContextType ?? _defaultContextType;
-			string contextName = ContextName ?? Project.Current.Name;
+			QualitySpecificationMsg specificationMsg = CreateSpecificationMsg(specificationRef);
 
 			VerificationRequest request =
 				await QueuedTask.Run(() =>
 				{
-					var result = QAUtils.CreateRequest(projectWorkspace, contextType,
-					                                   contextName, specificationRef.Id,
-					                                   perimeter, DdxEnvironmentName);
+					WorkContextMsg workContextMsg = CreateWorkContextMsg(projectWorkspace);
+
+					VerificationRequest result =
+						QAUtils.CreateRequest(workContextMsg, specificationMsg, perimeter,
+						                      DdxEnvironmentName);
 
 					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
@@ -191,8 +317,10 @@ namespace ProSuite.AGP.QA
 
 			SetPathParameters(resultsPath, request);
 
+			bool saveVerificationInDdx = Parameters?.SaveVerificationStatisticsInDdx ?? false;
+
 			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), false, true, false);
+				request, GetTileSize(projectWorkspace), saveVerificationInDdx, true, false);
 
 			return request;
 		}
@@ -204,16 +332,16 @@ namespace ProSuite.AGP.QA
 			[CanBeNull] string resultsPath,
 			[CanBeNull] IList<Row> objectsToVerify = null)
 		{
-			string contextType = ContextType ?? _defaultContextType;
-			string contextName = ContextName ?? Project.Current.Name;
+			QualitySpecificationMsg specificationMsg = CreateSpecificationMsg(specification);
 
 			VerificationRequest request =
 				await QueuedTask.Run(() =>
 				{
+					WorkContextMsg workContextMsg = CreateWorkContextMsg(projectWorkspace);
+
 					VerificationRequest result =
 						QAUtils.CreateRequest(
-							projectWorkspace, contextType, contextName, specification,
-							perimeter, DdxEnvironmentName);
+							workContextMsg, specificationMsg, perimeter, DdxEnvironmentName);
 
 					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
 
@@ -222,8 +350,10 @@ namespace ProSuite.AGP.QA
 
 			SetPathParameters(resultsPath, request);
 
+			bool saveVerificationInDdx = Parameters?.SaveVerificationStatisticsInDdx ?? false;
+
 			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), false, true, false);
+				request, GetTileSize(projectWorkspace), saveVerificationInDdx, true, false);
 
 			return request;
 		}
@@ -249,9 +379,18 @@ namespace ProSuite.AGP.QA
 				string xmlReport = Path.Combine(resultsPath, VerificationReportName);
 				string gdbDir = Path.Combine(resultsPath, "issues.gdb");
 
-				request.Parameters.HtmlReportPath = htmlReport;
-				request.Parameters.VerificationReportPath = xmlReport;
-				request.Parameters.IssueFileGdbPath = gdbDir;
+				// Only request the reports / the local Issue File GDB when configured to do so.
+				// Without parameters, both are written (the default, backward-compatible behavior).
+				if (Parameters?.CreateReports ?? true)
+				{
+					request.Parameters.HtmlReportPath = htmlReport;
+					request.Parameters.VerificationReportPath = xmlReport;
+				}
+
+				if (Parameters?.CreateLocalIssueFileGdb ?? true)
+				{
+					request.Parameters.IssueFileGdbPath = gdbDir;
+				}
 			}
 		}
 
@@ -259,6 +398,60 @@ namespace ProSuite.AGP.QA
 		{
 			// TODO
 			return -1;
+		}
+
+		private enum ClientDataReason
+		{
+			None,
+			Forced,
+			FeatureService,
+			UnsavedEdits
+		}
+
+		private async Task<ClientDataReason> GetClientDataReason(
+			[NotNull] ProjectWorkspace projectWorkspace)
+		{
+			if (AlwaysUseClientData)
+			{
+				return ClientDataReason.Forced;
+			}
+
+			Datastore datastore = projectWorkspace.Datastore;
+
+			return await QueuedTask.Run(() =>
+			{
+				if (IsFeatureService(datastore))
+				{
+					return ClientDataReason.FeatureService;
+				}
+
+				return HasUnsavedEdits(datastore)
+					       ? ClientDataReason.UnsavedEdits
+					       : ClientDataReason.None;
+			});
+		}
+
+		[NotNull]
+		private static string GetClientDataMessage(ClientDataReason reason)
+		{
+			const string sentFromHere =
+				"the data is read from this ArcGIS Pro session and sent to the verification service";
+
+			switch (reason)
+			{
+				case ClientDataReason.UnsavedEdits:
+					return $"The verified data has unsaved edits, so {sentFromHere}.";
+
+				case ClientDataReason.FeatureService:
+					return
+						$"The verified data is provided from a feature service, so {sentFromHere}.";
+
+				case ClientDataReason.Forced:
+					return $"Client-provided verification data is switched on, so {sentFromHere}.";
+
+				default:
+					return $"For this verification, {sentFromHere}.";
+			}
 		}
 	}
 }

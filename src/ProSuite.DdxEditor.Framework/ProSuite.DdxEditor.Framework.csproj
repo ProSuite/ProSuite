@@ -147,7 +147,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="microsoft.web.webview2" Version="1.0.1210.39" />
+    <PackageReference Include="microsoft.web.webview2" Version="1.0.2277.86" />
   </ItemGroup>
 
 </Project>

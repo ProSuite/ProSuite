@@ -49,6 +49,32 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 
 		protected override IEnumerable<Item> GetChildren()
 		{
+			if (_modelBuilder.UseAlgorithmUi)
+			{
+				foreach (Item item in _modelBuilder.AlgorithmEditorUi.CreateAlgorithmItems(
+					         _modelBuilder, typeof(QualityCondition)))
+				{
+					yield return RegisterChild(item);
+				}
+
+				if (_modelBuilder.SupportsTransformersAndFilters)
+				{
+					foreach (Item item in _modelBuilder.AlgorithmEditorUi.CreateAlgorithmItems(
+						         _modelBuilder, typeof(TransformerConfiguration)))
+					{
+						yield return RegisterChild(item);
+					}
+
+					foreach (Item item in _modelBuilder.AlgorithmEditorUi.CreateAlgorithmItems(
+						         _modelBuilder, typeof(IssueFilterConfiguration)))
+					{
+						yield return RegisterChild(item);
+					}
+				}
+
+				yield break;
+			}
+
 			yield return RegisterChild(new TestDescriptorsItem(_modelBuilder));
 
 			if (! _modelBuilder.SupportsTransformersAndFilters)
@@ -80,6 +106,39 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceDescriptors
 		}
 
 		#endregion
+
+		public void AddDescriptors([NotNull] string dllFilePath,
+		                           [NotNull] IItemNavigation itemNavigation)
+		{
+			Assert.ArgumentNotNullOrEmpty(dllFilePath, nameof(dllFilePath));
+			Assert.ArgumentNotNull(itemNavigation, nameof(itemNavigation));
+
+			using (_msg.IncrementIndentation(
+				       "Adding algorithm descriptors from assembly {0}", dllFilePath))
+			{
+				Assembly assembly = Assembly.LoadFile(dllFilePath);
+
+				InstanceDescriptorItemUtils.RegisterDescriptors(
+					_modelBuilder, InstanceDescriptorItemUtils.CreateTestDescriptors(assembly),
+					_modelBuilder.TestDescriptors, "test descriptor");
+
+				if (_modelBuilder.SupportsTransformersAndFilters)
+				{
+					InstanceDescriptorItemUtils.RegisterDescriptors(
+						_modelBuilder,
+						InstanceDescriptorItemUtils.CreateTransformerDescriptors(assembly),
+						_modelBuilder.InstanceDescriptors, "Transformer Descriptor");
+
+					InstanceDescriptorItemUtils.RegisterDescriptors(
+						_modelBuilder,
+						InstanceDescriptorItemUtils.CreateIssueFilterDescriptors(assembly),
+						_modelBuilder.InstanceDescriptors, "Issue Filter Descriptor");
+				}
+			}
+
+			itemNavigation.GoToItem(this);
+			RefreshChildren();
+		}
 
 		public void ImportInstanceDescriptors([NotNull] string fileName)
 		{

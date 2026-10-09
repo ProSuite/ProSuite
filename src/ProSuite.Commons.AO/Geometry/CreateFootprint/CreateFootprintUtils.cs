@@ -21,7 +21,6 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 	public static class CreateFootprintUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private static double? _knownTolerance;
 
 		[NotNull]
 		public static IList<IFeature> GetFootprintableFeatures(
@@ -263,13 +262,16 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return result;
 		}
 
-		public static IPolygon GetFootprint([NotNull] IMultiPatch multipatch,
-		                                    double? tolerance = null)
+		public static IPolygon GetFootprint(
+			[NotNull] IMultiPatch multipatch,
+			double? tolerance = null,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			IPolygon result = null;
 			if (IntersectionUtils.UseCustomIntersect)
 			{
-				result = TryGetGeomFootprint(multipatch, tolerance, out _);
+				result = TryGetGeomFootprint(multipatch, tolerance, out _,
+				                             crackAndClusterOptions);
 			}
 
 			if (result == null)
@@ -280,23 +282,12 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return result;
 		}
 
+		/// <summary>
+		/// The tolerance for detecting vertical rings and near-coincident vertices when no
+		/// explicit tolerance is given.
+		/// </summary>
 		private static double GetXyTolerance(IGeometry geometry)
 		{
-			if (_knownTolerance != null)
-			{
-				return _knownTolerance.Value;
-			}
-
-			string toleranceString =
-				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_VERTICAL_TOLERANCE");
-
-			if (toleranceString != null &&
-			    double.TryParse(toleranceString, out double envTolerance))
-			{
-				_knownTolerance = envTolerance;
-				return _knownTolerance.Value;
-			}
-
 			double xyTolerance = GeometryUtils.GetXyTolerance(geometry);
 
 			// Prevent bogus tolerance (everything smaller the resolution) that
@@ -307,23 +298,13 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			return Math.Max(xyTolerance, minimumTolerance);
 		}
 
+		/// <summary>
+		/// The calculation tolerance used when no explicit tolerance is given. Deliberately
+		/// finer than the XY tolerance so that almost-vertical walls thinner than the
+		/// tolerance can still be processed.
+		/// </summary>
 		private static double GetSmallXyTolerance(IGeometry geometry)
 		{
-			if (_knownTolerance != null)
-			{
-				return _knownTolerance.Value;
-			}
-
-			string toleranceString =
-				Environment.GetEnvironmentVariable("PROSUITE_FOOTPRINT_TOLERANCE");
-
-			if (toleranceString != null &&
-			    double.TryParse(toleranceString, out double envTolerance))
-			{
-				_knownTolerance = envTolerance;
-				return _knownTolerance.Value;
-			}
-
 			return GeometryUtils.GetXyResolution(geometry) / 2;
 		}
 
@@ -341,9 +322,10 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		}
 
 		[CanBeNull]
-		public static IPolygon TryGetGeomFootprint([NotNull] IMultiPatch multiPatch,
-		                                           double? tolerance,
-		                                           [CanBeNull] out IPolyline verticalRings)
+		public static IPolygon TryGetGeomFootprint(
+			[NotNull] IMultiPatch multiPatch, double? tolerance,
+			[CanBeNull] out IPolyline verticalRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
 
@@ -351,7 +333,8 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			try
 			{
 				IPolygon footprintPoly =
-					GetFootprintGeom(multiPatch, tolerance, out verticalRings);
+					GetFootprintGeom(multiPatch, tolerance, out verticalRings,
+					                 crackAndClusterOptions);
 
 				return footprintPoly;
 			}
@@ -375,9 +358,10 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		/// <param name="verticalOrSmallRings"></param>
 		/// <returns></returns>
 		[PublicAPI]
-		public static IPolygon GetFootprintGeom([NotNull] IMultiPatch multiPatch,
-		                                        double? tolerance,
-		                                        out IPolyline verticalOrSmallRings)
+		public static IPolygon GetFootprintGeom(
+			[NotNull] IMultiPatch multiPatch, double? tolerance,
+			out IPolyline verticalOrSmallRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			double verticalRingDetectionTolerance;
 			double xyTolerance;
@@ -399,8 +383,10 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 
 			IPolygon footprintPoly = GetFootprintGeom(multiPatch, xyTolerance,
 			                                          verticalRingDetectionTolerance,
-			                                          out verticalOrSmallRings);
+			                                          out verticalOrSmallRings,
+			                                          crackAndClusterOptions);
 
+			// Still required, SimplifyRingRelationships is not enough (but it is cheap):
 			GeometryUtils.Simplify(footprintPoly);
 
 			return footprintPoly;
@@ -420,9 +406,10 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		/// <param name="tooSmallRings">Output parameter for rings that are too small</param>
 		/// <returns></returns>
 		[PublicAPI]
-		public static IPolygon GetFootprintGeom(IMultiPatch multiPatch, double xyTolerance,
-		                                        double verticalRingDetectionTolerance,
-		                                        out IPolyline tooSmallRings)
+		public static IPolygon GetFootprintGeom(
+			IMultiPatch multiPatch, double xyTolerance,
+			double verticalRingDetectionTolerance, out IPolyline tooSmallRings,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			Polyhedron polyhedron =
 				GeometryConversionUtils.CreatePolyhedron(multiPatch, false, true);
@@ -433,7 +420,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			{
 				footprint =
 					polyhedron.GetXYFootprint(xyTolerance, verticalRingDetectionTolerance,
-					                          out verticalRings);
+					                          out verticalRings, crackAndClusterOptions);
 			}
 			catch (Exception)
 			{
@@ -464,6 +451,21 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 				//footprint = polyhedron.GetXYFootprint(xyTolerance, out verticalRings);
 
 				throw;
+			}
+
+			// The union above ran at xyTolerance, which can be a lot finer than the tolerance
+			// of the polygon the footprint ends up in (with a null tolerance it is half the
+			// resolution, i.e. 20 times finer than the typical XY tolerance). A result that
+			// is simple at the fine tolerance need not be simple at the coarse one, and
+			// GeometryUtils.Simplify below repairs that destructively - it deletes whole
+			// interior rings instead of keeping their area out of the footprint. Reduce the
+			// result while it is still ours.
+			double outputTolerance = GeometryUtils.GetXyTolerance(multiPatch);
+
+			if (outputTolerance > xyTolerance)
+			{
+				footprint =
+					SimplificationUtils.SimplifyRingRelationships(footprint, outputTolerance);
 			}
 
 			IPolygon footprintPoly =

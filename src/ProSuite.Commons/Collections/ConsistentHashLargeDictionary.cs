@@ -101,7 +101,14 @@ namespace ProSuite.Commons.Collections
 				}
 			}
 
+#if C5_LEGACY
+			// C5 2.5.x yields a C5.KeyValuePair here; C5 3.x yields System's.
+			var firstEntry = _circle.First();
+			_firstNode = new KeyValuePair<int, IDictionary<TKey, TValue>>(
+				firstEntry.Key, firstEntry.Value);
+#else
 			_firstNode = _circle.First();
+#endif
 		}
 
 		private static int TryGetCollectionCount<T>([NotNull] IEnumerable<T> enumerable)
@@ -139,7 +146,11 @@ namespace ProSuite.Commons.Collections
 				return _firstNode;
 			}
 
+#if C5_LEGACY
+			C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> node;
+#else
 			KeyValuePair<int, IDictionary<TKey, TValue>> node;
+#endif
 			if (! _circle.TryWeakPredecessor(hash, out node))
 			{
 				// this means something very bad has happened as there should always be a node at the 
@@ -148,7 +159,11 @@ namespace ProSuite.Commons.Collections
 				throw new Exception("Root node is missing!");
 			}
 
+#if C5_LEGACY
+			return new KeyValuePair<int, IDictionary<TKey, TValue>>(node.Key, node.Value);
+#else
 			return node;
+#endif
 		}
 
 		/// <summary>
@@ -281,7 +296,11 @@ namespace ProSuite.Commons.Collections
 		private KeyValuePair<int, IDictionary<TKey, TValue>> SplitNode(
 			KeyValuePair<int, IDictionary<TKey, TValue>> node)
 		{
+#if C5_LEGACY
+			C5Lib.KeyValuePair<int, IDictionary<TKey, TValue>> nextNode;
+#else
 			KeyValuePair<int, IDictionary<TKey, TValue>> nextNode;
+#endif
 			var nextHash = _circle.TrySuccessor(node.Key, out nextNode)
 				               ? nextNode.Key
 				               : _maxHash;

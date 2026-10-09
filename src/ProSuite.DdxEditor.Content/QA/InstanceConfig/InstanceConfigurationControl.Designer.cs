@@ -1,4 +1,4 @@
-using ProSuite.Commons.UI.WinForms.Controls;
+﻿using ProSuite.Commons.UI.WinForms.Controls;
 
 namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
@@ -541,7 +541,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_linkDocumentation.Size=new System.Drawing.Size(179, 15);
 			_linkDocumentation.TabIndex=23;
 			_linkDocumentation.TabStop=true;
-			_linkDocumentation.Text="Show Parameter Documentation";
+			_linkDocumentation.Text="Show Documentation";
 			_linkDocumentation.TextAlign=System.Drawing.ContentAlignment.TopRight;
 			_linkDocumentation.LinkClicked+=_linkDocumentation_LinkClicked;
 			// 

@@ -129,6 +129,21 @@
   <data name="IfIntersecting_featureClass" xml:space="preserve">
     <value>point, multipoint, polyline or polygon feature class</value>
   </data>
+  <data name="IfIssueConstraint_0" xml:space="preserve">
+    <value>Filters (suppresses) issues that fulfill 'constraint'. The constraint is evaluated on the issue itself: on $IssueCode, $Description, $AffectedComponent, $Value1, $Value2, $TextValue, and on all geometry properties available in QaGeometryConstraint ($Area, $Length, $VertexCount, ...), calculated on the issue geometry.
+Notes:
+- The filter is applied per quality condition; it must be attached to each condition it should act on.
+- Only container tests support issue filters; for other tests the filter is ignored (a warning is logged).
+- The expression is a .NET table filter expression, not SQL: AND/OR/NOT, comparisons, LIKE (% or *), IN, arithmetic and the standard column expression functions are available; regular expressions and SQL functions are not.
+- A missing value behaves like NULL: $IssueCode &lt;&gt; 'X' is false for an issue without issue code. Use $IssueCode IS NULL OR $IssueCode &lt;&gt; 'X' to mean 'everything except X'.
+- To include the sub-codes of an issue code: $IssueCode = 'Foo' OR $IssueCode LIKE 'Foo.%'
+- For issues without geometry, $Area and $Length are 0 and all other geometry columns are NULL (same as in QaGeometryConstraint). Note that e.g. $Area &lt; 10 is therefore fulfilled for an issue without geometry.
+- The issue geometry is not projected to the model spatial reference; $Area and $Length are in the units of the verified data.
+- Use IfInvolvedRows to filter by the attributes of the rows involved in an issue</value>
+  </data>
+  <data name="IfIssueConstraint_constraint" xml:space="preserve">
+    <value>Constraint on the issue attributes and/or the issue geometry. If it is fulfilled, the issue is not reported. Example: $IssueCode = 'PartlyCovered' AND $Area &lt; 10</value>
+  </data>
   <data name="IfInvolvedRows_0" xml:space="preserve">
     <value>Filters issues where any involved row fulfills 'constraint'</value>
   </data>

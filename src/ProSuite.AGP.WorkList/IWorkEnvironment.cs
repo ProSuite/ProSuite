@@ -12,6 +12,13 @@ public interface IWorkEnvironment
 	Task<IWorkList> CreateWorkListAsync(string uniqueName, string path);
 
 	/// <summary>
+	/// Loads the work list layer and its associated layers into the specified map view.
+	/// </summary>
+	void LoadLayers([NotNull] MapView mapView,
+	                [NotNull] IWorkList worklist,
+	                [NotNull] string workListDefinitionFilePath);
+
+	/// <summary>
 	/// Loads the work list layer, containing the navigable items based on the plugin
 	/// datasource, into the specified map view.
 	/// </summary>
@@ -29,6 +36,13 @@ public interface IWorkEnvironment
 	/// </summary>
 	void LoadAssociatedLayers([NotNull] MapView mapView,
 	                          [NotNull] IWorkList worklist);
+
+	/// <summary>
+	/// Whether the specified map view should be used for work lists that are loaded into and
+	/// navigated in all map views. This allows excluding special-purpose maps, such as
+	/// overview maps.
+	/// </summary>
+	bool UseMapForWorkLists([NotNull] MapView mapView);
 
 	string GetDisplayName();
 

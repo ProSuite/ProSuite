@@ -71,18 +71,16 @@ namespace ProSuite.GIS.Geometry.AGP
 			throw new NotImplementedException();
 		}
 
-		public double GetDistancePerpendicular2d(IPoint ofPoint, out double distanceAlongRatio,
-		                                         out IPoint pointOnLine)
+		public double GetDistance2d(IPoint toPoint, out CurveLocation location)
 		{
-			var proPoint = (MapPoint) ofPoint.NativeImplementation;
+			var proPoint = (MapPoint) toPoint.NativeImplementation;
 
-			MapPoint nearestPoint = GeometryEngine.Instance.QueryPointAndDistance(
-				_proPolycurve, SegmentExtensionType.NoExtension, proPoint, AsRatioOrLength.AsRatio,
-				out distanceAlongRatio, out double distanceFromCurve, out LeftOrRightSide _);
+			return ArcGeometryUtils.GetDistance2d(_proPolycurve, proPoint, out location);
+		}
 
-			pointOnLine = nearestPoint != null ? new ArcPoint(nearestPoint) : null;
-
-			return distanceFromCurve;
+		public double GetDistanceAlongCurve2d(CurveLocation location)
+		{
+			return ArcGeometryUtils.GetDistanceAlongCurve2d(_proPolycurve, location);
 		}
 
 		#endregion

@@ -58,8 +58,6 @@ public class FlashService : IDisposable
 
 	public FlashService Flash(Geometry geometry)
 	{
-		DisposeOverlays();
-
 		Geometry flashGeometry = null;
 		CIMSymbol symbol = null;
 
@@ -80,12 +78,9 @@ public class FlashService : IDisposable
 				symbol = _polygonSymbol;
 				break;
 			case GeometryType.Multipatch:
-				// TODO: Fix this for stereo:
-				// Use CleanMultipatchClientUtils.GetTriangleConversionRings to get polygons,
-				// create a bag and flash that bag. This will work for stereo and 3D maps.
-				// Alternative: Wait for Menno to fix multipatch overlays in stereo.
-				flashGeometry = geometry;
-				symbol = _polygonSymbol;
+				flashGeometry = GeometryUtils.GetMultipatchOutline((Multipatch) geometry) ??
+				                geometry;
+				symbol = _lineSymbol;
 				break;
 			case GeometryType.Unknown:
 			case GeometryType.GeometryBag:
@@ -95,10 +90,19 @@ public class FlashService : IDisposable
 		}
 
 		// TODO AE: Implement and assert not null!
-		if (flashGeometry != null)
+		// NOTE: Dispose the previous overlays on the MCT as well, together with adding
+		// the new one. Disposing here (on the UI thread) would race with an AddOverlay
+		// that is still queued: its overlay would be added after the disposal and hence
+		// remain in the map forever.
+		QueuedTask.Run(() =>
 		{
-			QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
-		}
+			DisposeOverlays();
+
+			if (flashGeometry != null)
+			{
+				AddOverlay(flashGeometry, symbol);
+			}
+		});
 
 		return this;
 	}
@@ -122,7 +126,8 @@ public class FlashService : IDisposable
 				flashGeometry = GetPolygonGeometry(geometry);
 				break;
 			case GeometryType.Multipatch:
-				flashGeometry = geometry;
+				flashGeometry = GeometryUtils.GetMultipatchOutline((Multipatch) geometry) ??
+				                geometry;
 				break;
 			case GeometryType.Unknown:
 			case GeometryType.Envelope:
@@ -139,7 +144,9 @@ public class FlashService : IDisposable
 
 	public void Dispose()
 	{
-		DisposeOverlays();
+		// On the MCT (and not directly), so that overlays whose AddOverlay is still
+		// queued are disposed too, instead of appearing after this disposal.
+		QueuedTask.Run(() => DisposeOverlays());
 	}
 
 	private Geometry GetPolygonGeometry(Geometry geometry)

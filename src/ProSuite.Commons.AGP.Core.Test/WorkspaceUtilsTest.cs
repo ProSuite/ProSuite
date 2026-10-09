@@ -1,10 +1,17 @@
-using ArcGIS.Core.Data;
-using NUnit.Framework;
-using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.DDL;
+using NUnit.Framework;
+using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.Testing;
+using AssertionException = ProSuite.Commons.Essentials.Assertions.AssertionException;
+using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Commons.AGP.Core.Test
 {
@@ -15,6 +22,45 @@ namespace ProSuite.Commons.AGP.Core.Test
 		public void OneTimeSetUp()
 		{
 			CoreHostProxy.Initialize();
+		}
+
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		public void GetDatastorePathIsNullForMemoryGeodatabase()
+		{
+			// An in-memory geodatabase has no catalog path: the SDK's Datastore.GetPath()
+			// returns null for it, which is what the [CanBeNull] annotation on
+			// GetDatastorePath makes explicit to callers.
+			using ArcGIS.Core.Data.Geodatabase memoryGdb =
+				SchemaBuilder.CreateGeodatabase(
+					new MemoryConnectionProperties("WorkspaceUtilsPathTest"));
+
+			Assert.Null(WorkspaceUtils.GetDatastorePath(memoryGdb));
+
+			// GetCatalogPath promises a path, so it fails rather than returning null
+			Assert.Throws<AssertionException>(
+				() => WorkspaceUtils.GetCatalogPath(memoryGdb));
+		}
+
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		public void GetDatastorePathIsPathForFileGeodatabase()
+		{
+			// Counterpart to GetDatastorePathIsNullForMemoryGeodatabase: make sure the
+			// method does report a path where there is one.
+			string gdbPath =
+				TestDataPreparer.ExtractZip("can_get_rows_in_list.gdb.zip").GetPath();
+
+			using ArcGIS.Core.Data.Geodatabase fileGdb =
+				WorkspaceUtils.OpenGeodatabase(gdbPath);
+
+			Uri path = WorkspaceUtils.GetDatastorePath(fileGdb);
+
+			Assert.NotNull(path);
+			Assert.AreEqual(Path.GetFullPath(gdbPath), Path.GetFullPath(path.LocalPath));
+
+			// GetCatalogPath returns the same path, as a local file system path
+			Assert.AreEqual(path.LocalPath, WorkspaceUtils.GetCatalogPath(fileGdb));
 		}
 
 		[Test]
@@ -161,5 +207,96 @@ namespace ProSuite.Commons.AGP.Core.Test
 			Assert.AreEqual("sde.DEFAULT", properties.Version);
 			Assert.AreEqual(string.Empty, properties.ProjectInstance);
 		}
-	}
+
+		[Test]
+		public void CanCreateFeatureServiceConnectorWithVersion()
+		{
+			const string connectionString =
+				"URL=https://portal.dirageosystems.ch/server/rest/services/NSW/FeatureServer;" +
+				"VERSION=paede@dira.ay_test;VERSIONGUID={D98F1C56-FDE7-4D2A-B067-1357442FFA12}";
+
+			Connector connector =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.FeatureService, connectionString);
+
+			var serviceConnection = (ServiceConnectionProperties) connector;
+
+			Assert.AreEqual(
+				"https://portal.dirageosystems.ch/server/rest/services/NSW/FeatureServer",
+				serviceConnection.URL.AbsoluteUri);
+			Assert.AreEqual("paede@dira.ay_test", serviceConnection.Version);
+
+			Connector otherConnector =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.FeatureService, connectionString);
+
+			var datastoreName1 = new DatastoreName(connector);
+			var datastoreName2 = new DatastoreName(otherConnector);
+
+			Assert.AreEqual(datastoreName1, datastoreName2);
+			Assert.IsTrue(datastoreName1.Equals(datastoreName2));
+			Assert.AreEqual(datastoreName1.GetHashCode(), datastoreName2.GetHashCode());
+
+			Assert.IsTrue(
+				datastoreName1.References(WorkspaceFactory.FeatureService, connectionString));
+		}
+
+		[Test, Ignore("Requires oracle connection")]
+		public void Can_create_version_tree_as_osa()
+        {
+			// todo
+            string catalogPath = null;
+            catalogPath = "get path to osa connection";
+            ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
+
+            Version currentVersion = WorkspaceUtils.GetCurrentVersion(geodatabase);
+            DatabaseConnectionProperties props = WorkspaceUtils.GetConnectionProperties(currentVersion);
+            Assert.NotNull(props);
+
+			Version first = WorkspaceUtils.CreateVersion(geodatabase, "first");
+            Version second = WorkspaceUtils.CreateVersion(first, "second");
+            Version third = WorkspaceUtils.CreateVersion(second, "third");
+
+            string firstName = first.GetName();
+            string secondName = second.GetName();
+            string thirdName = third.GetName();
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+
+            WorkspaceUtils.DeleteVersion(geodatabase, first.GetName(), true);
+
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+		}
+
+		[Test, Ignore("Requires oracle connection")]
+		public void Can_create_version_tree_as_user()
+		{
+			// todo
+			string catalogPath = null;
+            catalogPath = "get path to osa connection";
+			ArcGIS.Core.Data.Geodatabase geodatabase = WorkspaceUtils.OpenGeodatabase(catalogPath);
+
+            Version currentVersion = WorkspaceUtils.GetCurrentVersion(geodatabase);
+            DatabaseConnectionProperties props = WorkspaceUtils.GetConnectionProperties(currentVersion);
+			Assert.NotNull(props);
+
+            Version first = WorkspaceUtils.CreateVersion(geodatabase, "first");
+			Version second = WorkspaceUtils.CreateVersion(first, "second");
+			Version third = WorkspaceUtils.CreateVersion(second, "third");
+
+            string firstName = first.GetName();
+            string secondName = second.GetName();
+            string thirdName = third.GetName();
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.True(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+
+			WorkspaceUtils.DeleteVersion(geodatabase, first.GetName(), true);
+
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, firstName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, secondName));
+            Assert.False(WorkspaceUtils.ExistsVersion(geodatabase, thirdName));
+		}
+    }
 }

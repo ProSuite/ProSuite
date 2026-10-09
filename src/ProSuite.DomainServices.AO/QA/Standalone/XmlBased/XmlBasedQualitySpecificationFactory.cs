@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -281,8 +281,17 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			DdxModel result = ModelFactory.CreateModel(
 				workspace, modelName, modelId, databaseName, schemaOwner, datasetNames);
 
+			// A harvested model cannot tell a file catalog from any other polygon feature class.
+			// Where the condition list declares one, turn the harvested dataset into the catalog
+			// dataset it declares, so that the opener resolves its file-path field just like a
+			// DDX dataset's.
+			IList<DatasetDeclaration> datasetDeclarations =
+				XmlDataQualityUtils.GetDatasetDeclarations(workspaceId, referencedConditions);
+
+			CatalogDatasetUtils.ApplyDeclarations(result, datasetDeclarations);
+
 			IEnumerable<Dataset> referencedDatasets = datasetNames.Select(datasetName =>
-					XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))
+						XmlDataQualityUtils.GetDatasetByParameterValue(result, datasetName))
 				.Where(dataset => dataset != null);
 
 			ModelFactory.AssignMostFrequentlyUsedSpatialReference(result, referencedDatasets);

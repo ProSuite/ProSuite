@@ -43,9 +43,7 @@ public class LoadWorkListLayersOperation : Operation
 		{
 			await QueuedTask.Run(() =>
 			{
-				List<MapView> mapViews = _loadInAllMaps
-					                         ? MapViewUtils.GetAllMapViews().ToList()
-					                         : new List<MapView>() { MapView.Active };
+				List<MapView> mapViews = GetMapViews().ToList();
 
 				foreach (MapView mapView in mapViews)
 				{
@@ -69,9 +67,7 @@ public class LoadWorkListLayersOperation : Operation
 	{
 		try
 		{
-			IEnumerable<MapView> mapViews = _loadInAllMaps
-				                                ? MapViewUtils.GetAllMapViews()
-				                                : new[] { MapView.Active };
+			IEnumerable<MapView> mapViews = GetMapViews();
 
 			await QueuedTask.Run(() =>
 			{
@@ -109,6 +105,14 @@ public class LoadWorkListLayersOperation : Operation
 		await DoAsync();
 	}
 
+	private IEnumerable<MapView> GetMapViews()
+	{
+		return _loadInAllMaps
+			       ? MapViewUtils.GetAllMapViews()
+			                     .Where(_workEnvironment.UseMapForWorkLists)
+			       : new[] { MapView.Active };
+	}
+
 	private string GetName()
 	{
 		try
@@ -134,7 +138,6 @@ public class LoadWorkListLayersOperation : Operation
 		                              .WorkListDefinitionFilePath;
 		Assert.NotNullOrEmpty(workListFile);
 
-		_workEnvironment.LoadWorkListLayer(mapView, workList, workListFile);
-		_workEnvironment.LoadAssociatedLayers(mapView, workList);
+		_workEnvironment.LoadLayers(mapView, workList, workListFile);
 	}
 }

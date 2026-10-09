@@ -14,15 +14,15 @@ public class LogMessageImageConverter : IValueConverter
 			switch (logType)
 			{
 				case LogType.Debug:
-					return "/ProSuite.Commons.AGP;component/Images/StatusDebug_12x_16x.png";
+					return "/ProSuite.Commons.AGP;component/LoggerUI/Images/StatusDebug_16x.png";
 				case LogType.Warn:
-					return "/ProSuite.Commons.AGP;component/Images/StatusWarning_12x_16x.png";
+					return "/ProSuite.Commons.AGP;component/LoggerUI/Images/StatusWarning_16x.png";
 				case LogType.Error:
-					return "/ProSuite.Commons.AGP;component/Images/StatusCriticalError_12x_16x.png";
+					return "/ProSuite.Commons.AGP;component/LoggerUI/Images/StatusError_16x.png";
 			}
 		}
 
-		return "/ProSuite.Commons.AGP;component/Images/StatusInformation_12x_16x.png";
+		return "/ProSuite.Commons.AGP;component/LoggerUI/Images/StatusInformation_16x.png";
 	}
 
 	public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

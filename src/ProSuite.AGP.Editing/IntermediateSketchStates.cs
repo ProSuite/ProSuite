@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Events;
 using ArcGIS.Core.Geometry;
@@ -150,6 +151,25 @@ public class IntermediateSketchStates
 		}
 	}
 
+	private void OnSketchesReplayed(SketchStack replayedStack,
+	                                IReadOnlyList<Geometry> replayedSketches)
+	{
+		try
+		{
+			if (replayedStack == _sketchStack || IsInIntermittentSelectionPhase)
+			{
+				return;
+			}
+
+			// The replayed sketches are now the operation history of the sketch.
+			_sketchStack.ReplaceSketches(replayedSketches);
+		}
+		catch (Exception e)
+		{
+			_msg.Error($"Error in {nameof(OnSketchesReplayed)}: {e.Message}", e);
+		}
+	}
+
 	private void OnSketchCompleted(SketchCompletedEventArgs args)
 	{
 		try
@@ -175,10 +195,13 @@ public class IntermediateSketchStates
 	{
 		_onSketchModifiedToken = SketchModifiedEvent.Subscribe(OnSketchModified);
 		_onSketchCompletedToken = SketchCompletedEvent.Subscribe(OnSketchCompleted);
+		SketchStack.SketchesReplayed += OnSketchesReplayed;
 	}
 
 	private void UnwireEvents()
 	{
+		SketchStack.SketchesReplayed -= OnSketchesReplayed;
+
 		if (_onSketchModifiedToken != null)
 		{
 			SketchModifiedEvent.Unsubscribe(_onSketchModifiedToken);

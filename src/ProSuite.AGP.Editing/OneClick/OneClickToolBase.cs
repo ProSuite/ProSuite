@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.CreateBufferedLine;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
@@ -57,6 +58,14 @@ public abstract class OneClickToolBase : MapToolBase
 	/// Whether this tool requires a selection and the base class should handle the selection phase.
 	/// </summary>
 	protected bool RequiresSelection { get; init; } = true;
+
+	/// <summary>
+	/// Whether this tool supports the selection phase and the base class should handle it. Per
+	/// default this includes all tools that require a selection, but subclasses can override it
+	/// to support a selection phase even if they do not strictly require a selection, for example
+	/// the optional selection in the <see cref="CreateBufferedLineToolBase{TOptions,TPartial}"/>.
+	/// </summary>
+	protected virtual bool IsSelectionPhaseSupported => RequiresSelection;
 
 	/// <summary>
 	/// Whether this tool requires editing to be enabled.
@@ -241,7 +250,7 @@ public abstract class OneClickToolBase : MapToolBase
 				return false;
 			}
 
-			if (RequiresSelection && await IsInSelectionPhaseAsync())
+			if (IsSelectionPhaseSupported && await IsInSelectionPhaseAsync())
 			{
 				return await OnSelectionSketchCompleteAsync(sketchGeometry, progressor);
 			}
@@ -570,7 +579,14 @@ public abstract class OneClickToolBase : MapToolBase
 	{
 		OnSelecting();
 
-		PickerUtils.Select(items, precedence.SelectionCombinationMethod);
+		// AllowMultiSelection decides whether the existing selection is kept: single-selection
+		// tools always replace it (New), multi-selection tools honor the precedence (SHIFT = XOR).
+		SelectionCombinationMethod combinationMethod =
+			AllowMultiSelection(out _)
+				? precedence.SelectionCombinationMethod
+				: SelectionCombinationMethod.New;
+
+		PickerUtils.Select(items, combinationMethod);
 
 		return Task.CompletedTask;
 	}
@@ -645,8 +661,9 @@ public abstract class OneClickToolBase : MapToolBase
 
 	protected Task<bool> IsInSelectionPhaseAsync()
 	{
-		bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-		                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+		bool shiftDown = (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+		                  KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true)) &&
+		                 ! IsShiftPartOfShortcut;
 
 		return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
 	}
@@ -677,6 +694,8 @@ public abstract class OneClickToolBase : MapToolBase
 		return Task.CompletedTask;
 	}
 
+	protected virtual void AfterNoUsableSelection() { }
+
 	/// <remarks>Must be called on MCT</remarks>
 	protected async Task ProcessSelectionAsync(
 		[CanBeNull] CancelableProgressor progressor = null)
@@ -692,9 +711,14 @@ public abstract class OneClickToolBase : MapToolBase
 		var selectionByLayer = SelectionUtils.GetSelection(map);
 
 		var notifications = new NotificationCollection();
-		var applicableSelection =
-			GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
-			                                      notifications).ToList();
+
+		// NOTE: The same feature can be selected in several layers (referencing the same
+		//       feature class). Compare the non-distinct count with the selection count:
+		List<Feature> applicableFeatures =
+			GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
+			                              notifications).ToList();
+
+		List<Feature> applicableSelection = GetDistinct(applicableFeatures).ToList();
 
 		int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
 
@@ -702,7 +726,7 @@ public abstract class OneClickToolBase : MapToolBase
 
 		if (applicableSelection.Count > 0 &&
 		    (AllowNotApplicableFeaturesInSelection ||
-		     applicableSelection.Count == selectionCount) &&
+		     applicableFeatures.Count == selectionCount) &&
 		    (allowMultiselection || applicableSelection.Count == 1))
 		{
 			LogUsingCurrentSelection();
@@ -715,6 +739,12 @@ public abstract class OneClickToolBase : MapToolBase
 			{
 				_msg.DebugFormat(notifications.Concatenate(Environment.NewLine));
 			}
+
+			// No usable selection left: let the tool drop whatever it derived from the previous
+			// one. OnMapSelectionChangedCoreAsync cannot do this while a selection sketch is being
+			// completed, because IsCompletingSelectionSketch mutes it. This method, in contrast,
+			// runs once at the end of the pick, on the final selection.
+			AfterNoUsableSelection();
 
 			LogPromptForSelection();
 			await StartSelectionPhaseAsync();
@@ -824,10 +854,16 @@ public abstract class OneClickToolBase : MapToolBase
 		bool unJoinedFeaturesForEditing = false,
 		[CanBeNull] NotificationCollection notifications = null)
 	{
+		return GetDistinct(GetApplicableSelectedFeatures(selectionByLayer,
+		                                                 unJoinedFeaturesForEditing,
+		                                                 notifications));
+	}
+
+	private static IEnumerable<Feature> GetDistinct([NotNull] IEnumerable<Feature> features)
+	{
 		HashSet<GdbObjectReference> usedRows = new HashSet<GdbObjectReference>();
 
-		foreach (Feature feature in GetApplicableSelectedFeatures(selectionByLayer,
-			         unJoinedFeaturesForEditing, notifications))
+		foreach (Feature feature in features)
 		{
 			var objectReference = new GdbObjectReference(feature);
 
@@ -887,6 +923,12 @@ public abstract class OneClickToolBase : MapToolBase
 
 	protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView mapView)
 	{
+		// The active view is transiently null while ArcGIS Pro switches panes.
+		if (mapView?.Map == null)
+		{
+			return Enumerable.Empty<Feature>();
+		}
+
 		Dictionary<MapMember, List<long>> selectionByLayer =
 			SelectionUtils.GetSelection(mapView.Map);
 
@@ -991,8 +1033,13 @@ public abstract class OneClickToolBase : MapToolBase
 			}
 		}
 
-		throw new AssertionException(
-			"Empty sketch after simplify in non-single-click scenario.");
+		_msg.DebugFormat(
+			"Empty sketch after simplify in non-single-click scenario. Original sketch: {0}",
+			sketchGeometry.ToXml());
+
+		throw new InvalidOperationException(
+			"The sketch has become empty after the simplify operation. There are likely not " +
+			"enough points for the sketch geometry type.");
 	}
 
 	/// <summary>

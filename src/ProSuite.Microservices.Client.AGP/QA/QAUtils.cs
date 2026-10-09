@@ -45,6 +45,21 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			                     ddxEnvironmentName);
 		}
 
+		public static VerificationRequest CreateRequest(
+			[NotNull] ProjectWorkspace projectWorkspace,
+			[NotNull] string contextType,
+			[NotNull] string contextName,
+			[NotNull] QualitySpecificationMsg qualitySpecificationMsg,
+			[CanBeNull] Geometry perimeter,
+			[CanBeNull] string ddxEnvironmentName = null)
+		{
+			WorkContextMsg workContextMsg =
+				CreateWorkContextMsg(projectWorkspace, contextType, contextName);
+
+			return CreateRequest(workContextMsg, qualitySpecificationMsg, perimeter,
+			                     ddxEnvironmentName);
+		}
+
 		/// <summary>
 		/// Creates the verification request for an extent verification.
 		/// </summary>
@@ -258,13 +273,24 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				invalidateExceptionsIfAnyInvolvedObjectChanged;
 		}
 
-		private static WorkContextMsg CreateWorkContextMsg(
+		public static WorkContextMsg CreateWorkContextMsg(
 			[NotNull] ProjectWorkspace projectWorkspace,
 			string contextType,
 			string contextName)
 		{
 			const int workContextTypeProject = 1;
 
+			return CreateWorkContextMsg(projectWorkspace, projectWorkspace.ProjectId,
+			                            workContextTypeProject, contextType, contextName);
+		}
+
+		public static WorkContextMsg CreateWorkContextMsg(
+			[NotNull] ProjectWorkspace projectWorkspace,
+			int ddxId,
+			int workContextType,
+			string contextType,
+			string contextName)
+		{
 			// NOTE: If it is not a child workspace we should absolutely not include the path
 			//       because this triggers the notoriously slow GetDatasetMappings() method.
 			bool includePath = ! projectWorkspace.IsMasterDatabaseWorkspace;
@@ -282,8 +308,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			var workContextMsg = new WorkContextMsg
 			                     {
-				                     DdxId = projectWorkspace.ProjectId,
-				                     Type = workContextTypeProject,
+				                     DdxId = ddxId,
+				                     Type = workContextType,
 				                     ContextType = contextType,
 				                     ContextName = contextName,
 				                     Workspace = workspaceMsg,

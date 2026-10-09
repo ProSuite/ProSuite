@@ -114,9 +114,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// <summary>
 		/// Set the function to get schema and data from the client.
 		/// </summary>
-		/// <param name="dataRequestFunc"></param>
+		/// <param name="dataRequestFunc">Requests schema or a first data batch from the client.</param>
+		/// <param name="readNextBatchFunc">Reads a subsequent already-in-flight data batch from the
+		/// client (without issuing a new request), used when a data response has more data. May be
+		/// null for single-batch clients.</param>
 		void SetRemoteDataAccess(
-			Func<DataVerificationResponse, DataVerificationRequest> dataRequestFunc);
+			Func<DataVerificationResponse, DataVerificationRequest> dataRequestFunc,
+			Func<DataVerificationRequest> readNextBatchFunc = null);
 
 		/// <summary>
 		/// Creates the dataset opener that supports the opening functionality of the

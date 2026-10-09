@@ -7,7 +7,7 @@ namespace ProSuite.AGP.WorkList.Contracts;
 /// A work list filter expression associated with a <see cref="WorkListFilterDefinition"/>,
 /// applicable to a specific source class of the work list.
 /// </summary>
-public class WorkListFilterDefinitionExpression
+public class WorkListFilterDefinitionExpression : IWorkListFilterDefinitionExpression
 {
 	private readonly WorkListFilterDefinition _filterDefinition;
 

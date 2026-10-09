@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -15,7 +16,7 @@ namespace ProSuite.AGP.Editing.DestroyAndRebuild;
 
 public class DestroyAndRebuildFeedback
 {
-	private static readonly List<IDisposable> _overlays = new List<IDisposable>();
+	private readonly List<IDisposable> _overlays = new();
 
 	private CIMLineSymbol _lineSymbol;
 	private CIMPointSymbol _startPointSymbol;
@@ -25,9 +26,35 @@ public class DestroyAndRebuildFeedback
 	private CIMPointSymbol _controlPointMarkerSymbol;
 	private readonly bool _useOldSymbolization;
 
-	public DestroyAndRebuildFeedback(bool useOldSymbolization = false)
+	[CanBeNull] private readonly DestroyAndRebuildToolOptions _toolOptions;
+
+	private IDisposable _movedEndJunctionOverlay;
+	private CIMPointSymbol _movedEndJunctionSymbol;
+
+	[CanBeNull] private Multipoint _lastDrawnMovedEndJunctions;
+
+	public DestroyAndRebuildFeedback(bool useOldSymbolization = false,
+	                                 [CanBeNull] DestroyAndRebuildToolOptions toolOptions = null)
 	{
 		_useOldSymbolization = useOldSymbolization;
+		_toolOptions = toolOptions;
+
+		if (_toolOptions == null)
+		{
+			return;
+		}
+
+		_toolOptions.PropertyChanged += (_, args) =>
+		{
+			if (args.PropertyName ==
+			    nameof(DestroyAndRebuildToolOptions.MoveOpenJawEndJunction))
+			{
+				// Redraw in the other colour so that toggling the option (M key or dock pane)
+				// is immediately visible.
+				QueuedTask.Run(
+					() => UpdateMovedEndJunctions(_lastDrawnMovedEndJunctions));
+			}
+		};
 	}
 
 	/// <summary>
@@ -83,40 +110,7 @@ public class DestroyAndRebuildFeedback
 		}
 	}
 
-	[CanBeNull]
-	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
-	                                      [NotNull] CIMSymbol cimSymbol)
-	{
-		if (geometry == null || geometry.IsEmpty)
-		{
-			return null;
-		}
-
-		IDisposable result = MapView.Active.AddOverlay(
-			geometry, cimSymbol.MakeSymbolReference());
-
-		return result;
-	}
-
-	private CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
-	                                                CIMColor outlineColor, double outlineWidth)
-	{
-		double factor = Math.Sqrt(2.0);
-		var symbolSize = size * factor; // to compensate diamond vs square (rot 45°)
-		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, outlineWidth); //symbolSize / 5);
-		//var polySym = SymbolUtils.CreatePolygonSymbol(ColorUtils.WhiteRGB, SymbolUtils.FillStyle.Solid, stroke);
-		var polySym =
-			SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
-		var marker =
-			SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, symbolSize);
-		var symbol = SymbolUtils.CreatePointSymbol(marker);
-
-		return symbol;
-	}
-
-	#region Selection
-
-	public bool UpdateSelection([CanBeNull] IList<Feature> selectedFeatures)
+	public bool Update([CanBeNull] IList<Feature> selectedFeatures)
 	{
 		DisposeOverlays();
 
@@ -137,14 +131,16 @@ public class DestroyAndRebuildFeedback
 			{
 				case GeometryType.Point:
 					// Use start point symbol for points, consistent across both versions
-					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						AddOverlay(geometry, Assert.NotNull(_startPointSymbol)));
 					break;
 				case GeometryType.Polyline:
 					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_lineSymbol)));
 
 					var startPointL = GeometryUtils.GetStartPoint(geometry as Polyline);
 					var endPointL = GeometryUtils.GetEndPoint(geometry as Polyline);
-					_overlays.Add(AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
+					_overlays.Add(
+						AddOverlay(startPointL, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
@@ -153,29 +149,43 @@ public class DestroyAndRebuildFeedback
 						_overlays.Add(AddOverlay(vertexMultipoint,
 						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						                         Assert.NotNull(
+							                         _controlPointMarkerSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
+					_overlays.Add(
+						AddOverlay(endPointL, Assert.NotNull(_endPointSymbol)));
 					break;
 				case GeometryType.Polygon:
+					// Old symbolization: for polygons, show only the outline
 					_overlays.Add(AddOverlay(geometry, Assert.NotNull(_polygonSymbol)));
-
-					var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
-					var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
-					_overlays.Add(AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
 
 					if (! _useOldSymbolization)
 					{
+						var startPointP = GeometryUtils.GetStartPoint(geometry as Polygon);
+						var endPointP = GeometryUtils.GetEndPoint(geometry as Polygon);
+						_overlays.Add(
+							AddOverlay(startPointP, Assert.NotNull(_startPointSymbol)));
+
 						CreateVertexMultipoint(geometry, out vertexMultipoint,
 						                       out controlMultipoint);
 						_overlays.Add(AddOverlay(vertexMultipoint,
 						                         Assert.NotNull(_vertexMarkerSymbol)));
 						_overlays.Add(AddOverlay(controlMultipoint,
-						                         Assert.NotNull(_controlPointMarkerSymbol)));
+						                         Assert.NotNull(
+							                         _controlPointMarkerSymbol)));
+
+						_overlays.Add(
+							AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
 					}
 
-					_overlays.Add(AddOverlay(endPointP, Assert.NotNull(_endPointSymbol)));
+					break;
+
+				case GeometryType.Multipatch:
+					Polyline multipatchOutline =
+						GeometryUtils.GetMultipatchOutline((Multipatch) geometry);
+					_overlays.Add(AddOverlay(multipatchOutline,
+					                         Assert.NotNull(_lineSymbol)));
 					break;
 
 				default:
@@ -185,6 +195,55 @@ public class DestroyAndRebuildFeedback
 		}
 
 		return true;
+	}
+
+	/// <summary>
+	/// Draws the end points that the rebuilt edge relocates, i.e. the locations where the
+	/// connected junction (and the edges hanging off it) end up. The symbolization is the same
+	/// as in the Advanced Reshape tool: a bright blue circle while the junction is moved along,
+	/// a dark blue circle while it stays where it is.
+	/// Must be called on the queued task.
+	/// </summary>
+	public void UpdateMovedEndJunctions([CanBeNull] Multipoint points)
+	{
+		_movedEndJunctionOverlay?.Dispose();
+		_movedEndJunctionOverlay = null;
+
+		bool movesJunction = _toolOptions?.MoveOpenJawEndJunction ?? false;
+
+		_movedEndJunctionSymbol =
+			movesJunction
+				? CreateHollowPointSymbol(0, 200, 255, 19, SimpleMarkerStyle.Circle, 2,
+				                          SimpleLineStyle.Solid)
+				: CreateHollowPointSymbol(0, 0, 200, 19, SimpleMarkerStyle.Circle, 2,
+				                          SimpleLineStyle.Solid);
+
+		if (points != null && ! points.IsEmpty)
+		{
+			_movedEndJunctionOverlay =
+				MapView.Active.AddOverlay(
+					points, _movedEndJunctionSymbol.MakeSymbolReference());
+		}
+
+		_lastDrawnMovedEndJunctions = points;
+	}
+
+	public void Clear()
+	{
+		DisposeOverlays();
+
+		_movedEndJunctionOverlay?.Dispose();
+		_movedEndJunctionOverlay = null;
+		_lastDrawnMovedEndJunctions = null;
+	}
+
+	[CanBeNull]
+	private static IDisposable AddOverlay([CanBeNull] Geometry geometry,
+	                                      [NotNull] CIMSymbol cimSymbol)
+	{
+		IDisposable result = MapView.Active.AddOverlay(
+			geometry, cimSymbol.MakeSymbolReference());
+		return result;
 	}
 
 	private static void CreateVertexMultipoint(Geometry geometry,
@@ -217,12 +276,58 @@ public class DestroyAndRebuildFeedback
 		}
 	}
 
-	public void ClearSelection()
+	// NOTE: Kept in sync with the identically named helper in AdvancedReshapeFeedback, so that
+	// both tools draw the moved end junction exactly the same way.
+	private static CIMPointSymbol CreateHollowPointSymbol(
+		int red, int green, int blue, double size, SimpleMarkerStyle markerStyle,
+		double outlineWidth, SimpleLineStyle outlineStyle)
 	{
-		DisposeOverlays();
+		CIMColor color = ColorFactory.Instance.CreateRGBColor(red, green, blue);
+		CIMColor transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
+
+		CIMPointSymbol hollowSymbol =
+			SymbolFactory.Instance.ConstructPointSymbol(transparent, size, markerStyle);
+
+		var marker = hollowSymbol.SymbolLayers[0] as CIMVectorMarker;
+		Assert.NotNull(marker).DominantSizeAxis3D = DominantSizeAxis.Z;
+		marker.ScaleSymbolsProportionally = false;
+		var polySymbol = marker.MarkerGraphics[0].Symbol as CIMPolygonSymbol;
+
+		// Fill:
+		Assert.NotNull(polySymbol).SymbolLayers[0] =
+			SymbolFactory.Instance.ConstructSolidFill(transparent);
+
+		// Outline:
+		CIMStroke cimStroke =
+			SymbolFactory.Instance.ConstructStroke(color, outlineWidth, outlineStyle);
+		cimStroke.CapStyle = LineCapStyle.Square;
+		cimStroke.JoinStyle = LineJoinStyle.Miter;
+		cimStroke.MiterLimit = 4;
+		polySymbol.SymbolLayers[1] = cimStroke;
+
+		hollowSymbol.HaloSize = 0;
+
+		return hollowSymbol;
 	}
 
-	private static void DisposeOverlays()
+	private static CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,
+	                                                       CIMColor outlineColor,
+	                                                       double outlineWidth)
+	{
+		double factor = Math.Sqrt(2.0);
+		var symbolSize = size * factor; // to compensate diamond vs square (rot 45°)
+		var stroke = SymbolUtils.CreateSolidStroke(outlineColor, outlineWidth); //symbolSize / 5);
+
+		var polySym =
+			SymbolUtils.CreatePolygonSymbol(fillColor, SymbolUtils.FillStyle.Solid, stroke);
+		var marker =
+			SymbolUtils.CreateMarker(SymbolUtils.MarkerStyle.Diamond, polySym, symbolSize);
+		var symbol = SymbolUtils.CreatePointSymbol(marker);
+
+		return symbol;
+	}
+
+	private void DisposeOverlays()
 	{
 		foreach (IDisposable overlay in _overlays)
 		{
@@ -231,6 +336,4 @@ public class DestroyAndRebuildFeedback
 
 		_overlays.Clear();
 	}
-
-	#endregion Selection
 }

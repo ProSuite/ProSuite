@@ -6,6 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.Env;
 using ProSuite.DdxEditor.Content.Models;
 using ProSuite.DdxEditor.Content.QA.Categories;
+using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
@@ -35,7 +36,9 @@ namespace ProSuite.DdxEditor.Content.Options
 				       ShowQualityConditionsBasedOnDeletedDatasets =
 					       _modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets,
 				       ListQualityConditionsWithDataset =
-					       _modelBuilder.ListQualityConditionsWithDataset
+					       _modelBuilder.ListQualityConditionsWithDataset,
+				       UseClassicConditionSpecification =
+					       _modelBuilder.UseClassicConditionSpecification
 			       };
 		}
 
@@ -46,6 +49,8 @@ namespace ProSuite.DdxEditor.Content.Options
 				options.ShowQualityConditionsBasedOnDeletedDatasets;
 			_modelBuilder.ListQualityConditionsWithDataset =
 				options.ListQualityConditionsWithDataset;
+			_modelBuilder.UseClassicConditionSpecification =
+				options.UseClassicConditionSpecification;
 		}
 
 		public override void ShowOptionsDialog(IApplicationController applicationController,
@@ -58,6 +63,8 @@ namespace ProSuite.DdxEditor.Content.Options
 					_modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets;
 				form.ListQualityConditionsWithDataset =
 					_modelBuilder.ListQualityConditionsWithDataset;
+				form.UseClassicConditionSpecification =
+					_modelBuilder.UseClassicConditionSpecification;
 
 				DialogResult result = UIEnvironment.ShowDialog(form, owner);
 
@@ -66,30 +73,56 @@ namespace ProSuite.DdxEditor.Content.Options
 					return;
 				}
 
-				if (form.ShowDeletedModelElements != _modelBuilder.IncludeDeletedModelElements)
-				{
-					_modelBuilder.IncludeDeletedModelElements = form.ShowDeletedModelElements;
+				bool refreshDataModels =
+					form.ShowDeletedModelElements !=
+					_modelBuilder.IncludeDeletedModelElements;
 
+				bool refreshAlgorithmDescriptors =
+					form.UseClassicConditionSpecification !=
+					_modelBuilder.UseClassicConditionSpecification;
+
+				bool refreshQualityConditions =
+					refreshAlgorithmDescriptors ||
+					form.ShowQualityConditionsBasedOnDeletedDatasets !=
+					_modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets ||
+					form.ListQualityConditionsWithDataset !=
+					_modelBuilder.ListQualityConditionsWithDataset;
+
+				// The refresh removes the tree nodes of the affected items, including
+				// the node of the item that is currently being edited. Pending changes
+				// must be settled before that: settling them afterwards - from the
+				// selection change that the node removal triggers in the tree view -
+				// would delete tree nodes while the tree view is still removing them,
+				// which terminates the process (see TreeViewUpdateScope). This is the
+				// same precondition that IApplicationController.RefreshItem() enforces.
+				if ((refreshDataModels || refreshQualityConditions) &&
+				    applicationController.HasPendingChanges &&
+				    ! applicationController.PrepareItemSelection(
+					    applicationController.CurrentItem))
+				{
+					// cancelled by the user: leave the options unchanged
+					return;
+				}
+
+				ApplyOptions(new OptionSettings
+				             {
+					             ShowDeletedModelElements = form.ShowDeletedModelElements,
+					             ShowQualityConditionsBasedOnDeletedDatasets =
+						             form.ShowQualityConditionsBasedOnDeletedDatasets,
+					             ListQualityConditionsWithDataset =
+						             form.ListQualityConditionsWithDataset,
+					             UseClassicConditionSpecification =
+						             form.UseClassicConditionSpecification
+				             });
+
+				if (refreshDataModels)
+				{
 					RefreshDataModels(applicationController);
 				}
 
-				var refreshQualityConditions = false;
-				if (form.ShowQualityConditionsBasedOnDeletedDatasets !=
-				    _modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets)
+				if (refreshAlgorithmDescriptors)
 				{
-					_modelBuilder.IncludeQualityConditionsBasedOnDeletedDatasets =
-						form.ShowQualityConditionsBasedOnDeletedDatasets;
-
-					refreshQualityConditions = true;
-				}
-
-				if (form.ListQualityConditionsWithDataset !=
-				    _modelBuilder.ListQualityConditionsWithDataset)
-				{
-					_modelBuilder.ListQualityConditionsWithDataset =
-						form.ListQualityConditionsWithDataset;
-
-					refreshQualityConditions = true;
+					RefreshAlgorithmDescriptors(applicationController);
 				}
 
 				if (refreshQualityConditions)
@@ -126,12 +159,34 @@ namespace ProSuite.DdxEditor.Content.Options
 				}
 			}
 
-			if (controller.CurrentItem != null)
+			// Refreshing the current item reloads its content control (see
+			// InstanceConfigurationControlFactory), which is what makes the
+			// "Use classic condition specification" toggle take effect immediately
+			// for a currently open condition/transformer/filter item, without a
+			// restart. The caller has already settled any pending changes (which
+			// RefreshItem() requires); if the user cancelled that prompt, we are not
+			// called at all.
+			if (currentItem != null && ! controller.HasPendingChanges)
 			{
-				controller.RefreshItem(controller.CurrentItem);
+				controller.RefreshItem(currentItem);
 			}
 
 			// TODO: in the treeview, a parent node is incorrectly selected afterwards
+		}
+
+		private static void RefreshAlgorithmDescriptors([NotNull] IApplicationController controller)
+		{
+			Item currentItem = controller.CurrentItem;
+
+			foreach (AlgorithmDescriptorsItem item in
+			         controller.FindItems<AlgorithmDescriptorsItem>()
+			                   .Where(i => i.HasChildrenLoaded))
+			{
+				if (item != currentItem)
+				{
+					item.RefreshChildren();
+				}
+			}
 		}
 
 		private static void RefreshDataModels([NotNull] IApplicationController controller)

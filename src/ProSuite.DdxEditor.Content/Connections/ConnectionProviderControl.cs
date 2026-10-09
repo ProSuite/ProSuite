@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.ScreenBinding;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -114,7 +115,8 @@ namespace ProSuite.DdxEditor.Content.Connections
 				else
 				{
 					string msg = string.Format("Failed to connect.{0}Error: {1}",
-					                           Environment.NewLine, e.Message);
+					                           Environment.NewLine,
+					                           ExceptionUtils.FormatMessage(e));
 
 					_msg.Debug("Failed to connect", e);
 

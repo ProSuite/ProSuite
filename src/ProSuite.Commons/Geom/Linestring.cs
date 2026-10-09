@@ -177,10 +177,70 @@ namespace ProSuite.Commons.Geom
 					return null;
 				}
 
+				// Boundary loops:
+				// The local test above is only meaningful if the entering and the leaving
+				// segment belong to the same loop. If the ring visits its right-most-lowest
+				// vertex more than once - i.e. it is pinched exactly there - the two segments
+				// belong to DIFFERENT loops.
+				// Fall back to the enclosed area, which stays well-defined.
+				if (RightMostBottomPointIsVisitedTwice())
+				{
+					return GetArea2D() > 0;
+				}
+
 				bool ccw = isLeft > 0;
 
 				return ! ccw;
 			}
+		}
+
+		/// <summary>
+		/// Whether the right-most-lowest vertex occurs more than once in this ring, i.e.
+		/// the ring touches itself exactly there and the local orientation test at that
+		/// vertex compares segments of two different loops.
+		/// </summary>
+		private bool RightMostBottomPointIsVisitedTwice()
+		{
+			Pnt3D rmb = GetPoint3D(
+				RightMostBottomIndex == SegmentCount ? 0 : RightMostBottomIndex);
+
+			// Only the start points are compared: in a closed ring the last point is
+			// the same as the first and would otherwise be counted twice.
+			if (SpatialIndex != null)
+			{
+				var indexedCount = 0;
+
+				foreach (int segmentIndex in SpatialIndex.Search(
+					         rmb.X, rmb.Y, rmb.X, rmb.Y, 0))
+				{
+					if (! _segments[segmentIndex].StartPoint.EqualsXY(rmb, 0))
+					{
+						continue;
+					}
+
+					if (++indexedCount > 1)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			var count = 0;
+
+			for (var i = 0; i < SegmentCount; i++)
+			{
+				if (GetPoint3D(i).EqualsXY(rmb, 0))
+				{
+					if (++count > 1)
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		public Pnt3D StartPoint => _segments.Count == 0 ? null : _segments[0].StartPoint;
@@ -1254,7 +1314,7 @@ namespace ProSuite.Commons.Geom
 						            clonePoints, false);
 
 					return GeomTopoOpUtils.MergeConnectedLinestrings(
-						new List<Linestring> {toEndSubcurve, fromStartSubcurve}, null, epsilon);
+						new List<Linestring> { toEndSubcurve, fromStartSubcurve }, null, epsilon);
 				}
 
 				return toEndSubcurve;

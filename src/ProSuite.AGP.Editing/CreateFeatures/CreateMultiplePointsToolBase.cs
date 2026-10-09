@@ -51,9 +51,18 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 
 	protected override SelectionCursors FirstPhaseCursors => SelectionCursors;
 
-	protected override void OnCurrentTemplateUpdated()
+	protected override async void OnCurrentTemplateUpdated()
 	{
 		UpdateEnabled();
+
+		try
+		{
+			await RememberSketchAsync();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug($"Error remembering sketch on template change: {e.Message}", e);
+		}
 	}
 
 	#region Overrides of PlugIn
@@ -69,7 +78,7 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 	{
 		return MapUtils.IsStereoMapView(ActiveMapView)
 			       ? null
-			       : new SymbolizedSketchTypeBasedOnSelection(this);
+			       : new SymbolizedSketchTypeBasedOnTemplate(this);
 	}
 
 	protected override SketchGeometryType GetEditSketchGeometryType()
@@ -114,6 +123,17 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 		_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
 
 		return result;
+	}
+
+	protected override async Task HandleEscapeAsync()
+	{
+		Geometry currentSketch = await GetCurrentSketchAsync();
+		if (currentSketch == null || currentSketch.IsEmpty)
+		{
+			await ClearSelectionAsync();
+		}
+
+		await base.HandleEscapeAsync();
 	}
 
 	protected override async Task<bool> OnEditSketchCompleteCoreAsync(

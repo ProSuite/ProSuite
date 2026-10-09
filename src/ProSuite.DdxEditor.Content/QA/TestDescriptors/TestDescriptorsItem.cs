@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -12,11 +11,8 @@ using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
 using ProSuite.DdxEditor.Framework.Items;
-using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Repositories;
-using ProSuite.QA.Core;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 {
@@ -90,56 +86,16 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 			{
 				Assembly assembly = Assembly.LoadFile(dllFilePath);
 
-				var newDescriptors = new List<TestDescriptor>();
-
-				const bool includeObsolete = false;
-				const bool includeInternallyUsed = false;
-
-				const bool stopOnError = false;
-				const bool allowErrors = true;
-
-				// TODO allow specifying naming convention
-				// TODO optionally use alternate display name 
-				// TODO allow selection of types/constructors
-				// TODO optionally change properties of existing descriptors with same definition
-				var testCount = 0;
-
-				foreach (Type testType in TestFactoryUtils.GetTestClasses(
-					         assembly, includeObsolete, includeInternallyUsed))
-				{
-					foreach (int constructorIndex in
-					         InstanceUtils.GetConstructorIndexes(testType))
-					{
-						testCount++;
-						newDescriptors.Add(
-							new TestDescriptor(
-								TestFactoryUtils.GetDefaultTestDescriptorName(
-									testType, constructorIndex),
-								new ClassDescriptor(testType),
-								constructorIndex,
-								stopOnError, allowErrors));
-					}
-				}
-
-				var testFactoryCount = 0;
-
-				foreach (Type testFactoryType in TestFactoryUtils.GetTestFactoryClasses(
-					         assembly, includeObsolete, includeInternallyUsed))
-				{
-					testFactoryCount++;
-					newDescriptors.Add(
-						new TestDescriptor(
-							TestFactoryUtils.GetDefaultTestDescriptorName(testFactoryType),
-							new ClassDescriptor(testFactoryType),
-							stopOnError, allowErrors));
-				}
-
-				_msg.InfoFormat("The assembly contains {0} tests and {1} test factories",
-				                testCount, testFactoryCount);
+				IList<TestDescriptor> newDescriptors =
+					InstanceDescriptorItemUtils.CreateTestDescriptors(assembly);
 
 				itemNavigation.GoToItem(this);
 
-				TryAddTestDescriptors(newDescriptors);
+				InstanceDescriptorItemUtils.RegisterDescriptors(
+					_modelBuilder, newDescriptors, _modelBuilder.TestDescriptors,
+					"test descriptor");
+
+				RefreshChildren();
 			}
 		}
 
@@ -170,26 +126,6 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors
 
 				yield return new TestDescriptorTableRow(testDescriptor, refCount);
 			}
-		}
-
-		private void TryAddTestDescriptors(
-			[NotNull] IEnumerable<TestDescriptor> testDescriptors)
-		{
-			Assert.ArgumentNotNull(testDescriptors, nameof(testDescriptors));
-
-			ITestDescriptorRepository repository = _modelBuilder.TestDescriptors;
-
-			var addedCount = 0;
-			_modelBuilder.NewTransaction(
-				delegate
-				{
-					addedCount = InstanceDescriptorItemUtils.TryAddInstanceDescriptorsTx(
-						testDescriptors, repository);
-				});
-
-			_msg.InfoFormat("{0} test descriptor(s) added", addedCount);
-
-			RefreshChildren();
 		}
 	}
 }

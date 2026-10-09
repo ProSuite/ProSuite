@@ -1,16 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
 using Quaestor.ServiceDiscovery;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace ProSuite.Microservices.Client
 {
@@ -462,12 +463,20 @@ namespace ProSuite.Microservices.Client
 
 			_msg.DebugFormat("Starting microservice {0} in background...", executable);
 
-			// TOP-5321: Avoid keeping shared version lock because the child process somehow
-			// keeps the lock alive (despite no edit session in the child process) if it is
-			// started with useShellExecute == false.
-			const bool useShellExecute = true;
-			_startedProcess =
-				ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
+			try
+			{
+				// TOP-5321: Avoid keeping shared version lock because the child process somehow
+				// keeps the lock alive (despite no edit session in the child process) if it is
+				// started with useShellExecute == false.
+				const bool useShellExecute = true;
+				_startedProcess =
+					ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
+			}
+			catch (Win32Exception ex)
+			{
+				// System.ComponentModel.Win32Exception (1223): An error occurred trying to start process ...
+				throw new Win32Exception($"Cannot start background microservice ({ServiceDisplayName}). Make sure it is not blocked by a firewall or antivirus software (see trouble-shooting section in the Installation Guide). Origial error: {ex.Message}", ex);
+			}
 
 			_msg.DebugFormat("Started microservice {0} in background. Arguments: {1}",
 			                 Path.GetFileNameWithoutExtension(executable), arguments);

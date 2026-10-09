@@ -108,7 +108,18 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (ITest test in tests)
 			{
-				if (! (test is IFilterEditTest filterTest)) continue;
+				if (! (test is IFilterEditTest filterTest))
+				{
+					if (Condition.IssueFilterConfigurations.Count > 0)
+					{
+						_msg.WarnFormat(
+							"Condition '{0}': the configured issue filters are ignored " +
+							"because the test {1} does not support issue filters.",
+							Condition.Name, test.GetType().Name);
+					}
+
+					continue;
+				}
 
 				IList<IIssueFilter> filters = new List<IIssueFilter>();
 

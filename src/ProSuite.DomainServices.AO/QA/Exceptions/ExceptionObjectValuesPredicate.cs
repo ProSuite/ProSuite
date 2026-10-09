@@ -43,10 +43,10 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			double? errorDoubleValue1;
 			double? errorDoubleValue2;
 			string errorTextValue;
-			IssueUtils.GetValues(qaError.Values,
-			                     out errorDoubleValue1,
-			                     out errorDoubleValue2,
-			                     out errorTextValue);
+			QaErrorUtils.GetValues(qaError.Values,
+			                       out errorDoubleValue1,
+			                       out errorDoubleValue2,
+			                       out errorTextValue);
 
 			const double toleranceFactor = 10;
 			double tolerance = exceptionObject.XYTolerance * toleranceFactor ?? 0;

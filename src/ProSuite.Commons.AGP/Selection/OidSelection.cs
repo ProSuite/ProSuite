@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
@@ -6,8 +5,8 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Selection;
 
@@ -21,13 +20,13 @@ public class OidSelection : FeatureSelectionBase
 	                    [CanBeNull] SpatialReference outputSpatialReference)
 		: base(featureLayer)
 	{
-		_objectIds = objectIds ?? throw new ArgumentNullException(nameof(objectIds));
+		Assert.ArgumentNotNull(objectIds, nameof(objectIds));
+
+		_objectIds = objectIds;
 		_outputSpatialReference = outputSpatialReference;
 	}
 
-	/// <summary>
-	/// Does not have to be called on MCT
-	/// </summary>
+	/// <remarks>Must run on MCT</remarks>
 	[NotNull]
 	public override IEnumerable<Feature> GetFeatures()
 	{
@@ -47,7 +46,17 @@ public class OidSelection : FeatureSelectionBase
 
 	public override string ToString()
 	{
-		return
-			$"{BasicFeatureLayer.Name}, {StringUtils.Concatenate(_objectIds.OrderBy(id => id), "; ")}";
+		const string sep = ", ";
+		const int maxOidsToShow = 7;
+
+		var joined = string.Join(sep, _objectIds.OrderBy(id => id).Take(maxOidsToShow));
+
+		if (_objectIds.Count > maxOidsToShow)
+		{
+			int delta = _objectIds.Count - maxOidsToShow;
+			joined += $" (and {delta} more)";
+		}
+
+		return $"{BasicFeatureLayer.Name} {joined}";
 	}
 }

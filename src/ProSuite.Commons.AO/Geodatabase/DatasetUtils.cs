@@ -1793,6 +1793,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
+		[NotNull]
+		public static IEnumerable<IFeatureClass> GetFeatureClasses(
+			[NotNull] IWorkspace workspace)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			foreach (IDataset dataset in
+			         GetDatasets(workspace, esriDatasetType.esriDTFeatureClass))
+			{
+				if (dataset is IFeatureClass featureClass)
+				{
+					yield return featureClass;
+				}
+			}
+
+			foreach (IDataset dataset in
+			         GetDatasets(workspace, esriDatasetType.esriDTFeatureDataset))
+			{
+				foreach (
+					IFeatureClass featureClass in GetFeatureClasses((IFeatureDataset) dataset))
+				{
+					yield return featureClass;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Gets the feature classes in a feature dataset.
 		/// </summary>
@@ -3868,7 +3894,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				candidates = fields.Where(f => f.Type == esriFieldType.esriFieldTypeInteger &&
 				                               (uniqueIndexes == null ||
 				                                uniqueIndexes.Any(ix => ix.Fields.Field[0].Name ==
-					                                f.Name)))
+						                                f.Name)))
 				                   .ToList();
 
 				_msg.DebugFormat("{0}: Candidates with Nullable fields have been included.",

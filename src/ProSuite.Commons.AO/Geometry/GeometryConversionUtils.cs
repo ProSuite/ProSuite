@@ -535,15 +535,14 @@ namespace ProSuite.Commons.AO.Geometry
 			Linestring exteriorRing =
 				CreateLinestring(Assert.NotNull(exterior), excludeZs);
 
-			Assert.True(exteriorRing.IsClosed, "Expected a closed outer ring");
+			// TOP-5998: Very corrupt rings (e.g. consisting of 2 identical points) do exist.
+			// Do not assert anything here! The rings can be un-closed, empty, etc.
 
 			List<Linestring> interiorRings = new List<Linestring>(interior.Count);
 			foreach (IRing innerRing in interior)
 			{
 				var interiorLinestring =
 					new Linestring(CreateLinestring(innerRing, excludeZs));
-
-				Assert.True(exteriorRing.IsClosed, "Expected only closed inner rings");
 
 				interiorRings.Add(interiorLinestring);
 			}

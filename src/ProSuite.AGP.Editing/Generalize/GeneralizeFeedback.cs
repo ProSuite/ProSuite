@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -44,7 +46,8 @@ public class GeneralizeFeedback
 	}
 
 	public void Update([CanBeNull] GeneralizeResult generalizeResult,
-	                   [NotNull] IEnumerable<Feature> selectedFeatures)
+	                   [NotNull] IEnumerable<Feature> selectedFeatures,
+	                   CancellationToken cancellationToken)
 	{
 		// clear any previous drawings
 		DisposeOverlays();
@@ -88,19 +91,13 @@ public class GeneralizeFeedback
 
 		foreach (GeneralizedFeature generalizedFeature in generalizedFeatures)
 		{
-			foreach (SegmentInfo segmentInfo in generalizedFeature.RemovableSegments)
+			if (cancellationToken.IsCancellationRequested)
 			{
-				Segment segment = segmentInfo.Segment;
-
-				Polyline highLevelSegment =
-					PolylineBuilderEx.CreatePolyline(segment, segment.SpatialReference);
-
-				IDisposable addedSegment =
-					MapView.Active.AddOverlay(highLevelSegment,
-					                          _redSegmentSymbol.MakeSymbolReference());
-
-				_overlays.Add(addedSegment);
+				DisposeOverlays();
+				return;
 			}
+
+			AddRemovableSegmentsOverlay(generalizedFeature);
 
 			if (generalizedFeature.DeletablePoints != null)
 			{
@@ -113,17 +110,39 @@ public class GeneralizeFeedback
 
 			if (generalizedFeature.ProtectedPoints != null)
 			{
-				foreach (MapPoint point in generalizedFeature.ProtectedPoints.Points)
-				{
-					IDisposable addedProtectedPoint =
-						MapView.Active.AddOverlay(point, _greenPointMarker);
-					_overlays.Add(addedProtectedPoint);
-				}
+				IDisposable addedProtectedPoints =
+					MapView.Active.AddOverlay(generalizedFeature.ProtectedPoints,
+					                          _greenPointMarker);
+
+				_overlays.Add(addedProtectedPoints);
 			}
 		}
 
 		_msg.DebugStopTiming(stopwatch, "Added {0} overlays for {1} features.", _overlays.Count,
 		                     generalizedFeatures.Count);
+	}
+
+	/// <summary>
+	/// One overlay per segment blocks the main CIM thread for seconds on features with thousands
+	/// of removable segments, hence the single multipart overlay.
+	/// </summary>
+	private void AddRemovableSegmentsOverlay([NotNull] GeneralizedFeature generalizedFeature)
+	{
+		IList<SegmentInfo> removableSegments = generalizedFeature.RemovableSegments;
+
+		if (removableSegments.Count == 0)
+		{
+			return;
+		}
+
+		IEnumerable<IEnumerable<Segment>> parts =
+			removableSegments.Select(segmentInfo => new[] { segmentInfo.Segment });
+
+		Polyline polyline = PolylineBuilderEx.CreatePolyline(
+			parts, removableSegments[0].Segment.SpatialReference);
+
+		_overlays.Add(MapView.Active.AddOverlay(
+			              polyline, _redSegmentSymbol.MakeSymbolReference()));
 	}
 
 	public void DisposeOverlays()

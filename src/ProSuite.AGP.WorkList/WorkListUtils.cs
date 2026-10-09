@@ -76,7 +76,7 @@ public static class WorkListUtils
 
 		if (workListLayers.Count == 0)
 		{
-			await LoadWorkListLayerToMapAsync(environment, worklist, workListFile);
+			await LoadWorkListLayerToMapAsync(environment, worklist);
 		}
 
 		if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
@@ -143,7 +143,7 @@ public static class WorkListUtils
 
 		if (workListLayers.Count == 0)
 		{
-			await LoadWorkListLayerToMapAsync(environment, worklist, workListFile);
+			await LoadWorkListLayerToMapAsync(environment, worklist);
 		}
 
 		if (! ProjectItemUtils.TryAdd(workListFile, out WorkListProjectItem _))
@@ -155,8 +155,7 @@ public static class WorkListUtils
 	}
 
 	private static async Task LoadWorkListLayerToMapAsync(IWorkEnvironment environment,
-	                                                      IWorkList workList,
-	                                                      string workListFile)
+	                                                      IWorkList workList)
 	{
 		OperationManager manager = MapView.Active.Map.OperationManager;
 
@@ -168,10 +167,7 @@ public static class WorkListUtils
 
 	public static IEnumerable<ISourceClass> CreateSourceClasses([NotNull] Map map)
 	{
-		if (map is null)
-		{
-			throw new ArgumentNullException(nameof(map));
-		}
+		ArgumentNullException.ThrowIfNull(map);
 
 		Dictionary<MapMember, List<long>> oidsByLayer = SelectionUtils.GetSelection(map);
 
@@ -189,15 +185,9 @@ public static class WorkListUtils
 	public static IEnumerable<ISourceClass> CreateSourceClasses(
 		[NotNull] Map map, [NotNull] XmlWorkListDefinition definition)
 	{
-		if (map is null)
-		{
-			throw new ArgumentNullException(nameof(map));
-		}
+		ArgumentNullException.ThrowIfNull(map);
 
-		if (definition is null)
-		{
-			throw new ArgumentNullException(nameof(definition));
-		}
+		ArgumentNullException.ThrowIfNull(definition);
 
 		var tablesById = new Dictionary<long, Table>();
 
@@ -545,15 +535,10 @@ public static class WorkListUtils
 
 		foreach (Layer layer in layers)
 		{
-			if (layer.GetDataConnection() is not CIMStandardDataConnection connection)
+			if (! IsWorkListConnection(layer.GetDataConnection(), out string database))
 			{
 				continue;
 			}
-
-			string connectionString = connection.WorkspaceConnectionString;
-			var builder = new ConnectionStringBuilder(connectionString);
-
-			string database = builder["database"];
 
 			if (string.Equals(database, workListFile, StringComparison.OrdinalIgnoreCase))
 			{
@@ -737,8 +722,7 @@ public static class WorkListUtils
 
 	public static bool IsWorkListLayer(Layer layer)
 	{
-		bool isWorkListLayer = IsWorkListConnection(
-			layer.GetDataConnection(), out _);
+		bool isWorkListLayer = IsWorkListConnection(layer.GetDataConnection(), out _);
 
 		if (isWorkListLayer)
 		{
@@ -771,15 +755,30 @@ public static class WorkListUtils
 			return false;
 		}
 
-		var connectionStringBuilder =
-			new ConnectionStringBuilder(standardDataConnection.WorkspaceConnectionString);
+		string connectionString = standardDataConnection.WorkspaceConnectionString;
+
+		ConnectionStringBuilder connectionStringBuilder;
+		try
+		{
+			connectionStringBuilder = new ConnectionStringBuilder(connectionString);
+		}
+		catch (ArgumentException e)
+		{
+			// GOTOP-1214: The connection string of a Custom plugin datasource is not guaranteed
+			// to be an ADO key=value string (it can be a bare file path or URL, which makes
+			// DbConnectionStringBuilder throw). Such a layer is not a work list layer, so skip
+			// it instead of failing.
+			_msg.Debug($"Ignoring layer with non-parsable connection string " +
+			           $"'{connectionString}': {e.Message}", e);
+			return false;
+		}
 
 		if (! connectionStringBuilder.TryGetValue("IDENTIFIER", out string identifierValue))
 		{
 			return false;
 		}
 
-		if (identifierValue != "ProSuite_WorkListDatasource")
+		if (identifierValue != PluginIdentifier)
 		{
 			return false;
 		}
@@ -790,7 +789,7 @@ public static class WorkListUtils
 	public static SourceClassSchema CreateSchema(TableDefinition tableDefinition)
 	{
 		string oidField = tableDefinition.GetObjectIDField();
-		
+
 		Dictionary<string, int> subFields;
 
 		if (tableDefinition is FeatureClassDefinition featureClassDefinition)

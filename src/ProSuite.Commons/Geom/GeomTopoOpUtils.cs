@@ -88,13 +88,66 @@ namespace ProSuite.Commons.Geom
 			return differentInZ;
 		}
 
+		/// <summary>
+		/// Determines whether the linear intersection differs in Z from the target by comparing
+		/// only the Z values (and not the 3D distance) of the start and end points. An undefined
+		/// (NaN) Z value is considered different from a defined Z value.
+		/// </summary>
+		public static bool IsLinearIntersectionDifferentInZOnly(
+			[NotNull] SegmentIntersection intersection,
+			[NotNull] Line3D intersectionLine,
+			[NotNull] ISegmentList target,
+			double zTolerance)
+		{
+			Line3D targetSegment = target[intersection.TargetIndex];
+
+			Pnt3D fromPointOnTarget =
+				intersection.GetLinearIntersectionStartOnTarget(targetSegment);
+			Pnt3D toPointOnTarget =
+				intersection.GetLinearIntersectionEndOnTarget(targetSegment);
+
+			Assert.NotNull(fromPointOnTarget, nameof(fromPointOnTarget));
+			Assert.NotNull(toPointOnTarget, nameof(toPointOnTarget));
+
+			return IsDifferentZ(intersectionLine.StartPoint.Z, fromPointOnTarget.Z, zTolerance) ||
+			       IsDifferentZ(intersectionLine.EndPoint.Z, toPointOnTarget.Z, zTolerance);
+		}
+
+		/// <summary>
+		/// Whether the two Z values differ by more than the tolerance. An undefined (NaN) Z value
+		/// is considered different from a defined Z value.
+		/// </summary>
+		public static bool IsDifferentZ(double z1, double z2, double zTolerance)
+		{
+			if (double.IsNaN(z1) || double.IsNaN(z2))
+			{
+				return double.IsNaN(z1) != double.IsNaN(z2);
+			}
+
+			return ! MathUtils.AreEqual(z1, z2, zTolerance);
+		}
+
+		/// <summary>
+		/// Calculates the linear intersections (i.e. where the geometries are coincident in XY)
+		/// of the linestring with the multi-linestring that differ in Z.
+		/// </summary>
+		/// <param name="linestring1">The linestring whose Z values are used in the result.</param>
+		/// <param name="multiLinestring2">The other geometry.</param>
+		/// <param name="tolerance">The XY tolerance used to calculate the linear intersections.
+		/// If no <paramref name="zTolerance"/> is specified, it is also used as 3D distance
+		/// tolerance to compare the intersection's start and end points.</param>
+		/// <param name="zTolerance">Optional Z tolerance. If specified, only the Z values are
+		/// compared using this tolerance. This allows detecting even minimal Z differences
+		/// independent of the XY tolerance.</param>
+		/// <returns></returns>
 		public static IList<Linestring> GetZOnlyDifferences(
 			[NotNull] Linestring linestring1,
 			[NotNull] MultiPolycurve multiLinestring2,
-			double tolerance)
+			double tolerance,
+			double zTolerance = double.NaN)
 		{
 			IEnumerable<Line3D> zOnlyDifferenceLines =
-				GetZOnlyDifferenceLines(linestring1, multiLinestring2, tolerance);
+				GetZOnlyDifferenceLines(linestring1, multiLinestring2, tolerance, zTolerance);
 
 			double epsilon =
 				MathUtils.GetDoubleSignificanceEpsilon(linestring1.XMax, linestring1.YMax);
@@ -253,6 +306,134 @@ namespace ProSuite.Commons.Geom
 			return resultXY.SelectMany(r => GetConnectedComponents(r, tolerance)).ToList();
 		}
 
+		/// <summary>
+		/// Removes dangling spur parts from a set of cut lines: open parts that have an endpoint
+		/// lying strictly inside <paramref name="source"/> (i.e. not on its boundary) and not
+		/// shared with any other cut part. Such spurs cannot contribute to a cut and confuse the
+		/// cutting navigator (e.g. CutPlanar returns no result). They typically arise when a
+		/// self-touching "bite its tail" sketch is simplified into a closed loop plus leftover
+		/// tail segments. Closed rings and boundary-to-boundary lines (including cut lines that
+		/// overshoot the source) are kept. Pruning is iterative so that removing one spur can
+		/// expose the next.
+		/// </summary>
+		[NotNull]
+		public static MultiPolycurve RemoveDanglingCutLines(
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList cutLines,
+			double tolerance)
+		{
+			List<Linestring> parts = GeomUtils.GetLinestrings(cutLines).ToList();
+
+			bool removedAny;
+			do
+			{
+				removedAny = false;
+
+				for (int i = parts.Count - 1; i >= 0; i--)
+				{
+					Linestring part = parts[i];
+
+					if (part.IsClosed)
+					{
+						continue;
+					}
+
+					if (HasDanglingEndpoint(part, parts, source, tolerance))
+					{
+						parts.RemoveAt(i);
+						removedAny = true;
+					}
+				}
+			} while (removedAny && parts.Count > 0);
+
+			return new MultiPolycurve(parts);
+		}
+
+		private static bool HasDanglingEndpoint([NotNull] Linestring part,
+		                                        [NotNull] IEnumerable<Linestring> allParts,
+		                                        [NotNull] ISegmentList source,
+		                                        double tolerance)
+		{
+			return IsDanglingEndpoint(part.StartPoint, part, allParts, source, tolerance) ||
+			       IsDanglingEndpoint(part.EndPoint, part, allParts, source, tolerance);
+		}
+
+		private static bool IsDanglingEndpoint([CanBeNull] Pnt3D endPoint,
+		                                       [NotNull] Linestring ownPart,
+		                                       [NotNull] IEnumerable<Linestring> allParts,
+		                                       [NotNull] ISegmentList source,
+		                                       double tolerance)
+		{
+			if (endPoint == null)
+			{
+				return false;
+			}
+
+			// Only endpoints strictly inside the source can be spurs. Endpoints on the boundary or
+			// outside it (an overshooting cut line) can reach/cross the boundary and must be kept.
+			if (! GeomRelationUtils.PolycurveContainsXY(source, endPoint, tolerance))
+			{
+				return false;
+			}
+
+			if (IsOnBoundary(source, endPoint, tolerance))
+			{
+				return false;
+			}
+
+			// Strictly interior: not dangling if another cut part also touches this point (a real
+			// junction, e.g. where two cut lines meet).
+			foreach (Linestring other in allParts)
+			{
+				if (ReferenceEquals(other, ownPart))
+				{
+					continue;
+				}
+
+				foreach (Pnt3D otherPoint in other.GetPoints())
+				{
+					if (GeomRelationUtils.IsWithinTolerance(endPoint, otherPoint, tolerance, true))
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
+		private static bool IsOnBoundary([NotNull] ISegmentList source,
+		                                 [NotNull] Pnt3D point,
+		                                 double tolerance)
+		{
+			foreach (Linestring ring in GeomUtils.GetLinestrings(source))
+			{
+				for (int i = 0; i < ring.SegmentCount; i++)
+				{
+					Line3D segment = ring[i];
+
+					if (GeomRelationUtils.IsWithinTolerance(point, segment.StartPoint, tolerance,
+					                                        true) ||
+					    GeomRelationUtils.IsWithinTolerance(point, segment.EndPoint, tolerance, true))
+					{
+						return true;
+					}
+
+					if (segment.GetDistancePerpendicular(point, true) <= tolerance)
+					{
+						double ratio = segment.GetDistanceAlong(point, true);
+
+						if (ratio >= 0 && ratio <= 1)
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
 		public static Polyhedron GetDifferenceAreasXY(
 			[NotNull] Polyhedron sourcePolyhedron,
 			[NotNull] Polyhedron targetPolyhedron,
@@ -313,7 +494,9 @@ namespace ProSuite.Commons.Geom
 				// ReSharper disable once AccessToModifiedClosure
 				_msg.VerboseDebug(() => $"Processed target ring index at {count}");
 
-				ExplodeExteriorBoundaryLoops(result, tolerance);
+				// Re-establish the invariant that the accumulated result is simple in XY
+				// before the next target ring is subtracted from it.
+				RingSimplifier.SimplifyRingsXY(result, tolerance);
 
 				count++;
 			}
@@ -685,12 +868,32 @@ namespace ProSuite.Commons.Geom
 			return GetUnionAreasXY(allInputRings, tolerance);
 		}
 
-		public static MultiLinestring GetUnionAreasXY([NotNull] IEnumerable<RingGroup> ringGroups,
-		                                              double tolerance,
-		                                              double mergeTolerance = 0,
-		                                              bool inputRingsMayBeNonSimple = false)
+		/// <summary>
+		/// The union of the ring groups, calculated incrementally.
+		/// </summary>
+		/// <param name="ringGroups">The rings to unionize. They must be simple in XY, see
+		/// <see cref="RingSimplifier"/>.</param>
+		/// <param name="tolerance">The XY tolerance.</param>
+		/// <param name="mergeTolerance">The distance within which near-coincident parallel
+		/// edge runs are snapped together, see <see cref="RingOperator.MergeTolerance"/>.</param>
+		/// <param name="crackAndClusterOptions">How far a vertex may be moved when the two
+		/// operands of a step are snapped onto each other, see
+		/// <see cref="RingOperator.CrackAndClusterOptions"/>. Null uses the default.</param>
+		public static MultiLinestring GetUnionAreasXY(
+			[NotNull] IEnumerable<RingGroup> ringGroups,
+			double tolerance,
+			double mergeTolerance = 0,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			MultiLinestring result = null;
+
+			// The area of the accumulated result, carried forward from the previous step so
+			// that the post-condition below needs no extra pass over the previous result.
+			double accumulatedArea = 0;
+
+			// The rings whose step the post-condition rejected. They are parked, not
+			// discarded: see RetryRejectedRings below.
+			List<RingGroup> rejectedRings = null;
 
 			// TODO: Optimize and use potential spatial index (change to input polyhedron?)
 			foreach (RingGroup ringGroup in ringGroups.OrderByDescending(r => r.GetArea2D()))
@@ -698,12 +901,18 @@ namespace ProSuite.Commons.Geom
 				if (result == null)
 				{
 					result = ringGroup.Clone();
+					accumulatedArea = result.GetArea2D();
 				}
 				else
 				{
+					// Keep the previous state: the union shares linestrings with its operands
+					// and RingSimplifier below edits in place, so a reference is not enough.
+					MultiLinestring previous = result.Clone();
+					double ringArea = ringGroup.GetArea2D();
+
 					var watch = Stopwatch.StartNew();
 					result = GetUnionAreasXY(result, ringGroup, tolerance, mergeTolerance,
-					                         inputRingsMayBeNonSimple);
+					                         crackAndClusterOptions);
 					watch.Stop();
 
 					const long timeout300s = 300000;
@@ -714,16 +923,250 @@ namespace ProSuite.Commons.Geom
 						throw new AssertionException("Unexpectedly long processing time");
 					}
 
-					// Split any exterior boundary loop (a ring that self-touches at a point) in
-					// the accumulated result into two simple rings before the next union step.
-					// A self-touching source is non-simple and derails the turning-left walk
-					// ("Intersections seen twice", e.g. OID_3925818) when the next ring grazes
-					// the touch point. Mirrors the same call in the difference path.
-					ExplodeExteriorBoundaryLoops(result, tolerance);
+					// TODO: All this plausibility checking and re-trying is a workaround!
+					// Fix the actual problem!
+
+					// The post-condition is checked on what the WALK produced, before the
+					// repair below runs: RingSimplifier legitimately removes area (a
+					// sub-tolerance boundary loop can enclose several square metres), and
+					// charging that to the union turns correct steps into rejected ones.
+					if (UnionStepIsImplausible(previous, ringGroup, accumulatedArea, ringArea,
+					                           result, tolerance, mergeTolerance))
+					{
+						// Accepting it would return a silently wrong area; the previous
+						// result is a subset of the correct answer, which is not. Park the
+						// ring and try it again once the fold has settled - what derails the
+						// walk here is the state of the accumulated result at THIS point in
+						// the fold, not the ring.
+
+						if (rejectedRings == null)
+						{
+							rejectedRings = new List<RingGroup>();
+						}
+
+						rejectedRings.Add(ringGroup);
+
+						result = previous;
+						continue;
+					}
+
+					// The loop invariant: the accumulated result is simple in XY when the
+					// next ring group is unioned into it. A non-simple accumulated result
+					// derails the turning-left walk of the following step - it either loses
+					// the large ring (TOP-5999, TLM_GEBAEUDEKOERPER 8706452: 130 sq m down to
+					// 1.08) or throws "Intersections seen twice" (8712317, 8839728, 3925818).
+					// The invariant is established for the inputs by the caller (see
+					// RingSimplifyFlags.Input) and re-established here after every step.
+					// Only the rings the step could have touched are re-checked: the ring
+					// group just unioned in is the only place the result can differ from the
+					// previous result, and the invariant held for that one already.
+					RingSimplifier.SimplifyRingsXY(result, tolerance,
+					                               RingSimplifyFlags.StepResult, ringGroup);
+
+					accumulatedArea = result.GetArea2D();
 				}
 			}
 
+			if (rejectedRings != null)
+			{
+				result = RetryRejectedRings(Assert.NotNull(result), rejectedRings,
+				                            accumulatedArea, tolerance, mergeTolerance,
+				                            crackAndClusterOptions);
+			}
+
 			return result ?? MultiPolycurve.CreateEmpty();
+		}
+
+		/// <summary>
+		/// Unions the rings that <see cref="UnionStepIsImplausible"/> rejected during the
+		/// fold into the finished result.
+		/// <para>A rejected step says nothing bad about the ring: measured on TOP-5999
+		/// (TLM_GEBAEUDEKOERPER 8413141 and 8714809) the walk goes wrong because the
+		/// accumulated result is still half-built at that point - its exterior ring is
+		/// self-touching mid-fold, and the walk answers with the outline traversed twice
+		/// (293.98 + 0.22 -> 882.97, a spurious 588.80 ring with 59 self-intersections).
+		/// By the end of the fold the same ring unions in cleanly, resulting in the correct
+		/// area.</para>
+		/// <para>Each pass can unblock the next one, so the retry repeats while it makes
+		/// progress. A ring that is still implausible - or whose retry throws, which the
+		/// half-built accumulated result is equally capable of causing - is left out, i.e.
+		/// the behaviour without the retry.</para>
+		/// </summary>
+		private static MultiLinestring RetryRejectedRings(
+			[NotNull] MultiLinestring result,
+			[NotNull] IList<RingGroup> rejectedRings,
+			double accumulatedArea,
+			double tolerance,
+			double mergeTolerance,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions)
+		{
+			var anyAccepted = true;
+
+			while (anyAccepted && rejectedRings.Count > 0)
+			{
+				anyAccepted = false;
+
+				// The rings this pass could not place either, in the fold's order.
+				IList<RingGroup> stillRejected = new List<RingGroup>();
+
+				foreach (RingGroup ringGroup in rejectedRings)
+				{
+					// As in the fold: the step cracks its operands in place, so the state
+					// to fall back on has to be a copy taken before it runs.
+					MultiLinestring previous = result.Clone();
+					double ringArea = ringGroup.GetArea2D();
+
+					MultiLinestring stepResult;
+
+					try
+					{
+						stepResult = GetUnionAreasXY(result, ringGroup, tolerance,
+						                             mergeTolerance, crackAndClusterOptions);
+					}
+					catch (Exception e)
+					{
+						// Leaving the ring out is exactly what happened before the retry
+						// existed, so a failure here cannot make the result worse.
+						_msg.Debug(
+							$"Retrying the rejected ring of {ringArea:N3} m2 failed.", e);
+
+						result = previous;
+						stillRejected.Add(ringGroup);
+						continue;
+					}
+
+					if (UnionStepIsImplausible(previous, ringGroup, accumulatedArea, ringArea,
+					                           stepResult, tolerance, mergeTolerance))
+					{
+						result = previous;
+						stillRejected.Add(ringGroup);
+						continue;
+					}
+
+					RingSimplifier.SimplifyRingsXY(stepResult, tolerance,
+					                               RingSimplifyFlags.StepResult, ringGroup);
+
+					result = stepResult;
+					accumulatedArea = result.GetArea2D();
+
+					anyAccepted = true;
+				}
+
+				rejectedRings = stillRejected;
+			}
+
+			foreach (RingGroup droppedRing in rejectedRings)
+			{
+				_msg.Debug(
+					$"The rejected ring of {droppedRing.GetArea2D():N3} m2 is still " +
+					"implausible against the finished union result. It is left out.");
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// The post-condition of a single incremental union step: the area of a union of two
+		/// areas lies between the larger operand and their sum. Snapping (crack-and-cluster,
+		/// and the parallel-run snap at the merge tolerance) moves the boundary, so the
+		/// bounds are relaxed by the largest possible displacement times the perimeter
+		/// involved.
+		/// <para>A rejected step leaves the accumulated result untouched and the ring is
+		/// retried after the fold, see <see cref="RetryRejectedRings"/>.</para>
+		/// <para>A step outside those bounds is a defect of the turning-left walk, not an
+		/// effect of the tolerance: measured on TOP-5999 the offending operand is typically a
+		/// sliver ring roughly one tolerance thick that only TOUCHES the accumulated result,
+		/// and the walk then drops or duplicates whole parts (TLM_GEBAEUDEKOERPER 3737244:
+		/// 181.05 + 0.08 -> 30.59).</para>
+		/// <para>The bounds are evaluated on the NET signed area and, independently, on the
+		/// sum of ABSOLUTE ring areas, and a step is only rejected when both agree. The net
+		/// area alone raises false alarms: the walk can transiently emit extra rings with the
+		/// wrong sign, which swings the net area by more than a hundred square metres while
+		/// the geometry is intact and a later step untangles it again (3871761:
+		/// net 301.63 -> 162.78 but absolute 588.75 -> 722.11, and the fold still ends at the
+		/// correct 546.04). The absolute sum is blind to orientation, so requiring both to
+		/// break means only genuinely lost or duplicated geometry is rejected.</para>
+		/// </summary>
+		private static bool UnionStepIsImplausible([NotNull] MultiLinestring previous,
+		                                           [NotNull] RingGroup ringGroup,
+		                                           double previousArea,
+		                                           double ringArea,
+		                                           [NotNull] MultiLinestring stepResult,
+		                                           double tolerance,
+		                                           double mergeTolerance)
+		{
+			double stepArea = stepResult.GetArea2D();
+
+			double netLoss = Math.Max(previousArea, ringArea) - stepArea;
+			double netGain = stepArea - (previousArea + ringArea);
+
+			if (netLoss <= 0 && netGain <= 0)
+			{
+				// The overwhelmingly common case: no perimeter has to be measured.
+				return false;
+			}
+
+			// The most aggressive crack-and-cluster strategy moves a vertex by up to
+			// 2 * sqrt(2) * tolerance; the parallel-run snap by up to the merge tolerance.
+			double maxDisplacement =
+				Math.Max(2 * Math.Sqrt(2) * tolerance, mergeTolerance);
+
+			double perimeter = previous.GetLength2D() + ringGroup.GetLength2D();
+
+			// Plus a relative epsilon for the accumulated floating point error.
+			double slack = perimeter * maxDisplacement +
+			               1e-9 * Math.Abs(previousArea + ringArea);
+
+			if (netLoss <= slack && netGain <= slack)
+			{
+				return false;
+			}
+
+			// Confirm on the orientation-blind measure before rejecting anything.
+			double previousAbsolute = GetAbsoluteRingAreaSum(previous);
+			double stepAbsolute = GetAbsoluteRingAreaSum(stepResult);
+
+			bool confirmed =
+				netLoss > slack
+					? Math.Max(previousAbsolute, ringArea) - stepAbsolute > slack
+					: stepAbsolute - (previousAbsolute + ringArea) > slack;
+
+			if (! confirmed)
+			{
+				_msg.VerboseDebug(
+					() =>
+						$"Union step {previousArea:N3} + {ringArea:N3} -> {stepArea:N3} is " +
+						"outside the plausible range on the net area but not on the absolute " +
+						$"ring areas ({previousAbsolute:N3} -> {stepAbsolute:N3}): treating " +
+						"it as a transiently mis-oriented ring rather than lost geometry.");
+
+				return false;
+			}
+
+			_msg.Debug(
+				$"Union step rejected: {previousArea:N3} + {ringArea:N3} -> {stepArea:N3} " +
+				$"is outside [{Math.Max(previousArea, ringArea):N3}, " +
+				$"{previousArea + ringArea:N3}] by more than the snap slack {slack:N3} " +
+				$"(tolerance {tolerance}), confirmed on the absolute ring areas " +
+				$"({previousAbsolute:N3} -> {stepAbsolute:N3}).");
+
+			return true;
+		}
+
+		/// <summary>
+		/// The sum of the ABSOLUTE ring areas: how much geometry the rings carry, measured
+		/// so that it does not change when a ring comes out oriented the wrong way round.
+		/// </summary>
+		private static double GetAbsoluteRingAreaSum([NotNull] MultiLinestring rings)
+		{
+			double sum = 0;
+
+			foreach (Linestring ring in rings.GetLinestrings())
+			{
+				sum += Math.Abs(ring.GetArea2D());
+			}
+
+			return sum;
 		}
 
 		public static MultiLinestring GetUnionAreasXY(
@@ -905,61 +1348,28 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
-		                                              [NotNull] MultiLinestring targetRings,
-		                                              double tolerance,
-		                                              double mergeTolerance = 0,
-		                                              bool inputRingsMayBeNonSimple = false)
+		public static MultiLinestring GetUnionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] MultiLinestring targetRings,
+			double tolerance,
+			double mergeTolerance = 0,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			return GetUnionAreasXY(sourceRings, targetRings, tolerance, mergeTolerance,
 			                       allowReUnionRepair: true,
-			                       inputRingsMayBeNonSimple: inputRingsMayBeNonSimple);
+			                       crackAndClusterOptions: crackAndClusterOptions);
 		}
 
-		internal static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
-		                                                [NotNull] MultiLinestring targetRings,
-		                                                double tolerance,
-		                                                double mergeTolerance,
-		                                                bool allowReUnionRepair,
-		                                                bool inputRingsMayBeNonSimple = false)
+		internal static MultiLinestring GetUnionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] MultiLinestring targetRings,
+			double tolerance,
+			double mergeTolerance,
+			bool allowReUnionRepair,
+			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
 		{
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
-
-			// TODO: Consider getting rid of this, replace it with more general cracking below
-			if (inputRingsMayBeNonSimple)
-			{
-				// PROTOTYPE: collapse sub-resolution micro-zig-zags in the (possibly
-				// accumulated, non-simple) input rings before navigation. With the
-				// non-monotonic-run realignment below this is now only still required for
-				// hotel_waldhorn's sub-resolution spurious HOLE (a different mechanism than
-				// the kirchweg corner zig-zag, which the realigner handles generally).
-				double weldTolerance = 2 * tolerance;
-				sourceRings = SelfWeldRingsXY(sourceRings, weldTolerance);
-				targetRings = SelfWeldRingsXY(targetRings, weldTolerance);
-			}
-
-			// TODO: Consider more general cracking, always insert the actual opposite vertex into
-			//       the segment at an intersection point. Find out why this makes other cases
-			//       fail. Snap close vertices as well! Also, after this process, handle
-			//       linear self intersections and clamps (explosion of exterior boundary loops).
-			// PROTOTYPE (option 1): repair the kirchweg_turgi-style corruption at its root by
-			// realigning linear-run intermediate vertices whose target factor escapes the run's
-			// [start, end] interval (a sub-resolution micro zig-zag attached to the wrong target
-			// segment). Runs for every union but fires only on the non-monotonic signature, so
-			// it is far more selective than a blanket crossing-noder. Symmetric in both
-			// directions (source-on-target and target-on-source).
-			if (TryRealignNonMonotonicLinearRunsXY(sourceRings, targetRings, tolerance,
-			                                       out MultiLinestring realignedSource))
-			{
-				sourceRings = realignedSource;
-			}
-
-			if (TryRealignNonMonotonicLinearRunsXY(targetRings, sourceRings, tolerance,
-			                                       out MultiLinestring realignedTarget))
-			{
-				targetRings = realignedTarget;
-			}
 
 			var subcurveNavigator = new SubcurveNavigator(sourceRings, targetRings, tolerance);
 
@@ -967,7 +1377,8 @@ namespace ProSuite.Commons.Geom
 			                   {
 				                   AllowPointClustering = true,
 				                   MergeTolerance = mergeTolerance,
-				                   AllowReUnionRepair = allowReUnionRepair
+				                   AllowReUnionRepair = allowReUnionRepair,
+				                   CrackAndClusterOptions = crackAndClusterOptions
 			                   };
 
 			if (_msg.IsVerboseDebugEnabled)
@@ -3106,25 +3517,23 @@ namespace ProSuite.Commons.Geom
 		{
 			var filteredSelfIntersections = new List<SegmentIntersection>();
 
-			Func<SegmentIntersection, bool> predicate;
-			if (linearIntersectionsOnly)
-			{
-				predicate = li => li.HasLinearIntersection;
-			}
-			else
-			{
-				predicate = li => true;
-			}
-
 			int segmentCount = linestring.SegmentCount;
 			for (int i = 0; i < segmentCount; i++)
 			{
-				var relevantIntersections = new List<SegmentIntersection>(
-					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(
-						                        i, linestring[i], linestring, tolerance)
-					                        .Where(predicate));
+				// Deliberately no LINQ and no per-segment list: this runs for every segment
+				// of every input ring of every polyhedron (2.4 million rings on the Lugano
+				// extent), and in the common case it collects nothing at all.
+				foreach (SegmentIntersection intersection in
+				         SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(
+					         i, linestring[i], linestring, tolerance))
+				{
+					if (linearIntersectionsOnly && ! intersection.HasLinearIntersection)
+					{
+						continue;
+					}
 
-				filteredSelfIntersections.AddRange(relevantIntersections);
+					filteredSelfIntersections.Add(intersection);
+				}
 			}
 
 			IList<IntersectionPoint3D> intersectionPoints = GetIntersectionPoints(
@@ -3517,20 +3926,64 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		/// <summary>
+		/// Gets the points at which the segments intersect each other, i.e. the places where
+		/// two segments of the same list come closer to each other than the tolerance.
+		/// </summary>
+		/// <param name="segments">The segments to intersect with themselves.</param>
+		/// <param name="tolerance">The distance within which two segments are considered to
+		/// intersect.</param>
+		/// <param name="includeLinearIntersectionIntermediatePoints">Whether the vertices
+		/// inside a linear intersection are reported as well.</param>
+		/// <param name="areaOfInterest">If specified, only the intersections that lie within
+		/// this area are reported. See the remarks.</param>
+		/// <param name="knownSimpleSegmentCount">If greater than zero, the first this many
+		/// segments are known not to intersect EACH OTHER, so those pairs are not tested. The
+		/// segments are still tested against all the later ones. See the remarks.</param>
+		/// <remarks>
+		/// <para><paramref name="areaOfInterest"/> restricts the search to the segments whose
+		/// extent reaches into the area. A pair of segments with one segment inside the area
+		/// and one outside it is still found, because the search starts from the segment
+		/// inside; only a pair with both segments outside the area is skipped, and such a pair
+		/// cannot produce an intersection inside the area. What does change is that a pair
+		/// straddling the boundary is now reported once instead of twice (previously it was
+		/// found from both of its segments).</para>
+		/// <para><paramref name="knownSimpleSegmentCount"/> is for the incremental case where
+		/// the front of the list is a geometry that an earlier call already made simple, and
+		/// only the rest is new. Both restrictions are approximations: pass them only when the
+		/// caller can vouch for the assumption, and never when both directions of a pair are
+		/// required.</para>
+		/// </remarks>
 		[NotNull]
 		public static IList<IntersectionPoint3D> GetSelfIntersections(
 			[NotNull] ISegmentList segments,
 			double tolerance,
-			bool includeLinearIntersectionIntermediatePoints = false)
+			bool includeLinearIntersectionIntermediatePoints = false,
+			[CanBeNull] IBoundedXY areaOfInterest = null,
+			int knownSimpleSegmentCount = 0)
 		{
 			var selfIntersections = new List<SegmentIntersection>();
+
+			Predicate<int> beyondKnownSimple =
+				knownSimpleSegmentCount > 0
+					? i => i >= knownSimpleSegmentCount
+					: (Predicate<int>) null;
 
 			int globalIndex = 0;
 			foreach (Line3D sourceLine in segments)
 			{
+				int sourceIndex = globalIndex++;
+
+				if (areaOfInterest != null &&
+				    GeomRelationUtils.AreBoundsDisjoint(sourceLine, areaOfInterest, tolerance))
+				{
+					continue;
+				}
+
 				selfIntersections.AddRange(
 					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(
-						globalIndex++, sourceLine, segments, tolerance));
+						sourceIndex, sourceLine, segments, tolerance,
+						sourceIndex < knownSimpleSegmentCount ? beyondKnownSimple : null));
 			}
 
 			IEnumerable<SegmentIntersection> sortedRelevantIntersections =
@@ -3834,12 +4287,14 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <param name="results"></param>
 		/// <param name="minimumSegmentLength"></param>
+		/// <param name="keepShortSegments">Whether short (0-length segments) should be kept.</param>
 		/// <returns></returns>
 		public static bool TryDeleteLinearSelfIntersectionsXY(
 			[NotNull] Linestring ring,
 			double tolerance,
 			[NotNull] List<Linestring> results,
-			double? minimumSegmentLength = null)
+			double? minimumSegmentLength = null,
+			bool keepShortSegments = false)
 		{
 			// Basic idea:
 			// 1. Self-cracking with (potentially large) tolerance
@@ -3881,7 +4336,8 @@ namespace ProSuite.Commons.Geom
 
 				Line3D currentSegment = crackedSelfIntersections[i];
 
-				if (MathUtils.AreEqual(0, currentSegment.Length3D))
+				// Consider using minimumSegmentLength?
+				if (! keepShortSegments && MathUtils.AreEqual(0, currentSegment.Length3D))
 				{
 					continue;
 				}
@@ -3895,335 +4351,6 @@ namespace ProSuite.Commons.Geom
 		}
 
 		#endregion
-
-		#endregion
-
-		#region Self-weld (sub-resolution micro-notch collapse) - PROTOTYPE
-
-		/// <summary>
-		/// PROTOTYPE (bounded self-weld). Collapses sub-resolution micro-zig-zags
-		/// ("notches") in a closed ring. These are runs of consecutive vertices whose
-		/// segments are individually shorter than <paramref name="weldTolerance"/> but,
-		/// crucially, are NOT intersection points and are NOT pure out-and-back linear
-		/// self-intersections, so neither the union's intersection-point clustering nor
-		/// <see cref="TryDeleteLinearSelfIntersectionsXY"/> removes them. Such a notch
-		/// carries a meaningless local direction that corrupts the run-start
-		/// classification in the turning-left union walk (kirchweg_turgi / friedhofsmauer).
-		/// <para>The weld groups consecutive vertices by single linkage (each step shorter
-		/// than <paramref name="weldTolerance"/>) and collapses a group to its FIRST
-		/// vertex, but ONLY when the whole group is geometrically tiny (bounding-box
-		/// diagonal below 2 * <paramref name="weldTolerance"/>). The bounding-box bound is
-		/// what keeps the weld local: a densely-sampled smooth arc forms long single-linkage
-		/// chains but has a large bounding box, so it is left untouched.</para>
-		/// <remarks>The weld radius should be at least the coordinate RESOLUTION; the union
-		/// tolerance (resolution / 2) and even Sqrt(2)*tolerance are too small to see the
-		/// notch (empirically verified on kirchweg_turgi).</remarks>
-		/// </summary>
-		/// <returns>True if any vertex was welded away.</returns>
-		public static bool TrySelfWeldRingXY([NotNull] Linestring ring,
-		                                     double weldTolerance,
-		                                     [NotNull] out Linestring result)
-		{
-			result = ring;
-
-			if (weldTolerance <= 0 || ! ring.IsClosed || ring.PointCount < 5)
-			{
-				// Need at least a triangle (4 points incl. closing) plus one to weld.
-				return false;
-			}
-
-			List<Pnt3D> points = ring.GetPoints().ToList();
-			int n = points.Count - 1; // unique vertices (last == first for a closed ring)
-
-			double diagBound = 2 * weldTolerance;
-
-			var welded = new List<Pnt3D>(points.Count);
-			bool changed = false;
-
-			int i = 0;
-			while (i < n)
-			{
-				// Grow a single-linkage run [i..j] of near-coincident consecutive vertices.
-				int j = i;
-				double minX = points[i].X, maxX = points[i].X;
-				double minY = points[i].Y, maxY = points[i].Y;
-
-				while (j + 1 < n &&
-				       GetDistanceXY(points[j], points[j + 1]) < weldTolerance)
-				{
-					j++;
-					minX = Math.Min(minX, points[j].X);
-					maxX = Math.Max(maxX, points[j].X);
-					minY = Math.Min(minY, points[j].Y);
-					maxY = Math.Max(maxY, points[j].Y);
-				}
-
-				double diag = Math.Sqrt((maxX - minX) * (maxX - minX) +
-				                        (maxY - minY) * (maxY - minY));
-
-				welded.Add(points[i]); // keep the run's first (lowest-index) vertex
-
-				if (j > i && diag < diagBound)
-				{
-					// Collapse the whole tiny run onto its first vertex.
-					changed = true;
-					i = j + 1;
-				}
-				else
-				{
-					i++;
-				}
-			}
-
-			if (! changed || welded.Count < 3)
-			{
-				return false;
-			}
-
-			welded.Add(welded[0].ClonePnt3D()); // re-close
-
-			result = new Linestring(welded);
-			return true;
-		}
-
-		/// <summary>
-		/// PROTOTYPE. Applies <see cref="TrySelfWeldRingXY"/> to every ring of the
-		/// given geometry. Returns a new geometry if anything was welded, otherwise the
-		/// input is returned unchanged.
-		/// </summary>
-		[NotNull]
-		public static MultiLinestring SelfWeldRingsXY([NotNull] MultiLinestring rings,
-		                                              double weldTolerance)
-		{
-			List<Linestring> linestrings = null;
-
-			IList<Linestring> original = rings.GetLinestrings().ToList();
-			for (var idx = 0; idx < original.Count; idx++)
-			{
-				Linestring ls = original[idx];
-				if (TrySelfWeldRingXY(ls, weldTolerance, out Linestring welded))
-				{
-					if (linestrings == null)
-					{
-						linestrings = new List<Linestring>(original);
-					}
-
-					linestrings[idx] = welded;
-				}
-			}
-
-			return linestrings == null ? rings : new MultiPolycurve(linestrings);
-		}
-
-		private static double GetDistanceXY([NotNull] Pnt3D a, [NotNull] Pnt3D b)
-		{
-			double dx = a.X - b.X;
-			double dy = a.Y - b.Y;
-			return Math.Sqrt(dx * dx + dy * dy);
-		}
-
-		#endregion
-
-		#region Non-monotonic linear-run realignment
-
-		// A linear-run intermediate vertex whose target factor leaves the run's
-		// [start, end] target interval by more than this (dimensionless, fraction of a
-		// target segment) is treated as mis-attached to a neighbouring target segment.
-		private const double _linearRunEscapeEpsilon = 1e-5;
-
-		/// <summary>
-		/// PROTOTYPE (option 1). Detects and repairs the kirchweg_turgi-style corruption at
-		/// its root: a linear intersection run whose intermediate SOURCE vertices have a
-		/// target factor OUTSIDE the run's [start, end] target interval. Such a vertex is
-		/// physically within the tolerance of the shared edge but - because of a
-		/// sub-resolution micro zig-zag at a near-coincident corner - gets attached to the
-		/// neighbouring target segment, which flips the run-start direction (oppDir) and
-		/// breaks the union walk. The repair snaps each escaping source vertex back onto the
-		/// straight run chord (start-point to end-point), i.e. onto the shared edge, so the
-		/// run becomes monotonic again. Unlike a blanket crossing-noder, this fires ONLY on
-		/// the actual non-monotonic signature. Returns false (inputs unchanged) if there is
-		/// nothing to realign.
-		/// </summary>
-		internal static bool TryRealignNonMonotonicLinearRunsXY(
-			[NotNull] MultiLinestring source,
-			[NotNull] MultiLinestring target,
-			double tolerance,
-			[NotNull] out MultiLinestring realignedSource)
-		{
-			realignedSource = source;
-
-			IList<IntersectionPoint3D> intersectionPoints =
-				GetIntersectionPoints(
-					source, target, tolerance,
-					includeLinearIntersectionIntermediateRingStartEndPoints: true,
-					includeLinearIntersectionIntermediatePoints: true);
-
-			if (intersectionPoints.Count < 3)
-			{
-				return false;
-			}
-
-			List<IntersectionPoint3D> ordered =
-				intersectionPoints.OrderBy(ip => ip.VirtualSourceVertex).ToList();
-
-			// Each entry maps an original source vertex location to the location it should be
-			// snapped to (on the run chord).
-			var snaps = new List<KeyValuePair<Pnt3D, Pnt3D>>();
-
-			int i = 0;
-			while (i < ordered.Count)
-			{
-				if (ordered[i].Type != IntersectionPointType.LinearIntersectionStart)
-				{
-					i++;
-					continue;
-				}
-
-				int runStart = i;
-				int k = i + 1;
-				while (k < ordered.Count &&
-				       ordered[k].Type ==
-				       IntersectionPointType.LinearIntersectionIntermediate)
-				{
-					k++;
-				}
-
-				if (k >= ordered.Count ||
-				    ordered[k].Type != IntersectionPointType.LinearIntersectionEnd)
-				{
-					i = runStart + 1;
-					continue;
-				}
-
-				CollectEscapingRunVertexSnaps(ordered, runStart, k, tolerance, snaps);
-
-				i = k + 1;
-			}
-
-			if (snaps.Count == 0)
-			{
-				return false;
-			}
-
-			realignedSource = ApplySourceVertexSnaps(source, snaps);
-			return true;
-		}
-
-		private static void CollectEscapingRunVertexSnaps(
-			[NotNull] List<IntersectionPoint3D> ordered,
-			int runStart, int runEnd,
-			double tolerance,
-			[NotNull] List<KeyValuePair<Pnt3D, Pnt3D>> snaps)
-		{
-			IntersectionPoint3D start = ordered[runStart];
-			IntersectionPoint3D end = ordered[runEnd];
-
-			double startTarget = start.VirtualTargetVertex;
-			double endTarget = end.VirtualTargetVertex;
-
-			if (double.IsNaN(startTarget) || double.IsNaN(endTarget))
-			{
-				return;
-			}
-
-			double loTarget = Math.Min(startTarget, endTarget);
-			double hiTarget = Math.Max(startTarget, endTarget);
-
-			// Restrict to the simple case where the run is bounded by a single target segment
-			// (the shared-edge case). A multi-segment run would need a poly-chord projection.
-			if (hiTarget - loTarget > 1.0 + _linearRunEscapeEpsilon)
-			{
-				return;
-			}
-
-			var runChord = new Line3D(start.Point.ClonePnt3D(), end.Point.ClonePnt3D());
-
-			// A genuine sub-resolution artifact lies WITHIN the tolerance of the shared edge;
-			// only such a vertex may be snapped onto it. A vertex that escapes the run interval
-			// while sitting clearly off the chord is real geometry (e.g. a boundary-loop pinch)
-			// and must be left alone.
-			double maxChordDistance = Math.Sqrt(2) * tolerance;
-
-			for (int m = runStart + 1; m < runEnd; m++)
-			{
-				IntersectionPoint3D intermediate = ordered[m];
-
-				if (! intermediate.IsSourceVertex())
-				{
-					continue;
-				}
-
-				double targetVertex = intermediate.VirtualTargetVertex;
-				if (double.IsNaN(targetVertex))
-				{
-					continue;
-				}
-
-				bool escapes = targetVertex > hiTarget + _linearRunEscapeEpsilon ||
-				               targetVertex < loTarget - _linearRunEscapeEpsilon;
-				if (! escapes)
-				{
-					continue;
-				}
-
-				double chordDistance = runChord.GetDistancePerpendicular(
-					intermediate.Point, true, out double ratio, out _);
-
-				if (chordDistance > maxChordDistance)
-				{
-					continue;
-				}
-
-				// A genuine run intermediate projects strictly WITHIN the chord. A vertex that
-				// projects beyond an end is not a sub-resolution artifact on the shared edge
-				// (snapping it would clamp it to a corner and collapse real geometry).
-				if (ratio < -_linearRunEscapeEpsilon || ratio > 1 + _linearRunEscapeEpsilon)
-				{
-					continue;
-				}
-
-				Pnt3D snapped = runChord.GetPointAlong(ratio, true);
-
-				snaps.Add(new KeyValuePair<Pnt3D, Pnt3D>(
-					          intermediate.Point.ClonePnt3D(), snapped));
-			}
-		}
-
-		[NotNull]
-		private static MultiLinestring ApplySourceVertexSnaps(
-			[NotNull] MultiLinestring source,
-			[NotNull] List<KeyValuePair<Pnt3D, Pnt3D>> snaps)
-		{
-			const double matchTolerance = 1e-8;
-
-			IList<Linestring> parts = source.GetLinestrings().ToList();
-			var resultParts = new List<Linestring>(parts.Count);
-
-			foreach (Linestring part in parts)
-			{
-				var newPoints = new List<Pnt3D>(part.PointCount);
-				for (int idx = 0; idx < part.PointCount; idx++)
-				{
-					Pnt3D p = part.GetPoint3D(idx, true);
-
-					Pnt3D replacement = null;
-					foreach (var snap in snaps)
-					{
-						if (snap.Key.EqualsXY(p, matchTolerance))
-						{
-							replacement = snap.Value;
-							break;
-						}
-					}
-
-					newPoints.Add(replacement != null ? replacement.ClonePnt3D() : p);
-				}
-
-				resultParts.Add(new Linestring(newPoints));
-			}
-
-			return new MultiPolycurve(resultParts);
-		}
 
 		#endregion
 
@@ -4497,55 +4624,6 @@ namespace ProSuite.Commons.Geom
 					.ToList();
 
 			return TryCrackAtSelfIntersections(linestring, intersectionPoints, results);
-		}
-
-		/// <summary>
-		/// Exterior boundary loops are considered non-simple in most systems and lead to problems
-		/// especially as they tend to aggregate into multi-loop boundary loops.
-		/// </summary>
-		/// <param name="result"></param>
-		/// <param name="tolerance"></param>
-		private static void ExplodeExteriorBoundaryLoops([NotNull] MultiLinestring result,
-		                                                 double tolerance)
-		{
-			foreach (Linestring linestring in result.GetLinestrings().ToList())
-			{
-				if (linestring.ClockwiseOriented != true)
-				{
-					continue;
-				}
-
-				// In some sliver situations there might be linear self intersections.
-				// Let's not judge them already here.
-				IList<IntersectionPoint3D> selfIntersectionPoints =
-					GetSelfIntersectionPoints(linestring, tolerance)
-						.Where(i => i.Type == IntersectionPointType.TouchingInPoint).ToList();
-
-				Assert.True(
-					selfIntersectionPoints.All(i => i.Type == IntersectionPointType
-						                                .TouchingInPoint),
-					"Unexpected, probably linear self intersection in result.");
-
-				if (selfIntersectionPoints.Count == 2)
-				{
-					// Positive boundary loops are non-simple and lead to problems, especially if there
-					// are more than 2 loops (which typically happens in cupolas)
-					BoundaryLoop bl = new BoundaryLoop(selfIntersectionPoints[0],
-					                                   selfIntersectionPoints[1], linestring,
-					                                   true);
-
-					result.RemoveLinestring(linestring);
-					result.AddLinestring(bl.Loop1);
-					result.AddLinestring(bl.Loop2);
-				}
-				else if (selfIntersectionPoints.Count > 2)
-				{
-					// TODO: Cluster by point, build pairs
-					_msg.WarnFormat(
-						"Multiple boundary loops or otherwise unexpected self-intersections in {0}",
-						linestring.Segments);
-				}
-			}
 		}
 
 		private static bool TryCrackAtSelfIntersections(Linestring linestring,
@@ -5585,7 +5663,8 @@ namespace ProSuite.Commons.Geom
 		private static IEnumerable<Line3D> GetZOnlyDifferenceLines(
 			[NotNull] Linestring linestring1,
 			[NotNull] MultiLinestring multiLinestring2,
-			double tolerance)
+			double tolerance,
+			double zTolerance)
 		{
 			if (! linestring1.ExtentsIntersectXY(
 				    multiLinestring2.XMin, multiLinestring2.YMin,
@@ -5612,8 +5691,11 @@ namespace ProSuite.Commons.Geom
 				}
 
 				bool differentInZ =
-					IsLinearIntersectionDifferentInZ(intersection, intersectionLine,
-					                                 multiLinestring2, tolSquared);
+					double.IsNaN(zTolerance)
+						? IsLinearIntersectionDifferentInZ(intersection, intersectionLine,
+						                                   multiLinestring2, tolSquared)
+						: IsLinearIntersectionDifferentInZOnly(intersection, intersectionLine,
+						                                       multiLinestring2, zTolerance);
 				if (differentInZ)
 				{
 					yield return intersectionLine;
@@ -5819,5 +5901,830 @@ namespace ProSuite.Commons.Geom
 
 			return resultPaths;
 		}
+
+		#region Buffered line (offset-based)
+
+		// Two 2D direction vectors whose cross product is below this magnitude are
+		// treated as parallel, i.e. their offset lines do not yield a miter point.
+		private const double _parallelEpsilon = 1e-12;
+
+		// The maximum angular step (~5°) used when rounding a convex corner into a series
+		// of straight chord segments.
+		private const double _maxRoundJoinAngleStep = Math.PI / 36;
+
+		// The default miter limit (the ratio of the miter length to the offset distance)
+		// beyond which a mitered convex corner is bevelled instead, to avoid the long spikes
+		// that a plain miter produces at very sharp angles.
+		private const double _defaultMiterLimit = 10.0;
+
+		/// <summary>
+		/// Creates a polygon (as a <see cref="MultiLinestring"/>) by offsetting the
+		/// given line to the requested side(s) at the given distance, i.e. a buffered
+		/// line with flat (straight) ends and rounded corners between the segments.
+		/// Convex corners are rounded with a circular arc around the original vertex;
+		/// concave corners keep the mitered intersection of the adjacent offset lines
+		/// (the resulting self-intersection is cracked and unioned away). For a two-sided
+		/// buffer the line ends are closed with round (semicircular) caps; for a one-sided
+		/// buffer they stay flat (uncapped). This method is deliberately free of any
+		/// ArcGIS Pro SDK types so it can be unit-tested and reused on the
+		/// SDK-independent geometry model.
+		/// </summary>
+		/// <param name="line">The line to buffer. Each part is buffered on its own and
+		/// the parts are unioned into the result.</param>
+		/// <param name="bufferDistance">The offset distance. For
+		/// <see cref="BufferSide.Both"/> the distance is applied to each side (i.e. it
+		/// is the half-width); for a one-sided buffer it is the full width.</param>
+		/// <param name="bufferSide">The side(s) to offset, seen in digitizing direction.</param>
+		/// <param name="tolerance">The XY tolerance used to clean up the result.</param>
+		/// <param name="message">Receives the reason if no (valid) buffer could be
+		/// constructed, e.g. because the distance is too large.</param>
+		/// <param name="miteredCorners">When <c>true</c>, convex corners are mitered (the two
+		/// adjacent offset lines are extended to their intersection, bevelled past
+		/// <paramref name="miterLimit"/>) instead of rounded.</param>
+		/// <param name="flatEndCaps">When <c>true</c>, a two-sided (<see cref="BufferSide.Both"/>)
+		/// buffer is closed with straight ends instead of round end caps. One-sided buffers
+		/// are always flat.</param>
+		/// <param name="miterLimit">The ratio of the miter length to the offset distance beyond
+		/// which a mitered corner is bevelled. Only relevant when
+		/// <paramref name="miteredCorners"/> is <c>true</c>.</param>
+		/// <returns>The buffer polygon or null if no valid result could be constructed.</returns>
+		[CanBeNull]
+		public static MultiLinestring GetBufferedLine(
+			[NotNull] MultiLinestring line,
+			double bufferDistance,
+			BufferSide bufferSide,
+			double tolerance,
+			out string message,
+			bool miteredCorners = false,
+			bool flatEndCaps = false,
+			double miterLimit = _defaultMiterLimit)
+		{
+			Assert.ArgumentNotNull(line, nameof(line));
+
+			IList<Linestring> paths = line.GetLinestrings().ToList();
+
+			var distances = new List<double>(paths.Count);
+			for (var i = 0; i < paths.Count; i++)
+			{
+				distances.Add(bufferDistance);
+			}
+
+			return GetBufferedLine(paths, distances, bufferSide, tolerance, out message,
+			                       miteredCorners, flatEndCaps, miterLimit);
+		}
+
+		/// <summary>
+		/// Creates a buffered line polygon with a separate offset distance per line
+		/// part (see <see cref="GetBufferedLine(MultiLinestring,double,BufferSide,double,out string,bool,bool,double)"/>).
+		/// </summary>
+		/// <param name="pathsToBuffer">The line parts (open paths) to buffer.</param>
+		/// <param name="bufferDistances">The offset distance per path. Must have the
+		/// same count as <paramref name="pathsToBuffer"/>.</param>
+		/// <param name="bufferSide">The side(s) to offset, seen in digitizing direction.</param>
+		/// <param name="tolerance">The XY tolerance used to clean up the result.</param>
+		/// <param name="message">Receives the reason if no (valid) buffer could be
+		/// constructed.</param>
+		/// <param name="miteredCorners">When <c>true</c>, convex corners are mitered (bevelled
+		/// past <paramref name="miterLimit"/>) instead of rounded.</param>
+		/// <param name="flatEndCaps">When <c>true</c>, a two-sided buffer is closed with
+		/// straight ends instead of round end caps.</param>
+		/// <param name="miterLimit">The ratio of the miter length to the offset distance beyond
+		/// which a mitered corner is bevelled.</param>
+		/// <returns>The buffer polygon or null if no valid result could be constructed.</returns>
+		[CanBeNull]
+		public static MultiLinestring GetBufferedLine(
+			[NotNull] IList<Linestring> pathsToBuffer,
+			[NotNull] IList<double> bufferDistances,
+			BufferSide bufferSide,
+			double tolerance,
+			out string message,
+			bool miteredCorners = false,
+			bool flatEndCaps = false,
+			double miterLimit = _defaultMiterLimit)
+		{
+			Assert.ArgumentNotNull(pathsToBuffer, nameof(pathsToBuffer));
+			Assert.ArgumentNotNull(bufferDistances, nameof(bufferDistances));
+			Assert.ArgumentCondition(pathsToBuffer.Count == bufferDistances.Count,
+			                         "Path count and buffer distance count must match");
+
+			message = null;
+
+			var ringGroups = new List<RingGroup>();
+
+			for (var i = 0; i < pathsToBuffer.Count; i++)
+			{
+				Linestring path = pathsToBuffer[i];
+				double distance = bufferDistances[i];
+
+				if (path == null || path.SegmentCount == 0 || distance <= 0)
+				{
+					continue;
+				}
+
+				MultiLinestring area = BuildBufferAreaForPath(
+					path, distance, bufferSide, miteredCorners, flatEndCaps, miterLimit,
+					tolerance);
+
+				AddAreaComponents(area, tolerance, ringGroups);
+			}
+
+			if (ringGroups.Count == 0)
+			{
+				message = "Unable to construct a buffer for the given line and distance.";
+				return null;
+			}
+
+			MultiLinestring result = GetUnionAreasXY(ringGroups, tolerance);
+
+			if (result == null || result.IsEmpty)
+			{
+				message = "The buffer result is empty. The distance is probably too large.";
+				return null;
+			}
+
+			return result;
+		}
+
+		// Cracks a buffer ring (or piece) at its self-intersections and adds the resulting
+		// simple, clockwise rings to the collection to be unioned.
+		private static void AddCrackedRings([CanBeNull] Linestring ring, double tolerance,
+		                                    [NotNull] List<RingGroup> ringGroups)
+		{
+			if (ring == null || ring.SegmentCount < 3)
+			{
+				return;
+			}
+
+			// On concave corners the raw offset ring is self-intersecting once the distance
+			// exceeds the local feature size. Crack it into simple rings so the union below
+			// gets valid input (mirrors ConstructOffset + Simplify).
+			var simpleRings = new List<Linestring>();
+			if (! TryCrackSelfCrossingRing(ring, tolerance, simpleRings))
+			{
+				simpleRings.Add(ring);
+			}
+
+			foreach (Linestring simpleRing in simpleRings)
+			{
+				if (simpleRing.SegmentCount < 3)
+				{
+					continue;
+				}
+
+				if (simpleRing.ClockwiseOriented != true)
+				{
+					simpleRing.ReverseOrientation();
+				}
+
+				ringGroups.Add(new RingGroup(simpleRing));
+			}
+		}
+
+		// Buffers a single line part into a filled area (with holes). The whole part is buffered
+		// as one legacy offset outline - so corners and end caps look exactly as before and the
+		// dangling tails of an intertwined line blend smoothly into it - and then the inner ring
+		// of every loop is punched out as a hole. A loop is a closed part, an almost-closed part
+		// whose ends the buffer bridges, or a loop formed where the part crosses itself.
+		[CanBeNull]
+		private static MultiLinestring BuildBufferAreaForPath(
+			[NotNull] Linestring path, double distance, BufferSide bufferSide,
+			bool mitered, bool flatEndCaps, double miterLimit, double tolerance)
+		{
+			// The buffer band has this full width; an inner ring (hole) narrower than it is
+			// not kept: the two sides' offsets meet across it, so the loop closes solid.
+			double bufferWidth = bufferSide == BufferSide.Both ? 2 * distance : distance;
+
+			// A cleanly closed loop has no ends: build it straight from its outer offset ring
+			// (BuildBufferRing would add spurious end caps at the seam).
+			if (path.IsClosed)
+			{
+				GetLoopBoundaryAreas(path, distance, bufferSide, mitered, miterLimit, tolerance,
+				                     out MultiLinestring outerArea, out MultiLinestring innerArea);
+
+				if (! IsHoleWiderThan(innerArea, bufferWidth))
+				{
+					innerArea = null;
+				}
+
+				return SubtractInnerRing(outerArea, innerArea, tolerance);
+			}
+
+			// Base: the legacy offset outline, filled. This fills the interior of any loop and
+			// blends the dangles into it smoothly.
+			var baseRings = new List<RingGroup>();
+			AddCrackedRings(
+				BuildBufferRing(path, distance, bufferSide, mitered, flatEndCaps, miterLimit),
+				tolerance, baseRings);
+
+			if (baseRings.Count == 0)
+			{
+				return null;
+			}
+
+			MultiLinestring solid = GetUnionAreasXY(baseRings, tolerance);
+
+			if (solid == null || solid.IsEmpty)
+			{
+				return null;
+			}
+
+			// Punch out the inner ring of every loop, unless that ring is narrower than the
+			// buffer width (then the offsets cross over it and the loop stays closed).
+			foreach (Linestring loop in GetLoops(path, distance, bufferSide, tolerance))
+			{
+				GetLoopBoundaryAreas(loop, distance, bufferSide, mitered, miterLimit, tolerance,
+				                     out _, out MultiLinestring innerArea);
+
+				if (! IsHoleWiderThan(innerArea, bufferWidth))
+				{
+					continue;
+				}
+
+				MultiLinestring punched = GetDifferenceAreasXY(solid, innerArea, tolerance);
+
+				if (punched != null && ! punched.IsEmpty)
+				{
+					solid = punched;
+				}
+			}
+
+			return solid;
+		}
+
+		// Whether the inner ring (a candidate hole) is wider than the buffer width in both
+		// directions. A narrower hole is filled by the buffer reaching across it from both
+		// sides, so it must not be punched out.
+		private static bool IsHoleWiderThan([CanBeNull] MultiLinestring innerArea,
+		                                    double bufferWidth)
+		{
+			if (innerArea == null || innerArea.IsEmpty)
+			{
+				return false;
+			}
+
+			return innerArea.XMax - innerArea.XMin >= bufferWidth &&
+			       innerArea.YMax - innerArea.YMin >= bufferWidth;
+		}
+
+		// Collects the loops of an open path whose interior the buffer must hollow out: a loop
+		// formed where the path crosses itself (a closed sub-arc between the two visits of a
+		// crossing), or - if the path does not cross itself - an almost-closed path whose two
+		// ends are near enough that the buffer bridges the gap (within one buffer width).
+		[NotNull]
+		private static IList<Linestring> GetLoops(
+			[NotNull] Linestring path, double distance, BufferSide bufferSide, double tolerance)
+		{
+			var loops = new List<Linestring>();
+
+			var subArcs = new List<Linestring>();
+			if (TryCrackSelfCrossingLinestring(path, tolerance, subArcs))
+			{
+				foreach (Linestring subArc in subArcs)
+				{
+					if (subArc == null || subArc.SegmentCount < 2 ||
+					    ! subArc.StartPoint.EqualsXY(subArc.EndPoint, tolerance))
+					{
+						continue;
+					}
+
+					// The two ends are the same crossing point computed on different segments,
+					// so only equal within tolerance: close the sub-arc exactly.
+					IList<Pnt3D> points = subArc.GetPoints(clone: true).ToList();
+					points[points.Count - 1] = points[0].ClonePnt3D();
+					loops.Add(new Linestring(points));
+				}
+			}
+
+			// A genuinely simple arc (no self-intersections) whose two ends nearly meet: the
+			// buffer bridges the gap, so hollow the enclosed area. A fold-back has linear self-
+			// intersections and is excluded here, so its overlapping buffers just unify without
+			// a spurious hole between them.
+			if (loops.Count == 0 && path.SegmentCount >= 2 &&
+			    GetSelfIntersectionPoints(path, tolerance).Count == 0)
+			{
+				double dx = path.StartPoint.X - path.EndPoint.X;
+				double dy = path.StartPoint.Y - path.EndPoint.Y;
+				double endGap = Math.Sqrt(dx * dx + dy * dy);
+				double bridgingDistance = bufferSide == BufferSide.Both ? 2 * distance : distance;
+
+				if (endGap <= bridgingDistance)
+				{
+					loops.Add(CloseLinestring(path));
+				}
+			}
+
+			return loops;
+		}
+
+		// Fills the two boundary rings of a closed loop's band with the normal (legacy) corner
+		// style and returns them ordered by size: the larger (outer) and the smaller (inner)
+		// offset ring. Either may be null when it collapses (a large distance erodes the inner
+		// ring away). For a two-sided buffer the boundaries are the two offset rings; for a one-
+		// sided buffer they are the loop itself and its offset.
+		private static void GetLoopBoundaryAreas(
+			[NotNull] Linestring loop, double distance, BufferSide bufferSide,
+			bool mitered, double miterLimit, double tolerance,
+			[CanBeNull] out MultiLinestring outerArea, [CanBeNull] out MultiLinestring innerArea)
+		{
+			Linestring boundaryA;
+			Linestring boundaryB;
+
+			switch (bufferSide)
+			{
+				case BufferSide.Both:
+					boundaryA = GetClosedRoundedOffsetRing(loop, distance, mitered, miterLimit);
+					boundaryB = GetClosedRoundedOffsetRing(loop, -distance, mitered, miterLimit);
+					break;
+
+				case BufferSide.Left:
+					boundaryA = loop.Clone();
+					boundaryB = GetClosedRoundedOffsetRing(loop, distance, mitered, miterLimit);
+					break;
+
+				case BufferSide.Right:
+					boundaryA = loop.Clone();
+					boundaryB = GetClosedRoundedOffsetRing(loop, -distance, mitered, miterLimit);
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(bufferSide), bufferSide, null);
+			}
+
+			MultiLinestring filledA = GetFilledRingAreaXY(boundaryA, tolerance);
+			MultiLinestring filledB = GetFilledRingAreaXY(boundaryB, tolerance);
+
+			bool aEmpty = filledA == null || filledA.IsEmpty;
+			bool bEmpty = filledB == null || filledB.IsEmpty;
+
+			if (aEmpty || bEmpty)
+			{
+				outerArea = aEmpty ? filledB : filledA;
+				innerArea = null;
+				return;
+			}
+
+			bool aIsOuter = Math.Abs(filledA.GetArea2D()) >= Math.Abs(filledB.GetArea2D());
+			outerArea = aIsOuter ? filledA : filledB;
+			innerArea = aIsOuter ? filledB : filledA;
+		}
+
+		// Subtracts the inner ring area from the outer to leave it as a hole.
+		[CanBeNull]
+		private static MultiLinestring SubtractInnerRing([CanBeNull] MultiLinestring outerArea,
+		                                                 [CanBeNull] MultiLinestring innerArea,
+		                                                 double tolerance)
+		{
+			if (outerArea == null || outerArea.IsEmpty)
+			{
+				return null;
+			}
+
+			if (innerArea == null || innerArea.IsEmpty)
+			{
+				return outerArea;
+			}
+
+			MultiLinestring band = GetDifferenceAreasXY(outerArea, innerArea, tolerance);
+
+			return band != null && ! band.IsEmpty ? band : outerArea;
+		}
+
+		// Fills a (possibly self-intersecting) closed ring into its 2D area, reusing the same
+		// crack-and-union pipeline as the open-path buffer. Returns null for a degenerate ring.
+		[CanBeNull]
+		private static MultiLinestring GetFilledRingAreaXY([CanBeNull] Linestring ring,
+		                                                   double tolerance)
+		{
+			var ringGroups = new List<RingGroup>();
+			AddCrackedRings(ring, tolerance, ringGroups);
+
+			if (ringGroups.Count == 0)
+			{
+				return null;
+			}
+
+			return GetUnionAreasXY(ringGroups, tolerance);
+		}
+
+		// Offsets a CLOSED loop path perpendicularly in XY by the signed distance, rounding (or
+		// mitering) convex corners exactly like GetRoundedOffsetPoints but joining every corner
+		// including the one at the shared start/end vertex, so the result is a closed ring. This
+		// is achieved by restarting the loop at the midpoint of its closing segment (a point
+		// that is not a corner): offsetting that equivalent open path rounds all real corners,
+		// and because both of its flat ends lie on the same straight stretch their offset
+		// endpoints coincide, closing the ring.
+		[CanBeNull]
+		private static Linestring GetClosedRoundedOffsetRing(
+			[NotNull] Linestring closedPath, double signedDistance, bool mitered,
+			double miterLimit)
+		{
+			int segmentCount = closedPath.SegmentCount;
+
+			if (segmentCount < 3)
+			{
+				return null;
+			}
+
+			IList<Pnt3D> points = closedPath.GetPoints(clone: true).ToList();
+
+			// points: p0 .. p(n-1), p0 (closed). The corner an open-path offset misses is at p0,
+			// between the last and the first segment. Restart at the midpoint of the closing
+			// segment (p(n-1) -> p0) so that corner becomes an interior corner and both ends fall
+			// on a straight stretch.
+			Pnt3D first = points[0];
+			Pnt3D last = points[segmentCount - 1];
+
+			var mid = new Pnt3D((last.X + first.X) / 2,
+			                    (last.Y + first.Y) / 2,
+			                    (last.Z + first.Z) / 2);
+
+			var openPoints = new List<Pnt3D>(segmentCount + 2) { mid.ClonePnt3D() };
+			for (var i = 0; i < segmentCount; i++)
+			{
+				openPoints.Add(points[i].ClonePnt3D());
+			}
+
+			openPoints.Add(mid.ClonePnt3D());
+
+			var openPath = new Linestring(openPoints);
+
+			List<Pnt3D> offset = GetRoundedOffsetPoints(openPath, openPoints, signedDistance,
+			                                            mitered, miterLimit);
+
+			if (offset.Count < 4)
+			{
+				return null;
+			}
+
+			// The two flat ends are the offset of the same midpoint along the same segment,
+			// hence coincident: force exact closure.
+			offset[offset.Count - 1] = offset[0].ClonePnt3D();
+
+			return new Linestring(offset);
+		}
+
+		// Adds the connected components (each an exterior ring with its holes) of an area to the
+		// collection to be unioned, preserving holes (unlike AddCrackedRings, which fills them).
+		private static void AddAreaComponents([CanBeNull] MultiLinestring area, double tolerance,
+		                                      [NotNull] List<RingGroup> ringGroups)
+		{
+			if (area == null || area.IsEmpty)
+			{
+				return;
+			}
+
+			foreach (RingGroup component in GetConnectedComponents(area, tolerance))
+			{
+				if (component == null || component.IsEmpty)
+				{
+					continue;
+				}
+
+				component.TryOrientProperly();
+				ringGroups.Add(component);
+			}
+		}
+
+		// Returns a closed copy of an (almost closed) open path by appending its start point.
+		[NotNull]
+		private static Linestring CloseLinestring([NotNull] Linestring path)
+		{
+			IList<Pnt3D> points = path.GetPoints(clone: true).ToList();
+			points.Add(points[0].ClonePnt3D());
+
+			return new Linestring(points);
+		}
+
+		// Builds the (closed, clockwise) outline of the buffer of a single open path.
+		// For a two-sided buffer the ring is the left offset, an end cap, the reversed
+		// right offset and a start cap; for a one-sided buffer one edge is the offset line
+		// and the opposite edge is the original line, leaving the ends flat. The end caps are
+		// round unless <paramref name="flatEndCaps"/> is set (then the ends are closed with a
+		// straight chord). Convex corners of the offset side(s) are rounded, or mitered/
+		// bevelled when <paramref name="mitered"/> is set (see GetRoundedOffsetPoints).
+		[CanBeNull]
+		private static Linestring BuildBufferRing([NotNull] Linestring path, double distance,
+		                                          BufferSide bufferSide,
+		                                          bool mitered, bool flatEndCaps,
+		                                          double miterLimit)
+		{
+			IList<Pnt3D> original = path.GetPoints(clone: true).ToList();
+
+			if (original.Count < 2)
+			{
+				return null;
+			}
+
+			List<Pnt3D> ringPoints;
+
+			switch (bufferSide)
+			{
+				case BufferSide.Both:
+					List<Pnt3D> leftBoth =
+						GetRoundedOffsetPoints(path, original, distance, mitered, miterLimit);
+					List<Pnt3D> rightBoth =
+						GetRoundedOffsetPoints(path, original, -distance, mitered, miterLimit);
+					rightBoth.Reverse();
+
+					ringPoints = new List<Pnt3D>();
+					ringPoints.AddRange(leftBoth);
+
+					if (! flatEndCaps)
+					{
+						// Round end cap around the last vertex, bulging in the forward direction.
+						Line3D lastSegment = path.GetSegment(path.SegmentCount - 1);
+						AppendRoundCapPoints(ringPoints, lastSegment.EndPoint, distance,
+						                     leftBoth[leftBoth.Count - 1],
+						                     lastSegment.DeltaX, lastSegment.DeltaY);
+					}
+
+					// When flat, the straight chord from the last left-offset point to the
+					// first right-offset point (and the ring closure back to the start) forms
+					// the flat ends.
+					ringPoints.AddRange(rightBoth);
+
+					if (! flatEndCaps)
+					{
+						// Round start cap around the first vertex, bulging backwards.
+						Line3D firstSegment = path.GetSegment(0);
+						AppendRoundCapPoints(ringPoints, firstSegment.StartPoint, distance,
+						                     rightBoth[rightBoth.Count - 1],
+						                     -firstSegment.DeltaX, -firstSegment.DeltaY);
+					}
+
+					break;
+
+				case BufferSide.Left:
+					List<Pnt3D> left =
+						GetRoundedOffsetPoints(path, original, distance, mitered, miterLimit);
+
+					ringPoints = new List<Pnt3D>(left.Count + original.Count + 1);
+					ringPoints.AddRange(left);
+					for (int k = original.Count - 1; k >= 0; k--)
+					{
+						ringPoints.Add(original[k].ClonePnt3D());
+					}
+
+					break;
+
+				case BufferSide.Right:
+					List<Pnt3D> right =
+						GetRoundedOffsetPoints(path, original, -distance, mitered, miterLimit);
+
+					ringPoints = new List<Pnt3D>(original.Count + right.Count + 1);
+					foreach (Pnt3D p in original)
+					{
+						ringPoints.Add(p.ClonePnt3D());
+					}
+
+					for (int k = right.Count - 1; k >= 0; k--)
+					{
+						ringPoints.Add(right[k]);
+					}
+
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(bufferSide), bufferSide, null);
+			}
+
+			// Close the ring.
+			ringPoints.Add(ringPoints[0].ClonePnt3D());
+
+			return new Linestring(ringPoints, ensureClockwise: true);
+		}
+
+		// Offsets an open path perpendicularly in XY by the signed distance (positive =
+		// left of the digitizing direction). By default a convex (outer) corner is rounded
+		// with a circular arc (radius |signedDistance|, centred on the original vertex); when
+		// <paramref name="mitered"/> is set, the two adjacent offset lines are instead extended
+		// to their intersection (mitered), falling back to a straight bevel once the miter
+		// length exceeds <paramref name="miterLimit"/> * |signedDistance|. On the inner,
+		// concave side the mitered intersection of the two adjacent offset lines is always
+		// used (its self-intersection is cleaned up by the caller). The line ends are left
+		// flat. Z values are carried over from the corresponding source vertices.
+		[NotNull]
+		private static List<Pnt3D> GetRoundedOffsetPoints(
+			[NotNull] Linestring path, [NotNull] IList<Pnt3D> vertices, double signedDistance,
+			bool mitered = false, double miterLimit = _defaultMiterLimit)
+		{
+			int segmentCount = path.SegmentCount;
+
+			var offsetStart = new Pnt3D[segmentCount];
+			var offsetEnd = new Pnt3D[segmentCount];
+			var directionX = new double[segmentCount];
+			var directionY = new double[segmentCount];
+
+			for (var i = 0; i < segmentCount; i++)
+			{
+				Line3D segment = path.GetSegment(i);
+
+				double dx = segment.DeltaX;
+				double dy = segment.DeltaY;
+				double length = Math.Sqrt(dx * dx + dy * dy);
+
+				double normalX = 0;
+				double normalY = 0;
+				if (length > _parallelEpsilon)
+				{
+					// Left normal of the direction (rotate by +90° in XY).
+					normalX = -dy / length;
+					normalY = dx / length;
+				}
+
+				directionX[i] = dx;
+				directionY[i] = dy;
+
+				Pnt3D start = segment.StartPoint;
+				Pnt3D end = segment.EndPoint;
+
+				offsetStart[i] = new Pnt3D(start.X + normalX * signedDistance,
+				                           start.Y + normalY * signedDistance, start.Z);
+				offsetEnd[i] = new Pnt3D(end.X + normalX * signedDistance,
+				                         end.Y + normalY * signedDistance, end.Z);
+			}
+
+			double radius = Math.Abs(signedDistance);
+
+			var result = new List<Pnt3D> { offsetStart[0] };
+
+			for (var j = 1; j < segmentCount; j++)
+			{
+				double cross = directionX[j - 1] * directionY[j] -
+				               directionY[j - 1] * directionX[j];
+
+				// The offset side is the outer (convex) side of the corner exactly when the
+				// turn direction is opposite to the side being offset.
+				bool convexCorner = radius > 0 &&
+				                    Math.Abs(cross) > _parallelEpsilon &&
+				                    signedDistance * cross < 0;
+
+				if (convexCorner && ! mitered)
+				{
+					// Round the outer corner with a circular arc around the original vertex.
+					result.Add(offsetEnd[j - 1]);
+					AppendRoundJoinPoints(result, vertices[j], radius,
+					                      offsetEnd[j - 1],
+					                      directionX[j - 1], directionY[j - 1],
+					                      directionX[j], directionY[j]);
+					result.Add(offsetStart[j]);
+				}
+				else if (convexCorner && mitered &&
+				         TryIntersectLinesXY(offsetStart[j - 1], directionX[j - 1],
+				                             directionY[j - 1], offsetStart[j], directionX[j],
+				                             directionY[j], out double mx, out double my))
+				{
+					// Miter the outer corner by extending the two offset lines to their
+					// intersection. A very sharp corner would produce a long spike, so fall
+					// back to a straight bevel once the miter length exceeds miterLimit * radius.
+					double miterDx = mx - vertices[j].X;
+					double miterDy = my - vertices[j].Y;
+					double miterLengthSquared = miterDx * miterDx + miterDy * miterDy;
+					double maxMiterLength = miterLimit * radius;
+
+					if (miterLengthSquared <= maxMiterLength * maxMiterLength)
+					{
+						result.Add(new Pnt3D(mx, my, vertices[j].Z));
+					}
+					else
+					{
+						// Bevel: cut the corner off with a straight chord between the ends of
+						// the two adjacent offset segments.
+						result.Add(offsetEnd[j - 1]);
+						result.Add(offsetStart[j]);
+					}
+				}
+				else if (TryIntersectLinesXY(offsetStart[j - 1], directionX[j - 1],
+				                             directionY[j - 1], offsetStart[j], directionX[j],
+				                             directionY[j], out double x, out double y))
+				{
+					// Concave (inner) corner: use the mitered intersection of the two offset
+					// lines (the self-intersection this creates is cleaned up by the caller).
+					// At a near-180° fold-back (the line doubles back on itself) the two offset
+					// lines are almost parallel, so their intersection runs off far from the
+					// vertex - an endless spike. Cap the miter length and bevel the corner
+					// (join the two offset endpoints directly) instead.
+					double miterDx = x - vertices[j].X;
+					double miterDy = y - vertices[j].Y;
+					double miterLengthSquared = miterDx * miterDx + miterDy * miterDy;
+					double maxMiterLength = miterLimit * radius;
+
+					if (miterLengthSquared <= maxMiterLength * maxMiterLength)
+					{
+						result.Add(new Pnt3D(x, y, vertices[j].Z));
+					}
+					else
+					{
+						result.Add(offsetEnd[j - 1]);
+						result.Add(offsetStart[j]);
+					}
+				}
+				else
+				{
+					// Parallel / collinear segments: the two offset lines coincide, so the
+					// shared offset endpoint is the join.
+					result.Add(offsetEnd[j - 1]);
+				}
+			}
+
+			result.Add(offsetEnd[segmentCount - 1]);
+
+			return result;
+		}
+
+		// Appends the intermediate points of the circular arc that rounds a convex corner,
+		// sweeping around 'center' (radius) from the point 'from' by the corner's signed
+		// turn angle. The arc's start and end points are added by the caller, so only the
+		// in-between points are appended here.
+		private static void AppendRoundJoinPoints(
+			[NotNull] List<Pnt3D> result, [NotNull] Pnt3D center, double radius,
+			[NotNull] Pnt3D from,
+			double inDirectionX, double inDirectionY,
+			double outDirectionX, double outDirectionY)
+		{
+			double cross = inDirectionX * outDirectionY - inDirectionY * outDirectionX;
+			double dot = inDirectionX * outDirectionX + inDirectionY * outDirectionY;
+
+			// Signed turn angle in (-pi, pi]; equals the angle swept by the offset vector.
+			double sweep = Math.Atan2(cross, dot);
+
+			var steps = (int) Math.Ceiling(Math.Abs(sweep) / _maxRoundJoinAngleStep);
+
+			if (steps <= 1)
+			{
+				return;
+			}
+
+			double startAngle = Math.Atan2(from.Y - center.Y, from.X - center.X);
+
+			for (var k = 1; k < steps; k++)
+			{
+				double angle = startAngle + sweep * k / steps;
+
+				result.Add(new Pnt3D(center.X + radius * Math.Cos(angle),
+				                     center.Y + radius * Math.Sin(angle), center.Z));
+			}
+		}
+
+		// Appends the intermediate points of a semicircular end cap of the given radius
+		// around 'center', starting at 'from' (which lies on the circle) and sweeping 180°
+		// to the diametrically opposite point, bulging towards the outward direction. The
+		// cap's start and end points are added by the caller.
+		private static void AppendRoundCapPoints(
+			[NotNull] List<Pnt3D> ring, [NotNull] Pnt3D center, double radius,
+			[NotNull] Pnt3D from, double outwardX, double outwardY)
+		{
+			if (radius <= 0)
+			{
+				return;
+			}
+
+			double startAngle = Math.Atan2(from.Y - center.Y, from.X - center.X);
+			double outwardAngle = Math.Atan2(outwardY, outwardX);
+
+			// Sweep 180° in the direction that makes the cap bulge outwards (towards the
+			// forward/backward extension of the line end).
+			double delta = Math.Atan2(Math.Sin(outwardAngle - startAngle),
+			                          Math.Cos(outwardAngle - startAngle));
+			double sweep = delta >= 0 ? Math.PI : -Math.PI;
+
+			var steps = (int) Math.Ceiling(Math.PI / _maxRoundJoinAngleStep);
+
+			for (var k = 1; k < steps; k++)
+			{
+				double angle = startAngle + sweep * k / steps;
+
+				ring.Add(new Pnt3D(center.X + radius * Math.Cos(angle),
+				                   center.Y + radius * Math.Sin(angle), center.Z));
+			}
+		}
+
+		// Intersects two infinite lines in XY, each given by a point and a direction.
+		// Returns false if the directions are parallel.
+		private static bool TryIntersectLinesXY(
+			[NotNull] Pnt3D point1, double direction1X, double direction1Y,
+			[NotNull] Pnt3D point2, double direction2X, double direction2Y,
+			out double x, out double y)
+		{
+			x = 0;
+			y = 0;
+
+			double denominator = direction1X * direction2Y - direction1Y * direction2X;
+
+			if (Math.Abs(denominator) < _parallelEpsilon)
+			{
+				return false;
+			}
+
+			double t = ((point2.X - point1.X) * direction2Y -
+			            (point2.Y - point1.Y) * direction2X) / denominator;
+
+			x = point1.X + t * direction1X;
+			y = point1.Y + t * direction1Y;
+
+			return true;
+		}
+
+		#endregion
 	}
 }

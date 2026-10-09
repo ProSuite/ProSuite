@@ -29,7 +29,6 @@ public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 		foreach (FeatureSelectionBase selection in selectionByClasses)
 		{
 			BasicFeatureLayer layer = selection.BasicFeatureLayer;
-			bool isAnnotation = layer is AnnotationLayer;
 
 			// todo: daro use layer.Name > FeatureSelectionBase is
 			// is it IPickableFeatureClassItem or IPickableLayerItem?
@@ -38,7 +37,7 @@ public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 
 			if (! itemsByName.TryGetValue(name, out IPickableFeatureClassItem item))
 			{
-				item = CreatePickableClassItem(selection, isAnnotation);
+				item = CreatePickableClassItem(selection);
 				itemsByName.Add(name, item);
 			}
 			else
@@ -54,7 +53,7 @@ public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 	}
 
 	private static IPickableFeatureClassItem CreatePickableClassItem(
-		FeatureSelectionBase selection, bool isAnnotation)
+		FeatureSelectionBase selection)
 	{
 		var features = selection.GetFeatures().ToList();
 
@@ -62,8 +61,6 @@ public class PickableFeatureClassItemsFactory : IPickableItemsFactory
 		var oids = features.Select(feature => feature.GetObjectID()).ToList();
 		var geometry = GeometryUtils.Union(features.Select(feature => feature.GetShape()).ToList());
 
-		return isAnnotation
-			       ? new PickableAnnotationFeatureClassItem(datasetName, oids, geometry)
-			       : new PickableFeatureClassItem(datasetName, oids, geometry);
+		return new PickableFeatureClassItem(datasetName, oids, geometry);
 	}
 }

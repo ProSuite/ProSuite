@@ -1,4 +1,5 @@
 using System;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Progress
 {
@@ -10,6 +11,13 @@ namespace ProSuite.Commons.Progress
 		private int _stepSize = 1;
 
 		protected abstract void SetText(string text);
+
+		/// <summary>
+		/// Leveled counterpart of <see cref="SetText(string)"/>, used only by
+		/// <see cref="ShowMessage(string, LogLevel)"/>. Defaults to forwarding to the
+		/// no-level hook, so only subclasses that care about severity need to override it.
+		/// </summary>
+		protected virtual void SetText(string text, LogLevel level) => SetText(text);
 
 		#region IProgressFeedback
 
@@ -60,9 +68,9 @@ namespace ProSuite.Commons.Progress
 			SetComplete(string.Format(format, args));
 		}
 
-		public void ShowMessage(string message)
+		public void ShowMessage(string message, LogLevel level = LogLevel.Info)
 		{
-			SetText(message);
+			SetText(message, level);
 		}
 
 		public void ShowMessage(string format, params object[] args)
@@ -123,7 +131,7 @@ namespace ProSuite.Commons.Progress
 			get => _stepSize;
 			set
 			{
-				if (_stepSize <= 0)
+				if (value <= 0)
 				{
 					throw new ArgumentException("value must be 1 or greater");
 				}

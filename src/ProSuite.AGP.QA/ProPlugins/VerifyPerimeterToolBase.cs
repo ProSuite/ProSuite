@@ -55,6 +55,19 @@ namespace ProSuite.AGP.QA.ProPlugins
 			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
+		/// <summary>
+		/// Returns the perimeter to verify, derived from the sketched perimeter, for example
+		/// intersected with the current work unit.
+		/// </summary>
+		/// <param name="sketchedPerimeter">The perimeter sketched by the user.</param>
+		/// <returns>The perimeter to verify, or null if nothing is to be verified. In that
+		/// case the implementation has informed the user.</returns>
+		[CanBeNull]
+		protected virtual Geometry GetPerimeterToVerify([NotNull] Geometry sketchedPerimeter)
+		{
+			return sketchedPerimeter;
+		}
+
 		protected override Task OnToolActivateAsync(bool active)
 		{
 			return base.OnToolActivateAsync(active);
@@ -120,18 +133,23 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return false;
 			}
 
+			Geometry perimeter = GetPerimeterToVerify(sketchGeometry);
+
+			if (perimeter == null)
+			{
+				return false;
+			}
+
 			var progressTracker = new QualityVerificationProgressTracker
 			                      {
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
-
 			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				WorkListOpener, mapView, sketchGeometry, spatialRef,
+				WorkListOpener, mapView, perimeter, spatialRef,
 				SessionContext.VerificationEnvironment, SaveAction);
 
 			string perimeterName = "Perimeter";
@@ -140,7 +158,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(sketchGeometry, progressTracker, resultsPath),
+					VerificationAction = () => Verify(perimeter, progressTracker),
 					ApplicationController = appController
 				};
 
@@ -177,8 +195,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		private async Task<ServiceCallStatus> Verify(
 			[NotNull] Geometry perimeter,
-			[NotNull] QualityVerificationProgressTracker progressTracker,
-			string resultsPath)
+			[NotNull] QualityVerificationProgressTracker progressTracker)
 		{
 			// NOTE: If the background task is not Run( async () => ... but only Run(() => ...
 			// The tool's OnSketchCompleteAsync will be called twice! 
@@ -192,7 +209,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return await qaEnvironment.VerifyPerimeter(
-							       perimeter, progressTracker, "perimeter", resultsPath);
+							       perimeter, progressTracker, "perimeter");
 					},
 					BackgroundProgressor.None);
 

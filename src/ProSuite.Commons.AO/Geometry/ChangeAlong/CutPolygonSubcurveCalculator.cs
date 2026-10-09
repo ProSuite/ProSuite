@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry.CreateFootprint;
 using ProSuite.Commons.AO.Geometry.Cut;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -69,10 +70,30 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			Assert.ArgumentNotNull(targetPolyline, nameof(targetPolyline));
 			Assert.ArgumentNotNull(resultList, nameof(resultList));
 
+			// For multipatch sources use the robust footprint (same routine as the cut itself,
+			// CutGeometryUtils.TryCut) for ALL source-based reasoning below - the classic
+			// subcurve calculation, the interior-intersection filter and the topological cut
+			// lines. GeometryFactory.CreatePolygon / ITopologicalOperator.Boundary is unreliable
+			// for freshly-cut multipatches (see CutGeometryUtils.IsMultipatchWithDegenerateFootprint
+			// / TOP-5258): a stale boundary keeps the target line interior-intersecting the source,
+			// so the cut subcurve stays green after the cut has already been applied.
+			IPolygon sourceFootprint =
+				sourceGeometry is IMultiPatch sourceMultipatch
+					? CreateFootprintUtils.GetFootprint(
+						sourceMultipatch, GeometryUtils.GetXyTolerance(sourceGeometry))
+					: null;
+
+			IGeometry effectiveSource = sourceFootprint ?? sourceGeometry;
+
+			_msg.DebugFormat(
+				"CutPolygonSubcurveCalculator: source is {0}, using {1} for subcurve calculation",
+				sourceGeometry.GeometryType,
+				sourceFootprint != null ? "robust footprint" : "source geometry");
+
 			// calculate classic subcurves
 			var classicCurves = new List<CutSubcurve>();
 
-			_standardSubcurveCalculator.CalculateSubcurves(sourceGeometry,
+			_standardSubcurveCalculator.CalculateSubcurves(effectiveSource,
 			                                               targetPolyline, classicCurves,
 			                                               trackCancel);
 
@@ -81,7 +102,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					(cutSubcurve.CanReshape ||
 					 cutSubcurve.IsReshapeMemberCandidate) &&
 					GeometryUtils.InteriorIntersects(
-						sourceGeometry,
+						effectiveSource,
 						GeometryUtils.GetHighLevelGeometry(cutSubcurve.Path));
 
 			List<CutSubcurve> usableClassicCurves =
@@ -91,21 +112,16 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			                 usableClassicCurves.Count,
 			                 classicCurves.Count);
 
-			IPolygon sourcePolygon = sourceGeometry.GeometryType ==
-			                         esriGeometryType.esriGeometryPolygon
-				                         ? (IPolygon) sourceGeometry
-				                         : GeometryFactory.CreatePolygon(sourceGeometry);
-
 			Stopwatch watch =
 				_msg.DebugStartTiming(
 					"Calculating additional cut lines using topological operator");
 
 			List<CutSubcurve> usableCutLines = CalculateUsableTopoOpCutLines(
-				sourcePolygon, targetPolyline, usableClassicCurves);
+				(IPolygon) effectiveSource, targetPolyline, usableClassicCurves);
 
-			if (sourcePolygon != sourceGeometry)
+			if (sourceFootprint != null)
 			{
-				Marshal.ReleaseComObject(sourcePolygon);
+				Marshal.ReleaseComObject(sourceFootprint);
 			}
 
 			_msg.DebugStopTiming(watch, "Calculated {0} additional cut lines",
@@ -145,25 +161,48 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			// TODO: Consider using the correct Z-source also for the cut line calculation for correct feedback
 
-			// Try with simple cut - using brute force. 
+			// Try with simple cut - using brute force.
 			// in some situations it could yield additional curves (e.g. from-island-to-the-outside-and back-into-island)
-			IList<IGeometry> cutResults = CutGeometryUtils.TryCut(
-				sourcePolygon, targetPolyline, ChangeAlongZSource.Target);
-
-			if (cutResults != null && cutResults.Count > 0)
+			// NOTE: this is a best-effort enhancement on top of the classic curves. The brute-force
+			// cut can hit geometry cases the cookie-cutter does not support (e.g. a cut ring that
+			// touches the source outer ring in two points -> "Unexpected number of touching points"
+			// in RingOperator.GetContainingRingIndex). Such a failure must not abort the whole
+			// operation (the cut itself has already succeeded); just skip the additional lines.
+			try
 			{
-				// add those cut-lines that are not fully covered by classic curves within the source polygon
-				foreach (IPath trimmedPath in
-				         CutGeometryUtils.GetTrimmedCutLines(
-					         targetPolyline, sourcePolygon, cutResults)
-				        )
+				IList<IGeometry> cutResults = CutGeometryUtils.TryCut(
+					sourcePolygon, targetPolyline, ChangeAlongZSource.Target);
+
+				if (cutResults != null && cutResults.Count > 0)
 				{
-					if (! IsPathFullyCovered(trimmedPath, sourcePolygon,
-					                         usableClassicCurves))
+					// add those cut-lines that are not fully covered by classic curves within the source polygon
+					foreach (IPath trimmedPath in
+					         CutGeometryUtils.GetTrimmedCutLines(
+						         targetPolyline, sourcePolygon, cutResults)
+					        )
 					{
-						usableCutLines.Add(trimmedPath);
+						// A usable cut line must actually cross the source interior. After a cut
+						// (e.g. multipatch cookie-cut), the target ring coincides with the now
+						// shared boundary of a result piece; the brute-force cut re-detects it as a
+						// candidate even though it only traces the boundary. The classic path already
+						// rejects such lines via its InteriorIntersects filter, so apply the same gate
+						// here - otherwise the just-applied cut stays drawn green.
+						if (! IsPathFullyCovered(trimmedPath, sourcePolygon,
+						                         usableClassicCurves) &&
+						    GeometryUtils.InteriorIntersects(
+							    sourcePolygon,
+							    GeometryUtils.GetHighLevelGeometry(trimmedPath)))
+						{
+							usableCutLines.Add(trimmedPath);
+						}
 					}
 				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug(
+					"Additional (brute-force) cut lines could not be calculated. " +
+					"Continuing with the classic cut curves only.", e);
 			}
 
 			// TODO: Is proper Touch- and Candidate-calculation required? If yes, extract base method from ReshapableSubcurveCalculator

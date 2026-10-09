@@ -11,6 +11,63 @@ namespace ProSuite.Commons.Test.Geom
 	public class RingOperatorTest
 	{
 		[Test]
+		public void DuplicateTargetRingIsNotAddedTwice()
+		{
+			// Two squares sharing the edge x=100, plus a target ring that is IDENTICAL to
+			// the right square. The union walk merges everything into the 200x100 rectangle,
+			// i.e. the target is fully absorbed - but every one of its subcurves runs along
+			// the source, and SubcurveNavigator.RememberUsedTargetParts only marks a target
+			// part as used once the result deviates from the source. The target therefore
+			// stayed 'unprocessed' and was appended a SECOND time: the result got two
+			// overlapping exterior rings and its area was inflated by exactly the duplicated
+			// ring (30'000 instead of 20'000). TOP-5999.
+
+			var leftSquare = new List<Pnt3D>
+			                 {
+				                 new Pnt3D(0, 0, 9),
+				                 new Pnt3D(0, 100, 9),
+				                 new Pnt3D(100, 100, 9),
+				                 new Pnt3D(100, 0, 9)
+			                 };
+
+			var rightSquare = new List<Pnt3D>
+			                  {
+				                  new Pnt3D(100, 0, 9),
+				                  new Pnt3D(100, 100, 9),
+				                  new Pnt3D(200, 100, 9),
+				                  new Pnt3D(200, 0, 9)
+			                  };
+
+			const double tolerance = 0.01;
+
+			var source = new MultiPolycurve(
+				new[]
+				{
+					GeomTestUtils.CreateRing(leftSquare),
+					GeomTestUtils.CreateRing(rightSquare)
+				});
+
+			RingGroup target = GeomTestUtils.CreatePoly(rightSquare);
+
+			Assert.AreEqual(2 * 100 * 100, source.GetArea2D(), 0.001);
+			Assert.AreEqual(100 * 100, target.GetArea2D(), 0.001);
+
+			MultiLinestring union =
+				GeomTopoOpUtils.GetUnionAreasXY(source, target, tolerance);
+
+			Assert.AreEqual(1, union.PartCount);
+			Assert.AreEqual(2 * 100 * 100, union.GetArea2D(), 0.001);
+
+			// Vice versa to check symmetry:
+			MultiLinestring reverseUnion =
+				GeomTopoOpUtils.GetUnionAreasXY(target, source, tolerance);
+
+			// (the reverse direction leaves the two squares as separate, edge-touching
+			// exterior rings - what matters is that no area is counted twice)
+			Assert.AreEqual(2 * 100 * 100, reverseUnion.GetArea2D(), 0.001);
+		}
+
+		[Test]
 		public void TargetInsideIsland()
 		{
 			var ring1 = new List<Pnt3D>

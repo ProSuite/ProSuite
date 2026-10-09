@@ -1,5 +1,6 @@
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Content.QA.AlgorithmUI;
 using ProSuite.DdxEditor.Content.QA.QCon;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.ItemViews;
@@ -22,6 +23,20 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		                                    [NotNull] TableState tableStateQSpec,
 		                                    [NotNull] TableState tableStateIssueFilter)
 		{
+			// Every control creation starts from a clean item; the algorithm branch
+			// below re-installs whatever callbacks it needs. Without this reset, stale
+			// callbacks from a previous editor (e.g. algorithm mode) survive a switch
+			// to the classic editor and corrupt persistence/validation.
+			item.PreparePersistenceCallback = null;
+			item.PrepareValidationCallback = null;
+			item.WebHelpDescriptorProvider = null;
+
+			if (modelBuilder.UseAlgorithmUi)
+			{
+				return modelBuilder.AlgorithmEditorUi.CreateQualityConditionControl(
+					item, itemNavigation, modelBuilder, tableStateQSpec, tableStateIssueFilter);
+			}
+
 			// ReSharper disable once JoinDeclarationAndInitializer
 			QualityConditionControl control;
 
@@ -54,6 +69,18 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 		                                    [NotNull] CoreDomainModelItemModelBuilder modelBuilder,
 		                                    [NotNull] TableState tableState)
 		{
+			// See the QualityConditionItem overload above: reset before branching so
+			// callbacks from a previous editor never leak into the new control.
+			item.PreparePersistenceCallback = null;
+			item.PrepareValidationCallback = null;
+			item.WebHelpDescriptorProvider = null;
+
+			if (modelBuilder.UseAlgorithmUi)
+			{
+				return modelBuilder.AlgorithmEditorUi.CreateInstanceConfigurationControl(
+					item, itemNavigation, modelBuilder, tableState);
+			}
+
 			// ReSharper disable once JoinDeclarationAndInitializer
 			InstanceConfigurationControl control;
 

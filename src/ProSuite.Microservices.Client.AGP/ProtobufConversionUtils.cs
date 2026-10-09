@@ -635,7 +635,10 @@ public static class ProtobufConversionUtils
 			//       the data store. This shall work in every case if the service is local. If the service is remote
 			//       the path is useless (unless it is an FGDB on a UNC path that can be seen by the server)
 			// -> Use data-verification (if no unsupported tests are included)
-			result.Path = datastore.GetPath().AbsoluteUri;
+			// A datastore without a path (such as an in-memory geodatabase) results in an
+			// empty path, which the server side handles like a missing path.
+			result.Path = WorkspaceUtils.GetDatastorePath(datastore)?.AbsoluteUri ??
+			              string.Empty;
 		}
 		// The connection properties are useful, but the password is encrypted. Consider using the password
 		// stored in the DDX - look it up by Instance/Database/User (or just Instance/Database) from all connection providers.

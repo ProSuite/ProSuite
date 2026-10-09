@@ -20,29 +20,46 @@ public static class PickerUtils
 {
 	#region move, refactor
 
-	public static Uri GetImagePath(esriGeometryType? geometryType)
+	[NotNull]
+	public static Uri GetImagePath([NotNull] BasicFeatureLayer layer)
 	{
+		Assert.ArgumentNotNull(layer, nameof(layer));
+
+		if (layer is AnnotationLayer)
+		{
+			return new Uri(
+				@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/Annotation.png");
+		}
+
+		var geometryType = layer.ShapeType;
+
 		// todo: daro introduce image for unknown type
 		//if (geometryType == null)
 		//{
 		//}
+
+		return GetImagePath(geometryType);
+	}
+
+	public static Uri GetImagePath(esriGeometryType? geometryType)
+	{
 		switch (geometryType)
 		{
 			case esriGeometryType.esriGeometryPoint:
 			case esriGeometryType.esriGeometryMultipoint:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.png");
 			case esriGeometryType.esriGeometryLine:
 			case esriGeometryType.esriGeometryPolyline:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.png");
 			case esriGeometryType.esriGeometryPolygon:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.bmp",
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.png",
 					UriKind.Absolute);
 			case esriGeometryType.esriGeometryMultiPatch:
 				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.bmp");
+					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.png");
 			default:
 				throw new ArgumentOutOfRangeException(
 					$"Unsupported geometry type: {geometryType}");
@@ -230,8 +247,9 @@ public static class PickerUtils
 
 			case PickerMode.None:
 				return new List<IPickableItem>();
+
 			default:
-				throw new ArgumentOutOfRangeException();
+				throw new NotSupportedException($"Unknown {nameof(PickerMode)}");
 		}
 	}
 
@@ -266,42 +284,6 @@ public static class PickerUtils
 	}
 
 	#endregion
-
-	/// <summary>
-	/// Gets the count of features with the lowest non-empty geometry dimension.
-	/// </summary>
-	/// <param name="layerSelection">The layer selections</param>
-	/// <returns>The number of features with the lowest non-empty dimension.</returns>
-	public static int GetLowestGeometryDimensionFeatureCount(
-		[NotNull] IEnumerable<FeatureSelectionBase> layerSelection)
-	{
-		var count = 0;
-
-		// Initialize with sentinel value to detect the first dimension
-		int shapeDimension = -1;
-
-		foreach (FeatureSelectionBase selection in
-		         layerSelection.OrderBy(fcs => fcs.ShapeDimension))
-		{
-			if (shapeDimension < selection.ShapeDimension)
-			{
-				// If we've already counted features at a lower dimension, return that count
-				if (count > 0)
-				{
-					return count;
-				}
-
-				// If there are no rows at the current dimension, count objects in the next one
-				shapeDimension = selection.ShapeDimension;
-			}
-
-			// Add all features of the current dimension to the count
-			count += selection.GetCount();
-		}
-
-		// Return the total count (may be 0 if no features were found)
-		return count;
-	}
 
 	/// <summary>
 	/// Gets all features from the specified layer selections with the lowest dimension that

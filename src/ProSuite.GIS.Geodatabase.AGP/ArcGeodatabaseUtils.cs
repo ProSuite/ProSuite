@@ -59,7 +59,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 			ArcTable result = databaseTable is FeatureClass featureClass
 				                  ? new ArcFeatureClass(featureClass, eagerPropertyCaching)
-				                  : new ArcTable(proTable, eagerPropertyCaching);
+				                  : new ArcTable(databaseTable, eagerPropertyCaching);
 
 			existingWorkspace?.Cache(result);
 
@@ -70,17 +70,14 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			[NotNull] FeatureClass proFeatureClass,
 			bool eagerPropertyCaching = false)
 		{
-			return (ArcFeatureClass) ToArcTable((Table) proFeatureClass, eagerPropertyCaching);
+			return (ArcFeatureClass) ToArcTable(proFeatureClass, eagerPropertyCaching);
 		}
 
 		public static ArcRow ToArcRow([NotNull] Row proRow,
 		                              [CanBeNull] ITable parent = null,
 		                              bool cacheValues = false)
 		{
-			if (parent == null)
-			{
-				parent = ToArcTable(proRow.GetTable(), cacheValues);
-			}
+			parent ??= ToArcTable(proRow.GetTable(), cacheValues);
 
 			return ArcRow.Create(proRow, parent, cacheValues);
 		}

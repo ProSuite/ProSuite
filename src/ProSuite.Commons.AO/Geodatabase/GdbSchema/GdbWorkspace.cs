@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -226,7 +227,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		IEnumDatasetName IWorkspace.get_DatasetNames(esriDatasetType datasetType)
 		{
-			throw new NotImplementedException();
+			return new GdbDatasetNameEnum(
+				_backingDataStore.GetDatasetMonikers(datasetType)
+				                 .Select(moniker =>
+					                         GdbDatasetNameFactory
+						                         .CreateDatasetName(this, moniker)));
 		}
 
 		public string PathName { get; }

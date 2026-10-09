@@ -794,6 +794,30 @@ namespace ProSuite.DomainServices.AO.QA
 			_cancellationTokenSource ??
 			(_cancellationTokenSource = new CancellationTokenSource());
 
+		// Reports and the final response still use these references.
+		protected void ReleaseRunReferences()
+		{
+			_verificationContextIssueRepository = null;
+			_datasetResolver = null;
+			_externalIssueRepository = null;
+			_verificationReportBuilder = null;
+			_verificationContext = null;
+			_testPerimeter = null;
+			Parameters = null;
+			_selection = null;
+			_objectSelection = null;
+			_qualityConditions = null;
+			_verificationElements = null;
+			_lastInvolvedRowsReferenceGeometry = null;
+			_lastReferenceGeometry = null;
+			_verifiedVectorDatasets = null;
+			_locationBasedQualitySpecification = null;
+			ProgressStreamer = null;
+
+			_cancellationTokenSource?.Dispose();
+			_cancellationTokenSource = null;
+		}
+
 		public string CancellationMessage { get; set; }
 
 		private void LogVerificationParameters()

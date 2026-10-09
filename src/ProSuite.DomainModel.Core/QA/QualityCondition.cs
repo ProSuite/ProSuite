@@ -477,19 +477,24 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 		}
 
-		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues()
+		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues(
+			List<InstanceConfiguration> alreadyVisitedConfigurations)
 		{
 			foreach (IssueFilterConfiguration issueFilterConfiguration in
 			         IssueFilterConfigurations)
 			{
 				foreach (Dataset dataset in issueFilterConfiguration.GetDatasetParameterValues(
-					         includeReferencedProcessors: true))
+					         includeReferencedProcessors: true,
+					         includeSourceDatasets: false,
+					         excludeReferenceDatasets: false,
+					         alreadyVisitedConfigurations: alreadyVisitedConfigurations))
 				{
 					yield return dataset;
 				}
 			}
 
-			foreach (Dataset dataset in base.EnumReferencedDatasetParameterValues())
+			foreach (Dataset dataset in
+			         base.EnumReferencedDatasetParameterValues(alreadyVisitedConfigurations))
 			{
 				yield return dataset;
 			}

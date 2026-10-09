@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.Signatures;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 
@@ -31,6 +32,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_1))]
+		[NotAScalarListRedirect] // reservedNamesString is a token string (GetTokens)
 		public QaSchemaReservedFieldNamesDefinition(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
 			ITableSchemaDef table,

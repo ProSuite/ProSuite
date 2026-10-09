@@ -42,6 +42,19 @@ namespace ProSuite.AGP.QA.ProPlugins
 			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
+		/// <summary>
+		/// Returns the perimeter to verify, derived from the visible extent, for example
+		/// intersected with the current work unit.
+		/// </summary>
+		/// <param name="visibleExtent">The visible extent of the active map view.</param>
+		/// <returns>The perimeter to verify, or null if nothing is to be verified. In that
+		/// case the implementation has informed the user.</returns>
+		[CanBeNull]
+		protected virtual Geometry GetPerimeterToVerify([NotNull] Envelope visibleExtent)
+		{
+			return visibleExtent;
+		}
+
 		protected override Task<bool> OnClickAsyncCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
@@ -73,20 +86,23 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return Task.FromResult(false);
 			}
 
+			Geometry perimeter = GetPerimeterToVerify(mapView.Extent);
+
+			if (perimeter == null)
+			{
+				return Task.FromResult(false);
+			}
+
 			var progressTracker = new QualityVerificationProgressTracker
 			                      {
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			Envelope currentExtent = mapView.Extent;
-
-			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification);
-
 			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController =
-				new AgpBackgroundVerificationController(WorkListOpener, mapView, currentExtent,
+				new AgpBackgroundVerificationController(WorkListOpener, mapView, perimeter,
 				                                        spatialRef,
 				                                        SessionContext.VerificationEnvironment,
 				                                        SaveAction);
@@ -95,7 +111,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
+					VerificationAction = () => Verify(perimeter, progressTracker),
 					ApplicationController = appController
 				};
 
@@ -111,9 +127,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 		}
 
 		private async Task<ServiceCallStatus> Verify(
-			[NotNull] Envelope currentExtent,
-			[NotNull] QualityVerificationProgressTracker progressTracker,
-			string resultsPath)
+			[NotNull] Geometry perimeter,
+			[NotNull] QualityVerificationProgressTracker progressTracker)
 		{
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
@@ -125,7 +140,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							currentExtent, progressTracker, "visible extent", resultsPath);
+							perimeter, progressTracker, "visible extent");
 					},
 					BackgroundProgressor.None);
 

@@ -409,7 +409,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		public new IFeatureClass Class => (IFeatureClass) base.Class;
 
-		public IGeometry ShapeCopy
+		public virtual IGeometry ShapeCopy
 		{
 			get
 			{
@@ -424,7 +424,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
-		public IGeometry Shape
+		public virtual IGeometry Shape
 		{
 			get
 			{
@@ -468,7 +468,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			}
 		}
 
-		public IEnvelope Extent
+		public virtual IEnvelope Extent
 		{
 			get
 			{

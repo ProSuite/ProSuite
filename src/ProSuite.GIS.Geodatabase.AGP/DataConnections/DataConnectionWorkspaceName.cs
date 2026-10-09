@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -58,32 +58,49 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	{
 		Connector connector = datastore.GetConnector();
 
-		WorkspaceFactory workspaceFactory;
-
-		switch (connector)
+		if (! WorkspaceUtils.TryGetWorkspaceFactory(
+			    connector, out WorkspaceFactory workspaceFactory))
 		{
-			case DatabaseConnectionProperties:
-				workspaceFactory = WorkspaceFactory.SDE;
-				break;
-			case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
-				workspaceFactory = WorkspaceFactory.FileGDB;
-				break;
-			case FileSystemConnectionPath fileSystemConnection:
-				workspaceFactory = WorkspaceFactory.Shapefile;
-				break;
-			case MobileGeodatabaseConnectionPath mobileGeodatabaseConnectionPath:
-				workspaceFactory = WorkspaceFactory.SQLite;
-				break;
-			case PluginDatasourceConnectionPath pluginDatasourceConnectionPath:
-				workspaceFactory = WorkspaceFactory.Custom;
-				break;
-			default:
-				throw new NotImplementedException(
-					$"connector {connector.GetType()} is not implemented");
+			_msg.Debug($"No workspace factory for connector type {connector.GetType()} " +
+			           $"({WorkspaceUtils.GetDatastoreDisplayText(connector)})");
+
+			return null;
 		}
 
 		return new DataConnectionWorkspaceName(datastore.GetConnectionString(),
-		                                       workspaceFactory);
+		                                       workspaceFactory)
+		       {
+			       ConnectionFilePath = TryGetConnectionFilePath(datastore)
+		       };
+	}
+
+	/// <summary>
+	/// The original catalog path (e.g. an .sde connection file) the datastore was opened
+	/// from, if any. Preferred over <see cref="ConnectionString"/> when re-opening, because
+	/// it preserves the authentication mode (e.g. OSA) and credentials. The connection string
+	/// round-tripped from a live enterprise geodatabase can otherwise fail with
+	/// "invalid login account" on a fresh connection.
+	/// </summary>
+	[CanBeNull]
+	public string ConnectionFilePath { get; set; }
+
+	[CanBeNull]
+	private static string TryGetConnectionFilePath([NotNull] Datastore datastore)
+	{
+		try
+		{
+			string localPath = WorkspaceUtils.GetDatastorePath(datastore)?.LocalPath;
+
+			return ! string.IsNullOrEmpty(localPath) &&
+			       localPath.EndsWith(".sde", StringComparison.OrdinalIgnoreCase)
+				       ? localPath
+				       : null;
+		}
+		catch (Exception e)
+		{
+			_msg.Debug("Could not determine catalog path for datastore", e);
+			return null;
+		}
 	}
 
 	public DataConnectionWorkspaceName(CIMStandardDataConnection standardConnection)
@@ -108,6 +125,19 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 
 	public Datastore OpenDatastore()
 	{
+		// Prefer the original .sde connection file: it preserves the authentication mode
+		// (e.g. OSA) and credentials. Re-opening from the round-tripped connection string can
+		// fail with "invalid login account" (stale/mismatched DBMS credentials).
+		if (! string.IsNullOrEmpty(ConnectionFilePath) && File.Exists(ConnectionFilePath))
+		{
+			_msg.DebugFormat("Opening datastore from connection file {0}", ConnectionFilePath);
+			return WorkspaceUtils.OpenGeodatabase(ConnectionFilePath);
+		}
+
+		_msg.DebugFormat(
+			"No usable connection file (path='{0}'); opening from connection string",
+			ConnectionFilePath);
+
 		Connector connector = WorkspaceUtils.CreateConnector(FactoryType, ConnectionString);
 
 		return WorkspaceUtils.OpenDatastore(connector);
@@ -157,13 +187,17 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 					return esriWorkspaceType.esriFileSystemWorkspace;
 				default:
 
-					throw new ArgumentOutOfRangeException();
+					throw new ArgumentOutOfRangeException(
+						nameof(FactoryType), FactoryType,
+						$"No workspace type for workspace factory {FactoryType}");
 			}
 		}
 	}
 
 	public string Category => throw new NotImplementedException();
 	public string ConnectionString { get; set; }
+
+	public bool IsFeatureService => FactoryType == WorkspaceFactory.FeatureService;
 
 	public void ChangeVersion(string newVersionName)
 	{

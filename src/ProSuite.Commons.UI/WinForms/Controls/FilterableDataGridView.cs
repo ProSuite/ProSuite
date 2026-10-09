@@ -103,10 +103,13 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			CurrencyManager currencyManager = null; // This fixes ProSuite #236
 			try
 			{
-				BindingContext bindingContext = Assert.NotNull(BindingContext);
+				BindingContext bindingContext = BindingContext;
 
-				currencyManager = (CurrencyManager) bindingContext[DataSource];
-				currencyManager.SuspendBinding();
+				if (bindingContext != null && DataSource != null)
+				{
+					currencyManager = (CurrencyManager) bindingContext[DataSource];
+					currencyManager.SuspendBinding();
+				}
 
 				foreach (DataGridViewRow row in Rows)
 				{

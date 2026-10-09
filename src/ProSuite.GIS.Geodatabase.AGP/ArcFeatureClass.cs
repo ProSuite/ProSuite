@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -29,29 +27,23 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		[CanBeNull] private string _lengthFieldName;
 		[CanBeNull] private string _areaFieldName;
 
+		[CanBeNull] private ISpatialReference _spatialReference;
+		[CanBeNull] private IEnvelope _extent;
+
 		public ArcFeatureClass([NotNull] FeatureClass proFeatureClass,
 		                       bool cachePropertiesEagerly = false)
 			: base(proFeatureClass, cachePropertiesEagerly: false)
 		{
 			_proFeatureClass = proFeatureClass;
 
-			// NOTE: Joined feature classes have a FeatureClassDefinition that fails when used in
-			//       new ShapeDescription(featureClassDefinition). -> Use un-joined geometry definition.
+			// Query tables can expose qualified shape-field names in their feature-class
+			// definition. Passing such a definition into ShapeDescription(featureClassDefinition)
+			// fails because Description.SetName() rejects '.' characters. The ArcGeometryDef only
+			// needs geometry type, spatial reference, Z and M, so read them directly.
 			FeatureClassDefinition featureClassDefinition =
-				(FeatureClassDefinition) (proFeatureClass.IsJoinedTable()
-					                          ? DatasetUtils.GetDatabaseTable(proFeatureClass)
-					                                        .GetDefinition()
-					                          : (FeatureClassDefinition) ProTableDefinition);
+				(FeatureClassDefinition) ProTableDefinition;
 
-			if (featureClassDefinition.GetShapeType() != GeometryType.Unknown)
-			{
-				GeometryDefinition =
-					new ArcGeometryDef(new ShapeDescription(featureClassDefinition));
-			}
-			else
-			{
-				GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
-			}
+			GeometryDefinition = new ArcGeometryDef(featureClassDefinition);
 
 			// Only cache properties after the GeometryDefinition is set to avoid null pointer in field caching!
 			if (cachePropertiesEagerly)
@@ -262,19 +254,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		void IClass.AddField(IField field)
 		{
 			throw new NotImplementedException();
-			//ArcField arcField = (ArcField)field;
-
-			//Field proField = arcField.ProField;
-
-			//_aoFeatureClass.AddField(proField);
 		}
 
 		void IClass.DeleteField(IField field)
 		{
 			throw new NotImplementedException();
-
-			//ArcField arcField = (ArcField)field;
-			//_aoFeatureClass.DeleteField(arcField.ProField);
 		}
 
 		//void IClass.AddIndex(IIndex Index)
@@ -287,13 +271,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		//	_aoFeatureClass.DeleteIndex(Index);
 		//}
 
-		//public IFields Fields => new ArcFields(_aoFeatureClass.Fields);
-
-		////public IIndexes Indexes => ((IClass)_aoFeatureClass).Indexes;
-
-		//public bool HasOID => _aoFeatureClass.HasOID;
-
-		//public string OIDFieldName => _aoFeatureClass.OIDFieldName;
+		//public IIndexes Indexes => ((IClass)_aoFeatureClass).Indexes;
 
 		//public UID CLSID => _aoFeatureClass.CLSID;
 
@@ -302,10 +280,6 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		//public object Extension => _aoFeatureClass.Extension;
 
 		//public IPropertySet ExtensionProperties => _aoFeatureClass.ExtensionProperties;
-
-		//public int ObjectClassID => _aoFeatureClass.ObjectClassID;
-
-		//public string AliasName => _aoFeatureClass.AliasName;
 
 		private FeatureClassDefinition ProFeatureClassDefinition =>
 			(FeatureClassDefinition) ProTableDefinition;
@@ -341,6 +315,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 					// GOTOP-469: In some data models the GetShapeField() does not return the actual
 					//            field name, but the model name or even the alias.
 					int shapeFieldIndex = FindField(_shapeFieldName);
+
 					Assert.False(shapeFieldIndex < 0, $"{_shapeFieldName} not found in {Name}");
 
 					_shapeFieldName = Fields[shapeFieldIndex].Name;
@@ -348,6 +323,20 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 				return _shapeFieldName;
 			}
+		}
+
+		/// <summary>
+		/// Sets the shape field name explicitly, bypassing the <see cref="ShapeFieldName"/>
+		/// GetShapeField()-based resolution. Used for relationship-class query tables, whose
+		/// qualified shape field name is known a priori (see
+		/// <see cref="RelationshipClassJoinUtils.CreateQueryDef"/> /
+		/// <see cref="ArcWorkspace.OpenQueryTable"/>).
+		/// </summary>
+		internal void SetShapeFieldName([NotNull] string shapeFieldName)
+		{
+			Assert.ArgumentNotNullOrEmpty(shapeFieldName, nameof(shapeFieldName));
+
+			_shapeFieldName = shapeFieldName;
 		}
 
 		public IField AreaField
@@ -393,10 +382,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#region Implementation of IGeoDataset
 
+		// IGeoDataset properties are cached but eagerly
 		public ISpatialReference SpatialReference =>
-			new ArcSpatialReference(ProFeatureClassDefinition.GetSpatialReference());
+			_spatialReference ??=
+				new ArcSpatialReference(ProFeatureClassDefinition.GetSpatialReference());
 
-		public IEnvelope Extent => new ArcEnvelope(ProFeatureClassDefinition.GetExtent());
+		public IEnvelope Extent =>
+			_extent ??= new ArcEnvelope(ProFeatureClassDefinition.GetExtent());
 
 		#endregion
 
@@ -410,14 +402,11 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			return Fields.FirstOrDefault(f => f.Name.Equals(fieldName));
 		}
 
-		public void Dispose()
+		public new void Dispose()
 		{
-			// Remove ourselves from the parent workspace's table cache first (see ArcTable.Dispose).
-			RemoveFromWorkspaceCache();
+			base.Dispose();
 
 			_proFeatureClass?.Dispose();
-			ProFeatureClassDefinition.Dispose();
-			ProTable.Dispose();
 		}
 	}
 }

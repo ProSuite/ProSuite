@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
@@ -26,6 +27,25 @@ public class SketchStack
 
 	private const int MaxSketchCount = 10;
 
+	// Number of sketch stacks that are currently replaying. Written on the UI thread, read on
+	// the background thread that raises the sketch events.
+	private static int _replayingStackCount;
+
+	/// <summary>
+	/// Gets a value indicating whether any sketch stack is currently replaying its sketches.
+	/// Another stack must not record the replayed sketches as new states: the replay starts
+	/// with older states, and a replay that is interrupted never reaches the latest state.
+	/// </summary>
+	public static bool IsAnyStackReplayingSketches =>
+		Volatile.Read(ref _replayingStackCount) > 0;
+
+	/// <summary>
+	/// Raised on the UI thread after a stack has replayed its sketches completely, with the
+	/// replayed stack and the replayed sketches (oldest first). Other stacks do not record the
+	/// replayed sketches, but they can adopt them with <see cref="ReplaceSketches"/>.
+	/// </summary>
+	public static event Action<SketchStack, IReadOnlyList<Geometry>> SketchesReplayed;
+
 	/// <summary>
 	/// Gets the number of sketch states currently stored.
 	/// </summary>
@@ -47,6 +67,7 @@ public class SketchStack
 	/// sketch is already on top of the stack.
 	/// </summary>
 	/// <param name="sketch">The sketch geometry to add</param>
+	/// <param name="knownZPoints">Point with known Z values.</param>
 	public bool TryPush(Geometry sketch,
 	                    IReadOnlyCollection<MapPoint> knownZPoints = null)
 	{
@@ -100,7 +121,7 @@ public class SketchStack
 
 			if (double.IsNaN(lastPoint.Z) && noNanOnStack)
 			{
-				_msg.Warn(
+				_msg.Info(
 					"Sketch point could be missing in sketch (Repressed from stack due to NaN-Z). " +
 					"MAKE SURE TO CHECK sketch when finishing sketch after switching to stereo");
 				return false;
@@ -162,6 +183,13 @@ public class SketchStack
 
 			for (int partIndex = 0; partIndex < builder.PartCount; partIndex++)
 			{
+				if (builder.GetSegmentCount(partIndex) == 0)
+				{
+					// Degenerate part with just a single (probably unfinished) point:
+					// there is no segment to derive its coordinates from.
+					continue;
+				}
+
 				int pointCount = builder.GetPointCount(partIndex);
 
 				for (int pointIndex = 0; pointIndex < pointCount; pointIndex++)
@@ -249,25 +277,44 @@ public class SketchStack
 	/// <summary>
 	/// Handles an undo operation by removing the most recent sketch from the stack.
 	/// </summary>
-	/// <returns>True if a sketch was removed, false if the stack was empty</returns>
-	public bool HandleUndo()
+	/// <param name="currentSketch">The sketch after the undo</param>
+	/// <returns>True if the undo was handled, false if the stack was empty</returns>
+	public bool HandleUndo([CanBeNull] Geometry currentSketch)
 	{
 		if (_sketches.Count == 0)
 		{
 			return false;
 		}
 
+		// ArcGIS Pro raises the sketch modified event twice for one undo. After the first event
+		// the most recent state already equals the sketch after the undo: nothing to remove.
+		if (currentSketch != null && _sketches.Peek().IsEqual(currentSketch))
+		{
+			_msg.VerboseDebug(() => "HandleUndo: most recent state equals the current sketch");
+			return true;
+		}
+
 		_sketches.Pop();
 		_msg.VerboseDebug(() => $"HandleUndo pop: {_sketches.Count} sketches remaining");
 
-		// TODO: Understand and explain why this is necessary (it is!). Probably some previous sketch remains?
-		if (_sketches.Count == 1)
+		return true;
+	}
+
+	/// <summary>
+	/// Replaces all sketch states by the specified sketches, e.g. by the sketches that another
+	/// stack has just replayed.
+	/// </summary>
+	/// <param name="sketches">The sketches, oldest first</param>
+	public void ReplaceSketches([NotNull] IEnumerable<Geometry> sketches)
+	{
+		_sketches.Clear();
+
+		foreach (Geometry sketch in sketches)
 		{
-			_sketches.Clear();
-			_msg.VerboseDebug(() => "Cleared sketches after undo (original logic)");
+			_sketches.Push(sketch);
 		}
 
-		return true;
+		_msg.VerboseDebug(() => $"Replaced sketch states by {_sketches.Count} replayed sketches");
 	}
 
 	/// <summary>
@@ -303,6 +350,9 @@ public class SketchStack
 			return false;
 		}
 
+		// Clear() can reset IsReplayingSketches during the replay, so count separately:
+		bool isCounted = false;
+
 		try
 		{
 			Stopwatch watch = Stopwatch.StartNew();
@@ -313,11 +363,22 @@ public class SketchStack
 				_sketches.Take(MaxSketchCount).Reverse().ToList();
 
 			IsReplayingSketches = true;
+			Interlocked.Increment(ref _replayingStackCount);
+			isCounted = true;
 
 			foreach (Geometry sketch in sketchesToReplay)
 			{
 				await mapView.SetCurrentSketchAsync(sketch);
 			}
+
+			if (! IsReplayingSketches)
+			{
+				// Cleared during the replay, e.g. because the tool was deactivated
+				_msg.VerboseDebug(() => "Replay was interrupted");
+				return false;
+			}
+
+			SketchesReplayed?.Invoke(this, sketchesToReplay);
 
 			// Trim the stack. Subsequent undo operations and future replays remain consistent.
 			// sketchesToReplay is already oldest-first, so re-pushing it rebuilds the stack.
@@ -346,6 +407,11 @@ public class SketchStack
 		finally
 		{
 			IsReplayingSketches = false;
+
+			if (isCounted)
+			{
+				Interlocked.Decrement(ref _replayingStackCount);
+			}
 		}
 	}
 
@@ -375,14 +441,22 @@ public class SketchStack
 	public bool ProcessSketchModification(bool isUndo, Geometry currentSketch,
 	                                      IReadOnlyCollection<MapPoint> knownZPoints = null)
 	{
-		if (IsReplayingSketches)
+		if (IsAnyStackReplayingSketches)
 		{
-			return false; // Don't record - this is a replay operation
+			// Don't record - this is a replay operation of this or of another stack. Another
+			// stack's replay starts with older states, and it can be interrupted before it
+			// reaches the latest state. See SketchesReplayed for adopting a complete replay.
+			return false;
 		}
 
 		if (isUndo && HasSketches)
 		{
-			HandleUndo();
+			// Recorded states have their NaN Zs replaced by known Zs, compare accordingly:
+			Geometry comparableSketch = currentSketch is Multipart multipart
+				                            ? HandleNanZs(multipart, knownZPoints)
+				                            : currentSketch;
+
+			HandleUndo(comparableSketch);
 			return false; // Don't record - undo was handled internally
 		}
 
