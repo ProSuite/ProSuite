@@ -29,6 +29,15 @@ namespace ProSuite.Microservices.Server.AO
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
+		/// The database type assumed for the workspaces of data provided by the client, whose
+		/// object class messages carry no database type. It sets the limits of the where clauses
+		/// sent to the client, for example the number of values per IN list. The default (an
+		/// unknown DBMS) gives safe but short IN lists, one client round trip per ~50 keys.
+		/// </summary>
+		public static WorkspaceDbType ClientDataWorkspaceDbType { get; set; } =
+			WorkspaceDbType.ArcSDE;
+
+		/// <summary>
 		/// Converts the specified messages into a list of features that reference
 		/// a GdbTable or GdbFeatureClass which, however have null workspaces.
 		/// </summary>
@@ -109,7 +118,8 @@ namespace ProSuite.Microservices.Server.AO
 
 					container = new GdbTableContainer();
 
-					workspace = new GdbWorkspace(container, workspaceHandle);
+					workspace = new GdbWorkspace(container, workspaceHandle,
+					                             ClientDataWorkspaceDbType);
 				}
 				else
 				{
