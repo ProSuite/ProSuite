@@ -105,7 +105,9 @@ namespace ProSuite.Commons.AO.Test.Geometry.CreateFootprint
 			Assert.IsNotNull(footprintGeom);
 
 			Assert.AreEqual(75.441285, footprintGeom.Length, 0.0001);
-			Assert.AreEqual(349.015, ((IArea) footprintGeom).Area, 0.005);
+			// The union of the rings has 349.0102. The removal of the segments shorter than
+			// sqrt(2) * tolerance and the final simplify each change it by a few cm2.
+			Assert.AreEqual(349.01, ((IArea) footprintGeom).Area, 0.01);
 
 			IPolygon footprintAo =
 				CreateFootprintUtils.GetFootprintAO(multiPatch);

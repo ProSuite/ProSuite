@@ -471,6 +471,11 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			{
 				footprint =
 					SimplificationUtils.SimplifyRingRelationships(footprint, outputTolerance);
+
+				// Everything else that is not simple at the output tolerance: separate rings
+				// closer to each other than that, segments shorter than that.
+				footprint = SimplificationUtils.SimplifyAtTolerance(footprint, xyTolerance,
+				                                                    outputTolerance);
 			}
 
 			IPolygon footprintPoly =
