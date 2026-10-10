@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.Geom
 {
@@ -286,14 +287,77 @@ namespace ProSuite.Commons.Geom
 
 				if (touchPoints.Count > 2)
 				{
-					// TODO: Cluster by point, build pairs
+					// The ring touches itself in several places, or several times in the
+					// same place. Split off the loop between one pair of touch points that
+					// refer to each other; the caller simplifies the resulting rings again
+					// and thereby finds the remaining touch points.
+					if (TryGetTouchPointPair(touchPoints, ring.SegmentCount,
+					                         out IntersectionPoint3D first,
+					                         out IntersectionPoint3D second))
+					{
+						var boundaryLoop = new BoundaryLoop(first, second, ring, true);
+
+						replacement = new List<Linestring>
+						              { boundaryLoop.Loop1, boundaryLoop.Loop2 };
+
+						return true;
+					}
+
 					_msg.WarnFormat(
-						"Multiple boundary loops or otherwise unexpected self-intersections in {0}",
-						ring.Segments);
+						"Unexpected self-intersections in ring ({0}): {1}", ring,
+						StringUtils.Concatenate(touchPoints, "; "));
 				}
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Finds two touch points of a ring with itself that describe the same touch: the
+		/// ring vertex of each one is the vertex the other one touches.
+		/// </summary>
+		private static bool TryGetTouchPointPair(
+			[NotNull] IList<IntersectionPoint3D> touchPoints,
+			int segmentCount,
+			out IntersectionPoint3D first,
+			out IntersectionPoint3D second)
+		{
+			for (var i = 0; i < touchPoints.Count; i++)
+			{
+				for (int j = i + 1; j < touchPoints.Count; j++)
+				{
+					IntersectionPoint3D a = touchPoints[i];
+					IntersectionPoint3D b = touchPoints[j];
+
+					if (IsSameRingVertex(a.VirtualSourceVertex, b.VirtualTargetVertex,
+					                     segmentCount) &&
+					    IsSameRingVertex(a.VirtualTargetVertex, b.VirtualSourceVertex,
+					                     segmentCount))
+					{
+						first = a.VirtualSourceVertex <= b.VirtualSourceVertex ? a : b;
+						second = ReferenceEquals(first, a) ? b : a;
+
+						return true;
+					}
+				}
+			}
+
+			first = null;
+			second = null;
+
+			return false;
+		}
+
+		/// <summary>
+		/// Whether two positions along a closed ring are the same vertex. The start point
+		/// of the ring is both position 0 and position <paramref name="segmentCount"/>.
+		/// </summary>
+		private static bool IsSameRingVertex(double position1, double position2,
+		                                     int segmentCount)
+		{
+			double difference = Math.Abs(position1 - position2);
+
+			return difference < 1e-9 || Math.Abs(difference - segmentCount) < 1e-9;
 		}
 
 		#region Needles (zero-width spikes)

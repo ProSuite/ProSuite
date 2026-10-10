@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -181,6 +182,65 @@ namespace ProSuite.Commons.Test.Geom
 				               ring, _tolerance, RingSimplifyFlags.StepResult, results));
 
 			Assert.AreEqual(0, results.Count);
+		}
+
+		[Test]
+		public void CanSplitRingTouchingItselfInTwoPlaces()
+		{
+			// Three squares in a diagonal chain, connected in (10, 10) and in (20, 20).
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 30, 0),
+				                                new Pnt3D(30, 30, 0),
+				                                new Pnt3D(30, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance, RingSimplifyFlags.StepResult, results));
+
+			Assert.AreEqual(3, results.Count);
+			Assert.IsTrue(results.All(r => r.IsClosed));
+			Assert.IsTrue(results.All(r => Math.Abs(r.GetArea2D() - 100) < 0.001));
+		}
+
+		[Test]
+		public void CanSplitRingPassingThreeTimesThroughTheSamePoint()
+		{
+			// Two squares and a triangle that have only the point (10, 10) in common.
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(20, 5, 0),
+				                                new Pnt3D(15, 0, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance, RingSimplifyFlags.StepResult, results));
+
+			Assert.AreEqual(3, results.Count);
+			Assert.IsTrue(results.All(r => r.IsClosed));
+			Assert.AreEqual(237.5, results.Sum(r => r.GetArea2D()), 0.001);
 		}
 
 		[Test]
