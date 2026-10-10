@@ -41,6 +41,8 @@ public abstract class WorkItemStateRepository<TState, TDefinition> : IWorkItemSt
 
 	public int? CurrentIndex { get; set; }
 
+	public GdbObjectReference? CurrentItem { get; set; }
+
 	public void LoadAllStates()
 	{
 		ReadStatesByRow();

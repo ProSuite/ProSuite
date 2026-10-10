@@ -251,7 +251,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				_responseStream.WriteAsync(response);
+				LogFailedFinalWrite(_responseStream.WriteAsync(response));
 			}
 			catch (InvalidOperationException ex)
 			{
@@ -273,10 +273,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				// Re-try (only for final message)
 				Task.Delay(1000).Wait();
-				_responseStream.WriteAsync(response);
+				LogFailedFinalWrite(_responseStream.WriteAsync(response));
 			}
 
 			return finalStatus;
+		}
+
+		/// <summary>
+		/// The final write is not awaited. Grpc.Core reports invalid stream states (e.g. "Already
+		/// finished.") synchronously, but a failure after the write has started only faults the
+		/// task. Log it, otherwise it is lost as an unobserved task exception.
+		/// </summary>
+		private static void LogFailedFinalWrite([NotNull] Task writeTask)
+		{
+			writeTask.ContinueWith(
+				t => _msg.Warn("Error sending the final response to the client", t.Exception),
+				TaskContinuationOptions.OnlyOnFaulted);
 		}
 
 		private void WriteMessage(string text, int messageLevel)

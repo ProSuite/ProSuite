@@ -118,6 +118,11 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 		await base.OnEditCompletedAsyncCore(args);
 	}
 
+	protected override void AfterNoUsableSelection()
+	{
+		ResetDerivedGeometries();
+	}
+
 	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
 	                                                  CancelableProgressor progressor)
 	{

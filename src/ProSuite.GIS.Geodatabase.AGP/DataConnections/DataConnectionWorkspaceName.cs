@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -59,28 +58,13 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	{
 		Connector connector = datastore.GetConnector();
 
-		WorkspaceFactory workspaceFactory;
-
-		switch (connector)
+		if (! WorkspaceUtils.TryGetWorkspaceFactory(
+			    connector, out WorkspaceFactory workspaceFactory))
 		{
-			case DatabaseConnectionProperties:
-				workspaceFactory = WorkspaceFactory.SDE;
-				break;
-			case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
-				workspaceFactory = WorkspaceFactory.FileGDB;
-				break;
-			case FileSystemConnectionPath fileSystemConnection:
-				workspaceFactory = WorkspaceFactory.Shapefile;
-				break;
-			case MobileGeodatabaseConnectionPath mobileGeodatabaseConnectionPath:
-				workspaceFactory = WorkspaceFactory.SQLite;
-				break;
-			case PluginDatasourceConnectionPath pluginDatasourceConnectionPath:
-				workspaceFactory = WorkspaceFactory.Custom;
-				break;
-			default:
-				throw new NotImplementedException(
-					$"connector {connector.GetType()} is not implemented");
+			_msg.Debug($"No workspace factory for connector type {connector.GetType()} " +
+			           $"({WorkspaceUtils.GetDatastoreDisplayText(connector)})");
+
+			return null;
 		}
 
 		return new DataConnectionWorkspaceName(datastore.GetConnectionString(),
@@ -105,7 +89,7 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 	{
 		try
 		{
-			string localPath = datastore.GetPath()?.LocalPath;
+			string localPath = WorkspaceUtils.GetDatastorePath(datastore)?.LocalPath;
 
 			return ! string.IsNullOrEmpty(localPath) &&
 			       localPath.EndsWith(".sde", StringComparison.OrdinalIgnoreCase)
@@ -203,7 +187,9 @@ public class DataConnectionWorkspaceName : IWorkspaceName
 					return esriWorkspaceType.esriFileSystemWorkspace;
 				default:
 
-					throw new ArgumentOutOfRangeException();
+					throw new ArgumentOutOfRangeException(
+						nameof(FactoryType), FactoryType,
+						$"No workspace type for workspace factory {FactoryType}");
 			}
 		}
 	}

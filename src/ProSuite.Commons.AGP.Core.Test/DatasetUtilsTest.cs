@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -9,6 +10,7 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Hosting;
+using ProSuite.Commons.Testing;
 
 namespace ProSuite.Commons.AGP.Core.Test;
 
@@ -94,6 +96,40 @@ public class DatasetUtilsTest
 		//possible further tests
 		// - FC/Tables with joins
 		// - other workspaces (qualifiers)
+	}
+
+	[Test]
+	public void GetDatasetPath_IsNullForInMemoryFeatureClass()
+	{
+		// The test gdb is an in-memory geodatabase; its datasets have no catalog path.
+		// The SDK's Dataset.GetPath() returns null for them, which is what the
+		// [CanBeNull] annotation on GetDatasetPath makes explicit to callers.
+		using FeatureClass fc = _testGdb.OpenDataset<FeatureClass>("fc");
+		Assert.NotNull(fc);
+		Assert.Null(DatasetUtils.GetDatasetPath(fc));
+
+		using Table table = _testGdb.OpenDataset<Table>("tbl");
+		Assert.NotNull(table);
+		Assert.Null(DatasetUtils.GetDatasetPath(table));
+	}
+
+	[Test]
+	public void GetDatasetPath_IsPathForFileGeodatabaseFeatureClass()
+	{
+		// Counterpart to GetDatasetPath_IsNullForInMemoryFeatureClass: make sure the
+		// method does report a path where there is one.
+		string gdbPath =
+			TestDataPreparer.ExtractZip("can_get_rows_in_list.gdb.zip").GetPath();
+
+		using ArcGIS.Core.Data.Geodatabase fileGdb =
+			WorkspaceUtils.OpenGeodatabase(gdbPath);
+		using FeatureClass fc = fileGdb.OpenDataset<FeatureClass>("points");
+
+		Uri path = DatasetUtils.GetDatasetPath(fc);
+
+		Assert.NotNull(path);
+		Assert.AreEqual(Path.GetFullPath(Path.Combine(gdbPath, "points")),
+		                Path.GetFullPath(path.LocalPath));
 	}
 
 	private static ArcGIS.Core.Data.Geodatabase CreateTestGdb()

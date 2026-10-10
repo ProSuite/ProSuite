@@ -79,6 +79,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				           CreateModel(dataSource.OpenWorkspace(),
 				                       dataSource.DisplayName,
 				                       modelId,
+				                       dataSource.ID,
 				                       dataSource.DatabaseName,
 				                       dataSource.SchemaOwner,
 				                       referencedConditions));
@@ -114,12 +115,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 			[NotNull] IWorkspace workspace,
 			[NotNull] string modelName,
 			int workspaceId,
+			[NotNull] string dataSourceId,
 			[CanBeNull] string databaseName,
 			[CanBeNull] string schemaOwner,
-			[NotNull] IEnumerable<QualityConditionMsg> referencedConditions)
+			[NotNull] IList<QualityConditionMsg> referencedConditions)
 		{
 			DdxModel result = ModelFactory.CreateModel(workspace, modelName, workspaceId,
 			                                        databaseName, schemaOwner);
+
+			// A harvested model cannot tell a file catalog from any other polygon feature class.
+			// Where the condition list declares one, turn the harvested dataset into the catalog
+			// dataset it declares, so that the opener resolves its file-path field just like a
+			// DDX dataset's. The same step the XML factory makes, on the same seam.
+			IList<DatasetDeclaration> datasetDeclarations =
+				ProtoDataQualityUtils.GetDatasetDeclarations(dataSourceId, referencedConditions);
+
+			CatalogDatasetUtils.ApplyDeclarations(result, datasetDeclarations);
 
 			if (result.SpatialReferenceDescriptor == null)
 			{

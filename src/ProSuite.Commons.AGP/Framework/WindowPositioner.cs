@@ -7,11 +7,13 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using GeometryUtils = ProSuite.Commons.AGP.Core.Spatial.GeometryUtils;
 using Application = System.Windows.Application;
 using DisplayUtils = ProSuite.Commons.UI.WPF.DisplayUtils;
+using Matrix = System.Windows.Media.Matrix;
 
 namespace ProSuite.Commons.AGP.Framework;
 
@@ -22,6 +24,8 @@ public class WindowPositioner
 	private readonly List<Rect> _preferredAreas = new();
 	private readonly List<Rect> _areasToAvoid = new();
 	private readonly EvaluationMethod _method;
+	[CanBeNull] private readonly MapView _mapView;
+	private readonly bool _preferMapView;
 	private Window _window;
 	private Point _initialPosition;
 
@@ -56,23 +60,11 @@ public class WindowPositioner
 	                        EvaluationMethod method, int minimalLineOffset = 25)
 	{
 		_method = method;
-		Rect mapViewArea = GetMapViewScreenRect();
-		var boundingRects =
-			GetBoundingRectsScreen(featureToAvoid, layer, minimalLineOffset);
-		foreach (Rect rect in boundingRects)
-		{
-			// Restrict geometries to MapView area
-			rect.Intersect(mapViewArea);
-			if (! rect.IsEmpty)
-			{
-				_areasToAvoid.Add(rect);
-			}
-		}
+		_mapView = MapView.Active;
+		_preferMapView = placement == PreferredPlacement.MapView;
 
-		if (placement == PreferredPlacement.MapView)
-		{
-			_preferredAreas.Add(mapViewArea);
-		}
+		_areasToAvoid.AddRange(
+			GetBoundingRectsScreen(featureToAvoid, layer, minimalLineOffset));
 	}
 
 	/// <summary>
@@ -87,24 +79,12 @@ public class WindowPositioner
 	                        EvaluationMethod method, int lineOffset = 4)
 	{
 		_method = method;
-		Rect mapViewArea = GetMapViewScreenRect();
+		_mapView = MapView.Active;
+		_preferMapView = placement == PreferredPlacement.MapView;
+
 		foreach (var item in geometriesToAvoid)
 		{
-			var boundingRects = GetBoundingRectsScreen(item, lineOffset);
-			foreach (Rect rect in boundingRects)
-			{
-				// Restrict geometries to MapView area
-				rect.Intersect(mapViewArea);
-				if (! rect.IsEmpty)
-				{
-					_areasToAvoid.Add(rect);
-				}
-			}
-		}
-
-		if (placement == PreferredPlacement.MapView)
-		{
-			_preferredAreas.Add(mapViewArea);
+			_areasToAvoid.AddRange(GetBoundingRectsScreen(item, lineOffset));
 		}
 	}
 
@@ -117,13 +97,8 @@ public class WindowPositioner
 	                        EvaluationMethod method)
 	{
 		_method = method;
-
-		Rect mapViewArea = GetMapViewScreenRect();
-
-		if (placement == PreferredPlacement.MapView)
-		{
-			_preferredAreas.Add(mapViewArea);
-		}
+		_mapView = MapView.Active;
+		_preferMapView = placement == PreferredPlacement.MapView;
 	}
 
 	public WindowPositioner(List<Rect> preferredAreas,
@@ -138,10 +113,17 @@ public class WindowPositioner
 	// Sets the window to be positioned and changes its position on SizeChanged events.
 	// The initial position of the window is used as the desired position, i.e. the window
 	// is kept as close to its initial position as possible.
+	// Must be called on the UI thread.
 	public void SetWindow([NotNull] Window window, Point desiredPosition)
 	{
 		_window = window;
 		_initialPosition = desiredPosition;
+
+		if (_mapView != null)
+		{
+			RestrictToMapView(GetMapViewAt(desiredPosition, _mapView));
+		}
+
 		_window.SizeChanged += (sender, args) =>
 		{
 			if (window.Width is double.NaN || window.Height is double.NaN)
@@ -149,10 +131,15 @@ public class WindowPositioner
 				return;
 			}
 
-			var result = FindSuitablePosition(_initialPosition, _window.RenderSize.Width,
-			                                  _window.RenderSize.Height);
+			var result = FindSuitablePosition(
+				_initialPosition, _window.RenderSize.Width,
+				_window.RenderSize.Height);
 			_window.Left = result.X;
 			_window.Top = result.Y;
+
+			_msg.DebugFormat(
+				"Window moved to {0} (device independent pixels). Desired screen location: {1}, window size: {2}",
+				result, _initialPosition, _window.RenderSize);
 		};
 	}
 
@@ -169,9 +156,8 @@ public class WindowPositioner
 		{
 			desiredPosition = DisplayUtils.ToDeviceIndependentPixels(desiredPosition, ownerWindow);
 
-			var monitors = GetMonitorExtends(desiredPosition);
 			monitorsDeviceIndependent.AddRange(
-				monitors.Select(
+				GetMonitorExtends().Select(
 					rect => DisplayUtils.ToDeviceIndependentPixels(rect, ownerWindow)));
 
 			preferredAreasDeviceIndependent.AddRange(
@@ -187,32 +173,40 @@ public class WindowPositioner
 				// Prefer to put the window inside the client area of the main window
 				// Note that the window sizes are not accurate for maximized windows. However, they are
 				// not needed in this case because the monitor sizes are taken into account as well anyway.
-				preferredAreasDeviceIndependent.Add(new Rect(ownerWindow.Left, ownerWindow.Top,
-				                                             ownerWindow.ActualWidth,
-				                                             ownerWindow.ActualHeight));
+				preferredAreasDeviceIndependent.Add(
+					new Rect(
+						ownerWindow.Left, ownerWindow.Top,
+						ownerWindow.ActualWidth,
+						ownerWindow.ActualHeight));
 			}
 		}
 		else
 		{
-			monitorsDeviceIndependent = GetMonitorExtends(desiredPosition);
+			monitorsDeviceIndependent = GetMonitorExtends();
 			preferredAreasDeviceIndependent.AddRange(_preferredAreas);
 			areasToAvoidDeviceIndependent.AddRange(_areasToAvoid);
 		}
 
+		// The position and the monitors must be in the same unit for this comparison
+		monitorsDeviceIndependent = OrderByDistance(monitorsDeviceIndependent, desiredPosition);
+
 		// The window should be close to the initial position of the window.
 		var result =
-			FindPositionForObject(desiredPosition, windowWidth, windowHeight,
-			                      preferredAreasDeviceIndependent,
-			                      areasToAvoidDeviceIndependent, monitorsDeviceIndependent,
-			                      _method);
+			FindPositionForObject(
+				desiredPosition, windowWidth, windowHeight,
+				preferredAreasDeviceIndependent,
+				areasToAvoidDeviceIndependent, monitorsDeviceIndependent,
+				_method);
 		return result;
 	}
 
 	// Note that preferredAreas are assumed to be ordered such that the best area comes first (e.g. mapView area first, then client window)
-	private Point FindPositionForObject(Point desiredPosition, double objectWidth,
-	                                    double objectHeight, List<Rect> preferredAreas,
-	                                    List<Rect> areasToAvoid, List<Rect> monitors,
-	                                    EvaluationMethod method)
+	// The monitors are assumed to be ordered by their distance to the desired position.
+	// All arguments must be in the same unit.
+	public Point FindPositionForObject(Point desiredPosition, double objectWidth,
+	                                   double objectHeight, List<Rect> preferredAreas,
+	                                   List<Rect> areasToAvoid, List<Rect> monitors,
+	                                   EvaluationMethod method)
 	{
 		// Find a suitable position while ensuring that the object is kept completely on one monitor and inside a preferred area.
 		foreach (Rect monitor in monitors)
@@ -226,8 +220,9 @@ public class WindowPositioner
 
 				area.Intersect(monitor);
 
-				if (TryPlaceObjectInRect(desiredPosition, objectWidth, objectHeight, area,
-				                         areasToAvoid, out var pos))
+				if (TryPlaceObjectInRect(
+					    desiredPosition, objectWidth, objectHeight, area,
+					    areasToAvoid, out var pos))
 				{
 					return pos;
 				}
@@ -238,10 +233,23 @@ public class WindowPositioner
 		{
 			// No viable position found inside a preferred area (or no preferred area given). Try to simply
 			// put it somewhere on a monitor while still respecting areasToAvoid.
-			if (TryPlaceObjectInRect(desiredPosition, objectWidth, objectHeight, monitor,
-			                         areasToAvoid, out var result))
+			if (TryPlaceObjectInRect(
+				    desiredPosition, objectWidth, objectHeight, monitor,
+				    areasToAvoid, out var result))
 			{
 				return result;
+			}
+
+			// The search tries a limited number of positions. It misses the only possible
+			// position of an object that fits into the monitor without spare space.
+			Rect movedIntoMonitor =
+				new Rect(desiredPosition.X, desiredPosition.Y, objectWidth, objectHeight);
+			MoveInside(monitor, ref movedIntoMonitor);
+
+			if (monitor.Contains(movedIntoMonitor) &&
+			    ! IntersectsWithAny(movedIntoMonitor, areasToAvoid))
+			{
+				return movedIntoMonitor.TopLeft;
 			}
 		}
 
@@ -279,13 +287,16 @@ public class WindowPositioner
 					}
 
 					// Use the moved rect to estimate the minimal distance needed.
-					var distanceX = Math.Min(Math.Abs(desiredPosition.X - startingRect.Left),
-					                         Math.Abs(desiredPosition.X + objectWidth -
-					                                  startingRect.Right));
-					var distanceY = Math.Min(Math.Abs(desiredPosition.Y - startingRect.Top),
-					                         Math.Abs(
-						                         desiredPosition.Y + objectHeight -
-						                         startingRect.Bottom));
+					var distanceX = Math.Min(
+						Math.Abs(desiredPosition.X - startingRect.Left),
+						Math.Abs(
+							desiredPosition.X + objectWidth -
+							startingRect.Right));
+					var distanceY = Math.Min(
+						Math.Abs(desiredPosition.Y - startingRect.Top),
+						Math.Abs(
+							desiredPosition.Y + objectHeight -
+							startingRect.Bottom));
 					firstIteration = (int) Math.Sqrt(distanceX * distanceX + distanceY * distanceY);
 				}
 
@@ -314,8 +325,9 @@ public class WindowPositioner
 		for (int iteration = firstIteration;; ++iteration)
 		{
 			Queue<Point> pointsToLookAt = new();
-			AddNextPoints(desiredPosition, objectWidth, objectHeight, iteration,
-			              ref pointsToLookAt);
+			AddNextPoints(
+				desiredPosition, objectWidth, objectHeight, iteration,
+				ref pointsToLookAt);
 
 			// If no points are found, then we still do at least 50 iterations before giving up.
 			bool pointsWithinTargetFound = iteration < firstIteration + 50;
@@ -337,8 +349,9 @@ public class WindowPositioner
 				}
 
 				if (! positionFound ||
-				    IsNewPositionPreferred(pos, bestPosition, objectWidth, objectHeight,
-				                           desiredPosition))
+				    IsNewPositionPreferred(
+					    pos, bestPosition, objectWidth, objectHeight,
+					    desiredPosition))
 				{
 					bestPosition = pos;
 					positionFound = true;
@@ -366,8 +379,9 @@ public class WindowPositioner
 				break;
 
 			case EvaluationMethod.DistanceToRect:
-				AddNextPointsRectangle(origin, objectWidth, objectHeight, iteration,
-				                       ref pointsToLookAt);
+				AddNextPointsRectangle(
+					origin, objectWidth, objectHeight, iteration,
+					ref pointsToLookAt);
 				break;
 
 			default:
@@ -390,8 +404,10 @@ public class WindowPositioner
 
 		for (int i = 0; i < nrPoints; ++i)
 		{
-			pointsToLookAt.Enqueue(new Point(origin.X + iteration * Math.Cos(-angle),
-			                                 origin.Y + iteration * Math.Sin(-angle)));
+			pointsToLookAt.Enqueue(
+				new Point(
+					origin.X + iteration * Math.Cos(-angle),
+					origin.Y + iteration * Math.Sin(-angle)));
 			angle += deltaAngle;
 		}
 	}
@@ -416,15 +432,23 @@ public class WindowPositioner
 		double deltaY = (objectHeight + 2 * iteration) / nrPointsPerSide;
 		for (int i = 0; i < nrPointsPerSide; ++i)
 		{
-			pointsToLookAt.Enqueue(new Point(origin.X - objectWidth - iteration + i * deltaX,
-			                                 origin.Y + iteration));
-			pointsToLookAt.Enqueue(new Point(origin.X - objectWidth - iteration + i * deltaX,
-			                                 origin.Y - objectHeight - iteration));
+			pointsToLookAt.Enqueue(
+				new Point(
+					origin.X - objectWidth - iteration + i * deltaX,
+					origin.Y + iteration));
+			pointsToLookAt.Enqueue(
+				new Point(
+					origin.X - objectWidth - iteration + i * deltaX,
+					origin.Y - objectHeight - iteration));
 
-			pointsToLookAt.Enqueue(new Point(origin.X - objectWidth - iteration,
-			                                 origin.Y - objectHeight - iteration + i * deltaY));
-			pointsToLookAt.Enqueue(new Point(origin.X + iteration,
-			                                 origin.Y - objectHeight - iteration + i * deltaY));
+			pointsToLookAt.Enqueue(
+				new Point(
+					origin.X - objectWidth - iteration,
+					origin.Y - objectHeight - iteration + i * deltaY));
+			pointsToLookAt.Enqueue(
+				new Point(
+					origin.X + iteration,
+					origin.Y - objectHeight - iteration + i * deltaY));
 		}
 	}
 
@@ -510,8 +534,28 @@ public class WindowPositioner
 		return areasToAvoid.Any(rect => objRect.IntersectsWith(rect));
 	}
 
-	// The resulting list is sorted by proximity to focusPoint
-	private static List<Rect> GetMonitorExtends(Point focusPoint)
+	/// <summary>
+	/// Orders the rectangles by their distance to the position, the closest one first.
+	/// The rectangles and the position must be in the same unit.
+	/// </summary>
+	public static List<Rect> OrderByDistance([NotNull] IEnumerable<Rect> rectangles,
+	                                         Point position)
+	{
+		return rectangles.OrderBy(rect => DistanceToRectSquared(position, rect)).ToList();
+	}
+
+	/// <summary>
+	/// Gets the working area of the monitor that is closest to the position.
+	/// </summary>
+	/// <param name="screenPosition">The position in screen pixels</param>
+	/// <returns>The working area in screen pixels</returns>
+	public static Rect GetClosestMonitor(Point screenPosition)
+	{
+		return OrderByDistance(GetMonitorExtends(), screenPosition)[0];
+	}
+
+	// The monitor working areas in screen pixels
+	private static List<Rect> GetMonitorExtends()
 	{
 		List<Rect> screens = new();
 		foreach (var screen2 in Screen.AllScreens)
@@ -521,33 +565,113 @@ public class WindowPositioner
 			screens.Add(new Rect(rect.X, rect.Y, rect.Width, rect.Height));
 		}
 
-		screens.Sort((a, b) =>
-		{
-			double distanceA = DistanceToRectSquared(focusPoint, a);
-			double distanceB = DistanceToRectSquared(focusPoint, b);
-			return distanceA.CompareTo(distanceB);
-		});
-
 		return screens;
 	}
 
-	private static Rect GetMapViewScreenRect()
+	/// <summary>
+	/// Clips the areas to avoid to the map view and, if the map view is the preferred
+	/// placement, makes it the preferred area. Must be called on the UI thread.
+	/// </summary>
+	private void RestrictToMapView([NotNull] MapView mapView)
+	{
+		Rect mapViewArea = GetMapViewScreenRect(mapView);
+
+		_msg.DebugFormat("Screen rectangle of map view {0}: {1}", mapView.Map?.Name,
+		                 mapViewArea);
+
+		List<Rect> areasInMapView = new();
+		foreach (Rect rect in _areasToAvoid)
+		{
+			rect.Intersect(mapViewArea);
+			if (! rect.IsEmpty)
+			{
+				areasInMapView.Add(rect);
+			}
+		}
+
+		_areasToAvoid.Clear();
+		_areasToAvoid.AddRange(areasInMapView);
+
+		if (_preferMapView)
+		{
+			_preferredAreas.Add(mapViewArea);
+		}
+	}
+
+	/// <summary>
+	/// Gets the map view at the screen position, which is not necessarily the active map
+	/// view: the mouse can be over another map view when a command is started by its
+	/// keyboard shortcut. Must be called on the UI thread.
+	/// </summary>
+	/// <param name="screenPosition">The position in screen pixels</param>
+	/// <param name="activeMapView">The map view to return if it is at the position or if no
+	/// map view is at the position.</param>
+	[NotNull]
+	private static MapView GetMapViewAt(Point screenPosition, [NotNull] MapView activeMapView)
+	{
+		MapView visibleMapView = MapViewUtils.GetMapViewAt(screenPosition);
+
+		if (visibleMapView != null)
+		{
+			return visibleMapView;
+		}
+
+		if (GetMapViewScreenRect(activeMapView).Contains(screenPosition))
+		{
+			return activeMapView;
+		}
+
+		// NOTE: A map view that is hidden behind another tab still reports its last rectangle.
+		// It has the same rectangle as the visible map view of the same tab group.
+		foreach (MapView mapView in MapViewUtils.GetAllMapViews())
+		{
+			if (GetMapViewScreenRect(mapView).Contains(screenPosition))
+			{
+				return mapView;
+			}
+		}
+
+		return activeMapView;
+	}
+
+	private static Rect GetMapViewScreenRect([NotNull] MapView mapView)
 	{
 		try
 		{
-			var extent = MapView.Active.Extent;
-
-			MapPoint upperRight = GeometryUtils.GetUpperRight(extent);
-			MapPoint lowerLeft = GeometryUtils.GetLowerLeft(extent);
-			var upperRightScreen = MapView.Active.MapToScreen(upperRight);
-			var lowerLeftScreen = MapView.Active.MapToScreen(lowerLeft);
-			return new Rect(lowerLeftScreen, upperRightScreen);
+			return GetScreenRect(mapView);
 		}
 		catch (Exception e)
 		{
 			_msg.Warn("Error getting map view rect", e);
 			return Rect.Empty;
 		}
+	}
+
+	/// <summary>
+	/// Gets the rectangle of the map view in screen pixels. The rectangle is derived from
+	/// the size of the view and not from the map extent, because in a stereo map the screen
+	/// location of a map point depends on its height. Additionally, the map can be rotated.
+	/// Must be called on the UI thread.
+	/// </summary>
+	private static Rect GetScreenRect([NotNull] MapView mapView)
+	{
+		// The view size is in device independent pixels
+		Size viewSize = mapView.GetViewSize();
+
+		Window currentMainWindow = Assert.NotNull(Application.Current.MainWindow);
+
+		PresentationSource presentationSource =
+			Assert.NotNull(PresentationSource.FromVisual(currentMainWindow));
+
+		Matrix toScreenPixels =
+			Assert.NotNull(presentationSource.CompositionTarget).TransformToDevice;
+
+		Point upperLeft = mapView.ClientToScreen(new Point(0, 0));
+
+		return new Rect(
+			upperLeft, new Size(
+				viewSize.Width * toScreenPixels.M11,
+				viewSize.Height * toScreenPixels.M22));
 	}
 
 	// Returns the bounding rects in screen coordinates of the given feature. If layer is not null,
@@ -572,15 +696,17 @@ public class WindowPositioner
 
 		var symbol = layer.LookupSymbol(feature.GetObjectID(), MapView.Active);
 		double size = symbol.GetSize();
-		double offset = Math.Max(minimalLineOffset,
-		                         size / (MapView.Active.Camera.Scale /
-		                                 MapView.Active.Map.ReferenceScale));
+		double offset = Math.Max(
+			minimalLineOffset,
+			size / (MapView.Active.Camera.Scale /
+			        MapView.Active.Map.ReferenceScale));
 
-		return boundingRects.Select(r =>
-		{
-			r.Inflate(offset, offset);
-			return r;
-		}).ToList();
+		return boundingRects.Select(
+			r =>
+			{
+				r.Inflate(offset, offset);
+				return r;
+			}).ToList();
 	}
 
 	// Returns the bounding rects in screen coordinates of the given feature. Line geometries are split if they are longer than
@@ -691,10 +817,12 @@ public class WindowPositioner
 
 	private static double DistanceToRectSquared(Point pos, Rect rect)
 	{
-		var dx = Math.Max(Math.Max(rect.Left - pos.X, 0),
-		                  pos.X - (rect.Right));
-		var dy = Math.Max(Math.Max(rect.Top - pos.Y, 0),
-		                  pos.Y - (rect.Bottom));
+		var dx = Math.Max(
+			Math.Max(rect.Left - pos.X, 0),
+			pos.X - (rect.Right));
+		var dy = Math.Max(
+			Math.Max(rect.Top - pos.Y, 0),
+			pos.Y - (rect.Bottom));
 		return dx * dx + dy * dy;
 	}
 }

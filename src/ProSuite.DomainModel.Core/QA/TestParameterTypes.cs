@@ -60,6 +60,8 @@ namespace ProSuite.DomainModel.Core.QA
 				return TestParameterType.ObjectDataset;
 			if (typeof(IMosaicRasterDatasetDef).IsAssignableFrom(dataType))
 				return TestParameterType.RasterMosaicDataset;
+			if (typeof(IPointCloudDatasetDef).IsAssignableFrom(dataType))
+				return TestParameterType.PointCloudDataset;
 			if (typeof(IRasterDatasetDef).IsAssignableFrom(dataType))
 				return TestParameterType.RasterDataset;
 			if (typeof(ITerrainDef).IsAssignableFrom(dataType))
@@ -162,6 +164,9 @@ namespace ProSuite.DomainModel.Core.QA
 
 				case TestParameterType.RasterMosaicDataset:
 					return dataset is IRasterMosaicDataset;
+
+				case TestParameterType.PointCloudDataset:
+					return dataset is IPointCloudDataset;
 
 				case TestParameterType.RasterDataset:
 					return dataset is RasterDataset;
