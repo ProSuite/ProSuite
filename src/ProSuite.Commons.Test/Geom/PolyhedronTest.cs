@@ -1203,16 +1203,17 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		[Ignore(
-			"TOP-5999 issue 2 (open): repro for IntersectionClusters.PointsClusterButVertexCheckMissed")]
 		public void CanGetFootprintForLugano8710513()
 		{
 			// TOP-5999: TLM_GEBAEUDEKOERPER 8710513 (Lugano). NOT the subsumption issue:
-			// this one collapses in IntersectionClusters.PointsClusterButVertexCheckMissed
+			// this one collapsed in IntersectionClusters.PointsClusterButVertexCheckMissed
 			// (the XY-proximity cluster gate). At union step 43 the accumulated footprint
-			// drops from 232.71 to 11.91 sq m; the final footprint is 12.0467 in 2 parts
+			// dropped from 232.71 to 11.91 sq m; the final footprint was 12.0467 in 2 parts
 			// instead of the AO reference 232.7076 in 1 part. Simply disabling the gate is
 			// not the fix - it repairs this feature but collapses five others.
+			// The footprint is correct since the crack-and-cluster pass before the union
+			// (commit d022496a0e): the accumulated result no longer reaches the state that
+			// derailed step 43.
 			Polyhedron polyhedron = ReadPolyhedron("lugano_8710513.wkb");
 
 			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
