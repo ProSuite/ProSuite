@@ -268,6 +268,43 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.IsFalse(rings.GetPart(1).GetPoints().Any(p => p.Y > 15.0001));
 		}
 
+		[Test]
+		public void RingRunningAlongItselfSeveralTimesIsNotDeleted()
+		{
+			// The footprint of TLM_GEBAEUDEKOERPER 1745732 (Zurich): a rectangle with a thin
+			// zigzag appendix that runs along itself several times in the same place.
+			List<Pnt3D> points = Close(new List<Pnt3D>
+			                           {
+				                           new Pnt3D(0.0000, 2.6660, 0),
+				                           new Pnt3D(0.5230, 3.1460, 0),
+				                           new Pnt3D(2.9520, 0.4990, 0),
+				                           new Pnt3D(3.2760, 0.7697, 0),
+				                           new Pnt3D(3.3420, 0.8260, 0),
+				                           new Pnt3D(3.0860, 0.6190, 0),
+				                           new Pnt3D(3.3710, 0.8740, 0),
+				                           new Pnt3D(3.3830, 0.8610, 0),
+				                           new Pnt3D(2.4480, 0.0000, 0)
+			                           });
+
+			// The precondition of this test: the deletion of the linear self-intersections
+			// returns only open fragments for this ring.
+			var fragments = new List<Linestring>();
+
+			Assert.IsTrue(GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
+				              new Linestring(points), _tolerance, fragments));
+			Assert.IsFalse(fragments.Any(f => f.IsClosed));
+
+			MultiLinestring rings = new MultiPolycurve(
+				new List<Linestring> { new Linestring(points) });
+
+			double area = rings.GetArea2D();
+
+			RingSimplifier.SimplifyRingsXY(rings, _tolerance, RingSimplifyFlags.All);
+
+			Assert.AreEqual(1, rings.PartCount);
+			Assert.AreEqual(area, rings.GetArea2D(), 0.05);
+		}
+
 		private static MultiLinestring CreateRings(List<Pnt3D> points)
 		{
 			return new MultiPolycurve(

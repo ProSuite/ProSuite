@@ -228,8 +228,13 @@ namespace ProSuite.Commons.Geom
 			{
 				var fragments = new List<Linestring>();
 
+				// The deletion can return only open fragments for a ring that runs along
+				// itself several times in the same place. Such a result is only accepted
+				// for a ring that is not wider than the tolerance, which disappears.
 				if (GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-					    ring, tolerance, fragments))
+					    ring, tolerance, fragments) &&
+				    (fragments.Any(f => f.IsClosed && f.PointCount >= 4) ||
+				     Math.Abs(ring.GetArea2D()) <= ring.GetLength2D() * tolerance))
 				{
 					replacement = fragments;
 					return true;
