@@ -72,6 +72,43 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanClassifyLongOverlapOfNearlyParallelSegmentsAsLinear()
+		{
+			// Two long segments that run in opposite directions and diverge by 0.4 degrees.
+			// They overlap for 0.23 m, between the start point of the first one (which lies
+			// on the second one) and the start point of the second one (0.0016 m from the
+			// first one). The far end points are 0.07 m and 0.15 m off the other line, so
+			// the segments are not collinear over their full length. The stretch between
+			// the two start points is nevertheless within the tolerance all along and 90
+			// tolerances long: a linear intersection, not two point intersections.
+			Line3D line1 = new Line3D(new Pnt3D(0, 0, 0), new Pnt3D(-10, 0.07, 0));
+			Line3D line2 = new Line3D(new Pnt3D(-0.23, 0, 0), new Pnt3D(20, 0, 0));
+
+			const double tolerance = 0.0025;
+
+			SegmentIntersection intersection =
+				SegmentIntersection.CalculateIntersectionXY(0, 0, line1, line2, tolerance);
+
+			Assert.True(intersection.HasLinearIntersection);
+			Assert.True(intersection.LinearIntersectionInOppositeDirection);
+
+			intersection =
+				SegmentIntersection.CalculateIntersectionXY(0, 0, line2, line1, tolerance);
+
+			Assert.True(intersection.HasLinearIntersection);
+			Assert.True(intersection.LinearIntersectionInOppositeDirection);
+
+			// With an overlap of the size of the tolerance it remains a touch in a point
+			line2 = new Line3D(new Pnt3D(-0.004, 0, 0), new Pnt3D(20, 0, 0));
+
+			intersection =
+				SegmentIntersection.CalculateIntersectionXY(0, 0, line1, line2, tolerance);
+
+			Assert.True(intersection.HasIntersection);
+			Assert.False(intersection.HasLinearIntersection);
+		}
+
+		[Test]
 		public void CanClassifyCollinearOverlapContinuingFurther()
 		{
 			// The collinearity guard in HasLinearIntersection must NOT mistake a real linear

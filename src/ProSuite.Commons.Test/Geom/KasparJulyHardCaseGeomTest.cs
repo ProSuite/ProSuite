@@ -102,6 +102,57 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		/// <summary>
+		/// Two roof faces of building 043349C2 (coordinates relative to 2671768.421 /
+		/// 1247607.830). One edge of each ring runs along the same line in opposite
+		/// directions; the two edges overlap for 0.23 m and diverge by 0.4 degrees. From a
+		/// tolerance of 0.00125 the overlap was reported as two crossings instead of a linear
+		/// intersection, and the union cut off a triangle of 2.68 m2 along a segment that is
+		/// in neither ring (2044.59 instead of 2047.26 m2).
+		/// </summary>
+		[Test]
+		public void CanUnionRingsWithShortOverlapOfNearlyParallelEdges()
+		{
+			var ring1 = new RingGroup(new Linestring(new List<Pnt3D>
+			                                         {
+				                                         new Pnt3D(0, 0, 0),
+				                                         new Pnt3D(-20.6650, -25.9925, 0),
+				                                         new Pnt3D(-37.1813, -12.8625, 0),
+				                                         new Pnt3D(-34.7088, -9.9325, 0),
+				                                         new Pnt3D(-47.2725, 0.1488, 0),
+				                                         new Pnt3D(-30.6962, 20.9975, 0),
+				                                         new Pnt3D(-9.7900, 4.3738, 0),
+				                                         new Pnt3D(-8.1288, 6.4638, 0),
+				                                         new Pnt3D(0, 0, 0)
+			                                         }));
+
+			var ring2 = new RingGroup(new Linestring(new List<Pnt3D>
+			                                         {
+				                                         new Pnt3D(-34.8900, -9.7887, 0),
+				                                         new Pnt3D(-18.2812, -22.9937, 0),
+				                                         new Pnt3D(-42.7850, -53.8150, 0),
+				                                         new Pnt3D(-69.5738, -32.5162, 0),
+				                                         new Pnt3D(-60.2913, -20.8425, 0),
+				                                         new Pnt3D(-50.1125, -28.9362, 0),
+				                                         new Pnt3D(-34.8900, -9.7887, 0)
+			                                         }));
+
+			const double expectedArea = 2047.26;
+
+			foreach (double tolerance in new[] { 0.0005, 0.00125, 0.0025, 0.005, 0.01 })
+			{
+				Assert.AreEqual(expectedArea,
+				                GeomTopoOpUtils.GetUnionAreasXY(ring1, ring2, tolerance,
+				                                                tolerance).GetArea2D(), 0.05,
+				                $"tolerance {tolerance}");
+
+				Assert.AreEqual(expectedArea,
+				                GeomTopoOpUtils.GetUnionAreasXY(ring2, ring1, tolerance,
+				                                                tolerance).GetArea2D(), 0.05,
+				                $"tolerance {tolerance}, operands swapped");
+			}
+		}
+
+		/// <summary>
 		/// The group's exterior ring split at its self-touching point, with the smaller loops
 		/// as interior rings of the largest one.
 		/// </summary>
