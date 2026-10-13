@@ -22,37 +22,41 @@
 		</ResourceDictionary>
 	</UserControl.Resources>
 
-	<StackPanel
-		HorizontalAlignment="Left"
-		VerticalAlignment="Top">
+	<ScrollViewer VerticalScrollBarVisibility="Auto"
+				  HorizontalScrollBarVisibility="Disabled"
+				  Padding="0,0,5,0">
+		<StackPanel
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top">
 
-		<!-- Overlaps calculation -->
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Limit overlap calculation to current extent"
-		          DataContext="{Binding LimitOverlapCalculationToExtent}" />
+			<!-- Overlaps calculation -->
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Limit overlap calculation to current extent"
+			          DataContext="{Binding LimitOverlapCalculationToExtent}" />
 
-		<!-- Calculate overlap areas with other -->
-		<Label FontWeight="Medium" Content="Calculate overlap areas with other" Margin="0,15,0,0" />
-		<editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
+			<!-- Calculate overlap areas with other -->
+			<Label FontWeight="Medium" Content="Calculate overlap areas with other" Margin="0,15,0,0" />
+			<editing:TargetFeatureSelectionControl DataContext="{Binding TargetFeatureSelectionVM}" HorizontalAlignment="Left" />
 
-		<!-- Result geometry options -->
-		<Label FontWeight="Medium" Content="Result geometry options" Margin="0,15,0,0" />
+			<!-- Result geometry options -->
+			<Label FontWeight="Medium" Content="Result geometry options" Margin="0,15,0,0" />
 
-		<!-- TODO: Dropdown -->
+			<!-- TODO: Dropdown -->
 
-		<!--<ComboBox DataContext="{Binding Options.CentralizableZSource}"></ComboBox>-->
+			<!--<ComboBox DataContext="{Binding Options.CentralizableZSource}"></ComboBox>-->
 
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Explode multi-part result geometry into new features"
-		          DataContext="{Binding ExplodeMultipartResults}" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Explode multi-part result geometry into new features"
+			          DataContext="{Binding ExplodeMultipartResults}" />
 
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Insert vertices in target features for topological correctness"
-		          DataContext="{Binding InsertVerticesInTarget}" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Insert vertices in target features for topological correctness"
+			          DataContext="{Binding InsertVerticesInTarget}" />
 
-		<!-- Restore Defaults -->
-		<Button Template="{StaticResource RestoreDefaultsButton}" />
+			<!-- Restore Defaults -->
+			<Button Template="{StaticResource RestoreDefaultsButton}" />
 
-	</StackPanel>
+		</StackPanel>
+	</ScrollViewer>
 
 </UserControl>
