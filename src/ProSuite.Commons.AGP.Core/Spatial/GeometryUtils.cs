@@ -3034,12 +3034,17 @@ public static class GeometryUtils
 
 	public static bool IsMAware([NotNull] Geometry geometry)
 	{
-		return geometry.ToBuilder().HasM;
+		return geometry.HasM;
+	}
+
+	public static bool IsPointIDAware([NotNull] Geometry geometry)
+	{
+		return geometry.HasID;
 	}
 
 	public static bool IsZAware([NotNull] Geometry geometry)
 	{
-		return geometry.ToBuilder().HasZ;
+		return geometry.HasZ;
 	}
 
 	// TODO This should probably be made obsolete, as the geometry's tolerance may not be well 
@@ -3423,4 +3428,41 @@ public static class GeometryUtils
 		doc.Save(filePath);
 	}
 
+	public static bool HasUniqueVertexId(Geometry geometry, out int vertexId)
+	{
+		var singlePoint = geometry as MapPoint;
+		if (singlePoint != null)
+		{
+			vertexId = singlePoint.ID;
+
+			//return true;
+			return singlePoint.HasID && singlePoint.ID != 0;
+		}
+
+		int? idResult = null;
+		vertexId = 0;
+		if (geometry.HasID && geometry is Multipart multipartGeom)
+		{
+			ReadOnlyPointCollection points = multipartGeom.Points;
+			foreach (MapPoint testPoint in points)
+			{
+				int currentId = testPoint.ID;
+				if (idResult == null)
+				{
+					idResult = currentId;
+				}
+				else if (idResult != currentId)
+				{
+					return false;
+				}
+			}
+			if (idResult.HasValue)
+			{
+				vertexId = idResult.Value;
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
