@@ -5,6 +5,7 @@
 
     <managedOptions:OverrideToFontStyleConverter x:Key="OverrideToFontStyleConverter" />
     <managedOptions:NumericToDoubleConverter x:Key="NumericToDoubleConverter" />
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
     <ControlTemplate TargetType="CheckBox" x:Key="CentralizableSettingCheckbox">
         <CheckBox Content="{TemplateBinding Content}"

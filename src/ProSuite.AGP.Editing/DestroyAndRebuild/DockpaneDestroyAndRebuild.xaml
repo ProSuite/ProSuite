@@ -41,6 +41,15 @@
 			          Content="Move end junction in linear networks (toggle with M key)"
 			          DataContext="{Binding Path=MoveOpenJawEndJunction}" />
 
+			<!-- Always show this dialog -->
+			<StackPanel
+				Visibility="{Binding ShowAlwaysShowOptionsPaneOption, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Label FontWeight="Medium" Content="Workflow" Margin="0,15,0,0" />
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Always show this dialog"
+				          DataContext="{Binding AlwaysShowOptionsPane}" />
+			</StackPanel>
+
 			<!-- Restore Defaults -->
 			<Button Template="{StaticResource RestoreDefaultsButton}" />
 

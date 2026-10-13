@@ -445,6 +445,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	#region Tool Options DockPane
 
+	protected override bool AlwaysShowOptionsPane =>
+		_destroyAndRebuildToolOptions?.AlwaysShowOptionsPane == true;
 	protected override void ShowOptionsPane()
 	{
 		var viewModel = GetDestroyAndRebuildViewModel();

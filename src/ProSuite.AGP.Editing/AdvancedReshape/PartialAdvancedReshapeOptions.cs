@@ -16,6 +16,8 @@ public class PartialAdvancedReshapeOptions : PartialOptionsBase
 
 	public OverridableSetting<bool> UseTopologyTypeSelection { get; set; }
 
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#endregion
 
 	public override PartialOptionsBase Clone()
@@ -26,7 +28,8 @@ public class PartialAdvancedReshapeOptions : PartialOptionsBase
 			             RemainInSketchMode = TryClone(RemainInSketchMode),
 			             AllowOpenJawReshape = TryClone(AllowOpenJawReshape),
 			             MoveOpenJawEndJunction = TryClone(MoveOpenJawEndJunction),
-			             UseTopologyTypeSelection = TryClone(UseTopologyTypeSelection)
+			             UseTopologyTypeSelection = TryClone(UseTopologyTypeSelection),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 		return result;
 	}

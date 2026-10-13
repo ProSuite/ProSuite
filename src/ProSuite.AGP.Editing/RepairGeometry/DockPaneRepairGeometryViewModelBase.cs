@@ -33,6 +33,7 @@ public abstract class DockPaneRepairGeometryViewModelBase : DockPaneViewModelBas
 	private CentralizableSettingViewModel<bool> _addCrackPointsBetweenParts;
 	private CentralizableSettingViewModel<double> _crackPointTolerance;
 	private CentralizableSettingViewModel<bool> _use2D;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	public string Heading
 	{
@@ -82,6 +83,12 @@ public abstract class DockPaneRepairGeometryViewModelBase : DockPaneViewModelBas
 		set { SetProperty(ref _use2D, value); }
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set { SetProperty(ref _alwaysShowOptionsPane, value); }
+	}
+
 	public RepairGeometryToolOptions Options
 	{
 		get => _options;
@@ -126,6 +133,10 @@ public abstract class DockPaneRepairGeometryViewModelBase : DockPaneViewModelBas
 
 			Use2D =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableUse2D);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 		}
 	}
 

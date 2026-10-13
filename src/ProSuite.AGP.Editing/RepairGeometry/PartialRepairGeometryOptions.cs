@@ -26,6 +26,9 @@ public class PartialRepairGeometryOptions : PartialOptionsBase
 	[CanBeNull]
 	public OverridableSetting<bool> Use2D { get; set; }
 
+	[CanBeNull]
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#region Overrides of PartialOptionsBase
 
 	public override PartialOptionsBase Clone()
@@ -39,6 +42,7 @@ public class PartialRepairGeometryOptions : PartialOptionsBase
 		result.AddCrackPointsBetweenParts = TryClone(AddCrackPointsBetweenParts);
 		result.CrackPointTolerance = TryClone(CrackPointTolerance);
 		result.Use2D = TryClone(Use2D);
+		result.AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane);
 
 		return result;
 	}

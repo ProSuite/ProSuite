@@ -31,6 +31,7 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 	private CentralizableSettingViewModel<bool> _remainInSketchMode;
 	private CentralizableSettingViewModel<bool> _showPreview;
 	private CentralizableSettingViewModel<bool> _moveOpenJawEndJunction;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 	private bool _showMoveOpenJawEndJunction = true;
 
 	public string Heading
@@ -55,6 +56,12 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 	{
 		get => _moveOpenJawEndJunction;
 		set => SetProperty(ref _moveOpenJawEndJunction, value);
+	}
+
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
 	}
 
 	/// <summary>
@@ -82,6 +89,10 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 			MoveOpenJawEndJunction =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableMoveOpenJawEndJunction);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 		}
 	}
 

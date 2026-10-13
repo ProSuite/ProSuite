@@ -38,6 +38,8 @@
 				<RowDefinition Height="Auto" />
 				<!-- Advanced Section -->
 				<RowDefinition Height="Auto" />
+				<!-- Always show this dialog -->
+				<RowDefinition Height="Auto" />
 				<!-- Restore Defaults Button -->
 			</Grid.RowDefinitions>
 
@@ -213,8 +215,17 @@
 
 			</StackPanel>
 
+			<!-- Always show this dialog -->
+			<StackPanel Grid.Row="5"
+			            Visibility="{Binding ShowAlwaysShowOptionsPaneOption, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Label FontWeight="Medium" Content="Workflow" Padding="6,6,6,2" />
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Always show this dialog"
+				          DataContext="{Binding AlwaysShowOptionsPane}" />
+			</StackPanel>
+
 			<!-- Restore Defaults Button -->
-			<Button Grid.Row="5"
+			<Button Grid.Row="6"
 			        Template="{StaticResource RestoreDefaultsButton}" />
 		</Grid>
 	</ScrollViewer>

@@ -88,6 +88,9 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 	protected override SelectionCursors SecondPhaseCursors { get; } =
 		SelectionCursors.CreateCrossCursors(Resources.ChopperOverlay);
 
+	protected override bool AlwaysShowOptionsPane =>
+		_chopperToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override Task OnToolActivatingCoreAsync()
 	{
 		_chopperToolOptions = InitializeOptions();

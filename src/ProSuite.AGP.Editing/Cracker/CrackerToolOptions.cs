@@ -47,6 +47,11 @@ public class CrackerToolOptions : OptionsBase<PartialCrackerOptions>, ICrackerTo
 		CentralizableUseSourceZs =
 			InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.UseSourceZs), false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	#region Centralizable Properties
@@ -73,6 +78,8 @@ public class CrackerToolOptions : OptionsBase<PartialCrackerOptions>, ICrackerTo
 	//}
 
 	public CentralizableSetting<bool> CentralizableUseSourceZs { get; private set; }
+
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
 
 	#endregion
 
@@ -108,6 +115,11 @@ public class CrackerToolOptions : OptionsBase<PartialCrackerOptions>, ICrackerTo
 		get { return CentralizableUseSourceZs.CurrentValue; }
 	}
 
+	public bool AlwaysShowOptionsPane
+	{
+		get { return CentralizableAlwaysShowOptionsPane.CurrentValue; }
+	}
+
 	public bool ExcludeInteriorInteriorIntersections => false;
 
 	#endregion
@@ -125,6 +137,7 @@ public class CrackerToolOptions : OptionsBase<PartialCrackerOptions>, ICrackerTo
 		//CentralizableRemoveUnnecessaryVertices.RevertToDefault();
 
 		CentralizableUseSourceZs.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -161,6 +174,12 @@ public class CrackerToolOptions : OptionsBase<PartialCrackerOptions>, ICrackerTo
 		}
 
 		if (HasLocalOverride(CentralizableUseSourceZs, "Use source feature's Z",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
 		                     notifications))
 		{
 			result = true;

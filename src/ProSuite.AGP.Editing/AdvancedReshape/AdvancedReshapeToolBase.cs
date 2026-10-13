@@ -396,6 +396,9 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		                      OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_advancedReshapeToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		var viewModel = GetAdvancedReshapeViewModel();

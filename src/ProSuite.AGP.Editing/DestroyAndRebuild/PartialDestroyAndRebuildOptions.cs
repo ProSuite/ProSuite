@@ -24,6 +24,9 @@ public class PartialDestroyAndRebuildOptions : PartialOptionsBase
 	public OverridableSetting<DestroyAndRebuildLinearNetworkDefinition>
 		LinearNetworkDefinition { get; set; }
 
+	[CanBeNull]
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#endregion
 
 	public override PartialOptionsBase Clone()
@@ -33,7 +36,8 @@ public class PartialDestroyAndRebuildOptions : PartialOptionsBase
 			             HighlightOriginalGeometry = TryClone(HighlightOriginalGeometry),
 			             HideEditedFeature = TryClone(HideEditedFeature),
 			             MoveOpenJawEndJunction = TryClone(MoveOpenJawEndJunction),
-			             LinearNetworkDefinition = TryClone(LinearNetworkDefinition)
+			             LinearNetworkDefinition = TryClone(LinearNetworkDefinition),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 
 		return result;

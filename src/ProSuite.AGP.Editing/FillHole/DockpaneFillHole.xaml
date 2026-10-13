@@ -38,6 +38,7 @@
 						<RowDefinition Height="Auto" />
 						<RowDefinition Height="Auto" />
 						<RowDefinition Height="Auto" />
+						<RowDefinition Height="Auto" />
 					</Grid.RowDefinitions>
 
 					<CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
@@ -51,8 +52,17 @@
 					          Margin="20,0,0,0"
 					          DataContext="{Binding LimitPreviewToExtent}" />
 
+					<!-- Always show this dialog -->
+					<StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+					            Visibility="{Binding ShowAlwaysShowOptionsPaneOption, Converter={StaticResource BooleanToVisibilityConverter}}">
+						<Label FontWeight="Medium" Content="Workflow" Margin="0,15,0,0" />
+						<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+						          Content="Always show this dialog"
+						          DataContext="{Binding AlwaysShowOptionsPane}" />
+					</StackPanel>
+
 					<!-- Restore Defaults Button -->
-					<Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+					<Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
 					        Template="{StaticResource RestoreDefaultsButton}"
 					        Content="Restore Defaults" />
 				</Grid>

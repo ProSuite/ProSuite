@@ -243,6 +243,9 @@ public abstract class EraseToolBase : ConstructionToolBase
 		// Options changed - could implement refresh logic here if needed
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_eraseToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		// Ensure options are initialized

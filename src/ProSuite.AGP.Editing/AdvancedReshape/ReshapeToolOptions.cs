@@ -28,6 +28,11 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 			InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.UseTopologyTypeSelection),
 				false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	#region Centralizable Properties
@@ -45,6 +50,8 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 		get;
 		private set;
 	}
+
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
 
 	#endregion
 
@@ -64,6 +71,8 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 
 	public bool UseTopologyTypeSelection => CentralizableUseTopologyTypeSelection.CurrentValue;
 
+	public bool AlwaysShowOptionsPane => CentralizableAlwaysShowOptionsPane.CurrentValue;
+
 	#endregion
 
 	public override void RevertToDefaults()
@@ -73,6 +82,7 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 		CentralizableAllowOpenJawReshape.RevertToDefault();
 		CentralizableMoveOpenJawEndJunction.RevertToDefault();
 		CentralizableUseTopologyTypeSelection.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -106,6 +116,12 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 
 		if (HasLocalOverride(CentralizableUseTopologyTypeSelection,
 		                     "Enable topology type selection", notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
+		                     notifications))
 		{
 			result = true;
 		}

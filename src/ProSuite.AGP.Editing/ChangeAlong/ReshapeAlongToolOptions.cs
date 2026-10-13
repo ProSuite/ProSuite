@@ -98,6 +98,11 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 			InitializeSetting<TargetFeatureSelection>(
 				ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
 				TargetFeatureSelection.VisibleSelectableFeatures);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	#region Centralizable Properties
@@ -170,6 +175,8 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 		private set;
 	}
 
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
+
 	#endregion
 
 	#region Current Values
@@ -222,6 +229,8 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 	public TargetFeatureSelection TargetFeatureSelection =>
 		CentralizableTargetFeatureSelection.CurrentValue;
 
+	public bool AlwaysShowOptionsPane => CentralizableAlwaysShowOptionsPane.CurrentValue;
+
 	#endregion
 
 	public override void RevertToDefaults()
@@ -256,6 +265,7 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 
 		// Target Selection
 		CentralizableTargetFeatureSelection.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -377,6 +387,12 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 
 		// Target Selection
 		if (HasLocalOverride(CentralizableTargetFeatureSelection, "Target Feature Selection",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
 		                     notifications))
 		{
 			result = true;

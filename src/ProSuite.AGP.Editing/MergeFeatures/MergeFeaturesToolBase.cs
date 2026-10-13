@@ -458,6 +458,9 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		                      OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_mergeToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		var viewModel = GetDockPaneMergeFeaturesViewModel();
