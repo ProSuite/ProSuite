@@ -1044,6 +1044,25 @@ public static class LayerUtils
 		}
 	}
 
+	public static void Flatten<T>([NotNull] IEnumerable<Layer> layers,
+	                              [NotNull] ref ICollection<T> flattenedLayers) where T : Layer
+	{
+		foreach (Layer layer in layers)
+		{
+			if (layer is ILayerContainer container)
+			{
+				Flatten(container.Layers.OfType<T>(), ref flattenedLayers);
+			}
+			else
+			{
+				if (layer is T layerOfType)
+				{
+					flattenedLayers.Add(layerOfType);
+				}
+			}
+		}
+	}
+
 	public static void SetDisplayExpression([NotNull] BasicFeatureLayer layer,
 	                                        [NotNull] string expression)
 	{
