@@ -142,8 +142,117 @@ namespace ProSuite.Commons.AO.Test.Surface
 			Assert.AreEqual(tin.Extent.ZMin, spike.Z);
 		}
 
+		private static readonly SpikeFreeFreezeCarrier[] _allCarriers =
+		{
+			SpikeFreeFreezeCarrier.HardEdges,
+			SpikeFreeFreezeCarrier.NeighbourCircumcircle,
+			SpikeFreeFreezeCarrier.FrozenTriangleIndex
+		};
+
+		[Test]
+		[TestCaseSource(nameof(_allCarriers))]
+		public void EveryCarrierRejectsTheSpike(SpikeFreeFreezeCarrier carrier)
+		{
+			var spike = GeometryFactory.CreatePoint(50, 50, 10);
+
+			var points = new List<IPoint>
+			             {
+				             GeometryFactory.CreatePoint(49, 49, 100),
+				             GeometryFactory.CreatePoint(50, 51, 99),
+				             GeometryFactory.CreatePoint(51, 49, 98),
+				             spike
+			             };
+
+			ITinGenerator tinGenerator = CreateSpikeFreeTineGeneratorForPoints(
+				points, 10, 10, carrier);
+
+			var envelope =
+				GeometryFactory.CreateEnvelope(0, 0, 100, 100, 0, 100, _spatialReference);
+			ITin tin = tinGenerator.GenerateTin(envelope);
+
+			Assert.AreEqual(points.Count - 1, tin.DataNodeCount, carrier.ToString());
+			Assert.Greater(tin.Extent.ZMin, spike.Z, carrier.ToString());
+		}
+
+		/// <summary>Counter-test: without it a carrier could reject everything.</summary>
+		[Test]
+		[TestCaseSource(nameof(_allCarriers))]
+		public void NoCarrierRejectsAPointWithinTheInsertionBuffer(
+			SpikeFreeFreezeCarrier carrier)
+		{
+			var shallow = GeometryFactory.CreatePoint(50, 50, 97);
+
+			var points = new List<IPoint>
+			             {
+				             GeometryFactory.CreatePoint(49, 49, 100),
+				             GeometryFactory.CreatePoint(50, 51, 99),
+				             GeometryFactory.CreatePoint(51, 49, 98),
+				             shallow
+			             };
+
+			ITinGenerator tinGenerator = CreateSpikeFreeTineGeneratorForPoints(
+				points, 10, 10, carrier);
+
+			var envelope =
+				GeometryFactory.CreateEnvelope(0, 0, 100, 100, 0, 100, _spatialReference);
+			ITin tin = tinGenerator.GenerateTin(envelope);
+
+			Assert.AreEqual(points.Count, tin.DataNodeCount, carrier.ToString());
+		}
+
+		[Test]
+		[TestCaseSource(nameof(_allCarriers))]
+		public void EveryCarrierIsDeterministic(SpikeFreeFreezeCarrier carrier)
+		{
+			var envelope =
+				GeometryFactory.CreateEnvelope(0, 0, 100, 100, 0, 100, _spatialReference);
+
+			int NodeCount()
+			{
+				var points = new List<IPoint>
+				             {
+					             GeometryFactory.CreatePoint(49, 49, 100),
+					             GeometryFactory.CreatePoint(50, 51, 99),
+					             GeometryFactory.CreatePoint(51, 49, 98),
+					             GeometryFactory.CreatePoint(50, 50, 10),
+					             GeometryFactory.CreatePoint(48, 52, 97),
+					             GeometryFactory.CreatePoint(52, 48, 96)
+				             };
+
+				return CreateSpikeFreeTineGeneratorForPoints(points, 10, 10, carrier)
+				       .GenerateTin(envelope).DataNodeCount;
+			}
+
+			Assert.AreEqual(NodeCount(), NodeCount(), carrier.ToString());
+		}
+
+		[Test]
+		public void UnknownCarrierThrows()
+		{
+			var points = new List<IPoint> { GeometryFactory.CreatePoint(49, 49, 100) };
+			var envelope =
+				GeometryFactory.CreateEnvelope(0, 0, 100, 100, 0, 100, _spatialReference);
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => CreateSpikeFreeTineGeneratorForPoints(
+					      points, 10, 10, (SpikeFreeFreezeCarrier) 99)
+				      .GenerateTin(envelope));
+		}
+
+		/// <summary>
+		/// A missing setting and an unset field both end up here, so the order in the enum must
+		/// not move.
+		/// </summary>
+		[Test]
+		public void UnsetCarrierMeansHardEdges()
+		{
+			Assert.AreEqual(SpikeFreeFreezeCarrier.HardEdges,
+			                default(SpikeFreeFreezeCarrier));
+		}
+
 		private static ITinGenerator CreateSpikeFreeTineGeneratorForPoints(
-			IList<IPoint> points, double freezeDistance, double insertionBuffer)
+			IList<IPoint> points, double freezeDistance, double insertionBuffer,
+			SpikeFreeFreezeCarrier freezeCarrier = SpikeFreeFreezeCarrier.HardEdges)
 		{
 			const string idFieldName = "OID";
 			foreach (IPoint point in points)
@@ -178,7 +287,8 @@ namespace ProSuite.Commons.AO.Test.Surface
 				new SimpleTerrain("TEST", new List<SimpleTerrainDataSource> { terrainDataSource },
 				                  10, null);
 			var tinGenerator =
-				new SpikeFreeTinGenerator(simpleTerrain, freezeDistance, insertionBuffer, null, null);
+				new SpikeFreeTinGenerator(simpleTerrain, freezeDistance, insertionBuffer, null, null,
+				                          freezeCarrier);
 			tinGenerator.AllowIncompleteInterpolationDomainAtBoundary = true;
 
 			return tinGenerator;
