@@ -289,11 +289,26 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 		// instead of leaving it to the finalizer (each one holds a GDI bitmap handle).
 		previousImage?.Dispose();
 
-		Color firstPixelValue = bitmap.GetPixel(0, 0);
-		if (firstPixelValue.A != 0)
+		// Only a legacy, fully opaque bitmap uses its first pixel as the transparent (key)
+		// colour. An image with an alpha channel is drawn as is: keying it would remove all
+		// pixels of the first pixel's colour, e.g. a red mark in the upper left corner.
+		ImageTransparentColor = IsFullyOpaque(bitmap) ? bitmap.GetPixel(0, 0) : Color.Empty;
+	}
+
+	private static bool IsFullyOpaque([NotNull] Bitmap bitmap)
+	{
+		for (int y = 0; y < bitmap.Height; y++)
 		{
-			ImageTransparentColor = firstPixelValue;
+			for (int x = 0; x < bitmap.Width; x++)
+			{
+				if (bitmap.GetPixel(x, y).A != 255)
+				{
+					return false;
+				}
+			}
 		}
+
+		return true;
 	}
 
 	/// <summary>
