@@ -83,8 +83,13 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		RequiresSelection = true;
 
 		HandledKeys.Add(_keyToggleNonDefaultSide);
-		HandledKeys.Add(_keyToggleMoveEndJunction);
 	}
+
+	/// <summary>
+	/// Whether a line may be reshaped by a sketch that crosses it only once (Y-Reshape).
+	/// If false, the open-jaw feedback and the move end junction option are not offered.
+	/// </summary>
+	protected virtual bool AllowOpenJawReshape => _advancedReshapeToolOptions.AllowOpenJawReshape;
 
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.AdvancedReshapeOverlay,
@@ -214,6 +219,13 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	{
 		_advancedReshapeToolOptions = InitializeOptions();
 
+		HandledKeys.Remove(_keyToggleMoveEndJunction);
+
+		if (AllowOpenJawReshape)
+		{
+			HandledKeys.Add(_keyToggleMoveEndJunction);
+		}
+
 		_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
 		await QueuedTask.Run(() => { _feedback.InitializeSymbolsQueued(); });
@@ -316,8 +328,13 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 			{
 				_nonDefaultSideMode = ! _nonDefaultSideMode;
 
+				string yReshapeText = AllowOpenJawReshape
+					                      ? " The next Y-Reshape will use the furthest end-point."
+					                      : string.Empty;
+
 				_msg.Info(_nonDefaultSideMode
-					          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area. The next Y-Reshape will use the furthest end-point."
+					          ? "Enabled non-default reshape mode. The next reshape to the inside of a polygon will remove the larger area." +
+					            yReshapeText
 					          : "Disabled non-default reshape mode");
 
 				if (_updateFeedbackTask != null)
@@ -389,6 +406,7 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		}
 
 		viewModel.Options = _advancedReshapeToolOptions;
+		viewModel.ShowMoveOpenJawEndJunction = AllowOpenJawReshape;
 
 		viewModel.Activate(true);
 	}
@@ -529,12 +547,12 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		int timeout = selection.Count * 10000;
 		_cancellationTokenSource = new CancellationTokenSource(timeout);
 
-		bool allowOpenJawReshape = _advancedReshapeToolOptions.AllowOpenJawReshape;
+		bool allowOpenJawReshape = AllowOpenJawReshape;
 
 		ReshapeResult result = MicroserviceClient.Reshape(
 			selection, sketchLine, potentiallyAffectedFeatures, allowOpenJawReshape, true,
 			_nonDefaultSideMode, _cancellationTokenSource.Token,
-			_advancedReshapeToolOptions.MoveOpenJawEndJunction);
+			allowOpenJawReshape && _advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
 		if (result == null)
 		{
@@ -761,7 +779,7 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	{
 		MapPoint endPoint = null;
 
-		if (polylineSelection.Count == 1)
+		if (AllowOpenJawReshape && polylineSelection.Count == 1)
 		{
 			endPoint = await MicroserviceClient.GetOpenJawReplacementPointAsync(
 				           polylineSelection[0], sketchLine, useNonDefaultReshapeSide);

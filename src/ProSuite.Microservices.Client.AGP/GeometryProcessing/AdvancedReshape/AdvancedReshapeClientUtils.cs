@@ -70,8 +70,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
 				multiReshapeAsUnion, tryReshapeNonDefault, true);
 
-			request.AllowOpenJawReshape = true;
-
 			// TODO: If the server blocks for any reason, e.g. because
 			// - it is overwhelmed by requests
 			// - it hang in native code (DPS-#4)
@@ -141,8 +139,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			[NotNull] IReadOnlyDictionary<GdbObjectReference, Feature> allInputFeatures,
 			CancellationToken cancellationToken)
 		{
-			request.AllowOpenJawReshape = true;
-
 			long deadline = FeatureProcessingUtils.GetProcessingTimeout(request.Features.Count);
 
 			AdvancedReshapeResponse reshapeResultMsg = GrpcClientUtils.Try(
