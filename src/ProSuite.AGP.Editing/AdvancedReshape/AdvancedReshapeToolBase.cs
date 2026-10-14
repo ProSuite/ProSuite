@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -49,6 +50,9 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	// - Update feedback on toggle layer visibility
 
 	[CanBeNull] private AdvancedReshapeFeedback _feedback;
+
+	// Hides the edited features while sketching (HideEditedFeatures option).
+	private readonly EditedFeaturesHider _featuresHider = new();
 
 	protected ReshapeToolOptions _advancedReshapeToolOptions;
 
@@ -228,7 +232,14 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 
 		_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
-		await QueuedTask.Run(() => { _feedback.InitializeSymbolsQueued(); });
+		await QueuedTask.Run(() =>
+		{
+			_feedback.InitializeSymbolsQueued();
+
+			// Defensive: strip any leftover hide-filter that a previous session may have persisted
+			// (e.g. after a crash) so that no feature stays stuck hidden.
+			EditedFeaturesHider.RemoveLeftovers(ActiveMapView?.Map);
+		});
 
 		await base.OnToolActivatingCoreAsync();
 	}
@@ -285,6 +296,61 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	{
 		await base.OnSelectionPhaseStartedAsync();
 		_feedback?.Clear();
+
+		if (_featuresHider.IsHiding)
+		{
+			await QueuedTask.Run(_featuresHider.Restore);
+		}
+	}
+
+	protected override async Task AfterSelectionAsync(IList<Feature> selectedFeatures,
+	                                                  CancelableProgressor progressor)
+	{
+		// Also called when an option changes, which applies the HideEditedFeatures option.
+		UpdateHiddenFeatures();
+
+		await base.AfterSelectionAsync(selectedFeatures, progressor);
+	}
+
+	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
+		MapSelectionChangedEventArgs args)
+	{
+		bool result = await base.OnMapSelectionChangedCoreAsync(args);
+
+		// The selection changed while remaining in the sketch phase: hide the new selection.
+		if (result && IsInSketchPhase)
+		{
+			await QueuedTask.Run(UpdateHiddenFeatures);
+		}
+
+		return result;
+	}
+
+	protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+	{
+		if (_featuresHider.IsHiding)
+		{
+			await QueuedTask.Run(_featuresHider.Restore);
+		}
+
+		await base.OnToolDeactivateCoreAsync(hasMapViewChanged);
+	}
+
+	/// <summary>
+	/// Hides the selected (edited) features if the HideEditedFeatures option is set, otherwise
+	/// shows them again, see <see cref="EditedFeaturesHider"/>.
+	/// </summary>
+	/// <remarks>Must be called on the MCT.</remarks>
+	private void UpdateHiddenFeatures()
+	{
+		if (_advancedReshapeToolOptions.HideEditedFeatures)
+		{
+			_featuresHider.Hide(SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map));
+		}
+		else
+		{
+			_featuresHider.Restore();
+		}
 	}
 
 	protected override Task OnToolDeactivateCore(bool hasMapViewChanged)

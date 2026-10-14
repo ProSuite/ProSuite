@@ -15,6 +15,9 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 		CentralizableShowPreview =
 			InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.ShowPreview), true);
+		CentralizableHideEditedFeatures =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.HideEditedFeatures), false);
 		CentralizableRemainInSketchMode =
 			InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.RemainInSketchMode), false);
@@ -39,6 +42,8 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 
 	public CentralizableSetting<bool> CentralizableShowPreview { get; private set; }
 
+	public CentralizableSetting<bool> CentralizableHideEditedFeatures { get; private set; }
+
 	public CentralizableSetting<bool> CentralizableRemainInSketchMode { get; private set; }
 
 	public CentralizableSetting<bool> CentralizableAllowOpenJawReshape { get; private set; }
@@ -59,6 +64,8 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 
 	public bool ShowPreview => CentralizableShowPreview.CurrentValue;
 
+	public bool HideEditedFeatures => CentralizableHideEditedFeatures.CurrentValue;
+
 	public bool RemainInSketchMode => CentralizableRemainInSketchMode.CurrentValue;
 
 	public bool AllowOpenJawReshape => CentralizableAllowOpenJawReshape.CurrentValue;
@@ -78,6 +85,7 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 	public override void RevertToDefaults()
 	{
 		CentralizableShowPreview.RevertToDefault();
+		CentralizableHideEditedFeatures.RevertToDefault();
 		CentralizableRemainInSketchMode.RevertToDefault();
 		CentralizableAllowOpenJawReshape.RevertToDefault();
 		CentralizableMoveOpenJawEndJunction.RevertToDefault();
@@ -90,6 +98,12 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 		bool result = false;
 
 		if (HasLocalOverride(CentralizableShowPreview, "Show the reshape preview",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableHideEditedFeatures, "Hide the edited features",
 		                     notifications))
 		{
 			result = true;

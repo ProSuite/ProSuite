@@ -8,6 +8,8 @@ public class PartialAdvancedReshapeOptions : PartialOptionsBase
 
 	public OverridableSetting<bool> ShowPreview { get; set; }
 
+	public OverridableSetting<bool> HideEditedFeatures { get; set; }
+
 	public OverridableSetting<bool> RemainInSketchMode { get; set; }
 
 	public OverridableSetting<bool> AllowOpenJawReshape { get; set; }
@@ -25,6 +27,7 @@ public class PartialAdvancedReshapeOptions : PartialOptionsBase
 		var result = new PartialAdvancedReshapeOptions
 		             {
 			             ShowPreview = TryClone(ShowPreview),
+			             HideEditedFeatures = TryClone(HideEditedFeatures),
 			             RemainInSketchMode = TryClone(RemainInSketchMode),
 			             AllowOpenJawReshape = TryClone(AllowOpenJawReshape),
 			             MoveOpenJawEndJunction = TryClone(MoveOpenJawEndJunction),
