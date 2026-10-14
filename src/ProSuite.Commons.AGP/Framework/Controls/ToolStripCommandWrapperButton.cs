@@ -116,6 +116,10 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 		{
 			Enabled = PlugInWrapper.Enabled;
 		}
+
+		// A command may change its image together with its state. Otherwise the new image is
+		// only shown on the next UpdateAppearance, e.g. by a timer of the owner.
+		UpdateImage(PlugInWrapper.SmallImage as ImageSource);
 	}
 
 	#endregion
