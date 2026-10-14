@@ -46,6 +46,11 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	[CanBeNull] private CIMDisplayFilter[] _savedDisplayFilters;
 	private bool _savedEnableDisplayFilters;
 
+	// The selection colours (null: the default from the selection options) overridden with a
+	// transparent colour so the selection of the hidden feature is not drawn either.
+	[CanBeNull] private CIMColor _savedSelectionColor;
+	[CanBeNull] private CIMColor _savedPolygonSelectionFillColor;
+
 	[CanBeNull]
 	private OverridableSettingsProvider<PartialDestroyAndRebuildOptions> _settingsProvider;
 
@@ -447,6 +452,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override bool AlwaysShowOptionsPane =>
 		_destroyAndRebuildToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		var viewModel = GetDestroyAndRebuildViewModel();
@@ -831,7 +837,25 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		                          };
 		cimLayer.EnableDisplayFilters = true;
 
+		// The display filter does not hide the selection: make the selection colour and the
+		// selection fill of polygon interiors fully transparent.
+		_savedSelectionColor = cimLayer.SelectionColor;
+		_savedPolygonSelectionFillColor = cimLayer.PolygonSelectionFillColor;
+
+		cimLayer.SelectionColor = CreateTransparentColor();
+		cimLayer.PolygonSelectionFillColor = CreateTransparentColor();
+
 		SetDefinitionWithoutUndo(layer, cimLayer);
+	}
+
+	private static CIMColor CreateTransparentColor()
+	{
+		return ColorFactory.Instance.CreateRGBColor(0, 0, 0, 0);
+	}
+
+	private static bool IsTransparent([CanBeNull] CIMColor color)
+	{
+		return color != null && color.Alpha <= 0;
 	}
 
 	/// <summary>
@@ -854,6 +878,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			{
 				cimLayer.EnableDisplayFilters = _savedEnableDisplayFilters;
 				cimLayer.DisplayFilters = _savedDisplayFilters;
+				cimLayer.SelectionColor = _savedSelectionColor;
+				cimLayer.PolygonSelectionFillColor = _savedPolygonSelectionFillColor;
 
 				SetDefinitionWithoutUndo(layer, cimLayer);
 			}
@@ -863,6 +889,8 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			_hiddenFeatureLayer = null;
 			_savedDisplayFilters = null;
 			_savedEnableDisplayFilters = false;
+			_savedSelectionColor = null;
+			_savedPolygonSelectionFillColor = null;
 		}
 	}
 
@@ -934,6 +962,18 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 			if (remaining.Length == 0)
 			{
 				cimLayer.EnableDisplayFilters = false;
+			}
+
+			// The transparent selection colours are always set together with the filter. Their
+			// original values are lost, fall back to the default selection colours.
+			if (IsTransparent(cimLayer.SelectionColor))
+			{
+				cimLayer.SelectionColor = null;
+			}
+
+			if (IsTransparent(cimLayer.PolygonSelectionFillColor))
+			{
+				cimLayer.PolygonSelectionFillColor = null;
 			}
 
 			SetDefinitionWithoutUndo(layer, cimLayer);
