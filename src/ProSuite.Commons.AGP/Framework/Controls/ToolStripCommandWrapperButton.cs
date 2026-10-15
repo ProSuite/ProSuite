@@ -175,8 +175,11 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			// PROBLEM: When the Enabled value is false, the Image is not rendered.
 			// IDEA: Draw a greyed version of the Image as BackgroundImage, when Enabled is false.
 
-			// update Enabled
-			Enabled = PlugInWrapper.Enabled;
+			// update Enabled: the wrapper's Enabled is only re-evaluated in CanExecute, which
+			// Pro calls only for visible controls (e.g. on the active ribbon tab)
+			Enabled = PlugInWrapper is ICommand command
+				          ? command.CanExecute(null)
+				          : PlugInWrapper.Enabled;
 
 			// update Checked
 			Checked = PlugInWrapper.Checked;
