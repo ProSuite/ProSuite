@@ -187,7 +187,11 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			// update ToolTip
 			if (! OverrideCommandToolTip)
 			{
-				string header = CleanToolTipText(PlugInWrapper.Caption);
+				// prefer the DAML tooltip heading, as the ribbon does; fall back to the caption
+				string heading = PlugInWrapper.TooltipHeading;
+				string header = CleanToolTipText(string.IsNullOrEmpty(heading)
+					                                 ? PlugInWrapper.Caption
+					                                 : heading);
 				string body = CleanToolTipText(PlugInWrapper.Tooltip);
 				string combined = JoinToolTip(header, body);
 
