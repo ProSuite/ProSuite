@@ -580,13 +580,17 @@ public static class DatasetUtils
 		var dataset1 = class1.GetFeatureDataset();
 		var dataset2 = class2.GetFeatureDataset();
 
+		if (dataset1 == null || dataset2 == null)
+		{
+			return WorkspaceUtils.IsSameDatastore(class1.GetDatastore(), class2.GetDatastore());
+		}
+
 		if (! dataset1.GetName().Equals(dataset2.GetName()))
 		{
 			return false;
 		}
 
 		// class id and names are equal; could still be different db instances
-
 		return WorkspaceUtils.IsSameDatastore(dataset1.GetDatastore(), dataset2.GetDatastore());
 	}
 
