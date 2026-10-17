@@ -239,6 +239,30 @@ public static class Gateway
 	}
 
 	/// <summary>
+	/// Report the given warning message: (1) write it to
+	/// the given logger, and (2) show it in a modal message box.
+	/// The <paramref name="caption"/> defaults to the caller's name.
+	/// </summary>
+	/// <remarks>This method SHALL NOT throw exceptions.</remarks>
+	public static void ShowWarning(string message, IMsg logger, string caption = null)
+	{
+		if (message is null) return;
+
+		logger ??= _msg; // default to our own logger
+
+		if (caption is null)
+		{
+			logger.Warn(message);
+		}
+		else
+		{
+			logger.Warn($"{caption}: {message}");
+		}
+
+		ShowMessage(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+	}
+
+	/// <summary>
 	/// Report the given warning message without interrupting the
 	/// user (i.e., no modal dialog box): write it to the given logger
 	/// (and maybe to other feedback channels, e.g., toast notifications).
