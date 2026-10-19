@@ -17,6 +17,13 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 	{
 		Func<object> FindTestDescriptorDelegate { get; set; }
 
+		/// <summary>
+		/// If <c>true</c>, the test descriptor is resolved automatically by the
+		/// algorithm-first edit session: the test descriptor reference control becomes a
+		/// read-only display (no Find/Clear interaction). Default <c>false</c>.
+		/// </summary>
+		bool AlgorithmMode { get; set; }
+
 		void BindToParameterValues(
 			[NotNull] BindingList<ParameterValueListItem> parameterValues);
 

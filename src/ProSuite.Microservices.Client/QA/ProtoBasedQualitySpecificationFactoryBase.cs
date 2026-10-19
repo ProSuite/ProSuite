@@ -521,6 +521,18 @@ namespace ProSuite.Microservices.Client.QA
 			datasetParameterValue.FilterExpression = parameterMsg.WhereClause;
 			datasetParameterValue.UsedAsReferenceData = parameterMsg.UsedAsReferenceData;
 
+			// Transient declarations, empty unless the condition list was written against a
+			// harvested model. The model builder has already applied them (that is what turned
+			// the harvested feature class into a catalog dataset); they are kept on the value so
+			// that it still describes itself if the specification is converted onwards.
+			datasetParameterValue.DatasetType = (SupportedDatasetType) parameterMsg.DatasetType;
+
+			if (parameterMsg.FieldRoles.Count > 0)
+			{
+				datasetParameterValue.FieldRoles =
+					ProtoDataQualityUtils.CreateFieldRoles(parameterMsg.FieldRoles);
+			}
+
 			if (datasetValue == null)
 			{
 				datasetSettings.UnknownDatasetParameters.Add(

@@ -23,11 +23,13 @@ public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 	public IEventAggregator EventAggregator { get; set; }
 
 	[CanBeNull]
-	public ViewModelBase SelectedRow => SelectedRows.LastOrDefault(row => row is not DummyTestParameterValueViewModel);
+	public ViewModelBase SelectedRow =>
+		SelectedRows.LastOrDefault(row => row is not DummyTestParameterValueViewModel);
 
 	[NotNull]
 	public IList<ViewModelBase> SelectedRows { get; set; } = new List<ViewModelBase>();
 
+	// NOTE: Rows must start out as null as this signals that the data must be loaded.
 	protected IEnumerable<ViewModelBase> Rows { get; set; }
 
 	public void Dispose()
@@ -37,7 +39,7 @@ public abstract class DataGridBlazorBase : ComponentBase, IDisposable
 		EventAggregator.GetEvent<SelectedRowChangedEvent>().Unsubscribe(OnSelectedRowChangedAsync);
 	}
 
-	protected virtual void DisposeCore(){}
+	protected virtual void DisposeCore() { }
 
 	protected override void OnInitialized()
 	{

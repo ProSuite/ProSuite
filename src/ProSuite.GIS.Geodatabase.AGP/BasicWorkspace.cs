@@ -166,4 +166,10 @@ public class BasicWorkspaceName : IWorkspaceName
 
 	public IEnumerable<KeyValuePair<string, string>> ConnectionProperties =>
 		_datastoreName.ConnectionProperties;
+
+	// Always false in practice: BasicWorkspace only wraps non-geodatabase data stores
+	// (shapefiles, plugin data sources), while a feature service is always backed by a
+	// Geodatabase datastore (see ArcWorkspace.Create). Delegated rather than hardcoded so
+	// this stays correct if that assumption ever changes.
+	public bool IsFeatureService => _datastoreName.IsFeatureService;
 }

@@ -30,10 +30,41 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
+  <!-- Package versions per .NET version. The .NET version comes from the
+       TargetFrameworkVersion environment variable, so one branch serves several
+       ArcGIS Pro releases:
+         net10.0-windows   ArcGIS Pro 3.7 and higher
+         net8.0-windows    ArcGIS Pro 3.5 and 3.6
+         anything else     the previous default (net6.0-windows), left untouched for
+                           other repositories that build against this source
+       Both packages need a version per .NET version: the web view package follows the
+       .NET version of the web framework it is built on, and Radzen.Blazor 3.20.2 has no
+       build for .NET 8 or .NET 10. -->
+  <Choose>
+    <When Condition=" '$(TargetFramework)' == 'net10.0-windows' ">
+      <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="10.0.90" ExcludeAssets="build;buildTransitive" />
+        <PackageReference Include="Radzen.Blazor" Version="11.2.3" />
+      </ItemGroup>
+    </When>
+    <When Condition=" '$(TargetFramework)' == 'net8.0-windows' ">
+      <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="8.0.100" ExcludeAssets="build;buildTransitive" />
+        <PackageReference Include="Radzen.Blazor" Version="11.2.3" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="6.0.486" />
+        <PackageReference Include="Radzen.Blazor" Version="3.20.2" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="6.0.486" />
+    <!-- Prism.Core also has a .NET Standard 2.0 build, so one version fits every
+         .NET version and needs no condition. -->
     <PackageReference Include="Prism.Core" Version="8.1.97" />
-    <PackageReference Include="Radzen.Blazor" Version="3.20.2" />
   </ItemGroup>
 
   <ItemGroup>

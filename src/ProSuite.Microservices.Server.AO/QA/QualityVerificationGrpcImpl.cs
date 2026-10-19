@@ -286,7 +286,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
 						VerifyDataQualityCore(initialRequest, moreDataRequest, readNextBatch,
-						                      responseStream, trackCancellationToken);
+						                      responseStream, trackCancellationToken,
+						                      registeredRequest.CancellationSource.Token);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -623,7 +624,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r, context.CancellationToken)
+					.ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
@@ -660,7 +662,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				});
 
-				await WriteDataRequestWithRetryAsync(responseStream, r).ConfigureAwait(false);
+				await WriteDataRequestWithRetryAsync(responseStream, r, context.CancellationToken)
+					.ConfigureAwait(false);
 				await responseReaderTask.ConfigureAwait(false);
 			}
 			catch (Exception e)
@@ -684,7 +687,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		///       (progress) messages.
 		/// </summary>
 		private static async Task WriteDataRequestWithRetryAsync<T>(
-			[NotNull] IServerStreamWriter<T> responseStream, [NotNull] T message)
+			[NotNull] IServerStreamWriter<T> responseStream, [NotNull] T message,
+			CancellationToken cancellationToken)
 		{
 			const int maxAttempts = 10;
 			const int retryDelayMs = 100;
@@ -696,7 +700,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 					await responseStream.WriteAsync(message).ConfigureAwait(false);
 					return;
 				}
-				catch (InvalidOperationException e) when (attempt < maxAttempts)
+				// Once the client has cancelled, the stream is finished for good: no retry.
+				catch (InvalidOperationException e) when (
+					attempt < maxAttempts && ! cancellationToken.IsCancellationRequested)
 				{
 					// gRPC allows only one pending write at a time; a data request can
 					// collide with a concurrent (progress) write on the shared stream.
@@ -830,7 +836,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest,
 			[CanBeNull] Func<DataVerificationRequest> readNextBatch,
 			IServerStreamWriter<DataVerificationResponse> responseStream,
-			ITrackCancel trackCancel)
+			ITrackCancel trackCancel,
+			CancellationToken cancellationToken)
 		{
 			var request = initialRequest.Request;
 
@@ -839,6 +846,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ApplyServerOutputDirectory(request);
 
 			BackgroundVerificationService qaService = null;
+			IBackgroundVerificationInputs backgroundVerificationInputs = null;
 			VerificationProgressStreamer<DataVerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<DataVerificationResponse>(responseStream);
 
@@ -847,12 +855,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			List<GdbObjRefMsg> deletableAllowedErrorRefs = new List<GdbObjRefMsg>();
 			QualityVerification verification = null;
+			QualitySpecification specification = null;
 			string cancellationMessage = null;
 			try
 			{
 				bool useStandaloneService =
 					IsStandAloneVerification(request, initialRequest.Schema,
-					                         out QualitySpecification specification);
+					                         out specification);
 
 				DistributedTestRunner distributedTestRunner = null;
 
@@ -868,8 +877,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 				else
 				{
-					IBackgroundVerificationInputs backgroundVerificationInputs =
-						CreateBackgroundVerificationInputs(request);
+					backgroundVerificationInputs = CreateBackgroundVerificationInputs(request);
 
 					if (initialRequest.Schema != null)
 					{
@@ -898,6 +906,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
 				}
 			}
+			catch (Exception e) when (cancellationToken.IsCancellationRequested)
+			{
+				// Typically the client cancelled while the server was requesting data from it:
+				// System.InvalidOperationException: Already finished.
+				_msg.Warn("Verification was cancelled, likely by the client", e);
+				cancellationMessage = "Verification cancelled";
+			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
@@ -908,11 +923,24 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			string cancelMessage = cancellationMessage ?? qaService?.CancellationMessage;
 
-			ServiceCallStatus result = responseStreamer.SendFinalResponse(
-				verification, cancelMessage, deletableAllowedErrorRefs,
-				qaService?.GetVerifiedPerimeter(), trackCancel);
-
-			return result;
+			try
+			{
+				return responseStreamer.SendFinalResponse(
+					verification, cancelMessage, deletableAllowedErrorRefs,
+					qaService?.GetVerifiedPerimeter(), trackCancel);
+			}
+			finally
+			{
+				try
+				{
+					ReleaseVerificationRun(
+						qaService, responseStreamer, backgroundVerificationInputs);
+				}
+				finally
+				{
+					Release(specification);
+				}
+			}
 		}
 
 		private ServiceCallStatus VerifyQualityCore(
@@ -925,6 +953,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			ApplyServerOutputDirectory(request);
 
 			BackgroundVerificationService qaService = null;
+			IBackgroundVerificationInputs backgroundVerificationInputs = null;
 			VerificationProgressStreamer<VerificationResponse> responseStreamer =
 				new VerificationProgressStreamer<VerificationResponse>(responseStream);
 			responseStreamer.CreateResponseAction = responseStreamer.CreateVerificationResponse;
@@ -992,9 +1021,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				else
 				{
 					// DDX:
-					verification = VerifyDdxQualityCore(request, distributedTestRunner,
-					                                    responseStreamer, trackCancel,
-					                                    out qaService);
+					backgroundVerificationInputs = CreateBackgroundVerificationInputs(request);
+					verification = VerifyDdxQualityCore(
+						request, distributedTestRunner, responseStreamer, trackCancel,
+						backgroundVerificationInputs, out qaService);
 
 					deletableAllowedErrorRefs.AddRange(
 						GetDeletableAllowedErrorRefs(request.Parameters, qaService));
@@ -1012,44 +1042,74 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
+			try
+			{
+				return responseStreamer.SendFinalResponse(
+					verification, cancellationMessage ?? qaService?.CancellationMessage,
+					deletableAllowedErrorRefs, qaService?.GetVerifiedPerimeter(), trackCancel);
+			}
 			finally
 			{
-				Release(specification);
+				try
+				{
+					ReleaseVerificationRun(
+						qaService, responseStreamer, backgroundVerificationInputs);
+				}
+				finally
+				{
+					Release(specification);
+				}
 			}
-
-			ServiceCallStatus result = responseStreamer.SendFinalResponse(verification,
-				cancellationMessage ?? qaService?.CancellationMessage, deletableAllowedErrorRefs,
-				qaService?.GetVerifiedPerimeter(), trackCancel);
-
-			return result;
 		}
 
 		private static void Release(QualitySpecification specification)
 		{
-			if (specification == null)
+			if (specification != null)
 			{
-				return;
-			}
-
-			HashSet<DdxModel> modelsToRelease = new HashSet<DdxModel>();
-			foreach (QualitySpecificationElement element in specification.Elements)
-			{
-				foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(
-					         true, true))
+				HashSet<DdxModel> modelsToRelease = new HashSet<DdxModel>();
+				foreach (QualitySpecificationElement element in specification.Elements)
 				{
-					modelsToRelease.Add(dataset.Model);
+					foreach (Dataset dataset in element.QualityCondition.GetDatasetParameterValues(
+						         true, true))
+					{
+						modelsToRelease.Add(dataset.Model);
+					}
+				}
+
+				foreach (DdxModel ddxModel in modelsToRelease)
+				{
+					if (ddxModel is IDisposable disposable)
+					{
+						disposable.Dispose();
+					}
 				}
 			}
 
-			foreach (DdxModel ddxModel in modelsToRelease)
+		}
+
+		private static void ReleaseVerificationRun<T>(
+			BackgroundVerificationService qaService,
+			VerificationProgressStreamer<T> responseStreamer,
+			IBackgroundVerificationInputs backgroundVerificationInputs) where T : class
+		{
+			try
 			{
-				if (ddxModel is IDisposable disposable)
+				qaService?.Dispose();
+			}
+			finally
+			{
+				responseStreamer.BackgroundVerificationInputs = null;
+
+				try
 				{
-					disposable.Dispose();
+					// This cache is thread-static and must be cleared on the verification STA.
+					ReadOnlyTableFactory.ClearCache();
+				}
+				finally
+				{
+					(backgroundVerificationInputs as IDisposable)?.Dispose();
 				}
 			}
-
-			ReadOnlyTableFactory.ClearCache();
 		}
 
 		private CancelableRequest RegisterRequest([CanBeNull] string requestUserName,
@@ -1067,15 +1127,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 			DistributedTestRunner distributedTestRunner,
 			VerificationProgressStreamer<VerificationResponse> responseStreamer,
 			ITrackCancel trackCancel,
+			IBackgroundVerificationInputs backgroundVerificationInputs,
 			out BackgroundVerificationService qaService)
 		{
-			IBackgroundVerificationInputs backgroundVerificationInputs =
-				CreateBackgroundVerificationInputs(request);
-
 			responseStreamer.BackgroundVerificationInputs = backgroundVerificationInputs;
 
 			BackgroundVerificationService service = CreateVerificationService(
 				backgroundVerificationInputs, responseStreamer, trackCancel);
+			qaService = service;
 
 			service.DistributedTestRunner = distributedTestRunner;
 
@@ -1083,7 +1142,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				WithCulture(request.Parameters.ReportCultureCode,
 				            () => service.Verify(backgroundVerificationInputs, trackCancel));
 
-			qaService = service;
 			return verification;
 		}
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -13,6 +13,7 @@ using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Finder;
 using ProSuite.Commons.Validation;
+using ProSuite.DdxEditor.Content.QA.AlgorithmUI;
 using ProSuite.DdxEditor.Content.QA.Categories;
 using ProSuite.DdxEditor.Content.QA.InstanceConfig;
 using ProSuite.DdxEditor.Content.QA.QSpec;
@@ -23,7 +24,6 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -364,18 +364,49 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_webHelpCommand?.Execute();
 		}
 
+		/// <summary>
+		/// Optional callback supplying a transient (unsaved) descriptor built from the
+		/// algorithm and parameter set currently chosen in an edit session. It takes
+		/// precedence over the persisted descriptor (see
+		/// <see cref="GetWebHelpDescriptor"/>). <c>null</c> in classic mode, where the
+		/// persisted descriptor is the only source.
+		/// </summary>
 		[CanBeNull]
-		public string GetWebHelp([CanBeNull] TestDescriptor testDescriptor,
-		                         [CanBeNull] out string title)
+		public Func<InstanceDescriptor> WebHelpDescriptorProvider { get; set; }
+
+		/// <summary>
+		/// Descriptor for the "Show Documentation" command: while an edit session is
+		/// open, the transient descriptor for the parameter set chosen right now, so
+		/// switching the flavor selector changes the page; otherwise the persisted
+		/// descriptor (may still be <c>null</c>).
+		/// </summary>
+		[CanBeNull]
+		public InstanceDescriptor GetWebHelpDescriptor()
 		{
-			if (testDescriptor == null)
+			QualityCondition entity = GetEntity();
+
+			return WebHelpDescriptorProvider?.Invoke() ?? entity?.InstanceDescriptor;
+		}
+
+		/// <summary>
+		/// The documentation page the form shows in the help pane. It is the page the
+		/// "Test Documentation" command opens - the same descriptor, the same renderer -
+		/// so that selecting another condition while the page is open does not fall back
+		/// to the classic report.
+		/// </summary>
+		[CanBeNull]
+		public string GetWebHelp([CanBeNull] out string title)
+		{
+			InstanceDescriptor descriptor = GetWebHelpDescriptor();
+
+			if (descriptor == null)
 			{
 				title = null;
 				return null;
 			}
 
-			title = testDescriptor.TypeDisplayName;
-			return TestReportUtils.WriteDescriptorDoc(testDescriptor);
+			return InstanceDocumentationPage.Render(
+				_modelBuilder.InstanceDocumentation, descriptor, out title);
 		}
 
 		private void UpdateImage([CanBeNull] QualityCondition qualityCondition)
@@ -525,7 +556,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 					             _containerItem, applicationController));
 
 				_webHelpCommand = new ShowInstanceWebHelpCommand<QualityConditionItem>(
-					this, applicationController);
+					this, applicationController, _modelBuilder.InstanceDocumentation);
 
 				commands.Add(_webHelpCommand);
 			}

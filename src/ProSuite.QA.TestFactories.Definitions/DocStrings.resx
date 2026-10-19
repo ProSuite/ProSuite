@@ -246,6 +246,9 @@ InsideBranches (4): A branch toward the inside of a circular area may exist</val
   <data name="QaRelGroupConstraints" xml:space="preserve">
     <value>Checks if the number of distinct values of an expression (which may be a single field or a more complex expression involving field concatenation, value translation, substring extraction etc.) within groups defined by a 'group by' expression (which also may be a single field or a more complex expression on fields) does not exceed an allowed maximum value. The expressions are evaluated in a joined view of two tables.</value>
   </data>
+  <data name="QaRelGroupConstraints_ExistsRowGroupFilter" xml:space="preserve">
+    <value>An optional expression that selects the groups to be tested. A group is only tested if at least one of its rows fulfills this expression. If no expression is defined, all groups are tested.</value>
+  </data>
   <data name="QaConstraintsListFactory" xml:space="preserve">
     <value>Finds rows in 'table' based on a list of expressions defined in another table. The expression table can be filtered to a subset of expressions relevant for the verified table.</value>
   </data>

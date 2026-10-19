@@ -10,7 +10,7 @@ using ProSuite.DomainModel.Core.QA.Repositories;
 
 namespace ProSuite.DdxEditor.Content.QA.QSpec
 {
-	internal static class TableRows
+	public static class TableRows
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		

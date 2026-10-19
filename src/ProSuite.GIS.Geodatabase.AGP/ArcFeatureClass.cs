@@ -27,6 +27,9 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		[CanBeNull] private string _lengthFieldName;
 		[CanBeNull] private string _areaFieldName;
 
+		[CanBeNull] private ISpatialReference _spatialReference;
+		[CanBeNull] private IEnvelope _extent;
+
 		public ArcFeatureClass([NotNull] FeatureClass proFeatureClass,
 		                       bool cachePropertiesEagerly = false)
 			: base(proFeatureClass, cachePropertiesEagerly: false)
@@ -379,10 +382,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		#region Implementation of IGeoDataset
 
+		// IGeoDataset properties are cached but eagerly
 		public ISpatialReference SpatialReference =>
-			new ArcSpatialReference(ProFeatureClassDefinition.GetSpatialReference());
+			_spatialReference ??=
+				new ArcSpatialReference(ProFeatureClassDefinition.GetSpatialReference());
 
-		public IEnvelope Extent => new ArcEnvelope(ProFeatureClassDefinition.GetExtent());
+		public IEnvelope Extent =>
+			_extent ??= new ArcEnvelope(ProFeatureClassDefinition.GetExtent());
 
 		#endregion
 

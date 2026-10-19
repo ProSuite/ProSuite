@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
@@ -14,11 +9,18 @@ using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.Editing.Cut;
 
@@ -73,6 +75,48 @@ public abstract class CutFeatureToolBase : ConstructionToolBase
 	protected override SketchGeometryType GetEditSketchGeometryType()
 	{
 		return SketchGeometryType.Line;
+	}
+
+	protected override async Task<bool?> GetEditSketchHasZ()
+	{
+		Stopwatch watch = Stopwatch.StartNew();
+
+		int selectionCount = 0;
+		bool? result = await QueuedTask.Run(() =>
+		{
+			var selectionByLayer = SelectionUtils.GetSelection(ActiveMapView.Map);
+
+			if (selectionByLayer.Count == 0)
+			{
+				_msg.Debug($"{Caption}: no feature layer found in selection");
+				return null;
+			}
+
+			bool? hasAnyZ = false;
+
+			foreach (var selectedOidByLayer in selectionByLayer)
+			{
+				if (selectedOidByLayer.Key is FeatureLayer layer)
+				{
+					FeatureClass featureClass = layer.GetFeatureClass();
+					bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+
+					if (layerHasZ == true)
+					{
+						hasAnyZ = true;
+						break;
+					}
+				}
+			}
+
+			return hasAnyZ;
+		});
+
+		_msg.DebugStopTiming(
+			watch, "Determined sketch has Z: {0} (evaluated {1} selected layers)", result,
+			selectionCount);
+
+		return result;
 	}
 
 	protected override bool CanSelectGeometryType(GeometryType geometryType)

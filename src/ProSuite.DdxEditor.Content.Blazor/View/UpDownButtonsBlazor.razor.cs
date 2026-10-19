@@ -15,7 +15,7 @@ public partial class UpDownButtonsBlazor
 	public RadzenDataGrid<ViewModelBase> Grid { get; set; }
 
 	[CanBeNull]
-	public ViewModelBase Selected => Grid.Value.LastOrDefault();
+	public ViewModelBase Selected => Grid?.Value?.LastOrDefault();
 
 	[Parameter]
 	public EventCallback<ViewModelBase> SelectedChanged { get; set; }
@@ -70,7 +70,7 @@ public partial class UpDownButtonsBlazor
 
 	private bool UpButtonDisabled()
 	{
-		List<ViewModelBase> rows = Grid?.Data.ToList();
+		List<ViewModelBase> rows = Grid?.Data?.ToList();
 
 		if (ButtonDisabledCore(rows))
 		{
@@ -83,7 +83,7 @@ public partial class UpDownButtonsBlazor
 
 	private bool DownButtonDisabled()
 	{
-		List<ViewModelBase> rows = Grid?.Data.ToList();
+		List<ViewModelBase> rows = Grid?.Data?.ToList();
 
 		if (ButtonDisabledCore(rows))
 		{
@@ -97,7 +97,7 @@ public partial class UpDownButtonsBlazor
 
 	private bool DeleteRowButtonDisabled()
 	{
-		List<ViewModelBase> rows = Grid?.Data.ToList();
+		List<ViewModelBase> rows = Grid?.Data?.ToList();
 
 		if (ButtonDisabledCore(rows))
 		{

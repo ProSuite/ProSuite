@@ -9,7 +9,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
@@ -59,8 +58,6 @@ public class FlashService : IDisposable
 
 	public FlashService Flash(Geometry geometry)
 	{
-		DisposeOverlays();
-
 		Geometry flashGeometry = null;
 		CIMSymbol symbol = null;
 
@@ -93,10 +90,19 @@ public class FlashService : IDisposable
 		}
 
 		// TODO AE: Implement and assert not null!
-		if (flashGeometry != null)
+		// NOTE: Dispose the previous overlays on the MCT as well, together with adding
+		// the new one. Disposing here (on the UI thread) would race with an AddOverlay
+		// that is still queued: its overlay would be added after the disposal and hence
+		// remain in the map forever.
+		QueuedTask.Run(() =>
 		{
-			QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
-		}
+			DisposeOverlays();
+
+			if (flashGeometry != null)
+			{
+				AddOverlay(flashGeometry, symbol);
+			}
+		});
 
 		return this;
 	}
@@ -138,7 +144,9 @@ public class FlashService : IDisposable
 
 	public void Dispose()
 	{
-		DisposeOverlays();
+		// On the MCT (and not directly), so that overlays whose AddOverlay is still
+		// queued are disposed too, instead of appearing after this disposal.
+		QueuedTask.Run(() => DisposeOverlays());
 	}
 
 	private Geometry GetPolygonGeometry(Geometry geometry)

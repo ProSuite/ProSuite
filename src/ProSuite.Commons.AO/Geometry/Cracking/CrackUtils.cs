@@ -1782,13 +1782,12 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			var lineToSplit = (IPolyline) lineFeature.ShapeCopy;
 
-			if (maxSplitPointDistanceToLine > 0)
-			{
-				// For proper snapping of the existing vertices to the split point, otherwise short segments could result
-				CrackPolycurve(lineToSplit, splitPoints, maxSplitPointDistanceToLine);
-			}
+			// Insert the vertices with the split points' Z values (like the cracker) and snap the
+			// existing vertices to the split point, otherwise short segments could result.
+			// Projecting the split points would interpolate the Z values instead.
+			CrackPolycurve(lineToSplit, splitPoints, maxSplitPointDistanceToLine);
 
-			bool projectPointsOntoPathToSplit = maxSplitPointDistanceToLine == null;
+			const bool projectPointsOntoPathToSplit = false;
 			const bool createParts = true;
 
 			GeometryUtils.CrackPolycurve(lineToSplit, splitPoints, projectPointsOntoPathToSplit,

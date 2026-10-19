@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -25,9 +26,35 @@ public class DestroyAndRebuildFeedback
 	private CIMPointSymbol _controlPointMarkerSymbol;
 	private readonly bool _useOldSymbolization;
 
-	public DestroyAndRebuildFeedback(bool useOldSymbolization = false)
+	[CanBeNull] private readonly DestroyAndRebuildToolOptions _toolOptions;
+
+	private IDisposable _movedEndJunctionOverlay;
+	private CIMPointSymbol _movedEndJunctionSymbol;
+
+	[CanBeNull] private Multipoint _lastDrawnMovedEndJunctions;
+
+	public DestroyAndRebuildFeedback(bool useOldSymbolization = false,
+	                                 [CanBeNull] DestroyAndRebuildToolOptions toolOptions = null)
 	{
 		_useOldSymbolization = useOldSymbolization;
+		_toolOptions = toolOptions;
+
+		if (_toolOptions == null)
+		{
+			return;
+		}
+
+		_toolOptions.PropertyChanged += (_, args) =>
+		{
+			if (args.PropertyName ==
+			    nameof(DestroyAndRebuildToolOptions.MoveOpenJawEndJunction))
+			{
+				// Redraw in the other colour so that toggling the option (M key or dock pane)
+				// is immediately visible.
+				QueuedTask.Run(
+					() => UpdateMovedEndJunctions(_lastDrawnMovedEndJunctions));
+			}
+		};
 	}
 
 	/// <summary>
@@ -170,9 +197,44 @@ public class DestroyAndRebuildFeedback
 		return true;
 	}
 
+	/// <summary>
+	/// Draws the end points that the rebuilt edge relocates, i.e. the locations where the
+	/// connected junction (and the edges hanging off it) end up. The symbolization is the same
+	/// as in the Advanced Reshape tool: a bright blue circle while the junction is moved along,
+	/// a dark blue circle while it stays where it is.
+	/// Must be called on the queued task.
+	/// </summary>
+	public void UpdateMovedEndJunctions([CanBeNull] Multipoint points)
+	{
+		_movedEndJunctionOverlay?.Dispose();
+		_movedEndJunctionOverlay = null;
+
+		bool movesJunction = _toolOptions?.MoveOpenJawEndJunction ?? false;
+
+		_movedEndJunctionSymbol =
+			movesJunction
+				? CreateHollowPointSymbol(0, 200, 255, 19, SimpleMarkerStyle.Circle, 2,
+				                          SimpleLineStyle.Solid)
+				: CreateHollowPointSymbol(0, 0, 200, 19, SimpleMarkerStyle.Circle, 2,
+				                          SimpleLineStyle.Solid);
+
+		if (points != null && ! points.IsEmpty)
+		{
+			_movedEndJunctionOverlay =
+				MapView.Active.AddOverlay(
+					points, _movedEndJunctionSymbol.MakeSymbolReference());
+		}
+
+		_lastDrawnMovedEndJunctions = points;
+	}
+
 	public void Clear()
 	{
 		DisposeOverlays();
+
+		_movedEndJunctionOverlay?.Dispose();
+		_movedEndJunctionOverlay = null;
+		_lastDrawnMovedEndJunctions = null;
 	}
 
 	[CanBeNull]
@@ -212,6 +274,40 @@ public class DestroyAndRebuildFeedback
 				controlMultipoint = simplified;
 			}
 		}
+	}
+
+	// NOTE: Kept in sync with the identically named helper in AdvancedReshapeFeedback, so that
+	// both tools draw the moved end junction exactly the same way.
+	private static CIMPointSymbol CreateHollowPointSymbol(
+		int red, int green, int blue, double size, SimpleMarkerStyle markerStyle,
+		double outlineWidth, SimpleLineStyle outlineStyle)
+	{
+		CIMColor color = ColorFactory.Instance.CreateRGBColor(red, green, blue);
+		CIMColor transparent = ColorFactory.Instance.CreateRGBColor(0d, 0d, 0d, 0d);
+
+		CIMPointSymbol hollowSymbol =
+			SymbolFactory.Instance.ConstructPointSymbol(transparent, size, markerStyle);
+
+		var marker = hollowSymbol.SymbolLayers[0] as CIMVectorMarker;
+		Assert.NotNull(marker).DominantSizeAxis3D = DominantSizeAxis.Z;
+		marker.ScaleSymbolsProportionally = false;
+		var polySymbol = marker.MarkerGraphics[0].Symbol as CIMPolygonSymbol;
+
+		// Fill:
+		Assert.NotNull(polySymbol).SymbolLayers[0] =
+			SymbolFactory.Instance.ConstructSolidFill(transparent);
+
+		// Outline:
+		CIMStroke cimStroke =
+			SymbolFactory.Instance.ConstructStroke(color, outlineWidth, outlineStyle);
+		cimStroke.CapStyle = LineCapStyle.Square;
+		cimStroke.JoinStyle = LineJoinStyle.Miter;
+		cimStroke.MiterLimit = 4;
+		polySymbol.SymbolLayers[1] = cimStroke;
+
+		hollowSymbol.HaloSize = 0;
+
+		return hollowSymbol;
 	}
 
 	private static CIMPointSymbol CreateControlPointSymbol(double size, CIMColor fillColor,

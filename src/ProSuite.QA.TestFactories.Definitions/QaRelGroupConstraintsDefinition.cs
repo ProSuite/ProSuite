@@ -25,14 +25,26 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter("relationTables", typeof(IList<ITableSchemaDef>)),
-					new TestParameter("relation", typeof(string)),
-					new TestParameter("join", typeof(JoinType)),
-					new TestParameter("groupByExpression", typeof(string)),
-					new TestParameter("distinctExpression", typeof(string)),
-					new TestParameter("maxDistinctCount", typeof(int)),
-					new TestParameter("limitToTestedRows", typeof(bool)),
+					new TestParameter("relationTables", typeof(IList<ITableSchemaDef>),
+					                  DocStrings.QaRelConstraint_relationTables),
+					new TestParameter("relation", typeof(string),
+					                  DocStrings.QaRelConstraint_relation),
+					new TestParameter("join", typeof(JoinType),
+					                  DocStrings.QaRelConstraint_join),
+					new TestParameter("groupByExpression", typeof(string),
+					                  Tests.Documentation.DocStrings
+					                       .QaGroupConstraints_groupByExpression),
+					new TestParameter("distinctExpression", typeof(string),
+					                  Tests.Documentation.DocStrings
+					                       .QaGroupConstraints_distinctExpression),
+					new TestParameter("maxDistinctCount", typeof(int),
+					                  Tests.Documentation.DocStrings
+					                       .QaGroupConstraints_maxDistinctCount),
+					new TestParameter("limitToTestedRows", typeof(bool),
+					                  Tests.Documentation.DocStrings
+					                       .QaGroupConstraints_limitToTestedRows),
 					new TestParameter(ExistsRowGroupFilterName, typeof(string),
+					                  DocStrings.QaRelGroupConstraints_ExistsRowGroupFilter,
 					                  isConstructorParameter: false)
 				};
 

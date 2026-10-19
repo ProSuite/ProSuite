@@ -43,6 +43,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public abstract MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset);
 
+		public abstract PointCloudReference OpenPointCloud(IPointCloudDataset dataset);
+
 		public abstract IRelationshipClass OpenRelationshipClass(Association association);
 
 		public abstract Dataset GetDatasetByGdbName(string gdbDatasetName);

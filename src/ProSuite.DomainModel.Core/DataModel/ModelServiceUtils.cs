@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
@@ -20,6 +22,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 	/// </remarks>
 	public static class ModelServiceUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// The marker that prefixes a service URL in the model description.
 		/// </summary>
@@ -115,10 +119,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// names, so the remaining name can be matched against a model element name.
 		/// </summary>
 		/// <remarks>
-		/// System limitation: it is assumed that the prefix-stripped Pro SDK table name matches
-		/// the underlying database table name (which is also assumed to be the basis of the
-		/// service layer name). The service layer's <i>alias</i> (display name) is NOT used for
-		/// matching, as it does not correspond to the table name.
+		/// System limitation: it is assumed that the prefix-stripped Pro SDK table name is derived
+		/// from the underlying database table name (which is also assumed to be the basis of the
+		/// service layer name). It need not be equal to it: the name may be the qualified table
+		/// name with its dots replaced by underscores, which
+		/// <see cref="FindDatasetForServiceTableName"/> takes into account. The service layer's
+		/// <i>alias</i> (display name) is NOT used for matching, as it is freely defined by
+		/// whoever published the service.
 		/// </remarks>
 		[NotNull]
 		public static string StripFeatureServiceLayerPrefix([NotNull] string gdbDatasetName)
@@ -178,6 +185,178 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			return ModelElementNameUtils.GetQualifiedName(
 				model.DefaultDatabaseName, model.DefaultDatabaseSchemaOwner, strippedName);
+		}
+
+		/// <summary>
+		/// Searches the datasets of the given model for the one the given feature-service table
+		/// was published from, comparing the names without their separator characters. To be used
+		/// as a fall-back when matching by model element name has found nothing.
+		/// </summary>
+		/// <remarks>
+		/// When a service layer is published from a database table, the layer name often is the
+		/// fully qualified table name, and ArcGIS replaces every character that is not a letter or
+		/// a digit by an underscore. The table name seen by the client is therefore
+		/// <c>database_owner_tablename</c> where the model element name is
+		/// <c>database.owner.tablename</c>. This replacement cannot be undone (table names contain
+		/// underscores themselves), but it can be applied in the other direction: each model
+		/// dataset name is compared to the service table name with all separators removed, so that
+		/// dots and underscores become interchangeable.
+		/// <para>For a model whose element names are unqualified, the dataset name is first
+		/// qualified with the model's master database schema owner (and database name, if known),
+		/// because the service table name carries those parts.</para>
+		/// <para>A dataset is only returned if it is the single match: an ambiguous name is
+		/// reported and treated as no match, rather than binding the layer to an arbitrary
+		/// dataset. The child database dataset name transformer is not applied here.</para>
+		/// </remarks>
+		[CanBeNull]
+		public static Dataset FindDatasetForServiceTableName(
+			[NotNull] DdxModel model,
+			[NotNull] string gdbDatasetName,
+			[CanBeNull] Predicate<Dataset> ignoreDataset = null)
+		{
+			Assert.ArgumentNotNull(model, nameof(model));
+			Assert.ArgumentNotNullOrEmpty(gdbDatasetName, nameof(gdbDatasetName));
+
+			string strippedName = StripFeatureServiceLayerPrefix(gdbDatasetName);
+
+			string serviceTableKey = GetComparisonKey(strippedName);
+
+			if (serviceTableKey.Length == 0)
+			{
+				return null;
+			}
+
+			List<Dataset> matches = null;
+
+			foreach (Dataset dataset in model.GetDatasets())
+			{
+				if (ignoreDataset != null && ignoreDataset(dataset))
+				{
+					continue;
+				}
+
+				if (! MatchesServiceTableKey(model, dataset, serviceTableKey))
+				{
+					continue;
+				}
+
+				matches = matches ?? new List<Dataset>(2);
+				matches.Add(dataset);
+			}
+
+			if (matches == null)
+			{
+				return null;
+			}
+
+			if (matches.Count > 1)
+			{
+				_msg.WarnFormat(
+					"Feature service table '{0}' matches more than one dataset of model {1} " +
+					"when comparing names without separators ({2}). None of them is used; " +
+					"the service table name is too ambiguous to identify a dataset.",
+					gdbDatasetName, model.Name,
+					string.Join(", ", matches.ConvertAll(dataset => dataset.Name)));
+
+				return null;
+			}
+
+			Dataset match = matches[0];
+
+			_msg.DebugFormat(
+				"Feature service table '{0}' was matched to dataset {1} of model {2} by " +
+				"comparing the names without their separator characters.",
+				gdbDatasetName, match.Name, model.Name);
+
+			return match;
+		}
+
+		private static bool MatchesServiceTableKey([NotNull] DdxModel model,
+		                                           [NotNull] Dataset dataset,
+		                                           [NotNull] string serviceTableKey)
+		{
+			foreach (string candidateName in GetPossibleServiceTableNames(model, dataset))
+			{
+				if (string.Equals(GetComparisonKey(candidateName), serviceTableKey,
+				                  StringComparison.Ordinal))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Gets the names the feature-service layer could have been published under for the given
+		/// model dataset.
+		/// </summary>
+		[NotNull]
+		private static IEnumerable<string> GetPossibleServiceTableNames(
+			[NotNull] DdxModel model,
+			[NotNull] Dataset dataset)
+		{
+			string datasetName = dataset.Name;
+
+			if (string.IsNullOrEmpty(datasetName))
+			{
+				yield break;
+			}
+
+			yield return datasetName;
+
+			string[] nameParts = datasetName.Split('.');
+
+			if (nameParts.Length == 3)
+			{
+				// the layer may have been published without the database part
+				yield return $"{nameParts[1]}.{nameParts[2]}";
+				yield break;
+			}
+
+			if (nameParts.Length > 1)
+			{
+				yield break;
+			}
+
+			// The model element name is unqualified, the service table name is not: add the
+			// master database parts the service table name is expected to carry.
+			string schemaOwner = model.DefaultDatabaseSchemaOwner;
+
+			if (string.IsNullOrWhiteSpace(schemaOwner))
+			{
+				yield break;
+			}
+
+			yield return ModelElementNameUtils.GetQualifiedName(null, schemaOwner, datasetName);
+
+			string databaseName = model.DefaultDatabaseName;
+
+			if (! string.IsNullOrWhiteSpace(databaseName))
+			{
+				yield return ModelElementNameUtils.GetQualifiedName(
+					databaseName, schemaOwner, datasetName);
+			}
+		}
+
+		/// <summary>
+		/// Reduces a name to its letters and digits, in upper case, so that names differing only
+		/// in their separator characters (such as a dot replaced by an underscore) compare equal.
+		/// </summary>
+		[NotNull]
+		private static string GetComparisonKey([NotNull] string name)
+		{
+			var result = new StringBuilder(name.Length);
+
+			foreach (char character in name)
+			{
+				if (char.IsLetterOrDigit(character))
+				{
+					result.Append(char.ToUpperInvariant(character));
+				}
+			}
+
+			return result.ToString();
 		}
 	}
 }

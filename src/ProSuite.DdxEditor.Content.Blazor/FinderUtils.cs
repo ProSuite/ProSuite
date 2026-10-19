@@ -24,7 +24,7 @@ internal static class FinderUtils
 		                         columnDescriptors: null,
 		                         filterSettingsContext: FinderContextIds.GetId(category));
 	}
-	
+
 	[NotNull]
 	private static IEnumerable<FinderQuery<DatasetFinderItem>> GetFinderQueries(
 		[CanBeNull] DdxModel model,

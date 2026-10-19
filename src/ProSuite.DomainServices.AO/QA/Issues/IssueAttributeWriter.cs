@@ -1,6 +1,7 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core.IssueCodes;
 
 namespace ProSuite.DomainServices.AO.QA.Issues
@@ -132,10 +133,10 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			double? doubleValue1;
 			double? doubleValue2;
 			string textValue;
-			IssueUtils.GetValues(issue.Values,
-			                     out doubleValue1,
-			                     out doubleValue2,
-			                     out textValue);
+			QaErrorUtils.GetValues(issue.Values,
+			                       out doubleValue1,
+			                       out doubleValue2,
+			                       out textValue);
 
 			if (_doubleValue1FieldIndex >= 0)
 			{

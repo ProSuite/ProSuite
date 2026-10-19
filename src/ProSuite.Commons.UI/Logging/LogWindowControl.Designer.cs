@@ -217,12 +217,12 @@ namespace ProSuite.Commons.UI.Logging
 			this._dataGridView.RowTemplate.Height = 18;
 			this._dataGridView.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.True;
 			this._dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			this._dataGridView.ShowCellToolTips = false;
 			this._dataGridView.Size = new System.Drawing.Size(545, 147);
 			this._dataGridView.TabIndex = 1;
 			this._dataGridView.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this._dataGridView_CellDoubleClick);
 			this._dataGridView.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this._dataGridView_CellFormatting);
 			this._dataGridView.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this._dataGridView_CellMouseDown);
-			this._dataGridView.CellToolTipTextNeeded += new System.Windows.Forms.DataGridViewCellToolTipTextNeededEventHandler(this._dataGridView_CellToolTipTextNeeded);
 			this._dataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this._dataGridView_DataError);
 			this._dataGridView.Paint += new System.Windows.Forms.PaintEventHandler(this._dataGridView_Paint);
 			// 

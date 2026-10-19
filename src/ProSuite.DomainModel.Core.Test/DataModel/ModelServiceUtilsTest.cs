@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.GeoDb;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.Test.DataModel
@@ -173,6 +174,145 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 				ModelServiceUtils.GetMasterDatabaseModelElementName(model, "L0OTHER.Roads"));
 		}
 
+		[Test]
+		public void FindsDatasetOfUnqualifiedModelByServiceTableNameWithSchemaOwner()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false,
+			                             schemaOwner: "TOPGIS_RC");
+			Dataset roads = AddDataset(model, "TLM_STRASSE");
+			AddDataset(model, "TLM_GEBAEUDE");
+
+			// The service was published from "TOPGIS_RC.TLM_STRASSE"
+			Assert.AreSame(
+				roads,
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGIS_RC_TLM_STRASSE"));
+		}
+
+		[Test]
+		public void FindsDatasetOfUnqualifiedModelByServiceTableNameWithDatabaseAndSchemaOwner()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false,
+			                             schemaOwner: "TOPGIS_RC",
+			                             databaseName: "TOPGISRAW");
+			Dataset roads = AddDataset(model, "TLM_STRASSE");
+
+			// The service was published from "TOPGISRAW.TOPGIS_RC.TLM_STRASSE"
+			Assert.AreSame(
+				roads,
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGISRAW_TOPGIS_RC_TLM_STRASSE"));
+
+			// ... or from the name without the database part
+			Assert.AreSame(
+				roads,
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGIS_RC_TLM_STRASSE"));
+		}
+
+		[Test]
+		public void FindsDatasetOfQualifiedModelByServiceTableName()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: true,
+			                             schemaOwner: "TOPGIS_RC",
+			                             databaseName: "TOPGISRAW");
+			Dataset roads = AddDataset(model, "TOPGISRAW.TOPGIS_RC.TLM_STRASSE");
+
+			Assert.AreSame(
+				roads,
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGISRAW_TOPGIS_RC_TLM_STRASSE"));
+
+			// the layer may have been published without the database part
+			Assert.AreSame(
+				roads,
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGIS_RC_TLM_STRASSE"));
+		}
+
+		[Test]
+		public void ServiceTableNameSearchIgnoresCase()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false,
+			                             schemaOwner: "TOPGIS_RC");
+			Dataset roads = AddDataset(model, "TLM_STRASSE");
+
+			Assert.AreSame(
+				roads,
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5topgis_rc_tlm_strasse"));
+		}
+
+		[Test]
+		public void ServiceTableNameSearchSkipsIgnoredDatasets()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false,
+			                             schemaOwner: "TOPGIS_RC");
+			Dataset roads = AddDataset(model, "TLM_STRASSE");
+
+			Assert.IsNull(
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGIS_RC_TLM_STRASSE", dataset => dataset == roads));
+		}
+
+		[Test]
+		public void ServiceTableNameSearchReturnsNothingForAmbiguousName()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false,
+			                             schemaOwner: "TOPGIS_RC");
+
+			// both datasets reduce to the same letters and digits as the service table name:
+			// the first one once qualified with the schema owner, the second one as it is
+			AddDataset(model, "TLM_STRASSE");
+			AddDataset(model, "TOPGIS_RC_TLM_STRASSE");
+
+			Assert.IsNull(
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGIS_RC_TLM_STRASSE"));
+		}
+
+		[Test]
+		public void ServiceTableNameSearchDoesNotMatchOtherSchemaOwner()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false,
+			                             schemaOwner: "TOPGIS_RC");
+			AddDataset(model, "TLM_STRASSE");
+
+			Assert.IsNull(
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5OTHER_OWNER_TLM_STRASSE"));
+		}
+
+		[Test]
+		public void ServiceTableNameSearchDoesNotMatchOnNamePartAlone()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false,
+			                             schemaOwner: "TOPGIS_RC");
+			AddDataset(model, "STRASSE");
+
+			// "TLM_STRASSE" ends with the dataset name, but is not that dataset
+			Assert.IsNull(
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGIS_RC_TLM_STRASSE"));
+		}
+
+		[Test]
+		public void ServiceTableNameSearchNeedsSchemaOwnerForUnqualifiedModel()
+		{
+			DdxModel model = CreateModel(elementNamesAreQualified: false);
+			AddDataset(model, "TLM_STRASSE");
+
+			Assert.IsNull(
+				ModelServiceUtils.FindDatasetForServiceTableName(
+					model, "L5TOPGIS_RC_TLM_STRASSE"));
+		}
+
+		[NotNull]
+		private static Dataset AddDataset([NotNull] DdxModel model, [NotNull] string name)
+		{
+			return model.AddDataset(new TestDataset(name));
+		}
+
 		[NotNull]
 		private static DdxModel CreateModel(bool elementNamesAreQualified,
 		                                    [CanBeNull] string schemaOwner = null,
@@ -202,6 +342,13 @@ namespace ProSuite.DomainModel.Core.Test.DataModel
 			}
 
 			protected override void CheckAssignSpecialDatasetCore(Dataset dataset) { }
+		}
+
+		private class TestDataset : Dataset
+		{
+			public TestDataset([NotNull] string name) : base(name) { }
+
+			public override DatasetType DatasetType => DatasetType.FeatureClass;
 		}
 	}
 }

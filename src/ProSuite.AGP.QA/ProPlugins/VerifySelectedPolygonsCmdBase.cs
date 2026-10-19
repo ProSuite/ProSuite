@@ -49,6 +49,19 @@ namespace ProSuite.AGP.QA.ProPlugins
 			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
+		/// <summary>
+		/// Returns the perimeter to verify, derived from the union of the selected polygons,
+		/// for example intersected with the current work unit.
+		/// </summary>
+		/// <param name="selectedPolygons">The union of the selected polygons.</param>
+		/// <returns>The perimeter to verify, or null if nothing is to be verified. In that
+		/// case the implementation has informed the user.</returns>
+		[CanBeNull]
+		protected virtual Geometry GetPerimeterToVerify([NotNull] Polygon selectedPolygons)
+		{
+			return selectedPolygons;
+		}
+
 		protected override async Task<bool> OnClickAsyncCore()
 		{
 			if (SessionContext?.VerificationEnvironment == null)
@@ -101,6 +114,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 					                           (Polygon) GeometryUtils.Union(selectedPolygons));
 			}
 
+			Geometry perimeter = GetPerimeterToVerify(selectedPolygonGeometry);
+
+			if (perimeter == null)
+			{
+				return false;
+			}
+
 			var progressTracker = new QualityVerificationProgressTracker
 			                      {
 				                      CancellationTokenSource = new CancellationTokenSource()
@@ -110,7 +130,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				mapView, selectedPolygonGeometry, spatialRef,
+				mapView, perimeter, spatialRef,
 				SessionContext.VerificationEnvironment, SaveAction);
 
 			var qaProgressViewmodel =
@@ -118,7 +138,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () =>
-						Verify(selectedPolygonGeometry, progressTracker),
+						Verify(perimeter, progressTracker),
 					ApplicationController = appController
 				};
 
@@ -135,7 +155,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 		}
 
 		private async Task<ServiceCallStatus> Verify(
-			[NotNull] Polygon polygon,
+			[NotNull] Geometry perimeter,
 			[NotNull] QualityVerificationProgressTracker progressTracker)
 		{
 			Task<ServiceCallStatus> verificationTask =
@@ -148,7 +168,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							polygon, progressTracker, "selected polygons");
+							perimeter, progressTracker, "selected polygons");
 					},
 					BackgroundProgressor.None);
 

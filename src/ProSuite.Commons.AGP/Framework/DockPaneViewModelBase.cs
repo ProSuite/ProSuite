@@ -14,6 +14,7 @@ public abstract class DockPaneViewModelBase : DockPane
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private readonly Control _contentControl;
+	private Exception _viewCreationException;
 
 	protected DockPaneViewModelBase()
 	{
@@ -29,9 +30,39 @@ public abstract class DockPaneViewModelBase : DockPane
 
 	protected override Control OnCreateContent()
 	{
+		if (_contentControl is null)
+		{
+			// View creation failed (or CreateView() is not overridden). Return a placeholder
+			// instead of failing: Pro creates the pane not only on user action but also when
+			// restoring a project/session in which the pane was open, and an exception here
+			// surfaces to the user and breaks DockPaneManager.Find() for this pane ID.
+			return CreateFallbackView();
+		}
+
 		_contentControl.DataContext = this;
 
 		return _contentControl;
+	}
+
+	private Control CreateFallbackView()
+	{
+		string details = _viewCreationException is null
+			                 ? "No view was created."
+			                 : _viewCreationException.Message;
+
+		var textBlock = new TextBlock
+		                {
+			                Text = $"The '{Caption}' pane could not be initialized:" +
+			                       $"{Environment.NewLine}{Environment.NewLine}{details}" +
+			                       $"{Environment.NewLine}{Environment.NewLine}See the log file for details.",
+			                TextWrapping = System.Windows.TextWrapping.Wrap,
+			                Margin = new System.Windows.Thickness(12)
+		                };
+
+		// Follow Pro's theme (readable in dark mode); harmless no-op if the resource is unknown.
+		textBlock.SetResourceReference(TextBlock.ForegroundProperty, "Esri_TextStyleDefaultBrush");
+
+		return new ScrollViewer { Content = textBlock };
 	}
 
 	/// <summary>
@@ -98,6 +129,7 @@ public abstract class DockPaneViewModelBase : DockPane
 		}
 		catch (Exception e)
 		{
+			_viewCreationException = e;
 			_msg.Error($"Error creating view for dock pane {Caption}: {e.Message}", e);
 		}
 

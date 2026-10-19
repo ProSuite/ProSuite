@@ -24,6 +24,7 @@ using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Text;
@@ -441,13 +442,30 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 		return GeometryEngine.Instance.Relate(full, partial, "T********");
 	}
 
+	/// <summary>
+	/// Whether the specified geometry is fully inside the specified extent (does not touch)
+	/// </summary>
+	/// <param name="geometry"></param>
+	/// <param name="extent"></param>
+	/// <returns></returns>
 	private static bool IsFullyInsideExtent(Geometry geometry, Envelope extent)
 	{
-		Envelope g = geometry.Extent;
-		return g.XMin > extent.XMin &&
-		       g.XMax < extent.XMax &&
-		       g.YMin > extent.YMin &&
-		       g.YMax < extent.YMax;
+		Envelope geometryExtent = geometry.Extent;
+
+		double tolerance = GeometryUtils.GetXyTolerance(geometry);
+
+		if (double.IsNaN(tolerance))
+		{
+			// We cannot tell, re-calculate anyway
+			return false;
+		}
+
+		// To ensure that the geometry does not touch the extent, shrink it by tolerance:
+		Envelope reduced = extent.Expand(-tolerance, -tolerance, false);
+
+		return GeomRelationUtils.IsContained(
+			geometryExtent.XMin, geometryExtent.YMin, geometryExtent.XMax, geometryExtent.YMax,
+			reduced.XMin, reduced.YMin, reduced.XMax, reduced.YMax, 0);
 	}
 
 	private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,

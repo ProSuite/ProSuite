@@ -4,6 +4,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.GeoDb;
 using ProSuite.QA.Core;
+using ProSuite.QA.Core.Signatures;
 using ProSuite.QA.Core.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.ParameterTypes;
@@ -69,6 +70,7 @@ namespace ProSuite.QA.Tests
 			       textFieldNames, FieldListType.RelevantFields) { }
 
 		[Doc(nameof(DocStrings.QaTrimmedTextFields_5))]
+		[NotAScalarListRedirect] // textFieldNamesString is a token string (GetTokens)
 		public QaTrimmedTextFieldsDefinition(
 			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITableSchemaDef table,

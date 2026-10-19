@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -16,6 +17,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.Cracker;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -37,9 +39,16 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 
 	private Envelope _calculationExtent;
 
+	private const Key _vertexDisplayModeToggleKey = Key.V;
+
+	// Additional display mode, toggled with [V]
+	private VertexCoordinateDisplay _vertexDisplay;
+
 	protected ChopperToolBase()
 	{
 		GeomIsSimpleAsFeature = false;
+
+		HandledKeys.Add(_vertexDisplayModeToggleKey);
 	}
 
 	protected string OptionsFileName => "ChopperToolOptions.xml";
@@ -57,6 +66,12 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 	protected virtual string LocalConfigDir
 		=> EnvironmentUtils.ConfigurationDirectoryProvider.GetDirectory(
 			AppDataFolder.Roaming, "ToolDefaults");
+
+	/// <summary>
+	/// The scale denominator beyond which (i.e. zoomed further out than) the vertex labels
+	/// are hidden. Zooming in again restores them.
+	/// </summary>
+	protected virtual double LabelMinimumScaleDenominator => 1000;
 
 	protected override void OnUpdateCore()
 	{
@@ -77,6 +92,13 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 	{
 		_chopperToolOptions = InitializeOptions();
 		_feedback = new CrackerFeedback();
+
+		// The display mode starts off and is toggled with [V]
+		_vertexDisplay = new VertexCoordinateDisplay
+		                 {
+			                 MinimumScaleDenominator = LabelMinimumScaleDenominator
+		                 };
+
 		return base.OnToolActivatingCoreAsync();
 	}
 
@@ -85,6 +107,9 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		_settingsProvider?.StoreLocalConfiguration(_chopperToolOptions.LocalOptions);
 		_feedback?.DisposeOverlays();
 		_feedback = null;
+
+		_vertexDisplay?.Dispose();
+		_vertexDisplay = null;
 
 		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
@@ -102,10 +127,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 	                                                   CancelableProgressor progressor)
 	{
-		// Begin a new calculation generation up front so a superseding request (e.g. another
-		// spinner click) or Escape cancels this whole calculation, including the target search
-		// below, before the service round-trip is issued.
-		CancellationToken cancelToken = BeginCalculation();
+		CancellationToken cancelToken = CreateCancellationToken();
 
 		// Store current map extent
 		bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
@@ -138,11 +160,52 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		{
 			_feedback.UpdateExtent(_calculationExtent);
 		}
+
+		UpdateActiveDisplayFeatures(selectedFeatures);
 	}
 
 	protected override bool CanUseDerivedGeometries()
 	{
 		return _resultChopPoints != null && _resultChopPoints.ResultsByFeature.Count > 0;
+	}
+
+	protected override async Task HandleKeyDownCoreAsync(MapViewKeyEventArgs args)
+	{
+		if (args.Key == _vertexDisplayModeToggleKey)
+		{
+			await ToggleVertexDisplayAsync();
+		}
+
+		await base.HandleKeyDownCoreAsync(args);
+	}
+
+	// Hands the current selection to the display before switching it on. Unlike the chop
+	// point feedback the labels are available in both phases of the tool, i.e. without
+	// waiting for the chop points to be calculated. Switching off needs no shapes.
+	private async Task ToggleVertexDisplayAsync()
+	{
+		if (_vertexDisplay == null)
+		{
+			return;
+		}
+
+		if (! _vertexDisplay.IsEnabled)
+		{
+			await QueuedTaskUtils.Run(() => _vertexDisplay.SetFeatures(
+				                          GetApplicableSelectedFeatures(ActiveMapView).ToList()));
+		}
+
+		await _vertexDisplay.ToggleAsync();
+	}
+
+	// Keeps the display mode in sync with the selection while it is on. If it is off it
+	// picks up the selection when it is switched on.
+	private void UpdateActiveDisplayFeatures([CanBeNull] IList<Feature> selectedFeatures)
+	{
+		if (_vertexDisplay?.IsEnabled == true)
+		{
+			_vertexDisplay.SetFeatures(selectedFeatures);
+		}
 	}
 
 	protected override async Task<bool> SelectAndProcessDerivedGeometry(
@@ -169,8 +232,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		var selectedFeatures = MapUtils.GetFeatures(
 			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
-		// New calculation generation for the chop operation (see CalculateDerivedGeometries).
-		CancellationToken cancelToken = BeginCalculation();
+		CancellationToken cancelToken = CreateCancellationToken();
 
 		IList<Feature> intersectingFeatures =
 			GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);
@@ -281,6 +343,10 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		_resultChopPoints = null;
 		_calculationExtent = null;
 		_feedback.DisposeOverlays();
+
+		// The selection is gone (e.g. [ESC]): drop the labels with it. The display mode
+		// stays on and picks up the next selection.
+		_vertexDisplay?.SetShapes(null);
 	}
 
 	protected override void LogDerivedGeometriesCalculated(CancelableProgressor progressor)
@@ -297,7 +363,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 				             ? "Select the chop points to apply."
 				             : $"Chop points have been found in {_resultChopPoints.ResultsByFeature.Count} features. Select one or more chop points. Draw a box to select targets completely within the box.";
 
-			_msg.InfoFormat(LocalizableStrings.RemoveOverlapsTool_AfterSelection, msg);
+			_msg.InfoFormat(LocalizableStrings.CrackerTool_AfterSelection, msg);
 		}
 	}
 

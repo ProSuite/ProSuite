@@ -49,19 +49,28 @@ namespace ProSuite.GIS.Geometry.AGP
 
 		public long PrecisionExImpl => throw new NotImplementedException();
 
+		/// <summary>
+		/// Whether the XY precision (false origin and units) is defined.
+		/// </summary>
 		public bool HasXYPrecision()
 		{
-			throw new NotImplementedException();
+			return _proSpatialReference.XYScale > 0;
 		}
 
+		/// <summary>
+		/// Whether the Z precision (false Z origin and Z units) is defined.
+		/// </summary>
 		public bool HasZPrecision()
 		{
-			throw new NotImplementedException();
+			return _proSpatialReference.ZScale > 0;
 		}
 
+		/// <summary>
+		/// Whether the M precision (false M origin and M units) is defined.
+		/// </summary>
 		public bool HasMPrecision()
 		{
-			throw new NotImplementedException();
+			return _proSpatialReference.MScale > 0;
 		}
 
 		public bool AreEqual(ISpatialReference otherSr, bool includeResolution)

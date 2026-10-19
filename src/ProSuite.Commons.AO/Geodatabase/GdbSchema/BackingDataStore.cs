@@ -11,6 +11,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		public abstract void ExecuteSql(string sqlStatement);
 
+		public abstract IEnumerable<GdbDatasetMoniker> GetDatasetMonikers(
+			esriDatasetType datasetType);
+
 		public abstract IEnumerable<VirtualTable> GetDatasets(esriDatasetType datasetType);
 
 		public abstract VirtualTable OpenTable(string name);

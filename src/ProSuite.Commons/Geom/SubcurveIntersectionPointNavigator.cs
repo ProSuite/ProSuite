@@ -1357,14 +1357,14 @@ namespace ProSuite.Commons.Geom
 		/// <para>These redundant runs arise at acute corners where a vertex lies > tolerance from the
 		/// corner point but &lt; tolerance from the adjacent segment, so a single source segment is
 		/// linear with two adjacent target segments and the linear stretch is broken and re-seeded.
-		/// The containment is checked against ALL other runs (not just the immediately preceding one),
-		/// so it also catches the case where the larger run appears later in the source order, and it
-		/// includes runs that share an endpoint with the larger one (e.g.
-		/// CanGetDifferenceAreaWithLinearIntersectionWithVertexOnAcuteAngle - larger run first;
-		/// CanGetFootprintForFriedhofsmauerRoggwil - larger run shares the start, appears second).
+		/// The duplicate is always re-seeded directly after the run it duplicates, so only the
+		/// immediately preceding run is considered, and it must start STRICTLY before the inner one:
+		/// runs sharing a start describe two genuinely different target segments (TOP-5999).
 		/// Only the SOURCE span is compared (an inverted acute-angle run has a reversed/disjoint
 		/// target span) and only NON-short runs are removed (sub-tolerance runs are left to the
 		/// clustering, see CanGetUnionAreaXYWithMultipleShortSegmentsAtMultipartTouchPoints).</para>
+		/// <para>NOTE: comparing only source spans makes this a heuristic rather than a real
+		/// duplicate test - see the simplification notes before extending it further.</para>
 		/// </summary>
 		private static HashSet<IntersectionPoint3D> GetSubsumedLinearIntersectionPoints(
 			[NotNull] IList<IntersectionPoint3D> intersections, double tolerance)
@@ -1394,12 +1394,18 @@ namespace ProSuite.Commons.Geom
 				return result;
 			}
 
-			foreach (var inner in stretches)
+			// Only the IMMEDIATELY PRECEDING run is compared (TOP-5999): a duplicate is always
+			// re-seeded directly after the run it duplicates. Comparing against every OTHER run
+			// (as the generalized version did) also removes a run that is subsumed by a LATER
+			// one - which is exactly the target-spike case where the shorter flank is seeded
+			// first and must be kept (CanGetFootprintForLugano8711144: 2 of 119 sq m lost,
+			// CanGetFootprintForLugano8711671: 4 of 451). Restricting the comparison was
+			// measured to make no other difference on real data (41'231 TLM_GEBAEUDEKOERPER,
+			// Lugano: not a single otherwise differing footprint).
+			for (var i = 1; i < stretches.Count; i++)
 			{
-				if (result.Contains(inner.Key))
-				{
-					continue;
-				}
+				KeyValuePair<IntersectionPoint3D, IntersectionPoint3D> inner = stretches[i];
+				KeyValuePair<IntersectionPoint3D, IntersectionPoint3D> outer = stretches[i - 1];
 
 				// Leave short runs to the clustering machinery (do not remove them).
 				if (GeomUtils.GetDistanceXY(inner.Key.Point, inner.Value.Point) <= tolerance)
@@ -1407,20 +1413,10 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				foreach (var outer in stretches)
+				if (LinearStretchSubsumes(outer.Key, outer.Value, inner.Key, inner.Value))
 				{
-					if (ReferenceEquals(inner.Key, outer.Key) ||
-					    result.Contains(outer.Key))
-					{
-						continue;
-					}
-
-					if (LinearStretchSubsumes(outer.Key, outer.Value, inner.Key, inner.Value))
-					{
-						result.Add(inner.Key);
-						result.Add(inner.Value);
-						break;
-					}
+					result.Add(inner.Key);
+					result.Add(inner.Value);
 				}
 			}
 
@@ -1457,12 +1453,28 @@ namespace ProSuite.Commons.Geom
 			double innerSrcMax = Math.Max(innerStart.VirtualSourceVertex,
 			                              innerEnd.VirtualSourceVertex);
 
-			bool sourceContained =
-				innerSrcMin >= outerSrcMin - eps && innerSrcMax <= outerSrcMax + eps;
-			bool outerStrictlyLarger =
-				outerSrcMax - outerSrcMin > innerSrcMax - innerSrcMin + eps;
-
-			return sourceContained && outerStrictlyLarger;
+			// The inner run must start STRICTLY after the outer run (TOP-5999). Two runs that
+			// start at the SAME source location describe the source leaving that shared point
+			// along two different target segments - the two flanks of a target spike whose tip
+			// is thinner than the tolerance. That is not one overlap described twice, and
+			// dropping the shorter run makes the walk cut into the source. This is the mirror
+			// image of the ordering in CanGetFootprintForLugano8711144 /
+			// CanGetFootprintForLugano8711671, where the shorter run is seeded FIRST and it is
+			// the restriction to the immediately preceding run (see the caller) that keeps it.
+			// NOTE: TLM_GEBAEUDEKOERPER 8706452 appears to contradict this rule - it needs
+			// such a run REMOVED - but it does not: there the "outer" run has ZERO extent
+			// (its start and end are the same point, and its target span 3 -> 0 is the same
+			// location on a 3-segment ring). The old, over-broad predicate deleted the one
+			// REAL run as contained in that phantom, which accidentally hid a degenerate
+			// sub-tolerance boundary loop in the accumulated footprint. No sound duplicate
+			// test can reproduce that deletion, and every predicate that does also re-breaks
+			// CanGetFootprintForLugano8711144. The loop is now removed at the source, in
+			// RingSimplifier.RemoveSubToleranceBoundaryLoop; do not widen this predicate to
+			// chase such cases.
+			// The end is compared non-strictly: the duplicate at an acute corner ends exactly
+			// where the run it duplicates ends (see
+			// CanGetDifferenceAreaWithLinearIntersectionWithVertexOnAcuteAngle).
+			return innerSrcMin > outerSrcMin + eps && innerSrcMax <= outerSrcMax + eps;
 		}
 
 		/// <summary>

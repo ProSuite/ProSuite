@@ -1,4 +1,4 @@
-namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
+﻿namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 {
 	partial class InstanceParameterConfigControl
 	{
@@ -74,7 +74,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			this._linkDocumentation.Size = new System.Drawing.Size(179, 15);
 			this._linkDocumentation.TabIndex = 23;
 			this._linkDocumentation.TabStop = true;
-			this._linkDocumentation.Text = "Show Parameter Documentation";
+			this._linkDocumentation.Text = "Show Documentation";
 			this._linkDocumentation.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			this._linkDocumentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this._linkDocumentation_LinkClicked);
 			// 

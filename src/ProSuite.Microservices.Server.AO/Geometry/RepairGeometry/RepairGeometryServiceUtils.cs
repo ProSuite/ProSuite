@@ -172,7 +172,13 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 				{
 					IGeometry updateGeometry = ApplyRepairToFeature(
 						feature, minimumSegmentLength, crackPointTolerance, use2D,
-						allowPathSplitAtIntersections, allowLinearSelfIntersections);
+						allowPathSplitAtIntersections, allowLinearSelfIntersections,
+						trackCancel);
+
+					if (trackCancel != null && ! trackCancel.Continue())
+					{
+						break;
+					}
 
 					if (updateGeometry != null && ! updateGeometry.IsEmpty)
 					{
@@ -224,7 +230,12 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 						IGeometry updateGeometry = ApplyRepairToFeature(
 							feature, minimumSegmentLength,
 							crackPointTolerance, use2D, allowPathSplitAtIntersections,
-							allowLinearSelfIntersections);
+							allowLinearSelfIntersections, trackCancel);
+
+						if (trackCancel != null && ! trackCancel.Continue())
+						{
+							break;
+						}
 
 						if (updateGeometry != null && ! updateGeometry.IsEmpty)
 						{
@@ -286,7 +297,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 			double crackPointTolerance,
 			bool use2D,
 			bool allowPathSplitAtIntersections,
-			bool allowLinearSelfIntersections)
+			bool allowLinearSelfIntersections,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			IGeometry updateGeometry = feature.ShapeCopy;
 
@@ -327,10 +339,16 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RepairGeometry
 					                        };
 
 					int removedShortSegments = GeneralizeUtils.DeleteShortSegments(
-						(IPolycurve) updateGeometry, featureVertexInfo, use2D, null);
+						(IPolycurve) updateGeometry, featureVertexInfo, use2D, null, null,
+						trackCancel);
 
 					_msg.VerboseDebug(() => $"Removed {removedShortSegments} short segments");
 				}
+			}
+
+			if (trackCancel != null && ! trackCancel.Continue())
+			{
+				return updateGeometry;
 			}
 
 			if (updateGeometry.IsEmpty)

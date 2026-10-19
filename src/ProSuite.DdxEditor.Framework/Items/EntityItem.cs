@@ -117,14 +117,49 @@ namespace ProSuite.DdxEditor.Framework.Items
 				return true;
 			}
 
+			string preparationError = PrepareForValidation(entity);
+
 			notification = entity.ValidateForPersistence();
 			IsValidForPersistenceCore(entity, notification);
+
+			if (preparationError != null)
+			{
+				notification.RegisterMessage(preparationError, Severity.Error);
+			}
 
 			return notification.IsValid();
 		}
 
 		protected virtual void IsValidForPersistenceCore([NotNull] E entity,
 		                                                 [NotNull] Notification notification) { }
+
+		/// <summary>
+		/// Brings the entity into a validatable state right before its persistence
+		/// validation runs. Invoked inside the same (read-only) transaction as the
+		/// validation itself: the entity may be mutated in memory (e.g. assigning a
+		/// reference the editor resolves automatically), but nothing may be persisted
+		/// here - persistence-time preparation belongs in <see cref="RequestCommitCore"/>.
+		/// The default implementation invokes <see cref="PrepareValidationCallback"/>
+		/// (if set); subclasses may override instead of using the callback.
+		/// </summary>
+		/// <returns>An error message when the entity cannot be prepared for persistence
+		/// (registered on the validation result, blocking the save), or <c>null</c>.</returns>
+		[CanBeNull]
+		protected virtual string PrepareForValidation([NotNull] E entity)
+		{
+			return PrepareValidationCallback?.Invoke(entity);
+		}
+
+		/// <summary>
+		/// Optional callback invoked by the default <see cref="PrepareForValidation"/>,
+		/// inside the same read-only transaction as the pre-save validation, right
+		/// before the entity validates. May mutate the entity in memory and return an
+		/// error message that blocks the save (e.g. an algorithm-first editor assigning
+		/// a transient, not-yet-persisted descriptor here so its "Required" validation
+		/// passes). <c>null</c> (the default) leaves validation behavior unchanged.
+		/// </summary>
+		[CanBeNull]
+		public Func<E, string> PrepareValidationCallback { get; set; }
 
 		//protected override void StartEditingCore()
 		//{
@@ -154,6 +189,13 @@ namespace ProSuite.DdxEditor.Framework.Items
 
 		protected override void RequestCommitCore()
 		{
+			E entity = GetEntity();
+
+			if (entity != null)
+			{
+				PreparePersistenceCallback?.Invoke(entity);
+			}
+
 			base.RequestCommitCore();
 
 			if (_isNew)
@@ -166,6 +208,17 @@ namespace ProSuite.DdxEditor.Framework.Items
 				//_isNew = false;
 			}
 		}
+
+		/// <summary>
+		/// Optional callback invoked at the start of <see cref="RequestCommitCore"/>,
+		/// inside the item's persistence transaction, before the entity is saved (i.e.
+		/// before a new entity is inserted, respectively before the pending changes of
+		/// an existing entity are flushed). E.g. an algorithm-first editor uses this to
+		/// flush its edit session and resolve/assign a persisted descriptor at save
+		/// time. <c>null</c> (the default) leaves persistence behavior unchanged.
+		/// </summary>
+		[CanBeNull]
+		public Action<E> PreparePersistenceCallback { get; set; }
 
 		protected override void EndCommitCore()
 		{

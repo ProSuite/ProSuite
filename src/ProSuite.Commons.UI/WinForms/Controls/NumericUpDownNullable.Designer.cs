@@ -33,11 +33,13 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			this._textBoxNull = new System.Windows.Forms.TextBox();
 			((System.ComponentModel.ISupportInitialize)(this._numericUpDown)).BeginInit();
 			this.SuspendLayout();
-			// 
+			//
 			// _numericUpDown
-			// 
-			this._numericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			//
+			// Note: the child controls are positioned by LayoutChildren() (see the code file),
+			// not by anchoring: the "not set" check box grows with the font, so its width is
+			// only known at layout time. The bounds set here are the design-time defaults.
+			this._numericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
 			this._numericUpDown.Location = new System.Drawing.Point(0, 0);
 			this._numericUpDown.Name = "_numericUpDown";
 			this._numericUpDown.Size = new System.Drawing.Size(495, 20);
@@ -47,7 +49,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			// 
 			// _checkBoxNull
 			// 
-			this._checkBoxNull.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this._checkBoxNull.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
 			this._checkBoxNull.AutoSize = true;
 			this._checkBoxNull.Location = new System.Drawing.Point(505, 3);
 			this._checkBoxNull.Margin = new System.Windows.Forms.Padding(0);
@@ -60,8 +62,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			// 
 			// _textBoxNull
 			// 
-			this._textBoxNull.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			this._textBoxNull.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
 			this._textBoxNull.Location = new System.Drawing.Point(0, 0);
 			this._textBoxNull.Name = "_textBoxNull";
 			this._textBoxNull.ReadOnly = true;

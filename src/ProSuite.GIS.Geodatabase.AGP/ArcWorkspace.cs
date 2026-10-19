@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -230,14 +231,7 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		{
 			_allRelationshipClasses = new List<IRelationshipClass>();
 
-			foreach (RelationshipClassDefinition definition in Geodatabase
-				         .GetDefinitions<RelationshipClassDefinition>())
-			{
-				TryAddRelClass(definition, _allRelationshipClasses);
-			}
-
-			foreach (AttributedRelationshipClassDefinition definition in Geodatabase
-				         .GetDefinitions<AttributedRelationshipClassDefinition>())
+			foreach (RelationshipClassDefinition definition in GetRelationshipClassDefinitions())
 			{
 				TryAddRelClass(definition, _allRelationshipClasses);
 			}
@@ -247,6 +241,20 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		{
 			yield return relationshipClass;
 		}
+	}
+
+	private List<RelationshipClassDefinition> GetRelationshipClassDefinitions()
+	{
+		var result = new List<RelationshipClassDefinition>();
+
+		if (! RelationshipClassUtils.TryAddRelationshipClassDefinitions(
+			    Geodatabase, result, out string message))
+		{
+			// For example, a memory geodatabase has no relationship classes.
+			_msg.Debug(message);
+		}
+
+		return result;
 	}
 
 	private void TryAddRelClass(RelationshipClassDefinition definition,
@@ -333,14 +341,8 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 
 				break;
 			case esriDatasetType.esriDTRelationshipClass:
-				foreach (RelationshipClassDefinition definition in Geodatabase
-					         .GetDefinitions<RelationshipClassDefinition>())
-				{
-					yield return new ArcRelationshipClassDefinitionName(definition, this);
-				}
-
-				foreach (AttributedRelationshipClassDefinition definition in Geodatabase
-					         .GetDefinitions<AttributedRelationshipClassDefinition>())
+				foreach (RelationshipClassDefinition definition in
+				         GetRelationshipClassDefinitions())
 				{
 					yield return new ArcRelationshipClassDefinitionName(definition, this);
 				}
@@ -381,7 +383,12 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 		}
 	}
 
-	public string PathName => _pathName ??= WorkspaceUtils.GetCatalogPath(Geodatabase);
+	/// <summary>
+	/// The catalog path, or an empty string for a geodatabase that has none, such as an
+	/// in-memory geodatabase.
+	/// </summary>
+	public string PathName =>
+		_pathName ??= WorkspaceUtils.GetDatastorePath(Geodatabase)?.LocalPath ?? string.Empty;
 
 	public esriWorkspaceType Type =>
 		_workspaceType ??= ArcWorkspaceUtils.FromGeodatabaseWorkspaceType(
@@ -399,15 +406,16 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 	{
 		GeodatabaseType geodatabaseType = Geodatabase.GetGeodatabaseType();
 
-		// A live remote (enterprise) connection or feature service exists by virtue of being
-		// open; there is no local path to probe.
+		// A live remote (enterprise) connection, feature service or in-memory geodatabase
+		// exists by virtue of being open; there is no local path to probe.
 		if (geodatabaseType == GeodatabaseType.RemoteDatabase ||
-		    geodatabaseType == GeodatabaseType.Service)
+		    geodatabaseType == GeodatabaseType.Service ||
+		    geodatabaseType == GeodatabaseType.Memory)
 		{
 			return true;
 		}
 
-		string localPath = Geodatabase.GetPath()?.LocalPath;
+		string localPath = WorkspaceUtils.GetDatastorePath(Geodatabase)?.LocalPath;
 
 		if (string.IsNullOrEmpty(localPath))
 		{
@@ -1195,7 +1203,13 @@ public class ArcConflictClass : IConflictClass
 
 public class VersionInfo : IVersionInfo
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 	private readonly bool _isOwner;
+
+	// The children must be read lazily: a child's parent reads its children again,
+	// which would otherwise recurse endlessly between parent and child.
+	private readonly Lazy<IEnumerable<IVersionInfo>> _children;
 
 	public VersionInfo(Version version)
 	{
@@ -1204,7 +1218,7 @@ public class VersionInfo : IVersionInfo
 		Created = version.GetCreatedDate();
 		Modified = version.GetModifiedDate();
 		Parent = version.GetParent() != null ? new VersionInfo(version.GetParent()) : null;
-		Children = version.GetChildren().Select(c => new VersionInfo(c));
+		_children = new Lazy<IEnumerable<IVersionInfo>>(() => GetChildren(version));
 
 		_isOwner = version.IsOwner();
 	}
@@ -1218,7 +1232,8 @@ public class VersionInfo : IVersionInfo
 
 	public IVersionInfo Parent { get; }
 
-	public IEnumerable<IVersionInfo> Children { get; }
+	/// <remarks>Must be called on the MCT. Use QueuedTask.Run.</remarks>
+	public IEnumerable<IVersionInfo> Children => _children.Value;
 
 	public bool IsOwner()
 	{
@@ -1226,6 +1241,34 @@ public class VersionInfo : IVersionInfo
 	}
 
 	#endregion
+
+	private static IEnumerable<IVersionInfo> GetChildren(Version version)
+	{
+		try
+		{
+			return version.GetChildren().Select(c => new VersionInfo(c)).ToList();
+		}
+		catch (NotImplementedException)
+		{
+			// Not all datastores support retrieving the version tree's children
+			// (e.g. non-traditional / branch-versioned geodatabases).
+			_msg.VerboseDebug(() => $"GetChildren() is not implemented for version " +
+			                        $"{version.GetName()}. Assuming no children.");
+
+			return Enumerable.Empty<IVersionInfo>();
+		}
+		catch (GeodatabaseException ex)
+		{
+			// The version's children could not be determined, e.g. because the version
+			// (or one of its children) has meanwhile been deleted/renamed by another user.
+			// Do not fail the whole operation (such as a workspace comparison) just because
+			// the version tree cannot be fully resolved.
+			_msg.Debug($"Error getting children of version {version.GetName()}: " +
+			           $"{ex.Message}. Assuming no children.", ex);
+
+			return Enumerable.Empty<IVersionInfo>();
+		}
+	}
 }
 
 public class ArcWorkspaceName : IWorkspaceName
@@ -1269,6 +1312,8 @@ public class ArcWorkspaceName : IWorkspaceName
 
 	public IEnumerable<KeyValuePair<string, string>> ConnectionProperties =>
 		_datastoreName.ConnectionProperties;
+
+	public bool IsFeatureService => _datastoreName.IsFeatureService;
 
 	#endregion
 

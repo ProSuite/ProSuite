@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -119,14 +120,27 @@ public abstract class GdbItemRepository : IWorkItemRepository
 		WorkItemStateRepository.Commit(SourceClasses, extent);
 	}
 
+	[Obsolete("Use SetCurrentItem instead.")]
 	public void SetCurrentIndex(int currentIndex)
 	{
 		WorkItemStateRepository.CurrentIndex = currentIndex;
 	}
 
+	[Obsolete("Use GetCurrentItemReference instead.")]
 	public int GetCurrentIndex()
 	{
 		return WorkItemStateRepository.CurrentIndex ?? -1;
+	}
+
+	public void SetCurrentItem(IWorkItem item)
+	{
+		WorkItemStateRepository.CurrentItem =
+			item == null ? null : new GdbObjectReference(item.UniqueTableId, item.ObjectID);
+	}
+
+	public GdbObjectReference? GetCurrentItemReference()
+	{
+		return WorkItemStateRepository.CurrentItem;
 	}
 
 	public long GetNextOid()

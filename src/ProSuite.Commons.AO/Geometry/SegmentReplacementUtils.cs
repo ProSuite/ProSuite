@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.Essentials.Assertions;
@@ -14,6 +15,10 @@ namespace ProSuite.Commons.AO.Geometry
 	public static class SegmentReplacementUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		// For testing only:
+		public const string VerifyShortSegmentRemovalEnvironmentVariable =
+			"PROSUITE_VERIFY_SHORT_SEGMENT_REMOVAL";
 
 		[NotNull]
 		public static IPointCollection GetIntersectionPoints(
@@ -240,7 +245,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (actualReplacement != null)
 			{
-				ISegment[] replacementArray = {actualReplacement};
+				ISegment[] replacementArray = { actualReplacement };
 
 				if (((IPath) partSegments).IsClosed &&
 				    GeometryUtils.AreEqual(((IPath) partSegments).FromPoint, adjacentToPoint))
@@ -775,9 +780,8 @@ namespace ProSuite.Commons.AO.Geometry
 				if (distanceAlong < minimumSegmentLength ||
 				    segment.Length - distanceAlong < minimumSegmentLength)
 				{
-					_msg.VerboseDebug(
-						() =>
-							$"Unable to insert vertex because of violated minimum segment length. Distance along segment: {distanceAlong}, segment: {segment.Length}");
+					_msg.VerboseDebug(() =>
+						                  $"Unable to insert vertex because of violated minimum segment length. Distance along segment: {distanceAlong}, segment: {segment.Length}");
 
 					return false;
 				}
@@ -786,7 +790,7 @@ namespace ProSuite.Commons.AO.Geometry
 			ISegment newFrom, newTo;
 			segment.SplitAtDistance(distanceAlong, false, out newFrom, out newTo);
 
-			var newSegments = new[] {newFrom, newTo};
+			var newSegments = new[] { newFrom, newTo };
 
 			GeometryUtils.GeometryBridge.ReplaceSegments(allSegments, globalSegmentIndex, 1,
 			                                             ref newSegments);
@@ -1379,9 +1383,8 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentCondition(geometry is ISegmentCollection,
 			                         "geometry must be ISegmentCollection");
 
-			_msg.VerboseDebug(
-				() =>
-					$"Retrieving segment {localSegmentIndex} from part {partIndex} in geometry {GeometryUtils.ToString(geometry)}");
+			_msg.VerboseDebug(() =>
+				                  $"Retrieving segment {localSegmentIndex} from part {partIndex} in geometry {GeometryUtils.ToString(geometry)}");
 
 			var geometryCollection = geometry as IGeometryCollection;
 
@@ -1585,6 +1588,8 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="protectedPoints"></param>
 		/// <param name="inPerimeter">Polygon or envelope to which segment removal should be restricted</param>
 		/// <param name="notifications">The notifications</param>
+		/// <param name="trackCancel">Allows the caller to abort the removal. The geometry is then
+		/// left in a partially processed state and must be discarded.</param>
 		public static void RemoveShortSegments(
 			[NotNull] IPolycurve fromGeometry,
 			[NotNull] IList<esriSegmentInfo> shortSegmentInfos,
@@ -1592,13 +1597,15 @@ namespace ProSuite.Commons.AO.Geometry
 			bool use2DLengthOnly,
 			[CanBeNull] IPointCollection protectedPoints,
 			[CanBeNull] IGeometry inPerimeter,
-			[CanBeNull] NotificationCollection notifications)
+			[CanBeNull] NotificationCollection notifications,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			// TODO: separate class ShortSegmentsRemover
 			const bool allowDegeneratingPaths = false;
 			RemoveShortSegments(
 				fromGeometry, shortSegmentInfos, minimumSegmentLength, use2DLengthOnly,
-				allowDegeneratingPaths, protectedPoints, inPerimeter, notifications);
+				allowDegeneratingPaths, protectedPoints, inPerimeter, notifications,
+				trackCancel);
 		}
 
 		/// <summary>
@@ -1613,6 +1620,8 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="protectedPoints"></param>
 		/// <param name="inPerimeter">Polygon or envelope to which segment removal should be restricted</param>
 		/// <param name="notifications">The notifications</param>
+		/// <param name="trackCancel">Allows the caller to abort the removal. The geometry is then
+		/// left in a partially processed state and must be discarded.</param>
 		public static void RemoveShortSegments(
 			[NotNull] IPolycurve fromGeometry,
 			[NotNull] IList<esriSegmentInfo> shortSegmentInfos,
@@ -1621,7 +1630,8 @@ namespace ProSuite.Commons.AO.Geometry
 			bool allowDegeneratingPaths,
 			[CanBeNull] IPointCollection protectedPoints,
 			[CanBeNull] IGeometry inPerimeter,
-			[CanBeNull] NotificationCollection notifications)
+			[CanBeNull] NotificationCollection notifications,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			bool use3DLength = GeometryUtils.IsZAware(fromGeometry) && ! use2DLengthOnly;
 
@@ -1629,7 +1639,12 @@ namespace ProSuite.Commons.AO.Geometry
 			                                                shortSegmentInfos,
 			                                                minimumSegmentLength, use3DLength,
 			                                                allowDegeneratingPaths,
-			                                                protectedPoints);
+			                                                protectedPoints, trackCancel);
+
+			if (trackCancel != null && ! trackCancel.Continue())
+			{
+				return;
+			}
 
 			// second run - remove the shortest to avoid deleting the longer one of two adjacent short segments
 			if (! allRemoved)
@@ -1640,7 +1655,7 @@ namespace ProSuite.Commons.AO.Geometry
 				RemoveShortSegmentsOrderedByShortest(fromGeometry, protectedPoints,
 				                                     minimumSegmentLength, inPerimeter,
 				                                     use3DLength, allowDegeneratingPaths,
-				                                     notifications);
+				                                     notifications, trackCancel);
 			}
 		}
 
@@ -1660,7 +1675,8 @@ namespace ProSuite.Commons.AO.Geometry
 			double minimumSegmentLength,
 			bool use3DLength,
 			bool allowDegeneratingPaths,
-			[CanBeNull] IPointCollection protectedPoints)
+			[CanBeNull] IPointCollection protectedPoints,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			var segmentsRemoved = 0;
 
@@ -1668,6 +1684,12 @@ namespace ProSuite.Commons.AO.Geometry
 			var segmentsSkipped = false;
 			for (var i = 0; i < shortSegmentInfos.Count; i++)
 			{
+				if (trackCancel != null && ! trackCancel.Continue())
+				{
+					_msg.Debug("Cancelled while removing stand-alone short segments.");
+					return false;
+				}
+
 				esriSegmentInfo segmentInfo = shortSegmentInfos[i];
 
 				// NOTE: The segmentInfos are copies! -> changes in the geometry are not reflected.
@@ -1736,24 +1758,40 @@ namespace ProSuite.Commons.AO.Geometry
 			[CanBeNull] IGeometry inPerimeter,
 			bool use3DLength,
 			bool allowDegeneratingPaths,
-			[CanBeNull] NotificationCollection notifications)
+			[CanBeNull] NotificationCollection notifications,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			IList<int> shortPathsToProtect = allowDegeneratingPaths
 				                                 ? null
 				                                 : new List<int>();
 			var shortSegmentDeleted = true;
 
+			// The remaining short segments must be re-determined after every single deletion,
+			// because deleting a segment merges its two neighbours and can make the result long
+			// enough to keep. The candidate list does that from the change that was just made
+			// instead of measuring every segment of the polycurve again.
+			var remainingShortSegments = new ShortSegmentCandidates(
+				polycurve, minimumSegmentLength, inPerimeter, use3DLength);
+
 			// as long as there is something to delete...
 			while (shortSegmentDeleted)
 			{
-				IList<esriSegmentInfo> remainingShortSegmentInfos =
-					GeometryUtils.GetShortSegments(polycurve,
-					                               minimumSegmentLength, inPerimeter, use3DLength);
+				if (trackCancel != null && ! trackCancel.Continue())
+				{
+					_msg.Debug("Cancelled while removing short segments ordered by length.");
+					return;
+				}
 
 				shortSegmentDeleted = DeleteShortestSegment(polycurve,
-				                                            remainingShortSegmentInfos,
+				                                            remainingShortSegments.Current,
 				                                            protectedPoints,
-				                                            shortPathsToProtect, use3DLength);
+				                                            shortPathsToProtect, use3DLength,
+				                                            out SegmentRemovalResult removal);
+
+				if (shortSegmentDeleted)
+				{
+					remainingShortSegments.Update(removal);
+				}
 			}
 
 			if (shortPathsToProtect != null)
@@ -1772,8 +1810,11 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] IEnumerable<esriSegmentInfo> allShortSegmentInfos,
 			[CanBeNull] IPointCollection protectedPoints,
 			[CanBeNull] ICollection<int> shortPathsToProtect,
-			bool use3DLength)
+			bool use3DLength,
+			out SegmentRemovalResult removal)
 		{
+			removal = default;
+
 			double shortestSegmentLength = double.NaN;
 			int shortestLocalSegmentIndex = -1;
 			int shortestSegmentPart = -1;
@@ -1818,7 +1859,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (shortestLocalSegmentIndex >= 0 && shortestSegmentPart >= 0)
 			{
 				TryRemoveSegment(segmentCollection, shortestLocalSegmentIndex, shortestSegmentPart,
-				                 protectedPoints);
+				                 protectedPoints, out removal);
 
 				// return true even if it wasn't deleted, otherwise processing stops
 				return true;
@@ -1873,6 +1914,22 @@ namespace ProSuite.Commons.AO.Geometry
 		                                    int partIndex,
 		                                    [CanBeNull] IPointCollection protectedPoints)
 		{
+			return TryRemoveSegment(fromGeometry, localSegmentIndex, partIndex, protectedPoints,
+			                        out SegmentRemovalResult _);
+		}
+
+		/// <summary>
+		/// Removes the specified segment, and reports in <paramref name="removal"/> what was
+		/// changed so that the caller can update a list of short segments it maintains.
+		/// </summary>
+		internal static bool TryRemoveSegment([NotNull] IPolycurve fromGeometry,
+		                                      int localSegmentIndex,
+		                                      int partIndex,
+		                                      [CanBeNull] IPointCollection protectedPoints,
+		                                      out SegmentRemovalResult removal)
+		{
+			removal = new SegmentRemovalResult { PartIndex = partIndex };
+
 			// In case the previous / or next segment is non-linear, the segment should be removed rather than the vertex
 			// because point removal (sometimes) leads to the destruction of adjacent non-linear segments
 			bool removeEntireSegment;
@@ -1895,10 +1952,27 @@ namespace ProSuite.Commons.AO.Geometry
 				return false;
 			}
 
-			_msg.DebugFormat("Removing vertex {0} in part {1}", localVertexToRemove, partIndex);
+			_msg.VerboseDebug(() => $"Removing vertex {localVertexToRemove} in part {partIndex}");
 
-			RemoveCutPointsService.RemovePoint(fromGeometry, partIndex,
-			                                   (int) localVertexToRemove);
+			int vertexIndex = (int) localVertexToRemove;
+
+			RemoveCutPointsService.RemovePoint(fromGeometry, partIndex, vertexIndex);
+
+			if (! removeEntireSegment && vertexIndex > 0)
+			{
+				// The part now has one vertex less. If the removed vertex was neither the first
+				// nor the last one of the part, the two segments that met at it have become a
+				// single segment and the rest of the part is unchanged. Removing the first or the
+				// last vertex re-arranges the whole part instead, and is not reported here.
+				int partPointCount =
+					((IPointCollection) ((IGeometryCollection) fromGeometry).Geometry[partIndex])
+					.PointCount;
+
+				if (vertexIndex < partPointCount)
+				{
+					removal.RemovedInnerVertexIndex = vertexIndex;
+				}
+			}
 
 			return true;
 		}
@@ -1912,7 +1986,7 @@ namespace ProSuite.Commons.AO.Geometry
 				partIndex,
 				localSegmentIndex);
 
-			var segmentsToRemove = new List<int> {globalSegmentIndex};
+			var segmentsToRemove = new List<int> { globalSegmentIndex };
 
 			GeometryUtils.RemoveSegments(segmentCollection, segmentsToRemove, closeGap);
 		}

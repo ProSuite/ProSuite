@@ -150,10 +150,8 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 
 				try
 				{
-					IGeometry updateGeometry;
-					if (
-						! updatedGeometries.TryGetValue(featureVertexInfo.Feature,
-						                                out updateGeometry))
+					if (! updatedGeometries.TryGetValue(featureVertexInfo.Feature,
+					                                    out IGeometry updateGeometry))
 					{
 						updateGeometry = featureVertexInfo.Feature.ShapeCopy;
 					}
@@ -171,7 +169,13 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 					Assert.NotNull(polycurveToUpdate, "Feature's shape must be a polycurve");
 
 					int removeCount = DeleteShortSegments(polycurveToUpdate, featureVertexInfo,
-					                                      use2DLengthOnly, inPerimeter);
+					                                      use2DLengthOnly, inPerimeter, null,
+					                                      cancel);
+
+					if (cancel != null && ! cancel.Continue())
+					{
+						return;
+					}
 
 					if (removeCount > 0)
 					{
@@ -589,7 +593,8 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 					: NonLinearSegmentHandling.Omit;
 
 			IEnumerable<IFeature> targetFeatures = vertexProtectingFeatures.Where(
-				vertexProtectingFeature => ! selectedFeatures.Contains(vertexProtectingFeature));
+					vertexProtectingFeature => ! selectedFeatures.Contains(
+						                           vertexProtectingFeature));
 
 			CrackUtils.AddTargetIntersectionCrackPoints(
 				generalizationInfos, targetFeatures, vertexProtectingFeatureSelection,
@@ -698,7 +703,9 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			[NotNull] IPolycurve fromPolycurve,
 			[NotNull] FeatureVertexInfo vertexInfo,
 			bool use2DLengthOnly,
-			[CanBeNull] IGeometry inPerimeter)
+			[CanBeNull] IGeometry inPerimeter,
+			[CanBeNull] NotificationCollection notifications = null,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			IList<esriSegmentInfo> shortSegmentInfos = vertexInfo.ShortSegments;
 
@@ -716,7 +723,7 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			int originalSegmentCount = fromSegmentCollection.SegmentCount;
 
 			RemoveShortSegments(fromPolycurve, vertexInfo, use2DLengthOnly,
-			                    inPerimeter);
+			                    inPerimeter, notifications, trackCancel);
 
 			fromSegmentCollection.SegmentsChanged();
 
@@ -739,12 +746,16 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 		/// <param name="featureVertexInfo"></param>
 		/// <param name="use2DLengthOnly"></param>
 		/// <param name="inPerimeter"></param>
+		/// <param name="toNotifications">The optional collection that receives the reasons why
+		/// individual parts could not be generalized.</param>
 		/// <returns></returns>
 		private static void RemoveShortSegments(
 			[NotNull] IPolycurve fromPolycurve,
 			[NotNull] FeatureVertexInfo featureVertexInfo,
 			bool use2DLengthOnly,
-			[CanBeNull] IGeometry inPerimeter)
+			[CanBeNull] IGeometry inPerimeter,
+			[CanBeNull] NotificationCollection toNotifications,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			Assert.ArgumentNotNull(fromPolycurve, nameof(fromPolycurve));
 			Assert.ArgumentNotNull(featureVertexInfo, nameof(featureVertexInfo));
@@ -764,13 +775,15 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 			SegmentReplacementUtils.RemoveShortSegments(fromPolycurve, shortSegments,
 			                                            minimumSegmentLength, use2DLengthOnly,
 			                                            featureVertexInfo.CrackPointCollection,
-			                                            inPerimeter, notifications);
+			                                            inPerimeter, notifications, trackCancel);
 
 			if (notifications.Count > 0)
 			{
 				_msg.WarnFormat("Feature {0}: {1}",
 				                GdbObjectUtils.ToString(featureVertexInfo.Feature),
 				                notifications.Concatenate(" "));
+
+				toNotifications?.AddRange(notifications);
 			}
 		}
 	}

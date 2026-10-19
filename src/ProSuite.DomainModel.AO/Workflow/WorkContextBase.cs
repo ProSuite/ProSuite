@@ -192,6 +192,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 		public abstract MosaicRasterReference OpenSimpleRasterMosaic(IRasterMosaicDataset dataset);
 
+		public abstract PointCloudReference OpenPointCloud(IPointCloudDataset dataset);
+
 		public abstract IRelationshipClass OpenRelationshipClass(Association association);
 
 		#endregion

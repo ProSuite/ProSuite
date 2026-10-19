@@ -39,7 +39,9 @@ public class DatastoreName : IEquatable<DatastoreName>
 		_connector = connector;
 	}
 
-	private WorkspaceFactory WorkspaceFactory => WorkspaceUtils.GetWorkspaceFactory(_connector);
+	public bool IsFeatureService =>
+		WorkspaceUtils.TryGetWorkspaceFactory(_connector, out WorkspaceFactory factory) &&
+		factory == WorkspaceFactory.FeatureService;
 
 	/// <summary>
 	/// Opens the associated datastore. This method must be run on the MCT.
@@ -63,13 +65,24 @@ public class DatastoreName : IEquatable<DatastoreName>
 	public bool References(WorkspaceFactory workspaceFactory, string connectionString,
 	                       DatastoreComparison comparison = DatastoreComparison.Exact)
 	{
-		if (workspaceFactory != WorkspaceFactory)
+		if (! WorkspaceUtils.TryGetWorkspaceFactory(_connector, out WorkspaceFactory factory) ||
+		    factory != workspaceFactory)
 		{
 			return false;
 		}
 
-		Connector otherConnector =
-			WorkspaceUtils.CreateConnector(workspaceFactory, connectionString);
+		Connector otherConnector;
+
+		try
+		{
+			otherConnector = WorkspaceUtils.CreateConnector(workspaceFactory, connectionString);
+		}
+		catch (Exception e)
+		{
+			_msg.Debug($"No connector for {workspaceFactory} and {connectionString}", e);
+
+			return false;
+		}
 
 		return Equals(otherConnector, comparison);
 	}
@@ -154,11 +167,12 @@ public class DatastoreName : IEquatable<DatastoreName>
 				yield return new KeyValuePair<string, string>(
 					"URL", serviceConnection.URL.AbsoluteUri);
 
-				if (!string.IsNullOrEmpty(serviceConnection.User))
+				if (! string.IsNullOrEmpty(serviceConnection.User))
 					yield return new KeyValuePair<string, string>("USER", serviceConnection.User);
 
-				if (!string.IsNullOrEmpty(serviceConnection.Version))
-					yield return new KeyValuePair<string, string>("VERSION", serviceConnection.Version);
+				if (! string.IsNullOrEmpty(serviceConnection.Version))
+					yield return new KeyValuePair<string, string>(
+						"VERSION", serviceConnection.Version);
 			}
 
 			if (_connector is PluginDatasourceConnectionPath pluginPath)
@@ -387,19 +401,21 @@ public class DatastoreName : IEquatable<DatastoreName>
 		                  a.AuthenticationMode == b.AuthenticationMode &&
 		                  Equals(a.ProjectInstance, b.ProjectInstance);
 
-		if (comparison == DatastoreComparison.AnyUserAnyVersion)
+		if (! basicEqual || comparison == DatastoreComparison.AnyUserAnyVersion)
 		{
 			return basicEqual;
 		}
 
+		bool sameVersion = Equals(a.Version, b.Version) &&
+		                   Equals(a.Branch, b.Branch);
+
 		if (comparison == DatastoreComparison.AnyUserSameVersion)
 		{
-			return Equals(a.Version, b.Version) &&
-			       Equals(a.Branch, b.Branch);
+			return sameVersion;
 		}
 
 		// Do not compare password (one can be empty, the other encrypted)
-		return Equals(a.User, b.User);
+		return sameVersion && Equals(a.User, b.User);
 	}
 
 	private static bool AreEqual([NotNull] RealtimeServiceConnectionProperties a,

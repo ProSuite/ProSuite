@@ -279,6 +279,14 @@ public class InstanceConfigurationViewModel<T> : NotifyPropertyChangedBase,
 			Assert.NotNull(value);
 			foreach (ViewModelBase childRow in (IEnumerable<ViewModelBase>) value)
 			{
+				if (childRow.Value == null)
+				{
+					// A list element the user emptied with its clear button. Storing it
+					// would add an element without a dataset (or without a value), which
+					// no algorithm can use.
+					continue;
+				}
+
 				// recursive
 				AddTestParameterValue(instanceConfiguration, childRow);
 			}

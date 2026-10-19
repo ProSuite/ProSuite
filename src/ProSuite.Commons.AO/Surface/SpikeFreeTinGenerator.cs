@@ -20,17 +20,20 @@ namespace ProSuite.Commons.AO.Surface
 	{
 		private readonly double _freezeDistance;
 		private readonly double _insertionBuffer;
+		private readonly SpikeFreeFreezeCarrier _freezeCarrier;
 		[CanBeNull] private readonly IFeatureClass _areasWithSpikes;
 		private const int TagValue = 0;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 
-		public SpikeFreeTinGenerator([NotNull] SimpleTerrain simpleTerrain, double freezeDistance, double insertionBuffer, double? tinBufferDistance, [CanBeNull] IFeatureClass areasWithSpikes)
+		/// <param name="freezeCarrier">How a frozen triangle is remembered.</param>
+		public SpikeFreeTinGenerator([NotNull] SimpleTerrain simpleTerrain, double freezeDistance, double insertionBuffer, double? tinBufferDistance, [CanBeNull] IFeatureClass areasWithSpikes, SpikeFreeFreezeCarrier freezeCarrier = SpikeFreeFreezeCarrier.HardEdges)
 			: base(simpleTerrain, tinBufferDistance)
 		{
 			_freezeDistance = freezeDistance;
 			_insertionBuffer = insertionBuffer;
 			_areasWithSpikes = areasWithSpikes;
+			_freezeCarrier = freezeCarrier;
 		}
 
 		protected override void AddFeaturesToTin(ITinEdit tin, esriTinSurfaceType surfaceType,
@@ -147,7 +150,8 @@ namespace ProSuite.Commons.AO.Surface
 		public void AddPointsToTinUsingSpikeFree(ITinEdit tin,
 		                                         IEnumerable<(double x, double y, double z)> points)
 		{
-			SpikeFreePointInserter.AddPointsToTin(tin, points, _freezeDistance, _insertionBuffer);
+			SpikeFreePointInserter.Create(_freezeDistance, _insertionBuffer, _freezeCarrier)
+			                      .AddPointsToTin(tin, points);
 		}
 
 		private IEnumerable<(double x, double y, double z)> ExpandPointCollectionToCoodinates(

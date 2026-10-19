@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -6,7 +8,7 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 {
-	internal class QualityConditionParameters
+	public class QualityConditionParameters
 	{
 		[NotNull] private readonly Dataset _dataset;
 		[NotNull] private readonly string _name;
@@ -63,9 +65,14 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 
 		public void AddScalarParameter([NotNull] string name, [CanBeNull] object value)
 		{
-			string stringValue = value == null
+			// The text is handed to ScalarTestParameterValue, which stores it as given
+			// and reads it back with the invariant culture. Formatting with the machine
+			// culture would store "1,5" for 1.5 on a German or Swiss machine, which then
+			// reads back as 15 or fails to parse.
+			string stringValue = value == null || value == DBNull.Value
 				                     ? string.Empty
-				                     : value.ToString();
+				                     : string.Format(CultureInfo.InvariantCulture, "{0}",
+				                                     value);
 
 			var scalarParameterValue = new ScalarParameterValue(name, stringValue);
 

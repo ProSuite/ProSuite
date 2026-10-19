@@ -419,16 +419,18 @@ namespace ProSuite.DomainModel.Core.DataModel
 					return;
 				}
 
-				// Value changed. Discard current workspace proxy
 				_keepDatasetLocks = value;
 
-				//if (_masterDatabaseWorkspaceContext == null)
 				if (CachedMasterDatabaseWorkspaceContext == null)
 				{
 					return;
 				}
 
-				//_masterDatabaseWorkspaceContext = null;
+				if (CachedMasterDatabaseWorkspaceContext is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
+
 				CachedMasterDatabaseWorkspaceContext = null;
 
 				if (_keepDatasetLocks)

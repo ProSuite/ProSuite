@@ -12,6 +12,12 @@ namespace ProSuite.QA.Tests.Transformers
 			throw new NotImplementedException();
 		}
 
+		public override IEnumerable<GdbDatasetMoniker> GetDatasetMonikers(
+			esriDatasetType datasetType)
+		{
+			throw new NotImplementedException();
+		}
+
 		public override IEnumerable<VirtualTable> GetDatasets(esriDatasetType datasetType)
 		{
 			throw new NotImplementedException();

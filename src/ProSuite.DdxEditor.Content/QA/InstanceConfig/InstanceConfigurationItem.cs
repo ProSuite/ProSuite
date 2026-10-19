@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -11,6 +11,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Validation;
+using ProSuite.DdxEditor.Content.QA.AlgorithmUI;
 using ProSuite.DdxEditor.Content.QA.InstanceDescriptors;
 using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Commands;
@@ -18,7 +19,6 @@ using ProSuite.DdxEditor.Framework.Dependencies;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.AO.QA;
-using ProSuite.DomainModel.AO.QA.TestReport;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 using ProSuite.UI.Core.QA.ResourceLookup;
@@ -228,7 +228,7 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 					             _containerItem, applicationController));
 
 				_webHelpCommand = new ShowInstanceWebHelpCommand<InstanceConfigurationItem>(
-					this, applicationController);
+					this, applicationController, ModelBuilder.InstanceDocumentation);
 
 				commands.Add(_webHelpCommand);
 			}
@@ -346,18 +346,49 @@ namespace ProSuite.DdxEditor.Content.QA.InstanceConfig
 			_webHelpCommand?.Execute();
 		}
 
+		/// <summary>
+		/// Optional callback supplying a transient (unsaved) descriptor built from the
+		/// algorithm and parameter set currently chosen in an edit session. It takes
+		/// precedence over the persisted descriptor (see
+		/// <see cref="GetWebHelpDescriptor"/>). <c>null</c> in classic mode, where the
+		/// persisted descriptor is the only source.
+		/// </summary>
 		[CanBeNull]
-		public string GetWebHelp([CanBeNull] InstanceDescriptor instanceDescriptor,
-		                         [CanBeNull] out string title)
+		public Func<InstanceDescriptor> WebHelpDescriptorProvider { get; set; }
+
+		/// <summary>
+		/// Descriptor for the "Show Documentation" command: while an edit session is
+		/// open, the transient descriptor for the parameter set chosen right now, so
+		/// switching the flavor selector changes the page; otherwise the persisted
+		/// descriptor (may still be <c>null</c>).
+		/// </summary>
+		[CanBeNull]
+		public InstanceDescriptor GetWebHelpDescriptor()
 		{
-			if (instanceDescriptor == null)
+			InstanceConfiguration entity = GetEntity();
+
+			return WebHelpDescriptorProvider?.Invoke() ?? entity?.InstanceDescriptor;
+		}
+
+		/// <summary>
+		/// The documentation page the form shows in the help pane. It is the page the
+		/// documentation command opens - the same descriptor, the same renderer - so that
+		/// selecting another configuration while the page is open does not fall back to
+		/// the classic report.
+		/// </summary>
+		[CanBeNull]
+		public string GetWebHelp([CanBeNull] out string title)
+		{
+			InstanceDescriptor descriptor = GetWebHelpDescriptor();
+
+			if (descriptor == null)
 			{
 				title = null;
 				return null;
 			}
 
-			title = instanceDescriptor.TypeDisplayName;
-			return TestReportUtils.WriteDescriptorDoc(instanceDescriptor);
+			return InstanceDocumentationPage.Render(
+				ModelBuilder.InstanceDocumentation, descriptor, out title);
 		}
 	}
 }

@@ -4,12 +4,90 @@ using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
 	public class LinestringTest
 	{
+		[Test]
+		public void ClockwiseOrientedIsCorrectForRingPinchedAtRightMostBottomVertex()
+		{
+			// Two counter-clockwise slivers sharing the vertex (10, 0), which is also the
+			// ring's right-most-lowest vertex. ClockwiseOriented tests the segment leaving
+			// that vertex against the segment entering it - but here they belong to two
+			// DIFFERENT loops, so the test compares unrelated edges. It used to answer
+			// 'true' for this ring even though it encloses a negative area, and consumers
+			// filed the ring as an exterior ring. The union walk emits exactly this shape
+			// where source and target touch within the tolerance (TOP-5999).
+
+			var pinched = new List<Pnt3D>
+			              {
+				              new Pnt3D(10, 0, 0),
+				              new Pnt3D(1, 4, 0),
+				              new Pnt3D(0, 3, 0),
+				              new Pnt3D(10, 0, 0),
+				              new Pnt3D(5, 10, 0),
+				              new Pnt3D(4, 9, 0),
+				              new Pnt3D(10, 0, 0)
+			              };
+
+			var linestring = new Linestring(pinched);
+
+			Assert.IsTrue(linestring.IsClosed);
+			Assert.AreEqual(0, linestring.RightMostBottomIndex);
+
+			// Both loops are counter-clockwise: -6.5 and -7.5
+			Assert.AreEqual(-14, linestring.GetArea2D(), 1e-9);
+
+			Assert.AreEqual(false, linestring.ClockwiseOriented);
+		}
+
+		[Test]
+		public void ClockwiseOrientedIsCorrectForPinchedRingWithSpatialIndex()
+		{
+			// Same pinched ring as above, but with a spatial index: the check whether the
+			// right-most-lowest vertex is visited twice uses the index instead of scanning
+			// all vertices and must come to the same conclusion.
+
+			var pinched = new List<Pnt3D>
+			              {
+				              new Pnt3D(10, 0, 0),
+				              new Pnt3D(1, 4, 0),
+				              new Pnt3D(0, 3, 0),
+				              new Pnt3D(10, 0, 0),
+				              new Pnt3D(5, 10, 0),
+				              new Pnt3D(4, 9, 0),
+				              new Pnt3D(10, 0, 0)
+			              };
+
+			var linestring = new Linestring(pinched);
+
+			linestring.SpatialIndex =
+				SpatialHashSearcher<int>.CreateSpatialSearcher(linestring, 1);
+
+			Assert.AreEqual(false, linestring.ClockwiseOriented);
+
+			// A ring that visits its right-most-lowest vertex only once must still be
+			// oriented by the local test at that vertex:
+			var clockwise = new List<Pnt3D>
+			                {
+				                new Pnt3D(0, 0, 0),
+				                new Pnt3D(0, 10, 0),
+				                new Pnt3D(10, 10, 0),
+				                new Pnt3D(10, 0, 0),
+				                new Pnt3D(0, 0, 0)
+			                };
+
+			var clockwiseRing = new Linestring(clockwise);
+
+			clockwiseRing.SpatialIndex =
+				SpatialHashSearcher<int>.CreateSpatialSearcher(clockwiseRing, 1);
+
+			Assert.AreEqual(true, clockwiseRing.ClockwiseOriented);
+		}
+
 		[Test]
 		public void CanGetPointsFromLinestring()
 		{
@@ -18,7 +96,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			var line1 = new Line3D(startPoint, endPoint);
 
-			Linestring linestring = new Linestring(new List<Line3D> {line1});
+			Linestring linestring = new Linestring(new List<Line3D> { line1 });
 
 			Pnt3D start = linestring.GetPoint3D(0);
 			Assert.True(ReferenceEquals(startPoint, start));
@@ -55,7 +133,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			var intermediatePoint = new Pnt3D(0, 0, 0);
 
-			linestring = new Linestring(new[] {startPoint, intermediatePoint, endPoint});
+			linestring = new Linestring(new[] { startPoint, intermediatePoint, endPoint });
 
 			start = linestring.GetPoint3D(0);
 			Assert.True(ReferenceEquals(startPoint, start));
@@ -103,7 +181,7 @@ namespace ProSuite.Commons.Test.Geom
 		{
 			var line1 = new Line3D(new Pnt3D(-5, -15, -25), new Pnt3D(10, 20, 30));
 
-			Linestring linestring = new Linestring(new List<Line3D> {line1});
+			Linestring linestring = new Linestring(new List<Line3D> { line1 });
 
 			// TODO: Fast Extent2D class that takes box as constructor parameter
 			//Assert.AreEqual(line1.Extent, singleSegmentLinestring.Extent2D);
@@ -115,7 +193,7 @@ namespace ProSuite.Commons.Test.Geom
 
 			var line2 = new Line3D(new Pnt3D(10, 20, 30), new Pnt3D(110, 120, 130));
 
-			linestring = new Linestring(new List<Line3D> {line1, line2});
+			linestring = new Linestring(new List<Line3D> { line1, line2 });
 
 			// TODO: Line3D.Extent2D
 			IBox expected = new Box(new Pnt2D(line1.StartPoint.X, line1.StartPoint.Y),
@@ -134,7 +212,7 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(expected, linestring.Extent2D);
 
 			linestring =
-				new Linestring(new List<Pnt3D> {line1.StartPoint, line1.EndPoint});
+				new Linestring(new List<Pnt3D> { line1.StartPoint, line1.EndPoint });
 
 			Assert.AreEqual(line1.XMin, linestring.XMin);
 			Assert.AreEqual(line1.YMin, linestring.YMin);

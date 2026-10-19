@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
@@ -17,7 +18,7 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 {
-	internal partial class CreateQualityConditionsForm :
+	public partial class CreateQualityConditionsForm :
 		Form,
 		ICreateQualityConditionsView,
 		IFormStateAware<CreateQualityConditionsFormState>
@@ -49,6 +50,10 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			FormClosed += delegate { _formStateManager.SaveState(); };
 
 			_dataGridView.AutoGenerateColumns = false;
+
+			// Button cells ("…") are only used by presenters that add such columns; the
+			// classic one does not, and its observer ignores the notification.
+			_dataGridView.CellContentClick += _dataGridView_CellContentClick;
 
 			_qualitySpecificationGridHandler =
 				new BoundDataGridHandler<QualitySpecificationTableRow>(
@@ -89,6 +94,68 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			set { _textBoxTestDescriptorName.Text = value; }
 		}
 
+		string ICreateQualityConditionsView.SubjectCaption
+		{
+			get { return label2.Text; }
+			set { SetTextKeepingRightEdge(label2, value); }
+		}
+
+		string ICreateQualityConditionsView.ExcludeDatasetsCaption
+		{
+			get { return _checkBoxExcludeDatasetsUsingThisTest.Text; }
+			set
+			{
+				SetTextKeepingRightEdge(_checkBoxExcludeDatasetsUsingThisTest, value);
+
+				PlaceExcludeDatasetsNote();
+			}
+		}
+
+		string ICreateQualityConditionsView.ExcludeDatasetsNote
+		{
+			get { return _labelExcludeDatasetsNote.Text; }
+			set
+			{
+				_labelExcludeDatasetsNote.Text = value;
+
+				PlaceExcludeDatasetsNote();
+			}
+		}
+
+		/// <summary>
+		/// Keeps the note directly left of the checkbox it explains. Both sit at the
+		/// bottom right of the dataset box and both size themselves to their text, so the
+		/// note has to be placed again whenever either text changes.
+		/// </summary>
+		private void PlaceExcludeDatasetsNote()
+		{
+			const int gap = 12;
+
+			_labelExcludeDatasetsNote.Left =
+				_checkBoxExcludeDatasetsUsingThisTest.Left - gap -
+				_labelExcludeDatasetsNote.Width;
+
+			_labelExcludeDatasetsNote.Top =
+				_checkBoxExcludeDatasetsUsingThisTest.Top +
+				(_checkBoxExcludeDatasetsUsingThisTest.Height -
+				 _labelExcludeDatasetsNote.Height) / 2;
+		}
+
+		/// <summary>
+		/// Both captions sit on auto-sizing controls that are aligned by their right
+		/// edge (the labels line up with the input fields, the checkbox with the grid),
+		/// so a new text must move the control left or right by the width difference.
+		/// </summary>
+		private static void SetTextKeepingRightEdge([NotNull] Control control,
+		                                            [NotNull] string text)
+		{
+			int right = control.Right;
+
+			control.Text = text;
+
+			control.Left = right - control.Width;
+		}
+
 		string ICreateQualityConditionsView.QualityConditionNames
 		{
 			get { return _textBoxQualityConditionNames.Text; }
@@ -103,6 +170,43 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		void ICreateQualityConditionsView.AddParametersColumn(DataGridViewColumn gridColumn)
 		{
 			_dataGridView.Columns.Add(gridColumn);
+		}
+
+		void ICreateQualityConditionsView.ClearParametersColumns()
+		{
+			// unbind first: the bound DataTable's columns are what the grid columns
+			// refer to through DataPropertyName
+			_dataGridView.DataSource = null;
+			_dataGridView.Columns.Clear();
+		}
+
+		void ICreateQualityConditionsView.AddOptionsControl(Control control)
+		{
+			Assert.ArgumentNotNull(control, nameof(control));
+
+			// The header area is laid out with absolute positions, so make room for the
+			// additional control by moving the splitter (and everything below it) down.
+			const int gap = 6;
+
+			control.Dock = DockStyle.None;
+			control.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+
+			_panelMain.Controls.Add(control);
+
+			control.Location = new Point(_textBoxSupportedVariables.Left,
+			                             _splitContainer.Top);
+
+			int addedHeight = control.Height + gap;
+
+			// grow the window by the same amount, so the grid below keeps its size
+			Height += addedHeight;
+
+			MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height + addedHeight);
+
+			_splitContainer.SetBounds(_splitContainer.Left,
+			                          _splitContainer.Top + addedHeight,
+			                          _splitContainer.Width,
+			                          _splitContainer.Height - addedHeight);
 		}
 
 		string ICreateQualityConditionsView.SupportedVariablesText
@@ -388,6 +492,25 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 			{
 				_observer.CellValidated(dataRow, columnName);
 			}
+		}
+
+		private void _dataGridView_CellContentClick(object sender,
+		                                            DataGridViewCellEventArgs e)
+		{
+			if (_observer == null || e.RowIndex < 0 || e.ColumnIndex < 0)
+			{
+				return;
+			}
+
+			DataGridViewColumn column = _dataGridView.Columns[e.ColumnIndex];
+
+			if (! (column is DataGridViewButtonColumn))
+			{
+				return;
+			}
+
+			_observer.CellButtonClicked(GetDataRow(_dataGridView.Rows[e.RowIndex]),
+			                            column.Name);
 		}
 
 		private void _toolStripButtonApplyNamingConventionToSelection_Click(object sender,

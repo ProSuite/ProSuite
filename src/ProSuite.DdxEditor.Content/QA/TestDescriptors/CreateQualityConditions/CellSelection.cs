@@ -6,7 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 {
-	internal class CellSelection
+	public class CellSelection
 	{
 		private readonly Dictionary<string, List<DataGridViewCell>> _cellsPerColumn =
 			new Dictionary<string, List<DataGridViewCell>>();

@@ -13,6 +13,10 @@ namespace ProSuite.Commons.GeoDb
 		Raster = 12,
 		RasterMosaic = 29,
 		Terrain = 20,
-		Multipatch = 30
+
+		/// <summary>
+		/// A LAS point cloud (Esri: esriDTLasDataset).
+		/// </summary>
+		PointCloud = 30
 	}
 }

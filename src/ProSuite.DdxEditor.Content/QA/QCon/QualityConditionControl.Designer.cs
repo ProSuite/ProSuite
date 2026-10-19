@@ -1,4 +1,4 @@
-using ProSuite.Commons.UI.WinForms.Controls;
+﻿using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DdxEditor.Content.QA.QCon
@@ -1147,7 +1147,7 @@ namespace ProSuite.DdxEditor.Content.QA.QCon
 			_linkDocumentation.Size = new System.Drawing.Size(179, 15);
 			_linkDocumentation.TabIndex = 23;
 			_linkDocumentation.TabStop = true;
-			_linkDocumentation.Text = "Show Parameter Documentation";
+			_linkDocumentation.Text = "Show Documentation";
 			_linkDocumentation.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// _panelParametersEdit

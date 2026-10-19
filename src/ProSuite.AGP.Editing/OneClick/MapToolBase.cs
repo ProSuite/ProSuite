@@ -6,6 +6,8 @@ using System.Windows.Input;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
@@ -33,6 +35,47 @@ public abstract class MapToolBase : MapTool
 	/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
 	/// </summary>
 	protected List<Key> HandledKeys { get; } = new();
+
+	/// <summary>
+	/// Whether the SHIFT key currently held has been combined with a key this tool does not
+	/// handle itself. That makes it part of someone else's keyboard shortcut rather than the
+	/// tool's own SHIFT - for example Right SHIFT + ä, which toggles ArcGIS Pro's Z-only
+	/// snapping. The tool's SHIFT behaviour is suspended until SHIFT is released. It is
+	/// recognised from the key events, so it works whatever the keyboard layout and whatever
+	/// the other key is. The tool's own SHIFT combinations are not affected: their keys are in
+	/// <see cref="HandledKeys"/>.
+	/// </summary>
+	protected bool IsShiftPartOfShortcut { get; private set; }
+
+	/// <summary>
+	/// Which key it was, while <see cref="IsShiftPartOfShortcut"/> holds; null otherwise.
+	/// <para>
+	/// A <see cref="Key"/> is a virtual key, which for the OEM keys is the key's position on the
+	/// keyboard rather than the character printed on it, so the same value is expected whatever
+	/// the layout - the ä of a Swiss German keyboard and whatever sits in that position
+	/// elsewhere. That makes it usable for telling one SHIFT shortcut from another, which
+	/// matters where a tool has to react to one of them in particular: ArcGIS Pro's XY-only
+	/// snapping publishes no property, so the key is the only sign of it.
+	/// </para>
+	/// </summary>
+	protected Key? ShiftShortcutKey { get; private set; }
+
+	/// <summary>
+	/// Called once when the SHIFT key being held turns out to be part of a shortcut (see
+	/// <see cref="IsShiftPartOfShortcut"/>), so that a subclass can undo what SHIFT already
+	/// started - SHIFT goes down before the shortcut's other key does.
+	/// </summary>
+	protected virtual void OnShiftBecameShortcut() { }
+
+	/// <summary>
+	/// Whether <paramref name="key"/>, pressed while SHIFT is held, makes SHIFT part of a
+	/// shortcut (<see cref="IsShiftPartOfShortcut"/>). By default every key the tool does not
+	/// handle itself; a tool whose own keys mean something else with SHIFT adds them.
+	/// </summary>
+	protected virtual bool IsShiftShortcutKey(Key key)
+	{
+		return ! HandledKeys.Contains(key);
+	}
 
 	/// <summary>
 	/// The currently pressed keys.
@@ -95,6 +138,8 @@ public abstract class MapToolBase : MapTool
 			_msg.VerboseDebug(() => $"{nameof(OnToolActivateAsync)} ({Caption})");
 
 			PressedKeys.Clear();
+			IsShiftPartOfShortcut = false;
+			ShiftShortcutKey = null;
 
 			// ReSharper disable once MethodHasAsyncOverload
 			OnToolActivatingCore();
@@ -136,7 +181,22 @@ public abstract class MapToolBase : MapTool
 
 			PressedKeys.Add(args.Key);
 
-			if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
+			// A key this tool does not handle, pressed while SHIFT is held, belongs to a
+			// shortcut such as Right SHIFT + ä (ArcGIS Pro's Z-only snapping). Until SHIFT is
+			// released it is not the tool's SHIFT.
+			if (! IsShiftPartOfShortcut && KeyboardUtils.IsShiftDown() &&
+			    ! KeyboardUtils.IsModifierKey(args.Key) && IsShiftShortcutKey(args.Key))
+			{
+				IsShiftPartOfShortcut = true;
+				ShiftShortcutKey = args.Key;
+				OnShiftBecameShortcut();
+			}
+
+			// NOTE: Only claim a handled key while no modifier is down. Otherwise the tool
+			//       swallows application shortcuts that happen to use the same letter, such as
+			//       CTRL+SHIFT+O, and they never reach the DAML shortcut table.
+			if (KeyboardUtils.IsModifierKey(args.Key) ||
+			    (HandledKeys.Contains(args.Key) && ! KeyboardUtils.IsAnyModifierDown()))
 			{
 				// Trigger the call to HandleKeyDownAsync
 				args.Handled = true;
@@ -166,7 +226,7 @@ public abstract class MapToolBase : MapTool
 				await HandleEscapeAsync();
 			}
 
-			if (args.Key == _keyShowOptionsPane)
+			if (args.Key == _keyShowOptionsPane && ! KeyboardUtils.IsAnyModifierDown())
 			{
 				await UIEnvironment.ReleaseCursorAsync();
 
@@ -219,6 +279,16 @@ public abstract class MapToolBase : MapTool
 		{
 			// Use ErrorHandler to allow custom implementation of DialogService
 			ErrorHandler.HandleError(e, _msg);
+		}
+		finally
+		{
+			// Only now, after the release was handled: the handlers need to know that the SHIFT
+			// being released was a shortcut's.
+			if (KeyboardUtils.IsShiftKey(args.Key))
+			{
+				IsShiftPartOfShortcut = false;
+				ShiftShortcutKey = null;
+			}
 		}
 	}
 
@@ -433,6 +503,65 @@ public abstract class MapToolBase : MapTool
 
 		// Subclasses shall individually configure the progressor source
 		return null;
+	}
+
+	/// <summary>
+	/// The height of the feature the given sketch point snapped to, or NaN where it did not
+	/// snap to anything that has one.
+	/// </summary>
+	protected double GetSnappedZ([NotNull] MapPoint sketchPoint)
+	{
+		IReadOnlyList<SnapResult> snapResults = SnappingResults;
+
+		if (snapResults == null || sketchPoint.IsEmpty)
+		{
+			return double.NaN;
+		}
+
+		// The snapping results live on while the cursor moves: only a result the sketch
+		// point actually landed on is the one this click snapped to. The two are the same
+		// location, but they get there by different routes, so they are compared with the
+		// tolerance of the data - and never tighter than double arithmetic can tell apart.
+		double tolerance =
+			MathUtils.GetDoubleSignificanceEpsilon(sketchPoint.X, sketchPoint.Y);
+
+		double xyTolerance = GeometryUtils.GetXyTolerance(sketchPoint);
+
+		if (xyTolerance > tolerance)
+		{
+			tolerance = xyTolerance;
+		}
+
+		foreach (SnapResult snapResult in snapResults)
+		{
+			if (snapResult == null || snapResult.SnapType == SnapType.None)
+			{
+				continue;
+			}
+
+			MapPoint snapLocation = snapResult.SnapLocation;
+
+			if (snapLocation == null || snapLocation.IsEmpty || ! snapLocation.HasZ ||
+			    double.IsNaN(snapLocation.Z))
+			{
+				continue;
+			}
+
+			if (! MathUtils.AreEqual(snapLocation.X, sketchPoint.X, tolerance) ||
+			    ! MathUtils.AreEqual(snapLocation.Y, sketchPoint.Y, tolerance))
+			{
+				continue;
+			}
+
+			SnapType snapType = snapResult.SnapType;
+			double snappedZ = snapLocation.Z;
+
+			_msg.VerboseDebug(() => $"Sketch point snapped to {snapType} at Z {snappedZ}.");
+
+			return snappedZ;
+		}
+
+		return double.NaN;
 	}
 
 	protected void SetToolCursor([CanBeNull] Cursor cursor)
