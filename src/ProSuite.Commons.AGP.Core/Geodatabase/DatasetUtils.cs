@@ -629,11 +629,6 @@ public static class DatasetUtils
 		}
 
 		if (! string.Equals(table1.GetName(), table2.GetName()))
-		if (dataset1 == null || dataset2 == null)
-		{
-			return WorkspaceUtils.IsSameDatastore(class1.GetDatastore(), class2.GetDatastore());
-		}
-
 		{
 			return false;
 		}
