@@ -119,6 +119,72 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanKeepBoundaryLoopAroundHole()
+		{
+			// A square with a triangular hole that touches the bottom edge in (5, 0),
+			// modelled as one ring. ArcObjects considers this ring simple, and its simplify
+			// makes exactly such a ring of a hole that touches its exterior ring.
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(5, 0, 0),
+				                                new Pnt3D(6, 3, 0),
+				                                new Pnt3D(4, 3, 0),
+				                                new Pnt3D(5, 0, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsFalse(RingSimplifier.TrySimplifyRingXY(
+				               ring, _tolerance,
+				               RingSimplifyFlags.All |
+				               RingSimplifyFlags.KeepBoundaryLoopsAroundHoles, results));
+
+			// Without the flag the hole is split off:
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance, RingSimplifyFlags.All, results));
+			Assert.AreEqual(2, results.Count);
+			Assert.AreEqual(97, results.Sum(r => r.GetArea2D()), 0.0001);
+		}
+
+		[Test]
+		public void CanExplodeExteriorBoundaryLoopButKeepBoundaryLoopAroundHole()
+		{
+			// Two squares that touch in (10, 10); the lower one has a triangular hole that
+			// touches its bottom edge in (5, 0). All of it is one ring.
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(5, 0, 0),
+				                                new Pnt3D(6, 3, 0),
+				                                new Pnt3D(4, 3, 0),
+				                                new Pnt3D(5, 0, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance,
+				              RingSimplifyFlags.All |
+				              RingSimplifyFlags.KeepBoundaryLoopsAroundHoles, results));
+
+			Assert.AreEqual(2, results.Count);
+			Assert.IsTrue(results.All(r => r.ClockwiseOriented == true));
+			Assert.AreEqual(97, results.Min(r => r.GetArea2D()), 0.0001);
+			Assert.AreEqual(100, results.Max(r => r.GetArea2D()), 0.0001);
+		}
+
+		[Test]
 		public void CanRemoveSubToleranceBoundaryLoop()
 		{
 			// A square with a sliver spike whose two flanks are 0.002 apart, i.e. much

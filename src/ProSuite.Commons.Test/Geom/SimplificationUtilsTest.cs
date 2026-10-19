@@ -312,6 +312,138 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(300, result.GetArea2D(), 0.001);
 		}
 
+		[Test]
+		public void CanSimplifyAtToleranceInteriorRingInsideInteriorRing()
+		{
+			// The union can return an interior ring together with a larger interior ring
+			// that contains it (TLM_GEBAEUDEKOERPER 1299631). The smaller one would subtract
+			// its area a second time.
+			var exterior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(0, 20, 0),
+					new Pnt3D(20, 20, 0),
+					new Pnt3D(20, 0, 0),
+					new Pnt3D(0, 0, 0)
+				});
+
+			var interior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(5, 5, 0),
+					new Pnt3D(15, 5, 0),
+					new Pnt3D(15, 15, 0),
+					new Pnt3D(5, 15, 0),
+					new Pnt3D(5, 5, 0)
+				});
+
+			// Inside the interior ring, sharing its lower edge.
+			var inside = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(5, 5, 0),
+					new Pnt3D(15, 5, 0),
+					new Pnt3D(15, 10, 0),
+					new Pnt3D(5, 10, 0),
+					new Pnt3D(5, 5, 0)
+				});
+
+			var rings = new MultiPolycurve(new[] { exterior, interior, inside });
+
+			MultiLinestring result =
+				SimplificationUtils.SimplifyAtTolerance(rings, 0.0005, _tolerance);
+
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(300, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
+		public void CanKeepInteriorRingInsideIslandInsideInteriorRing()
+		{
+			// A courtyard with a building inside it, which has a courtyard of its own.
+			var rings = new MultiPolycurve(new[]
+			                               {
+				                               CreateSquare(0, 40, clockwise: true),
+				                               CreateSquare(5, 35, clockwise: false),
+				                               CreateSquare(10, 30, clockwise: true),
+				                               CreateSquare(15, 25, clockwise: false)
+			                               });
+
+			MultiLinestring result = SimplificationUtils.RemoveRedundantRings(rings, _tolerance);
+
+			Assert.AreSame(rings, result);
+		}
+
+		private static Linestring CreateSquare(double min, double max, bool clockwise)
+		{
+			var points = new List<Pnt3D>
+			             {
+				             new Pnt3D(min, min, 0),
+				             new Pnt3D(min, max, 0),
+				             new Pnt3D(max, max, 0),
+				             new Pnt3D(max, min, 0),
+				             new Pnt3D(min, min, 0)
+			             };
+
+			if (! clockwise)
+			{
+				points.Reverse();
+			}
+
+			return new Linestring(points);
+		}
+
+		[Test]
+		public void CanRemoveRingsNarrowerThanTheTolerance()
+		{
+			// A flat triangle 20 m long whose middle vertex is 0.005 off the long side, and a
+			// parallelogram 0.005 wide. All segments are long; both rings are narrower than
+			// the tolerance 0.01.
+			MultiLinestring result = SimplificationUtils.SimplifyRingsAtTolerance(
+				CreateFlatTriangleAndParallelogram(0.005), _tolerance);
+
+			Assert.IsTrue(result.IsEmpty);
+		}
+
+		[Test]
+		public void CanKeepNarrowRingsWiderThanTheTolerance()
+		{
+			// The same shapes, 0.02 wide: narrower than the distance within which ArcObjects
+			// merges vertices (2 * sqrt(2) * 0.01), but wider than the tolerance 0.01.
+			MultiLinestring rings = CreateFlatTriangleAndParallelogram(0.02);
+
+			MultiLinestring result = SimplificationUtils.SimplifyRingsAtTolerance(
+				rings, _tolerance);
+
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(rings.GetArea2D(), result.GetArea2D(), 0.0001);
+		}
+
+		private static MultiLinestring CreateFlatTriangleAndParallelogram(double width)
+		{
+			var triangle = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(10, width, 0),
+					new Pnt3D(20, 0, 0),
+					new Pnt3D(0, 0, 0)
+				});
+
+			var parallelogram = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 10, 0),
+					new Pnt3D(10, 10 + width, 0),
+					new Pnt3D(20, 10 + width, 0),
+					new Pnt3D(10, 10, 0),
+					new Pnt3D(0, 10, 0)
+				});
+
+			return new MultiPolycurve(new[] { triangle, parallelogram });
+		}
+
 		private static Polyhedron ReadPolyhedron(string fileName)
 		{
 			object geometry = GeomUtils.FromWkbFile(

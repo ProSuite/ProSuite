@@ -264,16 +264,17 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 
 		public static IPolygon GetFootprint(
 			[NotNull] IMultiPatch multipatch,
-			double? tolerance = null,
-			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
+			double? tolerance = null)
 		{
 			IPolygon result = null;
 			if (IntersectionUtils.UseCustomIntersect)
 			{
-				result = TryGetGeomFootprint(multipatch, tolerance, out _,
-				                             crackAndClusterOptions);
+				result = TryGetGeomFootprint(multipatch, tolerance, out _);
 			}
 
+			// NOTE: The result is empty if every ring is narrower than the tolerance (e.g. an
+			// almost vertical wall). The callers have to deal with these. GetFootprintAO
+			// is no fallback for it: it returns the envelope of such a multipatch.
 			if (result == null)
 			{
 				result = GetFootprintAO(multipatch);
@@ -324,8 +325,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		[CanBeNull]
 		public static IPolygon TryGetGeomFootprint(
 			[NotNull] IMultiPatch multiPatch, double? tolerance,
-			[CanBeNull] out IPolyline verticalRings,
-			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
+			[CanBeNull] out IPolyline verticalRings)
 		{
 			Assert.ArgumentNotNull(multiPatch, nameof(multiPatch));
 
@@ -333,8 +333,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			try
 			{
 				IPolygon footprintPoly =
-					GetFootprintGeom(multiPatch, tolerance, out verticalRings,
-					                 crackAndClusterOptions);
+					GetFootprintGeom(multiPatch, tolerance, out verticalRings);
 
 				return footprintPoly;
 			}
@@ -356,17 +355,19 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		}
 
 		/// <summary>
-		/// Returns the footprint as simplified polygon using extended Weiler-Atherthon polygon walk.
+		/// Returns the footprint, simple at <paramref name="tolerance"/>, using the extended
+		/// Weiler-Atherthon polygon walk. Rings narrower than the tolerance are removed, so
+		/// the result can be empty.
 		/// </summary>
 		/// <param name="multiPatch"></param>
-		/// <param name="tolerance"></param>
+		/// <param name="tolerance">The tolerance of the result. If null, the XY tolerance of
+		/// the multipatch is used (and the calculation runs at half the resolution).</param>
 		/// <param name="verticalOrSmallRings"></param>
 		/// <returns></returns>
 		[PublicAPI]
 		public static IPolygon GetFootprintGeom(
 			[NotNull] IMultiPatch multiPatch, double? tolerance,
-			out IPolyline verticalOrSmallRings,
-			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
+			out IPolyline verticalOrSmallRings)
 		{
 			double verticalRingDetectionTolerance;
 			double xyTolerance;
@@ -386,19 +387,13 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 				xyTolerance = tolerance.Value;
 			}
 
-			IPolygon footprintPoly = GetFootprintGeom(multiPatch, xyTolerance,
-			                                          verticalRingDetectionTolerance,
-			                                          out verticalOrSmallRings,
-			                                          crackAndClusterOptions);
-
-			// Still required, SimplifyRingRelationships is not enough (but it is cheap):
-			GeometryUtils.Simplify(footprintPoly);
-
-			return footprintPoly;
+			return GetFootprintGeom(multiPatch, xyTolerance, verticalRingDetectionTolerance,
+			                        out verticalOrSmallRings);
 		}
 
 		/// <summary>
-		/// Returns the footprint as (non-simplified) polygon using extended Weiler-Atherthon polygon walk.
+		/// Returns the footprint as polygon using extended Weiler-Atherthon polygon walk, simple
+		/// at the vertical ring detection tolerance. The polygon marked as known to be simple.
 		/// </summary>
 		/// <param name="multiPatch"></param>
 		/// <param name="xyTolerance">The calculation tolerance, which can be small (e.g. close to
@@ -413,8 +408,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 		[PublicAPI]
 		public static IPolygon GetFootprintGeom(
 			IMultiPatch multiPatch, double xyTolerance,
-			double verticalRingDetectionTolerance, out IPolyline tooSmallRings,
-			[CanBeNull] CrackAndClusterOptions crackAndClusterOptions = null)
+			double verticalRingDetectionTolerance, out IPolyline tooSmallRings)
 		{
 			Polyhedron polyhedron =
 				GeometryConversionUtils.CreatePolyhedron(multiPatch, false, true);
@@ -425,7 +419,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			{
 				footprint =
 					polyhedron.GetXYFootprint(xyTolerance, verticalRingDetectionTolerance,
-					                          out verticalRings, crackAndClusterOptions);
+					                          out verticalRings);
 			}
 			catch (Exception)
 			{
@@ -458,28 +452,17 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 				throw;
 			}
 
-			// The union above ran at xyTolerance, which can be a lot finer than the tolerance
-			// of the polygon the footprint ends up in (with a null tolerance it is half the
-			// resolution, i.e. 20 times finer than the typical XY tolerance). A result that
-			// is simple at the fine tolerance need not be simple at the coarse one, and
-			// GeometryUtils.Simplify below repairs that destructively - it deletes whole
-			// interior rings instead of keeping their area out of the footprint. Reduce the
-			// result while it is still ours.
-			double outputTolerance = GeometryUtils.GetXyTolerance(multiPatch);
+			// The union ran at xyTolerance, which can be a lot finer than the tolerance of the
+			// result (half the resolution if no tolerance is specified). A result that is
+			// simple at the fine tolerance need not be simple at the tolerance of the result.
+			double tolerance = verticalRingDetectionTolerance;
 
-			if (outputTolerance > xyTolerance)
-			{
-				footprint =
-					SimplificationUtils.SimplifyRingRelationships(footprint, outputTolerance);
+			footprint = SimplificationUtils.SimplifyRingRelationships(footprint, tolerance);
 
-				// Everything else that is not simple at the output tolerance: separate rings
-				// closer to each other than that, segments shorter than that.
-				footprint = SimplificationUtils.SimplifyAtTolerance(footprint, xyTolerance,
-				                                                    outputTolerance);
-			}
+			footprint =
+				SimplificationUtils.SimplifyAtTolerance(footprint, xyTolerance, tolerance);
 
-			IPolygon footprintPoly =
-				GeometryConversionUtils.CreatePolygon(multiPatch, footprint.GetLinestrings());
+			IPolygon footprintPoly = CreateFootprintPolygon(multiPatch, footprint, tolerance);
 
 			if (verticalRings != null && verticalRings.Count > 0)
 			{
@@ -493,6 +476,49 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 			}
 
 			return footprintPoly;
+		}
+
+		/// <summary>
+		/// Creates the polygon of the footprint rings in the canonical form (same as ArcObjects).
+		/// Every exterior ring is followed by the interior rings it contains, and the polygon is
+		/// marked as known to be simple. ArcObjects refuses some operations on a polygon that is
+		/// not marked as simple, for example the number of exterior rings.
+		/// </summary>
+		private static IPolygon CreateFootprintPolygon([NotNull] IMultiPatch multiPatch,
+		                                               [NotNull] MultiLinestring rings,
+		                                               double tolerance)
+		{
+			IPolygon result = GeometryConversionUtils.CreatePolygon(
+				multiPatch, GetRingsInCanonicalOrder(rings, tolerance));
+
+			((ITopologicalOperator2) result).IsKnownSimple_2 = true;
+
+			return result;
+		}
+
+		private static IEnumerable<Linestring> GetRingsInCanonicalOrder(
+			[NotNull] MultiLinestring rings,
+			double tolerance)
+		{
+			List<Linestring> parts = rings.GetLinestrings().ToList();
+
+			if (parts.All(r => r.ClockwiseOriented == true) ||
+			    parts.Any(r => r.ClockwiseOriented == null))
+			{
+				return parts;
+			}
+
+			List<RingGroup> ringGroups =
+				GeomTopoOpUtils.GetConnectedComponents(rings, tolerance).ToList();
+
+			if (ringGroups.Sum(g => g.PartCount) != parts.Count)
+			{
+				// An interior ring that no exterior ring contains: keep the rings as they come
+				// rather than lose one.
+				return parts;
+			}
+
+			return ringGroups.SelectMany(g => g.GetLinestrings());
 		}
 
 		[NotNull]

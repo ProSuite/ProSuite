@@ -321,10 +321,11 @@ namespace ProSuite.Commons.Geom
 				return rings;
 			}
 
-			// ArcObjects style tolerances:
-			// cluster at 2*sqrt(2)*tolerance, drop what is shorter than sqrt(2)*tolerance.
-			double clusterTolerance = 2 * Math.Sqrt(2) * tolerance;
-			double minimumSegmentLength = Math.Sqrt(2) * tolerance;
+			// What is farther apart than the tolerance stays apart. The minimum segment length
+			// has the ratio of CrackAndClusterToleranceStrategy.Uniform: a longer one would
+			// remove the vertices that the snapping inserted.
+			double clusterTolerance = tolerance;
+			double minimumSegmentLength = tolerance / Math.Sqrt(2);
 
 			List<Linestring> parts = rings.GetLinestrings().Select(l => l.Clone()).ToList();
 
@@ -547,7 +548,8 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Removes duplicate rings and unites the rings with each other at
+		/// Removes redundant rings (see <see cref="RemoveRedundantRings"/>) and unites the
+		/// rings with each other at
 		/// <paramref name="tolerance"/> if any two of them come closer to each other than that. Rings that only touch in a point at the
 		/// tolerance they were calculated with can run along each other at a coarser one;
 		/// ArcObjects deletes one of two such rings when it simplifies the polygon.
@@ -564,7 +566,7 @@ namespace ProSuite.Commons.Geom
 				return rings;
 			}
 
-			rings = RemoveDuplicateRings(rings, tolerance);
+			rings = RemoveRedundantRings(rings, tolerance);
 
 			if (rings.PartCount < 2 ||
 			    ! HasCrossPartIntersection(rings.GetLinestrings().ToList(), tolerance))
@@ -591,13 +593,16 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Removes every ring that has the same vertices (within the tolerance) and the same
-		/// orientation as a previous ring. The union can return the same interior ring
-		/// twice (TLM_GEBAEUDEKOERPER 4896336), which subtracts its area twice.
+		/// orientation as a previous ring, and every interior ring that lies inside another
+		/// interior ring without an exterior ring in between. The union can return the same
+		/// interior ring twice (TLM_GEBAEUDEKOERPER 4896336), or an interior ring together
+		/// with a larger one that contains it (1299631). Either subtracts the area of the
+		/// smaller ring twice.
 		/// </summary>
-		/// <returns>The rings without duplicates, or the unchanged input if there are
+		/// <returns>The rings without the redundant ones, or the unchanged input if there are
 		/// none.</returns>
 		[NotNull]
-		public static MultiLinestring RemoveDuplicateRings([NotNull] MultiLinestring rings,
+		public static MultiLinestring RemoveRedundantRings([NotNull] MultiLinestring rings,
 		                                                   double tolerance)
 		{
 			List<Linestring> parts = rings.GetLinestrings().ToList();
@@ -612,7 +617,34 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
+			foreach (Linestring interiorRing in kept.Where(r => r.ClockwiseOriented == false)
+			                                        .ToList())
+			{
+				if (IsInsideOtherInteriorRing(interiorRing, kept, tolerance))
+				{
+					kept.Remove(interiorRing);
+				}
+			}
+
 			return kept.Count == parts.Count ? rings : new MultiPolycurve(kept);
+		}
+
+		private static bool IsInsideOtherInteriorRing([NotNull] Linestring interiorRing,
+		                                              [NotNull] IList<Linestring> rings,
+		                                              double tolerance)
+		{
+			double area = Math.Abs(interiorRing.GetArea2D());
+
+			return rings.Any(
+				other => ! ReferenceEquals(other, interiorRing) &&
+				         other.ClockwiseOriented == false &&
+				         Math.Abs(other.GetArea2D()) >= area &&
+				         GeomRelationUtils.PolycurveContainsXY(other, interiorRing, tolerance) &&
+				         ! rings.Any(island => island.ClockwiseOriented == true &&
+				                               GeomRelationUtils.PolycurveContainsXY(
+					                               other, island, tolerance) &&
+				                               GeomRelationUtils.PolycurveContainsXY(
+					                               island, interiorRing, tolerance)));
 		}
 
 		private static bool AreSameRings([NotNull] Linestring ring1,
@@ -688,7 +720,9 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Removes the segments shorter than sqrt(2) * <paramref name="tolerance"/> and
-		/// makes every ring simple at the tolerance.
+		/// makes every ring simple at the tolerance. A ring that touches itself is split
+		/// unless one of its two loops is a hole inside the other one. A ring that is
+		/// nowhere wider than the tolerance is removed, so the result can be empty.
 		/// </summary>
 		/// <returns>The simplified rings. The input is not modified.</returns>
 		[NotNull]
@@ -701,9 +735,77 @@ namespace ProSuite.Commons.Geom
 			var result = new MultiPolycurve(
 				withoutShortSegments.GetLinestrings().Select(l => l.Clone()));
 
-			RingSimplifier.SimplifyRingsXY(result, tolerance, RingSimplifyFlags.All);
+			// A hole that touches its exterior ring in a point stays part of the exterior ring
+			// (as SimplifyRingRelationships made it), like ArcObjects represents it.
+			RingSimplifier.SimplifyRingsXY(result, tolerance,
+			                               RingSimplifyFlags.All |
+			                               RingSimplifyFlags.KeepBoundaryLoopsAroundHoles);
+
+			foreach (Linestring ring in result.GetLinestrings().ToList())
+			{
+				if (IsNarrowerThan(ring, tolerance))
+				{
+					result.RemoveLinestring(ring);
+				}
+			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Whether the ring is nowhere wider than <paramref name="width"/>: every vertex is
+		/// within that distance of a segment it is not an end point of, except at most two tips
+		/// at the ends of the ring (a needle, a flat triangle, a thin parallelogram).
+		/// </summary>
+		private static bool IsNarrowerThan([NotNull] Linestring ring, double width)
+		{
+			// The mean width (2 * area / perimeter) of a narrow ring is not larger than its
+			// width. This is the cheap test that excludes all other rings.
+			if (2 * Math.Abs(ring.GetArea2D()) > width * ring.GetLength2D())
+			{
+				return false;
+			}
+
+			int segmentCount = ring.SegmentCount;
+
+			var tipCount = 0;
+
+			for (var i = 0; i < segmentCount; i++)
+			{
+				Pnt3D vertex = ring.GetSegment(i).StartPoint;
+
+				var close = false;
+
+				for (var j = 0; j < segmentCount && ! close; j++)
+				{
+					if (j == i || j == (i - 1 + segmentCount) % segmentCount)
+					{
+						continue;
+					}
+
+					close = GetDistanceXY(vertex, ring.GetSegment(j)) <= width;
+				}
+
+				if (! close && ++tipCount > 2)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static double GetDistanceXY([NotNull] Pnt3D point, [NotNull] Line3D segment)
+		{
+			double distance = segment.GetDistancePerpendicular(
+				point, true, out double along, out Pnt3D _);
+
+			if (along < 0)
+			{
+				return point.GetDistance(segment.StartPoint, true);
+			}
+
+			return along > 1 ? point.GetDistance(segment.EndPoint, true) : distance;
 		}
 
 		/// <summary>
