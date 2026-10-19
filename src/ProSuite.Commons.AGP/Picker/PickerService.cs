@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.PickerUI;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Env;
 using ProSuite.Commons.UI.WPF;
 
@@ -23,6 +24,12 @@ namespace ProSuite.Commons.AGP.Picker;
 
 public class PickerService : IPickerService
 {
+	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	// The space that the picker window leaves free on its monitor, in device independent
+	// pixels, so that it does not touch both the upper and the lower edge of the monitor.
+	private const double _monitorMargin = 40;
+
 	private readonly IPickerPrecedence _precedence;
 
 	public PickerService(IPickerPrecedence precedence)
@@ -42,6 +49,9 @@ public class PickerService : IPickerService
 	private async Task<IPickableItem> ShowPickerControlAsync(
 		IPickerViewModel vm, Point location)
 	{
+		_msg.DebugFormat("Showing picker at screen location {0}, position preference: {1}",
+		                 location, _precedence.PositionPreference);
+
 		WindowPositioner positioner = GetWindowPositioner(_precedence.PositionPreference);
 
 		IPickableItem pickable = null;
@@ -53,6 +63,8 @@ public class PickerService : IPickerService
 			using var window = new PickerWindow(vm);
 
 			SetWindowLocation(window, location);
+
+			RestrictToMonitor(window, location, moveIntoMonitor: positioner == null);
 
 			positioner?.SetWindow(window, location);
 
@@ -98,6 +110,68 @@ public class PickerService : IPickerService
 
 		window.Left = dipLocation.X;
 		window.Top = dipLocation.Y;
+	}
+
+	/// <summary>
+	/// Limits the height of the window to the monitor at the location, so that a longer
+	/// list gets a scroll bar. Optionally the window is also moved up or to the left if it
+	/// extends beyond the lower or the right edge of the monitor.
+	/// </summary>
+	/// <remarks>Must call on main (UI) thread</remarks>
+	private static void RestrictToMonitor(Window window, Point location, bool moveIntoMonitor)
+	{
+		if (LocationUnknown(location))
+		{
+			return;
+		}
+
+		Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
+
+		Rect monitor = DisplayUtils.ToDeviceIndependentPixels(
+			WindowPositioner.GetClosestMonitor(location), ownerWindow);
+
+		window.MaxHeight = monitor.Height - _monitorMargin;
+
+		_msg.DebugFormat("Monitor of the picker (device independent pixels): {0}", monitor);
+
+		if (! moveIntoMonitor)
+		{
+			return;
+		}
+
+		Point desiredTopLeft = DisplayUtils.ToDeviceIndependentPixels(location, ownerWindow);
+
+		window.SizeChanged += (_, _) =>
+		{
+			Point topLeft = GetTopLeftOnMonitor(desiredTopLeft, window.RenderSize, monitor);
+
+			window.Left = topLeft.X;
+			window.Top = topLeft.Y;
+
+			_msg.DebugFormat(
+				"Picker window at {0} (device independent pixels). Desired location: {1}, window size: {2}",
+				topLeft, desiredTopLeft, window.RenderSize);
+		};
+	}
+
+	/// <summary>
+	/// Gets the location of the upper left corner of a window that shall appear at the
+	/// desired location. The window is only moved up or to the left if it would extend
+	/// beyond the lower or the right edge of the monitor.
+	/// </summary>
+	/// <param name="desiredTopLeft">The desired location of the upper left corner</param>
+	/// <param name="windowSize">The size of the window</param>
+	/// <param name="monitor">The working area of the monitor</param>
+	/// <returns></returns>
+	/// <remarks>All arguments must be in the same unit.</remarks>
+	public static Point GetTopLeftOnMonitor(Point desiredTopLeft, Size windowSize, Rect monitor)
+	{
+		double lowestBottom = monitor.Bottom - _monitorMargin / 2;
+
+		double top = Math.Min(desiredTopLeft.Y, lowestBottom - windowSize.Height);
+		double left = Math.Min(desiredTopLeft.X, monitor.Right - windowSize.Width);
+
+		return new Point(Math.Max(left, monitor.Left), Math.Max(top, monitor.Top));
 	}
 
 	private static bool LocationUnknown(Point location)

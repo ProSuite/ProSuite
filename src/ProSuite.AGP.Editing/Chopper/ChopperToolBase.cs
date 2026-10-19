@@ -127,10 +127,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 	protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 	                                                   CancelableProgressor progressor)
 	{
-		// Begin a new calculation generation up front so a superseding request (e.g. another
-		// spinner click) or Escape cancels this whole calculation, including the target search
-		// below, before the service round-trip is issued.
-		CancellationToken cancelToken = BeginCalculation();
+		CancellationToken cancelToken = CreateCancellationToken();
 
 		// Store current map extent
 		bool isStereoMap = MapUtils.IsStereoMapView(ActiveMapView);
@@ -235,8 +232,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 		var selectedFeatures = MapUtils.GetFeatures(
 			distinctSelectionByFeatureClass, true, activeMapView.Map.SpatialReference).ToList();
 
-		// New calculation generation for the chop operation (see CalculateDerivedGeometries).
-		CancellationToken cancelToken = BeginCalculation();
+		CancellationToken cancelToken = CreateCancellationToken();
 
 		IList<Feature> intersectingFeatures =
 			GetIntersectingFeatures(selectedFeatures, _chopperToolOptions, progressor);

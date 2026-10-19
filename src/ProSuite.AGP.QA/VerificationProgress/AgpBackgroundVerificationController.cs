@@ -200,12 +200,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
-			if (! verificationResult.HasIssues)
-			{
-				reason = "No issues";
-				return false;
-			}
-
+			// Even without new issues the production model work list is useful, e.g. to see
+			// the issues of all verifications (and to confirm none are left in the latest one):
 			if (_workListOpener.CanUseProductionModelIssueSchema())
 			{
 				reason =
@@ -214,6 +210,12 @@ namespace ProSuite.AGP.QA.VerificationProgress
 						: "The work list can be opened after the issues have been saved using 'Update Issues'";
 
 				return _issuesSaved;
+			}
+
+			if (! verificationResult.HasIssues)
+			{
+				reason = "No issues";
+				return false;
 			}
 
 			// No production model issue schema, use IssueGdb:

@@ -661,8 +661,9 @@ public abstract class OneClickToolBase : MapToolBase
 
 	protected Task<bool> IsInSelectionPhaseAsync()
 	{
-		bool shiftDown = KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
-		                 KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true);
+		bool shiftDown = (KeyboardUtils.IsModifierDown(Key.LeftShift, exclusive: true) ||
+		                  KeyboardUtils.IsModifierDown(Key.RightShift, exclusive: true)) &&
+		                 ! IsShiftPartOfShortcut;
 
 		return ViewUtils.TryAsync(IsInSelectionPhaseCoreAsync(shiftDown), _msg);
 	}
@@ -710,9 +711,14 @@ public abstract class OneClickToolBase : MapToolBase
 		var selectionByLayer = SelectionUtils.GetSelection(map);
 
 		var notifications = new NotificationCollection();
-		var applicableSelection =
-			GetDistinctApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
-			                                      notifications).ToList();
+
+		// NOTE: The same feature can be selected in several layers (referencing the same
+		//       feature class). Compare the non-distinct count with the selection count:
+		List<Feature> applicableFeatures =
+			GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
+			                              notifications).ToList();
+
+		List<Feature> applicableSelection = GetDistinct(applicableFeatures).ToList();
 
 		int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
 
@@ -720,7 +726,7 @@ public abstract class OneClickToolBase : MapToolBase
 
 		if (applicableSelection.Count > 0 &&
 		    (AllowNotApplicableFeaturesInSelection ||
-		     applicableSelection.Count == selectionCount) &&
+		     applicableFeatures.Count == selectionCount) &&
 		    (allowMultiselection || applicableSelection.Count == 1))
 		{
 			LogUsingCurrentSelection();
@@ -848,10 +854,16 @@ public abstract class OneClickToolBase : MapToolBase
 		bool unJoinedFeaturesForEditing = false,
 		[CanBeNull] NotificationCollection notifications = null)
 	{
+		return GetDistinct(GetApplicableSelectedFeatures(selectionByLayer,
+		                                                 unJoinedFeaturesForEditing,
+		                                                 notifications));
+	}
+
+	private static IEnumerable<Feature> GetDistinct([NotNull] IEnumerable<Feature> features)
+	{
 		HashSet<GdbObjectReference> usedRows = new HashSet<GdbObjectReference>();
 
-		foreach (Feature feature in GetApplicableSelectedFeatures(selectionByLayer,
-			         unJoinedFeaturesForEditing, notifications))
+		foreach (Feature feature in features)
 		{
 			var objectReference = new GdbObjectReference(feature);
 

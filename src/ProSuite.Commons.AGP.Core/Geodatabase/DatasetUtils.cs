@@ -507,23 +507,7 @@ public static class DatasetUtils
 		[NotNull] ArcGIS.Core.Data.Geodatabase geodatabase,
 		[CanBeNull] Predicate<RelationshipClassDefinition> predicate = null)
 	{
-		foreach (RelationshipClassDefinition definition in geodatabase
-			         .GetDefinitions<RelationshipClassDefinition>())
-		{
-			if (predicate is null || predicate(definition))
-			{
-				yield return definition;
-			}
-		}
-
-		foreach (AttributedRelationshipClassDefinition definition in
-		         geodatabase.GetDefinitions<AttributedRelationshipClassDefinition>())
-		{
-			if (predicate is null || predicate(definition))
-			{
-				yield return definition;
-			}
-		}
+		return RelationshipClassUtils.GetRelationshipClassDefinitions(geodatabase, predicate);
 	}
 
 	[Obsolete($"use {nameof(RelationshipClassUtils)}")]
@@ -549,23 +533,62 @@ public static class DatasetUtils
 		return OpenDataset<RelationshipClass>(geodatabase, relClassName);
 	}
 
-	public static bool IsSameTable(Table fc1, Table fc2)
+	/// <summary>
+	/// Determine if two tables are the same in the sense that they refer to the same
+	/// database table, ignoring versions and user names.
+	/// </summary>
+	/// <param name="table1">The first table.</param>
+	/// <param name="table2">The other table.</param>
+	/// <returns>
+	/// true if both tables are null or both refer to the same database table; otherwise, false.
+	/// </returns>
+	public static bool IsSameTable([CanBeNull] Table table1,
+	                               [CanBeNull] Table table2)
 	{
-		if (ReferenceEquals(fc1, fc2)) return true;
+		if (ReferenceEquals(table1, table2)) return true;
 
-		if (fc1 == null || fc2 == null) return false;
+		if (table1 == null || table2 == null) return false;
 
-		if (Equals(fc1.Handle, fc2.Handle)) return true;
+		return IsSameTable(table1, table2, TableEquality.SameTableAnyVersion);
+	}
 
-		var id1 = fc1.GetID();
-		var id2 = fc2.GetID();
-		if (id1 != id2) return false;
-		if (id1 >= 0) return true;
+	/// <summary>
+	/// Determine if two given tables are the same under the given definition of equality.
+	/// </summary>
+	/// <param name="table1">A table.</param>
+	/// <param name="table2">A table.</param>
+	/// <param name="equality">Definition of equality.</param>
+	/// <returns>True if the tables are the same; otherwise, false.</returns>
+	public static bool IsSameTable([NotNull] Table table1,
+	                               [NotNull] Table table2,
+	                               TableEquality equality)
+	{
+		Assert.ArgumentNotNull(table1, nameof(table1));
+		Assert.ArgumentNotNull(table2, nameof(table2));
 
-		// table id is negative for tables not registered with the Geodatabase
-		// compare table name and workspace -- for now, give up and assume not same
+		switch (equality)
+		{
+			case TableEquality.DontEquate:
+				return false;
 
-		return false;
+			case TableEquality.SameTableAnyVersion:
+				return IsSameInstance(table1, table2) ||
+				       IsSameDatabaseTable(table1, table2, requireSameVersion: false);
+
+			case TableEquality.SameTableSameVersion:
+				return IsSameInstance(table1, table2) ||
+				       IsSameDatabaseTable(table1, table2, requireSameVersion: true);
+
+			case TableEquality.SameDatasetName:
+				return IsSameInstance(table1, table2) ||
+				       string.Equals(table1.GetName(), table2.GetName());
+
+			case TableEquality.SameInstance:
+				return IsSameInstance(table1, table2);
+
+			default:
+				throw new ArgumentOutOfRangeException(nameof(equality));
+		}
 	}
 
 	/// <summary>
@@ -580,32 +603,43 @@ public static class DatasetUtils
 	public static bool IsSameObjectClass([NotNull] FeatureClass class1,
 	                                     [NotNull] FeatureClass class2)
 	{
-		Assert.ArgumentNotNull(class1, nameof(class1));
-		Assert.ArgumentNotNull(class2, nameof(class2));
+		return IsSameTable(class1, class2, TableEquality.SameTableAnyVersion);
+	}
 
-		// Test for reference-equals in real ArcObjects object class instances but also allow
-		// synthetic and mock feature classes to provide their own equality implementation:
-		if (class1.Equals(class2))
-		{
-			return true;
-		}
+	/// <summary>
+	/// Whether the two tables wrap the same underlying geodatabase object.
+	/// Two different .NET instances can wrap the same object, in which case their handles
+	/// are equal.
+	/// </summary>
+	private static bool IsSameInstance([NotNull] Table table1,
+	                                   [NotNull] Table table2)
+	{
+		return ReferenceEquals(table1, table2) || Equals(table1.Handle, table2.Handle);
+	}
 
-		if (class1.GetID() != class2.GetID())
+	private static bool IsSameDatabaseTable([NotNull] Table table1,
+	                                        [NotNull] Table table2,
+	                                        bool requireSameVersion)
+	{
+		// The table ID is -1 for all tables that are not registered with the geodatabase,
+		// for example shapefiles or query layers. Therefore the name must always be compared.
+		if (table1.GetID() != table2.GetID())
 		{
 			return false;
 		}
 
-		var dataset1 = class1.GetFeatureDataset();
-		var dataset2 = class2.GetFeatureDataset();
-
-		if (! dataset1.GetName().Equals(dataset2.GetName()))
+		if (! string.Equals(table1.GetName(), table2.GetName()))
 		{
 			return false;
 		}
 
-		// class id and names are equal; could still be different db instances
+		// Table ID and name are equal. The tables could still be in different databases.
+		using Datastore datastore1 = table1.GetDatastore();
+		using Datastore datastore2 = table2.GetDatastore();
 
-		return WorkspaceUtils.IsSameDatastore(dataset1.GetDatastore(), dataset2.GetDatastore());
+		return requireSameVersion
+			       ? WorkspaceUtils.IsSameVersion(datastore1, datastore2)
+			       : WorkspaceUtils.IsSameDatabase(datastore1, datastore2);
 	}
 
 	public static IEnumerable<Table> Distinct(
