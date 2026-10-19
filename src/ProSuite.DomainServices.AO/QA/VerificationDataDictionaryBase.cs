@@ -64,6 +64,14 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			if (string.IsNullOrEmpty(environmentName))
 			{
+				if (_environmentActivationAction != null)
+				{
+					throw new InvalidOperationException(
+						"The request does not specify the data dictionary environment. " +
+						"This server serves several environments and each request must " +
+						"specify one of them. Make sure the client sends the environment name.");
+				}
+
 				_msg.Debug("No environment name specified, using default environment.");
 				return;
 			}
