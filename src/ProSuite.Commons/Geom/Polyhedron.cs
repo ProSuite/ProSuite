@@ -167,7 +167,7 @@ namespace ProSuite.Commons.Geom
 				// duplicate segments sticking out. This makes ClockwiseOriented correct
 				// for each cleaned ring before AsProperlyOriented runs. This operation
 				// can change the ring's orientation!
-				IEnumerable<RingGroup> cleanedGroups = SimplifyRings(
+				List<RingGroup> cleanedGroups = SimplifyRings(
 					coplanarGroup, verticalRingDetectionTolerance,
 					out List<Linestring> cleanupVerticals);
 
@@ -205,7 +205,7 @@ namespace ProSuite.Commons.Geom
 		/// <returns>Zero or more cleaned ring groups. Empty if the input was
 		/// entirely vertical or degenerate. May contain more than one group if the
 		/// exterior ring split into multiple simple rings.</returns>
-		private static IEnumerable<RingGroup> SimplifyRings(
+		private static List<RingGroup> SimplifyRings(
 			[NotNull] RingGroup input,
 			double verticalRingDetectionTolerance,
 			[NotNull] out List<Linestring> verticalRings)
@@ -217,7 +217,7 @@ namespace ProSuite.Commons.Geom
 
 			if (cleanedExteriors.Count == 0)
 			{
-				return Enumerable.Empty<RingGroup>();
+				return new List<RingGroup>(0);
 			}
 
 			var cleanedInteriors = new List<Linestring>();
@@ -227,19 +227,79 @@ namespace ProSuite.Commons.Geom
 					SimplifyRing(interior, verticalRingDetectionTolerance, verticalRings));
 			}
 
-			// Reassemble. Interior rings are attached to the first exterior fragment
-			// only.
-			// TODO: When the exterior ring splits, distribute interior rings across
+			return AssembleByContainment(cleanedExteriors, cleanedInteriors,
+			                             verticalRingDetectionTolerance);
+		}
 
-			// the exterior fragments by geometric containment.
-			var result = new List<RingGroup>(cleanedExteriors.Count);
-			for (int i = 0; i < cleanedExteriors.Count; i++)
+		/// <summary>
+		/// Builds the ring groups from the fragments of a cleaned exterior ring and the
+		/// cleaned interior rings. Only the role of each ring is decided here: a fragment
+		/// contained in an odd number of other fragments is a hole, and so is every declared
+		/// interior ring. Each hole then goes to the smallest solid ring containing it, see
+		/// <see cref="GeomTopoOpUtils.GetConnectedComponents"/>.
+		/// <para>The role cannot be taken from the orientation of a fragment, because
+		/// <see cref="GeomTopoOpUtils.TryCrackSelfCrossingRing"/> makes every fragment of an
+		/// exploded self-touching ring clockwise - so the loops the ring traced as courtyards
+		/// would be filled in (Kaspar/July: a building stored as ONE ring tracing an outline
+		/// of 1279.5 m2 and two courtyards, 524.5 m2 too much). Containment parity is also
+		/// the even-odd reading ArcObjects gives for the same multipatch, including for a
+		/// ring whose loops are wound the same way.</para>
+		/// </summary>
+		[NotNull]
+		private static List<RingGroup> AssembleByContainment(
+			[NotNull] List<Linestring> exteriorFragments,
+			[NotNull] List<Linestring> interiorRings,
+			double tolerance)
+		{
+			if (exteriorFragments.Count == 1)
 			{
-				RingGroup group = i == 0 && cleanedInteriors.Count > 0
-					                  ? new RingGroup(cleanedExteriors[i], cleanedInteriors)
-					                  : new RingGroup(cleanedExteriors[i]);
-				result.Add(group);
+				// The common case: no explosion, everything belongs to the single ring.
+				return new List<RingGroup>
+				       {
+					       interiorRings.Count > 0
+						       ? new RingGroup(exteriorFragments[0], interiorRings)
+						       : new RingGroup(exteriorFragments[0])
+				       };
 			}
+
+			var rings = new List<Linestring>(exteriorFragments.Count + interiorRings.Count);
+
+			for (var i = 0; i < exteriorFragments.Count; i++)
+			{
+				var nestingDepth = 0;
+
+				for (var j = 0; j < exteriorFragments.Count; j++)
+				{
+					if (i != j &&
+					    IsContainedInXY(exteriorFragments[i], exteriorFragments[j], tolerance))
+					{
+						nestingDepth++;
+					}
+				}
+
+				rings.Add(WithOrientation(exteriorFragments[i], nestingDepth % 2 == 0));
+			}
+
+			rings.AddRange(interiorRings.Select(ring => WithOrientation(ring, false)));
+
+			return GeomTopoOpUtils.GetConnectedComponents(new MultiPolycurve(rings), tolerance)
+			                      .ToList();
+		}
+
+		/// <summary>
+		/// The ring itself if it has the specified orientation, otherwise a reversed copy:
+		/// the ring can still be one of the polyhedron's own.
+		/// </summary>
+		[NotNull]
+		private static Linestring WithOrientation([NotNull] Linestring ring, bool clockwise)
+		{
+			if (ring.ClockwiseOriented == clockwise)
+			{
+				return ring;
+			}
+
+			Linestring result = ring.Clone();
+			result.ReverseOrientation();
 
 			return result;
 		}
@@ -311,7 +371,9 @@ namespace ProSuite.Commons.Geom
 				return ringGroup;
 			}
 
-			IList<Pnt3D> exteriorPoints = ringGroup.ExteriorRing.GetPoints().ToList();
+			Linestring exteriorRing = ringGroup.ExteriorRing;
+
+			IList<Pnt3D> exteriorPoints = exteriorRing.GetPoints().ToList();
 
 			Plane3D exteriorPlane = Plane3D.TryFitPlane(exteriorPoints, isRing: true);
 
@@ -322,20 +384,38 @@ namespace ProSuite.Commons.Geom
 				return ringGroup;
 			}
 
+			// The exterior ring need not be planar itself: warped quads and folded roof faces
+			// are common in the TLM multipatches (Kaspar/July has exterior rings 0.20 m and
+			// 0.75 m off their own best-fit plane). Against such a plane an absolute
+			// tolerance rejects perfectly good courtyards, so only an interior ring that is
+			// off it by MORE than the exterior ring itself is can be a different face.
+			double exteriorDeviation =
+				exteriorPoints.Max(p => exteriorPlane.GetDistanceAbs(p.X, p.Y, p.Z));
+
+			double coplanarityThreshold = exteriorDeviation + coplanarityTolerance;
+
 			var coplanarInteriors = new List<Linestring>(ringGroup.InteriorRingCount);
 			foreach (Linestring interiorRing in ringGroup.InteriorRings)
 			{
-				if (IsCoplanar(interiorRing, exteriorPlane, coplanarityTolerance))
+				double interiorDeviation =
+					interiorRing.GetPoints()
+					            .Max(p => exteriorPlane.GetDistanceAbs(p.X, p.Y, p.Z));
+
+				// A hole must also lie within its exterior ring in XY; a ring reaching
+				// outside is a different face however planar the exterior is.
+				bool containedInXY = IsContainedInXY(interiorRing, exteriorRing,
+				                                     coplanarityTolerance);
+
+				if (containedInXY && interiorDeviation <= coplanarityThreshold)
 				{
 					coplanarInteriors.Add(interiorRing);
 				}
 				else
 				{
 					_msg.DebugFormat(
-						"Detected interior ring that is not coplanar with its exterior. Interior ring has {0} segments (max. distance to exterior plane: {1})",
-						interiorRing.SegmentCount,
-						interiorRing.GetPoints()
-						            .Max(p => exteriorPlane.GetDistanceAbs(p.X, p.Y, p.Z)));
+						"Detected interior ring that is not part of its exterior face. Interior ring has {0} segments, max. distance to the exterior plane: {1} (threshold {2}, the exterior ring's own deviation is {3}), contained in XY: {4}",
+						interiorRing.SegmentCount, interiorDeviation, coplanarityThreshold,
+						exteriorDeviation, containedInXY);
 
 					nonCoplanarRings.Add(interiorRing);
 				}
@@ -449,6 +529,21 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		/// <summary>
+		/// Whether every vertex of <paramref name="ring"/> is inside or on the boundary of
+		/// <paramref name="container"/> in XY.
+		/// </summary>
+		private static bool IsContainedInXY([NotNull] Linestring ring,
+		                                    [NotNull] Linestring container,
+		                                    double tolerance)
+		{
+			const bool disregardingOrientation = true;
+
+			return ! ring.GetPoints().Any(
+				       p => GeomRelationUtils.AreaContainsXY(
+					            container, p, tolerance, disregardingOrientation) == false);
+		}
+
 		private static bool IsCoplanar([NotNull] Linestring ring,
 		                               [NotNull] Plane3D plane,
 		                               double tolerance)
@@ -475,10 +570,12 @@ namespace ProSuite.Commons.Geom
 				return RingGroup.CreateEmpty();
 			}
 
-			if (clockwiseOriented == false)
-			{
-				resultRingGroup.ReverseOrientation();
-			}
+			// Orient each ring by its role rather than reversing the group as a whole: a
+			// multipatch does not guarantee that an inner ring is stored opposite to its
+			// outer ring (Kaspar/July has courtyards stored with the same orientation), and
+			// a group-wide reverse keeps such a hole positive - adding its area instead of
+			// subtracting it.
+			resultRingGroup.TryOrientProperly();
 
 			return resultRingGroup;
 		}

@@ -127,6 +127,27 @@ namespace ProSuite.Commons.Geom
 			(! double.IsNaN(_source1Factor) && ! double.IsNaN(_source2Factor));
 
 		/// <summary>
+		/// The overlap of two segments must be longer than this many tolerances to be a
+		/// linear intersection if the segments are not collinear over their full length.
+		/// Two segments that diverge by an angle alpha can stay within the tolerance of
+		/// each other for about 2 * tolerance / sin(alpha) only, so a longer overlap means
+		/// that the segments are nearly parallel.
+		/// </summary>
+		private const double _minimumOverlapInTolerances = 5;
+
+		/// <summary>
+		/// Whether exactly one end point of the source lies on the target, exactly one end
+		/// point of the target lies on the source, and the stretch between these two points
+		/// is clearly longer than the tolerance. Both ends of that stretch are within the
+		/// tolerance of the other segment, hence the whole stretch is: it is a real linear
+		/// intersection even if the segments are not collinear over their full length
+		/// (e.g. two long edges that diverge by a fraction of a degree and overlap for a
+		/// few decimetres). A stretch of about the size of the tolerance, on the other hand,
+		/// is the corner touch that <see cref="SegmentsAreCollinearXY"/> describes.
+		/// </summary>
+		private readonly bool _hasOverlapLongerThanTolerance;
+
+		/// <summary>
 		/// Whether or not the intersection between the source and the target segment
 		/// is a line. In case of a 0-length source segment the intersection is also
 		/// considered a (0-length) line.
@@ -169,12 +190,14 @@ namespace ProSuite.Commons.Geom
 					// actually collinear; otherwise it is a near-coincident corner touch
 					// (a pseudo-linear intersection) and must be treated as a point.
 					// See IsPotentialPseudoLinearIntersection (sebastianskapelle)
-					return ! MathUtils.AreEqual(0, nonNullTarget) && SegmentsAreCollinearXY;
+					return ! MathUtils.AreEqual(0, nonNullTarget) &&
+					       (SegmentsAreCollinearXY || _hasOverlapLongerThanTolerance);
 				}
 
 				if (SourceEndIntersects)
 				{
-					return ! MathUtils.AreEqual(1.0, nonNullTarget) && SegmentsAreCollinearXY;
+					return ! MathUtils.AreEqual(1.0, nonNullTarget) &&
+					       (SegmentsAreCollinearXY || _hasOverlapLongerThanTolerance);
 				}
 
 				return false;
@@ -320,6 +343,9 @@ namespace ProSuite.Commons.Geom
 
 			CollectVertexIntersectionInfos(sourceLine, targetLine, tolerance);
 
+			_hasOverlapLongerThanTolerance = HasOverlapLongerThan(
+				_minimumOverlapInTolerances * tolerance, sourceLine);
+
 			if (GetIntersectingVerticesCount() == 0)
 			{
 				// No linear intersection between the 2 lines, no intersection at vertices:
@@ -341,6 +367,22 @@ namespace ProSuite.Commons.Geom
 		}
 
 		#endregion
+
+		private bool HasOverlapLongerThan(double minimumLength, [NotNull] Line3D sourceLine)
+		{
+			if (SourceStartIntersects == SourceEndIntersects ||
+			    TargetStartIntersects == TargetEndIntersects)
+			{
+				return false;
+			}
+
+			double targetFactor = GetTargetStartIntersectionFactor() ??
+			                      Assert.NotNull(GetTargetEndIntersectionFactor()).Value;
+
+			double overlapRatio = SourceStartIntersects ? targetFactor : 1 - targetFactor;
+
+			return overlapRatio * sourceLine.Length2D > minimumLength;
+		}
 
 		/// <summary>
 		/// The factor (distance along the source segment as ratio) of the target's start point

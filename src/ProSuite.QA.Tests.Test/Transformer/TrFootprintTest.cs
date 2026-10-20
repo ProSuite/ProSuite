@@ -85,7 +85,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(TestCategory.FixMe)]
 		public void CanGetFootprintsRealData()
 		{
 			string path = TestDataPreparer.ExtractZip("GebZueriberg.gdb.zip").Overwrite().GetPath();
@@ -118,7 +117,6 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		}
 
 		[Test]
-		[Category(TestCategory.FixMe)]
 		public void CanGetFootprintsRealDataVerticals()
 		{
 			string path = TestDataPreparer.ExtractZip("GebkoerperSmallAreas.gdb.zip").Overwrite()
@@ -158,9 +156,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				}
 			}
 
-			// TODO: Check the difference compared to commit 8b547680d169f7c611fb97dffc3d1c4f54713a96
-			// and make sure it is no regression. But most likely it is not.
-			Assert.AreEqual(111, emptyCount);
+			// The footprints of the (almost) vertical multipatches are empty: their rings are
+			// narrower than the tolerance.
+			Assert.AreEqual(108, emptyCount);
 
 			// Many are different due to AO returning envelope if footprint is no polygon
 			// In some cases the equality check seems to incorrectly state that they are different. 

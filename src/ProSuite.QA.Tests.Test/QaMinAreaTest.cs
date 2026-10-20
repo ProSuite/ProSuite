@@ -73,7 +73,6 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		[Category(Commons.Test.TestCategory.FixMe)]
 		public void CanCheckRealWorldMultipatchesViaFootprintTop5659()
 		{
 			string path = TestDataPreparer.ExtractZip("GebkoerperSmallAreas.gdb.zip").GetPath();
@@ -87,13 +86,16 @@ namespace ProSuite.QA.Tests.Test
 
 			int errorCount = GetMinAreaErrorCount(footprintClass, 0.2, true);
 
-			// Just a few are actually small,
-			int expected = 12;
+			// Just a few are actually small: 11 footprints below 0.2 m2, and OID 123 with a
+			// second part of 0.005 m2 (a needle touching the main part in one vertex). OID 123
+			// is reported twice for each of its two parts, which makes 15.
+			int expected = 15;
 			Assert.AreEqual(expected, errorCount);
 
-			// most footprints are empty (empty is NOT area 0!, but ignored)
+			// most footprints are empty (empty is NOT area 0!, but ignored): the ones of
+			// the (almost) vertical multipatches, whose rings are narrower than the tolerance
 			errorCount = GetNonEmptyGeometryErrorCount(footprintClass);
-			Assert.AreEqual(112, errorCount);
+			Assert.AreEqual(108, errorCount);
 		}
 
 		private static int GetMinAreaErrorCount(IFeatureClass buildings, double limit, bool perPart)

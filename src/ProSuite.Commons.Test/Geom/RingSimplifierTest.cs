@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -118,6 +119,72 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanKeepBoundaryLoopAroundHole()
+		{
+			// A square with a triangular hole that touches the bottom edge in (5, 0),
+			// modelled as one ring. ArcObjects considers this ring simple, and its simplify
+			// makes exactly such a ring of a hole that touches its exterior ring.
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(5, 0, 0),
+				                                new Pnt3D(6, 3, 0),
+				                                new Pnt3D(4, 3, 0),
+				                                new Pnt3D(5, 0, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsFalse(RingSimplifier.TrySimplifyRingXY(
+				               ring, _tolerance,
+				               RingSimplifyFlags.All |
+				               RingSimplifyFlags.KeepBoundaryLoopsAroundHoles, results));
+
+			// Without the flag the hole is split off:
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance, RingSimplifyFlags.All, results));
+			Assert.AreEqual(2, results.Count);
+			Assert.AreEqual(97, results.Sum(r => r.GetArea2D()), 0.0001);
+		}
+
+		[Test]
+		public void CanExplodeExteriorBoundaryLoopButKeepBoundaryLoopAroundHole()
+		{
+			// Two squares that touch in (10, 10); the lower one has a triangular hole that
+			// touches its bottom edge in (5, 0). All of it is one ring.
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(5, 0, 0),
+				                                new Pnt3D(6, 3, 0),
+				                                new Pnt3D(4, 3, 0),
+				                                new Pnt3D(5, 0, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance,
+				              RingSimplifyFlags.All |
+				              RingSimplifyFlags.KeepBoundaryLoopsAroundHoles, results));
+
+			Assert.AreEqual(2, results.Count);
+			Assert.IsTrue(results.All(r => r.ClockwiseOriented == true));
+			Assert.AreEqual(97, results.Min(r => r.GetArea2D()), 0.0001);
+			Assert.AreEqual(100, results.Max(r => r.GetArea2D()), 0.0001);
+		}
+
+		[Test]
 		public void CanRemoveSubToleranceBoundaryLoop()
 		{
 			// A square with a sliver spike whose two flanks are 0.002 apart, i.e. much
@@ -184,6 +251,65 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanSplitRingTouchingItselfInTwoPlaces()
+		{
+			// Three squares in a diagonal chain, connected in (10, 10) and in (20, 20).
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 30, 0),
+				                                new Pnt3D(30, 30, 0),
+				                                new Pnt3D(30, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance, RingSimplifyFlags.StepResult, results));
+
+			Assert.AreEqual(3, results.Count);
+			Assert.IsTrue(results.All(r => r.IsClosed));
+			Assert.IsTrue(results.All(r => Math.Abs(r.GetArea2D() - 100) < 0.001));
+		}
+
+		[Test]
+		public void CanSplitRingPassingThreeTimesThroughTheSamePoint()
+		{
+			// Two squares and a triangle that have only the point (10, 10) in common.
+			var ring = new Linestring(Close(new List<Pnt3D>
+			                                {
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 20, 0),
+				                                new Pnt3D(20, 20, 0),
+				                                new Pnt3D(20, 10, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(20, 5, 0),
+				                                new Pnt3D(15, 0, 0),
+				                                new Pnt3D(10, 10, 0),
+				                                new Pnt3D(10, 0, 0),
+				                                new Pnt3D(0, 0, 0),
+				                                new Pnt3D(0, 10, 0)
+			                                }));
+
+			var results = new List<Linestring>();
+
+			Assert.IsTrue(RingSimplifier.TrySimplifyRingXY(
+				              ring, _tolerance, RingSimplifyFlags.StepResult, results));
+
+			Assert.AreEqual(3, results.Count);
+			Assert.IsTrue(results.All(r => r.IsClosed));
+			Assert.AreEqual(237.5, results.Sum(r => r.GetArea2D()), 0.001);
+		}
+
+		[Test]
 		public void InteriorRingsAreSimplifiedToo()
 		{
 			var outerRing = new Linestring(Close(Square(0, 0, 20)));
@@ -206,6 +332,43 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(2, rings.PartCount);
 			Assert.IsFalse(rings.GetPart(1).GetPoints().Any(p => p.Y > 15.0001));
+		}
+
+		[Test]
+		public void RingRunningAlongItselfSeveralTimesIsNotDeleted()
+		{
+			// The footprint of TLM_GEBAEUDEKOERPER 1745732 (Zurich): a rectangle with a thin
+			// zigzag appendix that runs along itself several times in the same place.
+			List<Pnt3D> points = Close(new List<Pnt3D>
+			                           {
+				                           new Pnt3D(0.0000, 2.6660, 0),
+				                           new Pnt3D(0.5230, 3.1460, 0),
+				                           new Pnt3D(2.9520, 0.4990, 0),
+				                           new Pnt3D(3.2760, 0.7697, 0),
+				                           new Pnt3D(3.3420, 0.8260, 0),
+				                           new Pnt3D(3.0860, 0.6190, 0),
+				                           new Pnt3D(3.3710, 0.8740, 0),
+				                           new Pnt3D(3.3830, 0.8610, 0),
+				                           new Pnt3D(2.4480, 0.0000, 0)
+			                           });
+
+			// The precondition of this test: the deletion of the linear self-intersections
+			// returns only open fragments for this ring.
+			var fragments = new List<Linestring>();
+
+			Assert.IsTrue(GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
+				              new Linestring(points), _tolerance, fragments));
+			Assert.IsFalse(fragments.Any(f => f.IsClosed));
+
+			MultiLinestring rings = new MultiPolycurve(
+				new List<Linestring> { new Linestring(points) });
+
+			double area = rings.GetArea2D();
+
+			RingSimplifier.SimplifyRingsXY(rings, _tolerance, RingSimplifyFlags.All);
+
+			Assert.AreEqual(1, rings.PartCount);
+			Assert.AreEqual(area, rings.GetArea2D(), 0.05);
 		}
 
 		private static MultiLinestring CreateRings(List<Pnt3D> points)
