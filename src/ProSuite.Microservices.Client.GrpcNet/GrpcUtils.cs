@@ -14,6 +14,8 @@ namespace ProSuite.Microservices.Client.GrpcNet
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private const string _disableProxyVariableName = "PROSUITE_GRPC_DISABLE_PROXY";
+
 #if NET8_0
 		// NOTE: We actually have to load the library in the desired version, otherwise Grpc.Net.Client will throw a System.IO.FileNotFoundException!
 		// TODO: In case a previously loaded Add-in has already loaded a lower version, do not fail here!
@@ -48,10 +50,8 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			[CanBeNull] ChannelCredentials credentials,
 			int maxMessageLength)
 		{
-			// Sometimes the local host is not configured as exception in the proxy settings:
-			bool disableProxy =
-				IsLocalHost(host) ||
-				EnvironmentUtils.GetBooleanEnvironmentVariableValue("PROSUITE_GRPC_DISABLE_PROXY");
+			// In some organizations localhost is not configured as exception in the proxy settings:
+			bool disableProxy = IsProxyBypassed(host);
 
 			_msg.DebugFormat("Creating channel to {0} on port {1}. Disabling proxy: {2}",
 			                 host, port, disableProxy);
@@ -86,6 +86,12 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			}
 
 			return address;
+		}
+
+		public static bool IsProxyBypassed([NotNull] string host)
+		{
+			return EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				_disableProxyVariableName, defaultValue: IsLocalHost(host));
 		}
 
 		private static bool IsLocalHost([NotNull] string host)
