@@ -30,8 +30,14 @@ namespace ProSuite.Microservices.Client.GrpcNet
 
 			if (disableProxy)
 			{
-				// TODO: Test this (s. https://stackoverflow.com/questions/66500195/net-5-grpc-client-call-throws-exception-requesting-http-version-2-0-with-versi)
-				HttpClient.DefaultProxy = new WebProxy();
+				// Do not change HttpClient.DefaultProxy: it applies to every connection in the
+				// process, for example to other add-in's internet connections.
+				result.HttpHandler = new SocketsHttpHandler
+				                     {
+					                     UseProxy = false,
+					                     EnableMultipleHttp2Connections = true
+				                     };
+				result.DisposeHttpClient = true;
 			}
 
 			return result;
@@ -42,9 +48,9 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			[CanBeNull] ChannelCredentials credentials,
 			int maxMessageLength)
 		{
-			// Sometimes the localhost is not configured as exception in the proxy settings:
+			// Sometimes the local host is not configured as exception in the proxy settings:
 			bool disableProxy =
-				string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase) ||
+				IsLocalHost(host) ||
 				EnvironmentUtils.GetBooleanEnvironmentVariableValue("PROSUITE_GRPC_DISABLE_PROXY");
 
 			_msg.DebugFormat("Creating channel to {0} on port {1}. Disabling proxy: {2}",
@@ -80,6 +86,12 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			}
 
 			return address;
+		}
+
+		private static bool IsLocalHost([NotNull] string host)
+		{
+			return string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase) ||
+			       IPAddress.TryParse(host, out IPAddress address) && IPAddress.IsLoopback(address);
 		}
 	}
 }
