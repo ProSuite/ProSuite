@@ -843,6 +843,24 @@ public static class MapUtils
 	}
 
 	/// <summary>
+	/// Gets the first of the specified maps that has an elevation surface.
+	/// Stereo maps are never returned. Must be called on the MCT.
+	/// </summary>
+	[CanBeNull]
+	public static Map GetMapWithSurface([NotNull] IEnumerable<Map> maps)
+	{
+		foreach (Map map in maps)
+		{
+			if (MapHasSurface(map))
+			{
+				return map;
+			}
+		}
+
+		return null;
+	}
+
+	/// <summary>
 	/// Gets the first elevation surface layer in the map with the specified name.
 	/// This layer contains the layers that provide the actual elevation.
 	/// </summary>
