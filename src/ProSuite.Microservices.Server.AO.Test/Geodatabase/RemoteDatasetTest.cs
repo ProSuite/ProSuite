@@ -9,6 +9,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
@@ -194,6 +195,58 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 			                          });
 
 			return objectClassMsg;
+		}
+
+		[Test]
+		public void Search_client_error_names_table_and_client_message()
+		{
+			// Issue C of the QA server issue list: the server message lacked the table name
+			// and doubled the period ("Specified cast is not valid..").
+			const string clientErrorMessage =
+				"Specified cast is not valid.\r\n" +
+				"Client exception: System.InvalidCastException: Specified cast is not valid.";
+
+			RemoteDataset remoteDataset = null;
+
+			var errorTable = new GdbTable(
+				417, "TOPGIS_TLM.TLM_ERRORS_ROW", null,
+				t =>
+				{
+					remoteDataset = new RemoteDataset(
+						t,
+						response => new DataVerificationRequest
+						            {
+							            ErrorMessage = clientErrorMessage
+						            },
+						new ClassDef
+						{
+							ClassHandle = 417,
+							WorkspaceHandle = 2000030
+						});
+
+					return remoteDataset;
+				});
+
+			errorTable.AddField(FieldUtils.CreateOIDField());
+
+			Assert.NotNull(remoteDataset);
+
+			var filter = new AoTableFilter
+			             {
+				             WhereClause = "FEHLERART = 300",
+				             SubFields = "*"
+			             };
+
+			var exception = Assert.Throws<DataAccessException>(
+				() => remoteDataset.Search(filter, recycling: false).ToList());
+
+			string message = exception.Message;
+			Console.WriteLine(message);
+
+			StringAssert.Contains("TOPGIS_TLM.TLM_ERRORS_ROW", message);
+			StringAssert.Contains(clientErrorMessage, message);
+			StringAssert.Contains("FEHLERART = 300", message);
+			StringAssert.DoesNotContain("valid..", message);
 		}
 
 		private static RelationshipClassQuery CreateRelationshipQuery()
