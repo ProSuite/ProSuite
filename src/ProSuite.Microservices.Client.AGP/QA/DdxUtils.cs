@@ -1054,9 +1054,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		}
 
 		/// <summary>
-		/// The server registers the data dictionary service only if it could open the data
-		/// dictionary at startup. Without it, every call fails with status Unimplemented and
-		/// an empty detail text.
+		/// The server does not register the data dictionary service if setting up the data
+		/// dictionary access failed at startup. Every call then fails with status Unimplemented
+		/// and an empty detail text. If only the database connection failed, the service is
+		/// registered and the calls fail with the database error instead.
 		/// </summary>
 		private static bool IsServiceUnavailable(Exception exception)
 		{
