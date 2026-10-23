@@ -8,6 +8,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using Google.Protobuf.Collections;
+using Grpc.Core;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -37,6 +38,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		// Sometimes it takes almost two minutes!
 		// From the US west cost to postgreSQL server in AWS europe even longer.
 		private const int _timeoutMilliseconds = 300000;
+
+		private const string _dataDictionaryUnavailableMessage =
+			"The quality verification server has no access to the data dictionary. " +
+			"If the server runs on this computer, its log file contains the reason. " +
+			"Otherwise, please contact the server administrator.";
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] IEnumerable<Table> tables,
@@ -89,11 +95,12 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_msg.DebugFormat("Getting quality specifications for {0} datasets.", datasetIds.Count);
 
 			GetSpecificationRefsResponse response =
-				await GrpcClientUtils.TryAsync(async callOptions =>
-					                               await ddxClient.GetQualitySpecificationRefsAsync(
-						                               request, callOptions),
-				                               CancellationToken.None,
-				                               _timeoutMilliseconds);
+				await TryDataDictionaryCallAsync(async callOptions =>
+					                                 await ddxClient
+						                                 .GetQualitySpecificationRefsAsync(
+							                                 request, callOptions),
+				                                 CancellationToken.None,
+				                                 _timeoutMilliseconds);
 
 			if (response == null)
 			{
@@ -134,11 +141,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			                 specificationId);
 
 			GetSpecificationResponse response =
-				await GrpcClientUtils.TryAsync(async callOptions =>
-					                               await ddxClient.GetQualitySpecificationAsync(
-						                               request, callOptions),
-				                               CancellationToken.None,
-				                               _timeoutMilliseconds);
+				await TryDataDictionaryCallAsync(async callOptions =>
+					                                 await ddxClient.GetQualitySpecificationAsync(
+						                                 request, callOptions),
+				                                 CancellationToken.None,
+				                                 _timeoutMilliseconds);
 
 			if (response == null)
 			{
@@ -180,11 +187,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			_msg.DebugFormat("Getting {0} quality conditions by id.", conditionIds.Count);
 
 			GetConditionsResponse response =
-				await GrpcClientUtils.TryAsync(async callOptions =>
-					                               await ddxClient.GetQualityConditionsAsync(
-						                               request, callOptions),
-				                               CancellationToken.None,
-				                               _timeoutMilliseconds);
+				await TryDataDictionaryCallAsync(async callOptions =>
+					                                 await ddxClient.GetQualityConditionsAsync(
+						                                 request, callOptions),
+				                                 CancellationToken.None,
+				                                 _timeoutMilliseconds);
 
 			if (response == null)
 			{
@@ -451,7 +458,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			                 datasets.Count);
 
 			GetDatasetDetailsResponse response =
-				GrpcClientUtils.Try(
+				TryDataDictionaryCall(
 					callOptions => ddxClient.GetDatasetDetails(request, callOptions),
 					CancellationToken.None, _timeoutMilliseconds);
 
@@ -703,11 +710,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[CanBeNull] IModelFactory modelFactory = null)
 		{
 			GetProjectWorkspacesResponse response =
-				await GrpcClientUtils.TryAsync(async callOptions =>
-					                               await ddxClient.GetProjectWorkspacesAsync(
-						                               request, callOptions),
-				                               CancellationToken.None,
-				                               _timeoutMilliseconds);
+				await TryDataDictionaryCallAsync(async callOptions =>
+					                                 await ddxClient.GetProjectWorkspacesAsync(
+						                                 request, callOptions),
+				                                 CancellationToken.None,
+				                                 _timeoutMilliseconds);
 
 			if (response == null)
 			{
@@ -1013,6 +1020,48 @@ namespace ProSuite.Microservices.Client.AGP.QA
 					spatialReferencesByWkId.Add(sr.Wkid, sr);
 				}
 			}
+		}
+
+		private static async Task<T> TryDataDictionaryCallAsync<T>(
+			[NotNull] Func<CallOptions, Task<T>> func,
+			CancellationToken cancellationToken,
+			long deadlineMilliseconds)
+		{
+			try
+			{
+				return await GrpcClientUtils.TryAsync(func, cancellationToken,
+				                                      deadlineMilliseconds);
+			}
+			catch (Exception e) when (IsServiceUnavailable(e))
+			{
+				throw new InvalidOperationException(_dataDictionaryUnavailableMessage, e);
+			}
+		}
+
+		private static T TryDataDictionaryCall<T>(
+			[NotNull] Func<CallOptions, T> func,
+			CancellationToken cancellationToken,
+			long deadlineMilliseconds)
+		{
+			try
+			{
+				return GrpcClientUtils.Try(func, cancellationToken, deadlineMilliseconds);
+			}
+			catch (Exception e) when (IsServiceUnavailable(e))
+			{
+				throw new InvalidOperationException(_dataDictionaryUnavailableMessage, e);
+			}
+		}
+
+		/// <summary>
+		/// The server registers the data dictionary service only if it could open the data
+		/// dictionary at startup. Without it, every call fails with status Unimplemented and
+		/// an empty detail text.
+		/// </summary>
+		private static bool IsServiceUnavailable(Exception exception)
+		{
+			return exception.InnerException is RpcException rpcException &&
+			       rpcException.StatusCode == StatusCode.Unimplemented;
 		}
 	}
 }
