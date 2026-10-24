@@ -321,10 +321,11 @@ namespace ProSuite.Commons.Geom
 				return rings;
 			}
 
-			// ArcObjects style tolerances:
-			// cluster at 2*sqrt(2)*tolerance, drop what is shorter than sqrt(2)*tolerance.
-			double clusterTolerance = 2 * Math.Sqrt(2) * tolerance;
-			double minimumSegmentLength = Math.Sqrt(2) * tolerance;
+			// What is farther apart than the tolerance stays apart. The minimum segment length
+			// has the ratio of CrackAndClusterToleranceStrategy.Uniform: a longer one would
+			// remove the vertices that the snapping inserted.
+			double clusterTolerance = tolerance;
+			double minimumSegmentLength = tolerance / Math.Sqrt(2);
 
 			List<Linestring> parts = rings.GetLinestrings().Select(l => l.Clone()).ToList();
 
@@ -503,6 +504,424 @@ namespace ProSuite.Commons.Geom
 			                };
 
 			return GeomTopoOpUtils.MergeConnectedLinestrings(subcurves, null, tolerance);
+		}
+
+		#endregion
+
+		#region Simplify at a coarser tolerance
+
+		/// <summary>
+		/// Makes rings that are the result of an operation at a fine tolerance simple at the
+		/// coarser <paramref name="tolerance"/> of the geometry they are stored in. Three
+		/// steps, each of which leaves rings that are simple already untouched:
+		/// <list type="number">
+		/// <item><see cref="UnionRingsAtTolerance"/>: rings that are separate at the fine
+		/// tolerance but closer to each other than the coarse one are united.</item>
+		/// <item><see cref="CrackAndClusterRings"/>: the segments shorter than
+		/// sqrt(2) * tolerance are removed, a vertex is inserted wherever two segments come
+		/// closer than the tolerance and such vertices are moved together.</item>
+		/// <item><see cref="SimplifyRingsAtTolerance"/>: the segments shorter than
+		/// sqrt(2) * tolerance are removed and each ring is made simple.</item>
+		/// </list>
+		/// </summary>
+		/// <param name="rings">The rings to simplify. Not modified.</param>
+		/// <param name="calculationTolerance">The tolerance at which the rings were
+		/// calculated, i.e. at which they are simple already.</param>
+		/// <param name="tolerance">The tolerance at which the rings must become simple.</param>
+		[NotNull]
+		public static MultiLinestring SimplifyAtTolerance([NotNull] MultiLinestring rings,
+		                                                  double calculationTolerance,
+		                                                  double tolerance)
+		{
+			Assert.ArgumentNotNull(rings, nameof(rings));
+
+			if (rings.IsEmpty)
+			{
+				return rings;
+			}
+
+			MultiLinestring result = UnionRingsAtTolerance(rings, calculationTolerance, tolerance);
+
+			result = CrackAndClusterRings(result, calculationTolerance, tolerance);
+
+			return SimplifyRingsAtTolerance(result, tolerance);
+		}
+
+		/// <summary>
+		/// Removes redundant rings (see <see cref="RemoveRedundantRings"/>) and unites the
+		/// rings with each other at
+		/// <paramref name="tolerance"/> if any two of them come closer to each other than that. Rings that only touch in a point at the
+		/// tolerance they were calculated with can run along each other at a coarser one;
+		/// ArcObjects deletes one of two such rings when it simplifies the polygon.
+		/// </summary>
+		/// <returns>The united rings, or the unchanged input if no two rings are close to
+		/// each other or the union failed.</returns>
+		[NotNull]
+		public static MultiLinestring UnionRingsAtTolerance([NotNull] MultiLinestring rings,
+		                                                    double calculationTolerance,
+		                                                    double tolerance)
+		{
+			if (rings.PartCount < 2)
+			{
+				return rings;
+			}
+
+			rings = RemoveRedundantRings(rings, tolerance);
+
+			if (rings.PartCount < 2 ||
+			    ! HasCrossPartIntersection(rings.GetLinestrings().ToList(), tolerance))
+			{
+				return rings;
+			}
+
+			try
+			{
+				List<RingGroup> ringGroups = GetRingGroups(rings, calculationTolerance);
+
+				MultiLinestring result =
+					GeomTopoOpUtils.GetUnionAreasXY(ringGroups, tolerance, tolerance);
+
+				return result.IsEmpty ? rings : result;
+			}
+			catch (Exception e) when (! (e is OutOfMemoryException))
+			{
+				_msg.Debug($"Unable to unite the rings at tolerance {tolerance}.", e);
+
+				return rings;
+			}
+		}
+
+		/// <summary>
+		/// Removes every ring that has the same vertices (within the tolerance) and the same
+		/// orientation as a previous ring, and every interior ring that lies inside another
+		/// interior ring without an exterior ring in between. The union can return the same
+		/// interior ring twice (TLM_GEBAEUDEKOERPER 4896336), or an interior ring together
+		/// with a larger one that contains it (1299631). Either subtracts the area of the
+		/// smaller ring twice.
+		/// </summary>
+		/// <returns>The rings without the redundant ones, or the unchanged input if there are
+		/// none.</returns>
+		[NotNull]
+		public static MultiLinestring RemoveRedundantRings([NotNull] MultiLinestring rings,
+		                                                   double tolerance)
+		{
+			List<Linestring> parts = rings.GetLinestrings().ToList();
+
+			var kept = new List<Linestring>(parts.Count);
+
+			foreach (Linestring ring in parts)
+			{
+				if (! kept.Any(other => AreSameRings(other, ring, tolerance)))
+				{
+					kept.Add(ring);
+				}
+			}
+
+			foreach (Linestring interiorRing in kept.Where(r => r.ClockwiseOriented == false)
+			                                        .ToList())
+			{
+				if (IsInsideOtherInteriorRing(interiorRing, kept, tolerance))
+				{
+					kept.Remove(interiorRing);
+				}
+			}
+
+			return kept.Count == parts.Count ? rings : new MultiPolycurve(kept);
+		}
+
+		private static bool IsInsideOtherInteriorRing([NotNull] Linestring interiorRing,
+		                                              [NotNull] IList<Linestring> rings,
+		                                              double tolerance)
+		{
+			double area = Math.Abs(interiorRing.GetArea2D());
+
+			return rings.Any(
+				other => ! ReferenceEquals(other, interiorRing) &&
+				         other.ClockwiseOriented == false &&
+				         Math.Abs(other.GetArea2D()) >= area &&
+				         GeomRelationUtils.PolycurveContainsXY(other, interiorRing, tolerance) &&
+				         ! rings.Any(island => island.ClockwiseOriented == true &&
+				                               GeomRelationUtils.PolycurveContainsXY(
+					                               other, island, tolerance) &&
+				                               GeomRelationUtils.PolycurveContainsXY(
+					                               island, interiorRing, tolerance)));
+		}
+
+		private static bool AreSameRings([NotNull] Linestring ring1,
+		                                 [NotNull] Linestring ring2,
+		                                 double tolerance)
+		{
+			if (ring1.PointCount != ring2.PointCount ||
+			    ! ring1.IsClosed || ! ring2.IsClosed ||
+			    GeomRelationUtils.AreBoundsDisjoint(ring1, ring2, tolerance))
+			{
+				return false;
+			}
+
+			// Without the duplicated closing point:
+			int count = ring1.PointCount - 1;
+
+			List<Pnt3D> points1 = ring1.GetPoints(0, count).ToList();
+			List<Pnt3D> points2 = ring2.GetPoints(0, count).ToList();
+
+			// The two rings can start at different vertices.
+			for (var offset = 0; offset < count; offset++)
+			{
+				var same = true;
+
+				for (var i = 0; i < count && same; i++)
+				{
+					same = GeomUtils.GetDistanceXY(points1[i], points2[(i + offset) % count]) <=
+					       tolerance;
+				}
+
+				if (same)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Removes the segments shorter than sqrt(2) * <paramref name="tolerance"/>, then
+		/// cracks and clusters all rings against each other at the tolerance and makes the
+		/// relationships between the rings simple again.
+		/// </summary>
+		/// <returns>The cracked and clustered rings, or the unchanged input if there was
+		/// nothing to do.</returns>
+		[NotNull]
+		public static MultiLinestring CrackAndClusterRings([NotNull] MultiLinestring rings,
+		                                                    double calculationTolerance,
+		                                                    double tolerance)
+		{
+			// The short segments first: the clustering moves all vertices of a chain of
+			// short segments (a rounded corner) into one point, including the end of a long
+			// edge next to it, and a long edge that is moved sideways changes the area.
+			MultiLinestring withoutShortSegments =
+				RemoveShortSegments(rings, Math.Sqrt(2) * tolerance);
+
+			List<RingGroup> ringGroups = GetRingGroups(withoutShortSegments, calculationTolerance);
+
+			IList<RingGroup> cracked = CrackAndCluster(ringGroups, tolerance, null, out _);
+
+			if (ReferenceEquals(cracked, ringGroups))
+			{
+				return withoutShortSegments;
+			}
+
+			var result = new MultiPolycurve(cracked.SelectMany(g => g.GetLinestrings()));
+
+			// The clustering can move an interior ring onto its exterior ring. ArcObjects
+			// deletes such an interior ring when it simplifies the polygon.
+			return result.PartCount < 2 ? result : SimplifyRingRelationships(result, tolerance);
+		}
+
+		/// <summary>
+		/// Removes the segments shorter than sqrt(2) * <paramref name="tolerance"/> and
+		/// makes every ring simple at the tolerance. A ring that touches itself is split
+		/// unless one of its two loops is a hole inside the other one. A ring that is
+		/// nowhere wider than the tolerance is removed, so the result can be empty.
+		/// </summary>
+		/// <returns>The simplified rings. The input is not modified.</returns>
+		[NotNull]
+		public static MultiLinestring SimplifyRingsAtTolerance([NotNull] MultiLinestring rings,
+		                                                       double tolerance)
+		{
+			MultiLinestring withoutShortSegments =
+				RemoveShortSegments(rings, Math.Sqrt(2) * tolerance);
+
+			var result = new MultiPolycurve(
+				withoutShortSegments.GetLinestrings().Select(l => l.Clone()));
+
+			// A hole that touches its exterior ring in a point stays part of the exterior ring
+			// (as SimplifyRingRelationships made it), like ArcObjects represents it.
+			RingSimplifier.SimplifyRingsXY(result, tolerance,
+			                               RingSimplifyFlags.All |
+			                               RingSimplifyFlags.KeepBoundaryLoopsAroundHoles);
+
+			foreach (Linestring ring in result.GetLinestrings().ToList())
+			{
+				if (IsNarrowerThan(ring, tolerance))
+				{
+					result.RemoveLinestring(ring);
+				}
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Whether the ring is nowhere wider than <paramref name="width"/>: every vertex is
+		/// within that distance of a segment it is not an end point of, except at most two tips
+		/// at the ends of the ring (a needle, a flat triangle, a thin parallelogram).
+		/// </summary>
+		private static bool IsNarrowerThan([NotNull] Linestring ring, double width)
+		{
+			// The mean width (2 * area / perimeter) of a narrow ring is not larger than its
+			// width. This is the cheap test that excludes all other rings.
+			if (2 * Math.Abs(ring.GetArea2D()) > width * ring.GetLength2D())
+			{
+				return false;
+			}
+
+			int segmentCount = ring.SegmentCount;
+
+			var tipCount = 0;
+
+			for (var i = 0; i < segmentCount; i++)
+			{
+				Pnt3D vertex = ring.GetSegment(i).StartPoint;
+
+				var close = false;
+
+				for (var j = 0; j < segmentCount && ! close; j++)
+				{
+					if (j == i || j == (i - 1 + segmentCount) % segmentCount)
+					{
+						continue;
+					}
+
+					close = GetDistanceXY(vertex, ring.GetSegment(j)) <= width;
+				}
+
+				if (! close && ++tipCount > 2)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private static double GetDistanceXY([NotNull] Pnt3D point, [NotNull] Line3D segment)
+		{
+			double distance = segment.GetDistancePerpendicular(
+				point, true, out double along, out Pnt3D _);
+
+			if (along < 0)
+			{
+				return point.GetDistance(segment.StartPoint, true);
+			}
+
+			return along > 1 ? point.GetDistance(segment.EndPoint, true) : distance;
+		}
+
+		/// <summary>
+		/// Removes the segments of each ring that are shorter than
+		/// <paramref name="minimumSegmentLength"/>, the shortest one first. A segment is
+		/// removed by removing one of its two end points: the one whose removal changes the
+		/// area of the ring less. The end of a long edge is therefore kept and the edge
+		/// stays where it is.
+		/// </summary>
+		/// <returns>The rings without short segments, or the unchanged input if there are
+		/// none. A ring that keeps fewer than three vertices is dropped.</returns>
+		[NotNull]
+		public static MultiLinestring RemoveShortSegments([NotNull] MultiLinestring rings,
+		                                                  double minimumSegmentLength)
+		{
+			var result = new List<Linestring>(rings.PartCount);
+
+			var changed = false;
+
+			foreach (Linestring ring in rings.GetLinestrings())
+			{
+				List<Pnt3D> vertices = ring.IsClosed
+					                       ? RemoveShortSegments(ring, minimumSegmentLength)
+					                       : null;
+
+				if (vertices == null)
+				{
+					result.Add(ring);
+					continue;
+				}
+
+				changed = true;
+
+				if (vertices.Count < 3)
+				{
+					continue;
+				}
+
+				vertices.Add(vertices[0].ClonePnt3D());
+
+				result.Add(new Linestring(vertices));
+			}
+
+			return changed ? new MultiPolycurve(result) : rings;
+		}
+
+		/// <returns>The remaining vertices without the duplicated closing point, or null if
+		/// the ring has no short segment.</returns>
+		[CanBeNull]
+		private static List<Pnt3D> RemoveShortSegments([NotNull] Linestring ring,
+		                                               double minimumSegmentLength)
+		{
+			List<Pnt3D> vertices = null;
+
+			while (true)
+			{
+				int count = vertices?.Count ?? ring.PointCount - 1;
+
+				if (count < 3)
+				{
+					return vertices;
+				}
+
+				int shortest = -1;
+				double shortestLength = minimumSegmentLength;
+
+				for (var i = 0; i < count; i++)
+				{
+					double length = vertices == null
+						                ? ring.GetSegment(i).Length2D
+						                : GeomUtils.GetDistanceXY(vertices[i],
+						                                          vertices[(i + 1) % count]);
+
+					if (length < shortestLength)
+					{
+						shortest = i;
+						shortestLength = length;
+					}
+				}
+
+				if (shortest < 0)
+				{
+					return vertices;
+				}
+
+				if (vertices == null)
+				{
+					vertices = ring.GetPoints(0, count, true).ToList();
+				}
+
+				int start = shortest;
+				int end = (shortest + 1) % count;
+
+				double areaChangeWithoutStart = GetTriangleArea(
+					vertices[(start - 1 + count) % count], vertices[start], vertices[end]);
+
+				double areaChangeWithoutEnd = GetTriangleArea(
+					vertices[start], vertices[end], vertices[(end + 1) % count]);
+
+				vertices.RemoveAt(areaChangeWithoutStart <= areaChangeWithoutEnd ? start : end);
+			}
+		}
+
+		private static double GetTriangleArea([NotNull] Pnt3D a, [NotNull] Pnt3D b,
+		                                      [NotNull] Pnt3D c)
+		{
+			return Math.Abs((b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y)) / 2;
+		}
+
+		[NotNull]
+		private static List<RingGroup> GetRingGroups([NotNull] MultiLinestring rings,
+		                                             double tolerance)
+		{
+			return GeomTopoOpUtils.GetConnectedComponents(
+				new MultiPolycurve(rings.GetLinestrings().Select(l => l.Clone())),
+				tolerance).ToList();
 		}
 
 		#endregion

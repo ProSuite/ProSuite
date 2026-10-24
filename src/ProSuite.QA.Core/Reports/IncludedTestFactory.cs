@@ -54,6 +54,14 @@ namespace ProSuite.QA.Core.Reports
 				ReflectionUtils.GetAssemblyDirectory(testFactoryAssembly),
 				$"{InstanceUtils.GetDefinitionsAssemblyName(testFactoryAssembly.GetName().Name)}.dll");
 
+			if (! File.Exists(fullPath))
+			{
+				// Factories without a separate definitions assembly define their parameters themselves.
+				_msg.Debug(
+					$"No definitions assembly at {fullPath}. The test factory type will be used directly.");
+				return null;
+			}
+
 			Assembly definitionsAssembly;
 			try
 			{

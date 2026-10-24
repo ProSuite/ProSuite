@@ -45,6 +45,15 @@ namespace ProSuite.Commons.Geom
 		ExplodeExteriorBoundaryLoops = 16,
 
 		/// <summary>
+		/// Restricts <see cref="ExplodeExteriorBoundaryLoops"/> to the loops that point
+		/// outwards: a ring whose two loops are an exterior ring and a hole inside it is kept
+		/// as one ring. ArcObjects considers such a ring simple, and its simplify makes
+		/// exactly such a ring of a hole that touches its exterior ring in a point (so does
+		/// <see cref="SimplificationUtils.SimplifyRingRelationships"/>).
+		/// </summary>
+		KeepBoundaryLoopsAroundHoles = 32,
+
+		/// <summary>
 		/// What the incremental union / difference needs between two steps to keep its
 		/// accumulated result simple. Deliberately uses the cheap
 		/// <see cref="DeleteNeedles"/> rather than the full linear self-intersection

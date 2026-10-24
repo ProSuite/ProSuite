@@ -26,6 +26,6 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[TestParameter(_defaultToleranceValue)]
 		[DocTr(nameof(DocTrStrings.TrFootprint_Tolerance))]
-		public double Tolerance { get; set; }
+		public double Tolerance { get; set; } = _defaultToleranceValue;
 	}
 }

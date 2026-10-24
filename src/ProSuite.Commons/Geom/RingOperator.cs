@@ -198,7 +198,7 @@ namespace ProSuite.Commons.Geom
 					processedRingsResult.Where(r => r.ClockwiseOriented == false)
 					                    .Concat(
 						                    ringsOutsideOtherPoly.Where(r => r.ClockwiseOriented ==
-							                    false))
+								                    false))
 					                    .Concat(equalRings.Where(r => r.ClockwiseOriented == false))
 					                    .ToList();
 
@@ -1088,14 +1088,15 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				parts.Add(sourcePart.Clone());
+				// By reference, not cloned (memory impact is significant):
+				parts.Add(sourcePart);
 				isSourcePart.Add(true);
 				sourceSegmentCount += sourcePart.SegmentCount;
 			}
 
 			for (var i = 0; i < target.PartCount; i++)
 			{
-				parts.Add(target.GetPart(i).Clone());
+				parts.Add(target.GetPart(i));
 				isSourcePart.Add(false);
 			}
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.Geom
 {
@@ -227,8 +228,13 @@ namespace ProSuite.Commons.Geom
 			{
 				var fragments = new List<Linestring>();
 
+				// The deletion can return only open fragments for a ring that runs along
+				// itself several times in the same place. Such a result is only accepted
+				// for a ring that is not wider than the tolerance, which disappears.
 				if (GeomTopoOpUtils.TryDeleteLinearSelfIntersectionsXY(
-					    ring, tolerance, fragments))
+					    ring, tolerance, fragments) &&
+				    (fragments.Any(f => f.IsClosed && f.PointCount >= 4) ||
+				     Math.Abs(ring.GetArea2D()) <= ring.GetLength2D() * tolerance))
 				{
 					replacement = fragments;
 					return true;
@@ -264,36 +270,111 @@ namespace ProSuite.Commons.Geom
 			if (HasFlag(flags, RingSimplifyFlags.ExplodeExteriorBoundaryLoops) &&
 			    ring.ClockwiseOriented == true)
 			{
-				// In some sliver situations there might be linear self intersections.
-				// Let's not judge them already here.
-				List<IntersectionPoint3D> touchPoints =
-					selfIntersections
-						.Where(ip => ip.Type == IntersectionPointType.TouchingInPoint)
-						.ToList();
-
-				if (touchPoints.Count == 2)
-				{
-					// Positive boundary loops are non-simple and lead to problems, especially
-					// if there are more than 2 loops (which typically happens in cupolas).
-					var boundaryLoop =
-						new BoundaryLoop(touchPoints[0], touchPoints[1], ring, true);
-
-					replacement = new List<Linestring>
-					              { boundaryLoop.Loop1, boundaryLoop.Loop2 };
-
-					return true;
-				}
-
-				if (touchPoints.Count > 2)
-				{
-					// TODO: Cluster by point, build pairs
-					_msg.WarnFormat(
-						"Multiple boundary loops or otherwise unexpected self-intersections in {0}",
-						ring.Segments);
-				}
+				return TryExplodeBoundaryLoop(
+					ring, selfIntersections,
+					HasFlag(flags, RingSimplifyFlags.KeepBoundaryLoopsAroundHoles),
+					out replacement);
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Splits a ring that touches itself into the two loops on either side of one touch.
+		/// Positive boundary loops are non-simple and lead to problems, especially if there
+		/// are more than 2 loops (which typically happens in cupolas). The caller simplifies
+		/// the resulting rings again and thereby finds the remaining touches.
+		/// </summary>
+		private static bool TryExplodeBoundaryLoop(
+			[NotNull] Linestring ring,
+			[NotNull] IEnumerable<IntersectionPoint3D> selfIntersections,
+			bool keepLoopsAroundHoles,
+			out List<Linestring> replacement)
+		{
+			replacement = null;
+
+			// In some sliver situations there might be linear self intersections.
+			// Let's not judge them already here.
+			List<IntersectionPoint3D> touchPoints =
+				selfIntersections
+					.Where(ip => ip.Type == IntersectionPointType.TouchingInPoint)
+					.ToList();
+
+			if (touchPoints.Count < 2)
+			{
+				return false;
+			}
+
+			List<BoundaryLoop> boundaryLoops = GetBoundaryLoops(touchPoints, ring).ToList();
+
+			if (boundaryLoops.Count == 0)
+			{
+				_msg.WarnFormat("Unexpected self-intersections in ring ({0}): {1}", ring,
+				                StringUtils.Concatenate(touchPoints, "; "));
+				return false;
+			}
+
+			BoundaryLoop boundaryLoop = boundaryLoops.FirstOrDefault(
+				loop => ! keepLoopsAroundHoles || loop.IsLoopingToOutside);
+
+			if (boundaryLoop == null)
+			{
+				return false;
+			}
+
+			replacement = new List<Linestring> { boundaryLoop.Loop1, boundaryLoop.Loop2 };
+			return true;
+		}
+
+		/// <summary>
+		/// Returns the boundary loop of every pair of touch points of a ring with itself
+		/// that describe the same touch: the ring vertex of each one is the vertex the other
+		/// one touches. Two touch points are such a pair in any case.
+		/// </summary>
+		private static IEnumerable<BoundaryLoop> GetBoundaryLoops(
+			[NotNull] IList<IntersectionPoint3D> touchPoints,
+			[NotNull] Linestring ring)
+		{
+			if (touchPoints.Count == 2)
+			{
+				yield return new BoundaryLoop(touchPoints[0], touchPoints[1], ring, true);
+				yield break;
+			}
+
+			int segmentCount = ring.SegmentCount;
+
+			for (var i = 0; i < touchPoints.Count; i++)
+			{
+				for (int j = i + 1; j < touchPoints.Count; j++)
+				{
+					IntersectionPoint3D a = touchPoints[i];
+					IntersectionPoint3D b = touchPoints[j];
+
+					if (IsSameRingVertex(a.VirtualSourceVertex, b.VirtualTargetVertex,
+					                     segmentCount) &&
+					    IsSameRingVertex(a.VirtualTargetVertex, b.VirtualSourceVertex,
+					                     segmentCount))
+					{
+						IntersectionPoint3D first =
+							a.VirtualSourceVertex <= b.VirtualSourceVertex ? a : b;
+						IntersectionPoint3D second = ReferenceEquals(first, a) ? b : a;
+
+						yield return new BoundaryLoop(first, second, ring, true);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Whether two positions along a closed ring are the same vertex. The start point
+		/// of the ring is both position 0 and position <paramref name="segmentCount"/>.
+		/// </summary>
+		private static bool IsSameRingVertex(double position1, double position2,
+		                                     int segmentCount)
+		{
+			double difference = Math.Abs(position1 - position2);
+
+			return difference < 1e-9 || Math.Abs(difference - segmentCount) < 1e-9;
 		}
 
 		#region Needles (zero-width spikes)

@@ -185,6 +185,265 @@ namespace ProSuite.Commons.Test.Geom
 			Assert.AreEqual(5, arcObjects[0].ExteriorRing.SegmentCount);
 		}
 
+		[Test]
+		public void CanRemoveShortSegmentsKeepingTheEndsOfLongEdges()
+		{
+			// A short segment at each end of the long upper edge. Removing the end of the
+			// long edge would move the edge sideways and change the area by 0.25, removing
+			// the other end of the short segment changes it by 0.0025.
+			var ring = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(0, 1, 0),
+					new Pnt3D(0.005, 1.01, 0),
+					new Pnt3D(50, 1.01, 0),
+					new Pnt3D(50.005, 1, 0),
+					new Pnt3D(50.005, 0, 0),
+					new Pnt3D(0, 0, 0)
+				});
+
+			var rings = new MultiPolycurve(new[] { ring });
+
+			const double tolerance = 0.0125;
+
+			foreach (MultiLinestring result in new[]
+			         {
+				         SimplificationUtils.RemoveShortSegments(
+					         rings, System.Math.Sqrt(2) * tolerance),
+				         SimplificationUtils.SimplifyAtTolerance(rings, 0.001, tolerance)
+			         })
+			{
+				Assert.AreEqual(1, result.PartCount);
+
+				List<Pnt3D> points = result.GetPart(0).GetPoints().ToList();
+
+				Assert.AreEqual(5, points.Count);
+				Assert.IsTrue(points.Any(p => p.X == 0.005 && p.Y == 1.01));
+				Assert.IsTrue(points.Any(p => p.X == 50 && p.Y == 1.01));
+				Assert.AreEqual(rings.GetArea2D(), result.GetArea2D(), 0.01);
+			}
+
+			// No short segment: the input is returned.
+			Assert.AreSame(rings, SimplificationUtils.RemoveShortSegments(rings, 0.01));
+		}
+
+		[Test]
+		public void CanSimplifyAtToleranceInteriorRingCloseToExteriorRing()
+		{
+			// The upper edge of the interior ring is 0.012 away from the upper edge of the
+			// exterior ring: more than the tolerance 0.01, but less than the distance within
+			// which vertices are moved together (sqrt(2) * tolerance). The interior ring must
+			// not end up running along the exterior ring as a separate ring, because
+			// ArcObjects deletes such an interior ring and thereby fills the hole.
+			var exterior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(0, 20, 0),
+					new Pnt3D(20, 20, 0),
+					new Pnt3D(20, 0, 0),
+					new Pnt3D(0, 0, 0)
+				});
+
+			var interior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(5, 5, 0),
+					new Pnt3D(15, 5, 0),
+					new Pnt3D(15, 19.988, 0),
+					new Pnt3D(5, 19.988, 0),
+					new Pnt3D(5, 5, 0)
+				});
+
+			var rings = new MultiPolycurve(new[] { exterior, interior });
+
+			MultiLinestring result =
+				SimplificationUtils.SimplifyAtTolerance(rings, 0.0005, _tolerance);
+
+			Assert.AreEqual(rings.GetArea2D(), result.GetArea2D(), 0.2);
+
+			Assert.IsFalse(
+				GeomTopoOpUtils.GetSelfIntersections(result, _tolerance)
+				               .Any(ip => ip.SourcePartIndex != ip.TargetPartIndex),
+				"Two rings of the result run along each other");
+		}
+
+		[Test]
+		public void CanSimplifyAtToleranceDuplicateInteriorRing()
+		{
+			var exterior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(0, 20, 0),
+					new Pnt3D(20, 20, 0),
+					new Pnt3D(20, 0, 0),
+					new Pnt3D(0, 0, 0)
+				});
+
+			var interior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(5, 5, 0),
+					new Pnt3D(15, 5, 0),
+					new Pnt3D(15, 15, 0),
+					new Pnt3D(5, 15, 0),
+					new Pnt3D(5, 5, 0)
+				});
+
+			// The same interior ring again, starting at another vertex.
+			var duplicate = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(15, 15, 0),
+					new Pnt3D(5, 15, 0),
+					new Pnt3D(5, 5, 0),
+					new Pnt3D(15, 5, 0),
+					new Pnt3D(15, 15, 0)
+				});
+
+			var rings = new MultiPolycurve(new[] { exterior, interior, duplicate });
+
+			MultiLinestring result =
+				SimplificationUtils.SimplifyAtTolerance(rings, 0.0005, _tolerance);
+
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(300, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
+		public void CanSimplifyAtToleranceInteriorRingInsideInteriorRing()
+		{
+			// The union can return an interior ring together with a larger interior ring
+			// that contains it (TLM_GEBAEUDEKOERPER 1299631). The smaller one would subtract
+			// its area a second time.
+			var exterior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(0, 20, 0),
+					new Pnt3D(20, 20, 0),
+					new Pnt3D(20, 0, 0),
+					new Pnt3D(0, 0, 0)
+				});
+
+			var interior = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(5, 5, 0),
+					new Pnt3D(15, 5, 0),
+					new Pnt3D(15, 15, 0),
+					new Pnt3D(5, 15, 0),
+					new Pnt3D(5, 5, 0)
+				});
+
+			// Inside the interior ring, sharing its lower edge.
+			var inside = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(5, 5, 0),
+					new Pnt3D(15, 5, 0),
+					new Pnt3D(15, 10, 0),
+					new Pnt3D(5, 10, 0),
+					new Pnt3D(5, 5, 0)
+				});
+
+			var rings = new MultiPolycurve(new[] { exterior, interior, inside });
+
+			MultiLinestring result =
+				SimplificationUtils.SimplifyAtTolerance(rings, 0.0005, _tolerance);
+
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(300, result.GetArea2D(), 0.001);
+		}
+
+		[Test]
+		public void CanKeepInteriorRingInsideIslandInsideInteriorRing()
+		{
+			// A courtyard with a building inside it, which has a courtyard of its own.
+			var rings = new MultiPolycurve(new[]
+			                               {
+				                               CreateSquare(0, 40, clockwise: true),
+				                               CreateSquare(5, 35, clockwise: false),
+				                               CreateSquare(10, 30, clockwise: true),
+				                               CreateSquare(15, 25, clockwise: false)
+			                               });
+
+			MultiLinestring result = SimplificationUtils.RemoveRedundantRings(rings, _tolerance);
+
+			Assert.AreSame(rings, result);
+		}
+
+		private static Linestring CreateSquare(double min, double max, bool clockwise)
+		{
+			var points = new List<Pnt3D>
+			             {
+				             new Pnt3D(min, min, 0),
+				             new Pnt3D(min, max, 0),
+				             new Pnt3D(max, max, 0),
+				             new Pnt3D(max, min, 0),
+				             new Pnt3D(min, min, 0)
+			             };
+
+			if (! clockwise)
+			{
+				points.Reverse();
+			}
+
+			return new Linestring(points);
+		}
+
+		[Test]
+		public void CanRemoveRingsNarrowerThanTheTolerance()
+		{
+			// A flat triangle 20 m long whose middle vertex is 0.005 off the long side, and a
+			// parallelogram 0.005 wide. All segments are long; both rings are narrower than
+			// the tolerance 0.01.
+			MultiLinestring result = SimplificationUtils.SimplifyRingsAtTolerance(
+				CreateFlatTriangleAndParallelogram(0.005), _tolerance);
+
+			Assert.IsTrue(result.IsEmpty);
+		}
+
+		[Test]
+		public void CanKeepNarrowRingsWiderThanTheTolerance()
+		{
+			// The same shapes, 0.02 wide: narrower than the distance within which ArcObjects
+			// merges vertices (2 * sqrt(2) * 0.01), but wider than the tolerance 0.01.
+			MultiLinestring rings = CreateFlatTriangleAndParallelogram(0.02);
+
+			MultiLinestring result = SimplificationUtils.SimplifyRingsAtTolerance(
+				rings, _tolerance);
+
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(rings.GetArea2D(), result.GetArea2D(), 0.0001);
+		}
+
+		private static MultiLinestring CreateFlatTriangleAndParallelogram(double width)
+		{
+			var triangle = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 0, 0),
+					new Pnt3D(10, width, 0),
+					new Pnt3D(20, 0, 0),
+					new Pnt3D(0, 0, 0)
+				});
+
+			var parallelogram = new Linestring(
+				new List<Pnt3D>
+				{
+					new Pnt3D(0, 10, 0),
+					new Pnt3D(10, 10 + width, 0),
+					new Pnt3D(20, 10 + width, 0),
+					new Pnt3D(10, 10, 0),
+					new Pnt3D(0, 10, 0)
+				});
+
+			return new MultiPolycurve(new[] { triangle, parallelogram });
+		}
+
 		private static Polyhedron ReadPolyhedron(string fileName)
 		{
 			object geometry = GeomUtils.FromWkbFile(

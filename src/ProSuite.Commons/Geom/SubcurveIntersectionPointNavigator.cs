@@ -1536,6 +1536,17 @@ namespace ProSuite.Commons.Geom
 				yield return linearBreak.Restart;
 			}
 
+			// A touch of a target part within the linear intersection with another target part
+			// (e.g. an island touching its exterior ring where that ring runs along the source)
+			// is needed for the relation of that part, but the navigation continues along the
+			// linear intersection.
+			foreach (IntersectionPoint3D withinLinearIntersection in
+			         GeomTopoOpUtils.GetIntersectionsWithinLinearIntersectionOfOtherTargetPart(
+				         intersectionsAlongSource, source))
+			{
+				yield return withinLinearIntersection;
+			}
+
 			if (! AllowBoundaryLoops)
 			{
 				// Filter the single touching points of a ring when union-ing,
