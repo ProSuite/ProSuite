@@ -910,6 +910,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Warn("Verification was cancelled, likely by the client", e);
 				cancellationMessage = "Verification cancelled";
 			}
+			catch (InvalidConfigurationException e)
+			{
+				// User error (e.g. wrong specification): report to the client, keep serving.
+				_msg.Warn($"Invalid verification request: {e.Message}", e);
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
+			}
 			catch (Exception e)
 			{
 				_msg.Error($"Error checking quality for request {request}", e);
