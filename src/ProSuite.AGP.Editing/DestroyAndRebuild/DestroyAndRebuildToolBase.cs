@@ -105,6 +105,14 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
 	}
 
+	protected override SketchGeometryType? GetKnownEditSketchGeometryType()
+	{
+		// Unknown until a feature is picked
+		return _currentFeatureGeometryType == GeometryType.Unknown
+			       ? null
+			       : GetEditSketchGeometryType();
+	}
+
 	protected override async Task<bool?> GetEditSketchHasZ()
 	{
 		Stopwatch watch = Stopwatch.StartNew();

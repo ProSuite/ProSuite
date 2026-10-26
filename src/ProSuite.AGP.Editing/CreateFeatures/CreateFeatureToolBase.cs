@@ -93,6 +93,12 @@ public abstract class CreateFeatureToolBase : ConstructionToolBase
 		}
 	}
 
+	protected override SketchGeometryType? GetKnownEditSketchGeometryType()
+	{
+		// Without a template there is no target layer
+		return GetTargetLayerShapeType() == null ? null : GetEditSketchGeometryType();
+	}
+
 	protected override SketchGeometryType GetSelectionSketchGeometryType()
 	{
 		return SketchGeometryType.Rectangle;
