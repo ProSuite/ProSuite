@@ -1203,16 +1203,17 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
-		[Ignore(
-			"TOP-5999 issue 2 (open): repro for IntersectionClusters.PointsClusterButVertexCheckMissed")]
 		public void CanGetFootprintForLugano8710513()
 		{
 			// TOP-5999: TLM_GEBAEUDEKOERPER 8710513 (Lugano). NOT the subsumption issue:
-			// this one collapses in IntersectionClusters.PointsClusterButVertexCheckMissed
+			// this one collapsed in IntersectionClusters.PointsClusterButVertexCheckMissed
 			// (the XY-proximity cluster gate). At union step 43 the accumulated footprint
-			// drops from 232.71 to 11.91 sq m; the final footprint is 12.0467 in 2 parts
+			// dropped from 232.71 to 11.91 sq m; the final footprint was 12.0467 in 2 parts
 			// instead of the AO reference 232.7076 in 1 part. Simply disabling the gate is
 			// not the fix - it repairs this feature but collapses five others.
+			// The footprint is correct since the crack-and-cluster pass before the union
+			// (commit d022496a0e): the accumulated result no longer reaches the state that
+			// derailed step 43.
 			Polyhedron polyhedron = ReadPolyhedron("lugano_8710513.wkb");
 
 			MultiLinestring footprint = polyhedron.GetXYFootprint(0.01, 0.01, out _);
@@ -1832,6 +1833,67 @@ namespace ProSuite.Commons.Test.Geom
 				polyhedron.GetXYFootprint(tolerance, tolerance, out _);
 
 			Assert.AreEqual(503.7757, footprint.GetArea2D(), 0.05);
+		}
+
+		[Test]
+		public void CanGetFootprintWithoutReorientingTheInputRings()
+		{
+			// The exterior ring touches itself at (5, 0), so it is split into the square and the
+			// triangle, and the grouping needs the declared interior ring anticlockwise. It is
+			// stored clockwise here (like the exterior ring, as in the Kaspar/July multipatches)
+			// and must not be reversed: the rings still belong to the caller's polyhedron.
+			Linestring exteriorRing =
+				GeomTestUtils.CreateRing(CreatePoints(0, 0, 0, 10, 10, 10, 10, 0, 5, 0, 3, 3,
+				                                      7, 3, 5, 0));
+			Linestring interiorRing =
+				GeomTestUtils.CreateRing(CreatePoints(1, 8, 1, 9, 2, 9, 2, 8));
+
+			Assert.IsTrue(exteriorRing.ClockwiseOriented);
+			Assert.IsTrue(interiorRing.ClockwiseOriented, "Interior ring as stored: clockwise");
+
+			var polyhedron = new Polyhedron(
+				new List<RingGroup> { new RingGroup(exteriorRing, new[] { interiorRing }) });
+
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.001, 0.001, out _);
+
+			// The square without the triangle (6) and without the interior ring (1)
+			Assert.AreEqual(93, footprint.GetArea2D(), 0.001);
+
+			Assert.IsTrue(exteriorRing.ClockwiseOriented);
+			Assert.IsTrue(interiorRing.ClockwiseOriented, "Interior ring reoriented in place");
+		}
+
+		private static List<Pnt3D> CreatePoints(params double[] xy)
+		{
+			var points = new List<Pnt3D>();
+
+			for (var i = 0; i < xy.Length; i += 2)
+			{
+				points.Add(new Pnt3D(xy[i], xy[i + 1], 0));
+			}
+
+			return points;
+		}
+
+		[Test]
+		public void CanGetFootprintForOid3828241()
+		{
+			// TLM_GEBAEUDEKOERPER OID 3828241 (Bern). When the self-intersections got an
+			// intersection for every other ring touching the same location (as the intersections
+			// with another target part do), the union failed with a NullReferenceException in
+			// GeomTopoOpUtils.IsOnTheRightSide. See SegmentIntersectionFilter.
+			object geometry = GeomUtils.FromWkbFile(
+				GeomTestUtils.GetGeometryTestDataPath("oid_3828241.wkb"), out _);
+
+			Polyhedron polyhedron = geometry as Polyhedron ??
+			                        new Polyhedron(((MultiPolyhedron) geometry)
+			                                       .Polyhedra.SelectMany(p => p.RingGroups)
+			                                       .ToList());
+
+			// The tolerances of CreateFootprintUtils.GetFootprintGeom without a tolerance
+			MultiLinestring footprint = polyhedron.GetXYFootprint(0.0005, 0.01, out _);
+
+			Assert.AreEqual(201.692, footprint.GetArea2D(), 0.01);
 		}
 
 		[Test]

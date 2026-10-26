@@ -52,7 +52,7 @@ namespace ProSuite.Commons.Geom
 					intersectionsForCurrentSourceSegment.Clear();
 				}
 
-				CollectIntersection(intersection, _source, _usedIntersectionFactors,
+				CollectIntersection(intersection, _source, _target, _usedIntersectionFactors,
 				                    intersectionsForCurrentSourceSegment);
 			}
 
@@ -102,8 +102,20 @@ namespace ProSuite.Commons.Geom
 
 					double intersectionFactorPartGlobal = localSegmentIndex + intersectionFactor;
 
+					target.GetLocalSegmentIndex(intersection.TargetIndex, out int targetPartIndex);
+
+					// Only an intersection with the same target part can take precedence. A different
+					// target part touching the source here must get its own intersection, even within
+					// a linear intersection (e.g. an island touching its exterior ring where that ring
+					// runs along the source), just like a different source part does.
+					// Except for the self-intersections between the parts of one geometry: their
+					// consumers expect one intersection per location (with one for each pair of rings
+					// touching in the same point, SimplifyRingRelationships merged a different pair).
+					int? precedenceTargetPartIndex =
+						ReferenceEquals(source, target) ? (int?) null : targetPartIndex;
+
 					if (_usedIntersectionFactors.Contains(
-						    partIndex, intersectionFactorPartGlobal,
+						    partIndex, intersectionFactorPartGlobal, precedenceTargetPartIndex,
 						    out List<double> alongTargetVertex)
 					    && ! IsIntersectionOnUnCrackedLine(intersection, alongTargetVertex, target))
 					{
@@ -116,7 +128,8 @@ namespace ProSuite.Commons.Geom
 						double alongTarget = intersection.TargetIndex +
 						                     intersection.GetIntersectionPointFactorAlongTarget();
 						AddIntersectionFactor(intersectionFactorPartGlobal, partIndex,
-						                      _usedIntersectionFactors, alongTarget, source);
+						                      _usedIntersectionFactors, targetPartIndex, alongTarget,
+						                      source);
 					}
 				}
 
@@ -192,6 +205,7 @@ namespace ProSuite.Commons.Geom
 			double localIntersectionFactor,
 			int partIndex,
 			[NotNull] IntersectionFactors toIntersectionFactors,
+			int targetPartIndex,
 			double targetFactor,
 			[NotNull] ISegmentList source)
 		{
@@ -200,12 +214,14 @@ namespace ProSuite.Commons.Geom
 			if (IsRingStartOrEnd(part, localIntersectionFactor))
 			{
 				// add both start and end point
-				toIntersectionFactors.Add(partIndex, 0, targetFactor);
-				toIntersectionFactors.Add(partIndex, part.SegmentCount, targetFactor);
+				toIntersectionFactors.Add(partIndex, 0, targetPartIndex, targetFactor);
+				toIntersectionFactors.Add(partIndex, part.SegmentCount, targetPartIndex,
+				                          targetFactor);
 			}
 			else
 			{
-				toIntersectionFactors.Add(partIndex, localIntersectionFactor, targetFactor);
+				toIntersectionFactors.Add(partIndex, localIntersectionFactor, targetPartIndex,
+				                          targetFactor);
 			}
 		}
 
@@ -236,6 +252,7 @@ namespace ProSuite.Commons.Geom
 		private static void CollectIntersection(
 			[NotNull] SegmentIntersection intersection,
 			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
 			[NotNull] IntersectionFactors allLinearIntersectionFactors,
 			[NotNull] ICollection<SegmentIntersection> resultIntersections)
 		{
@@ -260,7 +277,7 @@ namespace ProSuite.Commons.Geom
 
 				if (intersection.IsSourceZeroLength2D &&
 				    allLinearIntersectionFactors.Contains(
-					    partIndex, linearIntersectionEndFactor, out _))
+					    partIndex, linearIntersectionEndFactor, null, out _))
 				{
 					if (intersection.SourceEndIntersects &&
 					    source.IsLastSegmentInPart(intersection.SourceIndex) &&
@@ -281,7 +298,7 @@ namespace ProSuite.Commons.Geom
 
 				if (intersection.IsTargetZeroLength2D &&
 				    allLinearIntersectionFactors.Contains(
-					    partIndex, linearIntersectionEndFactor, out _))
+					    partIndex, linearIntersectionEndFactor, null, out _))
 				{
 					// avoid double linear segments if the target segment is 2D-'short' (or vertical) 
 					return;
@@ -292,10 +309,14 @@ namespace ProSuite.Commons.Geom
 				double endAlongTargetFactor = intersection.TargetIndex +
 				                              intersection.GetRatioAlongTargetLinearEnd();
 
+				target.GetLocalSegmentIndex(intersection.TargetIndex, out int targetPartIndex);
+
 				AddIntersectionFactor(linearIntersectionStartFactor, partIndex,
-				                      allLinearIntersectionFactors, startAlongTargetFactor, source);
+				                      allLinearIntersectionFactors, targetPartIndex,
+				                      startAlongTargetFactor, source);
 				AddIntersectionFactor(linearIntersectionEndFactor, partIndex,
-				                      allLinearIntersectionFactors, endAlongTargetFactor, source);
+				                      allLinearIntersectionFactors, targetPartIndex,
+				                      endAlongTargetFactor, source);
 			}
 
 			if (! isLinear && intersection.SourceStartIntersects &&
@@ -319,9 +340,11 @@ namespace ProSuite.Commons.Geom
 		{
 			private readonly IntersectionFactorComparer _comparer;
 
-			private readonly Dictionary<int, SortedList<double, List<double>>>
+			// Per source part and intersection factor along it: the intersected target part
+			// indexes (key) with the factors along the target (value).
+			private readonly Dictionary<int, SortedList<double, List<KeyValuePair<int, double>>>>
 				_intersectionFactorsByPart =
-					new Dictionary<int, SortedList<double, List<double>>>();
+					new Dictionary<int, SortedList<double, List<KeyValuePair<int, double>>>>();
 
 			internal IntersectionFactors(double epsilon)
 			{
@@ -330,51 +353,74 @@ namespace ProSuite.Commons.Geom
 
 			internal void Add(int partIndex,
 			                  double localIntersectionFactor,
+			                  int targetPartIndex,
 			                  double targetFactor)
 			{
-				SortedList<double, List<double>> localIntersectionFactors;
+				SortedList<double, List<KeyValuePair<int, double>>> localIntersectionFactors;
 
 				if (! _intersectionFactorsByPart.TryGetValue(partIndex,
 				                                             out localIntersectionFactors))
 				{
 					localIntersectionFactors =
-						new SortedList<double, List<double>>(_comparer);
+						new SortedList<double, List<KeyValuePair<int, double>>>(_comparer);
 					_intersectionFactorsByPart.Add(partIndex, localIntersectionFactors);
 				}
 
-				List<double> targetFactors;
+				var targetLocation = new KeyValuePair<int, double>(targetPartIndex, targetFactor);
+
+				List<KeyValuePair<int, double>> targetLocations;
 				if (! localIntersectionFactors.TryGetValue(localIntersectionFactor,
-				                                           out targetFactors))
+				                                           out targetLocations))
 				{
 					localIntersectionFactors.Add(localIntersectionFactor,
-					                             new List<double> { targetFactor });
+					                             new List<KeyValuePair<int, double>>
+					                             { targetLocation });
 				}
 				else
 				{
 					// ensure all target factors are in the values
-					targetFactors.Add(targetFactor);
+					targetLocations.Add(targetLocation);
 				}
 			}
 
+			/// <summary>
+			/// Whether the intersection factor along the source part is used by an intersection
+			/// with the specified target part, or with any target part if it is null.
+			/// </summary>
+			/// <param name="sourcePartIndex"></param>
+			/// <param name="intersectionFactor"></param>
+			/// <param name="targetPartIndex"></param>
+			/// <param name="alongTargetFactors">The factors along the target of these
+			/// intersections.</param>
+			/// <returns></returns>
 			internal bool Contains(
 				int sourcePartIndex,
 				double intersectionFactor,
-				out List<double> alongTargetFactor)
+				int? targetPartIndex,
+				out List<double> alongTargetFactors)
 			{
-				SortedList<double, List<double>> usedIntersectionFactors;
+				alongTargetFactors = new List<double>();
 
 				if (! _intersectionFactorsByPart.TryGetValue(
-					    sourcePartIndex, out usedIntersectionFactors))
+					    sourcePartIndex,
+					    out SortedList<double, List<KeyValuePair<int, double>>>
+						    usedIntersectionFactors) ||
+				    ! usedIntersectionFactors.TryGetValue(
+					    intersectionFactor,
+					    out List<KeyValuePair<int, double>> targetLocations))
 				{
-					alongTargetFactor = new List<double>();
 					return false;
 				}
 
-				bool result =
-					usedIntersectionFactors.TryGetValue(intersectionFactor,
-					                                    out alongTargetFactor);
+				foreach (KeyValuePair<int, double> targetLocation in targetLocations)
+				{
+					if (targetPartIndex == null || targetLocation.Key == targetPartIndex)
+					{
+						alongTargetFactors.Add(targetLocation.Value);
+					}
+				}
 
-				return result;
+				return alongTargetFactors.Count > 0;
 			}
 		}
 

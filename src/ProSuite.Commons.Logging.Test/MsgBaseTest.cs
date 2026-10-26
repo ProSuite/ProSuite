@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using log4net.ObjectRenderer;
 using NSubstitute;
@@ -160,6 +162,59 @@ namespace ProSuite.Commons.Logging.Test
 			msg.Debug(obj);
 
 			log.Received().Debug(message.ToUpper());
+		}
+
+		[TestCase(true, 0)]
+		[TestCase(false, 1)]
+		[Category("fast")]
+		public async Task CanIndentConcurrentRequestsSeparately(
+			bool indentSeparately, int expectedLevelInOtherRequest)
+		{
+			var msg = new Msg(Substitute.For<ILog>());
+			msg.ResetIndentation();
+
+			MsgBase.IndentConcurrentWorkSeparately = indentSeparately;
+
+			try
+			{
+				var firstRequestIndented = new SemaphoreSlim(0);
+				var secondRequestDone = new SemaphoreSlim(0);
+				int levelAfterAwait = -1;
+				int levelInStartedTask = -1;
+				int levelInOtherRequest = -1;
+
+				Task firstRequest = Task.Run(async () =>
+				{
+					using (msg.IncrementIndentation())
+					{
+						await Task.Yield();
+						levelAfterAwait = msg.IndentationLevel;
+						levelInStartedTask = await Task.Run(() => msg.IndentationLevel);
+
+						firstRequestIndented.Release();
+						await secondRequestDone.WaitAsync();
+					}
+				});
+
+				Task secondRequest = Task.Run(async () =>
+				{
+					await firstRequestIndented.WaitAsync();
+					levelInOtherRequest = msg.IndentationLevel;
+					secondRequestDone.Release();
+				});
+
+				await Task.WhenAll(firstRequest, secondRequest);
+
+				Assert.AreEqual(1, levelAfterAwait);
+				Assert.AreEqual(1, levelInStartedTask);
+				Assert.AreEqual(expectedLevelInOtherRequest, levelInOtherRequest);
+				Assert.AreEqual(0, msg.IndentationLevel);
+			}
+			finally
+			{
+				MsgBase.IndentConcurrentWorkSeparately = false;
+				msg.ResetIndentation();
+			}
 		}
 
 		[Test]

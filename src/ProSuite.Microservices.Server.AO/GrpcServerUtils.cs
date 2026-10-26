@@ -176,9 +176,10 @@ namespace ProSuite.Microservices.Server.AO
 
 				if (result == null)
 				{
-					_msg.InfoFormat(
-						"No certificate could be found by '{0}'. Using insecure credentials (no TLS).",
-						certificate);
+					_msg.WarnFormat(
+						"No usable certificate with private key could be found by '{0}' in the " +
+						"certificate store (Local Computer, Personal). Using insecure " +
+						"credentials (no TLS).", certificate);
 				}
 				else
 				{

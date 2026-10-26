@@ -128,8 +128,8 @@
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List"
                 className="WorkLists.ShowWorkListsButton" loadOnClick="true" condition="esri_mapping_mapPane"
-                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
-                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
+                smallImage="Images\NavigateWorklistCmd.xaml"
+                largeImage="Images\NavigateWorklistCmd.xaml">
           <tooltip heading="Open Work Lists for present Work List Layers in TOC">
             <disabledText>No active map.</disabledText>
           </tooltip>
@@ -146,8 +146,8 @@
         <button id="WorkLists_CreateSelectionWorkList" caption="Selection Work List"
                 className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
                 condition="esri_mapping_activeMapView_hasFeatureSelectionCondition"
-                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png"
-                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
+                smallImage="Images\NavigateSelectionCmd.xaml"
+                largeImage="Images\NavigateSelectionCmd.xaml">
           <tooltip heading="Open Selection Work List">
             Open Selection Work List for iterating on selected items.
             <disabledText>No features selected.</disabledText>
@@ -155,15 +155,15 @@
         </button>
         <button id="WorkLists_CreateIssueWorkList" caption="Issue Work List"
                 className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" condition="esri_mapping_mapPane"
-                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd16.png"
-                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd32.png">
+                smallImage="Images\NavigateErrorsCmd.xaml"
+                largeImage="Images\NavigateErrorsCmd.xaml">
           <tooltip heading="Open Issue Work List">
             Open Issue Work List for iterating on issue items.
             <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="Erase" className="Editing.EraseTool"
-              loadOnClick="true" smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
+              loadOnClick="true" smallImage="Images\CutHoleTool.xaml" largeImage="Images\CutHoleTool.xaml"
               condition="esri_editing_EditingMapCondition"
               categoryRefID="esri_editing_CommandList">
           <tooltip heading="Erase">
@@ -173,8 +173,8 @@
           <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="Remove Overlaps"
-              className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png"
-              largeImage="Images\RemoveOverlapsTool32.png" condition="esri_editing_EditingMapCondition"
+              className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool.xaml"
+              largeImage="Images\RemoveOverlapsTool.xaml" condition="esri_editing_EditingMapCondition"
               categoryRefID="esri_editing_CommandList">
           <tooltip heading="Remove Overlaps">
             Remove a part of a feature that overlaps with other polygon features.
@@ -183,8 +183,8 @@
           <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_ReshapeAlongTool" caption="Reshape Along"
-              className="Editing.ReshapeAlongTool" loadOnClick="true" smallImage="Images\ReshapeAlongTool16.png"
-              largeImage="Images\ReshapeAlongTool32.png" condition="esri_editing_EditingMapCondition"
+              className="Editing.ReshapeAlongTool" loadOnClick="true" smallImage="Images\ReshapeAlongTool.xaml"
+              largeImage="Images\ReshapeAlongTool.xaml" condition="esri_editing_EditingMapCondition"
               categoryRefID="esri_editing_CommandList">
           <tooltip heading="Reshape Along">
             Reshape the selected line or polygon feature(s) along other features.
@@ -197,8 +197,8 @@
           <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_CutAlongTool" caption="Cut Along" className="Editing.CutAlongTool"
-              loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
-              largeImage="Images\CutPolygonAlongTool32.png" condition="esri_editing_EditingMapCondition"
+              loadOnClick="true" smallImage="Images\CutPolygonAlongTool.xaml"
+              largeImage="Images\CutPolygonAlongTool.xaml" condition="esri_editing_EditingMapCondition"
               categoryRefID="esri_editing_CommandList">
           <tooltip heading="Cut Along">
             Cut the selected polygon feature(s) along other features.
@@ -212,8 +212,8 @@
           <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="Advanced Reshape"
-              className="Editing.AdvancedReshapeTool" loadOnClick="true" smallImage="Images\AdvancedReshapeTool16.png"
-              largeImage="Images\AdvancedReshapeTool32.png" condition="esri_editing_EditingMapCondition"
+              className="Editing.AdvancedReshapeTool" loadOnClick="true" smallImage="Images\AdvancedReshapeTool.xaml"
+              largeImage="Images\AdvancedReshapeTool.xaml" condition="esri_editing_EditingMapCondition"
               categoryRefID="esri_editing_CommandList">
           <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">
             Reshape line or polygon feature(s) with advanced options.
@@ -233,14 +233,14 @@
           <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Selection_SelectionTool" caption="Select" className="Selection.SelectionTool"
-              loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
+              loadOnClick="true" smallImage="Images\SelectionTool.xaml" largeImage="Images\SelectionTool.xaml"
               condition="esri_mapping_mapPane">
           <tooltip heading="Select">
             Select features.<disabledText />
           </tooltip>
         </tool>
         <button id="ProSuiteTools_Selection_SelectionToolButton" caption="Select" className="Selection.SelectionToolButton"
-                loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
+                loadOnClick="true" smallImage="Images\SelectionTool.xaml" largeImage="Images\SelectionTool.xaml"
                 condition="esri_mapping_mapPane">
           <tooltip heading="Select">
             Select features.<disabledText />
@@ -257,21 +257,21 @@
         </tool>
         <button id="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" caption="Verify Extent"
                 className="ProSuite.AGP.Solution.QA.VerifyVisibleExtentCmd" loadOnClick="false"
-                smallImage="Images\VerifyVisibleExtentCmd16.png" largeImage="Images\VerifyVisibleExtentCmd32.png">
+                smallImage="Images\VerifyVisibleExtentCmd.xaml" largeImage="Images\VerifyVisibleExtentCmd.xaml">
           <tooltip heading="Verify Visible Extent">
             Verifies the visible extent based on the selected quality specification.<disabledText />
           </tooltip>
         </button>
         <tool id="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" caption="Verify Perimeter"
               className="ProSuite.AGP.Solution.QA.VerifyPerimeterTool" loadOnClick="false"
-              smallImage="Images\VerifyPerimeterTool16.png" largeImage="Images\VerifyPerimeterTool32.png">
+              smallImage="Images\VerifyPerimeterTool.xaml" largeImage="Images\VerifyPerimeterTool.xaml">
           <tooltip heading="Verify features in a box">
             Verifies features intersecting a user-defined box, based on the selected quality specification.<disabledText />
           </tooltip>
         </tool>
         <button id="ProSuite_AGP_Solution_QA_VerifyLastCmd" caption="Verify Last"
                 className="ProSuite.AGP.Solution.QA.VerifyLastCmd" loadOnClick="false"
-                smallImage="Images\VerifyLastCmd16.png" largeImage="Images\VerifyLastCmd32.png">
+                smallImage="Images\VerifyLastCmd.xaml" largeImage="Images\VerifyLastCmd.xaml">
           <tooltip heading="Verify using previous perimeter">
             Re-verifies the last verified perimeter based on the selected quality specification.
 
@@ -281,14 +281,14 @@
         </button>
         <button id="ProSuite_AGP_Solution_QA_VerifySelectionCmd" caption="Verify Selection"
                 className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="false"
-                smallImage="Images\VerifySelectionCmd16.png" largeImage="Images\VerifySelectionCmd32.png">
+                smallImage="Images\VerifySelectionCmd.xaml" largeImage="Images\VerifySelectionCmd.xaml">
           <tooltip heading="Verify Selection">
             Verifies the selected features based on the selected quality specification.<disabledText />
           </tooltip>
         </button>
         <tool id="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" caption="Select Issue Features"
               className="ProSuite.AGP.Solution.QA.SelectIssueFeaturesTool" loadOnClick="false"
-              smallImage="Images\SelectIssueFeaturesTool16.png" largeImage="Images\SelectIssueFeaturesTool32.png"
+              smallImage="Images\SelectIssueFeaturesTool.xaml" largeImage="Images\SelectIssueFeaturesTool.xaml"
               condition="esri_mapping_mapPane">
           <tooltip heading="Select Issue Features">
             Select issue features from issue layers.<disabledText />
@@ -296,7 +296,7 @@
         </tool>
         <button id="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" caption="Select Involved Objects"
                 className="ProSuite.AGP.Solution.QA.SelectInvolvedObjectsCmd" loadOnClick="false"
-                smallImage="Images\SelectInvolvedObjectsCmd16.png" largeImage="Images\SelectInvolvedObjectsCmd32.png"
+                smallImage="Images\SelectInvolvedObjectsCmd.xaml" largeImage="Images\SelectInvolvedObjectsCmd.xaml"
                 condition="esri_mapping_mapPane">
           <tooltip heading="Select Involved Objects">
             Select involved objects based on the currently selected issues.<disabledText />
