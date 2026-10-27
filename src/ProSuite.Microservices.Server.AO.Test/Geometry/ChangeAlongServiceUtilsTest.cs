@@ -317,6 +317,221 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		}
 
 		[Test]
+		public void CanReshapeAlongZeroToleranceWithTargetVertexWithinMinimumAoTolerance()
+		{
+			// The inserted target vertex is 1mm away from the source-target intersection, which is
+			// less than the minimum AO tolerance (2mm) of the spatial reference.
+			GetOverlappingPolygons(out GdbFeature sourceFeature, out GdbFeature targetFeature,
+			                       CreateTlmLikeSpatialReference());
+
+			IPoint targetAlmostIntersectPoint = GeometryFactory.CreatePoint(
+				2601000.001, 1200500.0, sourceFeature.Shape.SpatialReference);
+
+			bool pointInserted = ReshapeUtils.EnsurePointsExistInTarget(
+				targetFeature.Shape, new[] { targetAlmostIntersectPoint }, 0.001);
+
+			Assert.IsTrue(pointInserted);
+
+			CalculateReshapeLinesRequest calculationRequest =
+				CreateCalculateReshapeLinesRequest(sourceFeature, targetFeature);
+
+			calculationRequest.Tolerance = 0;
+
+			CalculateReshapeLinesResponse calculateResponse =
+				ChangeAlongServiceUtils.CalculateReshapeLines(calculationRequest, null);
+
+			Assert.AreEqual((int) ReshapeAlongCurveUsability.CanReshape,
+			                calculateResponse.ReshapeLinesUsability);
+			AssertReshapeLineCount(calculateResponse.ReshapeLines, 2, 2);
+
+			int insideLineIndex =
+				GetInsideReshapeLineIndex(calculateResponse.ReshapeLines, sourceFeature.Shape);
+
+			IPolyline insideLine =
+				(IPolyline) ProtobufGeometryUtils.FromShapeMsg(
+					calculateResponse.ReshapeLines[insideLineIndex].Path);
+
+			Assert.NotNull(insideLine);
+			Assert.AreEqual(1000.0, insideLine.Length, 0.000000001);
+			Assert.AreEqual(2601000.0, insideLine.FromPoint.X);
+			Assert.AreEqual(1200500.0, insideLine.FromPoint.Y);
+
+			ApplyReshapeLinesRequest applyRequest = new ApplyReshapeLinesRequest();
+
+			applyRequest.ReshapeLines.Add(calculateResponse.ReshapeLines[insideLineIndex]);
+			applyRequest.CalculationRequest = calculationRequest;
+			applyRequest.InsertVerticesInTarget = false;
+			applyRequest.UseNonDefaultReshapeSide = false;
+
+			ApplyReshapeLinesResponse applyResponse =
+				ChangeAlongServiceUtils.ApplyReshapeLines(applyRequest, null);
+
+			Assert.AreEqual(1, applyResponse.ResultFeatures.Count);
+
+			IGeometry updatedGeometry =
+				ProtobufGeometryUtils.FromShapeMsg(applyResponse.ResultFeatures[0].Update.Shape);
+
+			Assert.IsNotNull(updatedGeometry);
+			Assert.AreEqual(1000 * 1000 * 3 / 4, ((IArea) updatedGeometry).Area);
+
+			// NOTE: The remaining (outside) reshape line is currently not reshapable because its
+			//       1mm-segment to the target vertex is removed by the AO-Simplify (with minimum
+			//       tolerance 2mm) in IntersectionUtils.GetDifferenceLinesXY.
+		}
+
+		[Test]
+		public void CannotReshapeAlongDifferenceOfOneResolutionWithDataTolerance()
+		{
+			// XY difference:
+			GetSourcePolygonAndTargetLineWithOneResolutionDifference(
+				false, out GdbFeature sourceFeature, out GdbFeature targetFeature);
+
+			CalculateReshapeLinesRequest calculationRequest =
+				CreateCalculateReshapeLinesRequest(sourceFeature, targetFeature);
+
+			CalculateReshapeLinesResponse calculateResponse =
+				ChangeAlongServiceUtils.CalculateReshapeLines(calculationRequest, null);
+
+			Assert.AreNotEqual((int) ReshapeAlongCurveUsability.CanReshape,
+			                   calculateResponse.ReshapeLinesUsability);
+			Assert.AreEqual(0, calculateResponse.ReshapeLines.Count(l => l.CanReshape));
+
+			// Z difference:
+			GetSourcePolygonAndTargetLineWithOneResolutionDifference(
+				true, out sourceFeature, out targetFeature);
+
+			calculationRequest = CreateCalculateReshapeLinesRequest(sourceFeature, targetFeature);
+
+			calculateResponse =
+				ChangeAlongServiceUtils.CalculateReshapeLines(calculationRequest, null);
+
+			Assert.AreNotEqual((int) ReshapeAlongCurveUsability.CanReshape,
+			                   calculateResponse.ReshapeLinesUsability);
+			Assert.AreEqual(0, calculateResponse.ReshapeLines.Count(l => l.CanReshape));
+		}
+
+		[Test]
+		[TestCase(0)]
+		[TestCase(0.0005)]
+		[TestCase(0.000001)]
+		public void CanReshapeAlongXyDifferenceOfOneResolution(double tolerance)
+		{
+			GetSourcePolygonAndTargetLineWithOneResolutionDifference(
+				false, out GdbFeature sourceFeature, out GdbFeature targetFeature);
+
+			CalculateReshapeLinesRequest calculationRequest =
+				CreateCalculateReshapeLinesRequest(sourceFeature, targetFeature);
+
+			calculationRequest.Tolerance = tolerance;
+
+			CalculateReshapeLinesResponse calculateResponse =
+				ChangeAlongServiceUtils.CalculateReshapeLines(calculationRequest, null);
+
+			Assert.AreEqual((int) ReshapeAlongCurveUsability.CanReshape,
+			                calculateResponse.ReshapeLinesUsability);
+			AssertReshapeLineCount(calculateResponse.ReshapeLines, 1, 1);
+
+			IPolyline reshapeLine =
+				(IPolyline) ProtobufGeometryUtils.FromShapeMsg(
+					calculateResponse.ReshapeLines[0].Path);
+
+			Assert.NotNull(reshapeLine);
+			Assert.AreEqual(1000.0, reshapeLine.Length, 0.0001);
+			Assert.AreEqual(2601000.001, reshapeLine.Envelope.XMax, 0.0000001);
+
+			//
+			// Apply:
+			ApplyReshapeLinesRequest applyRequest = new ApplyReshapeLinesRequest();
+
+			applyRequest.ReshapeLines.Add(calculateResponse.ReshapeLines[0]);
+			applyRequest.CalculationRequest = calculationRequest;
+			applyRequest.InsertVerticesInTarget = false;
+			applyRequest.UseNonDefaultReshapeSide = false;
+
+			ApplyReshapeLinesResponse applyResponse =
+				ChangeAlongServiceUtils.ApplyReshapeLines(applyRequest, null);
+
+			Assert.AreEqual(1, applyResponse.ResultFeatures.Count);
+
+			IGeometry updatedGeometry =
+				ProtobufGeometryUtils.FromShapeMsg(applyResponse.ResultFeatures[0].Update.Shape);
+
+			Assert.IsNotNull(updatedGeometry);
+
+			// The source gets the additional vertex 1mm outside:
+			Assert.AreEqual(6, GeometryUtils.GetPointCount(updatedGeometry));
+
+			// The triangle between the original edge and the target vertex: 1000 * 0.001 / 2
+			Assert.AreEqual(1000.0 * 1000.0 + 0.5, ((IArea) updatedGeometry).Area, 0.01);
+
+			List<Pnt3D> points = GeometryConversionUtils.GetPntList(updatedGeometry);
+			Assert.IsTrue(points.Any(p => MathUtils.AreEqual(p.X, 2601000.001, 0.0000001) &&
+			                              MathUtils.AreEqual(p.Y, 1200500.0, 0.0000001)));
+
+			AssertReshapeLineCount(applyResponse.NewReshapeLines, 0, 0);
+		}
+
+		[Test]
+		[TestCase(0)]
+		[TestCase(0.0005)]
+		[TestCase(0.000001)]
+		public void CanReshapeAlongZDifferenceOfOneResolution(double tolerance)
+		{
+			GetSourcePolygonAndTargetLineWithOneResolutionDifference(
+				true, out GdbFeature sourceFeature, out GdbFeature targetFeature);
+
+			CalculateReshapeLinesRequest calculationRequest =
+				CreateCalculateReshapeLinesRequest(sourceFeature, targetFeature);
+
+			calculationRequest.Tolerance = tolerance;
+
+			CalculateReshapeLinesResponse calculateResponse =
+				ChangeAlongServiceUtils.CalculateReshapeLines(calculationRequest, null);
+
+			Assert.AreEqual((int) ReshapeAlongCurveUsability.CanReshape,
+			                calculateResponse.ReshapeLinesUsability);
+			AssertReshapeLineCount(calculateResponse.ReshapeLines, 1, 1);
+
+			IPolyline reshapeLine =
+				(IPolyline) ProtobufGeometryUtils.FromShapeMsg(
+					calculateResponse.ReshapeLines[0].Path);
+
+			Assert.NotNull(reshapeLine);
+			Assert.AreEqual(1000.0, reshapeLine.Length, 0.0001);
+			Assert.AreEqual(500.001, reshapeLine.Envelope.ZMax, 0.0000001);
+
+			//
+			// Apply:
+			ApplyReshapeLinesRequest applyRequest = new ApplyReshapeLinesRequest();
+
+			applyRequest.ReshapeLines.Add(calculateResponse.ReshapeLines[0]);
+			applyRequest.CalculationRequest = calculationRequest;
+			applyRequest.InsertVerticesInTarget = false;
+			applyRequest.UseNonDefaultReshapeSide = false;
+
+			ApplyReshapeLinesResponse applyResponse =
+				ChangeAlongServiceUtils.ApplyReshapeLines(applyRequest, null);
+
+			Assert.AreEqual(1, applyResponse.ResultFeatures.Count);
+
+			IGeometry updatedGeometry =
+				ProtobufGeometryUtils.FromShapeMsg(applyResponse.ResultFeatures[0].Update.Shape);
+
+			Assert.IsNotNull(updatedGeometry);
+
+			// The source gets the additional vertex with Z 1mm higher:
+			Assert.AreEqual(6, GeometryUtils.GetPointCount(updatedGeometry));
+			Assert.AreEqual(1000.0 * 1000.0, ((IArea) updatedGeometry).Area, 0.0001);
+
+			List<Pnt3D> points = GeometryConversionUtils.GetPntList(updatedGeometry);
+			Assert.IsTrue(points.Any(p => MathUtils.AreEqual(p.X, 2601000.0, 0.0000001) &&
+			                              MathUtils.AreEqual(p.Y, 1200500.0, 0.0000001) &&
+			                              MathUtils.AreEqual(p.Z, 500.001, 0.0000001)));
+
+			AssertReshapeLineCount(applyResponse.NewReshapeLines, 0, 0);
+		}
+
+		[Test]
 		public void CanReshapeAlongBufferedTarget()
 		{
 			GetOverlappingPolygons(out GdbFeature sourceFeature, out GdbFeature targetFeature);
@@ -941,13 +1156,17 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		///  <param name="targetFeature"></param>
 		///  <returns></returns>
 		private static void GetOverlappingPolygons(out GdbFeature sourceFeature,
-		                                           out GdbFeature targetFeature)
+		                                           out GdbFeature targetFeature,
+		                                           ISpatialReference sr = null)
 		{
 			var fClass =
 				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
 
-			var sr = SpatialReferenceUtils.CreateSpatialReference(
-				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LN02);
+			if (sr == null)
+			{
+				sr = SpatialReferenceUtils.CreateSpatialReference(
+					WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LN02);
+			}
 
 			fClass.SpatialReference = sr;
 
@@ -968,6 +1187,67 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			targetFeature = GdbFeature.Create(43, fClass);
 			targetFeature.Shape = polygon2;
+		}
+
+		/// <summary>
+		/// Resolution 1mm, tolerance 1cm. The minimum AO tolerance is therefore 2mm.
+		/// </summary>
+		private static ISpatialReference CreateTlmLikeSpatialReference()
+		{
+			var sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LN02);
+
+			SpatialReferenceUtils.SetXYDomain(sr, 2400000, 1000000, 2900000, 1400000,
+			                                  0.001, 0.01);
+			SpatialReferenceUtils.SetZDomain(sr, -100, 10000, 0.001, 0.01);
+
+			return sr;
+		}
+
+		///  <summary>
+		///  Returns a square source polygon and a target line running along its right edge
+		///  with the middle vertex deviating by exactly one resolution (1mm, as in the TLM)
+		///  which is below the data tolerance (1cm):
+		///  - in X (outside the polygon) if zDifference is false
+		///  - in Z (higher) if zDifference is true
+		///  </summary>
+		private static void GetSourcePolygonAndTargetLineWithOneResolutionDifference(
+			bool zDifference,
+			out GdbFeature sourceFeature,
+			out GdbFeature targetFeature)
+		{
+			ISpatialReference sr = CreateTlmLikeSpatialReference();
+
+			var polygonClass =
+				new GdbFeatureClass(123, "TestPolygons", esriGeometryType.esriGeometryPolygon);
+			polygonClass.SpatialReference = sr;
+
+			var lineClass =
+				new GdbFeatureClass(124, "TestLines", esriGeometryType.esriGeometryPolyline);
+			lineClass.SpatialReference = sr;
+
+			IPolygon polygon = GeometryFactory.CreatePolygon(
+				GeometryFactory.CreatePoint(2600000, 1200000, sr),
+				GeometryFactory.CreatePoint(2601000, 1201000, sr));
+			polygon.SpatialReference = sr;
+
+			GeometryUtils.MakeZAware(polygon);
+			GeometryUtils.ApplyConstantZ(polygon, 500);
+
+			sourceFeature = GdbFeature.Create(42, polygonClass);
+			sourceFeature.Shape = polygon;
+
+			double middleX = zDifference ? 2601000 : 2601000.001;
+			double middleZ = zDifference ? 500.001 : 500;
+
+			IPolyline polyline = GeometryFactory.CreatePolyline(
+				sr,
+				GeometryFactory.CreatePoint(2601000, 1200000, 500, sr),
+				GeometryFactory.CreatePoint(middleX, 1200500, middleZ, sr),
+				GeometryFactory.CreatePoint(2601000, 1201000, 500, sr));
+
+			targetFeature = GdbFeature.Create(43, lineClass);
+			targetFeature.Shape = polyline;
 		}
 
 		private static void AssertReshapeLineCount(RepeatedField<ReshapeLineMsg> reshapeLines,
@@ -1012,6 +1292,12 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				new CalculateReshapeLinesRequest();
 
 			calculationRequest.ClassDefinitions.Add(objectClassMsg);
+
+			if (targetFeature.Class != sourceFeature.Class)
+			{
+				calculationRequest.ClassDefinitions.Add(
+					ProtobufGdbUtils.ToObjectClassMsg(targetFeature.Class));
+			}
 
 			calculationRequest.TargetFeatures.Add(targetFeatureMsg);
 			calculationRequest.SourceFeatures.Add(sourceFeatureMsg);
