@@ -1150,14 +1150,16 @@ public static class MapUtils
 			return allowSubMapToleranceResult ? res : ClampToMapTolerance(mapView, res);
 		}
 
-		// The point as screen point
+		// The point as screen point. MapToScreen rounds to whole pixels: measure from the
+		// rounded screen point, not from atPoint, or the result is off by up to half a pixel.
 		var screenPoint = mapView.MapToScreen(atPoint);
+		var screenMapPoint = mapView.ScreenToMap(screenPoint);
 
 		//Add tolerance pixels to get a "radius".
 		var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
 		var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
 
-		double result = GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		double result = GeometryEngine.Instance.Distance(screenMapPoint, radiusMapPoint);
 
 		return allowSubMapToleranceResult ? result : ClampToMapTolerance(mapView, result);
 	}
