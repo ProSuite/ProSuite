@@ -21,7 +21,8 @@ namespace ProSuite.AGP.Editing;
 /// </summary>
 /// <remarks>
 /// The display filter works in 2D map views only: the stereo view draws the transparent
-/// selection colours opaque and does not apply the display filter. Hidden by a definition
+/// selection colours opaque and does not apply the display filter, so the selection colours of
+/// a stereo map's layers are left unchanged. Hidden by a definition
 /// query instead (see the constructor), the features are hidden in stereo too, selected or not.
 /// </remarks>
 public class EditedFeaturesHider
@@ -193,9 +194,13 @@ public class EditedFeaturesHider
 		cimLayer.EnableDisplayFilters = true;
 
 		// The display filter does not hide the selection: make the selection colour and the
-		// selection fill of polygon interiors fully transparent.
-		cimLayer.SelectionColor = CreateTransparentColor();
-		cimLayer.PolygonSelectionFillColor = CreateTransparentColor();
+		// selection fill of polygon interiors fully transparent. Not in a stereo map, whose view
+		// draws them opaque (black) instead of the normal selection colour.
+		if (layer.Map?.DefaultViewingMode != MapViewingMode.MapStereo)
+		{
+			cimLayer.SelectionColor = CreateTransparentColor();
+			cimLayer.PolygonSelectionFillColor = CreateTransparentColor();
+		}
 
 		SetDefinitionWithoutUndo(layer, cimLayer);
 	}
