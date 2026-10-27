@@ -109,7 +109,8 @@ public abstract class SplitLineToolBase : MapToolBase
 
 		if (splitPoint == null)
 		{
-			_msg.Warn("SplitLine: Cannot split at or near the start or end point.");
+			_msg.Warn("SplitLine: Cannot split at or near the start or end point " +
+			          "(the line may already be split there).");
 			return;
 		}
 
@@ -182,6 +183,8 @@ public abstract class SplitLineToolBase : MapToolBase
 		{
 			return;
 		}
+
+		_msg.Info("SplitLine: Line split successfully.");
 
 		await PostProcessNewFeatures(itemFeature, newFeature, editOperation);
 
