@@ -9,8 +9,8 @@
              xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              xmlns:removeOverlaps="clr-namespace:ProSuite.AGP.Editing.RemoveOverlaps"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=removeOverlaps:DockPaneRemoveOverlapsViewModelBase}" Width="378"
-             Height="421" HorizontalAlignment="Left"
+             d:DataContext="{d:DesignInstance Type=removeOverlaps:DockPaneRemoveOverlapsViewModelBase}"
+             HorizontalAlignment="Left"
              VerticalAlignment="Top">
 	<UserControl.Resources>
 		<ResourceDictionary>

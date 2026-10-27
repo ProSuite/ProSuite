@@ -10,7 +10,7 @@
              xmlns:editing="clr-namespace:ProSuite.AGP.Editing"
              xmlns:geometryProcessing="clr-namespace:ProSuite.Commons.AGP.Core.GeometryProcessing;assembly=ProSuite.Commons.AGP.Core"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=cracker:DockPaneCrackerViewModelBase}" Width="378" Height="453"
+             d:DataContext="{d:DesignInstance Type=cracker:DockPaneCrackerViewModelBase}"
              HorizontalAlignment="Left"
              VerticalAlignment="Top">
 	<UserControl.Resources>
