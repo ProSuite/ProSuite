@@ -280,12 +280,16 @@ namespace ProSuite.Commons.UI.Dialogs
 		/// <param name="headerMessage">The header message.</param>
 		/// <param name="listLines">The list lines.</param>
 		/// <param name="footerMessage">The footer message.</param>
+		/// <param name="defaultIsCancel">if set to <c>true</c> the 'Cancel' button has the
+		/// focus and Enter selects it. Otherwise, Enter selects 'OK' and Escape selects
+		/// 'Cancel'.</param>
 		/// <returns></returns>
 		public bool ShowOkCancelList(IWin32Window owner,
 		                             string title,
 		                             string headerMessage,
 		                             IList<string> listLines,
-		                             string footerMessage)
+		                             string footerMessage,
+		                             bool defaultIsCancel = true)
 		{
 			Assert.ArgumentNotNullOrEmpty(title, nameof(title));
 			Assert.ArgumentNotNullOrEmpty(headerMessage, nameof(headerMessage));
@@ -300,7 +304,8 @@ namespace ProSuite.Commons.UI.Dialogs
 			                                  listLines,
 			                                  footerMessage,
 			                                  MessageBoxButtons.OKCancel,
-			                                  MessageBoxIcon.Question);
+			                                  MessageBoxIcon.Question,
+			                                  middleButtonIsDefault: ! defaultIsCancel);
 
 			_msg.DebugFormat("OK CANCEL List Dialog: {0}, '{1}'. Answer: '{2}'",
 			                 msg, title, result);
@@ -395,7 +400,8 @@ namespace ProSuite.Commons.UI.Dialogs
 		                                            [NotNull] IList<string> listLines,
 		                                            [CanBeNull] string footerMessage,
 		                                            MessageBoxButtons buttons,
-		                                            MessageBoxIcon icon);
+		                                            MessageBoxIcon icon,
+		                                            bool middleButtonIsDefault = false);
 
 		protected abstract DialogResult ShowMessageBox(
 			[CanBeNull] IWin32Window owner,

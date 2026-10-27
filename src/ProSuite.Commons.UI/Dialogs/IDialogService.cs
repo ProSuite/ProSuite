@@ -142,12 +142,16 @@ namespace ProSuite.Commons.UI.Dialogs
 		/// <param name="headerMessage">The header message.</param>
 		/// <param name="listLines">The list lines.</param>
 		/// <param name="footerMessage">The footer message.</param>
+		/// <param name="defaultIsCancel">if set to <c>true</c> the 'Cancel' button has the
+		/// focus and Enter selects it. Otherwise, Enter selects 'OK' and Escape selects
+		/// 'Cancel'.</param>
 		/// <returns></returns>
 		bool ShowOkCancelList([CanBeNull] IWin32Window owner,
 		                      [NotNull] string title,
 		                      [NotNull] string headerMessage,
 		                      [NotNull] IList<string> listLines,
-		                      [CanBeNull] string footerMessage);
+		                      [CanBeNull] string footerMessage,
+		                      bool defaultIsCancel = true);
 
 		/// <summary>
 		/// Shows a fully configurable message box.
