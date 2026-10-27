@@ -74,10 +74,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[CanBeNull] Geometry perimeter,
 			[CanBeNull] string ddxEnvironmentName = null)
 		{
-			var specificationMsg = new QualitySpecificationMsg
-			                       {
-				                       QualitySpecificationId = qualitySpecificationId
-			                       };
+			QualitySpecificationMsg specificationMsg =
+				CreateSpecificationMsg(qualitySpecificationId);
 
 			return CreateRequest(workContextMsg, specificationMsg, perimeter, ddxEnvironmentName);
 		}
@@ -121,6 +119,29 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			[CanBeNull] Geometry perimeter,
 			[CanBeNull] string ddxEnvironmentName = null)
 		{
+			return CreateRequest(workContextMsg, CreateSpecificationMsg(qualitySpecification),
+			                     perimeter, ddxEnvironmentName);
+		}
+
+		/// <summary>
+		/// Creates a reference to a specification stored in the data dictionary.
+		/// </summary>
+		[NotNull]
+		public static QualitySpecificationMsg CreateSpecificationMsg(int qualitySpecificationId)
+		{
+			return new QualitySpecificationMsg
+			       {
+				       QualitySpecificationId = qualitySpecificationId
+			       };
+		}
+
+		/// <summary>
+		/// Encodes a customized specification as its base specification and excluded conditions.
+		/// </summary>
+		[NotNull]
+		public static QualitySpecificationMsg CreateSpecificationMsg(
+			[NotNull] QualitySpecification qualitySpecification)
+		{
 			CustomQualitySpecification customSpecification =
 				(CustomQualitySpecification) qualitySpecification;
 
@@ -134,7 +155,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			specificationMsg.ExcludedConditionIds.AddRange(
 				customSpecification.GetDisabledConditions().Select(c => c.Id));
 
-			return CreateRequest(workContextMsg, specificationMsg, perimeter, ddxEnvironmentName);
+			return specificationMsg;
 		}
 
 		// TODO: Full specification, once the actual parameter changes are supported:

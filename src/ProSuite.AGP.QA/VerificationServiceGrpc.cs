@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -13,7 +12,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
-using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
@@ -60,7 +58,7 @@ namespace ProSuite.AGP.QA
 		/// </summary>
 		public bool AlwaysUseClientData { get; set; }
 
-		public override async Task<ServiceCallStatus> Verify(
+		public sealed override async Task<ServiceCallStatus> Verify(
 			IQualitySpecificationReference qualitySpecificationRef,
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
@@ -71,23 +69,11 @@ namespace ProSuite.AGP.QA
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
 			Assert.ArgumentNotNull(progress, nameof(progress));
 
-			QualitySpecificationReference specificationRef =
-				qualitySpecificationRef as QualitySpecificationReference;
-
-			Assert.NotNull(specificationRef, "Unexpected type of quality specification");
-
-			VerificationRequest request =
-				await CreateVerificationRequest(specificationRef, perimeter, projectWorkspace,
-				                                resultsPath);
-
-			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
-			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
-
-			return await Verify(Assert.NotNull(_client.QaGrpcClient), request,
-			                    messageCollector, projectWorkspace, progress);
+			return await CreateExecution(projectWorkspace, resultsPath, null).Verify(
+				       qualitySpecificationRef, perimeter, progress);
 		}
 
-		public override async Task<ServiceCallStatus> Verify(
+		public sealed override async Task<ServiceCallStatus> Verify(
 			QualitySpecification qualitySpecification,
 			Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
@@ -98,18 +84,11 @@ namespace ProSuite.AGP.QA
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
 			Assert.ArgumentNotNull(progress, nameof(progress));
 
-			VerificationRequest request =
-				await CreateVerificationRequest(qualitySpecification, perimeter, projectWorkspace,
-				                                resultsPath);
-
-			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
-			messageCollector.SetVerifiedSpecification(qualitySpecification);
-
-			return await Verify(Assert.NotNull(_client.QaGrpcClient), request,
-			                    messageCollector, projectWorkspace, progress);
+			return await CreateExecution(projectWorkspace, resultsPath, null).Verify(
+				       qualitySpecification, perimeter, progress);
 		}
 
-		public override async Task<ServiceCallStatus> VerifySelection(
+		public sealed override async Task<ServiceCallStatus> VerifySelection(
 			IQualitySpecificationReference qualitySpecificationRef,
 			IList<Row> objectsToVerify,
 			Geometry perimeter,
@@ -117,25 +96,11 @@ namespace ProSuite.AGP.QA
 			QualityVerificationProgressTracker progress,
 			string resultsPath)
 		{
-			QualitySpecificationReference specification =
-				qualitySpecificationRef as QualitySpecificationReference;
-
-			Assert.NotNull(specification, "Unexpected type of quality specification");
-
-			VerificationRequest request =
-				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
-				                                resultsPath, objectsToVerify);
-
-			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
-
-			messageCollector.SetVerifiedObjects(objectsToVerify);
-			messageCollector.SetVerifiedSpecificationId(qualitySpecificationRef.Id);
-
-			return await Verify(Assert.NotNull(_client.QaGrpcClient), request, messageCollector,
-			                    projectWorkspace, progress);
+			return await CreateExecution(projectWorkspace, resultsPath, null).VerifySelection(
+				       qualitySpecificationRef, objectsToVerify, perimeter, progress);
 		}
 
-		public override async Task<ServiceCallStatus> VerifySelection(
+		public sealed override async Task<ServiceCallStatus> VerifySelection(
 			QualitySpecification qualitySpecification,
 			IList<Row> objectsToVerify,
 			Geometry perimeter,
@@ -147,29 +112,14 @@ namespace ProSuite.AGP.QA
 			Assert.ArgumentNotNull(projectWorkspace, nameof(projectWorkspace));
 			Assert.ArgumentNotNull(progress, nameof(progress));
 
-			VerificationRequest request =
-				await CreateVerificationRequest(qualitySpecification, perimeter, projectWorkspace,
-				                                resultsPath, objectsToVerify);
-
-			ClientIssueMessageCollector messageCollector = CreateIssueMessageCollector();
-
-			messageCollector.SetVerifiedObjects(objectsToVerify);
-			messageCollector.SetVerifiedSpecification(qualitySpecification);
-
-			return await Verify(Assert.NotNull(_client.QaGrpcClient), request, messageCollector,
-			                    projectWorkspace, progress);
+			return await CreateExecution(projectWorkspace, resultsPath, null).VerifySelection(
+				       qualitySpecification, objectsToVerify, perimeter, progress);
 		}
 
-		private async Task<ServiceCallStatus> Verify(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
-			[NotNull] VerificationRequest request,
-			[NotNull] ClientIssueMessageCollector messageCollector,
-			[NotNull] ProjectWorkspace projectWorkspace,
-			[NotNull] QualityVerificationProgressTracker progress)
+		internal async Task<bool> ConfigureVerificationRunAsync(
+			[NotNull] BackgroundVerificationRun verificationRun,
+			[NotNull] ProjectWorkspace projectWorkspace)
 		{
-			BackgroundVerificationRun verificationRun =
-				QAUtils.CreateQualityVerificationRun(request, messageCollector, progress);
-
 			bool provideDataFromClient = false;
 
 			IVerificationDataProvider dataProvider =
@@ -193,10 +143,7 @@ namespace ProSuite.AGP.QA
 				_msg.Info(GetClientDataMessage(clientDataReason));
 			}
 
-			// Mode 2 (server-driven schema): send no schema; the client answers the server's
-			// schema requests on demand.
-			return await verificationRun.ExecuteAndProcessMessagesAsync(
-				       qaClient, provideDataFromClient, schemaMsg: null);
+			return provideDataFromClient;
 		}
 
 		/// <summary>
@@ -247,43 +194,27 @@ namespace ProSuite.AGP.QA
 			}
 		}
 
-		protected virtual ClientIssueMessageCollector CreateIssueMessageCollector()
+		protected internal virtual ClientIssueMessageCollector CreateIssueMessageCollector()
 		{
 			return new ClientIssueMessageCollector();
 		}
 
 		[NotNull]
-		protected virtual QualitySpecificationMsg CreateSpecificationMsg(
+		protected internal virtual QualitySpecificationMsg CreateSpecificationMsg(
 			[NotNull] IQualitySpecificationReference specificationRef)
 		{
-			return new QualitySpecificationMsg
-			       {
-				       QualitySpecificationId = specificationRef.Id
-			       };
+			return QAUtils.CreateSpecificationMsg(specificationRef.Id);
 		}
 
 		[NotNull]
-		protected virtual QualitySpecificationMsg CreateSpecificationMsg(
+		protected internal virtual QualitySpecificationMsg CreateSpecificationMsg(
 			[NotNull] QualitySpecification qualitySpecification)
 		{
-			CustomQualitySpecification customSpecification =
-				(CustomQualitySpecification) qualitySpecification;
-
-			int specificationId = customSpecification.BaseSpecification.Id;
-
-			var specificationMsg = new QualitySpecificationMsg
-			                       {
-				                       QualitySpecificationId = specificationId
-			                       };
-
-			specificationMsg.ExcludedConditionIds.AddRange(
-				customSpecification.GetDisabledConditions().Select(c => c.Id));
-
-			return specificationMsg;
+			return QAUtils.CreateSpecificationMsg(qualitySpecification);
 		}
 
 		[NotNull]
-		protected virtual WorkContextMsg CreateWorkContextMsg(
+		protected internal virtual WorkContextMsg CreateWorkContextMsg(
 			[NotNull] ProjectWorkspace projectWorkspace)
 		{
 			string contextType = ContextType ?? _defaultContextType;
@@ -292,112 +223,17 @@ namespace ProSuite.AGP.QA
 			return QAUtils.CreateWorkContextMsg(projectWorkspace, contextType, contextName);
 		}
 
-		private async Task<VerificationRequest> CreateVerificationRequest(
-			[NotNull] IQualitySpecificationReference specificationRef,
-			[CanBeNull] Geometry perimeter,
-			[NotNull] ProjectWorkspace projectWorkspace,
-			[CanBeNull] string resultsPath,
-			[CanBeNull] IList<Row> objectsToVerify = null)
+		public override IVerificationExecution CreateExecution(
+			ProjectWorkspace projectWorkspace, string resultsPath, string contextDisplayName)
 		{
-			QualitySpecificationMsg specificationMsg = CreateSpecificationMsg(specificationRef);
-
-			VerificationRequest request =
-				await QueuedTask.Run(() =>
-				{
-					WorkContextMsg workContextMsg = CreateWorkContextMsg(projectWorkspace);
-
-					VerificationRequest result =
-						QAUtils.CreateRequest(workContextMsg, specificationMsg, perimeter,
-						                      DdxEnvironmentName);
-
-					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
-
-					return result;
-				});
-
-			SetPathParameters(resultsPath, request);
-
-			bool saveVerificationInDdx = Parameters?.SaveVerificationStatisticsInDdx ?? false;
-
-			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), saveVerificationInDdx, true, false);
-
-			return request;
-		}
-
-		private async Task<VerificationRequest> CreateVerificationRequest(
-			[NotNull] QualitySpecification specification,
-			[CanBeNull] Geometry perimeter,
-			[NotNull] ProjectWorkspace projectWorkspace,
-			[CanBeNull] string resultsPath,
-			[CanBeNull] IList<Row> objectsToVerify = null)
-		{
-			QualitySpecificationMsg specificationMsg = CreateSpecificationMsg(specification);
-
-			VerificationRequest request =
-				await QueuedTask.Run(() =>
-				{
-					WorkContextMsg workContextMsg = CreateWorkContextMsg(projectWorkspace);
-
-					VerificationRequest result =
-						QAUtils.CreateRequest(
-							workContextMsg, specificationMsg, perimeter, DdxEnvironmentName);
-
-					QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
-
-					return result;
-				});
-
-			SetPathParameters(resultsPath, request);
-
-			bool saveVerificationInDdx = Parameters?.SaveVerificationStatisticsInDdx ?? false;
-
-			QAUtils.SetVerificationParameters(
-				request, GetTileSize(projectWorkspace), saveVerificationInDdx, true, false);
-
-			return request;
-		}
-
-		private void SetPathParameters(string resultsPath, VerificationRequest request)
-		{
-			if (! string.IsNullOrEmpty(resultsPath))
-			{
-				// GOTOP-796: Guard against inexistent path on server
-				// TODO: Make paths configurable and remove
-				if (! _client.RunsLocally())
-				{
-					// If not a local machine path, set the results path to null to avoid errors:
-					if (! resultsPath.StartsWith(@"\\"))
-					{
-						_msg.Debug(
-							"Paths will not be provided to server (no localhost and not UNC path)");
-						return;
-					}
-				}
-
-				string htmlReport = Path.Combine(resultsPath, HtmlReportName);
-				string xmlReport = Path.Combine(resultsPath, VerificationReportName);
-				string gdbDir = Path.Combine(resultsPath, "issues.gdb");
-
-				// Only request the reports / the local Issue File GDB when configured to do so.
-				// Without parameters, both are written (the default, backward-compatible behavior).
-				if (Parameters?.CreateReports ?? true)
-				{
-					request.Parameters.HtmlReportPath = htmlReport;
-					request.Parameters.VerificationReportPath = xmlReport;
-				}
-
-				if (Parameters?.CreateLocalIssueFileGdb ?? true)
-				{
-					request.Parameters.IssueFileGdbPath = gdbDir;
-				}
-			}
-		}
-
-		private double GetTileSize(ProjectWorkspace projectWorkspace)
-		{
-			// TODO
-			return -1;
+			return new ProjectWorkspaceVerificationExecutor(
+				       this, _client, projectWorkspace, resultsPath, contextDisplayName)
+			       {
+				       DdxEnvironmentName = DdxEnvironmentName,
+				       HtmlReportName = HtmlReportName,
+				       VerificationReportName = VerificationReportName,
+				       Parameters = Parameters
+			       };
 		}
 
 		private enum ClientDataReason
