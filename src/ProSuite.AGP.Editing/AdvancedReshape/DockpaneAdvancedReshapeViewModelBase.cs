@@ -33,7 +33,6 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 	private CentralizableSettingViewModel<bool> _hideEditedFeatures;
 	private CentralizableSettingViewModel<bool> _moveOpenJawEndJunction;
 	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
-	private bool _showMoveOpenJawEndJunction = true;
 
 	public string Heading
 	{
@@ -69,15 +68,6 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 	{
 		get => _alwaysShowOptionsPane;
 		set => SetProperty(ref _alwaysShowOptionsPane, value);
-	}
-
-	/// <summary>
-	/// The move end junction option only applies to tools that allow Y-Reshape.
-	/// </summary>
-	public bool ShowMoveOpenJawEndJunction
-	{
-		get => _showMoveOpenJawEndJunction;
-		set => SetProperty(ref _showMoveOpenJawEndJunction, value);
 	}
 
 	public ReshapeToolOptions Options

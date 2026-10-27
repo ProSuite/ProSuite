@@ -87,11 +87,12 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		RequiresSelection = true;
 
 		HandledKeys.Add(_keyToggleNonDefaultSide);
+		HandledKeys.Add(_keyToggleMoveEndJunction);
 	}
 
 	/// <summary>
 	/// Whether a line may be reshaped by a sketch that crosses it only once (Y-Reshape).
-	/// If false, the open-jaw feedback and the move end junction option are not offered.
+	/// If false, the open-jaw feedback is not offered.
 	/// </summary>
 	protected virtual bool AllowOpenJawReshape => _advancedReshapeToolOptions.AllowOpenJawReshape;
 
@@ -222,13 +223,6 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 	protected override async Task OnToolActivatingCoreAsync()
 	{
 		_advancedReshapeToolOptions = InitializeOptions();
-
-		HandledKeys.Remove(_keyToggleMoveEndJunction);
-
-		if (AllowOpenJawReshape)
-		{
-			HandledKeys.Add(_keyToggleMoveEndJunction);
-		}
 
 		_feedback = new AdvancedReshapeFeedback(_advancedReshapeToolOptions);
 
@@ -424,11 +418,11 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 				bool currentState = _advancedReshapeToolOptions.MoveOpenJawEndJunction;
 				if (currentState)
 				{
-					_msg.Info("Enabled move end junction option for Y-Reshape");
+					_msg.Info("Enabled move end junction option in linear networks");
 				}
 				else
 				{
-					_msg.Info("Disabled move end junction option for Y-Reshape");
+					_msg.Info("Disabled move end junction option in linear networks");
 				}
 
 				await _updateFeedbackTask;
@@ -475,7 +469,6 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		}
 
 		viewModel.Options = _advancedReshapeToolOptions;
-		viewModel.ShowMoveOpenJawEndJunction = AllowOpenJawReshape;
 
 		viewModel.Activate(true);
 	}
@@ -621,7 +614,7 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		ReshapeResult result = MicroserviceClient.Reshape(
 			selection, sketchLine, potentiallyAffectedFeatures, allowOpenJawReshape, true,
 			_nonDefaultSideMode, _cancellationTokenSource.Token,
-			allowOpenJawReshape && _advancedReshapeToolOptions.MoveOpenJawEndJunction);
+			_advancedReshapeToolOptions.MoveOpenJawEndJunction);
 
 		if (result == null)
 		{

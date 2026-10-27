@@ -42,12 +42,9 @@
 			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
 			          Content="Hide the edited features while sketching"
 			          DataContext="{Binding Path=HideEditedFeatures}" />
-			<StackPanel
-				Visibility="{Binding ShowMoveOpenJawEndJunction, Converter={StaticResource BooleanToVisibilityConverter}}">
-				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-				          Content="Move end junction in linear networks (toggle with M key)"
-				          DataContext="{Binding Path=MoveOpenJawEndJunction}" />
-			</StackPanel>
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Move end junction in linear networks (toggle with M key)"
+			          DataContext="{Binding Path=MoveOpenJawEndJunction}" />
 
 			<!-- Always show this dialog -->
 			<StackPanel
