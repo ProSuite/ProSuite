@@ -45,7 +45,25 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		public Task<bool> VerifyFullExtent()
 		{
-			return RunPerimeter(null, "Verify Full Extent", "full extent");
+			return VerifyPerimeter(null, "Verify Full Extent", "full extent");
+		}
+
+		public Task<bool> VerifyPerimeter(
+			[CanBeNull] Geometry perimeter, [NotNull] string title,
+			[NotNull] string perimeterDisplayName,
+			bool saveVerification = false,
+			[CanBeNull] Func<QualityVerificationProgressTracker, Task> onCompleted = null)
+		{
+			if (! TryGetContext(title, out IQualityVerificationEnvironment environment,
+			                    out MapView mapView))
+			{
+				return Task.FromResult(false);
+			}
+
+			return ShowProgressAsync(environment, mapView, perimeter, title,
+			                         p => VerifyPerimeterAsync(
+				                         perimeter, p, perimeterDisplayName, saveVerification,
+				                         onCompleted));
 		}
 
 		public Task<bool> VerifyVisibleExtent(
@@ -144,6 +162,30 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                                     .VerifySelection(selection, null, p)));
 		}
 
+		/// <summary>
+		/// Verifies an already resolved selection of rows, such as the involved objects of an
+		/// issue being retested. Requires an active map, but does not check the map's selection.
+		/// </summary>
+		public Task<bool> VerifySelection(
+			[NotNull] IList<Row> selection, [CanBeNull] Geometry perimeter,
+			[NotNull] string title,
+			[CanBeNull] Action<VerificationProgressViewModel> configureViewModel = null)
+		{
+			if (! TryGetContext(title, out IQualityVerificationEnvironment environment,
+			                    out MapView mapView))
+			{
+				return Task.FromResult(false);
+			}
+
+			return ShowProgressAsync(environment, mapView, perimeter, title,
+			                         p => ExecuteInBackground(() =>
+				                                                  Assert.NotNull(
+						                                                  _context.Environment)
+					                                                  .VerifySelection(
+						                                                  selection, perimeter, p)),
+			                         configureViewModel);
+		}
+
 		public async Task<bool> VerifySketch(
 			[NotNull] Geometry sketchGeometry,
 			[CanBeNull] Func<Geometry, Geometry> getPerimeter = null)
@@ -175,32 +217,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			                               p => VerifyPerimeterAsync(perimeter, p, "perimeter"));
 		}
 
-		// TODO(phwi): These next methods seem a bit duplicated
-		/// <summary>
-		/// Starts a perimeter verification. A null perimeter explicitly means full extent.
-		/// </summary>
-		public Task<bool> RunPerimeter([CanBeNull] Geometry perimeter, [NotNull] string title,
-		                               [NotNull] string perimeterDisplayName,
-		                               bool saveVerification = false)
-		{
-			return RunVerification(perimeter, title,
-			                       p => VerifyPerimeterAsync(perimeter, p, perimeterDisplayName,
-			                                                 saveVerification));
-		}
-
-		public Task<bool> RunVerification(
-			[CanBeNull] Geometry perimeter, [NotNull] string title,
-			[NotNull]
-			Func<QualityVerificationProgressTracker, Task<ServiceCallStatus>> verifyAction)
-		{
-			return TryGetContext(title, out IQualityVerificationEnvironment environment,
-			                     out MapView mapView)
-				       ? ShowProgressAsync(environment, mapView, perimeter, title, verifyAction)
-				       : Task.FromResult(false);
-		}
-
-		// TODO(phwi): It feels wrong for this to be public...
-		public static async Task<ServiceCallStatus> ExecuteInBackground(
+		private static async Task<ServiceCallStatus> ExecuteInBackground(
 			[NotNull] Func<Task<ServiceCallStatus>> verifyAction)
 		{
 			// The async lambda is required to avoid duplicate sketch-completion callbacks.
@@ -212,17 +229,30 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		private Task<ServiceCallStatus> VerifyPerimeterAsync(
 			Geometry perimeter, QualityVerificationProgressTracker progress,
-			string perimeterDisplayName, bool saveVerification = false)
+			string perimeterDisplayName, bool saveVerification = false,
+			[CanBeNull] Func<QualityVerificationProgressTracker, Task> onCompleted = null)
 		{
-			return ExecuteInBackground(() => Assert.NotNull(_context.Environment).VerifyPerimeter(
-				                           perimeter, progress, perimeterDisplayName,
-				                           saveVerification));
+			return ExecuteInBackground(async () =>
+			{
+				ServiceCallStatus result = await Assert.NotNull(_context.Environment)
+				                                       .VerifyPerimeter(
+					                                       perimeter, progress,
+					                                       perimeterDisplayName,
+					                                       saveVerification);
+				if (onCompleted != null)
+				{
+					await onCompleted(progress);
+				}
+
+				return result;
+			});
 		}
 
 		private async Task<bool> ShowProgressAsync(
 			IQualityVerificationEnvironment environment, MapView mapView, Geometry perimeter,
 			string title,
-			Func<QualityVerificationProgressTracker, Task<ServiceCallStatus>> verifyAction)
+			Func<QualityVerificationProgressTracker, Task<ServiceCallStatus>> verifyAction,
+			[CanBeNull] Action<VerificationProgressViewModel> configureViewModel = null)
 		{
 			IQualitySpecificationReference specification =
 				Assert.NotNull(environment.CurrentQualitySpecificationReference);
@@ -242,6 +272,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                ApplicationController =
 					                _context.CreateController(mapView, perimeter)
 			                };
+			configureViewModel?.Invoke(viewModel);
 			Window window = VerificationProgressWindow.Create(viewModel);
 			VerifyUtils.ShowProgressWindow(window, specification,
 			                               environment.BackendDisplayName ??
