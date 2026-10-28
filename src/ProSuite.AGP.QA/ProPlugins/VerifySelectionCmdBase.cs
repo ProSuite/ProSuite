@@ -1,36 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Threading.Tasks;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.AGP.WorkList;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.Selection;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
-using ProSuite.Commons.Progress;
-using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
-using ProSuite.UI.Core.QA.VerificationProgress;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
 	public abstract class VerifySelectionCmdBase : ButtonCommandBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		protected VerifySelectionCmdBase()
 		{
 			Register();
@@ -49,105 +33,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
 			SaveAction => null;
 
-		protected override async Task<bool> OnClickAsyncCore()
+		protected override Task<bool> OnClickAsyncCore()
 		{
-			if (SessionContext?.VerificationEnvironment == null)
-			{
-				MessageBox.Show("No quality verification environment is configured.",
-				                "Verify Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			MapView mapView = MapView.Active;
-
-			if (mapView == null)
-			{
-				MessageBox.Show("No active map.", "Verify Extent",
-				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			IQualityVerificationEnvironment qaEnvironment =
-				Assert.NotNull(SessionContext.VerificationEnvironment);
-
-			IQualitySpecificationReference qualitySpecification =
-				qaEnvironment.CurrentQualitySpecificationReference;
-
-			if (qualitySpecification == null)
-			{
-				MessageBox.Show("No quality specification is selected", "Verify Selection",
-				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			if (! MapUtils.HasSelection(mapView.Map))
-			{
-				MessageBox.Show("No selected features", "Verify Selection",
-				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			IList<Row> selection = await QueuedTask.Run(GetRelevantSelection);
-
-			var progressTracker = new QualityVerificationProgressTracker
-			                      {
-				                      CancellationTokenSource = new CancellationTokenSource()
-			                      };
-
-			// Consider getting the extent of the selection:
-			Envelope currentExtent = null; //SelectionUtils.
-
-			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
-			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
-
-			var appController = new AgpBackgroundVerificationController(WorkListOpener,
-				mapView, currentExtent, spatialRef,
-				SessionContext.VerificationEnvironment, SaveAction);
-
-			var qaProgressViewmodel =
-				new VerificationProgressViewModel
-				{
-					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(selection, progressTracker),
-					ApplicationController = appController
-				};
-
-			string actionTitle = $"{qualitySpecification.Name}: Verify Selection";
-
-			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
-
-			string backendDisplayName = Assert.NotNullOrEmpty(qaEnvironment.BackendDisplayName);
-
-			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               backendDisplayName, actionTitle);
-
-			return true;
+			return VerifyUtils.CreateCommandRunner(SessionContext, WorkListOpener, SaveAction)
+			                  .VerifySelection(GetRelevantSelection);
 		}
 
-		private async Task<ServiceCallStatus> Verify(
-			[NotNull] IList<Row> selection,
-			[NotNull] QualityVerificationProgressTracker progressTracker)
-		{
-			Task<ServiceCallStatus> verificationTask =
-				await BackgroundTask.Run(
-					() =>
-					{
-						IQualityVerificationEnvironment qaEnvironment =
-							SessionContext.VerificationEnvironment;
-
-						Assert.NotNull(qaEnvironment);
-
-						return qaEnvironment.VerifySelection(
-							selection, null, progressTracker);
-					},
-					BackgroundProgressor.None);
-
-			ServiceCallStatus result = await verificationTask;
-
-			return result;
-		}
-
-		private Task<IList<Row>> GetRelevantSelection()
+		private Task<IList<Row>> GetRelevantSelection(MapView mapView)
 		{
 			// Check if the selected feature is part of the project workspace:
 			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
@@ -160,7 +52,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			var result = new List<Row>();
 			bool anySelected = false;
-			foreach (Feature selectedFeature in SelectionUtils.GetSelectedFeatures(MapView.Active))
+			foreach (Feature selectedFeature in SelectionUtils.GetSelectedFeatures(mapView))
 			{
 				anySelected = true;
 				Datastore featureDatastore = selectedFeature.GetTable().GetDatastore();

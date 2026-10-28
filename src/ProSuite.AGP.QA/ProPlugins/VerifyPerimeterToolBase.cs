@@ -1,30 +1,18 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.OneClick;
-using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.AGP.WorkList;
-using ProSuite.Commons.AGP.Core.Spatial;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Progress;
-using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
-using ProSuite.UI.Core.QA.VerificationProgress;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	// todo daro: extract common base class for VerifyPerimeterToolBase, VerifySelectionCmdBase, VerifyVisibleExtentCmdBase
 	// TODO: Move OneClickToolBase to ProSuite.AGP as a shared project instead of using AGP.Editing
 	public abstract class VerifyPerimeterToolBase : OneClickToolBase
 	{
@@ -82,95 +70,12 @@ namespace ProSuite.AGP.QA.ProPlugins
 			return base.OnToolActivatedCore(hasMapViewChanged);
 		}
 
-		protected override async Task<bool> OnSketchCompleteCoreAsync(
+		protected override Task<bool> OnSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			GeometryUtils.Simplify(sketchGeometry);
-
-			if (SessionContext?.VerificationEnvironment == null)
-			{
-				MessageBox.Show("No quality verification environment is configured.",
-				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			MapView mapView = MapView.Active;
-
-			if (mapView == null)
-			{
-				MessageBox.Show("No active map.", "Verify Extent",
-				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			bool isSingleClickSketch = false;
-			await QueuedTask.Run(() =>
-			{
-				isSingleClickSketch =
-					ToolUtils.IsSingleClickSketch(sketchGeometry);
-			});
-
-			if (isSingleClickSketch)
-			{
-				MessageBox.Show(
-					"Invalid perimeter. Please draw a box to define the extent to be verified",
-					"Verify Extent",
-					MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			IQualityVerificationEnvironment qaEnvironment =
-				Assert.NotNull(SessionContext.VerificationEnvironment);
-
-			IQualitySpecificationReference qualitySpecification =
-				qaEnvironment.CurrentQualitySpecificationReference;
-
-			if (qualitySpecification == null)
-			{
-				MessageBox.Show("No Quality Specification is selected", "Verify Perimeter",
-				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return false;
-			}
-
-			Geometry perimeter = GetPerimeterToVerify(sketchGeometry);
-
-			if (perimeter == null)
-			{
-				return false;
-			}
-
-			var progressTracker = new QualityVerificationProgressTracker
-			                      {
-				                      CancellationTokenSource = new CancellationTokenSource()
-			                      };
-
-			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
-			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
-
-			var appController = new AgpBackgroundVerificationController(
-				WorkListOpener, mapView, perimeter, spatialRef,
-				SessionContext.VerificationEnvironment, SaveAction);
-
-			string perimeterName = "Perimeter";
-
-			var qaProgressViewmodel =
-				new VerificationProgressViewModel
-				{
-					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(perimeter, progressTracker),
-					ApplicationController = appController
-				};
-
-			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
-
-			string actionTitle = $"{qualitySpecification.Name}: Verify {perimeterName}";
-
-			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               Assert.NotNull(qaEnvironment.BackendDisplayName),
-			                               actionTitle);
-
-			return true;
+			return VerifyUtils.CreateCommandRunner(SessionContext, WorkListOpener, SaveAction)
+			                  .VerifySketch(sketchGeometry, GetPerimeterToVerify);
 		}
 
 		protected override SketchGeometryType GetSelectionSketchGeometryType()
@@ -191,31 +96,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected override void LogPromptForSelection()
 		{
 			_msg.Info("Draw a box or press P and draw a polygon");
-		}
-
-		private async Task<ServiceCallStatus> Verify(
-			[NotNull] Geometry perimeter,
-			[NotNull] QualityVerificationProgressTracker progressTracker)
-		{
-			// NOTE: If the background task is not Run( async () => ... but only Run(() => ...
-			// The tool's OnSketchCompleteAsync will be called twice! 
-			Task<ServiceCallStatus> verificationTask =
-				await BackgroundTask.Run(
-					async () =>
-					{
-						IQualityVerificationEnvironment qaEnvironment =
-							SessionContext.VerificationEnvironment;
-
-						Assert.NotNull(qaEnvironment);
-
-						return await qaEnvironment.VerifyPerimeter(
-							       perimeter, progressTracker, "perimeter");
-					},
-					BackgroundProgressor.None);
-
-			ServiceCallStatus result = await verificationTask;
-
-			return result;
 		}
 	}
 }
