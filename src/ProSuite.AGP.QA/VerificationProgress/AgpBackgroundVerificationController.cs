@@ -42,6 +42,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 		private bool _issuesSaved;
 
+		private readonly bool _useHTMLReport;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AgpBackgroundVerificationController"/> class.
 		/// </summary>
@@ -51,6 +53,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		/// <param name="verificationSpatialReference"></param>
 		/// <param name="verificationEnvironment"></param>
 		/// <param name="saveAction"></param>
+		/// <param name="useHTMLReport"></param>
 		public AgpBackgroundVerificationController(
 			[NotNull] IWorkListOpener workListOpener,
 			[NotNull] MapView mapView,
@@ -59,7 +62,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			[CanBeNull] IQualityVerificationEnvironment verificationEnvironment = null,
 			[CanBeNull]
 			Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>> saveAction =
-				null)
+				null,
+			bool useHTMLReport = false)
 		{
 			Assert.ArgumentNotNull(workListOpener, nameof(workListOpener));
 			Assert.ArgumentNotNull(mapView, nameof(mapView));
@@ -69,6 +73,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
 			_verificationEnvironment = verificationEnvironment;
+
+			_useHTMLReport = useHTMLReport;
 
 			SaveAction = saveAction;
 		}
@@ -252,7 +258,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		{
 			try
 			{
-				if (_verificationEnvironment == null)
+				if (_verificationEnvironment == null || _useHTMLReport)
 				{
 					// Fallback: open HTML report if environment not available
 					if (verificationResult.HtmlReportPath != null)
@@ -315,6 +321,24 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				reason = "No quality specification is associated with this verification";
 
 				return false;
+			}
+
+			if (_verificationEnvironment == null || _useHTMLReport)
+			{
+				if (string.IsNullOrEmpty(verificationResult.HtmlReportPath))
+				{
+					reason = "No HTML report has been created";
+
+					return false;
+				}
+
+				if (!File.Exists(verificationResult.HtmlReportPath))
+				{
+					reason =
+						$"HTML report at {verificationResult.HtmlReportPath} does not exist or cannot be accessed";
+
+					return false;
+				}
 			}
 
 			reason = "Show quality verification report";
