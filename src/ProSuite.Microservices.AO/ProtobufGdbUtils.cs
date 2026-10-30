@@ -94,7 +94,7 @@ namespace ProSuite.Microservices.AO
 				bool canGetShape =
 					string.IsNullOrEmpty(subFields) || subFields == "*" ||
 					StringUtils.Contains(subFields,
-					                     ((IFeatureClass) feature.FeatureClass).ShapeFieldName,
+					                     feature.FeatureClass.ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
 				if (canGetShape)
