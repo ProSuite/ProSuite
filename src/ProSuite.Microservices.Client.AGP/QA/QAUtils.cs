@@ -213,7 +213,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			{
 				Table table = DatasetUtils.GetDatabaseTable(objToVerify.GetTable());
 
-				if (table.GetDatastore().Handle != projectWorkspace.Datastore.Handle)
+				if (! WorkspaceUtils.IsSameDatastore(table.GetDatastore(),
+				                                     projectWorkspace.Datastore))
 				{
 					_msg.VerboseDebug(() => $"The object {GdbObjectUtils.ToString(objToVerify)} " +
 					                        $"is not part of the project workspace");
