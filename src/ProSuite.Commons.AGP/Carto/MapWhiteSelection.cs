@@ -54,9 +54,18 @@ public interface IMapWhiteSelection
 
 	IWhiteSelection GetLayerSelection(FeatureLayer layer);
 
-	ValueTuple<int, int> RefreshGeometries(); // all in mws; remove from sel where incompatible
+	/// <summary>
+	/// Refresh cached geometries from datastore for all involved features;
+	/// remove from selection where geometry changed in incompatible ways,
+	/// or where the entire feature (OID) vanished.
+	/// </summary>
+	/// <returns>Number of involved features retained/modified/removed.</returns>
+	ValueTuple<int, int, int> Refresh(); // all in mws; remove from sel where incompatible
 
-	ValueTuple<int, int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids);
+	/// <summary>
+	/// Like <see cref="Refresh()"/>, but only for the given oids in the given layer.
+	/// </summary>
+	ValueTuple<int, int, int> Refresh(FeatureLayer layer, IEnumerable<long> oids);
 
 	void ClearGeometryCache();
 
@@ -634,53 +643,46 @@ public class MapWhiteSelection : IMapWhiteSelection
 		return changed;
 	}
 
-	/// <summary>
-	/// Try update all geometries in selection (reload from data store),
-	/// but if part/vertex count don't agree, remove from selection.
-	/// </summary>
-	/// <returns>number of shape selections retained unchanged
-	/// and modified (presently: cleared)</returns>
+	/// <inheritdoc/>
 	/// <remarks>Must call on MCT</remarks>
-	public ValueTuple<int, int> RefreshGeometries()
+	public ValueTuple<int, int, int> Refresh()
 	{
 		ClearPolygonTypeCache();
 
 		int retained = 0;
+		int modified = 0;
 		int removed = 0;
 
 		var all = GetLayerSelections();
 
 		foreach (var ws in all)
 		{
-			var list = ws.RefreshGeometries();
+			var list = ws.Refresh();
 
 			retained += list.Count(r => r.State == IWhiteSelection.RefreshState.SelectionRetained);
-			removed += list.Count(r => r.State == IWhiteSelection.RefreshState.SelectionModified);
+			modified += list.Count(r => r.State == IWhiteSelection.RefreshState.SelectionModified);
+			removed += list.Count(r => r.State == IWhiteSelection.RefreshState.SelectionRemoved);
 		}
 
-		return (retained, removed);
+		return (retained, modified, removed);
 	}
 
-	/// <summary>
-	/// Try update given geometries in selection (reload from data store),
-	/// but if part/vertex count don't agree, remove from selection.
-	/// </summary>
-	/// <returns>number of shape selections retained unchanged
-	/// and modified (presently: cleared)</returns>
+	/// <inheritdoc/>
 	/// <remarks>Must call on MCT</remarks>
-	public ValueTuple<int, int> RefreshGeometries(FeatureLayer layer, IEnumerable<long> oids)
+	public ValueTuple<int, int, int> Refresh(FeatureLayer layer, IEnumerable<long> oids)
 	{
 		if (! _layerSelections.TryGetValue(layer.URI, out var ws))
 		{
-			return (0, 0); // layer has no white selection
+			return (0, 0, 0); // layer has no white selection
 		}
 
-		var result = ws.RefreshGeometries(oids);
+		var result = ws.Refresh(oids);
 
 		int retained = result.Count(r => r.State == IWhiteSelection.RefreshState.SelectionRetained);
 		int modified = result.Count(r => r.State == IWhiteSelection.RefreshState.SelectionModified);
+		int removed = result.Count(r => r.State == IWhiteSelection.RefreshState.SelectionRemoved);
 
-		return (retained, modified);
+		return (retained, modified, removed);
 	}
 
 	public void ClearGeometryCache()
