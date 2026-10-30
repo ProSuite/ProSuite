@@ -10,6 +10,8 @@ public class PartialHoleOptions : PartialOptionsBase
 
 	public OverridableSetting<bool> LimitPreviewToExtent { get; set; }
 
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#endregion
 
 	public override PartialOptionsBase Clone()
@@ -17,7 +19,8 @@ public class PartialHoleOptions : PartialOptionsBase
 		var result = new PartialHoleOptions()
 		             {
 			             ShowPreview = TryClone(ShowPreview),
-			             LimitPreviewToExtent = TryClone(LimitPreviewToExtent)
+			             LimitPreviewToExtent = TryClone(LimitPreviewToExtent),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 
 		return result;

@@ -70,6 +70,12 @@ public abstract class DockPaneViewModelBase : DockPane
 	/// </summary>
 	public override OperationManager OperationManager => MapView.Active?.Map.OperationManager;
 
+	/// <summary>
+	/// Whether a tool options pane shows the "Always show this dialog" option. Hidden by
+	/// default, an add-in that wants the option overrides this in its concrete view model.
+	/// </summary>
+	public virtual bool ShowAlwaysShowOptionsPaneOption => false;
+
 	protected override async void OnShow(bool isVisible)
 	{
 		try

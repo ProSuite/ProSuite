@@ -146,6 +146,11 @@ public abstract class MapToolBase : MapTool
 
 			await OnToolActivateCoreAsync(hasMapViewChanged);
 
+			if (AlwaysShowOptionsPane)
+			{
+				ShowOptionsPane();
+			}
+
 			// TODO: Activated here...
 		}
 		catch (Exception e)
@@ -487,6 +492,12 @@ public abstract class MapToolBase : MapTool
 	}
 
 	protected abstract Task HandleEscapeAsync();
+
+	/// <summary>
+	/// Whether the options pane is shown each time the tool is activated. Evaluated after
+	/// the tool's options have been initialized.
+	/// </summary>
+	protected virtual bool AlwaysShowOptionsPane => false;
 
 	protected virtual void ShowOptionsPane() { }
 

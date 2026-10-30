@@ -38,6 +38,7 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<bool> _respectMinimumSegmentLength;
 	private CentralizableSettingViewModel<double> _minimumSegmentLength;
 	private CentralizableSettingViewModel<bool> _useSourceZs;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
@@ -97,6 +98,12 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 		set => SetProperty(ref _useSourceZs, value);
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
+	}
+
 	public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
 	{
 		get => _targetFeatureSelectionVm;
@@ -142,6 +149,10 @@ public abstract class DockPaneCrackerViewModelBase : DockPaneViewModelBase
 
 			UseSourceZs =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableUseSourceZs);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 
 			TargetFeatureSelectionVM =
 				new TargetFeatureSelectionViewModel(

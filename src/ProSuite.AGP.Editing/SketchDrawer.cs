@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
@@ -20,7 +21,16 @@ public class SketchDrawer
 
 	[NotNull] private readonly List<IDisposable> _overlays = new List<IDisposable>(3);
 
-	private static readonly CIMRGBColor _sketchGreen = ColorUtils.CreateRGB(0, 125, 0);
+	// The line width, in points
+	private const double _lineWidth = 0.5;
+	private const double _stereoLineWidth = 1;
+
+	// The vertex squares are drawn as outlines, while ArcGIS Pro fills its sketch vertices,
+	// so the drawn sketch can be told apart from the sketch that is being edited.
+	private const double _vertexSize = 5;
+
+	// The map kind and the colors the symbols were created for
+	[CanBeNull] private string _symbolsKey;
 
 	private CIMSymbolReference _lineSymbolRef;
 	private CIMSymbolReference _polygonSymbolRef;
@@ -88,10 +98,13 @@ public class SketchDrawer
 
 		bool isStereo = MapUtils.IsStereoMapView(inMapView);
 
-		if (! SymbolReferencesInitialized())
+		// Typically this is called from SketchModified, which runs on the CIM thread
+		if (QueuedTask.OnWorker)
 		{
-			// Typically this is called from SketchModified (which is called from a CIM thread anyway)
-			// But just to be sure, use QueuedTask:
+			EnsureSymbolReferences(isStereo);
+		}
+		else
+		{
 			await QueuedTask.Run(() => EnsureSymbolReferences(isStereo));
 		}
 
@@ -165,104 +178,101 @@ public class SketchDrawer
 		_overlays.Clear();
 	}
 
-	private bool SymbolReferencesInitialized()
-	{
-		return _lineSymbolRef != null &&
-		       _polygonSymbolRef != null &&
-		       _regularUnselectedSymbolRef != null &&
-		       _currentUnselectedSymbolRef != null;
-	}
-
+	/// <summary>
+	/// Creates the symbols in the colors of the edit sketch that are set in the editing
+	/// options of ArcGIS Pro, unless the symbols were created for the same colors and the
+	/// same kind of map. The vertices are drawn as outlines. In stereo maps the line is
+	/// drawn in the primary color only.
+	/// </summary>
 	private void EnsureSymbolReferences(bool isStereo)
 	{
-		_lineSymbolRef ??= isStereo
-			                   ? CreateStereoLineSymbol().MakeSymbolReference()
-			                   : CreateLineSymbol().MakeSymbolReference();
+		EditingOptions options = ApplicationOptions.EditingOptions;
 
-		_polygonSymbolRef ??= isStereo
-			                      ? CreateStereoPolygonSymbol().MakeSymbolReference()
-			                      : CreatePolygonSymbol().MakeSymbolReference();
+		SegmentSymbolOptions segmentOptions = options?.GetSegmentSymbolOptions();
 
-		_regularUnselectedSymbolRef ??= isStereo
-			                                ? CreateStereoRegularUnselectedSymbol()
-				                                .MakeSymbolReference()
-			                                : CreateRegularUnselectedSymbol().MakeSymbolReference();
+		CIMColor primaryColor = segmentOptions?.PrimaryColor ?? ColorUtils.BlackRGB;
+		CIMColor secondaryColor = segmentOptions is { HasSecondaryColor: true }
+			                          ? segmentOptions.SecondaryColor
+			                          : null;
 
-		_currentUnselectedSymbolRef ??= isStereo
-			                                ? CreateStereoCurrentUnselectedSymbol()
-				                                .MakeSymbolReference()
-			                                : CreateCurrentUnselectedSymbol().MakeSymbolReference();
+		CIMColor regularVertexColor =
+			GetVertexColor(options, VertexSymbolType.RegularUnselected,
+			               ColorUtils.CreateRGB(0, 128, 0));
+		CIMColor currentVertexColor =
+			GetVertexColor(options, VertexSymbolType.CurrentUnselected,
+			               ColorUtils.CreateRGB(255, 0, 0));
+
+		string symbolsKey = string.Join(
+			"|", isStereo, ColorUtils.FormatColor(primaryColor),
+			ColorUtils.FormatColor(secondaryColor), ColorUtils.FormatColor(regularVertexColor),
+			ColorUtils.FormatColor(currentVertexColor));
+
+		if (symbolsKey == _symbolsKey)
+		{
+			return;
+		}
+
+		CIMSymbolLayer[] strokes = isStereo
+			                           ? CreateStereoSketchStrokes(primaryColor)
+			                           : CreateSketchStrokes(primaryColor, secondaryColor);
+
+		_lineSymbolRef = SymbolUtils.CreateLineSymbol(strokes).MakeSymbolReference();
+		_polygonSymbolRef = SymbolUtils.CreatePolygonSymbol(strokes).MakeSymbolReference();
+		_regularUnselectedSymbolRef =
+			CreateSketchVertexSymbol(regularVertexColor).MakeSymbolReference();
+		_currentUnselectedSymbolRef =
+			CreateSketchVertexSymbol(currentVertexColor).MakeSymbolReference();
+
+		_symbolsKey = symbolsKey;
 	}
 
-	private static CIMLineSymbol CreateLineSymbol()
+	[NotNull]
+	private static CIMColor GetVertexColor([CanBeNull] EditingOptions options,
+	                                       VertexSymbolType vertexSymbolType,
+	                                       [NotNull] CIMColor defaultColor)
 	{
-		return SymbolUtils.CreateLineSymbol(CreateSketchStrokes());
+		return options?.GetVertexSymbolOptions(vertexSymbolType)?.Color ?? defaultColor;
 	}
 
-	private static CIMLineSymbol CreateStereoLineSymbol()
+	/// <summary>
+	/// A solid line in the primary color. A dashed line uses so much memory in stereo maps
+	/// that ArcGIS Pro stops.
+	/// </summary>
+	private static CIMSymbolLayer[] CreateStereoSketchStrokes([NotNull] CIMColor primaryColor)
 	{
-		return SymbolFactory.Instance.ConstructLineSymbol(_sketchGreen, 1.6);
+		return new CIMSymbolLayer[]
+		       {
+			       SymbolUtils.CreateSolidStroke(primaryColor, _stereoLineWidth)
+		       };
 	}
 
-	private static CIMPolygonSymbol CreatePolygonSymbol()
+	/// <summary>
+	/// A line of primary colored dashes over a solid line in the secondary color, if the
+	/// secondary color is used, else only the dashes.
+	/// </summary>
+	private static CIMSymbolLayer[] CreateSketchStrokes([NotNull] CIMColor primaryColor,
+	                                                    [CanBeNull] CIMColor secondaryColor)
 	{
-		return SymbolUtils.CreatePolygonSymbol(CreateSketchStrokes());
-	}
-
-	private static CIMPolygonSymbol CreateStereoPolygonSymbol()
-	{
-		var solidStroke = new CIMSolidStroke
-		                  {
-			                  Color = _sketchGreen,
-			                  Width = 1.6
-		                  };
-
-		return SymbolFactory.Instance.ConstructPolygonSymbol(
-			_sketchGreen, SimpleFillStyle.Null, solidStroke);
-	}
-
-	private static CIMPointSymbol CreateCurrentUnselectedSymbol()
-	{
-		return CreateSketchVertexSymbol(ColorUtils.CreateRGB(255, 0, 0));
-	}
-
-	private static CIMPointSymbol CreateStereoCurrentUnselectedSymbol()
-	{
-		return SymbolFactory.Instance.ConstructPointSymbol(
-			ColorUtils.RedRGB, 4, SimpleMarkerStyle.Square);
-	}
-
-	private static CIMPointSymbol CreateRegularUnselectedSymbol()
-	{
-		return CreateSketchVertexSymbol(ColorUtils.CreateRGB(0, 128, 0));
-	}
-
-	private static CIMPointSymbol CreateStereoRegularUnselectedSymbol()
-	{
-		var result = SymbolFactory.Instance.ConstructPointSymbol(
-			ColorUtils.GreenRGB, 4, SimpleMarkerStyle.Square);
-
-		//result.HaloSize = 1;
-
-		return result;
-	}
-
-	private static CIMSymbolLayer[] CreateSketchStrokes()
-	{
-		double width = 0.5;
 		var dashPattern = SymbolUtils.CreateDashPattern(3, 3, 3, 3);
-		var whiteStroke = SymbolUtils.CreateSolidStroke(ColorUtils.WhiteRGB, width);
-		var blackStroke = SymbolUtils.CreateSolidStroke(ColorUtils.BlackRGB, width)
-		                             .AddDashes(dashPattern, LineDashEnding.HalfPattern);
-		return new[] { blackStroke, whiteStroke };
+		var primaryStroke = SymbolUtils.CreateSolidStroke(primaryColor, _lineWidth)
+		                               .AddDashes(dashPattern, LineDashEnding.HalfPattern);
+
+		if (secondaryColor == null)
+		{
+			return new CIMSymbolLayer[] { primaryStroke };
+		}
+
+		var secondaryStroke = SymbolUtils.CreateSolidStroke(secondaryColor, _lineWidth);
+
+		return new CIMSymbolLayer[] { primaryStroke, secondaryStroke };
 	}
 
-	private static CIMPointSymbol CreateSketchVertexSymbol(CIMRGBColor color)
+	private static CIMPointSymbol CreateSketchVertexSymbol(CIMColor color)
 	{
 		var outline = SymbolUtils.CreateSolidStroke(color, 1.5);
 		CIMPolygonSymbol polygonSymbol = SymbolUtils.CreatePolygonSymbol(outline);
 		Geometry geometry = SymbolUtils.CreateMarkerGeometry(SymbolUtils.MarkerStyle.Square);
-		CIMVectorMarker marker = SymbolUtils.CreateMarker(geometry, polygonSymbol, 5);
+		CIMVectorMarker marker = SymbolUtils.CreateMarker(geometry, polygonSymbol, _vertexSize);
 		return SymbolUtils.CreatePointSymbol(marker);
 	}
 }

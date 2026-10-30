@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
 
@@ -18,12 +19,21 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 		public ISupportedInstanceDescriptors KnownInstanceDescriptors { get; set; }
 
+		/// <summary>
+		/// The name of the DDX environment (for multi-DDX setups). A server that serves
+		/// several environments rejects requests without environment name.
+		/// </summary>
+		[CanBeNull]
+		public string DdxEnvironmentName { get; set; }
+
 		public QualityCondition GetCondition(string qualityConditionName)
 		{
 			Assert.ArgumentNotNullOrEmpty(qualityConditionName, nameof(qualityConditionName));
 
 			GetConditionRequest request = new GetConditionRequest()
 			                              {
+				                              Environment =
+					                              ProtobufGeomUtils.NullToEmpty(DdxEnvironmentName),
 				                              ConditionName = qualityConditionName
 			                              };
 
@@ -41,7 +51,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			IList<QualityCondition> conditions =
 				await DdxUtils.LoadQualityConditions(conditionIds, KnownInstanceDescriptors,
-				                                     _client);
+				                                     _client, DdxEnvironmentName);
 
 			return conditions ?? new List<QualityCondition>(0);
 		}

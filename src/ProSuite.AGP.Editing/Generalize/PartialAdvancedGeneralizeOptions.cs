@@ -40,6 +40,9 @@ public class PartialAdvancedGeneralizeOptions : PartialOptionsBase
 	[CanBeNull]
 	public OverridableSetting<bool> Only2D { get; set; }
 
+	[CanBeNull]
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#region Overrides of PartialOptionsBase
 
 	public override PartialOptionsBase Clone()
@@ -59,6 +62,7 @@ public class PartialAdvancedGeneralizeOptions : PartialOptionsBase
 		result.VertexProtectingFeatureSelection = VertexProtectingFeatureSelection;
 
 		result.Only2D = TryClone(Only2D);
+		result.AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane);
 
 		return result;
 	}

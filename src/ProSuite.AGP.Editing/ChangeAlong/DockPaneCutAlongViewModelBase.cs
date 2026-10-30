@@ -41,6 +41,7 @@ public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<bool> _enforceMinimumBufferSegmentLength;
 	private CentralizableSettingViewModel<double> _minBufferSegmentLength;
 	private CentralizableSettingViewModel<bool> _insertVertices;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 	private ZValueSourceSelectionViewModel _zValueSourceSelectionVm;
@@ -103,6 +104,12 @@ public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase
 	{
 		get => _insertVertices;
 		set => SetProperty(ref _insertVertices, value);
+	}
+
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
 	}
 
 	public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
@@ -175,6 +182,10 @@ public class DockPaneCutAlongViewModelBase : DockPaneViewModelBase
 
 			InsertVertices =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableInsertVertices);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 
 			TargetFeatureSelectionVM =
 				new TargetFeatureSelectionViewModel(

@@ -30,7 +30,9 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 	private ReshapeToolOptions _options;
 	private CentralizableSettingViewModel<bool> _remainInSketchMode;
 	private CentralizableSettingViewModel<bool> _showPreview;
+	private CentralizableSettingViewModel<bool> _hideEditedFeatures;
 	private CentralizableSettingViewModel<bool> _moveOpenJawEndJunction;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	public string Heading
 	{
@@ -50,10 +52,22 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 		set => SetProperty(ref _showPreview, value);
 	}
 
+	public CentralizableSettingViewModel<bool> HideEditedFeatures
+	{
+		get => _hideEditedFeatures;
+		set => SetProperty(ref _hideEditedFeatures, value);
+	}
+
 	public CentralizableSettingViewModel<bool> MoveOpenJawEndJunction
 	{
 		get => _moveOpenJawEndJunction;
 		set => SetProperty(ref _moveOpenJawEndJunction, value);
+	}
+
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
 	}
 
 	public ReshapeToolOptions Options
@@ -69,9 +83,16 @@ public abstract class DockPaneAdvancedReshapeViewModelBase : DockPaneViewModelBa
 			ShowPreview =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableShowPreview);
+			HideEditedFeatures =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableHideEditedFeatures);
 			MoveOpenJawEndJunction =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableMoveOpenJawEndJunction);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 		}
 	}
 

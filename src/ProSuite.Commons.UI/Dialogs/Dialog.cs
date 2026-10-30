@@ -190,10 +190,11 @@ namespace ProSuite.Commons.UI.Dialogs
 		                                [NotNull] string title,
 		                                [NotNull] string headerMessage,
 		                                [NotNull] IList<string> listLines,
-		                                [CanBeNull] string footerMessage)
+		                                [CanBeNull] string footerMessage,
+		                                bool defaultIsCancel = true)
 		{
 			return Service.ShowOkCancelList(owner, title, headerMessage, listLines,
-			                                footerMessage);
+			                                footerMessage, defaultIsCancel);
 		}
 
 		#endregion

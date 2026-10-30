@@ -395,6 +395,9 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 		                      OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_crackerToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 
 	{

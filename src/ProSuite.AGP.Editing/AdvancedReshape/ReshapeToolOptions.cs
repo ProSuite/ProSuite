@@ -15,6 +15,9 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 		CentralizableShowPreview =
 			InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.ShowPreview), true);
+		CentralizableHideEditedFeatures =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.HideEditedFeatures), false);
 		CentralizableRemainInSketchMode =
 			InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.RemainInSketchMode), false);
@@ -28,11 +31,18 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 			InitializeSetting<bool>(
 				ReflectionUtils.GetProperty(() => LocalOptions.UseTopologyTypeSelection),
 				false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	#region Centralizable Properties
 
 	public CentralizableSetting<bool> CentralizableShowPreview { get; private set; }
+
+	public CentralizableSetting<bool> CentralizableHideEditedFeatures { get; private set; }
 
 	public CentralizableSetting<bool> CentralizableRemainInSketchMode { get; private set; }
 
@@ -46,11 +56,15 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 		private set;
 	}
 
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
+
 	#endregion
 
 	#region Current Values
 
 	public bool ShowPreview => CentralizableShowPreview.CurrentValue;
+
+	public bool HideEditedFeatures => CentralizableHideEditedFeatures.CurrentValue;
 
 	public bool RemainInSketchMode => CentralizableRemainInSketchMode.CurrentValue;
 
@@ -64,15 +78,19 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 
 	public bool UseTopologyTypeSelection => CentralizableUseTopologyTypeSelection.CurrentValue;
 
+	public bool AlwaysShowOptionsPane => CentralizableAlwaysShowOptionsPane.CurrentValue;
+
 	#endregion
 
 	public override void RevertToDefaults()
 	{
 		CentralizableShowPreview.RevertToDefault();
+		CentralizableHideEditedFeatures.RevertToDefault();
 		CentralizableRemainInSketchMode.RevertToDefault();
 		CentralizableAllowOpenJawReshape.RevertToDefault();
 		CentralizableMoveOpenJawEndJunction.RevertToDefault();
 		CentralizableUseTopologyTypeSelection.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -80,6 +98,12 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 		bool result = false;
 
 		if (HasLocalOverride(CentralizableShowPreview, "Show the reshape preview",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableHideEditedFeatures, "Hide the edited features",
 		                     notifications))
 		{
 			result = true;
@@ -106,6 +130,12 @@ public class ReshapeToolOptions : OptionsBase<PartialAdvancedReshapeOptions>
 
 		if (HasLocalOverride(CentralizableUseTopologyTypeSelection,
 		                     "Enable topology type selection", notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
+		                     notifications))
 		{
 			result = true;
 		}

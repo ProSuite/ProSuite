@@ -1239,94 +1239,56 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
-			// safe defaults:
-			maximumWhereClauseLength = 2000;
-			maximumInValueCount = 1000;
+			if (workspace.Type == esriWorkspaceType.esriRemoteDatabaseWorkspace &&
+			    ! (workspace is IDatabaseConnectionInfo2))
+			{
+				// Use somewhat safe defaults
+				maximumWhereClauseLength = 60000; // actual limit is higher
+				maximumInValueCount = 1000; // limit may be higher
+				return;
+			}
 
+			WhereClauseLimits.Get(GetDbTypeForLimits(workspace),
+			                      out maximumWhereClauseLength, out maximumInValueCount);
+		}
+
+		// Unlike WorkspaceUtils.GetWorkspaceDbType, never throws: an unexpected workspace gets the
+		// safe limits.
+		private static WorkspaceDbType GetDbTypeForLimits([NotNull] IWorkspace workspace)
+		{
 			switch (workspace.Type)
 			{
 				case esriWorkspaceType.esriLocalDatabaseWorkspace:
 					if (WorkspaceUtils.IsFileGeodatabase(workspace))
 					{
-						if (RuntimeUtils.Is10_0)
-						{
-							// sql behavior is different, not yet verified 
-							// -> use safe defaults
-							return;
-						}
-
-						// these values have been found to work
-						maximumWhereClauseLength = 200000;
-						maximumInValueCount = 10000;
-						return;
+						// sql behavior of 10.0 is different, not yet verified -> safe defaults
+						return RuntimeUtils.Is10_0
+							       ? WorkspaceDbType.Unknown
+							       : WorkspaceDbType.FileGeodatabase;
 					}
 
-					if (WorkspaceUtils.IsPersonalGeodatabase(workspace))
-					{
-						maximumWhereClauseLength = 60000; // limit is approximately 64000 
-						maximumInValueCount = 1000; // not sure
-						return;
-					}
-
-					// Unknown; use safe defaults
-					return;
+					return WorkspaceUtils.IsPersonalGeodatabase(workspace)
+						       ? WorkspaceDbType.PersonalGeodatabase
+						       : WorkspaceDbType.Unknown;
 
 				case esriWorkspaceType.esriRemoteDatabaseWorkspace:
-					var connectionInfo = workspace as IDatabaseConnectionInfo2;
-
-					if (connectionInfo == null)
-					{
-						// Use somewhat safe defaults
-						maximumWhereClauseLength = 60000; // actual limit is higher
-						maximumInValueCount = 1000; // limit may be higher
-						return;
-					}
-
-					switch (connectionInfo.ConnectionDBMS)
+					switch (((IDatabaseConnectionInfo2) workspace).ConnectionDBMS)
 					{
 						case esriConnectionDBMS.esriDBMS_Oracle:
-							maximumWhereClauseLength = 60000; // not sure where the limit is
-							maximumInValueCount = 1000; // this limit is documented
-							return;
-
+							return WorkspaceDbType.ArcSDEOracle;
 						case esriConnectionDBMS.esriDBMS_SQLServer:
-							maximumWhereClauseLength = 60000; // actual limit is higher
-							maximumInValueCount = 1000; // limit may be higher
-							return;
-
+							return WorkspaceDbType.ArcSDESqlServer;
 						case esriConnectionDBMS.esriDBMS_PostgreSQL:
-							// apparently unlimited
-							maximumWhereClauseLength = 200000;
-							maximumInValueCount = 10000;
-							return;
+							return WorkspaceDbType.ArcSDEPostgreSQL;
 						case esriConnectionDBMS.esriDBMS_SQLite:
-							maximumWhereClauseLength = 100000000; // one billion bytes
-							maximumInValueCount = 10000; // no explicit limit
-							return;
-
-						case esriConnectionDBMS.esriDBMS_Unknown:
-						case esriConnectionDBMS.esriDBMS_Informix:
-						case esriConnectionDBMS.esriDBMS_DB2:
-							// Unknown; use safe defaults
-							return;
-
+							return WorkspaceDbType.MobileGeodatabase;
 						default:
-							// this includes values added after 10.0:
-							// esriConnectionDBMS.esriDBMS_Netezza
-							// esriConnectionDBMS.esriDBMS_Teradata
-							// esriConnectionDBMS.esriDBMS_SQLite
-
-							// Unknown; use safe defaults
-							return;
+							// Unknown, Informix, DB2, Netezza, Teradata
+							return WorkspaceDbType.Unknown;
 					}
 
-				case esriWorkspaceType.esriFileSystemWorkspace:
-					// Unknown; use safe defaults
-					return;
-
 				default:
-					// Unknown; use safe defaults
-					return;
+					return WorkspaceDbType.Unknown;
 			}
 		}
 

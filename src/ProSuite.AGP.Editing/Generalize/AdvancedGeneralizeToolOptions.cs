@@ -45,6 +45,8 @@ public class AdvancedGeneralizeToolOptions :
 
 	public CentralizableSetting<bool> CentralizableShowDialog { get; private set; }
 
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
+
 	public AdvancedGeneralizeToolOptions(
 		[CanBeNull] PartialAdvancedGeneralizeOptions centralOptions,
 		[CanBeNull] PartialAdvancedGeneralizeOptions localOptions)
@@ -94,6 +96,11 @@ public class AdvancedGeneralizeToolOptions :
 		CentralizableOnly2D = InitializeSetting<bool>(
 			ReflectionUtils.GetProperty(() => LocalOptions.Only2D),
 			false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	public bool LimitToVisibleExtent
@@ -156,6 +163,12 @@ public class AdvancedGeneralizeToolOptions :
 		set { CentralizableOnly2D.CurrentValue = value; }
 	}
 
+	public bool AlwaysShowOptionsPane
+	{
+		get { return CentralizableAlwaysShowOptionsPane.CurrentValue; }
+		set { CentralizableAlwaysShowOptionsPane.CurrentValue = value; }
+	}
+
 	#region Overrides of OptionsBase<PartialAdvancedGeneralizeOptions>
 
 	public override void RevertToDefaults()
@@ -179,6 +192,7 @@ public class AdvancedGeneralizeToolOptions :
 		CentralizableVertexProtectingFeatureSelection.RevertToDefault();
 
 		CentralizableOnly2D.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -242,6 +256,12 @@ public class AdvancedGeneralizeToolOptions :
 
 		if (HasLocalOverride(CentralizableOnly2D,
 		                     "Measure segment length in 2D only",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
 		                     notifications))
 		{
 			result = true;

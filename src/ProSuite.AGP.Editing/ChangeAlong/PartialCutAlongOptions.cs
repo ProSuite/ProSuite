@@ -37,6 +37,8 @@ public class PartialCutAlongOptions : PartialOptionsBase
 	// Z Value settings
 	public OverridableSetting<ChangeAlongZSource> ZValueSource { get; set; }
 
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	[CanBeNull]
 	public List<DatasetSpecificValue<ChangeAlongZSource>> DatasetSpecificZSource { get; set; }
 
@@ -68,7 +70,8 @@ public class PartialCutAlongOptions : PartialOptionsBase
 			             MinBufferSegmentLength = TryClone(MinBufferSegmentLength),
 
 			             // Z Value settings
-			             ZValueSource = TryClone(ZValueSource)
+			             ZValueSource = TryClone(ZValueSource),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 
 		if (DatasetSpecificZSource != null)

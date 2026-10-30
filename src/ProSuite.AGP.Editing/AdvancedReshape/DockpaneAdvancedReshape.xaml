@@ -21,26 +21,44 @@
 
 			</ResourceDictionary.MergedDictionaries>
 
+			<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
 		</ResourceDictionary>
 	</UserControl.Resources>
 
-	<StackPanel
-		HorizontalAlignment="Left"
-		VerticalAlignment="Top" Width="Auto">
+	<ScrollViewer VerticalScrollBarVisibility="Auto"
+				  HorizontalScrollBarVisibility="Disabled"
+				  Padding="0,0,5,0">
+		<StackPanel
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top" Width="Auto">
 
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Remain in sketch mode after finishing a reshape"
-		          DataContext="{Binding Path=RemainInSketchMode}" />
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Show preview for polygon reshapes"
-		          DataContext="{Binding Path=ShowPreview}" />
-		<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
-		          Content="Move end junction in linear networks (toggle with M key)"
-		          DataContext="{Binding Path=MoveOpenJawEndJunction}" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Remain in sketch mode after finishing a reshape"
+			          DataContext="{Binding Path=RemainInSketchMode}" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Show preview for polygon reshapes"
+			          DataContext="{Binding Path=ShowPreview}" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Hide the edited features while sketching"
+			          DataContext="{Binding Path=HideEditedFeatures}" />
+			<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+			          Content="Move end junction in linear networks (toggle with M key)"
+			          DataContext="{Binding Path=MoveOpenJawEndJunction}" />
 
-		<!-- Restore Defaults -->
-		<Button Template="{StaticResource RestoreDefaultsButton}" />
+			<!-- Always show this dialog -->
+			<StackPanel
+				Visibility="{Binding ShowAlwaysShowOptionsPaneOption, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Label FontWeight="Medium" Content="Workflow" Margin="0,15,0,0" />
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Always show this dialog"
+				          DataContext="{Binding AlwaysShowOptionsPane}" />
+			</StackPanel>
 
-	</StackPanel>
+			<!-- Restore Defaults -->
+			<Button Template="{StaticResource RestoreDefaultsButton}" />
+
+		</StackPanel>
+	</ScrollViewer>
 
 </UserControl>

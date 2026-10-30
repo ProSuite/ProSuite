@@ -476,6 +476,9 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 		                      "Options DockPane with ID '{0}' not found", OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_repairGeometryToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		DockPaneRepairGeometryViewModelBase viewModel = GetOptionsViewModel();

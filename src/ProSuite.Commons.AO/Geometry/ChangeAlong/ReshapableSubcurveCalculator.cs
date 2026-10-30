@@ -154,12 +154,20 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IGeometryCollection differences;
 			intersectionPoints = null;
 
+			// The AO operations (e.g. Simplify of the difference) cannot use a tolerance smaller
+			// than the minimum tolerance of the spatial reference.
+			double? reducedAoTolerance = UseMinimumTolerance
+				                             ? 0
+				                             : CustomTolerance < originalToleranceSource
+					                             ? CustomTolerance
+					                             : null;
+
 			try
 			{
-				if (UseMinimumTolerance)
+				if (reducedAoTolerance != null)
 				{
-					GeometryUtils.SetMinimumXyTolerance(preprocessedSourcePolyline);
-					GeometryUtils.SetMinimumXyTolerance(targetPolyline);
+					ReduceXyTolerance(preprocessedSourcePolyline, reducedAoTolerance.Value);
+					ReduceXyTolerance(targetPolyline, reducedAoTolerance.Value);
 				}
 
 				differences =
@@ -180,15 +188,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				// TODO: Consider using intersection point calculator from cracker in minimum-tolerance mode and / or
 				//       use the target segments (GetTargetSegmentsAlong) also in non-minimum tolerance mode.
 				//       This could possibly improve the situation from unit test CanReshapeAlongWithSmallIntersectionAngle
-				const bool assumeIntersecting = true;
 				intersectionPoints =
-					(IPointCollection) IntersectionUtils.GetIntersectionPoints(
-						(IPolyline) differences, preprocessedSourcePolyline,
-						assumeIntersecting);
+					GetIntersectionPoints((IPolyline) differences, preprocessedSourcePolyline);
 			}
 			finally
 			{
-				if (UseMinimumTolerance)
+				if (reducedAoTolerance != null)
 				{
 					// The Reshape Curves are sometimes not correct if not using the normal tolerance when splitting
 					// (see unit test CanReshapeAlongEnsureCorrectTargetVerticesLocationWithMinimalTolerance)
@@ -209,6 +214,40 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 
 			return differences;
+		}
+
+		private static void ReduceXyTolerance([NotNull] IGeometry geometry, double tolerance)
+		{
+			GeometryUtils.SetMinimumXyTolerance(geometry);
+
+			if (tolerance > GeometryUtils.GetXyTolerance(geometry))
+			{
+				GeometryUtils.SetXyTolerance(geometry, tolerance);
+			}
+		}
+
+		[NotNull]
+		private IPointCollection GetIntersectionPoints([NotNull] IPolyline differences,
+		                                               [NotNull] IPolyline sourcePolyline)
+		{
+			// The custom tolerance must also be used for the intersection points. Otherwise, the
+			// difference (calculated with the custom tolerance) is split at intersection points
+			// snapped to target vertices within the (larger) data tolerance.
+			if (CustomTolerance != null &&
+			    IntersectionUtils.UseCustomIntersect &&
+			    ! GeometryUtils.HasNonLinearSegments(differences) &&
+			    ! GeometryUtils.HasNonLinearSegments(sourcePolyline) &&
+			    ! GeometryUtils.IsMAware(differences))
+			{
+				bool planar = ! GeometryUtils.IsZAware(differences);
+
+				return (IPointCollection) IntersectionUtils.GetIntersectionPointsXY(
+					differences, sourcePolyline, CustomTolerance.Value, planar);
+			}
+
+			const bool assumeIntersecting = true;
+			return (IPointCollection) IntersectionUtils.GetIntersectionPoints(
+				differences, sourcePolyline, assumeIntersecting);
 		}
 
 		private bool CalculateReshapeSubcurves(

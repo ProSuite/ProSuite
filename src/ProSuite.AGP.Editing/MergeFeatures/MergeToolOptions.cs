@@ -28,6 +28,8 @@ public class MergeToolOptions : OptionsBase<PartialMergeOptions>
 
 	public CentralizableSetting<bool> CentralizablePreventLineFlip { get; }
 
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; }
+
 	public MergeToolOptions(
 		[CanBeNull] PartialMergeOptions centralOptions,
 		[CanBeNull] PartialMergeOptions localOptions)
@@ -76,6 +78,11 @@ public class MergeToolOptions : OptionsBase<PartialMergeOptions>
 		CentralizablePreventLineFlip = InitializeSetting<bool>(
 			ReflectionUtils.GetProperty(() => LocalOptions.PreventLineFlip),
 			false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	public bool UseMergeResultForNextMerge
@@ -138,6 +145,12 @@ public class MergeToolOptions : OptionsBase<PartialMergeOptions>
 		set { CentralizablePreventLineFlip.CurrentValue = value; }
 	}
 
+	public bool AlwaysShowOptionsPane
+	{
+		get { return CentralizableAlwaysShowOptionsPane.CurrentValue; }
+		set { CentralizableAlwaysShowOptionsPane.CurrentValue = value; }
+	}
+
 	#region Overrides of OptionsBase<PartialMergeOptions>
 
 	public override void RevertToDefaults()
@@ -161,6 +174,7 @@ public class MergeToolOptions : OptionsBase<PartialMergeOptions>
 		CentralizablePreventLoops.RevertToDefault();
 
 		CentralizablePreventLineFlip.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -232,6 +246,12 @@ public class MergeToolOptions : OptionsBase<PartialMergeOptions>
 
 		if (HasLocalOverride(CentralizablePreventLineFlip,
 		                     "Lines must have the same direction",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
 		                     notifications))
 		{
 			result = true;

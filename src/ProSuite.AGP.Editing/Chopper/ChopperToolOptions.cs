@@ -55,6 +55,10 @@ public class ChopperToolOptions : OptionsBase<PartialChopperOptions>, ICrackerTo
 				ReflectionUtils.GetProperty(
 					() => LocalOptions.ExcludeInteriorInteriorIntersections),
 				false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane), false);
 	}
 
 	#region Centralizable Properties
@@ -81,6 +85,8 @@ public class ChopperToolOptions : OptionsBase<PartialChopperOptions>, ICrackerTo
 	}
 
 	public CentralizableSetting<bool> CentralizableUseSourceZs { get; private set; }
+
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
 
 	#endregion
 
@@ -121,6 +127,11 @@ public class ChopperToolOptions : OptionsBase<PartialChopperOptions>, ICrackerTo
 		get { return CentralizableExcludeInteriorInteriorIntersections.CurrentValue; }
 	}
 
+	public bool AlwaysShowOptionsPane
+	{
+		get { return CentralizableAlwaysShowOptionsPane.CurrentValue; }
+	}
+
 	#endregion
 
 	public override void RevertToDefaults()
@@ -136,6 +147,8 @@ public class ChopperToolOptions : OptionsBase<PartialChopperOptions>, ICrackerTo
 		CentralizableExcludeInteriorInteriorIntersections.RevertToDefault();
 
 		CentralizableUseSourceZs.RevertToDefault();
+
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -179,6 +192,12 @@ public class ChopperToolOptions : OptionsBase<PartialChopperOptions>, ICrackerTo
 
 		if (HasLocalOverride(CentralizableExcludeInteriorInteriorIntersections,
 		                     "Only chop at endpoints intersecting selected line's interior (T shapes)",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
 		                     notifications))
 		{
 			result = true;

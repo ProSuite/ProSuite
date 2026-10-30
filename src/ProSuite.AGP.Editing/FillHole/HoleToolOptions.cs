@@ -20,6 +20,11 @@ public class HoleToolOptions : OptionsBase<PartialHoleOptions>
 		CentralizableLimitPreviewToExtent = InitializeSetting<bool>(
 			ReflectionUtils.GetProperty(() => LocalOptions.LimitPreviewToExtent),
 			false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	#region Centralizable Properties
@@ -27,6 +32,8 @@ public class HoleToolOptions : OptionsBase<PartialHoleOptions>
 	public CentralizableSetting<bool> CentralizableShowPreview { get; private set; }
 
 	public CentralizableSetting<bool> CentralizableLimitPreviewToExtent { get; private set; }
+
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
 
 	#endregion
 
@@ -36,6 +43,8 @@ public class HoleToolOptions : OptionsBase<PartialHoleOptions>
 
 	public bool LimitPreviewToExtent => CentralizableLimitPreviewToExtent.CurrentValue;
 
+	public bool AlwaysShowOptionsPane => CentralizableAlwaysShowOptionsPane.CurrentValue;
+
 	#endregion
 
 	public override void RevertToDefaults()
@@ -43,6 +52,7 @@ public class HoleToolOptions : OptionsBase<PartialHoleOptions>
 		CentralizableShowPreview.RevertToDefault();
 
 		CentralizableLimitPreviewToExtent.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -58,6 +68,12 @@ public class HoleToolOptions : OptionsBase<PartialHoleOptions>
 
 		if (HasLocalOverride(CentralizableLimitPreviewToExtent,
 		                     "Calculate preview only in visible extent for better performance",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
 		                     notifications))
 		{
 			result = true;

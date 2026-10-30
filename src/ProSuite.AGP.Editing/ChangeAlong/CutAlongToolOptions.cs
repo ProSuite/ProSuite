@@ -73,6 +73,11 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 			InitializeSetting<TargetFeatureSelection>(
 				ReflectionUtils.GetProperty(() => LocalOptions.TargetFeatureSelection),
 				TargetFeatureSelection.VisibleSelectableFeatures);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	#region Centralizable Properties
@@ -114,6 +119,8 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 		private set;
 	}
 
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
+
 	#endregion
 
 	#region Current Values
@@ -150,6 +157,8 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 	// Target Selection
 	public TargetFeatureSelection TargetFeatureSelection =>
 		CentralizableTargetFeatureSelection.CurrentValue;
+
+	public bool AlwaysShowOptionsPane => CentralizableAlwaysShowOptionsPane.CurrentValue;
 
 	#endregion
 
@@ -204,6 +213,7 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 
 		// Target Selection
 		CentralizableTargetFeatureSelection.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -290,6 +300,12 @@ public class CutAlongToolOptions : OptionsBase<PartialCutAlongOptions>
 
 		// Target Selection
 		if (HasLocalOverride(CentralizableTargetFeatureSelection, "Target Feature Selection",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
 		                     notifications))
 		{
 			result = true;

@@ -46,6 +46,7 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<bool> _insertVertices;
 	private CentralizableSettingViewModel<bool> _minimalToleranceApply;
 	private CentralizableSettingViewModel<double> _minimalTolerance;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
@@ -139,6 +140,12 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 		set => SetProperty(ref _minimalTolerance, value);
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
+	}
+
 	public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
 	{
 		get => _targetFeatureSelectionVm;
@@ -230,6 +237,10 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 				                   Decimals = unit.Decimals, Step = unit.Step,
 				                   UnitLabel = unit.Label
 			                   };
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 
 			TargetFeatureSelectionVM =
 				new TargetFeatureSelectionViewModel(

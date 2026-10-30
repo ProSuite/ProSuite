@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 
@@ -19,6 +20,7 @@ namespace ProSuite.Commons.Logging
 		private const int _maxIndentLevel = 10;
 		private static readonly string[] _indentFormats;
 		private static int _indentLevel;
+		private static readonly AsyncLocal<int> _separateIndentLevel = new AsyncLocal<int>();
 		private static bool _isVerboseDebugEnabled;
 		private static bool _reportMemoryConsumptionOnError;
 
@@ -44,6 +46,31 @@ namespace ProSuite.Commons.Logging
 
 		#endregion
 
+		/// <summary>
+		/// Whether each request keeps its own indentation. The indentation then belongs to the
+		/// sequence of calls that changed it, and the tasks started from there inherit it.
+		/// Set it in servers that process several requests at the same time. Otherwise one
+		/// indentation is shared by the whole process, and a request that is still running
+		/// indents the log messages of all other requests (the default).
+		/// </summary>
+		public static bool IndentConcurrentWorkSeparately { get; set; }
+
+		private static int CurrentIndentLevel
+		{
+			get => IndentConcurrentWorkSeparately ? _separateIndentLevel.Value : _indentLevel;
+			set
+			{
+				if (IndentConcurrentWorkSeparately)
+				{
+					_separateIndentLevel.Value = value;
+				}
+				else
+				{
+					_indentLevel = value;
+				}
+			}
+		}
+
 		#region IMsg Members
 
 		public IDisposable IncrementIndentation()
@@ -58,9 +85,9 @@ namespace ProSuite.Commons.Logging
 				Info(infoMessage);
 			}
 
-			if (_indentLevel < _maxIndentLevel)
+			if (CurrentIndentLevel < _maxIndentLevel)
 			{
-				_indentLevel++;
+				CurrentIndentLevel++;
 			}
 
 			return new DisposableCallback(DecrementIndentation);
@@ -75,18 +102,18 @@ namespace ProSuite.Commons.Logging
 
 		public void DecrementIndentation()
 		{
-			if (_indentLevel > 0)
+			if (CurrentIndentLevel > 0)
 			{
-				_indentLevel--;
+				CurrentIndentLevel--;
 			}
 		}
 
 		public void ResetIndentation()
 		{
-			_indentLevel = 0;
+			CurrentIndentLevel = 0;
 		}
 
-		public int IndentationLevel => _indentLevel;
+		public int IndentationLevel => CurrentIndentLevel;
 
 		public int MaximumIndentationLevel => _maxIndentLevel;
 
@@ -296,7 +323,7 @@ namespace ProSuite.Commons.Logging
 
 		#region Non-public members
 
-		private static string IndentationFormat => _indentFormats[_indentLevel];
+		private static string IndentationFormat => _indentFormats[CurrentIndentLevel];
 
 		protected abstract void DebugCore(string message);
 

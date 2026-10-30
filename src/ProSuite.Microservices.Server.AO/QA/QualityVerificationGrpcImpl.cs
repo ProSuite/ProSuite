@@ -369,36 +369,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				if (useclientData)
 				{
+					long dataRequestTimeoutMillis = DataRequestTimeoutSeconds * 1000L;
+
 					moreDataRequest =
-						delegate(QueryDataResponse r)
-						{
-							Task<QueryDataRequest> task = RequestMoreDataAsync(
-								requestStream, responseStream, context, r);
-
-							long timeOutMillis = 30 * 1000;
-							long elapsedMillis = 0;
-							int interval = 20;
-							while (! task.IsCompleted && elapsedMillis < timeOutMillis)
-							{
-								Thread.Sleep(interval);
-								elapsedMillis += interval;
-							}
-
-							if (task.IsFaulted)
-							{
-								throw task.Exception;
-							}
-
-							if (! task.IsCompleted)
-							{
-								throw new TimeoutException(
-									$"Client failed to provide data within {elapsedMillis}ms");
-							}
-
-							QueryDataRequest moreData = task.Result;
-
-							return moreData;
-						};
+						r => AwaitClientData(
+							RequestMoreDataAsync(requestStream, responseStream, context, r),
+							dataRequestTimeoutMillis);
 				}
 
 				Func<ITrackCancel, ServiceCallStatus> func = trackCancel =>
@@ -545,16 +521,19 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// <summary>
 		/// Blocks the calling (STA worker) thread until the client-data task completes or the
 		/// timeout elapses. Faults are re-thrown; a timeout throws a <see cref="TimeoutException"/>.
+		/// Public for unit tests.
 		/// </summary>
-		private static DataVerificationRequest AwaitClientData(
-			[NotNull] Task<DataVerificationRequest> task, long timeOutMillis)
+		public static T AwaitClientData<T>([NotNull] Task<T> task, long timeOutMillis)
 		{
-			long elapsedMillis = 0;
+			// Polls with Thread.Sleep rather than task.Wait: a managed wait on an STA thread pumps
+			// COM messages and could re-enter ArcObjects. Elapsed time comes from the stopwatch
+			// because Sleep(20) takes ~31 ms at the default timer resolution - counting sleeps
+			// stretched a 30 s cap to ~47 s.
+			var watch = Stopwatch.StartNew();
 			const int interval = 20;
-			while (! task.IsCompleted && elapsedMillis < timeOutMillis)
+			while (! task.IsCompleted && watch.ElapsedMilliseconds < timeOutMillis)
 			{
 				Thread.Sleep(interval);
-				elapsedMillis += interval;
 			}
 
 			if (task.IsFaulted)
@@ -565,10 +544,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 			if (! task.IsCompleted)
 			{
 				throw new TimeoutException(
-					$"Client failed to provide data within {elapsedMillis}ms");
+					$"Client failed to provide data within {watch.ElapsedMilliseconds}ms");
 			}
 
 			return task.Result;
+		}
+
+		/// <summary>
+		/// True for the expected "the client did not provide the requested data" cases - the client
+		/// closed the stream instead of answering (<see cref="IOException" /> from
+		/// RemoteDataset.ConfirmDataReceived) or did not answer in time - as opposed to a genuine
+		/// server-side fault. Public for unit tests.
+		/// </summary>
+		public static bool IsClientDataUnavailable([NotNull] Exception exception)
+		{
+			if (exception is TimeoutException || exception is IOException)
+			{
+				return true;
+			}
+
+			return exception is AggregateException aggregate &&
+			       aggregate.InnerExceptions.Count > 0 &&
+			       aggregate.InnerExceptions.All(IsClientDataUnavailable);
 		}
 
 		/// <summary>
@@ -912,6 +909,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 				// System.InvalidOperationException: Already finished.
 				_msg.Warn("Verification was cancelled, likely by the client", e);
 				cancellationMessage = "Verification cancelled";
+			}
+			catch (InvalidConfigurationException e)
+			{
+				// User error (e.g. wrong specification): report to the client, keep serving.
+				_msg.Warn($"Invalid verification request: {e.Message}", e);
+				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 			}
 			catch (Exception e)
 			{
@@ -1321,6 +1324,34 @@ namespace ProSuite.Microservices.Server.AO.QA
 				}
 
 				return ServiceCallStatus.Finished;
+			}
+			catch (Exception e) when (IsClientDataUnavailable(e))
+			{
+				// The client declined a data request (worker busy), abandoned the call (watchdog)
+				// or did not answer in time. Expected and self-healing - the client retries on its
+				// next refresh. The exception message embeds the data request (IN lists, ~20 KB),
+				// so only the type is logged here.
+				_msg.Debug($"{request.Transformer?.Name}: client did not provide the requested " +
+				           $"data ({e.GetBaseException().GetType().Name}); query abandoned.");
+				_msg.VerboseDebug(() => $"Abandoned data request: {request}", e);
+
+				if (trackCancel?.Continue() == false)
+				{
+					return ServiceCallStatus.Cancelled;
+				}
+
+				SendResponse(new QueryDataResponse
+				             {
+					             Message = new LogMsg
+					                       {
+						                       Message =
+						                       "Client did not provide the requested data.",
+						                       MessageLevel = Level.Warn.Value
+					                       },
+					             ServiceCallStatus = (int) ServiceCallStatus.Failed
+				             }, responseStream, trackCancel);
+
+				return ServiceCallStatus.Failed;
 			}
 			catch (Exception e)
 			{

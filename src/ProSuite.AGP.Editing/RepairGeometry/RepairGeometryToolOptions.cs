@@ -22,6 +22,8 @@ public class RepairGeometryToolOptions : OptionsBase<PartialRepairGeometryOption
 	public CentralizableSetting<double> CentralizableCrackPointTolerance { get; private set; }
 	public CentralizableSetting<bool> CentralizableUse2D { get; private set; }
 
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; private set; }
+
 	public RepairGeometryToolOptions(
 		[CanBeNull] PartialRepairGeometryOptions centralOptions,
 		[CanBeNull] PartialRepairGeometryOptions localOptions)
@@ -49,6 +51,11 @@ public class RepairGeometryToolOptions : OptionsBase<PartialRepairGeometryOption
 
 		CentralizableUse2D = InitializeSetting<bool>(
 			ReflectionUtils.GetProperty(() => LocalOptions.Use2D), false);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 	}
 
 	public bool EnforceMinimumSegmentLength
@@ -93,6 +100,12 @@ public class RepairGeometryToolOptions : OptionsBase<PartialRepairGeometryOption
 		set => CentralizableUse2D.CurrentValue = value;
 	}
 
+	public bool AlwaysShowOptionsPane
+	{
+		get => CentralizableAlwaysShowOptionsPane.CurrentValue;
+		set => CentralizableAlwaysShowOptionsPane.CurrentValue = value;
+	}
+
 	#region Overrides of OptionsBase<PartialRepairGeometryOptions>
 
 	public override void RevertToDefaults()
@@ -104,6 +117,7 @@ public class RepairGeometryToolOptions : OptionsBase<PartialRepairGeometryOption
 		CentralizableAddCrackPointsBetweenParts.RevertToDefault();
 		CentralizableCrackPointTolerance.RevertToDefault();
 		CentralizableUse2D.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -137,6 +151,12 @@ public class RepairGeometryToolOptions : OptionsBase<PartialRepairGeometryOption
 		if (HasLocalOverride(CentralizableUse2D,
 		                     "Use 2D distance", notifications))
 			result = true;
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
+		                     notifications))
+		{
+			result = true;
+		}
 
 		return result;
 	}

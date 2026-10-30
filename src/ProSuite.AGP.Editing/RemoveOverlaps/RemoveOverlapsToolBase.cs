@@ -558,6 +558,9 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 		                      OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_removeOverlapsToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		var viewModel = GetRemoveOverlapsViewModel();

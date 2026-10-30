@@ -39,6 +39,7 @@ public abstract class DockPaneMergeFeaturesViewModelBase : DockPaneViewModelBase
 	private bool _showPreventInconsistentAttributesOption = true;
 	private CentralizableSettingViewModel<bool> _preventLoops;
 	private CentralizableSettingViewModel<bool> _preventLineFlip;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	private MergeOperationSurvivorViewModel _mergeOperationSurvivorVm;
 
@@ -108,6 +109,12 @@ public abstract class DockPaneMergeFeaturesViewModelBase : DockPaneViewModelBase
 		set { SetProperty(ref _preventLineFlip, value); }
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set { SetProperty(ref _alwaysShowOptionsPane, value); }
+	}
+
 	public MergeOperationSurvivorViewModel MergeOperationSurvivorVM
 	{
 		get => _mergeOperationSurvivorVm;
@@ -148,6 +155,10 @@ public abstract class DockPaneMergeFeaturesViewModelBase : DockPaneViewModelBase
 
 			PreventLineFlip = new CentralizableSettingViewModel<bool>(
 				Options.CentralizablePreventLineFlip);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 
 			MergeOperationSurvivorVM =
 				new MergeOperationSurvivorViewModel(

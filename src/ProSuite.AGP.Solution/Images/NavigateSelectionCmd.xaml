@@ -1,0 +1,27 @@
+<Image xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Stretch="Uniform">
+  <Image.Source>
+    <DrawingImage>
+      <DrawingImage.Drawing>
+        <DrawingGroup>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H32 V32 H0 Z" />
+          <GeometryDrawing Brush="#F8F8F8" Geometry="M14,2 H30 V18 H14 Z" />
+          <GeometryDrawing Brush="#B3E9F9" Geometry="M14,2 H18.5 L19.5,5.5 L22,8.5 L23,11 L24,14 H14 Z" />
+          <GeometryDrawing Geometry="M18.5,2 L19.5,5.5 L22,8.5 L23,11 L24,14 M22,8.5 Q25,6 30,5">
+            <GeometryDrawing.Pen>
+              <Pen Brush="#7E7F82" Thickness="1" LineJoin="Round" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <GeometryDrawing Geometry="M13.5,1.5 H30.5 V18.5 H13.5 Z">
+            <GeometryDrawing.Pen>
+              <Pen Brush="#6D6E71" Thickness="1" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#F7F9FF" Geometry="M2,16 H26 V30 H2 Z" />
+          <GeometryDrawing Brush="#000000" Geometry="M0,14 H28 V32 H0 Z M2,16 V30 H26 V16 Z" />
+          <GeometryDrawing Brush="#031D3C" Geometry="M12,18 V28 L6,23 Z M16,18 L22,23 L16,28 Z" />
+        </DrawingGroup>
+      </DrawingImage.Drawing>
+    </DrawingImage>
+  </Image.Source>
+</Image>

@@ -45,6 +45,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		private CentralizableSettingViewModel<bool> _enforceMinimumSegmentLength;
 		private CentralizableSettingViewModel<double> _minimumSegmentLength;
 		private CentralizableSettingViewModel<BufferSide> _bufferSide;
+		private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 		public string Heading
 		{
@@ -92,6 +93,12 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		{
 			get => _bufferSide;
 			set => SetProperty(ref _bufferSide, value);
+		}
+
+		public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+		{
+			get => _alwaysShowOptionsPane;
+			set => SetProperty(ref _alwaysShowOptionsPane, value);
 		}
 	}
 
@@ -158,6 +165,10 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 				BufferSide = new CentralizableSettingViewModel<BufferSide>(
 					Options.CentralizableBufferSide);
+
+				AlwaysShowOptionsPane =
+					new CentralizableSettingViewModel<bool>(
+						Options.CentralizableAlwaysShowOptionsPane);
 			}
 		}
 	}

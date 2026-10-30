@@ -116,6 +116,10 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 		{
 			Enabled = PlugInWrapper.Enabled;
 		}
+
+		// A command may change its image together with its state. Otherwise the new image is
+		// only shown on the next UpdateAppearance, e.g. by a timer of the owner.
+		UpdateImage(PlugInWrapper.SmallImage as ImageSource);
 	}
 
 	#endregion
@@ -171,8 +175,11 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			// PROBLEM: When the Enabled value is false, the Image is not rendered.
 			// IDEA: Draw a greyed version of the Image as BackgroundImage, when Enabled is false.
 
-			// update Enabled
-			Enabled = PlugInWrapper.Enabled;
+			// update Enabled: the wrapper's Enabled is only re-evaluated in CanExecute, which
+			// Pro calls only for visible controls (e.g. on the active ribbon tab)
+			Enabled = PlugInWrapper is ICommand command
+				          ? command.CanExecute(null)
+				          : PlugInWrapper.Enabled;
 
 			// update Checked
 			Checked = PlugInWrapper.Checked;
@@ -183,7 +190,11 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 			// update ToolTip
 			if (! OverrideCommandToolTip)
 			{
-				string header = CleanToolTipText(PlugInWrapper.Caption);
+				// prefer the DAML tooltip heading, as the ribbon does; fall back to the caption
+				string heading = PlugInWrapper.TooltipHeading;
+				string header = CleanToolTipText(string.IsNullOrEmpty(heading)
+					                                 ? PlugInWrapper.Caption
+					                                 : heading);
 				string body = CleanToolTipText(PlugInWrapper.Tooltip);
 				string combined = JoinToolTip(header, body);
 
@@ -289,11 +300,26 @@ public partial class ToolStripCommandWrapperButton : ToolStripButton, ICommandWr
 		// instead of leaving it to the finalizer (each one holds a GDI bitmap handle).
 		previousImage?.Dispose();
 
-		Color firstPixelValue = bitmap.GetPixel(0, 0);
-		if (firstPixelValue.A != 0)
+		// Only a legacy, fully opaque bitmap uses its first pixel as the transparent (key)
+		// colour. An image with an alpha channel is drawn as is: keying it would remove all
+		// pixels of the first pixel's colour, e.g. a red mark in the upper left corner.
+		ImageTransparentColor = IsFullyOpaque(bitmap) ? bitmap.GetPixel(0, 0) : Color.Empty;
+	}
+
+	private static bool IsFullyOpaque([NotNull] Bitmap bitmap)
+	{
+		for (int y = 0; y < bitmap.Height; y++)
 		{
-			ImageTransparentColor = firstPixelValue;
+			for (int x = 0; x < bitmap.Width; x++)
+			{
+				if (bitmap.GetPixel(x, y).A != 255)
+				{
+					return false;
+				}
+			}
 		}
+
+		return true;
 	}
 
 	/// <summary>

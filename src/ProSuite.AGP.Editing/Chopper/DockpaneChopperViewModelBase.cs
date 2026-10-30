@@ -39,6 +39,7 @@ public abstract class DockPaneChopperViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<double> _minimumSegmentLength;
 	private CentralizableSettingViewModel<bool> _useSourceZs;
 	private CentralizableSettingViewModel<bool> _excludeInteriorInteriorIntersections;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	private TargetFeatureSelectionViewModel _targetFeatureSelectionVm;
 
@@ -104,6 +105,12 @@ public abstract class DockPaneChopperViewModelBase : DockPaneViewModelBase
 		set => SetProperty(ref _excludeInteriorInteriorIntersections, value);
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
+	}
+
 	public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
 	{
 		get => _targetFeatureSelectionVm;
@@ -153,6 +160,10 @@ public abstract class DockPaneChopperViewModelBase : DockPaneViewModelBase
 			ExcludeInteriorInteriorIntersections =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableExcludeInteriorInteriorIntersections);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 
 			TargetFeatureSelectionVM =
 				new TargetFeatureSelectionViewModel(

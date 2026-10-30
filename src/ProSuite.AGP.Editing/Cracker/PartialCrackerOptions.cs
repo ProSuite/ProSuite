@@ -17,6 +17,8 @@ public class PartialCrackerOptions : PartialOptionsBase
 
 	public OverridableSetting<bool> UseSourceZs { get; set; }
 
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#endregion
 
 	public override PartialOptionsBase Clone()
@@ -28,7 +30,8 @@ public class PartialCrackerOptions : PartialOptionsBase
 			             MinimumSegmentLength = TryClone(MinimumSegmentLength),
 			             SnapToTargetVertices = TryClone(SnapToTargetVertices),
 			             SnapTolerance = TryClone(SnapTolerance),
-			             UseSourceZs = TryClone(UseSourceZs)
+			             UseSourceZs = TryClone(UseSourceZs),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 
 		return result;

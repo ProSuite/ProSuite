@@ -269,7 +269,8 @@ public static class ProtobufConversionUtils
 					attributeValue.DateTimeTicksValue = ((DateTime) valueObject).Ticks;
 					break;
 				case FieldType.OID:
-					attributeValue.ShortIntValue = (int) valueObject;
+					// Tables with 64-bit object IDs return long, the others int:
+					attributeValue.BigIntValue = Convert.ToInt64(valueObject);
 					break;
 				case FieldType.Geometry:
 					// Leave empty, it is sent through Shape property
@@ -482,7 +483,9 @@ public static class ProtobufConversionUtils
 				SpatialReference = ToSpatialReferenceMsg(
 					spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
 				GeometryType = (int) geometryType,
-				WorkspaceHandle = objectClass.GetDatastore().Handle.ToInt64()
+				WorkspaceHandle = objectClass.GetDatastore().Handle.ToInt64(),
+				WorkspaceDbType =
+					(int) WorkspaceUtils.GetWorkspaceDbType(objectClass.GetDatastore())
 			};
 
 		if (includeFields)

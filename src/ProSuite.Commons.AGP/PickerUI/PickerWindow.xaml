@@ -70,7 +70,7 @@
 			</Style>
 
 			<DataTemplate x:Key="SinglePickTemplate" DataType="{x:Type picker:IPickableItem}">
-				<DockPanel>
+                <DockPanel Background="Transparent" HorizontalAlignment="Stretch">
 					<behaviors:Interaction.Triggers>
 						<behaviors:EventTrigger EventName="MouseEnter">
 							<behaviors:InvokeCommandAction
@@ -134,7 +134,10 @@
                         (bad contrast). -->
 						<Setter Property="IsSelected" Value="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-						<!-- close on mouse-up on the item -->
+                        <!-- Fire mouseover event on entire item (e.g. area without text) -->
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+
+                        <!-- close on mouse-up on the item -->
 						<EventSetter Event="MouseLeftButtonUp" Handler="ListBoxItem_MouseLeftButtonUp" />
 
 						<!-- Hovering over an item selects it, so keyboard navigation starts from the hovered item -->

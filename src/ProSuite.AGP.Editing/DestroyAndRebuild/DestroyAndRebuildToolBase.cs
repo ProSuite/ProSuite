@@ -5,10 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -36,15 +34,10 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	private const Key _keyToggleMoveEndJunction = Key.M;
 
-	private const string _hideEditedFeatureFilterName = "DestroyAndRebuild_HideEditedFeature";
-
 	private DestroyAndRebuildFeedback _feedback;
 
-	// While the edited feature is hidden (HideEditedFeature option), the layer whose display
-	// filter we temporarily overrode, together with the display filter state to restore.
-	[CanBeNull] private BasicFeatureLayer _hiddenFeatureLayer;
-	[CanBeNull] private CIMDisplayFilter[] _savedDisplayFilters;
-	private bool _savedEnableDisplayFilters;
+	// Hides the edited feature while sketching (HideEditedFeature option).
+	private readonly EditedFeaturesHider _featuresHider = new();
 
 	[CanBeNull]
 	private OverridableSettingsProvider<PartialDestroyAndRebuildOptions> _settingsProvider;
@@ -112,6 +105,14 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
 	}
 
+	protected override SketchGeometryType? GetKnownEditSketchGeometryType()
+	{
+		// Unknown until a feature is picked
+		return _currentFeatureGeometryType == GeometryType.Unknown
+			       ? null
+			       : GetEditSketchGeometryType();
+	}
+
 	protected override async Task<bool?> GetEditSketchHasZ()
 	{
 		Stopwatch watch = Stopwatch.StartNew();
@@ -143,10 +144,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	{
 		_destroyAndRebuildToolOptions = InitializeOptions();
 
-		// Make sure a hidden feature is never persisted into the project: restore its visibility
-		// before a save writes the .aprx (see OnProjectSavingAsync).
-		ProjectSavingEvent.Subscribe(OnProjectSavingAsync);
-
 		_feedback = new DestroyAndRebuildFeedback(UseOldSymbolization,
 		                                          _destroyAndRebuildToolOptions);
 
@@ -156,7 +153,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 			// Defensive: strip any leftover hide-filter that a previous session may have persisted
 			// (e.g. after a crash) so that no feature stays stuck hidden.
-			RemoveStaleHideFilters(ActiveMapView?.Map);
+			EditedFeaturesHider.RemoveLeftovers(ActiveMapView?.Map);
 		});
 
 		await base.OnToolActivateCoreAsync(hasMapViewChanged);
@@ -164,13 +161,11 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
-		ProjectSavingEvent.Unsubscribe(OnProjectSavingAsync);
-
 		_settingsProvider?.StoreLocalConfiguration(_destroyAndRebuildToolOptions?.LocalOptions);
 
-		if (_hiddenFeatureLayer != null)
+		if (_featuresHider.IsHiding)
 		{
-			await QueuedTask.Run(RestoreEditedFeatureVisibility);
+			await QueuedTask.Run(_featuresHider.Restore);
 		}
 
 		_feedback?.Clear();
@@ -207,9 +202,9 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		{
 			_feedback?.Clear();
 
-			if (_hiddenFeatureLayer != null)
+			if (_featuresHider.IsHiding)
 			{
-				await QueuedTask.Run(RestoreEditedFeatureVisibility);
+				await QueuedTask.Run(_featuresHider.Restore);
 			}
 		}
 
@@ -224,9 +219,9 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		_feedback?.Clear();
 		_originalLine = null;
 
-		if (_hiddenFeatureLayer != null)
+		if (_featuresHider.IsHiding)
 		{
-			await QueuedTask.Run(RestoreEditedFeatureVisibility);
+			await QueuedTask.Run(_featuresHider.Restore);
 		}
 
 		await base.OnSelectionPhaseStartedAsync();
@@ -252,7 +247,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		// interfere with the new sketch.
 		if (_destroyAndRebuildToolOptions.HideEditedFeature)
 		{
-			HideEditedFeature(feature, featureClass);
+			HideEditedFeature();
 		}
 
 		_msg.Info($"Rebuild the geometry for {GdbObjectUtils.GetDisplayValue(feature)}");
@@ -444,6 +439,9 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	}
 
 	#region Tool Options DockPane
+
+	protected override bool AlwaysShowOptionsPane =>
+		_destroyAndRebuildToolOptions?.AlwaysShowOptionsPane == true;
 
 	protected override void ShowOptionsPane()
 	{
@@ -731,21 +729,6 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 	#region Display Feedback
 
-	/// <summary>
-	/// Restores the hidden feature's visibility before the project is saved, so the temporary
-	/// display filter is never written into the .aprx (which would leave the feature invisible even
-	/// after a normal close and reopen).
-	/// </summary>
-	private async Task OnProjectSavingAsync(ProjectEventArgs args)
-	{
-		if (_hiddenFeatureLayer == null)
-		{
-			return;
-		}
-
-		await QueuedTask.Run(RestoreEditedFeatureVisibility);
-	}
-
 	private async Task ApplyHighlightOptionAsync()
 	{
 		if (_destroyAndRebuildToolOptions.HighlightOriginalGeometry)
@@ -769,177 +752,25 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 		{
 			if (_destroyAndRebuildToolOptions.HideEditedFeature)
 			{
-				if (_hiddenFeatureLayer == null)
+				if (! _featuresHider.IsHiding)
 				{
-					Feature feature =
-						GetApplicableSelectedFeatures(ActiveMapView).FirstOrDefault();
-
-					if (feature != null)
-					{
-						HideEditedFeature(feature, feature.GetTable());
-					}
+					HideEditedFeature();
 				}
 			}
 			else
 			{
-				RestoreEditedFeatureVisibility();
+				_featuresHider.Restore();
 			}
 		});
 	}
 
 	/// <summary>
-	/// Temporarily hides the edited feature by adding a display filter that excludes its
-	/// object ID on the layer it belongs to. The previous display-filter state is remembered so
-	/// it can be restored in <see cref="RestoreEditedFeatureVisibility()"/>.
+	/// Temporarily hides the selected (edited) feature, see <see cref="EditedFeaturesHider"/>.
 	/// </summary>
 	/// <remarks>Must be called on the MCT.</remarks>
-	private void HideEditedFeature([NotNull] Feature feature, [NotNull] FeatureClass featureClass)
+	private void HideEditedFeature()
 	{
-		// If a previous feature is still hidden (it should have been restored already), restore it
-		// first so we never capture our own filter as the "original" state to restore to.
-		if (_hiddenFeatureLayer != null)
-		{
-			RestoreEditedFeatureVisibility();
-		}
-
-		Dictionary<BasicFeatureLayer, List<long>> selectionByLayer =
-			SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map);
-
-		BasicFeatureLayer layer = selectionByLayer.Keys.FirstOrDefault();
-
-		if (layer == null || layer.GetDefinition() is not CIMFeatureLayer cimLayer)
-		{
-			return;
-		}
-
-		long oid = feature.GetObjectID();
-		string oidField = featureClass.GetDefinition().GetObjectIDField();
-
-		_hiddenFeatureLayer = layer;
-		_savedEnableDisplayFilters = cimLayer.EnableDisplayFilters;
-		_savedDisplayFilters = cimLayer.DisplayFilters;
-
-		cimLayer.DisplayFilters = new[]
-		                          {
-			                          new CIMDisplayFilter
-			                          {
-				                          Name = _hideEditedFeatureFilterName,
-				                          WhereClause = $"{oidField} <> {oid}"
-			                          }
-		                          };
-		cimLayer.EnableDisplayFilters = true;
-
-		SetDefinitionWithoutUndo(layer, cimLayer);
-	}
-
-	/// <summary>
-	/// Restores the display-filter state that was overridden by <see cref="HideEditedFeature"/>,
-	/// making the edited feature visible again.
-	/// </summary>
-	/// <remarks>Must be called on the MCT.</remarks>
-	private void RestoreEditedFeatureVisibility()
-	{
-		BasicFeatureLayer layer = _hiddenFeatureLayer;
-
-		if (layer == null)
-		{
-			return;
-		}
-
-		try
-		{
-			if (layer.GetDefinition() is CIMFeatureLayer cimLayer)
-			{
-				cimLayer.EnableDisplayFilters = _savedEnableDisplayFilters;
-				cimLayer.DisplayFilters = _savedDisplayFilters;
-
-				SetDefinitionWithoutUndo(layer, cimLayer);
-			}
-		}
-		finally
-		{
-			_hiddenFeatureLayer = null;
-			_savedDisplayFilters = null;
-			_savedEnableDisplayFilters = false;
-		}
-	}
-
-	/// <summary>
-	/// Applies a layer definition change without leaving an entry on the map's undo/redo stack.
-	/// The temporary display filter used to hide the edited feature is transient tool state and
-	/// must not be undoable: undoing/redoing it would re-apply or drop the filter behind the tool's
-	/// back and could leave the feature stuck hidden.
-	/// </summary>
-	/// <remarks>Must be called on the MCT.</remarks>
-	private static void SetDefinitionWithoutUndo([NotNull] BasicFeatureLayer layer,
-	                                             [NotNull] CIMBaseLayer definition)
-	{
-		OperationManager operationManager = layer.Map?.OperationManager;
-
-		var operationsBefore = operationManager?.FindUndoOperations(_ => true);
-
-		layer.SetDefinition(definition);
-
-		if (operationManager == null)
-		{
-			return;
-		}
-
-		// Remove any operation the SetDefinition call just pushed onto the undo stack.
-		foreach (var operation in operationManager.FindUndoOperations(_ => true))
-		{
-			if (operationsBefore == null || ! operationsBefore.Contains(operation))
-			{
-				operationManager.RemoveUndoOperation(operation);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Removes any leftover "hide edited feature" display filter (identified by its well-known
-	/// name) from the feature layers of the given map. This guards against a filter that a
-	/// previous session persisted without restoring, e.g. after a crash, which would otherwise
-	/// leave a feature stuck hidden.
-	/// </summary>
-	/// <remarks>Must be called on the MCT.</remarks>
-	private void RemoveStaleHideFilters([CanBeNull] Map map)
-	{
-		if (map == null)
-		{
-			return;
-		}
-
-		foreach (BasicFeatureLayer layer in
-		         map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>())
-		{
-			if (layer.GetDefinition() is not CIMFeatureLayer cimLayer)
-			{
-				continue;
-			}
-
-			CIMDisplayFilter[] filters = cimLayer.DisplayFilters;
-
-			if (filters == null || filters.All(f => f?.Name != _hideEditedFeatureFilterName))
-			{
-				continue;
-			}
-
-			CIMDisplayFilter[] remaining =
-				filters.Where(f => f?.Name != _hideEditedFeatureFilterName).ToArray();
-
-			cimLayer.DisplayFilters = remaining.Length > 0 ? remaining : null;
-
-			if (remaining.Length == 0)
-			{
-				cimLayer.EnableDisplayFilters = false;
-			}
-
-			SetDefinitionWithoutUndo(layer, cimLayer);
-
-			_msg.Debug(
-				$"{Caption}: removed stale '{_hideEditedFeatureFilterName}' display filter " +
-				$"from layer {layer.Name}");
-		}
+		_featuresHider.Hide(SelectionUtils.GetSelection<BasicFeatureLayer>(ActiveMapView.Map));
 	}
 
 	#endregion

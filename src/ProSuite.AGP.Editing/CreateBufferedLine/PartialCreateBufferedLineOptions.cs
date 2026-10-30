@@ -21,6 +21,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		public OverridableSetting<BufferSide> BufferSide { get; set; }
 
+		public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 		#endregion
 
 		public override PartialOptionsBase Clone()
@@ -33,7 +35,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 				             WeedTolerance = TryClone(WeedTolerance),
 				             EnforceMinimumSegmentLength = TryClone(EnforceMinimumSegmentLength),
 				             MinimumSegmentLength = TryClone(MinimumSegmentLength),
-				             BufferSide = TryClone(BufferSide)
+				             BufferSide = TryClone(BufferSide),
+				             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 			             };
 			return result;
 		}

@@ -35,6 +35,10 @@ public class DestroyAndRebuildToolOptions : OptionsBase<PartialDestroyAndRebuild
 			InitializeSetting<DestroyAndRebuildLinearNetworkDefinition>(
 				ReflectionUtils.GetProperty(() => LocalOptions.LinearNetworkDefinition),
 				DestroyAndRebuildLinearNetworkDefinition.SelectionFeatureClasses);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane), false);
 	}
 
 	#region Centralizable Properties
@@ -47,6 +51,8 @@ public class DestroyAndRebuildToolOptions : OptionsBase<PartialDestroyAndRebuild
 
 	public CentralizableSetting<DestroyAndRebuildLinearNetworkDefinition>
 		CentralizableLinearNetworkDefinition { get; }
+
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; }
 
 	#endregion
 
@@ -76,6 +82,12 @@ public class DestroyAndRebuildToolOptions : OptionsBase<PartialDestroyAndRebuild
 		set { CentralizableLinearNetworkDefinition.CurrentValue = value; }
 	}
 
+	public bool AlwaysShowOptionsPane
+	{
+		get { return CentralizableAlwaysShowOptionsPane.CurrentValue; }
+		set { CentralizableAlwaysShowOptionsPane.CurrentValue = value; }
+	}
+
 	#endregion
 
 	public override void RevertToDefaults()
@@ -87,6 +99,8 @@ public class DestroyAndRebuildToolOptions : OptionsBase<PartialDestroyAndRebuild
 		CentralizableMoveOpenJawEndJunction.RevertToDefault();
 
 		CentralizableLinearNetworkDefinition.RevertToDefault();
+
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -101,7 +115,9 @@ public class DestroyAndRebuildToolOptions : OptionsBase<PartialDestroyAndRebuild
 		                        notifications) ||
 		       HasLocalOverride(CentralizableLinearNetworkDefinition,
 		                        "Linear network definition",
-		                        notifications);
+		                        notifications) ||
+		       HasLocalOverride(CentralizableAlwaysShowOptionsPane,
+		                        "Always show this dialog", notifications);
 	}
 
 	public override string GetLocalOverridesMessage()

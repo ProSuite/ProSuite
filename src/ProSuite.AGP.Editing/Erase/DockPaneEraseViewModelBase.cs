@@ -32,6 +32,7 @@ public abstract class DockPaneEraseViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<bool> _allowPolylineErasing;
 	private CentralizableSettingViewModel<bool> _allowMultipointErasing;
 	private CentralizableSettingViewModel<bool> _preventMultipartResults;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	public string Heading
 	{
@@ -57,6 +58,12 @@ public abstract class DockPaneEraseViewModelBase : DockPaneViewModelBase
 		set => SetProperty(ref _preventMultipartResults, value);
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
+	}
+
 	public EraseToolOptions Options
 	{
 		get => _options;
@@ -75,6 +82,10 @@ public abstract class DockPaneEraseViewModelBase : DockPaneViewModelBase
 			PreventMultipartResults =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizablePreventMultipartResults);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 		}
 	}
 

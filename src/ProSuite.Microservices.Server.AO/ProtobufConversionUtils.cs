@@ -109,7 +109,13 @@ namespace ProSuite.Microservices.Server.AO
 
 					container = new GdbTableContainer();
 
-					workspace = new GdbWorkspace(container, workspaceHandle);
+					// The client's database runs the where clauses, so its type sets their limits.
+					// Older clients do not send it: an unknown DBMS with the safe limits.
+					WorkspaceDbType dbType = objectClassMsg.WorkspaceDbType == 0
+						                         ? WorkspaceDbType.ArcSDE
+						                         : (WorkspaceDbType) objectClassMsg.WorkspaceDbType;
+
+					workspace = new GdbWorkspace(container, workspaceHandle, dbType);
 				}
 				else
 				{

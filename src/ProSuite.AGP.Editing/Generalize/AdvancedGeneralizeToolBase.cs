@@ -517,6 +517,9 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 		                      OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_generalizeToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		DockPaneGeneralizeViewModelBase viewModel = GetOptionsViewModel();

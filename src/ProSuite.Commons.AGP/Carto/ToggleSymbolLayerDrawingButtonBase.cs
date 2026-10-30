@@ -1,5 +1,5 @@
 using System;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Framework;
 
@@ -7,11 +7,9 @@ namespace ProSuite.Commons.AGP.Carto;
 
 public class ToggleSymbolLayerDrawingButtonBase : ToggleSymbolDisplayButtonBase
 {
-	private readonly BitmapImage _iconOn16 = GetImage("Images/SymbolLayerDrawingOn16.png");
-	private readonly BitmapImage _iconOff16 = GetImage("Images/SymbolLayerDrawingOff16.png");
-	private readonly BitmapImage _iconOn32 = GetImage("Images/SymbolLayerDrawingOn32.png");
-	private readonly BitmapImage _iconOff32 = GetImage("Images/SymbolLayerDrawingOff32.png");
-	private readonly BitmapImage _iconUnknown = GetImage("Images/SymbolLayerDrawingUnknown32.png");
+	private readonly ImageSource _iconOn = GetImage("Images/SymbolLayerDrawingOn.xaml");
+	private readonly ImageSource _iconOff = GetImage("Images/SymbolLayerDrawingOff.xaml");
+	private readonly ImageSource _iconUnknown = GetImage("Images/SymbolLayerDrawingUnknown.xaml");
 	private bool? _lastState;
 
 	protected override void UpdateCore()
@@ -34,14 +32,14 @@ public class ToggleSymbolLayerDrawingButtonBase : ToggleSymbolDisplayButtonBase
 		{
 			if (state.Value)
 			{
-				LargeImage = _iconOn32;
-				SmallImage = _iconOn16;
+				LargeImage = _iconOn;
+				SmallImage = _iconOn;
 				TooltipHeading = "Turn SLD off";
 			}
 			else
 			{
-				LargeImage = _iconOff32;
-				SmallImage = _iconOff16;
+				LargeImage = _iconOff;
+				SmallImage = _iconOff;
 				TooltipHeading = "Turn SLD on";
 			}
 		}

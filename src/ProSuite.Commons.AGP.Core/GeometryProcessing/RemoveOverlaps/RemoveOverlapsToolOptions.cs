@@ -19,6 +19,8 @@ public class RemoveOverlapsToolOptions : OptionsBase<PartialRemoveOverlapsOption
 
 	public CentralizableSetting<ChangeAlongZSource> CentralizableZSource { get; }
 
+	public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; }
+
 	public RemoveOverlapsToolOptions(
 		[CanBeNull] PartialRemoveOverlapsOptions centralOptions,
 		[CanBeNull] PartialRemoveOverlapsOptions localOptions)
@@ -49,6 +51,11 @@ public class RemoveOverlapsToolOptions : OptionsBase<PartialRemoveOverlapsOption
 			InitializeSetting<ChangeAlongZSource>(
 				ReflectionUtils.GetProperty(() => LocalOptions.ZSource),
 				ChangeAlongZSource.Target);
+
+		CentralizableAlwaysShowOptionsPane =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+				false);
 
 		CentralizableZSource.TooltipAppendix = GetTooltipAppendix(ZSourceByDataset);
 	}
@@ -81,6 +88,12 @@ public class RemoveOverlapsToolOptions : OptionsBase<PartialRemoveOverlapsOption
 	{
 		get { return CentralizableZSource.CurrentValue; }
 		set { CentralizableZSource.CurrentValue = value; }
+	}
+
+	public bool AlwaysShowOptionsPane
+	{
+		get { return CentralizableAlwaysShowOptionsPane.CurrentValue; }
+		set { CentralizableAlwaysShowOptionsPane.CurrentValue = value; }
 	}
 
 	[NotNull]
@@ -123,6 +136,7 @@ public class RemoveOverlapsToolOptions : OptionsBase<PartialRemoveOverlapsOption
 		CentralizableInsertVerticesInTarget.RevertToDefault();
 
 		CentralizableZSource.RevertToDefault();
+		CentralizableAlwaysShowOptionsPane.RevertToDefault();
 	}
 
 	public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -159,6 +173,12 @@ public class RemoveOverlapsToolOptions : OptionsBase<PartialRemoveOverlapsOption
 
 		if (HasLocalOverride(CentralizableZSource,
 		                     "Take Z values for changed vertices", notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
+		                     notifications))
 		{
 			result = true;
 		}

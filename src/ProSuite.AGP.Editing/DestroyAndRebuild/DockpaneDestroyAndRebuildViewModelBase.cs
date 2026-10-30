@@ -31,6 +31,7 @@ public abstract class DockPaneDestroyAndRebuildViewModelBase : DockPaneViewModel
 	private CentralizableSettingViewModel<bool> _highlightOriginalGeometry;
 	private CentralizableSettingViewModel<bool> _hideEditedFeature;
 	private CentralizableSettingViewModel<bool> _moveOpenJawEndJunction;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	public string Heading
 	{
@@ -56,6 +57,12 @@ public abstract class DockPaneDestroyAndRebuildViewModelBase : DockPaneViewModel
 		set => SetProperty(ref _moveOpenJawEndJunction, value);
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set => SetProperty(ref _alwaysShowOptionsPane, value);
+	}
+
 	public DestroyAndRebuildToolOptions Options
 	{
 		get { return _options; }
@@ -72,6 +79,10 @@ public abstract class DockPaneDestroyAndRebuildViewModelBase : DockPaneViewModel
 			MoveOpenJawEndJunction =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableMoveOpenJawEndJunction);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 		}
 	}
 

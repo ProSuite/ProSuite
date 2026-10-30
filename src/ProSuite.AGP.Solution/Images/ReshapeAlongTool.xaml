@@ -1,0 +1,32 @@
+<Image xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Stretch="Uniform">
+  <Image.Source>
+    <DrawingImage>
+      <DrawingImage.Drawing>
+        <DrawingGroup>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H32 V32 H0 Z" />
+          <GeometryDrawing Brush="#9EFFFF" Geometry="M3,3 H18 V21 H3 Z" />
+          <GeometryDrawing Brush="#FFE884" Geometry="M18,6 H25 V19 H18 Z" />
+          <GeometryDrawing Geometry="M18,6.5 L12,12.5 L18,18.5 Z">
+            <GeometryDrawing.Brush>
+              <DrawingBrush TileMode="Tile" Viewport="0,0,2,2" ViewportUnits="Absolute" Viewbox="0,0,2,2" ViewboxUnits="Absolute">
+                <DrawingBrush.Drawing>
+                  <GeometryDrawing Brush="#FFE884" Geometry="M1,0 H2 V1 H1 Z M0,1 H1 V2 H0 Z" />
+                </DrawingBrush.Drawing>
+              </DrawingBrush>
+            </GeometryDrawing.Brush>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#404040" Geometry="M2,2 H19 V4 H18 V3 H3 V21 H18 V21 H19 V22 H2 Z M18,7 H19 V9 H18 Z M18,10 H19 V12 H18 Z M18,13 H19 V15 H18 Z M18,16 H19 V18 H18 Z M20,5 H26 V20 H20 V19 H25 V6 H20 Z" />
+          <GeometryDrawing Geometry="M17.5,6 L11,12.5 L17.5,19">
+            <GeometryDrawing.Pen>
+              <Pen Brush="#009E00" Thickness="1.5" />
+            </GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#FFFFFF" Geometry="M17,4 H20 V7 H17 Z M17,18 H20 V21 H17 Z" />
+          <GeometryDrawing Brush="#CCCCCC" Geometry="M18,4 H19 V5 H18 Z M18,20 H19 V21 H18 Z" />
+          <GeometryDrawing Brush="#008000" Geometry="M18,5 H19 V6 H18 Z M18,19 H19 V20 H18 Z" />
+        </DrawingGroup>
+      </DrawingImage.Drawing>
+    </DrawingImage>
+  </Image.Source>
+</Image>

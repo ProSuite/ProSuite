@@ -803,6 +803,9 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		#region DockPane integration
 
+		protected override bool AlwaysShowOptionsPane =>
+			_bufferedLineToolOptions?.AlwaysShowOptionsPane == true;
+
 		protected override void ShowOptionsPane()
 		{
 			var viewModel = GetBufferedLineViewModel();

@@ -57,6 +57,11 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			CentralizableBufferSide = InitializeSetting<BufferSide>(
 				ReflectionUtils.GetProperty(() => LocalOptions.BufferSide),
 				BufferSide.Both);
+
+			CentralizableAlwaysShowOptionsPane =
+				InitializeSetting<bool>(
+					ReflectionUtils.GetProperty(() => LocalOptions.AlwaysShowOptionsPane),
+					false);
 		}
 
 		#region Centralizable Properties
@@ -74,6 +79,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		public CentralizableSetting<double> CentralizableMinimumSegmentLength { get; }
 
 		public CentralizableSetting<BufferSide> CentralizableBufferSide { get; }
+
+		public CentralizableSetting<bool> CentralizableAlwaysShowOptionsPane { get; }
 
 		#endregion
 
@@ -98,6 +105,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 		public BufferSide BufferSide => CentralizableBufferSide.CurrentValue;
 
+		public bool AlwaysShowOptionsPane => CentralizableAlwaysShowOptionsPane.CurrentValue;
+
 		#endregion
 
 		public override void RevertToDefaults()
@@ -109,6 +118,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			CentralizableEnforceMinimumSegmentLength.RevertToDefault();
 			CentralizableMinimumSegmentLength.RevertToDefault();
 			CentralizableBufferSide.RevertToDefault();
+			CentralizableAlwaysShowOptionsPane.RevertToDefault();
 		}
 
 		public override bool HasLocalOverrides(NotificationCollection notifications)
@@ -147,6 +157,12 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 
 			if (HasLocalOverride(CentralizableBufferSide,
 			                     "Buffer side", notifications))
+			{
+				result = true;
+			}
+
+			if (HasLocalOverride(CentralizableAlwaysShowOptionsPane, "Always show this dialog",
+			                     notifications))
 			{
 				result = true;
 			}

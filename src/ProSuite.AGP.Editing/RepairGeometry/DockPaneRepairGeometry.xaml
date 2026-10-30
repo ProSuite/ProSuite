@@ -7,7 +7,6 @@
              xmlns:repairGeometry="clr-namespace:ProSuite.AGP.Editing.RepairGeometry"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=repairGeometry:DockPaneRepairGeometryViewModelBase}"
-             Width="475" Height="380"
              HorizontalAlignment="Left" VerticalAlignment="Top">
 	<UserControl.Resources>
 		<ResourceDictionary>
@@ -19,77 +18,90 @@
 		</ResourceDictionary>
 	</UserControl.Resources>
 
-	<StackPanel HorizontalAlignment="Left" VerticalAlignment="Top">
+	<ScrollViewer VerticalScrollBarVisibility="Auto"
+				  HorizontalScrollBarVisibility="Disabled"
+				  Padding="0,0,5,0">
+		<StackPanel HorizontalAlignment="Left" VerticalAlignment="Top">
 
-		<Label FontWeight="Medium" Content="Repair options" />
+			<Label FontWeight="Medium" Content="Repair options" />
 
-		<Grid HorizontalAlignment="Left" Width="Auto">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto" />
-				<ColumnDefinition Width="Auto" />
-				<ColumnDefinition Width="Auto" />
-			</Grid.ColumnDefinitions>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-			</Grid.RowDefinitions>
+			<Grid HorizontalAlignment="Left" Width="Auto">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
 
-			<!-- Enforce minimum segment length (checkbox) + value (spinner) -->
-			<CheckBox Grid.Row="0" Grid.Column="0"
-			          Template="{StaticResource CentralizableSettingCheckbox}"
-			          Content="Remove segments shorter than"
-			          DataContext="{Binding EnforceMinimumSegmentLength}" />
-			<Grid Grid.Row="0" Grid.Column="1">
-				<ContentControl Template="{StaticResource CentralizableSettingsSpinner}"
-				                DataContext="{Binding MinimumSegmentLength}" />
+				<!-- Enforce minimum segment length (checkbox) + value (spinner) -->
+				<CheckBox Grid.Row="0" Grid.Column="0"
+				          Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Remove segments shorter than"
+				          DataContext="{Binding EnforceMinimumSegmentLength}" />
+				<Grid Grid.Row="0" Grid.Column="1">
+					<ContentControl Template="{StaticResource CentralizableSettingsSpinner}"
+					                DataContext="{Binding MinimumSegmentLength}" />
+				</Grid>
+				<Grid Grid.Row="0" Grid.Column="2">
+					<ContentControl Template="{StaticResource CentralizableSettingsLabel}"
+					                DataContext="{Binding MinimumSegmentLength}" />
+				</Grid>
+
+				<!-- Allow loops -->
+				<CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+				          Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Allow self-intersecting loops"
+				          DataContext="{Binding AllowLoops}" />
+
+				<!-- Allow linear self-intersections -->
+				<CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+				          Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Allow linear self-intersections"
+				          DataContext="{Binding AllowLinearSelfIntersections}" />
+
+				<!-- Add crack points between parts (checkbox) + tolerance (spinner) -->
+				<CheckBox Grid.Row="3" Grid.Column="0"
+				          Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Add crack points between parts with tolerance"
+				          DataContext="{Binding AddCrackPointsBetweenParts}" />
+				<Grid Grid.Row="3" Grid.Column="1">
+					<ContentControl Template="{StaticResource CentralizableSettingsSpinner}"
+					                DataContext="{Binding CrackPointTolerance}" />
+				</Grid>
+				<Grid Grid.Row="3" Grid.Column="2">
+					<ContentControl Template="{StaticResource CentralizableSettingsLabel}"
+					                DataContext="{Binding CrackPointTolerance}" />
+				</Grid>
+
+				<!-- Use 2D -->
+				<CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+				          Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Use 2D distance also for Z-aware geometries"
+				          DataContext="{Binding Use2D}" />
+
 			</Grid>
-			<Grid Grid.Row="0" Grid.Column="2">
-				<ContentControl Template="{StaticResource CentralizableSettingsLabel}"
-				                DataContext="{Binding MinimumSegmentLength}" />
-			</Grid>
 
-			<!-- Allow loops -->
-			<CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-			          Template="{StaticResource CentralizableSettingCheckbox}"
-			          Content="Allow self-intersecting loops"
-			          DataContext="{Binding AllowLoops}" />
+			<!-- Always show this dialog -->
+			<StackPanel
+				Visibility="{Binding ShowAlwaysShowOptionsPaneOption, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Label FontWeight="Medium" Content="Workflow" Margin="0,15,0,0" />
+				<CheckBox Template="{StaticResource CentralizableSettingCheckbox}"
+				          Content="Always show this dialog"
+				          DataContext="{Binding AlwaysShowOptionsPane}" />
+			</StackPanel>
 
-			<!-- Allow linear self-intersections -->
-			<CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
-			          Template="{StaticResource CentralizableSettingCheckbox}"
-			          Content="Allow linear self-intersections"
-			          DataContext="{Binding AllowLinearSelfIntersections}" />
+			<!-- Restore Defaults -->
+			<Button Template="{StaticResource RestoreDefaultsButton}" />
 
-			<!-- Add crack points between parts (checkbox) + tolerance (spinner) -->
-			<CheckBox Grid.Row="3" Grid.Column="0"
-			          Template="{StaticResource CentralizableSettingCheckbox}"
-			          Content="Add crack points between parts with tolerance"
-			          DataContext="{Binding AddCrackPointsBetweenParts}" />
-			<Grid Grid.Row="3" Grid.Column="1">
-				<ContentControl Template="{StaticResource CentralizableSettingsSpinner}"
-				                DataContext="{Binding CrackPointTolerance}" />
-			</Grid>
-			<Grid Grid.Row="3" Grid.Column="2">
-				<ContentControl Template="{StaticResource CentralizableSettingsLabel}"
-				                DataContext="{Binding CrackPointTolerance}" />
-			</Grid>
-
-			<!-- Use 2D -->
-			<CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
-			          Template="{StaticResource CentralizableSettingCheckbox}"
-			          Content="Use 2D distance also for Z-aware geometries"
-			          DataContext="{Binding Use2D}" />
-
-		</Grid>
-
-		<!-- Restore Defaults -->
-		<Button Template="{StaticResource RestoreDefaultsButton}" />
-
-	</StackPanel>
+		</StackPanel>
+	</ScrollViewer>
 
 </UserControl>

@@ -11,12 +11,13 @@ namespace ProSuite.Commons.UI.Dialogs
 		                                            IList<string> listLines,
 		                                            string footerMessage,
 		                                            MessageBoxButtons buttons,
-		                                            MessageBoxIcon icon)
+		                                            MessageBoxIcon icon,
+		                                            bool middleButtonIsDefault = false)
 		{
 			using (var form = new MessageListForm())
 			{
 				return form.ShowDialog(owner, title, headerMessage, listLines,
-				                       footerMessage, icon, buttons);
+				                       footerMessage, icon, buttons, middleButtonIsDefault);
 			}
 		}
 
