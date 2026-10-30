@@ -795,7 +795,10 @@ public static class WorkspaceUtils
 						$"Real-Time connection ({realtimeServiceConnection.Type}) {realtimeServiceConnection.URL}";
 
 				case ServiceConnectionProperties serviceConnection:
-					return $"Service connection {serviceConnection.URL}";
+					// The version is only set for branch versioned services
+					return string.IsNullOrEmpty(serviceConnection.Version)
+						       ? $"Service connection {serviceConnection.URL}"
+						       : $"Service connection {serviceConnection.URL} - {serviceConnection.Version}";
 
 				case SQLiteConnectionPath sqLiteConnection:
 					return $"SQLite Database {sqLiteConnection.Path}";
