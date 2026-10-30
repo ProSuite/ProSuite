@@ -341,7 +341,7 @@ public class DatastoreName : IEquatable<DatastoreName>
 
 			case ServiceConnectionProperties serviceConnection:
 				var otherServiceConnection = (ServiceConnectionProperties) otherConnector;
-				return AreEqual(serviceConnection, otherServiceConnection);
+				return AreEqual(serviceConnection, otherServiceConnection, comparison);
 
 			case SQLiteConnectionPath sqLiteConnection:
 				var otherSqliteConnection = (SQLiteConnectionPath) otherConnector;
@@ -431,13 +431,23 @@ public class DatastoreName : IEquatable<DatastoreName>
 	}
 
 	private static bool AreEqual([NotNull] ServiceConnectionProperties a,
-	                             [CanBeNull] ServiceConnectionProperties b)
+	                             [CanBeNull] ServiceConnectionProperties b,
+	                             DatastoreComparison comparison)
 	{
-		if (b == null) return false;
+		if (b == null || ! Equals(a.URL, b.URL)) return false;
 
-		return Equals(a.URL, b.URL) &&
+		if (comparison == DatastoreComparison.AnyUserAnyVersion)
+		{
+			return true;
+		}
+
+		if (comparison == DatastoreComparison.AnyUserSameVersion)
+		{
+			return Equals(a.Version, b.Version);
+		}
+
+		return Equals(a.Version, b.Version) &&
 		       Equals(a.User, b.User) &&
-		       Equals(a.Password, b.Password) &&
-		       Equals(a.Version, b.Version);
+		       Equals(a.Password, b.Password);
 	}
 }

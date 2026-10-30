@@ -239,6 +239,47 @@ namespace ProSuite.Commons.AGP.Core.Test
 				datastoreName1.References(WorkspaceFactory.FeatureService, connectionString));
 		}
 
+		[Test]
+		public void CanGetFeatureServiceDisplayTextWithBranch()
+		{
+			const string url = "https://portal.dirageosystems.ch/server/rest/services/NSW/FeatureServer";
+
+			Connector withBranch =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.FeatureService,
+				                               $"URL={url};VERSION=paede@dira.ay_test");
+			Connector withoutBranch =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.FeatureService, $"URL={url}");
+
+			Assert.AreEqual($"Service connection {url} - paede@dira.ay_test",
+			                WorkspaceUtils.GetDatastoreDisplayText(withBranch));
+			Assert.AreEqual($"Service connection {url}",
+			                WorkspaceUtils.GetDatastoreDisplayText(withoutBranch));
+		}
+
+		[Test]
+		public void CanCompareFeatureServiceConnectorsInDifferentBranches()
+		{
+			const string url = "https://portal.dirageosystems.ch/server/rest/services/NSW/FeatureServer";
+			const string otherUrl = "https://portal.dirageosystems.ch/server/rest/services/Other/FeatureServer";
+
+			var datastoreName = new DatastoreName(
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.FeatureService,
+				                               $"URL={url};VERSION=paede@dira.ay_test"));
+
+			string otherBranch = $"URL={url};VERSION=sde.DEFAULT";
+			string otherService = $"URL={otherUrl};VERSION=paede@dira.ay_test";
+
+			Assert.IsFalse(datastoreName.References(WorkspaceFactory.FeatureService, otherBranch,
+			                                        DatastoreComparison.Exact));
+			Assert.IsFalse(datastoreName.References(WorkspaceFactory.FeatureService, otherBranch,
+			                                        DatastoreComparison.AnyUserSameVersion));
+			Assert.IsTrue(datastoreName.References(WorkspaceFactory.FeatureService, otherBranch,
+			                                       DatastoreComparison.AnyUserAnyVersion));
+
+			Assert.IsFalse(datastoreName.References(WorkspaceFactory.FeatureService, otherService,
+			                                        DatastoreComparison.AnyUserAnyVersion));
+		}
+
 		[Test, Ignore("Requires oracle connection")]
 		public void Can_create_version_tree_as_osa()
         {
