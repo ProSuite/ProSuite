@@ -3,7 +3,6 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Editing.MergeFeatures;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
@@ -21,9 +20,10 @@ using ProSuite.Commons.UI.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Desktop.Editing;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.Editing.SplitAndMerge
 {
@@ -41,14 +41,20 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 		MergeAction _mergeAction = MergeAction.MergeIntoFirstFeature;
 
-		//private const Key _alternateSplitAndMergeKey = Key.LeftCtrl;
-		private const Key _alternateSplitAndMergeKey = Key.A;
+		//remove process generated points
+		private const Key _alternateSplitAndMergeKey = Key.A; 
 		public bool AlternateSplitAndMerge { get; private set; } = false;
+
+		private const Key _saveSplitAndMergeKey = Key.F2;
+
+		private const Key _flipMergeAction = Key.F;
 
 		public bool SecondFeatureIsEditable { get; private set; }
 
 		private Feature _firstFeature;
 		private Feature _secondFeature;
+
+		private Geometry _mergeResult = null;
 
 		private SelectionCursors FirstPhaseCursors { get; } =
 			SelectionCursors.CreateArrowCursors(Resources.MergeFeaturesOverlay1);
@@ -67,6 +73,8 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 			GeomIsSimpleAsFeature = false;
 
 			HandledKeys.Add(_alternateSplitAndMergeKey);
+			HandledKeys.Add(_saveSplitAndMergeKey);
+			HandledKeys.Add(_flipMergeAction);
 		}
 
 		protected virtual string OptionsFileName => "MergeToolOptions.xml";
@@ -113,6 +121,7 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 		protected override Task OnSelectionPhaseStartedAsync()
 		{
+			_mergeResult = null;
 			_firstFeature = null;
 			_secondFeature = null;
 			AlternateSplitAndMerge = false;
@@ -134,32 +143,36 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 				if (args.Key == _alternateSplitAndMergeKey)
 				{
-					await QueuedTask.Run(async () =>
+					if (_firstFeature != null && _secondFeature != null)
 					{
-						if (_firstFeature != null && _secondFeature != null)
+						AlternateSplitAndMerge = ! AlternateSplitAndMerge;
+						PressedKeys.Remove(_alternateSplitAndMergeKey);
+						Feature survivingFeature = await ExecuteSplitAndMerge(true);
+					}
+				}
+				else if (args.Key == _flipMergeAction)
+				{
+					_mergeAction = _mergeAction == MergeAction.MergeIntoFirstFeature ? MergeAction.MergeIntoSecondFeature: MergeAction.MergeIntoFirstFeature;
+					Feature survivingFeature = await ExecuteSplitAndMerge(true);
+				}
+				else if (args.Key == _saveSplitAndMergeKey)
+				{
+					if (_mergeResult != null && _firstFeature != null && _secondFeature != null)
+					{
+						await QueuedTask.Run(async () =>
 						{
-							AlternateSplitAndMerge = !AlternateSplitAndMerge;
-
-							Polygon perimeter = GetPerimeter();
-							if (perimeter == null)
+							Feature survivingFeature = ExecuteMerge(_mergeResult, false);
+							await ClearSelectionAsync();
+							if (survivingFeature != null)
 							{
-								_msg.Error("Unable to merge: No Perimeter avaiavle.");
-								return;
+								_feedback?.Clear();
+								_feedback?.ClearSelection();
+
+								LogPromptForSelection();
+								await StartSelectionPhaseAsync();
 							}
-							Geometry firstGeometry = _firstFeature.GetShape();
-							Geometry secondGeometry = _secondFeature.GetShape();
-
-							var splitAndMerge = new SplitAndMergeGeometries(secondGeometry, firstGeometry, perimeter);
-							//var splitAndMerge = new SplitAndMergeGeometries(firstGeometry, secondGeometry, perimeter);
-							Geometry _mergeResult = splitAndMerge.MergeGeometriesOnPerimeter(AlternateSplitAndMerge);
-							PressedKeys.Remove(_alternateSplitAndMergeKey);
-							//show Overlay
-							_ = ExecuteMerge(_mergeResult);
-
-							_msg.InfoFormat($"Split and Merge use alternate: {AlternateSplitAndMerge}");
-
-						}
-					});
+						});
+					}
 				}
 			}
 			catch (Exception e)
@@ -222,7 +235,6 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 			await QueuedTask.Run(() => { SetupSketch(); });
 			await QueuedTask.Run(async () => { await ResetSelectionSketchTypeAsync(); });
 		}
-
 
 		protected override void LogUsingCurrentSelection()
 		{
@@ -356,7 +368,6 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 
 		#endregion MapToolBase and OneClickToolBase overrides
 
-
 		#region Non-public members
 
 		private async Task<bool> PickLastFeatureAndMerge(Geometry sketchGeometry,
@@ -374,10 +385,27 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 				return false;
 			}
 
-			//SecondFeatureIsEditable = selectedItem.Layer.CanEditData();
 			SecondFeatureIsEditable = selectedItem.Layer.IsEditable;
 
-			// Get all features in a single QueuedTask call to ensure thread consistency
+			Feature survivingFeature = await ExecuteSplitAndMerge(true);
+
+			await QueuedTask.Run(async () =>
+			{
+				await ClearSelectionAsync();
+				if (survivingFeature != null)
+				{
+					await StartSelectionPhaseAsync();
+				}
+			});
+
+			return true;
+		}
+
+		private async Task<Feature> ExecuteSplitAndMerge(bool overlayOnly)
+		{
+			if (_firstFeature == null || _secondFeature == null)
+				return null;
+
 			Feature survivingFeature = await QueuedTask.Run(async () =>
 			{
 				Feature updatedFeature = null;
@@ -393,55 +421,23 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 				Geometry firstGeometry = _firstFeature.GetShape();
 				Geometry secondGeometry = _secondFeature.GetShape();
 
+				bool flip = _mergeAction == MergeAction.MergeIntoSecondFeature;
+				var splitAndMerge =
+					flip
+						? new SplitAndMergeGeometries(firstGeometry, secondGeometry, perimeter)
+						: new SplitAndMergeGeometries(secondGeometry, firstGeometry, perimeter);
+				_mergeResult = splitAndMerge.MergeGeometriesOnPerimeter(AlternateSplitAndMerge);
 				//TODO also display MergeDiscontinuities
-				var splitAndMerge = new SplitAndMergeGeometries(secondGeometry, firstGeometry, perimeter);
-				//var splitAndMerge = new SplitAndMergeGeometries(firstGeometry, secondGeometry, perimeter);
-				Geometry _mergeResult = splitAndMerge.MergeGeometriesOnPerimeter(AlternateSplitAndMerge);
 
 				//show Overlay
-				updatedFeature = ExecuteMerge(_mergeResult);
+				updatedFeature = ExecuteMerge(_mergeResult, overlayOnly);
+
+				_msg.InfoFormat($"Split and Merge use alternate: {AlternateSplitAndMerge}");
 
 				return updatedFeature;
-
-
-				//MergerBase merger = GetMerger();
-
-				//List<Feature> featuresToMerge =
-				//	GetApplicableSelectedFeatures(ActiveMapView).ToList();
-
-				//featuresToMerge.Add(lastFeature);
-
-				//if (!EvaluateCanMerge(merger, featuresToMerge))
-				//{
-				//	return null;
-				//}
-
-				//Feature updateFeature;
-
-				//if (MergeOperationSurvivor == MergeOperationSurvivor.FirstObject)
-				//{
-				//	updateFeature = _firstFeature;
-				//}
-				//else
-				//{
-				//	updateFeature = DetermineSurvivingLargestFeature(featuresToMerge);
-				//}
-
-				//return await merger.MergeFeatures(featuresToMerge, updateFeature);
 			});
 
-			//if (survivingFeature != null)
-			{
-				//await SelectResultAndSetupNextStep(survivingFeature);
-				await QueuedTask.Run(async () =>
-				{
-					await ClearSelectionAsync();
-					//await StartSelectionPhaseAsync();
-				});
-
-			}
-
-			return true;
+			return survivingFeature;
 		}
 
 		private static bool RequiresSplitAndMerge([NotNull] Feature incrementFeature,
@@ -471,28 +467,51 @@ namespace ProSuite.AGP.Editing.SplitAndMerge
 			return true;
 		}
 
-		private Feature ExecuteMerge(Geometry mergeResult)
+		private Feature ExecuteMerge(Geometry mergeResult, bool overlayOnly)
 		{
-
-			QueuedTaskUtils.Run(() => _feedback?.UpdatePreview(
-				                          mergeResult));
-
-			if (_mergeAction == MergeAction.MergeIntoFirstFeature)
+			if (overlayOnly)
 			{
-				//QueuedTaskUtils.Run(() => _feedback?.UpdatePreviewFeatureToBeUpdated(
-				//	                    _firstFeature));
-				//SaveMergedFeatures(_firstFeature, _secondFeature, mergeResult,
-				//                   SecondFeatureIsEditable);
-			}
-			else if (SecondFeatureIsEditable)
-			{
-				//QueuedTaskUtils.Run(() => _feedback?.UpdatePreviewFeatureToBeUpdated(
-				//	                    _secondFeature));
-				//SaveMergedFeatures(_secondFeature, _firstFeature, mergeResult, true);
+				QueuedTaskUtils.Run(() => _feedback?.UpdatePreview(
+					                    mergeResult));
 			}
 			else
 			{
-				_msg.Warn("Unable to merge into second feature: It is not editable.");
+				if (_mergeAction == MergeAction.MergeIntoFirstFeature)
+				{
+					//QueuedTaskUtils.Run(() => _feedback?.UpdatePreviewFeatureToBeUpdated(
+					//						_firstFeature));
+					return SaveMergedFeatures(_firstFeature, _secondFeature, mergeResult,
+									   SecondFeatureIsEditable);
+				}
+				else if (SecondFeatureIsEditable)
+				{
+					//QueuedTaskUtils.Run(() => _feedback?.UpdatePreviewFeatureToBeUpdated(
+					//	                    _secondFeature));
+					return SaveMergedFeatures(_secondFeature, _firstFeature, mergeResult, true);
+				}
+				else
+				{
+					_msg.Warn("Unable to merge into second feature: It is not editable.");
+				}
+			}
+
+			return null;
+		}
+
+		private Feature SaveMergedFeatures(Feature featureToKeep, Feature featureToDelete,
+		                                Geometry newGeometry, bool deleteFeatureToDelete)
+		{
+			if (featureToKeep != null && newGeometry != null)
+			{
+				var editOperation = new EditOperation();
+
+				EditorTransaction transaction = new EditorTransaction(editOperation);
+
+				transaction.ExecuteAsync(
+					editContext => GdbPersistenceUtils.StoreShape(featureToKeep, newGeometry, editContext),
+					"SplitAndMerge", featureToKeep.GetTable() );
+
+				return featureToKeep;
 			}
 
 			return null;
