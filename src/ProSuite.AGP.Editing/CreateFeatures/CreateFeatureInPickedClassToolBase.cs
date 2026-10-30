@@ -61,6 +61,14 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 		return ToolUtils.GetSketchGeometryType(_currentFeatureGeometryType);
 	}
 
+	protected override SketchGeometryType? GetKnownEditSketchGeometryType()
+	{
+		// Unknown until a feature is picked
+		return _currentFeatureGeometryType == GeometryType.Unknown
+			       ? null
+			       : GetEditSketchGeometryType();
+	}
+
 	protected override SketchGeometryType GetSelectionSketchGeometryType()
 	{
 		return SketchGeometryType.Rectangle;

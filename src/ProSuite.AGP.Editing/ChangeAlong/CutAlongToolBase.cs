@@ -243,6 +243,9 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		}
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_cutAlongToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		// Ensure options are initialized

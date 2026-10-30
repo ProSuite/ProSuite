@@ -402,50 +402,10 @@ public static class GdbQueryUtils
 	                                         out int maximumWhereClauseLength,
 	                                         out int maximumInValueCount)
 	{
-		// safe defaults:
-		maximumWhereClauseLength = 2000;
-		maximumInValueCount = 1000;
-
-		if (workspace == null)
-		{
-			return;
-		}
-
-		switch (WorkspaceUtils.GetWorkspaceDbType(workspace))
-		{
-			case WorkspaceDbType.FileGeodatabase:
-				// these values have been found to work
-				maximumWhereClauseLength = 200000;
-				maximumInValueCount = 10000;
-				return;
-
-			case WorkspaceDbType.ArcSDEOracle:
-				maximumWhereClauseLength = 60000; // not sure where the limit is
-				maximumInValueCount = 1000; // this limit is documented
-				return;
-
-			case WorkspaceDbType.ArcSDESqlServer:
-				maximumWhereClauseLength = 60000; // actual limit is higher
-				maximumInValueCount = 1000; // limit may be higher
-				return;
-
-			case WorkspaceDbType.ArcSDEPostgreSQL:
-				// apparently unlimited
-				maximumWhereClauseLength = 200000;
-				maximumInValueCount = 10000;
-				return;
-
-			case WorkspaceDbType.FileSystem:
-			case WorkspaceDbType.Unknown:
-			case WorkspaceDbType.ArcSDEInformix:
-			case WorkspaceDbType.ArcSDEDB2:
-				// Unknown; use safe defaults
-				return;
-			default:
-				// Unknown; use safe defaults
-				throw new ArgumentOutOfRangeException(
-					$"Evaluate where clause limits for {WorkspaceUtils.GetWorkspaceDbType(workspace)}");
-		}
+		WhereClauseLimits.Get(workspace == null
+			                      ? WorkspaceDbType.Unknown
+			                      : WorkspaceUtils.GetWorkspaceDbType(workspace),
+		                      out maximumWhereClauseLength, out maximumInValueCount);
 	}
 
 	[NotNull]

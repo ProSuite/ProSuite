@@ -31,6 +31,7 @@ public abstract class DockPaneFillHoleViewModelBase : DockPaneViewModelBase
 
 	private CentralizableSettingViewModel<bool> _showPreview;
 	private CentralizableSettingViewModel<bool> _limitPreviewToExtent;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	public string Heading
 	{
@@ -50,6 +51,12 @@ public abstract class DockPaneFillHoleViewModelBase : DockPaneViewModelBase
 		set { SetProperty(ref _limitPreviewToExtent, value); }
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set { SetProperty(ref _alwaysShowOptionsPane, value); }
+	}
+
 	public HoleToolOptions Options
 	{
 		get => _options;
@@ -63,6 +70,10 @@ public abstract class DockPaneFillHoleViewModelBase : DockPaneViewModelBase
 			LimitPreviewToExtent = new CentralizableSettingViewModel<bool>(
 				Options.CentralizableLimitPreviewToExtent,
 				new[] { Options.CentralizableShowPreview });
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 		}
 	}
 

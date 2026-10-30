@@ -844,7 +844,17 @@ public static class WorkspaceUtils
 				return WorkspaceDbType.Unknown;
 			}
 
-			if (connector is DatabaseConnectionProperties connectionProperties)
+			// The DBMS sets the limits of where clauses (for example the length of IN lists).
+			DatabaseConnectionProperties connectionProperties =
+				connector switch
+				{
+					DatabaseConnectionProperties properties => properties,
+					DatabaseConnectionFile file =>
+						DatabaseClient.GetDatabaseConnectionProperties(file),
+					_ => null
+				};
+
+			if (connectionProperties != null)
 			{
 				switch (connectionProperties.DBMS)
 				{
@@ -865,7 +875,6 @@ public static class WorkspaceUtils
 				}
 			}
 
-			// No connection properties (probably SDE file -> TODO: How to find the connection details? Connection string?)
 			return WorkspaceDbType.ArcSDE;
 		}
 

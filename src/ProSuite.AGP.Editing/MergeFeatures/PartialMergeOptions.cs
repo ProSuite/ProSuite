@@ -35,6 +35,9 @@ public class PartialMergeOptions : PartialOptionsBase
 	[CanBeNull]
 	public OverridableSetting<bool> PreventLineFlip { get; set; }
 
+	[CanBeNull]
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#region Overrides of PartialOptionsBase
 
 	public override PartialOptionsBase Clone()
@@ -51,6 +54,7 @@ public class PartialMergeOptions : PartialOptionsBase
 		result.PreventInconsistentRelationships = TryClone(PreventInconsistentRelationships);
 		result.PreventLoops = TryClone(PreventLoops);
 		result.PreventLineFlip = TryClone(PreventLineFlip);
+		result.AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane);
 		return result;
 	}
 

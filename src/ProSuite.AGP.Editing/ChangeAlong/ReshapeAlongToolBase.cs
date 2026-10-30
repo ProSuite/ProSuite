@@ -253,6 +253,9 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 		}
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_reshapeAlongToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		// Ensure options are initialized

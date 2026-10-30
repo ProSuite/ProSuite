@@ -211,7 +211,6 @@ namespace ProSuite.Commons.UI.Dialogs
             this._tableLayoutPanelMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this._tableLayoutPanelMain.Controls.Add(this._flowLayoutPanelButtons, 1, 1);
             this._tableLayoutPanelMain.Controls.Add(this._flowLayoutPanelMain, 0, 0);
-            this._tableLayoutPanelMain.Dock = System.Windows.Forms.DockStyle.Top;
             this._tableLayoutPanelMain.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
             this._tableLayoutPanelMain.Location = new System.Drawing.Point(0, 0);
             this._tableLayoutPanelMain.Name = "_tableLayoutPanelMain";

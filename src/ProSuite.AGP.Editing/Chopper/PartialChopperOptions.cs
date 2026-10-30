@@ -19,6 +19,8 @@ public class PartialChopperOptions : PartialOptionsBase
 
 	public OverridableSetting<bool> UseSourceZs { get; set; }
 
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#endregion
 
 	public override PartialOptionsBase Clone()
@@ -32,7 +34,8 @@ public class PartialChopperOptions : PartialOptionsBase
 			             SnapTolerance = TryClone(SnapTolerance),
 			             UseSourceZs = TryClone(UseSourceZs),
 			             ExcludeInteriorInteriorIntersections =
-				             TryClone(ExcludeInteriorInteriorIntersections)
+				             TryClone(ExcludeInteriorInteriorIntersections),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 
 		return result;

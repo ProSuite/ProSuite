@@ -42,6 +42,7 @@ public abstract class DockPaneGeneralizeViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<bool> _only2D;
 	private CentralizableSettingViewModel<bool> _protectTopologicalVertices;
 	private CentralizableSettingViewModel<bool> _limitToVisibleExtent;
+	private CentralizableSettingViewModel<bool> _alwaysShowOptionsPane;
 
 	public string Heading
 	{
@@ -97,6 +98,12 @@ public abstract class DockPaneGeneralizeViewModelBase : DockPaneViewModelBase
 		set { SetProperty(ref _limitToVisibleExtent, value); }
 	}
 
+	public CentralizableSettingViewModel<bool> AlwaysShowOptionsPane
+	{
+		get => _alwaysShowOptionsPane;
+		set { SetProperty(ref _alwaysShowOptionsPane, value); }
+	}
+
 	public TargetFeatureSelectionViewModel TargetFeatureSelectionVM
 	{
 		get => _targetFeatureSelectionVm;
@@ -146,6 +153,10 @@ public abstract class DockPaneGeneralizeViewModelBase : DockPaneViewModelBase
 			LimitToVisibleExtent =
 				new CentralizableSettingViewModel<bool>(
 					Options.CentralizableLimitToVisibleExtent);
+
+			AlwaysShowOptionsPane =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizableAlwaysShowOptionsPane);
 
 			TargetFeatureSelectionVM =
 				new TargetFeatureSelectionViewModel(

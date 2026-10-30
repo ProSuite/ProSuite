@@ -843,6 +843,24 @@ public static class MapUtils
 	}
 
 	/// <summary>
+	/// Gets the first of the specified maps that has an elevation surface.
+	/// Stereo maps are never returned. Must be called on the MCT.
+	/// </summary>
+	[CanBeNull]
+	public static Map GetMapWithSurface([NotNull] IEnumerable<Map> maps)
+	{
+		foreach (Map map in maps)
+		{
+			if (MapHasSurface(map))
+			{
+				return map;
+			}
+		}
+
+		return null;
+	}
+
+	/// <summary>
 	/// Gets the first elevation surface layer in the map with the specified name.
 	/// This layer contains the layers that provide the actual elevation.
 	/// </summary>
@@ -1132,14 +1150,16 @@ public static class MapUtils
 			return allowSubMapToleranceResult ? res : ClampToMapTolerance(mapView, res);
 		}
 
-		// The point as screen point
+		// The point as screen point. MapToScreen rounds to whole pixels: measure from the
+		// rounded screen point, not from atPoint, or the result is off by up to half a pixel.
 		var screenPoint = mapView.MapToScreen(atPoint);
+		var screenMapPoint = mapView.ScreenToMap(screenPoint);
 
 		//Add tolerance pixels to get a "radius".
 		var radiusScreenPoint = new Point(screenPoint.X + pixels, screenPoint.Y);
 		var radiusMapPoint = mapView.ScreenToMap(radiusScreenPoint);
 
-		double result = GeometryEngine.Instance.Distance(atPoint, radiusMapPoint);
+		double result = GeometryEngine.Instance.Distance(screenMapPoint, radiusMapPoint);
 
 		return allowSubMapToleranceResult ? result : ClampToMapTolerance(mapView, result);
 	}

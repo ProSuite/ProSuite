@@ -11,6 +11,7 @@ namespace ProSuite.Commons.UI.Dialogs
 	internal partial class MessageListForm : Form
 	{
 		private MessageBoxButtons _buttons;
+		private Point _mouseLocation;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MessageListForm"/> class.
@@ -18,6 +19,50 @@ namespace ProSuite.Commons.UI.Dialogs
 		public MessageListForm()
 		{
 			InitializeComponent();
+
+			StartPosition = FormStartPosition.Manual;
+		}
+
+		/// <summary>
+		/// Opens the dialog centered on the mouse pointer, i.e. above the map the user works in.
+		/// The size of the form is only known after the automatic layout.
+		/// </summary>
+		protected override void OnLoad(EventArgs e)
+		{
+			_mouseLocation = Cursor.Position;
+
+			CenterOnMouseLocation();
+
+			base.OnLoad(e);
+		}
+
+		/// <summary>
+		/// Centers the dialog again: if the screen under the mouse pointer has another display
+		/// scaling than the screen the form was created for, the form is resized after
+		/// <see cref="OnLoad"/>.
+		/// </summary>
+		protected override void OnShown(EventArgs e)
+		{
+			CenterOnMouseLocation();
+
+			base.OnShown(e);
+		}
+
+		/// <summary>
+		/// Centers the form on the mouse location, moved into the working area of the screen
+		/// under the mouse pointer if necessary.
+		/// </summary>
+		private void CenterOnMouseLocation()
+		{
+			Rectangle workingArea = Screen.GetWorkingArea(_mouseLocation);
+
+			int x = Math.Max(workingArea.Left,
+			                 Math.Min(_mouseLocation.X - Width / 2, workingArea.Right - Width));
+			int y = Math.Max(workingArea.Top,
+			                 Math.Min(_mouseLocation.Y - Height / 2,
+			                          workingArea.Bottom - Height));
+
+			Location = new Point(x, y);
 		}
 
 		public DialogResult ShowDialog([CanBeNull] IWin32Window owner,
@@ -26,7 +71,8 @@ namespace ProSuite.Commons.UI.Dialogs
 		                               [NotNull] IList<string> listInfos,
 		                               [CanBeNull] string footerText,
 		                               MessageBoxIcon icon,
-		                               MessageBoxButtons buttons)
+		                               MessageBoxButtons buttons,
+		                               bool middleButtonIsDefault = false)
 		{
 			Assert.ArgumentNotNullOrEmpty(title, nameof(title));
 			Assert.ArgumentNotNullOrEmpty(headerText, nameof(headerText));
@@ -38,6 +84,12 @@ namespace ProSuite.Commons.UI.Dialogs
 
 			SetIcon(icon);
 			SetButtons(buttons);
+
+			if (middleButtonIsDefault)
+			{
+				SetMiddleButtonAsDefault(buttons);
+			}
+
 			SetTexts(title, headerText, footerText);
 			SetListText(listInfos);
 
@@ -65,7 +117,7 @@ namespace ProSuite.Commons.UI.Dialogs
 
 			foreach (string line in listInfos)
 			{
-				var label = new Label {Text = line};
+				var label = new Label {Text = line, AutoSize = true};
 
 				_flowLayoutPanelList.Controls.Add(label);
 				_flowLayoutPanelList.SetFlowBreak(label, true);
@@ -118,6 +170,22 @@ namespace ProSuite.Commons.UI.Dialogs
 				case MessageBoxButtons.YesNoCancel:
 					SetButtonTexts("Yes", "No", "Cancel", true, true, true);
 					break;
+			}
+		}
+
+		/// <summary>
+		/// Gives the focus to the middle button (OK, Yes or Retry), so that Enter selects it,
+		/// and lets Escape select the right button. Without this, the right button has the
+		/// focus because it is first in the tab order.
+		/// </summary>
+		private void SetMiddleButtonAsDefault(MessageBoxButtons buttons)
+		{
+			AcceptButton = _buttonMiddle;
+			ActiveControl = _buttonMiddle;
+
+			if (buttons != MessageBoxButtons.OK)
+			{
+				CancelButton = _buttonRight;
 			}
 		}
 
