@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -172,14 +173,12 @@ public class EditedFeaturesHider
 		string oidField = layer.GetTable().GetDefinition().GetObjectIDField();
 		string whereClause = $"{oidField} NOT IN ({string.Join(",", oids)})";
 
-		_hiddenLayers.Add(new HiddenLayerState(layer, cimLayer));
+		_hiddenLayers.Add(new HiddenLayerState(layer, cimLayer, _useDefinitionQuery));
 
 		if (_useDefinitionQuery)
 		{
 			// Hides the selection too.
-			AddDefinitionQuery(Assert.NotNull(cimLayer.FeatureTable), whereClause);
-
-			SetDefinitionWithoutUndo(layer, cimLayer);
+			ActivateOwnDefinitionQuery(layer, whereClause);
 			return;
 		}
 
@@ -207,29 +206,22 @@ public class EditedFeaturesHider
 
 	/// <summary>
 	/// Makes a definition query of its own the active one: the active query of the layer, if
-	/// any, and the where clause.
+	/// any, and the where clause. Not through the layer's CIM definition: ArcGIS Pro clears the
+	/// current editing template on every <see cref="BasicFeatureLayer.SetDefinition"/>, even
+	/// with an unchanged definition.
 	/// </summary>
-	private static void AddDefinitionQuery([NotNull] CIMFeatureTable featureTable,
-	                                       [NotNull] string whereClause)
+	private static void ActivateOwnDefinitionQuery([NotNull] BasicFeatureLayer layer,
+	                                               [NotNull] string whereClause)
 	{
-		string active = featureTable.DefinitionExpression;
+		string active = layer.DefinitionQuery;
 
 		string expression = string.IsNullOrWhiteSpace(active)
 			                    ? whereClause
 			                    : $"({active}) AND {whereClause}";
 
-		var ownQuery = new CIMDefinitionFilter
-		               {
-			               Name = _filterName,
-			               DefinitionExpression = expression
-		               };
-
-		featureTable.DefinitionFilterChoices =
-			(featureTable.DefinitionFilterChoices ?? Enumerable.Empty<CIMDefinitionFilter>())
-			.Append(ownQuery)
-			.ToArray();
-		featureTable.DefinitionExpressionName = _filterName;
-		featureTable.DefinitionExpression = expression;
+		ExecuteWithoutUndo(
+			layer,
+			() => layer.InsertDefinitionQuery(new DefinitionQuery(_filterName, expression), true));
 	}
 
 	/// <summary>
@@ -305,11 +297,18 @@ public class EditedFeaturesHider
 	private static void SetDefinitionWithoutUndo([NotNull] BasicFeatureLayer layer,
 	                                             [NotNull] CIMBaseLayer definition)
 	{
+		ExecuteWithoutUndo(layer, () => layer.SetDefinition(definition));
+	}
+
+	/// <remarks>Must be called on the MCT.</remarks>
+	private static void ExecuteWithoutUndo([NotNull] BasicFeatureLayer layer,
+	                                       [NotNull] Action layerChange)
+	{
 		OperationManager operationManager = layer.Map?.OperationManager;
 
 		var operationsBefore = operationManager?.FindUndoOperations(_ => true);
 
-		layer.SetDefinition(definition);
+		layerChange();
 
 		if (operationManager == null)
 		{
@@ -334,32 +333,42 @@ public class EditedFeaturesHider
 	{
 		[NotNull] private readonly BasicFeatureLayer _layer;
 
+		private readonly bool _hiddenByDefinitionQuery;
+
 		private readonly bool _enableDisplayFilters;
 		[CanBeNull] private readonly CIMDisplayFilter[] _displayFilters;
 
-		[CanBeNull] private readonly string _definitionExpression;
-		[CanBeNull] private readonly string _definitionExpressionName;
-		[CanBeNull] private readonly CIMDefinitionFilter[] _definitionFilterChoices;
+		[CanBeNull] private readonly string _activeDefinitionQueryName;
 
 		// null: the default from the selection options
 		[CanBeNull] private readonly CIMColor _selectionColor;
 		[CanBeNull] private readonly CIMColor _polygonSelectionFillColor;
 
 		public HiddenLayerState([NotNull] BasicFeatureLayer layer,
-		                        [NotNull] CIMFeatureLayer cimLayer)
+		                        [NotNull] CIMFeatureLayer cimLayer,
+		                        bool hiddenByDefinitionQuery)
 		{
 			_layer = layer;
+			_hiddenByDefinitionQuery = hiddenByDefinitionQuery;
 			_enableDisplayFilters = cimLayer.EnableDisplayFilters;
 			_displayFilters = cimLayer.DisplayFilters;
-			_definitionExpression = cimLayer.FeatureTable?.DefinitionExpression;
-			_definitionExpressionName = cimLayer.FeatureTable?.DefinitionExpressionName;
-			_definitionFilterChoices = cimLayer.FeatureTable?.DefinitionFilterChoices;
+			_activeDefinitionQueryName = layer.ActiveDefinitionQuery?.Name;
 			_selectionColor = cimLayer.SelectionColor;
 			_polygonSelectionFillColor = cimLayer.PolygonSelectionFillColor;
 		}
 
 		public void Restore()
 		{
+			if (_hiddenByDefinitionQuery)
+			{
+				ExecuteWithoutUndo(_layer, () =>
+				{
+					_layer.SetActiveDefinitionQuery(_activeDefinitionQueryName);
+					_layer.RemoveDefinitionQueries(new[] { _filterName });
+				});
+				return;
+			}
+
 			if (_layer.GetDefinition() is not CIMFeatureLayer cimLayer)
 			{
 				return;
@@ -367,14 +376,6 @@ public class EditedFeaturesHider
 
 			cimLayer.EnableDisplayFilters = _enableDisplayFilters;
 			cimLayer.DisplayFilters = _displayFilters;
-
-			if (cimLayer.FeatureTable != null)
-			{
-				cimLayer.FeatureTable.DefinitionExpression = _definitionExpression;
-				cimLayer.FeatureTable.DefinitionExpressionName = _definitionExpressionName;
-				cimLayer.FeatureTable.DefinitionFilterChoices = _definitionFilterChoices;
-			}
-
 			cimLayer.SelectionColor = _selectionColor;
 			cimLayer.PolygonSelectionFillColor = _polygonSelectionFillColor;
 
