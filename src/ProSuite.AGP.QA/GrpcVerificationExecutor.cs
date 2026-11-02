@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ProSuite.Commons.AGP;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -47,6 +51,8 @@ namespace ProSuite.AGP.QA
 
 		protected abstract bool RunsLocally { get; }
 
+		protected abstract bool AlwaysUseClientData { get; }
+
 		[NotNull]
 		protected abstract QualityVerificationGrpc.QualityVerificationGrpcClient GetQaClient();
 
@@ -83,15 +89,6 @@ namespace ProSuite.AGP.QA
 			[NotNull] QualityVerificationProgressTracker progress)
 		{
 			return QAUtils.CreateQualityVerificationRun(request, collector, progress);
-		}
-
-		/// <summary>
-		/// Configures optional client-data provision and returns whether it is enabled.
-		/// </summary>
-		protected virtual Task<bool> ConfigureVerificationRunAsync(
-			[NotNull] BackgroundVerificationRun verificationRun)
-		{
-			return Task.FromResult(false);
 		}
 
 		public Task<ServiceCallStatus> Verify(
@@ -210,6 +207,51 @@ namespace ProSuite.AGP.QA
 				request, -1, Parameters?.SaveVerificationStatisticsInDdx ?? false, true, false);
 		}
 
+		/// <summary>
+		/// Creates the data provider that serves verified data (and schema) from the client's edit
+		/// session for the given project workspace. The base implementation returns null, which
+		/// lets the server pull the data itself. Override to enable client-provided data.
+		/// </summary>
+		[CanBeNull]
+		protected virtual IVerificationDataProvider CreateVerificationDataProvider()
+		{
+			return null;
+		}
+
+		[NotNull]
+		protected abstract Task<Datastore> GetCurrentDatastore();
+
+		private async Task<bool> ConfigureVerificationRunAsync(
+			[NotNull] BackgroundVerificationRun verificationRun)
+		{
+			bool provideDataFromClient = false;
+
+			IVerificationDataProvider dataProvider =
+				CreateVerificationDataProvider();
+
+			Datastore datastore = await GetCurrentDatastore();
+
+			ClientDataReason clientDataReason = dataProvider == null
+				                                    ? ClientDataReason.None
+				                                    : await GetClientDataReason(datastore);
+
+			if (clientDataReason != ClientDataReason.None)
+			{
+				provideDataFromClient = true;
+
+				verificationRun.VerificationDataProvider = dataProvider;
+
+				// The provider reads the live workspace; the reads must run on the MCT so that
+				// unsaved edits are visible. The interactive verification runs on a worker thread,
+				// so blocking on the MCT here does not dead-lock.
+				verificationRun.DataProvisionScheduler = func => ProContext.Run(func);
+
+				_msg.Info(GetClientDataMessage(clientDataReason));
+			}
+
+			return provideDataFromClient;
+		}
+
 		private void SetPathParameters(VerificationRequest request)
 		{
 			if (string.IsNullOrEmpty(ResultsPath))
@@ -237,6 +279,94 @@ namespace ProSuite.AGP.QA
 			if (Parameters?.CreateLocalIssueFileGdb ?? true)
 			{
 				request.Parameters.IssueFileGdbPath = gdbDir;
+			}
+		}
+
+		private static bool IsFeatureService([CanBeNull] Datastore datastore)
+		{
+			return datastore?.GetConnector() is ServiceConnectionProperties;
+		}
+
+		private enum ClientDataReason
+		{
+			None,
+			Forced,
+			FeatureService,
+			UnsavedEdits
+		}
+
+		private async Task<ClientDataReason> GetClientDataReason(
+			[NotNull] Datastore datastore)
+		{
+			if (AlwaysUseClientData)
+			{
+				return ClientDataReason.Forced;
+			}
+
+			return await QueuedTask.Run(() =>
+			{
+				if (IsFeatureService(datastore))
+				{
+					return ClientDataReason.FeatureService;
+				}
+
+				return HasUnsavedEdits(datastore)
+					       ? ClientDataReason.UnsavedEdits
+					       : ClientDataReason.None;
+			});
+		}
+
+		[NotNull]
+		private static string GetClientDataMessage(ClientDataReason reason)
+		{
+			const string sentFromHere =
+				"the data is read from this ArcGIS Pro session and sent to the verification service";
+
+			switch (reason)
+			{
+				case ClientDataReason.UnsavedEdits:
+					return $"The verified data has unsaved edits, so {sentFromHere}.";
+
+				case ClientDataReason.FeatureService:
+					return
+						$"The verified data is provided from a feature service, so {sentFromHere}.";
+
+				case ClientDataReason.Forced:
+					return $"Client-provided verification data is switched on, so {sentFromHere}.";
+
+				default:
+					return $"For this verification, {sentFromHere}.";
+			}
+		}
+
+		private static bool HasUnsavedEdits([CanBeNull] Datastore datastore)
+		{
+			if (datastore == null)
+			{
+				return false;
+			}
+
+			try
+			{
+				Project project = Project.Current;
+				if (project?.HasEdits != true)
+				{
+					return false;
+				}
+
+				IReadOnlyList<Datastore> editedDatastores = project.EditedDatastores;
+				if (editedDatastores == null || editedDatastores.Count == 0)
+				{
+					return false;
+				}
+
+				return editedDatastores.Any(edited =>
+					                            WorkspaceUtils.IsSameDatastore(edited, datastore));
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error checking edited datastores: {e.Message}", e);
+				return false;
 			}
 		}
 	}

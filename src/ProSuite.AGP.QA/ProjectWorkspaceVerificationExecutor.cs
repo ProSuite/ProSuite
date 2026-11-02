@@ -37,6 +37,8 @@ namespace ProSuite.AGP.QA
 
 		protected override bool RunsLocally => _client.RunsLocally();
 
+		protected override bool AlwaysUseClientData => _service.AlwaysUseClientData;
+
 		protected override QualityVerificationGrpc.QualityVerificationGrpcClient GetQaClient()
 		{
 			return Assert.NotNull(_client.QaGrpcClient);
@@ -80,10 +82,14 @@ namespace ProSuite.AGP.QA
 				() => specification, perimeter, objectsToVerify);
 		}
 
-		protected override Task<bool> ConfigureVerificationRunAsync(
-			BackgroundVerificationRun verificationRun)
+		protected override IVerificationDataProvider CreateVerificationDataProvider()
 		{
-			return _service.ConfigureVerificationRunAsync(verificationRun, _workspace);
+			return _service.CreateVerificationDataProvider(_workspace);
+		}
+
+		protected override Task<Datastore> GetCurrentDatastore()
+		{
+			return Task.FromResult(_workspace.Datastore);
 		}
 	}
 }

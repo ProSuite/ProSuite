@@ -116,82 +116,16 @@ namespace ProSuite.AGP.QA
 				       qualitySpecification, objectsToVerify, perimeter, progress);
 		}
 
-		internal async Task<bool> ConfigureVerificationRunAsync(
-			[NotNull] BackgroundVerificationRun verificationRun,
-			[NotNull] ProjectWorkspace projectWorkspace)
-		{
-			bool provideDataFromClient = false;
-
-			IVerificationDataProvider dataProvider =
-				CreateVerificationDataProvider(projectWorkspace);
-
-			ClientDataReason clientDataReason = dataProvider == null
-				                                    ? ClientDataReason.None
-				                                    : await GetClientDataReason(projectWorkspace);
-
-			if (clientDataReason != ClientDataReason.None)
-			{
-				provideDataFromClient = true;
-
-				verificationRun.VerificationDataProvider = dataProvider;
-
-				// The provider reads the live workspace; the reads must run on the MCT so that
-				// unsaved edits are visible. The interactive verification runs on a worker thread,
-				// so blocking on the MCT here does not dead-lock.
-				verificationRun.DataProvisionScheduler = func => ProContext.Run(func);
-
-				_msg.Info(GetClientDataMessage(clientDataReason));
-			}
-
-			return provideDataFromClient;
-		}
-
 		/// <summary>
 		/// Creates the data provider that serves verified data (and schema) from the client's edit
 		/// session for the given project workspace. The base implementation returns null, which
 		/// lets the server pull the data itself. Override to enable client-provided data.
 		/// </summary>
 		[CanBeNull]
-		protected virtual IVerificationDataProvider CreateVerificationDataProvider(
+		public virtual IVerificationDataProvider CreateVerificationDataProvider(
 			[NotNull] ProjectWorkspace projectWorkspace)
 		{
 			return null;
-		}
-
-		private static bool IsFeatureService([CanBeNull] Datastore datastore)
-		{
-			return datastore?.GetConnector() is ServiceConnectionProperties;
-		}
-
-		private static bool HasUnsavedEdits([CanBeNull] Datastore datastore)
-		{
-			if (datastore == null)
-			{
-				return false;
-			}
-
-			try
-			{
-				Project project = Project.Current;
-				if (project?.HasEdits != true)
-				{
-					return false;
-				}
-
-				IReadOnlyList<Datastore> editedDatastores = project.EditedDatastores;
-				if (editedDatastores == null || editedDatastores.Count == 0)
-				{
-					return false;
-				}
-
-				return editedDatastores.Any(edited =>
-					                            WorkspaceUtils.IsSameDatastore(edited, datastore));
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error checking edited datastores: {e.Message}", e);
-				return false;
-			}
 		}
 
 		protected internal virtual ClientIssueMessageCollector CreateIssueMessageCollector()
@@ -234,60 +168,6 @@ namespace ProSuite.AGP.QA
 				       VerificationReportName = VerificationReportName,
 				       Parameters = Parameters
 			       };
-		}
-
-		private enum ClientDataReason
-		{
-			None,
-			Forced,
-			FeatureService,
-			UnsavedEdits
-		}
-
-		private async Task<ClientDataReason> GetClientDataReason(
-			[NotNull] ProjectWorkspace projectWorkspace)
-		{
-			if (AlwaysUseClientData)
-			{
-				return ClientDataReason.Forced;
-			}
-
-			Datastore datastore = projectWorkspace.Datastore;
-
-			return await QueuedTask.Run(() =>
-			{
-				if (IsFeatureService(datastore))
-				{
-					return ClientDataReason.FeatureService;
-				}
-
-				return HasUnsavedEdits(datastore)
-					       ? ClientDataReason.UnsavedEdits
-					       : ClientDataReason.None;
-			});
-		}
-
-		[NotNull]
-		private static string GetClientDataMessage(ClientDataReason reason)
-		{
-			const string sentFromHere =
-				"the data is read from this ArcGIS Pro session and sent to the verification service";
-
-			switch (reason)
-			{
-				case ClientDataReason.UnsavedEdits:
-					return $"The verified data has unsaved edits, so {sentFromHere}.";
-
-				case ClientDataReason.FeatureService:
-					return
-						$"The verified data is provided from a feature service, so {sentFromHere}.";
-
-				case ClientDataReason.Forced:
-					return $"Client-provided verification data is switched on, so {sentFromHere}.";
-
-				default:
-					return $"For this verification, {sentFromHere}.";
-			}
 		}
 	}
 }
