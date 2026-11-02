@@ -921,7 +921,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				_msg.Error($"Error checking quality for request {request}", e);
 				cancellationMessage = $"Server error: {ExceptionUtils.FormatMessage(e)}";
 
-				ServiceUtils.SetUnhealthy(Health, GetType());
+				if (! ServiceUtils.KeepServingOnError(KeepServingOnErrorDefaultValue))
+				{
+					ServiceUtils.SetUnhealthy(Health, GetType());
+				}
 			}
 
 			string cancelMessage = cancellationMessage ?? qaService?.CancellationMessage;
@@ -1045,6 +1048,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ServiceUtils.SetUnhealthy(Health, GetType());
 				}
 			}
+
 			try
 			{
 				return responseStreamer.SendFinalResponse(
@@ -1087,7 +1091,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 					}
 				}
 			}
-
 		}
 
 		private static void ReleaseVerificationRun<T>(
