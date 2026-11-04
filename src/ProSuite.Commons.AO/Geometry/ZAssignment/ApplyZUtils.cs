@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Properties;
 using ProSuite.Commons.AO.Surface;
@@ -21,12 +22,14 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 		private static readonly ThreadLocal<IPoint> _queryPoint =
 			new ThreadLocal<IPoint>(() => new PointClass());
 
-		[NotNull]
+		/// <returns>A copy of the source with the surface Z values, or null if the calculation
+		/// was cancelled.</returns>
 		public static T Dtm<T>([NotNull] T source,
 		                       [NotNull] ISimpleSurface surface,
 		                       [CanBeNull] IGeometry areaOfInterest = null,
 		                       double drapeTolerance = double.NaN,
-		                       double zOffset = double.NaN)
+		                       double zOffset = double.NaN,
+		                       [CanBeNull] ITrackCancel trackCancel = null)
 			where T : IGeometry
 		{
 			Assert.ArgumentNotNull(surface, LocalizableStrings.ApplyZ_NoSurface);
@@ -34,7 +37,12 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			IGeometry newGeometry;
 			if (! double.IsNaN(drapeTolerance))
 			{
-				newGeometry = Drape(source, surface, areaOfInterest, drapeTolerance);
+				newGeometry = Drape(source, surface, areaOfInterest, drapeTolerance, trackCancel);
+
+				if (newGeometry == null)
+				{
+					return default;
+				}
 			}
 			else
 			{
@@ -580,10 +588,12 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			return (T) GeometryUtils.InterpolateZ(polyline);
 		}
 
+		[CanBeNull]
 		private static IGeometry Drape([NotNull] IGeometry shape,
 		                               [NotNull] ISimpleSurface surface,
 		                               [CanBeNull] IGeometry areaOfInterest,
-		                               double drapeTolerance)
+		                               double drapeTolerance,
+		                               [CanBeNull] ITrackCancel trackCancel)
 		{
 			if (shape is IPoint || shape is IMultipoint)
 			{
@@ -591,18 +601,21 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 					$"Draping is not supported for shape type {shape.GeometryType}");
 			}
 
-			if (! TryUpdateShapeVerticesZ(shape, surface, areaOfInterest))
+			IGeometry draped = GeometryFactory.Clone(shape);
+
+			if (! TryUpdateShapeVerticesZ(draped, surface, areaOfInterest))
 			{
-				return null;
+				throw new InvalidDataException("Z value could not be assigned from surface.");
 			}
 
 			// Intermediate vertices:
 
 			IBoundedXY aoiEnvelope = GetAoiBounds(areaOfInterest);
 
-			if (shape is IPolycurve polycurve)
+			if (draped is IPolycurve polycurve)
 			{
-				return DrapePolycurve(polycurve, surface, drapeTolerance, aoiEnvelope);
+				return DrapePolycurve(polycurve, surface, drapeTolerance, aoiEnvelope,
+				                      trackCancel);
 			}
 
 			throw new InvalidOperationException(
@@ -631,12 +644,17 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			return aoiEnvelope;
 		}
 
-		private static IGeometry DrapePolycurve(IPolycurve polycurve, ISimpleSurface ontoSurface,
-		                                        double drapeTolerance, IBoundedXY aoi)
+		[CanBeNull]
+		private static IGeometry DrapePolycurve([NotNull] IPolycurve polycurve,
+		                                        [NotNull] ISimpleSurface ontoSurface,
+		                                        double drapeTolerance,
+		                                        [CanBeNull] IBoundedXY aoi,
+		                                        [CanBeNull] ITrackCancel trackCancel)
 		{
 			List<Linestring> drapedLinestrings = new List<Linestring>();
 
 			double tolerance = GeometryUtils.GetXyTolerance(polycurve);
+			double sampleDistance = GetSampleDistance(drapeTolerance, tolerance);
 
 			foreach (IPath path in GeometryUtils.GetPaths(polycurve))
 			{
@@ -650,65 +668,147 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 					continue;
 				}
 
-				var densifiedCoordinates = new List<Pnt3D>();
+				var drapedPoints = new List<Pnt3D>();
 				foreach (Line3D segment in linestring)
 				{
-					double length2D = segment.Length2D;
-					double count = Math.Floor(length2D / drapeTolerance);
-
-					densifiedCoordinates.Add(segment.StartPoint);
+					if (drapedPoints.Count == 0)
+					{
+						drapedPoints.Add(segment.StartPoint);
+					}
 
 					if (aoi == null || IsInAreaOfInterest(segment, aoi, tolerance))
 					{
-						Pnt3D previousPoint = null;
-						double pieceLength = length2D / count;
+						List<Pnt3D> samples =
+							SampleSurface(segment, ontoSurface, sampleDistance, trackCancel);
 
-						for (int i = 1; i < count; i++)
+						if (samples == null)
 						{
-							Pnt3D pointAlong = segment.GetPointAlong(pieceLength * i, false);
-
-							double originalZ = pointAlong.Z;
-
-							if (! TryUpdatePointZ(pointAlong, ontoSurface))
-							{
-								throw new ArgumentException(
-									$"No Z value available at {pointAlong.X}|{pointAlong.Y}");
-							}
-
-							double actualZ = pointAlong.Z;
-
-							if (MathUtils.AreEqual(originalZ, actualZ, drapeTolerance))
-							{
-								continue;
-							}
-
-							if (previousPoint != null)
-							{
-								Line3D currentSegment = new Line3D(previousPoint, segment.EndPoint);
-
-								Pnt3D thisPointOnCurrentSegment =
-									currentSegment.GetPointAlong(pieceLength, false);
-
-								if (MathUtils.AreEqual(thisPointOnCurrentSegment.Z, actualZ,
-								                       drapeTolerance))
-								{
-									continue;
-								}
-
-								densifiedCoordinates.Add(pointAlong);
-							}
-
-							previousPoint = pointAlong;
+							return null;
 						}
+
+						drapedPoints.AddRange(GetSamplesToKeep(samples, drapeTolerance));
 					}
 
-					densifiedCoordinates.Add(segment.EndPoint);
+					drapedPoints.Add(segment.EndPoint);
 				}
 
-				drapedLinestrings.Add(new Linestring(densifiedCoordinates));
+				drapedLinestrings.Add(new Linestring(drapedPoints));
 			}
 
 			return CreateAoGeometry(drapedLinestrings, polycurve);
+		}
+
+		private static double GetSampleDistance(double drapeTolerance, double xyTolerance)
+		{
+			// Samples closer than the XY tolerance would become duplicate vertices. A drape
+			// tolerance of 0 would result in an infinite number of samples.
+			return Math.Max(drapeTolerance, 2 * xyTolerance);
+		}
+
+		/// <summary>
+		/// Gets the points along the segment, at most the sample distance apart, with the Z
+		/// value of the surface. The start and end point of the segment are included
+		/// unchanged.
+		/// </summary>
+		/// <returns>The samples or null, if the calculation was cancelled.</returns>
+		[CanBeNull]
+		private static List<Pnt3D> SampleSurface([NotNull] Line3D segment,
+		                                         [NotNull] ISimpleSurface surface,
+		                                         double sampleDistance,
+		                                         [CanBeNull] ITrackCancel trackCancel)
+		{
+			int intervalCount = (int) Math.Ceiling(segment.Length2D / sampleDistance);
+
+			var samples = new List<Pnt3D>(intervalCount + 1) { segment.StartPoint };
+
+			for (int i = 1; i < intervalCount; i++)
+			{
+				if (trackCancel != null && ! trackCancel.Continue())
+				{
+					return null;
+				}
+
+				Pnt3D pointAlong = segment.GetPointAlong((double) i / intervalCount, true);
+
+				if (! TryUpdatePointZ(pointAlong, surface))
+				{
+					throw new ArgumentException(
+						$"No Z value available at {pointAlong.X}|{pointAlong.Y}");
+				}
+
+				samples.Add(pointAlong);
+			}
+
+			samples.Add(segment.EndPoint);
+
+			return samples;
+		}
+
+		/// <summary>
+		/// Gets the samples between the first and the last sample that must be added so that
+		/// the line through them deviates vertically by no more than the drape tolerance from
+		/// any sample. The sample that deviates most from the line between the samples kept
+		/// so far is kept first, until no sample deviates more than the drape tolerance.
+		/// </summary>
+		[NotNull]
+		private static IEnumerable<Pnt3D> GetSamplesToKeep([NotNull] List<Pnt3D> samples,
+		                                                   double drapeTolerance)
+		{
+			var isKept = new bool[samples.Count];
+
+			// A stack instead of recursion: the depth can reach the number of samples
+			var ranges = new Stack<KeyValuePair<int, int>>();
+			ranges.Push(new KeyValuePair<int, int>(0, samples.Count - 1));
+
+			while (ranges.Count > 0)
+			{
+				KeyValuePair<int, int> range = ranges.Pop();
+				int first = range.Key;
+				int last = range.Value;
+
+				int farthestIndex =
+					GetIndexOfMostDeviatingSample(samples, first, last, drapeTolerance);
+
+				if (farthestIndex < 0)
+				{
+					continue;
+				}
+
+				isKept[farthestIndex] = true;
+
+				ranges.Push(new KeyValuePair<int, int>(first, farthestIndex));
+				ranges.Push(new KeyValuePair<int, int>(farthestIndex, last));
+			}
+
+			return samples.Where((sample, index) => isKept[index]);
+		}
+
+		/// <returns>The index of the sample between first and last that deviates most from
+		/// the line between the first and the last sample, or -1 if no sample deviates more
+		/// than the minimum deviation.</returns>
+		private static int GetIndexOfMostDeviatingSample([NotNull] List<Pnt3D> samples,
+		                                                 int first,
+		                                                 int last,
+		                                                 double minimumDeviation)
+		{
+			int farthestIndex = -1;
+			double maxDeviation = minimumDeviation;
+
+			for (int i = first + 1; i < last; i++)
+			{
+				// The samples are equally spaced
+				double ratio = (double) (i - first) / (last - first);
+				double lineZ = samples[first].Z + ratio * (samples[last].Z - samples[first].Z);
+				double deviation = Math.Abs(samples[i].Z - lineZ);
+
+				if (deviation > maxDeviation)
+				{
+					maxDeviation = deviation;
+					farthestIndex = i;
+				}
+			}
+
+			return farthestIndex;
 		}
 
 		private static IGeometry CreateAoGeometry(IEnumerable<Linestring> linestrings,
@@ -746,18 +846,14 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 
 			if (aoi is ISegmentList polyAoi)
 			{
-				if (GeomRelationUtils.PolycurveContainsXY(polyAoi, segment.StartPoint, tolerance))
-				{
-					return true;
-				}
-
-				if (GeomRelationUtils.PolycurveContainsXY(polyAoi, segment.EndPoint, tolerance))
-				{
-					return true;
-				}
+				return GeomRelationUtils.PolycurveContainsXY(polyAoi, segment.StartPoint,
+				                                             tolerance) ||
+				       GeomRelationUtils.PolycurveContainsXY(polyAoi, segment.EndPoint,
+				                                             tolerance);
 			}
 
-			return false;
+			return GeomRelationUtils.BoundsContainXY(aoi, segment.StartPoint, tolerance) ||
+			       GeomRelationUtils.BoundsContainXY(aoi, segment.EndPoint, tolerance);
 		}
 
 		// TODO: Use some of these methods also from the SimpleRasterSurface
