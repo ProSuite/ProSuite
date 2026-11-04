@@ -488,8 +488,7 @@ public class SymbolDisplayManager : ISymbolDisplayManager
 			const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
 			var type = settings.GetType();
 			var property = type.GetProperty(_propertyName, flags)
-			               ?? throw new InvalidOperationException(
-				               $"No such property: {_propertyName}");
+			               ?? throw PropertyNotFound();
 			property.SetValue(settings, value);
 		}
 
