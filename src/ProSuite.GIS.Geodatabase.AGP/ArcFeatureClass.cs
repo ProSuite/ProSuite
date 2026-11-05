@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -65,8 +64,13 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				_lengthFieldName = ProFeatureClassDefinition.GetLengthField();
 				_areaFieldName = ProFeatureClassDefinition.GetAreaField();
 			}
-			catch (NotSupportedException)
+			catch (NotSupportedException ex)
 			{
+				// Without these names, the area and length fields are not recognized, e.g. when
+				// they should be left out of the subfields of a relationship class join.
+				_msg.Debug($"Area and length field of {_proFeatureClass.GetName()} are not " +
+				           "available. They are treated as missing.", ex);
+
 				_lengthFieldName = string.Empty;
 				_areaFieldName = string.Empty;
 			}
@@ -399,7 +403,12 @@ namespace ProSuite.GIS.Geodatabase.AGP
 				return null;
 			}
 
-			return Fields.FirstOrDefault(f => f.Name.Equals(fieldName));
+			// GOTOP-469, GOTOP-1541: The definition can return the model's field name in a
+			// different case (e.g. 'Shape.AREA' instead of 'SHAPE.AREA').
+			// FindField falls back to ignoring case.
+			int fieldIndex = Fields.FindField(fieldName);
+
+			return fieldIndex < 0 ? null : Fields.get_Field(fieldIndex);
 		}
 
 		public new void Dispose()

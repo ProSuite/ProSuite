@@ -573,6 +573,10 @@ public class ArcWorkspace : IFeatureWorkspace, IDatabaseConnectionInfo, IDisposa
 				PrimaryKeys = primaryKeyField
 			};
 
+		_msg.DebugFormat("Opening query table {0}: select {1} from {2} where {3} (primary key: {4})",
+		                 queryTableDescription.Name, queryDef.SubFields, queryDef.Tables,
+		                 queryDef.WhereClause, primaryKeyField);
+
 		Table queryTable = Geodatabase.OpenQueryTable(queryTableDescription);
 
 		// Wrap the query table directly (not via ArcGeodatabaseUtils.ToArcTable) so it never
