@@ -24,6 +24,9 @@ public class PartialRemoveOverlapsOptions : PartialOptionsBase
 	public OverridableSetting<ChangeAlongZSource> ZSource { get; set; }
 
 	[CanBeNull]
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
+	[CanBeNull]
 	public List<DatasetSpecificValue<ChangeAlongZSource>> DatasetSpecificZSource { get; set; }
 
 	#region Overrides of PartialOptionsBase
@@ -42,6 +45,7 @@ public class PartialRemoveOverlapsOptions : PartialOptionsBase
 		result.InsertVerticesInTarget = TryClone(InsertVerticesInTarget);
 
 		result.ZSource = TryClone(ZSource);
+		result.AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane);
 
 		if (DatasetSpecificZSource != null)
 		{

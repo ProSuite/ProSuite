@@ -104,34 +104,27 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Images\LayerMaskingOff16.png">
+    <!-- Icon xaml is loaded from code as a resource, not compiled as a WPF Page -->
+    <Page Remove="Images\*.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\LayerMaskingOff.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\LayerMaskingOff32.png">
+    <Resource Include="Images\LayerMaskingOn.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\LayerMaskingOn16.png">
+    <Resource Include="Images\LayerMaskingUnknown.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\LayerMaskingOn32.png">
+    <Resource Include="Images\SymbolLayerDrawingOff.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\LayerMaskingUnknown32.png">
+    <Resource Include="Images\SymbolLayerDrawingOn.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\SymbolLayerDrawingOff16.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\SymbolLayerDrawingOff32.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\SymbolLayerDrawingOn16.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\SymbolLayerDrawingOn32.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\SymbolLayerDrawingUnknown32.png">
+    <Resource Include="Images\SymbolLayerDrawingUnknown.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="LoggerUI\Images\StatusError_16x.png">

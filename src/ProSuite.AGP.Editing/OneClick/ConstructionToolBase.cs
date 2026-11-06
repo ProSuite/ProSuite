@@ -23,7 +23,8 @@ using ProSuite.Commons.UI.Input;
 
 namespace ProSuite.AGP.Editing.OneClick;
 
-public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketchTool
+public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketchTool,
+                                             IEditSketchTool
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -706,6 +707,15 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected abstract SketchGeometryType GetEditSketchGeometryType();
 
+	/// <summary>
+	/// The geometry type of the edit sketch, or null if it cannot be determined yet. Other
+	/// code than the tool itself asks for it at any time, e.g. a window that is updated.
+	/// </summary>
+	protected virtual SketchGeometryType? GetKnownEditSketchGeometryType()
+	{
+		return GetEditSketchGeometryType();
+	}
+
 	protected virtual Task<bool?> GetEditSketchHasZ()
 	{
 		return null;
@@ -909,35 +919,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		try
 		{
-			if (! IsInSketchMode)
-			{
-				// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
-				// sketching is not possible any more and the application appears hanging
-
-				// Try start sketch mode:
-				await QueuedTask.Run(async () =>
-				{
-					var mapView = ActiveMapView; // TODO should be passed in from outside QTR
-
-					IList<Feature> selection =
-						GetApplicableSelectedFeatures(mapView).ToList();
-
-					if (CanUseSelection(mapView))
-					{
-						await AfterSelectionAsync(selection, null);
-					}
-				});
-			}
-
-			if (IsInSketchMode)
-			{
-				_lastLoggedVertexIndex = -1;
-
-				// TODO: If the previousSketch was drawn CounterClockWise, the start point when sketching will be wrong. 
-
-				await SetCurrentSketchAsync(_previousSketch);
-			}
-			else
+			if (! await TrySetEditSketchAsync(_previousSketch))
 			{
 				_msg.Warn("Sketch cannot be restored in selection phase. " +
 				          "Please try again in the sketch phase.");
@@ -948,6 +930,50 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			throw new ApplicationException("Error restoring the previous sketch", e);
 		}
 	}
+
+	#region IEditSketchTool
+
+	bool IEditSketchTool.IsInEditSketchPhase =>
+		IsInSketchPhase && _intermediateSketchStates?.IsInIntermittentSelectionPhase != true;
+
+	SketchGeometryType? IEditSketchTool.EditSketchGeometryType => GetKnownEditSketchGeometryType();
+
+	public async Task<bool> TrySetEditSketchAsync(Geometry sketch)
+	{
+		if (! IsInSketchMode)
+		{
+			// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
+			// sketching is not possible any more and the application appears hanging
+
+			// Try start sketch mode:
+			await QueuedTask.Run(async () =>
+			{
+				var mapView = ActiveMapView; // TODO should be passed in from outside QTR
+
+				IList<Feature> selection =
+					GetApplicableSelectedFeatures(mapView).ToList();
+
+				if (CanUseSelection(mapView))
+				{
+					await AfterSelectionAsync(selection, null);
+				}
+			});
+		}
+
+		if (IsInSketchMode)
+		{
+			_lastLoggedVertexIndex = -1;
+
+			// TODO: If the previousSketch was drawn CounterClockWise, the start point when sketching will be wrong. 
+
+			await SetCurrentSketchAsync(sketch);
+			return true;
+		}
+
+		return false;
+	}
+
+	#endregion
 
 	private async Task LogLastSketchVertexZ([NotNull] Geometry sketch)
 	{

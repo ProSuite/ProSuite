@@ -30,7 +30,6 @@ public abstract class CIMBasedDataConnectionName : IDatasetName
 		return result;
 	}
 
-	[NotNull]
 	public static bool TryCreateFromCIMDataConnection(
 		[NotNull] CIMDataConnection cimDataConnection, out CIMBasedDataConnectionName result)
 	{
@@ -40,7 +39,8 @@ public abstract class CIMBasedDataConnectionName : IDatasetName
 				result = FeatureDatasetDataConnectionName.FromCIMDataConnection(
 					cimFeatureDatasetDataConnection);
 				return true;
-			case CIMStandardDataConnection cimStandardDataConnection:
+			case CIMStandardDataConnection cimStandardDataConnection
+				when TryToGISDatasetType(cimStandardDataConnection.DatasetType, out _):
 				result = StandardDataConnectionName.FromCIMDataConnection(
 					cimStandardDataConnection);
 				return true;
@@ -152,43 +152,75 @@ public abstract class CIMBasedDataConnectionName : IDatasetName
 	protected static esriDatasetType ToGISDatasetType(
 		ArcGIS.Core.CIM.esriDatasetType cimDatasetType)
 	{
+		if (! TryToGISDatasetType(cimDatasetType, out esriDatasetType result))
+		{
+			throw new ArgumentOutOfRangeException(
+				nameof(cimDatasetType), cimDatasetType,
+				$"Unsupported dataset type: {cimDatasetType}");
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Tries to convert a ArcGIS.Core.CIM.esriDatasetType to a
+	/// ProSuite.GIS.Geodatabase.API.esriDatasetType. Types without equivalent (e.g.
+	/// esriDTAny, as used by temporary raster layers) result in false.
+	/// </summary>
+	protected static bool TryToGISDatasetType(
+		ArcGIS.Core.CIM.esriDatasetType cimDatasetType, out esriDatasetType result)
+	{
 		switch (cimDatasetType)
 		{
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTFeatureClass:
-				return esriDatasetType.esriDTFeatureClass;
+				result = esriDatasetType.esriDTFeatureClass;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTTable:
-				return esriDatasetType.esriDTTable;
+				result = esriDatasetType.esriDTTable;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTRelationshipClass:
-				return esriDatasetType.esriDTRelationshipClass;
+				result = esriDatasetType.esriDTRelationshipClass;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTRasterDataset:
-				return esriDatasetType.esriDTRasterDataset;
+				result = esriDatasetType.esriDTRasterDataset;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTRasterBand:
-				return esriDatasetType.esriDTRasterBand;
+				result = esriDatasetType.esriDTRasterBand;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTTin:
-				return esriDatasetType.esriDTTin;
+				result = esriDatasetType.esriDTTin;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTRasterCatalog:
-				return esriDatasetType.esriDTRasterCatalog;
+				result = esriDatasetType.esriDTRasterCatalog;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTTopology:
-				return esriDatasetType.esriDTTopology;
+				result = esriDatasetType.esriDTTopology;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTNetworkDataset:
-				return esriDatasetType.esriDTNetworkDataset;
+				result = esriDatasetType.esriDTNetworkDataset;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTTerrain:
-				return esriDatasetType.esriDTTerrain;
+				result = esriDatasetType.esriDTTerrain;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTRepresentationClass:
-				return esriDatasetType.esriDTRepresentationClass;
+				result = esriDatasetType.esriDTRepresentationClass;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTCadastralFabric:
-				return esriDatasetType.esriDTCadastralFabric;
+				result = esriDatasetType.esriDTCadastralFabric;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTSchematicDataset:
-				return esriDatasetType.esriDTSchematicDataset;
+				result = esriDatasetType.esriDTSchematicDataset;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTMosaicDataset:
-				return esriDatasetType.esriDTMosaicDataset;
+				result = esriDatasetType.esriDTMosaicDataset;
+				return true;
 			case ArcGIS.Core.CIM.esriDatasetType.esriDTLasDataset:
-				return esriDatasetType.esriDTLasDataset;
+				result = esriDatasetType.esriDTLasDataset;
+				return true;
 
 			default:
-				throw new ArgumentOutOfRangeException(
-					nameof(cimDatasetType), cimDatasetType,
-					$"Unsupported dataset type: {cimDatasetType}");
+				result = default;
+				return false;
 		}
 	}
 

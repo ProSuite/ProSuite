@@ -307,7 +307,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				bool preferAssociationFirst =
 					! filterHasWhereClause && ShouldDriveFromAssociationSide(filter);
 
-				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(filter, preferAssociationFirst);
+				otherRowsByFeatureKey = GetOtherRowsByFeatureKey(
+					filter, preferAssociationFirst, GetOtherClassSubFields(filter));
 			}
 
 			IEnumerable<IReadOnlyRow> leftRows = PerformFinalGeoClassRead(
@@ -349,7 +350,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns></returns>
 		public IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
 			[CanBeNull] ITableFilter filter,
-			bool preferAssociationFirst = false)
+			bool preferAssociationFirst = false,
+			[CanBeNull] string otherSubFields = null)
 		{
 			EnsureKeyFieldNames();
 
@@ -390,7 +392,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				queryLeftTableFirst ? GeometryEndClass.EnumRows(filter, true) : null;
 
 			IDictionary<string, IList<IReadOnlyRow>> otherRows =
-				GetOtherRowsByFeatureKey(leftFeatures);
+				GetOtherRowsByFeatureKey(leftFeatures, otherSubFields);
 
 			// Revert the filter change:
 			filter.SubFields = originalSubfields;
@@ -399,7 +401,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(
-			[CanBeNull] IEnumerable<IReadOnlyRow> leftFeatures)
+			[CanBeNull] IEnumerable<IReadOnlyRow> leftFeatures,
+			[CanBeNull] string otherSubFields = null)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -431,9 +434,81 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			IDictionary<string, IList<IReadOnlyRow>> otherRows =
-				GetOtherRowListsByFeatureKey(fClassKeys);
+				GetOtherRowListsByFeatureKey(fClassKeys, otherSubFields);
 
 			return otherRows;
+		}
+
+		/// <summary>
+		/// The columns of <see cref="OtherEndClass" /> the query needs: its key, its OID and the
+		/// requested fields that belong to it. Reading only those made the whole-table read of a
+		/// wide table much cheaper (412K rows x 31 columns took 35 s for a query that needs one
+		/// attribute). Returns null - all columns - whenever the requested
+		/// fields cannot be attributed with certainty: '*', no sub-fields, a where clause (it is
+		/// re-applied to the joined rows and may reference any column), or a name that matches
+		/// neither joined table.
+		/// </summary>
+		[CanBeNull]
+		private string GetOtherClassSubFields([CanBeNull] ITableFilter filter)
+		{
+			string subFields = filter?.SubFields;
+
+			if (string.IsNullOrWhiteSpace(subFields) || subFields.Contains("*") ||
+			    ! string.IsNullOrEmpty(filter.WhereClause))
+			{
+				return null;
+			}
+
+			var otherFields = new List<string> { OtherClassKeyField };
+
+			if (OtherEndClass.HasOID)
+			{
+				otherFields.Add(OtherEndClass.OIDFieldName);
+			}
+
+			foreach (string token in subFields.Split(','))
+			{
+				string name = token.Trim();
+
+				if (name.Length == 0)
+				{
+					continue;
+				}
+
+				int dot = name.LastIndexOf('.');
+				string fieldName = dot < 0 ? name : name.Substring(dot + 1);
+				string tableName = dot < 0 ? null : name.Substring(0, dot);
+
+				bool isOther = OtherEndClass.FindField(fieldName) >= 0 &&
+				               (tableName is null || IsTable(OtherEndClass, tableName));
+
+				if (isOther)
+				{
+					if (! otherFields.Contains(fieldName, StringComparer.OrdinalIgnoreCase))
+					{
+						otherFields.Add(fieldName);
+					}
+
+					continue;
+				}
+
+				bool isGeometry = GeometryEndClass.FindField(fieldName) >= 0 &&
+				                  (tableName is null || IsTable(GeometryEndClass, tableName));
+
+				if (! isGeometry)
+				{
+					// E.g. a bridge-table field or a joined alias: cannot tell which table it
+					// comes from, so do not risk dropping it.
+					return null;
+				}
+			}
+
+			return string.Join(",", otherFields);
+		}
+
+		private static bool IsTable([NotNull] IReadOnlyTable table, [NotNull] string name)
+		{
+			return string.Equals(table.Name, name, StringComparison.OrdinalIgnoreCase);
 		}
 
 		private IEnumerable<IReadOnlyRow> PerformFinalGeoClassRead(
@@ -547,9 +622,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// The final read receives the whole-network key set when driving association-first, so it
-			// must filter that set client-side over the windowed enumeration (AssumeLeftTableCached,
-			// the routes case, or an INDEX override). Otherwise it would issue a select-in list over
-			// tens of thousands of keys, which is worse than the scan we are trying to avoid.
+			// must filter that set client-side over the windowed enumeration. Otherwise, it would
+			// issue a select-in list over tens of thousands of keys, which is worse than the scan
+			// we are trying to avoid.
 			bool finalReadFiltersClientSide =
 				AssumeLeftTableCached ||
 				string.Equals(_joinStrategy, "INDEX", StringComparison.OrdinalIgnoreCase);
@@ -789,12 +864,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private IDictionary<string, IReadOnlyRow> GetOtherRowsByKey(
-			[NotNull] IEnumerable<string> keyValues)
+			[NotNull] ICollection<string> keyValues,
+			[CanBeNull] string subFields = null)
 		{
 			// Get the non-feature-rows:
 			IDictionary<string, IReadOnlyRow> otherRows = new Dictionary<string, IReadOnlyRow>();
-			foreach (IReadOnlyRow row in TableFilterUtils.GetRowsInList(
-				         OtherEndClass, OtherClassKeyField, keyValues, false))
+			foreach (IReadOnlyRow row in FetchRowsByKeyAdaptive(
+				         keyValues, OtherEndClass, OtherClassKeyField, false, subFields))
 			{
 				string otherRowKey = GetKeyValue(row, OtherClassKeyFieldIndex);
 
@@ -821,7 +897,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowListsByFeatureKey(
-			[CanBeNull] HashSet<string> fClassKeys)
+			[CanBeNull] HashSet<string> fClassKeys,
+			[CanBeNull] string otherSubFields = null)
 		{
 			IDictionary<string, IList<IReadOnlyRow>> result =
 				new Dictionary<string, IList<IReadOnlyRow>>();
@@ -841,7 +918,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				watch = _msg.DebugStartTiming();
 
 				IDictionary<string, IReadOnlyRow> otherRowsByKey =
-					GetOtherRowsByKey(geoKeysByOtherKey.Keys);
+					GetOtherRowsByKey(geoKeysByOtherKey.Keys, otherSubFields);
 
 				_msg.DebugStopTiming(watch, "Retrieved all {0} other rows.", otherRowsByKey.Count);
 
@@ -872,12 +949,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (fClassKeys == null)
 			{
-				otherRows = OtherEndClass.EnumRows(null, true);
+				ITableFilter subFieldsFilter =
+					otherSubFields is null
+						? null
+						: new AoTableFilter { SubFields = otherSubFields };
+
+				otherRows = OtherEndClass.EnumRows(subFieldsFilter, true);
 			}
 			else
 			{
-				otherRows = TableFilterUtils.GetRowsInList(
-					OtherEndClass, OtherClassKeyField, fClassKeys, false);
+				otherRows = FetchRowsByKeyAdaptive(
+					fClassKeys, OtherEndClass, OtherClassKeyField, false, otherSubFields);
 			}
 
 			// Get the non-feature-rows:
@@ -962,8 +1044,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				bridgeTableRows = FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
-				                                            bridgeTableGeoKeyField, recycle);
+				bridgeTableRows = FetchRowsByKeyAdaptive(geoKeys, bridgeTable,
+				                                         bridgeTableGeoKeyField, recycle);
 			}
 
 			foreach (IReadOnlyRow row in bridgeTableRows)
@@ -1092,11 +1174,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#endregion
 
-		private IEnumerable<IReadOnlyRow> FetchBridgeTableRowsByKey(
-			[NotNull] HashSet<string> keys,
-			[NotNull] IReadOnlyTable bridgeTable,
+		/// <summary>
+		/// Fetches the rows of <paramref name="table" /> whose key is in <paramref name="keys" />,
+		/// either with select-in lists or by reading the whole table and filtering by key. With
+		/// many keys the select-in lists cost one round trip per ~1000 keys (65 sequential
+		/// queries / ~30 s for 64K keys), a single full read is far cheaper.
+		/// </summary>
+		private IEnumerable<IReadOnlyRow> FetchRowsByKeyAdaptive(
+			[NotNull] ICollection<string> keys,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string keyFieldName,
-			bool recycle)
+			bool recycle,
+			[CanBeNull] string subFields = null)
 		{
 			bool clientSideKeyFiltering;
 
@@ -1114,12 +1203,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				long ftsCount = GetTableRowCount(bridgeTable);
+				long ftsCount = GetTableRowCount(table);
 
 				clientSideKeyFiltering = (double) keys.Count / ftsCount > 0.025;
 			}
 
-			return FetchRowsByKey(bridgeTable, keys, keyFieldName, recycle, clientSideKeyFiltering);
+			ITableFilter filter = subFields is null ? null : new AoTableFilter();
+
+			return FetchRowsByKey(table, keys, keyFieldName, recycle, clientSideKeyFiltering,
+			                      filter, subFields);
 		}
 
 		private static IEnumerable<IReadOnlyRow> FetchRowsByKey(
@@ -1128,7 +1220,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] string keyFieldName,
 			bool recycle,
 			bool clientSideKeyFiltering = false,
-			[CanBeNull] ITableFilter filter = null)
+			[CanBeNull] ITableFilter filter = null,
+			[CanBeNull] string subFields = null)
 		{
 			// TODO: Switch depending on previous input-output count ratio with count
 			// Empirical values:
@@ -1145,7 +1238,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string originalSubfields = filter?.SubFields;
 			if (filter != null)
 			{
-				filter.SubFields = null;
+				filter.SubFields = subFields;
 			}
 
 			if (clientSideKeyFiltering)

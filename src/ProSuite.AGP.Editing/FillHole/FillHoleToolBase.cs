@@ -460,6 +460,9 @@ public abstract class FillHoleToolBase : TwoPhaseEditToolBase
 		                      OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_fillHoleToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		var viewModel = GetFillHoleViewModel();

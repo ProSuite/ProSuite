@@ -275,7 +275,7 @@ namespace ProSuite.Commons.Cryptography
 			if (! TryExportPrivateKey(certificate, out privateKeyValue,
 			                          out notificationMsg))
 			{
-				_msg.Debug(notificationMsg);
+				_msg.Warn(notificationMsg);
 
 				return null;
 			}
@@ -330,31 +330,49 @@ namespace ProSuite.Commons.Cryptography
 				return false;
 			}
 
-			RSAParameters parameters;
+			RSA rsaPrivateKey;
 
 			try
 			{
 				// CryptographicException: "Keyset does not exist" -> This works when running as administrator.
-				RSA rsaPrivateKey = certificate.GetRSAPrivateKey();
-
-				// CryptographicException: "The requested operation is not supported" (e.g. the key is not exportable)
-				parameters = rsaPrivateKey.ExportParameters(true);
-			}
-			catch (CryptographicException e)
-			{
-				_msg.Debug("Error getting private key from certificate.", e);
-
-				notifications =
-					$"Cannot get private key from certificate {certificate}, possibly due to access restriction ({e.Message}).";
-
-				return false;
+				rsaPrivateKey = certificate.GetRSAPrivateKey();
 			}
 			catch (Exception e)
 			{
 				_msg.Debug("Error getting private key from certificate.", e);
 
 				notifications =
-					$"Cannot get private key from certificate {certificate}, possibly due to access restriction ({e.Message}).";
+					$"Cannot access the private key of certificate {certificate.Subject} " +
+					$"({certificate.Thumbprint}): {e.Message.TrimEnd('.')}. Grant the account that runs " +
+					"this process read access to the private key (certificate store, " +
+					"All Tasks > Manage Private Keys).";
+
+				return false;
+			}
+
+			if (rsaPrivateKey == null)
+			{
+				notifications =
+					$"The private key of certificate {certificate.Subject} is not an RSA key.";
+				return false;
+			}
+
+			RSAParameters parameters;
+
+			try
+			{
+				// CryptographicException: "The requested operation is not supported" (the key is not exportable)
+				parameters = rsaPrivateKey.ExportParameters(true);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Error exporting private key from certificate.", e);
+
+				notifications =
+					$"Cannot export the private key of certificate {certificate.Subject} " +
+					$"({certificate.Thumbprint}): {e.Message.TrimEnd('.')}. The private key is probably not " +
+					"exportable. Import the certificate again with the option 'Mark this key " +
+					"as exportable', or provide the certificate and the private key as PEM files.";
 
 				return false;
 			}

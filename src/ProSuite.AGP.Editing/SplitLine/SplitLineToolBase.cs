@@ -55,6 +55,11 @@ public abstract class SplitLineToolBase : MapToolBase
 		return Task.CompletedTask;
 	}
 
+	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+	{
+		return Task.CompletedTask;
+	}
+
 	/// <summary>
 	/// Splits the line at the given position.
 	/// The line feature is selected using the picker.
@@ -63,6 +68,9 @@ public abstract class SplitLineToolBase : MapToolBase
 	{
 		// Create PickerPrecedence with the click point as sketch geometry
 		using var precedence = CreatePickerPrecedence(mapPoint);
+
+		// Only one line can be split: show the picker rather than picking several (ALT)
+		precedence.NoMultiselection = true;
 
 		var candidates =
 			FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
@@ -77,12 +85,6 @@ public abstract class SplitLineToolBase : MapToolBase
 			return;
 		}
 
-		if (items.Count > 1)
-		{
-			_msg.Warn(
-				"SplitLine: Too many candidate features found. Only considering the first one.");
-		}
-
 		IPickableFeatureItem pickableItem = items[0] as IPickableFeatureItem;
 		Feature itemFeature = pickableItem?.Feature;
 		if (itemFeature == null)
@@ -91,8 +93,6 @@ public abstract class SplitLineToolBase : MapToolBase
 			return;
 		}
 
-		bool featureIsSelected = SelectionUtils.IsSelected(pickableItem.Layer, itemFeature);
-
 		Polyline polyline = (Polyline) itemFeature.GetShape();
 		if (polyline == null)
 		{
@@ -100,29 +100,38 @@ public abstract class SplitLineToolBase : MapToolBase
 			return;
 		}
 
-		if (pickableItem.Layer is FeatureLayer featureLayer && !featureLayer.IsSnappable)
+		double searchRadius = MapUtils.ConvertScreenPixelToMapLength(
+			ActiveMapView, GetSelectionTolerancePixels(), mapPoint);
+
+		MapPoint splitPoint = SplitLineUtils.GetSplitPoint(
+			polyline, GeometryUtils.EnsureSpatialReference(mapPoint, polyline.SpatialReference),
+			searchRadius, polyline.SpatialReference.XYTolerance);
+
+		if (splitPoint == null)
 		{
-			// If the layer is not snappable, we project the point onto the line ourselves
-			mapPoint = GeometryUtils.Engine.QueryPointAndDistance(polyline, SegmentExtensionType.NoExtension,
-			                                           mapPoint, AsRatioOrLength.AsLength, out _,
-			                                           out _, out _);
+			_msg.Warn("SplitLine: Cannot split at or near the start or end point " +
+			          "(the line may already be split there).");
+			return;
 		}
 
+		await SplitCoreAsync(itemFeature, pickableItem.Layer, splitPoint);
+	}
+
+	/// <summary>
+	/// Splits the line feature at the split point, which lies on the line. The default
+	/// shortens the feature to the longer part and inserts the shorter part as a new feature.
+	/// Runs on the MCT.
+	/// </summary>
+	protected virtual async Task SplitCoreAsync([NotNull] Feature itemFeature,
+	                                            [NotNull] BasicFeatureLayer layer,
+	                                            [NotNull] MapPoint splitPoint)
+	{
+		bool featureIsSelected = SelectionUtils.IsSelected(layer, itemFeature);
+
+		Polyline polyline = (Polyline) itemFeature.GetShape();
 		double xyTolerance = polyline.SpatialReference.XYTolerance;
-		List<MapPoint> uniqueEndPoints = GeometryUtils.GetUniqueEndPoints(polyline);
-		if (GeometryUtils.IsSamePointXY(mapPoint, uniqueEndPoints[0]))
-		{
-			_msg.Warn("SplitLine: Cannot split at start point.");
-			return;
-		}
 
-		if (GeometryUtils.IsSamePointXY(mapPoint, uniqueEndPoints[1]))
-		{
-			_msg.Warn("SplitLine: Cannot split at end point.");
-			return;
-		}
-
-		Multipoint splitPoints = MultipointBuilderEx.CreateMultipoint(mapPoint);
+		Multipoint splitPoints = MultipointBuilderEx.CreateMultipoint(splitPoint);
 		GeometryUtils.SplitPolycurve(polyline, splitPoints, false, true, xyTolerance,
 		                             out var modifiedPolyline);
 
@@ -175,6 +184,8 @@ public abstract class SplitLineToolBase : MapToolBase
 			return;
 		}
 
+		_msg.Info("SplitLine: Line split successfully.");
+
 		await PostProcessNewFeatures(itemFeature, newFeature, editOperation);
 
 		// Update selection and flash the new feature
@@ -183,12 +194,12 @@ public abstract class SplitLineToolBase : MapToolBase
 
 		if (featureIsSelected)
 		{
-			SelectionUtils.SelectRows(pickableItem.Layer, SelectionCombinationMethod.Add,
+			SelectionUtils.SelectRows(layer, SelectionCombinationMethod.Add,
 			                          objectIds);
 		}
 
 		var oidsByMapMember = new Dictionary<BasicFeatureLayer, List<long>>
-		                      { { pickableItem.Layer, objectIds } };
+		                      { { layer, objectIds } };
 		SelectionSet selectionSet = SelectionSet.FromDictionary(oidsByMapMember);
 
 		ActiveMapView.FlashFeature(selectionSet, true);

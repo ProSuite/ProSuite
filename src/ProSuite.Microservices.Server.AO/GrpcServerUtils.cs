@@ -64,7 +64,9 @@ namespace ProSuite.Microservices.Server.AO
 		/// <param name="privateKeyFilePath">The PEM file containing the private key (only if the
 		/// certificate was provided by a PEM file</param>
 		/// <param name="enforceMutualTls">Enforce client authentication.</param>
-		/// <returns></returns>
+		/// <returns>Insecure credentials only if no certificate was provided.</returns>
+		/// <exception cref="InvalidConfigurationException">A certificate was provided but
+		/// cannot be used.</exception>
 		public static ServerCredentials GetServerCredentials(
 			[CanBeNull] string certificate,
 			[CanBeNull] string privateKeyFilePath,
@@ -79,12 +81,7 @@ namespace ProSuite.Microservices.Server.AO
 			}
 
 			KeyPair certificateKeyPair =
-				TryGetServerCertificateKeyPair(certificate, privateKeyFilePath);
-
-			if (certificateKeyPair == null)
-			{
-				return ServerCredentials.Insecure;
-			}
+				GetServerCertificateKeyPair(certificate, privateKeyFilePath);
 
 			List<KeyCertificatePair> keyCertificatePairs =
 				new List<KeyCertificatePair>
@@ -132,7 +129,8 @@ namespace ProSuite.Microservices.Server.AO
 			return channelOptions;
 		}
 
-		private static KeyPair TryGetServerCertificateKeyPair(
+		[NotNull]
+		private static KeyPair GetServerCertificateKeyPair(
 			[NotNull] string certificate,
 			[CanBeNull] string privateKeyFilePath)
 		{
@@ -176,17 +174,18 @@ namespace ProSuite.Microservices.Server.AO
 
 				if (result == null)
 				{
-					_msg.InfoFormat(
-						"No certificate could be found by '{0}'. Using insecure credentials (no TLS).",
-						certificate);
+					// Starting without TLS would expose the communication the configuration
+					// meant to protect.
+					throw new InvalidConfigurationException(
+						$"No usable certificate with private key could be found by '{certificate}' " +
+						"in the certificate store (Local Computer, Personal). The server does not " +
+						"start without TLS when a certificate is configured.");
 				}
-				else
-				{
-					_msg.InfoFormat("Using certificate from certificate store for TLS.");
-				}
+
+				_msg.InfoFormat("Using certificate from certificate store for TLS.");
 			}
 
-			if (result != null && _msg.IsVerboseDebugEnabled)
+			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.DebugFormat("Certificate chain: {0}", result.PublicKey);
 			}

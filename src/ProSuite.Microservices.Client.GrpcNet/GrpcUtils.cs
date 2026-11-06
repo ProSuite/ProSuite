@@ -14,6 +14,8 @@ namespace ProSuite.Microservices.Client.GrpcNet
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private const string _disableProxyVariableName = "PROSUITE_GRPC_DISABLE_PROXY";
+
 #if NET8_0
 		// NOTE: We actually have to load the library in the desired version, otherwise Grpc.Net.Client will throw a System.IO.FileNotFoundException!
 		// TODO: In case a previously loaded Add-in has already loaded a lower version, do not fail here!
@@ -30,8 +32,14 @@ namespace ProSuite.Microservices.Client.GrpcNet
 
 			if (disableProxy)
 			{
-				// TODO: Test this (s. https://stackoverflow.com/questions/66500195/net-5-grpc-client-call-throws-exception-requesting-http-version-2-0-with-versi)
-				HttpClient.DefaultProxy = new WebProxy();
+				// Do not change HttpClient.DefaultProxy: it applies to every connection in the
+				// process, for example to other add-in's internet connections.
+				result.HttpHandler = new SocketsHttpHandler
+				                     {
+					                     UseProxy = false,
+					                     EnableMultipleHttp2Connections = true
+				                     };
+				result.DisposeHttpClient = true;
 			}
 
 			return result;
@@ -42,10 +50,8 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			[CanBeNull] ChannelCredentials credentials,
 			int maxMessageLength)
 		{
-			// Sometimes the localhost is not configured as exception in the proxy settings:
-			bool disableProxy =
-				string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase) ||
-				EnvironmentUtils.GetBooleanEnvironmentVariableValue("PROSUITE_GRPC_DISABLE_PROXY");
+			// In some organizations localhost is not configured as exception in the proxy settings:
+			bool disableProxy = IsProxyBypassed(host);
 
 			_msg.DebugFormat("Creating channel to {0} on port {1}. Disabling proxy: {2}",
 			                 host, port, disableProxy);
@@ -80,6 +86,18 @@ namespace ProSuite.Microservices.Client.GrpcNet
 			}
 
 			return address;
+		}
+
+		public static bool IsProxyBypassed([NotNull] string host)
+		{
+			return EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+				_disableProxyVariableName, defaultValue: IsLocalHost(host));
+		}
+
+		private static bool IsLocalHost([NotNull] string host)
+		{
+			return string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase) ||
+			       IPAddress.TryParse(host, out IPAddress address) && IPAddress.IsLoopback(address);
 		}
 	}
 }

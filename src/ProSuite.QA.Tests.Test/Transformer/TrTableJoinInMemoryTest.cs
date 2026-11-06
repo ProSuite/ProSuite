@@ -24,6 +24,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 	[TestFixture]
 	public class TrTableJoinInMemoryTest
 	{
+		private const string _joinStrategyEnvVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
+
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
@@ -1094,8 +1096,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			// the client-side key filtering the association-first path relies on) - and assert
 			// equal results, both with the same spatial filter present.
 
-			const string envVar = "PROSUITE_MEMORY_JOIN_STRATEGY";
-			string originalStrategy = Environment.GetEnvironmentVariable(envVar);
+			string originalStrategy = Environment.GetEnvironmentVariable(_joinStrategyEnvVar);
 
 			try
 			{
@@ -1207,7 +1208,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 
 				// Reference: whole join, filtered to the window in memory (drive side irrelevant
 				// without a spatial filter). Built under the default strategy.
-				Environment.SetEnvironmentVariable(envVar, null);
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, null);
 				GdbTable refJoin = NewJoin().GetTransformed();
 				int refRoadIdx = FindJoinedField(refJoin, roadKey);
 				int refRouteIdx = FindJoinedField(refJoin, routeKey);
@@ -1225,19 +1226,19 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				                "Expected windowed pairs (roads 1,2,6,11; road 16 excluded)");
 
 				// Legacy left-first drive side, spatial filter present.
-				Environment.SetEnvironmentVariable(envVar, "LEFTFIRST");
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "LEFTFIRST");
 				List<(int, int)> leftFirst = WindowedPairs(new AoFeatureClassFilter(window));
 
 				// Association-first drive side (heuristic + client-side key filtering via INDEX),
 				// same spatial filter present.
-				Environment.SetEnvironmentVariable(envVar, "INDEX");
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "INDEX");
 				List<(int, int)> associationFirst = WindowedPairs(new AoFeatureClassFilter(window));
 
 				// The strategy knob is case-insensitive: lowercase "index" must drive the same
 				// association-first path (heuristic + client-side key filtering) as "INDEX". If the
 				// final-read comparison were case-sensitive it would fall through to a select-in over
 				// the whole-network key set and could return a different (or degenerate) result.
-				Environment.SetEnvironmentVariable(envVar, "index");
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "index");
 				List<(int, int)> associationFirstLower =
 					WindowedPairs(new AoFeatureClassFilter(window));
 
@@ -1253,7 +1254,177 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 			finally
 			{
-				Environment.SetEnvironmentVariable(envVar, originalStrategy);
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, originalStrategy);
+			}
+		}
+
+		[Test]
+		public void CanInnerJoinOneToMany_WholeTableReadMatchesSelectIn()
+		{
+			// The non-M:N key fetch switches from select-in lists to one whole-table read filtered
+			// by key when the key set is large. Force each strategy (FTS = select-in, INDEX = whole-table read) and compare the results.
+			string originalStrategy = Environment.GetEnvironmentVariable(_joinStrategyEnvVar);
+
+			try
+			{
+				IFeatureWorkspace ws =
+					TestWorkspaceUtils.CreateInMemoryWorkspace(
+						"TrTableJoinInMemory_OneToManyWholeTableRead");
+
+				IFeatureClass roadFc =
+					CreateFeatureClass(
+						ws, "roadFc", esriGeometryType.esriGeometryPolyline,
+						new[] { FieldUtils.CreateIntegerField("Nr_Road") });
+
+				ITable trailTable = DatasetUtils.CreateTable(
+					ws, "trails",
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("Trail_Road"),
+					FieldUtils.CreateIntegerField("Trail_Nr"));
+
+				for (var nr = 1; nr <= 4; nr++)
+				{
+					IFeature f = roadFc.CreateFeature();
+					f.Value[1] = nr;
+					f.Shape = CurveConstruction.StartLine(nr * 10, 0).LineTo(nr * 10, 10).Curve;
+					f.Store();
+				}
+
+				// Road 1 carries two trails, road 3 one; road 9 does not exist and must not join.
+				(int road, int trail)[] trails = { (1, 100), (1, 101), (3, 300), (9, 900) };
+				foreach ((int road, int trail) in trails)
+				{
+					IRow r = trailTable.CreateRow();
+					r.Value[1] = road;
+					r.Value[2] = trail;
+					r.Store();
+				}
+
+				// The strategy decides which trail rows are fetched, which shows as the multiset of
+				// joined roads (road 1 twice, road 3 once, road 9 never). The trail attributes are not
+				// asserted: in this in-memory setup they read 0 in the joined row regardless of
+				// strategy (pre-existing, unrelated to the key fetch).
+				List<int> JoinedRoads(string strategy)
+				{
+					Environment.SetEnvironmentVariable(_joinStrategyEnvVar, strategy);
+
+					var tr = new TrTableJoinInMemory(
+						ReadOnlyTableFactory.Create(roadFc),
+						ReadOnlyTableFactory.Create(trailTable),
+						"Nr_Road", "Trail_Road", JoinType.InnerJoin);
+					((ITableTransformer) tr).TransformerName = "test_join";
+
+					GdbTable joined = tr.GetTransformed();
+					int roadIdx = FindJoinedField(joined, "Nr_Road");
+					return joined.EnumReadOnlyRows(null, false)
+					             .Select(row => Convert.ToInt32(row.get_Value(roadIdx)))
+					             .OrderBy(r => r)
+					             .ToList();
+				}
+
+				var expected = new List<int> { 1, 1, 3 };
+
+				CollectionAssert.AreEqual(expected, JoinedRoads("FTS"));
+				CollectionAssert.AreEqual(expected, JoinedRoads("INDEX"));
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, originalStrategy);
+			}
+		}
+
+		[Test]
+		public void CanInnerJoinOneToMany_ReadOnlyRequestedOtherFields()
+		{
+			// The whole-table read of the other table fetches only its key, OID and the requested
+			// fields. Requested values must be unchanged; an unrequested field comes back empty,
+			// which shows the restriction was applied.
+			string originalStrategy = Environment.GetEnvironmentVariable(_joinStrategyEnvVar);
+
+			try
+			{
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, "INDEX");
+
+				IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace(
+					"TrTableJoinInMemory_ReadOnlyRequestedOtherFields");
+
+				ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
+					(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+				IFeatureClass roadFc = DatasetUtils.CreateSimpleFeatureClass(
+					ws, "ROADS", null,
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("ROADNR"),
+					FieldUtils.CreateShapeField(
+						"SHAPE", esriGeometryType.esriGeometryPoint, sref, 1000));
+
+				ITable trailTable = DatasetUtils.CreateTable(
+					ws, "TRAILS",
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("TRAIL_ROAD"),
+					FieldUtils.CreateIntegerField("TRAIL_TYPE"),
+					FieldUtils.CreateIntegerField("TRAIL_INFO"));
+
+				for (var nr = 1; nr <= 3; nr++)
+				{
+					IFeature f = roadFc.CreateFeature();
+					f.Value[1] = nr;
+					f.Shape = GeometryFactory.CreatePoint(2600000 + nr * 10, 1200000);
+					f.Store();
+				}
+
+				foreach ((int road, int type) in new[] { (1, 10), (1, 20), (3, 30) })
+				{
+					IRow r = trailTable.CreateRow();
+					r.Value[1] = road;
+					r.Value[2] = type;
+					r.Value[3] = type * 100;
+					r.Store();
+				}
+
+				var tr = new TrTableJoinInMemory(
+					ReadOnlyTableFactory.Create(roadFc), ReadOnlyTableFactory.Create(trailTable),
+					"ROADNR", "TRAIL_ROAD", JoinType.InnerJoin);
+				((ITableTransformer) tr).TransformerName = "test_join";
+				((ITableTransformerFieldSettings) tr).FullyQualifyFieldNames = true;
+
+				GdbTable joined = tr.GetTransformed();
+				int roadIdx = joined.FindField("ROADS.ROADNR");
+				int typeIdx = joined.FindField("TRAILS.TRAIL_TYPE");
+				int infoIdx = joined.FindField("TRAILS.TRAIL_INFO");
+				Assert.True(roadIdx >= 0 && typeIdx >= 0 && infoIdx >= 0);
+
+				List<(int, int, object)> Read(string subFields)
+				{
+					var filter = new AoFeatureClassFilter(
+						             GeometryFactory.CreateEnvelope(
+							             2599000, 1199000, 2601000, 1201000, sref))
+					             { SubFields = subFields };
+
+					return joined.EnumReadOnlyRows(filter, false)
+					             .Select(row => (Convert.ToInt32(row.get_Value(roadIdx)),
+						                            Convert.ToInt32(row.get_Value(typeIdx)),
+						                            row.get_Value(infoIdx)))
+					             .OrderBy(t => t.Item2)
+					             .ToList();
+				}
+
+				List<(int, int, object)> all = Read("*");
+				List<(int, int, object)> restricted =
+					Read("ROADS.ROADNR,ROADS.SHAPE,TRAILS.TRAIL_TYPE");
+
+				CollectionAssert.AreEqual(new[] { (1, 10), (1, 20), (3, 30) },
+				                          all.Select(t => (t.Item1, t.Item2)));
+				CollectionAssert.AreEqual(all.Select(t => (t.Item1, t.Item2)),
+				                          restricted.Select(t => (t.Item1, t.Item2)));
+
+				Assert.True(all.All(t => Convert.ToInt32(t.Item3) == t.Item2 * 100));
+				Assert.True(restricted.All(t => t.Item3 is null || t.Item3 is DBNull),
+				            "the unrequested TRAIL_INFO should not have been read");
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable(_joinStrategyEnvVar, originalStrategy);
 			}
 		}
 

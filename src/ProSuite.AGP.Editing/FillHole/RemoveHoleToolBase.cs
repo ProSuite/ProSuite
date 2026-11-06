@@ -377,6 +377,9 @@ public abstract class RemoveHoleToolBase : TwoPhaseEditToolBase
 		                      OptionsDockPaneID);
 	}
 
+	protected override bool AlwaysShowOptionsPane =>
+		_removeHoleToolOptions?.AlwaysShowOptionsPane == true;
+
 	protected override void ShowOptionsPane()
 	{
 		var viewModel = GetRemoveHoleViewModel();

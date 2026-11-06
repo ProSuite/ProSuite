@@ -40,6 +40,8 @@ public class PartialReshapeAlongOptions : PartialOptionsBase
 	// Z Value settings
 	public OverridableSetting<ChangeAlongZSource> ZValueSource { get; set; }
 
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#endregion
 
 	public override PartialOptionsBase Clone()
@@ -80,7 +82,8 @@ public class PartialReshapeAlongOptions : PartialOptionsBase
 				             TryClone(ExcludeLinesResultingInTargetOverlaps),
 
 			             // Z Value settings
-			             ZValueSource = TryClone(ZValueSource)
+			             ZValueSource = TryClone(ZValueSource),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 		return result;
 	}

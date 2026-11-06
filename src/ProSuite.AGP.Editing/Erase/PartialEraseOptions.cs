@@ -12,6 +12,8 @@ public class PartialEraseOptions : PartialOptionsBase
 
 	public OverridableSetting<bool> PreventMultipartResults { get; set; }
 
+	public OverridableSetting<bool> AlwaysShowOptionsPane { get; set; }
+
 	#endregion
 
 	public override PartialOptionsBase Clone()
@@ -20,7 +22,8 @@ public class PartialEraseOptions : PartialOptionsBase
 		             {
 			             AllowPolylineErasing = TryClone(AllowPolylineErasing),
 			             AllowMultipointErasing = TryClone(AllowMultipointErasing),
-			             PreventMultipartResults = TryClone(PreventMultipartResults)
+			             PreventMultipartResults = TryClone(PreventMultipartResults),
+			             AlwaysShowOptionsPane = TryClone(AlwaysShowOptionsPane)
 		             };
 		return result;
 	}
