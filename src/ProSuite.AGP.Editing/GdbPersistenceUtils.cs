@@ -239,9 +239,21 @@ public static class GdbPersistenceUtils
 					continue;
 				}
 
-				rowBuffer[field.Name] =
+				object value =
 					getAttributeValueFunc?.Invoke(field, classDefinition, targetSubtype) ??
 					DBNull.Value;
+
+				try
+				{
+					rowBuffer[field.Name] = value;
+				}
+				catch (Exception e)
+				{
+					string valueText = value == DBNull.Value ? "<null>" : $"'{value}'";
+
+					throw new DataException(
+						$"Cannot set field '{field.Name}' to {valueText}: {e.Message}", e);
+				}
 			}
 
 			string shapeFieldName = classDefinition.GetShapeField();
