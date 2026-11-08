@@ -820,13 +820,15 @@ public static class WorkspaceUtils
 		{
 			GeodatabaseType gdbType = geodatabase.GetGeodatabaseType();
 
-			// TODO: Test newer workspace types, such as sqlite, Netezza
+			// TODO: Test newer workspace types, such as Netezza
 
 			var connector = geodatabase.GetConnector();
 
 			if (gdbType == GeodatabaseType.LocalDatabase)
 			{
-				return WorkspaceDbType.FileGeodatabase;
+				return connector is MobileGeodatabaseConnectionPath
+					       ? WorkspaceDbType.MobileGeodatabase
+					       : WorkspaceDbType.FileGeodatabase;
 			}
 
 			if (gdbType == GeodatabaseType.FileSystem)
