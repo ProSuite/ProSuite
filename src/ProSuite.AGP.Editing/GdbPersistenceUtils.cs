@@ -222,8 +222,10 @@ public static class GdbPersistenceUtils
 
 		try
 		{
-			// Set the attributes
-			rowBuffer = targetFeatureClass.CreateRowBuffer();
+			// The new row buffer already holds the geodatabase default values of the subtype.
+			rowBuffer = targetSubtype == null
+				            ? targetFeatureClass.CreateRowBuffer()
+				            : targetFeatureClass.CreateRowBuffer(targetSubtype);
 
 			using var classDefinition = targetFeatureClass.GetDefinition();
 			GeometryType geometryType = classDefinition.GetShapeType();
@@ -239,9 +241,12 @@ public static class GdbPersistenceUtils
 					continue;
 				}
 
-				object value =
-					getAttributeValueFunc?.Invoke(field, classDefinition, targetSubtype) ??
-					DBNull.Value;
+				object value = getAttributeValueFunc?.Invoke(field, classDefinition, targetSubtype);
+
+				if (IsNullOrDbNull(value))
+				{
+					continue;
+				}
 
 				try
 				{
@@ -249,12 +254,13 @@ public static class GdbPersistenceUtils
 				}
 				catch (Exception e)
 				{
-					string valueText = value == DBNull.Value ? "<null>" : $"'{value}'";
-
 					throw new DataException(
-						$"Cannot set field '{field.Name}' to {valueText}: {e.Message}", e);
+						$"Cannot set field '{field.Name}' to {FormatFieldValue(value)}: {e.Message}",
+						e);
 				}
 			}
+
+			AssertRequiredFieldsHaveValues(rowBuffer, targetSubtype);
 
 			string shapeFieldName = classDefinition.GetShapeField();
 
@@ -293,10 +299,64 @@ public static class GdbPersistenceUtils
 		}
 		finally
 		{
-			rowBuffer.Dispose();
+			rowBuffer?.Dispose();
 		}
 
 		return newFeatures;
+	}
+
+	/// <summary>
+	/// Gets the value of a field for a new feature: the value of the template, otherwise
+	/// the geodatabase default value of the subtype. Must be called inside QueuedTask.Run.
+	/// </summary>
+	/// <remarks>
+	/// Like the standard ArcGIS Pro construction tools, this ignores the default value of
+	/// the field itself when the subtype defines none. A future option could honour the
+	/// field's geodatabase default in that case.
+	/// </remarks>
+	[CanBeNull]
+	public static object GetNewFeatureFieldValue([NotNull] Field field,
+	                                             [CanBeNull] EditingTemplate template,
+	                                             [CanBeNull] Subtype subtype)
+	{
+		if (TryGetFieldValueFromTemplate(field.Name, template, out object templateValue))
+		{
+			return templateValue;
+		}
+
+		return field.GetDefaultValue(subtype);
+	}
+
+	private static void AssertRequiredFieldsHaveValues([NotNull] RowBuffer rowBuffer,
+	                                                   [CanBeNull] Subtype subtype)
+	{
+		List<string> emptyFieldNames =
+			rowBuffer.GetFields()
+			         .Where(f => ! f.IsNullable && f.IsEditable &&
+			                     f.FieldType != FieldType.Geometry &&
+			                     IsNullOrDbNull(rowBuffer[f.Name]))
+			         .Select(f => f.Name)
+			         .ToList();
+
+		if (emptyFieldNames.Count == 0)
+		{
+			return;
+		}
+
+		throw new DataException(
+			$"Field(s) {string.Join(", ", emptyFieldNames.Select(n => $"'{n}'"))} must not be " +
+			"empty, but neither the template nor the geodatabase (subtype " +
+			$"{subtype?.GetCode().ToString() ?? "<none>"}) provides a value.");
+	}
+
+	private static bool IsNullOrDbNull([CanBeNull] object value)
+	{
+		return value == null || value == DBNull.Value;
+	}
+
+	private static string FormatFieldValue([CanBeNull] object value)
+	{
+		return IsNullOrDbNull(value) ? "<null>" : $"'{value}'";
 	}
 
 	public static IList<Feature> InsertTx(
@@ -495,13 +555,11 @@ public static class GdbPersistenceUtils
 	}
 
 	/// <summary>
-	/// Returns true if the specified template has a default value for the
-	/// specified field name other than null or DB-Null.
+	/// Returns true if the specified template has a value for the specified field
+	/// name other than null or DB-Null. The value currently shown in the Create
+	/// Features pane takes precedence over the value saved in the template definition.
+	/// Must be called inside QueuedTask.Run.
 	/// </summary>
-	/// <param name="fieldName"></param>
-	/// <param name="template"></param>
-	/// <param name="value"></param>
-	/// <returns></returns>
 	public static bool TryGetFieldValueFromTemplate([NotNull] string fieldName,
 	                                                [CanBeNull] EditingTemplate template,
 	                                                out object value)
@@ -512,9 +570,11 @@ public static class GdbPersistenceUtils
 			return false;
 		}
 
-		// NOTE: Read the default value from the template's CIM definition rather than
-		// its Inspector (which is null until the Create Features pane has been opened).
-		if (! EditorUtils.TryGetDefaultValue(template, fieldName, out value))
+		// The Inspector holds values the user changed in the Create Features pane, which
+		// are not in the saved definition. Since Pro 3.7 it is null until that pane has
+		// been opened; the saved definition is then the only source.
+		if (! TryGetInspectorValue(template, fieldName, out value) &&
+		    ! EditorUtils.TryGetDefaultValue(template, fieldName, out value))
 		{
 			return false;
 		}
@@ -525,6 +585,27 @@ public static class GdbPersistenceUtils
 		{
 			value = guid.ToString("B").ToUpper();
 		}
+
+		return value != null && value != DBNull.Value;
+	}
+
+	private static bool TryGetInspectorValue([NotNull] EditingTemplate template,
+	                                         [NotNull] string fieldName,
+	                                         out object value)
+	{
+		value = null;
+
+		var inspector = template.Inspector;
+
+		if (inspector == null || ! inspector.HasAttributes)
+		{
+			return false;
+		}
+
+		Attribute attribute = inspector.FirstOrDefault(
+			a => a.FieldName.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
+
+		value = attribute?.CurrentValue;
 
 		return value != null && value != DBNull.Value;
 	}

@@ -1852,13 +1852,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 		                                       [NotNull] FeatureClassDefinition featureClassDef,
 		                                       [CanBeNull] Subtype subtype)
 		{
-			if (GdbPersistenceUtils.TryGetFieldValueFromTemplate(
-				    field.Name, EditingTemplate.Current, out object result))
-			{
-				return result;
-			}
-
-			return field.GetDefaultValue(subtype);
+			return GdbPersistenceUtils.GetNewFeatureFieldValue(
+				field, EditingTemplate.Current, subtype);
 		}
 
 		private static void SelectCreatedFeatures([CanBeNull] MapView mapView,
