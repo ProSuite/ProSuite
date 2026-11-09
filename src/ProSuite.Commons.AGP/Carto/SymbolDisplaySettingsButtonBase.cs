@@ -16,6 +16,8 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 	[CanBeNull]
 	protected abstract IPerimeterDisplayManager PerimeterDisplayManager { get; }
 
+	protected virtual bool ShowMaskingSettings => true;
+
 	protected override Task<bool> OnClickAsyncCore()
 	{
 		var map = MapView.Active?.Map; // may be null
@@ -27,6 +29,7 @@ public abstract class SymbolDisplaySettingsButtonBase : ButtonCommandBase
 
 		var viewModel = new SymbolDisplaySettingsViewModel
 		                {
+							ShowMaskingSettings = ShowMaskingSettings,
 			                ScopeMessage = scopeHint,
 			                AvoidSLMWithoutSLD = manager.NoMaskingWithoutSLD[map],
 			                UseScaleRange = manager.AutoSwitch[map],

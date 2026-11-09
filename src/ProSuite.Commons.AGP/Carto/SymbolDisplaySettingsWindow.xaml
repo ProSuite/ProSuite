@@ -10,8 +10,9 @@
                     d:DataContext="{d:DesignInstance {x:Type local:SymbolDisplaySettingsViewModel}, IsDesignTimeCreatable=False}"
                     mc:Ignorable="d"
                     Title="Symbol Display Settings"
-                    Height="219" MinHeight="292" MaxHeight="320"
+                    Height="280" MinHeight="172" MaxHeight="320"
                     Width="400" MinWidth="400" MaxWidth="800"
+					SizeToContent="Height"
                     WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
 
 	<controls:ProWindow.Resources>
@@ -46,7 +47,7 @@
 				<RowDefinition Height="Auto" />
 				<RowDefinition Height="Auto" />
 			</Grid.RowDefinitions>
-			<StackPanel Grid.Row="0" Margin="2">
+			<StackPanel Grid.Row="0" Margin="2" Visibility="{Binding MaskingSettingsVisibility}">
 				<CheckBox Margin="4" IsChecked="{Binding AvoidSLMWithoutSLD }">Avoid SLM without SLD</CheckBox>
 				<TextBlock TextWrapping="Wrap"
 				           Background="{DynamicResource Esri_BackgroundHoverSelectedBrush}"
@@ -56,10 +57,12 @@
 					combination SLM on with SLD off will not be possible
 				</TextBlock>
 			</StackPanel>
-			<Separator Grid.Row="1" />
+			<Separator Grid.Row="1" Visibility="{Binding MaskingSettingsVisibility}"/>
 			<StackPanel Grid.Row="2" Margin="2">
-				<CheckBox Margin="4" Content="Disable SLD/SLM when..."
-				          IsChecked="{Binding UseScaleRange}"/>
+				<CheckBox Margin="4"
+				          IsChecked="{Binding UseScaleRange}">
+					<TextBlock>Disable <Run Text="{Binding WhatText, Mode=OneWay}" d:Text="SLD/SLM"/> when...</TextBlock>
+				</CheckBox>
 				<StackPanel Orientation="Horizontal" Margin="28,2,2,4">
 					<TextBlock VerticalAlignment="Center">zoomed in beyond</TextBlock>
 					<Separator Width="8" Visibility="Hidden" />
@@ -122,18 +125,27 @@
 					<Separator Width="8" Visibility="Hidden" />
 					<TextBlock VerticalAlignment="Center">(min scale, e.g. 1:15000)</TextBlock>
 				</StackPanel>
-				<TextBlock Foreground="{DynamicResource Esri_TextStyleSubduedBrush}" Margin="28,4,0,0">
-					Want:
-					SLD = <Run Text="{Binding WantSLD}" />,
-					SLM = <Run Text="{Binding WantLM}" />
-				</TextBlock>
+				<StackPanel Orientation="Horizontal" Margin="28,4,0,0">
+					<TextBlock Foreground="{DynamicResource Esri_TextStyleSubduedBrush}">
+						Current settings:
+					</TextBlock>
+					<Separator Width="12" Visibility="Hidden"/>
+					<TextBlock Foreground="{DynamicResource Esri_TextStyleSubduedBrush}">
+						SLD = <Run Text="{Binding WantSLD, Mode=OneWay}"/>
+					</TextBlock>
+					<Separator Width="12" Visibility="Hidden"/>
+					<TextBlock Foreground="{DynamicResource Esri_TextStyleSubduedBrush}"
+					           Visibility="{Binding MaskingSettingsVisibility}">
+						SLM = <Run Text="{Binding WantLM, Mode=OneWay}"/>
+					</TextBlock>
+				</StackPanel>
 			</StackPanel>
 			<Separator Grid.Row="3" />
 			<CheckBox Grid.Row="4"
 			          Visibility="{Binding PerimeterSettingsVisibility}"
 			          IsChecked="{Binding WantPerimeter}"
-			          Content="Show work unit perimeter on active map" Margin="4,4,8,52"
-			          ToolTip="Tentatively here -- until we have a better place" />
+			          Content="Show work unit perimeter on active map"
+			          Margin="4,4,8,52"/>
 		</Grid>
 	</DockPanel>
 </controls:ProWindow>

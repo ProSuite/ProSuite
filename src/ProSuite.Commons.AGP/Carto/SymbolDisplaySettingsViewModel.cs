@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -7,6 +8,7 @@ namespace ProSuite.Commons.AGP.Carto;
 
 public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 {
+	private bool _showMaskingSettings = true;
 	private bool _avoidSLMWithoutSLD;
 	private bool _useScaleRange;
 	private double _minScaleDenominator;
@@ -15,30 +17,28 @@ public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 	private bool? _wantLM;
 	private string _scopeMessage;
 
+	public bool ShowMaskingSettings
+	{
+		get => _showMaskingSettings;
+		set
+		{
+			if (SetProperty(ref _showMaskingSettings, value))
+			{
+				OnPropertyChanged(nameof(MaskingSettingsVisibility));
+				OnPropertyChanged(nameof(WhatText));
+			}
+		}
+	}
 	public bool AvoidSLMWithoutSLD
 	{
 		get => _avoidSLMWithoutSLD;
-		set
-		{
-			if (_avoidSLMWithoutSLD != value)
-			{
-				_avoidSLMWithoutSLD = value;
-				OnPropertyChanged();
-			}
-		}
+		set => SetProperty(ref _avoidSLMWithoutSLD, value);
 	}
 
 	public bool UseScaleRange
 	{
 		get => _useScaleRange;
-		set
-		{
-			if (_useScaleRange != value)
-			{
-				_useScaleRange = value;
-				OnPropertyChanged();
-			}
-		}
+		set => SetProperty(ref _useScaleRange, value);
 	}
 
 	public double MinScaleDenominator
@@ -70,41 +70,26 @@ public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 	public bool? WantSLD
 	{
 		get => _wantSLD;
-		set
-		{
-			if (_wantSLD != value)
-			{
-				_wantSLD = value;
-				OnPropertyChanged();
-			}
-		}
+		set => SetProperty(ref _wantSLD, value);
 	}
 
 	public bool? WantLM
 	{
 		get => _wantLM;
-		set
-		{
-			if (_wantLM != value)
-			{
-				_wantLM = value;
-				OnPropertyChanged();
-			}
-		}
+		set => SetProperty(ref _wantLM, value);
 	}
 
 	public string ScopeMessage
 	{
 		get => _scopeMessage;
-		set
-		{
-			if (_scopeMessage != value)
-			{
-				_scopeMessage = value;
-				OnPropertyChanged();
-			}
-		}
+		set => SetProperty(ref _scopeMessage, value);
 	}
+
+	public Visibility MaskingSettingsVisibility =>
+		ShowMaskingSettings ? Visibility.Visible : Visibility.Collapsed;
+
+	public string WhatText =>
+		ShowMaskingSettings ? "SLD/SLM" : "SLD";
 
 	#region Tentatively piggyback perimeter display settings
 
@@ -114,27 +99,13 @@ public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 	public bool WantPerimeter
 	{
 		get => _wantPerimeter;
-		set
-		{
-			if (_wantPerimeter != value)
-			{
-				_wantPerimeter = value;
-				OnPropertyChanged();
-			}
-		}
+		set => SetProperty(ref _wantPerimeter, value);
 	}
 
 	public Visibility PerimeterSettingsVisibility
 	{
 		get => _perimeterSettingsVisibility;
-		set
-		{
-			if (_perimeterSettingsVisibility != value)
-			{
-				_perimeterSettingsVisibility = value;
-				OnPropertyChanged();
-			}
-		}
+		set => SetProperty(ref _perimeterSettingsVisibility, value);
 	}
 
 	#endregion
@@ -144,5 +115,17 @@ public class SymbolDisplaySettingsViewModel : INotifyPropertyChanged
 	private void OnPropertyChanged([CallerMemberName] string name = null)
 	{
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+	}
+
+	private bool SetProperty<T>(ref T backingField, T value, [CallerMemberName] string propertyName = null)
+	{
+		if (EqualityComparer<T>.Default.Equals(backingField, value))
+		{
+			return false;
+		}
+
+		backingField = value;
+		OnPropertyChanged(propertyName);
+		return true;
 	}
 }
