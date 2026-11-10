@@ -196,7 +196,7 @@ public static class WorkspaceUtils
 				return new FileGeodatabaseConnectionPath(new Uri(filePath, UriKind.Absolute));
 
 			case WorkspaceFactory.SQLite:
-				return CreateSQLiteConnector(connectionString);
+				return CreateMobileGeodatabaseConnector(connectionString);
 
 			case WorkspaceFactory.SDE:
 				DatabaseConnectionProperties connectionProperties =
@@ -222,38 +222,58 @@ public static class WorkspaceUtils
 	}
 
 	/// <summary>
-	/// Creates the connector for a mobile geodatabase or a plain SQLite database. Both share
-	/// <see cref="WorkspaceFactory.SQLite"/> (see <see cref="TryGetWorkspaceFactory"/>).
+	/// Creates the connector for a mobile geodatabase from one of the two forms in which its
+	/// location is stored:
+	/// <list type="number">
+	/// <item>The connection string of Datastore.GetConnectionString(), stored by project
+	/// workspaces: DATABASE=main;...;DB_CONNECTION_PROPERTIES=C:\data\x.geodatabase;...</item>
+	/// <item>The path of the mobile geodatabase, either as file URI (stored by work list
+	/// definitions, see <see cref="GetConnectionString"/>) or as local path.</item>
+	/// </list>
+	/// Plain SQLite databases and GeoPackages do not arrive here: ArcGIS Pro returns
+	/// <see cref="DatabaseConnectionProperties"/> as their connector, which maps to
+	/// <see cref="WorkspaceFactory.SDE"/>.
 	/// </summary>
-	/// <param name="connectionString">Either the string of Datastore.GetConnectionString(),
-	/// whose DATABASE is the SQLite schema (main) and DB_CONNECTION_PROPERTIES the path,
-	/// or the plain path.</param>
-	private static Connector CreateSQLiteConnector([NotNull] string connectionString)
+	private static MobileGeodatabaseConnectionPath CreateMobileGeodatabaseConnector(
+		[NotNull] string connectionString)
 	{
-		string path = connectionString;
-		bool? isGeodatabase = null;
+		string mobileGeodatabasePath =
+			GetPathFromDatastoreConnectionString(connectionString) ?? connectionString;
 
-		if (connectionString.Contains('='))
+		return new MobileGeodatabaseConnectionPath(
+			new Uri(mobileGeodatabasePath, UriKind.Absolute));
+	}
+
+	/// <summary>
+	/// Gets the mobile geodatabase path from the DB_CONNECTION_PROPERTIES entry of a
+	/// connection string returned by Datastore.GetConnectionString().
+	/// </summary>
+	/// <returns>The path, or null if the connection string is not in that format. A path or
+	/// file URI is not, even if a folder name contains '=' or ';'.</returns>
+	[CanBeNull]
+	private static string GetPathFromDatastoreConnectionString(
+		[NotNull] string connectionString)
+	{
+		if (! connectionString.Contains('='))
 		{
-			var builder = new ConnectionStringBuilder(connectionString);
-
-			path = builder["db_connection_properties"];
-
-			if (builder.TryGetValue("is_geodatabase", out string value))
-			{
-				isGeodatabase = string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
-			}
+			return null;
 		}
 
-		Assert.False(string.IsNullOrEmpty(path),
-		             $"No path in SQLite connection string {connectionString}");
+		ConnectionStringBuilder connectionProperties;
+		try
+		{
+			connectionProperties = new ConnectionStringBuilder(connectionString);
+		}
+		catch (ArgumentException)
+		{
+			return null;
+		}
 
-		var uri = new Uri(path, UriKind.Absolute);
-
-		return isGeodatabase ??
-		       uri.LocalPath.EndsWith(".geodatabase", StringComparison.OrdinalIgnoreCase)
-			       ? new MobileGeodatabaseConnectionPath(uri)
-			       : new SQLiteConnectionPath(uri);
+		return connectionProperties.TryGetValue("db_connection_properties",
+		                                        out string databasePath) &&
+		       ! string.IsNullOrEmpty(databasePath)
+			       ? databasePath
+			       : null;
 	}
 
 	/// <summary>
