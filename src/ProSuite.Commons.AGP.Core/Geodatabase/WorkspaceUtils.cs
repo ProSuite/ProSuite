@@ -195,6 +195,9 @@ public static class WorkspaceUtils
 
 				return new FileGeodatabaseConnectionPath(new Uri(filePath, UriKind.Absolute));
 
+			case WorkspaceFactory.SQLite:
+				return CreateSQLiteConnector(connectionString);
+
 			case WorkspaceFactory.SDE:
 				DatabaseConnectionProperties connectionProperties =
 					GetConnectionProperties(connectionString);
@@ -212,12 +215,45 @@ public static class WorkspaceUtils
 			case WorkspaceFactory.InMemoryDB:
 				return CreateMemoryConnectionProperties(connectionString);
 
-			// TODO: SQLite, others?
-
 			default:
 				throw new ArgumentOutOfRangeException(nameof(factory), factory,
 				                                      $"Unsupported workspace factory: {factory}");
 		}
+	}
+
+	/// <summary>
+	/// Creates the connector for a mobile geodatabase or a plain SQLite database. Both share
+	/// <see cref="WorkspaceFactory.SQLite"/> (see <see cref="TryGetWorkspaceFactory"/>).
+	/// </summary>
+	/// <param name="connectionString">Either the string of Datastore.GetConnectionString(),
+	/// whose DATABASE is the SQLite schema (main) and DB_CONNECTION_PROPERTIES the path,
+	/// or the plain path.</param>
+	private static Connector CreateSQLiteConnector([NotNull] string connectionString)
+	{
+		string path = connectionString;
+		bool? isGeodatabase = null;
+
+		if (connectionString.Contains('='))
+		{
+			var builder = new ConnectionStringBuilder(connectionString);
+
+			path = builder["db_connection_properties"];
+
+			if (builder.TryGetValue("is_geodatabase", out string value))
+			{
+				isGeodatabase = string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+			}
+		}
+
+		Assert.False(string.IsNullOrEmpty(path),
+		             $"No path in SQLite connection string {connectionString}");
+
+		var uri = new Uri(path, UriKind.Absolute);
+
+		return isGeodatabase ??
+		       uri.LocalPath.EndsWith(".geodatabase", StringComparison.OrdinalIgnoreCase)
+			       ? new MobileGeodatabaseConnectionPath(uri)
+			       : new SQLiteConnectionPath(uri);
 	}
 
 	/// <summary>

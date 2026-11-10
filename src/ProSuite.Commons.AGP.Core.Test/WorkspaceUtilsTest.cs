@@ -280,6 +280,50 @@ namespace ProSuite.Commons.AGP.Core.Test
 			                                        DatastoreComparison.AnyUserAnyVersion));
 		}
 
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		public void CanReferenceMobileGeodatabaseByConnectionString()
+		{
+			string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+			Directory.CreateDirectory(directory);
+			var uri = new Uri(Path.Combine(directory, "project.geodatabase"));
+
+			using ArcGIS.Core.Data.Geodatabase mobileGdb =
+				SchemaBuilder.CreateGeodatabase(new MobileGeodatabaseConnectionPath(uri));
+
+			// What a project workspace stores to find the datastore again
+			Assert.IsTrue(WorkspaceUtils.TryGetWorkspaceFactory(mobileGdb.GetConnector(),
+			                                                    out WorkspaceFactory factory));
+			string connectionString = mobileGdb.GetConnectionString();
+			Console.WriteLine($"{factory}: {connectionString}");
+
+			Connector connector = WorkspaceUtils.CreateConnector(factory, connectionString);
+
+			Assert.IsInstanceOf<MobileGeodatabaseConnectionPath>(connector);
+			Assert.IsTrue(new DatastoreName(mobileGdb).References(factory, connectionString));
+			Assert.IsTrue(new DatastoreName(mobileGdb).References(factory, uri.LocalPath));
+		}
+
+		[Test]
+		public void CanCreateMobileGeodatabaseConnectorFromConnectionString()
+		{
+			const string path = @"D:\Data\project.geodatabase";
+
+			// As Datastore.GetConnectionString() returns it for a mobile geodatabase
+			const string connectionString =
+				$"DATABASE=main;SERVER=D:;INSTANCE=sde:sqlite:{path};" +
+				$"DB_CONNECTION_PROPERTIES={path};IS_GEODATABASE=true;" +
+				"AUTHENTICATION_MODE=OSA;IS_NOSERVER=0";
+
+			Connector connector =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.SQLite, connectionString);
+
+			var mobileConnection = (MobileGeodatabaseConnectionPath) connector;
+			Assert.AreEqual(path, mobileConnection.Path.LocalPath);
+
+			Assert.IsTrue(new DatastoreName(connector).References(WorkspaceFactory.SQLite, path));
+		}
+
 		[Test, Ignore("Requires oracle connection")]
 		public void Can_create_version_tree_as_osa()
         {
