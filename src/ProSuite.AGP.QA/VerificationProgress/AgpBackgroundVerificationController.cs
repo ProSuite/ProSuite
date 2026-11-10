@@ -37,7 +37,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
 		[CanBeNull] private readonly IQualityVerificationEnvironment _verificationEnvironment;
 
-		private List<IDisposable> _activeProgressOverlays = new();
+		private readonly List<IDisposable> _activeProgressOverlays = new();
 		private int _lastTileCount;
 
 		private bool _issuesSaved;
@@ -92,13 +92,15 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			// Multithreaded access: Copy the list to be able to enumerate it:
 			List<EnvelopeXY> immutableList = tiles.ToList();
 
+			// Synchronous on purpose: an awaiting update would let the next queued update (for
+			// example the removal at the end of the run) start before its overlays are added,
+			// and those overlays would then remain in the map.
 			QueuedTaskUtils.Run(
-				async delegate
+				delegate
 				{
 					try
 					{
-						await UpdateProgressOverlaysAsync(immutableList, showOverlay,
-						                                  currentProgressStep);
+						UpdateProgressOverlays(immutableList, showOverlay, currentProgressStep);
 						_msg.DebugFormat("Updated progress overlays. Current state: {0}",
 						                 showOverlay);
 					}
@@ -388,18 +390,13 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			return result;
 		}
 
-		private async Task UpdateProgressOverlaysAsync([NotNull] IList<EnvelopeXY> tiles,
-		                                               bool showOverlay,
-		                                               ServiceCallStatus currentProgressStep)
+		private void UpdateProgressOverlays([NotNull] IList<EnvelopeXY> tiles,
+		                                    bool showOverlay,
+		                                    ServiceCallStatus currentProgressStep)
 		{
 			if (! showOverlay || currentProgressStep == ServiceCallStatus.Undefined)
 			{
-				foreach (var overlay in _activeProgressOverlays)
-				{
-					overlay.Dispose();
-				}
-
-				_activeProgressOverlays.Clear();
+				RemoveProgressOverlays();
 
 				_lastTileCount = 0;
 
@@ -418,30 +415,37 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				// Update only the previous and current tile overlays to reduce flickering and improve performance.
 
 				int lastIndex = _activeProgressOverlays.Count - 1;
-				_activeProgressOverlays[lastIndex].Dispose();
+				_activeProgressOverlays[lastIndex]?.Dispose();
 				_activeProgressOverlays.RemoveAt(lastIndex);
 
-				var overlays =
-					CreateOverlays(tiles.TakeLast(2).ToList(), currentProgressStep);
-
-				var newOverlays = await MapUtils.AddOverlays(_mapView, overlays);
-				_activeProgressOverlays.AddRange(newOverlays);
+				AddProgressOverlays(CreateOverlays(tiles.TakeLast(2).ToList(),
+				                                   currentProgressStep));
 			}
 			else
 			{
-				// Recreate overlays completely
+				RemoveProgressOverlays();
 
-				foreach (var overlay in _activeProgressOverlays)
-				{
-					overlay.Dispose();
-				}
-
-				_activeProgressOverlays.Clear();
-
-				var overlays = CreateOverlays(tiles, currentProgressStep);
-
-				_activeProgressOverlays = await MapUtils.AddOverlays(_mapView, overlays);
+				AddProgressOverlays(CreateOverlays(tiles, currentProgressStep));
 			}
+		}
+
+		private void AddProgressOverlays([NotNull] IEnumerable<Overlay> overlays)
+		{
+			foreach (Overlay overlay in overlays)
+			{
+				_activeProgressOverlays.Add(overlay.AddToMap(_mapView));
+			}
+		}
+
+		private void RemoveProgressOverlays()
+		{
+			foreach (IDisposable overlay in _activeProgressOverlays)
+			{
+				// MapView.AddOverlay can return null
+				overlay?.Dispose();
+			}
+
+			_activeProgressOverlays.Clear();
 		}
 
 		private List<Overlay> CreateOverlays(IList<EnvelopeXY> tiles,

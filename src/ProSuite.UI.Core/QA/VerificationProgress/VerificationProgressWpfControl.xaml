@@ -55,16 +55,66 @@
                         ToolTipService.ShowOnDisabled="True">
                     <Image Source="/ProSuite.UI.Core;component/Properties/Images/NavigateErrorsCmd.png" Stretch="None" />
                 </Button>
-                <Button Command="{Binding ZoomToPerimeterCommand}"
+                <Button x:Name="ZoomToPerimeterButton"
+                        Command="{Binding ZoomToPerimeterCommand}"
                         CommandParameter="{Binding Mode=OneWay}"
                         ToolTip="{Binding ZoomToVerifiedPerimeterToolTip}"
                         ToolTipService.ShowOnDisabled="True">
                     <Image Source="/ProSuite.UI.Core;component/Properties/Images/ZoomToVerifiedCmd.png" Stretch="None" />
                 </Button>
+                <!-- The host application's theme (ArcGIS Pro) styles toggle buttons with rounded
+                     corners and a background that looks pressed. The own template and the colours
+                     of the neighbouring button make it look like the other buttons. -->
                 <ToggleButton IsChecked="{Binding ToggleProgressOverlay}"
-                              CommandParameter="{Binding Mode=OneWay}"
-                              ToolTip="{Binding ToggleProgressOverlayToolTip}">
-                    <Image Source="/ProSuite.UI.Core;component/Properties/Images/FlashProgressCmd.png" Stretch="None" />
+                              ToolTip="{Binding ToggleProgressOverlayToolTip}"
+                              MinWidth="{Binding ActualHeight, RelativeSource={RelativeSource Self}}"
+                              MinHeight="{Binding ActualWidth, RelativeSource={RelativeSource Self}}"
+                              Background="{Binding Background, ElementName=ZoomToPerimeterButton}"
+                              BorderBrush="{Binding BorderBrush, ElementName=ZoomToPerimeterButton}"
+                              BorderThickness="{Binding BorderThickness, ElementName=ZoomToPerimeterButton}"
+                              Padding="{Binding Padding, ElementName=ZoomToPerimeterButton}">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="{x:Type ToggleButton}">
+                            <Border x:Name="ButtonBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    SnapsToDevicePixels="True">
+                                <Grid>
+                                    <Rectangle x:Name="StateHighlight" Opacity="0"
+                                               Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                                    <ContentPresenter x:Name="Content"
+                                                      Margin="{TemplateBinding Padding}"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="StateHighlight" Property="Opacity" Value="0.15" />
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="StateHighlight" Property="Opacity" Value="0.2" />
+                                    <Setter TargetName="ButtonBorder" Property="BorderBrush"
+                                            Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="StateHighlight" Property="Opacity" Value="0.45" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="Content" Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                    <!-- Like the overlay in the map: finished tiles with a green outline, the
+                         current tile filled. The tiles are processed from the bottom left to
+                         the top right. -->
+                    <Canvas Width="16" Height="16">
+                        <Rectangle Canvas.Left="1" Canvas.Top="1" Width="4" Height="4" Fill="#00C800" />
+                        <Path Stroke="#008000" StrokeThickness="1"
+                              Data="M0.5,15.5 H15.5 V5.5 H0.5 Z M0.5,10.5 H15.5 M5.5,15.5 V5.5 M10.5,15.5 V5.5 M0.5,5.5 V0.5 H5.5 V5.5" />
+                    </Canvas>
                 </ToggleButton>
             </StackPanel>
 

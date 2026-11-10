@@ -15,13 +15,15 @@ using ProSuite.Commons.Misc;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Dialogs;
+using ProSuite.Commons.UI.Persistence.WPF;
 using ProSuite.Commons.UI.WPF;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
 
 namespace ProSuite.UI.Core.QA.VerificationProgress
 {
-	public class VerificationProgressViewModel : INotifyPropertyChanged
+	public class VerificationProgressViewModel
+		: INotifyPropertyChanged, IFormStateAware<VerificationProgressFormState>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -56,6 +58,14 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		private readonly List<EnvelopeXY> _allTiles = new List<EnvelopeXY>();
 
 		private bool _showProgressOverlay;
+
+		// Keeps the user's last choice for the next runs, also in later ArcGIS Pro sessions.
+		private readonly UserStateManager<VerificationProgressFormState> _formStateManager;
+
+		// The dialog can stay open long after the run, and several runs can be open at the same
+		// time. The tiles are therefore only shown while the run is going on.
+		private bool _progressOverlayEnded;
+
 		private bool _issueOptionsEnabled;
 		private string _showReportToolTip;
 		private string _saveErrorsToolTip;
@@ -77,8 +87,11 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			UpdateOptions = new UpdateIssuesOptionsViewModel();
 
-			// Set initial value to ensure the tooltip is initialized correctly
-			ToggleProgressOverlay = false;
+			_formStateManager =
+				new UserStateManager<VerificationProgressFormState>(this, "VerificationProgress");
+			_formStateManager.RestoreState();
+
+			SetProgressOverlayToolTip();
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -513,12 +526,48 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			set
 			{
 				_showProgressOverlay = value;
+				OnPropertyChanged();
 
-				ToggleProgressOverlayToolTip = _showProgressOverlay
-					                               ? "Hide the tile verification progress"
-					                               : "Show the tile verification progress";
+				_formStateManager.SaveState();
+
+				SetProgressOverlayToolTip();
+
+				if (_showProgressOverlay && _progressOverlayEnded)
+				{
+					_msg.Info("The tile verification progress is only shown while a " +
+					          "verification is running. It will be shown in the next verification.");
+				}
+
 				UpdateProgressOverlay(_showProgressOverlay);
 			}
+		}
+
+		private void SetProgressOverlayToolTip()
+		{
+			if (_progressOverlayEnded)
+			{
+				ToggleProgressOverlayToolTip =
+					_showProgressOverlay
+						? "Do not show the tile verification progress in the next verifications"
+						: "Show the tile verification progress in the next verifications";
+				return;
+			}
+
+			ToggleProgressOverlayToolTip = _showProgressOverlay
+				                               ? "Hide the tile verification progress"
+				                               : "Show the tile verification progress";
+		}
+
+		void IFormStateAware<VerificationProgressFormState>.SaveState(
+			VerificationProgressFormState formState)
+		{
+			formState.ShowProgressOverlay = _showProgressOverlay;
+		}
+
+		void IFormStateAware<VerificationProgressFormState>.RestoreState(
+			VerificationProgressFormState formState)
+		{
+			_showProgressOverlay = formState.ShowProgressOverlay;
 		}
 
 		public string ToggleProgressOverlayToolTip
@@ -589,6 +638,8 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				ProgressTracker.RemoteCallStatus = ServiceCallStatus.Failed;
 			}
 
+			EndProgressOverlay();
+
 			RunningProgressTypeText = $"{result}";
 
 			switch (result)
@@ -650,6 +701,8 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 		public void Closing(object sender, CancelEventArgs e)
 		{
+			EndProgressOverlay();
+
 			// Just in case the dialog is closed by the eXit button:
 			if (ProgressTracker == null)
 			{
@@ -665,12 +718,30 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 		private void UpdateProgressOverlay(bool showOverlay)
 		{
+			if (showOverlay && _progressOverlayEnded)
+			{
+				return;
+			}
+
 			Try(nameof(UpdateProgressOverlay),
 			    () =>
 			    {
 				    ApplicationController?.UpdateProgressOverlay(
 					    showOverlay, _allTiles, ProgressTracker.RemoteCallStatus);
 			    });
+		}
+
+		private void EndProgressOverlay()
+		{
+			if (_progressOverlayEnded)
+			{
+				return;
+			}
+
+			_progressOverlayEnded = true;
+			UpdateProgressOverlay(false);
+
+			SetProgressOverlayToolTip();
 		}
 
 		private bool CanZoomToPerimeter()
@@ -738,8 +809,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					    CloseAction();
 				    }
 
-				    // Remove overlays on close
-				    UpdateProgressOverlay(false);
+				    EndProgressOverlay();
 			    }
 			);
 		}

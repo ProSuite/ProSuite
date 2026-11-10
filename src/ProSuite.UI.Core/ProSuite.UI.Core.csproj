@@ -311,7 +311,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Properties\Images\FlashProgressCmd.png" />
     <Resource Include="Properties\Images\NavigateErrorsCmd.png" />
     <Resource Include="Properties\Images\ZoomToVerifiedCmd.png" />
   </ItemGroup>
