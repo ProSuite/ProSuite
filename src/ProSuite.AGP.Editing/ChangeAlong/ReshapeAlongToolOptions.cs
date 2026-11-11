@@ -39,6 +39,9 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 			InitializeSetting<double>(
 				ReflectionUtils.GetProperty(() => LocalOptions.HideLinesMaxScaleDenominator),
 				10000.0);
+		CentralizablePreviewDifferenceAreas =
+			InitializeSetting<bool>(
+				ReflectionUtils.GetProperty(() => LocalOptions.PreviewDifferenceAreas), false);
 
 		// Minimal Tolerance settings
 		CentralizableMinimalToleranceApply =
@@ -126,6 +129,8 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 		private set;
 	}
 
+	public CentralizableSetting<bool> CentralizablePreviewDifferenceAreas { get; private set; }
+
 	// Minimal Tolerance settings
 	public CentralizableSetting<bool> CentralizableMinimalToleranceApply { get; private set; }
 	public CentralizableSetting<double> CentralizableMinimalTolerance { get; private set; }
@@ -194,6 +199,8 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 	public double DisplayHideCutLinesScale =>
 		CentralizableDisplayHideCutLinesScale.CurrentValue;
 
+	public bool PreviewDifferenceAreas => CentralizablePreviewDifferenceAreas.CurrentValue;
+
 	// Minimal Tolerance settings
 	public bool UseCustomTolerance => CentralizableMinimalToleranceApply.CurrentValue;
 	public double CustomTolerance => CentralizableMinimalTolerance.CurrentValue;
@@ -242,6 +249,7 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 		CentralizableDisplayRecalculateCutLines.RevertToDefault();
 		CentralizableDisplayHideCutLines.RevertToDefault();
 		CentralizableDisplayHideCutLinesScale.RevertToDefault();
+		CentralizablePreviewDifferenceAreas.RevertToDefault();
 
 		// Minimal Tolerance settings
 		CentralizableMinimalToleranceApply.RevertToDefault();
@@ -303,6 +311,12 @@ public class ReshapeAlongToolOptions : OptionsBase<PartialReshapeAlongOptions>
 
 		if (HasLocalOverride(CentralizableDisplayHideCutLinesScale,
 		                     "Scale threshold for hiding cut lines",
+		                     notifications))
+		{
+			result = true;
+		}
+
+		if (HasLocalOverride(CentralizablePreviewDifferenceAreas, "Show area differences",
 		                     notifications))
 		{
 			result = true;
