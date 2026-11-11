@@ -73,8 +73,18 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			SaveAction = saveAction;
 		}
 
+		public bool AutoUpdateIssuesAfterVerification =>
+			_verificationEnvironment?.AutoUpdateIssuesAfterVerification ?? false;
+
+		/// <summary>
+		/// The work list of the central issue datasets shows the new issues only after they have
+		/// been updated. It is therefore only opened automatically if the issues are also updated
+		/// automatically. A work list of the local Issue FileGDB needs no update.
+		/// </summary>
 		public bool AutoOpenWorkListAfterVerification =>
-			_verificationEnvironment?.AutoOpenWorkListAfterVerification ?? false;
+			(_verificationEnvironment?.AutoOpenWorkListAfterVerification ?? false) &&
+			(! _workListOpener.CanUseProductionModelIssueSchema() ||
+			 AutoUpdateIssuesAfterVerification);
 
 		[CanBeNull]
 		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
@@ -170,6 +180,12 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 				await _workListOpener.OpenProductionModelIssueWorkEnvironmentAsync(envelope);
 			}
+			else if (string.IsNullOrEmpty(verificationResult.IssuesGdbPath))
+			{
+				// The work list type is recognised by the extension of the path, so an empty path
+				// fails. Happens when the options request no local Issue FileGDB.
+				_msg.Debug("No Issue File Geodatabase has been created. No work list to open.");
+			}
 			else
 			{
 				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
@@ -199,11 +215,10 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			{
 				reason = "The work list can be opened when the verification is completed";
 
-				// With automatic opening, the dialog saves the issues before it opens the work list.
 				if (_workListOpener.CanUseProductionModelIssueSchema())
 				{
 					reason += Environment.NewLine +
-					          (AutoOpenWorkListAfterVerification
+					          (AutoUpdateIssuesAfterVerification
 						           ? "and the issues have been saved (issues are configured for auto-save)."
 						           : "and the issues have been saved using 'Update Issues'.");
 				}

@@ -662,41 +662,58 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			CommandManager.InvalidateRequerySuggested();
 
-			bool autoOpenWorkList =
-				ApplicationController?.AutoOpenWorkListAfterVerification == true ||
+			await RunAutomaticFollowUpActions(result);
+
+			return result;
+		}
+
+		private async Task RunAutomaticFollowUpActions(ServiceCallStatus result)
+		{
+			IQualityVerificationResult verificationResult = VerificationResult;
+
+			if (ApplicationController == null || verificationResult == null)
+			{
+				return;
+			}
+
+			// The variable predates the separate options and has always meant both.
+			bool legacyAutoOpenWorkList =
 				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 					"PROSUITE_AUTO_OPEN_ISSUE_WORKLIST");
 
-			if (VerificationResult?.HasIssues == true && autoOpenWorkList)
+			bool autoUpdateIssues =
+				ApplicationController.AutoUpdateIssuesAfterVerification || legacyAutoOpenWorkList;
+			bool autoOpenWorkList =
+				ApplicationController.AutoOpenWorkListAfterVerification || legacyAutoOpenWorkList;
+
+			if (! autoUpdateIssues && ! autoOpenWorkList)
 			{
-				await ViewUtils.RunOnUIThread(async () =>
+				return;
+			}
+
+			await ViewUtils.RunOnUIThread(async () =>
+			{
+				try
 				{
-					try
+					// A cancelled or failed run did not verify the whole perimeter. Updating would
+					// delete existing issues in the parts that were not verified.
+					if (autoUpdateIssues && result == ServiceCallStatus.Finished &&
+					    ApplicationController.CanSaveIssues(verificationResult, out _))
 					{
-						IQualityVerificationResult verificationResult =
-							Assert.NotNull(VerificationResult);
+						await SaveIssuesAsync();
+					}
 
-						// For central issue datasets (production model issue schema) the issues must
-						// be updated (saved) before the work list can be opened. CanSaveIssues is
-						// only true in that case (and while the issues have not yet been saved).
-						if (ApplicationController.CanSaveIssues(verificationResult, out _))
-						{
-							await ApplicationController.SaveIssuesAsync(
-								verificationResult, UpdateOptions.ErrorDeletionType,
-								! UpdateOptions.KeepPreviousIssues);
-						}
-
+					if (autoOpenWorkList && verificationResult.HasIssues)
+					{
 						await ApplicationController.OpenWorkList(
 							verificationResult, replaceExisting: true);
 					}
-					catch (Exception ex)
-					{
-						ErrorHandler.HandleError(ex, _msg);
-					}
-				});
-			}
-
-			return result;
+				}
+				catch (Exception ex)
+				{
+					ErrorHandler.HandleError(ex, _msg);
+				}
+			});
 		}
 
 		public void Closing(object sender, CancelEventArgs e)
@@ -862,39 +879,44 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			try
 			{
-				if (ApplicationController == null)
-				{
-					return;
-				}
-
-				if (_latch.IsLatched)
-				{
-					_msg.Debug("SaveIssues already running, returning");
-					return;
-				}
-
-				try
-				{
-					_latch.Increment();
-
-					Mouse.OverrideCursor = Cursors.Wait;
-
-					await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
-					                                            UpdateOptions.ErrorDeletionType,
-					                                            ! UpdateOptions.KeepPreviousIssues);
-
-					_saveErrorsCommand?.RaiseCanExecuteChanged();
-					_openWorkListCommand?.RaiseCanExecuteChanged();
-				}
-				finally
-				{
-					_latch.Decrement();
-					Mouse.OverrideCursor = null;
-				}
+				await SaveIssuesAsync();
 			}
 			catch (Exception e)
 			{
 				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
+		private async Task SaveIssuesAsync()
+		{
+			if (ApplicationController == null)
+			{
+				return;
+			}
+
+			if (_latch.IsLatched)
+			{
+				_msg.Debug("SaveIssues already running, returning");
+				return;
+			}
+
+			try
+			{
+				_latch.Increment();
+
+				Mouse.OverrideCursor = Cursors.Wait;
+
+				await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
+				                                            UpdateOptions.ErrorDeletionType,
+				                                            ! UpdateOptions.KeepPreviousIssues);
+
+				_saveErrorsCommand?.RaiseCanExecuteChanged();
+				_openWorkListCommand?.RaiseCanExecuteChanged();
+			}
+			finally
+			{
+				_latch.Decrement();
+				Mouse.OverrideCursor = null;
 			}
 		}
 
