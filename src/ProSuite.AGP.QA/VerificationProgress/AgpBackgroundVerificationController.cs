@@ -197,7 +197,16 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			if (currentProgressStep == ServiceCallStatus.Running ||
 			    currentProgressStep == ServiceCallStatus.Undefined)
 			{
-				reason = "Opens the work list when the verification is completed";
+				reason = "The work list can be opened when the verification is completed";
+
+				// With automatic opening, the dialog saves the issues before it opens the work list.
+				if (_workListOpener.CanUseProductionModelIssueSchema())
+				{
+					reason += Environment.NewLine +
+					          (AutoOpenWorkListAfterVerification
+						           ? "and the issues have been saved (issues are configured for auto-save)."
+						           : "and the issues have been saved using 'Update Issues'.");
+				}
 
 				return false;
 			}
