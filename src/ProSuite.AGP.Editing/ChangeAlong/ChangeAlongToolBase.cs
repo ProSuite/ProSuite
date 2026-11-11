@@ -440,6 +440,23 @@ protected virtual bool CanUseAsTargetLayer(Layer layer)
 		CancellationToken cancellationToken,
 		out ChangeAlongCurves newChangeAlongCurves);
 
+	/// <summary>
+	/// Called on the QueuedTask after the change-along curves have been (re-)calculated.
+	/// </summary>
+	protected virtual void UpdatePreview([NotNull] IList<Feature> selectedFeatures) { }
+
+	protected virtual void ClearPreview() { }
+
+	/// <summary>
+	/// Must be called on the QueuedTask.
+	/// </summary>
+	protected void UpdateFeedback([NotNull] IList<Feature> selectedFeatures)
+	{
+		// Overlays are drawn in the order they are added: reshape lines on top of the preview
+		UpdatePreview(selectedFeatures);
+		_feedback.Update(ChangeAlongCurves);
+	}
+
 	private async Task StartTargetSelectionPhaseAsync()
 	{
 		SetupSketch();
@@ -596,7 +613,7 @@ protected virtual bool CanUseAsTargetLayer(Layer layer)
 
 		LogAfterPickTarget(ChangeAlongCurves.CurveUsability);
 
-		_feedback.Update(ChangeAlongCurves);
+		UpdateFeedback(selectedFeatures);
 
 		return ChangeAlongCurves;
 	}
@@ -676,6 +693,7 @@ protected virtual bool CanUseAsTargetLayer(Layer layer)
 	protected void ResetDerivedGeometries()
 	{
 		_feedback?.DisposeOverlays();
+		ClearPreview();
 		ChangeAlongCurves = null;
 	}
 
@@ -737,7 +755,7 @@ protected virtual bool CanUseAsTargetLayer(Layer layer)
 
 		ChangeAlongCurves.Update(newState);
 
-		_feedback.Update(ChangeAlongCurves);
+		UpdateFeedback(selectedFeatures);
 	}
 
 	private async Task<bool> UpdateFeatures(List<Feature> selectedFeatures,
@@ -818,6 +836,8 @@ protected virtual bool CanUseAsTargetLayer(Layer layer)
 			ChangeAlongCurves.TargetFeatures =
 				ReRead(ChangeAlongCurves.TargetFeatures, outputSpatialReference).ToList();
 		}
+
+		UpdateFeedback(ReRead(selectedFeatures, outputSpatialReference).ToList());
 
 		return success;
 	}

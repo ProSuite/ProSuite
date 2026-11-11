@@ -116,6 +116,44 @@ public class AreaDifferences
 		return new AreaDifferences(Union(addGeometries), Union(removeGeometries));
 	}
 
+	[NotNull]
+	public static AreaDifferences Union([NotNull] ICollection<AreaDifferences> differences)
+	{
+		var added = new List<Geometry>();
+		var removed = new List<Geometry>();
+
+		foreach (AreaDifferences difference in differences)
+		{
+			if (! IsNullOrEmpty(difference.Added))
+			{
+				added.Add(difference.Added);
+			}
+
+			if (! IsNullOrEmpty(difference.Removed))
+			{
+				removed.Add(difference.Removed);
+			}
+		}
+
+		return new AreaDifferences(Union(added), Union(removed));
+	}
+
+	public bool IsSameArea([NotNull] AreaDifferences other)
+	{
+		return IsSameArea(Added, other.Added) && IsSameArea(Removed, other.Removed);
+	}
+
+	private static bool IsSameArea([CanBeNull] Geometry geometry1,
+	                               [CanBeNull] Geometry geometry2)
+	{
+		if (IsNullOrEmpty(geometry1) || IsNullOrEmpty(geometry2))
+		{
+			return IsNullOrEmpty(geometry1) && IsNullOrEmpty(geometry2);
+		}
+
+		return GeometryEngine.Instance.Equals(geometry1, geometry2);
+	}
+
 	[CanBeNull]
 	private static Geometry Union([NotNull] ICollection<Geometry> geometries)
 	{

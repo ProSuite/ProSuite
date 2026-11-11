@@ -93,8 +93,22 @@
 			</StackPanel>
 
 
-			<!-- Display Performance Options -->
 			<StackPanel Grid.Row="1">
+				<!-- Display Section -->
+				<Label FontWeight="Medium" Content="Display" Padding="6,6,6,2" />
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<CheckBox Grid.Column="1"
+					          Template="{StaticResource CentralizableSettingCheckbox}"
+					          Content="Show area differences"
+					          DataContext="{Binding PreviewDifferenceAreas}" />
+				</Grid>
+
+				<!-- Display Performance Options -->
 				<Label FontWeight="Medium" Content="Display Performance Options" Padding="6,6,6,2" />
 				<Grid>
 					<Grid.ColumnDefinitions>

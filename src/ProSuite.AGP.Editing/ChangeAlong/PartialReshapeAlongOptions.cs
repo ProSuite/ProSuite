@@ -14,6 +14,9 @@ public class PartialReshapeAlongOptions : PartialOptionsBase
 
 	public OverridableSetting<bool> InsertVerticesInTargets { get; set; }
 
+	// Display Options
+	public OverridableSetting<bool> PreviewDifferenceAreas { get; set; }
+
 	// Display Performance Options
 	public OverridableSetting<bool> DisplayLinesInVisibleExtentOnly { get; set; }
 	public OverridableSetting<bool> RecalculateLinesOnExtentChange { get; set; }
@@ -50,6 +53,9 @@ public class PartialReshapeAlongOptions : PartialOptionsBase
 		             {
 			             TargetFeatureSelection = TryClone(TargetFeatureSelection),
 			             InsertVerticesInTargets = TryClone(InsertVerticesInTargets),
+
+			             // Display Options
+			             PreviewDifferenceAreas = TryClone(PreviewDifferenceAreas),
 
 			             // Display Performance Options
 			             DisplayLinesInVisibleExtentOnly =
