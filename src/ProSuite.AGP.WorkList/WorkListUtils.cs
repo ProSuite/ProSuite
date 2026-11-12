@@ -157,6 +157,14 @@ public static class WorkListUtils
 	private static async Task LoadWorkListLayerToMapAsync(IWorkEnvironment environment,
 	                                                      IWorkList workList)
 	{
+		// Pro cannot open the work list table without a feature class among the sources
+		// (NullReferenceException in Geodatabase_GetTable).
+		if (! workList.Repository.SourceClasses.Any(sourceClass => sourceClass.HasGeometry))
+		{
+			_msg.Debug($"Work list {workList} has no feature class, no layer is loaded.");
+			return;
+		}
+
 		OperationManager manager = MapView.Active.Map.OperationManager;
 
 		var ops = new LoadWorkListLayersOperation(environment, workList.Name,
@@ -191,17 +199,20 @@ public static class WorkListUtils
 
 		var tablesById = new Dictionary<long, Table>();
 
-		List<BasicFeatureLayer> featureLayers =
-			MapUtils.GetFeatureLayers<BasicFeatureLayer>(map).ToList();
+		List<IDisplayTable> displayTables =
+			MapUtils.GetFeatureLayers<BasicFeatureLayer>(map)
+			        .Cast<IDisplayTable>()
+			        .Concat(MapUtils.GetStandaloneTables(map, null))
+			        .ToList();
 
 		IEnumerable<XmlTableReference> tableReferences =
 			definition.Workspaces.SelectMany(w => w.Tables);
 
 		foreach (XmlTableReference tableReference in tableReferences)
 		{
-			foreach (BasicFeatureLayer layer in featureLayers)
+			foreach (IDisplayTable displayTable in displayTables)
 			{
-				Table table = layer.GetTable();
+				Table table = displayTable.GetTable();
 
 				long id = GetUniqueTableIdAcrossWorkspaces(new GdbTableIdentity(table));
 				if (id == tableReference.Id)

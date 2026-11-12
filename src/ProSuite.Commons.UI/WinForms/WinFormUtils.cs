@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
@@ -270,7 +271,36 @@ namespace ProSuite.Commons.UI.WinForms
 			return new WpfWin32Window(wpfWindow);
 		}
 
+		/// <summary>
+		/// Whether the current thread created the window. Only then can the window own a dialog
+		/// shown on this thread.
+		/// </summary>
+		public static bool IsCreatedOnCurrentThread([NotNull] IWin32Window window)
+		{
+			Assert.ArgumentNotNull(window, nameof(window));
+
+			// Reading the handle of a WPF window or a WinForms control on another thread throws.
+			switch (window)
+			{
+				case WpfWin32Window wpfWindow:
+					return wpfWindow.CheckAccess();
+				case Control control:
+					// Without a handle, InvokeRequired is false on every thread.
+					return control.IsHandleCreated && ! control.InvokeRequired;
+				default:
+					return GetWindowThreadProcessId(window.Handle, IntPtr.Zero) ==
+					       GetCurrentThreadId();
+			}
+		}
+
 		#region Non-public members
+
+		[DllImport("user32.dll")]
+		private static extern uint GetWindowThreadProcessId(IntPtr windowHandle,
+		                                                    IntPtr processId);
+
+		[DllImport("kernel32.dll")]
+		private static extern uint GetCurrentThreadId();
 
 		private static void FocusNextControl([NotNull] Control control, bool forward)
 		{
@@ -337,14 +367,18 @@ namespace ProSuite.Commons.UI.WinForms
 
 		private class WpfWin32Window : IWin32Window
 		{
+			private readonly Window _window;
 			private readonly WindowInteropHelper _interopHelper;
 
 			public WpfWin32Window(Window window)
 			{
+				_window = window;
 				_interopHelper = new WindowInteropHelper(window);
 			}
 
 			public IntPtr Handle => _interopHelper.Handle;
+
+			public bool CheckAccess() => _window.CheckAccess();
 		}
 	}
 }

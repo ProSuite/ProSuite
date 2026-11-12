@@ -15,6 +15,8 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		private bool _issuesSaved;
 
+		public bool AutoUpdateIssuesAfterVerification => false;
+
 		public bool AutoOpenWorkListAfterVerification => false;
 
 		[CanBeNull]

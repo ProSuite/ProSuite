@@ -207,7 +207,8 @@ public static class SymbolUtils
 	public static CIMPolygonSymbol CreateHatchFillSymbol(float red, float green, float blue,
 	                                                     double rotation = 0,
 	                                                     double lineWidth = 2,
-	                                                     double lineSeparation = 5)
+	                                                     double lineSeparation = 5,
+	                                                     bool outline = true)
 	{
 		CIMLineSymbol lineSymbol = CreateLineSymbol(red, green, blue, lineWidth);
 
@@ -221,7 +222,11 @@ public static class SymbolUtils
 
 		var symbolLayers = new List<CIMSymbolLayer>();
 
-		symbolLayers.AddRange(lineSymbol.SymbolLayers);
+		if (outline)
+		{
+			symbolLayers.AddRange(lineSymbol.SymbolLayers);
+		}
+
 		symbolLayers.Add(hatchFill);
 
 		return new CIMPolygonSymbol { SymbolLayers = symbolLayers.ToArray() };

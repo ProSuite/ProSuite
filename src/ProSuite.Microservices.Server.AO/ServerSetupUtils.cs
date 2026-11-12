@@ -218,7 +218,7 @@ namespace ProSuite.Microservices.Server.AO
 			}
 
 			_msg.DebugFormat("Starting grpc server on {0} with the {1} services...",
-			                 ToHttpUrl(hostName, port, certificate != null), services.Count);
+			                 ToHttpUrl(hostName, port, ! string.IsNullOrEmpty(certificate)), services.Count);
 
 			server.Start();
 

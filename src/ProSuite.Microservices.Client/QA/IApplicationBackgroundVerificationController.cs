@@ -16,8 +16,15 @@ namespace ProSuite.Microservices.Client.QA
 	public interface IApplicationBackgroundVerificationController
 	{
 		/// <summary>
-		/// Whether the work list should be opened automatically once a verification finishes (and,
-		/// for central issue datasets, the issues have been updated first).
+		/// Whether the issues should be saved automatically once a verification has finished
+		/// successfully. Only effective where <see cref="CanSaveIssues"/> allows saving.
+		/// </summary>
+		bool AutoUpdateIssuesAfterVerification { get; }
+
+		/// <summary>
+		/// Whether the work list should be opened automatically once a verification finishes and
+		/// has found issues. Where the work list shows only saved issues, this should also require
+		/// <see cref="AutoUpdateIssuesAfterVerification"/>.
 		/// </summary>
 		bool AutoOpenWorkListAfterVerification { get; }
 

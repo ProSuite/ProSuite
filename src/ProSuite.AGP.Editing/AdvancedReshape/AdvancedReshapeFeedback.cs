@@ -20,12 +20,9 @@ public class AdvancedReshapeFeedback
 {
 	private IDisposable _openJawReplacedEndPointOverlay;
 
-	private IDisposable _polygonPreviewOverlayAdd;
-	private IDisposable _polygonPreviewOverlayRemove;
+	private readonly AreaDifferencePreview _areaDifferencePreview = new();
 
 	private CIMPointSymbol _openJawEndSymbol;
-	private CIMPolygonSymbol _addAreaSymbol;
-	private CIMPolygonSymbol _removeAreaSymbol;
 	private readonly ReshapeToolOptions _advancedReshapeToolOptions;
 
 	private MapPoint _lastDrawnOpenJawPoint;
@@ -71,9 +68,6 @@ public class AdvancedReshapeFeedback
 		var green = ColorFactory.Instance.CreateRGBColor(0, 128, 0);
 		var magenta = ColorUtils.CreateRGB(240, 0, 248);
 		var yellow = ColorUtils.CreateRGB(255, 224, 0);
-
-		_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
-		_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 
 		//selection symbols
 		if (useProStyle)
@@ -147,8 +141,7 @@ public class AdvancedReshapeFeedback
 
 	public Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 	{
-		_polygonPreviewOverlayAdd?.Dispose();
-		_polygonPreviewOverlayRemove?.Dispose();
+		_areaDifferencePreview.Clear();
 
 		if (resultFeatures == null || resultFeatures.Count == 0)
 		{
@@ -157,33 +150,7 @@ public class AdvancedReshapeFeedback
 
 		if (_advancedReshapeToolOptions.ShowPreview)
 		{
-			var addGeometries = new List<Geometry>(resultFeatures.Count);
-			var removeGeometries = new List<Geometry>(resultFeatures.Count);
-
-			foreach (ResultFeature resultFeature in resultFeatures)
-			{
-				var sourcePoly = resultFeature.OriginalFeature.GetShape() as Polygon;
-
-				if (sourcePoly == null || sourcePoly.IsEmpty)
-				{
-					continue;
-				}
-
-				var reshapedPoly = (Polygon) resultFeature.NewGeometry;
-
-				addGeometries.Add(GeometryEngine.Instance.Difference(reshapedPoly, sourcePoly));
-				removeGeometries.Add(
-					GeometryEngine.Instance.Difference(sourcePoly, reshapedPoly));
-			}
-
-			Polygon polygonAddArea = GeometryEngine.Instance.Union(addGeometries) as Polygon;
-			Polygon polygonRemoveArea =
-				GeometryEngine.Instance.Union(removeGeometries) as Polygon;
-
-			_polygonPreviewOverlayAdd =
-				AddOverlay(polygonAddArea, Assert.NotNull(_addAreaSymbol));
-			_polygonPreviewOverlayRemove =
-				AddOverlay(polygonRemoveArea, Assert.NotNull(_removeAreaSymbol));
+			_areaDifferencePreview.Update(resultFeatures);
 		}
 
 		return Task.FromResult(true);
@@ -195,11 +162,7 @@ public class AdvancedReshapeFeedback
 		_openJawReplacedEndPointOverlay = null;
 		_lastDrawnOpenJawPoint = null;
 
-		_polygonPreviewOverlayAdd?.Dispose();
-		_polygonPreviewOverlayAdd = null;
-
-		_polygonPreviewOverlayRemove?.Dispose();
-		_polygonPreviewOverlayRemove = null;
+		_areaDifferencePreview.Clear();
 	}
 
 	[CanBeNull]
