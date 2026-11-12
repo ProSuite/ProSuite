@@ -146,7 +146,7 @@ namespace ProSuite.Commons.UI.WinForms
 
 		#region Non-public members
 
-		private static bool IsSystemDarkModeEnabled()
+		internal static bool IsSystemDarkModeEnabled()
 		{
 #if NET9_0_OR_GREATER
 #pragma warning disable WFO5001

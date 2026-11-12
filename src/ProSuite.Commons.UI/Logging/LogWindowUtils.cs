@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WinForms;
 
 namespace ProSuite.Commons.UI.Logging
 {
@@ -159,18 +160,38 @@ namespace ProSuite.Commons.UI.Logging
 				}
 			}
 
-			e.CellStyle.BackColor = backColor;
-
-			// Under Pro's dark theme the default cell foreground is light gray, which is
-			// unreadable on these bright warn/error/fatal back colors. Force a dark foreground
-			// so the text stays readable (same approach as QAVerificationForm). In light mode
-			// the default foreground is already dark, so it is left untouched.
-			if (useDarkTheme)
-			{
-				e.CellStyle.ForeColor = Color.Black;
-			}
+			e.CellStyle.BackColor =
+				useDarkTheme || WinFormsThemeUtils.IsSystemDarkModeEnabled()
+					? GetDarkBackColor(e.CellStyle.BackColor, item)
+					: backColor;
 
 			return true;
+		}
+
+		private static Color GetDarkBackColor(Color background, [NotNull] LogEventItem item)
+		{
+			switch (item.Level)
+			{
+				case LogLevel.Warn:
+					return Overlay(background, LogWindowColors.DarkWarning,
+					               LogWindowColors.DarkWarningOpacity);
+
+				case LogLevel.Error:
+					return Overlay(background, LogWindowColors.DarkError,
+					               LogWindowColors.DarkErrorOpacity);
+
+				default:
+					return Overlay(background, LogWindowColors.DarkFatal,
+					               LogWindowColors.DarkFatalOpacity);
+			}
+		}
+
+		private static Color Overlay(Color background, Color tint, float opacity)
+		{
+			int Mix(int b, int t) => (int) Math.Round(b + (t - b) * opacity);
+
+			return Color.FromArgb(Mix(background.R, tint.R), Mix(background.G, tint.G),
+			                      Mix(background.B, tint.B));
 		}
 
 		private static bool IsContained([NotNull] IEnumerable<int> array, int value)
