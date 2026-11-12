@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
+using ArcGIS.Core;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using NUnit.Framework;
@@ -67,6 +69,98 @@ public class ArcRelationshipClassTest
 		Assert.AreEqual(destinationObject.OID, swappedOrderResult.DestinationObject.OID);
 	}
 
+	[Test]
+	public void Failed_property_caching_can_be_retried_on_the_correct_thread()
+	{
+		using ArcGIS.Core.Data.Geodatabase geodatabase =
+			CreateGeodatabase("ArcRelationshipClassTest_RetryCaching");
+
+		CreateOneToManySchema(geodatabase);
+
+		using Table originTable = geodatabase.OpenDataset<Table>("ORIGIN_TABLE");
+
+		ArcWorkspace.Create(geodatabase);
+
+		ArcTable arcTable = ArcGeodatabaseUtils.ToArcTable(originTable);
+		IRelationshipClass relationshipClass =
+			arcTable.get_RelationshipClasses(esriRelRole.esriRelRoleAny).Single();
+
+		Assert.AreSame(arcTable,
+		               ArcGeodatabaseUtils.ToArcTable(originTable, eagerPropertyCaching: true));
+
+		for (int i = 0; i < 2; i++)
+		{
+			Exception exception = TestThreadUtils.RunOnOtherThread(
+				() => arcTable.get_RelationshipClasses(esriRelRole.esriRelRoleAny).ToList());
+
+			Assert.IsInstanceOf<CalledOnWrongThreadException>(exception);
+		}
+
+		arcTable.get_RelationshipClasses(esriRelRole.esriRelRoleAny).ToList();
+
+		esriRelCardinality cardinality = default;
+		string originPrimaryKey = null;
+		string originForeignKey = null;
+		string destinationClassAlias = null;
+
+		Exception cachedAccessException = TestThreadUtils.RunOnOtherThread(() =>
+		{
+			cardinality = relationshipClass.Cardinality;
+			originPrimaryKey = relationshipClass.OriginPrimaryKey;
+			originForeignKey = relationshipClass.OriginForeignKey;
+			destinationClassAlias = relationshipClass.DestinationClass.AliasName;
+		});
+
+		Assert.IsNull(cachedAccessException);
+		Assert.AreEqual(esriRelCardinality.esriRelCardinalityOneToMany, cardinality);
+		Assert.AreEqual("UUID", originPrimaryKey);
+		Assert.AreEqual("ORIGIN_FK", originForeignKey);
+		Assert.AreEqual("DEST_TABLE", destinationClassAlias);
+	}
+
+	[Test]
+	public void Relationship_classes_of_table_and_related_tables_are_readable_from_other_thread()
+	{
+		using ArcGIS.Core.Data.Geodatabase geodatabase =
+			CreateGeodatabase("ArcRelationshipClassTest_RelatedTables");
+
+		CreateOneToManySchema(geodatabase, withDetailTable: true);
+
+		using Table originTable = geodatabase.OpenDataset<Table>("ORIGIN_TABLE");
+
+		var originClassNotInWorkspaceCache = new ArcTable(originTable);
+		originClassNotInWorkspaceCache.CacheProperties();
+
+		IObjectClass destinationClass =
+			originClassNotInWorkspaceCache.get_RelationshipClasses(esriRelRole.esriRelRoleAny)
+			                              .Single().DestinationClass;
+		destinationClass.get_RelationshipClasses(esriRelRole.esriRelRoleAny).ToList();
+
+		List<string> originRelClassNames = null;
+		List<string> destinationRelClassNames = null;
+		string detailClassAlias = null;
+
+		Exception exception = TestThreadUtils.RunOnOtherThread(() =>
+		{
+			originRelClassNames =
+				originClassNotInWorkspaceCache.get_RelationshipClasses(esriRelRole.esriRelRoleAny)
+				                              .Select(r => r.Name).ToList();
+
+			List<IRelationshipClass> destinationRelClasses =
+				destinationClass.get_RelationshipClasses(esriRelRole.esriRelRoleAny).ToList();
+
+			destinationRelClassNames = destinationRelClasses.Select(r => r.Name).ToList();
+			detailClassAlias = destinationRelClasses.Single(r => r.Name == "DEST_DETAIL_REL")
+			                                        .DestinationClass.AliasName;
+		});
+
+		Assert.IsNull(exception);
+		CollectionAssert.AreEquivalent(new[] { "ORIGIN_DEST_REL" }, originRelClassNames);
+		CollectionAssert.AreEquivalent(new[] { "ORIGIN_DEST_REL", "DEST_DETAIL_REL" },
+		                               destinationRelClassNames);
+		Assert.AreEqual("DETAIL_TABLE", detailClassAlias);
+	}
+
 	private static ArcGIS.Core.Data.Geodatabase CreateGeodatabase(string name)
 	{
 		string tempDirectory = Path.Combine(
@@ -81,7 +175,8 @@ public class ArcRelationshipClassTest
 		return WorkspaceUtils.OpenFileGeodatabase(geodatabasePath);
 	}
 
-	private static void CreateOneToManySchema(ArcGIS.Core.Data.Geodatabase geodatabase)
+	private static void CreateOneToManySchema(ArcGIS.Core.Data.Geodatabase geodatabase,
+	                                          bool withDetailTable = false)
 	{
 		var schemaBuilder = new SchemaBuilder(geodatabase);
 
@@ -96,7 +191,8 @@ public class ArcRelationshipClassTest
 			"DEST_TABLE",
 			new List<FieldDescription>
 			{
-				new FieldDescription("ORIGIN_FK", FieldType.String) { Length = 38 }
+				new FieldDescription("ORIGIN_FK", FieldType.String) { Length = 38 },
+				new FieldDescription("UUID", FieldType.String) { Length = 38 }
 			});
 
 		schemaBuilder.Create(originDescription);
@@ -106,6 +202,23 @@ public class ArcRelationshipClassTest
 				"ORIGIN_DEST_REL", originDescription, destinationDescription,
 				RelationshipCardinality.OneToMany,
 				"UUID", "ORIGIN_FK"));
+
+		if (withDetailTable)
+		{
+			var detailDescription = new TableDescription(
+				"DETAIL_TABLE",
+				new List<FieldDescription>
+				{
+					new FieldDescription("DEST_FK", FieldType.String) { Length = 38 }
+				});
+
+			schemaBuilder.Create(detailDescription);
+			schemaBuilder.Create(
+				new RelationshipClassDescription(
+					"DEST_DETAIL_REL", destinationDescription, detailDescription,
+					RelationshipCardinality.OneToMany,
+					"UUID", "DEST_FK"));
+		}
 
 		Assert.True(schemaBuilder.Build(), "Failed to create test schema.");
 	}
