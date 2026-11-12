@@ -37,7 +37,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
 		[CanBeNull] private readonly IQualityVerificationEnvironment _verificationEnvironment;
 
-		private List<IDisposable> _activeProgressOverlays = new();
+		private readonly List<IDisposable> _activeProgressOverlays = new();
 		private int _lastTileCount;
 
 		private bool _issuesSaved;
@@ -79,8 +79,18 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			SaveAction = saveAction;
 		}
 
+		public bool AutoUpdateIssuesAfterVerification =>
+			_verificationEnvironment?.AutoUpdateIssuesAfterVerification ?? false;
+
+		/// <summary>
+		/// The work list of the central issue datasets shows the new issues only after they have
+		/// been updated. It is therefore only opened automatically if the issues are also updated
+		/// automatically. A work list of the local Issue FileGDB needs no update.
+		/// </summary>
 		public bool AutoOpenWorkListAfterVerification =>
-			_verificationEnvironment?.AutoOpenWorkListAfterVerification ?? false;
+			(_verificationEnvironment?.AutoOpenWorkListAfterVerification ?? false) &&
+			(! _workListOpener.CanUseProductionModelIssueSchema() ||
+			 AutoUpdateIssuesAfterVerification);
 
 		[CanBeNull]
 		private Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
@@ -98,13 +108,15 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			// Multithreaded access: Copy the list to be able to enumerate it:
 			List<EnvelopeXY> immutableList = tiles.ToList();
 
+			// Synchronous on purpose: an awaiting update would let the next queued update (for
+			// example the removal at the end of the run) start before its overlays are added,
+			// and those overlays would then remain in the map.
 			QueuedTaskUtils.Run(
-				async delegate
+				delegate
 				{
 					try
 					{
-						await UpdateProgressOverlaysAsync(immutableList, showOverlay,
-						                                  currentProgressStep);
+						UpdateProgressOverlays(immutableList, showOverlay, currentProgressStep);
 						_msg.DebugFormat("Updated progress overlays. Current state: {0}",
 						                 showOverlay);
 					}
@@ -174,6 +186,12 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 				await _workListOpener.OpenProductionModelIssueWorkEnvironmentAsync(envelope);
 			}
+			else if (string.IsNullOrEmpty(verificationResult.IssuesGdbPath))
+			{
+				// The work list type is recognised by the extension of the path, so an empty path
+				// fails. Happens when the options request no local Issue FileGDB.
+				_msg.Debug("No Issue File Geodatabase has been created. No work list to open.");
+			}
 			else
 			{
 				_msg.InfoFormat("Opening issue geodatabase ({0}) work list...",
@@ -201,7 +219,15 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			if (currentProgressStep == ServiceCallStatus.Running ||
 			    currentProgressStep == ServiceCallStatus.Undefined)
 			{
-				reason = "Opens the work list when the verification is completed";
+				reason = "The work list can be opened when the verification is completed";
+
+				if (_workListOpener.CanUseProductionModelIssueSchema())
+				{
+					reason += Environment.NewLine +
+					          (AutoUpdateIssuesAfterVerification
+						           ? "and the issues have been saved (issues are configured for auto-save)."
+						           : "and the issues have been saved using 'Update Issues'.");
+				}
 
 				return false;
 			}
@@ -412,18 +438,13 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			return result;
 		}
 
-		private async Task UpdateProgressOverlaysAsync([NotNull] IList<EnvelopeXY> tiles,
-		                                               bool showOverlay,
-		                                               ServiceCallStatus currentProgressStep)
+		private void UpdateProgressOverlays([NotNull] IList<EnvelopeXY> tiles,
+		                                    bool showOverlay,
+		                                    ServiceCallStatus currentProgressStep)
 		{
 			if (! showOverlay || currentProgressStep == ServiceCallStatus.Undefined)
 			{
-				foreach (var overlay in _activeProgressOverlays)
-				{
-					overlay.Dispose();
-				}
-
-				_activeProgressOverlays.Clear();
+				RemoveProgressOverlays();
 
 				_lastTileCount = 0;
 
@@ -442,30 +463,37 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				// Update only the previous and current tile overlays to reduce flickering and improve performance.
 
 				int lastIndex = _activeProgressOverlays.Count - 1;
-				_activeProgressOverlays[lastIndex].Dispose();
+				_activeProgressOverlays[lastIndex]?.Dispose();
 				_activeProgressOverlays.RemoveAt(lastIndex);
 
-				var overlays =
-					CreateOverlays(tiles.TakeLast(2).ToList(), currentProgressStep);
-
-				var newOverlays = await MapUtils.AddOverlays(_mapView, overlays);
-				_activeProgressOverlays.AddRange(newOverlays);
+				AddProgressOverlays(CreateOverlays(tiles.TakeLast(2).ToList(),
+				                                   currentProgressStep));
 			}
 			else
 			{
-				// Recreate overlays completely
+				RemoveProgressOverlays();
 
-				foreach (var overlay in _activeProgressOverlays)
-				{
-					overlay.Dispose();
-				}
-
-				_activeProgressOverlays.Clear();
-
-				var overlays = CreateOverlays(tiles, currentProgressStep);
-
-				_activeProgressOverlays = await MapUtils.AddOverlays(_mapView, overlays);
+				AddProgressOverlays(CreateOverlays(tiles, currentProgressStep));
 			}
+		}
+
+		private void AddProgressOverlays([NotNull] IEnumerable<Overlay> overlays)
+		{
+			foreach (Overlay overlay in overlays)
+			{
+				_activeProgressOverlays.Add(overlay.AddToMap(_mapView));
+			}
+		}
+
+		private void RemoveProgressOverlays()
+		{
+			foreach (IDisposable overlay in _activeProgressOverlays)
+			{
+				// MapView.AddOverlay can return null
+				overlay?.Dispose();
+			}
+
+			_activeProgressOverlays.Clear();
 		}
 
 		private List<Overlay> CreateOverlays(IList<EnvelopeXY> tiles,

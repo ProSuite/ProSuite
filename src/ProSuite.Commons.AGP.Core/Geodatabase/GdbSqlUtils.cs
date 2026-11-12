@@ -75,7 +75,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				{
 					case GeodatabaseType.LocalDatabase:
 
-						return GetFGDBDateLiteral(dateTime);
+						return datastore.GetConnector() is MobileGeodatabaseConnectionPath
+							       ? GetMobileGeodatabaseDateLiteral(dateTime)
+							       : GetFGDBDateLiteral(dateTime);
 
 					case GeodatabaseType.RemoteDatabase:
 
@@ -128,6 +130,17 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static string GetFGDBDateLiteral(DateTime dateTime)
 		{
 			return $"date '{dateTime:yyyy-MM-dd HH:mm:ss}'";
+		}
+
+		/// <summary>
+		/// A mobile geodatabase stores dates as Julian day numbers (SQLite type real). A text
+		/// literal such as DATETIME('...') is valid syntax there, but every comparison of a
+		/// number with a text is false, so the query silently returns no rows.
+		/// </summary>
+		[NotNull]
+		public static string GetMobileGeodatabaseDateLiteral(DateTime dateTime)
+		{
+			return $"julianday('{dateTime:yyyy-MM-dd HH:mm:ss}')";
 		}
 
 		[NotNull]

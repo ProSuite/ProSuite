@@ -65,12 +65,7 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 	{
 		Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
-		string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
-
-		if (! Directory.Exists(directory))
-		{
-			Directory.CreateDirectory(directory);
-		}
+		string directory = EnsureWorkListDirectoryExists();
 
 		string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
 
@@ -459,14 +454,40 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 	/// <param name="worklistFilePath">Full path to work list file</param>
 	public bool WorkListFileExistsInProjectFolder(out string worklistFilePath)
 	{
-		string directory = Path.Combine(Project.Current.HomeFolderPath, WorklistsFolder);
-		Assert.True(FileSystemUtils.EnsureDirectoryExists(directory),
-		            $"Cannot create {directory}");
+		string directory = EnsureWorkListDirectoryExists();
 
 		string fileName = FileSystemUtils.ReplaceInvalidFileNameChars(GetDisplayName(), '_');
 		worklistFilePath = EnsureValidDefinitionFilePath(directory, fileName, FileSuffix);
 
 		return worklistFilePath != null && File.Exists(worklistFilePath);
+	}
+
+	[NotNull]
+	private string EnsureWorkListDirectoryExists()
+	{
+		string homeFolder = Project.Current.HomeFolderPath;
+		string directory = Path.Combine(homeFolder, WorklistsFolder);
+
+		if (Directory.Exists(directory))
+		{
+			return directory;
+		}
+
+		try
+		{
+			Directory.CreateDirectory(directory);
+		}
+		catch (Exception e)
+		{
+			throw new IOException(
+				$"Cannot create the folder {directory} for the work list files: {e.Message}" +
+				$"{Environment.NewLine}{Environment.NewLine}" +
+				$"Work lists are stored in the subfolder '{WorklistsFolder}' of the home folder " +
+				$"of the current project. The home folder of the current project is {homeFolder}.",
+				e);
+		}
+
+		return directory;
 	}
 
 	// TODO: (daro) rename to EnsureUniqueWorkListFile

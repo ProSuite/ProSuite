@@ -39,6 +39,7 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 	private CentralizableSettingViewModel<bool> _excludeLinesOverlaps;
 	private CentralizableSettingViewModel<bool> _displayExcludeCutLines;
 	private CentralizableSettingViewModel<bool> _displayRecalculateCutLines;
+	private CentralizableSettingViewModel<bool> _previewDifferenceAreas;
 	private CentralizableSettingViewModel<bool> _bufferTarget;
 	private CentralizableSettingViewModel<double> _bufferTolerance;
 	private CentralizableSettingViewModel<bool> _enforceMinimumBufferSegmentLength;
@@ -96,6 +97,12 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 	{
 		get => _displayRecalculateCutLines;
 		set => SetProperty(ref _displayRecalculateCutLines, value);
+	}
+
+	public CentralizableSettingViewModel<bool> PreviewDifferenceAreas
+	{
+		get => _previewDifferenceAreas;
+		set => SetProperty(ref _previewDifferenceAreas, value);
 	}
 
 	public CentralizableSettingViewModel<bool> BufferTarget
@@ -195,6 +202,10 @@ public abstract class DockPaneReshapeAlongViewModelBase : DockPaneViewModelBase
 			DisplayRecalculateCutLines = new CentralizableSettingViewModel<bool>(
 				Options.CentralizableDisplayRecalculateCutLines,
 				new[] { Options.CentralizableDisplayExcludeCutLines });
+
+			PreviewDifferenceAreas =
+				new CentralizableSettingViewModel<bool>(
+					Options.CentralizablePreviewDifferenceAreas);
 
 			BufferTarget =
 				new CentralizableSettingViewModel<bool>(Options.CentralizableBufferTarget);

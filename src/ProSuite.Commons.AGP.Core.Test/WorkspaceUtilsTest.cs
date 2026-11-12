@@ -280,6 +280,225 @@ namespace ProSuite.Commons.AGP.Core.Test
 			                                        DatastoreComparison.AnyUserAnyVersion));
 		}
 
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		public void CanReferenceMobileGeodatabaseByConnectionString()
+		{
+			string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+			Directory.CreateDirectory(directory);
+			var uri = new Uri(Path.Combine(directory, "project.geodatabase"));
+
+			using ArcGIS.Core.Data.Geodatabase mobileGdb =
+				SchemaBuilder.CreateGeodatabase(new MobileGeodatabaseConnectionPath(uri));
+
+			// What a project workspace stores to find the datastore again
+			Assert.IsTrue(WorkspaceUtils.TryGetWorkspaceFactory(mobileGdb.GetConnector(),
+			                                                    out WorkspaceFactory factory));
+			string connectionString = mobileGdb.GetConnectionString();
+			Console.WriteLine($"{factory}: {connectionString}");
+
+			Connector connector = WorkspaceUtils.CreateConnector(factory, connectionString);
+
+			Assert.IsInstanceOf<MobileGeodatabaseConnectionPath>(connector);
+			Assert.IsTrue(new DatastoreName(mobileGdb).References(factory, connectionString));
+			Assert.IsTrue(new DatastoreName(mobileGdb).References(factory, uri.LocalPath));
+		}
+
+		/// <summary>
+		/// A path-based geodatabase is referenced by three forms of connection string: the one
+		/// of Datastore.GetConnectionString() (stored by project workspaces), the connector path
+		/// as file URI (stored by work list definitions) and the plain path. Characters that
+		/// separate key/value pairs in connection strings may also occur in folder names.
+		/// ArcGIS Pro cannot create a mobile geodatabase in a folder whose name contains ';'.
+		/// </summary>
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		[TestCase("plain", "x.gdb")]
+		[TestCase("a=b", "x.gdb")]
+		[TestCase("a;b", "x.gdb")]
+		[TestCase("a=b;c", "x.gdb")]
+		[TestCase("plain", "x.geodatabase")]
+		[TestCase("a=b", "x.geodatabase")]
+		public void CanReferencePathBasedGeodatabaseByStoredConnectionStrings(
+			string folderName, string geodatabaseName)
+		{
+			string root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+			string directory = Path.Combine(root, folderName);
+			Directory.CreateDirectory(directory);
+
+			try
+			{
+				var uri = new Uri(Path.Combine(directory, geodatabaseName));
+
+				using ArcGIS.Core.Data.Geodatabase geodatabase =
+					geodatabaseName.EndsWith(".gdb")
+						? SchemaBuilder.CreateGeodatabase(new FileGeodatabaseConnectionPath(uri))
+						: SchemaBuilder.CreateGeodatabase(new MobileGeodatabaseConnectionPath(uri));
+
+				Connector originalConnector = geodatabase.GetConnector();
+				Assert.IsTrue(WorkspaceUtils.TryGetWorkspaceFactory(originalConnector,
+					              out WorkspaceFactory factory));
+
+				string proConnectionString = geodatabase.GetConnectionString();
+				string workListConnectionString =
+					WorkspaceUtils.GetConnectionString(originalConnector, proConnectionString);
+
+				foreach (string connectionString in new[]
+				         {
+					         proConnectionString, workListConnectionString, uri.LocalPath
+				         })
+				{
+					Connector connector = WorkspaceUtils.CreateConnector(factory, connectionString);
+
+					Assert.AreEqual(originalConnector.GetType(), connector.GetType(),
+					                connectionString);
+					Assert.IsTrue(new DatastoreName(geodatabase).References(
+						              factory, connectionString), connectionString);
+				}
+			}
+			finally
+			{
+				try
+				{
+					Directory.Delete(root, true);
+				}
+				catch (IOException)
+				{
+					// The geodatabase may still be locked by ArcGIS Pro
+				}
+			}
+		}
+
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		[TestCase("plain")]
+		[TestCase("a=b")]
+		[TestCase("a;b")]
+		public void CanReferenceShapefileFolderByStoredConnectionString(string folderName)
+		{
+			string root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+			string directory = Path.Combine(root, folderName);
+			Directory.CreateDirectory(directory);
+
+			try
+			{
+				var originalConnector = new FileSystemConnectionPath(
+					new Uri(directory), FileSystemDatastoreType.Shapefile);
+
+				using var datastore = new FileSystemDatastore(originalConnector);
+
+				AssertCanReferenceByStoredConnectionString(datastore);
+			}
+			finally
+			{
+				Directory.Delete(root, true);
+			}
+		}
+
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		public void CanReferenceMemoryGeodatabaseByStoredConnectionString()
+		{
+			using ArcGIS.Core.Data.Geodatabase memoryGdb =
+				SchemaBuilder.CreateGeodatabase(
+					new MemoryConnectionProperties("WorkspaceUtilsStoredConnectionTest"));
+
+			AssertCanReferenceByStoredConnectionString(memoryGdb);
+		}
+
+		/// <summary>
+		/// Checks that the connection string stored in work list definitions
+		/// (<see cref="WorkspaceUtils.GetConnectionString"/>) can be read back by
+		/// <see cref="WorkspaceUtils.CreateConnector"/>.
+		/// </summary>
+		private static void AssertCanReferenceByStoredConnectionString(Datastore datastore)
+		{
+			Connector originalConnector = datastore.GetConnector();
+			Assert.IsTrue(WorkspaceUtils.TryGetWorkspaceFactory(originalConnector,
+			                                                    out WorkspaceFactory factory));
+
+			string workListConnectionString =
+				WorkspaceUtils.GetConnectionString(originalConnector,
+				                                   datastore.GetConnectionString());
+			Console.WriteLine($"{factory}: {workListConnectionString}");
+
+			Connector connector = WorkspaceUtils.CreateConnector(factory, workListConnectionString);
+
+			Assert.AreEqual(originalConnector.GetType(), connector.GetType());
+			Assert.IsTrue(new DatastoreName(datastore).References(
+				              factory, workListConnectionString));
+		}
+
+		[Test]
+		[TestCase(@"D:\Daten\x.geodatabase")]
+		[TestCase(@"D:\Daten\Stand=2026\x.geodatabase")]
+		[TestCase("file:///D:/Daten/Stand=2026/x.geodatabase")]
+		public void CanCreateMobileGeodatabaseConnectorFromPath(string path)
+		{
+			Connector connector = WorkspaceUtils.CreateConnector(WorkspaceFactory.SQLite, path);
+
+			var mobileConnection = (MobileGeodatabaseConnectionPath) connector;
+			Assert.AreEqual(new Uri(path).LocalPath, mobileConnection.Path.LocalPath);
+		}
+
+		/// <summary>
+		/// <see cref="WorkspaceFactory.SQLite"/> is only reached by mobile geodatabases: ArcGIS
+		/// Pro returns <see cref="DatabaseConnectionProperties"/> as connector of a plain SQLite
+		/// database or GeoPackage, even when it was opened with a
+		/// <see cref="SQLiteConnectionPath"/>. If this test fails, ArcGIS Pro has changed and
+		/// these databases would reach CreateMobileGeodatabaseConnector.
+		/// </summary>
+		[Test]
+		[Apartment(ApartmentState.STA)]
+		[TestCase("plain.sqlite")]
+		[TestCase("package.gpkg")]
+		public void PlainSQLiteDatabaseHasNoSQLiteWorkspaceFactory(string fileName)
+		{
+			string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+			Directory.CreateDirectory(directory);
+
+			try
+			{
+				// SQLite treats an empty file as an empty database
+				string path = Path.Combine(directory, fileName);
+				File.WriteAllBytes(path, Array.Empty<byte>());
+
+				using var database = new Database(new SQLiteConnectionPath(new Uri(path)));
+
+				Connector connector = database.GetConnector();
+				Console.WriteLine(database.GetConnectionString());
+
+				Assert.IsInstanceOf<DatabaseConnectionProperties>(connector);
+				Assert.IsTrue(WorkspaceUtils.TryGetWorkspaceFactory(connector,
+				                                                    out WorkspaceFactory factory));
+				Assert.AreEqual(WorkspaceFactory.SDE, factory);
+			}
+			finally
+			{
+				Directory.Delete(directory, true);
+			}
+		}
+
+		[Test]
+		public void CanCreateMobileGeodatabaseConnectorFromConnectionString()
+		{
+			const string path = @"D:\Data\project.geodatabase";
+
+			// As Datastore.GetConnectionString() returns it for a mobile geodatabase
+			const string connectionString =
+				$"DATABASE=main;SERVER=D:;INSTANCE=sde:sqlite:{path};" +
+				$"DB_CONNECTION_PROPERTIES={path};IS_GEODATABASE=true;" +
+				"AUTHENTICATION_MODE=OSA;IS_NOSERVER=0";
+
+			Connector connector =
+				WorkspaceUtils.CreateConnector(WorkspaceFactory.SQLite, connectionString);
+
+			var mobileConnection = (MobileGeodatabaseConnectionPath) connector;
+			Assert.AreEqual(path, mobileConnection.Path.LocalPath);
+
+			Assert.IsTrue(new DatastoreName(connector).References(WorkspaceFactory.SQLite, path));
+		}
+
 		[Test, Ignore("Requires oracle connection")]
 		public void Can_create_version_tree_as_osa()
         {

@@ -235,15 +235,8 @@ public abstract class CreateMultiplePointsToolBase : ConstructionToolBase
 	                                       [NotNull] FeatureClassDefinition featureClassDef,
 	                                       [CanBeNull] Subtype subtype)
 	{
-		// If there is an active template, use it:
-		if (GdbPersistenceUtils.TryGetFieldValueFromTemplate(
-			    field.Name, EditingTemplate.Current, out object result))
-		{
-			return result;
-		}
-
-		// Otherwise: Geodatabase default value:
-		return field.GetDefaultValue(subtype);
+		return GdbPersistenceUtils.GetNewFeatureFieldValue(
+			field, EditingTemplate.Current, subtype);
 	}
 
 	protected virtual string GetTargetObjectTypeName()

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Env;
+using ProSuite.Commons.UI.WinForms;
 
 namespace ProSuite.Commons.UI.Dialogs
 {
@@ -414,16 +414,19 @@ namespace ProSuite.Commons.UI.Dialogs
 		[CanBeNull]
 		private static IWin32Window ChooseOwner([CanBeNull] IWin32Window owner)
 		{
-			// If not on the UI thread, do not impose the main window from the provider but
-			// what the caller suggested. Otherwise, the following exception occurs:
-			// The calling thread cannot access this object because a different thread owns it
-			// NOTE: Windows can be shown from other STA threads than the Main thread (with limitations)
-			if (Environment.CurrentManagedThreadId != 1 || Thread.CurrentThread.IsBackground)
+			if (owner != null)
 			{
 				return owner;
 			}
 
-			return owner ?? UIEnvironment.MainWindow;
+			// The user interface thread is not always managed thread 1 (in ArcGIS Pro it is not).
+			// Without an owner, the message box is shown with DefaultDesktopOnly and the
+			// application loses the focus when the box is closed.
+			IWin32Window mainWindow = UIEnvironment.MainWindow;
+
+			return mainWindow != null && WinFormUtils.IsCreatedOnCurrentThread(mainWindow)
+				       ? mainWindow
+				       : null;
 		}
 
 		private static YesNoCancelDialogResult GetYesNoCancelAnswer(DialogResult result)

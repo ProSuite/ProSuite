@@ -7,7 +7,10 @@
              xmlns:commonswpf="clr-namespace:ProSuite.Commons.UI.WPF;assembly=ProSuite.Commons.UI"
              xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d"
-             Loaded="Window_Loaded">
+             Loaded="Window_Loaded"
+             PreviewMouseLeftButtonDown="ShowToolTipOfDisabledElement"
+             PreviewMouseMove="CloseClickedToolTipWhenMovedAway"
+             MouseLeave="CloseClickedToolTip">
     <UserControl.Resources>
         <commonswpf:BoolToColorBrushConverter x:Key="BoolToColorBrushConverter" />
     </UserControl.Resources>
@@ -23,50 +26,154 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Main progress type -->
-            <Label Grid.Row="0" Content="{Binding RunningProgressTypeText}" HorizontalAlignment="Stretch"
-                   HorizontalContentAlignment="Left" Margin="8,5,8,0"
-                   Background="{Binding RunningProgressBackColor}"
-                   VerticalAlignment="Top" />
+            <DockPanel Grid.Row="0" Margin="8,5,8,0">
+                <!-- Top right buttons -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" UseLayoutRounding="True">
+                    <!-- Note: UseLayoutRounding="True" avoids blurry icons -->
+                    <StackPanel.Resources>
 
-            <!-- Top right buttons -->
-            <StackPanel Grid.Row="0" HorizontalAlignment="Right" Orientation="Horizontal"
-                        Margin="8,5,8,0" UseLayoutRounding="True">
-                <!-- Note: UseLayoutRounding="True" avoids blurry bitmaps-->
-                <StackPanel.Resources>
+                        <Style TargetType="{x:Type Button}">
+                            <!-- Make the buttons square -->
+                            <Setter Property="MinWidth"
+                                    Value="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" />
+                            <Setter Property="MinHeight"
+                                    Value="{Binding ActualWidth, RelativeSource={RelativeSource Self}}" />
+                            <!-- Disable buttons if not bound to a command -->
+                            <Style.Triggers>
+                                <Trigger Property="Command" Value="{x:Null}">
+                                    <Setter Property="IsEnabled" Value="false" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
 
-                    <Style TargetType="{x:Type Button}">
-                        <!-- Make the buttons square -->
-                        <Setter Property="MinWidth"
-                                Value="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" />
-                        <Setter Property="MinHeight"
-                                Value="{Binding ActualWidth, RelativeSource={RelativeSource Self}}" />
-                        <!-- Disable buttons if not bound to a command -->
-                        <Style.Triggers>
-                            <Trigger Property="Command" Value="{x:Null}">
-                                <Setter Property="IsEnabled" Value="false" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </StackPanel.Resources>
-                <Button Command="{Binding OpenWorkListCommand}"
-                        CommandParameter="{Binding Mode=OneWay}"
-                        ToolTip="{Binding OpenWorkListToolTip}"
-                        ToolTipService.ShowOnDisabled="True">
-                    <Image Source="/ProSuite.UI.Core;component/Properties/Images/NavigateErrorsCmd.png" Stretch="None" />
-                </Button>
-                <Button Command="{Binding ZoomToPerimeterCommand}"
-                        CommandParameter="{Binding Mode=OneWay}"
-                        ToolTip="{Binding ZoomToVerifiedPerimeterToolTip}"
-                        ToolTipService.ShowOnDisabled="True">
-                    <Image Source="/ProSuite.UI.Core;component/Properties/Images/ZoomToVerifiedCmd.png" Stretch="None" />
-                </Button>
-                <ToggleButton IsChecked="{Binding ToggleProgressOverlay}"
-                              CommandParameter="{Binding Mode=OneWay}"
-                              ToolTip="{Binding ToggleProgressOverlayToolTip}">
-                    <Image Source="/ProSuite.UI.Core;component/Properties/Images/FlashProgressCmd.png" Stretch="None" />
-                </ToggleButton>
-            </StackPanel>
+                        <!-- WPF does not grey out images of a disabled button. -->
+                        <Style x:Key="DimmedWhenDisabled" TargetType="{x:Type FrameworkElement}">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.3" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Resources>
+                    <Button Command="{Binding OpenWorkListCommand}"
+                            CommandParameter="{Binding Mode=OneWay}"
+                            ToolTip="{Binding OpenWorkListToolTip}"
+                            ToolTipService.ShowOnDisabled="True">
+                        <!-- The same drawing as the 'Issue Work List' button in the ribbon. -->
+                        <Image Width="16" Height="16" Style="{StaticResource DimmedWhenDisabled}">
+                            <Image.Source>
+                                <DrawingImage>
+                                    <DrawingImage.Drawing>
+                                        <DrawingGroup>
+                                            <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H32 V32 H0 Z" />
+                                            <GeometryDrawing Brush="#B00303" Geometry="M15,8.5 A8.5,8.5 0 1 1 32,8.5 A8.5,8.5 0 1 1 15,8.5 Z" />
+                                            <GeometryDrawing Brush="#FFFFFF" Geometry="M18,5.5 L20.5,3 L23.5,6 L26.5,3 L29,5.5 L26,8.5 L29,11.5 L26.5,14 L23.5,11 L20.5,14 L18,11.5 L21,8.5 Z" />
+                                            <GeometryDrawing Brush="#F7F9FF" Geometry="M2,16 H26 V30 H2 Z" />
+                                            <GeometryDrawing Brush="#232323" Geometry="M0,14 H28 V32 H0 Z M2,16 V30 H26 V16 Z" />
+                                            <GeometryDrawing Brush="#031D3C" Geometry="M12,18 V28 L6,23 Z M16,18 L22,23 L16,28 Z" />
+                                        </DrawingGroup>
+                                    </DrawingImage.Drawing>
+                                </DrawingImage>
+                            </Image.Source>
+                        </Image>
+                    </Button>
+                    <Button x:Name="ZoomToPerimeterButton" Margin="4,0,0,0"
+                            Command="{Binding ZoomToPerimeterCommand}"
+                            CommandParameter="{Binding Mode=OneWay}"
+                            ToolTip="{Binding ZoomToVerifiedPerimeterToolTip}"
+                            ToolTipService.ShowOnDisabled="True">
+                        <!-- The verified perimeter in the green of the tile progress, and a magnifier. -->
+                        <Image Width="16" Height="16" Style="{StaticResource DimmedWhenDisabled}">
+                            <Image.Source>
+                                <DrawingImage>
+                                    <DrawingImage.Drawing>
+                                        <DrawingGroup>
+                                            <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H16 V16 H0 Z" />
+                                            <GeometryDrawing Geometry="M0.5,0.5 H10.5 V10.5 H0.5 Z">
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#008000" Thickness="1" />
+                                                </GeometryDrawing.Pen>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing Geometry="M12.5,12.5 L15.5,15.5">
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#232323" Thickness="2" />
+                                                </GeometryDrawing.Pen>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing Brush="#FFFFFF">
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#232323" Thickness="1.2" />
+                                                </GeometryDrawing.Pen>
+                                                <GeometryDrawing.Geometry>
+                                                    <EllipseGeometry Center="9.5,9.5" RadiusX="4" RadiusY="4" />
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing Brush="#232323" Geometry="M9,7 H10 V9 H12 V10 H10 V12 H9 V10 H7 V9 H9 Z" />
+                                        </DrawingGroup>
+                                    </DrawingImage.Drawing>
+                                </DrawingImage>
+                            </Image.Source>
+                        </Image>
+                    </Button>
+                    <!-- The host application's theme (ArcGIS Pro) styles toggle buttons with rounded
+                         corners and a background that looks pressed. The own template and the colours
+                         of the neighbouring button make it look like the other buttons. -->
+                    <ToggleButton Margin="4,0,0,0"
+                                  IsChecked="{Binding ToggleProgressOverlay}"
+                                  ToolTip="{Binding ToggleProgressOverlayToolTip}"
+                                  MinWidth="{Binding ActualHeight, RelativeSource={RelativeSource Self}}"
+                                  MinHeight="{Binding ActualWidth, RelativeSource={RelativeSource Self}}"
+                                  Background="{Binding Background, ElementName=ZoomToPerimeterButton}"
+                                  BorderBrush="{Binding BorderBrush, ElementName=ZoomToPerimeterButton}"
+                                  BorderThickness="{Binding BorderThickness, ElementName=ZoomToPerimeterButton}"
+                                  Padding="{Binding Padding, ElementName=ZoomToPerimeterButton}">
+                        <ToggleButton.Template>
+                            <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                <Border x:Name="ButtonBorder"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        SnapsToDevicePixels="True">
+                                    <Grid>
+                                        <Rectangle x:Name="StateHighlight" Opacity="0"
+                                                   Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                                        <ContentPresenter x:Name="Content"
+                                                          Margin="{TemplateBinding Padding}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="StateHighlight" Property="Opacity" Value="0.15" />
+                                    </Trigger>
+                                    <Trigger Property="IsChecked" Value="True">
+                                        <Setter TargetName="StateHighlight" Property="Opacity" Value="0.2" />
+                                        <Setter TargetName="ButtonBorder" Property="BorderBrush"
+                                                Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="StateHighlight" Property="Opacity" Value="0.45" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </ToggleButton.Template>
+                        <!-- Like the overlay in the map: finished tiles with a green outline, the
+                             current tile filled. The tiles are processed from the bottom left to
+                             the top right. -->
+                        <Canvas Width="16" Height="16" Style="{StaticResource DimmedWhenDisabled}">
+                            <Rectangle Canvas.Left="1" Canvas.Top="1" Width="4" Height="4" Fill="#00C800" />
+                            <Path Stroke="#008000" StrokeThickness="1"
+                                  Data="M0.5,15.5 H15.5 V5.5 H0.5 Z M0.5,10.5 H15.5 M5.5,15.5 V5.5 M10.5,15.5 V5.5 M0.5,5.5 V0.5 H5.5 V5.5" />
+                        </Canvas>
+                    </ToggleButton>
+                </StackPanel>
+
+                <!-- Main progress type -->
+                <Label Content="{Binding RunningProgressTypeText}"
+                       HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
+                       Margin="0,0,4,0"
+                       Background="{Binding RunningProgressBackColor}" />
+            </DockPanel>
 
             <!-- Progress messages and progress bars -->
             <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Margin="8" UseLayoutRounding="True">
@@ -154,8 +261,8 @@
                         </TextBox.Style>
                         </TextBox>
                     </Border>
-                    <Label Grid.Column="2" Margin="0,0,10,0" Content="{Binding StartTimeText}"
-                           HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="2" Margin="0,0,15,0" Text="{Binding StartTimeText}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" />
                 </Grid>
 
                 <!-- Second row: Errors -->
@@ -186,8 +293,8 @@
                             </TextBox.Style>
                         </TextBox>
                     </Border>
-                    <Label Grid.Column="2" Margin="0,0,10,0" Content="{Binding EndTimeText}"
-                           HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="2" Margin="0,0,15,0" Text="{Binding EndTimeText}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" />
                 </Grid>
 
             </Grid>

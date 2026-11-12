@@ -88,6 +88,12 @@ public interface IQualityVerificationEnvironment
 	IQualityConditionProvider ConditionProvider { get; }
 
 	/// <summary>
+	/// Whether the issues in the central issue datasets should be updated automatically once a
+	/// verification has finished successfully.
+	/// </summary>
+	bool AutoUpdateIssuesAfterVerification { get; }
+
+	/// <summary>
 	/// Whether the issue work list should be opened automatically once a verification finishes.
 	/// </summary>
 	bool AutoOpenWorkListAfterVerification { get; }

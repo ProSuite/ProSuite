@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -25,6 +29,9 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 	private static readonly Key _keyToggleNonDefaultReshapeSide = Key.S;
 
 	private bool _nonDefaultReshapeSideMode;
+
+	private readonly AreaDifferencePreview _areaDifferencePreview = new();
+	[CanBeNull] private string _loggedNoPreviewReason;
 
 	protected ReshapeAlongToolOptions _reshapeAlongToolOptions;
 
@@ -73,9 +80,163 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 			{
 				_msg.Info("Disabled non-default reshape mode.");
 			}
+
+			if (ChangeAlongCurves != null)
+			{
+				return QueuedTask.Run(
+					() => UpdateFeedback(GetApplicableSelectedFeatures(ActiveMapView).ToList()));
+			}
 		}
 
 		return Task.CompletedTask;
+	}
+
+	protected override void UpdatePreview(IList<Feature> selectedFeatures)
+	{
+		_areaDifferencePreview.Clear();
+
+		IList<Feature> targetFeatures = ChangeAlongCurves?.TargetFeatures;
+
+		if (! _reshapeAlongToolOptions.PreviewDifferenceAreas || targetFeatures == null)
+		{
+			return;
+		}
+
+		if (! GdbObjectUtils.Filter(selectedFeatures, GeometryType.Polygon).Any())
+		{
+			return;
+		}
+
+		List<CutSubcurve> reshapeCurves =
+			ChangeAlongCurves.GetSelectedReshapeCurves(c => c.CanReshape && ! c.IsFiltered,
+			                                           true);
+
+		if (reshapeCurves.Count == 0)
+		{
+			return;
+		}
+
+		// Applied together, some combinations of reshape lines give a result that differs from
+		// applying a part of them. The preview of all lines would be misleading then.
+		if (FormsClosedLoop(reshapeCurves))
+		{
+			LogNoPreview("the reshape lines form a closed loop");
+			return;
+		}
+
+		try
+		{
+			var cancellationTokenSource = new CancellationTokenSource(3000);
+
+			AreaDifferences differences =
+				GetAreaDifferences(selectedFeatures, targetFeatures, reshapeCurves,
+				                   cancellationTokenSource.Token);
+
+			if (reshapeCurves.Count > 1)
+			{
+				AreaDifferences oneByOne = AreaDifferences.Union(
+					reshapeCurves.Select(c => GetAreaDifferences(
+						                     selectedFeatures, targetFeatures,
+						                     new List<CutSubcurve> { c },
+						                     cancellationTokenSource.Token))
+					             .ToList());
+
+				if (! differences.IsSameArea(oneByOne))
+				{
+					LogNoPreview("applying the reshape lines one by one gives a different result");
+					return;
+				}
+			}
+
+			_loggedNoPreviewReason = null;
+
+			_areaDifferencePreview.Update(differences);
+		}
+		catch (Exception e)
+		{
+			_msg.Warn($"Error generating preview: {e.Message}", e);
+		}
+	}
+
+	protected override void ClearPreview()
+	{
+		_areaDifferencePreview.Clear();
+	}
+
+	[NotNull]
+	private AreaDifferences GetAreaDifferences([NotNull] IList<Feature> selectedFeatures,
+	                                           [NotNull] IList<Feature> targetFeatures,
+	                                           [NotNull] List<CutSubcurve> reshapeCurves,
+	                                           CancellationToken cancellationToken)
+	{
+		List<ResultFeature> resultFeatures = ChangeFeaturesAlong(
+			selectedFeatures.ToList(), targetFeatures, reshapeCurves,
+			UseNonDefaultReshapeSide, cancellationToken, out _);
+
+		// With 'insert vertices on targets' the result also contains the targets
+		return AreaDifferences.Calculate(
+			resultFeatures.Where(r => selectedFeatures.Any(
+				                     s => GdbObjectUtils.IsSameFeature(s, r.OriginalFeature))));
+	}
+
+	private void LogNoPreview([NotNull] string reason)
+	{
+		if (reason != _loggedNoPreviewReason)
+		{
+			_msg.Info($"No area preview: {reason}, so the result depends on which lines " +
+			          "you select.");
+			_loggedNoPreviewReason = reason;
+		}
+	}
+
+	/// <summary>
+	/// Whether the curves, connected at their end points, form a closed loop. Applied
+	/// together, such curves replace a whole ring, which is not what applying a part of
+	/// them does.
+	/// </summary>
+	private static bool FormsClosedLoop([NotNull] IList<CutSubcurve> curves)
+	{
+		var nodes = new List<MapPoint>();
+		var parents = new List<int>();
+
+		int GetNode(MapPoint point)
+		{
+			int index = nodes.FindIndex(n => GeometryUtils.IsSamePointXY(n, point));
+
+			if (index < 0)
+			{
+				index = nodes.Count;
+				nodes.Add(point);
+				parents.Add(index);
+			}
+
+			return index;
+		}
+
+		int GetRoot(int node)
+		{
+			while (parents[node] != node)
+			{
+				node = parents[node];
+			}
+
+			return node;
+		}
+
+		foreach (CutSubcurve curve in curves)
+		{
+			int fromRoot = GetRoot(GetNode(curve.FromPoint));
+			int toRoot = GetRoot(GetNode(curve.ToPoint));
+
+			if (fromRoot == toRoot)
+			{
+				return true;
+			}
+
+			parents[fromRoot] = toRoot;
+		}
+
+		return false;
 	}
 
 	protected override async Task HandleEscapeAsync()

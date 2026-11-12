@@ -254,6 +254,20 @@ public abstract class WorkListFactoryBase : IWorkListFactory
 							            $"Cannot remove work list {workList} from registry");
 						}
 					}
+
+					// A work list without a layer (only non-spatial rows) is not found above.
+					if (_workList != null &&
+					    WorkListRegistry.Instance.WorklistExists(_workList.Name) &&
+					    string.Equals(item.Path,
+					                  _workList.Repository.WorkItemStateRepository
+					                           .WorkListDefinitionFilePath,
+					                  StringComparison.OrdinalIgnoreCase))
+					{
+						_msg.Debug(
+							$"Project item {item.Name} removed, unregister work list {_workList} (no layer)");
+
+						WorkListRegistry.Instance.Remove(_workList);
+					}
 				}
 			});
 		}

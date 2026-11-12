@@ -15,13 +15,15 @@ using ProSuite.Commons.Misc;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.UI;
 using ProSuite.Commons.UI.Dialogs;
+using ProSuite.Commons.UI.Persistence.WPF;
 using ProSuite.Commons.UI.WPF;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
 
 namespace ProSuite.UI.Core.QA.VerificationProgress
 {
-	public class VerificationProgressViewModel : INotifyPropertyChanged
+	public class VerificationProgressViewModel
+		: INotifyPropertyChanged, IFormStateAware<VerificationProgressFormState>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -56,6 +58,14 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		private readonly List<EnvelopeXY> _allTiles = new List<EnvelopeXY>();
 
 		private bool _showProgressOverlay;
+
+		// Keeps the user's last choice for the next runs, also in later ArcGIS Pro sessions.
+		private readonly UserStateManager<VerificationProgressFormState> _formStateManager;
+
+		// The dialog can stay open long after the run, and several runs can be open at the same
+		// time. The tiles are therefore only shown while the run is going on.
+		private bool _progressOverlayEnded;
+
 		private bool _issueOptionsEnabled;
 		private string _showReportToolTip;
 		private string _saveErrorsToolTip;
@@ -77,8 +87,11 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			UpdateOptions = new UpdateIssuesOptionsViewModel();
 
-			// Set initial value to ensure the tooltip is initialized correctly
-			ToggleProgressOverlay = false;
+			_formStateManager =
+				new UserStateManager<VerificationProgressFormState>(this, "VerificationProgress");
+			_formStateManager.RestoreState();
+
+			SetProgressOverlayToolTip();
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -513,12 +526,48 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			set
 			{
 				_showProgressOverlay = value;
+				OnPropertyChanged();
 
-				ToggleProgressOverlayToolTip = _showProgressOverlay
-					                               ? "Hide the tile verification progress"
-					                               : "Show the tile verification progress";
+				_formStateManager.SaveState();
+
+				SetProgressOverlayToolTip();
+
+				if (_showProgressOverlay && _progressOverlayEnded)
+				{
+					_msg.Info("The tile verification progress is only shown while a " +
+					          "verification is running. It will be shown in the next verification.");
+				}
+
 				UpdateProgressOverlay(_showProgressOverlay);
 			}
+		}
+
+		private void SetProgressOverlayToolTip()
+		{
+			if (_progressOverlayEnded)
+			{
+				ToggleProgressOverlayToolTip =
+					_showProgressOverlay
+						? "Do not show the tile verification progress in the next verifications"
+						: "Show the tile verification progress in the next verifications";
+				return;
+			}
+
+			ToggleProgressOverlayToolTip = _showProgressOverlay
+				                               ? "Hide the tile verification progress"
+				                               : "Show the tile verification progress";
+		}
+
+		void IFormStateAware<VerificationProgressFormState>.SaveState(
+			VerificationProgressFormState formState)
+		{
+			formState.ShowProgressOverlay = _showProgressOverlay;
+		}
+
+		void IFormStateAware<VerificationProgressFormState>.RestoreState(
+			VerificationProgressFormState formState)
+		{
+			_showProgressOverlay = formState.ShowProgressOverlay;
 		}
 
 		public string ToggleProgressOverlayToolTip
@@ -589,6 +638,8 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				ProgressTracker.RemoteCallStatus = ServiceCallStatus.Failed;
 			}
 
+			EndProgressOverlay();
+
 			RunningProgressTypeText = $"{result}";
 
 			switch (result)
@@ -611,45 +662,64 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			CommandManager.InvalidateRequerySuggested();
 
-			bool autoOpenWorkList =
-				ApplicationController?.AutoOpenWorkListAfterVerification == true ||
-				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-					"PROSUITE_AUTO_OPEN_ISSUE_WORKLIST");
-
-			if (VerificationResult?.HasIssues == true && autoOpenWorkList)
-			{
-				await ViewUtils.RunOnUIThread(async () =>
-				{
-					try
-					{
-						IQualityVerificationResult verificationResult =
-							Assert.NotNull(VerificationResult);
-
-						// For central issue datasets (production model issue schema) the issues must
-						// be updated (saved) before the work list can be opened. CanSaveIssues is
-						// only true in that case (and while the issues have not yet been saved).
-						if (ApplicationController.CanSaveIssues(verificationResult, out _))
-						{
-							await ApplicationController.SaveIssuesAsync(
-								verificationResult, UpdateOptions.ErrorDeletionType,
-								! UpdateOptions.KeepPreviousIssues);
-						}
-
-						await ApplicationController.OpenWorkList(
-							verificationResult, replaceExisting: true);
-					}
-					catch (Exception ex)
-					{
-						ErrorHandler.HandleError(ex, _msg);
-					}
-				});
-			}
+			await RunAutomaticFollowUpActions(result);
 
 			return result;
 		}
 
+		private async Task RunAutomaticFollowUpActions(ServiceCallStatus result)
+		{
+			IQualityVerificationResult verificationResult = VerificationResult;
+
+			if (ApplicationController == null || verificationResult == null)
+			{
+				return;
+			}
+
+			// The variable predates the separate options and has always meant both.
+			bool legacyAutoOpenWorkList =
+				EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					"PROSUITE_AUTO_OPEN_ISSUE_WORKLIST");
+
+			bool autoUpdateIssues =
+				ApplicationController.AutoUpdateIssuesAfterVerification || legacyAutoOpenWorkList;
+			bool autoOpenWorkList =
+				ApplicationController.AutoOpenWorkListAfterVerification || legacyAutoOpenWorkList;
+
+			if (! autoUpdateIssues && ! autoOpenWorkList)
+			{
+				return;
+			}
+
+			await ViewUtils.RunOnUIThread(async () =>
+			{
+				try
+				{
+					// A cancelled or failed run did not verify the whole perimeter. Updating would
+					// delete existing issues in the parts that were not verified.
+					if (autoUpdateIssues && result == ServiceCallStatus.Finished &&
+					    ApplicationController.CanSaveIssues(verificationResult, out _))
+					{
+						await SaveIssuesAsync();
+					}
+
+					if (autoOpenWorkList && verificationResult.HasIssues)
+					{
+						await ApplicationController.OpenWorkList(
+							verificationResult, replaceExisting: true);
+					}
+				}
+				catch (Exception ex)
+				{
+					ErrorHandler.HandleError(ex, _msg);
+				}
+			});
+		}
+
 		public void Closing(object sender, CancelEventArgs e)
 		{
+			EndProgressOverlay();
+
 			// Just in case the dialog is closed by the eXit button:
 			if (ProgressTracker == null)
 			{
@@ -665,12 +735,30 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 		private void UpdateProgressOverlay(bool showOverlay)
 		{
+			if (showOverlay && _progressOverlayEnded)
+			{
+				return;
+			}
+
 			Try(nameof(UpdateProgressOverlay),
 			    () =>
 			    {
 				    ApplicationController?.UpdateProgressOverlay(
 					    showOverlay, _allTiles, ProgressTracker.RemoteCallStatus);
 			    });
+		}
+
+		private void EndProgressOverlay()
+		{
+			if (_progressOverlayEnded)
+			{
+				return;
+			}
+
+			_progressOverlayEnded = true;
+			UpdateProgressOverlay(false);
+
+			SetProgressOverlayToolTip();
 		}
 
 		private bool CanZoomToPerimeter()
@@ -738,8 +826,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 					    CloseAction();
 				    }
 
-				    // Remove overlays on close
-				    UpdateProgressOverlay(false);
+				    EndProgressOverlay();
 			    }
 			);
 		}
@@ -792,39 +879,44 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 			try
 			{
-				if (ApplicationController == null)
-				{
-					return;
-				}
-
-				if (_latch.IsLatched)
-				{
-					_msg.Debug("SaveIssues already running, returning");
-					return;
-				}
-
-				try
-				{
-					_latch.Increment();
-
-					Mouse.OverrideCursor = Cursors.Wait;
-
-					await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
-					                                            UpdateOptions.ErrorDeletionType,
-					                                            ! UpdateOptions.KeepPreviousIssues);
-
-					_saveErrorsCommand?.RaiseCanExecuteChanged();
-					_openWorkListCommand?.RaiseCanExecuteChanged();
-				}
-				finally
-				{
-					_latch.Decrement();
-					Mouse.OverrideCursor = null;
-				}
+				await SaveIssuesAsync();
 			}
 			catch (Exception e)
 			{
 				ErrorHandler.HandleError(e, _msg);
+			}
+		}
+
+		private async Task SaveIssuesAsync()
+		{
+			if (ApplicationController == null)
+			{
+				return;
+			}
+
+			if (_latch.IsLatched)
+			{
+				_msg.Debug("SaveIssues already running, returning");
+				return;
+			}
+
+			try
+			{
+				_latch.Increment();
+
+				Mouse.OverrideCursor = Cursors.Wait;
+
+				await ApplicationController.SaveIssuesAsync(Assert.NotNull(VerificationResult),
+				                                            UpdateOptions.ErrorDeletionType,
+				                                            ! UpdateOptions.KeepPreviousIssues);
+
+				_saveErrorsCommand?.RaiseCanExecuteChanged();
+				_openWorkListCommand?.RaiseCanExecuteChanged();
+			}
+			finally
+			{
+				_latch.Decrement();
+				Mouse.OverrideCursor = null;
 			}
 		}
 
