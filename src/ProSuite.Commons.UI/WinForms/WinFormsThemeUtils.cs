@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -208,10 +209,13 @@ namespace ProSuite.Commons.UI.WinForms
 				}
 				else if (control is TabControl tabControl)
 				{
-					// Native tab headers ignore BackColor.
-					tabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
-					tabControl.DrawItem -= PaintTab;
-					tabControl.DrawItem += PaintTab;
+					// Native tab headers, the strip behind them and the page frame ignore
+					// BackColor, and owner-drawn tabs only cover the tabs themselves.
+					_tabPainters.GetValue(tabControl, t => new DarkTabControlPainter(t));
+				}
+				else if (control is Form form)
+				{
+					EnableDarkTitleBar(form);
 				}
 			}
 
@@ -367,20 +371,130 @@ namespace ProSuite.Commons.UI.WinForms
 			e.Handled = true;
 		}
 
-		private static void PaintTab(object sender, DrawItemEventArgs e)
-		{
-			var tabControl = (TabControl) sender;
-			TabPage page = tabControl.TabPages[e.Index];
-			bool selected = e.Index == tabControl.SelectedIndex;
+		[DllImport("dwmapi.dll")]
+		private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute,
+		                                                ref int value, int size);
 
-			using (var back = new SolidBrush(selected ? _dialogBackground : _controlBackground))
+		private const int _dwmUseImmersiveDarkModeOld = 19; // Windows 10 before 20H1
+		private const int _dwmUseImmersiveDarkMode = 20;
+		private const int _dwmBorderColor = 34; // Windows 11 and later
+		private const int _dwmCaptionColor = 35;
+
+		/// <summary>
+		/// Lets the window manager draw the title bar and frame dark. Best effort: older Windows
+		/// versions ignore the attributes they do not know.
+		/// </summary>
+		private static void EnableDarkTitleBar([NotNull] Form form)
+		{
+			void Apply()
 			{
-				e.Graphics.FillRectangle(back, e.Bounds);
+				var on = 1;
+				if (DwmSetWindowAttribute(form.Handle, _dwmUseImmersiveDarkMode, ref on,
+				                          sizeof(int)) != 0)
+				{
+					DwmSetWindowAttribute(form.Handle, _dwmUseImmersiveDarkModeOld, ref on,
+					                      sizeof(int));
+				}
+
+				int caption = ColorTranslator.ToWin32(_dialogBackground);
+				DwmSetWindowAttribute(form.Handle, _dwmCaptionColor, ref caption, sizeof(int));
+
+				int border = ColorTranslator.ToWin32(_borderColor);
+				DwmSetWindowAttribute(form.Handle, _dwmBorderColor, ref border, sizeof(int));
 			}
 
-			TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, e.Bounds, _textColor,
-			                      TextFormatFlags.HorizontalCenter |
-			                      TextFormatFlags.VerticalCenter);
+			if (form.IsHandleCreated)
+			{
+				Apply();
+			}
+
+			form.HandleCreated -= ApplyDarkTitleBarOnHandleCreated;
+			form.HandleCreated += ApplyDarkTitleBarOnHandleCreated;
+		}
+
+		private static void ApplyDarkTitleBarOnHandleCreated(object sender, EventArgs e)
+		{
+			EnableDarkTitleBar((Form) sender);
+		}
+
+		private static readonly ConditionalWeakTable<TabControl, DarkTabControlPainter>
+			_tabPainters = new ConditionalWeakTable<TabControl, DarkTabControlPainter>();
+
+		/// <summary>
+		/// Paints the whole tab control (strip, tabs and page frame) dark after the native
+		/// painting. The tab pages are child windows and clipped out, so they paint themselves.
+		/// </summary>
+		private class DarkTabControlPainter : NativeWindow
+		{
+			private const int WM_PAINT = 0x000F;
+
+			private readonly TabControl _tabControl;
+
+			public DarkTabControlPainter([NotNull] TabControl tabControl)
+			{
+				_tabControl = tabControl;
+
+				if (tabControl.IsHandleCreated)
+				{
+					AssignHandle(tabControl.Handle);
+				}
+
+				tabControl.HandleCreated += (sender, args) => AssignHandle(_tabControl.Handle);
+				tabControl.HandleDestroyed += (sender, args) => ReleaseHandle();
+			}
+
+			protected override void WndProc(ref Message m)
+			{
+				base.WndProc(ref m);
+
+				if (m.Msg == WM_PAINT)
+				{
+					using (Graphics graphics = Graphics.FromHwnd(Handle))
+					{
+						Paint(graphics);
+					}
+				}
+			}
+
+			private void Paint([NotNull] Graphics graphics)
+			{
+				using (var dialogBrush = new SolidBrush(_dialogBackground))
+				using (var controlBrush = new SolidBrush(_controlBackground))
+				using (var borderPen = new Pen(_borderColor))
+				{
+					graphics.FillRectangle(dialogBrush, _tabControl.ClientRectangle);
+
+					Rectangle page = _tabControl.DisplayRectangle;
+					page.Inflate(1, 1);
+					graphics.DrawRectangle(borderPen, page);
+
+					for (var i = 0; i < _tabControl.TabCount; i++)
+					{
+						Rectangle tab = _tabControl.GetTabRect(i);
+						bool selected = i == _tabControl.SelectedIndex;
+
+						if (selected)
+						{
+							// Joins the page: no bottom line, one pixel taller.
+							tab.Height += 1;
+						}
+
+						graphics.FillRectangle(selected ? dialogBrush : controlBrush, tab);
+						graphics.DrawLines(borderPen, new[]
+						                              {
+							                              new Point(tab.Left, tab.Bottom),
+							                              new Point(tab.Left, tab.Top),
+							                              new Point(tab.Right, tab.Top),
+							                              new Point(tab.Right, tab.Bottom)
+						                              });
+
+						TextRenderer.DrawText(graphics, _tabControl.TabPages[i].Text,
+						                      _tabControl.Font, tab, _textColor,
+						                      TextFormatFlags.HorizontalCenter |
+						                      TextFormatFlags.VerticalCenter);
+					}
+				}
+			}
 		}
 
 		/// <summary>
