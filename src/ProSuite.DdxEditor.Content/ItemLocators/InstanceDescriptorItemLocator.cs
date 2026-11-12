@@ -23,9 +23,12 @@ namespace ProSuite.DdxEditor.Content.ItemLocators
 				return null;
 			}
 
+			// The folders are typed by the concrete descriptor class (test, transformer or
+			// issue filter descriptor). None of them accepts the base class
+			// InstanceDescriptor, therefore match by the type of the searched entity.
 			IItemTreeNode entityTypeNode = FindNode(
 				rootNode.ChildNodes,
-				n => n.IsBasedOnEntityType<InstanceDescriptor>(),
+				n => n.IsBasedOnEntityType(entity),
 				true);
 
 			return entityTypeNode == null
