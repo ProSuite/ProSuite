@@ -175,6 +175,13 @@ namespace ProSuite.Commons.UI.WinForms
 				control.BackColor = _controlBackground;
 				control.ForeColor = _textColor;
 
+				if (control is ComboBox comboBox &&
+				    comboBox.DropDownStyle == ComboBoxStyle.DropDownList)
+				{
+					// The visual style draws a drop-down list light, whatever its BackColor.
+					comboBox.FlatStyle = FlatStyle.Flat;
+				}
+
 				if (control is TextBoxBase)
 				{
 					// Multiline text boxes (e.g. the details view) have their own scrollbars.
@@ -216,6 +223,12 @@ namespace ProSuite.Commons.UI.WinForms
 				else if (control is Form form)
 				{
 					EnableDarkTitleBar(form);
+				}
+				else if (control is GroupBox groupBox)
+				{
+					// The native frame is drawn white.
+					groupBox.Paint -= PaintGroupBox;
+					groupBox.Paint += PaintGroupBox;
 				}
 			}
 
