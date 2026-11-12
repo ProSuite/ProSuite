@@ -272,6 +272,9 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			_tableLayoutPanel.BorderStyle = BorderStyle.Fixed3D;
 			_tableLayoutPanel.CellBorderStyle = TableLayoutPanelCellBorderStyle.None;
 
+			// The table is recreated on each rebuild, after the form applied its fixes
+			WinFormsThemeUtils.ApplySystemDarkModeFixes(_tableLayoutPanel);
+
 			_tableLayoutPanel.CellPaint += _tableLayoutPanel_CellPaint;
 			_tableLayoutPanel.MouseDown += _tableLayoutPanel_MouseDown;
 			_tableLayoutPanel.Paint += _tableLayoutPanel_Paint;
@@ -448,7 +451,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				var lineRectangle = new Rectangle(
 					cellBounds.X, cellBounds.Bottom - 2, rowWidth, 2);
 				var lineBrush = new LinearGradientBrush(
-					lineRectangle, Color.Blue, _tableLayoutPanel.BackColor,
+					lineRectangle, SystemColors.HotTrack, _tableLayoutPanel.BackColor,
 					LinearGradientMode.Horizontal);
 
 				e.Graphics.FillRectangle(lineBrush, lineRectangle);
