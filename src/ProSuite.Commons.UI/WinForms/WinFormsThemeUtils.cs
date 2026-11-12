@@ -65,12 +65,16 @@ namespace ProSuite.Commons.UI.WinForms
 			grid.EnableHeadersVisualStyles = false;
 			grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
 
+			// In WinForms' own dark mode the system colors are already dark.
+			bool dark = IsSystemDarkModeEnabled();
+			Color headerBackground = dark ? SystemColors.Control : _headerBackgroundLight;
+
 			// Match the body cell gridlines to the header's border color (SystemColors.Control,
 			// the designer default, is too faint to read as a boundary).
-			grid.GridColor = _headerBorderLight;
+			grid.GridColor = dark ? _borderColor : _headerBorderLight;
 
-			grid.ColumnHeadersDefaultCellStyle.BackColor = _headerBackgroundLight;
-			grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = _headerBackgroundLight;
+			grid.ColumnHeadersDefaultCellStyle.BackColor = headerBackground;
+			grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = headerBackground;
 			grid.ColumnHeadersDefaultCellStyle.Font = new Font(grid.Font, FontStyle.Bold);
 			grid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
 
@@ -84,7 +88,74 @@ namespace ProSuite.Commons.UI.WinForms
 			grid.CellPainting += PaintHeaderBorder;
 		}
 
+		/// <summary>
+		/// Fixes the controls that stay light when a standalone app uses WinForms' own dark mode
+		/// (<c>Application.SetColorMode</c>): theme-drawn grid headers, tab pages and the white
+		/// borders of grids, 3-D text boxes and group boxes. Does nothing when dark mode is off.
+		/// Call it after
+		/// <c>InitializeComponent</c>.
+		/// </summary>
+		public static void ApplySystemDarkModeFixes([NotNull] Control control)
+		{
+			if (! IsSystemDarkModeEnabled())
+			{
+				return;
+			}
+
+			if (control is DataGridView grid)
+			{
+				grid.EnableHeadersVisualStyles = false;
+
+				// Dark mode draws the grid's border white; the darker background sets it off.
+				grid.BorderStyle = BorderStyle.None;
+			}
+			else if (control is TextBoxBase textBox && textBox.BorderStyle == BorderStyle.Fixed3D)
+			{
+				// Dark mode draws a white Fixed3D border, but a grey FixedSingle one.
+				textBox.BorderStyle = BorderStyle.FixedSingle;
+			}
+			else if (control is ListBox listBox && listBox.BorderStyle == BorderStyle.Fixed3D)
+			{
+				listBox.BorderStyle = BorderStyle.FixedSingle;
+			}
+			else if (control is ListView listView && listView.BorderStyle == BorderStyle.Fixed3D)
+			{
+				listView.BorderStyle = BorderStyle.FixedSingle;
+			}
+			else if (control is Panel panel && panel.BorderStyle == BorderStyle.Fixed3D)
+			{
+				panel.BorderStyle = BorderStyle.FixedSingle;
+			}
+			else if (control is TabPage tabPage)
+			{
+				tabPage.UseVisualStyleBackColor = false;
+			}
+			else if (control is GroupBox groupBox)
+			{
+				// Dark mode (experimental up to .NET 10) draws the group box frame white, whatever
+				// the FlatStyle or ForeColor. A future .NET version might fix this; then drop it.
+				groupBox.Paint -= PaintGroupBox;
+				groupBox.Paint += PaintGroupBox;
+			}
+
+			foreach (Control child in control.Controls)
+			{
+				ApplySystemDarkModeFixes(child);
+			}
+		}
+
 		#region Non-public members
+
+		internal static bool IsSystemDarkModeEnabled()
+		{
+#if NET9_0_OR_GREATER
+#pragma warning disable WFO5001
+			return Application.IsDarkModeEnabled;
+#pragma warning restore WFO5001
+#else
+			return false;
+#endif
+		}
 
 		private static void ApplyDarkTheme([NotNull] Control control)
 		{
@@ -275,6 +346,47 @@ namespace ProSuite.Commons.UI.WinForms
 			}
 
 			e.Handled = true;
+		}
+
+		/// <summary>
+		/// Paints over the group box's own (white) frame and caption with a grey frame.
+		/// </summary>
+		private static void PaintGroupBox(object sender, PaintEventArgs e)
+		{
+			var box = (GroupBox) sender;
+			Graphics graphics = e.Graphics;
+			Rectangle client = box.ClientRectangle;
+
+			// Same caption offset as the native group box.
+			const int textLeft = 8;
+			Size textSize = TextRenderer.MeasureText(graphics, box.Text, box.Font);
+			int top = textSize.Height / 2;
+			int right = client.Right - 1;
+			int bottom = client.Bottom - 1;
+
+			using (var back = new SolidBrush(box.BackColor))
+			{
+				graphics.FillRectangle(back, client);
+			}
+
+			using (var pen = new Pen(_borderColor))
+			{
+				graphics.DrawLine(pen, 0, top, 0, bottom);
+				graphics.DrawLine(pen, 0, bottom, right, bottom);
+				graphics.DrawLine(pen, right, top, right, bottom);
+
+				if (string.IsNullOrEmpty(box.Text))
+				{
+					graphics.DrawLine(pen, 0, top, right, top);
+					return;
+				}
+
+				graphics.DrawLine(pen, 0, top, textLeft, top);
+				graphics.DrawLine(pen, textLeft + textSize.Width, top, right, top);
+			}
+
+			TextRenderer.DrawText(graphics, box.Text, box.Font, new Point(textLeft, 0),
+			                      box.Enabled ? box.ForeColor : SystemColors.GrayText);
 		}
 
 		private class DarkColorTable : ProfessionalColorTable
