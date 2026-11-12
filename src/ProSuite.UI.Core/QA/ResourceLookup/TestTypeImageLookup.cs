@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.UI.Core.Properties;
 
 namespace ProSuite.UI.Core.QA.ResourceLookup
@@ -37,6 +39,12 @@ namespace ProSuite.UI.Core.QA.ResourceLookup
 			_mapKeyToImage.Add(_keyTransformer, TestTypeImages.Transformer);
 			_mapKeyToImage.Add(_keyIssueFilter, TestTypeImages.IssueFilter);
 
+			// stored at 32 px
+			foreach (string key in _mapKeyToImage.Keys.ToList())
+			{
+				_mapKeyToImage[key] = DatasetTypeImageLookup.ScaleToDpi(_mapKeyToImage[key]);
+			}
+
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{
 				_mapImageToKey.Add(pair.Value, pair.Key);
@@ -56,7 +64,12 @@ namespace ProSuite.UI.Core.QA.ResourceLookup
 		[NotNull]
 		public static ImageList CreateImageList(bool addSortTag = false)
 		{
-			var result = new ImageList();
+			var result = new ImageList
+			             {
+				             ImageSize = new Size(DatasetTypeImageLookup.ImageSize,
+				                                  DatasetTypeImageLookup.ImageSize),
+				             ColorDepth = ColorDepth.Depth32Bit
+			             };
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{

@@ -49,6 +49,8 @@ namespace ProSuite.UI.Core.QA.VerificationResult
 			_domainTransactionManager = domainTransactionManager;
 
 			InitializeComponent();
+			// The images are stored at 48 px.
+			ToolStripDpiUtils.SetImageSize(this, 16);
 
 			ComboBox.ObjectCollection items = _toolStripComboBoxView.Items;
 			_viewIndexGridConditions = items.Add("Quality Conditions");

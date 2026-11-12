@@ -1,10 +1,15 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Markup;
+using ImageSource = System.Windows.Media.ImageSource;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -21,14 +26,13 @@ public static class PickerUtils
 	#region move, refactor
 
 	[NotNull]
-	public static Uri GetImagePath([NotNull] BasicFeatureLayer layer)
+	public static ImageSource GetImage([NotNull] BasicFeatureLayer layer)
 	{
 		Assert.ArgumentNotNull(layer, nameof(layer));
 
 		if (layer is AnnotationLayer)
 		{
-			return new Uri(
-				@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/Annotation.png");
+			return GetXamlImage("PickerAnnotation");
 		}
 
 		var geometryType = layer.ShapeType;
@@ -38,32 +42,52 @@ public static class PickerUtils
 		//{
 		//}
 
-		return GetImagePath(geometryType);
+		return GetImage(geometryType);
 	}
 
-	public static Uri GetImagePath(esriGeometryType? geometryType)
+	[NotNull]
+	public static ImageSource GetImage(esriGeometryType? geometryType)
 	{
 		switch (geometryType)
 		{
 			case esriGeometryType.esriGeometryPoint:
 			case esriGeometryType.esriGeometryMultipoint:
-				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PointGeometry.png");
+				return GetXamlImage("PickerPoint");
 			case esriGeometryType.esriGeometryLine:
 			case esriGeometryType.esriGeometryPolyline:
-				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/LineGeometry.png");
+				return GetXamlImage("PickerLine");
 			case esriGeometryType.esriGeometryPolygon:
-				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/PolygonGeometry.png",
-					UriKind.Absolute);
+				return GetXamlImage("PickerPolygon");
 			case esriGeometryType.esriGeometryMultiPatch:
-				return new Uri(
-					@"pack://application:,,,/ProSuite.Commons.AGP;component/PickerUI/Images/MultipatchGeometry.png");
+				return GetXamlImage("PickerMultipatch");
 			default:
 				throw new ArgumentOutOfRangeException(
 					$"Unsupported geometry type: {geometryType}");
 		}
+	}
+
+	private static readonly ConcurrentDictionary<string, ImageSource> _xamlImages = new();
+
+	/// <summary>
+	/// A vector icon from Images/*.xaml (generated from design/icons by Build-Icons.ps1),
+	/// sharp at any DPI. Frozen, so it can be shared between items and threads.
+	/// One variant for both Pro themes: the picker window's background is always white.
+	/// </summary>
+	private static ImageSource GetXamlImage(string name)
+	{
+		return _xamlImages.GetOrAdd(name, n =>
+		{
+			var uri = new Uri(
+				$"pack://application:,,,/ProSuite.Commons.AGP;component/Images/{n}.xaml",
+				UriKind.Absolute);
+
+			using Stream stream = System.Windows.Application.GetResourceStream(uri).Stream;
+
+			ImageSource image =
+				((System.Windows.Controls.Image) XamlReader.Load(stream)).Source;
+			image.Freeze();
+			return image;
+		});
 	}
 
 	[NotNull]

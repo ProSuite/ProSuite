@@ -38,6 +38,7 @@ namespace ProSuite.Commons.UI.Logging
 		private long _logCount;
 		private readonly int[] _textColumnIndices;
 
+		private int _singleLineRowHeight;
 		private bool _showDebugMessages;
 		private bool _useDarkTheme;
 
@@ -88,6 +89,47 @@ namespace ProSuite.Commons.UI.Logging
 			_useDarkTheme = true;
 
 			WinFormsThemeUtils.ApplyDarkTheme(this);
+		}
+
+		/// <summary>
+		/// Replaces the built-in 16 px level icons with the given (larger) images, which are
+		/// zoomed to the row height. Rows already in the grid are updated too.
+		/// </summary>
+		public void SetLevelImages([NotNull] Image debug, [NotNull] Image info,
+		                           [NotNull] Image warn, [NotNull] Image error)
+		{
+			var newImages = new Dictionary<int, Image>
+			                {
+				                [_logLevelDebugImageIndex] = debug,
+				                [_logLevelInfoImageIndex] = info,
+				                [_logLevelWarnImageIndex] = warn,
+				                [_logLevelErrorImageIndex] = error
+			                };
+
+			var replacements = new Dictionary<Image, Image>();
+			foreach (KeyValuePair<int, Image> pair in newImages)
+			{
+				if (_levelImageCache.TryGetValue(pair.Key, out Image oldImage))
+				{
+					replacements[oldImage] = pair.Value;
+				}
+
+				_levelImageCache[pair.Key] = pair.Value;
+			}
+
+			_columnLogLevelImage.ImageLayout = DataGridViewImageCellLayout.Zoom;
+			_columnLogLevelImage.DefaultCellStyle.Padding = new Padding(LogicalToDeviceUnits(3));
+
+			foreach (DataGridViewRow row in _dataGridView.Rows)
+			{
+				DataGridViewCell cell = row.Cells[_columnLogLevelImage.Index];
+
+				if (cell.Value is Image image &&
+				    replacements.TryGetValue(image, out Image newImage))
+				{
+					cell.Value = newImage;
+				}
+			}
 		}
 
 		#region ILogWindow Members
@@ -156,6 +198,26 @@ namespace ProSuite.Commons.UI.Logging
 		#endregion
 
 		#region Non-public members
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+
+			// The designer widths are 96 DPI pixels, so the icon and the time are cut off on
+			// larger screen scaling. Fit them to the font (which follows the DPI).
+			Font font = _dataGridView.DefaultCellStyle.Font ?? _dataGridView.Font;
+			int cellPadding = LogicalToDeviceUnits(8);
+
+			string longestTime = new DateTime(2000, 12, 28, 23, 58, 58).ToString("T");
+			int timeWidth = TextRenderer.MeasureText(longestTime, font).Width + cellPadding;
+			_columnLogDateTime.Width = Math.Max(_columnLogDateTime.Width, timeWidth);
+
+			// Square icon cell at the auto-sized row height.
+			int rowHeight = Math.Max(_dataGridView.RowTemplate.Height,
+			                         font.Height + LogicalToDeviceUnits(4));
+			_columnLogLevelImage.Width = Math.Max(_columnLogLevelImage.Width, rowHeight);
+			_singleLineRowHeight = rowHeight;
+		}
 
 		private void ScrollToEndCore()
 		{
@@ -553,6 +615,16 @@ namespace ProSuite.Commons.UI.Logging
 		                                          DataGridViewCellFormattingEventArgs e)
 		{
 			DataGridViewRow row = _dataGridView.Rows[e.RowIndex];
+
+			if (e.ColumnIndex == _columnLogLevelImage.Index &&
+			    _columnLogLevelImage.ImageLayout == DataGridViewImageCellLayout.Zoom)
+			{
+				// Keep the zoomed icon at its single-line size in multi-line rows.
+				int extra = Math.Max(0, (row.Height - _singleLineRowHeight) / 2);
+				Padding padding = e.CellStyle.Padding;
+				e.CellStyle.Padding = new Padding(padding.Left, padding.Top + extra,
+				                                  padding.Right, padding.Bottom + extra);
+			}
 
 			LogEventItem logEventItem = GetLogEventItem(row);
 			if (logEventItem == null)

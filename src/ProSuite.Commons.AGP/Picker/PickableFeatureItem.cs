@@ -1,5 +1,4 @@
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
@@ -10,7 +9,7 @@ namespace ProSuite.Commons.AGP.Picker;
 
 public class PickableFeatureItem : PropertyChangedBase, IPickableFeatureItem
 {
-	private BitmapImage _image;
+	private ImageSource _image;
 
 	private readonly string _displayValue;
 	private bool _selected;
@@ -48,7 +47,7 @@ public class PickableFeatureItem : PropertyChangedBase, IPickableFeatureItem
 	public string DisplayValue => ToString();
 
 	public ImageSource ImageSource =>
-		_image ??= new BitmapImage(PickerUtils.GetImagePath(Layer));
+		_image ??= PickerUtils.GetImage(Layer);
 
 	public double Score { get; set; }
 

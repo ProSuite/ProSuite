@@ -8,13 +8,15 @@ using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.SimpleTerrains
 {
 	public class SimpleTerrainDatasetTableRow : SelectableTableRow, IEntityRow
 	{
 		private readonly SimpleTerrainDataset _entity;
-		[NotNull] private static readonly Image _image = Resources.DatasetTypeSurface;
+		[NotNull] private static readonly Image _image =
+			DatasetTypeImageLookup.ScaleToDpi(Resources.DatasetTypeSurface);
 
 		public SimpleTerrainDatasetTableRow([NotNull] SimpleTerrainDataset entity)
 		{

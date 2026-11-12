@@ -306,17 +306,17 @@ namespace ProSuite.UI.Core.QA.VerificationResult
 		private class VerifiedDatasetItem
 		{
 			private static readonly Image _allowImage =
-				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
+				DatasetTypeImageLookup.ScaleToDpi(TestTypeImages.TestTypeWarning);
 
 			private static readonly Image _continueImage =
-				(Bitmap) TestTypeImages.TestTypeError.Clone();
+				DatasetTypeImageLookup.ScaleToDpi(TestTypeImages.TestTypeError);
 
 			private static readonly Image _stopImage =
-				(Bitmap) TestTypeImages.TestTypeStop.Clone();
+				DatasetTypeImageLookup.ScaleToDpi(TestTypeImages.TestTypeStop);
 
-			private static readonly Image _noIssuesImage = (Bitmap) VerificationResultImages.OK.Clone();
-			private static readonly Image _warningsImage = (Bitmap) VerificationResultImages.Warning.Clone();
-			private static readonly Image _errorsImage = (Bitmap) VerificationResultImages.Error.Clone();
+			private static readonly Image _noIssuesImage = DatasetTypeImageLookup.ScaleToDpi(VerificationResultImages.OK);
+			private static readonly Image _warningsImage = DatasetTypeImageLookup.ScaleToDpi(VerificationResultImages.Warning);
+			private static readonly Image _errorsImage = DatasetTypeImageLookup.ScaleToDpi(VerificationResultImages.Error);
 
 			private static readonly SortedList<string, Image> _datasetImageList;
 

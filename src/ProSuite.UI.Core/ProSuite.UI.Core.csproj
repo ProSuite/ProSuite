@@ -283,10 +283,10 @@
     <Content Include="Properties\Images\DatasetCategory.png" />
     <Content Include="Properties\Images\DatasetCategorySelected.png" />
     <Content Include="Properties\Images\Edit.png" />
-    <Content Include="Properties\Images\Empty.bmp" />
+    <Content Include="Properties\Images\Empty.png" />
     <Content Include="Properties\Images\Exit.png" />
-    <Content Include="Properties\Images\Full.bmp" />
-    <Content Include="Properties\Images\Half.bmp" />
+    <Content Include="Properties\Images\Full.png" />
+    <Content Include="Properties\Images\Half.png" />
     <Content Include="Properties\Images\UncheckAll.png" />
     <Content Include="Properties\Images\Undo_16x.png" />
     <Content Include="Properties\QualitySpecificationImages\QualitySpecification.png" />

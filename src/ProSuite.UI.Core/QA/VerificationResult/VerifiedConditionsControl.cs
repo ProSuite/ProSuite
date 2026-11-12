@@ -12,6 +12,7 @@ using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.UI.Core.Properties;
 
 namespace ProSuite.UI.Core.QA.VerificationResult
@@ -140,9 +141,9 @@ namespace ProSuite.UI.Core.QA.VerificationResult
 
 		private class VerifiedConditionItem
 		{
-			private static readonly Image _statusImageNoIssues = VerificationResultImages.OK;
-			private static readonly Image _statusImageHasWarnings = VerificationResultImages.Warning;
-			private static readonly Image _statusImageHasErrors = VerificationResultImages.Error;
+			private static readonly Image _statusImageNoIssues = DatasetTypeImageLookup.ScaleToDpi(VerificationResultImages.OK);
+			private static readonly Image _statusImageHasWarnings = DatasetTypeImageLookup.ScaleToDpi(VerificationResultImages.Warning);
+			private static readonly Image _statusImageHasErrors = DatasetTypeImageLookup.ScaleToDpi(VerificationResultImages.Error);
 
 			public VerifiedConditionItem(
 				[NotNull] QualityConditionVerification qualityConditionVerification)

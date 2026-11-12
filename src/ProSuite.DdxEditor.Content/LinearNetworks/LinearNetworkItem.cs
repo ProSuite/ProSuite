@@ -12,6 +12,7 @@ using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.LinearNetworks
 {
@@ -44,7 +45,10 @@ namespace ProSuite.DdxEditor.Content.LinearNetworks
 		}
 
 		protected override bool AllowDelete => true;
-		public override Image Image => Resources.DatasetTypeLinearNetwork;
+		private static readonly Image _image =
+			DatasetTypeImageLookup.ScaleToDpi(Resources.DatasetTypeLinearNetwork);
+
+		public override Image Image => _image;
 
 		private IList<DatasetTableRow> GetNetworkDatasetsToAdd(
 			IWin32Window owner, params ColumnDescriptor[] columns)

@@ -11,6 +11,7 @@ using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.UI.Core.Properties;
 using ProSuite.UI.Core.QA.Controls;
 
@@ -23,13 +24,13 @@ namespace ProSuite.UI.Core.QA.Customize
 		private class QualitySpecificationElementItem
 		{
 			private static readonly Image _allowImage =
-				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
+				DatasetTypeImageLookup.ScaleToDpi(TestTypeImages.TestTypeWarning);
 
 			private static readonly Image _continueImage =
-				(Bitmap) TestTypeImages.TestTypeError.Clone();
+				DatasetTypeImageLookup.ScaleToDpi(TestTypeImages.TestTypeError);
 
 			private static readonly Image _stopImage =
-				(Bitmap) TestTypeImages.TestTypeStop.Clone();
+				DatasetTypeImageLookup.ScaleToDpi(TestTypeImages.TestTypeStop);
 
 			static QualitySpecificationElementItem()
 			{

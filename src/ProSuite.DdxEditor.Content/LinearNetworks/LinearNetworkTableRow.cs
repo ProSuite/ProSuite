@@ -8,13 +8,15 @@ using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DdxEditor.Content.Properties;
 using ProSuite.DdxEditor.Framework.TableRows;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 
 namespace ProSuite.DdxEditor.Content.LinearNetworks
 {
 	public class LinearNetworkTableRow : SelectableTableRow, IEntityRow
 	{
 		[NotNull] private readonly LinearNetwork _entity;
-		[NotNull] private static readonly Image _image = Resources.DatasetTypeLinearNetwork;
+		[NotNull] private static readonly Image _image =
+			DatasetTypeImageLookup.ScaleToDpi(Resources.DatasetTypeLinearNetwork);
 
 		public LinearNetworkTableRow([NotNull] LinearNetwork entity)
 		{

@@ -13,6 +13,7 @@ using ProSuite.DdxEditor.Framework;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.ItemViews;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DdxEditor.Content.SimpleTerrains
@@ -48,7 +49,10 @@ namespace ProSuite.DdxEditor.Content.SimpleTerrains
 		}
 
 		protected override bool AllowDelete => true;
-		public override Image Image => Resources.DatasetTypeSurface;
+		private static readonly Image _image =
+			DatasetTypeImageLookup.ScaleToDpi(Resources.DatasetTypeSurface);
+
+		public override Image Image => _image;
 
 		protected override void IsValidForPersistenceCore(SimpleTerrainDataset entity,
 		                                                  Notification notification)

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,7 +12,7 @@ namespace ProSuite.Commons.AGP.Picker;
 public class PickableFeatureClassItem : PropertyChangedBase,
                                         IPickableFeatureClassItem
 {
-	private BitmapImage _image;
+	private ImageSource _image;
 	private readonly string _datasetName;
 	private bool _selected;
 	private readonly HashSet<long> _oids;
@@ -66,7 +65,7 @@ public class PickableFeatureClassItem : PropertyChangedBase,
 			// todo: daro refactor, unknown image
 			BasicFeatureLayer layer = Assert.NotNull(Layers.FirstOrDefault());
 
-			_image = new BitmapImage(PickerUtils.GetImagePath(layer));
+			_image = PickerUtils.GetImage(layer);
 
 			return _image;
 		}

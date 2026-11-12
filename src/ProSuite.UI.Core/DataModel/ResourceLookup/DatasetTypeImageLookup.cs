@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -59,6 +62,11 @@ namespace ProSuite.UI.Core.DataModel.ResourceLookup
 			_mapKeyToImage.Add(_keyRasterDataset, DatasetTypeImages.DatasetTypeRasterDataset);
 			_mapKeyToImage.Add(_keyTransformer, TestTypeImages.Transformer);
 
+			foreach (string key in _mapKeyToImage.Keys.ToList())
+			{
+				_mapKeyToImage[key] = ScaleToDpi(_mapKeyToImage[key]);
+			}
+
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{
 				_mapImageToKey.Add(pair.Value, pair.Key);
@@ -82,10 +90,47 @@ namespace ProSuite.UI.Core.DataModel.ResourceLookup
 
 		#endregion
 
+		/// <summary>
+		/// The icon size in pixels for the screen DPI: 16 at 100 %, 24 at 150 %.
+		/// </summary>
+		public static int ImageSize { get; } = GetImageSize();
+
+		/// <summary>
+		/// Returns a copy of the icon at <see cref="ImageSize"/>. The dataset type icons are
+		/// stored large, and grid image columns draw images at their own size.
+		/// </summary>
+		[NotNull]
+		public static Image ScaleToDpi([NotNull] Image image)
+		{
+			var scaled = new Bitmap(ImageSize, ImageSize);
+
+			using (Graphics graphics = Graphics.FromImage(scaled))
+			{
+				graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+				graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+				graphics.DrawImage(image, 0, 0, ImageSize, ImageSize);
+			}
+
+			return scaled;
+		}
+
+		private static int GetImageSize()
+		{
+			// ponytail: DPI at startup; a window moved to a monitor with another scale keeps it
+			using (Graphics graphics = Graphics.FromHwnd(IntPtr.Zero))
+			{
+				return (int) Math.Round(16 * graphics.DpiX / 96);
+			}
+		}
+
 		[NotNull]
 		public static ImageList CreateImageList(bool addSortTag = false)
 		{
-			var imageList = new ImageList();
+			var imageList = new ImageList
+			                {
+				                ImageSize = new Size(ImageSize, ImageSize),
+				                ColorDepth = ColorDepth.Depth32Bit
+			                };
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)
 			{

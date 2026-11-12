@@ -1,0 +1,14 @@
+<Image xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Stretch="Uniform">
+  <Image.Source>
+    <DrawingImage>
+      <DrawingImage.Drawing>
+        <DrawingGroup>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H16 V16 H0 Z" />
+          <GeometryDrawing Geometry="F1 M8,1.5 V14.5 M8,4.75 H14.5 M1.5,11.25 H8">
+            <GeometryDrawing.Pen><Pen Brush="#505050" Thickness="1.6" StartLineCap="Flat" EndLineCap="Flat" LineJoin="Miter" /></GeometryDrawing.Pen>
+          </GeometryDrawing>
+        </DrawingGroup>
+      </DrawingImage.Drawing>
+    </DrawingImage>
+  </Image.Source>
+</Image>

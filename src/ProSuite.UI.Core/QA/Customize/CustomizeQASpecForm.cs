@@ -9,6 +9,7 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.Persistence.WinForms;
+using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.QA;
@@ -199,6 +200,8 @@ namespace ProSuite.UI.Core.QA.Customize
 		public CustomizeQASpecForm()
 		{
 			InitializeComponent();
+			// The images are stored at 48 px.
+			ToolStripDpiUtils.SetImageSize(this, 16);
 
 			_selectedElements = new HashSet<QualitySpecificationElement>();
 

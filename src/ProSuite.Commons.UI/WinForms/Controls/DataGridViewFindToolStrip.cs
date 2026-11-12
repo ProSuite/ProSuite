@@ -25,8 +25,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		private readonly ToolStripCheckBox _toolStripCheckBoxMatchCase;
 		private readonly ToolStripButton _toolStripButtonFilterRows;
 
-		private readonly Image _filterImage;
-		private readonly Image _orangeFilterImage;
+		private Image _filterImage;
+		private Image _orangeFilterImage;
 
 		private readonly Color _defaultBackgroundColor;
 		private readonly Color _findTextDefaultBackColor;
@@ -34,6 +34,9 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		//private Color _findTextHighLightColor = Color.Empty;
 		private bool _highlightFindText = true;
+
+		// At 96 DPI, like the values the designer writes; applied scaled to the screen DPI.
+		private int _findTextBoxLogicalWidth = 150;
 
 		#region Constructors
 
@@ -51,7 +54,11 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				string.Format(
 					"{0}: ", LocalizableStrings.DataGridViewFindToolStrip_Find));
 
-			_toolStripTextBoxFind = new ToolStripTextBox { Width = 150, AutoSize = false };
+			_toolStripTextBoxFind = new ToolStripTextBox
+			                        {
+				                        Width = LogicalToDeviceUnits(_findTextBoxLogicalWidth),
+				                        AutoSize = false
+			                        };
 
 			_toolStripTextBoxFind.TextChanged += _toolStripTextBoxFind_TextChanged;
 			_toolStripTextBoxFind.KeyDown += _toolStripTextBoxFind_KeyDown;
@@ -61,7 +68,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				{
 					Text =
 						LocalizableStrings.DataGridViewFindToolStrip_ClearFilter,
-					ImageScaling = ToolStripItemImageScaling.None,
+					ImageScaling = ToolStripItemImageScaling.SizeToFit,
 					Image = Resources.ClearFilter,
 					DisplayStyle = ToolStripItemDisplayStyle.Image,
 					Enabled = false
@@ -80,7 +87,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				{
 					Text =
 						LocalizableStrings.DataGridViewFindToolStrip_FindNext,
-					ImageScaling = ToolStripItemImageScaling.None,
+					ImageScaling = ToolStripItemImageScaling.SizeToFit,
 					Image = Resources.DownArrow
 				};
 			_toolStripButtonMoveNext.Click += _toolStripButtonMoveNext_Click;
@@ -89,7 +96,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				new ToolStripButton
 				{
 					Text = LocalizableStrings.DataGridViewFindToolStrip_FindPrevious,
-					ImageScaling = ToolStripItemImageScaling.None,
+					ImageScaling = ToolStripItemImageScaling.SizeToFit,
 					Image = Resources.UpArrow
 				};
 			_toolStripButtonMovePrevious.Click += _toolStripButtonMovePrevious_Click;
@@ -105,7 +112,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				new ToolStripButton
 				{
 					Text = LocalizableStrings.DataGridViewFindToolStrip_FilterRows,
-					ImageScaling = ToolStripItemImageScaling.None,
+					ImageScaling = ToolStripItemImageScaling.SizeToFit,
 					Image = Resources.Filter,
 					CheckOnClick = true,
 				};
@@ -148,10 +155,35 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			}
 		}
 
+		/// <summary>
+		/// Whether the find next/previous buttons show their text next to the image. If not,
+		/// the text is the tooltip.
+		/// </summary>
+		[DefaultValue(true)]
+		public bool ShowFindButtonText
+		{
+			get { return _toolStripButtonMoveNext.DisplayStyle != ToolStripItemDisplayStyle.Image; }
+			set
+			{
+				ToolStripItemDisplayStyle style = value
+					                                  ? ToolStripItemDisplayStyle.ImageAndText
+					                                  : ToolStripItemDisplayStyle.Image;
+				_toolStripButtonMoveNext.DisplayStyle = style;
+				_toolStripButtonMovePrevious.DisplayStyle = style;
+			}
+		}
+
+		/// <summary>
+		/// The width of the find text box at 96 DPI. It is scaled to the screen DPI.
+		/// </summary>
 		public int FindTextBoxWidth
 		{
-			get { return _toolStripTextBoxFind.Width; }
-			set { _toolStripTextBoxFind.Width = value; }
+			get { return _findTextBoxLogicalWidth; }
+			set
+			{
+				_findTextBoxLogicalWidth = value;
+				_toolStripTextBoxFind.Width = LogicalToDeviceUnits(value);
+			}
 		}
 
 		public string FindText
@@ -247,6 +279,30 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		}
 
 		#region Non-public
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+
+			ScaleToDpi();
+		}
+
+		protected override void OnDpiChangedAfterParent(EventArgs e)
+		{
+			base.OnDpiChangedAfterParent(e);
+
+			ScaleToDpi();
+		}
+
+		// The images are 48 px, drawn at 16 logical px. Set, not multiplied, so a form that
+		// already scaled the ImageScalingSize of its tool strips gets the same size.
+		private void ScaleToDpi()
+		{
+			int size = LogicalToDeviceUnits(16);
+			ImageScalingSize = new Size(size, size);
+
+			_toolStripTextBoxFind.Width = LogicalToDeviceUnits(_findTextBoxLogicalWidth);
+		}
 
 		private void ApplyHighlightFindText()
 		{

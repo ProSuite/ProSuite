@@ -18,6 +18,11 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		public FileSystemPathControl()
 		{
 			InitializeComponent();
+
+			// The image is stored at 32 px.
+			int imageSize = LogicalToDeviceUnits(16);
+			_buttonBrowse.Image =
+				new System.Drawing.Bitmap(_buttonBrowse.Image, imageSize, imageSize);
 		}
 
 		#endregion

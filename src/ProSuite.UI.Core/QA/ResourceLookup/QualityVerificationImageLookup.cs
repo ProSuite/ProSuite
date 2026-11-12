@@ -2,6 +2,7 @@ using System.Drawing;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.UI.Core.Properties;
 
 namespace ProSuite.UI.Core.QA.ResourceLookup
@@ -18,9 +19,9 @@ namespace ProSuite.UI.Core.QA.ResourceLookup
 
 		static QualityVerificationImageLookup()
 		{
-			_notFulfilled = QualityVerificationImages.QualityVerificationNotFulfilled;
-			_fulfilledWarnings = QualityVerificationImages.QualityVerificationFulfilledWarnings;
-			_fulfilledNoIssues = QualityVerificationImages.QualityVerificationFulfilledNoIssues;
+			_notFulfilled = DatasetTypeImageLookup.ScaleToDpi(QualityVerificationImages.QualityVerificationNotFulfilled);
+			_fulfilledWarnings = DatasetTypeImageLookup.ScaleToDpi(QualityVerificationImages.QualityVerificationFulfilledWarnings);
+			_fulfilledNoIssues = DatasetTypeImageLookup.ScaleToDpi(QualityVerificationImages.QualityVerificationFulfilledNoIssues);
 
 			// for sorting
 			_notFulfilled.Tag = _sortIndexNotFulfilled;
