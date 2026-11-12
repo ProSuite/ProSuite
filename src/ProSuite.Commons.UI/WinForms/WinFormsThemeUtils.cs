@@ -200,6 +200,19 @@ namespace ProSuite.Commons.UI.WinForms
 			{
 				control.BackColor = _dialogBackground;
 				control.ForeColor = _textColor;
+
+				if (control is TabPage tabPage)
+				{
+					// Otherwise the visual style paints the page light over the BackColor.
+					tabPage.UseVisualStyleBackColor = false;
+				}
+				else if (control is TabControl tabControl)
+				{
+					// Native tab headers ignore BackColor.
+					tabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
+					tabControl.DrawItem -= PaintTab;
+					tabControl.DrawItem += PaintTab;
+				}
 			}
 
 			if (control.ContextMenuStrip != null)
@@ -247,7 +260,13 @@ namespace ProSuite.Commons.UI.WinForms
 			}
 		}
 
-		private static void ApplyDarkTheme([NotNull] ToolStrip toolStrip)
+		/// <summary>
+		/// Re-colors <paramref name="toolStrip"/> and its items to match ArcGIS Pro's dark theme.
+		/// Use it for context menus that are not reachable from a control tree, e.g. those
+		/// handed out in <see cref="DataGridView.CellContextMenuStripNeeded"/>.
+		/// Call this only when the dark theme is active.
+		/// </summary>
+		public static void ApplyDarkTheme([NotNull] ToolStrip toolStrip)
 		{
 			toolStrip.BackColor = _dialogBackground;
 			toolStrip.ForeColor = _textColor;
@@ -346,6 +365,22 @@ namespace ProSuite.Commons.UI.WinForms
 			}
 
 			e.Handled = true;
+		}
+
+		private static void PaintTab(object sender, DrawItemEventArgs e)
+		{
+			var tabControl = (TabControl) sender;
+			TabPage page = tabControl.TabPages[e.Index];
+			bool selected = e.Index == tabControl.SelectedIndex;
+
+			using (var back = new SolidBrush(selected ? _dialogBackground : _controlBackground))
+			{
+				e.Graphics.FillRectangle(back, e.Bounds);
+			}
+
+			TextRenderer.DrawText(e.Graphics, page.Text, tabControl.Font, e.Bounds, _textColor,
+			                      TextFormatFlags.HorizontalCenter |
+			                      TextFormatFlags.VerticalCenter);
 		}
 
 		/// <summary>
