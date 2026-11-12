@@ -171,7 +171,7 @@ public static class WindowUtils
 	}
 
 	/// <remarks>Must call on main (UI) thread</remarks>
-	private static void SetWindowLocation(IProSuiteWindow window, Point location)
+	private static void SetWindowLocation(ProSuiteWindow window, Point location)
 	{
 		Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
 

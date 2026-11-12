@@ -26,6 +26,8 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <returns></returns>
 		Task<IList<IQualitySpecificationReference>> GetQualitySpecifications();
 
+		Task<QualitySpecification> GetCurrentQualitySpecification(int ddxId);
+
 		/// <summary>
 		/// Get the quality specification by name - for GP compatibility .
 		/// </summary>

@@ -212,7 +212,7 @@ public static class SymbolUtils
 	{
 		CIMLineSymbol lineSymbol = CreateLineSymbol(red, green, blue, lineWidth);
 
-		var hatchFill = new CIMHatchFill
+		CIMFill hatchFill = new CIMHatchFill
 		                {
 			                Enable = true,
 			                Rotation = rotation,
@@ -227,6 +227,29 @@ public static class SymbolUtils
 			symbolLayers.AddRange(lineSymbol.SymbolLayers);
 		}
 
+		symbolLayers.Add(hatchFill);
+
+		return new CIMPolygonSymbol { SymbolLayers = symbolLayers.ToArray() };
+	}
+
+	public static CIMPolygonSymbol CreateHatchFillSymbol(CIMColor color,
+	                                                     double rotation = 0,
+	                                                     double lineWidth = 2,
+	                                                     double lineSeparation = 5)
+	{
+		CIMLineSymbol lineSymbol = CreateLineSymbol(color, lineWidth);
+
+		CIMFill hatchFill = new CIMHatchFill
+		                    {
+			                    Enable = true,
+			                    Rotation = rotation,
+			                    Separation = lineSeparation,
+			                    LineSymbol = lineSymbol
+		                    };
+
+		var symbolLayers = new List<CIMSymbolLayer>();
+
+		symbolLayers.AddRange(lineSymbol.SymbolLayers);
 		symbolLayers.Add(hatchFill);
 
 		return new CIMPolygonSymbol { SymbolLayers = symbolLayers.ToArray() };
@@ -418,13 +441,14 @@ public static class SymbolUtils
 	}
 
 	public static CIMFill CreateHatchFill(double angleDegrees, double separation,
-	                                      CIMColor color = null)
+										  CIMColor color = null,
+										  double lineWidth = 2)
 	{
 		var hatchFill = new CIMHatchFill();
 		hatchFill.Enable = true;
 		hatchFill.Rotation = angleDegrees;
 		hatchFill.Separation = separation;
-		hatchFill.LineSymbol = CreateLineSymbol(color);
+		hatchFill.LineSymbol = CreateLineSymbol(color, lineWidth);
 		return hatchFill;
 	}
 

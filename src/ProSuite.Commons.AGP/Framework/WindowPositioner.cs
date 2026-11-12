@@ -10,6 +10,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI;
 using GeometryUtils = ProSuite.Commons.AGP.Core.Spatial.GeometryUtils;
 using Application = System.Windows.Application;
 using DisplayUtils = ProSuite.Commons.UI.WPF.DisplayUtils;
@@ -17,7 +18,7 @@ using Matrix = System.Windows.Media.Matrix;
 
 namespace ProSuite.Commons.AGP.Framework;
 
-public class WindowPositioner
+public class WindowPositioner : IWindowPositioner
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 

@@ -242,10 +242,24 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Warnings" VerticalAlignment="Center" />
                     <Border Grid.Column="1" BorderBrush="DarkGray" BorderThickness="0">
-                        <TextBox Text="{Binding WarningCount}" Background="{Binding WarningTextBoxBackColor}"
+                        <TextBox Text="{Binding WarningCount}"
                                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2"
                                  HorizontalContentAlignment="Right" VerticalContentAlignment="Center"
-                                 FontWeight="Bold" IsReadOnly="True" />
+                                 FontWeight="Bold" IsReadOnly="True" >
+                            <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                    <Setter Property="Background" Value="{Binding WarningTextBoxBackColor}" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{Binding WarningTextBoxBackColor}" />
+                                    </Trigger>
+                                    <Trigger Property="IsFocused" Value="True">
+                                            <Setter Property="Background" Value="{Binding WarningTextBoxBackColor}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                        </TextBox>
                     </Border>
                     <TextBlock Grid.Column="2" Margin="0,0,15,0" Text="{Binding StartTimeText}"
                                HorizontalAlignment="Right" VerticalAlignment="Center" />
@@ -260,10 +274,24 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Errors" VerticalAlignment="Center" Margin="0,5,0,4" />
                     <Border Grid.Column="1" BorderBrush="DarkGray" BorderThickness="0">
-                        <TextBox Text="{Binding ErrorCount}" Background="{Binding ErrorTextBoxBackColor}"
+                        <TextBox Text="{Binding ErrorCount}"
                                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2"
                                  HorizontalContentAlignment="Right" VerticalContentAlignment="Center"
-                                 FontWeight="Bold" IsReadOnly="True" />
+                                 FontWeight="Bold" IsReadOnly="True" >
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Background" Value="{Binding ErrorTextBoxBackColor}" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{Binding ErrorTextBoxBackColor}" />
+                                        </Trigger>
+                                        <Trigger Property="IsFocused" Value="True">
+                                            <Setter Property="Background" Value="{Binding ErrorTextBoxBackColor}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
                     </Border>
                     <TextBlock Grid.Column="2" Margin="0,0,15,0" Text="{Binding EndTimeText}"
                                HorizontalAlignment="Right" VerticalAlignment="Center" />

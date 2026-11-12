@@ -1,10 +1,14 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
+using ProSuite.AGP.WorkList;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
@@ -19,6 +23,21 @@ namespace ProSuite.AGP.QA.ProPlugins
 		/// set the default result path is via the QualityVerificationOptions.ResultPathMode setting.
 		/// </summary>
 		public const string ResultPathEnvVariable = "PROSUITE_VERIFICATION_RESULT_DIR";
+
+		/// <summary>
+		/// Creates the shared command runner for the project-workspace based standard commands.
+		/// </summary>
+		[NotNull]
+		public static VerificationCommandRunner CreateCommandRunner(
+			[NotNull] IVerificationSessionContext sessionContext,
+			[NotNull] IWorkListOpener workListOpener,
+			[CanBeNull] Func<IQualityVerificationResult, ErrorDeletionInPerimeter, bool, Task<int>>
+				saveAction)
+		{
+			return new VerificationCommandRunner(
+				new ProjectWorkspaceVerificationCommandContext(
+					sessionContext, workListOpener, saveAction));
+		}
 
 		public static void ShowProgressWindow(
 			[NotNull] Window window,

@@ -63,7 +63,8 @@ public class ItemRepositoryMock : IWorkItemRepository
 		throw new NotImplementedException();
 	}
 
-	public IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(Table table, QueryFilter filter, bool ignoreDefinitionQuery = false) where T : IWorkItem
+	public IEnumerable<KeyValuePair<T, Geometry>> GetItems<T>(
+		Table table, QueryFilter filter, bool ignoreDefinitionQuery = false) where T : IWorkItem
 	{
 		throw new NotImplementedException();
 	}
@@ -77,6 +78,8 @@ public class ItemRepositoryMock : IWorkItemRepository
 	{
 		throw new NotImplementedException();
 	}
+
+	public void BeginUpdateStates() { }
 
 	public void UpdateState(IWorkItem item)
 	{

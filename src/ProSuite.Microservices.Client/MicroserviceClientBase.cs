@@ -12,6 +12,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using ProSuite.Commons.Misc;
 
 namespace ProSuite.Microservices.Client
 {
@@ -89,6 +90,13 @@ namespace ProSuite.Microservices.Client
 		public bool CanFailOver => _allChannelConfigs?.Count > 1;
 
 		public bool ProcessStarted => _startedProcess != null && ! _startedProcess.HasExited;
+
+		/// <summary>
+		/// If true, the locally started server process will be killed when the
+		/// parent process ends (or crashes). Implemented by adding the local
+		/// server process to a job object that belongs to the parent process.
+		/// </summary>
+		public bool KillLocalServerOnJobClose { get; set; }
 
 		public void Disconnect()
 		{
@@ -469,8 +477,15 @@ namespace ProSuite.Microservices.Client
 				// keeps the lock alive (despite no edit session in the child process) if it is
 				// started with useShellExecute == false.
 				const bool useShellExecute = true;
+				const bool createNoWindow = true;
+
 				_startedProcess =
-					ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
+					ProcessUtils.StartProcess(executable, arguments, useShellExecute, createNoWindow);
+
+				if (KillLocalServerOnJobClose)
+				{
+					ChildProcessTracker.AddProcess(_startedProcess);
+				}
 			}
 			catch (Win32Exception ex)
 			{

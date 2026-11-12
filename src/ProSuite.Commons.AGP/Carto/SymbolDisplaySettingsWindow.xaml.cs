@@ -17,8 +17,38 @@ public partial class SymbolDisplaySettingsWindow
 	{
 		InitializeComponent();
 
+		ContentRendered += SymbolDisplaySettingsWindow_ContentRendered;
+
 		_formStateManager = new BasicFormStateManager(this);
 		_formStateManager.RestoreState();
+	}
+
+	private void SymbolDisplaySettingsWindow_ContentRendered(object sender, EventArgs e)
+	{
+		try
+		{
+			ResizeHeightToContent();
+			//Dispatcher.BeginInvoke(ResizeHeightToContent, DispatcherPriority.Loaded);
+		}
+		catch (Exception ex)
+		{
+			_msg.Error($"ContentRendered: {ex.Message}", ex);
+		}
+	}
+
+	private void ResizeHeightToContent()
+	{
+		// Temporarily disable SizeToContent
+		SizeToContent = SizeToContent.Manual;
+
+		// Force a layout update
+		InvalidateMeasure();
+		InvalidateArrange();
+		UpdateLayout();
+
+		// Re-enable SizeToContent to recalculate
+		SizeToContent = SizeToContent.Height;
+		ResizeMode = ResizeMode.NoResize;
 	}
 
 	protected override void OnClosed(EventArgs args)

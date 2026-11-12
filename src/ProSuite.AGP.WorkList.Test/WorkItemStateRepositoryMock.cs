@@ -13,6 +13,8 @@ public class WorkItemStateRepositoryMock : IWorkItemStateRepository
 
 	public void UpdateState(IWorkItem item) { }
 
+	public void BeginUpdateStates() { }
+
 	public void Commit(IList<ISourceClass> sourceClasses, Envelope extent) { }
 
 	public int? CurrentIndex { get; set; }
