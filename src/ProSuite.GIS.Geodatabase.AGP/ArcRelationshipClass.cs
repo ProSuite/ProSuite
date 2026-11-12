@@ -15,6 +15,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private bool _cachePropertiesEagerly;
+		private bool _propertiesCached;
 		private readonly RelationshipClassDefinition _proRelationshipClassDefinition;
 
 		// Property caching for non CIM-thread access:
@@ -81,9 +82,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 
 		internal void CacheProperties()
 		{
-			if (_cachePropertiesEagerly)
+			if (_propertiesCached)
 			{
-				// Already cached
 				return;
 			}
 
@@ -103,6 +103,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_isComposite = IsComposite;
 			_originClass = PrepareCached(OriginClass);
 			_destinationClass = PrepareCached(DestinationClass);
+
+			_propertiesCached = true;
 		}
 
 		#region Implementation of IRelationshipClass

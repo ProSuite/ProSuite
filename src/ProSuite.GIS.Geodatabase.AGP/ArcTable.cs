@@ -22,6 +22,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 	public class ArcTable : ITable, IObjectClass, ISubtypes, IDisposable
 	{
 		private bool _cachePropertiesEagerly;
+		private bool _propertiesCached;
 
 		private long? _workspaceHandle;
 
@@ -66,11 +67,16 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_workspaceHandle = workspaceHandle;
 		}
 
-		internal void CacheProperties()
+		/// <summary>
+		/// Reads the properties of the table, so that they can also be accessed from other threads
+		/// than the one the table was opened on, e.g. from the UI thread. Relationship classes and
+		/// related tables accessed through this table afterwards are cached as well. Must be called
+		/// on the thread the table was opened on. If it fails, it can be called again.
+		/// </summary>
+		public void CacheProperties()
 		{
-			if (_cachePropertiesEagerly)
+			if (_propertiesCached)
 			{
-				// Already cached
 				return;
 			}
 
@@ -79,6 +85,7 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			_hasOID = HasOID;
 			_oidFieldName = OIDFieldName;
 			_objectClassID = ObjectClassID;
+			_name = Name;
 			_aliasName = AliasName;
 			_subtypeFieldName = SubtypeFieldName;
 			_defaultSubtypeCode = DefaultSubtypeCode;
@@ -91,6 +98,8 @@ namespace ProSuite.GIS.Geodatabase.AGP
 			InitializeSubtypes();
 
 			CachePropertiesCore();
+
+			_propertiesCached = true;
 		}
 
 		protected internal virtual void CachePropertiesCore() { }
