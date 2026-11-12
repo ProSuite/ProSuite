@@ -188,7 +188,7 @@ public abstract class SplitLineToolBase : MapToolBase
 
 		await PostProcessNewFeatures(itemFeature, newFeature, editOperation);
 
-		// Update selection and flash the new feature
+		// Update selection and, if desired, flash the new feature
 
 		List<long> objectIds = new List<long>{newFeature.GetObjectID(), itemFeature.GetObjectID()};
 
@@ -196,6 +196,11 @@ public abstract class SplitLineToolBase : MapToolBase
 		{
 			SelectionUtils.SelectRows(layer, SelectionCombinationMethod.Add,
 			                          objectIds);
+		}
+
+		if (! FlashEditResult)
+		{
+			return;
 		}
 
 		var oidsByMapMember = new Dictionary<BasicFeatureLayer, List<long>>

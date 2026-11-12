@@ -176,9 +176,11 @@ public abstract class EraseToolBase : ConstructionToolBase
 		}
 
 		var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
-		var taskFlash =
-			QueuedTaskUtils.Run(async () => await ToolUtils.FlashResultPolygonsAsync(
-				                                activeView, resultFeatures));
+		Task taskFlash = FlashEditResult
+			                 ? QueuedTaskUtils.Run(async () =>
+				                                       await ToolUtils.FlashResultPolygonsAsync(
+					                                       activeView, resultFeatures))
+			                 : Task.CompletedTask;
 
 		await Task.WhenAll(taskFlash, taskSave);
 

@@ -31,6 +31,20 @@ public abstract class MapToolBase : MapTool
 	private const Key _keyShowOptionsPane = Key.O;
 
 	/// <summary>
+	/// The environment variable that defines whether tools flash the resulting features after
+	/// an edit (yes, true or 1). If not set, the tools do not flash.
+	/// </summary>
+	public const string ToolFlashingEnvVar = "PROSUITE_TOOL_FLASHING";
+
+	/// <summary>
+	/// Whether the tool flashes the resulting features after a successful edit. By default
+	/// defined by the environment variable <see cref="ToolFlashingEnvVar"/>. Override to
+	/// define a tool-specific policy.
+	/// </summary>
+	protected virtual bool FlashEditResult =>
+		EnvironmentUtils.GetBooleanEnvironmentVariableValue(ToolFlashingEnvVar);
+
+	/// <summary>
 	/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 	/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
 	/// </summary>
