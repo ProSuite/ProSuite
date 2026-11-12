@@ -333,27 +333,6 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		}
 	}
 
-	protected override void OnKeyDownCore(MapViewKeyEventArgs args)
-	{
-		// The shift key starts an intermittent selection only while it is pressed on its own.
-		// As soon as another key joins it, the key press belongs to an application shortcut,
-		// such as the ArcGIS Pro stereo snapping shortcuts SHIFT+<key>. Pressing such a
-		// shortcut must not cost the user the construction in progress, so end the
-		// intermittent selection again, which puts the suspended edit sketch back on the map.
-		if (KeyboardUtils.IsShiftDown() && ! KeyboardUtils.IsModifierKey(args.Key))
-		{
-			_shiftIsPartOfKeyCombination = true;
-
-			if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true)
-			{
-				_ = ViewUtils.TryAsync(EndIntermittentSelectionAsync, _msg,
-				                       suppressErrorMessageBox: true);
-			}
-		}
-
-		base.OnKeyDownCore(args);
-	}
-
 	protected override async Task ShiftPressedCoreAsync(MapViewKeyEventArgs keyArgs)
 	{
 		if (! AllowSelectionChangeInSketchMode)
