@@ -1428,6 +1428,102 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 		}
 
+		[Test]
+		public void CanInnerJoinManyToMany_WhereClauseNotValidOnLeftTable()
+		{
+			// TLMQA-455 / TLMQA-695: the test container excludes rows loaded in a previous tile
+			// with '<OID field> NOT IN (...)', where the OID field comes from the bridge table.
+			// The join first tries the where clause on the left table alone. That query fails,
+			// and before the fix the failure left the caller's filter with SubFields = left key.
+			// The other table was then read with only its key and OID: the route attributes were
+			// null, and QaDuplicateGeometrySelf reported issues depending on the tile layout.
+
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace(
+				"TrTableJoinInMemory_WhereClauseNotValidOnLeftTable");
+
+			ISpatialReference sref = SpatialReferenceUtils.CreateSpatialReference(
+				(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, true);
+
+			IFeatureClass roadFc = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "ROADS", null,
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField("ROADNR"),
+				FieldUtils.CreateShapeField(
+					"SHAPE", esriGeometryType.esriGeometryPoint, sref, 1000));
+
+			ITable routeTable = DatasetUtils.CreateTable(
+				ws, "ROUTES",
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField("ROUTENR"),
+				FieldUtils.CreateIntegerField("ROUTE_TYPE"));
+
+			ITable bridgeTable = DatasetUtils.CreateTable(
+				ws, "ROAD_ROUTE",
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField("BR_ROADNR"),
+				FieldUtils.CreateIntegerField("BR_ROUTENR"));
+
+			for (var nr = 1; nr <= 2; nr++)
+			{
+				IFeature f = roadFc.CreateFeature();
+				f.Value[1] = nr;
+				f.Shape = GeometryFactory.CreatePoint(2600000 + nr * 10, 1200000);
+				f.Store();
+			}
+
+			foreach ((int route, int type) in new[] { (100, 1), (200, 2) })
+			{
+				IRow r = routeTable.CreateRow();
+				r.Value[1] = route;
+				r.Value[2] = type;
+				r.Store();
+			}
+
+			// Road 1 belongs to both routes, road 2 to route 200.
+			foreach ((int road, int route) in new[] { (1, 100), (1, 200), (2, 200) })
+			{
+				IRow a = bridgeTable.CreateRow();
+				a.Value[1] = road;
+				a.Value[2] = route;
+				a.Store();
+			}
+
+			var tr = new TrTableJoinInMemory(
+				         ReadOnlyTableFactory.Create(roadFc),
+				         ReadOnlyTableFactory.Create(routeTable),
+				         "ROADNR", "ROUTENR", JoinType.InnerJoin)
+			         {
+				         ManyToManyTable = ReadOnlyTableFactory.Create(bridgeTable),
+				         ManyToManyTableLeftKey = "BR_ROADNR",
+				         ManyToManyTableRightKey = "BR_ROUTENR"
+			         };
+			((ITableTransformer) tr).TransformerName = "test_join";
+
+			GdbTable joined = tr.GetTransformed();
+			int typeIdx = FindJoinedField(joined, "ROUTE_TYPE");
+			Assert.GreaterOrEqual(typeIdx, 0);
+
+			// Like the container's filter: all fields, a where clause on a bridge table field
+			// (the left table has no such field, so the attempt on the left table fails).
+			var filter = new AoFeatureClassFilter(
+				             GeometryFactory.CreateEnvelope(2599000, 1199000, 2601000, 1201000,
+				                                            sref))
+			             {
+				             WhereClause = "BR_ROUTENR NOT IN (999)"
+			             };
+
+			List<object> routeTypes = joined.EnumReadOnlyRows(filter, false)
+			                                .Select(row => row.get_Value(typeIdx))
+			                                .ToList();
+
+			Assert.AreEqual(3, routeTypes.Count);
+			CollectionAssert.AreEquivalent(new object[] { 1, 2, 2 }, routeTypes,
+			                               "The route attributes must be read");
+
+			Assert.That(filter.SubFields, Is.Null.Or.Empty,
+			            "The caller's filter must not be changed");
+		}
+
 		private static int FindJoinedField(GdbTable table, string fieldName)
 		{
 			int idx = table.FindField(fieldName);
