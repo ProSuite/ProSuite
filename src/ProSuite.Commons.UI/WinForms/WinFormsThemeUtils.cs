@@ -26,6 +26,7 @@ namespace ProSuite.Commons.UI.WinForms
 		private static readonly Color _borderColor = ColorTranslator.FromHtml("#4A4A4A");
 		private static readonly Color _textColor = ColorTranslator.FromHtml("#D1D1D1");
 		private static readonly Color _selectionBackground = ColorTranslator.FromHtml("#1B394C");
+		private static readonly Color _disabledTextColor = ColorTranslator.FromHtml("#7A7A7A");
 
 		// Matches the Attribute Table's column header look (light theme).
 		private static readonly Color _headerBackgroundLight = ColorTranslator.FromHtml("#F3F3F3");
@@ -195,6 +196,9 @@ namespace ProSuite.Commons.UI.WinForms
 				button.UseVisualStyleBackColor = false;
 				button.FlatStyle = FlatStyle.Flat;
 				button.FlatAppearance.BorderColor = _borderColor;
+
+				button.Paint -= PaintDisabledButtonText;
+				button.Paint += PaintDisabledButtonText;
 			}
 			else if (control is TreeView treeView)
 			{
@@ -513,6 +517,34 @@ namespace ProSuite.Commons.UI.WinForms
 		/// <summary>
 		/// Paints over the group box's own (white) frame and caption with a grey frame.
 		/// </summary>
+		/// <summary>
+		/// A disabled flat button derives its text color from the dark background and ignores
+		/// ForeColor, which leaves the caption barely readable. Redraws the caption of text-only
+		/// buttons in a grey that stays readable.
+		/// </summary>
+		private static void PaintDisabledButtonText(object sender, PaintEventArgs e)
+		{
+			var button = (Button) sender;
+
+			if (button.Enabled || button.Image != null || string.IsNullOrEmpty(button.Text))
+			{
+				return;
+			}
+
+			Rectangle inner = button.ClientRectangle;
+			inner.Inflate(-1, -1);
+
+			using (var back = new SolidBrush(button.BackColor))
+			{
+				e.Graphics.FillRectangle(back, inner);
+			}
+
+			TextRenderer.DrawText(e.Graphics, button.Text, button.Font, inner,
+			                      _disabledTextColor,
+			                      TextFormatFlags.HorizontalCenter |
+			                      TextFormatFlags.VerticalCenter);
+		}
+
 		private static void PaintGroupBox(object sender, PaintEventArgs e)
 		{
 			var box = (GroupBox) sender;
