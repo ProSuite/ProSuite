@@ -139,11 +139,42 @@ namespace ProSuite.Commons.UI.WinForms
 				groupBox.Paint -= PaintGroupBox;
 				groupBox.Paint += PaintGroupBox;
 			}
+			else if (control is ComboBox comboBox &&
+			         comboBox.DropDownStyle == ComboBoxStyle.DropDownList)
+			{
+				// Dark mode leaves some drop-down lists light. The flat style is drawn with the
+				// (dark) system colors.
+				comboBox.FlatStyle = FlatStyle.Flat;
+			}
+			else if (control is DateTimePicker dateTimePicker)
+			{
+				// Dark mode draws the spin buttons light.
+				PaintDarkSpinButtons(dateTimePicker);
+			}
 
 			foreach (Control child in control.Controls)
 			{
 				ApplySystemDarkModeFixes(child);
 			}
+		}
+
+		/// <summary>
+		/// The dark theme counterpart of a light background color, e.g. of a configured color
+		/// that marks a state: white becomes the background of dark controls, tinted colors keep
+		/// their hue. Dark colors are returned unchanged.
+		/// </summary>
+		public static Color GetDarkBackColor(Color color)
+		{
+			float lightness = color.GetBrightness();
+
+			if (lightness <= 0.5f)
+			{
+				return color;
+			}
+
+			float darkLightness = _controlBackground.GetBrightness() + (1 - lightness) / 2;
+
+			return FromHsl(color.GetHue(), color.GetSaturation(), darkLightness);
 		}
 
 		#region Non-public members
@@ -167,27 +198,63 @@ namespace ProSuite.Commons.UI.WinForms
 				return;
 			}
 
+			// Controls added later, e.g. the fields of a form loaded on demand, are themed too.
+			control.ControlAdded -= ApplyDarkThemeOnControlAdded;
+			control.ControlAdded += ApplyDarkThemeOnControlAdded;
+
 			if (control is ToolStrip toolStrip)
 			{
 				ApplyDarkTheme(toolStrip);
 			}
-			else if (control is TextBoxBase || control is ComboBox || control is ListControl)
+			else if (control is TextBoxBase || control is ComboBox || control is ListControl ||
+			         control is UpDownBase)
 			{
-				control.BackColor = _controlBackground;
+				// Keeps a dark color set before, e.g. the state color of an attribute editor field.
+				if (control.BackColor.GetBrightness() > 0.5f)
+				{
+					control.BackColor = _controlBackground;
+				}
+
 				control.ForeColor = _textColor;
 
 				if (control is ComboBox comboBox &&
-				    comboBox.DropDownStyle == ComboBoxStyle.DropDownList)
+				    comboBox.DropDownStyle != ComboBoxStyle.Simple)
 				{
-					// The visual style draws a drop-down list light, whatever its BackColor.
+					// The visual style draws a drop-down list light, whatever its BackColor, and
+					// the flat style draws the border and the button light.
 					comboBox.FlatStyle = FlatStyle.Flat;
+					_painters.GetValue(comboBox, c => new DarkComboBoxPainter((ComboBox) c));
 				}
 
-				if (control is TextBoxBase)
+				if (control is TextBoxBase textBox)
 				{
+					// The visual style draws a white Fixed3D border, but a grey FixedSingle one.
+					if (textBox.BorderStyle == BorderStyle.Fixed3D)
+					{
+						textBox.BorderStyle = BorderStyle.FixedSingle;
+					}
+
 					// Multiline text boxes (e.g. the details view) have their own scrollbars.
-					EnableDarkScrollBars(control);
+					EnableDarkExplorerTheme(control);
 				}
+				else if (control is UpDownBase)
+				{
+					foreach (Control child in control.Controls)
+					{
+						if (! (child is TextBoxBase))
+						{
+							_painters.GetValue(child, c => new DarkSpinPainter(c, h => h));
+						}
+					}
+				}
+			}
+			else if (control is DateTimePicker dateTimePicker)
+			{
+				PaintDarkSpinButtons(dateTimePicker);
+			}
+			else if (control is TrackBar trackBar)
+			{
+				_painters.GetValue(trackBar, c => new DarkTrackBarPainter((TrackBar) c));
 			}
 			else if (control is Button button)
 			{
@@ -222,7 +289,13 @@ namespace ProSuite.Commons.UI.WinForms
 				{
 					// Native tab headers, the strip behind them and the page frame ignore
 					// BackColor, and owner-drawn tabs only cover the tabs themselves.
-					_tabPainters.GetValue(tabControl, t => new DarkTabControlPainter(t));
+					_painters.GetValue(tabControl,
+					                   t => new DarkTabControlPainter((TabControl) t));
+				}
+				else if (control is CheckBox || control is RadioButton)
+				{
+					// The default visual style draws the box and the circle light.
+					EnableDarkExplorerTheme(control);
 				}
 				else if (control is Form form)
 				{
@@ -253,6 +326,17 @@ namespace ProSuite.Commons.UI.WinForms
 			grid.GridColor = _borderColor;
 			grid.EnableHeadersVisualStyles = false;
 
+			// The raised headers have white edges; single borders use the GridColor.
+			if (grid.ColumnHeadersBorderStyle == DataGridViewHeaderBorderStyle.Raised)
+			{
+				grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+			}
+
+			if (grid.RowHeadersBorderStyle == DataGridViewHeaderBorderStyle.Raised)
+			{
+				grid.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+			}
+
 			grid.DefaultCellStyle.BackColor = _controlBackground;
 			grid.DefaultCellStyle.ForeColor = _textColor;
 			grid.DefaultCellStyle.SelectionBackColor = _selectionBackground;
@@ -273,7 +357,7 @@ namespace ProSuite.Commons.UI.WinForms
 			grid.RowHeadersDefaultCellStyle.SelectionBackColor = _dialogBackground;
 			grid.RowHeadersDefaultCellStyle.SelectionForeColor = _textColor;
 
-			EnableDarkScrollBars(grid);
+			EnableDarkExplorerTheme(grid);
 
 			if (grid.ContextMenuStrip != null)
 			{
@@ -308,6 +392,69 @@ namespace ProSuite.Commons.UI.WinForms
 			{
 				ApplyDarkTheme(dropDownItem.DropDown);
 			}
+			else if (item is ToolStripControlHost host)
+			{
+				// E.g. the combo box of a ToolStripComboBox.
+				ApplyDarkTheme(host.Control);
+			}
+		}
+
+		private static void ApplyDarkThemeOnControlAdded(object sender, ControlEventArgs e)
+		{
+			ApplyDarkTheme(e.Control);
+		}
+
+		private static void PaintDarkSpinButtons([NotNull] DateTimePicker picker)
+		{
+			_painters.GetValue(picker, c => new DarkSpinPainter(
+				                           c, h => FindWindowEx(h, IntPtr.Zero, "msctls_updown32",
+				                                                null)));
+		}
+
+		[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+		private static extern IntPtr FindWindowEx(IntPtr parent, IntPtr childAfter,
+		                                          string className, string windowName);
+
+		private static Color FromHsl(float hue, float saturation, float lightness)
+		{
+			float chroma = (1 - Math.Abs(2 * lightness - 1)) * saturation;
+			float sector = hue / 60;
+			float second = chroma * (1 - Math.Abs(sector % 2 - 1));
+			float offset = lightness - chroma / 2;
+
+			float red = 0, green = 0, blue = 0;
+
+			switch ((int) sector)
+			{
+				case 0:
+					red = chroma;
+					green = second;
+					break;
+				case 1:
+					red = second;
+					green = chroma;
+					break;
+				case 2:
+					green = chroma;
+					blue = second;
+					break;
+				case 3:
+					green = second;
+					blue = chroma;
+					break;
+				case 4:
+					red = second;
+					blue = chroma;
+					break;
+				default:
+					red = chroma;
+					blue = second;
+					break;
+			}
+
+			return Color.FromArgb((int) Math.Round((red + offset) * 255),
+			                      (int) Math.Round((green + offset) * 255),
+			                      (int) Math.Round((blue + offset) * 255));
 		}
 
 		[DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
@@ -317,14 +464,14 @@ namespace ProSuite.Commons.UI.WinForms
 		private const string _darkExplorerTheme = "DarkMode_Explorer";
 
 		/// <summary>
-		/// Switches a control's native scrollbars to the dark Explorer theme so they are not drawn
-		/// light-grey in the otherwise dark UI. Handles the control's own scrollbars and any child
-		/// <see cref="ScrollBar"/> controls (e.g. a <see cref="DataGridView"/>'s row/column
-		/// scrollbars). Re-applies on handle creation, since the scrollbar handles may not exist
+		/// Switches a control (e.g. the box of a check box) and its native scrollbars to the dark
+		/// Explorer theme so they are not drawn light in the otherwise dark UI. Handles the
+		/// control's own scrollbars and any child <see cref="ScrollBar"/> controls (e.g. a
+		/// <see cref="DataGridView"/>'s row/column scrollbars). Re-applies on handle creation, since the scrollbar handles may not exist
 		/// yet when the theme is first applied. Best effort: <c>SetWindowTheme</c> simply has no
 		/// visible effect on OS versions that do not support the dark scrollbar theme.
 		/// </summary>
-		private static void EnableDarkScrollBars([NotNull] Control control)
+		private static void EnableDarkExplorerTheme([NotNull] Control control)
 		{
 			void Apply()
 			{
@@ -434,30 +581,37 @@ namespace ProSuite.Commons.UI.WinForms
 			EnableDarkTitleBar((Form) sender);
 		}
 
-		private static readonly ConditionalWeakTable<TabControl, DarkTabControlPainter>
-			_tabPainters = new ConditionalWeakTable<TabControl, DarkTabControlPainter>();
+		private static readonly ConditionalWeakTable<Control, DarkWindowPainter> _painters =
+			new ConditionalWeakTable<Control, DarkWindowPainter>();
 
 		/// <summary>
-		/// Paints the whole tab control (strip, tabs and page frame) dark after the native
-		/// painting. The tab pages are child windows and clipped out, so they paint themselves.
+		/// Paints over the native painting of a control's window, or of a native child window
+		/// found by <c>getWindow</c> from the control's handle, also after handle re-creation.
 		/// </summary>
-		private class DarkTabControlPainter : NativeWindow
+		private abstract class DarkWindowPainter : NativeWindow
 		{
 			private const int WM_PAINT = 0x000F;
 
-			private readonly TabControl _tabControl;
-
-			public DarkTabControlPainter([NotNull] TabControl tabControl)
+			protected DarkWindowPainter([NotNull] Control control,
+			                            [NotNull] Func<IntPtr, IntPtr> getWindow)
 			{
-				_tabControl = tabControl;
-
-				if (tabControl.IsHandleCreated)
+				void Assign()
 				{
-					AssignHandle(tabControl.Handle);
+					IntPtr window = getWindow(control.Handle);
+
+					if (window != IntPtr.Zero)
+					{
+						AssignHandle(window);
+					}
 				}
 
-				tabControl.HandleCreated += (sender, args) => AssignHandle(_tabControl.Handle);
-				tabControl.HandleDestroyed += (sender, args) => ReleaseHandle();
+				if (control.IsHandleCreated)
+				{
+					Assign();
+				}
+
+				control.HandleCreated += (sender, args) => Assign();
+				control.HandleDestroyed += (sender, args) => ReleaseHandle();
 			}
 
 			protected override void WndProc(ref Message m)
@@ -473,7 +627,224 @@ namespace ProSuite.Commons.UI.WinForms
 				}
 			}
 
-			private void Paint([NotNull] Graphics graphics)
+			protected virtual void Paint([NotNull] Graphics graphics) { }
+
+			protected static void DrawArrow([NotNull] Graphics graphics, Rectangle bounds,
+			                                bool up, Color color, [NotNull] Control control)
+			{
+				int size = control.LogicalToDeviceUnits(3);
+				int x = bounds.Left + bounds.Width / 2;
+				int top = bounds.Top + (bounds.Height - size) / 2;
+
+				Point[] points = up
+					                 ? new[]
+					                   {
+						                   new Point(x - size, top + size),
+						                   new Point(x + size, top + size),
+						                   new Point(x, top)
+					                   }
+					                 : new[]
+					                   {
+						                   new Point(x - size, top),
+						                   new Point(x + size, top),
+						                   new Point(x, top + size)
+					                   };
+
+				using (var brush = new SolidBrush(color))
+				{
+					graphics.FillPolygon(brush, points);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Paints the border and the button of a flat combo box dark: the flat style draws them
+		/// with the light system colors.
+		/// </summary>
+		private class DarkComboBoxPainter : DarkWindowPainter
+		{
+			private readonly ComboBox _comboBox;
+
+			public DarkComboBoxPainter([NotNull] ComboBox comboBox) : base(comboBox, h => h)
+			{
+				_comboBox = comboBox;
+			}
+
+			protected override void Paint(Graphics graphics)
+			{
+				var info = new ComboBoxInfo { Size = Marshal.SizeOf(typeof(ComboBoxInfo)) };
+
+				if (! GetComboBoxInfo(Handle, ref info))
+				{
+					return;
+				}
+
+				Rectangle client = _comboBox.ClientRectangle;
+
+				// Also covers the separator left of the button.
+				Rectangle button = Rectangle.FromLTRB(info.ItemRight, 1, client.Right - 1,
+				                                      client.Bottom - 1);
+
+				using (var back = new SolidBrush(_comboBox.BackColor))
+				using (var ring = new Pen(_comboBox.BackColor, 3))
+				using (var border = new Pen(_borderColor))
+				{
+					graphics.FillRectangle(back, button);
+
+					// The inner frame of a disabled combo box is drawn light.
+					graphics.DrawRectangle(ring, 2, 2, client.Width - 5, client.Height - 5);
+					graphics.DrawRectangle(border, 0, 0, client.Width - 1, client.Height - 1);
+				}
+
+				DrawArrow(graphics, button, false,
+				          _comboBox.Enabled ? _textColor : _disabledTextColor, _comboBox);
+			}
+
+			[DllImport("user32.dll")]
+			private static extern bool GetComboBoxInfo(IntPtr comboBox, ref ComboBoxInfo info);
+
+			[StructLayout(LayoutKind.Sequential)]
+			private struct ComboBoxInfo
+			{
+				public int Size;
+				public int ItemLeft, ItemTop, ItemRight, ItemBottom;
+				public int ButtonLeft, ButtonTop, ButtonRight, ButtonBottom;
+				public int ButtonState;
+				public IntPtr Combo, Item, List;
+			}
+		}
+
+		/// <summary>
+		/// Paints vertical spin buttons dark: the visual style draws them light.
+		/// </summary>
+		private class DarkSpinPainter : DarkWindowPainter
+		{
+			private readonly Control _control;
+
+			public DarkSpinPainter([NotNull] Control control,
+			                       [NotNull] Func<IntPtr, IntPtr> getWindow)
+				: base(control, getWindow)
+			{
+				_control = control;
+			}
+
+			protected override void Paint(Graphics graphics)
+			{
+				Rectangle bounds = Rectangle.Truncate(graphics.VisibleClipBounds);
+				int middle = bounds.Top + bounds.Height / 2;
+
+				using (var back = new SolidBrush(_controlBackground))
+				{
+					graphics.FillRectangle(back, bounds);
+				}
+
+				using (var pen = new Pen(_borderColor))
+				{
+					graphics.DrawLine(pen, bounds.Left, bounds.Top, bounds.Left, bounds.Bottom);
+					graphics.DrawLine(pen, bounds.Left, middle, bounds.Right, middle);
+				}
+
+				Color color = _control.Enabled ? _textColor : _disabledTextColor;
+
+				DrawArrow(graphics,
+				          Rectangle.FromLTRB(bounds.Left, bounds.Top, bounds.Right, middle),
+				          true, color, _control);
+				DrawArrow(graphics,
+				          Rectangle.FromLTRB(bounds.Left, middle, bounds.Right, bounds.Bottom),
+				          false, color, _control);
+			}
+		}
+
+		/// <summary>
+		/// Draws the channel of a track bar dark, through the custom draw notification its parent
+		/// reflects to it: the visual style draws the channel light.
+		/// </summary>
+		private class DarkTrackBarPainter : DarkWindowPainter
+		{
+			private const int WM_REFLECT_NOTIFY = 0x2000 + 0x004E;
+			private const int NM_CUSTOMDRAW = -12;
+			private const int CDDS_PREPAINT = 0x00001;
+			private const int CDDS_ITEMPREPAINT = 0x10001;
+			private const int CDRF_SKIPDEFAULT = 0x04;
+			private const int CDRF_NOTIFYITEMDRAW = 0x20;
+			private const int TBCD_CHANNEL = 3;
+
+			public DarkTrackBarPainter([NotNull] TrackBar trackBar) : base(trackBar, h => h) { }
+
+			protected override void WndProc(ref Message m)
+			{
+				if (m.Msg != WM_REFLECT_NOTIFY || ! TryDrawChannel(ref m))
+				{
+					base.WndProc(ref m);
+				}
+			}
+
+			private static bool TryDrawChannel(ref Message m)
+			{
+				var draw = (CustomDraw) Marshal.PtrToStructure(m.LParam, typeof(CustomDraw));
+
+				if (draw.Header.Code != NM_CUSTOMDRAW)
+				{
+					return false;
+				}
+
+				if (draw.DrawStage == CDDS_PREPAINT)
+				{
+					m.Result = (IntPtr) CDRF_NOTIFYITEMDRAW;
+					return true;
+				}
+
+				if (draw.DrawStage != CDDS_ITEMPREPAINT || (int) draw.ItemSpec != TBCD_CHANNEL)
+				{
+					return false;
+				}
+
+				using (Graphics graphics = Graphics.FromHdc(draw.Hdc))
+				using (var brush = new SolidBrush(_disabledTextColor))
+				{
+					graphics.FillRectangle(brush, Rectangle.FromLTRB(draw.Left, draw.Top,
+					                                                 draw.Right, draw.Bottom));
+				}
+
+				m.Result = (IntPtr) CDRF_SKIPDEFAULT;
+				return true;
+			}
+
+			[StructLayout(LayoutKind.Sequential)]
+			private struct NotifyHeader
+			{
+				public IntPtr WindowFrom;
+				public IntPtr IdFrom;
+				public int Code;
+			}
+
+			[StructLayout(LayoutKind.Sequential)]
+			private struct CustomDraw
+			{
+				public NotifyHeader Header;
+				public int DrawStage;
+				public IntPtr Hdc;
+				public int Left, Top, Right, Bottom;
+				public IntPtr ItemSpec;
+				public int ItemState;
+				public IntPtr ItemParam;
+			}
+		}
+
+		/// <summary>
+		/// Paints the whole tab control (strip, tabs and page frame) dark after the native
+		/// painting. The tab pages are child windows and clipped out, so they paint themselves.
+		/// </summary>
+		private class DarkTabControlPainter : DarkWindowPainter
+		{
+			private readonly TabControl _tabControl;
+
+			public DarkTabControlPainter([NotNull] TabControl tabControl) : base(tabControl, h => h)
+			{
+				_tabControl = tabControl;
+			}
+
+			protected override void Paint(Graphics graphics)
 			{
 				using (var dialogBrush = new SolidBrush(_dialogBackground))
 				using (var controlBrush = new SolidBrush(_controlBackground))
