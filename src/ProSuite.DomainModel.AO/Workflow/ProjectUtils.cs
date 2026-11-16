@@ -643,6 +643,29 @@ namespace ProSuite.DomainModel.AO.Workflow
 					       .GetUnqualifiedName(gdbElementName); // don't apply transformer
 		}
 
+		/// <summary>
+		/// Gets the model element name for a feature service table. The "L{layer id}" prefix
+		/// must be removed first: otherwise a model with qualified element names would be
+		/// searched for "database.owner.L10Table", which never exists.
+		/// </summary>
+		[CanBeNull]
+		private static string GetModelElementNameForServiceTable(
+			[NotNull] string gdbDatasetName,
+			[NotNull] IDatasetNameTransformer datasetNameTransformer,
+			[NotNull] DdxModel model,
+			bool isModelMasterDatabase)
+		{
+			if (isModelMasterDatabase)
+			{
+				return ModelServiceUtils.GetMasterDatabaseModelElementName(model, gdbDatasetName);
+			}
+
+			string tableName = ModelServiceUtils.StripFeatureServiceLayerPrefix(gdbDatasetName);
+
+			return GetModelElementNameForChildDatabaseElement(
+				tableName, model, datasetNameTransformer);
+		}
+
 		private static bool IsModelMasterDatabase([NotNull] IWorkspace workspace,
 		                                          [NotNull] ProductionModel model)
 		{
@@ -685,10 +708,15 @@ namespace ProSuite.DomainModel.AO.Workflow
 				return null;
 			}
 
-			string modelName = GetModelElementName(
-				datasetName.Name,
-				project.ChildDatabaseDatasetNameTransformer,
-				model, isModelMasterDatabase);
+			string modelName = isFeatureServiceWorkspace
+				                   ? GetModelElementNameForServiceTable(
+					                   datasetName.Name,
+					                   project.ChildDatabaseDatasetNameTransformer,
+					                   model, isModelMasterDatabase)
+				                   : GetModelElementName(
+					                   datasetName.Name,
+					                   project.ChildDatabaseDatasetNameTransformer,
+					                   model, isModelMasterDatabase);
 
 			_msg.VerboseDebug(
 				() =>
