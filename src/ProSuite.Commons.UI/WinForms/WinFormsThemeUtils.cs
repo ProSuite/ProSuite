@@ -664,10 +664,46 @@ namespace ProSuite.Commons.UI.WinForms
 		private class DarkComboBoxPainter : DarkWindowPainter
 		{
 			private readonly ComboBox _comboBox;
+			[UsedImplicitly] private readonly DisabledEditPainter _editPainter;
 
 			public DarkComboBoxPainter([NotNull] ComboBox comboBox) : base(comboBox, h => h)
 			{
 				_comboBox = comboBox;
+				_editPainter = new DisabledEditPainter(comboBox);
+			}
+
+			/// <summary>
+			/// The edit field of a disabled combo box is drawn light, whatever its BackColor.
+			/// </summary>
+			private class DisabledEditPainter : DarkWindowPainter
+			{
+				private readonly ComboBox _comboBox;
+
+				public DisabledEditPainter([NotNull] ComboBox comboBox)
+					: base(comboBox, h => FindWindowEx(h, IntPtr.Zero, "Edit", null))
+				{
+					_comboBox = comboBox;
+				}
+
+				protected override void Paint(Graphics graphics)
+				{
+					if (_comboBox.Enabled)
+					{
+						return;
+					}
+
+					Rectangle bounds = Rectangle.Truncate(graphics.VisibleClipBounds);
+
+					using (var back = new SolidBrush(_comboBox.BackColor))
+					{
+						graphics.FillRectangle(back, bounds);
+					}
+
+					TextRenderer.DrawText(graphics, _comboBox.Text, _comboBox.Font, bounds,
+					                      _disabledTextColor,
+					                      TextFormatFlags.Left | TextFormatFlags.VerticalCenter |
+					                      TextFormatFlags.NoPadding);
+				}
 			}
 
 			protected override void Paint(Graphics graphics)
