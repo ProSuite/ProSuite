@@ -428,6 +428,14 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 			_msg.Warn(e.Message, e);
 		}
+
+		// ArcGIS Pro does not call HandleKeyUpAsync for a key released while this key-down handler
+		// is still running, so a SHIFT released meanwhile would never end the selection.
+		if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true &&
+		    ! KeyboardUtils.IsShiftDown())
+		{
+			await EndIntermittentSelectionAsync();
+		}
 	}
 
 	protected override async Task ToggleSelectionSketchGeometryTypeAsync(
