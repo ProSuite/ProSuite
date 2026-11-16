@@ -246,6 +246,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 			if (matches == null)
 			{
+				_msg.VerboseDebug(
+					() => $"Feature service table '{gdbDatasetName}' matches no dataset of model " +
+					      $"{model.Name} when comparing names without separators (compared " +
+					      $"letters and digits: {serviceTableKey}, database name: " +
+					      $"'{model.DefaultDatabaseName}', schema owner: " +
+					      $"'{model.DefaultDatabaseSchemaOwner}').");
+
 				return null;
 			}
 
