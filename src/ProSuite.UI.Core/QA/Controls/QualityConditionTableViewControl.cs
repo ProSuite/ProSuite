@@ -171,7 +171,15 @@ namespace ProSuite.UI.Core.QA.Controls
 				}
 				else
 				{
-					graphics.FillRectangle(Brushes.LightGray, cellBounds);
+					// The dark theme darkens the cells; light gray would glare between them.
+					Color back = cellStyle.BackColor.GetBrightness() < 0.5f
+						             ? ControlPaint.Light(cellStyle.BackColor)
+						             : Color.LightGray;
+
+					using (var brush = new SolidBrush(back))
+					{
+						graphics.FillRectangle(brush, cellBounds);
+					}
 				}
 			}
 

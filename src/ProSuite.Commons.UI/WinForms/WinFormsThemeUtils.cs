@@ -397,7 +397,7 @@ namespace ProSuite.Commons.UI.WinForms
 		{
 			toolStrip.BackColor = _dialogBackground;
 			toolStrip.ForeColor = _textColor;
-			toolStrip.Renderer = new ToolStripProfessionalRenderer(new DarkColorTable());
+			toolStrip.Renderer = new DarkToolStripRenderer();
 
 			foreach (ToolStripItem item in toolStrip.Items)
 			{
@@ -1014,6 +1014,64 @@ namespace ProSuite.Commons.UI.WinForms
 
 			TextRenderer.DrawText(graphics, box.Text, box.Font, new Point(textLeft, 0),
 			                      box.Enabled ? box.ForeColor : SystemColors.GrayText);
+		}
+
+		/// <summary>
+		/// The professional renderer draws the top edge of a status strip and the border sides
+		/// of its labels with the light system colors, not with the color table.
+		/// </summary>
+		private class DarkToolStripRenderer : ToolStripProfessionalRenderer
+		{
+			public DarkToolStripRenderer() : base(new DarkColorTable()) { }
+
+			protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+			{
+				if (! (e.ToolStrip is StatusStrip))
+				{
+					base.OnRenderToolStripBorder(e);
+					return;
+				}
+
+				using (var pen = new Pen(_borderColor))
+				{
+					e.Graphics.DrawLine(pen, 0, 0, e.ToolStrip.Width, 0);
+				}
+			}
+
+			protected override void OnRenderToolStripStatusLabelBackground(
+				ToolStripItemRenderEventArgs e)
+			{
+				var label = (ToolStripStatusLabel) e.Item;
+				int right = label.Width - 1;
+				int bottom = label.Height - 1;
+				ToolStripStatusLabelBorderSides sides = label.BorderSides;
+
+				using (var back = new SolidBrush(label.BackColor))
+				using (var pen = new Pen(_borderColor))
+				{
+					e.Graphics.FillRectangle(back, 0, 0, label.Width, label.Height);
+
+					if ((sides & ToolStripStatusLabelBorderSides.Left) != 0)
+					{
+						e.Graphics.DrawLine(pen, 0, 0, 0, bottom);
+					}
+
+					if ((sides & ToolStripStatusLabelBorderSides.Top) != 0)
+					{
+						e.Graphics.DrawLine(pen, 0, 0, right, 0);
+					}
+
+					if ((sides & ToolStripStatusLabelBorderSides.Right) != 0)
+					{
+						e.Graphics.DrawLine(pen, right, 0, right, bottom);
+					}
+
+					if ((sides & ToolStripStatusLabelBorderSides.Bottom) != 0)
+					{
+						e.Graphics.DrawLine(pen, 0, bottom, right, bottom);
+					}
+				}
+			}
 		}
 
 		private class DarkColorTable : ProfessionalColorTable

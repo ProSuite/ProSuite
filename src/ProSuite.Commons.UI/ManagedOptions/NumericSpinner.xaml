@@ -19,7 +19,7 @@
                     <Setter TargetName="br" Property="Background" Value="{DynamicResource ThemeBrushActive}" />
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="false">
-                    <Setter TargetName="br" Property="Background" Value="Silver" />
+                    <Setter TargetName="br" Property="Opacity" Value="0.5" />
                 </Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
