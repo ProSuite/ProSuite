@@ -38,6 +38,8 @@ namespace ProSuite.Commons.UI.WinForms
 		/// </summary>
 		public static void ApplyDarkTheme([NotNull] Form form)
 		{
+			_darkRoots.GetValue(form, _ => new object());
+
 			ApplyDarkTheme((Control) form);
 		}
 
@@ -49,7 +51,27 @@ namespace ProSuite.Commons.UI.WinForms
 		/// </summary>
 		public static void ApplyDarkTheme([NotNull] UserControl control)
 		{
+			_darkRoots.GetValue(control, _ => new object());
+
 			ApplyDarkTheme((Control) control);
+		}
+
+		/// <summary>
+		/// Re-colors <paramref name="dialog"/> to match ArcGIS Pro's dark theme if
+		/// <paramref name="owner"/> is (inside) a form or control that has it. For dialogs that
+		/// a dialog opens in code that cannot ask ArcGIS Pro for its theme.
+		/// </summary>
+		public static void ApplyDarkThemeOfOwner([CanBeNull] IWin32Window owner,
+		                                         [NotNull] Form dialog)
+		{
+			for (var control = owner as Control; control != null; control = control.Parent)
+			{
+				if (_darkRoots.TryGetValue(control, out _))
+				{
+					ApplyDarkTheme(dialog);
+					return;
+				}
+			}
 		}
 
 		/// <summary>
@@ -583,6 +605,10 @@ namespace ProSuite.Commons.UI.WinForms
 
 		private static readonly ConditionalWeakTable<Control, DarkWindowPainter> _painters =
 			new ConditionalWeakTable<Control, DarkWindowPainter>();
+
+		// The forms and hosted controls the dark theme was applied to, for the dialogs they open.
+		private static readonly ConditionalWeakTable<Control, object> _darkRoots =
+			new ConditionalWeakTable<Control, object>();
 
 		/// <summary>
 		/// Paints over the native painting of a control's window, or of a native child window

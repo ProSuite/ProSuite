@@ -883,6 +883,7 @@ namespace ProSuite.UI.Core.QA.Customize
 					{
 						form.TestConfigurationCreator = TestConfigurationCreator;
 						form.SetQualityCondition(editCopy, _testParameterDatasetProvider);
+						WinFormsThemeUtils.ApplyDarkThemeOfOwner(this, form);
 						if (form.ShowDialog(this) != DialogResult.OK)
 						{
 							return;

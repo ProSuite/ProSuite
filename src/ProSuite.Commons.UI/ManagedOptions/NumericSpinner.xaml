@@ -55,14 +55,14 @@
             <Button x:Name="cmdUp" x:FieldModifier="private" Grid.Column="1" Grid.Row="0" Width="Auto" Height="Auto" Click="cmdUp_Click">
                 <Button.Content>
                     <Grid Background="Transparent" Width="18" Height="10">
-                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Black" Data="M4,0 L0,4 L8,4 z" />
+                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M4,0 L0,4 L8,4 z" />
                     </Grid>
                 </Button.Content>
             </Button>
             <Button x:Name="cmdDown" x:FieldModifier="private" Grid.Column="1" Grid.Row="1" Width="Auto" Height="Auto" Click="cmdDown_Click" Padding="10, 5">
                 <Button.Content >
                     <Grid Background="Transparent" Width="18" Height="10">
-                        <Path  HorizontalAlignment="Center" VerticalAlignment="Center"  Fill="Black" Data="M0,0 L8,0 L4,4 z"/>
+                        <Path  HorizontalAlignment="Center" VerticalAlignment="Center"  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M0,0 L8,0 L4,4 z"/>
                     </Grid>
                 </Button.Content>
             </Button>

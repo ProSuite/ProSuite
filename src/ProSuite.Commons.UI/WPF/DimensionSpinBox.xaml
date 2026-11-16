@@ -48,7 +48,7 @@
             <Button Grid.Column="0" Grid.Row="0" Width="Auto" Height="Auto" Click="DecrementValue" IsTabStop="False" Padding="10, 5">
                 <Button.Content >
                     <Grid Background="Transparent" Width="18" Height="10">
-                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,1 L8,1" Stroke="Black" 
+                        <Path HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,1 L8,1" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" 
                                StrokeThickness="2"/>
                     </Grid>
                 </Button.Content>
@@ -82,7 +82,7 @@
             <Button Grid.Column="2" Width="Auto" Height="Auto" Click="IncrementValue" IsTabStop="False">
                 <Button.Content>
                     <Grid Background="Transparent" Width="18" Height="10">
-                        <Path  HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,4 L8,4 M4,8 L4,0" Stroke="Black" 
+                        <Path  HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,4 L8,4 M4,8 L4,0" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" 
                                StrokeThickness="2"/>
                     </Grid>
                 </Button.Content>
