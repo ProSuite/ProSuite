@@ -41,6 +41,11 @@ public abstract class DockPaneViewModelBase : DockPane
 
 		_contentControl.DataContext = this;
 
+		if (ReturnsKeyboardFocus)
+		{
+			KeyboardFocusReturner.Attach(_contentControl);
+		}
+
 		return _contentControl;
 	}
 
@@ -75,6 +80,14 @@ public abstract class DockPaneViewModelBase : DockPane
 	/// default, an add-in that wants the option overrides this in its concrete view model.
 	/// </summary>
 	public virtual bool ShowAlwaysShowOptionsPaneOption => false;
+
+	/// <summary>
+	/// Whether the pane gives the keyboard back to where it came from (typically the map
+	/// view, so that the active tool keeps receiving the keys) when it is shown with the
+	/// focus and after a click into it. Text boxes keep the keyboard until Enter or Escape.
+	/// Meant for tool options panes. Read once, when the pane's content is created.
+	/// </summary>
+	protected virtual bool ReturnsKeyboardFocus => false;
 
 	protected override async void OnShow(bool isVisible)
 	{
