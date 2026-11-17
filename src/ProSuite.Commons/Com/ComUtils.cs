@@ -77,7 +77,7 @@ namespace ProSuite.Commons.Com
 			}
 			catch (Exception e)
 			{
-				_msg.ErrorFormat("Error instantiating object for {0}: {1}",
+				_msg.DebugFormat("Error instantiating object for {0}: {1}",
 				                 progId, e.Message);
 				throw;
 			}
