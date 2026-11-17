@@ -29,7 +29,7 @@
                     <!-- Note: UseLayoutRounding="True" avoids blurry icons -->
                     <StackPanel.Resources>
 
-                        <Style TargetType="{x:Type Button}">
+                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource Esri_SimpleBorderlessButton}">
                             <!-- Make the buttons square -->
                             <Setter Property="MinWidth"
                                     Value="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" />
@@ -174,7 +174,7 @@
             </DockPanel>
 
             <!-- Progress messages and progress bars -->
-            <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Margin="8" UseLayoutRounding="True">
+            <Border Grid.Row="1" BorderBrush="{DynamicResource Esri_BorderBrush}" BorderThickness="1" Margin="8" UseLayoutRounding="True">
                 <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                            Margin="2">
 
@@ -204,7 +204,7 @@
                                Content="Tile info" Visibility="{Binding TileInfoVisible}"
                                HorizontalAlignment="Left" Margin="3,8,0,0" VerticalAlignment="Top" />
 
-                        <Border Grid.Column="1" Grid.Row="1" BorderBrush="DarkGray" BorderThickness="0">
+                        <Border Grid.Column="1" Grid.Row="1" BorderBrush="{DynamicResource Esri_BorderBrush}" BorderThickness="0">
                             <TextBox x:Name="currentTileText" Height="36" Margin="3" VerticalAlignment="Top"
                                      HorizontalAlignment="Stretch" TextWrapping="Wrap" Background="Transparent"
                                      IsReadOnly="True" Text="{Binding TileInfoText, Mode=OneWay}"
@@ -239,8 +239,8 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Warnings" VerticalAlignment="Center" />
-                    <Border Grid.Column="1" BorderBrush="DarkGray" BorderThickness="0">
-                        <TextBox Text="{Binding WarningCount}"
+                    <Border Grid.Column="1" BorderBrush="{DynamicResource Esri_BorderBrush}" BorderThickness="0">
+                        <TextBox Text="{Binding WarningCount}" Foreground="{DynamicResource Esri_TextControlBrush}" BorderBrush="{DynamicResource Esri_BorderBrush}"
                                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2"
                                  HorizontalContentAlignment="Right" VerticalContentAlignment="Center"
                                  FontWeight="Bold" IsReadOnly="True" >
@@ -271,8 +271,8 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Errors" VerticalAlignment="Center" Margin="0,5,0,4" />
-                    <Border Grid.Column="1" BorderBrush="DarkGray" BorderThickness="0">
-                        <TextBox Text="{Binding ErrorCount}"
+                    <Border Grid.Column="1" BorderBrush="{DynamicResource Esri_BorderBrush}" BorderThickness="0">
+                        <TextBox Text="{Binding ErrorCount}" Foreground="{DynamicResource Esri_TextControlBrush}" BorderBrush="{DynamicResource Esri_BorderBrush}"
                                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2"
                                  HorizontalContentAlignment="Right" VerticalContentAlignment="Center"
                                  FontWeight="Bold" IsReadOnly="True" >
@@ -303,7 +303,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0, 0, 5, 0">
 
                     <!-- Save issues button -->
-                    <Button x:Name="saveErrors"
+                    <Button x:Name="saveErrors" Style="{DynamicResource Esri_Button}"
                             Margin="8, 8, 0, 8" Width="100" Height="22" Command="{Binding SaveErrorsCommand}"
                             CommandParameter="{Binding Mode=OneWay}"
                             ToolTip="{Binding SaveErrorsToolTip}"
@@ -316,7 +316,7 @@
                     </Button>
 
                     <!-- Save options triangle -->
-                    <Button x:Name="saveOptions"
+                    <Button x:Name="saveOptions" Style="{DynamicResource Esri_Button}" MinWidth="0" Padding="0"
                             Margin="0, 8, 8, 8" Width="22" Height="22"
                             IsEnabled="{Binding IssueOptionsEnabled}">
                         <b:Interaction.Behaviors>
@@ -340,14 +340,14 @@
                     </Button>
 
                     <!-- Show report button -->
-                    <Button x:Name="showReport" Content="Show Report"
+                    <Button x:Name="showReport" Style="{DynamicResource Esri_Button}" Content="Show Report"
                             Margin="0" Width="100" Height="22" Command="{Binding ShowReportCommand}"
                             CommandParameter="{Binding Mode=OneWay}"
                             ToolTip="{Binding ShowReportToolTip}"
                             ToolTipService.ShowOnDisabled="True" />
 
                     <!-- Close/cancel button -->
-                    <Button x:Name="cancelTests" Content="{Binding CancelButtonText}"
+                    <Button x:Name="cancelTests" Style="{DynamicResource Esri_Button}" Content="{Binding CancelButtonText}"
                             Margin="8" Width="100" Height="22" Command="{Binding CancelCommand}"
                             CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type verificationProgress:VerificationProgressWpfControl}}}" />
 
@@ -355,7 +355,7 @@
             </Grid>
         </Grid>
 
-        <Border DockPanel.Dock="Bottom" Height="28" BorderBrush="DarkGray" BorderThickness="0, 1, 0, 0">
+        <Border DockPanel.Dock="Bottom" Height="28" BorderBrush="{DynamicResource Esri_BorderBrush}" BorderThickness="0, 1, 0, 0">
             <StatusBar Margin="1" Background="{DynamicResource Esri_DialogFrameBackgroundBrush}">
                 <StatusBarItem>
                     <TextBox Text="{Binding StatusText, Mode=OneWay}" Foreground="{Binding StatusTextColor}"
