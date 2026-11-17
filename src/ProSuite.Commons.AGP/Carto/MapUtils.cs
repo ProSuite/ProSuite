@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,8 @@ namespace ProSuite.Commons.AGP.Carto;
 public static class MapUtils
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private static readonly TimeSpan _slowMapLoadDuration = TimeSpan.FromSeconds(2);
 
 	/// <summary>
 	/// Asserts an active MapView.
@@ -819,6 +822,49 @@ public static class MapUtils
 		}
 
 		return false;
+	}
+
+	/// <summary>
+	/// Returns the map of the project item. Pro loads a map that is not open in a view when
+	/// it is first requested, which can take long, for example if a layer has no data source.
+	/// A slow load is logged as a warning. Must be called on the MCT.
+	/// </summary>
+	[CanBeNull]
+	public static Map LoadMap([NotNull] MapProjectItem mapItem)
+	{
+		Stopwatch watch = Stopwatch.StartNew();
+
+		Map map = mapItem.GetMap();
+
+		if (watch.Elapsed >= _slowMapLoadDuration)
+		{
+			_msg.WarnFormat(
+				"Loading map '{0}' took {1:N0} s. Check its layers for missing data sources.",
+				mapItem.Name, watch.Elapsed.TotalSeconds);
+		}
+
+		return map;
+	}
+
+	/// <summary>
+	/// Logs a warning with the names of the layers and standalone tables of the map whose
+	/// data source cannot be found. Must be called on the MCT.
+	/// </summary>
+	public static void WarnAboutLayersWithoutDataSource([NotNull] Map map)
+	{
+		List<string> names = map.GetMapMembersAsFlattenedList()
+		                        .Where(member => member.ConnectionStatus ==
+		                                         ConnectionStatus.Broken)
+		                        .Select(member => member.Name)
+		                        .ToList();
+
+		if (names.Count == 0)
+		{
+			return;
+		}
+
+		_msg.WarnFormat("Map '{0}': {1} layer(s) without a valid data source: {2}",
+		                map.Name, names.Count, StringUtils.Concatenate(names, ", "));
 	}
 
 	public static bool MapHasSurface([NotNull] Map map)
