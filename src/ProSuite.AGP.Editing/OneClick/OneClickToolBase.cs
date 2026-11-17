@@ -442,7 +442,7 @@ public abstract class OneClickToolBase : MapToolBase
 		try
 		{
 			_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
-
+			
 			if (IsCompletingSelectionSketch)
 			{
 				return;
@@ -582,7 +582,7 @@ public abstract class OneClickToolBase : MapToolBase
 		// AllowMultiSelection decides whether the existing selection is kept: single-selection
 		// tools always replace it (New), multi-selection tools honor the precedence (SHIFT = XOR).
 		SelectionCombinationMethod combinationMethod =
-			AllowMultiSelection(out _)
+			AllowMultiSelection(out _) || items.Count == 0
 				? precedence.SelectionCombinationMethod
 				: SelectionCombinationMethod.New;
 

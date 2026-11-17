@@ -52,14 +52,16 @@ public interface IWhiteSelection
 	void ClearGeometryCache();
 
 	/// <summary>
-	/// Reload (given or all) geometries from data store.
-	/// If a geometry is no longer compatible with the current
-	/// shape selection, this shape is removed from the selection!
+	/// Reload (given or all) geometries from layer's datastore.
+	/// If a geometry no longer exists (feature was deleted), it is
+	/// removed from the white selection.
+	/// If a geometry is no longer compatible with the current shape
+	/// selection, this shape is unselected (but remains involved).
 	/// </summary>
 	/// <param name="oids">Optional list of OIDs (if missing: reload all)</param>
 	/// <returns>List updated (shape compatible with selection) and removed
 	/// (shape incompatible with selection) OIDs</returns>
-	List<RefreshInfo> RefreshGeometries(IEnumerable<long> oids = null);
+	List<RefreshInfo> Refresh(IEnumerable<long> oids = null);
 
 	public class RefreshInfo
 	{
@@ -84,6 +86,11 @@ public interface IWhiteSelection
 			return new RefreshInfo(oid, RefreshState.SelectionModified, details);
 		}
 
+		public static RefreshInfo Removed(long oid)
+		{
+			return new RefreshInfo(oid, RefreshState.SelectionRemoved);
+		}
+
 		public override string ToString()
 		{
 			return $"{State} OID {OID} (details: {OptionalDetails ?? "none"})";
@@ -94,6 +101,7 @@ public interface IWhiteSelection
 	{
 		SelectionRetained, // new shape was compatible, selection retained
 		SelectionModified, // incompatible new shape, selection modified (usually cleared)
+		SelectionRemoved // oid in white selection was missing in datastore
 	}
 }
 
@@ -303,10 +311,13 @@ public class WhiteSelection : IWhiteSelection
 		}
 	}
 
+	/// <returns>The set of OIDs not found in layer or null (if all were found)</returns>
 	/// <remarks>Must call on MCT</remarks>
-	private void ReloadGeometries(IReadOnlyList<long> objectIDs)
+	private ISet<long> ReloadGeometries(IReadOnlyList<long> objectIDs)
 	{
-		if (objectIDs is null || objectIDs.Count < 1) return;
+		if (objectIDs is null || objectIDs.Count < 1) return null;
+
+		var lost = new HashSet<long>(objectIDs);
 
 		foreach (var oid in objectIDs)
 		{
@@ -314,7 +325,7 @@ public class WhiteSelection : IWhiteSelection
 		}
 
 		using var featureClass = Layer.GetFeatureClass();
-		if (featureClass is null) return; // layer invalid (during shutdown/map removal/etc)
+		if (featureClass is null) return lost; // layer invalid (during shutdown/map removal/etc)
 
 		using var definition = featureClass.GetDefinition();
 
@@ -326,7 +337,7 @@ public class WhiteSelection : IWhiteSelection
 		filter.ObjectIDs = objectIDs;
 
 		using var cursor = featureClass.Search(filter);
-		if (cursor is null) return; // paranoia
+		if (cursor is null) return lost; // paranoia
 
 		while (cursor.MoveNext())
 		{
@@ -334,7 +345,10 @@ public class WhiteSelection : IWhiteSelection
 			var oid = feature.GetObjectID();
 			var shape = feature.GetShape();
 			_geometryCache[oid] = shape;
+			lost.Remove(oid);
 		}
+
+		return lost.Count > 0 ? lost : null;
 	}
 
 	public void ClearGeometryCache()
@@ -343,16 +357,16 @@ public class WhiteSelection : IWhiteSelection
 	}
 
 	/// <remarks>Must call on MCT</remarks>
-	public List<IWhiteSelection.RefreshInfo> RefreshGeometries(IEnumerable<long> oids = null)
+	public List<IWhiteSelection.RefreshInfo> Refresh(IEnumerable<long> oids = null)
 	{
 		if (oids is null) oids = _shapes.Keys;
 		else oids = oids.Intersect(_shapes.Keys);
 
 		var list = oids.ToList();
 
-		// (re)load into geometry cache:
+		// (re)load geometry cache from layer's datastore:
 
-		ReloadGeometries(list);
+		var lost = ReloadGeometries(list);
 
 		// update on IShapeSelection objects, if still compatible:
 
@@ -360,22 +374,31 @@ public class WhiteSelection : IWhiteSelection
 
 		foreach (var oid in list)
 		{
-			var newShape = GetGeometry(oid);
-			var selection = GetShapeSelection(oid) ??
-			                throw new AssertionException($"No shape selection for OID {oid}");
-
-			bool compatible = selection.IsCompatible(newShape, out string reason);
-
-			selection.UpdateShape(newShape);
-
-			if (compatible)
+			if (lost != null && lost.Contains(oid))
 			{
-				result.Add(IWhiteSelection.RefreshInfo.Retained(oid));
+				// This oid no longer exists (was deleted or whatever):
+				Remove(oid); // completely remove from selection and cache
+				result.Add(IWhiteSelection.RefreshInfo.Removed(oid));
 			}
 			else
 			{
-				selection.Clear();
-				result.Add(IWhiteSelection.RefreshInfo.Modified(oid, reason));
+				var newShape = GetGeometry(oid);
+				var selection = GetShapeSelection(oid) ??
+				                throw new AssertionException($"No shape selection for OID {oid}");
+
+				bool compatible = selection.IsCompatible(newShape, out string reason);
+
+				selection.UpdateShape(newShape);
+
+				if (compatible)
+				{
+					result.Add(IWhiteSelection.RefreshInfo.Retained(oid));
+				}
+				else
+				{
+					selection.Clear(); // unselect vertices, but keep involved
+					result.Add(IWhiteSelection.RefreshInfo.Modified(oid, reason));
+				}
 			}
 		}
 

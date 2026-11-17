@@ -1,11 +1,11 @@
 using System;
 using System.Drawing;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WinForms;
 
 namespace ProSuite.Commons.UI.Env
 {
@@ -125,16 +125,17 @@ namespace ProSuite.Commons.UI.Env
 		[CanBeNull]
 		private IWin32Window ChooseOwner([CanBeNull] IWin32Window owner)
 		{
-			// If not on the UI thread, do not impose the main window from the provider but
-			// what the caller suggested. Otherwise, the following exception occurs:
-			// The calling thread cannot access this object because a different thread owns it
-			// NOTE: Windows can be shown from other STA threads than the Main thread (with limitations)
-			if (Environment.CurrentManagedThreadId != 1 || Thread.CurrentThread.IsBackground)
+			if (owner != null)
 			{
 				return owner;
 			}
 
-			return owner ?? _mainWindowProvider.GetMainWindow();
+			// The user interface thread is not always managed thread 1 (in ArcGIS Pro it is not).
+			IWin32Window mainWindow = _mainWindowProvider.GetMainWindow();
+
+			return mainWindow != null && WinFormUtils.IsCreatedOnCurrentThread(mainWindow)
+				       ? mainWindow
+				       : null;
 		}
 	}
 }

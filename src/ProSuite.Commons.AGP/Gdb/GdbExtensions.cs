@@ -16,7 +16,7 @@ public static class GdbExtensions
 	{
 		if (featureClass is null) return null;
 		var queryFilter = new QueryFilter { ObjectIDs = new[] { oid } };
-		using var cursor = featureClass.Search(queryFilter);
+		using var cursor = featureClass.Search(queryFilter, false);
 		if (! cursor.MoveNext()) return null;
 		return (Feature) cursor.Current;
 	}
@@ -28,7 +28,7 @@ public static class GdbExtensions
 	{
 		if (table is null) return null;
 		var queryFilter = new QueryFilter { ObjectIDs = new[] { oid } };
-		using var cursor = table.Search(queryFilter);
+		using var cursor = table.Search(queryFilter, false);
 		if (! cursor.MoveNext()) return null;
 		return cursor.Current;
 	}

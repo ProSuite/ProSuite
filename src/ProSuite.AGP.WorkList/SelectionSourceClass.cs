@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList;
@@ -11,7 +10,6 @@ public class SelectionSourceClass : SourceClass
 	public List<long> Oids { get; }
 
 	public SelectionSourceClass(GdbTableIdentity tableIdentity,
-	                            SourceClassSchema schema,
 	                            List<long> oids)
 		: base(tableIdentity)
 	{

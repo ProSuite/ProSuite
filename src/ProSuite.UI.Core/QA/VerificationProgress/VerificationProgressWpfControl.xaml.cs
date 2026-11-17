@@ -1,8 +1,15 @@
+using System;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Xaml.Behaviors;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.UI.WPF;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using ToolTip = System.Windows.Controls.ToolTip;
 using TriggerBase = Microsoft.Xaml.Behaviors.TriggerBase;
 
 namespace ProSuite.UI.Core.QA.VerificationProgress
@@ -13,6 +20,9 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 	public partial class VerificationProgressWpfControl : IWinFormHostable
 	{
 		private Form _hostWinForm;
+
+		private ToolTip _clickedToolTip;
+		private FrameworkElement _clickedDisabledElement;
 
 		public VerificationProgressWpfControl()
 		{
@@ -76,6 +86,73 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				{
 					wpfWindow.Closing += vm.Closing;
 				}
+			}
+		}
+
+		/// <summary>
+		/// A disabled element receives no mouse events, the click arrives at the first
+		/// enabled parent. Its tooltip, which gives the reason why it is disabled, is shown
+		/// also on a click because users rarely wait for it to appear on hovering.
+		/// </summary>
+		private void ShowToolTipOfDisabledElement(object sender, MouseButtonEventArgs e)
+		{
+			CloseClickedToolTip(sender, e);
+
+			FrameworkElement disabledElement = FindDisabledElementWithToolTip(e);
+
+			if (disabledElement == null)
+			{
+				return;
+			}
+
+			_clickedDisabledElement = disabledElement;
+			_clickedToolTip = new ToolTip
+			                  {
+				                  Content = disabledElement.ToolTip,
+				                  PlacementTarget = disabledElement,
+				                  Placement = PlacementMode.Bottom,
+				                  StaysOpen = true,
+				                  IsOpen = true
+			                  };
+		}
+
+		private void CloseClickedToolTipWhenMovedAway(object sender, MouseEventArgs e)
+		{
+			if (_clickedToolTip != null &&
+			    FindDisabledElementWithToolTip(e) != _clickedDisabledElement)
+			{
+				CloseClickedToolTip(sender, e);
+			}
+		}
+
+		private FrameworkElement FindDisabledElementWithToolTip(MouseEventArgs e)
+		{
+			// The hit test also finds disabled elements, unlike the routing of mouse events.
+			DependencyObject current = VisualTreeHelper.HitTest(this, e.GetPosition(this))
+			                                           ?.VisualHit;
+
+			while (current != null && current != this)
+			{
+				if (current is FrameworkElement element && ! element.IsEnabled &&
+				    element.ToolTip != null)
+				{
+					return element;
+				}
+
+				current = VisualTreeHelper.GetParent(current);
+			}
+
+			return null;
+		}
+
+		private void CloseClickedToolTip(object sender, EventArgs e)
+		{
+			_clickedDisabledElement = null;
+
+			if (_clickedToolTip != null)
+			{
+				_clickedToolTip.IsOpen = false;
+				_clickedToolTip = null;
 			}
 		}
 

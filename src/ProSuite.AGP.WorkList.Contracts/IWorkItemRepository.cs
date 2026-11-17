@@ -72,6 +72,8 @@ public interface IWorkItemRepository
 	/// </summary>
 	GdbObjectReference? GetCurrentItemReference();
 
+	void BeginUpdateStates();
+
 	void UpdateState(IWorkItem item);
 
 	/// <summary>

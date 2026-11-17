@@ -31,6 +31,15 @@ namespace ProSuite.AGP.QA
 		[CanBeNull]
 		public VerificationParameters Parameters { get; set; }
 
+		/// <summary>
+		/// Creates an execution bound to a workspace and results path for one verification run.
+		/// </summary>
+		[NotNull]
+		public abstract IVerificationExecution CreateExecution(
+			[NotNull] ProjectWorkspace projectWorkspace,
+			[CanBeNull] string resultsPath,
+			[CanBeNull] string contextDisplayName);
+
 		public abstract Task<ServiceCallStatus> Verify(
 			[NotNull] IQualitySpecificationReference qualitySpecificationRef,
 			[CanBeNull] Geometry perimeter,

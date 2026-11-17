@@ -538,7 +538,62 @@ public static class ControlPointUtils
 		}
 	}
 
-	public static int CountControlPoints(Geometry shape) // TODO Move to ControlPointUtils
+	/// <returns>true iff given shape has at least one control point</returns>
+	/// <remarks>Equivalent to <see cref="CountControlPoints"/> > 0 but more efficient</remarks>
+	/// <seealso cref="CountControlPoints"/>
+	public static bool HasControlPoints(Geometry shape)
+	{
+		if (shape is null)
+		{
+			return false;
+		}
+
+		if (shape is MapPoint mapPoint)
+		{
+			return mapPoint.HasID && mapPoint.ID != 0;
+		}
+
+		if (shape is Multipoint multipoint)
+		{
+			if (! multipoint.HasID) return false;
+			var points = multipoint.Points;
+			if (points is null) return false; // paranoia
+			return points.Any(mp => mp.ID != 0);
+		}
+
+		if (shape is Multipart multipart)
+		{
+			if (! multipart.HasID) return false;
+			var points = multipart.Points;
+			if (points is null) return false; // paranoia
+			return points.Any(mp => mp.ID != 0);
+		}
+
+		if (shape is Multipatch multipatch)
+		{
+			if (! multipatch.HasID) return false;
+			var points = multipatch.Points;
+			if (points is null) return false; // paranoia
+			return points.Any(p => p.ID != 0);
+		}
+
+		if (shape is GeometryBag)
+		{
+			// Recurse on each geometry in the bag (beware of cycles?)
+			throw new NotImplementedException("Not yet implemented for GeometryBag geometries");
+		}
+
+		if (shape is Envelope)
+		{
+			return false; // an envelope has no vertices and therefore no control points
+		}
+
+		throw new NotSupportedException($"Unknown geometry type: {shape.GetType().Name}");
+	}
+
+	/// <returns>The number of control points in the given shape</returns>
+	/// <seealso cref="HasControlPoints"/>
+	public static int CountControlPoints(Geometry shape)
 	{
 		if (shape is null)
 		{
@@ -568,12 +623,15 @@ public static class ControlPointUtils
 			return count;
 		}
 
-		if (shape is Multipatch)
+		if (shape is Multipatch multipatch)
 		{
-			throw new NotImplementedException("Not yet implemented for Multipatch geometries");
+			if (!multipatch.HasID) return 0; // performance
+			var points = multipatch.Points;
+			if (points is null) return 0; // paranoia
+			return points.Count(p => p.ID != 0);
 		}
 
-		if (shape is GeometryBag)
+		if (shape is GeometryBag bag)
 		{
 			// Recurse on each geometry in the bag and sum up the counts
 			throw new NotImplementedException("Not yet implemented for GeometryBag geometries");

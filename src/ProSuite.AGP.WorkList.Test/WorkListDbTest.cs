@@ -326,7 +326,7 @@ public class WorkListDbTest
 			SourceClassSchema schema = WorkListUtils.CreateSchema(tableDefinition);
 
 			ISourceClass sourceClass =
-				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
+				new SelectionSourceClass(new GdbTableIdentity(table), oids);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -469,7 +469,7 @@ public class WorkListDbTest
 
 			List<long> oids = new() { 0, 1, 2, 3 };
 			var sourceClass =
-				new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
+				new SelectionSourceClass(new GdbTableIdentity(table), oids);
 
 			sourceClasses.Add(sourceClass);
 		}
@@ -578,9 +578,12 @@ public class WorkListDbTest
 			            };
 		}
 
+		// NOTE: The status values must be boxed as int (not as the IssueCorrectionStatus enum).
+		//       DatabaseSourceClass.GetStatus compares with object.Equals, which is type-strict:
+		//       a boxed enum never equals a boxed int, so every item would load as 'Todo'.
 		return new DbSourceClassSchema(statusField,
-		                               IssueCorrectionStatus.NotCorrected,
-		                               IssueCorrectionStatus.Corrected,
+		                               (int) IssueCorrectionStatus.NotCorrected,
+		                               (int) IssueCorrectionStatus.Corrected,
 		                               subFields);
 	}
 }

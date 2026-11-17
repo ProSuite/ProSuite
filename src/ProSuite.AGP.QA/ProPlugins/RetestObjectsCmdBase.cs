@@ -89,35 +89,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		public async Task<bool> RetestCurrentIssueAsync([CanBeNull] IWorkList workList)
 		{
-			if (SessionContext?.VerificationEnvironment == null)
-			{
-				Dialog.Warning(_caption, "No quality verification environment is configured.");
-				return false;
-			}
-
 			if (! CanRetestCurrentIssue(workList, out string reason))
 			{
 				Dialog.Warning(_caption, reason ?? "Quality verification is not available.");
-				return false;
-			}
-
-			MapView mapView = MapView.Active;
-
-			if (mapView == null)
-			{
-				Dialog.Warning(_caption, "No active map.");
-				return false;
-			}
-
-			IQualityVerificationEnvironment qaEnvironment =
-				Assert.NotNull(SessionContext.VerificationEnvironment);
-
-			IQualitySpecificationReference qualitySpecification =
-				qaEnvironment.CurrentQualitySpecificationReference;
-
-			if (qualitySpecification == null)
-			{
-				Dialog.Warning(_caption, "No quality specification is selected.");
 				return false;
 			}
 
@@ -139,43 +113,18 @@ namespace ProSuite.AGP.QA.ProPlugins
 			// in which case only the involved objects (not a perimeter) are verified.
 			Geometry perimeter = currentItem.Extent;
 
-			var progressTracker = new QualityVerificationProgressTracker
-			                      {
-				                      CancellationTokenSource = new CancellationTokenSource()
-			                      };
-
-			var projectWorkspace = (ProjectWorkspace) SessionContext.ProjectWorkspace;
-			SpatialReference spatialRef = projectWorkspace?.ModelSpatialReference;
-
-			var appController = new AgpBackgroundVerificationController(
-				WorkListOpener, mapView, perimeter, spatialRef,
-				qaEnvironment, SaveAction);
-
-			var qaProgressViewmodel =
-				new VerificationProgressViewModel
-				{
-					ProgressTracker = progressTracker,
-					VerificationAction =
-						() => Verify(involvedRows, perimeter, progressTracker),
-					ApplicationController = appController
-				};
+			var runner = new VerificationCommandRunner(
+				new ProjectWorkspaceVerificationCommandContext(
+					SessionContext, WorkListOpener, SaveAction));
 
 			// For a retest, keep the previously found issues in the work list by default (the merge
 			// adds the newly found issues rather than collapsing the filtered list to just this run).
 			// The user can still uncheck it. Other verification commands keep their own default.
-			qaProgressViewmodel.UpdateOptions.KeepPreviousIssues = true;
-
-			string actionTitle = $"{qualitySpecification.Name}: {_caption}";
-
-			Window window = VerificationProgressWindow.Create(qaProgressViewmodel);
-
-			string backendDisplayName = Assert.NotNullOrEmpty(qaEnvironment.BackendDisplayName);
-
-			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
-			                               backendDisplayName, actionTitle);
-
-			return true;
+			return await runner.VerifySelection(
+				involvedRows, perimeter, _caption,
+				viewModel => viewModel.UpdateOptions.KeepPreviousIssues = true);
 		}
+
 
 		protected override void OnUpdateCore()
 		{
@@ -193,26 +142,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected override async Task<bool> OnClickAsyncCore()
 		{
 			return await RetestCurrentIssueAsync(ActiveIssueWorkList);
-		}
-
-		private async Task<ServiceCallStatus> Verify(
-			[NotNull] IList<Row> involvedObjects,
-			[CanBeNull] Geometry perimeter,
-			[NotNull] QualityVerificationProgressTracker progressTracker)
-		{
-			Task<ServiceCallStatus> verificationTask =
-				await BackgroundTask.Run(
-					() =>
-					{
-						IQualityVerificationEnvironment qaEnvironment =
-							Assert.NotNull(SessionContext.VerificationEnvironment);
-
-						return qaEnvironment.VerifySelection(
-							involvedObjects, perimeter, progressTracker);
-					},
-					BackgroundProgressor.None);
-
-			return await verificationTask;
 		}
 
 		/// <summary>

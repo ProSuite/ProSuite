@@ -346,7 +346,9 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		// such as the ArcGIS Pro stereo snapping shortcuts SHIFT+<key>. Pressing such a
 		// shortcut must not cost the user the construction in progress, so end the
 		// intermittent selection again, which puts the suspended edit sketch back on the map.
-		if (KeyboardUtils.IsShiftDown() && ! KeyboardUtils.IsModifierKey(args.Key))
+		// The tool's own keys, such as P and L for the selection sketch type, are no shortcut.
+		if (KeyboardUtils.IsShiftDown() && ! KeyboardUtils.IsModifierKey(args.Key) &&
+		    IsShiftShortcutKey(args.Key))
 		{
 			_shiftIsPartOfKeyCombination = true;
 
@@ -425,6 +427,14 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			_intermediateSketchStates?.ResetSketchStates();
 
 			_msg.Warn(e.Message, e);
+		}
+
+		// ArcGIS Pro does not call HandleKeyUpAsync for a key released while this key-down handler
+		// is still running, so a SHIFT released meanwhile would never end the selection.
+		if (_intermediateSketchStates?.IsInIntermittentSelectionPhase == true &&
+		    ! KeyboardUtils.IsShiftDown())
+		{
+			await EndIntermittentSelectionAsync();
 		}
 	}
 
