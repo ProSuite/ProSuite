@@ -10,6 +10,9 @@ public interface IWorkItemDetailsPanel
 
 	UserControl CreateDetailsPanelView();
 
-	void Unload();
+	bool CanSelectCurrentFeature(IWorkItem currentItem);
 
+	Task SelectCurrentFeatureAsync();
+
+	public string ToolTipSelectCurrentFeature { get; }
 }

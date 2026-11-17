@@ -323,45 +323,48 @@ public static class PickerUtils
 		return result;
 	}
 
-	public static void Select(List<IPickableItem> items,
+	public static void Select([NotNull] IEnumerable<IPickableItem> items,
 	                          SelectionCombinationMethod selectionMethod)
 	{
-		// No candidate (user clicked into empty space).
-		// Don't clear selection if SelectionCombinationMethod.XOR (press shift).
-		if (items.Count == 0 && selectionMethod == SelectionCombinationMethod.And)
-		{
-			ClearSelection();
-			return;
-		}
+		Dictionary<BasicFeatureLayer, List<long>> oidsByLayer = new();
 
-		// New selection: clear the selection on the map level, NOT on the layer level
-		if (selectionMethod == SelectionCombinationMethod.New)
+		foreach ((BasicFeatureLayer layer, long oid) in GetOidByLayer(items))
 		{
-			ClearSelection();
-		}
-
-		foreach (IPickableFeatureClassItem item in items.OfType<IPickableFeatureClassItem>())
-		{
-			// Important to loop over each layer, they could have different definition queries!
-			foreach (BasicFeatureLayer layer in item.Layers)
+			if (oidsByLayer.TryGetValue(layer, out List<long> oids))
 			{
-				SelectionUtils.SelectRows(layer, selectionMethod, item.Oids.ToList());
+				oids.Add(oid);
+			}
+			else
+			{
+				oidsByLayer.Add(layer, new List<long> { oid });
 			}
 		}
 
-		foreach (var itemsByLayer in items.OfType<IPickableFeatureItem>()
-		                                  .GroupBy(item => item.Layer))
-		{
-			BasicFeatureLayer layer = itemsByLayer.Key;
-			List<long> oids = itemsByLayer.Select(item => item.Oid).ToList();
-
-			SelectionUtils.SelectRows(layer, selectionMethod, oids);
-		}
+		Map map = MapView.Active?.Map;
+		SelectionSet set = SelectionSet.FromDictionary(oidsByLayer);
+		map?.SetSelection(set, selectionMethod);
 	}
 
-	private static void ClearSelection()
+	private static IEnumerable<KeyValuePair<BasicFeatureLayer, long>> GetOidByLayer(
+		IEnumerable<IPickableItem> items)
 	{
-		Map map = MapView.Active?.Map;
-		SelectionUtils.ClearSelection(map);
+		foreach (IPickableItem item in items)
+		{
+			if (item is IPickableFeatureItem featureItem)
+			{
+				yield return KeyValuePair.Create(featureItem.Layer, featureItem.Oid);
+			}
+
+			if (item is IPickableFeatureClassItem featureClassItem)
+			{
+				foreach (BasicFeatureLayer layer in featureClassItem.Layers)
+				{
+					foreach (long oid in featureClassItem.Oids)
+					{
+						yield return KeyValuePair.Create(layer, oid);
+					}
+				}
+			}
+		}
 	}
 }

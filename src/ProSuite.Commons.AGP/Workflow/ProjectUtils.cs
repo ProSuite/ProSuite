@@ -151,6 +151,7 @@ public static class ProjectUtils
 		return SetDefaultProjectUnit(UnitFormatType.Symbol2D, abbreviation, name);
 	}
 
+	/// <remarks>Must run on MCT</remarks>
 	public static bool SetDefaultProjectUnit(UnitFormatType type, string abbreviation,
 	                                         string name = null)
 	{

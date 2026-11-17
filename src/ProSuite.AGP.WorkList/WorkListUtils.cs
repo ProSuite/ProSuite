@@ -186,7 +186,7 @@ public static class WorkListUtils
 
 			SourceClassSchema schema = CreateSchema(tableDefinition);
 
-			yield return new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
+			yield return new SelectionSourceClass(new GdbTableIdentity(table), oids);
 		}
 	}
 
@@ -246,7 +246,7 @@ public static class WorkListUtils
 
 			SourceClassSchema schema = CreateSchema(tableDefinition);
 
-			yield return new SelectionSourceClass(new GdbTableIdentity(table), schema, oids);
+			yield return new SelectionSourceClass(new GdbTableIdentity(table), oids);
 		}
 	}
 

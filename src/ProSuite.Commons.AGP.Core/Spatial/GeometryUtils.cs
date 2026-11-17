@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.Geometry;
@@ -9,6 +6,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Xml;
 using esriGeometryType = ArcGIS.Core.CIM.esriGeometryType;
 
 namespace ProSuite.Commons.AGP.Core.Spatial;
@@ -16,6 +18,14 @@ namespace ProSuite.Commons.AGP.Core.Spatial;
 public static class GeometryUtils
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	/// <summary>
+	/// default search radius when a geometry has no spatial reference (1cm)
+	/// </summary>
+	private const double _defaultSearchRadius = 0.01; // TODO eliminate need for this!
+
+
+	private const int _maxToStringPointCount = 1000;
 
 	public static Coordinate2D Shifted(this Coordinate2D point, double dx, double dy)
 	{
@@ -2439,6 +2449,70 @@ public static class GeometryUtils
 	}
 
 	/// <summary>
+	/// Returns a value indicating if two geometries are exactly equal, i.e.
+	/// all properties are identical (exact numbers compared, no tolerances applied).
+	/// duplicate of <see cref= "K2GeometryUtils.AreEqual"/>
+	/// </summary>
+	/// <param name="firstGeometry">The first geometry.</param>
+	/// <param name="secondGeometry">The second geometry.</param>
+	/// <returns></returns>
+	public static bool AreEqual([CanBeNull] Geometry firstGeometry,
+	                            [CanBeNull] Geometry secondGeometry)
+	{
+		if (ReferenceEquals(firstGeometry, secondGeometry))
+		{
+			// same instance
+			return true;
+		}
+
+		if (firstGeometry == null || secondGeometry == null)
+		{
+			// one is null, the other isn't
+			return false;
+		}
+
+		return firstGeometry.IsEqual(secondGeometry);
+	}
+
+	/// <summary>
+	/// Returns a value indicating if two geometries are equal 
+	/// in XY and within the XY tolerance.
+	/// duplicate of <see cref= "K2GeometryUtils.AreEqualInXY"/>
+	/// </summary>
+	/// <param name="firstGeometry">The first geometry.</param>
+	/// <param name="secondGeometry">The second geometry.</param>
+	/// <returns></returns>
+	public static bool AreEqualInXY([CanBeNull] Geometry firstGeometry,
+	                                [CanBeNull] Geometry secondGeometry)
+	{
+		if (firstGeometry == null && secondGeometry == null)
+		{
+			return true;
+		}
+
+		if (firstGeometry == null || secondGeometry == null)
+		{
+			return false;
+		}
+
+		bool areEqual = GeometryEngine.Instance.Equals(firstGeometry, secondGeometry);
+
+		Geometry difference =
+			GeometryEngine.Instance.SymmetricDifference(firstGeometry, secondGeometry);
+		// return true only if the difference is really empty
+		bool differenceIsEmpty = difference == null || difference.IsEmpty;
+		//areEqual = !differenceIsEmpty;
+
+		if (!areEqual)
+		{
+			return false;
+		}
+
+		return true; // trust Equals() for all other cases
+	}
+
+
+	/// <summary>
 	/// Returns a value indicating if two MapPoints are equal 
 	/// in XY and within the XY tolerance.
 	/// </summary>
@@ -3013,5 +3087,439 @@ public static class GeometryUtils
 		multipointBuilder.AddPointCollection(addPoints);
 
 		return multipointBuilder.ToGeometry();
+	}
+
+	public static bool IsMAware([NotNull] Geometry geometry)
+	{
+		return geometry.HasM;
+	}
+
+	public static bool IsPointIDAware([NotNull] Geometry geometry)
+	{
+		return geometry.HasID;
+	}
+
+	public static bool IsZAware([NotNull] Geometry geometry)
+	{
+		return geometry.HasZ;
+	}
+
+	// TODO This should probably be made obsolete, as the geometry's tolerance may not be well 
+	// defined (may be the minimum default from the map spatial reference!)
+	public static double GetSearchRadius([NotNull] Geometry geometry)
+	{
+		Assert.ArgumentNotNull(geometry, nameof(geometry));
+
+		if (geometry.SpatialReference == null)
+		{
+			return GetDefaultSearchRadius(geometry);
+		}
+
+		double tolerance = GeometryUtils.GetXyTolerance(geometry);
+
+		return double.IsNaN(tolerance)
+			       ? GetDefaultSearchRadius(geometry)
+			       : tolerance;
+	}
+
+	private static double GetDefaultSearchRadius([NotNull] Geometry geometry)
+	{
+		// TODO should be based on xmax/ymax 
+		return _defaultSearchRadius;
+	}
+
+	/// <summary>
+	/// Returns the point index as a global index in the geometry's pointcollection
+	/// </summary>
+	/// <param name="geometry"></param>
+	/// <param name="partIndex">index of the geometry part in the geometry collection</param>
+	/// <param name="pointIndex">index in the part of the geometry</param>
+	/// <returns></returns>
+	public static int GetGlobalIndex([NotNull] MultipartBuilderEx geometry,
+	                                 int partIndex,
+	                                 int pointIndex)
+	{
+		int result = pointIndex;
+
+		// in case of multipoint both partIndex and pointIndex are the same (also by hit test's opinion)
+		if (geometry.GeometryType == GeometryType.Multipoint)
+		{
+			return pointIndex;
+		}
+
+		var collection = geometry;
+
+		if (collection != null && partIndex > 0)
+		{
+			for (var i = 0; i < partIndex; i++)
+			{
+				result += geometry.GetPointCount(i);
+			}
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Add vertex to End
+	/// </summary>
+	/// <param name="geometry"></param>
+	/// <param name="newVertex"></param>
+	/// <param name="partIndex"></param>
+	/// <returns></returns>
+	public static bool AddVertex([NotNull] MultipartBuilderEx geometry, MapPoint newVertex,
+	                             int partIndex = 0)
+	{
+		if (geometry == null || newVertex == null)
+			return false;
+
+		if (partIndex < geometry.PartCount)
+		{
+			int segmentCount = geometry.GetSegmentCount(partIndex);
+			Segment segment = geometry.GetSegment(partIndex, segmentCount - 1);
+
+			MapPoint segmentEndPoint = segment.EndPoint;
+
+			SegmentBuilderEx segmentBuilder = segment.ToBuilder();
+			segmentBuilder.SetEmpty();
+			segmentBuilder.StartPoint = segmentEndPoint;
+			segmentBuilder.EndPoint = newVertex;
+			geometry.AddSegment(segmentBuilder);
+
+			return true;
+		}
+
+		return false;
+	}
+
+
+	#region ToString
+
+	[NotNull]
+	public static string ToString([CanBeNull] MapPoint point)
+	{
+		try
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine("[Point]");
+
+			if (point == null)
+			{
+				sb.AppendLine("Point is null");
+			}
+			else if (point.IsEmpty)
+			{
+				sb.AppendLine("Point is empty");
+			}
+			else
+			{
+				AppendZAware(sb, point);
+				AppendMAware(sb, point);
+
+				sb.AppendFormat("{0} {1} {2} {3}",
+				                point.X, point.Y, point.Z, point.M);
+			}
+
+			return sb.ToString();
+		}
+		catch (Exception e)
+		{
+			return HandleToStringException(e);
+		}
+	}
+
+	[NotNull]
+	public static string ToString([CanBeNull] Multipart path)
+	{
+		var sb = new StringBuilder();
+		sb.AppendLine("[path]");
+
+		if (path == null)
+		{
+			sb.AppendLine("Path is null");
+		}
+		else
+		{
+			AppendPart(sb, path, 0);
+			sb.Append(path.SpatialReference.ToString());
+		}
+
+		return sb.ToString();
+	}
+
+	[NotNull]
+	public static string ToString([CanBeNull] Multipoint multipoint)
+	{
+		try
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine("[Multipoint]");
+
+			if (multipoint == null)
+			{
+				sb.AppendLine("Multipoint is null");
+			}
+			else if (multipoint.IsEmpty)
+			{
+				sb.AppendLine("Multipoint is empty");
+			}
+			else
+			{
+				AppendTotalPointCount(sb, multipoint);
+				AppendIsSimple(sb, multipoint);
+				AppendZAware(sb, multipoint);
+				AppendMAware(sb, multipoint);
+
+				sb.Append(ToString(multipoint.Points,
+				                   _maxToStringPointCount));
+			}
+
+			return sb.ToString();
+		}
+		catch (Exception e)
+		{
+			return HandleToStringException(e);
+		}
+	}
+
+	[NotNull]
+	private static ReadOnlyPointCollection AppendPart([NotNull] StringBuilder sb,
+													  [NotNull] Multipart part,
+													  int totalPointsWritten)
+	{
+		//var points = (IPointCollection)part;
+		ReadOnlyPointCollection points = part.Points;
+		int maxPointCount = Math.Max(0,
+									 _maxToStringPointCount -
+									 totalPointsWritten);
+
+		sb.Append(ToString(points, maxPointCount));
+		return points;
+	}
+
+	private static string ToString([CanBeNull] ReadOnlyPointCollection points,
+								   int maxPointCount)
+	{
+		var sb = new StringBuilder();
+
+		if (points == null)
+		{
+			sb.AppendLine("Point collection is null");
+		}
+		else
+		{
+			AppendPoints(sb, points, maxPointCount);
+		}
+
+		return sb.ToString();
+	}
+
+	private static void AppendTotalPointCount([NotNull] StringBuilder sb,
+											  [CanBeNull] Geometry geometry)
+	{
+		if (geometry == null)
+		{
+			return;
+		}
+
+		sb.AppendFormat("Total point count: {0}", geometry.PointCount);
+		sb.AppendLine();
+	}
+
+	private static void AppendIsSimple([NotNull] StringBuilder sb,
+									   [CanBeNull] Geometry geometry)
+	{
+		try
+		{
+			string value = "n/a";
+
+			if (geometry != null)
+			{
+				bool isSimpleAsFeature = GeometryEngine.Instance.IsSimpleAsFeature(geometry);
+				bool geometryIsKnownSimple = geometry.IsKnownSimple;
+				sb.AppendFormat("Is known simple: {0}", geometryIsKnownSimple);
+				sb.AppendLine();
+			}
+			else
+			{
+				value = "n/a";
+			}
+
+			sb.AppendFormat("Simple: {0}", value);
+			sb.AppendLine();
+		}
+		catch (Exception e)
+		{
+			_msg.Debug("Error in simple check.", e);
+
+			sb.AppendFormat(
+				"Simple: Unable to determine if geometry simple or not ({0}).",
+				e.Message);
+			sb.AppendLine();
+		}
+	}
+
+	private static void AppendZAware([NotNull] StringBuilder sb,
+									 [CanBeNull] Geometry geometry)
+	{
+		bool isZAware = IsZAware(geometry);
+		sb.AppendFormat("Z Aware: {0}", isZAware);
+		sb.AppendLine();
+	}
+
+	private static void AppendMAware([NotNull] StringBuilder sb,
+									 [CanBeNull] Geometry geometry)
+	{
+		bool isMAware = IsMAware(geometry);
+		sb.AppendFormat("M Aware: {0}", isMAware);
+		sb.AppendLine();
+	}
+
+	private static void AppendPoints([NotNull] StringBuilder sb,
+									 [NotNull] ReadOnlyPointCollection points,
+									 int maxPointCount)
+	{
+		const bool printPointID = false;
+		AppendPoints(sb, points, printPointID, maxPointCount);
+	}
+
+	private static void AppendPoints([NotNull] StringBuilder sb,
+									 [NotNull] ReadOnlyPointCollection points,
+									 bool printPointID,
+									 int maxPointCount)
+	{
+		sb.AppendFormat("Point count: {0}", points.Count);
+		sb.AppendLine();
+
+		//var maware = points as IMAware;
+		bool printM = false; //maware != null && maware.MAware;
+
+		//var zaware = points as IZAware;
+		bool printZ = false; //zaware != null && zaware.ZAware;
+
+		int pointCount = points.Count;
+
+		int startSkipIndex = maxPointCount - 1;
+		int endSkipIndex = pointCount - 1; // always write the end point
+		int skippedCount = pointCount - maxPointCount;
+
+		for (var pointIndex = 0; pointIndex < pointCount; pointIndex++)
+		{
+			if (pointIndex > startSkipIndex && pointIndex < endSkipIndex)
+			{
+				// skip point
+				continue;
+			}
+
+			if (pointIndex == startSkipIndex)
+			{
+				sb.AppendFormat("... skipping {0} point{1} ...",
+								skippedCount, skippedCount == 1
+												  ? string.Empty
+												  : "s");
+			}
+			else
+			{
+				var templatePoint = points[pointIndex];
+
+				AppendPoint(templatePoint, sb, pointIndex, printZ, printM,
+							printPointID);
+			}
+
+			sb.AppendLine();
+		}
+	}
+
+	private static void AppendPoint([NotNull] MapPoint point,
+									[NotNull] StringBuilder sb,
+									int pointIndex,
+									bool printZ,
+									bool printM,
+									bool printPointID)
+	{
+		double x = point.X;
+		double y = point.Y;
+
+		printZ = IsZAware(point);
+		printM = IsMAware(point);
+
+		sb.AppendFormat("{0}: {1} {2}", pointIndex, x, y);
+
+		if (printZ)
+		{
+			sb.AppendFormat(" z:{0}", point.Z);
+		}
+
+		if (printM)
+		{
+			sb.AppendFormat(" m:{0}", point.M);
+		}
+
+		if (printPointID)
+		{
+			sb.AppendFormat(" id:{0}", point.ID);
+		}
+	}
+
+	[NotNull]
+	private static string HandleToStringException(Exception e)
+	{
+		string msg = string.Format("Error converting to string: {0}",
+		                           e.Message);
+		_msg.Debug(msg, e);
+		return msg;
+	}
+
+	#endregion ToString
+
+	public static void ToXmlFile([NotNull] Geometry geometry,
+	                             [NotNull] string filePath)
+	{
+		Assert.ArgumentNotNull(geometry, nameof(geometry));
+		Assert.ArgumentNotNullOrEmpty(filePath, nameof(filePath));
+
+		var xmlString = geometry.ToXml();
+
+		var doc = new XmlDocument();
+		doc.LoadXml(xmlString);
+		doc.Save(filePath);
+	}
+
+	public static bool HasUniqueVertexId(Geometry geometry, out int vertexId)
+	{
+		var singlePoint = geometry as MapPoint;
+		if (singlePoint != null)
+		{
+			vertexId = singlePoint.ID;
+
+			//return true;
+			return singlePoint.HasID && singlePoint.ID != 0;
+		}
+
+		int? idResult = null;
+		vertexId = 0;
+		if (geometry.HasID && geometry is Multipart multipartGeom)
+		{
+			ReadOnlyPointCollection points = multipartGeom.Points;
+			foreach (MapPoint testPoint in points)
+			{
+				int currentId = testPoint.ID;
+				if (idResult == null)
+				{
+					idResult = currentId;
+				}
+				else if (idResult != currentId)
+				{
+					return false;
+				}
+			}
+			if (idResult.HasValue)
+			{
+				vertexId = idResult.Value;
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

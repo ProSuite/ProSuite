@@ -636,7 +636,6 @@ public static class DatasetUtils
 		// Table ID and name are equal. The tables could still be in different databases.
 		using Datastore datastore1 = table1.GetDatastore();
 		using Datastore datastore2 = table2.GetDatastore();
-
 		return requireSameVersion
 			       ? WorkspaceUtils.IsSameVersion(datastore1, datastore2)
 			       : WorkspaceUtils.IsSameDatabase(datastore1, datastore2);

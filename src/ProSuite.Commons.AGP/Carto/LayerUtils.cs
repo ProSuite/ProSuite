@@ -275,9 +275,14 @@ public static class LayerUtils
 			                 ? definitions.First()
 			                 : definitions.First(predicate);
 
-		return definition is CIMFeatureLayer featureLayer
-			       ? featureLayer.Renderer
-			       : null;
+		if (definition is CIMFeatureLayer featureLayer)
+		{
+			return featureLayer.Renderer;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	/// <summary>
@@ -351,6 +356,40 @@ public static class LayerUtils
 			       Name = alias,
 			       MapMemberPosition = MapMemberPosition.AddToTop
 		       };
+	}
+
+	[NotNull]
+	public static FeatureLayer CreateFeatureLayer([NotNull] MapView mapView,
+	                                              [NotNull] string layerPath,
+	                                              MapMemberPosition mapMemberPosition,
+	                                              FeatureClass dataSource = null)
+	{
+		LayerDocument layerDocument = OpenLayerDocument(layerPath);
+
+		CIMLayerDocument cim = layerDocument.GetCIMLayerDocument();
+		var layerParams = new FeatureLayerCreationParams(cim)
+		                  {
+			                  MapMemberPosition = mapMemberPosition
+		                  };
+
+		FeatureLayer featureLayer = CreateFeatureLayer(layerParams, mapView.Map);
+		Assert.NotNull(featureLayer);
+
+		if (dataSource != null)
+		{
+			featureLayer.ReplaceDataSource(dataSource);
+		}
+
+		return featureLayer;
+	}
+
+	[CanBeNull]
+	private static FeatureLayer CreateFeatureLayer(
+		[NotNull] FeatureLayerCreationParams layerCreationParams,
+		[NotNull] ILayerContainerEdit layerContainer)
+	{
+		return LayerFactory.Instance.CreateLayer<FeatureLayer>(
+			layerCreationParams, layerContainer);
 	}
 
 	/// <summary>
@@ -1011,6 +1050,25 @@ public static class LayerUtils
 		}
 	}
 
+	public static void Flatten<T>([NotNull] IEnumerable<Layer> layers,
+	                              [NotNull] ref ICollection<T> flattenedLayers) where T : Layer
+	{
+		foreach (Layer layer in layers)
+		{
+			if (layer is ILayerContainer container)
+			{
+				Flatten(container.Layers.OfType<T>(), ref flattenedLayers);
+			}
+			else
+			{
+				if (layer is T layerOfType)
+				{
+					flattenedLayers.Add(layerOfType);
+				}
+			}
+		}
+	}
+
 	public static void SetDisplayExpression([NotNull] BasicFeatureLayer layer,
 	                                        [NotNull] string expression)
 	{
@@ -1044,5 +1102,22 @@ public static class LayerUtils
 		definition.FeatureTable.DisplayField = fieldName;
 		layer.SetDefinition(definition);
 #endif
+	}
+
+	public static bool HasGroupLayerAsParent(Layer layer, List<string> groupLayerNames)
+	{
+		if (layer.Parent is Map)
+		{
+			return false;
+		}
+
+		var parent = (GroupLayer)layer.Parent;
+		Assert.NotNull(parent);
+		if (groupLayerNames.Contains(parent.Name))
+		{
+			return true;
+		}
+
+		return HasGroupLayerAsParent(parent, groupLayerNames);
 	}
 }
