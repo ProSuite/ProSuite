@@ -27,6 +27,15 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		// Dark tones of the state colors, under light text.
+		private static readonly SolidColorBrush _darkText = CreateBrush("#D1D1D1");
+		private static readonly SolidColorBrush _darkErrorText = CreateBrush("#F28B82");
+		private static readonly SolidColorBrush _darkFinished = CreateBrush("#2E6B30");
+		private static readonly SolidColorBrush _darkCancelled = CreateBrush("#8A5A00");
+		private static readonly SolidColorBrush _darkFailed = CreateBrush("#9E2B25");
+		private static readonly SolidColorBrush _darkErrors = CreateBrush("#7A2A2A");
+		private static readonly SolidColorBrush _darkWarnings = CreateBrush("#6B5B00");
+
 		#region Field declarations
 
 		private int _warningCount;
@@ -44,7 +53,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 		private ICommand _showReportCommand;
 		private RelayCommand<VerificationProgressViewModel> _saveErrorsCommand;
 		private string _statusText;
-		private Brush _statusTextColor = Brushes.Black;
+		private Brush _statusTextColor;
 		private string _tileInfoText;
 		private Visibility _tileInfoVisible;
 		private string _detailProgressText;
@@ -278,11 +287,37 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			}
 		}
 
+		/// <summary>
+		/// Whether the host shows ArcGIS Pro's dark theme: the state colors become dark tones
+		/// under light text. Set it before the verification starts.
+		/// </summary>
+		public bool UseDarkTheme { get; set; }
+
+		/// <summary>
+		/// The text on the state colors.
+		/// </summary>
+		public Brush TextColor => Themed(Brushes.Black, _darkText);
+
 		public SolidColorBrush ErrorTextBoxBackColor =>
-			ErrorCount > 0 ? Brushes.Salmon : Brushes.Transparent;
+			ErrorCount > 0 ? Themed(Brushes.Salmon, _darkErrors) : Brushes.Transparent;
 
 		public SolidColorBrush WarningTextBoxBackColor =>
-			WarningCount > 0 ? Brushes.Yellow : Brushes.Transparent;
+			WarningCount > 0 ? Themed(Brushes.Yellow, _darkWarnings) : Brushes.Transparent;
+
+		private SolidColorBrush Themed([NotNull] SolidColorBrush light,
+		                               [NotNull] SolidColorBrush dark)
+		{
+			return UseDarkTheme ? dark : light;
+		}
+
+		[NotNull]
+		private static SolidColorBrush CreateBrush([NotNull] string color)
+		{
+			var brush = new SolidColorBrush((Color) ColorConverter.ConvertFromString(color));
+			brush.Freeze();
+
+			return brush;
+		}
 
 		public int WarningCount
 		{
@@ -328,7 +363,7 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 
 		public Brush StatusTextColor
 		{
-			get => _statusTextColor;
+			get => _statusTextColor ?? TextColor;
 			set
 			{
 				_statusTextColor = value;
@@ -616,20 +651,20 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 				}
 				else if (result == ServiceCallStatus.Cancelled)
 				{
-					StatusTextColor = Brushes.Maroon;
+					StatusTextColor = Themed(Brushes.Maroon, _darkErrorText);
 					StatusText = $"Verification cancelled after {timeSpanDisplay}";
 				}
 				else
 				{
 					// Failed (keep the error message from the last progress)
-					StatusTextColor = Brushes.Maroon;
+					StatusTextColor = Themed(Brushes.Maroon, _darkErrorText);
 				}
 			}
 			catch (Exception exception)
 			{
 				_msg.Debug("Error verifying quality in the background", exception);
 
-				StatusTextColor = Brushes.Maroon;
+				StatusTextColor = Themed(Brushes.Maroon, _darkErrorText);
 				StatusText = $"Error: {exception.Message}";
 
 				result = ServiceCallStatus.Failed;
@@ -645,13 +680,13 @@ namespace ProSuite.UI.Core.QA.VerificationProgress
 			switch (result)
 			{
 				case ServiceCallStatus.Failed:
-					RunningProgressBackColor = Brushes.OrangeRed;
+					RunningProgressBackColor = Themed(Brushes.OrangeRed, _darkFailed);
 					break;
 				case ServiceCallStatus.Cancelled:
-					RunningProgressBackColor = Brushes.SandyBrown;
+					RunningProgressBackColor = Themed(Brushes.SandyBrown, _darkCancelled);
 					break;
 				case ServiceCallStatus.Finished:
-					RunningProgressBackColor = Brushes.PaleGreen;
+					RunningProgressBackColor = Themed(Brushes.PaleGreen, _darkFinished);
 					break;
 			}
 

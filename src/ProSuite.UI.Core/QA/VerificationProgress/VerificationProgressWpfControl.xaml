@@ -11,9 +11,6 @@
              PreviewMouseLeftButtonDown="ShowToolTipOfDisabledElement"
              PreviewMouseMove="CloseClickedToolTipWhenMovedAway"
              MouseLeave="CloseClickedToolTip">
-    <UserControl.Resources>
-        <commonswpf:BoolToColorBrushConverter x:Key="BoolToColorBrushConverter" />
-    </UserControl.Resources>
     <UserControl.DataContext>
         <verificationProgress:VerificationProgressViewModel />
     </UserControl.DataContext>
@@ -172,6 +169,7 @@
                 <Label Content="{Binding RunningProgressTypeText}"
                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
                        Margin="0,0,4,0"
+                       Foreground="{Binding TextColor}"
                        Background="{Binding RunningProgressBackColor}" />
             </DockPanel>
 
@@ -312,7 +310,8 @@
                             ToolTipService.ShowOnDisabled="True">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <!-- <Image Source="/ProSuite.UI.Core;component/Properties/Images/Save.png" Stretch="None" /> -->
-                            <Label Padding="0, 0, 0, 0" Foreground="Black">Update Issues</Label>
+                            <Label Padding="0, 0, 0, 0"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}">Update Issues</Label>
                         </StackPanel>
                     </Button>
 
@@ -325,9 +324,7 @@
                         </b:Interaction.Behaviors>
                         <Button.Content>
                             <Path VerticalAlignment="Center" Margin="1,2,1,0"
-                                  Fill="{Binding IssueOptionsEnabled, 
-                Converter={StaticResource BoolToColorBrushConverter}, 
-                ConverterParameter=Black;DarkGray, Mode=OneWay}"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                   Data="M 0 0 L 5 5 L 10 0 Z" />
                         </Button.Content>
                         <Button.ContextMenu>
@@ -359,7 +356,7 @@
         </Grid>
 
         <Border DockPanel.Dock="Bottom" Height="28" BorderBrush="DarkGray" BorderThickness="0, 1, 0, 0">
-            <StatusBar Margin="1" Background="#F7F8F8">
+            <StatusBar Margin="1" Background="{DynamicResource Esri_DialogFrameBackgroundBrush}">
                 <StatusBarItem>
                     <TextBox Text="{Binding StatusText, Mode=OneWay}" Foreground="{Binding StatusTextColor}"
                              Background="Transparent" BorderThickness="0" IsReadOnly="True" />
