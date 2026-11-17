@@ -467,7 +467,7 @@ public abstract class FillHoleToolBase : TwoPhaseEditToolBase
 
 		viewModel.Options = _fillHoleToolOptions;
 
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

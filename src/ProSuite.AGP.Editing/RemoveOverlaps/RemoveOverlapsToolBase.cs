@@ -572,7 +572,7 @@ public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 
 		viewModel.Options = _removeOverlapsToolOptions;
 
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

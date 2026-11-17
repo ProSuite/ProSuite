@@ -473,7 +473,7 @@ public abstract class MergeFeaturesToolBase : OneClickToolBase
 		viewModel.Options = _mergeToolOptions;
 		viewModel.ShowPreventInconsistentAttributesOption = ShowPreventInconsistentAttributesOption;
 
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

@@ -470,7 +470,7 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 
 		viewModel.Options = _advancedReshapeToolOptions;
 
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

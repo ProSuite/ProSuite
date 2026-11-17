@@ -432,7 +432,7 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 		}
 
 		viewModel.Options = _reshapeAlongToolOptions;
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

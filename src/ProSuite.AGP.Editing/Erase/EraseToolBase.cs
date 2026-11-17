@@ -263,7 +263,7 @@ public abstract class EraseToolBase : ConstructionToolBase
 		}
 
 		viewModel.Options = _eraseToolOptions;
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

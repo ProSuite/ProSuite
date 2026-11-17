@@ -446,7 +446,7 @@ public abstract class ChopperToolBase : TopologicalCrackingToolBase
 
 		viewModel.Options = _chopperToolOptions;
 
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

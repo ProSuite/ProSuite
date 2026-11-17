@@ -528,7 +528,7 @@ public abstract class AdvancedGeneralizeToolBase : TwoPhaseEditToolBase
 
 		viewModel.Options = _generalizeToolOptions;
 
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

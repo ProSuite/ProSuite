@@ -261,7 +261,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		}
 
 		viewModel.Options = _cutAlongToolOptions;
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

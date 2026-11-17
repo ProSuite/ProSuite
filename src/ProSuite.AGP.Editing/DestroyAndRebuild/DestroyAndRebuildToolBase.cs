@@ -454,7 +454,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 		viewModel.Options = _destroyAndRebuildToolOptions;
 
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()

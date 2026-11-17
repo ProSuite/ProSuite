@@ -484,7 +484,7 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 		DockPaneRepairGeometryViewModelBase viewModel = GetOptionsViewModel();
 		Assert.NotNull(viewModel);
 		viewModel.Options = _repairGeometryToolOptions;
-		viewModel.Activate(true);
+		viewModel.Activate(false);
 	}
 
 	protected override void HideOptionsPane()
