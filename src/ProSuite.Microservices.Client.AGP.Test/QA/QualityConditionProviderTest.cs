@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -59,6 +60,33 @@ namespace ProSuite.Microservices.Client.AGP.Test.QA
 			provider.GetCondition("TLM.bauGEB: Simple Geometrie");
 
 			Assert.AreEqual(string.Empty, client.ConditionRequests[0].Environment);
+		}
+
+		[Test]
+		public void CanExplainUnreachableServiceWhenGettingConditionByName()
+		{
+			var client = new UnreachableDdxClient();
+
+			var provider = new QualityConditionProvider(client);
+
+			var exception = Assert.Throws<InvalidOperationException>(
+				() => provider.GetCondition("TLM.bauGEB: Simple Geometrie"));
+
+			Assert.AreEqual(DdxUtils.ServiceUnreachableMessage, exception.Message);
+		}
+
+		/// <summary>
+		/// Fails like a client whose server does not answer.
+		/// </summary>
+		private class UnreachableDdxClient
+			: QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient
+		{
+			public override GetConditionResponse GetQualityCondition(
+				GetConditionRequest request, CallOptions options)
+			{
+				throw new RpcException(new Status(StatusCode.Unavailable,
+				                                  "Error connecting to subchannel."));
+			}
 		}
 
 		/// <summary>

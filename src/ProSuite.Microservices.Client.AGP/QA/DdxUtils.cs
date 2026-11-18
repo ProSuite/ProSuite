@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -43,6 +44,11 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			"The quality verification server has no access to the data dictionary. " +
 			"If the server runs on this computer, its log file contains the reason. " +
 			"Otherwise, please contact the server administrator.";
+
+		public const string ServiceUnreachableMessage =
+			"The quality verification microservice is not running or cannot be reached. " +
+			"Quality verification, quality specifications and quality conditions are not " +
+			"available until it can be reached again.";
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidatesAsync(
 			[NotNull] IEnumerable<Table> tables,
@@ -206,6 +212,38 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			                 result.Count, conditionIds.Count);
 
 			return result;
+		}
+
+		/// <exception cref="InvalidOperationException">The quality verification microservice
+		/// cannot be reached or has no access to the data dictionary.</exception>
+		/// <exception cref="TimeoutException">The quality verification microservice did not
+		/// answer in time.</exception>
+		public static QualityCondition LoadQualityCondition(
+			[NotNull] string qualityConditionName,
+			[CanBeNull] ISupportedInstanceDescriptors supportedInstanceDescriptors,
+			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient,
+			[CanBeNull] string ddxEnvironment = null)
+		{
+			var request = new GetConditionRequest
+			              {
+				              Environment = ProtobufGeomUtils.NullToEmpty(ddxEnvironment),
+				              ConditionName = qualityConditionName
+			              };
+
+			GetConditionResponse response =
+				TryDataDictionaryCall(
+					callOptions => ddxClient.GetQualityCondition(request, callOptions),
+					CancellationToken.None, _timeoutMilliseconds);
+
+			if (response == null)
+			{
+				throw new TimeoutException(
+					$"The quality verification microservice did not answer within " +
+					$"{_timeoutMilliseconds / 1000} seconds. The quality condition " +
+					$"{qualityConditionName} was not loaded.");
+			}
+
+			return CreateQualityCondition(response, supportedInstanceDescriptors);
 		}
 
 		[NotNull]
@@ -1036,6 +1074,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			{
 				throw new InvalidOperationException(_dataDictionaryUnavailableMessage, e);
 			}
+			catch (Exception e) when (IsServiceUnreachable(e))
+			{
+				throw new InvalidOperationException(ServiceUnreachableMessage, e);
+			}
 		}
 
 		private static T TryDataDictionaryCall<T>(
@@ -1051,6 +1093,27 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			{
 				throw new InvalidOperationException(_dataDictionaryUnavailableMessage, e);
 			}
+			catch (Exception e) when (IsServiceUnreachable(e))
+			{
+				throw new InvalidOperationException(ServiceUnreachableMessage, e);
+			}
+		}
+
+		/// <summary>
+		/// The connection to the server cannot be established: status Unavailable when the host
+		/// does not answer or refuses the connection, status Internal with an HTTP request error
+		/// when the secure connection (SSL) fails.
+		/// </summary>
+		private static bool IsServiceUnreachable(Exception exception)
+		{
+			if (exception.InnerException is not RpcException rpcException)
+			{
+				return false;
+			}
+
+			return rpcException.StatusCode == StatusCode.Unavailable ||
+			       (rpcException.StatusCode == StatusCode.Internal &&
+			        rpcException.Status.DebugException is HttpRequestException);
 		}
 
 		/// <summary>
