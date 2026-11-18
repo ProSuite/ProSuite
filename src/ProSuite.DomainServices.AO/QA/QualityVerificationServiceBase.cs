@@ -429,7 +429,8 @@ namespace ProSuite.DomainServices.AO.QA
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
 			IList<QualitySpecificationElement> newDisabledElements =
-				qualitySpecification.DisableNonApplicableElements(GetVerifiedDatasets());
+				qualitySpecification.DisableNonApplicableElements(
+					GetVerifiedDatasets(), verifiesSelection: _selection != null);
 
 			QualityVerification qualityVerification;
 

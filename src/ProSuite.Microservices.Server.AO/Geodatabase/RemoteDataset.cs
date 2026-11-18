@@ -266,13 +266,14 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		}
 
 		[NotNull]
-		private static GdbData ConfirmDataReceived([CanBeNull] DataVerificationRequest moreData,
-		                                           [NotNull] DataRequest forRequest)
+		private GdbData ConfirmDataReceived([CanBeNull] DataVerificationRequest moreData,
+		                                    [NotNull] DataRequest forRequest)
 		{
 			if (moreData == null)
 			{
 				throw new IOException(
-					$"The client failed to provide more data upon request {forRequest}");
+					$"The client failed to provide data from {_schema.Name} " +
+					$"upon request {forRequest}");
 			}
 
 			GdbData gdbData = moreData.Data;
@@ -282,10 +283,14 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 				return gdbData;
 			}
 
+			// The client's error message ends with a period and, for newer clients, contains
+			// the client's exception including its stack trace.
 			string errorMessage = moreData.ErrorMessage;
 
 			throw new DataAccessException(
-				$"Error reading data for request: {errorMessage}. {Environment.NewLine}" +
+				$"The client failed to read data from {_schema.Name} " +
+				$"(where clause: {forRequest.WhereClause}). Client error:{Environment.NewLine}" +
+				$"{errorMessage}{Environment.NewLine}" +
 				$"Request:{Environment.NewLine}{forRequest}");
 		}
 

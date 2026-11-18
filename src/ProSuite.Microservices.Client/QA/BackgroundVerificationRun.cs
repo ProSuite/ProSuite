@@ -243,7 +243,16 @@ namespace ProSuite.Microservices.Client.QA
 			return result;
 		}
 
-		private static async Task<bool> SatisfyDataRequestAsync(
+		/// <summary>
+		/// Answers a schema or data request of the server by writing the requested schema or
+		/// data to the stream. If the data cannot be provided, the error message is written to
+		/// the stream instead, so that the server can report it.
+		/// </summary>
+		/// <param name="arg">The server's message containing the schema or data request.</param>
+		/// <param name="verificationDataProvider">The provider that reads the data.</param>
+		/// <param name="callRequestStream">The stream to the server.</param>
+		/// <returns>Whether the request was answered with the schema or the data.</returns>
+		public static async Task<bool> SatisfyDataRequestAsync(
 			[NotNull] DataVerificationResponse arg,
 			[NotNull] IVerificationDataProvider verificationDataProvider,
 			[NotNull] IClientStreamWriter<DataVerificationRequest> callRequestStream)
@@ -295,12 +304,16 @@ namespace ProSuite.Microservices.Client.QA
 					}
 					catch (Exception e)
 					{
-						_msg.Debug("Error handling data request", e);
+						// The verification fails on the server because of this error. Log it
+						// with its stack trace and send the stack trace to the server, too,
+						// because the server log is often the only log that is available.
+						_msg.Warn($"Error providing data for the server's request {dataRequest}", e);
 
 						await callRequestStream.WriteAsync(
 							new DataVerificationRequest
 							{
-								ErrorMessage = ExceptionUtils.FormatMessage(e)
+								ErrorMessage = $"{ExceptionUtils.FormatMessage(e)}" +
+								               $"{Environment.NewLine}Client exception: {e}"
 							});
 						return false;
 					}

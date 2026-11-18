@@ -355,12 +355,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			EnsureKeyFieldNames();
 
-			string originalSubfields = filter?.SubFields;
-
-			if (filter == null)
-			{
-				filter = new AoTableFilter();
-			}
+			// Work on a copy: the caller uses its filter again, also after this method threw
+			// (e.g. GetJoinedRows tries the where clause on the left table first and falls back
+			// on failure). Changing the caller's SubFields here made the fallback read only the
+			// key and OID of the other table (TLMQA-455, TLMQA-695).
+			filter = filter?.Clone() ?? new AoTableFilter();
 
 			filter.SubFields = GeometryClassKeyField;
 
@@ -391,13 +390,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			IEnumerable<IReadOnlyRow> leftFeatures =
 				queryLeftTableFirst ? GeometryEndClass.EnumRows(filter, true) : null;
 
-			IDictionary<string, IList<IReadOnlyRow>> otherRows =
-				GetOtherRowsByFeatureKey(leftFeatures, otherSubFields);
-
-			// Revert the filter change:
-			filter.SubFields = originalSubfields;
-
-			return otherRows;
+			return GetOtherRowsByFeatureKey(leftFeatures, otherSubFields);
 		}
 
 		private IDictionary<string, IList<IReadOnlyRow>> GetOtherRowsByFeatureKey(

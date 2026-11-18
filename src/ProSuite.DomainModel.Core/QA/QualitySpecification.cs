@@ -519,14 +519,22 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Disables all specification elements that have no dataset in editableDatasets
 		/// </summary>
 		/// <param name="verifiedDatasets"></param>
+		/// <param name="verifiesSelection">Whether only selected objects are verified. The
+		/// verified datasets are then the datasets of the selected objects, and the conditions
+		/// that do not involve them are expected to be disabled. They are therefore not
+		/// reported as warnings, but summarized in one information message.</param>
 		/// <returns>List of newly disabled datasets</returns>
 		[NotNull]
 		public IList<QualitySpecificationElement> DisableNonApplicableElements(
-			[NotNull] ICollection<Dataset> verifiedDatasets)
+			[NotNull] ICollection<Dataset> verifiedDatasets,
+			bool verifiesSelection = false)
 		{
 			var result = new List<QualitySpecificationElement>();
 
 			var datasets = new HashSet<Dataset>(verifiedDatasets);
+
+			var enabledCount = 0;
+			var notInvolvingSelectionCount = 0;
 
 			foreach (QualitySpecificationElement element in Elements)
 			{
@@ -535,6 +543,8 @@ namespace ProSuite.DomainModel.Core.QA
 					// already disabled, ignore
 					continue;
 				}
+
+				enabledCount++;
 
 				if (IsQualityConditionApplicable(element.QualityCondition, datasets))
 				{
@@ -553,6 +563,14 @@ namespace ProSuite.DomainModel.Core.QA
 						element.QualityCondition.Name,
 						string.Join(", ", deletedParameterValues));
 				}
+				else if (verifiesSelection)
+				{
+					_msg.DebugFormat(
+						"Quality condition '{0}' does not involve the datasets of the selected " +
+						"objects and is not verified.", element.QualityCondition.Name);
+
+					notInvolvingSelectionCount++;
+				}
 				else
 				{
 					_msg.WarnFormat(
@@ -565,6 +583,13 @@ namespace ProSuite.DomainModel.Core.QA
 
 				result.Add(element);
 				element.Enabled = false;
+			}
+
+			if (notInvolvingSelectionCount > 0)
+			{
+				_msg.InfoFormat(
+					"{0} of {1} quality conditions do not involve the datasets of the selected " +
+					"objects and are not verified.", notInvolvingSelectionCount, enabledCount);
 			}
 
 			return result;

@@ -200,6 +200,14 @@ public abstract class MapToolBase : MapTool
 
 			PressedKeys.Add(args.Key);
 
+			if (KeyboardUtils.IsShiftKey(args.Key))
+			{
+				// A SHIFT just pressed is nobody's shortcut yet. HandleKeyUpAsync, which resets
+				// this, is not called by ArcGIS Pro for every release.
+				IsShiftPartOfShortcut = false;
+				ShiftShortcutKey = null;
+			}
+
 			// A key this tool does not handle, pressed while SHIFT is held, belongs to a
 			// shortcut such as Right SHIFT + ä (ArcGIS Pro's Z-only snapping). Until SHIFT is
 			// released it is not the tool's SHIFT.

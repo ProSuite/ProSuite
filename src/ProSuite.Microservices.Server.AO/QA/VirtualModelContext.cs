@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.GeoDb;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
@@ -20,6 +21,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 {
 	public class VirtualModelContext : IModelContext, IQueryTableContext, IVirtualModelContext
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private IList<GdbWorkspace> _virtualWorkspaces;
 
 		private readonly DdxModel _primaryModel;
@@ -86,6 +89,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 					"The client failed to provide the schema for the requested datasets: " +
 					dataResponse.ErrorMessage);
 			}
+
+			_msg.DebugFormat(
+				"Schema requested from the client for {0} dataset(s), received {1} class(es): {2}",
+				datasets.Count, dataResponse.Schema.ClassDefinitions.Count,
+				string.Join(", ", dataResponse.Schema.ClassDefinitions.Select(c => c.Name)));
 
 			SetGdbSchema(ProtobufConversionUtils.CreateSchema(
 				             dataResponse.Schema.ClassDefinitions,

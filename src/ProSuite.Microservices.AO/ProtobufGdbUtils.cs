@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -93,7 +94,7 @@ namespace ProSuite.Microservices.AO
 				bool canGetShape =
 					string.IsNullOrEmpty(subFields) || subFields == "*" ||
 					StringUtils.Contains(subFields,
-					                     ((IFeatureClass) feature.FeatureClass).ShapeFieldName,
+					                     feature.FeatureClass.ShapeFieldName,
 					                     StringComparison.InvariantCultureIgnoreCase);
 
 				if (canGetShape)
@@ -149,7 +150,21 @@ namespace ProSuite.Microservices.AO
 
 					object valueObject = featureOrRow.GetValue(fieldIdx);
 
-					AttributeValue attributeValue = ToAttributeValueMsg(valueObject, field);
+					AttributeValue attributeValue;
+					try
+					{
+						attributeValue = ToAttributeValueMsg(valueObject, field);
+					}
+					catch (Exception e)
+					{
+						// The original exception text alone ("Specified cast is not valid.") does
+						// not say which value could not be converted.
+						throw new InvalidOperationException(
+							$"Cannot convert the value of field {field.Name} " +
+							$"({(esriFieldType) field.FieldType}) in row <oid> {featureOrRow.OID} " +
+							$"of {featureOrRow.DbTable.Name}: the value '{valueObject}' has the " +
+							$".NET type {valueObject?.GetType().FullName}. {e.Message}", e);
+					}
 
 					result.Values.Add(attributeValue);
 				}
@@ -451,19 +466,27 @@ namespace ProSuite.Microservices.AO
 			{
 				esriFieldType fieldType = (esriFieldType) field.FieldType;
 
+				// NOTE: Numbers are converted rather than unboxed, because the database driver
+				//       can return another numeric type than the field type, e.g. a long or a
+				//       decimal for an integer field. Unboxing then fails with
+				//       "Specified cast is not valid.". Values out of range still fail.
 				switch (fieldType)
 				{
 					case esriFieldType.esriFieldTypeSmallInteger:
-						attributeValue.ShortIntValue = (short) valueObject;
+						attributeValue.ShortIntValue =
+							Convert.ToInt16(valueObject, CultureInfo.InvariantCulture);
 						break;
 					case esriFieldType.esriFieldTypeInteger:
-						attributeValue.IntValue = (int) valueObject;
+						attributeValue.IntValue =
+							Convert.ToInt32(valueObject, CultureInfo.InvariantCulture);
 						break;
 					case esriFieldType.esriFieldTypeSingle:
-						attributeValue.FloatValue = (float) valueObject;
+						attributeValue.FloatValue =
+							Convert.ToSingle(valueObject, CultureInfo.InvariantCulture);
 						break;
 					case esriFieldType.esriFieldTypeDouble:
-						attributeValue.DoubleValue = (double) valueObject;
+						attributeValue.DoubleValue =
+							Convert.ToDouble(valueObject, CultureInfo.InvariantCulture);
 						break;
 					case esriFieldType.esriFieldTypeString:
 						attributeValue.StringValue = (string) valueObject;

@@ -2267,6 +2267,16 @@ namespace ProSuite.DomainModel.Core.QA.Xml
 				workspaceId = null;
 			}
 
+			// TODO: When exporting from a DDX, the declared DatasetType and FieldRoles are never
+			// set (they are transient, filled only by the XML and proto readers), so a file
+			// catalog dataset is written without datasetType and without <Fields>. Such a document
+			// cannot be verified standalone: the catalog is harvested as a plain polygon feature
+			// class. Derive both from the DDX dataset instead (IPointCloudCatalogDataset ->
+			// PointCloudCatalog, IRasterCatalogDataset -> RasterCatalog, but check that a plain
+			// raster mosaic is not labelled a catalog; roles from the attribute roles, e.g.
+			// FilePath). Put it here, in the shared code, so the ProSuite solution exports it too.
+			// Cost: builds whose schema predates datasetType reject such a document.
+			// See Swisstopo.GoTop doc/context/qa-file-catalog-sources.md, "Export from a DDX".
 			return new XmlDatasetTestParameterValue
 			       {
 				       TestParameterName = datasetTestParameterValue.TestParameterName,
