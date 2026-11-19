@@ -61,13 +61,23 @@ public abstract class MapToolBase : MapTool
 	protected List<Key> HandledKeys { get; } = new();
 
 	/// <summary>
+	/// Whether the tool handles <paramref name="key"/> at the moment, instead of ArcGIS Pro: by
+	/// default the keys in <see cref="HandledKeys"/>. A subclass adds the keys it handles only in
+	/// some phases.
+	/// </summary>
+	protected virtual bool HandlesKey(Key key)
+	{
+		return HandledKeys.Contains(key);
+	}
+
+	/// <summary>
 	/// Whether the SHIFT key currently held has been combined with a key this tool does not
 	/// handle itself. That makes it part of someone else's keyboard shortcut rather than the
 	/// tool's own SHIFT - for example Right SHIFT + ä, which toggles ArcGIS Pro's Z-only
 	/// snapping. The tool's SHIFT behaviour is suspended until SHIFT is released. It is
 	/// recognised from the key events, so it works whatever the keyboard layout and whatever
-	/// the other key is. The tool's own SHIFT combinations are not affected: their keys are in
-	/// <see cref="HandledKeys"/>.
+	/// the other key is. The tool's own SHIFT combinations are not affected: it handles their
+	/// keys (<see cref="HandlesKey"/>).
 	/// </summary>
 	protected bool IsShiftPartOfShortcut { get; private set; }
 
@@ -98,7 +108,7 @@ public abstract class MapToolBase : MapTool
 	/// </summary>
 	protected virtual bool IsShiftShortcutKey(Key key)
 	{
-		return ! HandledKeys.Contains(key);
+		return ! HandlesKey(key);
 	}
 
 	/// <summary>
@@ -237,7 +247,7 @@ public abstract class MapToolBase : MapTool
 			//       swallows application shortcuts that happen to use the same letter, such as
 			//       CTRL+SHIFT+O, and they never reach the DAML shortcut table.
 			if (KeyboardUtils.IsModifierKey(args.Key) ||
-			    (HandledKeys.Contains(args.Key) && ! KeyboardUtils.IsAnyModifierDown()))
+			    (HandlesKey(args.Key) && ! KeyboardUtils.IsAnyModifierDown()))
 			{
 				// Trigger the call to HandleKeyDownAsync
 				args.Handled = true;
@@ -293,7 +303,7 @@ public abstract class MapToolBase : MapTool
 			// NOTE: The HandleKeyUpAsync is only called for handled keys.
 			// However, they will not perform the standard functionality devised by the
 			// application! Examples: F8 (Toggle stereo fixed cursor mode), B (snap to ground, ...)
-			if (KeyboardUtils.IsModifierKey(args.Key) || HandledKeys.Contains(args.Key))
+			if (KeyboardUtils.IsModifierKey(args.Key) || HandlesKey(args.Key))
 			{
 				args.Handled = true;
 			}

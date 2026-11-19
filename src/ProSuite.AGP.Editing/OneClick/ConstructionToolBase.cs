@@ -403,6 +403,12 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		}
 	}
 
+	/// <summary>
+	/// While sketching, P and L are ArcGIS Pro's (P: parallel). They switch the selection sketch
+	/// only in the selection phase, the intermittent selection with SHIFT included.
+	/// </summary>
+	protected override bool HandlesSelectionSketchKeys => ! IsInSketchMode;
+
 	protected override async Task ToggleSelectionSketchGeometryTypeAsync(
 		SketchGeometryType toggleSketchType)
 	{
