@@ -20,6 +20,7 @@ using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
@@ -284,7 +285,8 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 					if (selectedOidByLayer.Key is FeatureLayer layer)
 					{
 						FeatureClass featureClass = layer.GetFeatureClass();
-						bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+						bool? layerHasZ =
+							featureClass == null ? null : DatasetUtils.HasZ(featureClass);
 
 						if (layerHasZ == true)
 						{

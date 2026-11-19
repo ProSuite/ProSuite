@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -24,6 +25,9 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase;
 public static class DatasetUtils
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private static readonly ConcurrentDictionary<string, bool> _virtualJoinsWarned =
+		new(StringComparer.OrdinalIgnoreCase);
 
 	[NotNull]
 	public static string GetTableDisplayName([NotNull] Table table)
@@ -102,7 +106,7 @@ public static class DatasetUtils
 	{
 		if (table is null) return null;
 
-		using (var definition = table.GetDefinition())
+		using (var definition = GetDefinitionWithJoinFallback(table))
 		{
 			return GetDefaultSubtypeCode(definition);
 		}
@@ -662,8 +666,9 @@ public static class DatasetUtils
 		}
 
 		// Table ID and name are equal. The tables could still be in different databases.
-		using Datastore datastore1 = table1.GetDatastore();
-		using Datastore datastore2 = table2.GetDatastore();
+		// NOTE: Two instances of the same join across datastores are considered different.
+		using Datastore datastore1 = TryGetDatastore(table1);
+		using Datastore datastore2 = TryGetDatastore(table2);
 		return requireSameVersion
 			       ? WorkspaceUtils.IsSameVersion(datastore1, datastore2)
 			       : WorkspaceUtils.IsSameDatabase(datastore1, datastore2);
@@ -797,6 +802,128 @@ public static class DatasetUtils
 	}
 
 	/// <summary>
+	/// If the table is a join across different datastores (a virtual dataset without valid
+	/// definition), the definition of the joined database table providing the rows (and the
+	/// geometry) is returned instead and a warning is logged.
+	/// NOTE: The fallback definition does not contain the joined fields and its field
+	/// names and indexes do not correspond to the fields of the joined table or its rows.
+	/// Use it for schema information such as Z/M-awareness, spatial reference, shape type,
+	/// subtypes or domains, but not for field names or indexes used on the joined table.
+	/// </summary>
+	/// <remarks>Must call on MCT. The caller is responsible for disposing the result.</remarks>
+	[NotNull]
+	public static TableDefinition GetDefinitionWithJoinFallback([NotNull] Table table)
+	{
+		if (! table.IsJoinedTable())
+		{
+			return table.GetDefinition();
+		}
+
+		TableDefinition definition = TryGetDefinition(table);
+
+		if (definition != null)
+		{
+			return definition;
+		}
+
+		Table databaseTable = GetDatabaseTable(table);
+
+		WarnVirtualJoin(table, databaseTable,
+		                "its schema is used instead of the joined schema");
+
+		return databaseTable.GetDefinition();
+	}
+
+	/// <summary>
+	/// See <see cref="GetDefinitionWithJoinFallback(Table)"/>.
+	/// </summary>
+	/// <remarks>Must call on MCT. The caller is responsible for disposing the result.</remarks>
+	[NotNull]
+	public static FeatureClassDefinition GetDefinitionWithJoinFallback(
+		[NotNull] FeatureClass featureClass)
+	{
+		return (FeatureClassDefinition) GetDefinitionWithJoinFallback((Table) featureClass);
+	}
+
+	/// <summary>
+	/// Returns the name of the object id field as it can be used in where clauses on
+	/// the table (or layer). For joins across datastores (that have no valid definition)
+	/// the object id field of the joined database table is qualified with its table name,
+	/// as in other joined tables. A warning is logged.
+	/// </summary>
+	/// <remarks>Must call on MCT</remarks>
+	[CanBeNull]
+	public static string GetObjectIdFieldNameWithJoinFallback([NotNull] Table table)
+	{
+		if (! table.IsJoinedTable())
+		{
+			return GetObjectIdFieldName(table);
+		}
+
+		using (TableDefinition definition = TryGetDefinition(table))
+		{
+			if (definition != null)
+			{
+				return GetObjectIdFieldName(definition);
+			}
+		}
+
+		Table databaseTable = GetDatabaseTable(table);
+
+		WarnVirtualJoin(table, databaseTable,
+		                "its object id field is used (qualified with its table name)");
+
+		string oidField = GetObjectIdFieldName(databaseTable);
+
+		return oidField == null ? null : $"{databaseTable.GetName()}.{oidField}";
+	}
+
+	/// <summary>
+	/// Returns null for virtual datasets without datastore, such as joins across different
+	/// datastores.
+	/// </summary>
+	/// <remarks>Must call on MCT. The caller is responsible for disposing the result.</remarks>
+	[CanBeNull]
+	public static Datastore TryGetDatastore([NotNull] Table table)
+	{
+		try
+		{
+			return table.GetDatastore();
+		}
+		catch (InvalidOperationException e)
+		{
+			_msg.VerboseDebug(
+				() => $"Table {table.GetName()} has no datastore " +
+				      $"(joined table: {table.IsJoinedTable()}): {e.Message}");
+			return null;
+		}
+	}
+
+	private static void WarnVirtualJoin([NotNull] Table joinedTable,
+	                                    [NotNull] Table databaseTable,
+	                                    [NotNull] string consequence)
+	{
+		string joinedName = joinedTable.GetName();
+
+		string message =
+			$"The data source '{joinedName}' is a join across different workspaces, " +
+			"for which ArcGIS Pro provides no schema information. Falling back to the " +
+			$"joined table '{databaseTable.GetName()}': {consequence}. Some functionality " +
+			"may be limited (e.g. joined fields are not available). To avoid this, store " +
+			"the joined tables in the same workspace.";
+
+		// Called for every sketch or selection change: warn once per join
+		if (_virtualJoinsWarned.TryAdd(joinedName, true))
+		{
+			_msg.Warn(message);
+		}
+		else
+		{
+			_msg.Debug(message);
+		}
+	}
+
+	/// <summary>
 	/// Returns the database table at the start of the (possibly nested) join, i.e. the
 	/// table the join was created from. For layer joins, this is the layer's own data
 	/// source, regardless of the relationship's direction.
@@ -847,13 +974,13 @@ public static class DatasetUtils
 
 	public static bool HasM([NotNull] FeatureClass featureClass)
 	{
-		using var definition = featureClass.GetDefinition();
+		using var definition = GetDefinitionWithJoinFallback(featureClass);
 		return definition.HasM();
 	}
 
 	public static bool HasZ([NotNull] FeatureClass featureClass)
 	{
-		using var definition = featureClass.GetDefinition();
+		using var definition = GetDefinitionWithJoinFallback(featureClass);
 		return definition.HasZ();
 	}
 

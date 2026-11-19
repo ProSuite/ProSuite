@@ -766,6 +766,8 @@ public static class GdbPersistenceUtils
 			throw new Exception("One or more updates geometries have become empty.");
 		}
 
+		AssertNotJoined(feature);
+
 		try
 		{
 			// NOTE: Even if the geometry is not projected before setting the shape,
@@ -800,6 +802,8 @@ public static class GdbPersistenceUtils
 			throw new Exception("One or more updates geometries have become empty.");
 		}
 
+		AssertNotJoined(feature);
+
 		try
 		{
 			// NOTE: Even if the geometry is not projected before setting the shape,
@@ -821,6 +825,16 @@ public static class GdbPersistenceUtils
 		{
 			editOperationContext?.Invalidate(feature);
 		}
+	}
+
+	// Storing a row of a joined table throws a NotImplementedException (GOTOP-190)
+	private static void AssertNotJoined([NotNull] Row row)
+	{
+		using Table table = row.GetTable();
+
+		Assert.ArgumentCondition(! table.IsJoinedTable(),
+		                         "Row {0} is from the joined table {1}: load it without joins",
+		                         row.GetObjectID(), table.GetName());
 	}
 
 	public static IEnumerable<Dataset> GetDatasetsNonEmpty(

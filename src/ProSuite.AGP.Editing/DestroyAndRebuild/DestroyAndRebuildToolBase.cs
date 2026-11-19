@@ -132,7 +132,7 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 
 			FeatureClass featureClass = layer.GetFeatureClass();
 
-			return featureClass?.GetDefinition()?.HasZ();
+			return featureClass == null ? (bool?) null : DatasetUtils.HasZ(featureClass);
 		});
 
 		_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);

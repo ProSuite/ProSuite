@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.QA;
 using ProSuite.AGP.Solution.QA;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -243,9 +244,11 @@ namespace ProSuite.AGP.Solution.Workflow
 			//TODO: we are missing Standalone tables here, maybe other types of Layers as well
 			foreach (Table table in map.GetLayers<FeatureLayer>().GetTables())
 			{
-				if (table.GetDatastore() is FileSystemDatastore)
+				Datastore datastore = DatasetUtils.TryGetDatastore(table);
+
+				if (datastore is null || datastore is FileSystemDatastore)
 				{
-					// Shapefile workspaces are not supported
+					// Joins across datastores and shapefile workspaces are not supported
 					continue;
 				}
 

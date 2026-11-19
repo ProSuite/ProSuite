@@ -4,6 +4,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing;
@@ -59,7 +60,8 @@ public static class EditorUtils
 		}
 
 		using FeatureClass featureClass = featureLayer.GetFeatureClass();
-		using FeatureClassDefinition classDefinition = featureClass?.GetDefinition();
+		using FeatureClassDefinition classDefinition =
+			featureClass == null ? null : DatasetUtils.GetDefinitionWithJoinFallback(featureClass);
 
 		string subtypeField = classDefinition?.GetSubtypeField();
 
