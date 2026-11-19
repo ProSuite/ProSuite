@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -121,9 +122,18 @@ public class SketchStack
 
 			if (double.IsNaN(lastPoint.Z) && noNanOnStack)
 			{
-				_msg.Info(
-					"Sketch point could be missing in sketch (Repressed from stack due to NaN-Z). " +
-					"MAKE SURE TO CHECK sketch when finishing sketch after switching to stereo");
+				// Without Z values in the target class, there are no Zs for the user to check:
+				bool targetHasNoZ =
+					FrameworkApplication.ActiveTool is IEditSketchTool { EditSketchHasZ: false };
+
+				if (! targetHasNoZ)
+				{
+					_msg.Info(
+						"Sketch point could be missing in sketch (Repressed from stack " +
+						"due to NaN-Z). MAKE SURE TO CHECK sketch when finishing sketch " +
+						"after switching to stereo");
+				}
+
 				return false;
 			}
 		}
