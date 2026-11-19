@@ -8,6 +8,7 @@ using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Selection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -90,7 +91,7 @@ public class EditEventsRowCacheSynchronizer : IDisposable
 
 		foreach (BasicFeatureLayer layer in layers)
 		{
-			Table table = layer.GetTable();
+			Table table = LayerUtils.GetTable(layer, unJoined: true);
 			if (_rowCache.CanContain(table))
 			{
 				canContain = true;
@@ -115,7 +116,7 @@ public class EditEventsRowCacheSynchronizer : IDisposable
 		{
 			var fullTableInvalidations = args.InvalidateAllMembers
 			                                 .OfType<BasicFeatureLayer>()
-			                                 .Select(lyr => lyr.GetTable())
+			                                 .Select(l => LayerUtils.GetTable(l, unJoined: true))
 			                                 .Where(table => _rowCache.CanContain(table))
 			                                 .ToList();
 

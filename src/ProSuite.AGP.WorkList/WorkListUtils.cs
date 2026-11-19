@@ -212,7 +212,9 @@ public static class WorkListUtils
 		{
 			foreach (IDisplayTable displayTable in displayTables)
 			{
-				Table table = displayTable.GetTable();
+				// The work list references the database tables (see CreateSourceClasses(map)).
+				// NOTE: Joins across datastores are virtual datasets without datastore.
+				Table table = LayerUtils.GetTable(displayTable, unJoined: true);
 
 				long id = GetUniqueTableIdAcrossWorkspaces(new GdbTableIdentity(table));
 				if (id == tableReference.Id)

@@ -368,6 +368,9 @@ public static class SelectionUtils
 		return GetSelection(selectionChangedArgs.Selection);
 	}
 
+	/// <summary>
+	/// Returns the selected object ids by database table, i.e. without the layers' joins.
+	/// </summary>
 	[NotNull]
 	public static Dictionary<Table, List<long>> GetSelectionByTable(
 		[NotNull] Dictionary<MapMember, List<long>> oidsByMapMember)
@@ -388,7 +391,7 @@ public static class SelectionUtils
 				continue;
 			}
 
-			Table table = featureLayer.GetTable();
+			Table table = LayerUtils.GetTable(featureLayer, unJoined: true);
 
 			if (oidsByHandle.ContainsKey(table.Handle))
 			{
