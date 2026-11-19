@@ -688,7 +688,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected virtual Task<bool?> GetEditSketchHasZ()
 	{
-		return null;
+		return Task.FromResult<bool?>(null);
 	}
 
 	/// <summary>
