@@ -223,8 +223,36 @@ public static class DatasetUtils
 
 	public static GeometryType GetShapeType(this FeatureClass featureClass)
 	{
-		using var definition = featureClass?.GetDefinition();
-		return definition?.GetShapeType() ?? GeometryType.Unknown;
+		if (featureClass is null) return GeometryType.Unknown;
+
+		using var definition = (FeatureClassDefinition) TryGetDefinition(featureClass);
+
+		if (definition != null)
+		{
+			return definition.GetShapeType();
+		}
+
+		// Joins across datastores have no valid definition: use the joined database
+		// feature class, which provides the geometry.
+		if (featureClass.IsJoinedTable())
+		{
+			try
+			{
+				FeatureClass databaseClass = GetDatabaseFeatureClass(featureClass);
+
+				if (! databaseClass.IsJoinedTable())
+				{
+					return GetShapeType(databaseClass);
+				}
+			}
+			catch (InvalidOperationException e)
+			{
+				_msg.Debug($"Unable to determine the shape type of joined feature class " +
+				           $"{featureClass.GetName()}: {e.Message}", e);
+			}
+		}
+
+		return GeometryType.Unknown;
 	}
 
 	/// <summary>See <see cref="IsVersioned(Dataset, out bool)"/></summary>
@@ -652,7 +680,12 @@ public static class DatasetUtils
 	/// </summary>
 	/// <param name="tableWithJoin"></param>
 	/// <returns></returns>
-	/// <exception cref="NotImplementedException"></exception>
+	/// <remarks>
+	/// Joined tables whose join spans different datastores (e.g. two file geodatabases)
+	/// are virtual datasets that do not provide a definition (GetDefinition() throws).
+	/// Therefore, the joined table's definition is only used if the database table
+	/// cannot be determined otherwise.
+	/// </remarks>
 	public static Table GetDatabaseTable([NotNull] Table tableWithJoin)
 	{
 		if (! tableWithJoin.IsJoinedTable())
@@ -665,18 +698,26 @@ public static class DatasetUtils
 			return GetDatabaseFeatureClass(featureClass);
 		}
 
-		// Extract the shape's table name from the (fully qualified) shape field name:
-		TableDefinition definition = tableWithJoin.GetDefinition();
+		TableDefinition definition = TryGetDefinition(tableWithJoin);
 
-		if (! definition.HasObjectID())
+		if (definition == null)
 		{
-			throw new NotImplementedException(
-				"Unable to determine the main table without OBJECTID");
+			return GetJoinOriginDatabaseTable(tableWithJoin);
 		}
 
-		string oidField = definition.GetObjectIDField();
+		using (definition)
+		{
+			if (! definition.HasObjectID())
+			{
+				throw new NotImplementedException(
+					"Unable to determine the main table without OBJECTID");
+			}
 
-		return GetGdbTableContainingField(tableWithJoin, oidField);
+			// Extract the main table's name from the (fully qualified) OID field name:
+			string oidField = definition.GetObjectIDField();
+
+			return GetGdbTableContainingField(tableWithJoin, oidField);
+		}
 	}
 
 	/// <summary>
@@ -686,6 +727,12 @@ public static class DatasetUtils
 	/// <param name="featureClassWithJoin"></param>
 	/// <returns></returns>
 	/// <exception cref="InvalidOperationException"></exception>
+	/// <remarks>
+	/// Joined feature classes whose join spans different datastores (e.g. two file
+	/// geodatabases) are virtual datasets that do not provide a definition
+	/// (GetDefinition() throws). Therefore, the joined feature class's definition is
+	/// only used if the database feature class cannot be determined otherwise.
+	/// </remarks>
 	public static FeatureClass GetDatabaseFeatureClass(
 		[NotNull] FeatureClass featureClassWithJoin)
 	{
@@ -694,10 +741,77 @@ public static class DatasetUtils
 			return featureClassWithJoin;
 		}
 
-		// Extract the shape's table name from the (fully qualified) shape field name:
-		string shapeField = featureClassWithJoin.GetDefinition().GetShapeField();
+		// Typical case: a feature class joined with one or more tables. The only
+		// feature class among the joined database tables provides the geometry.
+		List<FeatureClass> databaseFeatureClasses =
+			GetDatabaseTables(featureClassWithJoin).OfType<FeatureClass>().ToList();
 
-		return GetGdbTableContainingField(featureClassWithJoin, shapeField);
+		if (databaseFeatureClasses.Count == 1)
+		{
+			return databaseFeatureClasses[0];
+		}
+
+		// Several feature classes are joined: the table name qualifying the shape field
+		// identifies the one providing the geometry.
+		using FeatureClassDefinition definition =
+			(FeatureClassDefinition) TryGetDefinition(featureClassWithJoin);
+
+		if (definition != null)
+		{
+			string shapeField = definition.GetShapeField();
+
+			return GetGdbTableContainingField(featureClassWithJoin, shapeField);
+		}
+
+		if (GetJoinOriginDatabaseTable(featureClassWithJoin) is FeatureClass originClass)
+		{
+			return originClass;
+		}
+
+		throw new InvalidOperationException(
+			$"Unable to determine the database feature class of joined feature class " +
+			$"{featureClassWithJoin.GetName()}");
+	}
+
+	/// <summary>
+	/// Returns the definition of the table, or null if the table does not have a valid
+	/// definition. This is the case for joined tables whose join spans different
+	/// datastores (e.g. two file geodatabases): they are virtual datasets without
+	/// definition (and without datastore).
+	/// </summary>
+	/// <remarks>Must call on MCT. The caller is responsible for disposing the result.</remarks>
+	[CanBeNull]
+	public static TableDefinition TryGetDefinition([NotNull] Table table)
+	{
+		try
+		{
+			return table.GetDefinition();
+		}
+		catch (InvalidOperationException e)
+		{
+			_msg.VerboseDebug(
+				() => $"Table {table.GetName()} has no valid definition " +
+				      $"(joined table: {table.IsJoinedTable()}): {e.Message}");
+			return null;
+		}
+	}
+
+	/// <summary>
+	/// Returns the database table at the start of the (possibly nested) join, i.e. the
+	/// table the join was created from. For layer joins, this is the layer's own data
+	/// source, regardless of the relationship's direction.
+	/// </summary>
+	[NotNull]
+	private static Table GetJoinOriginDatabaseTable([NotNull] Table joinedTable)
+	{
+		Table table = joinedTable;
+
+		while (table.IsJoinedTable())
+		{
+			table = table.GetJoin().GetOriginTable();
+		}
+
+		return table;
 	}
 
 	/// <summary>
@@ -813,9 +927,11 @@ public static class DatasetUtils
 	[CanBeNull]
 	public static string GetSubtypeFieldName([NotNull] Table table)
 	{
-		using (var definition = table.GetDefinition())
+		// NOTE: Joins across datastores have no valid definition and thus no subtype
+		//       information (the subtype field could not be resolved in the joined row).
+		using (var definition = TryGetDefinition(table))
 		{
-			return GetSubtypeFieldName(definition);
+			return definition == null ? null : GetSubtypeFieldName(definition);
 		}
 	}
 
@@ -848,8 +964,9 @@ public static class DatasetUtils
 	/// if the table has no subtype field.</returns>
 	public static int GetSubtypeFieldIndex([NotNull] Table table)
 	{
-		using var definition = table.GetDefinition();
-		return GetSubtypeFieldIndex(definition);
+		// NOTE: Joins across datastores have no valid definition (see GetSubtypeFieldName).
+		using var definition = TryGetDefinition(table);
+		return definition == null ? -1 : GetSubtypeFieldIndex(definition);
 	}
 
 	public static int GetSubtypeFieldIndex([NotNull] TableDefinition definition)

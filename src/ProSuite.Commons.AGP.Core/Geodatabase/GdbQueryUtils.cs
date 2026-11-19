@@ -44,7 +44,19 @@ public static class GdbQueryUtils
 			return false;
 		}
 
-		using Datastore datastore = table.GetDatastore();
+		Datastore datastore;
+		try
+		{
+			datastore = table.GetDatastore();
+		}
+		catch (InvalidOperationException)
+		{
+			// Virtual dataset without datastore, e.g. a join across different datastores.
+			// Such joins are not in a memory datastore, the issue cannot occur.
+			return false;
+		}
+
+		using var disposableDatastore = datastore;
 
 		if (datastore?.GetConnector() is not MemoryConnectionProperties memoryConnection)
 		{
