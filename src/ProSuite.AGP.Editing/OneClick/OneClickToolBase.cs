@@ -442,7 +442,7 @@ public abstract class OneClickToolBase : MapToolBase
 		try
 		{
 			_msg.VerboseDebug(() => $"OnMapSelectionChangedAsync ({Caption})");
-			
+
 			if (IsCompletingSelectionSketch)
 			{
 				return;
@@ -655,8 +655,9 @@ public abstract class OneClickToolBase : MapToolBase
 		                    };
 
 		const Predicate<Feature> featurePredicate = null;
-		return featureFinder.FindFeaturesByLayer(searchGeometry, fl => CanSelectFromLayer(fl),
-		                                         featurePredicate, progressor);
+		return featureFinder.FindFeaturesByLayer(
+			searchGeometry, fl => CanSelectFromLayer(fl, acceptTemporarilyHiddenLayer: false),
+			featurePredicate, progressor);
 	}
 
 	protected Task<bool> IsInSelectionPhaseAsync()
@@ -716,7 +717,8 @@ public abstract class OneClickToolBase : MapToolBase
 		//       feature class). Compare the non-distinct count with the selection count:
 		List<Feature> applicableFeatures =
 			GetApplicableSelectedFeatures(selectionByLayer, UnJoinedSelection,
-			                              notifications).ToList();
+			                              notifications,
+			                              acceptTemporarilyHiddenLayer: false).ToList();
 
 		List<Feature> applicableSelection = GetDistinct(applicableFeatures).ToList();
 
@@ -759,7 +761,8 @@ public abstract class OneClickToolBase : MapToolBase
 	protected bool UnJoinedSelection { get; set; } = true;
 
 	protected bool CanSelectFromLayer([CanBeNull] Layer layer,
-	                                  NotificationCollection notifications = null)
+	                                  NotificationCollection notifications = null,
+	                                  bool acceptTemporarilyHiddenLayer = true)
 	{
 		if (layer is not BasicFeatureLayer featureLayer)
 		{
@@ -769,7 +772,8 @@ public abstract class OneClickToolBase : MapToolBase
 
 		string layerName = layer.Name;
 
-		if (! LayerUtils.IsVisible(layer, ActiveMapView))
+		if (! LayerUtils.IsVisible(layer, ActiveMapView) &&
+		    ! (acceptTemporarilyHiddenLayer && TemporarilyHiddenLayers.Contains(layer)))
 		{
 			NotificationUtils.Add(notifications,
 			                      $"Layer is not visible in active map: {layerName}");
@@ -877,7 +881,8 @@ public abstract class OneClickToolBase : MapToolBase
 	protected IEnumerable<Feature> GetApplicableSelectedFeatures(
 		[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
 		bool unJoinedFeaturesForEditing = false,
-		[CanBeNull] NotificationCollection notifications = null)
+		[CanBeNull] NotificationCollection notifications = null,
+		bool acceptTemporarilyHiddenLayer = true)
 	{
 		var filteredCount = 0;
 		var selectionCount = 0;
@@ -891,7 +896,8 @@ public abstract class OneClickToolBase : MapToolBase
 
 		foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
 		{
-			if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
+			if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications,
+			                         acceptTemporarilyHiddenLayer))
 			{
 				filteredCount += oidsByLayer.Value.Count;
 				continue;
