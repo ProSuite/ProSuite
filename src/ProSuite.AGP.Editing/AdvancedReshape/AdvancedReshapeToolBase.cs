@@ -124,6 +124,13 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		return base.HandleEscapeAsync();
 	}
 
+	protected override Task OnEditingStoppedCoreAsync()
+	{
+		_cancellationTokenSource?.Cancel();
+
+		return base.OnEditingStoppedCoreAsync();
+	}
+
 	protected override void LogPromptForSelection()
 	{
 		// TODO: Only usable selection

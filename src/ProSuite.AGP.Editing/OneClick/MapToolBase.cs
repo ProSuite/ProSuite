@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons;
@@ -29,6 +31,14 @@ public abstract class MapToolBase : MapTool
 	private const int MaxUpdateErrors = 10;
 
 	private const Key _keyShowOptionsPane = Key.O;
+
+	[CanBeNull] private Project _observedProject;
+
+	/// <summary>
+	/// Whether this tool requires editing to be enabled. Such a tool resets itself when editing
+	/// stops (see <see cref="OnEditingStoppedCoreAsync"/>).
+	/// </summary>
+	protected bool RequiresEditSession { get; init; } = true;
 
 	/// <summary>
 	/// The environment variable that defines whether tools flash the resulting features after
@@ -158,6 +168,8 @@ public abstract class MapToolBase : MapTool
 			// ReSharper disable once MethodHasAsyncOverload
 			OnToolActivatingCore();
 
+			ObserveEditingState();
+
 			await OnToolActivateCoreAsync(hasMapViewChanged);
 
 			if (AlwaysShowOptionsPane)
@@ -183,6 +195,8 @@ public abstract class MapToolBase : MapTool
 			HideOptionsPane();
 
 			OnToolDeactivatingCore();
+
+			StopObservingEditingState();
 
 			await OnToolDeactivateCoreAsync(hasMapViewChanged);
 		}
@@ -504,6 +518,73 @@ public abstract class MapToolBase : MapTool
 		[CanBeNull] CancelableProgressor progressor)
 	{
 		return Task.FromResult(true);
+	}
+
+	/// <summary>
+	/// Resets the tool when editing stops while it is active and <see cref="RequiresEditSession"/>
+	/// is true. The tool stays active. Called on the UI thread.
+	/// </summary>
+	protected virtual Task OnEditingStoppedCoreAsync()
+	{
+		return ClearSketchAsync();
+	}
+
+	#endregion
+
+	#region Editing state
+
+	private void ObserveEditingState()
+	{
+		StopObservingEditingState();
+
+		if (! RequiresEditSession || Project.Current is null)
+		{
+			return;
+		}
+
+		_observedProject = Project.Current;
+		_observedProject.PropertyChanged += OnProjectPropertyChanged;
+	}
+
+	private void StopObservingEditingState()
+	{
+		if (_observedProject is null)
+		{
+			return;
+		}
+
+		_observedProject.PropertyChanged -= OnProjectPropertyChanged;
+		_observedProject = null;
+	}
+
+	private void OnProjectPropertyChanged(object sender, PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName != nameof(Project.IsEditingEnabled))
+		{
+			return;
+		}
+
+		// Pro raises PropertyChanged on the thread that switches editing
+		_ = ViewUtils.RunOnUIThread(OnEditingStoppedAsync);
+	}
+
+	private async Task OnEditingStoppedAsync()
+	{
+		try
+		{
+			if (Project.Current?.IsEditingEnabled != false)
+			{
+				return;
+			}
+
+			_msg.DebugFormat("{0}: editing stopped, resetting the tool", Caption);
+
+			await OnEditingStoppedCoreAsync();
+		}
+		catch (Exception e)
+		{
+			ErrorHandler.LogWarn(e, _msg);
+		}
 	}
 
 	#endregion

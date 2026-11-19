@@ -549,6 +549,20 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		}
 	}
 
+	protected override async Task OnEditingStoppedCoreAsync()
+	{
+		_intermediateSketchStates?.ResetSketchStates();
+
+		if (! RequiresSelection)
+		{
+			// Create tools stay in the sketch phase
+			await ResetSketchAsync();
+			return;
+		}
+
+		await base.OnEditingStoppedCoreAsync();
+	}
+
 	protected override async Task<bool> OnMapSelectionChangedCoreAsync(
 		MapSelectionChangedEventArgs args)
 	{

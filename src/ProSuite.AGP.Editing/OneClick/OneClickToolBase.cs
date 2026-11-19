@@ -68,11 +68,6 @@ public abstract class OneClickToolBase : MapToolBase
 	protected virtual bool IsSelectionPhaseSupported => RequiresSelection;
 
 	/// <summary>
-	/// Whether this tool requires editing to be enabled.
-	/// </summary>
-	protected bool RequiresEditSession { get; init; } = true;
-
-	/// <summary>
 	/// Whether the required selection can only contain editable features.
 	/// </summary>
 	protected bool SelectOnlyEditFeatures { get; init; } = true;
@@ -174,6 +169,17 @@ public abstract class OneClickToolBase : MapToolBase
 		OnToolDeactivateCore(hasMapViewChanged);
 
 		return Task.CompletedTask;
+	}
+
+	protected override async Task OnEditingStoppedCoreAsync()
+	{
+		if (! IsSelectionPhaseSupported)
+		{
+			await base.OnEditingStoppedCoreAsync();
+			return;
+		}
+
+		await StartSelectionPhaseAsync();
 	}
 
 	#endregion

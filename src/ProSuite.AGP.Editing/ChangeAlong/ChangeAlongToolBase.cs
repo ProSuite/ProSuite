@@ -188,6 +188,13 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 		return base.OnToolDeactivateCore(hasMapViewChanged);
 	}
 
+	protected override Task OnEditingStoppedCoreAsync()
+	{
+		ResetDerivedGeometries();
+
+		return base.OnEditingStoppedCoreAsync();
+	}
+
 	protected override Task OnSelectionPhaseStartedAsync()
 	{
 		SelectionCursors = InitialSelectionCursors;
@@ -237,6 +244,13 @@ public abstract class ChangeAlongToolBase : OneClickToolBase
 				{
 					List<Feature> selectedFeatures =
 						GetApplicableSelectedFeatures(ActiveMapView).ToList();
+
+					if (selectedFeatures.Count == 0)
+					{
+						// The service cannot calculate curves without source features
+						ResetDerivedGeometries();
+						return true;
+					}
 
 					using CancelableProgressorSource source = GetProgressorSource();
 					CancelableProgressor progressor = source?.Progressor;

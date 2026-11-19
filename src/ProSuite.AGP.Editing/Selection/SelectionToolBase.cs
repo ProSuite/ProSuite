@@ -21,6 +21,7 @@ public abstract class SelectionToolBase : OneClickToolBase
 	{
 		IsSketchTool = true;
 
+		RequiresEditSession = false;
 		SelectOnlyEditFeatures = false;
 		UnJoinedSelection = false;
 	}

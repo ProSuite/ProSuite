@@ -23,6 +23,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			IsSketchTool = true;
 			CompleteSketchOnMouseUp = true;
 			RequiresSelection = false;
+			RequiresEditSession = false;
 
 			//SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
 			//SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
