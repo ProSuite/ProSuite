@@ -173,7 +173,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			if (ExcludeInteriorInteriorIntersections &&
-			    transformedIntersectionTarget.Dimension ==
+			    intersectionTarget.Dimension ==
 			    esriGeometryDimension.esriGeometry1Dimension)
 			{
 				// only use line end points as intersection targets

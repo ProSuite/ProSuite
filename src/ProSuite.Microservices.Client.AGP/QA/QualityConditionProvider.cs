@@ -30,19 +30,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		{
 			Assert.ArgumentNotNullOrEmpty(qualityConditionName, nameof(qualityConditionName));
 
-			GetConditionRequest request = new GetConditionRequest()
-			                              {
-				                              Environment =
-					                              ProtobufGeomUtils.NullToEmpty(DdxEnvironmentName),
-				                              ConditionName = qualityConditionName
-			                              };
-
-			GetConditionResponse response = _client.GetQualityCondition(request);
-
-			QualityCondition condition =
-				DdxUtils.CreateQualityCondition(response, KnownInstanceDescriptors);
-
-			return condition;
+			return DdxUtils.LoadQualityCondition(qualityConditionName, KnownInstanceDescriptors,
+			                                     _client, DdxEnvironmentName);
 		}
 
 		public async Task<IList<QualityCondition>> GetConditions(IList<int> conditionIds)

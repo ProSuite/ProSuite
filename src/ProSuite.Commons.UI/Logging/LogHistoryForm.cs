@@ -32,6 +32,7 @@ namespace ProSuite.Commons.UI.Logging
 		{
 			InitializeComponent();
 
+			_dataGridViewLogEvents.LogicalRowHeight = ListRowHeight.Log;
 			WinFormsThemeUtils.ApplyModernHeaderStyle(_dataGridViewLogEvents);
 
 			_formStateManager = new BasicFormStateManager(this);

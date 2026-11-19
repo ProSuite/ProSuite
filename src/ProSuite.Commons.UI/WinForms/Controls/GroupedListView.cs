@@ -42,6 +42,9 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private bool _isFirstPaintEvent = true;
 
+		// Item rows get the central row height, headings and the filler keep their size.
+		private readonly List<int> _itemRows = new List<int>();
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
@@ -311,6 +314,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			_itemList.Sort(); // by Group, then by Name
 			_groupNameToControlMap.Clear(); // reset
 
+			_itemRows.Clear();
+
 			var rowNumber = 0;
 			string currentHeading = null;
 
@@ -330,6 +335,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			}
 
 			AddFillerRow(rowNumber);
+			ApplyRowStyles(rowNumber + 1);
 
 			_tableLayoutPanel.ResumeLayout();
 
@@ -338,6 +344,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void AddItemEntry([NotNull] InternalItem internalItem, int rowNumber)
 		{
+			_itemRows.Add(rowNumber);
+
 			var columnNumber = 0;
 
 			if (_showCheckBoxes)
@@ -360,17 +368,18 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 					SmallImageList.Images[internalItem.UserItem.ImageKey];
 			}
 
+			internalItem.PictureBox.Anchor = AnchorStyles.Left;
 			_tableLayoutPanel.Controls.Add(internalItem.PictureBox,
 			                               columnNumber++, rowNumber);
 
 			internalItem.NameLabel.Anchor = AnchorStyles.Left;
-			internalItem.NameLabel.Margin = new Padding(1, 4, 1, 1);
+			internalItem.NameLabel.Margin = new Padding(1);
 			internalItem.NameLabel.Padding = new Padding(0, 0, 0, 0);
 			_tableLayoutPanel.Controls.Add(internalItem.NameLabel,
 			                               columnNumber++, rowNumber);
 
 			internalItem.InfoLabel.Anchor = AnchorStyles.Left;
-			internalItem.InfoLabel.Margin = new Padding(1, 4, 1, 1);
+			internalItem.InfoLabel.Margin = new Padding(1);
 			internalItem.InfoLabel.Padding = new Padding(0, 0, 0, 0);
 			_tableLayoutPanel.Controls.Add(internalItem.InfoLabel,
 			                               columnNumber, rowNumber);
@@ -379,6 +388,20 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			if (! string.IsNullOrEmpty(toolTipText))
 			{
 				_toolTip.SetToolTip(internalItem.NameLabel, toolTipText);
+			}
+		}
+
+		private void ApplyRowStyles(int rowCount)
+		{
+			int height = ListRowHeight.GetDeviceHeight(this, Font);
+
+			_tableLayoutPanel.RowStyles.Clear();
+
+			for (var row = 0; row < rowCount; row++)
+			{
+				_tableLayoutPanel.RowStyles.Add(_itemRows.Contains(row)
+					                                ? new RowStyle(SizeType.Absolute, height)
+					                                : new RowStyle(SizeType.AutoSize));
 			}
 		}
 

@@ -274,6 +274,76 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		}
 
 		[Test]
+		public void CanCalculateChopPointsExcludingInteriorIntersectionsWithMultipatchTarget()
+		{
+			// GOTOP-1688: With 'exclude interior-interior intersections' only the end points of
+			// target lines are used. A multipatch target must be treated like a polygon target.
+			// Getting the end points of the multipatch's ring outlines failed.
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95,
+				WellKnownVerticalCS.LN02);
+
+			WorkspaceMock workspace = new WorkspaceMock();
+
+			GdbFeatureClass lineClass =
+				CreateGdbFeatureClass(123, "TestLines", sr, workspace,
+				                      esriGeometryType.esriGeometryPolyline);
+			GdbFeatureClass multipatchClass =
+				CreateGdbFeatureClass(124, "TestBuildings", sr, workspace,
+				                      esriGeometryType.esriGeometryMultiPatch);
+
+			IPolyline sourceLine = GeometryFactory.CreatePolyline(
+				GeometryFactory.CreatePoint(2600000, 1200005, 500),
+				GeometryFactory.CreatePoint(2600100, 1200005, 500));
+			sourceLine.SpatialReference = sr;
+
+			GdbFeature sourceFeature = GdbFeature.Create(42, lineClass);
+			sourceFeature.Shape = sourceLine;
+
+			IPolygon footprint = GeometryFactory.CreatePolygon(
+				2600040, 1200000, 2600060, 1200010, 500);
+			footprint.SpatialReference = sr;
+
+			GdbFeature targetFeature = GdbFeature.Create(43, multipatchClass);
+			targetFeature.Shape = GeometryFactory.CreateMultiPatch(footprint);
+
+			CrackOptionsMsg options = new CrackOptionsMsg()
+			                          {
+				                          ExcludeInteriorInteriorIntersection = true,
+				                          IntersectionPointOptions =
+					                          (int) IntersectionPointOptions
+						                          .IncludeLinearIntersectionEndpoints
+			                          };
+
+			CalculateCrackPointsRequest calculationRequest =
+				new CalculateCrackPointsRequest()
+				{
+					ClassDefinitions =
+					{
+						ProtobufGdbUtils.ToObjectClassMsg(lineClass, true),
+						ProtobufGdbUtils.ToObjectClassMsg(multipatchClass, true)
+					},
+					SourceFeatures =
+						{ ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) sourceFeature) },
+					TargetFeatures =
+						{ ProtobufGdbUtils.ToGdbObjectMsg((IReadOnlyRow) targetFeature) },
+					CrackOptions = options
+				};
+
+			CalculateCrackPointsResponse response =
+				CrackServiceUtils.CalculateCrackPoints(calculationRequest, null);
+
+			List<IPoint> resultPoints =
+				ProtobufGeometryUtils.FromShapeMsgList<IPoint>(
+					response.CrackPoints.SelectMany(kvp => kvp.CrackPoints)
+					        .Select(cp => cp.Point).ToList());
+
+			Assert.AreEqual(2, resultPoints.Count);
+			Assert.AreEqual(2600040, resultPoints.Min(p => p.X), 0.001);
+			Assert.AreEqual(2600060, resultPoints.Max(p => p.X), 0.001);
+		}
+
+		[Test]
 		public void CanCrackBetweenClasses()
 		{
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
@@ -412,8 +482,9 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			fClass1.AddField(FieldUtils.CreateOIDField());
 			fClass1.AddField(
-				FieldUtils.CreateShapeField(geometryType,
-				                            spatialReference));
+				FieldUtils.CreateShapeField(
+					geometryType, spatialReference,
+					hasZ: geometryType == esriGeometryType.esriGeometryMultiPatch));
 			return fClass1;
 		}
 	}

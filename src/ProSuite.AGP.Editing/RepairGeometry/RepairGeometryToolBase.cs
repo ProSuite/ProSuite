@@ -116,13 +116,29 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 		// Optionally, allow a non-standard tolerance
 		selectedFeatures = ReReadFeaturesFromFeatureClass(selectedFeatures);
 
-		_repairGeometryResult = CalculateRepairInfo(
-			selectedFeatures, _repairGeometryToolOptions, cancellationToken);
+		// The microservice reports no issue for an empty geometry, because simplifying it
+		// does not change it.
+		List<Feature> emptyFeatures = selectedFeatures.Where(HasEmptyGeometry).ToList();
+		List<Feature> featuresToCheck = selectedFeatures.Except(emptyFeatures).ToList();
+
+		_repairGeometryResult = featuresToCheck.Count > 0
+			                        ? CalculateRepairInfo(featuresToCheck,
+			                                              _repairGeometryToolOptions,
+			                                              cancellationToken)
+			                        : new RepairGeometryResult();
 
 		if (cancellationToken.IsCancellationRequested)
 		{
 			_msg.Debug("Calculation of repair info was cancelled.");
 			return;
+		}
+
+		foreach (Feature emptyFeature in emptyFeatures)
+		{
+			_repairGeometryResult?.NonStorableMessages.Add(
+				$"{GdbObjectUtils.GetDisplayValue(emptyFeature)} has an empty geometry and " +
+				"cannot be repaired. Delete the feature, or create a new geometry for it " +
+				"with the Destroy And Rebuild tool.");
 		}
 
 		_feedback.Update(_repairGeometryResult, selectedFeatures, cancellationToken);
@@ -279,7 +295,10 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 
 		if (! _repairGeometryResult.HasRepairableFeatures)
 		{
-			_msg.Info("No geometry issues found. Select other features to check.");
+			_msg.Info(_repairGeometryResult.NonStorableMessages.Count > 0
+				          ? "No geometry issues found that this tool can repair. " +
+				            "Select other features to check."
+				          : "No geometry issues found. Select other features to check.");
 			return;
 		}
 
@@ -375,6 +394,11 @@ public abstract class RepairGeometryToolBase : TwoPhaseEditToolBase
 		}
 
 		return result;
+	}
+
+	private static bool HasEmptyGeometry([NotNull] Feature feature)
+	{
+		return feature.GetShape() is not { IsEmpty: false };
 	}
 
 	[NotNull]

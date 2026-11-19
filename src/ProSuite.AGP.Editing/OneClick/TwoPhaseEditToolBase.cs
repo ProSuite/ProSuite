@@ -151,9 +151,12 @@ public abstract class TwoPhaseEditToolBase : OneClickToolBase
 				Geometry simpleGeometry = GeometryUtils.Simplify(sketchGeometry);
 				Assert.NotNull(simpleGeometry, "Geometry is null");
 
-				bool success =
-					await SelectAndProcessDerivedGeometry(
-						selection, simpleGeometry, progressor);
+				// The phase was decided on the UI thread from a cached flag. Meanwhile, the
+				// derived geometries can have been reset (selection cleared) or not yet
+				// calculated (new selection still being processed).
+				bool success = CanUseDerivedGeometries() &&
+				               await SelectAndProcessDerivedGeometry(
+					               selection, simpleGeometry, progressor);
 
 				await DerivedGeometriesCalculated(null, true);
 

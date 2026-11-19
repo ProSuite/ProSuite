@@ -311,5 +311,57 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cracking
 				                $"Snap tolerance: {snapTolerance}");
 			}
 		}
+
+		[Test]
+		public void CanGetSplitPolycurvesWithSameSplitPointTwice()
+		{
+			// GOTOP-1688: The line crosses the shared boundary of two target polygons. Each
+			// target provides the same split point. The second split at the same point must
+			// not result in an additional empty line.
+			ISpatialReference lv95 = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			// The coordinates as stored in the bug data. With rounded coordinates the error
+			// does not occur.
+			IPolyline originalPolyline = GeometryFactory.CreatePolyline(
+				lv95, new List<IPoint>
+				      {
+					      GeometryFactory.CreatePoint(
+						      2573081.2179999985, 1106543.5260000005, 460.3179999999993),
+					      GeometryFactory.CreatePoint(
+						      2573169.1730000004, 1106605.2089999989, 460.67500000000291),
+					      GeometryFactory.CreatePoint(
+						      2573254.3850000016, 1106663.3770000003, 460.64800000000105)
+				      });
+
+			IFeature mockFeature = TestUtils.CreateMockFeature(originalPolyline, 0.01, 0.001);
+
+			// The split point as calculated from the bug data (not on the resolution grid)
+			var splitPoint = new WKSPointZ
+			                 {
+				                 X = 2573236.890074123, Y = 1106651.4344936805,
+				                 Z = 460.78800000000047
+			                 };
+
+			IPointCollection splitPoints = (IPointCollection) GeometryFactory.CreateMultipoint(
+				new[] { splitPoint, splitPoint }, lv95);
+
+			foreach (double? snapTolerance in new double?[] { null, 0.1 })
+			{
+				List<IPolyline> splitLines =
+					CrackUtils.GetSplitPolycurves(mockFeature, splitPoints, snapTolerance)
+					          .ToList();
+
+				Assert.AreEqual(2, splitLines.Count, $"Snap tolerance: {snapTolerance}");
+
+				foreach (IPolyline splitLine in splitLines)
+				{
+					Assert.IsFalse(splitLine.IsEmpty, $"Snap tolerance: {snapTolerance}");
+				}
+
+				Assert.AreEqual(originalPolyline.Length, splitLines.Sum(l => l.Length), 0.001,
+				                $"Snap tolerance: {snapTolerance}");
+			}
+		}
 	}
 }

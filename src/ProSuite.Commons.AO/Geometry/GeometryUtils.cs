@@ -9152,8 +9152,11 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 
 				// NOTE: if createParts == true: empty parts are generated, otherwise no empty segment is created and
-				//		 splitHappens is false. But splitHappens is also false if there was a vertex already
-				if (createParts && curveCollection.Geometry[newPartIdx].IsEmpty)
+				//		 splitHappens is false. But splitHappens is also false if there was a vertex already.
+				//		 A second split at the same point can create a part with one point,
+				//		 which is not IsEmpty but has no segment either (GOTOP-1688).
+				if (createParts &&
+				    ((IPointCollection) curveCollection.Geometry[newPartIdx]).PointCount < 2)
 				{
 					// the split point was too close to the previous split point
 					curveCollection.RemoveGeometries(newPartIdx, 1);

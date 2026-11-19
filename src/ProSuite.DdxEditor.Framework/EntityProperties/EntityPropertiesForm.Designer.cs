@@ -31,7 +31,7 @@
 			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
 			this._groupBoxProperties = new System.Windows.Forms.GroupBox();
 			this._buttonClose = new System.Windows.Forms.Button();
-			this._dataGridView = new System.Windows.Forms.DataGridView();
+			this._dataGridView = new ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView();
 			this._statusStrip = new System.Windows.Forms.StatusStrip();
 			this._statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
 			this._buttonCopy = new System.Windows.Forms.Button();
@@ -163,7 +163,7 @@
 
 		private System.Windows.Forms.GroupBox _groupBoxProperties;
 		private System.Windows.Forms.Button _buttonClose;
-		private System.Windows.Forms.DataGridView _dataGridView;
+		private ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView _dataGridView;
 		private System.Windows.Forms.StatusStrip _statusStrip;
 		private System.Windows.Forms.ToolStripStatusLabel _statusLabel;
 		private System.Windows.Forms.Button _buttonCopy;

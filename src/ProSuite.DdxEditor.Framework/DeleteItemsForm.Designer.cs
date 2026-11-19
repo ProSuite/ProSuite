@@ -34,7 +34,7 @@
 			this._splitContainer = new ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx();
 			this._treeView = new System.Windows.Forms.TreeView();
 			this._imageList = new System.Windows.Forms.ImageList(this.components);
-			this._dataGridView = new System.Windows.Forms.DataGridView();
+			this._dataGridView = new ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView();
 			this._columnImage = new System.Windows.Forms.DataGridViewImageColumn();
 			this._columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this._columnTypeName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -298,7 +298,7 @@
 		private System.Windows.Forms.Button _buttonYes;
 		private global::ProSuite.Commons.UI.WinForms.Controls.SplitContainerEx _splitContainer;
 		private System.Windows.Forms.TreeView _treeView;
-		private System.Windows.Forms.DataGridView _dataGridView;
+		private ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView _dataGridView;
 		private System.Windows.Forms.DataGridViewTextBoxColumn _columnDependingItem;
 		private System.Windows.Forms.DataGridViewTextBoxColumn _columnRequiresConfirmation;
 		private System.Windows.Forms.DataGridViewTextBoxColumn _columnCanRemove;
