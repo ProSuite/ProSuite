@@ -50,7 +50,7 @@ namespace ProSuite.UI.Core.DataModel
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
 			this._groupBoxStorage = new System.Windows.Forms.GroupBox();
 			this._groupBoxDatasets = new System.Windows.Forms.GroupBox();
-			this._dataGridViewDatasets = new System.Windows.Forms.DataGridView();
+			this._dataGridViewDatasets = new ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView();
 			this._columnDatasetName = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this._columnStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this._columnFeatureDataset = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -563,7 +563,7 @@ namespace ProSuite.UI.Core.DataModel
 		private System.Windows.Forms.Panel _panelGridSizeInfo;
 		private System.Windows.Forms.GroupBox _groupBoxDatasets;
 		private System.Windows.Forms.GroupBox _groupBoxFeatureDataset;
-		private System.Windows.Forms.DataGridView _dataGridViewDatasets;
+		private ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView _dataGridViewDatasets;
 		private System.Windows.Forms.Label _labelFeatureDatasetName;
 		private System.Windows.Forms.TextBox _textBoxFeatureDatasetName;
 		private System.Windows.Forms.DataGridViewTextBoxColumn _columnDatasetName;

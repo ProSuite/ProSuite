@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WinForms;
+using ProSuite.Commons.UI.WinForms.Controls;
 
 namespace ProSuite.Commons.UI.Logging
 {
@@ -38,7 +39,6 @@ namespace ProSuite.Commons.UI.Logging
 		private long _logCount;
 		private readonly int[] _textColumnIndices;
 
-		private int _singleLineRowHeight;
 		private bool _showDebugMessages;
 		private bool _useDarkTheme;
 
@@ -52,6 +52,7 @@ namespace ProSuite.Commons.UI.Logging
 			InitializeComponent();
 
 			_dataGridView.AutoGenerateColumns = false;
+			_dataGridView.LogicalRowHeight = ListRowHeight.Log;
 			_showDebugMessages = _toolStripMenuItemShowDebugMessages.Checked;
 
 			WinFormsThemeUtils.ApplyModernHeaderStyle(_dataGridView);
@@ -117,8 +118,9 @@ namespace ProSuite.Commons.UI.Logging
 				_levelImageCache[pair.Key] = pair.Value;
 			}
 
+			// The grid base class pads the icon at the sides only: vertical padding would keep
+			// auto-sized rows above the central row height.
 			_columnLogLevelImage.ImageLayout = DataGridViewImageCellLayout.Zoom;
-			_columnLogLevelImage.DefaultCellStyle.Padding = new Padding(LogicalToDeviceUnits(3));
 
 			foreach (DataGridViewRow row in _dataGridView.Rows)
 			{
@@ -212,11 +214,9 @@ namespace ProSuite.Commons.UI.Logging
 			int timeWidth = TextRenderer.MeasureText(longestTime, font).Width + cellPadding;
 			_columnLogDateTime.Width = Math.Max(_columnLogDateTime.Width, timeWidth);
 
-			// Square icon cell at the auto-sized row height.
-			int rowHeight = Math.Max(_dataGridView.RowTemplate.Height,
-			                         font.Height + LogicalToDeviceUnits(4));
-			_columnLogLevelImage.Width = Math.Max(_columnLogLevelImage.Width, rowHeight);
-			_singleLineRowHeight = rowHeight;
+			// The grid base class centers the icon at 16 logical px.
+			_columnLogLevelImage.Width = Math.Max(_columnLogLevelImage.Width,
+			                                      LogicalToDeviceUnits(16 + 8));
 		}
 
 		private void ScrollToEndCore()
@@ -615,16 +615,6 @@ namespace ProSuite.Commons.UI.Logging
 		                                          DataGridViewCellFormattingEventArgs e)
 		{
 			DataGridViewRow row = _dataGridView.Rows[e.RowIndex];
-
-			if (e.ColumnIndex == _columnLogLevelImage.Index &&
-			    _columnLogLevelImage.ImageLayout == DataGridViewImageCellLayout.Zoom)
-			{
-				// Keep the zoomed icon at its single-line size in multi-line rows.
-				int extra = Math.Max(0, (row.Height - _singleLineRowHeight) / 2);
-				Padding padding = e.CellStyle.Padding;
-				e.CellStyle.Padding = new Padding(padding.Left, padding.Top + extra,
-				                                  padding.Right, padding.Bottom + extra);
-			}
 
 			LogEventItem logEventItem = GetLogEventItem(row);
 			if (logEventItem == null)

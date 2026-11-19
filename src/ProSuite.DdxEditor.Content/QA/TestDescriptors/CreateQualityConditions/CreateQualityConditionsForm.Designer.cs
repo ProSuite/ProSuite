@@ -29,7 +29,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 		private void InitializeComponent()
 		{
 			components=new System.ComponentModel.Container();
-			_dataGridView=new System.Windows.Forms.DataGridView();
+			_dataGridView=new ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView();
 			_contextMenuStripDataGrid=new System.Windows.Forms.ContextMenuStrip(components);
 			_buttonCancel=new System.Windows.Forms.Button();
 			_buttonOK=new System.Windows.Forms.Button();
@@ -495,7 +495,7 @@ namespace ProSuite.DdxEditor.Content.QA.TestDescriptors.CreateQualityConditions
 
 		#endregion
 
-		private System.Windows.Forms.DataGridView _dataGridView;
+		private ProSuite.Commons.UI.WinForms.Controls.SortAwareDataGridView _dataGridView;
 		private System.Windows.Forms.Button _buttonCancel;
 		private System.Windows.Forms.Button _buttonOK;
 		private global::ProSuite.Commons.UI.WinForms.Controls.ToolStripEx _toolStripElements;
