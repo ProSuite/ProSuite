@@ -283,7 +283,7 @@ public static class GdbPersistenceUtils
 				geometryToStore = GeometryUtils.EnsureSpatialReference(
 					geometryToStore, spatialReference);
 
-				rowBuffer[shapeFieldName] = geometryToStore;
+				SetShape(rowBuffer, geometryToStore, shapeFieldName);
 
 				var feature = targetFeatureClass.CreateRow(rowBuffer);
 
@@ -403,7 +403,7 @@ public static class GdbPersistenceUtils
 				geometryToStore = GeometryUtils.EnsureSpatialReference(
 					geometryToStore, spatialReference);
 
-				rowBuffer[shapeFieldName] = geometryToStore;
+				SetShape(rowBuffer, geometryToStore, shapeFieldName);
 
 				var feature = targetFeatureClass.CreateRow(rowBuffer);
 
@@ -624,6 +624,12 @@ public static class GdbPersistenceUtils
 	                             [NotNull] Geometry geometry,
 	                             string shapeFieldName)
 	{
+		// A file geodatabase stores an empty geometry without error
+		if (geometry.IsEmpty)
+		{
+			throw new DataException("One or more new geometries are empty.");
+		}
+
 		try
 		{
 			rowBuffer[shapeFieldName] = geometry;
