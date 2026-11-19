@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -131,47 +132,77 @@ public class FeatureFinder
 
 			searchGeometry = Assert.NotNull(ExpandWithExtraTolerance(searchGeometry));
 
-			QueryFilter filter =
-				GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
-
-			using FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
-
-			Assert.NotNull(featureClass,
-			               $"Layer {basicFeatureLayer.Name} has null feature class");
-
-			if (DelayFeatureFetching)
+			FeatureSelectionBase selection;
+			try
 			{
-				using var definition = featureClass.GetDefinition();
-				filter.SubFields = definition.GetObjectIDField();
-
-				List<long> objectIds =
-					LayerUtils.SearchObjectIds(basicFeatureLayer, filter, featurePredicate)
-					          .ToList();
-
-				if (objectIds.Count > 0)
-				{
-					yield return new OidSelection(basicFeatureLayer, objectIds,
-					                              outputSpatialReference);
-				}
+				selection = FindFeaturesInLayer(basicFeatureLayer, searchGeometry,
+				                                featurePredicate, outputSpatialReference);
 			}
-			else
+			catch (GeodatabaseException e)
 			{
-				// TODO: Honour ReturnUnJoinedFeatures value.
-				filter.OutputSpatialReference = outputSpatialReference;
+				WarnLayerNotSearched(basicFeatureLayer.Name, e);
+				continue;
+			}
 
-				// NOTE: FeatureSelection takes ownership (ToList) of the features.
-				// A recycling cursor would yield N references to the same row!
-				IEnumerable<Feature> features =
-#if ARCGISPRO_GREATER_3_5
-					LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate,
-					                      recycling: false);
-#else
-					LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate);
-#endif
-
-				yield return new FeatureSelection(basicFeatureLayer, features);
+			if (selection != null)
+			{
+				yield return selection;
 			}
 		}
+	}
+
+	/// <returns>The found features, or null if no object IDs were found with
+	/// <see cref="DelayFeatureFetching"/>.</returns>
+	[CanBeNull]
+	private FeatureSelectionBase FindFeaturesInLayer(
+		[NotNull] BasicFeatureLayer basicFeatureLayer,
+		[NotNull] Geometry searchGeometry,
+		[NotNull] Predicate<Feature> featurePredicate,
+		[CanBeNull] SpatialReference outputSpatialReference)
+	{
+		QueryFilter filter =
+			GdbQueryUtils.CreateSpatialFilter(searchGeometry, SpatialRelationship);
+
+		using FeatureClass featureClass = basicFeatureLayer.GetFeatureClass();
+
+		Assert.NotNull(featureClass,
+		               $"Layer {basicFeatureLayer.Name} has null feature class");
+
+		if (DelayFeatureFetching)
+		{
+			using var definition = featureClass.GetDefinition();
+			filter.SubFields = definition.GetObjectIDField();
+
+			List<long> objectIds =
+				LayerUtils.SearchObjectIds(basicFeatureLayer, filter, featurePredicate)
+				          .ToList();
+
+			return objectIds.Count > 0
+				       ? new OidSelection(basicFeatureLayer, objectIds, outputSpatialReference)
+				       : null;
+		}
+
+		// TODO: Honour ReturnUnJoinedFeatures value.
+		filter.OutputSpatialReference = outputSpatialReference;
+
+		// NOTE: FeatureSelection enumerates and takes ownership (ToList) of the features.
+		// A recycling cursor would yield N references to the same row!
+		IEnumerable<Feature> features =
+#if ARCGISPRO_GREATER_3_5
+			LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate,
+			                      recycling: false);
+#else
+			LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate);
+#endif
+
+		return new FeatureSelection(basicFeatureLayer, features);
+	}
+
+	private static void WarnLayerNotSearched([NotNull] string layerName,
+	                                         [NotNull] Exception exception)
+	{
+		_msg.Warn($"Layer '{layerName}' could not be searched. Features of this layer " +
+		          $"might be missing in the result. Error: {exception.Message}", exception);
 	}
 
 	// todo daro rename to FindFeaturesByTable?
@@ -250,6 +281,10 @@ public class FeatureFinder
 						featurePredicate, cancellationToken);
 
 					features.AddRange(foundFeatures);
+				}
+				catch (GeodatabaseException e)
+				{
+					WarnLayerNotSearched(basicFeatureLayer.Name, e);
 				}
 				catch (Exception e)
 				{
