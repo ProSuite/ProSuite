@@ -4,9 +4,9 @@
       <DrawingImage.Drawing>
         <DrawingGroup>
           <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H16 V16 H0 Z" />
-          <GeometryDrawing Brush="#505050" Geometry="F1 M6.25,4 A1.75,1.75 0 1,0 9.75,4 A1.75,1.75 0 1,0 6.25,4 Z" />
-          <GeometryDrawing Brush="#505050" Geometry="F1 M1.75,11.5 A1.75,1.75 0 1,0 5.25,11.5 A1.75,1.75 0 1,0 1.75,11.5 Z" />
-          <GeometryDrawing Brush="#505050" Geometry="F1 M10.75,10 A1.75,1.75 0 1,0 14.25,10 A1.75,1.75 0 1,0 10.75,10 Z" />
+          <GeometryDrawing Brush="#505050" Geometry="F1 M5,8 A3,3 0 1,0 11,8 A3,3 0 1,0 5,8 Z">
+            <GeometryDrawing.Pen><Pen Brush="#FFFFFF" Thickness="1" StartLineCap="Flat" EndLineCap="Flat" LineJoin="Miter" /></GeometryDrawing.Pen>
+          </GeometryDrawing>
         </DrawingGroup>
       </DrawingImage.Drawing>
     </DrawingImage>

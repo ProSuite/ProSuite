@@ -79,7 +79,7 @@
                             CommandParameter="{Binding Mode=OneWay}"
                             ToolTip="{Binding ZoomToVerifiedPerimeterToolTip}"
                             ToolTipService.ShowOnDisabled="True">
-                        <!-- The verified perimeter in the green of the tile progress, and a magnifier. -->
+                        <!-- The verified perimeter in the green of the tile progress, and the zoom magnifier. -->
                         <Image Width="16" Height="16" Style="{StaticResource DimmedWhenDisabled}">
                             <Image.Source>
                                 <DrawingImage>
@@ -91,20 +91,33 @@
                                                     <Pen Brush="#008000" Thickness="1" />
                                                 </GeometryDrawing.Pen>
                                             </GeometryDrawing>
-                                            <GeometryDrawing Geometry="M12.5,12.5 L15.5,15.5">
+                                            <!-- the magnifier of the other zoom icons (ShowToc): white halo, brown handle, blue ring -->
+                                            <GeometryDrawing Geometry="M11.25,11.25 L14,14">
                                                 <GeometryDrawing.Pen>
-                                                    <Pen Brush="#232323" Thickness="2" />
+                                                    <Pen Brush="#FFFFFF" Thickness="4" StartLineCap="Round" EndLineCap="Round" />
                                                 </GeometryDrawing.Pen>
                                             </GeometryDrawing>
                                             <GeometryDrawing Brush="#FFFFFF">
                                                 <GeometryDrawing.Pen>
-                                                    <Pen Brush="#232323" Thickness="1.2" />
+                                                    <Pen Brush="#FFFFFF" Thickness="3" />
                                                 </GeometryDrawing.Pen>
                                                 <GeometryDrawing.Geometry>
-                                                    <EllipseGeometry Center="9.5,9.5" RadiusX="4" RadiusY="4" />
+                                                    <EllipseGeometry Center="8.75,8.75" RadiusX="3.25" RadiusY="3.25" />
                                                 </GeometryDrawing.Geometry>
                                             </GeometryDrawing>
-                                            <GeometryDrawing Brush="#232323" Geometry="M9,7 H10 V9 H12 V10 H10 V12 H9 V10 H7 V9 H9 Z" />
+                                            <GeometryDrawing Geometry="M11.25,11.25 L14,14">
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#A8802A" Thickness="2.25" StartLineCap="Round" EndLineCap="Round" />
+                                                </GeometryDrawing.Pen>
+                                            </GeometryDrawing>
+                                            <GeometryDrawing Brush="#EAF3FC">
+                                                <GeometryDrawing.Pen>
+                                                    <Pen Brush="#2B7BD6" Thickness="1.5" />
+                                                </GeometryDrawing.Pen>
+                                                <GeometryDrawing.Geometry>
+                                                    <EllipseGeometry Center="8.75,8.75" RadiusX="3.25" RadiusY="3.25" />
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
                                         </DrawingGroup>
                                     </DrawingImage.Drawing>
                                 </DrawingImage>

@@ -4,7 +4,10 @@
       <DrawingImage.Drawing>
         <DrawingGroup>
           <GeometryDrawing Brush="#00FFFFFF" Geometry="M0,0 H16 V16 H0 Z" />
-          <GeometryDrawing Brush="#505050" Geometry="F0 M6.6,1.5 H9.4 L14.5,14.5 H12.2 L11,11.25 H5 L3.8,14.5 H1.5 Z M5.85,9.25 H10.15 L8,3.8 Z" />
+          <GeometryDrawing Brush="#FFFFFF" Geometry="F0 M7.3,1.25 H8.7 L14.5,14.5 H12.2 L11,11.25 H5 L3.8,14.5 H1.5 Z M5.85,9.25 H10.15 L8,3.8 Z">
+            <GeometryDrawing.Pen><Pen Brush="#FFFFFF" Thickness="1.6" StartLineCap="Flat" EndLineCap="Flat" LineJoin="Round" /></GeometryDrawing.Pen>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#505050" Geometry="F0 M7.3,1.25 H8.7 L14.5,14.5 H12.2 L11,11.25 H5 L3.8,14.5 H1.5 Z M5.85,9.25 H10.15 L8,3.8 Z" />
         </DrawingGroup>
       </DrawingImage.Drawing>
     </DrawingImage>
