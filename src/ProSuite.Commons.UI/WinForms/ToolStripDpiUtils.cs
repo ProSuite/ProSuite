@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -8,20 +9,23 @@ namespace ProSuite.Commons.UI.WinForms
 {
 	public static class ToolStripDpiUtils
 	{
+		// A second call (e.g. ScaleImagesToDpi, then SetImageSize) must scale from the original
+		// image, not from the smaller copy of the first call.
+		private static readonly ConditionalWeakTable<ToolStripItem, Image> _originalImages =
+			new ConditionalWeakTable<ToolStripItem, Image>();
+
 		/// <summary>
 		/// Scales the designer's <see cref="ToolStrip.ImageScalingSize"/> (set for 96 DPI) of all
 		/// tool strips and context menus below <paramref name="control"/> to the screen DPI.
 		/// WinForms scales the rest of the layout but leaves this size as it is, so the icons
-		/// shrink on high-DPI screens. Call it once, after <c>InitializeComponent</c>.
+		/// shrink on high-DPI screens. Images larger than that size are pre-scaled with
+		/// high-quality interpolation: the tool strip's own scaling drops or doubles 1 px
+		/// details, which makes e.g. a symmetric border look thicker on one side.
+		/// Call it once, after <c>InitializeComponent</c>.
 		/// </summary>
 		public static void ScaleImagesToDpi([NotNull] Control control)
 		{
 			float factor = control.DeviceDpi / 96f;
-
-			if (factor <= 1)
-			{
-				return;
-			}
 
 			ScaleImages(control,
 			            size => new Size((int) (size.Width * factor),
@@ -72,7 +76,8 @@ namespace ProSuite.Commons.UI.WinForms
 				return;
 			}
 
-			toolStrip.ImageScalingSize = getSize(toolStrip.ImageScalingSize);
+			Size targetSize = getSize(toolStrip.ImageScalingSize);
+			toolStrip.ImageScalingSize = targetSize;
 
 			// Items keep the image size computed for the old scaling size (and draw the icon
 			// tiny until the next resize) unless their image is set again.
@@ -81,24 +86,36 @@ namespace ProSuite.Commons.UI.WinForms
 				if (sizeToFit)
 				{
 					item.ImageScaling = ToolStripItemImageScaling.SizeToFit;
-
-					if (item is ToolStripDropDownItem dropDownItem &&
-					    dropDownItem.HasDropDownItems)
-					{
-						Scale(dropDownItem.DropDown, getSize, true, scaled);
-					}
 				}
 
-				Image image = item.Image;
+				if (item is ToolStripDropDownItem dropDownItem &&
+				    dropDownItem.HasDropDownItems)
+				{
+					Scale(dropDownItem.DropDown, getSize, sizeToFit, scaled);
+				}
 
-				if (image is null)
+				if (item.Image is null ||
+				    item.ImageScaling != ToolStripItemImageScaling.SizeToFit)
 				{
 					continue;
 				}
 
+				Image image = _originalImages.GetValue(item, i => i.Image);
+
 				item.Image = null;
-				item.Image = image;
+				item.Image = GetImageForSize(image, targetSize);
 			}
+		}
+
+		[NotNull]
+		private static Image GetImageForSize([NotNull] Image image, Size size)
+		{
+			if (image.Width <= size.Width && image.Height <= size.Height)
+			{
+				return image;
+			}
+
+			return ImageDpiUtils.Scale(image, size);
 		}
 	}
 }
