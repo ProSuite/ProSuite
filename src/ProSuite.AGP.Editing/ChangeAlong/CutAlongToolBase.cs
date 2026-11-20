@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -261,7 +262,7 @@ public abstract class CutAlongToolBase : ChangeAlongToolBase
 		}
 
 		viewModel.Options = _cutAlongToolOptions;
-		viewModel.Activate(false);
+		DockPaneUtils.ShowToolOptions(viewModel);
 	}
 
 	protected override void HideOptionsPane()

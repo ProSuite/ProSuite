@@ -817,7 +817,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			}
 
 			viewModel.Options = _bufferedLineToolOptions;
-			viewModel.Activate(false);
+			DockPaneUtils.ShowToolOptions(viewModel);
 		}
 
 		protected override void HideOptionsPane()

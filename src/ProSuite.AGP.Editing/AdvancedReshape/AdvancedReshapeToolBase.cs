@@ -477,7 +477,7 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 
 		viewModel.Options = _advancedReshapeToolOptions;
 
-		viewModel.Activate(false);
+		DockPaneUtils.ShowToolOptions(viewModel);
 	}
 
 	protected override void HideOptionsPane()

@@ -21,23 +21,29 @@ namespace ProSuite.Commons.AGP.Framework;
 /// (DockPane.Activate(true)) and after a click into the pane. Text boxes and combo boxes keep
 /// the keyboard while they are used; Enter or Escape in a text box and closing a combo box's
 /// drop-down or a date picker's calendar give it back.
+/// Nothing is given back while the pane is auto-hidden: such a pane closes as soon as it
+/// loses the keyboard, so it could not be read nor used.
 /// </summary>
 public class KeyboardFocusReturner
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	[NotNull] private readonly FrameworkElement _content;
+	[NotNull] private readonly Func<bool> _isAutoHidden;
 
 	// The element in a map pane that had the keyboard before the pane, e.g. the ViewerHost.
 	[CanBeNull] private IInputElement _mapFocus;
 
 	private bool _returnOnMouseUp;
 
-	private KeyboardFocusReturner([NotNull] FrameworkElement content)
+	private KeyboardFocusReturner([NotNull] FrameworkElement content,
+	                              [NotNull] Func<bool> isAutoHidden)
 	{
 		Assert.ArgumentNotNull(content, nameof(content));
+		Assert.ArgumentNotNull(isAutoHidden, nameof(isAutoHidden));
 
 		_content = content;
+		_isAutoHidden = isAutoHidden;
 
 		_content.AddHandler(UIElement.GotKeyboardFocusEvent,
 		                    new KeyboardFocusChangedEventHandler(OnGotKeyboardFocus), true);
@@ -52,10 +58,13 @@ public class KeyboardFocusReturner
 	/// <summary>
 	/// Makes the given pane content give the keyboard back to the active map view.
 	/// </summary>
-	public static void Attach([NotNull] FrameworkElement content)
+	/// <param name="content">The content of the pane.</param>
+	/// <param name="isAutoHidden">Whether the pane is auto-hidden at the moment.</param>
+	public static void Attach([NotNull] FrameworkElement content,
+	                          [NotNull] Func<bool> isAutoHidden)
 	{
 		// The handlers keep the instance alive as long as the content lives.
-		_ = new KeyboardFocusReturner(content);
+		_ = new KeyboardFocusReturner(content, isAutoHidden);
 	}
 
 	private void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -232,6 +241,13 @@ public class KeyboardFocusReturner
 			if (! IsInside(focused) || KeepsKeyboard(focused) && ! leaveTextBox)
 			{
 				// The keyboard has moved on meanwhile, or is in a text box.
+				return;
+			}
+
+			if (_isAutoHidden())
+			{
+				// The pane would close at once. A click into the map closes it and gives the
+				// keyboard to the map anyway.
 				return;
 			}
 

@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI;
@@ -281,7 +282,10 @@ public abstract class MapToolBase : MapTool
 			{
 				await UIEnvironment.ReleaseCursorAsync();
 
-				ShowOptionsPane();
+				using (DockPaneUtils.SlideOutAutoHidden())
+				{
+					ShowOptionsPane();
+				}
 			}
 
 			await HandleKeyDownCoreAsync(args);

@@ -391,7 +391,7 @@ public abstract class RemoveHoleToolBase : TwoPhaseEditToolBase
 
 		viewModel.Options = _removeHoleToolOptions;
 
-		viewModel.Activate(false);
+		DockPaneUtils.ShowToolOptions(viewModel);
 	}
 
 	protected override void HideOptionsPane()

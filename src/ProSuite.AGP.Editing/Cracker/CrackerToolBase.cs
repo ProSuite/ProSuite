@@ -411,7 +411,7 @@ public abstract class CrackerToolBase : TopologicalCrackingToolBase
 
 		viewModel.Options = _crackerToolOptions;
 
-		viewModel.Activate(false);
+		DockPaneUtils.ShowToolOptions(viewModel);
 	}
 
 	protected override void HideOptionsPane()

@@ -43,7 +43,8 @@ public abstract class DockPaneViewModelBase : DockPane
 
 		if (ReturnsKeyboardFocus)
 		{
-			KeyboardFocusReturner.Attach(_contentControl);
+			KeyboardFocusReturner.Attach(_contentControl,
+			                             () => DockState == DockPaneState.AutoHide);
 		}
 
 		return _contentControl;
@@ -85,6 +86,7 @@ public abstract class DockPaneViewModelBase : DockPane
 	/// Whether the pane gives the keyboard back to where it came from (typically the map
 	/// view, so that the active tool keeps receiving the keys) when it is shown with the
 	/// focus and after a click into it. Text boxes keep the keyboard until Enter or Escape.
+	/// An auto-hidden pane keeps the keyboard, else it would close at once.
 	/// Meant for tool options panes. Read once, when the pane's content is created.
 	/// </summary>
 	protected virtual bool ReturnsKeyboardFocus => false;

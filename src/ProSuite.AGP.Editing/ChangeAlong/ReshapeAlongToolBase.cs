@@ -15,6 +15,7 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -432,7 +433,7 @@ public abstract class ReshapeAlongToolBase : ChangeAlongToolBase
 		}
 
 		viewModel.Options = _reshapeAlongToolOptions;
-		viewModel.Activate(false);
+		DockPaneUtils.ShowToolOptions(viewModel);
 	}
 
 	protected override void HideOptionsPane()
