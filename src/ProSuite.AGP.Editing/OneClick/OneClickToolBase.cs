@@ -49,9 +49,6 @@ public abstract class OneClickToolBase : MapToolBase
 	protected OneClickToolBase()
 	{
 		ContextMenuID = "esri_mapping_selection2DContextMenu";
-
-		HandledKeys.Add(_keyLassoDraw);
-		HandledKeys.Add(_keyPolygonDraw);
 	}
 
 	/// <summary>
@@ -183,6 +180,18 @@ public abstract class OneClickToolBase : MapToolBase
 	}
 
 	#endregion
+
+	/// <summary>
+	/// Whether P and L switch the selection sketch to polygon and lasso at the moment. While they
+	/// do not, the tool leaves them to ArcGIS Pro.
+	/// </summary>
+	protected virtual bool HandlesSelectionSketchKeys => true;
+
+	protected override bool HandlesKey(Key key)
+	{
+		return base.HandlesKey(key) ||
+		       ((key == _keyPolygonDraw || key == _keyLassoDraw) && HandlesSelectionSketchKeys);
+	}
 
 	protected virtual async Task ToggleSelectionSketchGeometryTypeAsync(
 		SketchGeometryType toggleSketchType)

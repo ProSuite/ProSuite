@@ -23,6 +23,12 @@ public interface IEditSketchTool
 	SketchGeometryType? EditSketchGeometryType { get; }
 
 	/// <summary>
+	/// Whether the target of the edit sketch has Z values, as determined when the sketch phase
+	/// started. Null if the tool cannot tell it.
+	/// </summary>
+	bool? EditSketchHasZ { get; }
+
+	/// <summary>
 	/// Replaces the edit sketch by the specified sketch. A tool in its selection phase first
 	/// starts the sketch phase if the current selection allows it.
 	/// </summary>

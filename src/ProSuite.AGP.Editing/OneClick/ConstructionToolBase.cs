@@ -42,6 +42,9 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	private bool _ignoreMouseDownDuringReplay;
 
+	// Written on the UI thread, read on the background thread that raises the sketch events.
+	private bool? _editSketchHasZ;
+
 	protected ConstructionToolBase()
 	{
 		ContextMenuID = "esri_editing_SketchContextMenu";
@@ -399,6 +402,12 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 			await EndIntermittentSelectionAsync();
 		}
 	}
+
+	/// <summary>
+	/// While sketching, P and L are ArcGIS Pro's (P: parallel). They switch the selection sketch
+	/// only in the selection phase, the intermittent selection with SHIFT included.
+	/// </summary>
+	protected override bool HandlesSelectionSketchKeys => ! IsInSketchMode;
 
 	protected override async Task ToggleSelectionSketchGeometryTypeAsync(
 		SketchGeometryType toggleSketchType)
@@ -778,6 +787,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		await QueuedTask.Run(ResetSketchVertexSymbolOptions);
 
+		_editSketchHasZ = await GetEditSketchHasZ();
+
 		EditingTemplate relevanteTemplate = GetSketchTemplate();
 
 		if (relevanteTemplate != null)
@@ -921,6 +932,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		IsInSketchPhase && _intermediateSketchStates?.IsInIntermittentSelectionPhase != true;
 
 	SketchGeometryType? IEditSketchTool.EditSketchGeometryType => GetKnownEditSketchGeometryType();
+
+	bool? IEditSketchTool.EditSketchHasZ => _editSketchHasZ;
 
 	public async Task<bool> TrySetEditSketchAsync(Geometry sketch)
 	{

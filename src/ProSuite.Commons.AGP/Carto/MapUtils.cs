@@ -1506,31 +1506,18 @@ public static class MapUtils
 
 	private static FeatureClass GetUnJoinedFeatureClass(FeatureClass featureClass)
 	{
-		// Get the shape's table name
-		string shapeField = featureClass.GetDefinition().GetShapeField();
-
-		List<string> tokens = shapeField.Split('.').ToList();
-
-		if (tokens.Count < 2)
+		try
 		{
+			// NOTE: Also works for joins across datastores, which have no valid definition.
+			return DatasetUtils.GetDatabaseFeatureClass(featureClass);
+		}
+		catch (InvalidOperationException e)
+		{
+			_msg.Debug($"Unable to determine the un-joined feature class of " +
+			           $"{featureClass.GetName()}: {e.Message}", e);
+
 			return featureClass;
 		}
-
-		tokens.RemoveAt(tokens.Count - 1);
-
-		string tableName = StringUtils.Concatenate(tokens, ".");
-
-		foreach (Table databaseTable in DatasetUtils.GetDatabaseTables(featureClass))
-		{
-			if (databaseTable is FeatureClass dbFeatureClass &&
-			    dbFeatureClass.GetName()
-			                  .Equals(tableName, StringComparison.InvariantCultureIgnoreCase))
-			{
-				return dbFeatureClass;
-			}
-		}
-
-		return featureClass;
 	}
 
 	[NotNull]

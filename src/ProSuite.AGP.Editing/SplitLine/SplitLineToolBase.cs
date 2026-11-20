@@ -131,7 +131,15 @@ public abstract class SplitLineToolBase : MapToolBase
 			}
 
 			IPickableFeatureItem pickableItem = items[0] as IPickableFeatureItem;
-			Feature itemFeature = pickableItem?.Feature;
+
+			// Same spatial reference as the picked feature (the map's)
+			Feature itemFeature =
+				pickableItem == null
+					? null
+					: MapUtils.GetFeatures(pickableItem.Layer, new[] { pickableItem.Oid },
+					                       withoutJoins: true, recycling: false,
+					                       mapView.Map.SpatialReference)
+					          .FirstOrDefault();
 			if (itemFeature is null)
 			{
 				_msg.Warn("SplitLine: No splittable line picked.");

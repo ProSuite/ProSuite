@@ -170,11 +170,20 @@ public class FeatureFinder
 
 		if (DelayFeatureFetching)
 		{
-			using var definition = featureClass.GetDefinition();
-			filter.SubFields = definition.GetObjectIDField();
+			// NOTE: Joins across datastores have no valid definition. In that case,
+			//       the sub-fields are not restricted (see SearchObjectIds).
+			using (TableDefinition definition = DatasetUtils.TryGetDefinition(featureClass))
+			{
+				if (definition != null)
+				{
+					filter.SubFields = definition.GetObjectIDField();
+				}
+			}
 
+			// NOTE: One-to-many joins return the same OID several times.
 			List<long> objectIds =
 				LayerUtils.SearchObjectIds(basicFeatureLayer, filter, featurePredicate)
+				          .Distinct()
 				          .ToList();
 
 			return objectIds.Count > 0
@@ -194,6 +203,12 @@ public class FeatureFinder
 #else
 			LayerUtils.SearchRows(basicFeatureLayer, filter, featurePredicate);
 #endif
+
+		// NOTE: One-to-many joins return the same feature (OID) several times.
+		if (featureClass.IsJoinedTable())
+		{
+			features = features.DistinctBy(f => f.GetObjectID());
+		}
 
 		return new FeatureSelection(basicFeatureLayer, features);
 	}
@@ -375,14 +390,23 @@ public class FeatureFinder
 
 		if (ReturnUnJoinedFeatures && featureClass.IsJoinedTable())
 		{
-			filter.SubFields = featureClass.GetDefinition().GetObjectIDField();
+			// NOTE: Joins across datastores have no valid definition. In that case,
+			//       the sub-fields cannot be restricted to the (qualified) OID field.
+			using (TableDefinition definition = DatasetUtils.TryGetDefinition(featureClass))
+			{
+				if (definition != null)
+				{
+					filter.SubFields = definition.GetObjectIDField();
+				}
+			}
 
 			IEnumerable<Feature> foundJoined =
 				GdbQueryUtils
 					.GetFeatures(featureClass, filter, false, cancellationToken)
 					.Where(f => featurePredicate == null || featurePredicate(f));
 
-			List<long> oids = foundJoined.Select(f => f.GetObjectID()).ToList();
+			// NOTE: One-to-many joins return the same OID several times.
+			List<long> oids = foundJoined.Select(f => f.GetObjectID()).Distinct().ToList();
 
 			if (oids.Count > 0)
 			{

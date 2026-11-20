@@ -102,7 +102,7 @@ public abstract class EraseToolBase : ConstructionToolBase
 				if (selectedOidByLayer.Key is FeatureLayer layer)
 				{
 					FeatureClass featureClass = layer.GetFeatureClass();
-					bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+					bool? layerHasZ = featureClass == null ? null : DatasetUtils.HasZ(featureClass);
 
 					if (layerHasZ == true)
 					{

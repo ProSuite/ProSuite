@@ -93,7 +93,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 
 			FeatureClass featureClass = layer.GetFeatureClass();
 
-			return featureClass?.GetDefinition()?.HasZ();
+			return featureClass == null ? (bool?) null : DatasetUtils.HasZ(featureClass);
 		});
 
 		_msg.DebugStopTiming(watch, "Determined sketch has Z: {0}", result);
@@ -143,7 +143,7 @@ public abstract class CreateFeatureInPickedClassToolBase : ConstructionToolBase
 			{
 				var applicableSelection =
 					SelectionUtils.GetApplicableSelectedFeatures(
-						selectionByLayer, CanSelectFromLayer);
+						selectionByLayer, CanSelectFromLayer, withoutJoins: true);
 
 				List<Feature> selectedFeatures = applicableSelection.Values.FirstOrDefault();
 

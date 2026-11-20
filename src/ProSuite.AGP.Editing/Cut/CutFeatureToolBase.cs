@@ -6,6 +6,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.GeometryProcessing;
 using ProSuite.Commons.AGP.Core.GeometryProcessing.ChangeAlong;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -99,7 +100,7 @@ public abstract class CutFeatureToolBase : ConstructionToolBase
 				if (selectedOidByLayer.Key is FeatureLayer layer)
 				{
 					FeatureClass featureClass = layer.GetFeatureClass();
-					bool? layerHasZ = featureClass?.GetDefinition()?.HasZ();
+					bool? layerHasZ = featureClass == null ? null : DatasetUtils.HasZ(featureClass);
 
 					if (layerHasZ == true)
 					{

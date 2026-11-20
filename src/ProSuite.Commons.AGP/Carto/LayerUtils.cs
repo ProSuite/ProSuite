@@ -212,22 +212,41 @@ public static class LayerUtils
 		CancellationToken cancellationToken = default)
 	{
 		using var table = layer.GetTable();
-		using var definition = table?.GetDefinition();
-		var oidField = definition?.GetObjectIDField();
 
-		if (string.IsNullOrEmpty(oidField))
+		if (table == null)
 		{
-			yield break; // no OIDs
+			yield break; // no valid data source
 		}
 
-		if (filter == null)
+		// NOTE: Joins across different datastores (e.g. two file geodatabases) are virtual
+		// datasets without definition. The layer can be searched nevertheless, but the
+		// (qualified) OID field name is unknown and the sub-fields cannot be restricted.
+		using var definition = DatasetUtils.TryGetDefinition(table);
+
+		if (definition != null)
 		{
-			filter = new QueryFilter { SubFields = oidField };
+			string oidField = definition.GetObjectIDField();
+
+			if (string.IsNullOrEmpty(oidField))
+			{
+				yield break; // no OIDs
+			}
+
+			if (filter == null)
+			{
+				filter = new QueryFilter { SubFields = oidField };
+			}
+			else if (GdbQueryUtils.EnsureSubField(oidField, filter.SubFields,
+			                                      out string newSubFields))
+			{
+				filter.SubFields = newSubFields;
+			}
 		}
-		else if (GdbQueryUtils.EnsureSubField(oidField, filter.SubFields,
-		                                      out string newSubFields))
+		else
 		{
-			filter.SubFields = newSubFields;
+			_msg.VerboseDebug(
+				() => $"Layer {((MapMember) layer).Name}: table without valid definition, " +
+				      "searching object IDs without restricting the sub-fields");
 		}
 
 		foreach (Feature row in SearchRows(layer, filter, predicate))
