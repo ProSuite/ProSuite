@@ -64,6 +64,8 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 	public ICommand CloseWindowCommand { get; }
 	public ICommand ConfirmSelectionCommand { get; }
 
+	public event Action<IPickableItem> ItemFlashed;
+
 	/// <summary>
 	/// The awaitable task that provides the result when the dialog is closed.
 	/// True means a selection has been made, false means nothing was picked.
@@ -133,6 +135,7 @@ public abstract class PickerViewModelBase<T> : NotifyPropertyChangedBase, IPicke
 	private void FlashItem(T candidate)
 	{
 		FlashItemCore(candidate);
+		ItemFlashed?.Invoke(candidate);
 	}
 
 	protected virtual void FlashItemCore(T item)

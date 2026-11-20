@@ -232,22 +232,62 @@ public static class PickerUtils
 		return await service.Pick(items, vm);
 	}
 
-	public static async Task<IPickableItem> ShowPickerAsync(
+	public static Task<IPickableItem> ShowPickerAsync(
 		IPickerPrecedence precedence,
 		IEnumerable<FeatureSelectionBase> candidates,
 		IPickableItemsFactory factory)
 	{
-		var items = factory.CreateItems(candidates);
+		return ShowPickerAsync(precedence, candidates, factory, null);
+	}
+
+	public static async Task<IPickableItem> ShowPickerAsync(
+		IPickerPrecedence precedence,
+		IEnumerable<FeatureSelectionBase> candidates,
+		IPickableItemsFactory factory,
+		[CanBeNull] Action<IPickableItem> onItemFlashed)
+	{
+		IEnumerable<IPickableItem> items = factory.CreateItems(candidates);
 		IPickerViewModel vm = factory.CreateViewModel(precedence.GetSelectionGeometry());
 
 		var picker = new PickerService(precedence);
 
-		return await picker.Pick(items, vm);
+		if (onItemFlashed != null)
+		{
+			List<IPickableItem> orderedItems = precedence.Order(items).ToList();
+			items = orderedItems;
+
+			vm.ItemFlashed += onItemFlashed;
+
+			if (orderedItems.Count > 0)
+			{
+				onItemFlashed(orderedItems[0]);
+			}
+		}
+
+		try
+		{
+			return await picker.Pick(items, vm);
+		}
+		finally
+		{
+			if (onItemFlashed != null)
+			{
+				vm.ItemFlashed -= onItemFlashed;
+			}
+		}
+	}
+
+	public static Task<List<IPickableItem>> GetItemsAsync(
+		ICollection<FeatureSelectionBase> candidates,
+		IPickerPrecedence precedence)
+	{
+		return GetItemsAsync(candidates, precedence, null);
 	}
 
 	public static async Task<List<IPickableItem>> GetItemsAsync(
 		ICollection<FeatureSelectionBase> candidates,
-		IPickerPrecedence precedence)
+		IPickerPrecedence precedence,
+		[CanBeNull] Action<IPickableItem> onItemFlashed)
 	{
 		IPickableItemsFactory itemsFactory = precedence.CreateItemsFactory();
 
@@ -257,7 +297,7 @@ public static class PickerUtils
 			// when user doesn't pick an item from picker window.
 			case PickerMode.ShowPicker:
 				IPickableItem pick =
-					await ShowPickerAsync(precedence, candidates, itemsFactory);
+					await ShowPickerAsync(precedence, candidates, itemsFactory, onItemFlashed);
 				return pick == null
 					       ? new List<IPickableItem>()
 					       : new List<IPickableItem> { pick };

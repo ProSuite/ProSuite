@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -24,6 +25,8 @@ namespace ProSuite.AGP.Editing.SplitLine;
 public abstract class SplitLineToolBase : MapToolBase
 {
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+	private readonly SplitLineFeedback _feedback = new();
 
 	protected SplitLineToolBase()
 	{
@@ -55,9 +58,26 @@ public abstract class SplitLineToolBase : MapToolBase
 		return Task.CompletedTask;
 	}
 
-	protected override Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
+	protected override async Task OnToolDeactivateCoreAsync(bool hasMapViewChanged)
 	{
-		return Task.CompletedTask;
+		await QueuedTask.Run(() => _feedback.Clear());
+	}
+
+	/// <summary>
+	/// Updates the visual split-location feedback to show a perpendicular cut line on
+	/// <paramref name="polyline"/> at <paramref name="splitPoint"/> in the active map view.
+	/// Must be called on the MCT.
+	/// </summary>
+	protected void UpdateSplitFeedback([NotNull] Polyline polyline,
+	                                   [NotNull] MapPoint splitPoint)
+	{
+		MapView mapView = ActiveMapView;
+		if (mapView is null)
+		{
+			return;
+		}
+
+		_feedback.Update(mapView, polyline, splitPoint);
 	}
 
 	/// <summary>
@@ -66,55 +86,126 @@ public abstract class SplitLineToolBase : MapToolBase
 	/// </summary>
 	private async Task SplitLineAt(MapPoint mapPoint)
 	{
-		// Create PickerPrecedence with the click point as sketch geometry
-		using var precedence = CreatePickerPrecedence(mapPoint);
-
-		// Only one line can be split: show the picker rather than picking several (ALT)
-		precedence.NoMultiselection = true;
-
-		var candidates =
-			FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
-			                        precedence.SpatialRelationship).ToList();
-
-		List<IPickableItem> items =
-			await PickerUtils.GetItemsAsync(candidates, precedence);
-
-		if (items.Count == 0)
+		MapView mapView = ActiveMapView;
+		if (mapView is null)
 		{
-			_msg.Info("SplitLine: Select split point on a line feature.");
 			return;
 		}
 
-		IPickableFeatureItem pickableItem = items[0] as IPickableFeatureItem;
-		Feature itemFeature = pickableItem?.Feature;
-		if (itemFeature == null)
+		try
 		{
-			_msg.Warn("SplitLine: No splittable line picked.");
-			return;
-		}
+			// Create PickerPrecedence with the click point as sketch geometry
+			using var precedence = CreatePickerPrecedence(mapPoint);
 
-		Polyline polyline = (Polyline) itemFeature.GetShape();
-		if (polyline == null)
+			// Only one line can be split: show the picker rather than picking several (ALT)
+			precedence.NoMultiselection = true;
+
+			var candidates =
+				FindFeaturesOfAllLayers(precedence.GetSelectionGeometry(),
+				                        precedence.SpatialRelationship).ToList();
+
+			double searchRadius = MapUtils.ConvertScreenPixelToMapLength(
+				mapView, GetSelectionTolerancePixels(), mapPoint);
+
+			List<IPickableItem> items;
+			using (var pickerCts = new CancellationTokenSource())
+			{
+				try
+				{
+					CancellationToken token = pickerCts.Token;
+					items = await PickerUtils.GetItemsAsync(
+						        candidates, precedence,
+						        item => OnPickerItemFlashed(
+							        item, mapView, mapPoint, searchRadius, token));
+				}
+				finally
+				{
+					pickerCts.Cancel();
+				}
+			}
+
+			if (items.Count == 0)
+			{
+				_msg.Info("SplitLine: Select split point on a line feature.");
+				return;
+			}
+
+			IPickableFeatureItem pickableItem = items[0] as IPickableFeatureItem;
+			Feature itemFeature = pickableItem?.Feature;
+			if (itemFeature is null)
+			{
+				_msg.Warn("SplitLine: No splittable line picked.");
+				return;
+			}
+
+			Polyline polyline = itemFeature.GetShape() as Polyline;
+			if (polyline is null)
+			{
+				_msg.Warn("SplitLine: No splittable line picked (invalid geometry type).");
+				return;
+			}
+
+			MapPoint splitPoint = SplitLineUtils.GetSplitPoint(
+				polyline, GeometryUtils.EnsureSpatialReference(mapPoint, polyline.SpatialReference),
+				searchRadius, polyline.SpatialReference.XYTolerance);
+
+			if (splitPoint is null)
+			{
+				_msg.Warn("SplitLine: Cannot split at or near the start or end point " +
+				          "(the line may already be split there).");
+				return;
+			}
+
+			_feedback.Update(mapView, polyline, splitPoint);
+
+			await SplitCoreAsync(itemFeature, pickableItem.Layer, splitPoint);
+		}
+		finally
 		{
-			_msg.Warn("SplitLine: No splittable line picked (invalid geometry type).");
-			return;
+			_feedback.Clear();
 		}
+	}
 
-		double searchRadius = MapUtils.ConvertScreenPixelToMapLength(
-			ActiveMapView, GetSelectionTolerancePixels(), mapPoint);
-
-		MapPoint splitPoint = SplitLineUtils.GetSplitPoint(
-			polyline, GeometryUtils.EnsureSpatialReference(mapPoint, polyline.SpatialReference),
-			searchRadius, polyline.SpatialReference.XYTolerance);
-
-		if (splitPoint == null)
+	private void OnPickerItemFlashed([CanBeNull] IPickableItem item,
+	                                 [NotNull] MapView mapView,
+	                                 [NotNull] MapPoint clickPoint,
+	                                 double searchRadius,
+	                                 CancellationToken cancellationToken)
+	{
+		QueuedTask.Run(() =>
 		{
-			_msg.Warn("SplitLine: Cannot split at or near the start or end point " +
-			          "(the line may already be split there).");
-			return;
-		}
+			if (cancellationToken.IsCancellationRequested)
+			{
+				return;
+			}
 
-		await SplitCoreAsync(itemFeature, pickableItem.Layer, splitPoint);
+			try
+			{
+				if (item is not IPickableFeatureItem featureItem ||
+				    featureItem.Geometry is not Polyline polyline)
+				{
+					_feedback.Clear();
+					return;
+				}
+
+				MapPoint splitPoint = SplitLineUtils.GetSplitPoint(
+					polyline,
+					GeometryUtils.EnsureSpatialReference(clickPoint, polyline.SpatialReference),
+					searchRadius, polyline.SpatialReference.XYTolerance);
+
+				if (splitPoint is null)
+				{
+					_feedback.Clear();
+					return;
+				}
+
+				_feedback.Update(mapView, polyline, splitPoint);
+			}
+			catch (Exception ex)
+			{
+				_msg.Warn("Error updating split line feedback", ex);
+			}
+		});
 	}
 
 	/// <summary>
@@ -301,8 +392,8 @@ public abstract class SplitLineToolBase : MapToolBase
 		return true;
 	}
 
-	protected override Task HandleEscapeAsync()
+	protected override async Task HandleEscapeAsync()
 	{
-		return Task.CompletedTask;
+		await QueuedTask.Run(() => _feedback.Clear());
 	}
 }

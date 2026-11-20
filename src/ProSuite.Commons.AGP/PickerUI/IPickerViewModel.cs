@@ -48,4 +48,9 @@ public interface IPickerViewModel : IDisposable
 	/// Should only be set via ConfirmSelectionCommand.
 	/// </summary>
 	IPickableItem SelectedItem { get; set; }
+
+	/// <summary>
+	/// Raised on the UI thread when an item is flashed (via hover or keyboard navigation).
+	/// </summary>
+	event Action<IPickableItem> ItemFlashed;
 }
