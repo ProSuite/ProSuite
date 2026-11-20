@@ -123,6 +123,9 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	[CanBeNull]
 	protected IntermediateSketchStates SketchStates => _intermediateSketchStates;
 
+	public bool IsInIntermittentSelectionPhase =>
+		_intermediateSketchStates?.IsInIntermittentSelectionPhase == true;
+
 	protected bool SupportRestoreLastSketch => true;
 
 	protected bool LogSketchVertexZs { get; set; }
