@@ -12,7 +12,7 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.Editing.SplitLine;
 
 /// <summary>
-/// Draws a short perpendicular pink cut line at the split point as a map overlay.
+/// Draws a short perpendicular green cut line at the split point as a map overlay.
 /// All methods must be called on the MCT (see <c>QueuedTask.Run</c>).
 /// </summary>
 public class SplitLineFeedback
@@ -85,14 +85,14 @@ public class SplitLineFeedback
 	[NotNull]
 	private static CIMSymbolReference CreateCutLineSymbol()
 	{
-		CIMStroke pinkStroke = SymbolUtils.CreateSolidStroke(
-			ColorUtils.CreateRGB(255, 0, 200), 2.5);
-		pinkStroke.CapStyle = LineCapStyle.Round;
+		CIMStroke greenStroke = SymbolUtils.CreateSolidStroke(
+			ColorUtils.CreateRGB(14, 170, 53), 2.5);
+		greenStroke.CapStyle = LineCapStyle.Round;
 
 		CIMStroke casingStroke = SymbolUtils.CreateSolidStroke(
 			ColorUtils.CreateRGB(255, 255, 255), 4.5);
 		casingStroke.CapStyle = LineCapStyle.Round;
 
-		return SymbolUtils.CreateLineSymbol(pinkStroke, casingStroke).MakeSymbolReference();
+		return SymbolUtils.CreateLineSymbol(greenStroke, casingStroke).MakeSymbolReference();
 	}
 }
