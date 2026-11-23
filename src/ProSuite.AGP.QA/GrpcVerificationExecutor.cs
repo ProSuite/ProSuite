@@ -38,6 +38,7 @@ namespace ProSuite.AGP.QA
 		}
 
 		public string ResultsPath { get; }
+		public bool WritesResults { get; private set; }
 		public string ContextDisplayName { get; }
 
 		[CanBeNull]
@@ -274,11 +275,13 @@ namespace ProSuite.AGP.QA
 			{
 				request.Parameters.HtmlReportPath = htmlReport;
 				request.Parameters.VerificationReportPath = xmlReport;
+				WritesResults = true;
 			}
 
 			if (Parameters?.CreateLocalIssueFileGdb ?? true)
 			{
 				request.Parameters.IssueFileGdbPath = gdbDir;
+				WritesResults = true;
 			}
 		}
 
