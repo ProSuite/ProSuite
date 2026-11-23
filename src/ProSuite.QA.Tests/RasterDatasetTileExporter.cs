@@ -1,4 +1,7 @@
+using System;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -19,6 +22,30 @@ namespace ProSuite.QA.Tests
 		                                 string outputPath)
 		{
 			return raster.ExportTileAsTiff(extent, outputPath);
+		}
+
+		/// <summary>
+		/// A mosaic is exported through its raster dataset.
+		/// </summary>
+		[NotNull]
+		public static RasterDatasetReference GetRasterDatasetReference(
+			[NotNull] RasterReference rasterReference)
+		{
+			if (rasterReference is RasterDatasetReference rasterDatasetReference)
+			{
+				return rasterDatasetReference;
+			}
+
+			if (rasterReference is MosaicRasterReference)
+			{
+				IRasterDataset rasterDataset = DatasetUtils.OpenRasterDataset(
+					rasterReference.Dataset.Workspace, rasterReference.Name);
+				return new RasterDatasetReference(rasterDataset);
+			}
+
+			throw new ArgumentException(
+				$"Unsupported image raster type {rasterReference.GetType().Name}",
+				nameof(rasterReference));
 		}
 	}
 }

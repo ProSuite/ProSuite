@@ -12,7 +12,15 @@
 			</div>
 		}
 		<div class="col w-100" style="border: unset">
-			<RadzenTextBox @bind-Value="StringValue" oninput="@(OnInput)"/>
+			@if (IsMultilineText)
+			{
+				<RadzenTextArea @bind-Value="StringValue" oninput="@(OnInput)" Rows="10"
+				                Style="width: 100%"/>
+			}
+			else
+			{
+				<RadzenTextBox @bind-Value="StringValue" oninput="@(OnInput)"/>
+			}
 		</div>
 		<div class="col-auto" style="padding-left: unset">
 			@if (! string.IsNullOrEmpty(StringValue))

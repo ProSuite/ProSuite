@@ -18,6 +18,7 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 	private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 	private bool? _parameterIsSqlExpression;
+	private bool? _parameterIsMultilineText;
 
 	public ScalarTestParameterValueViewModel([NotNull] TestParameter parameter,
 	                                         [CanBeNull] object value,
@@ -144,25 +145,46 @@ public class ScalarTestParameterValueViewModel : ViewModelBase
 		return TryGetQueriedDatasetParameter(out DatasetTestParameterValue _);
 	}
 
+	/// <summary>
+	/// True if the text value can contain line breaks, see <see cref="MultilineTextAttribute"/>.
+	/// </summary>
+	public bool IsMultilineText
+	{
+		get
+		{
+			_parameterIsMultilineText ??=
+				Parameter.Type == typeof(string) &&
+				GetAlgorithmDefinitionType() is Type instanceType &&
+				TestParameterTypeUtils.HasMultilineTextAttribute(instanceType, Parameter);
+
+			return _parameterIsMultilineText.Value;
+		}
+	}
+
+	[CanBeNull]
+	private Type GetAlgorithmDefinitionType()
+	{
+		ClassDescriptor descriptorClass =
+			Observer.GetEntity().InstanceDescriptor?.Class;
+
+		if (descriptorClass == null)
+		{
+			return null;
+		}
+
+		return InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
+			       descriptorClass, out Type instanceType)
+			       ? instanceType
+			       : null;
+	}
+
 	private bool TryGetQueriedDatasetParameter(out DatasetTestParameterValue datasetParameter)
 	{
 		datasetParameter = null;
 
 		InstanceConfiguration instanceConfiguration = Observer.GetEntity();
-		InstanceDescriptor descriptor = instanceConfiguration.InstanceDescriptor;
 
-		ClassDescriptor descriptorClass = descriptor?.Class;
-
-		if (descriptorClass == null)
-		{
-			return false;
-		}
-
-		if (! InstanceDescriptorUtils.TryGetAlgorithmDefinitionType(
-			    descriptorClass, out Type instanceType))
-		{
-			return false;
-		}
+		Type instanceType = GetAlgorithmDefinitionType();
 
 		if (instanceType == null)
 		{
