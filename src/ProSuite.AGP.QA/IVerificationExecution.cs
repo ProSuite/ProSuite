@@ -20,6 +20,12 @@ namespace ProSuite.AGP.QA
 		[CanBeNull]
 		string ResultsPath { get; }
 
+		/// <summary>
+		/// Whether the last verification request asked for reports or an issue FileGDB in
+		/// <see cref="ResultsPath"/>.
+		/// </summary>
+		bool WritesResults { get; }
+
 		Task<ServiceCallStatus> Verify(
 			[NotNull] IQualitySpecificationReference specification,
 			[CanBeNull] Geometry perimeter,

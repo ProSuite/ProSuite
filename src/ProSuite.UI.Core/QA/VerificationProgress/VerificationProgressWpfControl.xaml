@@ -30,6 +30,7 @@
                     <StackPanel.Resources>
 
                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource Esri_SimpleBorderlessButton}">
+                            <Setter Property="Padding" Value="0.5" />
                             <!-- Make the buttons square -->
                             <Setter Property="MinWidth"
                                     Value="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" />
