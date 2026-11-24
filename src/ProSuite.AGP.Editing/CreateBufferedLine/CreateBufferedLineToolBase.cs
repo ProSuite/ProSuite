@@ -419,7 +419,7 @@ namespace ProSuite.AGP.Editing.CreateBufferedLine
 			}
 
 			// [1]/[2] change the buffer width only as bare keys. When a modifier is held
-			// (e.g. SHIFT+1 / SHIFT+2, the "Synchronize Map Centers [and Scales]" shortcuts)
+			// (e.g. CTRL+1 / CTRL+2, the "Synchronize Map Centers [and Scales]" shortcuts)
 			// do not claim the key: returning here leaves args.Handled false, so it falls
 			// through to the application shortcut instead of changing the buffer width.
 			if ((args.Key == _keyIncreaseBufferWidth || args.Key == _keyDecreaseBufferWidth) &&

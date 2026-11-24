@@ -39,6 +39,11 @@ public class EditedFeaturesHider
 
 	private readonly List<HiddenLayerState> _hiddenLayers = new();
 
+	// The layers that any hider hides now, once per hiding (MCT only). Their own query or
+	// filter is no leftover: removing it would leave the hider to restore a query that is
+	// gone, which ArcGIS Pro refuses ("choice list is empty").
+	private static readonly List<BasicFeatureLayer> _layersHiddenNow = new();
+
 	[CanBeNull] private SubscriptionToken _projectSavingToken;
 
 	/// <param name="useDefinitionQuery">Whether the features are hidden by a definition query
@@ -104,7 +109,8 @@ public class EditedFeaturesHider
 	/// Removes any leftover display filter of this class (identified by its well-known name)
 	/// from the feature layers of the given map. This guards against a filter that a previous
 	/// session persisted without restoring, e.g. after a crash, which would otherwise leave
-	/// features stuck hidden. Must be called on the MCT.
+	/// features stuck hidden. A layer that a hider hides now keeps its filter.
+	/// Must be called on the MCT.
 	/// </summary>
 	public static void RemoveLeftovers([CanBeNull] Map map)
 	{
@@ -116,17 +122,20 @@ public class EditedFeaturesHider
 		foreach (BasicFeatureLayer layer in
 		         map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>())
 		{
-			if (layer.GetDefinition() is not CIMFeatureLayer cimLayer)
+			if (_layersHiddenNow.Contains(layer))
 			{
 				continue;
 			}
 
-			if (RemoveOwnDefinitionQuery(cimLayer.FeatureTable))
+			if (RemoveOwnDefinitionQuery(layer))
 			{
-				SetDefinitionWithoutUndo(layer, cimLayer);
-
 				_msg.Debug($"Removed stale '{_filterName}' definition query from layer " +
 				           $"{layer.Name}");
+			}
+
+			if (layer.GetDefinition() is not CIMFeatureLayer cimLayer)
+			{
+				continue;
 			}
 
 			CIMDisplayFilter[] filters = cimLayer.DisplayFilters;
@@ -174,6 +183,7 @@ public class EditedFeaturesHider
 		string whereClause = $"{oidField} NOT IN ({string.Join(",", oids)})";
 
 		_hiddenLayers.Add(new HiddenLayerState(layer, cimLayer, _useDefinitionQuery));
+		_layersHiddenNow.Add(layer);
 
 		if (_useDefinitionQuery)
 		{
@@ -226,38 +236,42 @@ public class EditedFeaturesHider
 
 	/// <summary>
 	/// Removes the definition query of this class, making the query it was made from the
-	/// active one again where it can be found among the remaining ones.
+	/// active one again where it can be found among the remaining ones. Not through the
+	/// layer's CIM definition, which would clear the current editing template.
 	/// </summary>
 	/// <returns>Whether the layer had the definition query of this class.</returns>
-	private static bool RemoveOwnDefinitionQuery([CanBeNull] CIMFeatureTable featureTable)
+	/// <remarks>Must be called on the MCT.</remarks>
+	private static bool RemoveOwnDefinitionQuery([NotNull] BasicFeatureLayer layer)
 	{
-		CIMDefinitionFilter ownQuery =
-			featureTable?.DefinitionFilterChoices?.FirstOrDefault(q => q?.Name == _filterName);
+		DefinitionQuery ownQuery =
+			layer.DefinitionQueries.FirstOrDefault(q => q.Name == _filterName);
 
 		if (ownQuery == null)
 		{
 			return false;
 		}
 
-		CIMDefinitionFilter[] remaining =
-			featureTable.DefinitionFilterChoices.Where(q => q != ownQuery).ToArray();
+		DefinitionQuery original = null;
 
-		featureTable.DefinitionFilterChoices = remaining.Length > 0 ? remaining : null;
-
-		if (featureTable.DefinitionExpressionName != _filterName)
+		if (layer.ActiveDefinitionQuery?.Name == _filterName)
 		{
-			return true;
+			// The own query is "(<the query it was made from>) AND <where clause>".
+			string ownExpression = ownQuery.WhereClause ?? string.Empty;
+
+			original = layer.DefinitionQueries.FirstOrDefault(
+				q => q.Name != _filterName &&
+				     ownExpression.StartsWith($"({q.WhereClause}) AND "));
 		}
 
-		// The own query is "(<the query it was made from>) AND <where clause>".
-		string ownExpression = ownQuery.DefinitionExpression ?? string.Empty;
+		ExecuteWithoutUndo(layer, () =>
+		{
+			if (original != null)
+			{
+				layer.SetActiveDefinitionQuery(original.Name);
+			}
 
-		CIMDefinitionFilter original =
-			remaining.FirstOrDefault(
-				q => ownExpression.StartsWith($"({q?.DefinitionExpression}) AND "));
-
-		featureTable.DefinitionExpressionName = original?.Name;
-		featureTable.DefinitionExpression = original?.DefinitionExpression;
+			layer.RemoveDefinitionQueries(new[] { _filterName });
+		});
 
 		return true;
 	}
@@ -269,7 +283,15 @@ public class EditedFeaturesHider
 	/// </summary>
 	private async Task OnProjectSavingAsync(ProjectEventArgs args)
 	{
-		await QueuedTask.Run(Restore);
+		// An ArcGIS Pro event handler: nothing may escape into the save.
+		try
+		{
+			await QueuedTask.Run(Restore);
+		}
+		catch (Exception ex)
+		{
+			_msg.Warn("Could not show the hidden features again before saving the project", ex);
+		}
 	}
 
 	private static bool IsOwnFilter([CanBeNull] CIMDisplayFilter filter)
@@ -359,8 +381,19 @@ public class EditedFeaturesHider
 
 		public void Restore()
 		{
+			_layersHiddenNow.Remove(_layer);
+
 			if (_hiddenByDefinitionQuery)
 			{
+				if (_layer.DefinitionQueries.All(q => q.Name != _filterName))
+				{
+					// Removed behind the hider's back, e.g. by the layer properties: the
+					// layer shows its features already.
+					_msg.Debug($"Layer {_layer.Name} no longer has the '{_filterName}' " +
+					           "definition query; nothing to restore");
+					return;
+				}
+
 				ExecuteWithoutUndo(_layer, () =>
 				{
 					_layer.SetActiveDefinitionQuery(_activeDefinitionQueryName);

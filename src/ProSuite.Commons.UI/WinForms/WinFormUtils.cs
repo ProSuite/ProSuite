@@ -272,6 +272,18 @@ namespace ProSuite.Commons.UI.WinForms
 		}
 
 		/// <summary>
+		/// The active window of the current thread, such as a floating map pane, or null if
+		/// the current thread has no active window.
+		/// </summary>
+		[CanBeNull]
+		public static IWin32Window GetActiveWindow()
+		{
+			IntPtr handle = GetActiveWindowHandle();
+
+			return handle == IntPtr.Zero ? null : new Win32Window(handle);
+		}
+
+		/// <summary>
 		/// Whether the current thread created the window. Only then can the window own a dialog
 		/// shown on this thread.
 		/// </summary>
@@ -301,6 +313,9 @@ namespace ProSuite.Commons.UI.WinForms
 
 		[DllImport("kernel32.dll")]
 		private static extern uint GetCurrentThreadId();
+
+		[DllImport("user32.dll", EntryPoint = "GetActiveWindow")]
+		private static extern IntPtr GetActiveWindowHandle();
 
 		private static void FocusNextControl([NotNull] Control control, bool forward)
 		{
@@ -379,6 +394,16 @@ namespace ProSuite.Commons.UI.WinForms
 			public IntPtr Handle => _interopHelper.Handle;
 
 			public bool CheckAccess() => _window.CheckAccess();
+		}
+
+		private class Win32Window : IWin32Window
+		{
+			public Win32Window(IntPtr handle)
+			{
+				Handle = handle;
+			}
+
+			public IntPtr Handle { get; }
 		}
 	}
 }

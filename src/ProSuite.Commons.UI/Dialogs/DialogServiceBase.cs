@@ -419,6 +419,15 @@ namespace ProSuite.Commons.UI.Dialogs
 				return owner;
 			}
 
+			// The window the user works in owns the dialog, such as a floating map pane: a
+			// message box opens in its middle, and it is active again once the box is closed.
+			IWin32Window activeWindow = WinFormUtils.GetActiveWindow();
+
+			if (activeWindow != null && WinFormUtils.IsCreatedOnCurrentThread(activeWindow))
+			{
+				return activeWindow;
+			}
+
 			// The user interface thread is not always managed thread 1 (in ArcGIS Pro it is not).
 			// Without an owner, the message box is shown with DefaultDesktopOnly and the
 			// application loses the focus when the box is closed.

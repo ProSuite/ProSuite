@@ -30,6 +30,7 @@ public class KeyboardFocusReturner
 
 	[NotNull] private readonly FrameworkElement _content;
 	[NotNull] private readonly Func<bool> _isAutoHidden;
+	private readonly bool _onRequestOnly;
 
 	// The element in a map pane that had the keyboard before the pane, e.g. the ViewerHost.
 	[CanBeNull] private IInputElement _mapFocus;
@@ -37,16 +38,24 @@ public class KeyboardFocusReturner
 	private bool _returnOnMouseUp;
 
 	private KeyboardFocusReturner([NotNull] FrameworkElement content,
-	                              [NotNull] Func<bool> isAutoHidden)
+	                              [NotNull] Func<bool> isAutoHidden,
+	                              bool onRequestOnly)
 	{
 		Assert.ArgumentNotNull(content, nameof(content));
 		Assert.ArgumentNotNull(isAutoHidden, nameof(isAutoHidden));
 
 		_content = content;
 		_isAutoHidden = isAutoHidden;
+		_onRequestOnly = onRequestOnly;
 
 		_content.AddHandler(UIElement.GotKeyboardFocusEvent,
 		                    new KeyboardFocusChangedEventHandler(OnGotKeyboardFocus), true);
+
+		if (onRequestOnly)
+		{
+			return;
+		}
+
 		_content.AddHandler(UIElement.PreviewMouseUpEvent,
 		                    new MouseButtonEventHandler(OnPreviewMouseUp), true);
 		_content.AddHandler(UIElement.PreviewKeyDownEvent,
@@ -60,11 +69,24 @@ public class KeyboardFocusReturner
 	/// </summary>
 	/// <param name="content">The content of the pane.</param>
 	/// <param name="isAutoHidden">Whether the pane is auto-hidden at the moment.</param>
-	public static void Attach([NotNull] FrameworkElement content,
-	                          [NotNull] Func<bool> isAutoHidden)
+	/// <param name="onRequestOnly">The keyboard goes back only by <see cref="Return()"/>,
+	/// e.g. after a list entry was applied to the active tool. The pane keeps it after a
+	/// click, so that the keys can be used in its lists.</param>
+	/// <returns>The returner, for <see cref="Return()"/>.</returns>
+	public static KeyboardFocusReturner Attach([NotNull] FrameworkElement content,
+	                                           [NotNull] Func<bool> isAutoHidden,
+	                                           bool onRequestOnly = false)
 	{
 		// The handlers keep the instance alive as long as the content lives.
-		_ = new KeyboardFocusReturner(content, isAutoHidden);
+		return new KeyboardFocusReturner(content, isAutoHidden, onRequestOnly);
+	}
+
+	/// <summary>
+	/// Gives the keyboard back to the active map view now, if the pane has it.
+	/// </summary>
+	public void Return()
+	{
+		ReturnLater();
 	}
 
 	private void OnGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -77,6 +99,11 @@ public class KeyboardFocusReturner
 			if (cameFromOutside && FindMapPane(oldFocus) != null)
 			{
 				_mapFocus = e.OldFocus;
+			}
+
+			if (_onRequestOnly)
+			{
+				return;
 			}
 
 			var newFocus = e.NewFocus as DependencyObject;

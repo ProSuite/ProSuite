@@ -15,6 +15,7 @@ public abstract class DockPaneViewModelBase : DockPane
 
 	private readonly Control _contentControl;
 	private Exception _viewCreationException;
+	[CanBeNull] private KeyboardFocusReturner _keyboardFocusReturner;
 
 	protected DockPaneViewModelBase()
 	{
@@ -41,10 +42,11 @@ public abstract class DockPaneViewModelBase : DockPane
 
 		_contentControl.DataContext = this;
 
-		if (ReturnsKeyboardFocus)
+		if (ReturnsKeyboardFocus || ReturnsKeyboardFocusOnRequest)
 		{
-			KeyboardFocusReturner.Attach(_contentControl,
-			                             () => DockState == DockPaneState.AutoHide);
+			_keyboardFocusReturner = KeyboardFocusReturner.Attach(
+				_contentControl, () => DockState == DockPaneState.AutoHide,
+				onRequestOnly: ! ReturnsKeyboardFocus);
 		}
 
 		return _contentControl;
@@ -90,6 +92,23 @@ public abstract class DockPaneViewModelBase : DockPane
 	/// Meant for tool options panes. Read once, when the pane's content is created.
 	/// </summary>
 	protected virtual bool ReturnsKeyboardFocus => false;
+
+	/// <summary>
+	/// Whether the pane gives the keyboard back to where it came from only when it calls
+	/// <see cref="ReturnKeyboardFocus"/>, e.g. after it applied something to the active tool.
+	/// The pane keeps the keyboard after a click, so that its lists can be used with the keys.
+	/// Read once, when the pane's content is created.
+	/// </summary>
+	protected virtual bool ReturnsKeyboardFocusOnRequest => false;
+
+	/// <summary>
+	/// Gives the keyboard back to the active map view, if the pane has it. Needs
+	/// <see cref="ReturnsKeyboardFocus"/> or <see cref="ReturnsKeyboardFocusOnRequest"/>.
+	/// </summary>
+	protected void ReturnKeyboardFocus()
+	{
+		_keyboardFocusReturner?.Return();
+	}
 
 	protected override async void OnShow(bool isVisible)
 	{
