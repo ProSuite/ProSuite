@@ -97,8 +97,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			SetGdbSchema(ProtobufConversionUtils.CreateSchema(
 				             dataResponse.Schema.ClassDefinitions,
-				             dataResponse.Schema.RelclassDefinitions, _dataRequestFunc,
-				             _readNextBatchFunc));
+				             dataResponse.Schema.RelclassDefinitions,
+				             VerificationDataAccess.GetData(_dataRequestFunc),
+				             VerificationDataAccess.ReadNextBatch(_readNextBatchFunc)));
 		}
 
 		private void SetGdbSchema(IList<GdbWorkspace> gdbWorkspaces)
@@ -354,8 +355,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 			               "The context is not set up to request query table data.");
 
 			BackingDataset CreateBackingDataset(ITable t) =>
-				new RemoteDataset(t, _dataRequestFunc, null, relClassQueryMsg,
-				                  _readNextBatchFunc);
+				new RemoteDataset(t, VerificationDataAccess.GetData(_dataRequestFunc), null,
+				                  relClassQueryMsg,
+				                  VerificationDataAccess.ReadNextBatch(_readNextBatchFunc));
 
 			// It is cached on the client side, in case various tests utilize the same definition.
 			return ProtobufConversionUtils.FromQueryTableMsg(queryTableMsg, gdbWorkspace,

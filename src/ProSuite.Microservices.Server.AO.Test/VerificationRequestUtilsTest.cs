@@ -8,7 +8,6 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.GeoDb;
 using ProSuite.Microservices.AO.QA;
-using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Test

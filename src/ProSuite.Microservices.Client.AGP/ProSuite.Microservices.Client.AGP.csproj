@@ -61,6 +61,7 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.GIS.Geodatabase.AGP\ProSuite.GIS.Geodatabase.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.GIS.Geometry.AGP\ProSuite.GIS.Geometry.AGP.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client.GrpcNet\ProSuite.Microservices.Client.GrpcNet.csproj" />
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj" />
@@ -69,8 +70,8 @@
   <ItemGroup>
     <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
 
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.9.0" />
-    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.9.0" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.Geometry" Version="0.9.1" />
+    <PackageReference Include="DiraGeoSystems.ProSuite.Microservices.QA" Version="0.9.1" />
   </ItemGroup>
 
   <ItemGroup>

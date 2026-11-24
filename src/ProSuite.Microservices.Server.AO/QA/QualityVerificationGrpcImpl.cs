@@ -273,14 +273,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				// Requests schema or the first data batch from the client (writes a request,
 				// then reads the client's reply).
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
-					r => AwaitClientData(
+					r => GrpcServerUtils.AwaitClientData(
 						RequestMoreDataAsync(requestStream, responseStream, context, r),
 						dataRequestTimeoutMillis);
 
 				// Reads a subsequent, already-in-flight data batch from the client without issuing
 				// a new request (used when a data response has GdbData.HasMoreData set).
 				Func<DataVerificationRequest> readNextBatch =
-					() => AwaitClientData(
+					() => GrpcServerUtils.AwaitClientData(
 						ReadMoreDataAsync(requestStream), dataRequestTimeoutMillis);
 
 				Func<ITrackCancel, ServiceCallStatus> func =
@@ -372,7 +372,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					long dataRequestTimeoutMillis = DataRequestTimeoutSeconds * 1000L;
 
 					moreDataRequest =
-						r => AwaitClientData(
+						r => GrpcServerUtils.AwaitClientData(
 							RequestMoreDataAsync(requestStream, responseStream, context, r),
 							dataRequestTimeoutMillis);
 				}
@@ -516,38 +516,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 					_staThreadScheduler);
 
 			return result;
-		}
-
-		/// <summary>
-		/// Blocks the calling (STA worker) thread until the client-data task completes or the
-		/// timeout elapses. Faults are re-thrown; a timeout throws a <see cref="TimeoutException"/>.
-		/// Public for unit tests.
-		/// </summary>
-		public static T AwaitClientData<T>([NotNull] Task<T> task, long timeOutMillis)
-		{
-			// Polls with Thread.Sleep rather than task.Wait: a managed wait on an STA thread pumps
-			// COM messages and could re-enter ArcObjects. Elapsed time comes from the stopwatch
-			// because Sleep(20) takes ~31 ms at the default timer resolution - counting sleeps
-			// stretched a 30 s cap to ~47 s.
-			var watch = Stopwatch.StartNew();
-			const int interval = 20;
-			while (! task.IsCompleted && watch.ElapsedMilliseconds < timeOutMillis)
-			{
-				Thread.Sleep(interval);
-			}
-
-			if (task.IsFaulted)
-			{
-				throw task.Exception;
-			}
-
-			if (! task.IsCompleted)
-			{
-				throw new TimeoutException(
-					$"Client failed to provide data within {watch.ElapsedMilliseconds}ms");
-			}
-
-			return task.Result;
 		}
 
 		/// <summary>
@@ -881,8 +849,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 						backgroundVerificationInputs.SetGdbSchema(
 							ProtobufConversionUtils.CreateSchema(
 								initialRequest.Schema.ClassDefinitions,
-								initialRequest.Schema.RelclassDefinitions, moreDataRequest,
-								readNextBatch));
+								initialRequest.Schema.RelclassDefinitions,
+								VerificationDataAccess.GetData(moreDataRequest),
+								VerificationDataAccess.ReadNextBatch(readNextBatch)));
 					}
 					else if (moreDataRequest != null)
 					{
@@ -1631,25 +1600,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 			// Else: Data provided by client. Create virtual workspaces from provided SchemaMsg
 			Assert.NotNull(moreDataRequest);
 
-			Func<DataVerificationResponse, DataVerificationRequest> dataRequest = response =>
+			Func<DataRequest, GdbData> dataRequest = request =>
 			{
 				var input = new QueryDataResponse()
 				            {
-					            DataRequest = response.DataRequest,
+					            DataRequest = request,
 					            ServiceCallStatus = (int) ServiceCallStatus.Running
 				            };
 
 				QueryDataRequest output = moreDataRequest(input);
 
-				if (output?.InputData == null)
-				{
-					return null;
-				}
-
-				return new DataVerificationRequest
-				       {
-					       Data = output.InputData
-				       };
+				return output?.InputData;
 			};
 
 			IList<GdbWorkspace> workspaces = ProtobufConversionUtils.CreateSchema(

@@ -17,7 +17,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			var neverAnswered = new TaskCompletionSource<string>();
 			var watch = Stopwatch.StartNew();
 
-			Assert.Throws<TimeoutException>(() => QualityVerificationGrpcImpl.AwaitClientData(
+			Assert.Throws<TimeoutException>(() => GrpcServerUtils.AwaitClientData(
 				                                neverAnswered.Task, 2000));
 
 			Assert.That(watch.ElapsedMilliseconds, Is.InRange(2000, 2500));
@@ -27,7 +27,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		public void AwaitClientDataReturnsAnswer()
 		{
 			Assert.AreEqual("data",
-			                QualityVerificationGrpcImpl.AwaitClientData(
+			                GrpcServerUtils.AwaitClientData(
 				                Task.FromResult("data"), 2000));
 		}
 

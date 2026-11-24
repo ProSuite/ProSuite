@@ -15,6 +15,7 @@ using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 using ProSuite.Microservices.Server.AO.Geodatabase;
+using ProSuite.Microservices.Server.AO.QA;
 
 namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 {
@@ -42,7 +43,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 			{
 				remoteDataset = new RemoteDataset(
 					t,
-					response =>
+					VerificationDataAccess.GetData(response =>
 					{
 						capturedRequest = response.DataRequest;
 
@@ -53,7 +54,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 								              GdbColumnarData = new ColumnarGdbObjects { RowCount = 0 }
 							              }
 						       };
-					},
+					}),
 					classDefinition: null,
 					queryDefinition: CreateRelationshipQuery());
 
@@ -126,14 +127,15 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 			Func<ITable, BackingDataset> createBackingDataset = t =>
 				new RemoteDataset(
 					t,
-					response => new DataVerificationRequest
-					            {
-						            Data = new GdbData
-						                   {
-							                   GdbColumnarData = columnarData,
-							                   GdbObjectCount = 1
-						                   }
-					            },
+					VerificationDataAccess.GetData(
+						response => new DataVerificationRequest
+						            {
+							            Data = new GdbData
+							                   {
+								                   GdbColumnarData = columnarData,
+								                   GdbObjectCount = 1
+							                   }
+						            }),
 					classDefinition: null,
 					queryDefinition: CreateRelationshipQuery());
 
@@ -359,10 +361,10 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 			Func<ITable, BackingDataset> createBackingDataset = t =>
 				new RemoteDataset(
 					t,
-					getRemoteDataFunc,
+					VerificationDataAccess.GetData(getRemoteDataFunc),
 					classDefinition: null,
 					queryDefinition: CreateRelationshipQuery(),
-					readNextBatchFunc: readNextBatchFunc);
+					readNextBatchFunc: VerificationDataAccess.ReadNextBatch(readNextBatchFunc));
 
 			GdbTable table = ProtobufConversionUtils.FromQueryTableMsg(
 				objectClassMsg, new WorkspaceMock(), createBackingDataset,
@@ -466,10 +468,11 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 				{
 					remoteDataset = new RemoteDataset(
 						t,
-						response => new DataVerificationRequest
-						            {
-							            ErrorMessage = clientErrorMessage
-						            },
+						VerificationDataAccess.GetData(
+							response => new DataVerificationRequest
+							            {
+								            ErrorMessage = clientErrorMessage
+							            }),
 						new ClassDef
 						{
 							ClassHandle = 417,

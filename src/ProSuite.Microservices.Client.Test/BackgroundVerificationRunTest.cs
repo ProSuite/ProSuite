@@ -6,6 +6,7 @@ using NSubstitute;
 using NUnit.Framework;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Client.Test
 {

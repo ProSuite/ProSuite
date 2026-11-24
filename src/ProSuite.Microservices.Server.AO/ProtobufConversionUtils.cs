@@ -89,8 +89,8 @@ namespace ProSuite.Microservices.Server.AO
 		[NotNull]
 		public static GdbTableContainer CreateGdbTableContainer(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
-			[CanBeNull] Func<DataVerificationResponse, DataVerificationRequest> getRemoteDataFunc,
-			[CanBeNull] Func<DataVerificationRequest> readNextBatchFunc,
+			[CanBeNull] Func<DataRequest, GdbData> getRemoteDataFunc,
+			[CanBeNull] Func<GdbData> readNextBatchFunc,
 			out GdbWorkspace workspace)
 		{
 			GdbTableContainer container = null;
@@ -212,8 +212,8 @@ namespace ProSuite.Microservices.Server.AO
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] ICollection<ObjectClassMsg> relClassMessages = null,
-			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest = null,
-			Func<DataVerificationRequest> readNextBatchFunc = null)
+			Func<DataRequest, GdbData> moreDataRequest = null,
+			Func<GdbData> readNextBatchFunc = null)
 		{
 			var result = new List<GdbWorkspace>();
 			foreach (IGrouping<long, ObjectClassMsg> classGroup in

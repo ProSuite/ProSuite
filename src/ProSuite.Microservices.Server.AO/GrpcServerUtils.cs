@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -42,6 +43,37 @@ namespace ProSuite.Microservices.Server.AO
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Blocks the calling (STA worker) thread until the client-data task completes or the
+		/// timeout elapses. Faults are re-thrown; a timeout throws a <see cref="TimeoutException"/>.
+		/// </summary>
+		public static T AwaitClientData<T>([NotNull] Task<T> task, long timeOutMillis)
+		{
+			// Polls with Thread.Sleep rather than task.Wait: a managed wait on an STA thread pumps
+			// COM messages and could re-enter ArcObjects. Elapsed time comes from the stopwatch
+			// because Sleep(20) takes about 31 ms at the default timer resolution, so counting the
+			// sleeps would make the timeout about 50 % too long.
+			var watch = Stopwatch.StartNew();
+			const int interval = 20;
+			while (! task.IsCompleted && watch.ElapsedMilliseconds < timeOutMillis)
+			{
+				Thread.Sleep(interval);
+			}
+
+			if (task.IsFaulted)
+			{
+				throw task.Exception;
+			}
+
+			if (! task.IsCompleted)
+			{
+				throw new TimeoutException(
+					$"Client failed to provide data within {watch.ElapsedMilliseconds}ms");
+			}
+
+			return task.Result;
 		}
 
 		public static void GracefullyStop(Grpc.Core.Server server)

@@ -16,7 +16,6 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Client.QA;
-using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared.Gdb;
 
 namespace ProSuite.Microservices.Server.AO.Geodatabase
@@ -34,10 +33,10 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		// TODO: use GdbTable instead of ITable in Constr
 		public RemoteDataset(
 			[NotNull] ITable schema,
-			[NotNull] Func<DataVerificationResponse, DataVerificationRequest> getRemoteDataFunc,
+			[NotNull] Func<DataRequest, GdbData> getRemoteDataFunc,
 			[CanBeNull] ClassDef classDefinition,
 			[CanBeNull] RelationshipClassQuery queryDefinition = null,
-			[CanBeNull] Func<DataVerificationRequest> readNextBatchFunc = null)
+			[CanBeNull] Func<GdbData> readNextBatchFunc = null)
 		{
 			Assert.True(classDefinition != null | queryDefinition != null,
 			            "Either the class definition or the query definition must be provided.");
@@ -50,15 +49,21 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			ReadNextBatch = readNextBatchFunc;
 		}
 
-		public Func<DataVerificationResponse, DataVerificationRequest> GetData { get; set; }
+		/// <summary>
+		/// Requests data from the client. Returns null if the client does not answer, and
+		/// throws a <see cref="DataAccessException"/> with the client's error message if the
+		/// client could not read the data.
+		/// </summary>
+		public Func<DataRequest, GdbData> GetData { get; set; }
 
 		/// <summary>
 		/// Reads the next already-in-flight data batch from the client (without issuing a new
 		/// request), used when a <see cref="GdbData"/> response has <see cref="GdbData.HasMoreData"/>
 		/// set. May be null for callers that never send multi-batch data (single-batch clients).
+		/// Answers like <see cref="GetData"/>.
 		/// </summary>
 		[CanBeNull]
-		public Func<DataVerificationRequest> ReadNextBatch { get; set; }
+		public Func<GdbData> ReadNextBatch { get; set; }
 
 		public override IEnvelope Extent
 		{
@@ -79,27 +84,21 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			Assert.False(string.IsNullOrEmpty(_schema.OIDFieldName),
 			             "The table {0} has no OID Field Name", _schema.Name);
 
-			DataVerificationResponse response =
-				new DataVerificationResponse
-				{
-					DataRequest = new DataRequest
-					              {
-						              WhereClause = $"{_schema.OIDFieldName} = {id}"
-					              }
-				};
+			var dataRequest = new DataRequest
+			                  {
+				                  WhereClause = $"{_schema.OIDFieldName} = {id}"
+			                  };
 
 			if (_queryDefinition != null)
 			{
-				response.DataRequest.RelQueryDef = _queryDefinition;
+				dataRequest.RelQueryDef = _queryDefinition;
 			}
 			else
 			{
-				response.DataRequest.ClassDef = Assert.NotNull(_classDefinition);
+				dataRequest.ClassDef = Assert.NotNull(_classDefinition);
 			}
 
-			DataVerificationRequest moreData = GetData(response);
-
-			GdbData gdbData = ConfirmDataReceived(moreData, response.DataRequest);
+			GdbData gdbData = ConfirmDataReceived(() => GetData(dataRequest), dataRequest);
 
 			// A single OID lookup returns at most one row and fits in one batch, but it may be
 			// transferred either row-wise or columnar depending on the client's transfer mode.
@@ -118,17 +117,9 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 			dataRequest.CountOnly = true;
 
-			DataVerificationResponse response =
-				new DataVerificationResponse
-				{
-					DataRequest = dataRequest
-				};
-
 			_msg.DebugFormat("Get Row count from {0} where {1}", _schema.Name, filter?.WhereClause);
 
-			DataVerificationRequest moreData = GetData(response);
-
-			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
+			GdbData gdbData = ConfirmDataReceived(() => GetData(dataRequest), dataRequest);
 
 			return gdbData.GdbObjectCount;
 		}
@@ -136,12 +127,6 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		public override IEnumerable<VirtualRow> Search(ITableFilter filter, bool recycling)
 		{
 			DataRequest dataRequest = CreateDataRequest(filter);
-
-			DataVerificationResponse response =
-				new DataVerificationResponse
-				{
-					DataRequest = dataRequest
-				};
 
 			string subFields = filter?.SubFields;
 			List<int> fieldIndexes = null;
@@ -159,8 +144,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			// The client may split large results into several batches (GdbData.HasMoreData).
 			// The first batch is requested via GetData; subsequent batches are already in flight
 			// and read via ReadNextBatch without issuing a new request.
-			DataVerificationRequest moreData = GetData(response);
-			GdbData gdbData = ConfirmDataReceived(moreData, dataRequest);
+			GdbData gdbData = ConfirmDataReceived(() => GetData(dataRequest), dataRequest);
 
 			int batchNumber = 0;
 			while (true)
@@ -182,8 +166,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 					"The client signalled more data but no read-next-batch function is available " +
 					"(table {0}).", _schema.Name);
 
-				DataVerificationRequest nextData = ReadNextBatch();
-				gdbData = ConfirmDataReceived(nextData, dataRequest);
+				gdbData = ConfirmDataReceived(ReadNextBatch, dataRequest);
 			}
 
 			_msg.DebugStopTiming(watch, "Received and yielded objects in {0} batch(es)",
@@ -266,32 +249,33 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		}
 
 		[NotNull]
-		private GdbData ConfirmDataReceived([CanBeNull] DataVerificationRequest moreData,
+		private GdbData ConfirmDataReceived([NotNull] Func<GdbData> readData,
 		                                    [NotNull] DataRequest forRequest)
 		{
-			if (moreData == null)
+			GdbData gdbData;
+			try
+			{
+				gdbData = readData();
+			}
+			catch (DataAccessException e)
+			{
+				// The client's error message ends with a period and, for newer clients, contains
+				// the client's exception including its stack trace.
+				throw new DataAccessException(
+					$"The client failed to read data from {_schema.Name} " +
+					$"(where clause: {forRequest.WhereClause}). Client error:{Environment.NewLine}" +
+					$"{e.Message}{Environment.NewLine}" +
+					$"Request:{Environment.NewLine}{forRequest}", e);
+			}
+
+			if (gdbData == null)
 			{
 				throw new IOException(
 					$"The client failed to provide data from {_schema.Name} " +
 					$"upon request {forRequest}");
 			}
 
-			GdbData gdbData = moreData.Data;
-
-			if (gdbData != null)
-			{
-				return gdbData;
-			}
-
-			// The client's error message ends with a period and, for newer clients, contains
-			// the client's exception including its stack trace.
-			string errorMessage = moreData.ErrorMessage;
-
-			throw new DataAccessException(
-				$"The client failed to read data from {_schema.Name} " +
-				$"(where clause: {forRequest.WhereClause}). Client error:{Environment.NewLine}" +
-				$"{errorMessage}{Environment.NewLine}" +
-				$"Request:{Environment.NewLine}{forRequest}");
+			return gdbData;
 		}
 
 		private IEnumerable<VirtualRow> ProcessColumnarData(
