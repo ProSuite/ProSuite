@@ -13,6 +13,13 @@ public interface IWorkList : IRowCache, IWorkItemData
 
 	int CurrentIndex { get; }
 
+	/// <summary>
+	/// Whether the row of the current item was deleted. The item is not in the work list's items
+	/// any more, but it stays the current item and is counted until the user navigates to another
+	/// item.
+	/// </summary>
+	bool IsCurrentItemDeleted { get; }
+
 	// TODO: daro hide?
 	IWorkItemRepository Repository { get; }
 

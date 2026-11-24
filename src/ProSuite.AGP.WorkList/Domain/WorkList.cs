@@ -40,6 +40,13 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	private WorkItemVisibility? _visibility;
 	[NotNull] private string _displayName;
 
+	/// <summary>
+	/// The current item after the user deleted its row. It is no longer in the work list but
+	/// stays the current item until the user navigates, so the user can finish the work at this
+	/// place. Meanwhile, CurrentIndex is the index of the item that followed the deleted item.
+	/// </summary>
+	[CanBeNull] private IWorkItem _deletedCurrentItem;
+
 	protected WorkList([NotNull] IWorkItemRepository repository,
 	                   [CanBeNull] Geometry areaOfInterest,
 	                   [NotNull] string name,
@@ -87,7 +94,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	{
 		get
 		{
-			IWorkItem current = GetItem(CurrentIndex);
+			IWorkItem current = _deletedCurrentItem ?? GetItem(CurrentIndex);
 			if (current == null)
 			{
 				return null;
@@ -100,6 +107,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	}
 
 	public int CurrentIndex { get; set; }
+
+	public bool IsCurrentItemDeleted => _deletedCurrentItem != null;
 
 	public WorkItemVisibility? Visibility
 	{
@@ -137,12 +146,21 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 	public virtual bool CanSetStatus()
 	{
-		return HasCurrentItem();
+		return HasCurrentItem() || _deletedCurrentItem != null;
 	}
 
 	public async Task SetStatusAsync(IWorkItem item, WorkItemStatus status)
 	{
-		await Repository.SetStatusAsync(item, status);
+		if (item == _deletedCurrentItem)
+		{
+			// The row of the item is deleted: there is nothing to store. The status only tells
+			// that the work at this place is done (e.g. for auto go nearest).
+			item.Status = status;
+		}
+		else
+		{
+			await Repository.SetStatusAsync(item, status);
+		}
 
 		// If an item visibility changes to 'Done' the item might not be part
 		// of the work list anymore depending on the work list's Visibility,
@@ -465,6 +483,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 		IWorkItem oldCurrentItem = CurrentItem;
 		IWorkItem newCurrentItem = null;
+		_deletedCurrentItem = null;
 
 		// If there is no current item in memory (e.g. the items are loaded for the first time after
 		// re-opening the project), use the remembered current item from the definition file. This
@@ -676,10 +695,25 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 	public long CountLoadedItems(out int todo)
 	{
-		todo = 0;
-		todo += CountLoadedItemsCore(_items);
+		List<IWorkItem> items = GetCountedItems();
 
-		return CountItems(_items);
+		todo = CountLoadedItemsCore(items);
+
+		return CountItems(items);
+	}
+
+	/// <summary>
+	/// The items of the work list and the deleted current item: the deleted current item is
+	/// counted until the user navigates, so setting its status changes the todo count.
+	/// </summary>
+	private List<IWorkItem> GetCountedItems()
+	{
+		if (_deletedCurrentItem == null)
+		{
+			return _items;
+		}
+
+		return new List<IWorkItem>(_items) { _deletedCurrentItem };
 	}
 
 	protected virtual int CountItems(List<IWorkItem> items)
@@ -1234,6 +1268,9 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 
 	private void SetCurrentItemCore([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
 	{
+		IWorkItem deletedCurrentItem = _deletedCurrentItem;
+		_deletedCurrentItem = null;
+
 		nextItem.Visited = true;
 		CurrentIndex = _items.IndexOf(nextItem);
 
@@ -1245,6 +1282,12 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			           : new List<long> { nextItem.OID };
 
 		OnWorkListChanged(null, oids);
+
+		if (deletedCurrentItem?.Extent != null)
+		{
+			// The deleted item is not in the work list: invalidate by OID does not erase it
+			Invalidate(deletedCurrentItem.Extent);
+		}
 	}
 
 	private void ReorderCurrentItem([NotNull] IWorkItem nextItem)
@@ -1323,14 +1366,18 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	[CanBeNull]
 	private IWorkItem GetNextVisitedVisibleItem()
 	{
-		if (CurrentIndex >= _items.Count - 1)
+		// After the current item was deleted, CurrentIndex is the index of the item that
+		// followed the deleted item
+		int start = _deletedCurrentItem == null ? CurrentIndex + 1 : CurrentIndex;
+
+		if (start >= _items.Count)
 		{
 			// last item reached
 			return null;
 		}
 
 		// true if another visible, visited item comes afterwards
-		for (int i = CurrentIndex + 1; i < _items.Count; i++)
+		for (int i = start; i < _items.Count; i++)
 		{
 			IWorkItem item = _items[i];
 			if (item.Visited && IsVisible(item))
@@ -1436,7 +1483,7 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		// makes the total drop when the current issue is toggled to 'Allowed' (which goes through
 		// ProcessChanges -> Invalidate(oids) -> here): CountItems excludes 'Allowed' issues, just
 		// like the loaded/todo numbers the navigator recomputes in response to this event.
-		TotalCount = CountItems(_items);
+		TotalCount = CountItems(GetCountedItems());
 
 		WorkListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 	}
@@ -1539,13 +1586,18 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 			Invalidate(ProcessUpdates(table, oids, insertedOids));
 		}
 
+		var deletedItems = new List<IWorkItem>();
+
 		foreach ((Table table, List<long> oids) in deletes)
 		{
-			ProcessDeletes(table, oids);
+			deletedItems.AddRange(ProcessDeletes(table, oids));
+		}
 
-			// Do not invalidate with item OID because the item has already
+		if (deletedItems.Count > 0)
+		{
+			// Do not invalidate with item OID because the items have already
 			// been removed from _items.
-			Invalidate();
+			InvalidateDeletedItems(deletedItems);
 		}
 
 		InvalidateNewItems(insertedOids);
@@ -1629,9 +1681,15 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		return invalidateOids;
 	}
 
-	private void ProcessDeletes(Table table, List<long> oids)
+	/// <summary>
+	/// Removes the items of the deleted rows from the work list cache.
+	/// </summary>
+	/// <returns>The removed items</returns>
+	private List<IWorkItem> ProcessDeletes(Table table, List<long> oids)
 	{
 		_msg.Debug($"ProcessDeletes {table.GetName()}.");
+
+		var deletedItems = new List<IWorkItem>();
 
 		try
 		{
@@ -1646,18 +1704,14 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 					continue;
 				}
 
-				if (CurrentItem != null && CurrentItem.Equals(cachedItem))
-				{
-					Assert.True(HasCurrentItem(), $"{nameof(HasCurrentItem)} is false");
-					ClearCurrentItem(cachedItem);
-				}
-
 				// to invalidate item remove it from work list cache
 				bool invalidated =
 					_rowMap.Remove(cachedItem.GdbRowProxy, out IWorkItem item) &&
-					_items.Remove(item);
+					RemoveItem(item);
 				Assert.True(invalidated,
 				            $"Invalidate work item failed: {rowId} not part of work list");
+
+				deletedItems.Add(cachedItem);
 
 				Envelope extent = cachedItem.Extent;
 				if (extent != null)
@@ -1673,6 +1727,56 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 		catch (Exception ex)
 		{
 			_msg.Debug(ex.Message, ex);
+		}
+
+		return deletedItems;
+	}
+
+	/// <summary>
+	/// Removes the item from _items and keeps CurrentIndex at the current item. If the item is
+	/// the current item, it stays the current item, see <see cref="_deletedCurrentItem"/>.
+	/// </summary>
+	private bool RemoveItem([NotNull] IWorkItem item)
+	{
+		int index = _items.IndexOf(item);
+
+		if (index < 0)
+		{
+			return false;
+		}
+
+		_items.RemoveAt(index);
+
+		if (index == CurrentIndex && _deletedCurrentItem == null)
+		{
+			// CurrentIndex stays: it is now the index of the item after the deleted item
+			_deletedCurrentItem = item;
+		}
+		else if (index < CurrentIndex)
+		{
+			CurrentIndex--;
+		}
+
+		return true;
+	}
+
+	private void InvalidateDeletedItems([NotNull] List<IWorkItem> deletedItems)
+	{
+		Envelope extent = null;
+
+		foreach (IWorkItem item in deletedItems.Where(item => item.Extent != null))
+		{
+			extent = extent == null ? item.Extent : extent.Union(item.Extent);
+		}
+
+		if (extent != null)
+		{
+			Invalidate(extent);
+		}
+		else
+		{
+			// Non-spatial items: invalidate the work list layers in the map extent
+			OnWorkListChanged();
 		}
 	}
 
@@ -1918,6 +2022,8 @@ public abstract class WorkList : NotifyPropertyChangedBase, IWorkList, IEquatabl
 	private void ClearCurrentItem([NotNull] IWorkItem current)
 	{
 		Assert.ArgumentNotNull(current, nameof(current));
+
+		_deletedCurrentItem = null;
 
 		if (CurrentIndex < 0)
 		{
