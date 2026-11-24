@@ -199,7 +199,47 @@ namespace ProSuite.Commons.UI.WinForms
 			return FromHsl(color.GetHue(), color.GetSaturation(), darkLightness);
 		}
 
+		/// <returns>Black or the light text of dark controls.</returns>
+		/// <remarks>
+		/// Not <see cref="Color.GetBrightness"/>: it is 50 % for every pure color, e.g. for
+		/// red and yellow, on which black text is easier to read.
+		/// </remarks>
+		public static Color GetDarkThemeTextColorWithMostContrast(Color backColor)
+		{
+			double background = GetRelativeLuminance(backColor);
+
+			double contrastToBlack = (background + 0.05) / 0.05;
+			double contrastToText = (GetRelativeLuminance(_textColor) + 0.05) / (background + 0.05);
+
+			return contrastToBlack > contrastToText ? Color.Black : _textColor;
+		}
+
+		public static void ExcludeColorsFromDarkTheme([NotNull] Control control)
+		{
+			_colorsExcludedFromDarkTheme.GetValue(control, _ => new object());
+		}
+
 		#region Non-public members
+
+		/// <summary>
+		/// The brightness as the eye sees it, from 0 (black) to 1 (white), as defined in the
+		/// Web Content Accessibility Guidelines (WCAG).
+		/// </summary>
+		private static double GetRelativeLuminance(Color color)
+		{
+			return 0.2126 * GetLinearChannel(color.R) +
+			       0.7152 * GetLinearChannel(color.G) +
+			       0.0722 * GetLinearChannel(color.B);
+		}
+
+		private static double GetLinearChannel(byte value)
+		{
+			double channel = value / 255.0;
+
+			return channel <= 0.04045
+				       ? channel / 12.92
+				       : Math.Pow((channel + 0.055) / 1.055, 2.4);
+		}
 
 		internal static bool IsSystemDarkModeEnabled()
 		{
@@ -231,13 +271,16 @@ namespace ProSuite.Commons.UI.WinForms
 			else if (control is TextBoxBase || control is ComboBox || control is ListControl ||
 			         control is UpDownBase)
 			{
-				// Keeps a dark color set before, e.g. the state color of an attribute editor field.
-				if (control.BackColor.GetBrightness() > 0.5f)
+				if (! _colorsExcludedFromDarkTheme.TryGetValue(control, out _))
 				{
-					control.BackColor = _controlBackground;
-				}
+					// Keeps a dark color set before.
+					if (control.BackColor.GetBrightness() > 0.5f)
+					{
+						control.BackColor = _controlBackground;
+					}
 
-				control.ForeColor = _textColor;
+					control.ForeColor = _textColor;
+				}
 
 				if (control is ComboBox comboBox &&
 				    comboBox.DropDownStyle != ComboBoxStyle.Simple)
@@ -608,6 +651,9 @@ namespace ProSuite.Commons.UI.WinForms
 
 		// The forms and hosted controls the dark theme was applied to, for the dialogs they open.
 		private static readonly ConditionalWeakTable<Control, object> _darkRoots =
+			new ConditionalWeakTable<Control, object>();
+
+		private static readonly ConditionalWeakTable<Control, object> _colorsExcludedFromDarkTheme =
 			new ConditionalWeakTable<Control, object>();
 
 		/// <summary>

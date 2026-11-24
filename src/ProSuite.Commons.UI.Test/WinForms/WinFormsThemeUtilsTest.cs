@@ -34,6 +34,42 @@ namespace ProSuite.Commons.UI.Test.WinForms
 		}
 
 		[Test]
+		public void ApplyDarkTheme_LeavesTheColorsOfExcludedControls()
+		{
+			using (var form = new Form())
+			{
+				var kept = new TextBox { BackColor = Color.LightBlue, ForeColor = Color.Black };
+				var themed = new TextBox { BackColor = Color.LightBlue };
+				form.Controls.Add(kept);
+				form.Controls.Add(themed);
+
+				WinFormsThemeUtils.ExcludeColorsFromDarkTheme(kept);
+				WinFormsThemeUtils.ApplyDarkTheme(form);
+
+				Assert.AreEqual(Color.LightBlue, kept.BackColor);
+				Assert.AreEqual(Color.Black, kept.ForeColor);
+				Assert.Less(themed.BackColor.GetBrightness(), 0.5f);
+			}
+		}
+
+		[Test]
+		public void GetDarkThemeTextColorWithMostContrast_BlackOnLightBackground()
+		{
+			Assert.AreEqual(Color.Black, GetTextColor(Color.LightBlue));
+			Assert.AreEqual(Color.Black, GetTextColor(Color.Red));
+			Assert.AreEqual(Color.Black, GetTextColor(Color.Yellow));
+			Assert.AreEqual(Color.Black, GetTextColor(Color.Orange));
+			Assert.Greater(GetTextColor(Color.FromArgb(29, 80, 96)).GetBrightness(), 0.5f);
+			Assert.Greater(GetTextColor(WinFormsThemeUtils.GetDarkBackColor(Color.White))
+				               .GetBrightness(), 0.5f);
+		}
+
+		private static Color GetTextColor(Color backColor)
+		{
+			return WinFormsThemeUtils.GetDarkThemeTextColorWithMostContrast(backColor);
+		}
+
+		[Test]
 		public void ApplyDarkThemeOfOwner_FollowsTheFormOfTheOwner()
 		{
 			using (var darkForm = new Form())
