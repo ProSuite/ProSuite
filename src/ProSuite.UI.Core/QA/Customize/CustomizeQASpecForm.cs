@@ -13,6 +13,7 @@ using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.UI.Core.QA.Controls;
 
 namespace ProSuite.UI.Core.QA.Customize
@@ -202,6 +203,8 @@ namespace ProSuite.UI.Core.QA.Customize
 			InitializeComponent();
 			// The images are stored at 48 px.
 			ToolStripDpiUtils.SetImageSize(this, 16);
+
+			dgcSelType.Width = DatasetTypeImageLookup.ImageSize + 2;
 
 			_selectedElements = new HashSet<QualitySpecificationElement>();
 

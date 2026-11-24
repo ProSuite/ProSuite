@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 
 namespace ProSuite.UI.Core.QA.Controls
 {
@@ -21,6 +22,11 @@ namespace ProSuite.UI.Core.QA.Controls
 			InitializeComponent();
 
 			_dataGridViewTestParameters.AutoGenerateColumns = false;
+
+			int datasetTypeColumnWidth = DatasetTypeImageLookup.ImageSize + 2;
+			datasetTypeDataGridViewImageColumn.MinimumWidth = datasetTypeColumnWidth;
+			datasetTypeDataGridViewImageColumn.Width = datasetTypeColumnWidth;
+
 			_columnParameterValueFilterExpression.CellTemplate = new DatasetPropertyCell();
 			_columnParameterValueModelName.CellTemplate = new DatasetPropertyCell();
 			_columnParameterUsedAsReferenceData.CellTemplate = new DatasetPropertyCell();

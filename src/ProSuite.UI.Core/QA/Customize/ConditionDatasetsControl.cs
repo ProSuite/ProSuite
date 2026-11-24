@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.Core.DataModel.ResourceLookup;
 using ProSuite.UI.Core.QA.Controls;
 
 namespace ProSuite.UI.Core.QA.Customize
@@ -22,6 +23,12 @@ namespace ProSuite.UI.Core.QA.Customize
 		public ConditionDatasetsControl()
 		{
 			InitializeComponent();
+
+			int imageColumnWidth = DatasetTypeImageLookup.ImageSize + 2;
+			_columnQualityConditionType.MinimumWidth = imageColumnWidth;
+			_columnQualityConditionType.Width = imageColumnWidth;
+			_columnDatasetType.MinimumWidth = imageColumnWidth;
+			_columnDatasetType.Width = imageColumnWidth;
 
 			_findController = new DataGridViewFindController(_dataGridViewAllConditions,
 			                                                 _dataGridViewFindToolStrip)
