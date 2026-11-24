@@ -1,12 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Net;
 using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
-using System.Text;
-using System.Threading;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -126,15 +121,7 @@ namespace ProSuite.QA.Tests
 
 				if (outstandingJobs.Count > 0)
 				{
-					TimeSpan remaining = timeoutAt - DateTime.UtcNow;
-					if (remaining <= TimeSpan.Zero)
-					{
-						continue;
-					}
-
-					Thread.Sleep(remaining < TimeSpan.FromSeconds(1)
-						             ? remaining
-						             : TimeSpan.FromSeconds(1));
+					PredictionServiceHttp.WaitBeforeNextPoll(timeoutAt);
 				}
 			}
 
@@ -202,37 +189,24 @@ namespace ProSuite.QA.Tests
 		                                   DateTime timeoutAt)
 		{
 			string requestUrl = BuildJobUrl(apiUrl, tileOverlapRatio);
-			string boundary = "----ProSuitePredictionService" + Guid.NewGuid().ToString("N");
 
-			var request = (HttpWebRequest) WebRequest.Create(requestUrl);
-			AddPredictionServiceApiKeyHeader(request);
-			request.Method = "POST";
-			request.ContentType = "multipart/form-data; boundary=" + boundary;
-			request.Accept = "application/json";
-			SetRequestTimeout(request, RemainingTimeout(timeoutAt));
-
-			using (Stream requestStream = request.GetRequestStream())
-			{
-				WriteMultipartTiff(requestStream, boundary, imagePath);
-			}
-
-			using (var response = (HttpWebResponse) request.GetResponse())
-			using (Stream responseStream = response.GetResponseStream())
-			{
-				var serializer =
-					new DataContractJsonSerializer(typeof(PredictionServiceJobResponse));
-				var jobResponse =
-					(PredictionServiceJobResponse) serializer.ReadObject(responseStream);
-
-				string jobId = jobResponse?.JobId;
-				if (string.IsNullOrEmpty(jobId))
+			var jobResponse = PredictionServiceHttp.PostMultipart<PredictionServiceJobResponse>(
+				requestUrl,
+				new[]
 				{
-					throw new InvalidOperationException(
-						"Prediction service response contains no job_id");
-				}
+					PredictionServiceHttp.MultipartPart.FromFile(
+						"file", imagePath, "image/tiff")
+				},
+				timeoutAt);
 
-				return new PendingPredictionServiceJob(index, imagePath, jobId);
+			string jobId = jobResponse.JobId;
+			if (string.IsNullOrEmpty(jobId))
+			{
+				throw new InvalidOperationException(
+					"Prediction service response contains no job_id");
 			}
+
+			return new PendingPredictionServiceJob(index, imagePath, jobId);
 		}
 
 		private bool TryGetCompletedResult(
@@ -242,33 +216,16 @@ namespace ProSuite.QA.Tests
 			[CanBeNull] out AreaPredictionJobResult completedResult)
 		{
 			completedResult = null;
-			string statusUrl = BuildJobStatusUrl(apiUrl, pendingJob.JobId);
-			var request = (HttpWebRequest) WebRequest.Create(statusUrl);
-			AddPredictionServiceApiKeyHeader(request);
-			request.Method = "GET";
-			request.Accept = "application/json";
-			SetRequestTimeout(request, RemainingTimeout(timeoutAt));
-
-			PredictionServiceJobStatus status;
-			using (var response = (HttpWebResponse) request.GetResponse())
-			using (Stream stream = response.GetResponseStream())
-			{
-				var serializer =
-					new DataContractJsonSerializer(typeof(PredictionServiceJobStatus));
-				status = (PredictionServiceJobStatus) serializer.ReadObject(stream);
-			}
-
-			if (status == null)
-			{
-				throw new InvalidOperationException(
-					$"Prediction service job {pendingJob.JobId} returned no status");
-			}
+			var status = PredictionServiceHttp.GetJson<PredictionServiceJobStatus>(
+				PredictionServiceHttp.BuildJobStatusUrl(apiUrl, pendingJob.JobId), timeoutAt);
 
 			if (string.Equals(status.Status, "done",
 			                  StringComparison.OrdinalIgnoreCase))
 			{
-				PredictionServiceGeoJsonResult predictionResult = GetResult(
-					BuildJobResultUrl(apiUrl, pendingJob.JobId), timeoutAt);
+				var predictionResult =
+					PredictionServiceHttp.GetJson<PredictionServiceGeoJsonResult>(
+						PredictionServiceHttp.BuildJobResultUrl(apiUrl, pendingJob.JobId),
+						timeoutAt);
 				completedResult = new AreaPredictionJobResult(
 					pendingJob.ImagePath, pendingJob.JobId,
 					ToPredictions(predictionResult),
@@ -458,97 +415,11 @@ namespace ProSuite.QA.Tests
 			return value.HasValue ? value.Value.ToString() : "?";
 		}
 
-		private PredictionServiceGeoJsonResult GetResult(string resultUrl,
-		                                      DateTime timeoutAt)
-		{
-			var request = (HttpWebRequest) WebRequest.Create(resultUrl);
-			AddPredictionServiceApiKeyHeader(request);
-			request.Method = "GET";
-			request.Accept = "application/json";
-			SetRequestTimeout(request, RemainingTimeout(timeoutAt));
-
-			using (var response = (HttpWebResponse) request.GetResponse())
-			using (Stream stream = response.GetResponseStream())
-			{
-				var serializer =
-					new DataContractJsonSerializer(typeof(PredictionServiceGeoJsonResult));
-				return (PredictionServiceGeoJsonResult) serializer.ReadObject(stream);
-			}
-		}
-
-		private static void AddPredictionServiceApiKeyHeader(HttpWebRequest request)
-		{
-			string apiKey = Environment.GetEnvironmentVariable("PREDICTION_API_KEY");
-
-			if (! string.IsNullOrWhiteSpace(apiKey))
-			{
-				request.Headers["X-API-Key"] = apiKey;
-			}
-		}
-
-		private static void WriteMultipartTiff(Stream requestStream,
-		                                       string boundary,
-		                                       string imagePath)
-		{
-			string header =
-				"--" + boundary + "\r\n" +
-				"Content-Disposition: form-data; name=\"file\"; filename=\"" +
-				IOPath.GetFileName(imagePath) + "\"\r\n" +
-				"Content-Type: image/tiff\r\n\r\n";
-			byte[] headerBytes = Encoding.UTF8.GetBytes(header);
-			requestStream.Write(headerBytes, 0, headerBytes.Length);
-
-			using (System.IO.FileStream fileStream = File.OpenRead(imagePath))
-			{
-				fileStream.CopyTo(requestStream);
-			}
-
-			byte[] footerBytes =
-				Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
-			requestStream.Write(footerBytes, 0, footerBytes.Length);
-		}
-
-		private static void SetRequestTimeout(HttpWebRequest request, TimeSpan timeout)
-		{
-			int timeoutMilliseconds = ToTimeoutMilliseconds(timeout);
-			request.Timeout = timeoutMilliseconds;
-			request.ReadWriteTimeout = timeoutMilliseconds;
-		}
-
-		private static int ToTimeoutMilliseconds(TimeSpan timeout)
-		{
-			if (timeout <= TimeSpan.Zero)
-			{
-				return 1;
-			}
-
-			if (timeout.TotalMilliseconds >= int.MaxValue)
-			{
-				return int.MaxValue;
-			}
-
-			return Math.Max(1, (int) timeout.TotalMilliseconds);
-		}
-
-		private static TimeSpan RemainingTimeout(DateTime timeoutAt)
-		{
-			TimeSpan remaining = timeoutAt - DateTime.UtcNow;
-			if (remaining <= TimeSpan.Zero)
-			{
-				throw new TimeoutException("Timed out waiting for Prediction service job result");
-			}
-
-			return remaining;
-		}
-
 		private static string BuildJobUrl(string apiUrl,
 		                                  double? tileOverlapRatio)
 		{
-			string separator = apiUrl.EndsWith("/", StringComparison.Ordinal)
-				                   ? string.Empty
-				                   : "/";
-
-			string result = apiUrl + separator + "jobs?target=buildings";
+			string result =
+				PredictionServiceHttp.CombineApiPath(apiUrl, "jobs?target=buildings");
 
 			if (tileOverlapRatio.HasValue)
 			{
@@ -558,25 +429,6 @@ namespace ProSuite.QA.Tests
 			}
 
 			return result;
-		}
-
-		private static string BuildJobStatusUrl(string apiUrl, string jobId)
-		{
-			return CombineApiPath(apiUrl, "jobs/" + Uri.EscapeDataString(jobId));
-		}
-
-		private static string BuildJobResultUrl(string apiUrl, string jobId)
-		{
-			return CombineApiPath(
-				apiUrl, "jobs/" + Uri.EscapeDataString(jobId) + "/result");
-		}
-
-		private static string CombineApiPath(string apiUrl, string path)
-		{
-			string separator = apiUrl.EndsWith("/", StringComparison.Ordinal)
-				                   ? string.Empty
-				                   : "/";
-			return apiUrl + separator + path;
 		}
 
 		private static IList<AreaPrediction> ToPredictions(

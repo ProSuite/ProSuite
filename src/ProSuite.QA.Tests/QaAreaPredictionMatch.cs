@@ -133,7 +133,9 @@ namespace ProSuite.QA.Tests
 			double minimumArea,
 			[Doc(nameof(DocStrings.QaAreaPredictionMatch_minimumOverlapRatio))]
 			double minimumOverlapRatio)
-			: this(featureClass, GetRasterDatasetReference(imageMosaic), apiUrl, modelName,
+			: this(featureClass,
+			       RasterDatasetTileExporter.GetRasterDatasetReference(imageMosaic),
+			       apiUrl, modelName,
 			       minimumArea, minimumOverlapRatio) { }
 
 		internal QaAreaPredictionMatch(
@@ -177,34 +179,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaAreaPredictionMatch_0))]
 		public QaAreaPredictionMatch([NotNull] QaAreaPredictionMatchDefinition definition)
 			: this((IReadOnlyFeatureClass) definition.FeatureClass,
-			       GetRasterDatasetReference((RasterReference) definition.ImageRaster),
+			       RasterDatasetTileExporter.GetRasterDatasetReference(
+				       (RasterReference) definition.ImageRaster),
 			       definition.ApiUrl,
 			       definition.ModelName,
 			       definition.MinimumArea,
 			       definition.MinimumOverlapRatio)
 		{
 			MatchMode = definition.MatchMode;
-		}
-
-		[NotNull]
-		private static RasterDatasetReference GetRasterDatasetReference(
-			[NotNull] RasterReference rasterReference)
-		{
-			if (rasterReference is RasterDatasetReference rasterDatasetReference)
-			{
-				return rasterDatasetReference;
-			}
-
-			if (rasterReference is MosaicRasterReference)
-			{
-				IRasterDataset rasterDataset = DatasetUtils.OpenRasterDataset(
-					rasterReference.Dataset.Workspace, rasterReference.Name);
-				return new RasterDatasetReference(rasterDataset);
-			}
-
-			throw new ArgumentException(
-				$"Unsupported image raster type {rasterReference.GetType().Name}",
-				nameof(rasterReference));
 		}
 
 		public double MinimumArea { get; }

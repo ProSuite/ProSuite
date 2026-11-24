@@ -15,6 +15,10 @@ public partial class StringValueBlazor : TestParameterValueBlazorBase<string>
 		ViewModel is ScalarTestParameterValueViewModel scalarViewModel &&
 		scalarViewModel.ShowSqlExpressionBuilderButton;
 
+	private bool IsMultilineText =>
+		ViewModel is ScalarTestParameterValueViewModel scalarViewModel &&
+		scalarViewModel.IsMultilineText;
+
 	private void OnInput(ChangeEventArgs args)
 	{
 		SetValue(args.Value);

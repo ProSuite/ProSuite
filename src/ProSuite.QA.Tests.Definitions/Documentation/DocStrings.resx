@@ -4911,6 +4911,37 @@ Remarks: A source row may be exported several times with different tile ids.</va
 - MissingPredictions: existing buildings that have no matching prediction
 - Both: both types of difference</value>
   </data>
+  <data name="QaSemanticImageMatch_0" xml:space="preserve">
+    <value>Sends the features of 'featureClass' together with the image to a language model service, which judges each feature against 'rule', a rule written in text. Reports the features that the service judges to be wrong with a probability greater than 'MinimumErrorProbability', and the features that could not be checked. The results are kept in a cache file in the local user profile: a repeated verification sends only new or changed features, because each checked feature costs money.</value>
+  </data>
+  <data name="QaSemanticImageMatch_featureClass" xml:space="preserve">
+    <value>Polygon feature class whose features are checked. Features larger than 400 map units in width or height are not sent and are reported as not checked.</value>
+  </data>
+  <data name="QaSemanticImageMatch_imageRaster" xml:space="preserve">
+    <value>Raster image on which the features are judged. Bands 1 to 3 must be red, green and blue.</value>
+  </data>
+  <data name="QaSemanticImageMatch_imageMosaic" xml:space="preserve">
+    <value>Image mosaic on which the features are judged. Bands 1 to 3 must be red, green and blue.</value>
+  </data>
+  <data name="QaSemanticImageMatch_contextFeatureClasses" xml:space="preserve">
+    <value>Polygon feature classes that are drawn as surroundings in the image shown to the language model, for example all buildings. Their features are not checked but can provide extra context.</value>
+  </data>
+  <data name="QaSemanticImageMatch_apiUrl" xml:space="preserve">
+    <value>Base address of the prediction service.</value>
+  </data>
+  <data name="QaSemanticImageMatch_rule" xml:space="preserve">
+    <value>The rule, at most 4000 characters. Describe what the object is, what kind of image is used, what makes a feature right or wrong, and the categories the answer should use. The service asks the language model for the probability that recording the feature is wrong according to this rule.</value>
+  </data>
+  <data name="QaSemanticImageMatch_CacheDirectory" xml:space="preserve">
+    <value>The folder in which the results of the service are kept. A feature whose result is in this folder is not sent to the service again, as long as its geometry is unchanged. Environment variables such as %LOCALAPPDATA% are expanded on the computer that runs the verification, for example in %LOCALAPPDATA%\Dira GeoSystems\ProSuite\SemanticImageMatch. Leave the value empty to send all features on every run.
+
+Shared results: the folder can be a shared folder, for example \\server\share\SemanticImageMatch. The results in it can come from a previous verification of a larger area, or can be pre-calculated with the same quality condition. Only read access to the folder is required to use them. Verifications in any extent then take the results from the folder and do not use the service. Only features that are new or whose geometry has changed are sent to the service. If the service cannot be reached, an issue is reported for these features.
+
+Results are kept separately for each feature class, image and rule, and are found by object ID. They are reused only if the verification reads the same feature class and image, with the same names and object IDs, and the rule is unchanged. A changed rule starts a new set of results. An exchanged image is not noticed: after exchanging the image, use a new folder or delete the results in the folder.</value>
+  </data>
+  <data name="QaSemanticImageMatch_MinimumErrorProbability" xml:space="preserve">
+    <value>A feature is reported when the error probability given by the service, a value from 0 to 100, is greater than this value. With 50, the same features are reported as by the service's own judgement.</value>
+  </data>
   <data name="QaLasFileZRange_0" xml:space="preserve">
     <value>Finds LAS files of 'pointCloud' covering the features of 'perimeterClass' whose header cannot be read, or whose declared Z range is not within 'minimumZ' and 'maximumZ'</value>
   </data>

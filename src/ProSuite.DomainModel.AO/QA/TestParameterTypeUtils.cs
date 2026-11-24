@@ -211,13 +211,7 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] Type instanceType,
 			[NotNull] TestParameter testParameter)
 		{
-			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
-
-			PropertyInfo propertyInfo =
-				instanceType.GetProperties()
-				            .FirstOrDefault(p => p.Name.Equals(
-					                            testParameter.Name,
-					                            StringComparison.InvariantCultureIgnoreCase));
+			PropertyInfo propertyInfo = GetParameterProperty(instanceType, testParameter);
 
 			if (propertyInfo == null)
 			{
@@ -225,6 +219,27 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			return ReflectionUtils.GetAttribute<SqlExpressionAttribute>(propertyInfo);
+		}
+
+		public static bool HasMultilineTextAttribute([NotNull] Type instanceType,
+		                                             [NotNull] TestParameter testParameter)
+		{
+			PropertyInfo propertyInfo = GetParameterProperty(instanceType, testParameter);
+
+			return propertyInfo != null &&
+			       ReflectionUtils.GetAttribute<MultilineTextAttribute>(propertyInfo) != null;
+		}
+
+		[CanBeNull]
+		private static PropertyInfo GetParameterProperty([NotNull] Type instanceType,
+		                                                 [NotNull] TestParameter testParameter)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			return instanceType.GetProperties()
+			                   .FirstOrDefault(p => p.Name.Equals(
+				                                   testParameter.Name,
+				                                   StringComparison.InvariantCultureIgnoreCase));
 		}
 	}
 }
