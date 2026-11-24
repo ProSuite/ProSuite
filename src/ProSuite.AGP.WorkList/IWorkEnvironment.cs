@@ -59,7 +59,8 @@ public interface IWorkEnvironment
 	/// state could be maintained in the VerificationEnvironment, such as the LastFilterDate which
 	/// should be updated before a (dormant) work list from the registry is re-opened.
 	/// Also, the underlying data might have changed and must be re-read.
+	/// Must be called on the MCT.
 	/// </summary>
 	/// <param name="worklist"></param>
-	Task UpdateConfigurationAsync(IWorkList worklist);
+	void UpdateConfiguration([NotNull] IWorkList worklist);
 }

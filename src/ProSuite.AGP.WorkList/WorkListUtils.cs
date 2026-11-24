@@ -123,10 +123,14 @@ public static class WorkListUtils
 				worklist = await environment.CreateWorkListAsync(name, workListFile);
 				Assert.NotNull(worklist);
 			}
+			else
+			{
+				environment.UpdateConfiguration(worklist);
+			}
 		}
 		else
 		{
-			await environment.UpdateConfigurationAsync(worklist);
+			environment.UpdateConfiguration(worklist);
 		}
 
 		// Commit writes work list definition to disk.

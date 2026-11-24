@@ -45,6 +45,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 	// Written on the UI thread, read on the background thread that raises the sketch events.
 	private bool? _editSketchHasZ;
 
+	[CanBeNull] private DrawnLine _drawnLine;
+
 	protected ConstructionToolBase()
 	{
 		ContextMenuID = "esri_editing_SketchContextMenu";
@@ -130,15 +132,46 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected bool LogSketchVertexZs { get; set; }
 
+	/// <summary>
+	/// Whether the tool keeps track of the drawn line and of where the height of each of its
+	/// vertices comes from, so that line vertices can be interpolated, see
+	/// <see cref="InterpolateSketchZs"/>.
+	/// </summary>
+	protected virtual bool CanInterpolateSketchZs => false;
+
+	[CanBeNull]
+	private DrawnLine DrawnLine =>
+		CanInterpolateSketchZs ? _drawnLine ??= new DrawnLine(GetSnappedZ) : null;
+
+	/// <summary>
+	/// Whether the line vertices drawn while it is true get their heights interpolated along
+	/// the line between the vertices with a known height: those drawn while it was false, and
+	/// those snapped to a feature with a height. The tool gets these heights from
+	/// <see cref="GetDrawnLineWithZs"/> and in <see cref="OnEditSketchCompleteCoreAsync"/>,
+	/// where a line whose ends have no known height is refused. ArcGIS Pro's sketch keeps the
+	/// heights of the clicks. Requires <see cref="CanInterpolateSketchZs"/>.
+	/// </summary>
+	protected virtual bool InterpolateSketchZs => false;
+
+	/// <summary>
+	/// Whether a line with at least one vertex is being drawn.
+	/// </summary>
+	protected bool IsSketchingLine => _drawnLine?.IsDrawing == true;
+
 	#region MapTool overrides
 
 	protected override async Task<bool> OnSketchModifiedAsync()
 	{
 		_msg.VerboseDebug(() => "OnSketchModifiedAsync()");
 
+		DrawnLine drawnLine = DrawnLine;
+		int completionCount = drawnLine?.CompletionCount ?? 0;
+
+		Geometry sketch = null;
+
 		if (LogSketchVertexZs && IsInSketchMode)
 		{
-			Geometry sketch = await GetCurrentSketchAsync();
+			sketch = await GetCurrentSketchAsync();
 
 			await LogLastSketchVertexZ(sketch);
 		}
@@ -146,6 +179,20 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		// Does it make any difference what the return value is?
 		if (_intermediateSketchStates?.IsReplayingSketches != true)
 		{
+			if (drawnLine is not null && IsInSketchMode)
+			{
+				sketch ??= await GetCurrentSketchAsync();
+
+				if (completionCount != drawnLine.CompletionCount)
+				{
+					// The line was completed in the meantime: what this modification read of
+					// the sketch must not replace the completed line.
+					return true;
+				}
+
+				drawnLine.Update(sketch, InterpolateSketchZs);
+			}
+
 			return await OnSketchModifiedAsyncCore();
 		}
 
@@ -160,6 +207,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 	protected override async Task<bool> OnSketchCanceledAsync()
 	{
+		ForgetDrawnLine();
+
 		return await OnSketchCanceledAsyncCore();
 	}
 
@@ -652,6 +701,24 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		if (IsInSketchMode)
 		{
+			DrawnLine drawnLine = DrawnLine;
+
+			if (drawnLine is not null && sketchGeometry is Polyline sketchLine)
+			{
+				if (! drawnLine.TryComplete(sketchLine, InterpolateSketchZs,
+				                            out Polyline withZs))
+				{
+					_msg.Warn("The line must start and end on a point with a known height. " +
+					          "Draw its last point with the stereo cursor or the surface, " +
+					          "or snap it.");
+
+					await SetCurrentSketchAsync(sketchGeometry);
+					return false;
+				}
+
+				sketchGeometry = withZs;
+			}
+
 			if (sketchGeometry is MapPoint sketchPoint &&
 			    ! MapUtils.IsStereoMapView(ActiveMapView))
 			{
@@ -783,6 +850,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		UseSnapping = true;
 		CompleteSketchOnMouseUp = false;
 
+		ForgetDrawnLine();
+
 		SetSketchType(GetEditSketchGeometryType());
 
 		SelectionCursors = SketchCursors;
@@ -877,6 +946,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 		await ClearSketchAsync();
 
+		ForgetDrawnLine();
+
 		await OnSketchModifiedAsyncCore();
 
 		OnSketchResetCore();
@@ -898,6 +969,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		if (sketch is { IsEmpty: false })
 		{
 			_previousSketch = sketch;
+			_drawnLine?.Remember();
 		}
 	}
 
@@ -914,6 +986,8 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 
 			return;
 		}
+
+		_drawnLine?.RestoreRemembered();
 
 		try
 		{
@@ -1184,6 +1258,26 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		              };
 
 		return builder.ToGeometry();
+	}
+
+	/// <summary>
+	/// The line being drawn, or the completed one until the next line is started, with the
+	/// heights of its vertices. Null if there is none. Requires
+	/// <see cref="CanInterpolateSketchZs"/>.
+	/// </summary>
+	[CanBeNull]
+	protected Polyline GetDrawnLineWithZs()
+	{
+		return Assert.NotNull(DrawnLine, "The tool does not keep track of the drawn line")
+		             .GetWithZs();
+	}
+
+	/// <summary>
+	/// Forgets the drawn line, for example after the tool applied its result.
+	/// </summary>
+	protected void ForgetDrawnLine()
+	{
+		_drawnLine?.Forget();
 	}
 
 	public virtual Task<bool> CanSetConstructionSketchSymbol(GeometryType geometryType)
