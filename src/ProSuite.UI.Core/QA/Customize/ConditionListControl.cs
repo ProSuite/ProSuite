@@ -156,6 +156,10 @@ namespace ProSuite.UI.Core.QA.Customize
 		{
 			InitializeComponent();
 
+			int typeColumnWidth = DatasetTypeImageLookup.ImageSize + 2;
+			_columnQualityConditionType.MinimumWidth = typeColumnWidth;
+			_columnQualityConditionType.Width = typeColumnWidth;
+
 			_findController = new DataGridViewFindController(_dataGridViewAllConditions,
 			                                                 _dataGridViewFindToolStrip)
 			                  {
