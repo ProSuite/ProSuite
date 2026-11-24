@@ -303,11 +303,11 @@ namespace ProSuite.AGP.Editing.Properties {
 		/// <summary>
 		///   Looks up a localized resource of type System.Byte[].
 		/// </summary>
-		internal static byte[] SplitLineToolCursor
+		internal static byte[] SplitLineOverlay
 		{
 			get
 			{
-				object obj = ResourceManager.GetObject("SplitLineToolCursor", resourceCulture);
+				object obj = ResourceManager.GetObject("SplitLineOverlay", resourceCulture);
 				return ((byte[])(obj));
 			}
 		}

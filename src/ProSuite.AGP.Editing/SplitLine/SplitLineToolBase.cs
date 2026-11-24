@@ -47,7 +47,7 @@ public abstract class SplitLineToolBase : MapToolBase
 	{
 		try
 		{
-			var newCursor = ToolUtils.GetCursor(Resources.SplitLineToolCursor);
+			var newCursor = ToolUtils.CreateCursor(Resources.Arrow, Resources.SplitLineOverlay, 0, 0);
 			SetToolCursor(newCursor);
 		}
 		catch (Exception ex)
