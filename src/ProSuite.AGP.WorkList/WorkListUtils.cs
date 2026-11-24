@@ -123,6 +123,10 @@ public static class WorkListUtils
 				worklist = await environment.CreateWorkListAsync(name, workListFile);
 				Assert.NotNull(worklist);
 			}
+			else
+			{
+				await environment.UpdateConfigurationAsync(worklist);
+			}
 		}
 		else
 		{
