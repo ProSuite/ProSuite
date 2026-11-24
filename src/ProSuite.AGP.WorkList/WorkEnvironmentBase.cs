@@ -42,7 +42,7 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 
 	public bool AllowBackgroundLoading { get; set; }
 
-	public async Task UpdateConfigurationAsync(IWorkList workList)
+	public void UpdateConfiguration(IWorkList workList)
 	{
 		// Consider separating volatile and one-time only state and make two methods
 		ConfigureWorkList(workList);
@@ -52,7 +52,7 @@ public abstract class WorkEnvironmentBase : IWorkEnvironment
 			dbStatusWorkList.UpdateDefinitionExpressions();
 		}
 
-		await QueuedTask.Run(() => workList.Invalidate());
+		workList.Invalidate();
 	}
 
 	protected virtual Geometry GetAreaOfInterest()

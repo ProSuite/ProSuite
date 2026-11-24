@@ -125,12 +125,12 @@ public static class WorkListUtils
 			}
 			else
 			{
-				await environment.UpdateConfigurationAsync(worklist);
+				environment.UpdateConfiguration(worklist);
 			}
 		}
 		else
 		{
-			await environment.UpdateConfigurationAsync(worklist);
+			environment.UpdateConfiguration(worklist);
 		}
 
 		// Commit writes work list definition to disk.
