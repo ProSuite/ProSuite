@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -8,6 +9,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.UI.Env;
 
 namespace ProSuite.Commons.AGP.Framework;
 
@@ -72,6 +74,24 @@ public static class DockPaneUtils
 		if (pane is IFrameworkWindow window)
 		{
 			window.Activate();
+		}
+	}
+
+	/// <summary>
+	/// Shows a pane on an explicit request of the user, as the O key shows a tool's options:
+	/// the fixed (stereo) cursor is released, so that the pane can be used with the mouse,
+	/// and the keyboard stays where it is, so that the active tool keeps receiving the keys.
+	/// An auto-hidden pane is slid out.
+	/// </summary>
+	public static async Task ShowReleasingCursorAsync<T>([NotNull] string id) where T : DockPane
+	{
+		T pane = GetViewModel<T>(id);
+
+		await UIEnvironment.ReleaseCursorAsync();
+
+		using (SlideOutAutoHidden())
+		{
+			ShowToolOptions(pane);
 		}
 	}
 
