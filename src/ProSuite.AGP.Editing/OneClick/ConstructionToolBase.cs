@@ -857,7 +857,7 @@ public abstract class ConstructionToolBase : OneClickToolBase, ISymbolizedSketch
 		SelectionCursors = SketchCursors;
 		SetToolCursor(SelectionCursors?.GetCursor(GetSketchType(), false));
 
-		await QueuedTask.Run(ResetSketchVertexSymbolOptions);
+		await QueuedTask.Run(ResetSketchSymbolOptions);
 
 		_editSketchHasZ = await GetEditSketchHasZ();
 

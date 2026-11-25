@@ -428,11 +428,11 @@ public abstract class DestroyAndRebuildToolBase : ConstructionToolBase
 	{
 		if (QueuedTask.OnWorker)
 		{
-			ResetSketchVertexSymbolOptions();
+			ResetSketchSymbolOptions();
 		}
 		else
 		{
-			await QueuedTask.Run(ResetSketchVertexSymbolOptions);
+			await QueuedTask.Run(ResetSketchSymbolOptions);
 		}
 
 		await base.OnSketchPhaseStartedAsync();

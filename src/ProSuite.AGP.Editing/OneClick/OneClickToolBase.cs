@@ -391,15 +391,29 @@ public abstract class OneClickToolBase : MapToolBase
 
 		SetToolCursor(newCursor);
 
-		if (newGeometryType == SketchGeometryType.Polygon)
+		await QueuedTask.Run(() =>
 		{
-			// If using a polygon sketch as a selection sketch, the vertices should be invisible:
-			await QueuedTask.Run(() =>
+			// The selection sketch shall not look like the edit sketch (colour and width from
+			// the editing options). Pro forgets this on deactivation, so set it every time.
+			// Black and white draws a thin dashed line, close to Pro's own select tools.
+			// Note: with 0.5 pt (Pro's default sketch width) Pro draws no line at all.
+			// 0.75 pt is one pixel at 96 DPI, the thinnest visible line.
+			SetSketchSegmentSymbolOptions(
+				new SegmentSymbolOptions
+				{
+					PrimaryColor = ColorUtils.CreateRGB(0, 0, 0),
+					HasSecondaryColor = true,
+					SecondaryColor = ColorUtils.CreateRGB(255, 255, 255),
+					Width = 0.75
+				});
+
+			if (newGeometryType == SketchGeometryType.Polygon)
 			{
+				// If using a polygon sketch as a selection sketch, the vertices should be invisible:
 				SetTransparentVertexSymbol(VertexSymbolType.RegularUnselected);
 				SetTransparentVertexSymbol(VertexSymbolType.CurrentUnselected);
-			});
-		}
+			}
+		});
 
 		// Remember the sketch type (consider local field, using last sketch type across tool phases):
 		SelectionCursors.PreviousSelectionSketchType = newGeometryType;
@@ -413,6 +427,17 @@ public abstract class OneClickToolBase : MapToolBase
 			              OutlineColor = ColorUtils.CreateRGB(0, 0, 0, 0)
 		              };
 		SetSketchVertexSymbolOptions(vertexSymbolType, options);
+	}
+
+	/// <summary>
+	/// Gives the edit sketch the vertex and segment symbols of the editing options again,
+	/// undoing the look of the selection sketch.
+	/// </summary>
+	/// <remarks>Must be called on the MCT</remarks>
+	protected void ResetSketchSymbolOptions()
+	{
+		ResetSketchVertexSymbolOptions();
+		ResetSketchSegmentSymbolOptions();
 	}
 
 	protected void SetupSketch(SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
