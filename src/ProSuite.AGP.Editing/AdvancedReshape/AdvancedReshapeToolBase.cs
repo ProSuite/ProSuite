@@ -838,10 +838,12 @@ public abstract class AdvancedReshapeToolBase : ConstructionToolBase
 		}
 	}
 
-	private static async Task<bool> SaveAsync(IDictionary<Feature, Geometry> resultFeatures)
+	protected virtual string EditOperationDescription => "Advanced reshape";
+
+	private async Task<bool> SaveAsync(IDictionary<Feature, Geometry> resultFeatures)
 	{
 		return await GdbPersistenceUtils.SaveInOperationAsync(
-			       "Advanced reshape", resultFeatures);
+			       EditOperationDescription, resultFeatures);
 	}
 
 	private async Task<bool> UpdateOpenJawReplacedEndpointAsync(

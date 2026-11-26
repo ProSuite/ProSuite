@@ -8,6 +8,8 @@ public abstract class YReshapeToolBase : AdvancedReshapeToolBase
 {
 	protected override string OptionsFileName => "YReshapeToolOptions.xml";
 
+	protected override string EditOperationDescription => "Y-Reshape";
+
 	protected override SelectionCursors FirstPhaseCursors { get; } =
 		SelectionCursors.CreateArrowCursors(Resources.YReshapeOverlay);
 
