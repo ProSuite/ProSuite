@@ -143,6 +143,8 @@ public abstract class MapToolBase : MapTool
 	{
 		try
 		{
+			base.OnUpdate();
+
 			OnUpdateCore();
 		}
 		catch (Exception ex)
