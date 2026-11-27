@@ -45,6 +45,26 @@ namespace ProSuite.Commons.UI.Logging
 			style.Padding = GetCellPadding(item, defaultPadding);
 		}
 
+		/// <summary>
+		/// The designer widths are 96 DPI pixels, so the icon and the time are cut off on
+		/// larger screen scaling. Fits them to the font (which follows the DPI).
+		/// </summary>
+		public static void FitColumnWidths([NotNull] DataGridView grid,
+		                                   [NotNull] DataGridViewImageColumn levelImageColumn,
+		                                   [NotNull] DataGridViewColumn timeColumn)
+		{
+			Font font = grid.DefaultCellStyle.Font ?? grid.Font;
+			int cellPadding = grid.LogicalToDeviceUnits(8);
+
+			string longestTime = new DateTime(2000, 12, 28, 23, 58, 58).ToString("T");
+			int timeWidth = TextRenderer.MeasureText(longestTime, font).Width + cellPadding;
+			timeColumn.Width = Math.Max(timeColumn.Width, timeWidth);
+
+			// The grid base class centers the icon at 16 logical px.
+			levelImageColumn.Width = Math.Max(levelImageColumn.Width,
+			                                  grid.LogicalToDeviceUnits(16 + 8));
+		}
+
 		public static void HandleCellFormattingEvent(
 			[NotNull] DataGridViewCellFormattingEventArgs e,
 			[NotNull] DataGridViewRow row,

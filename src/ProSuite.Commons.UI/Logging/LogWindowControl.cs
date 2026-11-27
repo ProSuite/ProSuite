@@ -205,18 +205,8 @@ namespace ProSuite.Commons.UI.Logging
 		{
 			base.OnHandleCreated(e);
 
-			// The designer widths are 96 DPI pixels, so the icon and the time are cut off on
-			// larger screen scaling. Fit them to the font (which follows the DPI).
-			Font font = _dataGridView.DefaultCellStyle.Font ?? _dataGridView.Font;
-			int cellPadding = LogicalToDeviceUnits(8);
-
-			string longestTime = new DateTime(2000, 12, 28, 23, 58, 58).ToString("T");
-			int timeWidth = TextRenderer.MeasureText(longestTime, font).Width + cellPadding;
-			_columnLogDateTime.Width = Math.Max(_columnLogDateTime.Width, timeWidth);
-
-			// The grid base class centers the icon at 16 logical px.
-			_columnLogLevelImage.Width = Math.Max(_columnLogLevelImage.Width,
-			                                      LogicalToDeviceUnits(16 + 8));
+			LogWindowUtils.FitColumnWidths(_dataGridView, _columnLogLevelImage,
+			                               _columnLogDateTime);
 		}
 
 		private void ScrollToEndCore()
@@ -526,7 +516,8 @@ namespace ProSuite.Commons.UI.Logging
 
 				form.ShowDialog(_logMessages,
 				                _columnLogNumber.Visible,
-				                _columnLogDateTime.Visible);
+				                _columnLogDateTime.Visible,
+				                _columnLogLevelImage);
 			}
 		}
 

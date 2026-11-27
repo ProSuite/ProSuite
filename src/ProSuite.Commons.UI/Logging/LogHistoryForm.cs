@@ -61,14 +61,20 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		public DialogResult ShowDialog([NotNull] IList<LogEventItem> logEventItems,
-		                               bool showLogNr, bool showLogDate)
+		                               bool showLogNr, bool showLogDate,
+		                               [NotNull] DataGridViewImageColumn levelImageColumn)
 		{
 			Assert.ArgumentNotNull(logEventItems, nameof(logEventItems));
+			Assert.ArgumentNotNull(levelImageColumn, nameof(levelImageColumn));
 
 			_toolStripStatusLabel.Text = string.Empty;
 
 			LogNummer.Visible = showLogNr;
 			logDateTimeDataGridViewTextBoxColumn.Visible = showLogDate;
+
+			logLevelImageDataGridViewImageColumn.ImageLayout = levelImageColumn.ImageLayout;
+			logLevelImageDataGridViewImageColumn.DefaultCellStyle =
+				levelImageColumn.DefaultCellStyle.Clone();
 
 			// take a copy of the list, otherwise exceptions result if 
 			// the grid itself also writes to the log (list changed under enumerator)
@@ -79,6 +85,15 @@ namespace ProSuite.Commons.UI.Logging
 		}
 
 		#region Non-public methods
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+
+			LogWindowUtils.FitColumnWidths(_dataGridViewLogEvents,
+			                               logLevelImageDataGridViewImageColumn,
+			                               logDateTimeDataGridViewTextBoxColumn);
+		}
 
 		private void RefreshDetails()
 		{
